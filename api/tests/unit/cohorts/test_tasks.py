@@ -131,7 +131,7 @@ def test_apply_cohort_membership_deltas__dynamo_throttled__raises_backoff(
 ) -> None:
     # Given
     mocker.patch(
-        "cohorts.services.DynamoIdentityWrapper"
+        "environments.identities.system_traits.DynamoIdentityWrapper"
     ).return_value.is_enabled = True
     mocker.patch.object(
         services,
@@ -154,7 +154,7 @@ def test_apply_cohort_membership_deltas__other_client_error__reraises(
 ) -> None:
     # Given
     mocker.patch(
-        "cohorts.services.DynamoIdentityWrapper"
+        "environments.identities.system_traits.DynamoIdentityWrapper"
     ).return_value.is_enabled = True
     mocker.patch.object(
         services,

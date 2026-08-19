@@ -101,7 +101,9 @@ def test_apply_pending_memberships__row_transitioned_mid_write__not_flipped(
     membership = CohortMembership.objects.create(
         cohort=edge_cohort, identifier="user-1"
     )
-    wrapper_mock = mocker.patch("cohorts.services.DynamoIdentityWrapper").return_value
+    wrapper_mock = mocker.patch(
+        "environments.identities.system_traits.DynamoIdentityWrapper"
+    ).return_value
 
     def transition_row(**kwargs: str) -> None:
         CohortMembership.objects.filter(id=membership.id).update(

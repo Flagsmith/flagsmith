@@ -2,8 +2,7 @@ import typing
 
 import structlog
 from django.db import transaction
-from django.db.models import F, Func, QuerySet, Value
-from django.db.models.fields.json import JSONField
+from django.db.models import QuerySet
 from django.utils import timezone
 from flag_engine.segments.constants import IS_SET
 
@@ -11,14 +10,15 @@ from cohorts.constants import COHORT_MEMBERSHIP_APPLY_BATCH_SIZE
 from cohorts.metrics import flagsmith_cohorts_membership_deltas_applied_total
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
 from core.dataclasses import AuthorData
-from environments.dynamodb import DynamoIdentityWrapper
-from environments.identities.models import Identity
+from environments.identities.system_traits import (
+    set_system_trait,
+    unset_system_trait,
+)
 from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from segments.services import delete_segment
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
-    from projects.models import Project
 
 logger = structlog.get_logger("cohorts")
 
@@ -32,50 +32,12 @@ def pending_memberships(cohort: Cohort) -> "QuerySet[CohortMembership]":
     return CohortMembership.objects.filter(cohort=cohort, state__in=_PENDING_STATES)
 
 
-def _write_to_edge_identities(
-    cohort: Cohort, batch: list[CohortMembership]
-) -> tuple[list[int], list[int]]:
-    identity_wrapper = DynamoIdentityWrapper()
-    environment_api_key: str = cohort.environment.api_key
-    trait_key = cohort.system_trait_key
-    added_ids: list[int] = []
-    removed_ids: list[int] = []
-    for row in batch:
-        if row.state == CohortMembershipState.PENDING_ADD:
-            identity_wrapper.set_system_trait(
-                environment_api_key=environment_api_key,
-                identifier=row.identifier,
-                trait_key=trait_key,
-            )
-            added_ids.append(row.id)
-        else:
-            identity_wrapper.unset_system_trait(
-                environment_api_key=environment_api_key,
-                identifier=row.identifier,
-                trait_key=trait_key,
-            )
-            removed_ids.append(row.id)
-    return added_ids, removed_ids
-
-
-# Postgres merges and drops a key in a single statement, so a cohort applying
-# to an identity never has to read, lock, or overwrite another cohort's keys.
-class _JSONBMerge(Func):
-    arg_joiner = " || "
-    template = "%(expressions)s"
-    output_field = JSONField()
-
-
-class _JSONBDropKey(Func):
-    arg_joiner = " - "
-    template = "%(expressions)s"
-    output_field = JSONField()
-
-
-def _write_to_core_identities(
-    cohort: Cohort, batch: list[CohortMembership]
-) -> tuple[list[int], list[int]]:
-    trait_key = cohort.system_trait_key
+def apply_pending_memberships(cohort: Cohort) -> bool:
+    batch = list(
+        pending_memberships(cohort).order_by("id")[:COHORT_MEMBERSHIP_APPLY_BATCH_SIZE]
+    )
+    if not batch:
+        return False
     added_ids: list[int] = []
     removed_ids: list[int] = []
     added_identifiers: list[str] = []
@@ -87,40 +49,10 @@ def _write_to_core_identities(
         else:
             removed_ids.append(row.id)
             removed_identifiers.append(row.identifier)
-    # A member who has never identified still gets their trait, so that it is
-    # already in place the first time they do.
-    Identity.objects.bulk_create(
-        [
-            Identity(environment_id=cohort.environment_id, identifier=identifier)
-            for identifier in added_identifiers
-        ],
-        ignore_conflicts=True,
-    )
-    identities = Identity.objects.filter(environment_id=cohort.environment_id)
-    if added_identifiers:
-        identities.filter(identifier__in=added_identifiers).update(
-            system_traits=_JSONBMerge(
-                F("system_traits"), Value({trait_key: True}, JSONField())
-            )
-        )
-    if removed_identifiers:
-        identities.filter(identifier__in=removed_identifiers).update(
-            system_traits=_JSONBDropKey(F("system_traits"), Value(trait_key))
-        )
-    return added_ids, removed_ids
-
-
-def apply_pending_memberships(cohort: Cohort) -> bool:
-    batch = list(
-        pending_memberships(cohort).order_by("id")[:COHORT_MEMBERSHIP_APPLY_BATCH_SIZE]
-    )
-    if not batch:
-        return False
-    added_ids, removed_ids = (
-        _write_to_edge_identities(cohort, batch)
-        if edge_sync_enabled(cohort.environment.project)
-        else _write_to_core_identities(cohort, batch)
-    )
+    environment = cohort.environment
+    trait_key = cohort.system_trait_key
+    set_system_trait(environment, trait_key, added_identifiers)
+    unset_system_trait(environment, trait_key, removed_identifiers)
     added_count = CohortMembership.objects.filter(
         id__in=added_ids, state=CohortMembershipState.PENDING_ADD
     ).update(state=CohortMembershipState.APPLIED, updated_at=timezone.now())
@@ -174,10 +106,6 @@ def create_cohort(
         organisation__id=environment.project.organisation_id,
     )
     return cohort
-
-
-def edge_sync_enabled(project: "Project") -> bool:
-    return bool(project.enable_dynamo_db and DynamoIdentityWrapper().is_enabled)
 
 
 def delete_cohort(cohort: Cohort) -> None:
