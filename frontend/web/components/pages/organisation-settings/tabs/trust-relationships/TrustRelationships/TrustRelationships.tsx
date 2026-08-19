@@ -30,7 +30,9 @@ const NameCell: FC<{ trustRelationship: TrustRelationship }> = ({
       {providerIconForIssuer(trustRelationship.issuer, 20)}
     </span>
     <div className='trust-relationships__name-body'>
-      <div className='font-weight-medium'>{trustRelationship.name}</div>
+      <div className='font-weight-medium text-break'>
+        {trustRelationship.name}
+      </div>
       <div className='list-item-subtitle'>
         Created {moment(trustRelationship.created_at).format('Do MMM YYYY')}
       </div>
@@ -42,7 +44,7 @@ const NameCell: FC<{ trustRelationship: TrustRelationship }> = ({
 const ConfigurationCell: FC<{ trustRelationship: TrustRelationship }> = ({
   trustRelationship,
 }) => (
-  <dl className='trust-relationships__config'>
+  <dl className='trust-relationships__config m-0'>
     <dt className='font-weight-medium fs-captionSmall text-secondary text-uppercase m-0'>
       Issuer
     </dt>
