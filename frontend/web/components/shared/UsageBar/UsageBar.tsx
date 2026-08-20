@@ -65,7 +65,7 @@ const UsageBar: FC<UsageBarProps> = ({
           aria-valuetext={`${percent}% of ${Format.shortenNumber(limit)}`}
         >
           <div
-            className='h-100 rounded-full'
+            className='usage-bar__fill h-100 rounded-full'
             style={{
               background: FILL_COLOURS[tone],
               width: `${boundedPercent}%`,
