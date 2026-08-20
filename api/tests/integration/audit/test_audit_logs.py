@@ -46,7 +46,7 @@ def test_list_audit_logs__with_project_filter__makes_expected_queries(  # type: 
 
     # Then
     assert res.status_code == status.HTTP_200_OK
-    assert res.json()["count"] == 3
+    assert res.json()["count"] == 4
 
 
 def test_retrieve_audit_log__environment_change__includes_change_details(
@@ -363,7 +363,7 @@ def test_retrieve_audit_log__segment_override_created_and_deleted__includes_chan
     get_audit_logs_response_2 = admin_client.get(get_audit_logs_url)
     assert get_audit_logs_response_2.status_code == status.HTTP_200_OK
     results = get_audit_logs_response_2.json()["results"]
-    assert len(results) == 5
+    assert len(results) == 6
 
     # and the first one in the list should be for the deletion of the segment override
     delete_override_audit_log_id = results[0]["id"]
@@ -421,9 +421,9 @@ def test_retrieve_audit_log__segment_override_created_for_feature_value__include
 
     # and we should only have one audit log in the list related to the segment override
     # (since the FeatureState hasn't changed)
-    # 1 for creating the feature + 1 for creating the environment + 1 for creating the segment
-    # + 1 for the segment override = 4
-    assert len(results) == 4
+    # 1 for creating the project + 1 for creating the feature + 1 for creating the environment + 1 for creating the segment
+    # + 1 for the segment override = 5
+    assert len(results) == 5
 
     # the first audit log in the list (i.e. most recent) should be the one that we want
     audit_log_id = results[0]["id"]
