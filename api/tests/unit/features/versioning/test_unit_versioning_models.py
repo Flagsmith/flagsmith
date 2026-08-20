@@ -7,6 +7,7 @@ from freezegun import freeze_time
 from pytest_mock import MockerFixture
 
 from core.constants import STRING
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from environments.tasks import rebuild_environment_document
 from features.models import Feature, FeatureSegment, FeatureState
@@ -184,11 +185,11 @@ def test_get_previous_version__more_recent_version_published__returns_correct_pr
     version_1 = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature
     )
-    version_1.publish(admin_user)
+    version_1.publish(AuthorData(user=admin_user))
     version_2 = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature
     )
-    version_2.publish(admin_user)
+    version_2.publish(AuthorData(user=admin_user))
 
     # When
     previous_version = version_1.get_previous_version()
@@ -220,7 +221,7 @@ def test_environment_feature_version_publish__valid_version__sets_live_and_trigg
 
     # When
     with freeze_time(now):
-        version_2.publish(published_by=admin_user)
+        version_2.publish(AuthorData(user=admin_user))
 
     # Then
     assert version_2.is_live
@@ -251,7 +252,7 @@ def test_environment_feature_version_publish__new_version__triggers_update_webho
     )
 
     # When
-    new_version.publish(admin_user)
+    new_version.publish(AuthorData(user=admin_user))
 
     # Then
     mock_trigger_update_version_webhooks.delay.assert_called_once_with(
@@ -276,7 +277,7 @@ def test_get_latest_versions__future_scheduled_version__excludes_from_results(
         feature=feature,
         live_from=timezone.now() + timedelta(hours=1),
     )
-    scheduled_version.publish(admin_user)
+    scheduled_version.publish(AuthorData(user=admin_user))
 
     # When
     latest_versions = EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(

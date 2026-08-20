@@ -14,7 +14,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 )
 from softdelete.models import SoftDeleteObject  # type: ignore[import-untyped]
 
-from api_keys.models import MasterAPIKey
+from core.dataclasses import AuthorData
 from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
@@ -176,21 +176,18 @@ class EnvironmentFeatureVersion(  # type: ignore[django-manager-missing]
 
     def publish(
         self,
-        published_by: typing.Union["FFAdminUser", None] = None,
-        published_by_api_key: MasterAPIKey | None = None,
+        author: AuthorData | None = None,
         live_from: datetime.datetime | None = None,
         persist: bool = True,
     ) -> None:
-        assert not (published_by and published_by_api_key), (
-            "Version must be published by either a user or a MasterAPIKey"
-        )
+        author = author or AuthorData()
 
         now = timezone.now()
 
         self.live_from = live_from or (self.live_from or now)
         self.published_at = now
-        self.published_by = published_by
-        self.published_by_api_key = published_by_api_key
+        self.published_by = author.user
+        self.published_by_api_key = author.api_key
 
         if persist:
             self.save()

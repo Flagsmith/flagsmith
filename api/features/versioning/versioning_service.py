@@ -198,10 +198,7 @@ def _update_flag_for_versioning_v2(
     if change_set.segment_id is not None and change_set.segment_priority is not None:
         _update_segment_priority(target_feature_state, change_set.segment_priority)
 
-    new_version.publish(
-        published_by=change_set.author.user,
-        published_by_api_key=change_set.author.api_key,
-    )
+    new_version.publish(change_set.author)
 
     return target_feature_state
 
@@ -400,10 +397,7 @@ def _update_flag_v2_for_versioning_v2(
             )
             update_multivariate_values(segment_state, override.multivariate_values)
 
-    new_version.publish(
-        published_by=change_set.author.user,
-        published_by_api_key=change_set.author.api_key,
-    )
+    new_version.publish(change_set.author)
 
 
 def _update_flag_v2_for_versioning_v1(
@@ -523,7 +517,7 @@ def _delete_segment_override_v2(
     )
     segment_feature_state.feature_segment.delete()
 
-    new_version.publish(published_by=author.user, published_by_api_key=author.api_key)
+    new_version.publish(author)
 
 
 def get_updated_feature_states_for_version(

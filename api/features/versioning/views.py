@@ -160,7 +160,7 @@ class EnvironmentFeatureVersionViewSet(
         ef_version = self.get_object()
         serializer = self.get_serializer(data=request.data, instance=ef_version)
         serializer.is_valid(raise_exception=True)
-        serializer.save(published_by=request.user)
+        serializer.save()
         return Response(serializer.data)
 
     def _apply_visibility_limits(self, queryset: QuerySet) -> QuerySet:  # type: ignore[type-arg]

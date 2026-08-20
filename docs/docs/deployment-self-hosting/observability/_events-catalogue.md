@@ -266,7 +266,7 @@ Attributes:
 ### `features.flag.update_rejected`
 
 Logged at `warning` from:
- - `api/features/future/views.py:49`
+ - `api/features/future/views.py:50`
 
 Attributes:
  - `environment.id`
@@ -278,8 +278,8 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:334`
- - `api/features/future/services.py:373`
+ - `api/features/future/services.py:322`
+ - `api/features/future/services.py:361`
 
 Attributes:
  - `environment.id`
@@ -905,7 +905,7 @@ Attributes:
 ### `workflows.change_request.committed`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:45`
+ - `api/core/workflows_services.py:46`
 
 Attributes:
  - `environment.id`
@@ -915,7 +915,7 @@ Attributes:
 ### `workflows.missing_live_segment`
 
 Logged at `warning` from:
- - `api/core/workflows_services.py:130`
+ - `api/core/workflows_services.py:133`
 
 Attributes:
  - `draft_segment`
@@ -923,7 +923,7 @@ Attributes:
 ### `workflows.segment_revision_created`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:135`
+ - `api/core/workflows_services.py:138`
 
 Attributes:
  - `revision_id`

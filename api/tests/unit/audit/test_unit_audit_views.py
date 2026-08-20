@@ -12,6 +12,7 @@ from rest_framework.test import APIClient
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.models import Feature
 from features.versioning.models import EnvironmentFeatureVersion
@@ -182,7 +183,7 @@ def test_retrieve_audit_log__environment_feature_version_published__includes_req
         feature=feature,
         environment=environment_v2_versioning,
     )
-    new_version.publish(published_by=admin_user)
+    new_version.publish(AuthorData(user=admin_user))
 
     audit_log = (
         AuditLog.objects.filter(related_object_type=RelatedObjectType.EF_VERSION.name)

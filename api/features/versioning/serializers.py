@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from rest_framework import serializers
 
-from api_keys.user import APIKeyUser
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
@@ -20,7 +20,6 @@ from integrations.gitlab.services import (
     post_gitlab_state_change_comment_for_feature_state,
 )
 from segments.models import Segment
-from users.models import FFAdminUser
 
 if typing.TYPE_CHECKING:
     from features.models import FeatureState
@@ -203,11 +202,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
 
         if self.validated_data.get("publish_immediately", False):
             request = self.context["request"]
-            version.publish(
-                published_by=(
-                    request.user if isinstance(request.user, FFAdminUser) else None
-                )
-            )
+            version.publish(AuthorData.from_request(request))
 
         return version  # type: ignore[no-any-return]
 
@@ -345,18 +340,8 @@ class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):  # typ
 
         request = self.context["request"]
 
-        published_by = None
-        published_by_api_key = None
-
-        if isinstance(request.user, FFAdminUser):
-            published_by = request.user
-        elif isinstance(request.user, APIKeyUser):
-            published_by_api_key = request.user.key
-
         self.instance.publish(  # type: ignore[union-attr]
-            live_from=live_from,
-            published_by=published_by,
-            published_by_api_key=published_by_api_key,
+            AuthorData.from_request(request), live_from=live_from
         )
         return self.instance
 

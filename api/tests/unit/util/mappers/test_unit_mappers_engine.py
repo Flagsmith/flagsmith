@@ -6,6 +6,7 @@ import pytz
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
+from core.dataclasses import AuthorData
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -772,7 +773,7 @@ def test_map_environment_to_engine__v2_versioning_segment_override_removed__retu
                 environment_feature_version=v2,
             ),
         )
-    v2.publish(staff_user)
+    v2.publish(AuthorData(user=staff_user))
 
     # Now, let's create another new version which will keep one of the segment overrides
     # and remove the other.
@@ -787,7 +788,7 @@ def test_map_environment_to_engine__v2_versioning_segment_override_removed__retu
         feature_segment__segment=another_segment, environment_feature_version=v3
     ).delete()
 
-    v3.publish(staff_user)
+    v3.publish(AuthorData(user=staff_user))
 
     # When
     environment_model = engine.map_environment_to_engine(environment_v2_versioning)

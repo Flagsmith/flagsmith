@@ -13,6 +13,7 @@ from freezegun.api import FrozenDateTimeFactory
 from rest_framework.exceptions import ValidationError
 
 from core.constants import STRING
+from core.dataclasses import AuthorData
 from environments.identities.models import Identity
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureSegment, FeatureState
@@ -88,7 +89,7 @@ def test_disable_v2_versioning__published_and_unpublished_versions__restores_lat
         environment_feature_version=v2,
     )
 
-    v2.publish(staff_user)
+    v2.publish(AuthorData(user=staff_user))
 
     # Now, let's create a new version which we won't publish (and hence should be ignored after we disabled
     # v2 versioning)
@@ -174,7 +175,7 @@ def test_trigger_update_version_webhooks__version_with_changes__triggers_flag_up
     v2_fs = v2.feature_states.first()
     v2_fs.enabled = not v1_fs.enabled  # Make a change
     v2_fs.save()
-    v2.publish(published_by=staff_user)
+    v2.publish(AuthorData(user=staff_user))
 
     # Setup webhooks
     from organisations.models import OrganisationWebhook
@@ -262,12 +263,12 @@ def test_trigger_update_version_webhooks__version_without_changes__triggers_only
     v1 = EnvironmentFeatureVersion.objects.get(
         feature=feature, environment=environment_v2_versioning
     )
-    v1.publish(published_by=staff_user)
+    v1.publish(AuthorData(user=staff_user))
 
     v2 = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature
     )
-    v2.publish(published_by=staff_user)
+    v2.publish(AuthorData(user=staff_user))
 
     # Setup webhook
     environment_webhook_url = "https://example.com/env-webhook/"
@@ -329,7 +330,7 @@ def test_trigger_update_version_webhooks__multivariate_feature__includes_mv_valu
     original_allocation = bumped_mv_value.percentage_allocation
     bumped_mv_value.percentage_allocation = original_allocation + 5
     bumped_mv_value.save()
-    v2.publish(published_by=staff_user)
+    v2.publish(AuthorData(user=staff_user))
 
     environment_webhook_url = "https://example.com/env-webhook/"
     Webhook.objects.create(

@@ -17,6 +17,7 @@ from rest_framework.test import APIClient
 from audit.constants import SEGMENT_FEATURE_STATE_DELETED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
@@ -647,14 +648,14 @@ def test_get_feature_segments__v2_versioning__returns_only_latest_version(
         feature_segment=feature_segment_v1,
         environment_feature_version=version_1,
     )
-    version_1.publish(staff_user, persist=True)
+    version_1.publish(AuthorData(user=staff_user), persist=True)
 
     # and let's create another new version, which will trigger a duplication
     # of the feature segment into the new version
     version_2 = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature
     )
-    version_2.publish(published_by=staff_user, persist=True)
+    version_2.publish(AuthorData(user=staff_user), persist=True)
 
     # Let's grab the latest versioned feature segment, so we can check for it's
     # (exclusive) existence in the response from the API.

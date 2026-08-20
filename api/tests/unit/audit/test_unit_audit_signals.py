@@ -15,6 +15,7 @@ from audit.signals import (
     send_feature_flag_went_live_signal,
     trigger_feature_state_change_webhooks,
 )
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
@@ -345,7 +346,7 @@ def _create_and_publish_environment_feature_version(
         environment=environment,
         feature=feature,
     )
-    version.publish(user)
+    version.publish(AuthorData(user=user))
 
     audit_log_record = (
         AuditLog.objects.filter(
