@@ -917,6 +917,12 @@ TRENCH_AUTH = {
     "SECRET_KEY_LENGTH": 32,
 }
 
+# Controls the app domain used in emails (currently invites and change requests).
+# If set, domain stored with `django.contrib.sites` is disregarded.
+DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
+# Used when no Django site is specified.
+DEFAULT_DOMAIN = "app.flagsmith.com"
+
 USER_CREATE_PERMISSIONS = env.list(
     "USER_CREATE_PERMISSIONS", default=["custom_auth.permissions.IsSignupAllowed"]
 )
@@ -1294,12 +1300,6 @@ SOFTDELETE_CASCADE_ALLOW_DELETE_ALL = False
 
 # Used for serializing and deserializing GenericForeignKey(used in metadata) using the natural key of the object
 SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_support"}
-
-# Controls the app domain used in emails (currently invites and change requests).
-# If set, domain stored with `django.contrib.sites` is disregarded.
-DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
-# Used when no Django site is specified.
-DEFAULT_DOMAIN = "app.flagsmith.com"
 
 # Define the cooldown duration, in seconds, for password reset emails
 PASSWORD_RESET_EMAIL_COOLDOWN = env.int("PASSWORD_RESET_EMAIL_COOLDOWN", 60 * 60 * 24)
