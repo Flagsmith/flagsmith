@@ -41,13 +41,20 @@ export const hasUnmatchedIdentityOverride = ({
   overrideValue,
   variationOverrides,
 }: {
-  controlValue: FlagsmithValue
-  overrideValue: FlagsmithValue
+  controlValue: FlagsmithValue | undefined
+  overrideValue: FlagsmithValue | undefined
   variationOverrides: VariationOverrides
 }): boolean =>
+  // `undefined` means the feature state has not loaded, which is not the same
+  // as an override of `null`. Answering from absent data would say "unmatched"
+  // for any non-null control value, and the caller latches that answer for the
+  // lifetime of the editor — so withhold a verdict until both sides are known.
+  controlValue !== undefined &&
+  overrideValue !== undefined &&
   !variationOverrides?.some(
     (variation) => variation.percentage_allocation === 100,
-  ) && (overrideValue ?? null) !== (controlValue ?? null)
+  ) &&
+  overrideValue !== controlValue
 
 // The editor lists an unmatched override until the modal is saved, but selects
 // it only while it is still the value in play. Presence therefore latches:
@@ -62,9 +69,10 @@ export const resolveUnmatchedOverride = ({
 }: {
   isSelected: boolean
   latchedValue: LatchedOverrideValue
-  overrideValue: FlagsmithValue
+  overrideValue: FlagsmithValue | undefined
 }): UnmatchedOverride | undefined => {
-  // `null` is a valid override value, so the latch is keyed on `undefined`.
+  // `null` is a valid override value, so the latch is keyed on `undefined` —
+  // which doubles as the not-yet-loaded state, and so never latches.
   const value =
     latchedValue === undefined && isSelected ? overrideValue : latchedValue
   return value === undefined ? undefined : { selected: isSelected, value }

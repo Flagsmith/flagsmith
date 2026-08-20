@@ -95,6 +95,26 @@ describe('multivariate', () => {
       ).toBe(true)
     })
 
+    // An unloaded feature state must not read as an override: the caller
+    // latches this answer, so a verdict from absent data would stick.
+    it.each`
+      controlValue     | overrideValue    | scenario
+      ${'ENV_DEFAULT'} | ${undefined}     | ${'the override has not loaded'}
+      ${undefined}     | ${'MY_OVERRIDE'} | ${'the control value has not loaded'}
+      ${undefined}     | ${undefined}     | ${'neither has loaded'}
+    `(
+      'withholds a verdict while $scenario',
+      ({ controlValue, overrideValue }) => {
+        expect(
+          hasUnmatchedIdentityOverride({
+            controlValue,
+            overrideValue,
+            variationOverrides: [],
+          }),
+        ).toBe(false)
+      },
+    )
+
     it.each`
       controlValue | overrideValue | expected
       ${null}      | ${undefined}  | ${false}
@@ -169,6 +189,16 @@ describe('multivariate', () => {
           overrideValue: 'MY_OVERRIDE',
         }),
       ).toEqual({ selected: true, value: 'MY_OVERRIDE' })
+    })
+
+    it('does not latch while the override value is unavailable', () => {
+      expect(
+        resolveUnmatchedOverride({
+          isSelected: true,
+          latchedValue: undefined,
+          overrideValue: undefined,
+        }),
+      ).toBeUndefined()
     })
 
     // `null` is a real override value, so it has to latch like any other —

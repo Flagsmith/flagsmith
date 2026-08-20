@@ -286,8 +286,10 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     !!multivariate_options.length
   )
 
+  // Left undefined while unloaded rather than coerced to null, which is itself
+  // a valid value — see hasUnmatchedIdentityOverride.
   const controlValue =
-    projectFlag.environment_feature_state?.feature_state_value ?? null
+    projectFlag.environment_feature_state?.feature_state_value
 
   // An override that predates the flag becoming multivariate holds a value the
   // control/variation radios cannot express, so surface it rather than letting
@@ -297,7 +299,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     hasVariations &&
     hasUnmatchedIdentityOverride({
       controlValue,
-      overrideValue: featureState.feature_state_value ?? null,
+      overrideValue: featureState.feature_state_value,
       variationOverrides: identityVariations,
     })
 
@@ -308,7 +310,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   const unmatchedOverride = resolveUnmatchedOverride({
     isSelected: unmatchedOverrideSelected,
     latchedValue: latchedOverrideValue.current,
-    overrideValue: featureState.feature_state_value ?? null,
+    overrideValue: featureState.feature_state_value,
   })
   latchedOverrideValue.current = unmatchedOverride?.value
 
@@ -451,7 +453,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               disabled
               select
               unmatchedOverride={unmatchedOverride}
-              controlValue={controlValue}
+              controlValue={controlValue ?? null}
               controlPercentage={controlPercentage}
               variationOverrides={identityVariations as any}
               setValue={(value) =>
