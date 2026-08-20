@@ -33,9 +33,12 @@ test.describe('Signup', () => {
     // Which flow we get cannot be decided before signing up: the app reads
     // onboarding_quickstart_flow under a per-signup identity, while
     // `hasFeature` here has none and only sees the environment default.
-    await page.waitForURL(/\/(create|getting-started)/, { timeout: 20000 });
+    await page.waitForURL(
+      (url) => url.pathname === '/create' || url.pathname === '/getting-started',
+      { timeout: 20000 },
+    );
     test.skip(
-      new URL(page.url()).pathname.startsWith('/getting-started'),
+      new URL(page.url()).pathname === '/getting-started',
       'Signup entered the single-page onboarding flow',
     );
     await waitForElementVisible('[name="orgName"]');
