@@ -99,7 +99,7 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: Flagsmith/setup-cli@v1
       - run: flagsmith flag list
 ```
