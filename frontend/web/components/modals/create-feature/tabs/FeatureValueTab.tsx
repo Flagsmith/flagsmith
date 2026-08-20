@@ -21,7 +21,10 @@ import {
   MultivariateOption,
   ProjectFlag,
 } from 'common/types/responses'
-import { hasUnmatchedIdentityOverride } from 'common/utils/multivariate'
+import {
+  hasUnmatchedIdentityOverride,
+  resolveUnmatchedOverride,
+} from 'common/utils/multivariate'
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { useHasPermission } from 'common/providers/Permission'
@@ -298,25 +301,16 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
       variationOverrides: identityVariations,
     })
 
-  // Picking a variation deselects the override but must not remove it: the
-  // value is only gone once saved, and until then it is what the user is
-  // choosing to replace — and the only way back if they change their mind.
-  // Latched rather than read once on mount, as the feature state loads async.
-  // `null` is a valid override value, so the latch is keyed on `undefined`.
-  const unmatchedOverrideValue = useRef<FlagsmithValue | undefined>(undefined)
-  if (
-    unmatchedOverrideSelected &&
-    unmatchedOverrideValue.current === undefined
-  ) {
-    unmatchedOverrideValue.current = featureState.feature_state_value ?? null
-  }
-  const unmatchedOverride =
-    unmatchedOverrideValue.current === undefined
-      ? undefined
-      : {
-          selected: unmatchedOverrideSelected,
-          value: unmatchedOverrideValue.current,
-        }
+  // Held in a ref rather than read once on mount, as the feature state loads
+  // async — there is no single render at which the override is known to be
+  // there. See resolveUnmatchedOverride for why presence outlives selection.
+  const latchedOverrideValue = useRef<FlagsmithValue | undefined>(undefined)
+  const unmatchedOverride = resolveUnmatchedOverride({
+    isSelected: unmatchedOverrideSelected,
+    latchedValue: latchedOverrideValue.current,
+    overrideValue: featureState.feature_state_value ?? null,
+  })
+  latchedOverrideValue.current = unmatchedOverride?.value
 
   if (compareOpen && canCompareValue && environmentId) {
     return (

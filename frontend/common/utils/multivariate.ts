@@ -31,6 +31,27 @@ export const hasUnmatchedIdentityOverride = ({
     (variation) => variation.percentage_allocation === 100,
   ) && (overrideValue ?? null) !== (controlValue ?? null)
 
+// The editor lists an unmatched override until the modal is saved, but selects
+// it only while it is still the value in play. Presence therefore latches:
+// deriving it from the live predicate instead removed the row the moment a
+// variation was picked, taking away both the value being replaced and the only
+// way back to it. `latchedValue` carries what a previous call resolved, so
+// callers hold one value rather than reimplementing the rule.
+export const resolveUnmatchedOverride = ({
+  isSelected,
+  latchedValue,
+  overrideValue,
+}: {
+  isSelected: boolean
+  latchedValue: FlagsmithValue | undefined
+  overrideValue: FlagsmithValue
+}): { selected: boolean; value: FlagsmithValue } | undefined => {
+  // `null` is a valid override value, so the latch is keyed on `undefined`.
+  const value =
+    latchedValue === undefined && isSelected ? overrideValue : latchedValue
+  return value === undefined ? undefined : { selected: isSelected, value }
+}
+
 // Options not yet saved have no id and sort last, in input order.
 export const sortMultivariateOptions = <T extends { id?: number | null }>(
   options: T[],

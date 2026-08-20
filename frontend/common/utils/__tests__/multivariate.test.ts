@@ -1,6 +1,7 @@
 import {
   getDefaultVariantKey,
   hasUnmatchedIdentityOverride,
+  resolveUnmatchedOverride,
   sortMultivariateOptions,
 } from 'common/utils/multivariate'
 
@@ -113,5 +114,83 @@ describe('multivariate', () => {
         ).toBe(expected)
       },
     )
+  })
+
+  describe('resolveUnmatchedOverride', () => {
+    it('lists nothing while the identity has no unmatched override', () => {
+      expect(
+        resolveUnmatchedOverride({
+          isSelected: false,
+          latchedValue: undefined,
+          overrideValue: 'ENV_DEFAULT',
+        }),
+      ).toBeUndefined()
+    })
+
+    it('latches the override value the first time it is seen', () => {
+      expect(
+        resolveUnmatchedOverride({
+          isSelected: true,
+          latchedValue: undefined,
+          overrideValue: 'MY_OVERRIDE',
+        }),
+      ).toEqual({ selected: true, value: 'MY_OVERRIDE' })
+    })
+
+    // The bug this function exists for: presence used to follow selection, so
+    // picking a variation removed the row instead of deselecting it.
+    it('keeps a latched override listed once it stops being selected', () => {
+      expect(
+        resolveUnmatchedOverride({
+          isSelected: false,
+          latchedValue: 'MY_OVERRIDE',
+          overrideValue: 'MY_OVERRIDE',
+        }),
+      ).toEqual({ selected: false, value: 'MY_OVERRIDE' })
+    })
+
+    // Picking the control row rewrites the edited value, which must not drag
+    // the listed row along with it — that value is what the user is replacing.
+    it('shows the latched value, not the value the user moved to', () => {
+      expect(
+        resolveUnmatchedOverride({
+          isSelected: false,
+          latchedValue: 'MY_OVERRIDE',
+          overrideValue: 'ENV_DEFAULT',
+        }),
+      ).toEqual({ selected: false, value: 'MY_OVERRIDE' })
+    })
+
+    it('reselects the latched override without relatching it', () => {
+      expect(
+        resolveUnmatchedOverride({
+          isSelected: true,
+          latchedValue: 'MY_OVERRIDE',
+          overrideValue: 'MY_OVERRIDE',
+        }),
+      ).toEqual({ selected: true, value: 'MY_OVERRIDE' })
+    })
+
+    // `null` is a real override value, so it has to latch like any other —
+    // keying the latch on it would leave the row permanently unlisted.
+    it('latches a null override value', () => {
+      expect(
+        resolveUnmatchedOverride({
+          isSelected: true,
+          latchedValue: undefined,
+          overrideValue: null,
+        }),
+      ).toEqual({ selected: true, value: null })
+    })
+
+    it('keeps a latched null override listed once deselected', () => {
+      expect(
+        resolveUnmatchedOverride({
+          isSelected: false,
+          latchedValue: null,
+          overrideValue: 'ENV_DEFAULT',
+        }),
+      ).toEqual({ selected: false, value: null })
+    })
   })
 })
