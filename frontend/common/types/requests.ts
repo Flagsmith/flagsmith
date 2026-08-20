@@ -74,7 +74,10 @@ export enum PermissionRoleType {
   GRANTED_FOR_TAGS = 'GRANTED_FOR_TAGS',
   NONE = 'NONE',
 }
-export const billingPeriods = [
+export type BillingPeriod = Req['getOrganisationUsage']['billing_period']
+export type PeriodOption = { label: string; value: BillingPeriod }
+
+export const periodOptions: PeriodOption[] = [
   {
     label: 'Current billing period',
     value: 'current_billing_period',
@@ -86,7 +89,7 @@ export const billingPeriods = [
   { label: 'Last 90 days', value: '90_day_period' },
   { label: 'Last 30 days', value: undefined },
 ]
-export const freePeriods = [
+export const rollingPeriodOptions: PeriodOption[] = [
   { label: 'Last 90 days', value: '90_day_period' },
   { label: 'Last 30 days', value: undefined },
 ]
