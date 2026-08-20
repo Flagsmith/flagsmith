@@ -15,9 +15,12 @@ import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsa
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import UsageChartFilters from 'components/organisation-settings/usage/components/UsageChartFilters'
 import UsageChartTotals from 'components/organisation-settings/usage/components/UsageChartTotals'
+import UsageDashboard from 'components/organisation-settings/usage/UsageDashboard'
 
 const OrganisationUsagePage: FC = () => {
   const isSdkViewEnabled = Utils.getFlagsmithHasFeature('sdk_usage_charts')
+  const isUsageDashboardEnabled =
+    Utils.getFlagsmithHasFeature('usage_dashboard')
 
   const { organisationId } = useRouteContext()
   const location = useLocation()
@@ -53,6 +56,7 @@ const OrganisationUsagePage: FC = () => {
     Req['getOrganisationUsage']['billing_period']
   >(isOnFreePlanPeriods ? '90_day_period' : 'current_billing_period')
 
+  // Skipped behind the flag, otherwise this page and UsageDashboard both fetch.
   const { data, isError } = useGetOrganisationUsageQuery(
     {
       billing_period: billingPeriod,
@@ -60,12 +64,12 @@ const OrganisationUsagePage: FC = () => {
       organisationId: organisationId || 0,
       projectId: project,
     },
-    { skip: !organisationId },
+    { skip: !organisationId || isUsageDashboardEnabled },
   )
 
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery(
     { id: organisationId || 0 },
-    { skip: !organisationId },
+    { skip: !organisationId || isUsageDashboardEnabled },
   )
 
   // Aggregate usage events by date, summing metrics across all client types
@@ -123,6 +127,10 @@ const OrganisationUsagePage: FC = () => {
     } else {
       setSelection(selection.concat([key]))
     }
+  }
+
+  if (isUsageDashboardEnabled) {
+    return <UsageDashboard organisationId={organisationId} />
   }
 
   return (
