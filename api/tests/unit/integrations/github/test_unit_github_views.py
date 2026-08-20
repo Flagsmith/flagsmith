@@ -660,6 +660,7 @@ def test_fetch_repositories__valid_installation__returns_repositories(
                     "full_name": "owner/repo-name",
                     "id": 1,
                     "name": "repo-name",
+                    "owner": {"login": "owner"},
                 },
             ],
             "total_count": 1,
@@ -677,8 +678,14 @@ def test_fetch_repositories__valid_installation__returns_repositories(
     # Then
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
-    assert "results" in response_json
-    assert len(response_json["results"]) == 1
+    assert response_json["results"] == [
+        {
+            "full_name": "owner/repo-name",
+            "id": 1,
+            "name": "repo-name",
+            "owner": {"login": "owner"},
+        }
+    ]
 
 
 @pytest.mark.parametrize(
