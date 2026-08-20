@@ -24,7 +24,11 @@ type UsageDashboardProps = {
 const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
   const [project, setProject] = useState<string | undefined>()
 
-  const { data: organisation } = useGetOrganisationQuery(
+  const {
+    data: organisation,
+    isError: organisationFailed,
+    isLoading: loadingOrganisation,
+  } = useGetOrganisationQuery(
     organisationId ? { id: organisationId } : skipToken,
   )
   const subscription = organisation?.subscription
@@ -35,8 +39,15 @@ const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
   const [chosenPeriod, setChosenPeriod] = useState<PeriodSelection>('default')
   const billingPeriod = resolvePeriod(chosenPeriod, hasBillingPeriod)
 
-  const { data, isError, isLoading } = useGetOrganisationUsageQuery(
-    organisationId
+  // Waits for the plan. Asking earlier would request the rolling window first,
+  // so a billed organisation would show the wrong period and then correct
+  // itself, at the cost of an extra request.
+  const {
+    data,
+    isError: usageFailed,
+    isLoading: loadingUsage,
+  } = useGetOrganisationUsageQuery(
+    organisationId && organisation
       ? {
           billing_period: billingPeriod,
           organisationId,
@@ -45,9 +56,12 @@ const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
         }
       : skipToken,
   )
-  const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery(
-    organisationId ? { id: organisationId } : skipToken,
-  )
+  // Its failure is not fatal: no metadata means no limit, which is what a
+  // self-hosted installation looks like, and the meter falls back to a count.
+  const { data: subscriptionMeta, isLoading: loadingLimit } =
+    useGetSubscriptionMetadataQuery(
+      organisationId ? { id: organisationId } : skipToken,
+    )
 
   const periods = periodsFor(hasBillingPeriod)
 
@@ -61,8 +75,8 @@ const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
       total={data?.totals?.total ?? 0}
       limit={subscriptionMeta?.max_api_calls}
       hasBillingPeriod={hasBillingPeriod}
-      isError={isError}
-      isLoading={isLoading}
+      isError={organisationFailed || usageFailed}
+      isLoading={loadingOrganisation || loadingUsage || loadingLimit}
       filters={
         <Row className='gap-2'>
           <div className='usage-dashboard__filter'>
