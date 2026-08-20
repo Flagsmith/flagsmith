@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 
+from django.core.exceptions import ObjectDoesNotExist
 from task_processor.decorators import (
     register_task_handler,
 )
@@ -131,6 +132,12 @@ def _get_feature_state_webhook_data(
         )
 
     assert feature_state.environment is not None
+
+    try:
+        feature_segment = feature_state.feature_segment
+    except ObjectDoesNotExist:
+        feature_segment = None
+
     return Webhook.generate_webhook_feature_state_data(
         feature_state.feature,
         environment=feature_state.environment,
@@ -138,7 +145,7 @@ def _get_feature_state_webhook_data(
         value=value,
         identity_id=feature_state.identity_id,
         identity_identifier=getattr(feature_state.identity, "identifier", None),
-        feature_segment=feature_state.feature_segment,
+        feature_segment=feature_segment,
         multivariate_feature_state_values=mv_values,
     )
 
