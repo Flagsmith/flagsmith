@@ -74,7 +74,7 @@ Attributes:
 ### `cohorts.cohort.created`
 
 Logged at `info` from:
- - `api/cohorts/services.py:100`
+ - `api/cohorts/services.py:111`
 
 Attributes:
  - `cohort.id`
@@ -86,7 +86,7 @@ Attributes:
 ### `cohorts.cohort.deleted`
 
 Logged at `info` from:
- - `api/cohorts/services.py:133`
+ - `api/cohorts/services.py:219`
 
 Attributes:
  - `cohort.id`
@@ -95,7 +95,7 @@ Attributes:
 ### `cohorts.cohort.deletion_requested`
 
 Logged at `info` from:
- - `api/cohorts/services.py:117`
+ - `api/cohorts/services.py:203`
 
 Attributes:
  - `cohort.id`
@@ -104,7 +104,7 @@ Attributes:
 ### `cohorts.membership.applied`
 
 Logged at `info` from:
- - `api/cohorts/services.py:69`
+ - `api/cohorts/services.py:77`
 
 Attributes:
  - `adds.count`
@@ -128,6 +128,19 @@ Logged at `warning` from:
 
 Attributes:
  - `cohort.id`
+
+### `cohorts.membership.deltas_received`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:168`
+ - `api/cohorts/services.py:187`
+
+Attributes:
+ - `action`
+ - `cohort.id`
+ - `deltas.count`
+ - `environment.id`
+ - `members.matched`
 
 ### `core.encrypted_field.decrypt_failed`
 
