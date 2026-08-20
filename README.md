@@ -16,21 +16,22 @@
   <a href="https://www.flagsmith.com/demo">Try our interactive demo </a>
 </p>
 
+# [Flagsmith](https://flagsmith.com/) is an Open-Source Feature Flagging Tool to Ship Faster & Control Releases
 
-# [Flagsmith](https://flagsmith.com/) is an Open-Source Feature Flagging Tool to Ship Faster & Control Releases 
+Change the way your team releases software. Roll out, segment, and optimise—with granular control. Stay secure with
+on-premise and private cloud hosting.
 
-Change the way your team releases software. Roll out, segment, and optimise—with granular control. Stay secure with on-premise and private cloud hosting. 
+- Feature flags: Release features behind the safety of a feature flag
+- Make changes remotely: Easily toggle individual features on and off, and make changes without deploying new code
+- A/B testing: Use segments to run A/B and multivariate tests on new features
+- Segments: Release features to beta testers, collect feedback, and iterate
+- Organisation management: Stay organised with orgs, projects, and roles for team members
+- SDKs & frameworks: Choose from 15+ popular languages like Typescript, .NET, Java, and more. Integrate with any
+  framework, including React, Next.js, and more
+- Integrations: Use your favourite tools with Flagsmith
 
-* Feature flags: Release features behind the safety of a feature flag
-* Make changes remotely: Easily toggle individual features on and off, and make changes without deploying new code
-* A/B testing: Use segments to run A/B and multivariate tests on new features
-* Segments: Release features to beta testers, collect feedback, and iterate 
-* Organisation management: Stay organised with orgs, projects, and roles for team members
-* SDKs & frameworks: Choose from 15+ popular languages like Typescript, .NET, Java, and more. Integrate with any framework, including React, Next.js, and more
-* Integrations: Use your favourite tools with Flagsmith
-
-Flagsmith makes it easy to create and manage feature flags across web, mobile, and server side applications. Just wrap
-a section of code with a flag, and then use Flagsmith to toggle that feature on or off for different environments, users
+Flagsmith makes it easy to create and manage feature flags across web, mobile, and server side applications. Just wrap a
+section of code with a flag, and then use Flagsmith to toggle that feature on or off for different environments, users
 or user segments.
 
 ## Get up and running in less than a minute:
@@ -50,9 +51,170 @@ Please go to the following page and choose a password: http://localhost:8000/pas
 
 ![Flagsmith Screenshot](static-files/screenshot.png)
 
+## Who uses Flagsmith
+
+<table>
+  <tbody>
+    <tr>
+      <td align="center" width="130">
+        <a href="https://connectwise.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/connectwise-dark.svg">
+            <img src="static-files/users/connectwise-light.svg" alt="ConnectWise" width="128">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://creditas.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/creditas-dark.svg">
+            <img src="static-files/users/creditas-light.svg" alt="Creditas" width="110">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://cytiva.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/cytiva-dark.svg">
+            <img src="static-files/users/cytiva-light.svg" alt="Cytiva" width="102">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://dfds.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/dfds-dark.svg">
+            <img src="static-files/users/dfds-light.svg" alt="DFDS" width="96">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://doist.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/doist-dark.svg">
+            <img src="static-files/users/doist-light.svg" alt="Doist" width="80">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://dpr.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/dpr-dark.svg">
+            <img src="static-files/users/dpr-light.svg" alt="DPR Construction" width="94">
+          </picture>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="130">
+        <a href="https://emerson.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/emerson-dark.png">
+            <img src="static-files/users/emerson-light.png" alt="Emerson" width="110">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://ford.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/ford-dark.png">
+            <img src="static-files/users/ford-light.png" alt="Ford" width="96">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://idexx.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/idexx-dark.svg">
+            <img src="static-files/users/idexx-light.svg" alt="IDEXX" width="97">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://libertyglobal.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/liberty-global-dark.svg">
+            <img src="static-files/users/liberty-global-light.svg" alt="Liberty Global" width="68">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://manomano.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/manomano-dark.svg">
+            <img src="static-files/users/manomano-light.svg" alt="ManoMano" width="114">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://sailpoint.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/sailpoint-dark.svg">
+            <img src="static-files/users/sailpoint-light.svg" alt="SailPoint" width="116">
+          </picture>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" width="130">
+        <a href="https://stingray.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/stingray-dark.svg">
+            <img src="static-files/users/stingray-light.svg" alt="Stingray" width="110">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://totvs.com.br/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/totvs-dark.svg">
+            <img src="static-files/users/totvs-light.svg" alt="TOTVS" width="114">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://trimble.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/trimble-dark.svg">
+            <img src="static-files/users/trimble-light.svg" alt="Trimble" width="114">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://varonis.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/varonis-dark.svg">
+            <img src="static-files/users/varonis-light.svg" alt="Varonis" width="118">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://vontobel.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/vontobel-dark.svg">
+            <img src="static-files/users/vontobel-light.svg" alt="Vontobel" width="112">
+          </picture>
+        </a>
+      </td>
+      <td align="center" width="130">
+        <a href="https://wistia.com/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="static-files/users/wistia-dark.svg">
+            <img src="static-files/users/wistia-light.svg" alt="Wistia" width="112">
+          </picture>
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+See [USERS.md](USERS.md) for the full list of companies using Flagsmith. If your company uses Flagsmith and you'd like
+to be listed, open a pull request adding yourself — and if you appear there and would rather not, open a PR or an issue
+and we will remove you straight away.
+
 ## Flagsmith Open Source
 
-We love contributions from the community and are always looking to improve! Here are our [contribution guidelines](https://docs.flagsmith.com/platform/contributing).
+We love contributions from the community and are always looking to improve! Here are our
+[contribution guidelines](https://docs.flagsmith.com/platform/contributing).
 
 ## Flagsmith hosted SaaS
 
@@ -60,25 +222,32 @@ You can try our hosted version for free at https://flagsmith.com
 
 ## Community Resources
 
-* [Visit our docs](https://docs.flagsmith.com/)
-* [Chat with other developers on Discord](https://discord.com/invite/hFhxNtXzgm)
-* If you need help getting up and running, please [get in touch](https://www.flagsmith.com/contact-us)
+- [Visit our docs](https://docs.flagsmith.com/)
+- [Chat with other developers on Discord](https://discord.com/invite/hFhxNtXzgm)
+- [Read our Code of Conduct](CODE_OF_CONDUCT.md)
+- If you need help getting up and running, please [get in touch](https://www.flagsmith.com/contact-us)
 
 ## Open Source Philosophy
 
-The majority of our platform is open source under the [BSD-3-Clause license](https://github.com/Flagsmith/flagsmith?tab=BSD-3-Clause-1-ov-file#readme). A small number of repositories are under the MIT license.
+The majority of our platform is open source under the
+[BSD-3-Clause license](https://github.com/Flagsmith/flagsmith?tab=BSD-3-Clause-1-ov-file#readme). A small number of
+repositories are under the MIT license.
 
-We built Flagsmith as the open source feature flag tool we needed but couldn't find on GitHub. Our core functionality stays open, always. Read our [open letter to developers](https://www.flagsmith.com/about-us).
+We built Flagsmith as the open source feature flag tool we needed but couldn't find on GitHub. Our core functionality
+stays open, always. Read our [open letter to developers](https://www.flagsmith.com/about-us).
 
 ## Open Source vs Paid
 
-With our core functionality being open, you can use our open-source feature flag and remote config management platform no matter what. Enterprise-level governance and management features are available with a valid Flagsmith Enterprise license.
+With our core functionality being open, you can use our open-source feature flag and remote config management platform
+no matter what. Enterprise-level governance and management features are available with a valid Flagsmith Enterprise
+license.
 
-To learn more, [contact us](https://www.flagsmith.com/contact-us) or see our [version comparison](https://docs.flagsmith.com/version-comparison).
+To learn more, [contact us](https://www.flagsmith.com/contact-us) or see our
+[version comparison](https://docs.flagsmith.com/version-comparison).
 
 ## Contributors
 
-Thank you to the open source community for your contributions and for building this with us!  
+Thank you to the open source community for your contributions and for building this with us!
 
 <a href="https://github.com/flagsmith/flagsmith/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=flagsmith/flagsmith" />
