@@ -22,6 +22,7 @@ const variantCards = (page: Page) => page.locator('#create-feature-modal .varian
 test.describe('Multivariate Options', () => {
   test('Repeated saves keep the variant set stable @oss', async ({ page }) => {
     const {
+      click,
       closeModal,
       createRemoteConfig,
       editRemoteConfig,
@@ -29,12 +30,30 @@ test.describe('Multivariate Options', () => {
       gotoFeatures,
       gotoProject,
       login,
+      waitForElementClickable,
       waitForElementNotExist,
+      waitForElementVisible,
     } = createHelpers(page);
 
     log('Login');
     await login(E2E_USER, PASSWORD);
     await gotoProject(E2E_TEST_PROJECT);
+
+    // Another suite creates CR_Test_Env in this shared project and it sorts
+    // ahead of Development, so it becomes the default selection. Saving in a
+    // change-request environment opens a change request instead of saving, so
+    // no toast ever arrives.
+    const isDevelopmentActive = await page
+      .locator(byId('switch-environment-development-active'))
+      .isVisible()
+      .catch(() => false);
+
+    if (!isDevelopmentActive) {
+      log('Switching to development first');
+      await waitForElementClickable(byId('switch-environment-development'));
+      await click(byId('switch-environment-development'));
+      await waitForElementVisible(byId('switch-environment-development-active'));
+    }
 
     log('Create multivariate flag');
     await createRemoteConfig({ name: 'mv_repeat_save', value: 'ctrl_value', mvs: [
@@ -69,13 +88,31 @@ test.describe('Multivariate Options', () => {
       gotoProject,
       login,
       setText,
+      waitForElementClickable,
       waitForElementNotExist,
+      waitForElementVisible,
       waitForToast,
     } = createHelpers(page);
 
     log('Login');
     await login(E2E_USER, PASSWORD);
     await gotoProject(E2E_TEST_PROJECT);
+
+    // Another suite creates CR_Test_Env in this shared project and it sorts
+    // ahead of Development, so it becomes the default selection. Saving in a
+    // change-request environment opens a change request instead of saving, so
+    // no toast ever arrives.
+    const isDevelopmentActive = await page
+      .locator(byId('switch-environment-development-active'))
+      .isVisible()
+      .catch(() => false);
+
+    if (!isDevelopmentActive) {
+      log('Switching to development first');
+      await waitForElementClickable(byId('switch-environment-development'));
+      await click(byId('switch-environment-development'));
+      await waitForElementVisible(byId('switch-environment-development-active'));
+    }
 
     log('Create multivariate flag');
     await createRemoteConfig({ name: 'mv_add_remove', value: 'root_val', mvs: [

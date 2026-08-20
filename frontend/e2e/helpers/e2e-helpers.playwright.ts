@@ -248,7 +248,8 @@ export class E2EHelpers {
     const userRow = this.page.locator('[data-test^="user-item-"]').filter({ hasText: identifier }).first();
     await userRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await userRow.locator('a').first().click();
-    await this.page.waitForLoadState('networkidle');
+    // No networkidle: it needs a 500ms lull in requests, which a page with
+    // polling never gets, and the wait below is the real signal anyway.
     await this.waitForElementVisible('#add-trait');
   }
 
