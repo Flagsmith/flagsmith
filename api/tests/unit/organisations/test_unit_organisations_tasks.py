@@ -39,6 +39,7 @@ from organisations.subscriptions.constants import (
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from organisations.task_helpers import (
     handle_api_usage_notification_for_organisation,
+    send_api_flags_blocked_notification,
 )
 from organisations.tasks import (  # type: ignore[attr-defined]
     ALERT_EMAIL_MESSAGE,
@@ -528,6 +529,45 @@ def test_handle_api_usage_notifications__usage_below_100_percent__sends_90_perce
         ).first()
         == api_usage_notification
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_handle_api_usage_notifications__no_admin_users__skips_notification(
+    mocker: MockerFixture,
+    mailoutbox: list[EmailMultiAlternatives],
+    log: StructuredLogCapture,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given - an organisation with no users
+    organisation = Organisation.objects.create(name="No Users Org")
+    now = timezone.now()
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=100,
+        current_billing_term_starts_at=now - timedelta(days=45),
+        current_billing_term_ends_at=now + timedelta(days=320),
+        api_calls_30d=91,
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.task_helpers.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 91
+    enable_features("api_usage_alerting")
+
+    # When
+    handle_api_usage_notifications()
+
+    # Then - no email sent, warning logged
+    assert len(mailoutbox) == 0
+    assert any(e.get("event") == "notification.no_recipients" for e in log.events)
+    assert OrganisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+        percent_usage=90,
+    ).exists()
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -2135,4 +2175,28 @@ def test_update_organisation_subscription_information_cache__called__calls_updat
         mocker.call(
             SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.API_USAGE
         )
+    ]
+
+
+@pytest.mark.django_db
+def test_send_api_flags_blocked_notification__no_recipients__skips_notification(
+    organisation: Organisation,
+    log: StructuredLogCapture,
+    mailoutbox: list[EmailMultiAlternatives],
+) -> None:
+    # Given
+    # Ensure no users are associated with the organisation
+    UserOrganisation.objects.filter(organisation=organisation).delete()
+
+    # When
+    send_api_flags_blocked_notification(organisation)
+
+    # Then
+    assert len(mailoutbox) == 0
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "notification.no_recipients_for_blocked_notification",
+            "organisation__id": organisation.id,
+        }
     ]
