@@ -52,17 +52,17 @@
         "type": "MULTIVARIATE"
       },
       "feature_segment": null,
-      "feature_state_value": null,
-      "featurestate_uuid": "b05bac5f-2172-42fc-85ec-841c045823c4",
+      "feature_state_value": "",
+      "featurestate_uuid": "844544cb-bd95-41c5-8755-f511a5fbfc4c",
       "multivariate_feature_state_values": [
         {
-          "id": 361128,
+          "id": 364746,
           "multivariate_feature_option": {
             "id": 30000,
             "key": "single_page",
             "value": ""
           },
-          "mv_fs_value_uuid": "c8e58a0d-d2b4-4d17-8a85-7ba2258a7812",
+          "mv_fs_value_uuid": "d5dc0913-af52-47df-a9a9-f43161a54cd0",
           "percentage_allocation": 0
         }
       ]
