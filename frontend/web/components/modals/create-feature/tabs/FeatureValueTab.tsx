@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
 import ValueEditor from 'components/ValueEditor'
 import Constants from 'common/constants'
@@ -17,6 +17,7 @@ import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import Utils from 'common/utils/utils'
 import {
   FeatureState,
+  FlagsmithValue,
   MultivariateOption,
   ProjectFlag,
 } from 'common/types/responses'
@@ -288,7 +289,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   // An override that predates the flag becoming multivariate holds a value the
   // control/variation radios cannot express, so surface it rather than letting
   // the control row imply the identity is on the environment default.
-  const unmatchedOverride =
+  const unmatchedOverrideSelected =
     !!identity &&
     hasVariations &&
     hasUnmatchedIdentityOverride({
@@ -296,8 +297,26 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
       overrideValue: featureState.feature_state_value ?? null,
       variationOverrides: identityVariations,
     })
-      ? { value: featureState.feature_state_value ?? null }
-      : undefined
+
+  // Picking a variation deselects the override but must not remove it: the
+  // value is only gone once saved, and until then it is what the user is
+  // choosing to replace — and the only way back if they change their mind.
+  // Latched rather than read once on mount, as the feature state loads async.
+  // `null` is a valid override value, so the latch is keyed on `undefined`.
+  const unmatchedOverrideValue = useRef<FlagsmithValue | undefined>(undefined)
+  if (
+    unmatchedOverrideSelected &&
+    unmatchedOverrideValue.current === undefined
+  ) {
+    unmatchedOverrideValue.current = featureState.feature_state_value ?? null
+  }
+  const unmatchedOverride =
+    unmatchedOverrideValue.current === undefined
+      ? undefined
+      : {
+          selected: unmatchedOverrideSelected,
+          value: unmatchedOverrideValue.current,
+        }
 
   if (compareOpen && canCompareValue && environmentId) {
     return (
@@ -430,7 +449,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         <div>
           <FormGroup className='mb-4'>
             {variationsInfo}
-            {!!unmatchedOverride && (
+            {unmatchedOverrideSelected && (
               <WarningMessage warningMessage="This identity override contains a value that is not one of this flag's variations. We recommend changing it." />
             )}
             <VariationOptions

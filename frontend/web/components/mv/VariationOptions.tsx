@@ -23,9 +23,9 @@ interface VariationOptionsProps {
   removeVariation: (i: number) => void
   select?: boolean
   // An override value that is neither the control value nor one of the
-  // variations. Shown read-only and selected, so the identity does not read as
-  // being on the control value.
-  unmatchedOverride?: { value: FlagsmithValue }
+  // variations. Shown read-only, so the identity does not read as being on the
+  // control value. Stays listed once deselected — it is only gone on save.
+  unmatchedOverride?: { selected: boolean; value: FlagsmithValue }
   setValue: (value: FlagsmithValue) => void
   setVariations: (variations: VariationOverride[]) => void
   unsavedVariations?: boolean[]
@@ -61,7 +61,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
     return null
   }
   const controlSelected =
-    !unmatchedOverride &&
+    !unmatchedOverride?.selected &&
     (!variationOverrides ||
       !variationOverrides.find((v) => v.percentage_allocation === 100))
   return (
@@ -82,7 +82,17 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
                   value={Utils.getTypedValue(unmatchedOverride.value)}
                 />
               </Flex>
-              <div className='btn-radio btn-radio-on ml-2' />
+              <div
+                data-test='select-unmatched-override'
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                  setVariations([])
+                  setValue?.(unmatchedOverride.value)
+                }}
+                className={`btn-radio ml-2 ${
+                  unmatchedOverride.selected ? 'btn-radio-on' : ''
+                }`}
+              />
             </Row>
           </div>
         </div>

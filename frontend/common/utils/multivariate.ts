@@ -13,6 +13,11 @@ export const getDefaultVariantKey = (index: number): string =>
 // the control row reads as selected and the identity looks like it is on the
 // environment default. Detect it so the editor can show the value, and so
 // saving does not quietly replace it with the control value.
+//
+// Reads the current editor state, so it goes false as soon as the user picks
+// the control or a variation. That drives which row is selected and what save
+// writes; whether the row is listed at all is latched separately, as the value
+// is only gone once saved.
 export const hasUnmatchedIdentityOverride = ({
   controlValue,
   overrideValue,
