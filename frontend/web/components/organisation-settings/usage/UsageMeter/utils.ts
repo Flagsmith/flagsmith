@@ -1,5 +1,5 @@
 import Format from 'common/utils/format'
-import { usagePercent } from 'components/shared/UsageBar/utils'
+import { PlanLimit, usagePercent } from 'components/shared/UsageBar/utils'
 
 export type MeterCopy = {
   /** The oversized figure: a percentage, or the count when there is no limit. */
@@ -28,7 +28,5 @@ const withoutLimit = (total: number): MeterCopy => ({
  * Without a limit there is nothing to divide by, so the meter falls back to
  * reporting the raw count. One branch, so the two readings cannot drift apart.
  */
-export const meterCopy = (
-  total: number,
-  limit: number | null | undefined,
-): MeterCopy => (limit ? withLimit(total, limit) : withoutLimit(total))
+export const meterCopy = (total: number, limit: PlanLimit): MeterCopy =>
+  limit ? withLimit(total, limit) : withoutLimit(total)

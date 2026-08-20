@@ -1,7 +1,11 @@
 import { FC, ReactNode } from 'react'
 import Format from 'common/utils/format'
 import UsageBar from 'components/shared/UsageBar'
-import { toneFor, usagePercent } from 'components/shared/UsageBar/utils'
+import {
+  PlanLimit,
+  toneFor,
+  usagePercent,
+} from 'components/shared/UsageBar/utils'
 import { meterCopy } from './utils'
 import './UsageMeter.scss'
 
@@ -12,7 +16,7 @@ const NOTIFICATION_THRESHOLDS = [WARN_AT, 100]
 
 export type UsageMeterProps = {
   total: number
-  limit: number | null | undefined
+  limit: PlanLimit
   /** Explains the numbers underneath. Filled in by #8187 and #8188. */
   note?: ReactNode
 }

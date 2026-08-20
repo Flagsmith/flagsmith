@@ -2,6 +2,7 @@ import { FC, useMemo } from 'react'
 import { Res } from 'common/types/responses'
 import { colorSurfaceAction } from 'common/theme/tokens'
 import EmptyState from 'components/EmptyState'
+import { PlanLimit } from 'components/shared/UsageBar/utils'
 import BarChart from 'components/charts/BarChart'
 import LineChart from 'components/charts/LineChart'
 import {
@@ -13,7 +14,7 @@ import {
 
 type UsageOverTimeProps = {
   data: Res['organisationUsage'] | undefined
-  limit: number | null | undefined
+  limit: PlanLimit
   isBillingPeriod: boolean
 }
 

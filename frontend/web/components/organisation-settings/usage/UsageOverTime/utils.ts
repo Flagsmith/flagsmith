@@ -2,6 +2,7 @@ import moment from 'moment'
 import { Res } from 'common/types/responses'
 import { colorBorderDanger } from 'common/theme/tokens'
 import Format from 'common/utils/format'
+import { PlanLimit } from 'components/shared/UsageBar/utils'
 
 export type DailyPoint = { day: string; total: number }
 export type CumulativePoint = { day: string; cumulative: number }
@@ -44,7 +45,7 @@ export const cumulativeTotals = (daily: DailyPoint[]): CumulativePoint[] => {
  * Uses the border token, not the text one: the text intents are darkened in
  * light mode for contrast and shift between themes.
  */
-export const planLimitThreshold = (limit: number | null | undefined) =>
+export const planLimitThreshold = (limit: PlanLimit) =>
   limit
     ? {
         colour: colorBorderDanger,

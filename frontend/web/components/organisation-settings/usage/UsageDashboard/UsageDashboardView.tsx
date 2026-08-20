@@ -1,11 +1,12 @@
 import { FC, ReactNode } from 'react'
 import { Res } from 'common/types/responses'
+import { PlanLimit } from 'components/shared/UsageBar/utils'
 import UsageDashboardBody from './UsageDashboardBody'
 
 export type UsageDashboardViewProps = {
   data: Res['organisationUsage'] | undefined
   total: number
-  limit: number | null | undefined
+  limit: PlanLimit
   /**
    * Whether the selected period accumulates towards the limit. False for the
    * rolling windows, and for any plan without a billing term.

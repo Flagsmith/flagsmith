@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { Res } from 'common/types/responses'
+import { PlanLimit } from 'components/shared/UsageBar/utils'
 import EmptyState from 'components/EmptyState'
 import UsageMeter from 'components/organisation-settings/usage/UsageMeter'
 import UsageOverTime from 'components/organisation-settings/usage/UsageOverTime'
@@ -7,7 +8,7 @@ import UsageOverTime from 'components/organisation-settings/usage/UsageOverTime'
 export type UsageDashboardBodyProps = {
   data: Res['organisationUsage'] | undefined
   total: number
-  limit: number | null | undefined
+  limit: PlanLimit
   hasBillingPeriod: boolean
   isError?: boolean
   isLoading?: boolean
