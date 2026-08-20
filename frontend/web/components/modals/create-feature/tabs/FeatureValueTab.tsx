@@ -17,12 +17,12 @@ import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import Utils from 'common/utils/utils'
 import {
   FeatureState,
-  FlagsmithValue,
   MultivariateOption,
   ProjectFlag,
 } from 'common/types/responses'
 import {
   hasUnmatchedIdentityOverride,
+  LatchedOverrideValue,
   resolveUnmatchedOverride,
 } from 'common/utils/multivariate'
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
@@ -304,7 +304,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   // Held in a ref rather than read once on mount, as the feature state loads
   // async — there is no single render at which the override is known to be
   // there. See resolveUnmatchedOverride for why presence outlives selection.
-  const latchedOverrideValue = useRef<FlagsmithValue | undefined>(undefined)
+  const latchedOverrideValue = useRef<LatchedOverrideValue>(undefined)
   const unmatchedOverride = resolveUnmatchedOverride({
     isSelected: unmatchedOverrideSelected,
     latchedValue: latchedOverrideValue.current,

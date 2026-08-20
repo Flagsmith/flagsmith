@@ -18,6 +18,24 @@ export const getDefaultVariantKey = (index: number): string =>
 // the control or a variation. That drives which row is selected and what save
 // writes; whether the row is listed at all is latched separately, as the value
 // is only gone once saved.
+// Only the allocation matters here: a variation pinned at 100% is what makes
+// an override expressible as a variation rather than a free-form value.
+export type VariationOverrides =
+  | { percentage_allocation: number }[]
+  | null
+  | undefined
+
+// An override the variation radios cannot express, and whether it is still the
+// value in play.
+export type UnmatchedOverride = {
+  selected: boolean
+  value: FlagsmithValue
+}
+
+// What a previous resolve latched: undefined until an unmatched override has
+// been seen at all.
+export type LatchedOverrideValue = FlagsmithValue | undefined
+
 export const hasUnmatchedIdentityOverride = ({
   controlValue,
   overrideValue,
@@ -25,7 +43,7 @@ export const hasUnmatchedIdentityOverride = ({
 }: {
   controlValue: FlagsmithValue
   overrideValue: FlagsmithValue
-  variationOverrides: { percentage_allocation: number }[] | null | undefined
+  variationOverrides: VariationOverrides
 }): boolean =>
   !variationOverrides?.some(
     (variation) => variation.percentage_allocation === 100,
@@ -43,9 +61,9 @@ export const resolveUnmatchedOverride = ({
   overrideValue,
 }: {
   isSelected: boolean
-  latchedValue: FlagsmithValue | undefined
+  latchedValue: LatchedOverrideValue
   overrideValue: FlagsmithValue
-}): { selected: boolean; value: FlagsmithValue } | undefined => {
+}): UnmatchedOverride | undefined => {
   // `null` is a valid override value, so the latch is keyed on `undefined`.
   const value =
     latchedValue === undefined && isSelected ? overrideValue : latchedValue

@@ -4,6 +4,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
 import Utils from 'common/utils/utils'
 import { FlagsmithValue, MultivariateOption } from 'common/types/responses'
+import { UnmatchedOverride } from 'common/utils/multivariate'
 
 type VariationOverride = {
   id?: number
@@ -25,7 +26,7 @@ interface VariationOptionsProps {
   // An override value that is neither the control value nor one of the
   // variations. Shown read-only, so the identity does not read as being on the
   // control value. Stays listed once deselected — it is only gone on save.
-  unmatchedOverride?: { selected: boolean; value: FlagsmithValue }
+  unmatchedOverride?: UnmatchedOverride
   setValue: (value: FlagsmithValue) => void
   setVariations: (variations: VariationOverride[]) => void
   unsavedVariations?: boolean[]
