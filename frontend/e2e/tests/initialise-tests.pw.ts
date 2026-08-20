@@ -30,13 +30,9 @@ test.describe('Signup', () => {
     await setText(byId('email'), E2E_SIGN_UP_USER);
     await setText(byId('password'), PASSWORD);
     await click(byId('signup-btn'));
-    // The app decides between the legacy /create page and the single-page flow
-    // at /getting-started (onboarding_quickstart_flow). It reads that flag
-    // under a per-signup identity, so a percentage rollout lands differently
-    // run to run and cannot be predicted here: `hasFeature` in this process
-    // has no identity and only ever sees the environment default. Wait for
-    // whichever redirect happened, then bow out if it isn't ours; the
-    // single-page flow is covered by onboarding-tests.
+    // Which flow we get cannot be decided before signing up: the app reads
+    // onboarding_quickstart_flow under a per-signup identity, while
+    // `hasFeature` here has none and only sees the environment default.
     await page.waitForURL(/\/(create|getting-started)/, { timeout: 20000 });
     test.skip(
       new URL(page.url()).pathname.startsWith('/getting-started'),
