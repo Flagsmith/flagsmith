@@ -7,13 +7,12 @@ on:
 
 permissions:
   contents: read
+  id-token: write # For the Flagsmith trust relationship
 
 jobs:
   update_server_defaults:
     runs-on: depot-ubuntu-latest
     name: Update API Flagsmith Defaults
-    env:
-      FLAGSMITH_API_KEY: ${{ secrets.FLAGSMITH_API_KEY }}
 
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -30,7 +29,7 @@ jobs:
           permission-pull-requests: write
 
       - name: Install Flagsmith CLI
-        run: curl -fsSL https://raw.githubusercontent.com/Flagsmith/flagsmith-cli/main/install.sh | sh
+        uses: Flagsmith/setup-cli@c7154aaa37dff8aca0b66afc1e6722e7ad00c115 # v1.0.0
 
       - name: Update defaults
         run: make -C api update-flagsmith-environment
