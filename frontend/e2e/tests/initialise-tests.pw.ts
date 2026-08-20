@@ -13,15 +13,6 @@ test.describe('Signup', () => {
     const { addErrorLogging, click, logout, setText, waitForElementVisible } = createHelpers(page);
     const flagsmith = await getFlagsmith();
 
-    // The new single-page onboarding flow (onboarding_quickstart_flow) replaces
-    // the legacy getting-started page that this test drives, so the legacy
-    // signup-to-integration-to-project path doesn't exist when the flag is on.
-    // Skip it in that case; the new flow gets its own coverage.
-    test.skip(
-      flagsmith.hasFeature('onboarding_quickstart_flow'),
-      'Legacy signup flow superseded by onboarding_quickstart_flow',
-    );
-
     // Add error logging
     await addErrorLogging();
 
@@ -39,8 +30,18 @@ test.describe('Signup', () => {
     await setText(byId('email'), E2E_SIGN_UP_USER);
     await setText(byId('password'), PASSWORD);
     await click(byId('signup-btn'));
-    // Wait for navigation and form to load after signup
-    await page.waitForURL(/\/create/, { timeout: 20000 });
+    // The app decides between the legacy /create page and the single-page flow
+    // at /getting-started (onboarding_quickstart_flow). It reads that flag
+    // under a per-signup identity, so a percentage rollout lands differently
+    // run to run and cannot be predicted here: `hasFeature` in this process
+    // has no identity and only ever sees the environment default. Wait for
+    // whichever redirect happened, then bow out if it isn't ours; the
+    // single-page flow is covered by onboarding-tests.
+    await page.waitForURL(/\/(create|getting-started)/, { timeout: 20000 });
+    test.skip(
+      new URL(page.url()).pathname.startsWith('/getting-started'),
+      'Signup entered the single-page onboarding flow',
+    );
     await waitForElementVisible('[name="orgName"]');
     await visualSnapshot(page, 'create-organisation', testInfo)
 
