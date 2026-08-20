@@ -30,8 +30,9 @@ test.describe('Signup', () => {
     await setText(byId('email'), E2E_SIGN_UP_USER);
     await setText(byId('password'), PASSWORD);
     await click(byId('signup-btn'));
-    // onboarding_quickstart_flow buckets on an identity the API assigns, while
-    // `hasFeature` here identifies nobody and only sees the environment default.
+    // onboarding_quickstart_flow buckets per organisation, on an identifier
+    // created at signup. `hasFeature` here identifies nobody, so it only ever
+    // sees the environment default.
     await page.waitForURL(
       (url) => url.pathname === '/create' || url.pathname === '/getting-started',
       { timeout: 20000 },
