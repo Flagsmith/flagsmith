@@ -657,10 +657,10 @@ def test_fetch_repositories__valid_installation__returns_repositories(
         json={
             "repositories": [
                 {
-                    "full_name": "owner/repo-name",
+                    "full_name": "acme-inc/my-repo",
                     "id": 1,
-                    "name": "repo-name",
-                    "owner": {"login": "owner"},
+                    "name": "my-repo",
+                    "owner": {"login": "acme-inc"},
                 },
             ],
             "total_count": 1,
@@ -680,10 +680,10 @@ def test_fetch_repositories__valid_installation__returns_repositories(
     response_json = response.json()
     assert response_json["results"] == [
         {
-            "full_name": "owner/repo-name",
+            "full_name": "acme-inc/my-repo",
             "id": 1,
-            "name": "repo-name",
-            "owner": {"login": "owner"},
+            "name": "my-repo",
+            "owner": {"login": "acme-inc"},
         }
     ]
 
