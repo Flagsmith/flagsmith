@@ -1,8 +1,13 @@
+import pytest
+from django.db import IntegrityError, OperationalError
+from django.db.transaction import TransactionManagementError
 from pytest_mock import MockerFixture
+from task_processor.exceptions import TaskBackoffError
 
 from audit.models import AuditLog
 from environments.models import Environment
 from environments.tasks import (
+    delete_environment,
     delete_environment_from_dynamo,
     process_environment_update,
     rebuild_environment_document,
@@ -117,3 +122,66 @@ def test_delete_environment_from_dynamo__valid_environment__calls_all_wrappers(
     mocked_identity_wrapper.delete_all_identities.assert_called_once_with(
         environment_api_key
     )
+
+
+@pytest.mark.django_db
+def test_delete_environment__environment_does_not_exist__succeeds_silently(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_get_environment = mocker.patch("environments.tasks.Environment.objects.get")
+    mock_get_environment.side_effect = Environment.DoesNotExist
+
+    # When
+    delete_environment(environment_id=1)
+
+    # Then
+    mock_get_environment.assert_called_once_with(id=1)
+
+
+@pytest.mark.django_db
+def test_delete_environment__database_deadlock__raises_task_backoff_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_get_environment = mocker.patch("environments.tasks.Environment.objects.get")
+    mock_get_environment.side_effect = OperationalError
+
+    # When
+    with pytest.raises(TaskBackoffError):
+        delete_environment(environment_id=1)
+
+    # Then
+    mock_get_environment.assert_called_once_with(id=1)
+
+
+@pytest.mark.django_db
+def test_delete_environment__integrity_error__raises_task_backoff_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_get_environment = mocker.patch("environments.tasks.Environment.objects.get")
+    mock_get_environment.side_effect = IntegrityError
+
+    # When
+    with pytest.raises(TaskBackoffError):
+        delete_environment(environment_id=1)
+
+    # Then
+    mock_get_environment.assert_called_once_with(id=1)
+
+
+@pytest.mark.django_db
+def test_delete_environment__transaction_management_error__raises_task_backoff_error(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_get_environment = mocker.patch("environments.tasks.Environment.objects.get")
+    mock_get_environment.side_effect = TransactionManagementError
+
+    # When
+    with pytest.raises(TaskBackoffError):
+        delete_environment(environment_id=1)
+
+    # Then
+    mock_get_environment.assert_called_once_with(id=1)
