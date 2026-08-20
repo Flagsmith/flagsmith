@@ -1,0 +1,10 @@
+.usage-bar {
+  // Room above the track for the threshold labels.
+  &__wrap {
+    padding-top: 22px;
+  }
+
+  &__track {
+    height: 8px;
+  }
+}
