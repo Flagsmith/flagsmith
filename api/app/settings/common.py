@@ -928,6 +928,7 @@ DJOSER = {
     "PASSWORD_RESET_CONFIRM_URL": "password-reset/confirm/{uid}/{token}",
     # if True user required to click activation link in email to activate account
     "SEND_ACTIVATION_EMAIL": env.bool("ENABLE_EMAIL_ACTIVATION", default=False),
+    "EMAIL_FRONTEND_DOMAIN": env.str("FLAGSMITH_DOMAIN", default=""),
     # FE uri to redirect user to from activation email
     "ACTIVATION_URL": "activate/{uid}/{token}",
     # register or activation endpoint will send confirmation email to user
