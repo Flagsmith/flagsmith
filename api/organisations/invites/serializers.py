@@ -16,4 +16,11 @@ class InviteListSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
 
     class Meta:
         model = Invite
-        fields = ("id", "email", "date_created", "invited_by", "permission_groups")
+        fields = (
+            "id",
+            "email",
+            "date_created",
+            "invited_by",
+            "permission_groups",
+            "role",
+        )

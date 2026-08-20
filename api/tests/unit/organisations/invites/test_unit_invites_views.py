@@ -305,6 +305,41 @@ def test_retrieve_invite__valid_invite__returns_200(  # type: ignore[no-untyped-
     response = admin_client.get(url)
     # Then
     assert response.status_code == status.HTTP_200_OK
+    assert response.json()["role"] == invite.role
+
+
+def test_list_invites__returns_role_for_each_invite(
+    admin_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    Invite.objects.create(
+        organisation=organisation,
+        email="admin-invite@example.com",
+        role=OrganisationRole.ADMIN.name,
+    )
+    Invite.objects.create(
+        organisation=organisation,
+        email="user-invite@example.com",
+        role=OrganisationRole.USER.name,
+    )
+    url = reverse(
+        "api-v1:organisations:organisation-invites-list",
+        args=[organisation.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    roles_by_email = {
+        invite["email"]: invite["role"] for invite in response.json()["results"]
+    }
+    assert roles_by_email == {
+        "admin-invite@example.com": OrganisationRole.ADMIN.name,
+        "user-invite@example.com": OrganisationRole.USER.name,
+    }
 
 
 def test_delete_invite__valid_invite__returns_204(  # type: ignore[no-untyped-def]
