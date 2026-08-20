@@ -448,8 +448,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.is_valid(raise_exception=True)
         self._validate_owner_removal(
             feature,
-            owners_to_remove=0,
-            group_owners_to_remove=len(serializer.validated_data["group_ids"]),
+            group_ids_to_remove=serializer.validated_data["group_ids"],
         )
         serializer.remove_group_owners(feature)
         response = Response(self.get_serializer(instance=feature).data)
@@ -486,8 +485,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         feature = self.get_object()
         self._validate_owner_removal(
             feature,
-            owners_to_remove=len(serializer.validated_data["user_ids"]),
-            group_owners_to_remove=0,
+            user_ids_to_remove=serializer.validated_data["user_ids"],
         )
         serializer.remove_users(feature)
 
@@ -496,11 +494,15 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def _validate_owner_removal(
         self,
         feature: Feature,
-        owners_to_remove: int,
-        group_owners_to_remove: int,
+        user_ids_to_remove: typing.Iterable[int] = (),
+        group_ids_to_remove: typing.Iterable[int] = (),
     ) -> None:
         if not feature.project.enforce_feature_owners:
             return
+        owners_to_remove = feature.owners.filter(id__in=user_ids_to_remove).count()
+        group_owners_to_remove = feature.group_owners.filter(
+            id__in=group_ids_to_remove
+        ).count()
         remaining = (
             feature.owners.count()
             - owners_to_remove
