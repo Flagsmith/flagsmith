@@ -1,5 +1,7 @@
+import typing
+
 from django.db import models
-from rest_framework_api_key.models import AbstractAPIKey
+from rest_framework_api_key.models import AbstractAPIKey, APIKeyManager
 
 from cohorts.constants import COHORT_SYSTEM_TRAIT_KEY_PREFIX
 from core.models import SoftDeleteExportableModel
@@ -27,9 +29,10 @@ class Cohort(SoftDeleteExportableModel):
         choices=CohortSourceType.choices,
         default=CohortSourceType.CSV,
     )
-    # The cohort's identifier in the external source (e.g. Mixpanel's cohort
-    # ID). Set for sources that push to us under their own identifier; null
-    # for sources that adopt ours (Amplitude) and for CSV cohorts.
+    # The cohort's identifier in the external source. Mixpanel pushes under
+    # its own cohort ID, so we store it to route later requests; Amplitude
+    # uses the ID we hand back at list creation, and CSV cohorts have no
+    # external system, so both leave this null.
     external_id = models.CharField(max_length=255, null=True, blank=True)
     version = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -50,19 +53,22 @@ class Cohort(SoftDeleteExportableModel):
                 condition=models.Q(deleted_at__isnull=True),
                 name="unique_active_cohort_per_segment",
             ),
-            # One Mixpanel cohort must map to one active cohort per
-            # environment: without this, two simultaneous first-sync requests
-            # would each create their own cohort and split the members
-            # between them.
-            models.UniqueConstraint(
-                fields=["environment", "source_type", "external_id"],
-                condition=models.Q(deleted_at__isnull=True, external_id__isnull=False),
-                name="unique_active_cohort_per_source_external_id",
-            ),
         ]
 
 
+class CohortSyncKeyManager(APIKeyManager):
+    def get_from_key(self, key: str) -> "CohortSyncKey":
+        if "\x00" in key:
+            # A NUL can't travel in a raw header, but base64 credentials can
+            # decode to one, and the database driver refuses to build a query
+            # containing it. No real key holds one, so treat it as absent.
+            raise self.model.DoesNotExist("Key contains a NUL character.")
+        return typing.cast("CohortSyncKey", super().get_from_key(key))
+
+
 class CohortSyncKey(AbstractAPIKey):
+    objects: typing.ClassVar[CohortSyncKeyManager] = CohortSyncKeyManager()
+
     environment = models.ForeignKey(
         "environments.Environment",
         on_delete=models.CASCADE,

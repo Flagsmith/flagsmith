@@ -86,7 +86,7 @@ Attributes:
 ### `cohorts.cohort.deleted`
 
 Logged at `info` from:
- - `api/cohorts/services.py:276`
+ - `api/cohorts/services.py:244`
 
 Attributes:
  - `cohort.id`
@@ -95,7 +95,7 @@ Attributes:
 ### `cohorts.cohort.deletion_requested`
 
 Logged at `info` from:
- - `api/cohorts/services.py:260`
+ - `api/cohorts/services.py:228`
 
 Attributes:
  - `cohort.id`
@@ -132,8 +132,8 @@ Attributes:
 ### `cohorts.membership.deltas_received`
 
 Logged at `info` from:
- - `api/cohorts/services.py:225`
- - `api/cohorts/services.py:244`
+ - `api/cohorts/services.py:193`
+ - `api/cohorts/services.py:212`
 
 Attributes:
  - `action`
