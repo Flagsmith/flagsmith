@@ -3,18 +3,4 @@
   &__wrap {
     padding-top: 22px;
   }
-
-  &__track {
-    height: 8px;
-  }
-
-  // The width changes when the period or project filter changes. Easing it
-  // stops the bar jumping to the new value.
-  &__fill {
-    transition: width var(--duration-slow) var(--easing-standard);
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: none;
-    }
-  }
 }

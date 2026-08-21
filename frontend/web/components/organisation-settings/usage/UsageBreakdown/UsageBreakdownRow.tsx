@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import Format from 'common/utils/format'
 import { colorSurfaceAction } from 'common/theme/tokens'
+import BarTrack from 'components/shared/BarTrack'
 import './UsageBreakdownRow.scss'
 
 export type UsageBreakdownRowProps = {
@@ -10,6 +11,8 @@ export type UsageBreakdownRowProps = {
   largest: number
   /** Everything in the breakdown, so the row can state its share. */
   total: number
+  /** Kept from the old usage page so the four request types stay recognisable. */
+  colour?: string
 }
 
 const share = (value: number, total: number) =>
@@ -21,28 +24,33 @@ const share = (value: number, total: number) =>
  * this", and a single bar cannot say both.
  */
 const UsageBreakdownRow: FC<UsageBreakdownRowProps> = ({
+  colour,
   label,
   largest,
   total,
   value,
 }) => (
-  <div className='usage-breakdown-row'>
-    <div className='usage-breakdown-row__label'>{label}</div>
-
-    <div className='usage-breakdown-row__track rounded-full overflow-hidden bg-surface-muted'>
-      <div
-        className='usage-breakdown-row__fill h-100 rounded-full'
-        style={{
-          background: colorSurfaceAction,
-          width: `${share(value, largest)}%`,
-        }}
-      />
+  <div className='usage-breakdown-row d-flex align-items-center gap-3 border-top border-default'>
+    <div className='usage-breakdown-row__label d-flex align-items-center gap-2'>
+      {colour && (
+        <span
+          className='usage-breakdown-row__swatch rounded-sm'
+          style={{ background: colour }}
+        />
+      )}
+      {label}
     </div>
 
-    <div className='usage-breakdown-row__value fw-bold'>
+    <BarTrack
+      className='usage-breakdown-row__track'
+      percent={share(value, largest)}
+      colour={colour ?? colorSurfaceAction}
+    />
+
+    <div className='usage-breakdown-row__value text-end fw-bold'>
       {Format.shortenNumber(value)}
     </div>
-    <div className='usage-breakdown-row__share fs-captionSmall text-secondary'>
+    <div className='usage-breakdown-row__share text-end fs-captionSmall text-secondary'>
       {share(value, total)}%
     </div>
   </div>

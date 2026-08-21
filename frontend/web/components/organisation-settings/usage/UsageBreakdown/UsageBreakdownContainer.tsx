@@ -1,4 +1,5 @@
 import { FC, useMemo, useState } from 'react'
+import { skipToken } from '@reduxjs/toolkit/query'
 import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import { useGetProjectsQuery } from 'common/services/useProject'
@@ -26,17 +27,16 @@ const UsageBreakdownContainer: FC<UsageBreakdownContainerProps> = ({
   const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
 
   const { data: projects } = useGetProjectsQuery(
-    { organisationId },
-    { skip: dimension !== 'project' },
+    dimension === 'project' ? { organisationId } : skipToken,
   )
   const { data: environments } = useGetEnvironmentsQuery(
-    { projectId: projectId as number },
-    { skip: dimension !== 'environment' || !projectId },
+    dimension === 'environment' && projectId ? { projectId } : skipToken,
   )
 
   const scopes: UsageScope[] = useMemo(() => {
     if (dimension === 'project') {
       return (projects ?? []).map((project) => ({
+        key: `project-${project.id}`,
         label: project.name,
         projectId: project.id,
       }))
@@ -44,13 +44,17 @@ const UsageBreakdownContainer: FC<UsageBreakdownContainerProps> = ({
     if (dimension === 'environment') {
       return (environments?.results ?? []).map((environment) => ({
         environmentId: environment.api_key,
+        key: `environment-${environment.api_key}`,
         label: environment.name,
       }))
     }
     return []
   }, [dimension, projects, environments])
 
-  const scoped = useScopedBreakdown(scopes)
+  const scoped = useScopedBreakdown(
+    scopes,
+    `${dimension}|${billingPeriod ?? 'rolling'}|${projectId ?? 'all'}`,
+  )
 
   const rows = useMemo(() => {
     if (dimension === 'request-type') return byRequestType(data)
@@ -65,7 +69,7 @@ const UsageBreakdownContainer: FC<UsageBreakdownContainerProps> = ({
       {!needsProject &&
         scopes.map((scope) => (
           <UsageScopeTotal
-            key={scope.label}
+            key={scope.key}
             organisationId={organisationId}
             billingPeriod={billingPeriod}
             scope={scope}
@@ -77,7 +81,7 @@ const UsageBreakdownContainer: FC<UsageBreakdownContainerProps> = ({
         dimension={dimension}
         onChangeDimension={setDimension}
         rows={rows}
-        isLoading={!!scopes.length && scoped.isLoading}
+        isLoading={scoped.isLoading}
         needsProject={needsProject}
       />
     </>
