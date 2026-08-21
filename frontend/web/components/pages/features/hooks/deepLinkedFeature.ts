@@ -1,4 +1,5 @@
-import type { FeatureState } from 'common/types/responses'
+import Utils from 'common/utils/utils'
+import type { FeatureState, FeatureStateValue } from 'common/types/responses'
 
 /**
  * Decides whether the `?feature=` deep link targets a feature that is NOT on the
@@ -26,13 +27,35 @@ export function shouldDeepFetchFeature(args: {
 }
 
 /** Pick the environment feature state matching `featureId`, falling back to the
- * first result, or `undefined` when there is none. */
+ * first result, or `undefined` when there is none.
+ *
+ * `features/featurestates/` serialises `feature_state_value` as a nested
+ * `{type, string_value, ...}` object, whereas the paginated feature list
+ * flattens it to a scalar. Normalise to the scalar here so the slideout gets
+ * the same shape whichever path opened it — otherwise the value editor
+ * stringifies the object and renders `[object Object]`.
+ *
+ * ponytail: normalising at this boundary mirrors ConnectedFeatureOverrideRow.
+ * The deeper fix is typing this endpoint's response separately from
+ * `FeatureState` so the mismatch can't go unnoticed again.
+ */
 export function pickEnvironmentFlag(
   results: FeatureState[] | undefined,
   featureId: number,
 ): FeatureState | undefined {
-  return (
+  const featureState =
     results?.find((featureState) => featureState.feature === featureId) ??
     results?.[0]
-  )
+  if (!featureState) {
+    return featureState
+  }
+  return {
+    ...featureState,
+    // `?? null` because featureStateToValue returns undefined for an
+    // unrecognised shape, and FlagsmithValue has no undefined.
+    feature_state_value:
+      Utils.featureStateToValue(
+        featureState.feature_state_value as unknown as FeatureStateValue,
+      ) ?? null,
+  }
 }
