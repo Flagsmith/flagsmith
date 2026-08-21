@@ -1,5 +1,36 @@
 # Changelog
 
+## [2.265.0](https://github.com/Flagsmith/flagsmith/compare/v2.264.0...v2.265.0) (2026-08-21)
+
+
+### Features
+
+* Add EMAIL_FRONTEND_DOMAIN override to Djoser ([#8329](https://github.com/Flagsmith/flagsmith/issues/8329)) ([fe16f9b](https://github.com/Flagsmith/flagsmith/commit/fe16f9bd98e1292b65b516e84d2c78b015a5b985))
+* **OIDC:** stack the issuer and audience in one column ([#8324](https://github.com/Flagsmith/flagsmith/issues/8324)) ([34b9e67](https://github.com/Flagsmith/flagsmith/commit/34b9e67814b5b021327f4dd727b039e3ec85f407))
+
+
+### Bug Fixes
+
+* **ci:** Update API Flagsmith Defaults fails with jq compile errors ([#8333](https://github.com/Flagsmith/flagsmith/issues/8333)) ([4eeec59](https://github.com/Flagsmith/flagsmith/commit/4eeec597f04503f4e81392d109edaacd00aa1e54))
+* **e2e:** decide the signup flow from the redirect ([#8335](https://github.com/Flagsmith/flagsmith/issues/8335)) ([227fce1](https://github.com/Flagsmith/flagsmith/commit/227fce16fa0978583010a8eb3100b3cdd5a2d644))
+* **github:** Trust relationship cannot be created for a repository picked from the list ([#8332](https://github.com/Flagsmith/flagsmith/issues/8332)) ([74eace8](https://github.com/Flagsmith/flagsmith/commit/74eace836c5f310e0694795a2505384e52286f74))
+
+
+### Dependency Updates
+
+* **api:** update dependency django to v5.2.17 [security] ([#8326](https://github.com/Flagsmith/flagsmith/issues/8326)) ([5a52ccb](https://github.com/Flagsmith/flagsmith/commit/5a52ccbdbba5a0956abbf4921205ca22cdea75ab))
+* **frontend:** Bump `nanoid` from 3.3.16 to 3.3.18, `fast-uri` from 3.1.4. to 3.1.5, `brace-expansion` from 1.1.15/2.1.x/5.0.x to 1.1.18/2.1.4/5.0.9 ([#8342](https://github.com/Flagsmith/flagsmith/issues/8342)) ([b62cc1f](https://github.com/Flagsmith/flagsmith/commit/b62cc1fb5a3210baed45d97598289131791da64d))
+
+
+### CI
+
+* Migrate update-flagsmith-environment to Flagsmith/setup-cli action ([#8331](https://github.com/Flagsmith/flagsmith/issues/8331)) ([41e2c4e](https://github.com/Flagsmith/flagsmith/commit/41e2c4ebb701e80d2208ef4d7b9aaf4dbb77e53f))
+
+
+### Docs
+
+* **OIDC:** Document OIDC trust relationships and token exchange ([#8045](https://github.com/Flagsmith/flagsmith/issues/8045)) ([5e89680](https://github.com/Flagsmith/flagsmith/commit/5e8968055ade4649202165ae6aa274a33fe03027))
+
 ## [2.264.0](https://github.com/Flagsmith/flagsmith/compare/v2.263.0...v2.264.0) (2026-08-19)
 
 
