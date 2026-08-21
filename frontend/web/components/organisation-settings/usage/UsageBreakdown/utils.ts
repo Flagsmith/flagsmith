@@ -11,7 +11,6 @@ export type BreakdownRow = {
   key: string
   label: string
   value: number
-  colour?: string
 }
 
 export const BREAKDOWN_DIMENSIONS: {
@@ -32,23 +31,14 @@ export type RequestTypeKey =
   | 'traits'
 
 /**
- * The four types an API call is billed as. Named and coloured as the usage page
- * has always had them, so the rows stay recognisable and line up with the
- * "what counts" definitions.
+ * The four types an API call is billed as, named as the usage page has always
+ * named them so the rows line up with the "what counts" definitions.
  */
-export const REQUEST_TYPES: {
-  key: RequestTypeKey
-  label: string
-  colour: string
-}[] = [
-  { colour: '#0AADDF', key: 'flags', label: 'Flags' },
-  { colour: '#27AB95', key: 'identities', label: 'Identities' },
-  {
-    colour: '#FF9F43',
-    key: 'environment_document',
-    label: 'Environment Document',
-  },
-  { colour: '#EF4D56', key: 'traits', label: 'Traits' },
+export const REQUEST_TYPES: { key: RequestTypeKey; label: string }[] = [
+  { key: 'flags', label: 'Flags' },
+  { key: 'identities', label: 'Identities' },
+  { key: 'environment_document', label: 'Environment Document' },
+  { key: 'traits', label: 'Traits' },
 ]
 
 const countOf = (event: UsageEventsList, key: RequestTypeKey): number =>
@@ -68,8 +58,7 @@ export const byRequestType = (
   const events = data?.events_list ?? []
 
   return ranked(
-    REQUEST_TYPES.map(({ colour, key, label }) => ({
-      colour,
+    REQUEST_TYPES.map(({ key, label }) => ({
       key,
       label,
       value: events.reduce((sum, event) => sum + countOf(event, key), 0),
