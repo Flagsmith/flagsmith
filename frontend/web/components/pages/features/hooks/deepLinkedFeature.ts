@@ -1,4 +1,33 @@
-import type { FeatureState } from 'common/types/responses'
+import type {
+  FeatureState,
+  FeatureStateValue,
+  FlagsmithValue,
+} from 'common/types/responses'
+
+type FlattenableFeatureStateValue = FlagsmithValue | FeatureStateValue
+
+// The featurestates endpoint returns a nested value; the list path is flat.
+// Mirrors Utils.featureStateToValue, inlined to keep the Flux stores out.
+function flattenFeatureStateValue(
+  value: FlattenableFeatureStateValue | undefined,
+): FlagsmithValue {
+  if (value === null || value === undefined) {
+    return null
+  }
+  if (typeof value !== 'object') {
+    return value
+  }
+  switch (value.type) {
+    case 'bool':
+      return value.boolean_value
+    case 'float':
+      return value.float_value ?? null
+    case 'int':
+      return value.integer_value ?? null
+    default:
+      return value.string_value
+  }
+}
 
 /**
  * Decides whether the `?feature=` deep link targets a feature that is NOT on the
@@ -31,8 +60,14 @@ export function pickEnvironmentFlag(
   results: FeatureState[] | undefined,
   featureId: number,
 ): FeatureState | undefined {
-  return (
+  const match =
     results?.find((featureState) => featureState.feature === featureId) ??
     results?.[0]
-  )
+  if (!match) {
+    return undefined
+  }
+  return {
+    ...match,
+    feature_state_value: flattenFeatureStateValue(match.feature_state_value),
+  }
 }

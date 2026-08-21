@@ -578,7 +578,7 @@ export type MultivariateFeatureStateValue = {
 export type FeatureStateValue = {
   boolean_value: boolean | null
   float_value?: number | null
-  integer_value?: boolean | null
+  integer_value?: number | null
   string_value: string
   type: 'int' | 'unicode' | 'bool' | 'float'
 }
