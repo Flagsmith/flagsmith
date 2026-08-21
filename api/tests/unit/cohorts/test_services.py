@@ -1,24 +1,32 @@
 import io
 
 import pytest
+from django.db import IntegrityError
+from django.utils import timezone
 from flag_engine.segments.constants import IS_SET
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 from rest_framework.exceptions import ValidationError
 
-from cohorts.models import Cohort, CohortMembership, CohortMembershipState
+from cohorts.models import (
+    Cohort,
+    CohortMembership,
+    CohortMembershipState,
+    CohortSourceType,
+)
 from cohorts.services import (
     _batched,
     apply_pending_memberships,
     create_cohort,
     delete_cohort,
     extract_identifiers_from_csv,
+    get_or_create_cohort_for_source,
     sync_cohort_memberships_from_csv,
 )
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.models import Identity
 from environments.models import Environment
-from segments.models import SegmentManagedBy, SegmentRule
+from segments.models import Segment, SegmentManagedBy, SegmentRule
 
 
 @pytest.mark.parametrize(
@@ -542,3 +550,64 @@ def test_sync_cohort_memberships_from_csv__edge_cohort__applies_traits(
     assert document["system_traits"] == {edge_cohort.system_trait_key: True}
     membership = CohortMembership.objects.get(cohort=edge_cohort)
     assert membership.state == CohortMembershipState.APPLIED
+
+
+def test_get_or_create_cohort_for_source__simultaneous_creation__returns_other_requests_cohort(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given - creating the cohort fails because another request created its
+    # own cohort between our lookup and our insert
+    def create_winning_cohort_and_conflict(**kwargs: object) -> Cohort:
+        segment = Segment.objects.create(
+            name="Power users", project=environment.project
+        )
+        Cohort.objects.create(
+            environment=environment,
+            segment=segment,
+            source_type=CohortSourceType.MIXPANEL,
+            external_id="mp-42",
+        )
+        raise IntegrityError("unique_active_cohort_per_source_external_id")
+
+    mocker.patch(
+        "cohorts.services.create_cohort_for_source",
+        side_effect=create_winning_cohort_and_conflict,
+    )
+
+    # When
+    cohort = get_or_create_cohort_for_source(
+        environment=environment,
+        name="Power users",
+        source_type=CohortSourceType.MIXPANEL,
+        external_id="mp-42",
+    )
+
+    # Then
+    assert cohort == Cohort.objects.get(external_id="mp-42")
+
+
+def test_get_or_create_cohort_for_source__deletion_requested_same_external_id__returns_none(
+    environment: Environment,
+) -> None:
+    # Given - a cohort with the same external ID is awaiting deletion, so it
+    # is invisible to the lookup but still occupies the external ID
+    segment = Segment.objects.create(name="Power users", project=environment.project)
+    Cohort.objects.create(
+        environment=environment,
+        segment=segment,
+        source_type=CohortSourceType.MIXPANEL,
+        external_id="mp-42",
+        deletion_requested_at=timezone.now(),
+    )
+
+    # When
+    cohort = get_or_create_cohort_for_source(
+        environment=environment,
+        name="Power users",
+        source_type=CohortSourceType.MIXPANEL,
+        external_id="mp-42",
+    )
+
+    # Then
+    assert cohort is None

@@ -1,12 +1,15 @@
+import json
 import typing
 import uuid as uuid_module
 
+import structlog
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ParseError
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from cohorts import services
 from cohorts.authentication import CohortSyncKeyAuthentication
@@ -15,11 +18,19 @@ from cohorts.permissions import CohortSyncPlanPermission, HasCohortSyncKey
 from cohorts.serializers import (
     AmplitudeListSerializer,
     CohortSyncMembersSerializer,
+    MixpanelWebhookSerializer,
 )
 
 _LIST_RESPONSE = inline_serializer(
     "AmplitudeListResponse", {"list_id": serializers.UUIDField()}
 )
+
+_MIXPANEL_RESPONSE = inline_serializer(
+    "MixpanelWebhookResponse",
+    {"action": serializers.CharField(), "status": serializers.CharField()},
+)
+
+logger = structlog.get_logger("cohorts")
 
 
 @extend_schema_view(
@@ -83,3 +94,112 @@ class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
         if cohort is None:
             raise NotFound("List not found.")
         return cohort
+
+
+class MixpanelCohortSyncView(APIView):
+    """
+    The receiving end of Mixpanel's Custom Webhook cohort destination:
+    https://docs.mixpanel.com/docs/cohort-sync/webhooks
+
+    Mixpanel POSTs every message to this one URL and reads the outcome from
+    the response body, which must repeat the action alongside a
+    success/failure status.
+    """
+
+    authentication_classes = [CohortSyncKeyAuthentication]
+    permission_classes = [HasCohortSyncKey]
+
+    @extend_schema(
+        description=(
+            "Called by Mixpanel every sync cycle with the cohort's full "
+            "membership (`members`) or the changes since the last sync "
+            "(`add_members`/`remove_members`)."
+        ),
+        request=MixpanelWebhookSerializer,
+        responses={200: _MIXPANEL_RESPONSE},
+    )
+    def post(self, request: Request) -> Response:
+        serializer = MixpanelWebhookSerializer(data=request.data)
+        if not serializer.is_valid():
+            return self._failure(
+                request,
+                message=(
+                    f"Invalid payload: {json.dumps(serializer.errors, default=str)}"
+                ),
+                code=400,
+            )
+
+        data = serializer.validated_data
+        webhook_action: str = data["action"]
+        parameters = data["parameters"]
+        identifiers = [
+            member["mixpanel_distinct_id"] for member in parameters["members"]
+        ]
+        environment = typing.cast(CohortSyncKey, request.auth).environment
+
+        if webhook_action == "members":
+            # A large first sync arrives as several requests, each one page
+            # of members. Every page only adds; removals can't be detected
+            # without seeing all pages at once.
+            cohort_or_none = services.get_or_create_cohort_for_source(
+                environment=environment,
+                name=parameters["mixpanel_cohort_name"],
+                source_type=CohortSourceType.MIXPANEL,
+                external_id=parameters["mixpanel_cohort_id"],
+            )
+            if cohort_or_none is None:
+                return self._failure(
+                    request, message="Cohort is being deleted.", code=404
+                )
+            services.add_cohort_members(cohort_or_none, identifiers)
+        else:
+            cohort_or_none = services.get_cohort_for_source(
+                environment=environment,
+                source_type=CohortSourceType.MIXPANEL,
+                external_id=parameters["mixpanel_cohort_id"],
+            )
+            if cohort_or_none is None:
+                # A 404 makes Mixpanel pause the sync and email the customer,
+                # which is what should happen when the cohort was deleted in
+                # Flagsmith but Mixpanel is still syncing it.
+                return self._failure(request, message="Cohort not found.", code=404)
+            if webhook_action == "add_members":
+                services.add_cohort_members(cohort_or_none, identifiers)
+            else:
+                services.remove_cohort_members(cohort_or_none, identifiers)
+
+        return Response({"action": webhook_action, "status": "success"})
+
+    def handle_exception(self, exc: Exception) -> Response:
+        if isinstance(exc, ParseError):
+            # A body that isn't valid JSON raises before post() runs, so the
+            # response is shaped here to keep the envelope Mixpanel expects.
+            return self._failure(self.request, message="Invalid payload.", code=400)
+        return super().handle_exception(exc)
+
+    def _failure(self, request: Request, *, message: str, code: int) -> Response:
+        logger.warning(
+            "sync_webhook.rejected",
+            source="mixpanel",
+            action=self._echo_action(request),
+            environment__id=typing.cast(CohortSyncKey, request.auth).environment_id,
+            error__message=message,
+            error__code=code,
+        )
+        return Response(
+            {
+                "action": self._echo_action(request),
+                "status": "failure",
+                "error": {"message": message, "code": code},
+            },
+            status=code,
+        )
+
+    def _echo_action(self, request: Request) -> str | None:
+        # Mixpanel expects the response to name the action it sent, even on
+        # failure; None when the request was too malformed to carry one.
+        if isinstance(request.data, dict) and isinstance(
+            action_value := request.data.get("action"), str
+        ):
+            return action_value
+        return None

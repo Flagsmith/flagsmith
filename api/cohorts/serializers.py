@@ -98,6 +98,27 @@ def _validate_identifier_byte_length(value: str) -> None:
         )
 
 
+class MixpanelMemberSerializer(serializers.Serializer[None]):
+    # Length mirrors CohortMembership.identifier.
+    mixpanel_distinct_id = serializers.CharField(max_length=2000)
+
+
+class MixpanelParametersSerializer(serializers.Serializer[None]):
+    mixpanel_cohort_id = serializers.CharField(max_length=255)
+    mixpanel_cohort_name = serializers.CharField(max_length=2000)
+    # An empty page is valid: a first sync of an empty cohort has no members.
+    members = MixpanelMemberSerializer(many=True, allow_empty=True)
+
+
+class MixpanelWebhookSerializer(serializers.Serializer[None]):
+    # "members" carries the full membership on the first sync;
+    # "add_members"/"remove_members" carry changes since the last sync.
+    action = serializers.ChoiceField(
+        choices=["members", "add_members", "remove_members"]
+    )
+    parameters = MixpanelParametersSerializer()
+
+
 class CohortSyncMembersSerializer(serializers.Serializer[None]):
     user_ids = serializers.ListField(
         child=serializers.CharField(validators=[_validate_identifier_byte_length]),

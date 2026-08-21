@@ -1,3 +1,4 @@
+import base64
 import typing
 
 import pytest
@@ -5,6 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 from flag_engine.segments.constants import IS_SET
 from pytest_django.fixtures import SettingsWrapper
+from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -18,6 +20,7 @@ from cohorts.models import (
     CohortSyncKey,
 )
 from environments.dynamodb import DynamoIdentityWrapper
+from environments.identities.models import Identity
 from environments.models import Environment
 from projects.models import Project
 from segments.models import Segment
@@ -468,3 +471,449 @@ def test_amplitude_create_list__segment_limit_reached__returns_400(
         "The project has reached the maximum allowed segments limit."
     ]
     assert not Cohort.objects.exists()
+
+
+def _basic_auth_client(plaintext_key: str) -> APIClient:
+    credentials = base64.b64encode(f"flagsmith:{plaintext_key}".encode()).decode()
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
+    return client
+
+
+def test_mixpanel_webhook__members_action_unknown_cohort__creates_cohort_and_memberships(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+) -> None:
+    # Given
+    key, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-42",
+                "mixpanel_cohort_name": "Power users",
+                "members": [
+                    {"mixpanel_distinct_id": "user-1"},
+                    {"mixpanel_distinct_id": "user-2"},
+                ],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"action": "members", "status": "success"}
+    cohort = Cohort.objects.get(
+        environment=key.environment,
+        source_type=CohortSourceType.MIXPANEL,
+        external_id="mp-42",
+    )
+    assert cohort.segment.name == "Power users"
+    assert sorted(
+        CohortMembership.objects.filter(cohort=cohort).values_list(
+            "identifier", "state"
+        )
+    ) == [
+        ("user-1", CohortMembershipState.APPLIED),
+        ("user-2", CohortMembershipState.APPLIED),
+    ]
+
+
+def test_mixpanel_webhook__members_action_existing_cohort__adds_to_it(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+    mixpanel_cohort: Cohort,
+) -> None:
+    # Given
+    _, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-42",
+                "mixpanel_cohort_name": "Power users",
+                "members": [{"mixpanel_distinct_id": "user-1"}],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert Cohort.objects.filter(source_type=CohortSourceType.MIXPANEL).count() == 1
+    membership = CohortMembership.objects.get(cohort=mixpanel_cohort)
+    assert (membership.identifier, membership.state) == (
+        "user-1",
+        CohortMembershipState.APPLIED,
+    )
+
+
+def test_mixpanel_webhook__add_members_action__sets_system_trait(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+    mixpanel_cohort: Cohort,
+) -> None:
+    # Given
+    _, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "add_members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-42",
+                "mixpanel_cohort_name": "Power users",
+                "members": [{"mixpanel_distinct_id": "user-1"}],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"action": "add_members", "status": "success"}
+    identity = Identity.objects.get(
+        environment=mixpanel_cohort.environment, identifier="user-1"
+    )
+    assert identity.system_traits == {mixpanel_cohort.system_trait_key: True}
+
+
+def test_mixpanel_webhook__remove_members_action__unsets_system_trait(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+    mixpanel_cohort: Cohort,
+) -> None:
+    # Given
+    Identity.objects.create(
+        environment=mixpanel_cohort.environment,
+        identifier="member",
+        system_traits={mixpanel_cohort.system_trait_key: True},
+    )
+    CohortMembership.objects.create(
+        cohort=mixpanel_cohort,
+        identifier="member",
+        state=CohortMembershipState.APPLIED,
+    )
+    _, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "remove_members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-42",
+                "mixpanel_cohort_name": "Power users",
+                "members": [{"mixpanel_distinct_id": "member"}],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"action": "remove_members", "status": "success"}
+    assert not CohortMembership.objects.filter(cohort=mixpanel_cohort).exists()
+    identity = Identity.objects.get(
+        environment=mixpanel_cohort.environment, identifier="member"
+    )
+    assert identity.system_traits == {}
+
+
+def test_mixpanel_webhook__add_members_unknown_cohort__returns_404_failure(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    key, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "add_members",
+            "parameters": {
+                "mixpanel_cohort_id": "unknown",
+                "mixpanel_cohort_name": "Power users",
+                "members": [{"mixpanel_distinct_id": "user-1"}],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {
+        "action": "add_members",
+        "status": "failure",
+        "error": {"message": "Cohort not found.", "code": 404},
+    }
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "sync_webhook.rejected",
+            "source": "mixpanel",
+            "action": "add_members",
+            "environment__id": key.environment_id,
+            "error__message": "Cohort not found.",
+            "error__code": 404,
+        }
+    ]
+
+
+def test_mixpanel_webhook__deletion_requested_cohort__returns_404_failure(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+    mixpanel_cohort: Cohort,
+) -> None:
+    # Given
+    mixpanel_cohort.deletion_requested_at = timezone.now()
+    mixpanel_cohort.save()
+    _, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "remove_members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-42",
+                "mixpanel_cohort_name": "Power users",
+                "members": [{"mixpanel_distinct_id": "user-1"}],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["status"] == "failure"
+
+
+def test_mixpanel_webhook__missing_parameters__returns_400_failure(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+) -> None:
+    # Given
+    _, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(url, data={"action": "members"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    body = response.json()
+    assert body["action"] == "members"
+    assert body["status"] == "failure"
+    assert body["error"]["code"] == 400
+    assert "parameters" in body["error"]["message"]
+
+
+def test_mixpanel_webhook__non_object_payload__returns_400_failure(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+) -> None:
+    # Given
+    _, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(url, data=["not", "an", "object"], format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    body = response.json()
+    assert body["action"] is None
+    assert body["status"] == "failure"
+    assert body["error"]["code"] == 400
+
+
+def test_mixpanel_webhook__unparseable_body__returns_400_failure(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+) -> None:
+    # Given
+    _, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(url, data="{not json", content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "action": None,
+        "status": "failure",
+        "error": {"message": "Invalid payload.", "code": 400},
+    }
+
+
+def test_mixpanel_webhook__members_action_while_cohort_draining__returns_404_failure(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+    mixpanel_cohort: Cohort,
+) -> None:
+    # Given - the cohort was deleted in Flagsmith and is still draining
+    mixpanel_cohort.deletion_requested_at = timezone.now()
+    mixpanel_cohort.save()
+    _, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-42",
+                "mixpanel_cohort_name": "Power users",
+                "members": [{"mixpanel_distinct_id": "user-1"}],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {
+        "action": "members",
+        "status": "failure",
+        "error": {"message": "Cohort is being deleted.", "code": 404},
+    }
+    assert Cohort.objects.filter(source_type=CohortSourceType.MIXPANEL).count() == 1
+
+
+def test_mixpanel_webhook__other_environment_key__returns_404_failure(
+    mixpanel_cohort: Cohort,
+) -> None:
+    # Given - a key scoped to a different environment than the cohort's
+    other_environment = Environment.objects.create(
+        name="Other environment", project=mixpanel_cohort.environment.project
+    )
+    _, plaintext = CohortSyncKey.objects.create_key(
+        name="other key", environment=other_environment
+    )
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "add_members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-42",
+                "mixpanel_cohort_name": "Power users",
+                "members": [{"mixpanel_distinct_id": "user-1"}],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert not CohortMembership.objects.filter(cohort=mixpanel_cohort).exists()
+
+
+def test_mixpanel_webhook__empty_members_page__returns_success(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+) -> None:
+    # Given
+    key, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-42",
+                "mixpanel_cohort_name": "Empty cohort",
+                "members": [],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    cohort = Cohort.objects.get(environment=key.environment, external_id="mp-42")
+    assert not CohortMembership.objects.filter(cohort=cohort).exists()
+
+
+def test_mixpanel_webhook__non_ascii_basic_credentials__returns_401(
+    db: None,
+) -> None:
+    # Given - a header byte outside ASCII, which base64 decoding rejects
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION="Basic dXNlcjprÿZXk=")
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(url, data={"action": "members"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_mixpanel_webhook__nul_byte_in_basic_password__returns_401(
+    db: None,
+) -> None:
+    # Given - valid base64 whose decoded password contains a NUL character
+    credentials = base64.b64encode(b"user:\x00key").decode()
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f"Basic {credentials}")
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(url, data={"action": "members"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_mixpanel_webhook__malformed_basic_credentials__returns_401(
+    db: None,
+) -> None:
+    # Given
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION="Basic not-base64!!")
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(url, data={"action": "members"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_mixpanel_webhook__unknown_key_in_basic_password__returns_401(
+    db: None,
+) -> None:
+    # Given
+    client = _basic_auth_client("not-a-key")
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(url, data={"action": "members"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED

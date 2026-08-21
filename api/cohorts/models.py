@@ -8,6 +8,7 @@ from core.models import SoftDeleteExportableModel
 class CohortSourceType(models.TextChoices):
     CSV = "csv", "CSV"
     AMPLITUDE = "amplitude", "Amplitude"
+    MIXPANEL = "mixpanel", "Mixpanel"
 
 
 class Cohort(SoftDeleteExportableModel):
@@ -26,6 +27,10 @@ class Cohort(SoftDeleteExportableModel):
         choices=CohortSourceType.choices,
         default=CohortSourceType.CSV,
     )
+    # The cohort's identifier in the external source (e.g. Mixpanel's cohort
+    # ID). Set for sources that push to us under their own identifier; null
+    # for sources that adopt ours (Amplitude) and for CSV cohorts.
+    external_id = models.CharField(max_length=255, null=True, blank=True)
     version = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     # Deletion drains memberships from the identity store first; the cohort is
@@ -44,6 +49,15 @@ class Cohort(SoftDeleteExportableModel):
                 fields=["segment"],
                 condition=models.Q(deleted_at__isnull=True),
                 name="unique_active_cohort_per_segment",
+            ),
+            # One Mixpanel cohort must map to one active cohort per
+            # environment: without this, two simultaneous first-sync requests
+            # would each create their own cohort and split the members
+            # between them.
+            models.UniqueConstraint(
+                fields=["environment", "source_type", "external_id"],
+                condition=models.Q(deleted_at__isnull=True, external_id__isnull=False),
+                name="unique_active_cohort_per_source_external_id",
             ),
         ]
 
