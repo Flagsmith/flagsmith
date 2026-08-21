@@ -1,0 +1,40 @@
+.usage-breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border-default);
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  // Fixed so the bars all start at the same x, whatever the labels say.
+  &__label {
+    width: 280px;
+    flex: 0 0 auto;
+  }
+
+  &__track {
+    flex: 1;
+    height: 8px;
+  }
+
+  &__fill {
+    transition: width var(--duration-slow) var(--easing-standard);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  &__value {
+    width: 70px;
+    text-align: right;
+  }
+
+  &__share {
+    width: 44px;
+    text-align: right;
+  }
+}
