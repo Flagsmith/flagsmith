@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import Format from 'common/utils/format'
 import { colorSurfaceAction } from 'common/theme/tokens'
-import BarTrack from 'components/shared/BarTrack'
+import ValueBar from 'components/shared/ValueBar'
 import './UsageBreakdownRow.scss'
 
 export type UsageBreakdownRowProps = {
@@ -41,7 +41,7 @@ const UsageBreakdownRow: FC<UsageBreakdownRowProps> = ({
       {label}
     </div>
 
-    <BarTrack
+    <ValueBar
       className='usage-breakdown-row__track'
       percent={share(value, largest)}
       colour={colour ?? colorSurfaceAction}

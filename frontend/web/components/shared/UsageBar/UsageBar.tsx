@@ -5,7 +5,7 @@ import {
   colorSurfaceAction,
 } from 'common/theme/tokens'
 import Format from 'common/utils/format'
-import BarTrack from 'components/shared/BarTrack'
+import ValueBar from 'components/shared/ValueBar'
 import UsageBarThresholds from './UsageBarThresholds'
 import { boundPercent, toneFor, usagePercent } from './utils'
 import './UsageBar.scss'
@@ -62,7 +62,7 @@ const UsageBar: FC<UsageBarProps> = ({
           thresholds?.length ? 'usage-bar__wrap position-relative' : undefined
         }
       >
-        <BarTrack
+        <ValueBar
           percent={boundedPercent}
           colour={FILL_COLOURS[tone]}
           ariaLabel={label ?? ariaLabel}
