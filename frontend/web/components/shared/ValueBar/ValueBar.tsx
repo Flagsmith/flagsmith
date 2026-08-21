@@ -1,8 +1,8 @@
 import { FC } from 'react'
 import cn from 'classnames'
-import './BarTrack.scss'
+import './ValueBar.scss'
 
-export type BarTrackProps = {
+export type ValueBarProps = {
   /** 0 to 100. Callers clamp before passing. */
   percent: number
   /** Any CSS colour. Passed inline because the width beside it must be. */
@@ -18,7 +18,7 @@ export type BarTrackProps = {
   ariaValueText?: string
 }
 
-const BarTrack: FC<BarTrackProps> = ({
+const ValueBar: FC<ValueBarProps> = ({
   ariaLabel,
   ariaValueNow,
   ariaValueText,
@@ -31,7 +31,7 @@ const BarTrack: FC<BarTrackProps> = ({
   return (
     <div
       className={cn(
-        'bar-track rounded-full overflow-hidden bg-surface-muted',
+        'value-bar rounded-full overflow-hidden bg-surface-muted',
         className,
       )}
       role={isMeter ? 'progressbar' : undefined}
@@ -42,11 +42,11 @@ const BarTrack: FC<BarTrackProps> = ({
       aria-valuetext={ariaValueText}
     >
       <div
-        className='bar-track__fill h-100 rounded-full'
+        className='value-bar__fill h-100 rounded-full'
         style={{ background: colour, width: `${percent}%` }}
       />
     </div>
   )
 }
 
-export default BarTrack
+export default ValueBar
