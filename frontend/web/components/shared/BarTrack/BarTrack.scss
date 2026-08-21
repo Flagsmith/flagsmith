@@ -1,0 +1,11 @@
+.bar-track {
+  height: 8px;
+
+  &__fill {
+    transition: width var(--duration-slow) var(--easing-standard);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+}

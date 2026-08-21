@@ -1,3 +1,5 @@
-export { default } from './UsageBreakdown'
+export { default } from './UsageBreakdownContainer'
+export { default as UsageBreakdown } from './UsageBreakdown'
+export type { UsageBreakdownContainerProps } from './UsageBreakdownContainer'
 export type { UsageBreakdownProps } from './UsageBreakdown'
 export type { BreakdownDimension, BreakdownRow } from './utils'

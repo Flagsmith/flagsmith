@@ -7,8 +7,11 @@ export type BreakdownDimension =
   | 'sdk'
 
 export type BreakdownRow = {
+  /** Unique within a breakdown. Names can repeat, so rows key on this. */
+  key: string
   label: string
   value: number
+  colour?: string
 }
 
 export const BREAKDOWN_DIMENSIONS: {
@@ -21,24 +24,35 @@ export const BREAKDOWN_DIMENSIONS: {
   { label: 'By SDK', value: 'sdk' },
 ]
 
+/** The countable fields on an event, as opposed to its day and its labels. */
+export type RequestTypeKey =
+  | 'flags'
+  | 'identities'
+  | 'environment_document'
+  | 'traits'
+
 /**
- * The four types an API call is billed as. Named as the usage page has always
- * named them, so the rows line up with the "what counts" definitions.
+ * The four types an API call is billed as. Named and coloured as the usage page
+ * has always had them, so the rows stay recognisable and line up with the
+ * "what counts" definitions.
  */
-export const REQUEST_TYPES: { key: keyof UsageEventsList; label: string }[] = [
-  { key: 'flags', label: 'Flags' },
-  { key: 'identities', label: 'Identities' },
-  { key: 'environment_document', label: 'Environment Document' },
-  { key: 'traits', label: 'Traits' },
+export const REQUEST_TYPES: {
+  key: RequestTypeKey
+  label: string
+  colour: string
+}[] = [
+  { colour: '#0AADDF', key: 'flags', label: 'Flags' },
+  { colour: '#27AB95', key: 'identities', label: 'Identities' },
+  {
+    colour: '#FF9F43',
+    key: 'environment_document',
+    label: 'Environment Document',
+  },
+  { colour: '#EF4D56', key: 'traits', label: 'Traits' },
 ]
 
-const countOf = (
-  event: UsageEventsList,
-  key: keyof UsageEventsList,
-): number => {
-  const value = event[key]
-  return typeof value === 'number' ? value : 0
-}
+const countOf = (event: UsageEventsList, key: RequestTypeKey): number =>
+  event[key] ?? 0
 
 /** Every request in an event, whatever it was billed as. */
 export const totalOf = (event: UsageEventsList): number =>
@@ -54,7 +68,9 @@ export const byRequestType = (
   const events = data?.events_list ?? []
 
   return ranked(
-    REQUEST_TYPES.map(({ key, label }) => ({
+    REQUEST_TYPES.map(({ colour, key, label }) => ({
+      colour,
+      key,
       label,
       value: events.reduce((sum, event) => sum + countOf(event, key), 0),
     })),
@@ -76,17 +92,23 @@ export const bySdk = (
   }
 
   return ranked(
-    [...totals.entries()].map(([label, value]) => ({ label, value })),
+    [...totals.entries()].map(([label, value]) => ({
+      key: label,
+      label,
+      value,
+    })),
   )
 }
 
-/** One request per key, so each result arrives already scoped to its own row. */
+/** One request per scope, so each total arrives already attributed to a row. */
 export const fromScopedTotals = (
-  results: { label: string; data: Res['organisationUsage'] | undefined }[],
+  scopes: { key: string; label: string }[],
+  totals: Record<string, number | undefined>,
 ): BreakdownRow[] =>
   ranked(
-    results.map(({ data, label }) => ({
+    scopes.map(({ key, label }) => ({
+      key,
       label,
-      value: data?.totals?.total ?? 0,
+      value: totals[key] ?? 0,
     })),
   )
