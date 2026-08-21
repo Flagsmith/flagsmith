@@ -1,7 +1,9 @@
 import { FC, ReactNode } from 'react'
+import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import EmptyState from 'components/EmptyState'
+import UsageBreakdownContainer from 'components/organisation-settings/usage/UsageBreakdown/UsageBreakdownContainer'
 import UsageMeter from 'components/organisation-settings/usage/UsageMeter'
 import UsageOverTime from 'components/organisation-settings/usage/UsageOverTime'
 
@@ -16,18 +18,24 @@ export type UsageDashboardViewProps = {
   hasBillingPeriod: boolean
   isError?: boolean
   isLoading?: boolean
+  organisationId: number
+  billingPeriod: Req['getOrganisationUsage']['billing_period']
+  projectId: number | undefined
   /** A slot, because the controls fetch their own options. */
   filters?: ReactNode
 }
 
 /** Kept apart from the fetching so every state can be rendered on its own. */
 const UsageDashboardView: FC<UsageDashboardViewProps> = ({
+  billingPeriod,
   data,
   filters,
   hasBillingPeriod,
   isError,
   isLoading,
   limit,
+  organisationId,
+  projectId,
   total,
 }) => {
   // Loading and failure replace the figures rather than the whole page, so the
@@ -60,6 +68,13 @@ const UsageDashboardView: FC<UsageDashboardViewProps> = ({
           data={data}
           limit={limit}
           isBillingPeriod={hasBillingPeriod}
+        />
+
+        <UsageBreakdownContainer
+          organisationId={organisationId}
+          billingPeriod={billingPeriod}
+          data={data}
+          projectId={projectId}
         />
       </>
     )
