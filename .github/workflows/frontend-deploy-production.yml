@@ -79,6 +79,32 @@ jobs:
       npm_build_environment: prod
     secrets: inherit
 
+  notify-production-smoke-test:
+    name: Notify Production Smoke Test
+    needs: deploy-production
+    if: ${{ needs.deploy-production.result == 'success' }}
+    runs-on: ubuntu-latest
+    # Only needs to read the repo to resolve the local action below.
+    permissions:
+      contents: read
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          # Nothing runs git after this, so the token need not persist.
+          persist-credentials: false
+
+      - name: Notify Slack
+        # The deploy has already succeeded by this point, so a Slack outage or a
+        # rotated webhook should not fail the run.
+        continue-on-error: true
+        uses: ./.github/actions/notify-slack-deploy
+        with:
+          webhook_url: ${{ secrets.SLACK_FRONTEND_DEPLOY_WEBHOOK }}
+          service: Frontend
+          app_url: https://app.flagsmith.com
+
   deploy-demo:
     name: Deploy to Vercel Demo
     needs: run-tests
