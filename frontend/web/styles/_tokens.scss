@@ -92,6 +92,7 @@
   --color-surface-action-hover: var(--purple-700);
   --color-surface-action-muted: oklch(from var(--purple-600) l c h / 0.16);
   --color-surface-action-subtle: oklch(from var(--purple-600) l c h / 0.08);
+  --color-surface-action-tint: oklch(from var(--purple-600) l c h / 0.12);
   --color-surface-active: oklch(from var(--slate-1000) l c h / 0.16);
   --color-surface-danger: oklch(from var(--red-500) l c h / 0.08);
   --color-surface-default: var(--slate-0);
@@ -197,6 +198,7 @@
   --color-surface-action-hover: var(--purple-600);
   --color-surface-action-muted: oklch(from var(--slate-0) l c h / 0.16);
   --color-surface-action-subtle: oklch(from var(--slate-0) l c h / 0.08);
+  --color-surface-action-tint: oklch(from var(--purple-400) l c h / 0.16);
   --color-surface-active: oklch(from var(--slate-0) l c h / 0.16);
   --color-surface-danger: oklch(from var(--red-500) 0.18 0.02 h);
   --color-surface-default: var(--slate-950);

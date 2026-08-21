@@ -1,0 +1,15 @@
+.csv-upload {
+  &__droparea {
+    padding: 32px;
+    border: 1px dashed var(--color-border-action);
+  }
+
+  &__file-card {
+    border: 1px solid var(--color-border-default);
+  }
+
+  &__file-icon {
+    width: 36px;
+    height: 36px;
+  }
+}
