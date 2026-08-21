@@ -10,14 +10,24 @@ export type ValueBarProps = {
   /** Sizes the track in its row, e.g. `flex-1`. */
   className?: string
   /**
-   * Progressbar semantics. Omitted when the bar compares values rather than
-   * measuring one against an allowance, since there is no maximum to report.
+   * Meter semantics. Omitted when the bar compares values against each other
+   * rather than measuring one against an allowance, since there is then no
+   * maximum to report.
    */
   ariaLabel?: string
   ariaValueNow?: number
   ariaValueText?: string
 }
 
+/**
+ * A track with a proportional fill, carrying no semantics of its own: usage
+ * against a plan is a meter, a breakdown row is a comparison with no maximum,
+ * and only the caller knows which it is drawing.
+ *
+ * `meter` rather than `progressbar`, because nothing here is a task advancing.
+ * ARIA reserves progressbar for that and meter for a value inside a known
+ * range, which is what a plan allowance is.
+ */
 const ValueBar: FC<ValueBarProps> = ({
   ariaLabel,
   ariaValueNow,
@@ -34,7 +44,7 @@ const ValueBar: FC<ValueBarProps> = ({
         'value-bar rounded-full overflow-hidden bg-surface-muted',
         className,
       )}
-      role={isMeter ? 'progressbar' : undefined}
+      role={isMeter ? 'meter' : undefined}
       aria-label={ariaLabel}
       aria-valuenow={ariaValueNow}
       aria-valuemin={isMeter ? 0 : undefined}
