@@ -38,6 +38,9 @@ relevant section below for more details.
 - `ORGANISATION_NAME`: Organisation name to use for the default organisation.
 - `PROJECT_NAME`: Project name to use for the default project.
 - `ENABLE_GZIP_COMPRESSION`: If Django should gzip compress HTTP responses. Defaults to `False`.
+- `TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS`: Lifetime of access tokens minted by the OIDC trust relationship
+  token exchange. Defaults to `3600`.
+- `OIDC_TOKEN_EXCHANGE_THROTTLE_RATE`: Rate limit for the OIDC token exchange endpoint. Defaults to `60/min`.
 - `GOOGLE_ANALYTICS_KEY`: If Google Analytics is required, add your tracking code.
 - `GOOGLE_SERVICE_ACCOUNT`: Service account JSON for accessing the Google API, used for getting usage of an
   organisation - needs access to analytics.readonly scope.
