@@ -15,19 +15,17 @@ export const ByRequestType: Story = {
     dimension: 'request-type',
     rows: [
       {
-        colour: '#FF9F43',
         key: 'environment_document',
         label: 'Environment Document',
         value: 5_240_000,
       },
       {
-        colour: '#27AB95',
         key: 'identities',
         label: 'Identities',
         value: 1_910_000,
       },
-      { colour: '#0AADDF', key: 'flags', label: 'Flags', value: 730_000 },
-      { colour: '#EF4D56', key: 'traits', label: 'Traits', value: 120_000 },
+      { key: 'flags', label: 'Flags', value: 730_000 },
+      { key: 'traits', label: 'Traits', value: 120_000 },
     ],
   },
 }

@@ -11,8 +11,6 @@ export type UsageBreakdownRowProps = {
   largest: number
   /** Everything in the breakdown, so the row can state its share. */
   total: number
-  /** Kept from the old usage page so the four request types stay recognisable. */
-  colour?: string
 }
 
 const share = (value: number, total: number) =>
@@ -24,27 +22,18 @@ const share = (value: number, total: number) =>
  * this", and a single bar cannot say both.
  */
 const UsageBreakdownRow: FC<UsageBreakdownRowProps> = ({
-  colour,
   label,
   largest,
   total,
   value,
 }) => (
   <div className='usage-breakdown-row d-flex align-items-center gap-3 border-top border-default'>
-    <div className='usage-breakdown-row__label d-flex align-items-center gap-2'>
-      {colour && (
-        <span
-          className='usage-breakdown-row__swatch rounded-sm'
-          style={{ background: colour }}
-        />
-      )}
-      {label}
-    </div>
+    <div className='usage-breakdown-row__label'>{label}</div>
 
     <ValueBar
       className='usage-breakdown-row__track'
       percent={share(value, largest)}
-      colour={colour ?? colorSurfaceAction}
+      colour={colorSurfaceAction}
     />
 
     <div className='usage-breakdown-row__value text-end fw-bold'>
