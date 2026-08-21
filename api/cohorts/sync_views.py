@@ -141,17 +141,17 @@ class MixpanelCohortSyncView(APIView):
             # A large first sync arrives as several requests, each one page
             # of members. Every page only adds; removals can't be detected
             # without seeing all pages at once.
-            cohort_or_none = services.get_or_create_cohort_for_source(
+            cohort = services.get_cohort_for_source(
+                environment=environment,
+                source_type=CohortSourceType.MIXPANEL,
+                external_id=parameters["mixpanel_cohort_id"],
+            ) or services.create_cohort_for_source(
                 environment=environment,
                 name=parameters["mixpanel_cohort_name"],
                 source_type=CohortSourceType.MIXPANEL,
                 external_id=parameters["mixpanel_cohort_id"],
             )
-            if cohort_or_none is None:
-                return self._failure(
-                    request, message="Cohort is being deleted.", code=404
-                )
-            services.add_cohort_members(cohort_or_none, identifiers)
+            services.add_cohort_members(cohort, identifiers)
         else:
             cohort_or_none = services.get_cohort_for_source(
                 environment=environment,

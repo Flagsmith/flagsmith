@@ -1,5 +1,4 @@
 import base64
-import typing
 from contextlib import suppress
 
 from django.contrib.auth.models import AnonymousUser
@@ -38,16 +37,8 @@ class CohortSyncKeyAuthentication(authentication.BaseAuthentication):
         else:
             return None
 
-        if "\x00" in raw_key:
-            # Postgres refuses to run a query containing a NUL character, so
-            # the key lookup below would crash instead of returning 401.
-            raise exceptions.AuthenticationFailed("Valid cohort sync key not found.")
-
         with suppress(CohortSyncKey.DoesNotExist):
-            key = typing.cast(
-                CohortSyncKey,
-                CohortSyncKey.objects.get_from_key(raw_key),
-            )
+            key = CohortSyncKey.objects.get_from_key(raw_key)
             if not key.has_expired:
                 # No person is acting here, so no user is returned: the key
                 # alone carries authority, and audit trails record the source

@@ -1,7 +1,7 @@
 import typing
 
 import structlog
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from django.db.models import QuerySet
 from django.utils import timezone
 from flag_engine.segments.constants import IS_SET
@@ -168,38 +168,6 @@ def get_cohort_for_source(
         deletion_requested_at__isnull=True,
     ).first()
     return cohort
-
-
-def get_or_create_cohort_for_source(
-    *,
-    environment: "Environment",
-    name: str,
-    source_type: CohortSourceType,
-    external_id: str,
-) -> Cohort | None:
-    if cohort := get_cohort_for_source(
-        environment=environment, source_type=source_type, external_id=external_id
-    ):
-        return cohort
-    try:
-        return create_cohort_for_source(
-            environment=environment,
-            name=name,
-            source_type=source_type,
-            external_id=external_id,
-        )
-    except IntegrityError:
-        # Two situations end up here. A simultaneous first-sync request
-        # created the cohort between our lookup and our insert — use the one
-        # it created. Or the cohort was deleted in Flagsmith and is still
-        # draining memberships from identity data: the lookup doesn't see it,
-        # but it still occupies the external ID — nothing usable exists, so
-        # return None.
-        if cohort := get_cohort_for_source(
-            environment=environment, source_type=source_type, external_id=external_id
-        ):
-            return cohort
-        return None
 
 
 def add_cohort_members(cohort: Cohort, identifiers: "typing.Iterable[str]") -> None:

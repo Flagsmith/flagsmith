@@ -696,41 +696,6 @@ def test_mixpanel_webhook__unparseable_body__returns_400_failure(
     }
 
 
-def test_mixpanel_webhook__members_action_while_cohort_draining__returns_404_failure(
-    postgres_cohort_sync_key: _KeyAndPlaintext,
-    mixpanel_cohort: Cohort,
-) -> None:
-    # Given - the cohort was deleted in Flagsmith and is still draining
-    mixpanel_cohort.deletion_requested_at = timezone.now()
-    mixpanel_cohort.save()
-    _, plaintext = postgres_cohort_sync_key
-    client = _basic_auth_client(plaintext)
-    url = reverse("api-v1:cohort-sync:mixpanel")
-
-    # When
-    response = client.post(
-        url,
-        data={
-            "action": "members",
-            "parameters": {
-                "mixpanel_cohort_id": "mp-42",
-                "mixpanel_cohort_name": "Power users",
-                "members": [{"mixpanel_distinct_id": "user-1"}],
-            },
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json() == {
-        "action": "members",
-        "status": "failure",
-        "error": {"message": "Cohort is being deleted.", "code": 404},
-    }
-    assert Cohort.objects.filter(source_type=CohortSourceType.MIXPANEL).count() == 1
-
-
 def test_mixpanel_webhook__other_environment_key__returns_404_failure(
     mixpanel_cohort: Cohort,
 ) -> None:

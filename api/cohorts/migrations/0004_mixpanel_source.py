@@ -30,14 +30,4 @@ class Migration(migrations.Migration):
                 max_length=50,
             ),
         ),
-        migrations.AddConstraint(
-            model_name="cohort",
-            constraint=models.UniqueConstraint(
-                condition=models.Q(
-                    ("deleted_at__isnull", True), ("external_id__isnull", False)
-                ),
-                fields=("environment", "source_type", "external_id"),
-                name="unique_active_cohort_per_source_external_id",
-            ),
-        ),
     ]
