@@ -12,6 +12,10 @@ from pydantic import TypeAdapter
 from rest_framework.request import Request
 from typing_extensions import is_typeddict
 
+from environments.identities.traits.constants import (
+    TRAIT_STRING_VALUE_MAX_LENGTH,
+)
+
 
 def append_meta(schema: dict[str, Any], meta: dict[str, Any]) -> dict[str, Any]:
     """
@@ -309,4 +313,27 @@ def postprocessing_assign_tags(
                 operation["tags"] = ["Other"]
 
     result["tags"] = TAGS
+    return result
+
+
+def postprocessing_add_trait_value_max_length(
+    result: dict[str, Any], generator: Any, **kwargs: Any
+) -> dict[str, Any]:
+    """Document the `trait_value` string length limit enforced by the API.
+
+    `trait_value` schemas are generated from `flagsmith_schemas`, which
+    types the field as `flag_engine.segments.types.ContextValue` — a plain
+    `str | int | float | bool | None` union with no length constraint. The
+    API enforces `TRAIT_STRING_VALUE_MAX_LENGTH` at runtime (see
+    `environments.identities.traits.fields.TraitValueField`), so patch the
+    generated schema here to keep the two in sync.
+    """
+    for schema in result.get("components", {}).get("schemas", {}).values():
+        trait_value_schema = schema.get("properties", {}).get("trait_value")
+        if not isinstance(trait_value_schema, dict):
+            continue
+        for variant in trait_value_schema.get("anyOf", []):
+            if variant.get("type") == "string":
+                variant["maxLength"] = TRAIT_STRING_VALUE_MAX_LENGTH
+
     return result
