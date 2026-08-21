@@ -4,6 +4,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
 import Utils from 'common/utils/utils'
 import { FlagsmithValue, MultivariateOption } from 'common/types/responses'
+import { UnmatchedOverride } from 'common/utils/multivariate'
 
 type VariationOverride = {
   id?: number
@@ -22,6 +23,10 @@ interface VariationOptionsProps {
   readOnly?: boolean
   removeVariation: (i: number) => void
   select?: boolean
+  // An override value that is neither the control value nor one of the
+  // variations. Shown read-only, so the identity does not read as being on the
+  // control value. Stays listed once deselected — it is only gone on save.
+  unmatchedOverride?: UnmatchedOverride
   setValue: (value: FlagsmithValue) => void
   setVariations: (variations: VariationOverride[]) => void
   unsavedVariations?: boolean[]
@@ -46,6 +51,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
   select,
   setValue,
   setVariations,
+  unmatchedOverride,
   unsavedVariations,
   updateVariation,
   variationOverrides,
@@ -56,8 +62,9 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
     return null
   }
   const controlSelected =
-    !variationOverrides ||
-    !variationOverrides.find((v) => v.percentage_allocation === 100)
+    !unmatchedOverride?.selected &&
+    (!variationOverrides ||
+      !variationOverrides.find((v) => v.percentage_allocation === 100))
   return (
     <>
       {invalid && (
@@ -65,6 +72,31 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           className='mt-2'
           error='Your variation percentage splits total to over 100%'
         />
+      )}
+      {select && !!unmatchedOverride && (
+        <div className='panel panel--flat panel-without-heading mb-2'>
+          <div className='panel-content'>
+            <Row>
+              <Flex>
+                <ValueEditor
+                  disabled
+                  value={Utils.getTypedValue(unmatchedOverride.value)}
+                />
+              </Flex>
+              <div
+                data-test='select-unmatched-override'
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                  setVariations([])
+                  setValue?.(unmatchedOverride.value)
+                }}
+                className={`btn-radio ml-2 ${
+                  unmatchedOverride.selected ? 'btn-radio-on' : ''
+                }`}
+              />
+            </Row>
+          </div>
+        </div>
       )}
       {select && (
         <div className='panel panel--flat panel-without-heading mb-2'>
