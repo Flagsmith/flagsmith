@@ -83,20 +83,12 @@ describe('pickEnvironmentFlag', () => {
     expect(pickEnvironmentFlag(undefined, 99)).toBeUndefined()
   })
 
-  it.each([
-    ['unicode', { string_value: '{"a":1}', type: 'unicode' }, '{"a":1}'],
-    ['bool', { boolean_value: true, type: 'bool' }, true],
-    ['float', { float_value: 1.5, type: 'float' }, 1.5],
-    ['int', { integer_value: 7, type: 'int' }, 7],
-    ['int missing', { type: 'int' }, null],
-    ['no value', undefined, null],
-  ])(
-    'flattens a nested feature_state_value (%s) to the typed value',
-    (_label, nested, expected) => {
-      const results = [make(11, 99, nested)]
-      expect(pickEnvironmentFlag(results, 99)?.feature_state_value).toBe(
-        expected,
-      )
-    },
-  )
+  it('flattens the nested feature_state_value via featureStateToValue', () => {
+    // Branch coverage lives in featureStateToValue.test.ts; this just proves the
+    // nested value is flattened rather than passed through as an object.
+    const results = [make(11, 99, { string_value: '{"a":1}', type: 'unicode' })]
+    expect(pickEnvironmentFlag(results, 99)?.feature_state_value).toBe(
+      '{"a":1}',
+    )
+  })
 })
