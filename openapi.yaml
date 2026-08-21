@@ -1741,6 +1741,33 @@ paths:
         - Cohort Sync Key: []
       tags:
         - Other
+  /api/v1/cohort-sync/mixpanel/webhook/:
+    post:
+      operationId: api_v1_cohort_sync_mixpanel_webhook_create
+      description: Called by Mixpanel every sync cycle with the cohort's full membership (`members`) or the changes since the last sync (`add_members`/`remove_members`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MixpanelWebhook'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MixpanelWebhook'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MixpanelWebhook'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MixpanelWebhookResponse'
+      security:
+        - Cohort Sync Key: []
+      tags:
+        - Webhooks
   /api/v1/environment-document/:
     get:
       operationId: sdk_v1_environment_document
@@ -18664,6 +18691,16 @@ paths:
         - processor
 components:
   schemas:
+    ActionEnum:
+      description: |-
+        * `members` - members
+        * `add_members` - add_members
+        * `remove_members` - remove_members
+      type: string
+      enum:
+        - members
+        - add_members
+        - remove_members
     ActionTypeEnum:
       description: |-
         * `TOGGLE_FEATURE` - Enable/Disable Feature for the environment
@@ -22700,6 +22737,51 @@ components:
           maxLength: 200
       required:
         - api_key
+    MixpanelMember:
+      type: object
+      properties:
+        mixpanel_distinct_id:
+          type: string
+          maxLength: 2000
+      required:
+        - mixpanel_distinct_id
+    MixpanelParameters:
+      type: object
+      properties:
+        mixpanel_cohort_id:
+          type: string
+          maxLength: 255
+        mixpanel_cohort_name:
+          type: string
+          maxLength: 2000
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/MixpanelMember'
+      required:
+        - members
+        - mixpanel_cohort_id
+        - mixpanel_cohort_name
+    MixpanelWebhook:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        parameters:
+          $ref: '#/components/schemas/MixpanelParameters'
+      required:
+        - action
+        - parameters
+    MixpanelWebhookResponse:
+      type: object
+      properties:
+        action:
+          type: string
+        status:
+          type: string
+      required:
+        - action
+        - status
     Monitoring:
       type: object
       properties:
@@ -27346,10 +27428,12 @@ components:
       description: |-
         * `csv` - CSV
         * `amplitude` - Amplitude
+        * `mixpanel` - Mixpanel
       type: string
       enum:
         - csv
         - amplitude
+        - mixpanel
     StageAction:
       type: object
       properties:
@@ -29361,7 +29445,7 @@ components:
     Cohort Sync Key:
       type: http
       scheme: bearer
-      description: 'For cohort sync endpoints called by an external cohort source, such as Amplitude.'
+      description: 'For cohort sync endpoints called by an external cohort source, such as Amplitude. Sources that can only send Basic credentials (e.g. Mixpanel) pass the key as the password, with any username.'
     Environment API Key:
       type: apiKey
       in: header

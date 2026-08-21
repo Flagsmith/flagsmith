@@ -2,7 +2,11 @@ from flag_engine.segments.constants import IS_SET
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
-from cohorts.models import Cohort, CohortMembership, CohortMembershipState
+from cohorts.models import (
+    Cohort,
+    CohortMembership,
+    CohortMembershipState,
+)
 from cohorts.services import (
     apply_pending_memberships,
     create_cohort,
