@@ -24,7 +24,9 @@ type UsageDashboardPageProps = {
 const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   organisationId,
 }) => {
+  // ProjectFilter hands the id back as a string, the queries want the pk.
   const [project, setProject] = useState<string | undefined>()
+  const selectedProjectId = project ? Number(project) : undefined
 
   const {
     data: organisation,
@@ -50,7 +52,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       ? {
           billing_period: billingPeriod,
           organisationId,
-          projectId: project ? Number(project) : undefined,
+          projectId: selectedProjectId,
         }
       : skipToken,
   )
@@ -71,6 +73,9 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       total={data?.totals?.total ?? 0}
       limit={subscriptionMeta?.max_api_calls}
       hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
+      organisationId={organisationId}
+      billingPeriod={billingPeriod}
+      projectId={selectedProjectId}
       isError={organisationFailed || usageFailed}
       isLoading={loadingOrganisation || loadingUsage || loadingLimit}
       filters={

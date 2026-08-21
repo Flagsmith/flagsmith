@@ -1,7 +1,9 @@
 import { FC, ReactNode } from 'react'
+import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import EmptyState from 'components/EmptyState'
+import UsageBreakdownContainer from 'components/organisation-settings/usage/UsageBreakdown/UsageBreakdownContainer'
 import UsageMeter from './components/UsageMeter'
 import UsageOverTime from './components/UsageOverTime'
 
@@ -12,16 +14,22 @@ export type UsageDashboardProps = {
   hasBillingPeriod: boolean
   isError?: boolean
   isLoading?: boolean
+  organisationId: number
+  billingPeriod: Req['getOrganisationUsage']['billing_period']
+  projectId: number | undefined
   filters?: ReactNode
 }
 
 const UsageDashboard: FC<UsageDashboardProps> = ({
+  billingPeriod,
   data,
   filters,
   hasBillingPeriod,
   isError,
   isLoading,
   limit,
+  organisationId,
+  projectId,
   total,
 }) => {
   let content
@@ -49,6 +57,13 @@ const UsageDashboard: FC<UsageDashboardProps> = ({
           data={data}
           limit={limit}
           isBillingPeriod={hasBillingPeriod}
+        />
+
+        <UsageBreakdownContainer
+          organisationId={organisationId}
+          billingPeriod={billingPeriod}
+          data={data}
+          projectId={projectId}
         />
       </>
     )
