@@ -1244,6 +1244,16 @@ export interface AggregateUsageDataItem {
   traits: number | null
 }
 
+/**
+ * A threshold crossing we emailed about. Only those inside the current billing
+ * period are returned, so the list is what has happened this period.
+ */
+export type OrganisationUsageNotification = {
+  organisation_id: number
+  percent_usage: number
+  notified_at: string
+}
+
 export interface UsageEventsList extends AggregateUsageDataItem {
   labels: {
     user_agent: string | null
@@ -1343,6 +1353,7 @@ export type Res = {
     }
     events_list: UsageEventsList[]
   }
+  organisationUsageNotifications: PagedResponse<OrganisationUsageNotification>
   identity: { id: string } //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
   permission: Record<string, boolean> & {

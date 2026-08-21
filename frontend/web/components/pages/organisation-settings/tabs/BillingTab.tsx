@@ -1,6 +1,5 @@
 import React from 'react'
 import { Organisation } from 'common/types/responses'
-import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 import Payment from 'components/modals/payment'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
@@ -43,74 +42,46 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
     Utils.getFlagsmithHasFeature('feature_versioning') &&
     feature_history_visibility_days !== 0
 
-  const limitItems: LimitItem[] = [
-    {
-      icon: 'bar-chart',
-      label: 'API Calls',
-      value: formatLimit(max_api_calls),
-    },
-    { icon: 'people', label: 'Team Seats', value: formatLimit(max_seats) },
-    { icon: 'layers', label: 'Projects', value: formatLimit(max_projects) },
-    showAuditLog
-      ? {
-          icon: 'list',
-          label: 'Audit Log',
-          value: formatDays(audit_log_visibility_days),
-        }
-      : undefined,
-    showFeatureHistory
-      ? {
-          icon: 'clock',
-          label: 'Feature History',
-          value: formatDays(feature_history_visibility_days),
-        }
-      : undefined,
-  ].filter((item): item is LimitItem => item !== undefined)
+  const limitItems: LimitItem[] = (
+    [
+      {
+        icon: 'bar-chart',
+        label: 'API Calls',
+        value: formatLimit(max_api_calls),
+      },
+      { icon: 'people', label: 'Team Seats', value: formatLimit(max_seats) },
+      { icon: 'layers', label: 'Projects', value: formatLimit(max_projects) },
+      showAuditLog
+        ? {
+            icon: 'list',
+            label: 'Audit Log',
+            value: formatDays(audit_log_visibility_days),
+          }
+        : undefined,
+      showFeatureHistory
+        ? {
+            icon: 'clock',
+            label: 'Feature History',
+            value: formatDays(feature_history_visibility_days),
+          }
+        : undefined,
+    ] as (LimitItem | undefined)[]
+  ).filter((item): item is LimitItem => item !== undefined)
 
   return (
     <div className='mt-4'>
-      <Row space className='plan p-4 mb-4 flex-wrap gap-4'>
-        <div>
-          <Row className='flex-wrap gap-4'>
-            <div>
-              <Row style={{ width: '230px' }}>
-                <div className='plan-icon'>
-                  <Icon name='layers' width={32} />
-                </div>
-                <div>
-                  <p className='fs-small lh-sm mb-0'>Your plan</p>
-                  <h4 className='mb-0'>{planName}</h4>
-                </div>
-              </Row>
-            </div>
-            <div>
-              <Row style={{ width: '230px' }}>
-                <div className='plan-icon'>
-                  <h4 className='mb-0 text-center' style={{ width: '32px' }}>
-                    ID
-                  </h4>
-                </div>
-                <div>
-                  <p className='fs-small lh-sm mb-0'>Organisation ID</p>
-                  <h4 className='mb-0'>{organisation.id}</h4>
-                </div>
-              </Row>
-            </div>
-            {!!chargebee_email && (
-              <div>
-                <Row style={{ width: '230px' }}>
-                  <div className='plan-icon'>
-                    <Icon name='layers' width={32} />
-                  </div>
-                  <div>
-                    <p className='fs-small lh-sm mb-0'>Management Email</p>
-                    <h6 className='mb-0'>{chargebee_email}</h6>
-                  </div>
-                </Row>
-              </div>
-            )}
-          </Row>
-        </div>
+      <Row space className='mb-4 flex-wrap gap-3 align-items-stretch'>
+        <Row className='flex-wrap gap-3 align-items-stretch flex-1'>
+          <StatItem icon='layers' label='Your plan' value={planName} />
+          <StatItem label='Organisation ID' value={String(organisation.id)} />
+          {!!chargebee_email && (
+            <StatItem
+              label='Management email'
+              value={chargebee_email}
+              size='sm'
+            />
+          )}
+        </Row>
         <div className='align-self-center'>
           {organisation.subscription?.subscription_id && (
             <Button
@@ -127,7 +98,8 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
       {subscriptionMeta && (
         <>
           <h5 className='mt-4 mb-3'>Subscription Limits</h5>
-          <Row className='plan p-4 mb-4 flex-wrap gap-4'>
+          {/* StatItem carries its own card, so this row is layout only. */}
+          <Row className='mb-4 flex-wrap gap-3 align-items-stretch'>
             {limitItems.map((item) => (
               <StatItem
                 key={item.label}

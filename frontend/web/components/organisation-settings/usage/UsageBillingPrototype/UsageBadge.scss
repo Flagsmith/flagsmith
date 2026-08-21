@@ -1,0 +1,62 @@
+// Mirrors experiments/StatusBadge so the two read as one pattern.
+.usage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+  }
+
+  &--success {
+    background: var(--color-surface-success);
+    color: var(--color-text-success);
+
+    .usage-badge__dot {
+      background: var(--color-text-success);
+    }
+  }
+
+  &--warning {
+    background: var(--color-surface-warning);
+    color: var(--color-text-warning);
+
+    .usage-badge__dot {
+      background: var(--color-text-warning);
+    }
+  }
+
+  &--danger {
+    background: var(--color-surface-danger);
+    color: var(--color-text-danger);
+
+    .usage-badge__dot {
+      background: var(--color-text-danger);
+    }
+  }
+
+  &--info {
+    background: var(--color-surface-info);
+    color: var(--color-text-info);
+
+    .usage-badge__dot {
+      background: var(--color-text-info);
+    }
+  }
+
+  &--neutral {
+    background: var(--color-surface-muted);
+    color: var(--color-text-secondary);
+
+    .usage-badge__dot {
+      background: var(--color-text-secondary);
+    }
+  }
+}
