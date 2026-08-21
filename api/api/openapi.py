@@ -175,7 +175,9 @@ class CohortSyncKeyAuthenticationExtension(OpenApiAuthenticationExtension):  # t
             "scheme": "bearer",
             "description": (
                 "For cohort sync endpoints called by an external cohort "
-                "source, such as Amplitude."
+                "source, such as Amplitude. Sources that can only send "
+                "Basic credentials (e.g. Mixpanel) pass the key as the "
+                "password, with any username."
             ),
         }
 

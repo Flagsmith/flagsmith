@@ -1,6 +1,7 @@
+from django.urls import path
 from rest_framework.routers import SimpleRouter
 
-from cohorts.sync_views import AmplitudeCohortSyncViewSet
+from cohorts.sync_views import AmplitudeCohortSyncViewSet, MixpanelCohortSyncView
 
 app_name = "cohort-sync"
 
@@ -8,4 +9,7 @@ app_name = "cohort-sync"
 router = SimpleRouter()
 router.register(r"amplitude/lists", AmplitudeCohortSyncViewSet, basename="amplitude")
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("mixpanel/webhook/", MixpanelCohortSyncView.as_view(), name="mixpanel"),
+    *router.urls,
+]
