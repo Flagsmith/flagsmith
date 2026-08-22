@@ -45,6 +45,7 @@ class ProjectListSerializer(serializers.ModelSerializer):  # type: ignore[type-a
             "edge_v2_migration_status",
             "minimum_change_request_approvals",
             "enforce_feature_owners",
+            "max_environments_allowed",
         )
         read_only_fields = (
             "enable_dynamo_db",
@@ -128,6 +129,7 @@ class ProjectRetrieveSerializer(ProjectListSerializer):
             "max_segments_allowed",
             "max_features_allowed",
             "max_segment_overrides_allowed",
+            "max_environments_allowed",
             "total_features",
             "total_segments",
         )
