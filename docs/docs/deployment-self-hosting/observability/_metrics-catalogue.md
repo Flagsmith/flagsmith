@@ -46,6 +46,15 @@ Results of cache retrieval for environment document. `result` label is either `h
 Labels:
  - `result`
 
+### `flagsmith_environment_document_writes`
+
+Counter.
+
+Environment documents written to DynamoDB. `result` label is either `success` or `failure`. A batch write that fails counts every document it carried, since DynamoDB does not report which of them were persisted.
+
+Labels:
+ - `result`
+
 ### `flagsmith_experimentation_warehouse_connection_verifications`
 
 Counter.
