@@ -1,9 +1,9 @@
 import { FC } from 'react'
 import EmptyState from 'components/EmptyState'
-import UsageBreakdownRow from './UsageBreakdownRow'
-import { BreakdownRow } from './utils'
+import Row from './Row'
+import { BreakdownRow } from 'components/organisation-settings/usage/UsageBreakdown/utils'
 
-export type UsageBreakdownListProps = {
+export type ListProps = {
   rows: BreakdownRow[]
   isLoading?: boolean
   /** Environments belong to a project, so the dimension needs one chosen. */
@@ -14,11 +14,7 @@ export type UsageBreakdownListProps = {
  * A partial list would rank wrongly, so nothing is drawn until every scope has
  * reported. That is why loading covers the whole list rather than each row.
  */
-const UsageBreakdownList: FC<UsageBreakdownListProps> = ({
-  isLoading,
-  needsProject,
-  rows,
-}) => {
+const List: FC<ListProps> = ({ isLoading, needsProject, rows }) => {
   if (isLoading) {
     return (
       <div className='text-center'>
@@ -53,7 +49,7 @@ const UsageBreakdownList: FC<UsageBreakdownListProps> = ({
   return (
     <>
       {rows.map((row) => (
-        <UsageBreakdownRow
+        <Row
           key={row.key}
           label={row.label}
           value={row.value}
@@ -65,4 +61,4 @@ const UsageBreakdownList: FC<UsageBreakdownListProps> = ({
   )
 }
 
-export default UsageBreakdownList
+export default List

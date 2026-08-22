@@ -2,9 +2,9 @@ import { FC } from 'react'
 import Format from 'common/utils/format'
 import { colorSurfaceAction } from 'common/theme/tokens'
 import ValueBar from 'components/shared/ValueBar'
-import './UsageBreakdownRow.scss'
+import './Row.scss'
 
-export type UsageBreakdownRowProps = {
+export type RowProps = {
   label: string
   value: number
   /** The largest row, so the bars can be compared against each other. */
@@ -21,12 +21,7 @@ const share = (value: number, total: number) =>
  * total. One answers "which is biggest", the other "how much of my usage is
  * this", and a single bar cannot say both.
  */
-const UsageBreakdownRow: FC<UsageBreakdownRowProps> = ({
-  label,
-  largest,
-  total,
-  value,
-}) => (
+const Row: FC<RowProps> = ({ label, largest, total, value }) => (
   <div className='usage-breakdown-row d-flex align-items-center gap-3 border-top border-default'>
     <div className='usage-breakdown-row__label'>{label}</div>
 
@@ -45,4 +40,4 @@ const UsageBreakdownRow: FC<UsageBreakdownRowProps> = ({
   </div>
 )
 
-export default UsageBreakdownRow
+export default Row
