@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fromScopedTotals } from './utils'
-import { UsageScope } from './UsageScopeTotal'
+import { UsageScope } from './components/ScopeTotal'
 
 /**
- * Collects the totals reported by one UsageScopeTotal per scope.
+ * Collects the totals reported by one ScopeTotal per scope.
  *
  * Keyed on the scope's key rather than its label, because two projects may
  * share a name and would otherwise overwrite each other.

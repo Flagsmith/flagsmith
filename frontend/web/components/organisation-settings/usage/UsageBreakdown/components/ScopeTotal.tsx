@@ -10,7 +10,7 @@ export type UsageScope = {
   environmentId?: string
 }
 
-type UsageScopeTotalProps = {
+type ScopeTotalProps = {
   organisationId: number
   billingPeriod: Req['getOrganisationUsage']['billing_period']
   scope: UsageScope
@@ -30,7 +30,7 @@ type UsageScopeTotalProps = {
  * and would also remove the wait: the rows only rank correctly once every
  * scope has answered, so the section loads at the pace of its slowest request.
  */
-const UsageScopeTotal: FC<UsageScopeTotalProps> = ({
+const ScopeTotal: FC<ScopeTotalProps> = ({
   billingPeriod,
   onTotal,
   organisationId,
@@ -52,4 +52,4 @@ const UsageScopeTotal: FC<UsageScopeTotalProps> = ({
   return null
 }
 
-export default UsageScopeTotal
+export default ScopeTotal
