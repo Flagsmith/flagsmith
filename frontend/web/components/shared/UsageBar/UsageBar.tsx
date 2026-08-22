@@ -5,6 +5,7 @@ import {
   colorSurfaceAction,
 } from 'common/theme/tokens'
 import Format from 'common/utils/format'
+import ValueBar from 'components/shared/ValueBar'
 import UsageBarThresholds from './UsageBarThresholds'
 import { boundPercent, toneFor, usagePercent } from './utils'
 import './UsageBar.scss'
@@ -61,23 +62,13 @@ const UsageBar: FC<UsageBarProps> = ({
           thresholds?.length ? 'usage-bar__wrap position-relative' : undefined
         }
       >
-        <div
-          className='usage-bar__track rounded-full overflow-hidden bg-surface-muted'
-          role='progressbar'
-          aria-label={label ?? ariaLabel}
-          aria-valuenow={boundedPercent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuetext={`${percent}% of ${Format.shortenNumber(limit)}`}
-        >
-          <div
-            className='usage-bar__fill h-100 rounded-full'
-            style={{
-              background: FILL_COLOURS[tone],
-              width: `${boundedPercent}%`,
-            }}
-          />
-        </div>
+        <ValueBar
+          percent={boundedPercent}
+          colour={FILL_COLOURS[tone]}
+          ariaLabel={label ?? ariaLabel}
+          ariaValueNow={boundedPercent}
+          ariaValueText={`${percent}% of ${Format.shortenNumber(limit)}`}
+        />
 
         {!!thresholds?.length && <UsageBarThresholds thresholds={thresholds} />}
       </div>

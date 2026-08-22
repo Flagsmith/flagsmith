@@ -22,7 +22,9 @@ type UsageDashboardProps = {
 
 /** Behind `usage_dashboard`. Owns the fetching; the view draws the result. */
 const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
+  // ProjectFilter hands the id back as a string, the queries want the pk.
   const [project, setProject] = useState<string | undefined>()
+  const selectedProjectId = project ? Number(project) : undefined
 
   const {
     data: organisation,
@@ -51,8 +53,7 @@ const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
       ? {
           billing_period: billingPeriod,
           organisationId,
-          // ProjectFilter hands the id back as a string, the query wants the pk.
-          projectId: project ? Number(project) : undefined,
+          projectId: selectedProjectId,
         }
       : skipToken,
   )
@@ -75,6 +76,9 @@ const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
       total={data?.totals?.total ?? 0}
       limit={subscriptionMeta?.max_api_calls}
       hasBillingPeriod={hasBillingPeriod}
+      organisationId={organisationId}
+      billingPeriod={billingPeriod}
+      projectId={selectedProjectId}
       isError={organisationFailed || usageFailed}
       isLoading={loadingOrganisation || loadingUsage || loadingLimit}
       filters={
