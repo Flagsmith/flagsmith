@@ -5,7 +5,6 @@ import {
   colorSurfaceAction,
 } from 'common/theme/tokens'
 import Format from 'common/utils/format'
-import UsageBarHeader from './UsageBarHeader'
 import UsageBarThresholds from './UsageBarThresholds'
 import { boundPercent, toneFor, usagePercent } from './utils'
 import './UsageBar.scss'
@@ -48,7 +47,14 @@ const UsageBar: FC<UsageBarProps> = ({
 
   return (
     <div className='usage-bar mb-2'>
-      {label && <UsageBarHeader label={label} usage={usage} limit={limit} />}
+      {label && (
+        <div className='d-flex justify-content-between align-items-center mb-1'>
+          <span className='fs-small fw-normal'>{label}</span>
+          <span className='fs-small fw-bold'>
+            {usage}/{limit}
+          </span>
+        </div>
+      )}
 
       <div
         className={
