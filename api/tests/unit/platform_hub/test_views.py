@@ -3,6 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from api_keys.models import MasterAPIKey
 from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation, OrganisationRole
@@ -144,6 +145,39 @@ def test_organisations_view__user_admin_of_one_org__returns_only_that_org(
     assert len(data) == 1
     assert data[0]["id"] == platform_hub_organisation.id
     assert data[0]["name"] == "Platform Hub Org"
+
+
+def test_organisations_view__admin_master_api_key__returns_only_that_org(
+    platform_hub_organisation: Organisation,
+    platform_hub_project: Project,
+    platform_hub_environment: Environment,
+    platform_hub_feature: Feature,
+    other_organisation: Organisation,
+    other_org_project: Project,
+    other_org_environment: Environment,
+    other_org_feature: Feature,
+    settings: pytest.FixtureRequest,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False  # type: ignore[attr-defined]
+    settings.INFLUXDB_TOKEN = ""  # type: ignore[attr-defined]
+
+    _, key = MasterAPIKey.objects.create_key(
+        name="platform_hub_key", organisation=platform_hub_organisation, is_admin=True
+    )
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION="Api-Key " + key)
+
+    url = reverse("api-v1:platform-hub:organisations")
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["id"] == platform_hub_organisation.id
 
 
 def test_organisations_view__non_admin_org_exists__excludes_non_admin_orgs(

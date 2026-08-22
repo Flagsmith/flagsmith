@@ -42,6 +42,11 @@ class APIKeyUser(UserABC):
     def organisations(self) -> QuerySet[Organisation]:
         return Organisation.objects.filter(id=self.key.organisation_id)  # type: ignore[no-any-return]
 
+    def get_admin_organisations(self) -> QuerySet[Organisation]:
+        if not self.key.is_admin:
+            return Organisation.objects.none()  # type: ignore[no-any-return]
+        return Organisation.objects.filter(id=self.key.organisation_id)  # type: ignore[no-any-return]
+
     def belongs_to(self, organisation_id: int) -> bool:
         return self.key.organisation_id == organisation_id
 
