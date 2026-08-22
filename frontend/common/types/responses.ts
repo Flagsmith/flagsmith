@@ -514,6 +514,7 @@ export type Subscription = {
   customer_id: string
   payment_method: string
   notes: string | null
+  has_active_billing_periods: boolean
 }
 
 export type OnboardingVariant = 'control' | 'single_page'

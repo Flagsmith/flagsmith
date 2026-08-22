@@ -1,0 +1,26 @@
+.usage-bar {
+  &__marker {
+    position: absolute;
+    top: 4px;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-border-strong);
+    transform: translateX(-50%);
+  }
+
+  &__marker-label {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  // The last marker sits at the right edge, so its label is right-aligned to
+  // keep it inside the container.
+  &__marker--end &__marker-label {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+}
