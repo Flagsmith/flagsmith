@@ -166,10 +166,9 @@ def add_cohort_members(cohort: Cohort, identifiers: "typing.Iterable[str]") -> N
         )
         apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort.id})
     logger.info(
-        "membership.deltas_received",
+        "membership.adds_received",
         cohort__id=cohort.id,
         environment__id=cohort.environment_id,
-        action="add",
         deltas__count=len(rows),
     )
 
@@ -177,18 +176,24 @@ def add_cohort_members(cohort: Cohort, identifiers: "typing.Iterable[str]") -> N
 def remove_cohort_members(cohort: Cohort, identifiers: "typing.Iterable[str]") -> None:
     from cohorts.tasks import apply_cohort_membership_deltas
 
-    unique_identifiers = set(identifiers)
+    unique_identifiers = list(set(identifiers))
+    matched = 0
     with transaction.atomic():
-        # Removing a non-member is a no-op: only existing rows flip.
-        matched = CohortMembership.objects.filter(
-            cohort=cohort, identifier__in=unique_identifiers
-        ).update(state=CohortMembershipState.PENDING_REMOVE, updated_at=timezone.now())
+        # Postgres rejects a statement carrying more than 65535 bind
+        # parameters, which a single large identifier list would exceed.
+        for start in range(0, len(unique_identifiers), 1000):
+            # Removing a non-member is a no-op: only existing rows flip.
+            matched += CohortMembership.objects.filter(
+                cohort=cohort,
+                identifier__in=unique_identifiers[start : start + 1000],
+            ).update(
+                state=CohortMembershipState.PENDING_REMOVE, updated_at=timezone.now()
+            )
         apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort.id})
     logger.info(
-        "membership.deltas_received",
+        "membership.removals_received",
         cohort__id=cohort.id,
         environment__id=cohort.environment_id,
-        action="remove",
         deltas__count=len(unique_identifiers),
         members__matched=matched,
     )

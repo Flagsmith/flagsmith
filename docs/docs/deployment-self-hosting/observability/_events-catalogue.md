@@ -86,7 +86,7 @@ Attributes:
 ### `cohorts.cohort.deleted`
 
 Logged at `info` from:
- - `api/cohorts/services.py:219`
+ - `api/cohorts/services.py:224`
 
 Attributes:
  - `cohort.id`
@@ -95,10 +95,20 @@ Attributes:
 ### `cohorts.cohort.deletion_requested`
 
 Logged at `info` from:
- - `api/cohorts/services.py:203`
+ - `api/cohorts/services.py:208`
 
 Attributes:
  - `cohort.id`
+ - `environment.id`
+
+### `cohorts.membership.adds_received`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:168`
+
+Attributes:
+ - `cohort.id`
+ - `deltas.count`
  - `environment.id`
 
 ### `cohorts.membership.applied`
@@ -129,14 +139,12 @@ Logged at `warning` from:
 Attributes:
  - `cohort.id`
 
-### `cohorts.membership.deltas_received`
+### `cohorts.membership.removals_received`
 
 Logged at `info` from:
- - `api/cohorts/services.py:168`
- - `api/cohorts/services.py:187`
+ - `api/cohorts/services.py:193`
 
 Attributes:
- - `action`
  - `cohort.id`
  - `deltas.count`
  - `environment.id`
