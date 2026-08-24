@@ -21,7 +21,8 @@ const RolloutComingSoonCard: FC<RolloutComingSoonCardProps> = ({
 }) => {
   // A trait rather than local state, so asking survives a reload and the beta
   // can later be handed out by targeting it. Read at render, as Announcement
-  // does, so it still resolves if traits land after mount.
+  // does, so reopening the quest reflects it; the trait read does not
+  // subscribe, so local state covers the click itself.
   const [notified, setNotified] = useState(false)
   const alreadyAsked = notified || !!flagsmith.getTrait(ROLLOUT_BETA_REQUESTED)
   const notifyMe = () => {
