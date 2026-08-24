@@ -10,6 +10,12 @@
     flex: 0 0 auto;
   }
 
+  &__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   &__track {
     flex: 1;
   }

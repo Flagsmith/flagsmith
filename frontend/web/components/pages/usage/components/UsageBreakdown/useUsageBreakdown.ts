@@ -42,8 +42,8 @@ export const useUsageBreakdown = ({
     }
     if (dimension === 'environment') {
       return (environments?.results ?? []).map((environment) => ({
-        environmentId: environment.api_key,
-        key: `environment-${environment.api_key}`,
+        environmentId: `${environment.id}`,
+        key: `environment-${environment.id}`,
         label: environment.name,
       }))
     }

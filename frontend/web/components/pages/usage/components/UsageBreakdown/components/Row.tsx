@@ -20,7 +20,9 @@ const Row: FC<RowProps> = ({ colour, label, largest, total, value }) => (
   <div className='usage-breakdown-row d-flex align-items-center gap-3 border-top border-default'>
     <div className='usage-breakdown-row__label d-flex align-items-center gap-2'>
       {colour && <ColorSwatch color={colour} size='sm' />}
-      {label}
+      <span className='usage-breakdown-row__name' title={label}>
+        {label}
+      </span>
     </div>
 
     <ValueBar
