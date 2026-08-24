@@ -30,6 +30,21 @@ _MIXPANEL_RESPONSE = inline_serializer(
     {"action": serializers.CharField(), "status": serializers.CharField()},
 )
 
+_MIXPANEL_FAILURE_RESPONSE = inline_serializer(
+    "MixpanelWebhookFailureResponse",
+    {
+        "action": serializers.CharField(allow_null=True),
+        "status": serializers.CharField(),
+        "error": inline_serializer(
+            "MixpanelWebhookError",
+            {
+                "message": serializers.CharField(),
+                "code": serializers.IntegerField(),
+            },
+        ),
+    },
+)
+
 logger = structlog.get_logger("cohorts")
 
 
@@ -116,7 +131,11 @@ class MixpanelCohortSyncView(APIView):
             "(`add_members`/`remove_members`)."
         ),
         request=MixpanelWebhookSerializer,
-        responses={200: _MIXPANEL_RESPONSE},
+        responses={
+            200: _MIXPANEL_RESPONSE,
+            400: _MIXPANEL_FAILURE_RESPONSE,
+            404: _MIXPANEL_FAILURE_RESPONSE,
+        },
     )
     def post(self, request: Request) -> Response:
         serializer = MixpanelWebhookSerializer(data=request.data)
