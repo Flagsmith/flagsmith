@@ -1,6 +1,7 @@
 import { Subscription } from 'common/types/responses'
 import {
-  hasBillingPeriod,
+  isBillingPeriodSelected,
+  planHasBillingPeriod,
   periodsFor,
   resolvePeriod,
 } from 'components/pages/usage/utils'
@@ -9,10 +10,10 @@ const subscription = (values: Partial<Subscription>): Subscription =>
   ({ has_active_billing_periods: false, plan: null, ...values } as Subscription)
 
 describe('UsageDashboard utils', () => {
-  describe('hasBillingPeriod', () => {
+  describe('planHasBillingPeriod', () => {
     it('is true for a paid plan with active billing periods', () => {
       expect(
-        hasBillingPeriod(
+        planHasBillingPeriod(
           subscription({ has_active_billing_periods: true }),
           false,
         ),
@@ -23,7 +24,7 @@ describe('UsageDashboard utils', () => {
     // limit but no term.
     it('is false for a paid plan without active billing periods', () => {
       expect(
-        hasBillingPeriod(
+        planHasBillingPeriod(
           subscription({ has_active_billing_periods: false }),
           false,
         ),
@@ -32,7 +33,7 @@ describe('UsageDashboard utils', () => {
 
     it('is false on the free plan even if the flag is somehow set', () => {
       expect(
-        hasBillingPeriod(
+        planHasBillingPeriod(
           subscription({ has_active_billing_periods: true }),
           true,
         ),
@@ -40,7 +41,21 @@ describe('UsageDashboard utils', () => {
     })
 
     it('is false before the subscription has loaded', () => {
-      expect(hasBillingPeriod(undefined, false)).toBe(false)
+      expect(planHasBillingPeriod(undefined, false)).toBe(false)
+    })
+  })
+
+  // A billed organisation can still pick a rolling window, and 90 days of
+  // usage must not be drawn against a monthly allowance.
+  describe('isBillingPeriodSelected', () => {
+    it.each`
+      period                       | expected
+      ${'current_billing_period'}  | ${true}
+      ${'previous_billing_period'} | ${true}
+      ${'90_day_period'}           | ${false}
+      ${undefined}                 | ${false}
+    `('$period is a billing period: $expected', ({ expected, period }) => {
+      expect(isBillingPeriodSelected(period)).toBe(expected)
     })
   })
 

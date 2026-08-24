@@ -9,19 +9,19 @@ import ProjectFilter from 'components/ProjectFilter'
 import { PeriodOption } from 'common/types/requests'
 import UsageDashboard from './UsageDashboard'
 import {
-  hasBillingPeriod as deriveHasBillingPeriod,
+  isBillingPeriodSelected,
   periodsFor,
   PeriodSelection,
+  planHasBillingPeriod,
   resolvePeriod,
 } from './utils'
 import './UsageDashboardPage.scss'
 
 type UsageDashboardPageProps = {
-  /** Absent until the route context resolves, so nothing is drawn yet. */
   organisationId: number | undefined
 }
 
-/** Behind `usage_dashboard`. Owns the fetching; the view draws the result. */
+/** Behind `usage_dashboard`. Fetches; the sections it renders take props. */
 const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   organisationId,
 }) => {
@@ -37,18 +37,19 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   const subscription = organisation?.subscription
   const isFreePlan =
     planNames.free === Utils.getPlanName(subscription?.plan ?? '')
-  const hasBillingPeriod = deriveHasBillingPeriod(subscription, isFreePlan)
+  const planIsBilled = planHasBillingPeriod(subscription, isFreePlan)
 
   const [chosenPeriod, setChosenPeriod] = useState<PeriodSelection>('default')
-  const billingPeriod = resolvePeriod(chosenPeriod, hasBillingPeriod)
+  const billingPeriod = resolvePeriod(chosenPeriod, planIsBilled)
 
-  // Waits for the plan. Asking earlier would request the rolling window first,
-  // so a billed organisation would show the wrong period and then correct
-  // itself, at the cost of an extra request.
+  // Waits for the plan: asking earlier requests the rolling window first, so a
+  // billed organisation shows the wrong period and then corrects itself.
+  // isFetching, not isLoading, so changing period shows the loader rather than
+  // the previous period's figures.
   const {
     data,
     isError: usageFailed,
-    isLoading: loadingUsage,
+    isFetching: loadingUsage,
   } = useGetOrganisationUsageQuery(
     organisationId && organisation
       ? {
@@ -69,7 +70,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       organisationId ? { id: organisationId } : skipToken,
     )
 
-  const periods = periodsFor(hasBillingPeriod)
+  const periods = periodsFor(planIsBilled)
 
   if (!organisationId) {
     return null
@@ -80,7 +81,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       data={data}
       total={data?.totals?.total ?? 0}
       limit={subscriptionMeta?.max_api_calls}
-      hasBillingPeriod={hasBillingPeriod}
+      hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
       isError={organisationFailed || usageFailed}
       isLoading={loadingOrganisation || loadingUsage || loadingLimit}
       filters={

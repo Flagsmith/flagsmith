@@ -10,7 +10,8 @@
 
   &__marker-label {
     position: absolute;
-    top: -6px;
+    // Clear of the tick below it, rather than sitting on the ticker.
+    top: -10px;
     left: 50%;
     transform: translateX(-50%);
     white-space: nowrap;
@@ -20,7 +21,8 @@
   // keep it inside the container.
   &__marker--end &__marker-label {
     left: auto;
-    right: 0;
+    // Pulled in from the edge so the label is not flush with the container.
+    right: 4px;
     transform: none;
   }
 }

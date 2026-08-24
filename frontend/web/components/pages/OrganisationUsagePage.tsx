@@ -15,7 +15,7 @@ import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsa
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import UsageChartFilters from 'components/organisation-settings/usage/components/UsageChartFilters'
 import UsageChartTotals from 'components/organisation-settings/usage/components/UsageChartTotals'
-import UsageDashboard from './usage'
+import UsageDashboardPage from './usage'
 
 const OrganisationUsagePage: FC = () => {
   const isSdkViewEnabled = Utils.getFlagsmithHasFeature('sdk_usage_charts')
@@ -56,7 +56,7 @@ const OrganisationUsagePage: FC = () => {
     Req['getOrganisationUsage']['billing_period']
   >(isOnFreePlanPeriods ? '90_day_period' : 'current_billing_period')
 
-  // Skipped behind the flag, otherwise this page and UsageDashboard both fetch.
+  // Skipped behind the flag, otherwise both pages fetch.
   const { data, isError } = useGetOrganisationUsageQuery(
     {
       billing_period: billingPeriod,
@@ -130,7 +130,7 @@ const OrganisationUsagePage: FC = () => {
   }
 
   if (isUsageDashboardEnabled) {
-    return <UsageDashboard organisationId={organisationId} />
+    return <UsageDashboardPage organisationId={organisationId} />
   }
 
   return (

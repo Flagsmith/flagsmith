@@ -23,6 +23,12 @@ type UsageOverTimeProps = {
  * period is drawn cumulatively against the limit. Rolling windows get daily
  * volume instead.
  */
+/** Self-hosted has no limit, so the heading must not promise a comparison. */
+const headingFor = (isBillingPeriod: boolean, limit: PlanLimit) => {
+  if (!isBillingPeriod) return 'Daily usage'
+  return limit ? 'Usage vs plan limit' : 'Cumulative usage'
+}
+
 const UsageOverTime: FC<UsageOverTimeProps> = ({
   data,
   isBillingPeriod,
@@ -60,9 +66,7 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
   return (
     <div className='p-4 border border-default rounded-lg bg-surface-default'>
       <div className='d-flex align-items-baseline justify-content-between gap-3 mb-3'>
-        <strong>
-          {isBillingPeriod ? 'Usage vs plan limit' : 'Daily usage'}
-        </strong>
+        <strong>{headingFor(isBillingPeriod, limit)}</strong>
         <span className='fs-captionSmall text-secondary'>
           {isBillingPeriod
             ? 'Cumulative · this billing period'

@@ -16,7 +16,7 @@ export type PeriodSelection = BillingPeriod | 'default'
  * The plan lookup stays with the caller: resolving it pulls in the Flux stores,
  * which cannot load outside a browser.
  */
-export const hasBillingPeriod = (
+export const planHasBillingPeriod = (
   subscription: Subscription | undefined,
   isFreePlan: boolean,
 ): boolean => !isFreePlan && !!subscription?.has_active_billing_periods
@@ -34,6 +34,14 @@ export const resolvePeriod = (
   }
   return billingPeriodAvailable ? 'current_billing_period' : undefined
 }
+
+/**
+ * Whether the period being *viewed* accumulates towards the limit. A billed
+ * organisation can still choose a rolling window, and 90 days of usage must
+ * not be drawn against a monthly allowance.
+ */
+export const isBillingPeriodSelected = (period: BillingPeriod): boolean =>
+  period === 'current_billing_period' || period === 'previous_billing_period'
 
 /** Without a billing term the billing-period options cannot be selected. */
 export const periodsFor = (billingPeriodAvailable: boolean): PeriodOption[] =>
