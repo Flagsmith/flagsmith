@@ -10,18 +10,12 @@ export type RowProps = {
   value: number
   largest: number
   total: number
-  /** Drawn as a swatch and used for the bar, so the row reads as a key. */
   colour?: string
 }
 
 const share = (value: number, total: number) =>
   total ? Math.round((value / total) * 100) : 0
 
-/**
- * The bar is sized against the largest row and the percentage against the
- * total. One answers "which is biggest", the other "how much of my usage is
- * this", and a single bar cannot say both.
- */
 const Row: FC<RowProps> = ({ colour, label, largest, total, value }) => (
   <div className='usage-breakdown-row d-flex align-items-center gap-3 border-top border-default'>
     <div className='usage-breakdown-row__label d-flex align-items-center gap-2'>

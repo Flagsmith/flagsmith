@@ -3,18 +3,14 @@ import cn from 'classnames'
 import './ValueBar.scss'
 
 export type ValueBarProps = {
-  /** 0 to 100. Callers clamp before passing. */
   percent: number
-  /** Any CSS colour. Passed inline because the width beside it must be. */
   colour: string
   className?: string
-  /** Meter semantics. Omit them and the bar reports nothing to assistive tech. */
   ariaLabel?: string
   ariaValueNow?: number
   ariaValueText?: string
 }
 
-/** A track with a proportional fill. The caller supplies any semantics. */
 const ValueBar: FC<ValueBarProps> = ({
   ariaLabel,
   ariaValueNow,

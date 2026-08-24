@@ -1,12 +1,10 @@
 .usage-breakdown-row {
-  // 12px has no step on the spacing scale, which jumps 8px to 16px.
   padding: 12px 0;
 
   &:first-child {
     border-top: 0;
   }
 
-  // Fixed so every bar starts at the same x, whatever the labels say.
   &__label {
     width: 280px;
     flex: 0 0 auto;

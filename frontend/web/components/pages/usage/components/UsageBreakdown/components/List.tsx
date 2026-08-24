@@ -9,10 +9,6 @@ export type ListProps = {
   needsProject?: boolean
 }
 
-/**
- * A partial list would rank wrongly, so nothing is drawn until every scope has
- * reported. That is why loading covers the whole list rather than each row.
- */
 const List: FC<ListProps> = ({ isLoading, needsProject, rows }) => {
   if (isLoading) {
     return (

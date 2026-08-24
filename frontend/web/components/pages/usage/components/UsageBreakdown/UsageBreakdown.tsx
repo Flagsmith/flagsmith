@@ -9,20 +9,11 @@ export type UsageBreakdownProps = {
   onChangeDimension: (dimension: BreakdownDimension) => void
   rows: BreakdownRow[]
   isLoading?: boolean
-  /** Environments belong to a project, so the dimension needs one chosen. */
   needsProject?: boolean
 }
 
 type DimensionOption = (typeof BREAKDOWN_DIMENSIONS)[number]
 
-/**
- * Where the usage came from. Deliberately carries no plan limit: a single
- * request type or project has no allowance of its own, so a limit line here
- * would invite a comparison that means nothing.
- *
- * Totals only, no series over time. The chart above answers "where am I
- * heading against my plan", and a second time chart here would compete with it.
- */
 const UsageBreakdown: FC<UsageBreakdownProps> = ({
   dimension,
   isLoading,

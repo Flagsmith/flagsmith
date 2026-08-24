@@ -13,11 +13,9 @@ export type BreakdownDimension =
   | 'sdk'
 
 export type BreakdownRow = {
-  /** Unique within a breakdown. Names can repeat, so rows key on this. */
   key: string
   label: string
   value: number
-  /** Set where the dimension has a fixed palette, so the rows read as a key. */
   colour?: string
 }
 
@@ -31,21 +29,12 @@ export const BREAKDOWN_DIMENSIONS: {
   { label: 'By SDK', value: 'sdk' },
 ]
 
-/** The countable fields on an event, as opposed to its day and its labels. */
 export type RequestTypeKey =
   | 'flags'
   | 'identities'
   | 'environment_document'
   | 'traits'
 
-/**
- * The four types an API call is billed as, named and coloured as the usage
- * page has always had them so the rows line up with the "what counts"
- * definitions.
- *
- * Chart tokens rather than status ones: these are categorical, and Identities
- * is not "success". The light values match what the old page hardcoded.
- */
 export const REQUEST_TYPES: {
   key: RequestTypeKey
   label: string
@@ -67,7 +56,6 @@ const countOf = (event: UsageEventsList, key: RequestTypeKey): number =>
 export const totalOf = (event: UsageEventsList): number =>
   REQUEST_TYPES.reduce((sum, { key }) => sum + countOf(event, key), 0)
 
-/** Rows sort by size, because the question is always "what is the biggest". */
 const ranked = (rows: BreakdownRow[]): BreakdownRow[] =>
   rows.filter((row) => row.value > 0).sort((a, b) => b.value - a.value)
 
@@ -86,10 +74,6 @@ export const byRequestType = (
   )
 }
 
-/**
- * Older events predate user-agent capture, so they carry no SDK. They are
- * grouped rather than dropped, otherwise the rows would not sum to the total.
- */
 export const bySdk = (
   data: Res['organisationUsage'] | undefined,
 ): BreakdownRow[] => {
@@ -109,7 +93,6 @@ export const bySdk = (
   )
 }
 
-/** One request per scope, so each total arrives already attributed to a row. */
 export const fromScopedTotals = (
   scopes: { key: string; label: string }[],
   totals: Record<string, number | null | undefined>,
