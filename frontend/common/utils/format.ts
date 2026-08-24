@@ -4,7 +4,6 @@ type Person = {
   email?: string
 }
 
-/** Counts and limits are routinely absent while a query is in flight. */
 type NullableNumber = number | null | undefined
 
 const Format = {
