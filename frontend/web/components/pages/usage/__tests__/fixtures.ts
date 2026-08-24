@@ -1,6 +1,5 @@
 import { Res, UsageEventsList } from 'common/types/responses'
 
-/** The four fields an event is billed on. */
 const COUNTED = [
   'flags',
   'identities',
@@ -25,10 +24,6 @@ export const usageEvent = (
   ...values,
 })
 
-/**
- * Totals are derived rather than supplied, so a fixture cannot claim a total
- * that its own events disagree with, and no cast is needed to omit them.
- */
 export const usageResponse = (
   events: UsageEventsList[],
 ): Res['organisationUsage'] => ({

@@ -50,16 +50,10 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       ? {
           billing_period: billingPeriod,
           organisationId,
-          // ProjectFilter hands the id back as a string, the query wants the pk.
           projectId: project ? Number(project) : undefined,
         }
       : skipToken,
   )
-  // Failure is not fatal: no metadata means no limit, which is what a
-  // self-hosted installation looks like, and the meter falls back to a count.
-  // The wait is another matter. Until it answers the meter would report "no
-  // plan limit", which is a claim rather than an absence, and then correct
-  // itself a moment later.
   const { data: subscriptionMeta, isLoading: loadingLimit } =
     useGetSubscriptionMetadataQuery(
       organisationId ? { id: organisationId } : skipToken,

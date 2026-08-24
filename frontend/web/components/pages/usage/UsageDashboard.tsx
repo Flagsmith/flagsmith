@@ -9,10 +9,6 @@ export type UsageDashboardProps = {
   data: Res['organisationUsage'] | undefined
   total: number
   limit: PlanLimit
-  /**
-   * Whether the selected period accumulates towards the limit. False for the
-   * rolling windows, and for any plan without a billing term.
-   */
   hasBillingPeriod: boolean
   isError?: boolean
   isLoading?: boolean
@@ -28,9 +24,6 @@ const UsageDashboard: FC<UsageDashboardProps> = ({
   limit,
   total,
 }) => {
-  // Loading and failure replace the figures rather than the whole page, so the
-  // heading and the filters stay put. Without this the meter reads 0% in both,
-  // which is indistinguishable from an organisation that made no calls.
   let content
 
   if (isLoading) {
@@ -51,8 +44,6 @@ const UsageDashboard: FC<UsageDashboardProps> = ({
     content = (
       <>
         <UsageMeter total={total} limit={limit} />
-
-        {/* Tile row waits for #8188 and #8258: alone it repeated the meter. */}
 
         <UsageOverTime
           data={data}

@@ -6,7 +6,6 @@ type ProjectFilterType = {
   value?: string
   onChange: (id: string, name: string) => void
   showAll?: boolean
-  /** Associates the control with a FieldLabel. */
   inputId?: string
 }
 

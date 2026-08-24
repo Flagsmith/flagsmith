@@ -56,7 +56,6 @@ const OrganisationUsagePage: FC = () => {
     Req['getOrganisationUsage']['billing_period']
   >(isOnFreePlanPeriods ? '90_day_period' : 'current_billing_period')
 
-  // Skipped behind the flag, otherwise both pages fetch.
   const { data, isError } = useGetOrganisationUsageQuery(
     {
       billing_period: billingPeriod,

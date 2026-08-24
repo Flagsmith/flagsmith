@@ -24,17 +24,11 @@ type LineChartProps = {
   showLegend?: boolean
   seriesLabels?: Record<string, string>
   verticalGrid?: boolean
-  /**
-   * A horizontal threshold drawn across the chart, for a limit or a target.
-   * The y-axis grows to include it, so the line is always in view.
-   */
   referenceLine?: Threshold
 }
 
 type Threshold = { value: number; label?: string; colour: string }
 
-// Room above the highest of the data and the threshold, so the topmost label
-// is not clipped by the edge of the plot.
 const axisDomainFor = (referenceLine?: Threshold): AxisDomain | undefined =>
   referenceLine
     ? [
