@@ -173,11 +173,11 @@ const OnboardingFlow: FC = () => {
   }
 
   // Off, rollout deep-links to the overrides tab like every other next step.
-  const rolloutQuestEnabled = Utils.getFlagsmithHasFeature(
-    'onboarding_rollout_quest',
-  )
+  // Read on click rather than on render: hasFeature counts an evaluation, and
+  // this page re-renders on every connection poll.
   const goToNextStep = (step: OnboardingNextStep) =>
-    step === 'rollout' && rolloutQuestEnabled
+    step === 'rollout' &&
+    Utils.getFlagsmithHasFeature('onboarding_rollout_quest')
       ? openRolloutQuest({
           diagnosticIds,
           featureName,
