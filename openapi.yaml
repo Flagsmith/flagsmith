@@ -19395,7 +19395,6 @@ components:
           type: array
           items:
             type: string
-            maxLength: 2000
           minItems: 1
       required:
         - user_ids
