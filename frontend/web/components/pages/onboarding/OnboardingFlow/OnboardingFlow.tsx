@@ -10,12 +10,14 @@ import OnboardingFlagsTable from 'components/pages/onboarding/OnboardingFlagsTab
 import OnboardingNextSteps, {
   OnboardingNextStep,
 } from 'components/pages/onboarding/OnboardingNextSteps'
+import { openRolloutQuest } from 'components/pages/onboarding/OnboardingRolloutQuest'
 import { useEnsureOnboardingResources } from 'components/pages/onboarding/hooks/useEnsureOnboardingResources'
 import { useOnboardingFlagRename } from 'components/pages/onboarding/hooks/useOnboardingFlagRename'
 import { useOnboardingFlag } from 'components/pages/onboarding/hooks/useOnboardingFlag'
 import { useOnboardingConnection } from 'components/pages/onboarding/hooks/useOnboardingConnection'
 import { useUpdateOrganisationMutation } from 'common/services/useOrganisation'
 import { useUpdateProjectMutation } from 'common/services/useProject'
+import { useGetProfileQuery } from 'common/services/useProfile'
 import API from 'project/api'
 import Constants from 'common/constants'
 import { isPendingAuthorisation } from 'common/utils/pendingAuthorisation'
@@ -41,6 +43,8 @@ const OnboardingFlow: FC = () => {
   const history = useHistory()
   const [updateOrganisation] = useUpdateOrganisationMutation()
   const [updateProject] = useUpdateProjectMutation()
+  // Already fetched by useEnsureOnboardingResources, so this is a cache read.
+  const { data: profile } = useGetProfileQuery({})
 
   // A client waiting on the consent screen sent this user here to sign up. It
   // is answered once the workspace exists, never on load: bootstrapping is a
@@ -144,8 +148,8 @@ const OnboardingFlow: FC = () => {
     }
   }
 
-  // Each next-step card deep-links to the flag's real config; nothing faked.
-  const goToNextStep = (step: OnboardingNextStep) => {
+  // Where a quest ends up: the flag's real config, nothing faked.
+  const goToFlagConfig = (step: OnboardingNextStep) => {
     if (projectId === null) {
       return
     }
@@ -167,6 +171,20 @@ const OnboardingFlow: FC = () => {
     organisation_id: organisationId,
     project_id: projectId,
   }
+
+  // Off, rollout deep-links to the overrides tab like every other next step.
+  // Read on click rather than on render: hasFeature counts an evaluation, and
+  // this page re-renders on every connection poll.
+  const goToNextStep = (step: OnboardingNextStep) =>
+    step === 'rollout' &&
+    Utils.getFlagsmithHasFeature('onboarding_rollout_quest')
+      ? openRolloutQuest({
+          diagnosticIds,
+          featureName,
+          onContinue: () => goToFlagConfig('rollout'),
+          who: { email: profile?.email, organisation: organisationDisplayName },
+        })
+      : goToFlagConfig(step)
   const trackSnippetCopied = (snippet: OnboardingSnippet) =>
     API.trackEvent({
       ...Constants.events.ONBOARDING_SNIPPET_COPIED,
