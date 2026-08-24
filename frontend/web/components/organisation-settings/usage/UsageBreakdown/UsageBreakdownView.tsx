@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import List from './components/List'
 import { BREAKDOWN_DIMENSIONS, BreakdownDimension, BreakdownRow } from './utils'
 import './UsageBreakdown.scss'
@@ -30,10 +31,14 @@ const UsageBreakdownView: FC<UsageBreakdownViewProps> = ({
   rows,
 }) => (
   <div className='p-4 mt-3 border border-default rounded-lg bg-surface-default'>
-    <div className='d-flex align-items-center justify-content-between gap-3 mb-3'>
+    <div className='d-flex align-items-end justify-content-between gap-3 mb-3'>
       <strong>Where the usage came from</strong>
       <div className='usage-breakdown__dimension'>
+        <FieldLabel htmlFor='usage-breakdown-dimension'>
+          Break down by
+        </FieldLabel>
         <Select
+          inputId='usage-breakdown-dimension'
           onChange={(option: DimensionOption) =>
             onChangeDimension(option.value)
           }

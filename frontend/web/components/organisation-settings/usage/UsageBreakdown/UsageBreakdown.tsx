@@ -26,12 +26,13 @@ const UsageBreakdown: FC<UsageBreakdownProps> = ({
 }) => {
   const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
 
-  const { data: projects } = useGetProjectsQuery(
+  const { data: projects, isLoading: loadingProjects } = useGetProjectsQuery(
     dimension === 'project' ? { organisationId } : skipToken,
   )
-  const { data: environments } = useGetEnvironmentsQuery(
-    dimension === 'environment' && projectId ? { projectId } : skipToken,
-  )
+  const { data: environments, isLoading: loadingEnvironments } =
+    useGetEnvironmentsQuery(
+      dimension === 'environment' && projectId ? { projectId } : skipToken,
+    )
 
   const scopes: UsageScope[] = useMemo(() => {
     if (dimension === 'project') {
@@ -64,6 +65,10 @@ const UsageBreakdown: FC<UsageBreakdownProps> = ({
 
   const needsProject = dimension === 'environment' && !projectId
 
+  // Until the keys are known there are no scopes to wait on, so without this
+  // switching dimension shows "no usage" before the first request is even made.
+  const loadingScopes = loadingProjects || loadingEnvironments
+
   return (
     <>
       {!needsProject &&
@@ -81,7 +86,7 @@ const UsageBreakdown: FC<UsageBreakdownProps> = ({
         dimension={dimension}
         onChangeDimension={setDimension}
         rows={rows}
-        isLoading={scoped.isLoading}
+        isLoading={loadingScopes || scoped.isLoading}
         needsProject={needsProject}
       />
     </>
