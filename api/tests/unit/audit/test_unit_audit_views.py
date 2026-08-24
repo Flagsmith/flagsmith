@@ -9,6 +9,7 @@ from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from api_keys.models import MasterAPIKey
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -168,6 +169,69 @@ def test_list_audit_log__admin_of_another_organisation__returns_empty(
     response = api_client.get(url)
 
     # Then
+    assert response.json()["count"] == 0
+
+
+def test_list_audit_log__admin_master_api_key__returns_organisation_logs(
+    admin_master_api_key_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+) -> None:
+    # Given
+    audit_log = AuditLog.objects.create(project=project)
+    url = reverse("api-v1:audit-list")
+
+    # When
+    response = admin_master_api_key_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["id"] == audit_log.id
+
+
+def test_list_audit_log__non_admin_master_api_key__returns_empty(
+    master_api_key: typing.Tuple[MasterAPIKey, str],
+    api_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+) -> None:
+    # Given
+    AuditLog.objects.create(project=project)
+    url = reverse("api-v1:audit-list")
+
+    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + master_api_key[1])
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 0
+
+
+def test_list_audit_log__master_api_key_of_another_organisation__returns_empty(
+    api_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+) -> None:
+    # Given
+    another_organisation = Organisation.objects.create(name="another organisation")
+    _, key = MasterAPIKey.objects.create_key(
+        name="another_key", organisation=another_organisation, is_admin=True
+    )
+
+    AuditLog.objects.create(project=project)
+    url = reverse("api-v1:audit-list")
+
+    api_client.credentials(HTTP_AUTHORIZATION="Api-Key " + key)
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
     assert response.json()["count"] == 0
 
 

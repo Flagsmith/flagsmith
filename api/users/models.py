@@ -254,8 +254,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     def is_organisation_admin(self, organisation: typing.Union["Organisation", int]):  # type: ignore[no-untyped-def]
         return is_user_organisation_admin(self, organisation)
 
-    def get_admin_organisations(self):  # type: ignore[no-untyped-def]
-        return Organisation.objects.filter(
+    def get_admin_organisations(self) -> QuerySet[Organisation]:
+        return Organisation.objects.filter(  # type: ignore[no-any-return]
             userorganisation__user=self,
             userorganisation__role=OrganisationRole.ADMIN.name,
         )
