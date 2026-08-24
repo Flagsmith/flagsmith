@@ -2,14 +2,9 @@ import { FC } from 'react'
 import './UsageBarThresholds.scss'
 
 export type UsageBarThresholdsProps = {
-  /** Percentages to mark, e.g. the points usage is notified at. */
   thresholds: number[]
 }
 
-/**
- * Ticks above the track. The one at the limit is marked so its label can be
- * pulled back inside the container instead of overflowing the right edge.
- */
 const UsageBarThresholds: FC<UsageBarThresholdsProps> = ({ thresholds }) => (
   <>
     {thresholds.map((threshold) => {

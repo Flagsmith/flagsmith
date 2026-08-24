@@ -21,7 +21,6 @@ type UsageDashboardPageProps = {
   organisationId: number | undefined
 }
 
-/** Behind `usage_dashboard`. Fetches; the sections it renders take props. */
 const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   organisationId,
 }) => {
@@ -42,10 +41,6 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   const [chosenPeriod, setChosenPeriod] = useState<PeriodSelection>('default')
   const billingPeriod = resolvePeriod(chosenPeriod, planIsBilled)
 
-  // Waits for the plan: asking earlier requests the rolling window first, so a
-  // billed organisation shows the wrong period and then corrects itself.
-  // isFetching, not isLoading, so changing period shows the loader rather than
-  // the previous period's figures.
   const {
     data,
     isError: usageFailed,

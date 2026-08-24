@@ -9,9 +9,6 @@ import UsageBarThresholds from './UsageBarThresholds'
 import { boundPercent, toneFor, usagePercent } from './utils'
 import './UsageBar.scss'
 
-// The border tokens hold the saturated status colours and stay the same in both
-// themes. The text ones are darkened for contrast and read muddy as a fill; the
-// surface ones are 8% tints and read as empty track.
 const FILL_COLOURS = {
   danger: colorBorderDanger,
   success: colorSurfaceAction,
@@ -23,13 +20,9 @@ export type { UsageTone } from './utils'
 export type UsageBarProps = {
   usage: number
   limit: number
-  /** Renders a label and a usage/limit figure above the bar. */
   label?: string
-  /** Percentages to mark on the bar, e.g. the thresholds usage is notified at. */
   thresholds?: number[]
-  /** Percentage at which the bar turns amber. */
   warnAt?: number
-  /** Needed when there is no label to name the bar. */
   ariaLabel?: string
 }
 

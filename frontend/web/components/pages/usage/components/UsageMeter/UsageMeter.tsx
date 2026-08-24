@@ -9,15 +9,12 @@ import {
 import { meterCopy } from './utils'
 import './UsageMeter.scss'
 
-// The API notifies on more (API_USAGE_ALERT_THRESHOLDS), but 90 sits close
-// enough to 100 that the labels collide, and past the limit the bar is full.
 const WARN_AT = 75
 const NOTIFICATION_THRESHOLDS = [WARN_AT, 100]
 
 export type UsageMeterProps = {
   total: number
   limit: PlanLimit
-  /** Explains the numbers underneath. Filled in by #8187 and #8188. */
   note?: ReactNode
 }
 

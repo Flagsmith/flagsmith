@@ -16,11 +16,9 @@ export type UsageDashboardProps = {
   hasBillingPeriod: boolean
   isError?: boolean
   isLoading?: boolean
-  /** A slot, because the controls fetch their own options. */
   filters?: ReactNode
 }
 
-/** Kept apart from the fetching so every state can be rendered on its own. */
 const UsageDashboard: FC<UsageDashboardProps> = ({
   data,
   filters,

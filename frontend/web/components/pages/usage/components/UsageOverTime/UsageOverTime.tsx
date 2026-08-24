@@ -18,12 +18,6 @@ type UsageOverTimeProps = {
   isBillingPeriod: boolean
 }
 
-/**
- * A rolling window's total falls as old days drop out of it, so only a billing
- * period is drawn cumulatively against the limit. Rolling windows get daily
- * volume instead.
- */
-/** Self-hosted has no limit, so the heading must not promise a comparison. */
 const headingFor = (isBillingPeriod: boolean, limit: PlanLimit) => {
   if (!isBillingPeriod) return 'Daily usage'
   return limit ? 'Usage vs plan limit' : 'Cumulative usage'
