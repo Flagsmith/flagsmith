@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from 'storybook'
-import { UsageBreakdownView } from 'components/pages/usage/components/UsageBreakdown'
+import UsageBreakdown from 'components/pages/usage/components/UsageBreakdown'
 
-const meta: Meta<typeof UsageBreakdownView> = {
+const meta: Meta<typeof UsageBreakdown> = {
   args: { onChangeDimension: () => {} },
-  component: UsageBreakdownView,
+  component: UsageBreakdown,
   title: 'Pages/Usage Dashboard/Components/UsageBreakdown',
 }
 export default meta
 
-type Story = StoryObj<typeof UsageBreakdownView>
+type Story = StoryObj<typeof UsageBreakdown>
 
 export const ByRequestType: Story = {
   args: {

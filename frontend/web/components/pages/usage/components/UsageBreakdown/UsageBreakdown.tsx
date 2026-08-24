@@ -1,42 +1,57 @@
 import { FC } from 'react'
-import { Req } from 'common/types/requests'
-import { Res } from 'common/types/responses'
-import ScopeTotal from './components/ScopeTotal'
-import UsageBreakdownView from './UsageBreakdownView'
-import { useUsageBreakdown } from './useUsageBreakdown'
+import FieldLabel from 'components/base/forms/FieldLabel'
+import List from './components/List'
+import { BREAKDOWN_DIMENSIONS, BreakdownDimension, BreakdownRow } from './utils'
+import './UsageBreakdown.scss'
 
 export type UsageBreakdownProps = {
-  organisationId: number
-  billingPeriod: Req['getOrganisationUsage']['billing_period']
-  /** Already fetched for the charts above, so request type and SDK are free. */
-  data: Res['organisationUsage'] | undefined
-  /** The page's project filter. Environments can only be listed under one. */
-  projectId: number | undefined
+  dimension: BreakdownDimension
+  onChangeDimension: (dimension: BreakdownDimension) => void
+  rows: BreakdownRow[]
+  isLoading?: boolean
+  /** Environments belong to a project, so the dimension needs one chosen. */
+  needsProject?: boolean
 }
+
+type DimensionOption = (typeof BREAKDOWN_DIMENSIONS)[number]
 
 /**
- * Wires the hook to the view. The ScopeTotals are rendered rather than
- * fetched in the hook, because project and environment need one request per
- * key and a hook cannot mount a query per item of a list that changes length.
+ * Where the usage came from. Deliberately carries no plan limit: a single
+ * request type or project has no allowance of its own, so a limit line here
+ * would invite a comparison that means nothing.
+ *
+ * Totals only, no series over time. The chart above answers "where am I
+ * heading against my plan", and a second time chart here would compete with it.
  */
-const UsageBreakdown: FC<UsageBreakdownProps> = (props) => {
-  const { onTotal, scopes, setDimension, ...view } = useUsageBreakdown(props)
-
-  return (
-    <>
-      {scopes.map((scope) => (
-        <ScopeTotal
-          key={scope.key}
-          organisationId={props.organisationId}
-          billingPeriod={props.billingPeriod}
-          scope={scope}
-          onTotal={onTotal}
+const UsageBreakdown: FC<UsageBreakdownProps> = ({
+  dimension,
+  isLoading,
+  needsProject,
+  onChangeDimension,
+  rows,
+}) => (
+  <div className='p-4 mt-3 border border-default rounded-lg bg-surface-default'>
+    <div className='d-flex align-items-end justify-content-between gap-3 mb-3'>
+      <strong>Where the usage came from</strong>
+      <div className='usage-breakdown__dimension'>
+        <FieldLabel htmlFor='usage-breakdown-dimension'>
+          Break down by
+        </FieldLabel>
+        <Select
+          inputId='usage-breakdown-dimension'
+          onChange={(option: DimensionOption) =>
+            onChangeDimension(option.value)
+          }
+          value={BREAKDOWN_DIMENSIONS.find(
+            (option) => option.value === dimension,
+          )}
+          options={BREAKDOWN_DIMENSIONS}
         />
-      ))}
+      </div>
+    </div>
 
-      <UsageBreakdownView {...view} onChangeDimension={setDimension} />
-    </>
-  )
-}
+    <List rows={rows} isLoading={isLoading} needsProject={needsProject} />
+  </div>
+)
 
 export default UsageBreakdown
