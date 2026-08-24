@@ -14,7 +14,7 @@ type ScopeTotalProps = {
   organisationId: number
   billingPeriod: Req['getOrganisationUsage']['billing_period']
   scope: UsageScope
-  onTotal: (key: string, total: number | undefined) => void
+  onTotal: (key: string, total: number | null | undefined) => void
 }
 
 /**
@@ -31,14 +31,16 @@ const ScopeTotal: FC<ScopeTotalProps> = ({
   organisationId,
   scope,
 }) => {
-  const { data } = useGetOrganisationUsageQuery({
+  const { data, isError } = useGetOrganisationUsageQuery({
     billing_period: billingPeriod,
     environmentId: scope.environmentId,
     organisationId,
     projectId: scope.projectId,
   })
 
-  const total = data?.totals?.total
+  // null means answered with nothing to show, as opposed to still in flight.
+  // A failed scope drops out of the ranking rather than holding up the rest.
+  const total = isError ? null : data?.totals?.total
 
   useEffect(() => {
     onTotal(scope.key, total)

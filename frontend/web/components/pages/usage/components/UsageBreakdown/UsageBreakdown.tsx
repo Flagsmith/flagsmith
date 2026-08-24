@@ -26,10 +26,14 @@ const UsageBreakdown: FC<UsageBreakdownProps> = ({
 }) => {
   const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
 
-  const { data: projects, isLoading: loadingProjects } = useGetProjectsQuery(
-    dimension === 'project' ? { organisationId } : skipToken,
-  )
-  const { data: environments, isLoading: loadingEnvironments } =
+  // currentData rather than data: RTK keeps the previous result when the
+  // arguments change, so a project switch would briefly list the old project's
+  // environments while the new request is still out.
+  const { currentData: projects, isFetching: loadingProjects } =
+    useGetProjectsQuery(
+      dimension === 'project' ? { organisationId } : skipToken,
+    )
+  const { currentData: environments, isFetching: loadingEnvironments } =
     useGetEnvironmentsQuery(
       dimension === 'environment' && projectId ? { projectId } : skipToken,
     )
@@ -54,7 +58,9 @@ const UsageBreakdown: FC<UsageBreakdownProps> = ({
 
   const scoped = useScopedBreakdown(
     scopes,
-    `${dimension}|${billingPeriod ?? 'rolling'}|${projectId ?? 'all'}`,
+    `${organisationId}|${dimension}|${billingPeriod ?? 'rolling'}|${
+      projectId ?? 'all'
+    }`,
   )
 
   const rows = useMemo(() => {

@@ -11,26 +11,27 @@ import { UsageScope } from './components/ScopeTotal'
  * stay on screen while the new requests are in flight, marked as current.
  */
 export const useScopedBreakdown = (scopes: UsageScope[], identity: string) => {
-  const [totals, setTotals] = useState<Record<string, number>>({})
+  const [totals, setTotals] = useState<Record<string, number | null>>({})
 
   useEffect(() => {
     setTotals({})
   }, [identity])
 
-  const onTotal = useCallback((key: string, total: number | undefined) => {
-    if (total === undefined) {
-      return
-    }
-    setTotals((current) =>
-      current[key] === total ? current : { ...current, [key]: total },
-    )
-  }, [])
+  const onTotal = useCallback(
+    (key: string, total: number | null | undefined) => {
+      if (total === undefined) {
+        return
+      }
+      setTotals((current) =>
+        current[key] === total ? current : { ...current, [key]: total },
+      )
+    },
+    [],
+  )
 
   const rows = useMemo(() => fromScopedTotals(scopes, totals), [scopes, totals])
 
-  const answered = scopes.filter(
-    (scope) => totals[scope.key] !== undefined,
-  ).length
+  const answered = scopes.filter((scope) => scope.key in totals).length
 
   return {
     isLoading: !!scopes.length && answered < scopes.length,

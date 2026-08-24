@@ -92,7 +92,7 @@ export const bySdk = (
 /** One request per scope, so each total arrives already attributed to a row. */
 export const fromScopedTotals = (
   scopes: { key: string; label: string }[],
-  totals: Record<string, number | undefined>,
+  totals: Record<string, number | null | undefined>,
 ): BreakdownRow[] =>
   ranked(
     scopes.map(({ key, label }) => ({
