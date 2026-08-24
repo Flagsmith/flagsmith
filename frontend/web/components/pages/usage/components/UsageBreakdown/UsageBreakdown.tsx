@@ -1,100 +1,40 @@
-import { FC, useMemo, useState } from 'react'
-import { skipToken } from '@reduxjs/toolkit/query'
+import { FC } from 'react'
 import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
-import { useGetProjectsQuery } from 'common/services/useProject'
-import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import ScopeTotal from './components/ScopeTotal'
 import UsageBreakdownView from './UsageBreakdownView'
-import ScopeTotal, { UsageScope } from './components/ScopeTotal'
-import { useScopedBreakdown } from './useScopedBreakdown'
-import { byRequestType, bySdk, BreakdownDimension } from './utils'
+import { useUsageBreakdown } from './useUsageBreakdown'
 
 export type UsageBreakdownProps = {
   organisationId: number
   billingPeriod: Req['getOrganisationUsage']['billing_period']
-  /** Already fetched for the charts above, so these two cost nothing extra. */
+  /** Already fetched for the charts above, so request type and SDK are free. */
   data: Res['organisationUsage'] | undefined
   /** The page's project filter. Environments can only be listed under one. */
   projectId: number | undefined
 }
 
-const UsageBreakdown: FC<UsageBreakdownProps> = ({
-  billingPeriod,
-  data,
-  organisationId,
-  projectId,
-}) => {
-  const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
-
-  // currentData rather than data: RTK keeps the previous result when the
-  // arguments change, so a project switch would briefly list the old project's
-  // environments while the new request is still out.
-  const { currentData: projects, isFetching: loadingProjects } =
-    useGetProjectsQuery(
-      dimension === 'project' ? { organisationId } : skipToken,
-    )
-  const { currentData: environments, isFetching: loadingEnvironments } =
-    useGetEnvironmentsQuery(
-      dimension === 'environment' && projectId ? { projectId } : skipToken,
-    )
-
-  const scopes: UsageScope[] = useMemo(() => {
-    if (dimension === 'project') {
-      return (projects ?? []).map((project) => ({
-        key: `project-${project.id}`,
-        label: project.name,
-        projectId: project.id,
-      }))
-    }
-    if (dimension === 'environment') {
-      return (environments?.results ?? []).map((environment) => ({
-        environmentId: environment.api_key,
-        key: `environment-${environment.api_key}`,
-        label: environment.name,
-      }))
-    }
-    return []
-  }, [dimension, projects, environments])
-
-  const scoped = useScopedBreakdown(
-    scopes,
-    `${organisationId}|${dimension}|${billingPeriod ?? 'rolling'}|${
-      projectId ?? 'all'
-    }`,
-  )
-
-  const rows = useMemo(() => {
-    if (dimension === 'request-type') return byRequestType(data)
-    if (dimension === 'sdk') return bySdk(data)
-    return scoped.rows
-  }, [dimension, data, scoped.rows])
-
-  const needsProject = dimension === 'environment' && !projectId
-
-  // Until the keys are known there are no scopes to wait on, so without this
-  // switching dimension shows "no usage" before the first request is even made.
-  const loadingScopes = loadingProjects || loadingEnvironments
+/**
+ * Wires the hook to the view. The ScopeTotals are rendered rather than
+ * fetched in the hook, because project and environment need one request per
+ * key and a hook cannot mount a query per item of a list that changes length.
+ */
+const UsageBreakdown: FC<UsageBreakdownProps> = (props) => {
+  const { onTotal, scopes, setDimension, ...view } = useUsageBreakdown(props)
 
   return (
     <>
-      {!needsProject &&
-        scopes.map((scope) => (
-          <ScopeTotal
-            key={scope.key}
-            organisationId={organisationId}
-            billingPeriod={billingPeriod}
-            scope={scope}
-            onTotal={scoped.onTotal}
-          />
-        ))}
+      {scopes.map((scope) => (
+        <ScopeTotal
+          key={scope.key}
+          organisationId={props.organisationId}
+          billingPeriod={props.billingPeriod}
+          scope={scope}
+          onTotal={onTotal}
+        />
+      ))}
 
-      <UsageBreakdownView
-        dimension={dimension}
-        onChangeDimension={setDimension}
-        rows={rows}
-        isLoading={loadingScopes || scoped.isLoading}
-        needsProject={needsProject}
-      />
+      <UsageBreakdownView {...view} onChangeDimension={setDimension} />
     </>
   )
 }
