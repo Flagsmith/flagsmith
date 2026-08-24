@@ -1,4 +1,8 @@
-import { Res } from 'common/types/responses'
+import { UsageEventsList } from 'common/types/responses'
+import {
+  usageEvent,
+  usageResponse,
+} from 'components/pages/usage/__tests__/fixtures'
 import {
   cumulativeTotals,
   dailyTotals,
@@ -6,28 +10,13 @@ import {
   xAxisIntervalFor,
 } from 'components/pages/usage/components/UsageOverTime/utils'
 
-type UsageEvent = Res['organisationUsage']['events_list'][number]
-
-const event = (day: string, values: Partial<UsageEvent> = {}): UsageEvent =>
-  ({
-    day,
-    environment_document: 0,
-    flags: 0,
-    identities: 0,
-    labels: { user_agent: null },
-    traits: 0,
-    ...values,
-  } as UsageEvent)
-
-const usage = (events: UsageEvent[]) =>
-  ({ events_list: events } as Res['organisationUsage'])
-
 describe('UsageOverTime utils', () => {
   describe('dailyTotals', () => {
     it('sums every metric on a day', () => {
       const result = dailyTotals(
-        usage([
-          event('2026-08-01', {
+        usageResponse([
+          usageEvent({
+            day: '2026-08-01',
             environment_document: 1,
             flags: 10,
             identities: 5,
@@ -42,10 +31,10 @@ describe('UsageOverTime utils', () => {
     // The API returns a row per day and client type, so a day can appear twice.
     it('collapses several rows for the same day into one point', () => {
       const result = dailyTotals(
-        usage([
-          event('2026-08-01', { flags: 10 }),
-          event('2026-08-01', { flags: 5 }),
-          event('2026-08-02', { flags: 3 }),
+        usageResponse([
+          usageEvent({ day: '2026-08-01', flags: 10 }),
+          usageEvent({ day: '2026-08-01', flags: 5 }),
+          usageEvent({ day: '2026-08-02', flags: 3 }),
         ]),
       )
 
@@ -57,10 +46,10 @@ describe('UsageOverTime utils', () => {
 
     it('orders by date rather than by the formatted label', () => {
       const result = dailyTotals(
-        usage([
-          event('2026-08-10', { flags: 1 }),
-          event('2026-08-02', { flags: 2 }),
-          event('2026-09-01', { flags: 3 }),
+        usageResponse([
+          usageEvent({ day: '2026-08-10', flags: 1 }),
+          usageEvent({ day: '2026-08-02', flags: 2 }),
+          usageEvent({ day: '2026-09-01', flags: 3 }),
         ]),
       )
 
@@ -72,14 +61,16 @@ describe('UsageOverTime utils', () => {
     })
 
     it('treats missing metrics as zero', () => {
-      const result = dailyTotals(usage([{ day: '2026-08-01' } as UsageEvent]))
+      const result = dailyTotals(
+        usageResponse([{ day: '2026-08-01' } as UsageEventsList]),
+      )
 
       expect(result).toEqual([{ day: '1 Aug', total: 0 }])
     })
 
     it('returns nothing when there is no data', () => {
       expect(dailyTotals(undefined)).toEqual([])
-      expect(dailyTotals(usage([]))).toEqual([])
+      expect(dailyTotals(usageResponse([]))).toEqual([])
     })
   })
 
