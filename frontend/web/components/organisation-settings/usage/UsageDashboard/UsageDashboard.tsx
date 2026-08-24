@@ -4,6 +4,7 @@ import Utils, { planNames } from 'common/utils/utils'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import ProjectFilter from 'components/ProjectFilter'
 import { PeriodOption } from 'common/types/requests'
 import UsageDashboardView from './UsageDashboardView'
@@ -56,12 +57,12 @@ const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
         }
       : skipToken,
   )
-  // Its failure is not fatal: no metadata means no limit, which is what a
-  // self-hosted installation looks like, and the meter falls back to a count.
-  const { data: subscriptionMeta, isLoading: loadingLimit } =
-    useGetSubscriptionMetadataQuery(
-      organisationId ? { id: organisationId } : skipToken,
-    )
+  // Neither its failure nor its wait is fatal: no metadata means no limit,
+  // which is what a self-hosted installation looks like, and the meter falls
+  // back to a count. Blocking the page on an optional figure would be worse.
+  const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery(
+    organisationId ? { id: organisationId } : skipToken,
+  )
 
   const periods = periodsFor(hasBillingPeriod)
 
@@ -76,18 +77,22 @@ const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
       limit={subscriptionMeta?.max_api_calls}
       hasBillingPeriod={hasBillingPeriod}
       isError={organisationFailed || usageFailed}
-      isLoading={loadingOrganisation || loadingUsage || loadingLimit}
+      isLoading={loadingOrganisation || loadingUsage}
       filters={
-        <Row className='gap-2'>
+        <Row className='gap-3 align-items-end'>
           <div className='usage-dashboard__filter'>
+            <FieldLabel htmlFor='usage-period'>Period</FieldLabel>
             <Select
+              inputId='usage-period'
               onChange={(option: PeriodOption) => setChosenPeriod(option.value)}
               value={periods.find((period) => period.value === billingPeriod)}
               options={periods}
             />
           </div>
           <div className='usage-dashboard__filter'>
+            <FieldLabel htmlFor='usage-project'>Project</FieldLabel>
             <ProjectFilter
+              inputId='usage-project'
               showAll
               organisationId={organisationId}
               onChange={setProject}

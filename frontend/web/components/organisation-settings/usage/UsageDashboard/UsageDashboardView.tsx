@@ -67,7 +67,7 @@ const UsageDashboardView: FC<UsageDashboardViewProps> = ({
 
   return (
     <div className='px-3 px-md-4 py-4'>
-      <Row space className='mb-4 align-items-center'>
+      <Row space className='mb-4 align-items-end'>
         <h4 className='mb-0'>Usage</h4>
         {filters}
       </Row>

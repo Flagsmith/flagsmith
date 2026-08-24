@@ -6,9 +6,12 @@ type ProjectFilterType = {
   value?: string
   onChange: (id: string, name: string) => void
   showAll?: boolean
+  /** Associates the control with a FieldLabel. */
+  inputId?: string
 }
 
 const ProjectFilter: FC<ProjectFilterType> = ({
+  inputId,
   onChange,
   organisationId,
   showAll,
@@ -44,6 +47,7 @@ const ProjectFilter: FC<ProjectFilterType> = ({
       onChange={(value: { value: string; label: string }) =>
         onChange(value.value || '', value.label || '')
       }
+      inputId={inputId}
       data-test='project-select'
     />
   )
