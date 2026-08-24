@@ -22,14 +22,14 @@ const ScopeTotal: FC<ScopeTotalProps> = ({
   organisationId,
   scope,
 }) => {
-  const { currentData, isError } = useGetOrganisationUsageQuery({
+  const { currentData, isFetching } = useGetOrganisationUsageQuery({
     billing_period: billingPeriod,
     environmentId: scope.environmentId,
     organisationId,
     projectId: scope.projectId,
   })
 
-  const total = isError ? null : currentData?.totals?.total
+  const total = isFetching ? undefined : currentData?.totals?.total ?? null
 
   useEffect(() => {
     onTotal(scope.key, total)
