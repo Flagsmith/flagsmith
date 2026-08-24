@@ -1,3 +1,4 @@
+import { colorChart1 } from 'common/theme/tokens'
 import {
   usageEvent,
   usageResponse,
@@ -26,6 +27,12 @@ describe('UsageBreakdown utils', () => {
   })
 
   describe('byRequestType', () => {
+    it('carries the colour each type has always had on the usage page', () => {
+      const result = byRequestType(usageResponse([usageEvent({ flags: 1 })]))
+
+      expect(result[0].colour).toBe(colorChart1)
+    })
+
     it('sums each type across every day, biggest first', () => {
       const result = byRequestType(
         usageResponse([

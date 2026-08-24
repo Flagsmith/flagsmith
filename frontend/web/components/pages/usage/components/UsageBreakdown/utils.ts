@@ -1,3 +1,9 @@
+import {
+  colorChart1,
+  colorChart2,
+  colorChart3,
+  colorChart4,
+} from 'common/theme/tokens'
 import { Res, UsageEventsList } from 'common/types/responses'
 
 export type BreakdownDimension =
@@ -11,6 +17,8 @@ export type BreakdownRow = {
   key: string
   label: string
   value: number
+  /** Set where the dimension has a fixed palette, so the rows read as a key. */
+  colour?: string
 }
 
 export const BREAKDOWN_DIMENSIONS: {
@@ -31,14 +39,26 @@ export type RequestTypeKey =
   | 'traits'
 
 /**
- * The four types an API call is billed as, named as the usage page has always
- * named them so the rows line up with the "what counts" definitions.
+ * The four types an API call is billed as, named and coloured as the usage
+ * page has always had them so the rows line up with the "what counts"
+ * definitions.
+ *
+ * Chart tokens rather than status ones: these are categorical, and Identities
+ * is not "success". The light values match what the old page hardcoded.
  */
-export const REQUEST_TYPES: { key: RequestTypeKey; label: string }[] = [
-  { key: 'flags', label: 'Flags' },
-  { key: 'identities', label: 'Identities' },
-  { key: 'environment_document', label: 'Environment Document' },
-  { key: 'traits', label: 'Traits' },
+export const REQUEST_TYPES: {
+  key: RequestTypeKey
+  label: string
+  colour: string
+}[] = [
+  { colour: colorChart1, key: 'flags', label: 'Flags' },
+  { colour: colorChart3, key: 'identities', label: 'Identities' },
+  {
+    colour: colorChart4,
+    key: 'environment_document',
+    label: 'Environment Document',
+  },
+  { colour: colorChart2, key: 'traits', label: 'Traits' },
 ]
 
 const countOf = (event: UsageEventsList, key: RequestTypeKey): number =>
@@ -58,7 +78,8 @@ export const byRequestType = (
   const events = data?.events_list ?? []
 
   return ranked(
-    REQUEST_TYPES.map(({ key, label }) => ({
+    REQUEST_TYPES.map(({ colour, key, label }) => ({
+      colour,
       key,
       label,
       value: events.reduce((sum, event) => sum + countOf(event, key), 0),

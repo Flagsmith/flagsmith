@@ -52,6 +52,7 @@ const List: FC<ListProps> = ({ isLoading, needsProject, rows }) => {
           key={row.key}
           label={row.label}
           value={row.value}
+          colour={row.colour}
           largest={largest}
           total={total}
         />

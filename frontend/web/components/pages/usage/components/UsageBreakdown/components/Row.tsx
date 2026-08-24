@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import Format from 'common/utils/format'
 import { colorSurfaceAction } from 'common/theme/tokens'
+import ColorSwatch from 'components/ColorSwatch'
 import ValueBar from 'components/shared/ValueBar'
 import './Row.scss'
 
@@ -9,6 +10,8 @@ export type RowProps = {
   value: number
   largest: number
   total: number
+  /** Drawn as a swatch and used for the bar, so the row reads as a key. */
+  colour?: string
 }
 
 const share = (value: number, total: number) =>
@@ -19,14 +22,17 @@ const share = (value: number, total: number) =>
  * total. One answers "which is biggest", the other "how much of my usage is
  * this", and a single bar cannot say both.
  */
-const Row: FC<RowProps> = ({ label, largest, total, value }) => (
+const Row: FC<RowProps> = ({ colour, label, largest, total, value }) => (
   <div className='usage-breakdown-row d-flex align-items-center gap-3 border-top border-default'>
-    <div className='usage-breakdown-row__label'>{label}</div>
+    <div className='usage-breakdown-row__label d-flex align-items-center gap-2'>
+      {colour && <ColorSwatch color={colour} size='sm' />}
+      {label}
+    </div>
 
     <ValueBar
       className='usage-breakdown-row__track'
       percent={share(value, largest)}
-      colour={colorSurfaceAction}
+      colour={colour ?? colorSurfaceAction}
     />
 
     <div className='usage-breakdown-row__value text-end fw-bold'>

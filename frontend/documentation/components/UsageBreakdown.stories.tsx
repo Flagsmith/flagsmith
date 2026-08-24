@@ -1,4 +1,10 @@
 import type { Meta, StoryObj } from 'storybook'
+import {
+  colorChart1,
+  colorChart2,
+  colorChart3,
+  colorChart4,
+} from 'common/theme/tokens'
 import UsageBreakdown from 'components/pages/usage/components/UsageBreakdown'
 
 const meta: Meta<typeof UsageBreakdown> = {
@@ -15,17 +21,19 @@ export const ByRequestType: Story = {
     dimension: 'request-type',
     rows: [
       {
+        colour: colorChart4,
         key: 'environment_document',
         label: 'Environment Document',
         value: 5_240_000,
       },
       {
+        colour: colorChart3,
         key: 'identities',
         label: 'Identities',
         value: 1_910_000,
       },
-      { key: 'flags', label: 'Flags', value: 730_000 },
-      { key: 'traits', label: 'Traits', value: 120_000 },
+      { colour: colorChart1, key: 'flags', label: 'Flags', value: 730_000 },
+      { colour: colorChart2, key: 'traits', label: 'Traits', value: 120_000 },
     ],
   },
 }
@@ -35,9 +43,14 @@ export const OneDominantRow: Story = {
   args: {
     dimension: 'request-type',
     rows: [
-      { key: 'flags', label: 'Flags', value: 8_900_000 },
-      { key: 'identities', label: 'Identities', value: 41_000 },
-      { key: 'traits', label: 'Traits', value: 9_000 },
+      { colour: colorChart1, key: 'flags', label: 'Flags', value: 8_900_000 },
+      {
+        colour: colorChart3,
+        key: 'identities',
+        label: 'Identities',
+        value: 41_000,
+      },
+      { colour: colorChart2, key: 'traits', label: 'Traits', value: 9_000 },
     ],
   },
 }
