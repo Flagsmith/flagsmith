@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import EmptyState from 'components/EmptyState'
 import Row from './Row'
-import { BreakdownRow } from 'components/organisation-settings/usage/UsageBreakdown/utils'
+import { BreakdownRow } from 'components/pages/usage/components/UsageBreakdown/utils'
 
 export type ListProps = {
   rows: BreakdownRow[]

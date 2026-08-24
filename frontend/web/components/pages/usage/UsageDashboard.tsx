@@ -3,7 +3,7 @@ import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import EmptyState from 'components/EmptyState'
-import UsageBreakdown from 'components/organisation-settings/usage/UsageBreakdown'
+import UsageBreakdown from './components/UsageBreakdown'
 import UsageMeter from './components/UsageMeter'
 import UsageOverTime from './components/UsageOverTime'
 

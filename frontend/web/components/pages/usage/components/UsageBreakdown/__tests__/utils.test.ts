@@ -4,7 +4,7 @@ import {
   bySdk,
   fromScopedTotals,
   totalOf,
-} from 'components/organisation-settings/usage/UsageBreakdown/utils'
+} from 'components/pages/usage/components/UsageBreakdown/utils'
 
 const event = (values: Partial<UsageEventsList> = {}): UsageEventsList =>
   ({

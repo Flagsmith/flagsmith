@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from 'storybook'
-import { UsageBreakdownView } from 'components/organisation-settings/usage/UsageBreakdown'
+import { UsageBreakdownView } from 'components/pages/usage/components/UsageBreakdown'
 
 const meta: Meta<typeof UsageBreakdownView> = {
   args: { onChangeDimension: () => {} },
