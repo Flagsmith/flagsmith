@@ -60,12 +60,17 @@ class AmplitudeListSerializer(serializers.Serializer[None]):
     name = serializers.CharField(max_length=2000)
 
 
+def _validate_identifier_byte_length(value: str) -> None:
+    # Edge identifiers are DynamoDB sort keys, capped at 1024 bytes.
+    if len(value.encode()) > 1024:
+        raise serializers.ValidationError(
+            "Ensure this identifier has no more than 1024 bytes."
+        )
+
+
 class CohortSyncMembersSerializer(serializers.Serializer[None]):
-    # Child length mirrors CohortMembership.identifier.
-    # TODO: this counts characters, but identity data is stored with a
-    # 1024-byte identifier limit, so a multibyte identifier is accepted here
-    # and only fails once we try to write it. Check the byte length, together
-    # with the same check for CSV uploads.
+    # TODO: apply the same byte-length check to CSV uploads.
     user_ids = serializers.ListField(
-        child=serializers.CharField(max_length=2000), min_length=1
+        child=serializers.CharField(validators=[_validate_identifier_byte_length]),
+        min_length=1,
     )

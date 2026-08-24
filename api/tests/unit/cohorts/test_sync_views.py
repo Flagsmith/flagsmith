@@ -400,3 +400,23 @@ def test_amplitude_add_members__master_api_key_throttle_enabled__succeeds(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+
+def test_amplitude_add_members__identifier_over_1024_bytes__returns_400(
+    cohort_sync_key: _KeyAndPlaintext,
+    amplitude_cohort: Cohort,
+) -> None:
+    # Given - 512 three-byte characters: few characters, too many bytes
+    _, plaintext = cohort_sync_key
+    client = _authenticated_client(plaintext)
+    url = reverse(
+        "api-v1:cohort-sync:amplitude-add", kwargs={"pk": str(amplitude_cohort.uuid)}
+    )
+
+    # When
+    response = client.post(url, data={"user_ids": ["€" * 512]}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "1024 bytes" in str(response.json())
+    assert not CohortMembership.objects.exists()
