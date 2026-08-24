@@ -1,4 +1,7 @@
-import { Res, UsageEventsList } from 'common/types/responses'
+import {
+  usageEvent,
+  usageResponse,
+} from 'components/pages/usage/__tests__/fixtures'
 import {
   byRequestType,
   bySdk,
@@ -6,26 +9,12 @@ import {
   totalOf,
 } from 'components/pages/usage/components/UsageBreakdown/utils'
 
-const event = (values: Partial<UsageEventsList> = {}): UsageEventsList =>
-  ({
-    day: '2026-08-01',
-    environment_document: 0,
-    flags: 0,
-    identities: 0,
-    labels: { user_agent: null },
-    traits: 0,
-    ...values,
-  } as UsageEventsList)
-
-const usage = (events: UsageEventsList[]) =>
-  ({ events_list: events } as Res['organisationUsage'])
-
 describe('UsageBreakdown utils', () => {
   describe('totalOf', () => {
     it('counts every billable type', () => {
       expect(
         totalOf(
-          event({
+          usageEvent({
             environment_document: 1,
             flags: 10,
             identities: 5,
@@ -39,9 +28,9 @@ describe('UsageBreakdown utils', () => {
   describe('byRequestType', () => {
     it('sums each type across every day, biggest first', () => {
       const result = byRequestType(
-        usage([
-          event({ flags: 10, identities: 2 }),
-          event({ flags: 5, traits: 20 }),
+        usageResponse([
+          usageEvent({ flags: 10, identities: 2 }),
+          usageEvent({ flags: 5, traits: 20 }),
         ]),
       )
 
@@ -55,7 +44,7 @@ describe('UsageBreakdown utils', () => {
     })
 
     it('drops types with no usage rather than showing empty rows', () => {
-      const result = byRequestType(usage([event({ flags: 3 })]))
+      const result = byRequestType(usageResponse([usageEvent({ flags: 3 })]))
 
       expect(result.map(({ label, value }) => ({ label, value }))).toEqual([
         { label: 'Flags', value: 3 },
@@ -64,17 +53,17 @@ describe('UsageBreakdown utils', () => {
 
     it('returns nothing when there is no data', () => {
       expect(byRequestType(undefined)).toEqual([])
-      expect(byRequestType(usage([]))).toEqual([])
+      expect(byRequestType(usageResponse([]))).toEqual([])
     })
   })
 
   describe('bySdk', () => {
     it('groups by user agent, biggest first', () => {
       const result = bySdk(
-        usage([
-          event({ flags: 10, labels: { user_agent: 'python/3.1.0' } }),
-          event({ flags: 4, labels: { user_agent: 'java/2.0.0' } }),
-          event({ identities: 5, labels: { user_agent: 'python/3.1.0' } }),
+        usageResponse([
+          usageEvent({ flags: 10, labels: { user_agent: 'python/3.1.0' } }),
+          usageEvent({ flags: 4, labels: { user_agent: 'java/2.0.0' } }),
+          usageEvent({ identities: 5, labels: { user_agent: 'python/3.1.0' } }),
         ]),
       )
 
@@ -88,9 +77,9 @@ describe('UsageBreakdown utils', () => {
     // rows disagree with the total on the meter above.
     it('keeps unattributed usage rather than dropping it', () => {
       const result = bySdk(
-        usage([
-          event({ flags: 10, labels: { user_agent: null } }),
-          event({ flags: 4, labels: { user_agent: 'go/1.0.0' } }),
+        usageResponse([
+          usageEvent({ flags: 10, labels: { user_agent: null } }),
+          usageEvent({ flags: 4, labels: { user_agent: 'go/1.0.0' } }),
         ]),
       )
 
