@@ -4,7 +4,7 @@ import {
   dailyTotals,
   planLimitThreshold,
   xAxisIntervalFor,
-} from 'components/organisation-settings/usage/UsageOverTime/utils'
+} from 'components/pages/usage/components/UsageOverTime/utils'
 
 type UsageEvent = Res['organisationUsage']['events_list'][number]
 

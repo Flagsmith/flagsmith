@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from 'storybook'
-import { UsageDashboardView } from 'components/organisation-settings/usage/UsageDashboard'
+import { UsageDashboard } from 'components/pages/usage'
 import { Res } from 'common/types/responses'
 
-const meta: Meta<typeof UsageDashboardView> = {
-  component: UsageDashboardView,
+const meta: Meta<typeof UsageDashboard> = {
+  component: UsageDashboard,
   parameters: { layout: 'fullscreen' },
   title: 'Pages/Usage Dashboard/Page',
 }
 export default meta
 
-type Story = StoryObj<typeof UsageDashboardView>
+type Story = StoryObj<typeof UsageDashboard>
 
 const DAY_WEIGHTS = [1.08, 1.12, 1.05, 1.1, 0.98, 0.62, 0.58]
 

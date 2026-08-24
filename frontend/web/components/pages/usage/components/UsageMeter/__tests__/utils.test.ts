@@ -1,4 +1,4 @@
-import { meterCopy } from 'components/organisation-settings/usage/UsageMeter/utils'
+import { meterCopy } from 'components/pages/usage/components/UsageMeter/utils'
 
 describe('UsageMeter utils', () => {
   describe('meterCopy', () => {

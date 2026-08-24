@@ -3,7 +3,7 @@ import {
   hasBillingPeriod,
   periodsFor,
   resolvePeriod,
-} from 'components/organisation-settings/usage/UsageDashboard/utils'
+} from 'components/pages/usage/utils'
 
 const subscription = (values: Partial<Subscription>): Subscription =>
   ({ has_active_billing_periods: false, plan: null, ...values } as Subscription)

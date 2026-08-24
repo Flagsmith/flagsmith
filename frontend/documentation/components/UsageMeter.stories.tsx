@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from 'storybook'
-import UsageMeter from 'components/organisation-settings/usage/UsageMeter'
+import UsageMeter from 'components/pages/usage/components/UsageMeter'
 
 const meta: Meta<typeof UsageMeter> = {
   component: UsageMeter,

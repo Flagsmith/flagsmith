@@ -2,10 +2,10 @@ import { FC, ReactNode } from 'react'
 import { Res } from 'common/types/responses'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import EmptyState from 'components/EmptyState'
-import UsageMeter from 'components/organisation-settings/usage/UsageMeter'
-import UsageOverTime from 'components/organisation-settings/usage/UsageOverTime'
+import UsageMeter from './components/UsageMeter'
+import UsageOverTime from './components/UsageOverTime'
 
-export type UsageDashboardViewProps = {
+export type UsageDashboardProps = {
   data: Res['organisationUsage'] | undefined
   total: number
   limit: PlanLimit
@@ -21,7 +21,7 @@ export type UsageDashboardViewProps = {
 }
 
 /** Kept apart from the fetching so every state can be rendered on its own. */
-const UsageDashboardView: FC<UsageDashboardViewProps> = ({
+const UsageDashboard: FC<UsageDashboardProps> = ({
   data,
   filters,
   hasBillingPeriod,
@@ -77,4 +77,4 @@ const UsageDashboardView: FC<UsageDashboardViewProps> = ({
   )
 }
 
-export default UsageDashboardView
+export default UsageDashboard

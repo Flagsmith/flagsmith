@@ -15,7 +15,7 @@ import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsa
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import UsageChartFilters from 'components/organisation-settings/usage/components/UsageChartFilters'
 import UsageChartTotals from 'components/organisation-settings/usage/components/UsageChartTotals'
-import UsageDashboard from 'components/organisation-settings/usage/UsageDashboard'
+import UsageDashboard from './usage'
 
 const OrganisationUsagePage: FC = () => {
   const isSdkViewEnabled = Utils.getFlagsmithHasFeature('sdk_usage_charts')

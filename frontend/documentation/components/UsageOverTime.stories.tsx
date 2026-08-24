@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from 'storybook'
-import UsageOverTime from 'components/organisation-settings/usage/UsageOverTime'
+import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
 import { Res } from 'common/types/responses'
 
 const meta: Meta<typeof UsageOverTime> = {

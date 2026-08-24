@@ -7,22 +7,24 @@ import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscription
 import FieldLabel from 'components/base/forms/FieldLabel'
 import ProjectFilter from 'components/ProjectFilter'
 import { PeriodOption } from 'common/types/requests'
-import UsageDashboardView from './UsageDashboardView'
+import UsageDashboard from './UsageDashboard'
 import {
   hasBillingPeriod as deriveHasBillingPeriod,
   periodsFor,
   PeriodSelection,
   resolvePeriod,
 } from './utils'
-import './UsageDashboard.scss'
+import './UsageDashboardPage.scss'
 
-type UsageDashboardProps = {
+type UsageDashboardPageProps = {
   /** Absent until the route context resolves, so nothing is drawn yet. */
   organisationId: number | undefined
 }
 
 /** Behind `usage_dashboard`. Owns the fetching; the view draws the result. */
-const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
+const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
+  organisationId,
+}) => {
   const [project, setProject] = useState<string | undefined>()
 
   const {
@@ -74,7 +76,7 @@ const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
   }
 
   return (
-    <UsageDashboardView
+    <UsageDashboard
       data={data}
       total={data?.totals?.total ?? 0}
       limit={subscriptionMeta?.max_api_calls}
@@ -108,4 +110,4 @@ const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
   )
 }
 
-export default UsageDashboard
+export default UsageDashboardPage
