@@ -64,7 +64,6 @@ export const REQUEST_TYPES: {
 const countOf = (event: UsageEventsList, key: RequestTypeKey): number =>
   event[key] ?? 0
 
-/** Every request in an event, whatever it was billed as. */
 export const totalOf = (event: UsageEventsList): number =>
   REQUEST_TYPES.reduce((sum, { key }) => sum + countOf(event, key), 0)
 

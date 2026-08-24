@@ -7,7 +7,6 @@ export type ValueBarProps = {
   percent: number
   /** Any CSS colour. Passed inline because the width beside it must be. */
   colour: string
-  /** Sizes the track in its row, e.g. `flex-1`. */
   className?: string
   /** Meter semantics. Omit them and the bar reports nothing to assistive tech. */
   ariaLabel?: string

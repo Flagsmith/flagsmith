@@ -17,10 +17,7 @@ type UseUsageBreakdown = {
   projectId: number | undefined
 }
 
-/**
- * Everything the breakdown needs to know, so the section that draws it stays a
- * component you can render with props alone.
- */
+/** Keeps the queries out of the section, so it renders from props alone. */
 export const useUsageBreakdown = ({
   billingPeriod,
   data,
