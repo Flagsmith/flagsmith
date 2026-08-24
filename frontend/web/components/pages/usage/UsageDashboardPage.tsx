@@ -28,7 +28,6 @@ type UsageDashboardPageProps = {
 const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   organisationId,
 }) => {
-  // ProjectFilter hands the id back as a string, the queries want the pk.
   const [project, setProject] = useState<string | undefined>()
   const selectedProjectId = project ? Number(project) : undefined
 
@@ -67,8 +66,6 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   const periods = periodsFor(planIsBilled)
 
-  // The page fetches; the sections take props. The breakdown's scopes need one
-  // request per key, so the page renders those alongside the section itself.
   const { onTotal, scopes, setDimension, ...breakdown } = useUsageBreakdown({
     billingPeriod,
     data,
