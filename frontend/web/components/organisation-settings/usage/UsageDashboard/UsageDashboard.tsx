@@ -57,12 +57,15 @@ const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
         }
       : skipToken,
   )
-  // Neither its failure nor its wait is fatal: no metadata means no limit,
-  // which is what a self-hosted installation looks like, and the meter falls
-  // back to a count. Blocking the page on an optional figure would be worse.
-  const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery(
-    organisationId ? { id: organisationId } : skipToken,
-  )
+  // Failure is not fatal: no metadata means no limit, which is what a
+  // self-hosted installation looks like, and the meter falls back to a count.
+  // The wait is another matter. Until it answers the meter would report "no
+  // plan limit", which is a claim rather than an absence, and then correct
+  // itself a moment later.
+  const { data: subscriptionMeta, isLoading: loadingLimit } =
+    useGetSubscriptionMetadataQuery(
+      organisationId ? { id: organisationId } : skipToken,
+    )
 
   const periods = periodsFor(hasBillingPeriod)
 
@@ -77,7 +80,7 @@ const UsageDashboard: FC<UsageDashboardProps> = ({ organisationId }) => {
       limit={subscriptionMeta?.max_api_calls}
       hasBillingPeriod={hasBillingPeriod}
       isError={organisationFailed || usageFailed}
-      isLoading={loadingOrganisation || loadingUsage}
+      isLoading={loadingOrganisation || loadingUsage || loadingLimit}
       filters={
         <Row className='gap-3 align-items-end'>
           <div className='usage-dashboard__filter'>
