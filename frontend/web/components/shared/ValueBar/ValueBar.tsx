@@ -14,15 +14,7 @@ export type ValueBarProps = {
   ariaValueText?: string
 }
 
-/**
- * A track with a proportional fill, carrying no semantics of its own: usage
- * against a plan is a meter, a breakdown row is a comparison with no maximum,
- * and only the caller knows which it is drawing.
- *
- * `meter` rather than `progressbar`, because nothing here is a task advancing.
- * ARIA reserves progressbar for that and meter for a value inside a known
- * range, which is what a plan allowance is.
- */
+/** A track with a proportional fill. The caller supplies any semantics. */
 const ValueBar: FC<ValueBarProps> = ({
   ariaLabel,
   ariaValueNow,
