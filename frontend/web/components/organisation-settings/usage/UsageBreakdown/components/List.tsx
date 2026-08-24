@@ -6,7 +6,6 @@ import { BreakdownRow } from 'components/organisation-settings/usage/UsageBreakd
 export type ListProps = {
   rows: BreakdownRow[]
   isLoading?: boolean
-  /** Environments belong to a project, so the dimension needs one chosen. */
   needsProject?: boolean
 }
 

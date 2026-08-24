@@ -20,15 +20,10 @@ type ScopeTotalProps = {
 /**
  * Fetches one scope's total and reports it up. It draws nothing.
  *
- * The endpoint filters by project and environment rather than grouping by
- * them, so a breakdown needs one request per key. Those cannot be a loop of
- * hooks inside the parent: the list of keys starts empty and fills once it
- * loads, and React requires the same hooks in the same order every render. A
- * component per scope keeps each query's lifecycle tied to its own mount.
- *
- * A `group_by` on the endpoint would collapse all of this into one request,
- * and would also remove the wait: the rows only rank correctly once every
- * scope has answered, so the section loads at the pace of its slowest request.
+ * The endpoint filters by project and environment rather than grouping by them,
+ * so a breakdown needs one request per key. It cannot be a loop of hooks: the
+ * key list starts empty and fills once loaded, and React requires the same
+ * hooks in the same order every render. A `group_by` would remove all of this.
  */
 const ScopeTotal: FC<ScopeTotalProps> = ({
   billingPeriod,

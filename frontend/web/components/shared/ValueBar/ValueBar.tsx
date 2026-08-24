@@ -9,11 +9,7 @@ export type ValueBarProps = {
   colour: string
   /** Sizes the track in its row, e.g. `flex-1`. */
   className?: string
-  /**
-   * Meter semantics. Omitted when the bar compares values against each other
-   * rather than measuring one against an allowance, since there is then no
-   * maximum to report.
-   */
+  /** Meter semantics. Omit them and the bar reports nothing to assistive tech. */
   ariaLabel?: string
   ariaValueNow?: number
   ariaValueText?: string

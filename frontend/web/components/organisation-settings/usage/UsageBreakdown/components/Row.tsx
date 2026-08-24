@@ -7,9 +7,7 @@ import './Row.scss'
 export type RowProps = {
   label: string
   value: number
-  /** The largest row, so the bars can be compared against each other. */
   largest: number
-  /** Everything in the breakdown, so the row can state its share. */
   total: number
 }
 

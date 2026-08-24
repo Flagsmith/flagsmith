@@ -3,15 +3,12 @@ import { fromScopedTotals } from './utils'
 import { UsageScope } from './components/ScopeTotal'
 
 /**
- * Collects the totals reported by one ScopeTotal per scope.
+ * Collects the totals reported by one ScopeTotal per scope, keyed on the scope
+ * rather than its label because two projects may share a name.
  *
- * Keyed on the scope's key rather than its label, because two projects may
- * share a name and would otherwise overwrite each other.
- *
- * `identity` is anything that changes what the totals mean: the period, the
- * project filter, the dimension. When it changes the collected totals are
- * dropped, otherwise the previous period's numbers stay on screen while the new
- * requests are still in flight, with nothing to say they are stale.
+ * `identity` is anything that changes what the totals mean: period, project,
+ * dimension. Without dropping them on a change, the previous period's numbers
+ * stay on screen while the new requests are in flight, marked as current.
  */
 export const useScopedBreakdown = (scopes: UsageScope[], identity: string) => {
   const [totals, setTotals] = useState<Record<string, number>>({})
