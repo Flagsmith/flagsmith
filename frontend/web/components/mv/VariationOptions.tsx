@@ -39,14 +39,14 @@ interface VariationOptionsProps {
   weightTitle: string
 }
 
-interface SelectRowLabelProps {
-  text: string
+interface ValueRowLabelProps {
+  children: React.ReactNode
 }
 
-// Select rows show a bare value, so each needs saying what it is.
-const SelectRowLabel: React.FC<SelectRowLabelProps> = ({ text }) => (
+// Each row shows a bare value, so it needs saying which value it is.
+const ValueRowLabel: React.FC<ValueRowLabelProps> = ({ children }) => (
   <div className='mb-2'>
-    <span className='h6 mb-0 font-weight-semibold'>{text}</span>
+    <span className='h6 mb-0 font-weight-semibold'>{children}</span>
   </div>
 )
 
@@ -87,7 +87,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
       {select && !!unmatchedOverride && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
-            <SelectRowLabel text='Current override' />
+            <ValueRowLabel>Current override</ValueRowLabel>
             <Row>
               <Flex>
                 <ValueEditor
@@ -113,7 +113,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
       {select && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
-            <SelectRowLabel text='Environment default' />
+            <ValueRowLabel>Environment default</ValueRowLabel>
             <Row>
               <Flex>
                 <ValueEditor
@@ -159,9 +159,9 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
         return select ? (
           <div key={i} className='panel panel--flat panel-without-heading mb-2'>
             <div className='panel-content'>
-              <SelectRowLabel
-                text={theValue.key || Utils.getDefaultVariantKey(i)}
-              />
+              <ValueRowLabel>
+                {theValue.key || Utils.getDefaultVariantKey(i)}
+              </ValueRowLabel>
               <Row>
                 <Flex>
                   <ValueEditor
