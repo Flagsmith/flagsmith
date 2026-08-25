@@ -2730,7 +2730,7 @@ def test_update_segment__change_request_draft__updates_segment(
     assert response.status_code != status.HTTP_409_CONFLICT
 
 
-def test_list_segments__returns_has_overrides(
+def test_list_segments__mixed_overrides__returns_has_overrides(
     admin_client: APIClient,
     project: Project,
     segment: Segment,
