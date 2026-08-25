@@ -5,6 +5,7 @@ import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
 import {
   extractIdentifiers,
+  MAX_IDENTIFIER_BYTES,
   parseCsvText,
   toCsvColumn,
   toParsedCsv,
@@ -28,6 +29,7 @@ import Icon from 'components/icons/Icon'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Tabs from 'components/navigation/TabMenu/Tabs'
+import { submitCohortCsv } from './submitCohortCsv'
 import './CreateSegmentFromCsv.scss'
 
 const PREVIEW_ROW_COUNT = 5
@@ -91,6 +93,11 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
     [csvColumn],
   )
 
+  const ignoredRowCount = extraction
+    ? extraction.emptyCount +
+      extraction.duplicateCount +
+      extraction.tooLongCount
+    : 0
   const isBlocked = !!extraction && !extraction.identifiers.length
   const canSubmit =
     !!name &&
@@ -112,26 +119,28 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
       return
     }
     try {
-      // Keep the created cohort across a failed sync so retrying only syncs.
-      let cohortId = createdCohortId
-      if (cohortId === null) {
-        const cohort = await createCohort({
-          description: description || undefined,
-          environmentApiKey: environmentId,
-          metadata,
-          name,
-          projectId: Number(projectId),
-        }).unwrap()
-        cohortId = cohort.id
-        setCreatedCohortId(cohortId)
-      }
-      const result = await syncCohortCsv({
-        cohortId,
-        environmentApiKey: environmentId,
-        file: new File([csvColumn], 'identifiers.csv', { type: 'text/csv' }),
-        has_header: false,
-        projectId: Number(projectId),
-      }).unwrap()
+      const result = await submitCohortCsv({
+        createCohort: () =>
+          createCohort({
+            description: description || undefined,
+            environmentApiKey: environmentId,
+            metadata,
+            name,
+            projectId: Number(projectId),
+          }).unwrap(),
+        existingCohortId: createdCohortId,
+        onCohortCreated: setCreatedCohortId,
+        syncCsv: (cohortId) =>
+          syncCohortCsv({
+            cohortId,
+            environmentApiKey: environmentId,
+            file: new File([csvColumn], 'identifiers.csv', {
+              type: 'text/csv',
+            }),
+            has_header: false,
+            projectId: Number(projectId),
+          }).unwrap(),
+      })
       toast(
         `Segment created with ${result.added} ${
           result.added === 1 ? 'identity' : 'identities'
@@ -309,7 +318,11 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
                     {extraction.identifiers.length === 1
                       ? 'identifier'
                       : 'identifiers'}{' '}
-                    detected. Duplicates and empty rows will be ignored.
+                    detected.
+                    {!!ignoredRowCount &&
+                      ` ${ignoredRowCount.toLocaleString()} ${
+                        ignoredRowCount === 1 ? 'row' : 'rows'
+                      } ignored (empty, duplicate, or over ${MAX_IDENTIFIER_BYTES.toLocaleString()} bytes).`}
                   </span>
                 </div>
               )}

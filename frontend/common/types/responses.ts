@@ -177,6 +177,8 @@ export type SegmentMembersResponse = PagedResponse<SegmentMember> & {
 export type SegmentCohort = {
   id: number
   environment: number
+  environment_api_key: string
+  environment_name: string
   source_type: 'csv'
   version: number
   deletion_requested_at: string | null

@@ -1,5 +1,5 @@
 import React, { FC, FormEvent, useState } from 'react'
-import { Environment, Segment, SegmentCohort } from 'common/types/responses'
+import { Segment } from 'common/types/responses'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
@@ -7,7 +7,6 @@ import Button from 'components/base/forms/Button'
 import ModalHR from './ModalHR'
 import { deleteSegment } from 'common/services/useSegment'
 import { deleteCohort } from 'common/services/useCohort'
-import { getEnvironments } from 'common/services/useEnvironment'
 import { getStore } from 'common/store'
 
 type ConfirmRemoveSegmentType = {
@@ -19,28 +18,16 @@ export const handleRemoveSegment = (
   segment: Segment,
   onComplete?: () => void,
 ) => {
-  // Cohort-managed segments must be deleted via their cohort; the segment
-  // endpoint rejects them.
-  const removeCohort = async (cohort: SegmentCohort) => {
-    const { data: environments } = await getEnvironments(getStore(), {
-      projectId: Number(projectId),
-    })
-    const environmentApiKey = environments?.results?.find(
-      (environment: Environment) => environment.id === cohort.environment,
-    )?.api_key
-    if (!environmentApiKey) {
-      throw new Error('Cohort environment not found')
-    }
-    return deleteCohort(getStore(), {
-      cohortId: cohort.id,
-      environmentApiKey,
-      projectId: Number(projectId),
-    })
-  }
   const removeSegmentCallback = async () => {
     try {
+      // Cohort-managed segments must be deleted via their cohort; the segment
+      // endpoint rejects them.
       const res = segment.cohort
-        ? await removeCohort(segment.cohort)
+        ? await deleteCohort(getStore(), {
+            cohortId: segment.cohort.id,
+            environmentApiKey: segment.cohort.environment_api_key,
+            projectId: Number(projectId),
+          })
         : await deleteSegment(getStore(), { id: segment.id, projectId })
       if (res.error) throw new Error(res.error)
       toast(

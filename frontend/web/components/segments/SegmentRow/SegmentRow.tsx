@@ -10,7 +10,6 @@ import { SegmentMembershipTotalBadge } from 'components/segments/SegmentMembersh
 import Chip from 'components/base/Chip'
 import ConfirmCloneSegment from 'components/modals/ConfirmCloneSegment'
 import { useCloneSegmentMutation } from 'common/services/useSegment'
-import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { handleRemoveSegment } from 'components/modals/ConfirmRemoveSegment'
 import { ProjectPermission } from 'common/types/permissions.types'
 
@@ -24,13 +23,6 @@ const SegmentRow: FC<SegmentRowProps> = ({ index, projectId, segment }) => {
   const history = useHistory()
   const { cohort, description, feature, id, name } = segment
 
-  const { data: environments } = useGetEnvironmentsQuery(
-    { projectId: Number(projectId) },
-    { skip: !cohort },
-  )
-  const cohortEnvironment = environments?.results?.find(
-    (environment) => environment.id === cohort?.environment,
-  )
   const isPendingDeletion = !!cohort?.deletion_requested_at
 
   const { permission: manageSegmentsPermission } = useHasPermission({
@@ -106,9 +98,9 @@ const SegmentRow: FC<SegmentRowProps> = ({ index, projectId, segment }) => {
               {cohort.source_type.toUpperCase()}
             </Chip>
           )}
-          {!!cohort && !!cohortEnvironment && (
+          {!!cohort && (
             <Chip className='ml-2' size='xs'>
-              {cohortEnvironment.name}
+              {cohort.environment_name}
             </Chip>
           )}
           {isPendingDeletion && (

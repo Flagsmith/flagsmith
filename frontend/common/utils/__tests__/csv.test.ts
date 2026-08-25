@@ -1,5 +1,6 @@
 import {
   extractIdentifiers,
+  MAX_IDENTIFIER_BYTES,
   parseCsvText,
   toCsvColumn,
   toParsedCsv,
@@ -73,6 +74,7 @@ describe('extractIdentifiers', () => {
       duplicateCount: 2,
       emptyCount: 2,
       identifiers: ['a', 'b'],
+      tooLongCount: 0,
     })
   })
 
@@ -81,6 +83,22 @@ describe('extractIdentifiers', () => {
       duplicateCount: 0,
       emptyCount: 1,
       identifiers: ['y'],
+      tooLongCount: 0,
+    })
+  })
+
+  test('identifiers over the UTF-8 byte limit are dropped', () => {
+    // 'é' is 2 UTF-8 bytes, so 513 of them exceed 1024 bytes in 513 chars.
+    const rows = [
+      ['a'.repeat(MAX_IDENTIFIER_BYTES)],
+      ['a'.repeat(MAX_IDENTIFIER_BYTES + 1)],
+      ['é'.repeat(513)],
+    ]
+    expect(extractIdentifiers(rows, 0)).toEqual({
+      duplicateCount: 0,
+      emptyCount: 0,
+      identifiers: ['a'.repeat(MAX_IDENTIFIER_BYTES)],
+      tooLongCount: 2,
     })
   })
 })
