@@ -74,7 +74,7 @@ Attributes:
 ### `cohorts.cohort.created`
 
 Logged at `info` from:
- - `api/cohorts/services.py:115`
+ - `api/cohorts/services.py:152`
 
 Attributes:
  - `cohort.id`
@@ -86,7 +86,7 @@ Attributes:
 ### `cohorts.cohort.deleted`
 
 Logged at `info` from:
- - `api/cohorts/services.py:244`
+ - `api/cohorts/services.py:421`
 
 Attributes:
  - `cohort.id`
@@ -95,16 +95,39 @@ Attributes:
 ### `cohorts.cohort.deletion_requested`
 
 Logged at `info` from:
- - `api/cohorts/services.py:228`
+ - `api/cohorts/services.py:405`
 
 Attributes:
  - `cohort.id`
  - `environment.id`
 
+### `cohorts.csv.synced`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:377`
+
+Attributes:
+ - `adds.count`
+ - `cohort.id`
+ - `cohort.version`
+ - `environment.id`
+ - `removes.count`
+ - `unchanged.count`
+
+### `cohorts.membership.adds_received`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:230`
+
+Attributes:
+ - `cohort.id`
+ - `deltas.count`
+ - `environment.id`
+
 ### `cohorts.membership.applied`
 
 Logged at `info` from:
- - `api/cohorts/services.py:77`
+ - `api/cohorts/services.py:103`
 
 Attributes:
  - `adds.count`
@@ -129,14 +152,12 @@ Logged at `warning` from:
 Attributes:
  - `cohort.id`
 
-### `cohorts.membership.deltas_received`
+### `cohorts.membership.removals_received`
 
 Logged at `info` from:
- - `api/cohorts/services.py:193`
- - `api/cohorts/services.py:212`
+ - `api/cohorts/services.py:255`
 
 Attributes:
- - `action`
  - `cohort.id`
  - `deltas.count`
  - `environment.id`
@@ -658,7 +679,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:185`
+ - `api/segments/serializers.py:215`
 
 Attributes:
  - `revision_id`

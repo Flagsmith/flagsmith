@@ -1,7 +1,6 @@
 import io
 
 import pytest
-from django.utils import timezone
 from flag_engine.segments.constants import IS_SET
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
@@ -547,4 +546,3 @@ def test_sync_cohort_memberships_from_csv__edge_cohort__applies_traits(
     assert document["system_traits"] == {edge_cohort.system_trait_key: True}
     membership = CohortMembership.objects.get(cohort=edge_cohort)
     assert membership.state == CohortMembershipState.APPLIED
-
