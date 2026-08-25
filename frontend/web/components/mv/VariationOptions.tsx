@@ -45,8 +45,8 @@ interface ValueRowLabelProps {
 
 // Each row shows a bare value, so it needs saying which value it is.
 const ValueRowLabel: FC<ValueRowLabelProps> = ({ children }) => (
-  <div className='mb-1'>
-    <span className='text-small text-secondary'>{children}</span>
+  <div className='mb-2'>
+    <span className='h6 mb-0 font-weight-semibold'>{children}</span>
   </div>
 )
 
