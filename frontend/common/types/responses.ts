@@ -174,6 +174,16 @@ export type SegmentMembersResponse = PagedResponse<SegmentMember> & {
   // Pass as `cursor` to fetch the next page; null when there are no more rows.
   next_cursor: string | null
 }
+export type SegmentCohort = {
+  id: number
+  environment: number
+  environment_api_key: string
+  environment_name: string
+  source_type: 'csv'
+  version: number
+  deletion_requested_at: string | null
+}
+
 export type Segment = {
   id: number
   rules: SegmentRule[]
@@ -184,6 +194,7 @@ export type Segment = {
   feature?: number
   metadata: Metadata[] | []
   membership_counts?: SegmentMembership[]
+  cohort?: SegmentCohort | null
 }
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
@@ -995,6 +1006,29 @@ export type Metadata = {
   field_value: string
 }
 
+export type Cohort = {
+  id: number
+  uuid: string
+  name: string
+  description: string | null
+  segment: number
+  source_type: 'csv'
+  version: number
+  created_at: string
+}
+
+export type CohortCsvSyncResult = {
+  version: number
+  added: number
+  removed: number
+  unchanged: number
+  ignored: {
+    empty: number
+    duplicates: number
+    too_long: number
+  }
+}
+
 export type MetadataFieldModelField = {
   id: number
   content_type: number
@@ -1324,6 +1358,8 @@ export type TrustRelationship = {
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
+  cohort: Cohort
+  cohortCsvSync: CohortCsvSyncResult
   segmentMembers: SegmentMembersResponse
   auditLogs: PagedResponse<AuditLogItem>
   organisationLicence: {}

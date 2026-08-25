@@ -7,7 +7,12 @@ export type ExtractedIdentifiers = {
   duplicateCount: number
   emptyCount: number
   identifiers: string[]
+  tooLongCount: number
 }
+
+// Mirrors the API's COHORT_IDENTIFIER_MAX_BYTES (Edge identifiers are
+// DynamoDB sort keys, capped at 1024 bytes).
+export const MAX_IDENTIFIER_BYTES = 1024
 
 export function parseCsvText(text: string): string[][] {
   const rows: string[][] = []
@@ -58,7 +63,10 @@ export function toParsedCsv(
   if (!rawRows.length) {
     return { columns: [], rows: [] }
   }
-  const columnCount = Math.max(...rawRows.map((cells) => cells.length))
+  const columnCount = rawRows.reduce(
+    (max, cells) => Math.max(max, cells.length),
+    0,
+  )
   if (hasHeaders) {
     const [header, ...rows] = rawRows
     return {
@@ -81,12 +89,16 @@ export function extractIdentifiers(
 ): ExtractedIdentifiers {
   const seen = new Set<string>()
   const identifiers: string[] = []
+  const encoder = new TextEncoder()
   let emptyCount = 0
   let duplicateCount = 0
+  let tooLongCount = 0
   for (const cells of rows) {
     const value = (cells[columnIndex] ?? '').trim()
     if (!value) {
       emptyCount++
+    } else if (encoder.encode(value).length > MAX_IDENTIFIER_BYTES) {
+      tooLongCount++
     } else if (seen.has(value)) {
       duplicateCount++
     } else {
@@ -94,5 +106,13 @@ export function extractIdentifiers(
       identifiers.push(value)
     }
   }
-  return { duplicateCount, emptyCount, identifiers }
+  return { duplicateCount, emptyCount, identifiers, tooLongCount }
+}
+
+export function toCsvColumn(values: string[]): string {
+  return values
+    .map((value) =>
+      /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value,
+    )
+    .join('\n')
 }

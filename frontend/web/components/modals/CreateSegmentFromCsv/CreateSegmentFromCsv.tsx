@@ -3,8 +3,19 @@ import classNames from 'classnames'
 import Constants from 'common/constants'
 import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
-import { extractIdentifiers, parseCsvText, toParsedCsv } from 'common/utils/csv'
+import {
+  extractIdentifiers,
+  MAX_IDENTIFIER_BYTES,
+  parseCsvText,
+  toCsvColumn,
+  toParsedCsv,
+} from 'common/utils/csv'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
+import {
+  useCreateCohortMutation,
+  useSyncCohortCsvMutation,
+} from 'common/services/useCohort'
+import { Metadata } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
 import { colorIconSuccess } from 'common/theme/tokens'
 import Button from 'components/base/forms/Button'
@@ -18,9 +29,12 @@ import Icon from 'components/icons/Icon'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Tabs from 'components/navigation/TabMenu/Tabs'
+import { CreatedCohort, submitCohortCsv } from './submitCohortCsv'
 import './CreateSegmentFromCsv.scss'
 
 const PREVIEW_ROW_COUNT = 5
+// Mirrors the API's COHORT_CSV_MAX_FILE_SIZE_BYTES.
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
 type CreateSegmentFromCsvType = {
   projectId: number | string
@@ -35,6 +49,14 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
   const [hasHeaders, setHasHeaders] = useState(true)
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null)
   const [tab, setTab] = useState(0)
+  const [metadata, setMetadata] = useState<Metadata[]>([])
+  const [createdCohort, setCreatedCohort] = useState<CreatedCohort | null>(null)
+
+  const [createCohort, { error: createError, isLoading: isCreating }] =
+    useCreateCohortMutation()
+  const [syncCohortCsv, { error: syncError, isLoading: isSyncing }] =
+    useSyncCohortCsvMutation()
+  const isSaving = isCreating || isSyncing
 
   const metadataEnable = Utils.getPlansPermission('METADATA')
   const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
@@ -60,9 +82,38 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
     [parsed.rows, columnIndex],
   )
 
+  // Only the identifier column leaves the browser.
+  const csvColumn = useMemo(
+    () => (extraction ? toCsvColumn(extraction.identifiers) : ''),
+    [extraction],
+  )
+  // Quoting can expand values, so the generated upload needs its own check.
+  const isUploadTooLarge = useMemo(
+    () => new Blob([csvColumn]).size > MAX_FILE_SIZE_BYTES,
+    [csvColumn],
+  )
+
+  // Identifies the cohort a retry may reuse; see submitCohortCsv.
+  const cohortFormKey = JSON.stringify({
+    description,
+    environmentId,
+    metadata,
+    name,
+  })
+
+  const ignoredRowCount = extraction
+    ? extraction.emptyCount +
+      extraction.duplicateCount +
+      extraction.tooLongCount
+    : 0
   const isBlocked = !!extraction && !extraction.identifiers.length
   const canSubmit =
-    !!name && !!environmentId && !!file && !!extraction && !isBlocked
+    !!name &&
+    !!environmentId &&
+    !!file &&
+    !!extraction &&
+    !isBlocked &&
+    !isUploadTooLarge
 
   const onFile = (newFile: File, text: string) => {
     setFile(newFile)
@@ -70,9 +121,46 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
     setSelectedColumn(null)
   }
 
-  const save = (e: FormEvent) => {
+  const save = async (e: FormEvent) => {
     e.preventDefault()
-    // TODO: submit to the cohorts API once the creation endpoint exists
+    if (!canSubmit || !extraction) {
+      return
+    }
+    try {
+      const result = await submitCohortCsv({
+        createCohort: () =>
+          createCohort({
+            description: description || undefined,
+            environmentApiKey: environmentId,
+            metadata,
+            name,
+            projectId: Number(projectId),
+          }).unwrap(),
+        createdCohort,
+        formKey: cohortFormKey,
+        onCohortCreated: setCreatedCohort,
+        syncCsv: (cohortId) =>
+          syncCohortCsv({
+            cohortId,
+            environmentApiKey: environmentId,
+            file: new File([csvColumn], 'identifiers.csv', {
+              type: 'text/csv',
+            }),
+            has_header: false,
+            projectId: Number(projectId),
+          }).unwrap(),
+      })
+      toast(
+        `Segment created with ${result.added} ${
+          result.added === 1 ? 'identity' : 'identities'
+        }`,
+        'success',
+        10000,
+      )
+      closeModal()
+    } catch (error) {
+      console.error('CSV segment creation failed:', error)
+    }
   }
 
   const columnName = columnIndex === null ? '' : parsed.columns[columnIndex]
@@ -86,7 +174,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
 
   const form = (
     <form
-      className='px-2 pt-4'
+      className='px-4 pt-4'
       id='create-segment-from-csv-modal'
       onSubmit={save}
     >
@@ -126,7 +214,6 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
           <EnvironmentSelect
             inputId='environment-select'
             projectId={Number(projectId)}
-            idField='id'
             size='default'
             value={environmentId}
             onChange={(value) => setEnvironmentId(`${value}`)}
@@ -139,6 +226,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
       <div className='mb-4'>
         <CsvUpload
           value={file}
+          maxSizeBytes={MAX_FILE_SIZE_BYTES}
           rowCount={file ? parsed.rows.length : undefined}
           onChange={onFile}
         />
@@ -239,7 +327,11 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
                     {extraction.identifiers.length === 1
                       ? 'identifier'
                       : 'identifiers'}{' '}
-                    detected. Duplicates and empty rows will be ignored.
+                    detected.
+                    {!!ignoredRowCount &&
+                      ` ${ignoredRowCount.toLocaleString()} ${
+                        ignoredRowCount === 1 ? 'row' : 'rows'
+                      } ignored (empty, duplicate, or over ${MAX_IDENTIFIER_BYTES.toLocaleString()} bytes).`}
                   </span>
                 </div>
               )}
@@ -250,11 +342,21 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
               error={`No valid identifiers found in "${columnName}". Choose a different column or check your file.`}
             />
           )}
+          {isUploadTooLarge && (
+            <ErrorMessage error='The extracted identifiers exceed the 10MB upload limit. Reduce the number of rows and try again.' />
+          )}
         </>
       )}
+      {!!(createError || syncError) && (
+        <ErrorMessage error={createError || syncError} />
+      )}
       <div className='text-right py-3'>
-        <Button data-test='create-segment' disabled={!canSubmit} type='submit'>
-          Create Segment
+        <Button
+          data-test='create-segment'
+          disabled={!canSubmit || isSaving}
+          type='submit'
+        >
+          {isSaving ? 'Creating Segment...' : 'Create Segment'}
         </Button>
       </div>
     </form>
@@ -273,7 +375,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
         {form}
       </TabItem>
       <TabItem tabLabelString='Custom Fields' tabLabel='Custom Fields'>
-        <FormGroup className='px-2 pt-4 setting'>
+        <FormGroup className='px-4 pt-4 setting'>
           <InputGroup
             component={
               <AddMetadataToEntity
@@ -281,6 +383,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
                 projectId={Number(projectId)}
                 entityContentType={segmentContentType.id}
                 entity={segmentContentType.model}
+                onChange={(m) => setMetadata(m as Metadata[])}
               />
             }
           />
