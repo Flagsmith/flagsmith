@@ -143,6 +143,12 @@ const CreateSegment: FC<CreateSegmentType> = ({
     projectId,
   })
   const [segment, setSegment] = useState(_segment || defaultSegment)
+  // A cohort owns its segment's rules, and the API rejects updating one.
+  const isCohortManaged = !!_segment?.cohort
+  const isReadOnly = readOnly || isCohortManaged
+  const readOnlyMessage = isCohortManaged
+    ? 'This segment is managed by a cohort. Its rules follow the cohort membership and cannot be edited.'
+    : undefined
   const [description, setDescription] = useState(segment.description)
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
@@ -462,7 +468,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   />
                   <Rule
                     showDescription={showDescriptions}
-                    readOnly={readOnly}
+                    readOnly={isReadOnly}
                     data-test={`rule-${displayIndex}`}
                     rule={rule}
                     index={i}
@@ -490,7 +496,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </InfoMessage>
         )}
         <Row className='justify-content-end'>
-          {!readOnly && (
+          {!isReadOnly && (
             <div
               onClick={() =>
                 addRule(topLevelRuleType === 'ANY' ? 'ALL' : 'ANY')
@@ -574,7 +580,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 description={description}
                 setDescription={setDescription}
                 identity={identity}
-                readOnly={readOnly}
+                readOnly={isReadOnly}
+                readOnlyMessage={readOnlyMessage}
                 showDescriptions={showDescriptions}
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
@@ -653,7 +660,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 description={description}
                 setDescription={setDescription}
                 identity={identity}
-                readOnly={readOnly}
+                readOnly={isReadOnly}
+                readOnlyMessage={readOnlyMessage}
                 showDescriptions={showDescriptions}
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
@@ -692,7 +700,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
               description={description}
               setDescription={setDescription}
               identity={identity}
-              readOnly={readOnly}
+              readOnly={isReadOnly}
+              readOnlyMessage={readOnlyMessage}
               showDescriptions={showDescriptions}
               setShowDescriptions={setShowDescriptions}
               allWarnings={allWarnings}

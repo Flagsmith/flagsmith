@@ -121,7 +121,8 @@ const SegmentRow: FC<SegmentRowProps> = ({ index, projectId, segment }) => {
           <SegmentAction
             index={index}
             isRemoveDisabled={!manageSegmentsPermission}
-            isCloneDisabled={!manageSegmentsPermission}
+            // The API rejects cloning a cohort-managed segment.
+            isCloneDisabled={!manageSegmentsPermission || !!cohort}
             onRemove={onRemoveSegmentClick}
             onClone={handleCloneSegment}
           />

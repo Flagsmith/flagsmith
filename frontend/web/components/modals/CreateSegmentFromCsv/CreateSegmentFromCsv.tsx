@@ -29,7 +29,7 @@ import Icon from 'components/icons/Icon'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Tabs from 'components/navigation/TabMenu/Tabs'
-import { submitCohortCsv } from './submitCohortCsv'
+import { CreatedCohort, submitCohortCsv } from './submitCohortCsv'
 import './CreateSegmentFromCsv.scss'
 
 const PREVIEW_ROW_COUNT = 5
@@ -50,7 +50,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
   const [selectedColumn, setSelectedColumn] = useState<number | null>(null)
   const [tab, setTab] = useState(0)
   const [metadata, setMetadata] = useState<Metadata[]>([])
-  const [createdCohortId, setCreatedCohortId] = useState<number | null>(null)
+  const [createdCohort, setCreatedCohort] = useState<CreatedCohort | null>(null)
 
   const [createCohort, { error: createError, isLoading: isCreating }] =
     useCreateCohortMutation()
@@ -93,6 +93,14 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
     [csvColumn],
   )
 
+  // Identifies the cohort a retry may reuse; see submitCohortCsv.
+  const cohortFormKey = JSON.stringify({
+    description,
+    environmentId,
+    metadata,
+    name,
+  })
+
   const ignoredRowCount = extraction
     ? extraction.emptyCount +
       extraction.duplicateCount +
@@ -128,8 +136,9 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
             name,
             projectId: Number(projectId),
           }).unwrap(),
-        existingCohortId: createdCohortId,
-        onCohortCreated: setCreatedCohortId,
+        createdCohort,
+        formKey: cohortFormKey,
+        onCohortCreated: setCreatedCohort,
         syncCsv: (cohortId) =>
           syncCohortCsv({
             cohortId,
