@@ -268,7 +268,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         """
         if not segment.project.is_workflow_enabled:
             return
-        if not self._has_overrides(segment):
+        if not get_overrides_in_effect().filter(segment=segment).exists():
             return
         api_error = ChangeRequestsEnabledError(
             "Cannot delete a segment with feature overrides in a project with "
@@ -282,13 +282,6 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             reason=api_error.default_code,
         )
         raise api_error
-
-    @staticmethod
-    def _has_overrides(segment: Segment) -> bool:
-        # `get_queryset` annotates this; fall back for any other code path.
-        if (has_overrides := getattr(segment, "has_overrides", None)) is not None:
-            return bool(has_overrides)
-        return get_overrides_in_effect().filter(segment=segment).exists()
 
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         segment = self.get_object()
