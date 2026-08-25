@@ -7003,11 +7003,12 @@
         ]
       },
       "SourceTypeEnum": {
-        "description": "* `csv` - CSV\n* `amplitude` - Amplitude",
+        "description": "* `csv` - CSV\n* `amplitude` - Amplitude\n* `mixpanel` - Mixpanel",
         "type": "string",
         "enum": [
           "csv",
-          "amplitude"
+          "amplitude",
+          "mixpanel"
         ]
       },
       "StageAction": {
@@ -7817,6 +7818,11 @@
         "type": "http",
         "scheme": "bearer",
         "description": "For cohort sync endpoints called by an external cohort source, such as Amplitude."
+      },
+      "Cohort Sync Key (Basic)": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "For cohort sync endpoints called by an external cohort source that can only send Basic credentials, such as Mixpanel. The key is the password; the username is ignored."
       },
       "Environment API Key": {
         "type": "apiKey",
