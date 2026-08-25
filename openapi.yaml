@@ -1685,6 +1685,7 @@ paths:
         - Cohort Sync Key: []
       tags:
         - Other
+      x-flagsmith-minimum-plan: START_UP
   '/api/v1/cohort-sync/amplitude/lists/{id}/add/':
     post:
       operationId: api_v1_cohort_sync_amplitude_lists_add_create
@@ -1713,6 +1714,7 @@ paths:
         - Cohort Sync Key: []
       tags:
         - Other
+      x-flagsmith-minimum-plan: START_UP
   '/api/v1/cohort-sync/amplitude/lists/{id}/remove/':
     post:
       operationId: api_v1_cohort_sync_amplitude_lists_remove_create
@@ -1741,6 +1743,7 @@ paths:
         - Cohort Sync Key: []
       tags:
         - Other
+      x-flagsmith-minimum-plan: START_UP
   /api/v1/environment-document/:
     get:
       operationId: sdk_v1_environment_document
