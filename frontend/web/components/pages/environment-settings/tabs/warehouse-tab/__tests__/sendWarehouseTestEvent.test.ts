@@ -1,11 +1,12 @@
 import sendWarehouseTestEvent from 'components/pages/environment-settings/tabs/warehouse-tab/sendWarehouseTestEvent'
 
 const init = jest.fn().mockResolvedValue(undefined)
+const identify = jest.fn().mockResolvedValue(undefined)
 const trackEvent = jest.fn()
 const flushEvents = jest.fn().mockResolvedValue(undefined)
 
 jest.mock('@flagsmith/flagsmith/isomorphic', () => ({
-  createFlagsmithInstance: () => ({ flushEvents, init, trackEvent }),
+  createFlagsmithInstance: () => ({ flushEvents, identify, init, trackEvent }),
 }))
 
 jest.mock('common/project', () => ({
@@ -16,6 +17,7 @@ jest.mock('common/project', () => ({
 describe('sendWarehouseTestEvent', () => {
   beforeEach(() => {
     init.mockClear()
+    identify.mockClear()
     trackEvent.mockClear()
     flushEvents.mockClear()
   })
@@ -33,11 +35,13 @@ describe('sendWarehouseTestEvent', () => {
     )
   })
 
-  it('tracks the test_custom_event after init', async () => {
+  it('identifies a test user and tracks the test_custom_event after init', async () => {
     await sendWarehouseTestEvent('env-key-123')
 
+    expect(identify).toHaveBeenCalledWith('test_warehouse_user')
     expect(trackEvent).toHaveBeenCalledWith('test_custom_event')
     expect(init).toHaveBeenCalledTimes(1)
+    expect(identify).toHaveBeenCalledTimes(1)
     expect(trackEvent).toHaveBeenCalledTimes(1)
   })
 

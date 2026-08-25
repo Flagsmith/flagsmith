@@ -27,6 +27,7 @@ const sendWarehouseTestEvent = async (environmentId: string): Promise<void> => {
       },
     }),
   })
+  await instance.identify('test_warehouse_user')
   instance.trackEvent('test_custom_event')
   await instance.flushEvents()
 }
