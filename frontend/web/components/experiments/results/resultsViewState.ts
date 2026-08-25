@@ -3,6 +3,7 @@ import {
   ExperimentStatus,
 } from 'common/types/responses'
 import { formatCountdown } from 'common/hooks/useCountdown'
+import { ExposuresViewState } from './exposuresViewState'
 
 export type ResultsViewState =
   | { kind: 'empty' }
@@ -46,7 +47,7 @@ export const deriveResultsViewState = (
 
 export const hasRefreshSettled = (
   resultsViewState: ResultsViewState,
-  exposuresViewState: { kind: string },
+  exposuresViewState: ExposuresViewState,
   requestsInFlight: boolean,
 ): boolean =>
   !requestsInFlight &&
