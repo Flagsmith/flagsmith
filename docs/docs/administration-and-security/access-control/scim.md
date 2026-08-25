@@ -30,7 +30,8 @@ provisioning (which users and groups exist in Flagsmith, and who belongs to what
 Flagsmith's SCIM 2.0 API supports:
 
 - Creating users.
-- Deactivating and reactivating users through the `active` attribute. See [Deactivating users](#deactivating-users).
+- Deactivating and reactivating users through the `active` attribute. See [User lifecycle](#user-lifecycle) for what is
+  and is not retained.
 - Deleting users. See [User lifecycle](#user-lifecycle) for what is and is not removed.
 - Pushing groups: create and update [permission groups](/administration-and-security/access-control/rbac#groups) and
   their membership, and delete groups.
@@ -69,30 +70,14 @@ When your identity provider deprovisions a user by sending a DELETE request:
    [permission groups](/administration-and-security/access-control/rbac#groups) in that organisation.
 2. The user's data (audit log entries, change request history) is preserved.
 
-### Deactivating users
-
-Deactivation is the reversible alternative to deletion. Setting the SCIM `active` attribute to `false` — through either
-a PUT or a PATCH request — deactivates the user's membership of the organisation:
+When your identity provider deprovisions a user by sending a PUT or a PATCH request with `active: false`:
 
 1. The user can still log in to Flagsmith, but cannot access the organisation, and no longer sees it in their
    organisation picker.
 2. The membership no longer counts towards your plan's seat limit.
 3. Their role, project and environment permissions, and
    [permission group](/administration-and-security/access-control/rbac#groups) memberships are all retained.
-
-Setting `active` back to `true` reactivates the membership and restores access exactly as it was. A reactivated member
-takes up a seat again. Reactivation always succeeds, even when that takes you over your plan's seat limit — your
-identity provider stays the source of truth, and the extra seats are billed as an overage.
-
-Deactivated members remain visible over SCIM: a GET on the user returns `200` with `"active": false`, and they appear in
-`/Users` list responses.
-
-:::tip
-
-Prefer deactivation over deletion when a user might return, or when you want to preserve their permissions while they
-are on leave. Use DELETE when you want the membership and its permissions gone for good.
-
-:::
+4. The membership can be reactivated by sending a PUT or a PATCH request with `active: true`.
 
 ### User attributes
 
@@ -194,9 +179,8 @@ These steps are for the Flagsmith application from the Okta Integration Network 
 1. Click "Test API Credentials" to verify the connection, then save.
 1. Select "To App" and click "Edit", then enable "Create Users", "Update User Attributes" and "Deactivate Users".
 
-To deactivate a user, deactivate them in Okta or unassign them from the application. Okta sends `active: false` and
-Flagsmith deactivates their membership, freeing their seat while preserving their permissions. Reactivating them in Okta
-restores their access.
+To deactivate a user, deactivate them in Okta or unassign them from the application. Reactivating them in Okta restores
+their access.
 
 To remove a user entirely, delete them from Okta. Okta sends a DELETE request and Flagsmith removes the user from your
 organisation along with their permissions.
@@ -261,9 +245,3 @@ endpoints as defined by the SCIM 2.0 specification.
   must send a DELETE request.
 - Check that your identity provider is configured to send deprovisioning events at all — in Okta, for example,
   "Deactivate Users" must be enabled under "Provisioning to App".
-
-### Reactivated users took the organisation over its seat limit
-
-- Reactivating a deactivated member takes up a seat again, and Flagsmith does not block reactivation to keep you within
-  your plan's limit — doing so would leave your identity provider and Flagsmith out of sync. The additional seats are
-  billed as an overage. Deactivate or remove members in your identity provider to bring the count back down.
