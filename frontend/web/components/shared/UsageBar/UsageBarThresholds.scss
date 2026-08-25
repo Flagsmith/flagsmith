@@ -1,0 +1,24 @@
+.usage-bar {
+  &__marker {
+    position: absolute;
+    top: 4px;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-border-strong);
+    transform: translateX(-50%);
+  }
+
+  &__marker-label {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  &__marker--end &__marker-label {
+    left: auto;
+    right: 4px;
+    transform: none;
+  }
+}

@@ -1,0 +1,17 @@
+.usage-bar {
+  &__wrap {
+    padding-top: 32px;
+  }
+
+  &__track {
+    height: 8px;
+  }
+
+  &__fill {
+    transition: width var(--duration-slow) var(--easing-standard);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+}
