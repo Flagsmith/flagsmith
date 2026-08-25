@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { FC, ReactNode } from 'react'
 import ValueEditor from 'components/ValueEditor'
 import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
@@ -39,7 +39,18 @@ interface VariationOptionsProps {
   weightTitle: string
 }
 
-export const VariationOptions: React.FC<VariationOptionsProps> = ({
+interface ValueRowLabelProps {
+  children: ReactNode
+}
+
+// Each row shows a bare value, so it needs saying which value it is.
+const ValueRowLabel: FC<ValueRowLabelProps> = ({ children }) => (
+  <div className='mb-2'>
+    <span className='h6 mb-0 font-weight-semibold'>{children}</span>
+  </div>
+)
+
+export const VariationOptions: FC<VariationOptionsProps> = ({
   apiErrors,
   canCreateFeature,
   controlPercentage,
@@ -76,6 +87,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
       {select && !!unmatchedOverride && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
+            <ValueRowLabel>Current override</ValueRowLabel>
             <Row>
               <Flex>
                 <ValueEditor
@@ -101,6 +113,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
       {select && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
+            <ValueRowLabel>Control value</ValueRowLabel>
             <Row>
               <Flex>
                 <ValueEditor
@@ -144,8 +157,11 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           )
         }
         return select ? (
-          <div className='panel panel--flat panel-without-heading mb-2'>
+          <div key={i} className='panel panel--flat panel-without-heading mb-2'>
             <div className='panel-content'>
+              <ValueRowLabel>
+                {theValue.key || Utils.getDefaultVariantKey(i)}
+              </ValueRowLabel>
               <Row>
                 <Flex>
                   <ValueEditor
