@@ -9,7 +9,7 @@ import AccountStore from 'common/stores/account-store'
 import { colorIconSuccess } from 'common/theme/tokens'
 import Button from 'components/base/forms/Button'
 import Checkbox from 'components/base/forms/Checkbox'
-import Input from 'components/base/forms/Input'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import InputGroup from 'components/base/forms/InputGroup'
 import CsvUpload from 'components/CsvUpload'
 import EnvironmentSelect from 'components/EnvironmentSelect'
@@ -90,28 +90,25 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
       id='create-segment-from-csv-modal'
       onSubmit={save}
     >
-      <div className='mb-4'>
-        <label htmlFor='segmentID'>Name*</label>
-        <Flex>
-          <Input
-            data-test='segmentID'
-            name='id'
-            id='segmentID'
-            maxLength={Constants.forms.maxLength.SEGMENT_ID}
-            value={name}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              setName(
-                Format.enumeration
-                  .set(Utils.safeParseEventValue(e))
-                  .toLowerCase(),
-              )
-            }}
-            isValid={!!name?.length}
-            type='text'
-            placeholder='E.g. power_users'
-          />
-        </Flex>
-      </div>
+      <InputGroup
+        className='mb-4'
+        id='segmentID'
+        data-test='segmentID'
+        title='Name*'
+        value={name}
+        inputProps={{
+          maxLength: Constants.forms.maxLength.SEGMENT_ID,
+          name: 'id',
+        }}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+          setName(
+            Format.enumeration.set(Utils.safeParseEventValue(e)).toLowerCase(),
+          )
+        }}
+        isValid={!!name?.length}
+        type='text'
+        placeholder='E.g. power_users'
+      />
       <InputGroup
         className='mb-4'
         value={description}
@@ -124,9 +121,10 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
         placeholder="e.g. 'People who have spent over $100' "
       />
       <div className='mb-4'>
-        <label>Environment</label>
+        <FieldLabel htmlFor='environment-select'>Environment</FieldLabel>
         <div className='create-segment-from-csv__select'>
           <EnvironmentSelect
+            inputId='environment-select'
             projectId={Number(projectId)}
             idField='id'
             size='default'
@@ -151,9 +149,12 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
             <div />
           ) : (
             <div>
-              <label>Identifier column</label>
+              <FieldLabel htmlFor='identifier-column-select'>
+                Identifier column
+              </FieldLabel>
               <div className='create-segment-from-csv__select'>
                 <Select
+                  inputId='identifier-column-select'
                   data-test='identifier-column-select'
                   isDisabled={parsed.columns.length === 1}
                   placeholder='Select column'

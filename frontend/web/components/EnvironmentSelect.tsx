@@ -66,7 +66,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
     <div data-test={dataTestProp}>
       <Select
         {...rest}
-        className={size === 'default' ? 'react-select' : `react-select ${size}`}
+        size={size === 'default' ? undefined : size}
         value={
           foundValue
             ? foundValue
