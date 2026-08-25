@@ -2,6 +2,7 @@ import React, { FC, useState } from 'react'
 import flagsmith from '@flagsmith/flagsmith'
 import classNames from 'classnames'
 import AccountStore from 'common/stores/account-store'
+import Utils from 'common/utils/utils'
 import { colorIconAction } from 'common/theme/tokens'
 import Button from 'components/base/forms/Button'
 import BareButton from 'components/base/forms/BareButton'
@@ -9,7 +10,8 @@ import Chip from 'components/base/Chip'
 import Icon from 'components/icons/Icon'
 import './CreateSegmentSourcesModal.scss'
 
-type SegmentSource = {
+export type SegmentSource = {
+  active: boolean
   description: string
   image?: string
   key: string
@@ -18,45 +20,77 @@ type SegmentSource = {
 
 type SelectedSegmentSource = SegmentSource | null
 
-const SOURCES: SegmentSource[] = [
-  {
-    description:
-      'Upload identifiers to create a managed segment. Update members with a new upload.',
-    key: 'csv',
-    name: 'From a CSV list',
-  },
-  {
-    description:
-      'Sync a behavioural cohort as a managed segment, updated on schedule or real-time.',
-    image: '/static/images/integrations/amplitude.svg',
-    key: 'amplitude',
-    name: 'Amplitude',
-  },
-  {
-    description:
-      'A managed segment that updates as users enter and exit your Mixpanel cohort.',
-    image: '/static/images/integrations/mp.svg',
-    key: 'mixpanel',
-    name: 'Mixpanel',
-  },
-  {
+const SOURCE_DETAILS: Record<string, Omit<SegmentSource, 'active'>> = {
+  adobe_journey_manager: {
     description:
       'Activate an Adobe audience as a managed segment, refreshed automatically by Adobe.',
     image: '/static/images/integrations/adobe-analytics.png',
     key: 'adobe_journey_manager',
     name: 'Adobe Journey Manager',
   },
-]
+  amplitude: {
+    description:
+      'Sync a behavioural cohort as a managed segment, updated on schedule or real-time.',
+    image: '/static/images/integrations/amplitude.svg',
+    key: 'amplitude',
+    name: 'Amplitude',
+  },
+  csv: {
+    description:
+      'Upload identifiers to create a managed segment. Update members with a new upload.',
+    key: 'csv',
+    name: 'From a CSV list',
+  },
+  mixpanel: {
+    description:
+      'A managed segment that updates as users enter and exit your Mixpanel cohort.',
+    image: '/static/images/integrations/mp.svg',
+    key: 'mixpanel',
+    name: 'Mixpanel',
+  },
+}
+
+type SegmentSourceFlagEntry = {
+  active?: boolean
+  name?: string
+  visible?: boolean
+}
+
+export function getSegmentSources(): SegmentSource[] {
+  const config = Utils.getFlagsmithJSONValue(
+    'create_segment_with_external_sources',
+    [],
+  )
+  if (!Array.isArray(config)) {
+    return []
+  }
+  return (config as SegmentSourceFlagEntry[])
+    .filter(
+      (entry) => entry?.visible !== false && SOURCE_DETAILS[entry?.name ?? ''],
+    )
+    .map((entry) => ({
+      ...SOURCE_DETAILS[entry.name ?? ''],
+      active: !!entry.active,
+    }))
+}
 
 type CreateSegmentSourcesModalType = {
   onManual: () => void
+  onCsv?: () => void
+  sources: SegmentSource[]
 }
 
 const CreateSegmentSourcesModal: FC<CreateSegmentSourcesModalType> = ({
+  onCsv,
   onManual,
+  sources,
 }) => {
   const [selected, setSelected] = useState<SelectedSegmentSource>(null)
   const [requested, setRequested] = useState<string[]>([])
+
+  const sourceHandlers: Partial<Record<string, () => void>> = {
+    csv: onCsv,
+  }
 
   const trackSourceEvent = (event: string, source: SegmentSource) => {
     flagsmith.trackEvent(event, {
@@ -74,6 +108,12 @@ const CreateSegmentSourcesModal: FC<CreateSegmentSourcesModalType> = ({
   }
 
   const selectSource = (source: SegmentSource) => {
+    const handler = source.active ? sourceHandlers[source.key] : undefined
+    if (handler) {
+      closeModal()
+      handler()
+      return
+    }
     if (selected?.key === source.key) {
       return
     }
@@ -111,8 +151,9 @@ const CreateSegmentSourcesModal: FC<CreateSegmentSourcesModalType> = ({
         </div>
       </BareButton>
       <div className='row g-0'>
-        {SOURCES.map((source) => {
+        {sources.map((source) => {
           const isSelected = selected?.key === source.key
+          const isFakeDoor = !source.active || !sourceHandlers[source.key]
           return (
             <div key={source.key} className='col-md-6 p-1'>
               <BareButton
@@ -147,10 +188,12 @@ const CreateSegmentSourcesModal: FC<CreateSegmentSourcesModalType> = ({
                     {source.description}
                   </div>
                 </div>
-                <Chip size='xs' variant='accent' className='fw-semibold'>
-                  <Icon name='rocket' width={12} />
-                  Beta
-                </Chip>
+                {isFakeDoor && (
+                  <Chip size='xs' variant='accent' className='fw-semibold'>
+                    <Icon name='rocket' width={12} />
+                    Beta
+                  </Chip>
+                )}
               </BareButton>
             </div>
           )
