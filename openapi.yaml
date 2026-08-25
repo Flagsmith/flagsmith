@@ -22883,7 +22883,6 @@ components:
       properties:
         mixpanel_distinct_id:
           type: string
-          maxLength: 2000
       required:
         - mixpanel_distinct_id
     MixpanelParameters:
