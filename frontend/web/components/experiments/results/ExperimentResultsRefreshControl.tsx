@@ -15,6 +15,7 @@ import {
   canRefreshResults,
   deriveResultsViewState,
   getResultsRefreshLabel,
+  hasRefreshSettled,
 } from './resultsViewState'
 import { deriveExposuresViewState } from './exposuresViewState'
 
@@ -58,14 +59,16 @@ const ExperimentResultsRefreshControl: FC<
   const [pollStartedAt, setPollStartedAt] = useState<number | null>(null)
   const [retryAfter, startRetryCountdown] = useCountdown()
 
-  const { data: results } = useGetExperimentBayesianResultsQuery(
-    { environmentId, experimentId },
-    { pollingInterval: pollInterval },
-  )
-  const { data: exposures } = useGetExperimentExposuresQuery(
-    { environmentId, experimentId },
-    { pollingInterval: pollInterval },
-  )
+  const { data: results, isFetching: isFetchingResults } =
+    useGetExperimentBayesianResultsQuery(
+      { environmentId, experimentId },
+      { pollingInterval: pollInterval },
+    )
+  const { data: exposures, isFetching: isFetchingExposures } =
+    useGetExperimentExposuresQuery(
+      { environmentId, experimentId },
+      { pollingInterval: pollInterval },
+    )
   const [refreshResults, { isLoading: isSubmittingResults }] =
     useRefreshExperimentBayesianResultsMutation()
   const [refreshExposures, { isLoading: isSubmittingExposures }] =
@@ -78,9 +81,16 @@ const ExperimentResultsRefreshControl: FC<
   const eitherRefreshing =
     resultsViewState.kind === 'refreshing' ||
     exposuresViewState.kind === 'refreshing'
-  const bothSettled =
-    resultsViewState.kind !== 'refreshing' &&
-    exposuresViewState.kind !== 'refreshing'
+  const requestsInFlight =
+    isSubmittingResults ||
+    isSubmittingExposures ||
+    isFetchingResults ||
+    isFetchingExposures
+  const bothSettled = hasRefreshSettled(
+    resultsViewState,
+    exposuresViewState,
+    requestsInFlight,
+  )
 
   const pollTimedOut =
     pollStartedAt !== null && Date.now() - pollStartedAt > POLL_TIMEOUT_MS

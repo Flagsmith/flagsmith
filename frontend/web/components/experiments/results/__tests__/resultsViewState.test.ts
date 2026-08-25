@@ -2,6 +2,7 @@ import {
   canRefreshResults,
   deriveResultsViewState,
   getResultsRefreshLabel,
+  hasRefreshSettled,
 } from 'components/experiments/results/resultsViewState'
 import {
   ExperimentBayesianResults,
@@ -79,6 +80,45 @@ describe('canRefreshResults', () => {
         reason: 'final',
       },
     )
+  })
+})
+
+describe('hasRefreshSettled', () => {
+  const settledCases: [
+    string,
+    Parameters<typeof hasRefreshSettled>,
+    boolean,
+  ][] = [
+    [
+      'settled view states with nothing in flight',
+      [{ kind: 'loaded' }, { kind: 'loaded' }, false],
+      true,
+    ],
+    [
+      'stale settled view states while requests are still in flight',
+      [{ kind: 'loaded' }, { kind: 'loaded' }, true],
+      false,
+    ],
+    [
+      'results still refreshing',
+      [{ kind: 'refreshing' }, { kind: 'loaded' }, false],
+      false,
+    ],
+    [
+      'exposures still refreshing',
+      [{ kind: 'loaded' }, { kind: 'refreshing' }, false],
+      false,
+    ],
+    [
+      'error view state with nothing in flight',
+      [{ kind: 'error', staleAvailable: true }, { kind: 'empty' }, false],
+      true,
+    ],
+  ]
+  settledCases.forEach(([name, args, expected]) => {
+    it(`${name} → ${expected}`, () => {
+      expect(hasRefreshSettled(...args)).toBe(expected)
+    })
   })
 })
 

@@ -44,6 +44,15 @@ export const deriveResultsViewState = (
   return { kind: 'empty' }
 }
 
+export const hasRefreshSettled = (
+  resultsViewState: ResultsViewState,
+  exposuresViewState: { kind: string },
+  requestsInFlight: boolean,
+): boolean =>
+  !requestsInFlight &&
+  resultsViewState.kind !== 'refreshing' &&
+  exposuresViewState.kind !== 'refreshing'
+
 export const canRefreshResults = (
   status: ExperimentStatus,
   results: ExperimentBayesianResults | null | undefined,
