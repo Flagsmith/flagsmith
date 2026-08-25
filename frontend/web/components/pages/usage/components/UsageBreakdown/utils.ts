@@ -23,13 +23,9 @@ export const BREAKDOWN_DIMENSIONS: {
   { label: 'By SDK', value: 'sdk' },
 ]
 
-export type RequestTypeKey =
-  | 'flags'
-  | 'identities'
-  | 'environment_document'
-  | 'traits'
+type RequestTypeKey = 'flags' | 'identities' | 'environment_document' | 'traits'
 
-export const REQUEST_TYPES: {
+const REQUEST_TYPES: {
   key: RequestTypeKey
   label: string
   colour: string
