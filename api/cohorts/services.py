@@ -4,13 +4,13 @@ import typing
 
 import structlog
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import F, QuerySet
 from django.utils import timezone
 from flag_engine.segments.constants import IS_SET
 from rest_framework.exceptions import ValidationError
 
 from cohorts.constants import (
-    COHORT_CSV_MEMBERSHIP_CREATE_BATCH_SIZE,
+    COHORT_CSV_MEMBERSHIP_WRITE_BATCH_SIZE,
     COHORT_IDENTIFIER_MAX_BYTES,
     COHORT_MEMBERSHIP_APPLY_BATCH_SIZE,
 )
@@ -40,6 +40,15 @@ _PENDING_STATES = [
     CohortMembershipState.PENDING_ADD,
     CohortMembershipState.PENDING_REMOVE,
 ]
+
+_T = typing.TypeVar("_T")
+
+
+def _batched(
+    items: list[_T], size: int = COHORT_CSV_MEMBERSHIP_WRITE_BATCH_SIZE
+) -> typing.Iterator[list[_T]]:
+    for offset in range(0, len(items), size):
+        yield items[offset : offset + size]
 
 
 def pending_memberships(cohort: Cohort) -> "QuerySet[CohortMembership]":
@@ -182,50 +191,61 @@ def sync_cohort_memberships_from_csv(
     if not extraction.identifiers:
         raise ValidationError({"file": "No valid identifiers found in the CSV file."})
 
+    # A sync is a full reconciliation towards the uploaded CSV: a partially
+    # failed or interleaved run converges on the next upload, and the unique
+    # constraint absorbs concurrent inserts. Writes are therefore chunked into
+    # their own implicit transactions instead of one long transaction that
+    # would hold locks against the applier task while a 10 MB file lands.
     incoming = set(extraction.identifiers)
-    added = removed = unchanged = 0
-    with transaction.atomic():
-        # Serialise concurrent syncs of the same cohort.
-        locked_cohort = Cohort.objects.select_for_update().get(id=cohort.id)
-        existing = {
-            membership.identifier: membership
-            for membership in CohortMembership.objects.filter(cohort=cohort).only(
-                "id", "identifier", "state"
-            )
-        }
+    existing = {
+        membership.identifier: membership
+        for membership in CohortMembership.objects.filter(cohort=cohort).only(
+            "id", "identifier", "state"
+        )
+    }
+    to_create = [
+        identifier
+        for identifier in extraction.identifiers
+        if identifier not in existing
+    ]
+    present = incoming & existing.keys()
+    readd_ids = [
+        existing[identifier].id
+        for identifier in present
+        if existing[identifier].state == CohortMembershipState.PENDING_REMOVE
+    ]
+    # A departed pending add may have had its trait written by a concurrent
+    # applier run, so drain it via pending remove, never delete.
+    remove_ids = [
+        membership.id
+        for identifier, membership in existing.items()
+        if identifier not in incoming
+        and membership.state != CohortMembershipState.PENDING_REMOVE
+    ]
+
+    for identifier_batch in _batched(to_create):
         CohortMembership.objects.bulk_create(
             [
                 CohortMembership(cohort=cohort, identifier=identifier)
-                for identifier in extraction.identifiers
-                if identifier not in existing
+                for identifier in identifier_batch
             ],
-            batch_size=COHORT_CSV_MEMBERSHIP_CREATE_BATCH_SIZE,
+            ignore_conflicts=True,
         )
-        added += len(incoming - existing.keys())
-
-        readd_ids: list[int] = []
-        remove_ids: list[int] = []
-        for identifier, membership in existing.items():
-            if identifier in incoming:
-                if membership.state == CohortMembershipState.PENDING_REMOVE:
-                    readd_ids.append(membership.id)
-                else:
-                    unchanged += 1
-            elif membership.state != CohortMembershipState.PENDING_REMOVE:
-                # A pending add may have had its trait written by a concurrent
-                # applier run, so drain it via pending remove, never delete.
-                remove_ids.append(membership.id)
-
-        added += CohortMembership.objects.filter(id__in=readd_ids).update(
+    added = len(to_create)
+    removed = 0
+    unchanged = len(present) - len(readd_ids)
+    for id_batch in _batched(readd_ids):
+        added += CohortMembership.objects.filter(id__in=id_batch).update(
             state=CohortMembershipState.PENDING_ADD, updated_at=timezone.now()
         )
-        removed += CohortMembership.objects.filter(id__in=remove_ids).update(
+    for id_batch in _batched(remove_ids):
+        removed += CohortMembership.objects.filter(id__in=id_batch).update(
             state=CohortMembershipState.PENDING_REMOVE, updated_at=timezone.now()
         )
 
-        locked_cohort.version += 1
-        locked_cohort.save(update_fields=["version"])
-        apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort.id})
+    Cohort.objects.filter(id=cohort.id).update(version=F("version") + 1)
+    cohort.refresh_from_db(fields=["version"])
+    apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort.id})
 
     flagsmith_cohorts_csv_syncs_total.inc()
     flagsmith_cohorts_csv_sync_identifiers.observe(len(incoming))
@@ -233,13 +253,13 @@ def sync_cohort_memberships_from_csv(
         "csv.synced",
         cohort__id=cohort.id,
         environment__id=cohort.environment_id,
-        cohort__version=locked_cohort.version,
+        cohort__version=cohort.version,
         adds__count=added,
         removes__count=removed,
         unchanged__count=unchanged,
     )
     return CohortCsvSyncResult(
-        version=locked_cohort.version,
+        version=cohort.version,
         added=added,
         removed=removed,
         unchanged=unchanged,

@@ -8,6 +8,7 @@ from rest_framework.exceptions import ValidationError
 
 from cohorts.models import Cohort, CohortMembership, CohortMembershipState
 from cohorts.services import (
+    _batched,
     apply_pending_memberships,
     create_cohort,
     delete_cohort,
@@ -17,6 +18,27 @@ from cohorts.services import (
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
 from segments.models import SegmentManagedBy, SegmentRule
+
+
+@pytest.mark.parametrize(
+    "items, size, expected",
+    [
+        ([], 2, []),
+        ([1, 2, 3], 2, [[1, 2], [3]]),
+        ([1, 2], 2, [[1, 2]]),
+        ([1], 2, [[1]]),
+    ],
+)
+def test_batched__various_lengths__yields_expected_chunks(
+    items: list[int],
+    size: int,
+    expected: list[list[int]],
+) -> None:
+    # Given / When
+    result = list(_batched(items, size))
+
+    # Then
+    assert result == expected
 
 
 def test_apply_pending_memberships__no_pending_rows__returns_false(
