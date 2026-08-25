@@ -40,6 +40,7 @@ WebhookModels = typing.Union[OrganisationWebhook, Webhook]
 
 
 class WebhookEventType(enum.Enum):
+    FLAG_CREATED = "FLAG_CREATED"
     FLAG_UPDATED = "FLAG_UPDATED"
     FLAG_DELETED = "FLAG_DELETED"
     AUDIT_LOG_CREATED = "AUDIT_LOG_CREATED"

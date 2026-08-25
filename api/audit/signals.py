@@ -270,8 +270,12 @@ def trigger_feature_state_change_webhooks(
         # Skip deleted feature states - handled in views
         return
 
-    # Skip versioned environments - handled by trigger_update_version_webhooks
-    if fresh_feature_state.environment_feature_version_id:
+    # Skip versioned environments - handled by trigger_update_version_webhooks,
+    # except for v2 feature creation, which creates an initial version without
+    # going through the version publish webhook path.
+    if fresh_feature_state.environment_feature_version_id and not kwargs.get(
+        "feature_created"
+    ):
         return
 
     tasks.trigger_feature_state_change_webhooks(fresh_feature_state)
