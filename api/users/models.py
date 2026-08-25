@@ -254,11 +254,43 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     def is_organisation_admin(self, organisation: typing.Union["Organisation", int]):  # type: ignore[no-untyped-def]
         return is_user_organisation_admin(self, organisation)
 
-    def get_admin_organisations(self):  # type: ignore[no-untyped-def]
-        return Organisation.objects.filter(
+    def get_admin_organisations(self) -> QuerySet[Organisation]:
+        # NOTE: the lookups must stay in a single `filter()` call so that they
+        # apply to the same `UserOrganisation` row.
+        return Organisation.objects.filter(  # type: ignore[no-any-return]
             userorganisation__user=self,
             userorganisation__role=OrganisationRole.ADMIN.name,
+            userorganisation__is_active=True,
         )
+
+    def get_active_organisations(self) -> QuerySet[Organisation]:
+        return Organisation.objects.filter(  # type: ignore[no-any-return]
+            userorganisation__user=self,
+            userorganisation__is_active=True,
+        )
+
+    def set_organisation_membership_active(
+        self, organisation: Organisation, is_active: bool
+    ) -> None:
+        """
+        Activate or deactivate this user's membership of `organisation`.
+
+        Deactivated members keep their roles, permissions and group memberships,
+        but lose access to the organisation and free up their seat.
+
+        Reactivation deliberately does not enforce the plan's seat limit: this is
+        driven by an external identity provider over SCIM, where failing the call
+        would leave the provider and Flagsmith out of sync. Going over the limit
+        is handled by the usual seat overage billing instead.
+        """
+        user_organisation = UserOrganisation.objects.get(
+            user=self, organisation=organisation
+        )
+        if user_organisation.is_active == is_active:
+            return
+
+        user_organisation.is_active = is_active
+        user_organisation.save()
 
     def add_organisation(
         self, organisation: Organisation, role: OrganisationRole = OrganisationRole.USER
@@ -370,7 +402,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
 
     def belongs_to(self, organisation_id: int) -> bool:
         return self.userorganisation_set.filter(
-            organisation_id=organisation_id
+            organisation_id=organisation_id, is_active=True
         ).exists()
 
     def is_environment_admin(

@@ -98,7 +98,8 @@ class UserOrganisationSerializer(serializers.ModelSerializer):  # type: ignore[t
 
     class Meta:
         model = UserOrganisation
-        fields = ("role", "organisation")
+        fields = ("role", "organisation", "is_active")
+        read_only_fields = ("is_active",)
 
 
 class InviteSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]

@@ -95,6 +95,7 @@ class AllAuditLogViewSet(_BaseAuditLogViewSet):
         return Q(
             project__organisation__userorganisation__user=self.request.user,
             project__organisation__userorganisation__role=OrganisationRole.ADMIN,
+            project__organisation__userorganisation__is_active=True,
         )
 
     def _get_organisation(self) -> Organisation | None:
@@ -109,9 +110,7 @@ class AllAuditLogViewSet(_BaseAuditLogViewSet):
         Since we're applying the base filters to the query set
         """
         return (  # type: ignore[no-any-return]
-            self.request.user.organisations.filter(  # type: ignore[union-attr]
-                userorganisation__role=OrganisationRole.ADMIN
-            )
+            self.request.user.get_admin_organisations()  # type: ignore[union-attr]
             .select_related("subscription", "subscription_information_cache")
             .first()
         )

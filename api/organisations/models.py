@@ -109,7 +109,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
     @property
     def num_seats(self) -> int:
-        return self.users.count()
+        return self.userorganisation_set.filter(is_active=True).count()
 
     def has_paid_subscription(self) -> bool:
         # Includes subscriptions that are canceled.
@@ -231,6 +231,13 @@ class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     date_joined = models.DateTimeField(auto_now_add=True)
     role = models.CharField(max_length=50, choices=OrganisationRole.choices)
+    is_active = models.BooleanField(
+        default=True,
+        help_text=(
+            "Inactive members can still log in, but cannot access the "
+            "organisation, and do not count towards its seat limit."
+        ),
+    )
 
     class Meta:
         unique_together = (
