@@ -171,7 +171,6 @@ overrides = [
     { name = "pydantic", specifier = "==2.12.5" },
     { name = "pydantic-collections", specifier = "==0.6.0" },
     { name = "pydantic-core", specifier = "==2.41.5" },
-    { name = "pyfakefs", specifier = "==5.7.4" },
     { name = "pygithub", specifier = "==2.8.1" },
     { name = "pygments", specifier = "==2.19.2" },
     { name = "pylint", specifier = "==2.16.4" },
@@ -1746,7 +1745,7 @@ requires-dist = [
     { name = "psycopg2-binary", specifier = ">=2.9.5,<2.10.0" },
     { name = "pydantic", specifier = ">=2.12.0,<3.0.0" },
     { name = "pydantic-collections", specifier = ">=0.6.0,<0.7.0" },
-    { name = "pyfakefs", marker = "extra == 'dev'", specifier = ">=5.7.4,<6.0.0" },
+    { name = "pyfakefs", marker = "extra == 'dev'", specifier = ">=6,<7" },
     { name = "pygithub", specifier = ">=2.8,<2.9.0" },
     { name = "pyjwt", marker = "extra == 'dev'", specifier = ">=2.13.0" },
     { name = "pylint", marker = "extra == 'dev'", specifier = ">=2.16.2,<2.17.0" },
@@ -3208,11 +3207,11 @@ wheels = [
 
 [[package]]
 name = "pyfakefs"
-version = "5.7.4"
+version = "6.2.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8e/f9/3a2f10b1b3e251cec47ab7581d15bc39553cd5a23893cbe0efe633856c4e/pyfakefs-5.7.4.tar.gz", hash = "sha256:4971e65cc80a93a1e6f1e3a4654909c0c493186539084dc9301da3d68c8878fe", size = 213382, upload-time = "2025-01-14T19:24:54.538Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/98/0d/c80012ee6e885c293ad63c5f5b049d3ef3fd2b32bbe6fa8739145f392ec6/pyfakefs-6.2.0.tar.gz", hash = "sha256:e59a36db447bf509ce9c97ab3d1510c08cc51895c5311325a560a5e5b5dc1940", size = 228273, upload-time = "2026-04-12T13:38:50.411Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b9/52/eb08c795d9159da167334a7fa8a23bd04112b4c8b63030a2600711a94143/pyfakefs-5.7.4-py3-none-any.whl", hash = "sha256:3e763d700b91c54ade6388be2cfa4e521abc00e34f7defb84ee511c73031f45f", size = 228706, upload-time = "2025-01-14T19:24:51.436Z" },
+    { url = "https://files.pythonhosted.org/packages/b2/80/97571ac8295289c267367b7b60aadeae1a9a841e83f0a96ad9b65d1dd3c0/pyfakefs-6.2.0-py3-none-any.whl", hash = "sha256:0968a49db692694ffed420e54a9f1cbae4636637b880e8ab09c8ccc0f11bd7ae", size = 241113, upload-time = "2026-04-12T13:38:48.927Z" },
 ]
 
 [[package]]
