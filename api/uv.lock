@@ -32,7 +32,6 @@ overrides = [
     { name = "chargebee", specifier = "==3.18.2" },
     { name = "charset-normalizer", specifier = "==3.2.0" },
     { name = "click", specifier = "==8.1.6" },
-    { name = "clickhouse-driver", specifier = "==0.2.11" },
     { name = "colorama", specifier = "==0.4.6" },
     { name = "coreapi", specifier = "==2.3.3" },
     { name = "coreschema", specifier = "==0.0.4" },
@@ -1043,11 +1042,15 @@ wheels = [
 
 [[package]]
 name = "django-clickhouse-backend"
-version = "1.6"
-source = { git = "https://github.com/jayvynl/django-clickhouse-backend?rev=d884c7d#d884c7d8d89fd94d79fca440e3965a931aa69435" }
+version = "2.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "clickhouse-driver" },
     { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e3/22/0ef2c0aa085d98705d143e68ffc1f163b220049e500a2638b03a5bf83066/django_clickhouse_backend-2.0.tar.gz", hash = "sha256:011b28c9786712d6f32d59d194859a97f7d0ab13631a258ff1d4b4a8a4923c6e", size = 91337, upload-time = "2026-08-09T14:03:10.617Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/f5/65082e6a59ba9b4c9e398b338006200b8ac1dbb7b6e433b1eb867098e5fa/django_clickhouse_backend-2.0-py3-none-any.whl", hash = "sha256:6b4ddab0bac1f3101d0b656a465c8a0eb5661a92d4bb25b32d4107ff8daafd30", size = 104161, upload-time = "2026-08-09T14:03:08.896Z" },
 ]
 
 [[package]]
@@ -1687,7 +1690,7 @@ requires-dist = [
     { name = "django", specifier = ">=5,<6" },
     { name = "django-admin-sso", specifier = ">=5.2.0,<5.3.0" },
     { name = "django-axes", specifier = ">=8.1.0,<9.0.0" },
-    { name = "django-clickhouse-backend", git = "https://github.com/jayvynl/django-clickhouse-backend?rev=d884c7d" },
+    { name = "django-clickhouse-backend", specifier = ">=2,<3" },
     { name = "django-cockroachdb", specifier = ">=4.2,<4.3.0" },
     { name = "django-cors-headers", specifier = ">=3.5.0,<3.6.0" },
     { name = "django-debug-toolbar", marker = "extra == 'dev'" },
