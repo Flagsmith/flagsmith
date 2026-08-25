@@ -155,7 +155,6 @@ overrides = [
     { name = "pep8", specifier = "==1.7.1" },
     { name = "pexpect", specifier = "==4.9.0" },
     { name = "platformdirs", specifier = "==3.10.0" },
-    { name = "pluggy", specifier = "==1.2.0" },
     { name = "pre-commit", specifier = "==4.0.1" },
     { name = "prometheus-client", specifier = "==0.21.1" },
     { name = "prompt-toolkit", specifier = "==3.0.52" },
@@ -183,11 +182,9 @@ overrides = [
     { name = "pyreadline", specifier = "==2.1" },
     { name = "pyrepl", specifier = "==0.9.0" },
     { name = "pysaml2", specifier = "==7.4.2" },
-    { name = "pytest", specifier = "==7.2.2" },
     { name = "pytest-cov", specifier = "==4.1.0" },
     { name = "pytest-django", specifier = "==4.8.0" },
     { name = "pytest-freezegun", specifier = "==0.4.2" },
-    { name = "pytest-lazy-fixture", specifier = "==0.6.3" },
     { name = "pytest-mock", specifier = "==3.10.0" },
     { name = "pytest-responses", specifier = "==0.5.1" },
     { name = "pytest-structlog", specifier = "==1.1" },
@@ -1650,7 +1647,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-django" },
     { name = "pytest-freezegun" },
-    { name = "pytest-lazy-fixture" },
+    { name = "pytest-lazy-fixtures" },
     { name = "pytest-mock" },
     { name = "pytest-responses" },
     { name = "pytest-structlog" },
@@ -1757,7 +1754,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0,<4.2.0" },
     { name = "pytest-django", marker = "extra == 'dev'", specifier = ">=4.8.0,<5.0.0" },
     { name = "pytest-freezegun", marker = "extra == 'dev'", specifier = ">=0.4.2,<0.5.0" },
-    { name = "pytest-lazy-fixture", marker = "extra == 'dev'", specifier = ">=0.6.3,<0.7.0" },
+    { name = "pytest-lazy-fixtures", marker = "extra == 'dev'", specifier = ">=1.4,<2" },
     { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.10.0,<3.11.0" },
     { name = "pytest-responses", marker = "extra == 'dev'", specifier = ">=0.5.1,<0.6.0" },
     { name = "pytest-structlog", marker = "extra == 'dev'", specifier = ">=1.1,<2.0.0" },
@@ -2936,14 +2933,11 @@ wheels = [
 
 [[package]]
 name = "pluggy"
-version = "1.2.0"
+version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "importlib-metadata" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8a/42/8f2833655a29c4e9cb52ee8a2be04ceac61bcff4a680fb338cbd3d1e322d/pluggy-1.2.0.tar.gz", hash = "sha256:d12f0c4b579b15f5e054301bb226ee85eeeba08ffec228092f8defbaa3a4c4b3", size = 61613, upload-time = "2023-06-21T09:12:28.745Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3", size = 69412, upload-time = "2025-05-15T12:30:07.975Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/51/32/4a79112b8b87b21450b066e102d6608907f4c885ed7b04c3fdb085d4d6ae/pluggy-1.2.0-py3-none-any.whl", hash = "sha256:c2fd55a7d7a3863cba1a013e4e2414658b1d07b6bc57b3919e0c63c9abb99849", size = 17695, upload-time = "2023-06-21T09:12:27.397Z" },
+    { url = "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746", size = 20538, upload-time = "2025-05-15T12:30:06.134Z" },
 ]
 
 [[package]]
@@ -3385,19 +3379,18 @@ wheels = [
 
 [[package]]
 name = "pytest"
-version = "7.2.2"
+version = "9.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "attrs" },
     { name = "colorama" },
-    { name = "importlib-metadata" },
     { name = "iniconfig" },
     { name = "packaging" },
     { name = "pluggy" },
+    { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b9/29/311895d9cd3f003dd58e8fdea36dd895ba2da5c0c90601836f7de79f76fe/pytest-7.2.2.tar.gz", hash = "sha256:c99ab0c73aceb050f68929bc93af19ab6db0558791c6a0715723abe9d0ade9d4", size = 1320028, upload-time = "2023-03-03T19:12:29.775Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7d/0d/549bd94f1a0a402dc8cf64563a117c0f3765662e2e668477624baeec44d5/pytest-9.0.3.tar.gz", hash = "sha256:b86ada508af81d19edeb213c681b1d48246c1a91d304c6c81a427674c17eb91c", size = 1572165, upload-time = "2026-04-07T17:16:18.027Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b2/68/5321b5793bd506961bd40bdbdd0674e7de4fb873ee7cab33dd27283ad513/pytest-7.2.2-py3-none-any.whl", hash = "sha256:130328f552dcfac0b1cec75c12e3f005619dc5f874f0a06e8ff7263f0ee6225e", size = 317207, upload-time = "2023-03-03T19:12:27.611Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/24/a372aaf5c9b7208e7112038812994107bc65a84cd00e0354a88c2c77a617/pytest-9.0.3-py3-none-any.whl", hash = "sha256:2c5efc453d45394fdd706ade797c0a81091eccd1d6e4bccfcd476e2b8e0ab5d9", size = 375249, upload-time = "2026-04-07T17:16:16.13Z" },
 ]
 
 [[package]]
@@ -3439,15 +3432,15 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-lazy-fixture"
-version = "0.6.3"
+name = "pytest-lazy-fixtures"
+version = "1.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b2/82/ae6d2f6903719c4ec410dcd31ee24e3bce74b2cef3c5b9150ad36e8594b6/pytest-lazy-fixture-0.6.3.tar.gz", hash = "sha256:0e7d0c7f74ba33e6e80905e9bfd81f9d15ef9a790de97993e34213deb5ad10ac", size = 7878, upload-time = "2020-02-01T18:04:02.321Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/02/e9/19deae3ec38f0c09c59d5d4ba0b66786b49512a24a5307213956720efa69/pytest_lazy_fixtures-1.4.1.tar.gz", hash = "sha256:8684abfd4914ea01f1e2f7b24524739344421d8f3f12286fb3100fb5681e1181", size = 63077, upload-time = "2026-08-12T09:08:36.464Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2d/a1/2f2c1c2353350d66c4d110d283e422e4943eb5ad10effa9357ba66f7b5b9/pytest_lazy_fixture-0.6.3-py3-none-any.whl", hash = "sha256:e0b379f38299ff27a653f03eaa69b08a6fd4484e46fd1c9907d984b9f9daeda6", size = 4948, upload-time = "2020-02-01T18:04:00.347Z" },
+    { url = "https://files.pythonhosted.org/packages/18/c8/c7ba9d446a61293f037eff92f99f160d3a97c0da8315c9b6ea002b66cd3a/pytest_lazy_fixtures-1.4.1-py3-none-any.whl", hash = "sha256:42213af5859ea4a3c7ec86a7f9dbb43efa9b02547460bddad041e846cdcf921d", size = 10327, upload-time = "2026-08-12T09:08:35.404Z" },
 ]
 
 [[package]]
