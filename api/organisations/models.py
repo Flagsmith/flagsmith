@@ -209,21 +209,30 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         ).values_list("id", flat=True):
             rebuild_environment_document.delay(args=(environment_id,))
 
-    def cancel_users(self):  # type: ignore[no-untyped-def]
+    def cancel_users(self) -> None:
+        """
+        Reduce the organisation to the single seat the free plan allows.
+
+        The retained member must hold an active membership, otherwise the
+        organisation would be left with nobody able to access it.
+        """
+        active_memberships = UserOrganisation.objects.filter(
+            organisation=self,
+            is_active=True,
+        )
         remaining_seat_holder = (
-            UserOrganisation.objects.filter(
-                organisation=self,
-                role=OrganisationRole.ADMIN,
-            )
+            active_memberships.filter(role=OrganisationRole.ADMIN)
             .order_by("date_joined")
             .first()
+            or active_memberships.order_by("date_joined").first()
         )
+        if remaining_seat_holder is None:
+            # No seat is in use, so there is nothing to cancel down to.
+            return
 
         UserOrganisation.objects.filter(
             organisation=self,
-        ).exclude(
-            id=remaining_seat_holder.id  # type: ignore[union-attr]
-        ).delete()
+        ).exclude(id=remaining_seat_holder.id).delete()
 
 
 class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
@@ -389,7 +398,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
         if cancellation_date <= timezone.now():
             # Since the date is immediate, wipe data right away.
-            self.organisation.cancel_users()  # type: ignore[no-untyped-call]
+            self.organisation.cancel_users()
             self.save_as_free_subscription()  # type: ignore[no-untyped-call]
             return
 

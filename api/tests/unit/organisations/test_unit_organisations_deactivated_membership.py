@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -243,3 +246,64 @@ def test_add_organisation__new_membership__is_active(
 
     # Then
     assert user.belongs_to(organisation.id) is True
+
+
+def test_cancel_users__deactivated_earliest_admin__retains_an_active_admin(
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    # The earliest-joined admin has left and been deactivated, so retaining
+    # them would leave nobody able to access the organisation.
+    founding_admin = FFAdminUser.objects.create(email="founder@example.com")
+    founding_admin.add_organisation(organisation, role=OrganisationRole.ADMIN)
+    UserOrganisation.objects.filter(
+        user=founding_admin, organisation=organisation
+    ).update(date_joined=timezone.now() - timedelta(days=365))
+    founding_admin.set_organisation_membership_active(organisation, is_active=False)
+
+    # When
+    organisation.cancel_users()
+
+    # Then
+    assert admin_user.belongs_to(organisation.id) is True
+    assert organisation.num_seats == 1
+    assert not UserOrganisation.objects.filter(
+        user=founding_admin, organisation=organisation
+    ).exists()
+
+
+def test_cancel_users__no_active_admin__retains_earliest_active_member(
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    # Every admin is deactivated, leaving only a regular member holding a seat.
+    admin_user.set_organisation_membership_active(organisation, is_active=False)
+
+    # When
+    organisation.cancel_users()
+
+    # Then
+    assert staff_user.belongs_to(organisation.id) is True
+    assert organisation.num_seats == 1
+
+
+def test_cancel_users__no_active_memberships__is_a_noop(
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    # Nothing is holding a seat, so there is nothing to cancel down to.
+    admin_user.set_organisation_membership_active(organisation, is_active=False)
+    staff_user.set_organisation_membership_active(organisation, is_active=False)
+
+    # When
+    organisation.cancel_users()
+
+    # Then
+    assert organisation.num_seats == 0
+    assert UserOrganisation.objects.filter(organisation=organisation).count() == 2
