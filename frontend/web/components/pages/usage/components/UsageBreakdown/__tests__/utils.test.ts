@@ -6,7 +6,6 @@ import {
 import {
   byRequestType,
   bySdk,
-  fromScopedTotals,
   totalOf,
 } from 'components/pages/usage/components/UsageBreakdown/utils'
 
@@ -98,49 +97,6 @@ describe('UsageBreakdown utils', () => {
 
     it('returns nothing when there is no data', () => {
       expect(bySdk(undefined)).toEqual([])
-    })
-  })
-
-  describe('fromScopedTotals', () => {
-    const scopes = [
-      { key: 'project-1', label: 'Project A' },
-      { key: 'project-2', label: 'Project B' },
-    ]
-
-    it('ranks one row per scope', () => {
-      const result = fromScopedTotals(scopes, {
-        'project-1': 40,
-        'project-2': 90,
-      })
-
-      expect(result).toEqual([
-        { key: 'project-2', label: 'Project B', value: 90 },
-        { key: 'project-1', label: 'Project A', value: 40 },
-      ])
-    })
-
-    // Two projects can share a name, so rows key on the scope rather than it.
-    it('keeps same-named scopes apart', () => {
-      const result = fromScopedTotals(
-        [
-          { key: 'project-1', label: 'Checkout' },
-          { key: 'project-2', label: 'Checkout' },
-        ],
-        { 'project-1': 10, 'project-2': 25 },
-      )
-
-      expect(result.map((row) => row.value)).toEqual([25, 10])
-    })
-
-    it('skips scopes with no usage or none reported yet', () => {
-      const result = fromScopedTotals(
-        [...scopes, { key: 'project-3', label: 'Idle' }],
-        { 'project-1': 7, 'project-3': 0 },
-      )
-
-      expect(result).toEqual([
-        { key: 'project-1', label: 'Project A', value: 7 },
-      ])
     })
   })
 })

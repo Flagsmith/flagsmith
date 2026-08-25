@@ -5,29 +5,9 @@ import { BreakdownRow } from 'components/pages/usage/components/UsageBreakdown/u
 
 export type ListProps = {
   rows: BreakdownRow[]
-  isLoading?: boolean
-  needsProject?: boolean
 }
 
-const List: FC<ListProps> = ({ isLoading, needsProject, rows }) => {
-  if (isLoading) {
-    return (
-      <div className='text-center'>
-        <Loader />
-      </div>
-    )
-  }
-
-  if (needsProject) {
-    return (
-      <EmptyState
-        title='Pick a project'
-        description='Environments belong to a project, so choose one above to break its usage down.'
-        icon='bar-chart'
-      />
-    )
-  }
-
+const List: FC<ListProps> = ({ rows }) => {
   if (!rows.length) {
     return (
       <EmptyState

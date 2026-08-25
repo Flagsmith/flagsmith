@@ -6,11 +6,7 @@ import {
 } from 'common/theme/tokens'
 import { Res, UsageEventsList } from 'common/types/responses'
 
-export type BreakdownDimension =
-  | 'request-type'
-  | 'project'
-  | 'environment'
-  | 'sdk'
+export type BreakdownDimension = 'request-type' | 'sdk'
 
 export type BreakdownRow = {
   key: string
@@ -24,8 +20,6 @@ export const BREAKDOWN_DIMENSIONS: {
   value: BreakdownDimension
 }[] = [
   { label: 'By request type', value: 'request-type' },
-  { label: 'By project', value: 'project' },
-  { label: 'By environment', value: 'environment' },
   { label: 'By SDK', value: 'sdk' },
 ]
 
@@ -92,24 +86,3 @@ export const bySdk = (
     })),
   )
 }
-
-export type ScopedTotal = number | null | undefined
-
-export type UsageScope = {
-  key: string
-  label: string
-  projectId?: number
-  environmentId?: string
-}
-
-export const fromScopedTotals = (
-  scopes: { key: string; label: string }[],
-  totals: Record<string, ScopedTotal>,
-): BreakdownRow[] =>
-  ranked(
-    scopes.map(({ key, label }) => ({
-      key,
-      label,
-      value: totals[key] ?? 0,
-    })),
-  )

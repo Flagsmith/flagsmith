@@ -79,26 +79,6 @@ export const BySdk: Story = {
   },
 }
 
-export const ByProject: Story = {
-  args: {
-    dimension: 'project',
-    rows: [
-      { key: 'checkout', label: 'Checkout', value: 4_120_000 },
-      { key: 'mobile-app', label: 'Mobile app', value: 2_060_000 },
-      { key: 'internal-tools', label: 'Internal tools', value: 88_000 },
-    ],
-  },
-}
-
-/** Environments belong to a project, so the dimension asks for one first. */
-export const EnvironmentWithoutAProject: Story = {
-  args: { dimension: 'environment', needsProject: true, rows: [] },
-}
-
-export const Loading: Story = {
-  args: { dimension: 'project', isLoading: true, rows: [] },
-}
-
 export const NoUsageRecorded: Story = {
   args: { dimension: 'request-type', rows: [] },
 }

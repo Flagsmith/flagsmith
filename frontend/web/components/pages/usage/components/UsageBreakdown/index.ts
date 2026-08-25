@@ -1,5 +1,4 @@
 export { default } from './UsageBreakdown'
-export { default as ScopeTotal } from './components/ScopeTotal'
 export type { UsageBreakdownProps } from './UsageBreakdown'
-export type { BreakdownDimension, BreakdownRow, UsageScope } from './utils'
+export type { BreakdownDimension, BreakdownRow } from './utils'
 export { useUsageBreakdown } from './useUsageBreakdown'

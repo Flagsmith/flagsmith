@@ -8,16 +8,12 @@ export type UsageBreakdownProps = {
   dimension: BreakdownDimension
   onChangeDimension: (dimension: BreakdownDimension) => void
   rows: BreakdownRow[]
-  isLoading?: boolean
-  needsProject?: boolean
 }
 
 type DimensionOption = (typeof BREAKDOWN_DIMENSIONS)[number]
 
 const UsageBreakdown: FC<UsageBreakdownProps> = ({
   dimension,
-  isLoading,
-  needsProject,
   onChangeDimension,
   rows,
 }) => (
@@ -41,7 +37,7 @@ const UsageBreakdown: FC<UsageBreakdownProps> = ({
       </div>
     </div>
 
-    <List rows={rows} isLoading={isLoading} needsProject={needsProject} />
+    <List rows={rows} />
   </div>
 )
 

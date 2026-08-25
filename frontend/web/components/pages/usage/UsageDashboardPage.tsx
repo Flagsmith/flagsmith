@@ -7,10 +7,7 @@ import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscription
 import FieldLabel from 'components/base/forms/FieldLabel'
 import ProjectFilter from 'components/ProjectFilter'
 import { PeriodOption } from 'common/types/requests'
-import UsageBreakdown, {
-  ScopeTotal,
-  useUsageBreakdown,
-} from './components/UsageBreakdown'
+import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
 import UsageDashboard from './UsageDashboard'
 import {
   isBillingPeriodSelected,
@@ -66,12 +63,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   const periods = periodsFor(planIsBilled)
 
-  const { onTotal, scopes, setDimension, ...breakdown } = useUsageBreakdown({
-    billingPeriod,
-    data,
-    organisationId: organisationId ?? 0,
-    projectId: selectedProjectId,
-  })
+  const { setDimension, ...breakdown } = useUsageBreakdown({ data })
 
   if (!organisationId) {
     return null
@@ -84,18 +76,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       limit={subscriptionMeta?.max_api_calls}
       hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
       breakdown={
-        <>
-          {scopes.map((scope) => (
-            <ScopeTotal
-              key={scope.key}
-              organisationId={organisationId}
-              billingPeriod={billingPeriod}
-              scope={scope}
-              onTotal={onTotal}
-            />
-          ))}
-          <UsageBreakdown {...breakdown} onChangeDimension={setDimension} />
-        </>
+        <UsageBreakdown {...breakdown} onChangeDimension={setDimension} />
       }
       isError={organisationFailed || usageFailed}
       isLoading={loadingOrganisation || loadingUsage || loadingLimit}
