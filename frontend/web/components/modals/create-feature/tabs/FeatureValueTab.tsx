@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
 import ValueEditor from 'components/ValueEditor'
 import Constants from 'common/constants'
@@ -20,6 +20,11 @@ import {
   MultivariateOption,
   ProjectFlag,
 } from 'common/types/responses'
+import {
+  hasUnmatchedIdentityOverride,
+  LatchedOverrideValue,
+  resolveUnmatchedOverride,
+} from 'common/utils/multivariate'
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { useHasPermission } from 'common/providers/Permission'
@@ -281,6 +286,34 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     !!multivariate_options.length
   )
 
+  // Left undefined while unloaded rather than coerced to null, which is itself
+  // a valid value — see hasUnmatchedIdentityOverride.
+  const controlValue =
+    projectFlag.environment_feature_state?.feature_state_value
+
+  // An override that predates the flag becoming multivariate holds a value the
+  // control/variation radios cannot express, so surface it rather than letting
+  // the control row imply the identity is on the environment default.
+  const unmatchedOverrideSelected =
+    !!identity &&
+    hasVariations &&
+    hasUnmatchedIdentityOverride({
+      controlValue,
+      overrideValue: featureState.feature_state_value,
+      variationOverrides: identityVariations,
+    })
+
+  // Held in a ref rather than read once on mount, as the feature state loads
+  // async — there is no single render at which the override is known to be
+  // there. See resolveUnmatchedOverride for why presence outlives selection.
+  const latchedOverrideValue = useRef<LatchedOverrideValue>(undefined)
+  const unmatchedOverride = resolveUnmatchedOverride({
+    isSelected: unmatchedOverrideSelected,
+    latchedValue: latchedOverrideValue.current,
+    overrideValue: featureState.feature_state_value,
+  })
+  latchedOverrideValue.current = unmatchedOverride?.value
+
   if (compareOpen && canCompareValue && environmentId) {
     return (
       <div className={`${identity ? 'mx-3' : ''}`}>
@@ -412,14 +445,15 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         <div>
           <FormGroup className='mb-4'>
             {variationsInfo}
+            {unmatchedOverrideSelected && (
+              <WarningMessage warningMessage="This identity override contains a value that is not one of this flag's variations. We recommend changing it." />
+            )}
             <VariationOptions
               canCreateFeature={false}
               disabled
               select
-              controlValue={
-                projectFlag.environment_feature_state?.feature_state_value ??
-                null
-              }
+              unmatchedOverride={unmatchedOverride}
+              controlValue={controlValue ?? null}
               controlPercentage={controlPercentage}
               variationOverrides={identityVariations as any}
               setValue={(value) =>
