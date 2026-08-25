@@ -882,3 +882,34 @@ def test_mixpanel_webhook__unknown_key_in_basic_password__returns_401(
 
     # Then
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_mixpanel_webhook__distinct_id_over_1024_bytes__returns_400_failure(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+    mixpanel_cohort: Cohort,
+) -> None:
+    # Given - 512 three-byte characters: few characters, too many bytes
+    _, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "add_members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-42",
+                "mixpanel_cohort_name": "Power users",
+                "members": [{"mixpanel_distinct_id": "€" * 512}],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    body = response.json()
+    assert body["status"] == "failure"
+    assert "1024 bytes" in body["error"]["message"]
+    assert not CohortMembership.objects.exists()

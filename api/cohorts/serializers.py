@@ -99,8 +99,9 @@ def _validate_identifier_byte_length(value: str) -> None:
 
 
 class MixpanelMemberSerializer(serializers.Serializer[None]):
-    # Length mirrors CohortMembership.identifier.
-    mixpanel_distinct_id = serializers.CharField(max_length=2000)
+    mixpanel_distinct_id = serializers.CharField(
+        validators=[_validate_identifier_byte_length]
+    )
 
 
 class MixpanelParametersSerializer(serializers.Serializer[None]):
