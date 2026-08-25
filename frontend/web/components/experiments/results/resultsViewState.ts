@@ -3,6 +3,7 @@ import {
   ExperimentStatus,
 } from 'common/types/responses'
 import { formatCountdown } from 'common/hooks/useCountdown'
+import { ExposuresViewState } from './exposuresViewState'
 
 export type ResultsViewState =
   | { kind: 'empty' }
@@ -48,6 +49,15 @@ export const deriveResultsViewState = (
   if (results.payload) return { kind: 'loaded' }
   return { kind: 'empty' }
 }
+
+export const hasRefreshSettled = (
+  resultsViewState: ResultsViewState,
+  exposuresViewState: ExposuresViewState,
+  requestsInFlight: boolean,
+): boolean =>
+  !requestsInFlight &&
+  resultsViewState.kind !== 'refreshing' &&
+  exposuresViewState.kind !== 'refreshing'
 
 export const canRefreshResults = (
   status: ExperimentStatus,
