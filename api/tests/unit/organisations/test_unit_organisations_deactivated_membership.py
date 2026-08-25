@@ -3,6 +3,7 @@ from datetime import timedelta
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -104,6 +105,26 @@ def test_set_organisation_membership_active__reactivate__restores_access(
     # Then
     assert deactivated_staff_user.belongs_to(organisation.id) is True
     assert organisation.num_seats == 2
+
+
+@pytest.mark.parametrize("is_active", [True, False])
+def test_set_organisation_membership_active__no_change__does_not_write(
+    organisation: Organisation,
+    staff_user: FFAdminUser,
+    mocker: MockerFixture,
+    is_active: bool,
+) -> None:
+    # Given
+    staff_user.set_organisation_membership_active(organisation, is_active=is_active)
+    mocked_save = mocker.patch.object(UserOrganisation, "save")
+
+    # When
+    # The membership is already in the requested state.
+    staff_user.set_organisation_membership_active(organisation, is_active=is_active)
+
+    # Then
+    mocked_save.assert_not_called()
+    assert staff_user.belongs_to(organisation.id) is is_active
 
 
 def test_belongs_to__deactivated_membership__returns_false(
