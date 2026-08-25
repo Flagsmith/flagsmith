@@ -2426,6 +2426,8 @@ def test_list_segments__cohort_managed__returns_cohort_summary(
     assert results[segment.id]["cohort"] == {
         "deletion_requested_at": None,
         "environment": environment.id,
+        "environment_api_key": environment.api_key,
+        "environment_name": environment.name,
         "id": cohort.id,
         "source_type": "csv",
         "version": 0,

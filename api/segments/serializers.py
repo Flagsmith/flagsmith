@@ -104,11 +104,20 @@ class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
 
 
 class _SegmentCohortSerializer(serializers.ModelSerializer[Cohort]):
+    # The environment's key and name ride along so clients can address and
+    # display the cohort without paging through the environments list.
+    environment_api_key = serializers.CharField(
+        source="environment.api_key", read_only=True
+    )
+    environment_name = serializers.CharField(source="environment.name", read_only=True)
+
     class Meta:
         model = Cohort
         fields = [
             "id",
             "environment",
+            "environment_api_key",
+            "environment_name",
             "source_type",
             "version",
             "deletion_requested_at",

@@ -28887,6 +28887,12 @@ components:
           readOnly: true
         environment:
           type: integer
+        environment_api_key:
+          type: string
+          readOnly: true
+        environment_name:
+          type: string
+          readOnly: true
         source_type:
           $ref: '#/components/schemas/SourceTypeEnum'
         version:
