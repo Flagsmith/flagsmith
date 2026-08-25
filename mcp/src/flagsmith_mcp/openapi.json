@@ -6925,6 +6925,17 @@
               }
             ],
             "readOnly": true
+          },
+          "cohort": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/_SegmentCohort"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true
           }
         },
         "required": [
@@ -6989,6 +7000,14 @@
           "ALL",
           "ANY",
           "NONE"
+        ]
+      },
+      "SourceTypeEnum": {
+        "description": "* `csv` - CSV\n* `amplitude` - Amplitude",
+        "type": "string",
+        "enum": [
+          "csv",
+          "amplitude"
         ]
       },
       "StageAction": {
@@ -7752,6 +7771,44 @@
         },
         "required": [
           "type"
+        ]
+      },
+      "_SegmentCohort": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "environment": {
+            "type": "integer"
+          },
+          "environment_api_key": {
+            "type": "string",
+            "readOnly": true
+          },
+          "environment_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/SourceTypeEnum"
+          },
+          "version": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 0
+          },
+          "deletion_requested_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "environment"
         ]
       }
     },

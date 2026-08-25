@@ -4,15 +4,22 @@ from common.environments.permissions import (
     VIEW_ENVIRONMENT,
 )
 from common.projects.permissions import MANAGE_SEGMENTS
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from cohorts.models import Cohort, CohortSyncKey
+from cohorts.models import (
+    Cohort,
+    CohortMembership,
+    CohortMembershipState,
+    CohortSyncKey,
+)
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
+from metadata.models import Metadata, MetadataModelField
 from organisations.models import Subscription
 from projects.models import Project
 from segments.models import Segment
@@ -390,3 +397,255 @@ def test_create_sync_key__missing_name__returns_400(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert not CohortSyncKey.objects.exists()
+
+
+def test_create_cohort__with_metadata__attaches_metadata_to_segment(
+    staff_client: APIClient,
+    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    required_segment_metadata_field_for_dynamo_project: MetadataModelField,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=dynamo_enabled_project_environment_one.id,
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-list",
+        args=[dynamo_enabled_project_environment_one.api_key],
+    )
+
+    # When
+    response = staff_client.post(
+        url,
+        data={
+            "name": "Beta users",
+            "metadata": [
+                {
+                    "model_field": required_segment_metadata_field_for_dynamo_project.id,
+                    "field_value": 10,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    cohort = Cohort.objects.get(id=response.json()["id"])
+    metadata = Metadata.objects.get(
+        model_field=required_segment_metadata_field_for_dynamo_project
+    )
+    assert metadata.object_id == cohort.segment_id
+    assert metadata.field_value == "10"
+
+
+def test_create_cohort__missing_required_metadata__returns_400(
+    staff_client: APIClient,
+    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    required_segment_metadata_field_for_dynamo_project: MetadataModelField,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=dynamo_enabled_project_environment_one.id,
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-list",
+        args=[dynamo_enabled_project_environment_one.api_key],
+    )
+
+    # When
+    response = staff_client.post(url, data={"name": "Beta users"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["metadata"] == ["Missing required metadata field: a"]
+    assert not Cohort.objects.exists()
+
+
+def test_sync_csv__staff_with_manage_segments__returns_202_with_counts(
+    staff_client: APIClient,
+    dynamo_enabled_project: Project,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=edge_cohort.environment_id,
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-sync-csv",
+        args=[edge_cohort.environment.api_key, edge_cohort.id],
+    )
+    file = SimpleUploadedFile(
+        "identities.csv",
+        b"identity,email\nuser-1,a@example.com\nuser-2,b@example.com\nuser-3,\n",
+        content_type="text/csv",
+    )
+
+    # When
+    response = staff_client.post(
+        url,
+        data={"file": file, "identifier_column": 1, "has_header": True},
+        format="multipart",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    assert response.json() == {
+        "version": 1,
+        "added": 2,
+        "removed": 0,
+        "unchanged": 0,
+        "ignored": {"empty": 1, "duplicates": 0, "too_long": 0},
+    }
+    memberships = CohortMembership.objects.filter(cohort=edge_cohort)
+    assert {m.identifier for m in memberships} == {
+        "a@example.com",
+        "b@example.com",
+    }
+    assert all(m.state == CohortMembershipState.APPLIED for m in memberships)
+    edge_cohort.refresh_from_db()
+    assert edge_cohort.version == 1
+
+
+def test_sync_csv__without_permission__returns_403(
+    staff_client: APIClient,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT], environment_id=edge_cohort.environment_id
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-sync-csv",
+        args=[edge_cohort.environment.api_key, edge_cohort.id],
+    )
+    file = SimpleUploadedFile("identities.csv", b"user-1\n", content_type="text/csv")
+
+    # When
+    response = staff_client.post(url, data={"file": file}, format="multipart")
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert not CohortMembership.objects.exists()
+
+
+def test_sync_csv__file_over_size_limit__returns_413(
+    staff_client: APIClient,
+    dynamo_enabled_project: Project,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch("cohorts.serializers.COHORT_CSV_MAX_FILE_SIZE_BYTES", 10)
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=edge_cohort.environment_id,
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-sync-csv",
+        args=[edge_cohort.environment.api_key, edge_cohort.id],
+    )
+    file = SimpleUploadedFile(
+        "identities.csv", b"identity\nuser-1\n", content_type="text/csv"
+    )
+
+    # When
+    response = staff_client.post(url, data={"file": file}, format="multipart")
+
+    # Then
+    assert response.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    assert not CohortMembership.objects.exists()
+
+
+def test_sync_csv__no_valid_identifiers__returns_400(
+    staff_client: APIClient,
+    dynamo_enabled_project: Project,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=edge_cohort.environment_id,
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-sync-csv",
+        args=[edge_cohort.environment.api_key, edge_cohort.id],
+    )
+    file = SimpleUploadedFile("identities.csv", b"identity\n", content_type="text/csv")
+
+    # When
+    response = staff_client.post(url, data={"file": file}, format="multipart")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"file": "No valid identifiers found in the CSV file."}
+    assert not CohortMembership.objects.exists()
+    edge_cohort.refresh_from_db()
+    assert edge_cohort.version == 0
+
+
+def test_sync_csv__deletion_requested_cohort__returns_404(
+    staff_client: APIClient,
+    dynamo_enabled_project: Project,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=edge_cohort.environment_id,
+    )
+    edge_cohort.deletion_requested_at = timezone.now()
+    edge_cohort.save(update_fields=["deletion_requested_at"])
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-sync-csv",
+        args=[edge_cohort.environment.api_key, edge_cohort.id],
+    )
+    file = SimpleUploadedFile("identities.csv", b"user-1\n", content_type="text/csv")
+
+    # When
+    response = staff_client.post(url, data={"file": file}, format="multipart")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND

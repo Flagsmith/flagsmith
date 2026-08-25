@@ -9,6 +9,22 @@ Labels:
  - `ci_commit_sha`
  - `version`
 
+### `flagsmith_cohorts_csv_sync_identifiers`
+
+Histogram.
+
+Number of unique identifiers extracted per accepted cohort CSV synchronisation.
+
+Labels:
+
+### `flagsmith_cohorts_csv_syncs`
+
+Counter.
+
+Total number of accepted cohort CSV synchronisations, i.e. uploads that yielded at least one valid identifier and enqueued a membership sync.
+
+Labels:
+
 ### `flagsmith_cohorts_membership_deltas_applied`
 
 Counter.

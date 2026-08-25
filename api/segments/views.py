@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any
 
 from common.environments.permissions import VIEW_IDENTITIES
 from common.projects.permissions import VIEW_PROJECT
+from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
@@ -13,6 +14,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
+from cohorts.models import Cohort
 from core.dataclasses import AuthorData
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
@@ -104,6 +106,9 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
             #  we shouldn't return all of the rules and conditions in the list view.
             queryset = queryset.prefetch_related(
+                Prefetch(
+                    "cohorts", queryset=Cohort.objects.select_related("environment")
+                ),
                 "membership_counts",
                 "rules",
                 "rules__conditions",
