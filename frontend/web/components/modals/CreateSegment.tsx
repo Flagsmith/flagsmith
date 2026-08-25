@@ -260,6 +260,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const save = async (e: FormEvent) => {
     try {
       Utils.preventDefault(e)
+      if (isReadOnly) return
       setValueChanged(false)
       setMetadataValueChanged(false)
       const segmentData: Omit<Segment, 'id' | 'uuid'> = {
@@ -510,7 +511,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </Button>
             </div>
           )}
-          {topLevelRuleType !== 'ANY' && (
+          {!isReadOnly && topLevelRuleType !== 'ANY' && (
             <div onClick={() => addRule('NONE')} className='text-center'>
               <Button
                 theme='outline'
