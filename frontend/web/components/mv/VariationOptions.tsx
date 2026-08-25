@@ -39,8 +39,12 @@ interface VariationOptionsProps {
   weightTitle: string
 }
 
+interface SelectRowLabelProps {
+  text: string
+}
+
 // Select rows show a bare value, so each needs saying what it is.
-const SelectRowLabel: React.FC<{ text: string }> = ({ text }) => (
+const SelectRowLabel: React.FC<SelectRowLabelProps> = ({ text }) => (
   <div className='mb-2'>
     <span className='h6 mb-0 font-weight-semibold'>{text}</span>
   </div>
