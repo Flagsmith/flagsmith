@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { FC, ReactNode } from 'react'
 import ValueEditor from 'components/ValueEditor'
 import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
@@ -40,17 +40,17 @@ interface VariationOptionsProps {
 }
 
 interface ValueRowLabelProps {
-  children: React.ReactNode
+  children: ReactNode
 }
 
 // Each row shows a bare value, so it needs saying which value it is.
-const ValueRowLabel: React.FC<ValueRowLabelProps> = ({ children }) => (
+const ValueRowLabel: FC<ValueRowLabelProps> = ({ children }) => (
   <div className='mb-2'>
     <span className='h6 mb-0 font-weight-semibold'>{children}</span>
   </div>
 )
 
-export const VariationOptions: React.FC<VariationOptionsProps> = ({
+export const VariationOptions: FC<VariationOptionsProps> = ({
   apiErrors,
   canCreateFeature,
   controlPercentage,
