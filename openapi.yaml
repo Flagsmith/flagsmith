@@ -19265,6 +19265,10 @@ components:
             - $ref: '#/components/schemas/_SegmentCohort'
             - type: 'null'
           readOnly: true
+        has_overrides:
+          description: 'Whether any feature override points at this segment, counting overrides that are live now or scheduled to go live.'
+          type: boolean
+          readOnly: true
         change_request:
           type:
             - integer
@@ -25503,6 +25507,10 @@ components:
             - $ref: '#/components/schemas/_SegmentCohort'
             - type: 'null'
           readOnly: true
+        has_overrides:
+          description: 'Whether any feature override points at this segment, counting overrides that are live now or scheduled to go live.'
+          type: boolean
+          readOnly: true
     PatchedSegmentConfiguration:
       type: object
       properties:
@@ -27239,6 +27247,10 @@ components:
           oneOf:
             - $ref: '#/components/schemas/_SegmentCohort'
             - type: 'null'
+          readOnly: true
+        has_overrides:
+          description: 'Whether any feature override points at this segment, counting overrides that are live now or scheduled to go live.'
+          type: boolean
           readOnly: true
       required:
         - name
