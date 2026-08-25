@@ -6,8 +6,8 @@
   }
 
   &__label {
-    width: 280px;
-    flex: 0 0 auto;
+    flex: 0 1 280px;
+    min-width: 0;
   }
 
   &__name {
