@@ -1658,6 +1658,92 @@ paths:
         - basicAuth: []
       tags:
         - Webhooks
+  /api/v1/cohort-sync/amplitude/lists/:
+    post:
+      operationId: api_v1_cohort_sync_amplitude_lists_create
+      description: Called by Amplitude once per cohort sync setup; creates the backing cohort and returns its identifier as the list ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AmplitudeList'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AmplitudeList'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AmplitudeList'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmplitudeListResponse'
+      security:
+        - Cohort Sync Key: []
+      tags:
+        - Other
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/cohort-sync/amplitude/lists/{id}/add/':
+    post:
+      operationId: api_v1_cohort_sync_amplitude_lists_add_create
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CohortSyncMembers'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CohortSyncMembers'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CohortSyncMembers'
+      responses:
+        '200':
+          description: No response body
+      security:
+        - Cohort Sync Key: []
+      tags:
+        - Other
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/cohort-sync/amplitude/lists/{id}/remove/':
+    post:
+      operationId: api_v1_cohort_sync_amplitude_lists_remove_create
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CohortSyncMembers'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CohortSyncMembers'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CohortSyncMembers'
+      responses:
+        '200':
+          description: No response body
+      security:
+        - Cohort Sync Key: []
+      tags:
+        - Other
+      x-flagsmith-minimum-plan: START_UP
   /api/v1/environment-document/:
     get:
       operationId: sdk_v1_environment_document
@@ -2306,6 +2392,88 @@ paths:
             type: string
       responses:
         '202':
+          description: No response body
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/environments/{environment_api_key}/cohorts/sync-keys/':
+    get:
+      operationId: api_v1_environments_cohorts_sync_keys_list
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CohortSyncKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+    post:
+      operationId: api_v1_environments_cohorts_sync_keys_create
+      description: Create a cohort sync key. The response is the only time the plaintext key is available.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CohortSyncKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CohortSyncKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CohortSyncKey'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CohortSyncKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/environments/{environment_api_key}/cohorts/sync-keys/{prefix}/':
+    delete:
+      operationId: api_v1_environments_cohorts_sync_keys_destroy
+      description: Revoke a cohort sync key.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: prefix
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
           description: No response body
       security:
         - tokenAuth: []
@@ -18562,6 +18730,22 @@ components:
           maxLength: 200
       required:
         - api_key
+    AmplitudeList:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 2000
+      required:
+        - name
+    AmplitudeListResponse:
+      type: object
+      properties:
+        list_id:
+          type: string
+          format: uuid
+      required:
+        - list_id
     AuditLogList:
       type: object
       properties:
@@ -19199,6 +19383,36 @@ components:
           readOnly: true
       required:
         - name
+    CohortSyncKey:
+      type: object
+      properties:
+        prefix:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 50
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        key:
+          type:
+            - string
+            - 'null'
+          readOnly: true
+      required:
+        - name
+    CohortSyncMembers:
+      type: object
+      properties:
+        user_ids:
+          type: array
+          items:
+            type: string
+          minItems: 1
+      required:
+        - user_ids
     Condition:
       type: object
       properties:
@@ -27143,10 +27357,13 @@ components:
       required:
         - channel_id
     SourceTypeEnum:
-      description: '* `csv` - CSV'
+      description: |-
+        * `csv` - CSV
+        * `amplitude` - Amplitude
       type: string
       enum:
         - csv
+        - amplitude
     StageAction:
       type: object
       properties:
@@ -29165,6 +29382,10 @@ components:
       required:
         - type
   securitySchemes:
+    Cohort Sync Key:
+      type: http
+      scheme: bearer
+      description: 'For cohort sync endpoints called by an external cohort source, such as Amplitude.'
     Environment API Key:
       type: apiKey
       in: header
