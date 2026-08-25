@@ -16,6 +16,7 @@ from segment_membership.constants import MAX_SEGMENT_MEMBERS_PAGE_SIZE
 from segment_membership.models import SegmentMembershipCount
 from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
+from segments.services import get_overrides_in_effect
 from segments.types import (
     LegacySegmentRule,
 )
@@ -129,6 +130,12 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     metadata = MetadataSerializer(required=False, many=True)
     membership_counts = SegmentMembershipCountSerializer(many=True, read_only=True)
     cohort = serializers.SerializerMethodField()
+    has_overrides = serializers.SerializerMethodField(
+        help_text=(
+            "Whether any feature override points at this segment, counting "
+            "overrides that are live now or scheduled to go live."
+        ),
+    )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
@@ -164,11 +171,13 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "membership_counts",
             "managed_by",
             "cohort",
+            "has_overrides",
         ]
         read_only_fields = [
             "managed_by",
             "membership_counts",
             "project",
+            "has_overrides",
         ]
 
     @extend_schema_field(_SegmentCohortSerializer(allow_null=True))
@@ -176,6 +185,13 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         # next() over the relation keeps the list view's prefetch cache warm.
         cohort = next(iter(segment.cohorts.all()), None)
         return _SegmentCohortSerializer(cohort).data if cohort else None
+
+    def get_has_overrides(self, segment: Segment) -> bool:
+        # Annotated by `SegmentViewSet.get_queryset`; fall back where a segment
+        # is serialized outside that queryset.
+        if (has_overrides := getattr(segment, "has_overrides", None)) is not None:
+            return bool(has_overrides)
+        return get_overrides_in_effect().filter(segment=segment).exists()
 
     def to_internal_value(self, data: dict[str, Any]) -> Any:
         self._validate_rules_depth(data.get("rules", []))

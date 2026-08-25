@@ -14,6 +14,25 @@ with open(Path(__file__).parent.resolve() / "sql/get_latest_versions.sql") as f:
 
 
 class EnvironmentFeatureVersionManager(SoftDeleteManager):  # type: ignore[misc]
+    def get_superseded_versions(
+        self,
+        feature_id: typing.Any,
+        environment_id: typing.Any,
+        live_from: typing.Any,
+    ) -> QuerySet["EnvironmentFeatureVersion"]:
+        """
+        Get the published versions of a flag that a later version has replaced.
+
+        Versions are ordered by when they went live, matching what the SDKs serve.
+        """
+        return self.filter(  # type: ignore[no-any-return]
+            feature_id=feature_id,
+            environment_id=environment_id,
+            published_at__isnull=False,
+            live_from__lte=timezone.now(),
+            live_from__gt=live_from,
+        )
+
     def get_latest_versions_by_environment_id(self, environment_id: int) -> RawQuerySet:  # type: ignore[type-arg]
         """
         Get the latest EnvironmentFeatureVersion objects for a given environment.

@@ -1,8 +1,9 @@
-import logging
 from typing import TYPE_CHECKING, Any
 
+import structlog
 from common.environments.permissions import VIEW_IDENTITIES
 from common.projects.permissions import VIEW_PROJECT
+from django.db import models
 from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
@@ -16,6 +17,7 @@ from rest_framework.response import Response
 from app.pagination import CustomPagination
 from cohorts.models import Cohort
 from core.dataclasses import AuthorData
+from core.exceptions import ChangeRequestsEnabledError
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -44,12 +46,12 @@ from .serializers import (
     SegmentMembersResponseSerializer,
     SegmentSerializer,
 )
-from .services import delete_segment
+from .services import delete_segment, get_overrides_in_effect
 
 if TYPE_CHECKING:
     from users.models import FFAdminUser
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("segments")
 
 
 @method_decorator(
@@ -100,7 +102,13 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             return Segment.objects.none()
 
         project = self.get_project()
-        queryset = Segment.live_objects.filter(project=project, is_system_segment=False)
+        queryset = Segment.live_objects.filter(
+            project=project, is_system_segment=False
+        ).annotate(
+            has_overrides=models.Exists(
+                get_overrides_in_effect().filter(segment_id=models.OuterRef("pk"))
+            )
+        )
 
         if self.action == "list":
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
@@ -229,9 +237,62 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 "This segment is managed by a cohort and cannot be edited "
                 "or cloned directly."
             )
+        if self.action in ("update", "partial_update"):
+            self._check_change_requests_disabled(obj)
+
+    def _check_change_requests_disabled(self, segment: Segment) -> None:
+        """Refuse to edit a segment that can only be changed by a change request."""
+        if not segment.project.is_workflow_enabled:
+            return
+        if segment.change_request_id is not None:
+            # A draft held by a change request; editing it *is* the workflow.
+            return
+        api_error = ChangeRequestsEnabledError(
+            "Cannot update segments in a project with change requests enabled."
+        )
+        logger.warning(
+            "update_rejected",
+            organisation__id=segment.project.organisation_id,
+            project__id=segment.project_id,
+            segment__id=segment.id,
+            reason=api_error.default_code,
+        )
+        raise api_error
+
+    def _check_segment_is_deletable(self, segment: Segment) -> None:
+        """
+        Refuse to delete an overridden segment where change requests are enabled.
+
+        Deleting a segment deletes the overrides pointing at it, which changes
+        what the SDKs serve without anyone reviewing the change.
+        """
+        if not segment.project.is_workflow_enabled:
+            return
+        if not self._has_overrides(segment):
+            return
+        api_error = ChangeRequestsEnabledError(
+            "Cannot delete a segment with feature overrides in a project with "
+            "change requests enabled. Remove the overrides first."
+        )
+        logger.warning(
+            "delete_rejected",
+            organisation__id=segment.project.organisation_id,
+            project__id=segment.project_id,
+            segment__id=segment.id,
+            reason=api_error.default_code,
+        )
+        raise api_error
+
+    @staticmethod
+    def _has_overrides(segment: Segment) -> bool:
+        # `get_queryset` annotates this; fall back for any other code path.
+        if (has_overrides := getattr(segment, "has_overrides", None)) is not None:
+            return bool(has_overrides)
+        return get_overrides_in_effect().filter(segment=segment).exists()
 
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         segment = self.get_object()
+        self._check_segment_is_deletable(segment)
         author = AuthorData.from_request(request)
         delete_segment(segment, author=author)
         return Response(status=status.HTTP_204_NO_CONTENT)
