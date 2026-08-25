@@ -1,19 +1,16 @@
 import { FC, useEffect } from 'react'
 import { Req } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
-
-export type UsageScope = {
-  key: string
-  label: string
-  projectId?: number
-  environmentId?: string
-}
+import {
+  ScopedTotal,
+  UsageScope,
+} from 'components/pages/usage/components/UsageBreakdown/utils'
 
 type ScopeTotalProps = {
   organisationId: number
   billingPeriod: Req['getOrganisationUsage']['billing_period']
   scope: UsageScope
-  onTotal: (key: string, total: number | null | undefined) => void
+  onTotal: (key: string, total: ScopedTotal) => void
 }
 
 const ScopeTotal: FC<ScopeTotalProps> = ({

@@ -93,9 +93,18 @@ export const bySdk = (
   )
 }
 
+export type ScopedTotal = number | null | undefined
+
+export type UsageScope = {
+  key: string
+  label: string
+  projectId?: number
+  environmentId?: string
+}
+
 export const fromScopedTotals = (
   scopes: { key: string; label: string }[],
-  totals: Record<string, number | null | undefined>,
+  totals: Record<string, ScopedTotal>,
 ): BreakdownRow[] =>
   ranked(
     scopes.map(({ key, label }) => ({

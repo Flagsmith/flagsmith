@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import EmptyState from 'components/EmptyState'
-import Row from './Row'
+import Row from 'components/pages/usage/components/UsageBreakdown/components/Row'
 import { BreakdownRow } from 'components/pages/usage/components/UsageBreakdown/utils'
 
 export type ListProps = {

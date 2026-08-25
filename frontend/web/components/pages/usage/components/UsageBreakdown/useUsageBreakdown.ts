@@ -4,9 +4,8 @@ import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import { UsageScope } from './components/ScopeTotal'
 import { useScopedBreakdown } from './useScopedBreakdown'
-import { byRequestType, bySdk, BreakdownDimension } from './utils'
+import { byRequestType, bySdk, BreakdownDimension, UsageScope } from './utils'
 
 type UseUsageBreakdown = {
   organisationId: number
