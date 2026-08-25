@@ -5,6 +5,7 @@ from django.db import transaction
 from django.db.models import QuerySet
 from django.utils import timezone
 from flag_engine.segments.constants import IS_SET
+from rest_framework.exceptions import ValidationError
 
 from audit.constants import SEGMENT_CREATED_MESSAGE
 from audit.models import AuditLog
@@ -18,6 +19,7 @@ from cohorts.models import (
     CohortSourceType,
 )
 from core.dataclasses import AuthorData
+from edge_api.utils import is_edge_enabled
 from environments.identities.system_traits import (
     set_system_trait,
     unset_system_trait,
@@ -91,6 +93,17 @@ def create_cohort(
     description: str | None = None,
     source_type: CohortSourceType = CohortSourceType.CSV,
 ) -> Cohort:
+    project = environment.project
+    # Mirrors the segment limit enforced by SegmentSerializer, which cohort
+    # creation bypasses by creating its managed segment directly.
+    if (
+        is_edge_enabled()
+        and Segment.live_objects.filter(project=project).count()
+        >= project.max_segments_allowed
+    ):
+        raise ValidationError(
+            {"project": ["The project has reached the maximum allowed segments limit."]}
+        )
     with transaction.atomic():
         segment = Segment.objects.create(
             name=name,

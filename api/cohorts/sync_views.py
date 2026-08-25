@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from cohorts import services
 from cohorts.authentication import CohortSyncKeyAuthentication
 from cohorts.models import Cohort, CohortSourceType, CohortSyncKey
-from cohorts.permissions import HasCohortSyncKey
+from cohorts.permissions import CohortSyncPlanPermission, HasCohortSyncKey
 from cohorts.serializers import (
     AmplitudeListSerializer,
     CohortSyncMembersSerializer,
@@ -36,7 +36,7 @@ _LIST_RESPONSE = inline_serializer(
 )
 class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
     authentication_classes = [CohortSyncKeyAuthentication]
-    permission_classes = [HasCohortSyncKey]
+    permission_classes = [HasCohortSyncKey, CohortSyncPlanPermission]
 
     def create(self, request: Request) -> Response:
         serializer = AmplitudeListSerializer(data=request.data)

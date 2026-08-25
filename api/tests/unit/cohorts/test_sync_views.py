@@ -1,5 +1,6 @@
 import typing
 
+import pytest
 from django.urls import reverse
 from django.utils import timezone
 from flag_engine.segments.constants import IS_SET
@@ -18,6 +19,8 @@ from cohorts.models import (
 )
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
+from projects.models import Project
+from segments.models import Segment
 
 _KeyAndPlaintext = typing.Tuple[CohortSyncKey, str]
 
@@ -420,3 +423,48 @@ def test_amplitude_add_members__identifier_over_1024_bytes__returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "1024 bytes" in str(response.json())
     assert not CohortMembership.objects.exists()
+
+
+@pytest.mark.saas_mode
+def test_amplitude_create_list__saas_free_plan__returns_403(
+    cohort_sync_key: _KeyAndPlaintext,
+) -> None:
+    # Given
+    _, plaintext = cohort_sync_key
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:amplitude-list")
+
+    # When
+    response = client.post(url, data={"name": "Beta users"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == (
+        "This resource requires a START_UP plan or above."
+    )
+
+
+def test_amplitude_create_list__segment_limit_reached__returns_400(
+    cohort_sync_key: _KeyAndPlaintext,
+    dynamo_enabled_project: Project,
+    segment: Segment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given - the project already holds as many segments as the plan allows
+    settings.EDGE_ENABLED = True
+    dynamo_enabled_project.max_segments_allowed = 1
+    dynamo_enabled_project.save()
+    Segment.objects.create(name="existing", project=dynamo_enabled_project)
+    _, plaintext = cohort_sync_key
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:amplitude-list")
+
+    # When
+    response = client.post(url, data={"name": "Beta users"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["project"] == [
+        "The project has reached the maximum allowed segments limit."
+    ]
+    assert not Cohort.objects.exists()

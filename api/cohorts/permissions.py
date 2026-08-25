@@ -24,6 +24,22 @@ class HasCohortSyncKey(BasePermission):
 _MinimumStartupPlan = require_minimum_plan(SubscriptionPlanFamily.START_UP)
 
 
+class CohortSyncPlanPermission(_MinimumStartupPlan):  # type: ignore[misc,valid-type]
+    """Stops sync keys of a downgraded organisation from syncing forever."""
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        if not isinstance(request.auth, CohortSyncKey):
+            return False
+        # The base class reads the organisation from an `organisation`
+        # request param the sync endpoints don't carry; the key's
+        # environment provides it instead.
+        return bool(
+            super().has_object_permission(
+                request, view, request.auth.environment.project
+            )
+        )
+
+
 class CohortPlanPermission(_MinimumStartupPlan):  # type: ignore[misc,valid-type]
     def has_permission(self, request: Request, view: APIView) -> bool:
         try:
