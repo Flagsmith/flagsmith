@@ -10,7 +10,7 @@ from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from django.urls import reverse
 from pytest_django import DjangoAssertNumQueries
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
