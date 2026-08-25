@@ -45,7 +45,7 @@ dependencies = [
     "django-filter>=2.4.0,<2.5.0",
     "flagsmith-flag-engine>=10.1.0,<11.0.0",
     "flagsmith-sql-flag-engine>=0.2.0,<0.3.0",
-    "django-clickhouse-backend>=1.4,<2.0",
+    "django-clickhouse-backend>=2,<3",
     "clickhouse-driver==0.2.11",
     "clickhouse-connect>=1.6.0,<2.0.0",
     "boto3>=1.35.95,<1.36.0",
@@ -158,7 +158,6 @@ explicit = true
 
 [tool.uv.sources]
 flagsmith-private = { index = "flagsmith-pypi-production" }
-django-clickhouse-backend = { git = "https://github.com/jayvynl/django-clickhouse-backend", rev = "d884c7d" }
 
 [tool.uv]
 required-version = ">=0.11.18"  # Ensure this matches the version in .pre-commit-config.yaml
@@ -166,8 +165,6 @@ required-version = ">=0.11.18"  # Ensure this matches the version in .pre-commit
 # main before this migration, so the poetry -> uv switch is dependency-neutral.
 # Keep this list in sync with poetry.lock until the lockfile churn settles.
 override-dependencies = [
-    # TODO: remove once https://github.com/jayvynl/django-clickhouse-backend/issues/172 is closed
-    "clickhouse-driver==0.2.11",
     "annotated-types==0.6.0",
     "anyio==4.12.1",
     "appdirs==1.4.4",
