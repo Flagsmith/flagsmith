@@ -1,7 +1,10 @@
 import { FC } from 'react'
 import EmptyState from 'components/EmptyState'
 import Row from 'components/pages/usage/components/UsageBreakdown/components/Row'
-import { BreakdownRow } from 'components/pages/usage/components/UsageBreakdown/utils'
+import {
+  BreakdownRow,
+  sharesOf,
+} from 'components/pages/usage/components/UsageBreakdown/utils'
 
 export type ListProps = {
   rows: BreakdownRow[]
@@ -19,18 +22,18 @@ const List: FC<ListProps> = ({ rows }) => {
   }
 
   const largest = Math.max(1, ...rows.map((row) => row.value))
-  const total = rows.reduce((sum, row) => sum + row.value, 0)
+  const shares = sharesOf(rows.map((row) => row.value))
 
   return (
     <>
-      {rows.map((row) => (
+      {rows.map((row, index) => (
         <Row
           key={row.key}
           label={row.label}
           value={row.value}
           colour={row.colour}
           largest={largest}
-          total={total}
+          share={shares[index]}
         />
       ))}
     </>

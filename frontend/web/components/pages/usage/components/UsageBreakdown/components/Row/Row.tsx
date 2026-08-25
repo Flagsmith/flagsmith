@@ -9,14 +9,11 @@ export type RowProps = {
   label: string
   value: number
   largest: number
-  total: number
+  share: number
   colour?: string
 }
 
-const share = (value: number, total: number) =>
-  total ? Math.round((value / total) * 100) : 0
-
-const Row: FC<RowProps> = ({ colour, label, largest, total, value }) => (
+const Row: FC<RowProps> = ({ colour, label, largest, share, value }) => (
   <div className='usage-breakdown-row d-flex align-items-center gap-3 border-top border-default'>
     <div className='usage-breakdown-row__label d-flex align-items-center gap-2'>
       {colour && <ColorSwatch color={colour} size='sm' />}
@@ -27,7 +24,7 @@ const Row: FC<RowProps> = ({ colour, label, largest, total, value }) => (
 
     <ValueBar
       className='usage-breakdown-row__track'
-      percent={share(value, largest)}
+      percent={largest ? Math.round((value / largest) * 100) : 0}
       colour={colour ?? colorSurfaceAction}
     />
 
@@ -35,7 +32,7 @@ const Row: FC<RowProps> = ({ colour, label, largest, total, value }) => (
       {Format.shortenNumber(value)}
     </div>
     <div className='usage-breakdown-row__share text-end fs-captionSmall text-secondary'>
-      {share(value, total)}%
+      {share}%
     </div>
   </div>
 )

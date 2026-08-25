@@ -82,3 +82,27 @@ export const bySdk = (
     })),
   )
 }
+
+export const sharesOf = (values: number[]): number[] => {
+  const total = values.reduce((sum, value) => sum + value, 0)
+
+  if (!total) {
+    return values.map(() => 0)
+  }
+
+  const exact = values.map((value) => (value / total) * 100)
+  const shares = exact.map(Math.floor)
+  const byRemainder = exact
+    .map((value, index) => ({ index, remainder: value - Math.floor(value) }))
+    .sort((a, b) => b.remainder - a.remainder)
+
+  let left = 100 - shares.reduce((sum, share) => sum + share, 0)
+
+  for (const { index } of byRemainder) {
+    if (left <= 0) break
+    shares[index] += 1
+    left -= 1
+  }
+
+  return shares
+}

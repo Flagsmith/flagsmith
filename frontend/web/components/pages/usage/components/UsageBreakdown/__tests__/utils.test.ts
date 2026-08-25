@@ -6,6 +6,7 @@ import {
 import {
   byRequestType,
   bySdk,
+  sharesOf,
   totalOf,
 } from 'components/pages/usage/components/UsageBreakdown/utils'
 
@@ -97,6 +98,25 @@ describe('UsageBreakdown utils', () => {
 
     it('returns nothing when there is no data', () => {
       expect(bySdk(undefined)).toEqual([])
+    })
+  })
+
+  describe('sharesOf', () => {
+    it('adds up to 100 when the split does not divide evenly', () => {
+      const shares = sharesOf([1, 1, 1])
+
+      expect(shares.reduce((sum, share) => sum + share, 0)).toBe(100)
+      expect(shares).toEqual([34, 33, 33])
+    })
+
+    it('gives the spare points to the largest remainders', () => {
+      const shares = sharesOf([5, 3, 1])
+
+      expect(shares.reduce((sum, share) => sum + share, 0)).toBe(100)
+    })
+
+    it('reports zero rather than NaN when nothing was used', () => {
+      expect(sharesOf([0, 0])).toEqual([0, 0])
     })
   })
 })
