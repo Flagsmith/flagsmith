@@ -158,8 +158,8 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
         10000,
       )
       closeModal()
-    } catch {
-      // Errors surface via the mutation error states below.
+    } catch (error) {
+      console.error('CSV segment creation failed:', error)
     }
   }
 
@@ -174,7 +174,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
 
   const form = (
     <form
-      className='px-2 pt-4'
+      className='px-4 pt-4'
       id='create-segment-from-csv-modal'
       onSubmit={save}
     >
@@ -375,7 +375,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
         {form}
       </TabItem>
       <TabItem tabLabelString='Custom Fields' tabLabel='Custom Fields'>
-        <FormGroup className='px-2 pt-4 setting'>
+        <FormGroup className='px-4 pt-4 setting'>
           <InputGroup
             component={
               <AddMetadataToEntity
