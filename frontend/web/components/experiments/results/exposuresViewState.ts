@@ -18,12 +18,17 @@ export type RefreshLabel = { message: string; tone: 'muted' | 'danger' }
 export const REFRESH_POLL_INTERVAL_MS = 10000
 export const POLL_TIMEOUT_MS = 120000
 export const DEFAULT_RETRY_AFTER_S = 300
+export const REFRESH_STALE_CUTOFF_MS = 10 * 60 * 1000
 
 const ms = (iso: string | null): number => (iso ? new Date(iso).getTime() : 0)
 
 const isRefreshing = (e: ExperimentExposures): boolean => {
   const requested = ms(e.refresh_requested_at)
-  return requested > 0 && requested > Math.max(ms(e.as_of), ms(e.last_error_at))
+  return (
+    requested > 0 &&
+    requested > Math.max(ms(e.as_of), ms(e.last_error_at)) &&
+    Date.now() - requested < REFRESH_STALE_CUTOFF_MS
+  )
 }
 
 const hasError = (e: ExperimentExposures): boolean =>

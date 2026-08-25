@@ -731,6 +731,10 @@
         {
             "source": "/basic-features",
             "destination": "/flagsmith-concepts/data-model"
+        },
+        {
+            "source": "/integrating-with-flagsmith/flagsmith-api-overview/admin-api/updating-flags",
+            "destination": "/managing-flags/updating-flags"
         }
     ],
     "trailingSlash": false

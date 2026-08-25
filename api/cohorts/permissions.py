@@ -7,6 +7,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
+from cohorts.models import CohortSyncKey
 from environments.models import Environment
 from organisations.subscriptions.constants import SubscriptionPlanFamily
 from organisations.subscriptions.permissions import require_minimum_plan
@@ -14,7 +15,29 @@ from users.models import FFAdminUser
 
 _READ_ACTIONS = ("list", "retrieve")
 
+
+class HasCohortSyncKey(BasePermission):
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        return isinstance(request.auth, CohortSyncKey)
+
+
 _MinimumStartupPlan = require_minimum_plan(SubscriptionPlanFamily.START_UP)
+
+
+class CohortSyncPlanPermission(_MinimumStartupPlan):  # type: ignore[misc,valid-type]
+    """Stops sync keys of a downgraded organisation from syncing forever."""
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        if not isinstance(request.auth, CohortSyncKey):
+            return False
+        # The base class reads the organisation from an `organisation`
+        # request param the sync endpoints don't carry; the key's
+        # environment provides it instead.
+        return bool(
+            super().has_object_permission(
+                request, view, request.auth.environment.project
+            )
+        )
 
 
 class CohortPlanPermission(_MinimumStartupPlan):  # type: ignore[misc,valid-type]

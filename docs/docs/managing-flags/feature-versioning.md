@@ -27,7 +27,9 @@ Enabling Feature Versioning v2 on an environment is irreversible.
 
 To produce a new published version on a v2 environment, use one of:
 
-- **The experimental [update-flag endpoints](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/updating-flags)** (`update-flag-v1`, `update-flag-v2`, `delete-segment-override`). These accept the same payloads as on v1 environments and publish a new version per call on v2 environments.
+- **The experimental [update-flag endpoint](/managing-flags/updating-flags)** (`PATCH` or `PUT` on
+  `/__future__/environments/{env}/features/{feature}/`). This takes the same request whichever versioning the
+  environment uses, and publishes a new version per call on v2 environments.
 - **The new versioning endpoint family**:
   - `GET /environments/{env}/features/{feature}/versions/` — list versions for a feature.
   - `POST /environments/{env}/features/{feature}/versions/` — create a draft version.

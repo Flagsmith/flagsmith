@@ -37,6 +37,7 @@ urlpatterns = [
         r"^multivariate/", include("features.multivariate.urls"), name="multivariate"
     ),
     re_path(r"^segments/", include("segments.urls"), name="segments"),
+    re_path(r"^cohort-sync/", include("cohorts.sync_urls"), name="cohort-sync"),
     re_path(r"^users/", include("users.urls")),
     re_path(r"^e2etests/", include("e2etests.urls")),
     re_path(r"^audit/", include("audit.urls")),

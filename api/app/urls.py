@@ -37,6 +37,9 @@ if not settings.TASK_PROCESSOR_MODE:
             r"^api/experiments/",
             include("api.urls.experiments", namespace="api-experiments"),
         ),
+        re_path(
+            r"^api/__future__/", include("api.urls.future", namespace="api-future")
+        ),
         re_path(r"^admin/", admin.site.urls),
         re_path(
             r"^sales-dashboard/",

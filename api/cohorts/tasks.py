@@ -21,9 +21,6 @@ def apply_cohort_membership_deltas(cohort_id: int) -> None:
     if (cohort := Cohort.objects.filter(id=cohort_id).first()) is None:
         log.info("membership.apply.skipped", reason="cohort_missing")
         return
-    if not services.edge_sync_enabled(cohort.environment.project):
-        log.info("membership.apply.skipped", reason="not_edge")
-        return
     try:
         for _ in range(COHORT_MEMBERSHIP_APPLY_MAX_BATCHES_PER_RUN):
             if not services.apply_pending_memberships(cohort):

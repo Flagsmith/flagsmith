@@ -163,7 +163,9 @@ const App = class extends Component {
       // instead of blocking the redirect.
       Promise.race([
         AccountStore.getUser()?.isGettingStarted
-          ? decideOnboardingEntry().catch(() => null)
+          ? decideOnboardingEntry(AccountStore.getUser()?.email).catch(
+              () => null,
+            )
           : Promise.resolve(null),
         new Promise((resolve) => setTimeout(() => resolve(null), 2000)),
       ]).then((decision) => {

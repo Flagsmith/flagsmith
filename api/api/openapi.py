@@ -163,6 +163,23 @@ class MasterAPIKeyAuthenticationExtension(OpenApiAuthenticationExtension):  # ty
         }
 
 
+class CohortSyncKeyAuthenticationExtension(OpenApiAuthenticationExtension):  # type: ignore[no-untyped-call]
+    target_class = "cohorts.authentication.CohortSyncKeyAuthentication"
+    name = "Cohort Sync Key"
+
+    def get_security_definition(
+        self, auto_schema: openapi.AutoSchema | None = None
+    ) -> dict[str, Any]:
+        return {
+            "type": "http",
+            "scheme": "bearer",
+            "description": (
+                "For cohort sync endpoints called by an external cohort "
+                "source, such as Amplitude."
+            ),
+        }
+
+
 # Tag definitions controlling the order and display of sections in the Swagger UI.
 TAGS: list[dict[str, str]] = [
     {

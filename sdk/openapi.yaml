@@ -86,6 +86,12 @@ paths:
                         - type: integer
                         - type: boolean
                         - type: string
+                    variant:
+                      type: string
+                      nullable: true
+                    reason:
+                      type: string
+                      nullable: true
                   required:
                     - enabled
                     - feature
@@ -539,12 +545,26 @@ components:
             - type: string
             - type: 'null'
           title: Feature State Value
+        variant:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Variant
+        reason:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Reason
       required:
         - feature
         - enabled
         - feature_state_value
       title: V1Flag
   securitySchemes:
+    Cohort Sync Key:
+      type: http
+      scheme: bearer
+      description: 'For cohort sync endpoints called by an external cohort source, such as Amplitude.'
     Environment API Key:
       type: apiKey
       in: header

@@ -7003,10 +7003,11 @@
         ]
       },
       "SourceTypeEnum": {
-        "description": "* `csv` - CSV",
+        "description": "* `csv` - CSV\n* `amplitude` - Amplitude",
         "type": "string",
         "enum": [
-          "csv"
+          "csv",
+          "amplitude"
         ]
       },
       "StageAction": {
@@ -7812,6 +7813,11 @@
       }
     },
     "securitySchemes": {
+      "Cohort Sync Key": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "For cohort sync endpoints called by an external cohort source, such as Amplitude."
+      },
       "Environment API Key": {
         "type": "apiKey",
         "in": "header",

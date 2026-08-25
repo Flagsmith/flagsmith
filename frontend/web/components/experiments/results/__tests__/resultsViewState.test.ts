@@ -25,6 +25,13 @@ const loaded = results({
 })
 
 describe('deriveResultsViewState', () => {
+  beforeAll(() => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-06-12T11:05:00Z'))
+  })
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
   it('is empty when there is no payload and nothing in flight', () => {
     expect(deriveResultsViewState(results()).kind).toBe('empty')
   })
@@ -54,6 +61,28 @@ describe('deriveResultsViewState', () => {
       ...loaded,
       last_error_at: '2026-06-12T12:00:00Z',
       refresh_requested_at: '2026-06-12T13:00:00Z',
+    })
+    expect(state.kind).toBe('refreshing')
+  })
+
+  const staleCases: [string, Partial<ExperimentBayesianResults>, string][] = [
+    ['loaded', loaded, 'loaded'],
+    ['empty', results(), 'empty'],
+  ]
+  staleCases.forEach(([name, base, expected]) => {
+    it(`ignores a refresh request older than the cutoff (${name})`, () => {
+      const state = deriveResultsViewState({
+        ...results(base),
+        refresh_requested_at: '2026-06-12T10:54:00Z',
+      })
+      expect(state.kind).toBe(expected)
+    })
+  })
+
+  it('still refreshes just inside the cutoff', () => {
+    const state = deriveResultsViewState({
+      ...loaded,
+      refresh_requested_at: '2026-06-12T10:56:00Z',
     })
     expect(state.kind).toBe('refreshing')
   })

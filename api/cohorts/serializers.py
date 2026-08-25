@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from cohorts.constants import COHORT_CSV_MAX_FILE_SIZE_BYTES
 from cohorts.exceptions import CsvFileTooLargeError
-from cohorts.models import Cohort
+from cohorts.models import Cohort, CohortSyncKey
 from cohorts.services import create_cohort
 from environments.models import Environment
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
@@ -63,6 +63,46 @@ class CohortSerializer(serializers.ModelSerializer[Cohort]):
         if metadata_data:
             _SegmentMetadataHandler()._update_metadata(cohort.segment, metadata_data)
         return cohort
+
+
+class CohortSyncKeySerializer(serializers.ModelSerializer[CohortSyncKey]):
+    key = serializers.SerializerMethodField()
+    # The model field carries a default, which DRF would read as optional;
+    # saving without a name fails at the database instead.
+    name = serializers.CharField(max_length=50)
+
+    class Meta:
+        model = CohortSyncKey
+        fields = ("prefix", "name", "created", "key")
+        read_only_fields = ("prefix", "created")
+
+    def create(self, validated_data: dict[str, typing.Any]) -> CohortSyncKey:
+        key, self._generated_key = CohortSyncKey.objects.create_key(**validated_data)
+        return typing.cast(CohortSyncKey, key)
+
+    def get_key(self, instance: CohortSyncKey) -> str | None:
+        # The plaintext key exists only in the create response; it is
+        # unrecoverable afterwards.
+        return getattr(self, "_generated_key", None)
+
+
+class AmplitudeListSerializer(serializers.Serializer[None]):
+    name = serializers.CharField(max_length=2000)
+
+
+def _validate_identifier_byte_length(value: str) -> None:
+    # Edge identifiers are DynamoDB sort keys, capped at 1024 bytes.
+    if len(value.encode()) > 1024:
+        raise serializers.ValidationError(
+            "Ensure this identifier has no more than 1024 bytes."
+        )
+
+
+class CohortSyncMembersSerializer(serializers.Serializer[None]):
+    user_ids = serializers.ListField(
+        child=serializers.CharField(validators=[_validate_identifier_byte_length]),
+        min_length=1,
+    )
 
 
 class CohortCsvSyncSerializer(serializers.Serializer):  # type: ignore[type-arg]

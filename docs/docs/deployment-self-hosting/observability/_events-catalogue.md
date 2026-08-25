@@ -74,7 +74,7 @@ Attributes:
 ### `cohorts.cohort.created`
 
 Logged at `info` from:
- - `api/cohorts/services.py:128`
+ - `api/cohorts/services.py:148`
 
 Attributes:
  - `cohort.id`
@@ -86,7 +86,7 @@ Attributes:
 ### `cohorts.cohort.deleted`
 
 Logged at `info` from:
- - `api/cohorts/services.py:300`
+ - `api/cohorts/services.py:396`
 
 Attributes:
  - `cohort.id`
@@ -95,7 +95,7 @@ Attributes:
 ### `cohorts.cohort.deletion_requested`
 
 Logged at `info` from:
- - `api/cohorts/services.py:284`
+ - `api/cohorts/services.py:380`
 
 Attributes:
  - `cohort.id`
@@ -104,7 +104,7 @@ Attributes:
 ### `cohorts.csv.synced`
 
 Logged at `info` from:
- - `api/cohorts/services.py:252`
+ - `api/cohorts/services.py:352`
 
 Attributes:
  - `adds.count`
@@ -114,10 +114,20 @@ Attributes:
  - `removes.count`
  - `unchanged.count`
 
+### `cohorts.membership.adds_received`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:205`
+
+Attributes:
+ - `cohort.id`
+ - `deltas.count`
+ - `environment.id`
+
 ### `cohorts.membership.applied`
 
 Logged at `info` from:
- - `api/cohorts/services.py:97`
+ - `api/cohorts/services.py:103`
 
 Attributes:
  - `adds.count`
@@ -129,7 +139,6 @@ Attributes:
 
 Logged at `info` from:
  - `api/cohorts/tasks.py:22`
- - `api/cohorts/tasks.py:25`
 
 Attributes:
  - `cohort.id`
@@ -138,10 +147,21 @@ Attributes:
 ### `cohorts.membership.apply.throttled`
 
 Logged at `warning` from:
- - `api/cohorts/tasks.py:35`
+ - `api/cohorts/tasks.py:32`
 
 Attributes:
  - `cohort.id`
+
+### `cohorts.membership.removals_received`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:230`
+
+Attributes:
+ - `cohort.id`
+ - `deltas.count`
+ - `environment.id`
+ - `members.matched`
 
 ### `core.encrypted_field.decrypt_failed`
 
@@ -276,6 +296,33 @@ Logged at `info` from:
 Attributes:
  - `environment.id`
  - `organisation.id`
+
+### `features.flag.update_rejected`
+
+Logged at `warning` from:
+ - `api/features/future/views.py:49`
+
+Attributes:
+ - `environment.id`
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `reason`
+
+### `features.flag.updated`
+
+Logged at `info` from:
+ - `api/features/future/services.py:334`
+ - `api/features/future/services.py:373`
+
+Attributes:
+ - `environment.id`
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `segment_overrides.created.segment.ids`
+ - `segment_overrides.deleted.segment.ids`
+ - `segment_overrides.updated.segment.ids`
 
 ### `gitlab.api_call.failed`
 
@@ -671,7 +718,7 @@ Attributes:
 ### `trust_relationships.created`
 
 Logged at `info` from:
- - `api/trust_relationships/services.py:47`
+ - `api/trust_relationships/services.py:63`
 
 Attributes:
  - `organisation.id`
@@ -681,16 +728,41 @@ Attributes:
 ### `trust_relationships.deleted`
 
 Logged at `info` from:
- - `api/trust_relationships/services.py:93`
+ - `api/trust_relationships/services.py:109`
 
 Attributes:
  - `organisation.id`
  - `trust_relationship.id`
 
+### `trust_relationships.token.exchanged`
+
+Logged at `info` from:
+ - `api/trust_relationships/services.py:234`
+
+Attributes:
+ - `organisation.id`
+ - `token.sub`
+ - `trust_relationship.id`
+
+### `trust_relationships.token.rejected`
+
+Logged at `info` from:
+ - `api/trust_relationships/services.py:172`
+ - `api/trust_relationships/services.py:176`
+ - `api/trust_relationships/services.py:186`
+ - `api/trust_relationships/services.py:203`
+ - `api/trust_relationships/services.py:208`
+ - `api/trust_relationships/services.py:224`
+ - `api/trust_relationships/services.py:229`
+
+Attributes:
+ - `reason`
+ - `token.issuer`
+
 ### `trust_relationships.updated`
 
 Logged at `info` from:
- - `api/trust_relationships/services.py:78`
+ - `api/trust_relationships/services.py:94`
 
 Attributes:
  - `organisation.id`
@@ -732,7 +804,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1152`
+ - `api/experimentation/services.py:1147`
 
 Attributes:
  - `environment.id`
@@ -741,8 +813,8 @@ Attributes:
 ### `warehouse.connection.event_names_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:229`
- - `api/experimentation/services.py:1252`
+ - `api/experimentation/services.py:224`
+ - `api/experimentation/services.py:1247`
 
 Attributes:
  - `environment.id`
@@ -752,7 +824,7 @@ Attributes:
 ### `warehouse.connection.event_stats_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1215`
+ - `api/experimentation/services.py:1210`
 
 Attributes:
  - `environment.id`
@@ -761,7 +833,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:926`
+ - `api/experimentation/services.py:921`
 
 Attributes:
  - `environment.id`
@@ -770,7 +842,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1127`
+ - `api/experimentation/services.py:1122`
 
 Attributes:
  - `environment.id`
@@ -780,7 +852,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1137`
+ - `api/experimentation/services.py:1132`
 
 Attributes:
  - `environment.id`
@@ -789,7 +861,7 @@ Attributes:
 ### `warehouse.delivery.all_objects_rejected`
 
 Logged at `error` from:
- - `api/experimentation/services.py:1082`
+ - `api/experimentation/services.py:1077`
 
 Attributes:
  - `connection.id`
@@ -800,7 +872,7 @@ Attributes:
 ### `warehouse.delivery.budget_exhausted`
 
 Logged at `info` from:
- - `api/experimentation/services.py:971`
+ - `api/experimentation/services.py:966`
 
 Attributes:
  - `connection.id`
@@ -811,7 +883,7 @@ Attributes:
 ### `warehouse.delivery.completed`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1092`
+ - `api/experimentation/services.py:1087`
 
 Attributes:
  - `connection.id`
@@ -824,7 +896,7 @@ Attributes:
 ### `warehouse.delivery.failed`
 
 Logged at `error` from:
- - `api/experimentation/services.py:1065`
+ - `api/experimentation/services.py:1060`
 
 Attributes:
  - `connection.id`
@@ -835,7 +907,7 @@ Attributes:
 ### `warehouse.delivery.object_rejected`
 
 Logged at `error` from:
- - `api/experimentation/services.py:1000`
+ - `api/experimentation/services.py:995`
 
 Attributes:
  - `connection.id`
@@ -847,7 +919,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:522`
+ - `api/experimentation/services.py:517`
 
 Attributes:
  - `environment.id`
@@ -857,7 +929,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:508`
+ - `api/experimentation/services.py:503`
 
 Attributes:
  - `environment.id`

@@ -6,6 +6,9 @@ from rest_framework.views import APIView
 from organisations.permissions.permissions import (
     NestedIsOrganisationAdminPermission,
 )
+from trust_relationships.authentication import (
+    TrustRelationshipTokenAuthentication,
+)
 
 from .authentication import MasterAPIKeyAuthentication
 from .models import MasterAPIKey
@@ -18,7 +21,10 @@ class ExcludeMasterAPIKeyAuthenticationMixin(APIView):
         return [
             authenticator
             for authenticator in super().get_authenticators()
-            if not isinstance(authenticator, MasterAPIKeyAuthentication)
+            if not isinstance(
+                authenticator,
+                (MasterAPIKeyAuthentication, TrustRelationshipTokenAuthentication),
+            )
         ]
 
 

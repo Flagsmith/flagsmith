@@ -1,4 +1,5 @@
 from django.db import models
+from rest_framework_api_key.models import AbstractAPIKey
 
 from cohorts.constants import COHORT_SYSTEM_TRAIT_KEY_PREFIX
 from core.models import SoftDeleteExportableModel
@@ -6,6 +7,7 @@ from core.models import SoftDeleteExportableModel
 
 class CohortSourceType(models.TextChoices):
     CSV = "csv", "CSV"
+    AMPLITUDE = "amplitude", "Amplitude"
 
 
 class Cohort(SoftDeleteExportableModel):
@@ -44,6 +46,21 @@ class Cohort(SoftDeleteExportableModel):
                 name="unique_active_cohort_per_segment",
             ),
         ]
+
+
+class CohortSyncKey(AbstractAPIKey):
+    environment = models.ForeignKey(
+        "environments.Environment",
+        on_delete=models.CASCADE,
+        related_name="cohort_sync_keys",
+    )
+    created_by = models.ForeignKey(
+        "users.FFAdminUser", on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    class Meta(AbstractAPIKey.Meta):
+        verbose_name = "cohort sync key"
+        verbose_name_plural = "cohort sync keys"
 
 
 class CohortMembershipState(models.TextChoices):
