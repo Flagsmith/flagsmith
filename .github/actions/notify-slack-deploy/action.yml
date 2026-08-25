@@ -1,5 +1,5 @@
 name: Notify Slack of a deploy
-description: Post a deploy notification to a Slack incoming webhook, prompting a smoke test.
+description: Post the outcome of a deploy to a Slack incoming webhook.
 
 inputs:
   webhook_url:
@@ -15,6 +15,26 @@ inputs:
     description: The environment that was deployed to.
     required: false
     default: production
+  conclusion:
+    description: >
+      The deploy run's conclusion, straight from workflow_run. Only success and
+      cancelled get their own copy; anything else reads as a failure.
+    required: true
+  commit_sha:
+    description: The commit that was deployed.
+    required: true
+  actor:
+    description: The GitHub login that triggered the deploy.
+    required: true
+  run_url:
+    description: Link to the deploy run, not to the run posting this.
+    required: true
+  started_at:
+    description: When the deploy run started, ISO 8601. Omitted from the message if absent.
+    required: false
+  ended_at:
+    description: When the deploy run finished, ISO 8601. Paired with started_at for the duration.
+    required: false
 
 runs:
   using: composite
@@ -27,62 +47,46 @@ runs:
         SERVICE: ${{ inputs.service }}
         APP_URL: ${{ inputs.app_url }}
         ENVIRONMENT: ${{ inputs.environment }}
-        COMMIT_SHA: ${{ github.sha }}
-        ACTOR: ${{ github.actor }}
-        WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      # jq builds the payload so every value is escaped for us, rather than
-      # interpolated into a JSON heredoc.
+        CONCLUSION: ${{ inputs.conclusion }}
+        COMMIT_SHA: ${{ inputs.commit_sha }}
+        ACTOR: ${{ inputs.actor }}
+        RUN_URL: ${{ inputs.run_url }}
+        STARTED_AT: ${{ inputs.started_at }}
+        ENDED_AT: ${{ inputs.ended_at }}
       run: |
+        set -euo pipefail
+
+        # Best effort: a timestamp that will not parse costs the message two
+        # fields rather than failing the run.
+        epoch() { date -u -d "$1" +%s 2>/dev/null || true; }
+
+        started_epoch="$([ -n "$STARTED_AT" ] && epoch "$STARTED_AT" || true)"
+        ended_epoch="$([ -n "$ENDED_AT" ] && epoch "$ENDED_AT" || true)"
+        started_label=''
+        duration=''
+
+        if [ -n "$started_epoch" ]; then
+          started_label="$(date -u -d "@$started_epoch" '+%H:%M UTC' 2>/dev/null || true)"
+          if [ -n "$ended_epoch" ] && [ "$ended_epoch" -ge "$started_epoch" ]; then
+            elapsed=$(( ended_epoch - started_epoch ))
+            duration="$(( elapsed / 60 ))m $(( elapsed % 60 ))s"
+          fi
+        fi
+
+        # jq escapes every value for us, unlike a JSON heredoc.
         jq -n \
           --arg service "$SERVICE" \
           --arg environment "$ENVIRONMENT" \
+          --arg conclusion "$CONCLUSION" \
           --arg short_sha "${COMMIT_SHA:0:7}" \
           --arg actor "$ACTOR" \
           --arg app_url "$APP_URL" \
-          --arg workflow_url "$WORKFLOW_URL" \
-          '($environment | (.[0:1] | ascii_upcase) + .[1:]) as $env_name |
-          {
-            # Slack honours username on this webhook but ignores icon_emoji.
-            # The avatar comes from the icon set on the Slack app itself.
-            username: "\($service) Deploy",
-            text: "🚀 \($service) deployed to \($environment): smoke test required",
-            blocks: [
-              {
-                type: "header",
-                text: { type: "plain_text", text: "🚀 \($service) deployed to \($environment)" }
-              },
-              {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: "🧪 *\($env_name) smoke test required*\n\nPlease verify the application directly in \($environment)."
-                }
-              },
-              {
-                type: "section",
-                fields: [
-                  { type: "mrkdwn", text: "*Commit:*\n\($short_sha)" },
-                  { type: "mrkdwn", text: "*Deployed by:*\n@\($actor)" }
-                ]
-              },
-              {
-                type: "actions",
-                elements: [
-                  {
-                    type: "button",
-                    text: { type: "plain_text", text: "Open \($env_name)" },
-                    url: $app_url
-                  },
-                  {
-                    type: "button",
-                    text: { type: "plain_text", text: "View GitHub Actions" },
-                    url: $workflow_url
-                  }
-                ]
-              }
-            ]
-          }' \
-          | curl --fail-with-body --connect-timeout 10 --max-time 30 -X POST \
-              -H 'Content-Type: application/json' \
-              --data @- \
-              "$SLACK_WEBHOOK_URL"
+          --arg run_url "$RUN_URL" \
+          --arg started_epoch "$started_epoch" \
+          --arg started_label "$started_label" \
+          --arg duration "$duration" \
+          -f "$GITHUB_ACTION_PATH/payload.jq" \
+        | curl --fail-with-body --connect-timeout 10 --max-time 30 -X POST \
+            -H 'Content-Type: application/json' \
+            --data @- \
+            "$SLACK_WEBHOOK_URL"
