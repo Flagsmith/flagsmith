@@ -45,8 +45,8 @@ interface ValueRowLabelProps {
 
 // Each row shows a bare value, so it needs saying which value it is.
 const ValueRowLabel: FC<ValueRowLabelProps> = ({ children }) => (
-  <div className='mb-2'>
-    <span className='h6 mb-0 font-weight-semibold'>{children}</span>
+  <div className='mb-1'>
+    <span className='text-small text-secondary'>{children}</span>
   </div>
 )
 
@@ -113,7 +113,7 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
       {select && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
-            <ValueRowLabel>Environment default</ValueRowLabel>
+            <ValueRowLabel>Control value</ValueRowLabel>
             <Row>
               <Flex>
                 <ValueEditor
