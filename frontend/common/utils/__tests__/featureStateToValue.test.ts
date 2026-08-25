@@ -1,4 +1,5 @@
 import { featureStateToValue } from 'common/utils/featureStateToValue'
+import type { FlagsmithValue, TraitValue } from 'common/types/responses'
 
 describe('featureStateToValue', () => {
   it.each([
@@ -10,10 +11,51 @@ describe('featureStateToValue', () => {
     expect(featureStateToValue(nested as never)).toBe(expected)
   })
 
-  it('reads value_type when present (core traits)', () => {
-    expect(
-      featureStateToValue({ integer_value: 3, value_type: 'int' } as never),
-    ).toBe(3)
+  // Typed rather than cast, so these fail to compile if TraitValue drifts.
+  it.each<[string, TraitValue, FlagsmithValue]>([
+    [
+      'int',
+      {
+        boolean_value: null,
+        integer_value: 3,
+        string_value: null,
+        value_type: 'int',
+      },
+      3,
+    ],
+    [
+      'float',
+      {
+        boolean_value: null,
+        float_value: 2.5,
+        integer_value: null,
+        string_value: null,
+        value_type: 'float',
+      },
+      2.5,
+    ],
+    [
+      'bool',
+      {
+        boolean_value: false,
+        integer_value: null,
+        string_value: null,
+        value_type: 'bool',
+      },
+      false,
+    ],
+    [
+      'unicode',
+      {
+        boolean_value: null,
+        integer_value: null,
+        string_value: 'power_users',
+        value_type: 'unicode',
+      },
+      'power_users',
+    ],
+  ])('reads value_type on a core trait (%s)', (_label, trait, expected) => {
+    expect(featureStateToValue(trait)).toBe(expected)
   })
 
   it('normalises a missing int/float to null', () => {

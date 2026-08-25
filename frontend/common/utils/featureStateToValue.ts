@@ -1,4 +1,8 @@
-import type { FeatureStateValue, FlagsmithValue } from 'common/types/responses'
+import type {
+  FeatureStateValue,
+  FlagsmithValue,
+  TraitValue,
+} from 'common/types/responses'
 
 /**
  * Flattens a feature state (or core trait) value into its typed scalar.
@@ -10,7 +14,7 @@ import type { FeatureStateValue, FlagsmithValue } from 'common/types/responses'
  * their unit tests) don't pull the Flux stores in through `utils.tsx`.
  */
 export function featureStateToValue(
-  value: FlagsmithValue | FeatureStateValue | undefined,
+  value: FlagsmithValue | FeatureStateValue | TraitValue | undefined,
 ): FlagsmithValue {
   if (value === null || value === undefined) {
     return null
@@ -19,9 +23,7 @@ export function featureStateToValue(
     return value
   }
   // `value_type` is the type key on core traits; `type` on feature states.
-  const type =
-    (value as { value_type?: FeatureStateValue['type'] }).value_type ??
-    value.type
+  const type = 'value_type' in value ? value.value_type : value.type
   switch (type) {
     case 'bool':
       return value.boolean_value

@@ -595,6 +595,16 @@ export type FeatureStateValue = {
   type: 'int' | 'unicode' | 'bool' | 'float'
 }
 
+// The trait shape from the core API, which keys its type as `value_type`
+// where feature states use `type`.
+export type TraitValue = {
+  boolean_value: boolean | null
+  float_value?: number | null
+  integer_value: number | null
+  string_value: string | null
+  value_type: 'int' | 'unicode' | 'bool' | 'float'
+}
+
 export type MultivariateOption = {
   id: number
   uuid: string
