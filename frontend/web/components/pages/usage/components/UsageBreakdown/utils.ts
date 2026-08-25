@@ -106,3 +106,11 @@ export const sharesOf = (values: number[]): number[] => {
 
   return shares
 }
+
+export const barPercent = (value: number, largest: number): number => {
+  if (value <= 0 || largest <= 0) {
+    return 0
+  }
+
+  return Math.max(1, Math.round((value / largest) * 100))
+}

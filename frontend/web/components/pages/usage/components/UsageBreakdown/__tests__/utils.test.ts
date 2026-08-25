@@ -5,6 +5,7 @@ import {
 } from 'components/pages/usage/__tests__/fixtures'
 import {
   byRequestType,
+  barPercent,
   bySdk,
   sharesOf,
   totalOf,
@@ -117,6 +118,22 @@ describe('UsageBreakdown utils', () => {
 
     it('reports zero rather than NaN when nothing was used', () => {
       expect(sharesOf([0, 0])).toEqual([0, 0])
+    })
+  })
+
+  describe('barPercent', () => {
+    it('keeps a tiny contributor visible rather than rounding it away', () => {
+      expect(barPercent(9_000, 8_900_000)).toBe(1)
+    })
+
+    it('scales to the largest row', () => {
+      expect(barPercent(4_450_000, 8_900_000)).toBe(50)
+      expect(barPercent(8_900_000, 8_900_000)).toBe(100)
+    })
+
+    it('draws nothing when there is nothing to draw', () => {
+      expect(barPercent(0, 8_900_000)).toBe(0)
+      expect(barPercent(10, 0)).toBe(0)
     })
   })
 })

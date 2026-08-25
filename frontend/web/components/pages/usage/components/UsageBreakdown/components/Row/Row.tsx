@@ -3,6 +3,7 @@ import Format from 'common/utils/format'
 import { colorSurfaceAction } from 'common/theme/tokens'
 import ColorSwatch from 'components/ColorSwatch'
 import ValueBar from 'components/shared/ValueBar'
+import { barPercent } from 'components/pages/usage/components/UsageBreakdown/utils'
 import './Row.scss'
 
 export type RowProps = {
@@ -24,7 +25,7 @@ const Row: FC<RowProps> = ({ colour, label, largest, share, value }) => (
 
     <ValueBar
       className='usage-breakdown-row__track'
-      percent={largest ? Math.round((value / largest) * 100) : 0}
+      percent={barPercent(value, largest)}
       colour={colour ?? colorSurfaceAction}
     />
 
