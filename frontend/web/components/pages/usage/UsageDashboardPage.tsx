@@ -11,6 +11,7 @@ import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
 import UsageDashboard from './UsageDashboard'
 import {
   isBillingPeriodSelected,
+  periodLabel,
   periodsFor,
   PeriodSelection,
   planHasBillingPeriod,
@@ -26,6 +27,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   organisationId,
 }) => {
   const [project, setProject] = useState<string | undefined>()
+  const [projectName, setProjectName] = useState<string | undefined>()
   const selectedProjectId = project ? Number(project) : undefined
 
   const {
@@ -65,6 +67,13 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   const { setDimension, ...breakdown } = useUsageBreakdown({ data })
 
+  const scope = [
+    selectedProjectId ? projectName : 'All projects',
+    periodLabel(periods, billingPeriod),
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
   if (!organisationId) {
     return null
   }
@@ -76,7 +85,11 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       limit={subscriptionMeta?.max_api_calls}
       hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
       breakdown={
-        <UsageBreakdown {...breakdown} onChangeDimension={setDimension} />
+        <UsageBreakdown
+          {...breakdown}
+          onChangeDimension={setDimension}
+          scope={scope}
+        />
       }
       isError={organisationFailed || usageFailed}
       isLoading={loadingOrganisation || loadingUsage || loadingLimit}
@@ -97,7 +110,10 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
               inputId='usage-project'
               showAll
               organisationId={organisationId}
-              onChange={setProject}
+              onChange={(id: string, name: string) => {
+                setProject(id)
+                setProjectName(name)
+              }}
               value={project}
             />
           </div>

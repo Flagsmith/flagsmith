@@ -79,6 +79,23 @@ export const BySdk: Story = {
   },
 }
 
+/** The section states what it is showing, so a filter is never silently applied. */
+export const ScopedToAProject: Story = {
+  args: {
+    dimension: 'request-type',
+    rows: [
+      { colour: colorChart1, key: 'flags', label: 'Flags', value: 620_000 },
+      {
+        colour: colorChart3,
+        key: 'identities',
+        label: 'Identities',
+        value: 180_000,
+      },
+    ],
+    scope: 'Checkout · Last 30 days',
+  },
+}
+
 export const NoUsageRecorded: Story = {
   args: { dimension: 'request-type', rows: [] },
 }

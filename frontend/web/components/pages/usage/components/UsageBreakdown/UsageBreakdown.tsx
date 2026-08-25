@@ -8,6 +8,7 @@ export type UsageBreakdownProps = {
   dimension: BreakdownDimension
   onChangeDimension: (dimension: BreakdownDimension) => void
   rows: BreakdownRow[]
+  scope?: string
 }
 
 type DimensionOption = (typeof BREAKDOWN_DIMENSIONS)[number]
@@ -16,10 +17,14 @@ const UsageBreakdown: FC<UsageBreakdownProps> = ({
   dimension,
   onChangeDimension,
   rows,
+  scope,
 }) => (
   <div className='p-4 mt-3 border border-default rounded-lg bg-surface-default'>
     <div className='d-flex align-items-end justify-content-between gap-3 mb-3'>
-      <strong>Where the usage came from</strong>
+      <div>
+        <strong>Where the usage came from</strong>
+        {scope && <div className='fs-captionSmall text-secondary'>{scope}</div>}
+      </div>
       <div className='usage-breakdown__dimension'>
         <FieldLabel htmlFor='usage-breakdown-dimension'>
           Break down by

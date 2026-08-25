@@ -26,5 +26,10 @@ export const resolvePeriod = (
 export const isBillingPeriodSelected = (period: BillingPeriod): boolean =>
   period === 'current_billing_period' || period === 'previous_billing_period'
 
+export const periodLabel = (
+  periods: PeriodOption[],
+  period: BillingPeriod,
+): string => periods.find((option) => option.value === period)?.label ?? ''
+
 export const periodsFor = (billingPeriodAvailable: boolean): PeriodOption[] =>
   billingPeriodAvailable ? periodOptions : rollingPeriodOptions
