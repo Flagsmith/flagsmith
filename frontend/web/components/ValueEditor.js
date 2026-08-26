@@ -4,6 +4,7 @@ import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { Clipboard } from 'polyfill-react-native'
 import Icon from './icons/Icon'
+import BareButton from './base/forms/BareButton'
 import { IonIcon } from '@ionic/react'
 import { checkmarkCircle, warning } from 'ionicons/icons'
 
@@ -152,6 +153,10 @@ class ValueEditor extends Component {
 
   render() {
     const { ...rest } = this.props
+    const showFormat =
+      this.state.language === 'json' &&
+      !this.props.disabled &&
+      !!this.props.value
     return (
       <div
         className={cx(
@@ -216,21 +221,21 @@ class ValueEditor extends Component {
             >
               .yaml {this.state.language === 'yaml' && this.renderValidation()}
             </span>
-            {this.state.language === 'json' &&
-              !this.props.disabled &&
-              !!this.props.value && (
-                <span
-                  onMouseDown={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    this.formatJson()
-                  }}
-                  className={cx('txt primary')}
-                >
-                  <Icon name='code' />
-                  format
-                </span>
-              )}
+            <BareButton
+              disabled={!showFormat}
+              onMouseDown={(e) => {
+                // Keep the editor focused; the click still fires the format.
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+              onClick={this.formatJson}
+              className={cx('primary format-action', {
+                'is-visible': showFormat,
+              })}
+            >
+              <Icon name='code' />
+              format
+            </BareButton>
             <span
               onMouseDown={() => {
                 const res = Clipboard.setString(this.props.value)

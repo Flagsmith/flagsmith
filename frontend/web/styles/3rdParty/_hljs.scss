@@ -65,7 +65,8 @@
         color: var(--color-text-default);
       }
     }
-    span {
+    span,
+    .bare-btn {
       display: flex;
       align-items: center;
       gap: 2px;
@@ -79,6 +80,24 @@
       }
       &.primary {
         color: var(--color-text-action);
+      }
+    }
+    // Slides and fades in when JSON is selected, collapses out otherwise.
+    .format-action {
+      max-width: 0;
+      overflow: hidden;
+      opacity: 0;
+      white-space: nowrap;
+      pointer-events: none;
+      transition: max-width var(--duration-normal, 200ms) ease,
+        opacity var(--duration-normal, 200ms) ease;
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+      &.is-visible {
+        max-width: 6rem;
+        opacity: 1;
+        pointer-events: auto;
       }
     }
   }
