@@ -3,7 +3,9 @@
 // mocked out to allow `common/utils/utils` to load for real.
 jest.mock('common/stores/account-store', () => ({}))
 jest.mock('common/stores/project-store', () => ({}))
-jest.mock('common/store', () => ({ getStore: () => ({}) }))
+jest.mock('common/store', () => ({
+  getStore: () => ({ getState: () => ({}) }),
+}))
 jest.mock('@flagsmith/flagsmith', () => ({
   getValue: (_key: string, opts: { fallback: unknown }) => opts.fallback,
 }))
@@ -94,5 +96,69 @@ describe('validateRule', () => {
       value: 'not-a-version',
     })
     expect(Utils.validateRule(rule)).toBe(false)
+  })
+})
+
+describe('getPlanPermission', () => {
+  beforeEach(() => {
+    jest.spyOn(Utils, 'isEnterpriseImage').mockReturnValue(false)
+    jest.spyOn(Utils, 'isSaas').mockReturnValue(true)
+  })
+  afterEach(() => jest.restoreAllMocks())
+
+  it.each([
+    ['scale-up', 'AUDIT', true],
+    ['enterprise', 'AUDIT', true],
+    ['start-up', 'AUDIT', false],
+    ['free', 'AUDIT', false],
+    ['enterprise', 'SCIM', true],
+    ['scale-up', 'SCIM', false],
+  ] as const)(
+    'hardcoded features: plan=%s feature=%s => %s',
+    (plan, feature, expected) => {
+      expect(Utils.getPlanPermission(plan, feature)).toBe(expected)
+    },
+  )
+
+  describe('WAREHOUSE with legacy array value', () => {
+    it('allows free plan when value includes "free"', () => {
+      jest.spyOn(Utils, 'getFlagsmithJSONValue').mockReturnValue(['free'])
+      expect(Utils.getPlanPermission('free', 'WAREHOUSE')).toBe(true)
+    })
+
+    it('blocks free plan when value is empty', () => {
+      jest.spyOn(Utils, 'getFlagsmithJSONValue').mockReturnValue([])
+      expect(Utils.getPlanPermission('free', 'WAREHOUSE')).toBe(false)
+    })
+
+    it('allows scale-up when value includes "scale-up"', () => {
+      jest.spyOn(Utils, 'getFlagsmithJSONValue').mockReturnValue(['scale-up'])
+      expect(Utils.getPlanPermission('scale-up', 'WAREHOUSE')).toBe(true)
+    })
+  })
+
+  describe('WAREHOUSE with object value', () => {
+    it('allows free plan when allowed_plans includes "free"', () => {
+      jest.spyOn(Utils, 'getFlagsmithJSONValue').mockReturnValue({
+        allowed_plans: ['free'],
+        auto_connect_warehouse: true,
+      })
+      expect(Utils.getPlanPermission('free', 'WAREHOUSE')).toBe(true)
+    })
+
+    it('blocks free plan when allowed_plans does not include "free"', () => {
+      jest
+        .spyOn(Utils, 'getFlagsmithJSONValue')
+        .mockReturnValue({ allowed_plans: ['scale-up'] })
+      expect(Utils.getPlanPermission('free', 'WAREHOUSE')).toBe(false)
+    })
+
+    it('falls back to enterprise with malformed value', () => {
+      jest
+        .spyOn(Utils, 'getFlagsmithJSONValue')
+        .mockReturnValue({ allowed_plans: 'not-an-array' })
+      expect(Utils.getPlanPermission('enterprise', 'WAREHOUSE')).toBe(true)
+      expect(Utils.getPlanPermission('scale-up', 'WAREHOUSE')).toBe(false)
+    })
   })
 })
