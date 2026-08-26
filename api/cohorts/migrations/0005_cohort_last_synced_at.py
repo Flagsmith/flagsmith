@@ -3,7 +3,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("cohorts", "0003_cohort_sync_key"),
+        ("cohorts", "0004_mixpanel_source"),
     ]
 
     operations = [
