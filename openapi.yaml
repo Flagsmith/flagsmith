@@ -1787,6 +1787,7 @@ paths:
         - Cohort Sync Key (Basic): []
       tags:
         - Webhooks
+      x-flagsmith-minimum-plan: START_UP
   /api/v1/environment-document/:
     get:
       operationId: sdk_v1_environment_document
