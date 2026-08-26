@@ -2703,33 +2703,6 @@ def test_partial_update_segment__change_requests_enabled__returns_409(
     assert response.status_code == status.HTTP_409_CONFLICT
 
 
-def test_update_segment__change_request_draft__updates_segment(
-    admin_client: APIClient,
-    project_with_change_requests: Project,
-    segment: Segment,
-    project_change_request: ChangeRequest,
-) -> None:
-    # Given
-    draft = segment.clone(name="Draft", change_request=project_change_request)
-    url = reverse(
-        "api-v1:projects:project-segments-detail",
-        args=[project_with_change_requests.id, draft.id],
-    )
-    data = {
-        "name": "Edited draft",
-        "project": project_with_change_requests.id,
-        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
-    }
-
-    # When
-    response = admin_client.put(
-        url, data=json.dumps(data), content_type="application/json"
-    )
-
-    # Then
-    assert response.status_code != status.HTTP_409_CONFLICT
-
-
 def test_list_segments__mixed_overrides__returns_has_overrides(
     admin_client: APIClient,
     project: Project,

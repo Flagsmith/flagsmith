@@ -244,9 +244,6 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         """Refuse to edit a segment that can only be changed by a change request."""
         if not segment.project.is_workflow_enabled:
             return
-        if segment.change_request_id is not None:
-            # A draft held by a change request; editing it *is* the workflow.
-            return
         api_error = ChangeRequestsEnabledError(
             "Cannot update segments in a project with change requests enabled."
         )

@@ -14,16 +14,28 @@ with open(Path(__file__).parent.resolve() / "sql/get_latest_versions.sql") as f:
 
 
 class EnvironmentFeatureVersionManager(SoftDeleteManager):  # type: ignore[misc]
-    def get_superseded_versions(
+    def get_superseding_versions(
         self,
         feature_id: typing.Any,
         environment_id: typing.Any,
         live_from: typing.Any,
     ) -> QuerySet["EnvironmentFeatureVersion"]:
         """
-        Get the published versions of a flag that a later version has replaced.
+        Get the versions of a flag that have gone live since the given time.
 
-        Versions are ordered by when they went live, matching what the SDKs serve.
+        A version is superseded once another has gone live after it, so
+        `~Exists(get_superseding_versions(..., live_from=<the version's
+        live_from>))` identifies the version currently being served. Versions
+        scheduled to go live later are excluded, since they are not serving
+        anything yet.
+
+        Ordering by when versions went live rather than when they were created
+        matches what the SDKs serve — see
+        https://github.com/Flagsmith/flagsmith/issues/8127.
+
+        The arguments are loosely typed so that callers can pass `OuterRef`
+        expressions and use this as a correlated subquery, which avoids
+        querying per environment.
         """
         return self.filter(  # type: ignore[no-any-return]
             feature_id=feature_id,
