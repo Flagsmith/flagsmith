@@ -23,7 +23,7 @@ class EnvironmentFeatureVersionManager(SoftDeleteManager):  # type: ignore[misc]
         live_from: datetime | OuterRef,
     ) -> QuerySet["EnvironmentFeatureVersion"]:
         """
-        Get the published versions of a flag that have gone live since a given time.
+        Get the published versions of a flag that went live between the provided `live_from` and now. 
         """
         return self.filter(  # type: ignore[no-any-return]
             feature_id=feature_id,
