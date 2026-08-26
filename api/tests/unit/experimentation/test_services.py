@@ -49,6 +49,7 @@ from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.versioning.dataclasses import MultivariateValueChangeSet
+from organisations.models import Organisation
 from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
@@ -2508,184 +2509,182 @@ def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer
     assert getattr(fresh_connection, "event_stats", None) == expected_stats
 
 
-class TestGetExperimentFlagConfig:
-    def test__flag_disabled__returns_empty(
-        self,
-        organisation: "Organisation",
-        mocker: MockerFixture,
-    ) -> None:
-        # Given
-        mock_client = MagicMock()
-        mock_client.get_boolean_value.return_value = False
-        mocker.patch(
-            "experimentation.services.get_openfeature_client",
-            return_value=mock_client,
-        )
-
-        # When
-        result = services.get_experiment_flag_config(organisation)
-
-        # Then
-        assert result == {}
-        mock_client.get_string_value.assert_not_called()
-
-    def test__flag_enabled_with_valid_json__returns_parsed(
-        self,
-        organisation: "Organisation",
-        mocker: MockerFixture,
-    ) -> None:
-        # Given
-        mock_client = MagicMock()
-        mock_client.get_boolean_value.return_value = True
-        mock_client.get_string_value.return_value = '{"auto_connect_warehouse": true}'
-        mocker.patch(
-            "experimentation.services.get_openfeature_client",
-            return_value=mock_client,
-        )
-
-        # When
-        result = services.get_experiment_flag_config(organisation)
-
-        # Then
-        assert result == {"auto_connect_warehouse": True}
-
-    @pytest.mark.parametrize(
-        "raw_value",
-        ["not-json", "", None],
-        ids=["invalid-json", "empty-string", "none"],
+def test_get_experiment_flag_config__flag_disabled__returns_empty(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = MagicMock()
+    mock_client.get_boolean_value.return_value = False
+    mocker.patch(
+        "experimentation.services.get_openfeature_client",
+        return_value=mock_client,
     )
-    def test__flag_enabled_with_bad_value__returns_empty(
-        self,
-        organisation: "Organisation",
-        mocker: MockerFixture,
-        raw_value: str | None,
-    ) -> None:
-        # Given
-        mock_client = MagicMock()
-        mock_client.get_boolean_value.return_value = True
-        mock_client.get_string_value.return_value = raw_value
-        mocker.patch(
-            "experimentation.services.get_openfeature_client",
-            return_value=mock_client,
-        )
 
-        # When
-        result = services.get_experiment_flag_config(organisation)
+    # When
+    result = services.get_experiment_flag_config(organisation)
 
-        # Then
-        assert result == {}
+    # Then
+    assert result == {}
+    mock_client.get_string_value.assert_not_called()
 
-    def test__flag_enabled_with_non_dict_json__returns_empty(
-        self,
-        organisation: "Organisation",
-        mocker: MockerFixture,
-    ) -> None:
-        # Given
-        mock_client = MagicMock()
-        mock_client.get_boolean_value.return_value = True
-        mock_client.get_string_value.return_value = '["free"]'
-        mocker.patch(
-            "experimentation.services.get_openfeature_client",
-            return_value=mock_client,
-        )
 
-        # When
-        result = services.get_experiment_flag_config(organisation)
+def test_get_experiment_flag_config__flag_enabled_with_valid_json__returns_parsed(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = MagicMock()
+    mock_client.get_boolean_value.return_value = True
+    mock_client.get_string_value.return_value = '{"auto_connect_warehouse": true}'
+    mocker.patch(
+        "experimentation.services.get_openfeature_client",
+        return_value=mock_client,
+    )
 
-        # Then
-        assert result == {}
+    # When
+    result = services.get_experiment_flag_config(organisation)
+
+    # Then
+    assert result == {"auto_connect_warehouse": True}
+
+
+@pytest.mark.parametrize(
+    "raw_value",
+    ["not-json", "", None],
+    ids=["invalid-json", "empty-string", "none"],
+)
+def test_get_experiment_flag_config__flag_enabled_with_bad_value__returns_empty(
+    organisation: Organisation,
+    mocker: MockerFixture,
+    raw_value: str | None,
+) -> None:
+    # Given
+    mock_client = MagicMock()
+    mock_client.get_boolean_value.return_value = True
+    mock_client.get_string_value.return_value = raw_value
+    mocker.patch(
+        "experimentation.services.get_openfeature_client",
+        return_value=mock_client,
+    )
+
+    # When
+    result = services.get_experiment_flag_config(organisation)
+
+    # Then
+    assert result == {}
+
+
+def test_get_experiment_flag_config__flag_enabled_with_non_dict_json__returns_empty(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = MagicMock()
+    mock_client.get_boolean_value.return_value = True
+    mock_client.get_string_value.return_value = '["free"]'
+    mocker.patch(
+        "experimentation.services.get_openfeature_client",
+        return_value=mock_client,
+    )
+
+    # When
+    result = services.get_experiment_flag_config(organisation)
+
+    # Then
+    assert result == {}
 
 
 @pytest.mark.django_db()
-class TestEnsureFlagsmithWarehouseConnection:
-    def test__auto_connect_disabled__returns_none(
-        self,
-        environment: Environment,
-        mocker: MockerFixture,
-    ) -> None:
-        # Given
-        mocker.patch(
-            "experimentation.services.get_experiment_flag_config",
-            return_value={},
-        )
+def test_ensure_flagsmith_warehouse_connection__auto_connect_disabled__returns_none(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.services.get_experiment_flag_config",
+        return_value={},
+    )
 
-        # When
-        result = services.ensure_flagsmith_warehouse_connection(environment)
+    # When
+    result = services.ensure_flagsmith_warehouse_connection(environment)
 
-        # Then
-        assert result is None
-        assert not WarehouseConnection.objects.filter(
+    # Then
+    assert result is None
+    assert not WarehouseConnection.objects.filter(
+        environment=environment,
+    ).exists()
+
+
+@pytest.mark.django_db()
+def test_ensure_flagsmith_warehouse_connection__auto_connect_enabled__creates_connection(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.services.get_experiment_flag_config",
+        return_value={"auto_connect_warehouse": True},
+    )
+
+    # When
+    result = services.ensure_flagsmith_warehouse_connection(environment)
+
+    # Then
+    assert result is not None
+    assert result.warehouse_type == WarehouseType.FLAGSMITH
+    assert result.name == "Flagsmith"
+    assert result.environment == environment
+
+
+@pytest.mark.django_db()
+def test_ensure_flagsmith_warehouse_connection__connection_already_exists__returns_none(
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.services.get_experiment_flag_config",
+        return_value={"auto_connect_warehouse": True},
+    )
+
+    # When
+    result = services.ensure_flagsmith_warehouse_connection(environment)
+
+    # Then
+    assert result is None
+    assert (
+        WarehouseConnection.objects.filter(
             environment=environment,
-        ).exists()
+            deleted_at__isnull=True,
+        ).count()
+        == 1
+    )
 
-    def test__auto_connect_enabled__creates_flagsmith_connection(
-        self,
-        environment: Environment,
-        mocker: MockerFixture,
-    ) -> None:
-        # Given
-        mocker.patch(
-            "experimentation.services.get_experiment_flag_config",
-            return_value={"auto_connect_warehouse": True},
-        )
 
-        # When
-        result = services.ensure_flagsmith_warehouse_connection(environment)
+def test_ensure_flagsmith_warehouse_connection__race_condition__handles_integrity_error(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.services.get_experiment_flag_config",
+        return_value={"auto_connect_warehouse": True},
+    )
+    mocker.patch.object(
+        WarehouseConnection.objects,
+        "filter",
+        return_value=MagicMock(exists=MagicMock(return_value=False)),
+    )
+    mocker.patch.object(
+        WarehouseConnection.objects,
+        "create",
+        side_effect=IntegrityError("duplicate"),
+    )
 
-        # Then
-        assert result is not None
-        assert result.warehouse_type == WarehouseType.FLAGSMITH
-        assert result.name == "Flagsmith"
-        assert result.environment == environment
+    # When
+    result = services.ensure_flagsmith_warehouse_connection(environment)
 
-    def test__connection_already_exists__returns_none(
-        self,
-        environment: Environment,
-        warehouse_connection: WarehouseConnection,
-        mocker: MockerFixture,
-    ) -> None:
-        # Given
-        mocker.patch(
-            "experimentation.services.get_experiment_flag_config",
-            return_value={"auto_connect_warehouse": True},
-        )
-
-        # When
-        result = services.ensure_flagsmith_warehouse_connection(environment)
-
-        # Then
-        assert result is None
-        assert (
-            WarehouseConnection.objects.filter(
-                environment=environment,
-                deleted_at__isnull=True,
-            ).count()
-            == 1
-        )
-
-    def test__race_condition__handles_integrity_error(
-        self,
-        environment: Environment,
-        mocker: MockerFixture,
-    ) -> None:
-        # Given
-        mocker.patch(
-            "experimentation.services.get_experiment_flag_config",
-            return_value={"auto_connect_warehouse": True},
-        )
-        mocker.patch.object(
-            WarehouseConnection.objects,
-            "filter",
-            return_value=MagicMock(exists=MagicMock(return_value=False)),
-        )
-        mocker.patch.object(
-            WarehouseConnection.objects,
-            "create",
-            side_effect=IntegrityError("duplicate"),
-        )
-
-        # When
-        result = services.ensure_flagsmith_warehouse_connection(environment)
-
-        # Then
-        assert result is None
+    # Then
+    assert result is None
