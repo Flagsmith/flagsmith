@@ -2703,6 +2703,79 @@ def test_partial_update_segment__change_requests_enabled__returns_409(
     assert response.status_code == status.HTTP_409_CONFLICT
 
 
+def test_update_segment__change_request_draft__updates_segment(
+    admin_client: APIClient,
+    project_with_change_requests: Project,
+    segment: Segment,
+    project_change_request: ChangeRequest,
+) -> None:
+    """Editing a draft held by a change request is the workflow, not a bypass."""
+    # Given
+    # `clone` leaves `version_of` pointing at the clone itself, which is the
+    # shape the change request API produces when `version_of` is omitted.
+    draft = segment.clone(name="Draft", change_request=project_change_request)
+    assert draft.version_of_id == draft.id
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project_with_change_requests.id, draft.id],
+    )
+    data = {
+        "name": "Edited draft",
+        "project": project_with_change_requests.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+    }
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    draft.refresh_from_db()
+    assert draft.name == "Edited draft"
+
+
+def test_update_segment__draft_of_live_segment__returns_404(
+    admin_client: APIClient,
+    project_with_change_requests: Project,
+    segment: Segment,
+    project_change_request: ChangeRequest,
+) -> None:
+    """A draft of a live segment is not served by this endpoint at all.
+
+    The dashboard sends `version_of`, so the draft is a version rather than a
+    canonical segment, and `Segment.live_objects` excludes it. Such drafts are
+    edited through the change request endpoints.
+    """
+    # Given
+    draft = segment.clone(
+        name="Draft", change_request=project_change_request, version_of=segment
+    )
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project_with_change_requests.id, draft.id],
+    )
+
+    # When
+    response = admin_client.put(
+        url,
+        data=json.dumps(
+            {
+                "name": "Edited draft",
+                "project": project_with_change_requests.id,
+                "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    draft.refresh_from_db()
+    assert draft.name == "Draft"
+
+
 def test_list_segments__mixed_overrides__returns_has_overrides(
     admin_client: APIClient,
     project: Project,
