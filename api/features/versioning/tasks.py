@@ -12,6 +12,7 @@ from task_processor.decorators import (
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.dataclasses import AuthorData
 from features.models import FeatureState
 from features.versioning.exceptions import FeatureVersioningError
 from features.versioning.models import (
@@ -345,7 +346,7 @@ def publish_version_change_set(
     # which might mean that actually version_change_set.live_from is slightly
     # in the past since the task processor won't have picked it up and handled
     # it immediately, but we always care about the _actual_ time it's published.
-    version.publish(published_by=user, live_from=now)
+    version.publish(AuthorData(user=user), live_from=now)
 
     # if live_from was set on the version_change set, then leave it alone for
     # auditing purposes.

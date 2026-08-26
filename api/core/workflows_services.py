@@ -4,6 +4,7 @@ import structlog
 from django.db import transaction
 from django.utils import timezone
 
+from core.dataclasses import AuthorData
 from environments.tasks import rebuild_environment_document
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
@@ -84,7 +85,9 @@ class ChangeRequestCommitService:
                 ):
                     environment_feature_version.live_from = now
 
-                environment_feature_version.publish(published_by, persist=False)
+                environment_feature_version.publish(
+                    AuthorData(user=published_by), persist=False
+                )
 
             EnvironmentFeatureVersion.objects.bulk_update(
                 environment_feature_versions,

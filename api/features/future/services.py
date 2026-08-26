@@ -7,7 +7,7 @@ import structlog
 from django.db import transaction
 from django.db.models import Count, Q
 
-from api_keys.user import APIKeyUser
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.future.exceptions import (
     DuplicatePriorityError,
@@ -29,7 +29,6 @@ from features.models import Feature, FeatureSegment, FeatureState, FeatureStateV
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import get_environment_flags_list
-from users.models import FFAdminUser
 
 logger = structlog.get_logger("features")
 
@@ -70,17 +69,6 @@ def _get_feature_states_to_write(
             "feature_segment",
             "feature_state_value",
         ).prefetch_related("multivariate_feature_state_values")
-    )
-
-
-def _publish_version(
-    version: EnvironmentFeatureVersion, author: FFAdminUser | APIKeyUser
-) -> None:
-    # `UserABC.__subclasshook__` matches any user against `APIKeyUser`
-    published_by = author if isinstance(author, FFAdminUser) else None
-    version.publish(
-        published_by=published_by,
-        published_by_api_key=None if published_by else author.key,
     )
 
 
@@ -294,7 +282,7 @@ def update_flag(
     feature: Feature,
     changes: UpdateFlagRequest,
     replace: bool,
-    author: FFAdminUser | APIKeyUser,
+    author: AuthorData,
 ) -> UpdateFlagResponse:
     """Write the given parts of a flag, whichever versioning the environment uses."""
     writes_nothing = not changes if replace else not any(changes.values())
@@ -329,7 +317,7 @@ def update_flag(
             )
 
         if version is not None:
-            _publish_version(version, author)
+            version.publish(author)
 
     logger.info(
         "flag.updated",
@@ -350,7 +338,7 @@ def delete_segment_override(
     environment: Environment,
     feature: Feature,
     segment_id: int,
-    author: FFAdminUser | APIKeyUser,
+    author: AuthorData,
 ) -> UpdateFlagResponse:
     """Remove a flag's override for one segment, leaving the rest of the flag alone."""
     with transaction.atomic():
@@ -368,7 +356,7 @@ def delete_segment_override(
         )
 
         if version is not None:
-            _publish_version(version, author)
+            version.publish(author)
 
     logger.info(
         "flag.updated",

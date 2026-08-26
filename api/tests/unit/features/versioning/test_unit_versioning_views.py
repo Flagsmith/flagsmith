@@ -22,6 +22,7 @@ from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from core.constants import STRING
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
@@ -68,7 +69,7 @@ def test_list_versions__v2_versioning_enabled__returns_all_versions(
     version_2 = EnvironmentFeatureVersion.objects.create(
         feature=feature, environment=environment_v2_versioning
     )
-    version_2.publish(published_by=admin_user)
+    version_2.publish(AuthorData(user=admin_user))
 
     # and a draft version
     draft_version = EnvironmentFeatureVersion.objects.create(
@@ -117,6 +118,34 @@ def test_create_feature_version__staff_with_permissions__returns_created(
     response_json = response.json()
     assert response_json["created_by"] == staff_user.id
     assert response_json["uuid"]
+
+
+def test_create_feature_version__master_api_key__publishes_with_api_key_attribution(
+    admin_master_api_key: MasterAPIKey,
+    admin_master_api_key_client: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    response = admin_master_api_key_client.post(
+        url,
+        data=json.dumps({"publish_immediately": True}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    version = EnvironmentFeatureVersion.objects.get(uuid=response.json()["uuid"])
+    assert version.published is True
+    assert version.published_by is None
+    assert version.published_by_api_key == admin_master_api_key[0]
 
 
 def test_delete_feature_version__unpublished_version__marks_as_deleted(
@@ -216,7 +245,7 @@ def test_retrieve_feature_version__has_previous_version__returns_previous_uuid(
     version_2 = EnvironmentFeatureVersion.objects.create(
         feature=feature, environment=environment_v2_versioning
     )
-    version_2.publish(published_by=staff_user)
+    version_2.publish(AuthorData(user=staff_user))
 
     url = reverse("api-v1:versioning:get-efv-by-uuid", args=[version_2.uuid])
 
@@ -642,7 +671,7 @@ def test_delete_feature_version_feature_state__published_version__returns_bad_re
     )
 
     # and we publish the version
-    environment_feature_version.publish(admin_user)
+    environment_feature_version.publish(AuthorData(user=admin_user))
 
     url = reverse(
         "api-v1:versioning:environment-feature-version-featurestates-detail",
@@ -732,7 +761,7 @@ def test_list_versions__filter_by_is_live__returns_matching_versions(
     published_environment_feature_version = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature
     )
-    published_environment_feature_version.publish(staff_user)
+    published_environment_feature_version.publish(AuthorData(user=staff_user))
 
     _base_url = reverse(
         "api-v1:versioning:environment-feature-versions-list",
@@ -1620,7 +1649,7 @@ def test_list_versions__non_enterprise_plan__returns_only_recent_versions(
         version = EnvironmentFeatureVersion.objects.create(
             environment=environment_v2_versioning, feature=feature
         )
-        version.publish(staff_user)
+        version.publish(AuthorData(user=staff_user))
         outside_limit_versions.append(version)
 
     # Now let's jump to the current time and create some versions which
@@ -1632,7 +1661,7 @@ def test_list_versions__non_enterprise_plan__returns_only_recent_versions(
         version = EnvironmentFeatureVersion.objects.create(
             environment=environment_v2_versioning, feature=feature
         )
-        version.publish(staff_user)
+        version.publish(AuthorData(user=staff_user))
         inside_limit_versions.append(version)
 
     # When
@@ -1676,7 +1705,7 @@ def test_list_versions__current_version_outside_limit__still_returns_current(
     latest_version = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature
     )
-    latest_version.publish(staff_user)
+    latest_version.publish(AuthorData(user=staff_user))
 
     # When
     # we jump to the current time and retrieve the versions
@@ -1737,7 +1766,7 @@ def test_list_versions__enterprise_plan_saas__returns_all_versions(
         version = EnvironmentFeatureVersion.objects.create(
             environment=environment_v2_versioning, feature=feature
         )
-        version.publish(staff_user)
+        version.publish(AuthorData(user=staff_user))
         all_versions.append(version)
 
     # Now let's jump to the current time and create some versions which
@@ -1748,7 +1777,7 @@ def test_list_versions__enterprise_plan_saas__returns_all_versions(
         version = EnvironmentFeatureVersion.objects.create(
             environment=environment_v2_versioning, feature=feature
         )
-        version.publish(staff_user)
+        version.publish(AuthorData(user=staff_user))
         all_versions.append(version)
 
     # When
@@ -1822,7 +1851,7 @@ def test_create_feature_version_feature_state__override_recreated_in_draft__inhe
             environment_feature_version=overridden_version,
         ),
     )
-    overridden_version.publish(published_by=admin_user)
+    overridden_version.publish(AuthorData(user=admin_user))
 
     # and a draft version from which the (cloned) override has been removed
     draft_version = EnvironmentFeatureVersion.objects.create(

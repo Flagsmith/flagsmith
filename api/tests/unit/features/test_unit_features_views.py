@@ -36,6 +36,7 @@ from audit.constants import (
 )
 from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
+from core.dataclasses import AuthorData
 from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoIdentityWrapper,
@@ -2536,7 +2537,7 @@ def test_list_features__v2_versioning_with_removed_override__returns_zero_overri
         ),
         environment_feature_version=version_2,
     )
-    version_2.publish(admin_user)
+    version_2.publish(AuthorData(user=admin_user))
 
     # and now let's create a new version which removes the segment override
     version_3 = EnvironmentFeatureVersion.objects.create(
@@ -2546,7 +2547,7 @@ def test_list_features__v2_versioning_with_removed_override__returns_zero_overri
         environment_feature_version=version_3,
         feature_segment__segment=segment,
     ).delete()
-    version_3.publish(admin_user)
+    version_3.publish(AuthorData(user=admin_user))
 
     # When
     response = admin_client_new.get(url)
@@ -4023,9 +4024,9 @@ def test_list_features__value_search_string_and_int__returns_matching(
     feature_state1b.enabled = False
     feature_state1b.save()
 
-    environment_feature_version1b.publish(staff_user)
+    environment_feature_version1b.publish(AuthorData(user=staff_user))
 
-    environment_feature_version1.publish(staff_user)
+    environment_feature_version1.publish(AuthorData(user=staff_user))
 
     feature_state_value1 = feature_state1.feature_state_value
     feature_state_value1.set_value("1945", "integer")
@@ -4295,12 +4296,12 @@ def test_list_feature_states__v2_versioning__returns_latest_versions(
         environment=environment_v2_versioning,
         environment_feature_version=version_2,
     )
-    version_2.publish(staff_user)
+    version_2.publish(AuthorData(user=staff_user))
 
     version_3 = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature
     )
-    version_3.publish(staff_user)
+    version_3.publish(AuthorData(user=staff_user))
 
     # When
     response = staff_client.get(url)
@@ -4398,7 +4399,7 @@ def _assert_feature_list_last_modified_values(  # type: ignore[no-untyped-def]
                 environment=environment_v2_versioning_2, feature=feature
             )
         )
-        environment_v2_versioning_2_version_2.publish(staff_user)
+        environment_v2_versioning_2_version_2.publish(AuthorData(user=staff_user))
 
     with freeze_time(now):
         # and create a new unpublished version in the current environment, simulated to be now
