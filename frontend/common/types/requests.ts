@@ -186,6 +186,18 @@ export type Req = {
     cohortId: number
     projectId: number
   }
+  getCohort: {
+    environmentApiKey: string
+    cohortId: number
+  }
+  updateCohort: {
+    environmentApiKey: string
+    cohortId: number
+    projectId: number
+    segmentId: number
+    name?: string
+    description?: string
+  }
   syncCohortCsv: {
     environmentApiKey: string
     cohortId: number

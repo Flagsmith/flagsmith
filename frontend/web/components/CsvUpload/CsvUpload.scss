@@ -2,6 +2,11 @@
   &__droparea {
     padding: 32px;
     border: 1px dashed var(--color-border-action);
+
+    &--disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
   }
 
   &__file-card {

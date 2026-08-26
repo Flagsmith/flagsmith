@@ -28,6 +28,7 @@ import {
 } from 'common/services/useSegment'
 import Utils from 'common/utils/utils'
 import AssociatedSegmentOverrides from 'components/segments/AssociatedSegmentOverrides'
+import CohortSegmentDetail from 'components/segments/CohortSegmentDetail'
 import { SegmentMembershipTotalBadge } from 'components/segments/SegmentMembershipBadge'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
@@ -648,7 +649,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
             tabLabelString='Basic configuration'
             tabLabel={'Basic configuration'}
           >
-            <div className={className || 'my-3 mx-4'}>
+            {/* Horizontal padding comes from the surrounding tab-item. */}
+            <div className={className || 'my-3'}>
               <CreateSegmentRulesTabForm
                 save={save}
                 is4Eyes={is4Eyes}
@@ -684,7 +686,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               <Row className='justify-content-center'>Custom Fields</Row>
             }
           >
-            <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
+            <div className={className || 'my-3'}>{MetadataTab}</div>
           </TabItem>
         </Tabs>
       )}
@@ -792,11 +794,22 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
       },
     )
 
-  return isLoading ? (
-    <div className='text-center'>
-      <Loader />
-    </div>
-  ) : (
+  if (isLoading) {
+    return (
+      <div className='text-center'>
+        <Loader />
+      </div>
+    )
+  }
+
+  // CSV cohort segments have no editable rules; show the sync detail view.
+  if (segmentData?.cohort?.source_type === 'csv') {
+    return (
+      <CohortSegmentDetail projectId={props.projectId} segment={segmentData} />
+    )
+  }
+
+  return (
     <CreateSegment
       {...props}
       segment={segmentData || undefined}

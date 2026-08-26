@@ -1,10 +1,10 @@
 import React, { FC, FormEvent, useMemo, useState } from 'react'
-import classNames from 'classnames'
 import Constants from 'common/constants'
 import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
 import {
   extractIdentifiers,
+  MAX_CSV_FILE_SIZE_BYTES,
   MAX_IDENTIFIER_BYTES,
   parseCsvText,
   toCsvColumn,
@@ -22,6 +22,7 @@ import Button from 'components/base/forms/Button'
 import Checkbox from 'components/base/forms/Checkbox'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import InputGroup from 'components/base/forms/InputGroup'
+import CsvPreview from 'components/CsvPreview'
 import CsvUpload from 'components/CsvUpload'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import ErrorMessage from 'components/ErrorMessage'
@@ -31,10 +32,6 @@ import TabItem from 'components/navigation/TabMenu/TabItem'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import { CreatedCohort, submitCohortCsv } from './submitCohortCsv'
 import './CreateSegmentFromCsv.scss'
-
-const PREVIEW_ROW_COUNT = 5
-// Mirrors the API's COHORT_CSV_MAX_FILE_SIZE_BYTES.
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
 type CreateSegmentFromCsvType = {
   projectId: number | string
@@ -89,7 +86,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
   )
   // Quoting can expand values, so the generated upload needs its own check.
   const isUploadTooLarge = useMemo(
-    () => new Blob([csvColumn]).size > MAX_FILE_SIZE_BYTES,
+    () => new Blob([csvColumn]).size > MAX_CSV_FILE_SIZE_BYTES,
     [csvColumn],
   )
 
@@ -173,11 +170,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
   }
 
   const form = (
-    <form
-      className='px-4 pt-4'
-      id='create-segment-from-csv-modal'
-      onSubmit={save}
-    >
+    <form className='pt-4' id='create-segment-from-csv-modal' onSubmit={save}>
       <InputGroup
         className='mb-4'
         id='segmentID'
@@ -185,6 +178,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
         title='Name*'
         value={name}
         inputProps={{
+          className: 'full-width',
           maxLength: Constants.forms.maxLength.SEGMENT_ID,
           name: 'id',
         }}
@@ -226,7 +220,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
       <div className='mb-4'>
         <CsvUpload
           value={file}
-          maxSizeBytes={MAX_FILE_SIZE_BYTES}
+          maxSizeBytes={MAX_CSV_FILE_SIZE_BYTES}
           rowCount={file ? parsed.rows.length : undefined}
           onChange={onFile}
         />
@@ -276,45 +270,11 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
         <>
           {!!parsed.rows.length && (
             <div className='mb-4'>
-              <div className='create-segment-from-csv__section-label fw-semibold text-secondary text-uppercase mb-2'>
-                Preview (first {PREVIEW_ROW_COUNT} rows)
-              </div>
-              <div className='create-segment-from-csv__preview rounded-lg overflow-auto'>
-                <table className='mb-0 w-100 fs-small'>
-                  <thead>
-                    <tr>
-                      {parsed.columns.map((column, i) => (
-                        <th
-                          key={i}
-                          className={classNames('fw-semibold', {
-                            'create-segment-from-csv__cell--selected':
-                              i === columnIndex,
-                          })}
-                        >
-                          {column}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {parsed.rows.slice(0, PREVIEW_ROW_COUNT).map((row, i) => (
-                      <tr key={i}>
-                        {parsed.columns.map((_, j) => (
-                          <td
-                            key={j}
-                            className={classNames({
-                              'create-segment-from-csv__cell--selected':
-                                j === columnIndex,
-                            })}
-                          >
-                            {row[j]}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <CsvPreview
+                columns={parsed.columns}
+                rows={parsed.rows}
+                selectedColumn={columnIndex}
+              />
               {!!extraction && !isBlocked && (
                 <div className='d-flex align-items-center gap-2 mt-2 fs-small text-secondary'>
                   <Icon
@@ -363,7 +323,8 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
   )
 
   if (!metadataEnable || !segmentContentType?.id) {
-    return form
+    // Outside tabs there is no tab-item padding, so the form provides it.
+    return <div className='px-4'>{form}</div>
   }
 
   return (
@@ -375,7 +336,7 @@ const CreateSegmentFromCsv: FC<CreateSegmentFromCsvType> = ({ projectId }) => {
         {form}
       </TabItem>
       <TabItem tabLabelString='Custom Fields' tabLabel='Custom Fields'>
-        <FormGroup className='px-4 pt-4 setting'>
+        <FormGroup className='pt-4 setting'>
           <InputGroup
             component={
               <AddMetadataToEntity

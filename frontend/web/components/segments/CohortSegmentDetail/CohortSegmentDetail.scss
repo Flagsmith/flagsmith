@@ -1,0 +1,46 @@
+.cohort-segment-detail {
+  border: 1px solid var(--color-border-default);
+
+  &__header {
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  &__info-panel,
+  &__review {
+    border: 1px solid var(--color-border-default);
+  }
+
+  &__info-label {
+    width: 150px;
+    flex-shrink: 0;
+  }
+
+  &__status {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 10px;
+  }
+
+  &__status-dot {
+    width: 6px;
+    height: 6px;
+    background: currentColor;
+  }
+
+  &__progress-track {
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--color-surface-default);
+  }
+
+  &__progress-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width var(--duration-normal, 200ms) ease;
+  }
+
+  &__select {
+    width: 220px;
+  }
+}

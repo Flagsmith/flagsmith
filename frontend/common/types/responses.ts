@@ -179,7 +179,7 @@ export type SegmentCohort = {
   environment: number
   environment_api_key: string
   environment_name: string
-  source_type: 'csv'
+  source_type: 'csv' | 'amplitude'
   version: number
   deletion_requested_at: string | null
 }
@@ -1016,15 +1016,23 @@ export type Metadata = {
   field_value: string
 }
 
+export type CohortMembershipCounts = {
+  applied: number
+  pending_add: number
+  pending_remove: number
+}
+
 export type Cohort = {
   id: number
   uuid: string
   name: string
   description: string | null
   segment: number
-  source_type: 'csv'
+  source_type: 'csv' | 'amplitude'
   version: number
   created_at: string
+  last_synced_at: string | null
+  membership_counts: CohortMembershipCounts
 }
 
 export type CohortCsvSyncResult = {
