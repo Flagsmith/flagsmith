@@ -565,6 +565,10 @@ components:
       type: http
       scheme: bearer
       description: 'For cohort sync endpoints called by an external cohort source, such as Amplitude.'
+    Cohort Sync Key (Basic):
+      type: http
+      scheme: basic
+      description: 'For cohort sync endpoints called by an external cohort source that can only send Basic credentials, such as Mixpanel. The key is the password; the username is ignored.'
     Environment API Key:
       type: apiKey
       in: header

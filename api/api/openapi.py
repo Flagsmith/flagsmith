@@ -165,19 +165,38 @@ class MasterAPIKeyAuthenticationExtension(OpenApiAuthenticationExtension):  # ty
 
 class CohortSyncKeyAuthenticationExtension(OpenApiAuthenticationExtension):  # type: ignore[no-untyped-call]
     target_class = "cohorts.authentication.CohortSyncKeyAuthentication"
-    name = "Cohort Sync Key"
+    name = ["Cohort Sync Key", "Cohort Sync Key (Basic)"]
+
+    def get_security_requirement(
+        self, auto_schema: openapi.AutoSchema
+    ) -> list[dict[str, list[Any]]]:
+        # Separate entries: the caller sends the key with either scheme,
+        # not both at once.
+        return [{name: []} for name in self.name]
 
     def get_security_definition(
         self, auto_schema: openapi.AutoSchema | None = None
-    ) -> dict[str, Any]:
-        return {
-            "type": "http",
-            "scheme": "bearer",
-            "description": (
-                "For cohort sync endpoints called by an external cohort "
-                "source, such as Amplitude."
-            ),
-        }
+    ) -> list[dict[str, Any]]:
+        return [
+            {
+                "type": "http",
+                "scheme": "bearer",
+                "description": (
+                    "For cohort sync endpoints called by an external cohort "
+                    "source, such as Amplitude."
+                ),
+            },
+            {
+                "type": "http",
+                "scheme": "basic",
+                "description": (
+                    "For cohort sync endpoints called by an external cohort "
+                    "source that can only send Basic credentials, such as "
+                    "Mixpanel. The key is the password; the username is "
+                    "ignored."
+                ),
+            },
+        ]
 
 
 # Tag definitions controlling the order and display of sections in the Swagger UI.

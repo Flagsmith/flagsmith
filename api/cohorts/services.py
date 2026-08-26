@@ -116,6 +116,7 @@ def create_cohort(
     name: str,
     description: str | None = None,
     source_type: CohortSourceType = CohortSourceType.CSV,
+    external_id: str | None = None,
 ) -> Cohort:
     project = environment.project
     # Mirrors the segment limit enforced by SegmentSerializer, which cohort
@@ -137,7 +138,10 @@ def create_cohort(
         )
         rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
         cohort: Cohort = Cohort.objects.create(
-            environment=environment, segment=segment, source_type=source_type
+            environment=environment,
+            segment=segment,
+            source_type=source_type,
+            external_id=external_id,
         )
         Condition.objects.create(
             rule=rule,
@@ -161,10 +165,16 @@ def create_cohort_for_source(
     environment: "Environment",
     name: str,
     source_type: CohortSourceType,
+    external_id: str | None = None,
 ) -> Cohort:
     """Create a cohort on behalf of an external source, where no Flagsmith
     user is acting."""
-    cohort = create_cohort(environment=environment, name=name, source_type=source_type)
+    cohort = create_cohort(
+        environment=environment,
+        name=name,
+        source_type=source_type,
+        external_id=external_id,
+    )
     # Nothing records a user for these calls, so the audit log that Flagsmith
     # derives from historical records is skipped — and with it the environment
     # document rebuild that makes the new segment visible to SDKs. Write the
@@ -180,6 +190,37 @@ def create_cohort_for_source(
         ),
     )
     return cohort
+
+
+def get_cohort_for_source(
+    *,
+    environment: "Environment",
+    source_type: CohortSourceType,
+    external_id: str,
+) -> Cohort | None:
+    cohort: Cohort | None = Cohort.objects.filter(
+        environment=environment,
+        source_type=source_type,
+        external_id=external_id,
+        deletion_requested_at__isnull=True,
+    ).first()
+    return cohort
+
+
+def cohort_deletion_in_progress(
+    *,
+    environment: "Environment",
+    source_type: CohortSourceType,
+    external_id: str,
+) -> bool:
+    return bool(
+        Cohort.objects.filter(
+            environment=environment,
+            source_type=source_type,
+            external_id=external_id,
+            deletion_requested_at__isnull=False,
+        ).exists()
+    )
 
 
 def add_cohort_members(cohort: Cohort, identifiers: "typing.Iterable[str]") -> None:

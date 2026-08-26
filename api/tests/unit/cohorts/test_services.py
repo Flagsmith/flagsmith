@@ -6,7 +6,11 @@ from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 from rest_framework.exceptions import ValidationError
 
-from cohorts.models import Cohort, CohortMembership, CohortMembershipState
+from cohorts.models import (
+    Cohort,
+    CohortMembership,
+    CohortMembershipState,
+)
 from cohorts.services import (
     _batched,
     apply_pending_memberships,

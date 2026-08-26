@@ -66,6 +66,30 @@ def amplitude_cohort(
 
 
 @pytest.fixture()
+def postgres_cohort_sync_key(
+    environment: Environment,
+) -> typing.Tuple[CohortSyncKey, str]:
+    return typing.cast(
+        typing.Tuple[CohortSyncKey, str],
+        CohortSyncKey.objects.create_key(name="postgres key", environment=environment),
+    )
+
+
+@pytest.fixture()
+def mixpanel_cohort(environment: Environment) -> Cohort:
+    segment = Segment.objects.create(
+        name="mixpanel segment", project=environment.project
+    )
+    cohort: Cohort = Cohort.objects.create(
+        environment=environment,
+        segment=segment,
+        source_type=CohortSourceType.MIXPANEL,
+        external_id="mp-42",
+    )
+    return cohort
+
+
+@pytest.fixture()
 def edge_cohort(
     dynamo_enabled_project: Project,
     dynamo_enabled_project_environment_one: Environment,

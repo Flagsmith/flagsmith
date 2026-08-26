@@ -1683,6 +1683,7 @@ paths:
                 $ref: '#/components/schemas/AmplitudeListResponse'
       security:
         - Cohort Sync Key: []
+        - Cohort Sync Key (Basic): []
       tags:
         - Other
       x-flagsmith-minimum-plan: START_UP
@@ -1712,6 +1713,7 @@ paths:
           description: No response body
       security:
         - Cohort Sync Key: []
+        - Cohort Sync Key (Basic): []
       tags:
         - Other
       x-flagsmith-minimum-plan: START_UP
@@ -1741,8 +1743,50 @@ paths:
           description: No response body
       security:
         - Cohort Sync Key: []
+        - Cohort Sync Key (Basic): []
       tags:
         - Other
+      x-flagsmith-minimum-plan: START_UP
+  /api/v1/cohort-sync/mixpanel/webhook/:
+    post:
+      operationId: api_v1_cohort_sync_mixpanel_webhook_create
+      description: Called by Mixpanel every sync cycle with the cohort's full membership (`members`) or the changes since the last sync (`add_members`/`remove_members`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MixpanelWebhook'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MixpanelWebhook'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MixpanelWebhook'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MixpanelWebhookResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MixpanelWebhookFailureResponse'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MixpanelWebhookFailureResponse'
+      security:
+        - Cohort Sync Key: []
+        - Cohort Sync Key (Basic): []
+      tags:
+        - Webhooks
       x-flagsmith-minimum-plan: START_UP
   /api/v1/environment-document/:
     get:
@@ -18726,6 +18770,16 @@ paths:
         - processor
 components:
   schemas:
+    ActionEnum:
+      description: |-
+        * `members` - members
+        * `add_members` - add_members
+        * `remove_members` - remove_members
+      type: string
+      enum:
+        - members
+        - add_members
+        - remove_members
     ActionTypeEnum:
       description: |-
         * `TOGGLE_FEATURE` - Enable/Disable Feature for the environment
@@ -22825,6 +22879,75 @@ components:
           maxLength: 200
       required:
         - api_key
+    MixpanelMember:
+      type: object
+      properties:
+        mixpanel_distinct_id:
+          type: string
+      required:
+        - mixpanel_distinct_id
+    MixpanelParameters:
+      type: object
+      properties:
+        mixpanel_cohort_id:
+          type: string
+          maxLength: 255
+        mixpanel_cohort_name:
+          type: string
+          maxLength: 2000
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/MixpanelMember'
+      required:
+        - members
+        - mixpanel_cohort_id
+        - mixpanel_cohort_name
+    MixpanelWebhook:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        parameters:
+          $ref: '#/components/schemas/MixpanelParameters'
+      required:
+        - action
+        - parameters
+    MixpanelWebhookError:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: integer
+      required:
+        - code
+        - message
+    MixpanelWebhookFailureResponse:
+      type: object
+      properties:
+        action:
+          type:
+            - string
+            - 'null'
+        status:
+          type: string
+        error:
+          $ref: '#/components/schemas/MixpanelWebhookError'
+      required:
+        - action
+        - error
+        - status
+    MixpanelWebhookResponse:
+      type: object
+      properties:
+        action:
+          type: string
+        status:
+          type: string
+      required:
+        - action
+        - status
     Monitoring:
       type: object
       properties:
@@ -27481,10 +27604,12 @@ components:
       description: |-
         * `csv` - CSV
         * `amplitude` - Amplitude
+        * `mixpanel` - Mixpanel
       type: string
       enum:
         - csv
         - amplitude
+        - mixpanel
     StageAction:
       type: object
       properties:
@@ -29538,6 +29663,10 @@ components:
       type: http
       scheme: bearer
       description: 'For cohort sync endpoints called by an external cohort source, such as Amplitude.'
+    Cohort Sync Key (Basic):
+      type: http
+      scheme: basic
+      description: 'For cohort sync endpoints called by an external cohort source that can only send Basic credentials, such as Mixpanel. The key is the password; the username is ignored.'
     Environment API Key:
       type: apiKey
       in: header
