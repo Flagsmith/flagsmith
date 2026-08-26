@@ -2481,6 +2481,45 @@ paths:
       tags:
         - Environments
       x-flagsmith-minimum-plan: START_UP
+    patch:
+      operationId: api_v1_environments_cohorts_partial_update
+      description: Update the cohort's managed segment name and description.
+      parameters:
+        - name: cohort_id
+          in: path
+          description: A unique integer value identifying this cohort.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCohort'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCohort'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCohort'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohort'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
     delete:
       operationId: api_v1_environments_cohorts_destroy
       description: Request cohort deletion. Memberships are drained from identity data first; the cohort and its segment are deleted once drained.
@@ -19558,6 +19597,16 @@ components:
           type: string
           format: date-time
           readOnly: true
+        last_synced_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          readOnly: true
+        membership_counts:
+          allOf:
+            - $ref: '#/components/schemas/CohortMembershipCounts'
+          readOnly: true
       required:
         - name
     CohortCsvSync:
@@ -19614,6 +19663,22 @@ components:
         - removed
         - unchanged
         - version
+    CohortMembershipCounts:
+      type: object
+      properties:
+        applied:
+          type: integer
+          minimum: 0
+        pending_add:
+          type: integer
+          minimum: 0
+        pending_remove:
+          type: integer
+          minimum: 0
+      required:
+        - applied
+        - pending_add
+        - pending_remove
     CohortSyncKey:
       type: object
       properties:
@@ -24507,6 +24572,52 @@ components:
             $ref: '#/components/schemas/VersionChangeSet'
         ignore_conflicts:
           type: boolean
+    PatchedCohort:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 2000
+        description:
+          type:
+            - string
+            - 'null'
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/Metadata'
+          writeOnly: true
+        segment:
+          type: integer
+          readOnly: true
+        source_type:
+          allOf:
+            - $ref: '#/components/schemas/SourceTypeEnum'
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_synced_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          readOnly: true
+        membership_counts:
+          allOf:
+            - $ref: '#/components/schemas/CohortMembershipCounts'
+          readOnly: true
     PatchedCreateUpdateUserEnvironmentPermission:
       type: object
       properties:
