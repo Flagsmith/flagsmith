@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { MultivariateOption } from 'common/types/responses'
 import ColorSwatch from 'components/ColorSwatch'
-import { getDefaultVariantKey } from 'common/utils/multivariate'
+import { VariantKey } from 'components/mv/VariantKey'
 import {
   CONTROL_COLOUR,
   getVariationColour,
@@ -60,9 +60,11 @@ const VariationTable: FC<VariationTableProps> = ({
                 size='md'
                 shape='circle'
               />
-              <span className='variation-table__name-text'>
-                {mv.key || getDefaultVariantKey(index)}
-              </span>
+              <VariantKey
+                className='variation-table__name-text'
+                value={mv.key}
+                index={index}
+              />
             </div>
             <div className='variation-table__cell variation-table__cell--value'>
               {value ? (

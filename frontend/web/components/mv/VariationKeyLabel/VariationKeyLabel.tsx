@@ -4,6 +4,7 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
+import { VariantKey } from 'components/mv/VariantKey'
 import { colorIconAction, colorIconSecondary } from 'common/theme/tokens'
 import './VariationKeyLabel.scss'
 
@@ -34,8 +35,6 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
   const [error, setError] = useState<string | null>(null)
 
   const canEdit = !readOnly && !disabled
-  // Fallback label when none is set — persisted on save by the provider.
-  const displayName = value || Utils.getDefaultVariantKey(index)
 
   // Validates the raw input — trimming here would hide a trailing
   // space from the user until their next keystroke.
@@ -146,12 +145,12 @@ export const VariationKeyLabel: FC<VariationKeyLabelProps> = ({
 
   return (
     <Row className='align-items-center'>
-      <span
+      <VariantKey
         className='h6 mb-0 font-weight-semibold'
+        value={value}
+        index={index}
         data-test={`featureVariationKey${index}`}
-      >
-        {displayName}
-      </span>
+      />
       {canEdit && (
         <Button
           theme='text'

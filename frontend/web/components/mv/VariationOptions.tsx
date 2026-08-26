@@ -5,6 +5,7 @@ import { VariationValueInput } from './VariationValueInput'
 import Utils from 'common/utils/utils'
 import { FlagsmithValue, MultivariateOption } from 'common/types/responses'
 import { UnmatchedOverride } from 'common/utils/multivariate'
+import { VariantKey } from './VariantKey'
 
 type VariationOverride = {
   id?: number
@@ -160,7 +161,7 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
           <div key={i} className='panel panel--flat panel-without-heading mb-2'>
             <div className='panel-content'>
               <ValueRowLabel>
-                {theValue.key || Utils.getDefaultVariantKey(i)}
+                <VariantKey value={theValue.key} index={i} />
               </ValueRowLabel>
               <Row>
                 <Flex>

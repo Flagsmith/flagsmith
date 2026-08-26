@@ -4,7 +4,7 @@ import Input from 'components/base/forms/Input'
 import ErrorMessage from 'components/ErrorMessage'
 import ColorSwatch from 'components/ColorSwatch'
 import Utils from 'common/utils/utils'
-import { getDefaultVariantKey } from 'common/utils/multivariate'
+import { VariantKey } from 'components/mv/VariantKey'
 import {
   CONTROL_COLOUR,
   VariationSplitEntry,
@@ -76,9 +76,11 @@ const RolloutSplitEditor: FC<RolloutSplitEditorProps> = ({
                 size='md'
                 shape='circle'
               />
-              <span className='rollout-split__name-text'>
-                {option.key || getDefaultVariantKey(index)}
-              </span>
+              <VariantKey
+                className='rollout-split__name-text'
+                value={option.key}
+                index={index}
+              />
             </span>
             <span className='rollout-split__weight'>
               <Input
