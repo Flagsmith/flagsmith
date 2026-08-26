@@ -207,6 +207,22 @@ def get_cohort_for_source(
     return cohort
 
 
+def cohort_deletion_in_progress(
+    *,
+    environment: "Environment",
+    source_type: CohortSourceType,
+    external_id: str,
+) -> bool:
+    return bool(
+        Cohort.objects.filter(
+            environment=environment,
+            source_type=source_type,
+            external_id=external_id,
+            deletion_requested_at__isnull=False,
+        ).exists()
+    )
+
+
 def add_cohort_members(cohort: Cohort, identifiers: "typing.Iterable[str]") -> None:
     from cohorts.tasks import apply_cohort_membership_deltas
 

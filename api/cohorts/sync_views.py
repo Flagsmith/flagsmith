@@ -6,7 +6,7 @@ import structlog
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound, ParseError
+from rest_framework.exceptions import NotFound, ParseError, ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -157,6 +157,17 @@ class MixpanelCohortSyncView(APIView):
         environment = typing.cast(CohortSyncKey, request.auth).environment
 
         if webhook_action == "members":
+            if services.cohort_deletion_in_progress(
+                environment=environment,
+                source_type=CohortSourceType.MIXPANEL,
+                external_id=parameters["mixpanel_cohort_id"],
+            ):
+                # Recreating the cohort while its memberships are still being
+                # drained would resurrect it. The 404 pauses the sync and
+                # emails the customer.
+                return self._failure(
+                    request, message="Cohort is being deleted.", code=404
+                )
             # A large first sync arrives as several requests, each one page
             # of members. Every page only adds; removals can't be detected
             # without seeing all pages at once.
@@ -194,6 +205,14 @@ class MixpanelCohortSyncView(APIView):
             # A body that isn't valid JSON raises before post() runs, so the
             # response is shaped here to keep the envelope Mixpanel expects.
             return self._failure(self.request, message="Invalid payload.", code=400)
+        if isinstance(exc, ValidationError):
+            # Raised below the view, e.g. by the segment limit on cohort
+            # creation; shaped here for the same reason.
+            return self._failure(
+                self.request,
+                message=json.dumps(exc.detail, default=str),
+                code=400,
+            )
         return super().handle_exception(exc)
 
     def _failure(self, request: Request, *, message: str, code: int) -> Response:

@@ -108,7 +108,12 @@ class MixpanelParametersSerializer(serializers.Serializer[None]):
     mixpanel_cohort_id = serializers.CharField(max_length=255)
     mixpanel_cohort_name = serializers.CharField(max_length=2000)
     # An empty page is valid: a first sync of an empty cohort has no members.
-    members = MixpanelMemberSerializer(many=True, allow_empty=True)
+    # Mixpanel sends at most 1000 members per message; the cap stops anything
+    # else from posting an arbitrarily large page.
+    # The stubs don't know many=True forwards max_length to the list serialiser.
+    members = MixpanelMemberSerializer(  # type: ignore[call-arg]
+        many=True, allow_empty=True, max_length=1000
+    )
 
 
 class MixpanelWebhookSerializer(serializers.Serializer[None]):

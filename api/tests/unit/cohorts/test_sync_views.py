@@ -913,3 +913,104 @@ def test_mixpanel_webhook__distinct_id_over_1024_bytes__returns_400_failure(
     assert body["status"] == "failure"
     assert "1024 bytes" in body["error"]["message"]
     assert not CohortMembership.objects.exists()
+
+
+def test_mixpanel_webhook__over_1000_members__returns_400_failure(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+    mixpanel_cohort: Cohort,
+) -> None:
+    # Given - one more member than Mixpanel's documented batch size
+    _, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "add_members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-42",
+                "mixpanel_cohort_name": "Power users",
+                "members": [{"mixpanel_distinct_id": f"user-{i}"} for i in range(1001)],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["status"] == "failure"
+    assert not CohortMembership.objects.exists()
+
+
+def test_mixpanel_webhook__members_action_at_segment_limit__returns_400_failure(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+    settings: SettingsWrapper,
+) -> None:
+    # Given - the project already holds as many segments as the plan allows
+    key, plaintext = postgres_cohort_sync_key
+    project = key.environment.project
+    settings.EDGE_ENABLED = True
+    project.max_segments_allowed = 1
+    project.save()
+    Segment.objects.create(name="existing", project=project)
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-99",
+                "mixpanel_cohort_name": "New cohort",
+                "members": [{"mixpanel_distinct_id": "user-1"}],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    body = response.json()
+    assert body["action"] == "members"
+    assert body["status"] == "failure"
+    assert "maximum allowed segments" in body["error"]["message"]
+    assert not Cohort.objects.filter(external_id="mp-99").exists()
+
+
+def test_mixpanel_webhook__members_action_while_cohort_draining__returns_404_failure(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+    mixpanel_cohort: Cohort,
+) -> None:
+    # Given - the cohort was deleted in Flagsmith and is still draining
+    mixpanel_cohort.deletion_requested_at = timezone.now()
+    mixpanel_cohort.save()
+    _, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-42",
+                "mixpanel_cohort_name": "Power users",
+                "members": [{"mixpanel_distinct_id": "user-1"}],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {
+        "action": "members",
+        "status": "failure",
+        "error": {"message": "Cohort is being deleted.", "code": 404},
+    }
+    assert Cohort.objects.filter(source_type=CohortSourceType.MIXPANEL).count() == 1
