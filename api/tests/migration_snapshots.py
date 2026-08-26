@@ -482,8 +482,24 @@ def template_backed_test_databases() -> typing.Iterator[None]:
         finally:
             snapshots.close()
 
+    def serialize_db_to_string(self: BaseDatabaseCreation) -> str:
+        """Skip the setup-time snapshot Django takes for `serialized_rollback`.
+
+        Django serialises every model in every database while setting the
+        databases up, so that `TransactionTestCase(serialized_rollback=True)`
+        can restore them afterwards. Nothing in this suite asks for that, so
+        it is pure cost -- and on the ClickHouse alias it is worse than that:
+        it builds a `MigrationLoader`, and `django-clickhouse-backend` caches
+        its migration model on `MigrationRecorder` in a way that breaks if a
+        PostgreSQL connection got there first.
+        """
+        return ""
+
+    original_serialize = BaseDatabaseCreation.serialize_db_to_string
     BaseDatabaseCreation.create_test_db = create_test_db  # type: ignore[method-assign]
+    BaseDatabaseCreation.serialize_db_to_string = serialize_db_to_string  # type: ignore[method-assign]
     try:
         yield
     finally:
         BaseDatabaseCreation.create_test_db = original  # type: ignore[method-assign]
+        BaseDatabaseCreation.serialize_db_to_string = original_serialize  # type: ignore[method-assign]
