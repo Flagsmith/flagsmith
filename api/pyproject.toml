@@ -475,7 +475,8 @@ omit = [
 pythonpath = ['.']
 addopts = [
   '--ds=app.settings.test',
-  '-vvvv',
+  # `-v` and above print a line per test, which on a suite this size costs
+  # several seconds of pure formatting and buries failures in the noise.
   '-p',
   'no:warnings',
   '--dist=worksteal',
