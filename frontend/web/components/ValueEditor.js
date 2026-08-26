@@ -145,7 +145,11 @@ class ValueEditor extends Component {
   formatJson = () => {
     if (this.props.disabled || !this.props.onChange) return
     try {
-      this.props.onChange(JSON.stringify(JSON.parse(this.props.value), null, 2))
+      const formatted = JSON.stringify(JSON.parse(this.props.value), null, 2)
+      // Don't emit a no-op change; the parent flags dirty on any onChange.
+      if (formatted !== this.props.value) {
+        this.props.onChange(formatted)
+      }
     } catch (e) {
       toast('Cannot format invalid JSON', 'danger')
     }
