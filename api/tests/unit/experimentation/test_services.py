@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 import pytest
+from django.db import IntegrityError
 from django.db.models import Q
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from prometheus_client import REGISTRY
@@ -38,8 +39,6 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.results_query import _MetricSlot
-from django.db import IntegrityError
-
 from experimentation.services import (
     annotate_warehouse_event_stats,
     verify_clickhouse_connection,
@@ -2538,9 +2537,7 @@ class TestGetExperimentFlagConfig:
         # Given
         mock_client = MagicMock()
         mock_client.get_boolean_value.return_value = True
-        mock_client.get_string_value.return_value = (
-            '{"auto_connect_warehouse": true}'
-        )
+        mock_client.get_string_value.return_value = '{"auto_connect_warehouse": true}'
         mocker.patch(
             "experimentation.services.get_openfeature_client",
             return_value=mock_client,
@@ -2658,10 +2655,13 @@ class TestEnsureFlagsmithWarehouseConnection:
 
         # Then
         assert result is None
-        assert WarehouseConnection.objects.filter(
-            environment=environment,
-            deleted_at__isnull=True,
-        ).count() == 1
+        assert (
+            WarehouseConnection.objects.filter(
+                environment=environment,
+                deleted_at__isnull=True,
+            ).count()
+            == 1
+        )
 
     def test__race_condition__handles_integrity_error(
         self,
