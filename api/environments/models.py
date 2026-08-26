@@ -184,6 +184,12 @@ class Environment(
     def create_feature_states(self) -> None:
         FeatureState.create_initial_feature_states_for_environment(environment=self)
 
+    @hook(AFTER_CREATE)  # type: ignore[misc]
+    def auto_connect_warehouse(self) -> None:
+        from experimentation.services import ensure_flagsmith_warehouse_connection
+
+        ensure_flagsmith_warehouse_connection(self)
+
     @hook(AFTER_UPDATE)  # type: ignore[misc]
     def clear_environment_cache(self) -> None:
         # TODO: this could rebuild the cache itself (using an async task)
