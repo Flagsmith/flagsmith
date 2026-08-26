@@ -227,7 +227,7 @@ class ValueEditor extends Component {
                   }}
                   className={cx('txt primary')}
                 >
-                  <Icon name='code' fill={'#6837fc'} />
+                  <Icon name='code' />
                   format
                 </span>
               )}
