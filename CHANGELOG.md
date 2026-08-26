@@ -1,5 +1,34 @@
 # Changelog
 
+## [2.266.0](https://github.com/Flagsmith/flagsmith/compare/v2.265.0...v2.266.0) (2026-08-26)
+
+
+### Features
+
+* cohort CSV sync endpoint and cohort summary on segments ([#8352](https://github.com/Flagsmith/flagsmith/issues/8352)) ([b9b32ba](https://github.com/Flagsmith/flagsmith/commit/b9b32ba4276163276cc02160319eb699d814c28f))
+* **cohorts:** Amplitude cohort sync endpoints and sync keys ([#8290](https://github.com/Flagsmith/flagsmith/issues/8290)) ([cc20443](https://github.com/Flagsmith/flagsmith/commit/cc204436c1d6a94de8e99df81d2006b5320c8642))
+* create segment from CSV drawer ([#8283](https://github.com/Flagsmith/flagsmith/issues/8283)) ([0102a0c](https://github.com/Flagsmith/flagsmith/commit/0102a0cda47426d265ecf06fd1f53dd323fc9b53))
+* Mixpanel cohort sync webhook ([#8338](https://github.com/Flagsmith/flagsmith/issues/8338)) ([c25dc8c](https://github.com/Flagsmith/flagsmith/commit/c25dc8c0fda0cd1fd7482cf1f1fcfe68e4db296a))
+* **onboarding:** gradual rollout quest screen ([#8286](https://github.com/Flagsmith/flagsmith/issues/8286)) ([2c313e0](https://github.com/Flagsmith/flagsmith/commit/2c313e0a9c6650457221584499d641b6d0d17cbf))
+* **SCIM:** Support deactivated user membership ([#8370](https://github.com/Flagsmith/flagsmith/issues/8370)) ([c0b2a31](https://github.com/Flagsmith/flagsmith/commit/c0b2a316e234ddf58be01f1e95acaf82546a2cff))
+* **usage:** Show usage against the plan limit for the current billing period ([#8320](https://github.com/Flagsmith/flagsmith/issues/8320)) ([763938b](https://github.com/Flagsmith/flagsmith/commit/763938ba33e636d23125126231774737672e1e81))
+* wire CSV segments to the cohorts API ([#8295](https://github.com/Flagsmith/flagsmith/issues/8295)) ([d0485cc](https://github.com/Flagsmith/flagsmith/commit/d0485ccfdd03fbb2618b8b1171af2fa9c8f628a4))
+
+
+### Bug Fixes
+
+* **deep-link:** feature value renders as [object Object] ([#8341](https://github.com/Flagsmith/flagsmith/issues/8341)) ([ac56c47](https://github.com/Flagsmith/flagsmith/commit/ac56c47c48953339293e850d1130b855cd4d9c77))
+* identify user before sending warehouse test event ([#8356](https://github.com/Flagsmith/flagsmith/issues/8356)) ([3ff27da](https://github.com/Flagsmith/flagsmith/commit/3ff27da1a604d495f61204cc8833db01110c46ab))
+* **identities:** label the rows in the identity override selector ([#8372](https://github.com/Flagsmith/flagsmith/issues/8372)) ([0be48ea](https://github.com/Flagsmith/flagsmith/commit/0be48ea8cec38089964a5d3f2a6360bdc05872d2))
+* **identities:** multivariate override editor hides the identity's override value ([#8279](https://github.com/Flagsmith/flagsmith/issues/8279)) ([2e5ea89](https://github.com/Flagsmith/flagsmith/commit/2e5ea89025370047ba9caeeb3589cbc9178a99b1))
+* keep experiment refresh state until requests settle ([#8351](https://github.com/Flagsmith/flagsmith/issues/8351)) ([0f81888](https://github.com/Flagsmith/flagsmith/commit/0f81888498f2168f4efc0bd2e83da8b9d969ba3c))
+* treat stale experiment refresh requests as settled ([#8347](https://github.com/Flagsmith/flagsmith/issues/8347)) ([66b630a](https://github.com/Flagsmith/flagsmith/commit/66b630aebf69bc880c41f90a837ffbca0007434f))
+
+
+### Refactoring
+
+* **featureStateToValue:** extract into a Flux-free module ([#8344](https://github.com/Flagsmith/flagsmith/issues/8344)) ([0212201](https://github.com/Flagsmith/flagsmith/commit/0212201961af0a7bb0e0cd1da4a11b38a5c4f293))
+
 ## [2.265.0](https://github.com/Flagsmith/flagsmith/compare/v2.264.0...v2.265.0) (2026-08-21)
 
 
