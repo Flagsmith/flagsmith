@@ -13,9 +13,11 @@ export type UsageDashboardProps = {
   isError?: boolean
   isLoading?: boolean
   filters?: ReactNode
+  breakdown?: ReactNode
 }
 
 const UsageDashboard: FC<UsageDashboardProps> = ({
+  breakdown,
   data,
   filters,
   hasBillingPeriod,
@@ -50,6 +52,8 @@ const UsageDashboard: FC<UsageDashboardProps> = ({
           limit={limit}
           isBillingPeriod={hasBillingPeriod}
         />
+
+        {breakdown}
       </>
     )
   }

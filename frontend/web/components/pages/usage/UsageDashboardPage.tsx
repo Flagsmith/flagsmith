@@ -7,9 +7,11 @@ import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscription
 import FieldLabel from 'components/base/forms/FieldLabel'
 import ProjectFilter from 'components/ProjectFilter'
 import { PeriodOption } from 'common/types/requests'
+import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
 import UsageDashboard from './UsageDashboard'
 import {
   isBillingPeriodSelected,
+  periodLabel,
   periodsFor,
   PeriodSelection,
   planHasBillingPeriod,
@@ -25,6 +27,8 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   organisationId,
 }) => {
   const [project, setProject] = useState<string | undefined>()
+  const [projectName, setProjectName] = useState<string | undefined>()
+  const selectedProjectId = project ? Number(project) : undefined
 
   const {
     data: organisation,
@@ -50,7 +54,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       ? {
           billing_period: billingPeriod,
           organisationId,
-          projectId: project ? Number(project) : undefined,
+          projectId: selectedProjectId,
         }
       : skipToken,
   )
@@ -60,6 +64,15 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     )
 
   const periods = periodsFor(planIsBilled)
+
+  const { setDimension, ...breakdown } = useUsageBreakdown({ data })
+
+  const scope = [
+    selectedProjectId ? projectName : 'All projects',
+    periodLabel(periods, billingPeriod),
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
   if (!organisationId) {
     return null
@@ -71,6 +84,13 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       total={data?.totals?.total ?? 0}
       limit={subscriptionMeta?.max_api_calls}
       hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
+      breakdown={
+        <UsageBreakdown
+          {...breakdown}
+          onChangeDimension={setDimension}
+          scope={scope}
+        />
+      }
       isError={organisationFailed || usageFailed}
       isLoading={loadingOrganisation || loadingUsage || loadingLimit}
       filters={
@@ -90,7 +110,10 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
               inputId='usage-project'
               showAll
               organisationId={organisationId}
-              onChange={setProject}
+              onChange={(id: string, name: string) => {
+                setProject(id)
+                setProjectName(name)
+              }}
               value={project}
             />
           </div>
