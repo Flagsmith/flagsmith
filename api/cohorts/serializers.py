@@ -63,9 +63,7 @@ class CohortSerializer(serializers.ModelSerializer[Cohort]):
         # Clients derive sync status and progress from these.
         return cohort.memberships.aggregate(
             applied=Count("id", filter=Q(state=CohortMembershipState.APPLIED)),
-            pending_add=Count(
-                "id", filter=Q(state=CohortMembershipState.PENDING_ADD)
-            ),
+            pending_add=Count("id", filter=Q(state=CohortMembershipState.PENDING_ADD)),
             pending_remove=Count(
                 "id", filter=Q(state=CohortMembershipState.PENDING_REMOVE)
             ),
@@ -94,9 +92,7 @@ class CohortSerializer(serializers.ModelSerializer[Cohort]):
             _SegmentMetadataHandler()._update_metadata(cohort.segment, metadata_data)
         return cohort
 
-    def update(
-        self, instance: Cohort, validated_data: dict[str, typing.Any]
-    ) -> Cohort:
+    def update(self, instance: Cohort, validated_data: dict[str, typing.Any]) -> Cohort:
         # Only the managed segment's fields are updatable.
         validated_data.pop("metadata", None)
         segment_data = validated_data.pop("segment", {})
