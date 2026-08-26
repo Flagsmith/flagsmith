@@ -280,8 +280,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
 
         Reactivation deliberately does not enforce the plan's seat limit: this is
         driven by an external identity provider over SCIM, where failing the call
-        would leave the provider and Flagsmith out of sync. Going over the limit
-        is handled by the usual seat overage billing instead.
+        would leave the provider and Flagsmith out of sync.
         """
         user_organisation = UserOrganisation.objects.get(
             user=self, organisation=organisation
