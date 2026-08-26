@@ -34,7 +34,7 @@ def get_overrides_in_effect() -> "QuerySet[FeatureSegment]":
         environment__use_v2_feature_versioning=True,
         environment_feature_version__published_at__isnull=False,
     ) & ~models.Exists(
-        EnvironmentFeatureVersion.objects.get_superseding_versions(
+        EnvironmentFeatureVersion.objects.get_versions_live_since(
             feature_id=models.OuterRef("feature_id"),
             environment_id=models.OuterRef("environment_id"),
             live_from=models.OuterRef("environment_feature_version__live_from"),
