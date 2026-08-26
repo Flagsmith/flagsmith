@@ -1,4 +1,4 @@
-import React, { ComponentPropsWithoutRef, FC } from 'react'
+import { ComponentPropsWithoutRef, FC } from 'react'
 import classNames from 'classnames'
 import { getDefaultVariantKey } from 'common/utils/multivariate'
 
