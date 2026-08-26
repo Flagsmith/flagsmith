@@ -141,6 +141,15 @@ class ValueEditor extends Component {
     />
   )
 
+  formatJson = () => {
+    if (this.props.disabled || !this.props.onChange) return
+    try {
+      this.props.onChange(JSON.stringify(JSON.parse(this.props.value), null, 2))
+    } catch (e) {
+      toast('Cannot format invalid JSON', 'danger')
+    }
+  }
+
   render() {
     const { ...rest } = this.props
     return (
@@ -207,6 +216,21 @@ class ValueEditor extends Component {
             >
               .yaml {this.state.language === 'yaml' && this.renderValidation()}
             </span>
+            {this.state.language === 'json' &&
+              !this.props.disabled &&
+              !!this.props.value && (
+                <span
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    this.formatJson()
+                  }}
+                  className={cx('txt primary')}
+                >
+                  <Icon name='code' fill={'#6837fc'} />
+                  format
+                </span>
+              )}
             <span
               onMouseDown={() => {
                 const res = Clipboard.setString(this.props.value)
