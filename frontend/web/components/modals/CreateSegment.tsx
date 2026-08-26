@@ -805,7 +805,11 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
   // CSV cohort segments have no editable rules; show the sync detail view.
   if (segmentData?.cohort?.source_type === 'csv') {
     return (
-      <CohortSegmentDetail projectId={props.projectId} segment={segmentData} />
+      <CohortSegmentDetail
+        projectId={props.projectId}
+        segment={segmentData}
+        readOnly={props.readOnly}
+      />
     )
   }
 

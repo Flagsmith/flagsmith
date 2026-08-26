@@ -20,6 +20,7 @@ const SYNC_POLL_INTERVAL_MS = 3000
 
 type CohortSegmentDetailType = {
   projectId: number | string
+  readOnly?: boolean
   segment: Segment
 }
 
@@ -37,6 +38,7 @@ const InfoRow: FC<{ label: string; children: ReactNode }> = ({
 
 const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
   projectId,
+  readOnly,
   segment,
 }) => {
   const cohort = segment.cohort
@@ -61,11 +63,20 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
     (counts?.pending_add ?? 0) + (counts?.pending_remove ?? 0)
   const isSyncing = pendingCount > 0
   const identityCount = appliedCount + (counts?.pending_add ?? 0)
-  const progressTotal = appliedCount + pendingCount
+
+  // Snapshot the pending work when a synchronisation starts; applied totals
+  // shrink on removals so they cannot measure progress.
+  const [syncTotal, setSyncTotal] = useState(0)
+  const syncDone = Math.max(syncTotal - pendingCount, 0)
 
   useEffect(() => {
     setPollingInterval(isSyncing ? SYNC_POLL_INTERVAL_MS : 0)
-  }, [isSyncing])
+    if (isSyncing) {
+      setSyncTotal((total) => Math.max(total, pendingCount))
+    } else {
+      setSyncTotal(0)
+    }
+  }, [isSyncing, pendingCount])
 
   useEffect(() => {
     setName(segment.name)
@@ -108,6 +119,7 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
           <InputGroup
             className='mb-0'
             title='Name*'
+            disabled={readOnly}
             value={name}
             inputProps={{
               className: 'full-width',
@@ -127,6 +139,7 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
           <InputGroup
             className='mb-0'
             title='Description'
+            disabled={readOnly}
             value={description}
             inputProps={{ className: 'full-width' }}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,7 +149,7 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
             placeholder="e.g. 'People who have spent over $100' "
           />
           {!!updateError && <ErrorMessage error={updateError} />}
-          {isDirty && (
+          {isDirty && !readOnly && (
             <div className='text-right'>
               <Button disabled={!name || isUpdating} onClick={save}>
                 {isUpdating ? 'Saving...' : 'Save Changes'}
@@ -176,17 +189,15 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
           {isSyncing && (
             <div className='d-flex flex-column mx-0 gap-1'>
               <div className='fs-small text-secondary'>
-                {appliedCount.toLocaleString()} of{' '}
-                {progressTotal.toLocaleString()} applied
+                {syncDone.toLocaleString()} of {syncTotal.toLocaleString()}{' '}
+                applied
               </div>
               <div className='cohort-segment-detail__progress-track'>
                 <div
                   className='cohort-segment-detail__progress-bar bg-surface-action'
                   style={{
                     width: `${
-                      progressTotal
-                        ? Math.round((appliedCount / progressTotal) * 100)
-                        : 0
+                      syncTotal ? Math.round((syncDone / syncTotal) * 100) : 0
                     }%`,
                   }}
                 />
@@ -194,12 +205,14 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
             </div>
           )}
         </div>
-        <CohortCsvSync
-          cohortId={cohort.id}
-          environmentApiKey={cohort.environment_api_key}
-          projectId={projectId}
-          isSyncing={isSyncing}
-        />
+        {!readOnly && (
+          <CohortCsvSync
+            cohortId={cohort.id}
+            environmentApiKey={cohort.environment_api_key}
+            projectId={projectId}
+            isSyncing={isSyncing}
+          />
+        )}
       </div>
     </div>
   )
