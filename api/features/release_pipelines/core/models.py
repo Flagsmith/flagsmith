@@ -265,7 +265,7 @@ class PhasedRolloutState(LifecycleModelMixin, models.Model):  # type: ignore[mis
     is_rollout_complete = models.BooleanField(default=False)
     last_updated_at = models.DateTimeField(auto_now=True)
 
-    @hook(BEFORE_CREATE)  # type: ignore[misc]
+    @hook(BEFORE_CREATE)
     def set_initial_split(self) -> None:
         if self.current_split is None:
             self.current_split = self.initial_split
