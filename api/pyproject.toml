@@ -132,8 +132,6 @@ dev = [
     "diff-cover>=10.1.0,<11.0.0",
     "django-debug-toolbar",
     "ipython>=9.10.0,<10.0.0",
-    # imported directly by trust_relationships, so declared rather than
-    # relied upon transitively
     "pyjwt>=2.13.0"
 ]
 
