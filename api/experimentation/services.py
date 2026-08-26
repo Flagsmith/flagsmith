@@ -180,11 +180,12 @@ def ensure_flagsmith_warehouse_connection(
         return None
 
     try:
-        return WarehouseConnection.objects.create(
+        connection: WarehouseConnection = WarehouseConnection.objects.create(
             environment=environment,
             warehouse_type=WarehouseType.FLAGSMITH,
             name="Flagsmith",
         )
+        return connection
     except IntegrityError:
         return None
 
