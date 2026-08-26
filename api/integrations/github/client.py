@@ -242,6 +242,9 @@ def fetch_github_repositories(
             "full_name": i["full_name"],
             "id": i["id"],
             "name": i["name"],
+            # The owner login is needed to derive OIDC audiences for GitHub
+            # Actions trust relationships.
+            "owner": {"login": i["owner"]["login"]},
         }
         for i in json_response["repositories"]
     ]

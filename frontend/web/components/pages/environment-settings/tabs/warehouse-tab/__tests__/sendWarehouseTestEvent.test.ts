@@ -28,6 +28,7 @@ describe('sendWarehouseTestEvent', () => {
         defaultFlags: {},
         enableEvents: true,
         environmentID: 'env-key-123',
+        identity: 'test_warehouse_user',
         preventFetch: true,
       }),
     )

@@ -1,0 +1,88 @@
+name: Notify Slack of a deploy
+description: Post a deploy notification to a Slack incoming webhook, prompting a smoke test.
+
+inputs:
+  webhook_url:
+    description: The Slack incoming webhook to post the notification to.
+    required: true
+  service:
+    description: The name of the deployed service, e.g. Frontend.
+    required: true
+  app_url:
+    description: The URL of the deployed application, linked from the notification.
+    required: true
+  environment:
+    description: The environment that was deployed to.
+    required: false
+    default: production
+
+runs:
+  using: composite
+
+  steps:
+    - name: Post to Slack
+      shell: bash
+      env:
+        SLACK_WEBHOOK_URL: ${{ inputs.webhook_url }}
+        SERVICE: ${{ inputs.service }}
+        APP_URL: ${{ inputs.app_url }}
+        ENVIRONMENT: ${{ inputs.environment }}
+        COMMIT_SHA: ${{ github.sha }}
+        ACTOR: ${{ github.actor }}
+        WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # jq builds the payload so every value is escaped for us, rather than
+      # interpolated into a JSON heredoc.
+      run: |
+        jq -n \
+          --arg service "$SERVICE" \
+          --arg environment "$ENVIRONMENT" \
+          --arg short_sha "${COMMIT_SHA:0:7}" \
+          --arg actor "$ACTOR" \
+          --arg app_url "$APP_URL" \
+          --arg workflow_url "$WORKFLOW_URL" \
+          '($environment | (.[0:1] | ascii_upcase) + .[1:]) as $env_name |
+          {
+            # Slack honours username on this webhook but ignores icon_emoji.
+            # The avatar comes from the icon set on the Slack app itself.
+            username: "\($service) Deploy",
+            text: "🚀 \($service) deployed to \($environment): smoke test required",
+            blocks: [
+              {
+                type: "header",
+                text: { type: "plain_text", text: "🚀 \($service) deployed to \($environment)" }
+              },
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: "🧪 *\($env_name) smoke test required*\n\nPlease verify the application directly in \($environment)."
+                }
+              },
+              {
+                type: "section",
+                fields: [
+                  { type: "mrkdwn", text: "*Commit:*\n\($short_sha)" },
+                  { type: "mrkdwn", text: "*Deployed by:*\n@\($actor)" }
+                ]
+              },
+              {
+                type: "actions",
+                elements: [
+                  {
+                    type: "button",
+                    text: { type: "plain_text", text: "Open \($env_name)" },
+                    url: $app_url
+                  },
+                  {
+                    type: "button",
+                    text: { type: "plain_text", text: "View GitHub Actions" },
+                    url: $workflow_url
+                  }
+                ]
+              }
+            ]
+          }' \
+          | curl --fail-with-body --connect-timeout 10 --max-time 30 -X POST \
+              -H 'Content-Type: application/json' \
+              --data @- \
+              "$SLACK_WEBHOOK_URL"

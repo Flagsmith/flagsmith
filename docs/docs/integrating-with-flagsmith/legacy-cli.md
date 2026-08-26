@@ -9,9 +9,31 @@ unlisted: true
 :::warning
 
 The npm-based CLI (`@flagsmith/cli`) is deprecated and no longer maintained. Use the new
-[Flagsmith CLI](/integrating-with-flagsmith/CLI) instead.
+[Flagsmith CLI](/integrating-with-flagsmith/CLI) instead — see [Migrating to the new CLI](#migrating-to-the-new-cli).
 
 :::
+
+## Migrating to the new CLI
+
+The legacy CLI's `flagsmith get` command is reimplemented as `flagsmith eval --js`:
+
+```bash
+# Before
+FLAGSMITH_ENVIRONMENT=<key> flagsmith get
+
+# After
+FLAGSMITH_ENVIRONMENT_KEY=<key> flagsmith eval --js > flags.json
+```
+
+The options map as follows:
+
+| Legacy CLI                       | New CLI                                                                         |
+| -------------------------------- | ------------------------------------------------------------------------------- |
+| `ENVIRONMENT` argument           | `--environment <key>`, or `flagsmith init` to bind the directory                |
+| `FLAGSMITH_ENVIRONMENT` variable | `FLAGSMITH_ENVIRONMENT_KEY`                                                     |
+| `-o, --output <file>`            | Redirect stdout: `> flags.json`                                                 |
+| `-a, --api <url>`                | `--sdk-api-url <url>` or `FLAGSMITH_SDK_API_URL`, without the `/api/v1/` suffix |
+| `-i, --identity <identity>`      | `--identity <identity>`                                                         |
 
 ## Installation
 

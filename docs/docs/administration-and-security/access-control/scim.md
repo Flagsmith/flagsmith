@@ -18,7 +18,7 @@ With SCIM, you can:
 
 - Create Flagsmith users ahead of their first login, so they already have the right group memberships and permissions
   waiting for them.
-- Remove users from your Flagsmith organisation when they are deprovisioned in your identity provider.
+- Deactivate or remove users from your Flagsmith organisation when they are deprovisioned in your identity provider.
 - Sync group membership so that adding or removing a user from a group in your identity provider is reflected in
   Flagsmith automatically.
 
@@ -30,6 +30,8 @@ provisioning (which users and groups exist in Flagsmith, and who belongs to what
 Flagsmith's SCIM 2.0 API supports:
 
 - Creating users.
+- Deactivating and reactivating users through the `active` attribute. See [User lifecycle](#user-lifecycle) for what is
+  and is not retained.
 - Deleting users. See [User lifecycle](#user-lifecycle) for what is and is not removed.
 - Pushing groups: create and update [permission groups](/administration-and-security/access-control/rbac#groups) and
   their membership, and delete groups.
@@ -37,7 +39,6 @@ Flagsmith's SCIM 2.0 API supports:
 
 Flagsmith does not support:
 
-- Deactivating users through the `active` attribute. Use DELETE requests to deprovision users instead.
 - Profile sourcing, `/Me`, `/Bulk`, sorting, and ETag concurrency control.
 
 ## Prerequisites
@@ -69,24 +70,28 @@ When your identity provider deprovisions a user by sending a DELETE request:
    [permission groups](/administration-and-security/access-control/rbac#groups) in that organisation.
 2. The user's data (audit log entries, change request history) is preserved.
 
-:::caution
+When your identity provider deprovisions a user by sending a PUT or a PATCH request with `active: false`:
 
-Deprovisioning is supported through DELETE requests only. Flagsmith does not act on the SCIM `active` attribute.
-
-:::
+1. The user can still log in to Flagsmith, but cannot access the organisation, and no longer sees it in their
+   organisation picker.
+2. The membership no longer counts towards your plan's seat limit.
+3. Their role, project and environment permissions, and
+   [permission group](/administration-and-security/access-control/rbac#groups) memberships are all retained.
+4. The membership can be reactivated by sending a PUT or a PATCH request with `active: true`.
 
 ### User attributes
 
 Flagsmith reads the following attributes from SCIM user requests:
 
-| Attribute         | Required | Maps to       |
-| ----------------- | -------- | ------------- |
-| `userName`        | Yes      | Email address |
-| `name.givenName`  | No       | First name    |
-| `name.familyName` | No       | Last name     |
+| Attribute         | Required | Maps to                        |
+| ----------------- | -------- | ------------------------------ |
+| `userName`        | Yes      | Email address                  |
+| `name.givenName`  | No       | First name                     |
+| `name.familyName` | No       | Last name                      |
+| `active`          | No       | Organisation membership status |
 
 All other attributes are ignored. If your identity provider lets you choose which attributes to send, sending only the
-three above keeps your configuration simpler and avoids implying that Flagsmith stores data it does not.
+four above keeps your configuration simpler and avoids implying that Flagsmith stores data it does not.
 
 ## Group lifecycle
 
@@ -172,10 +177,13 @@ These steps are for the Flagsmith application from the Okta Integration Network 
 1. On the "Provisioning" tab, select "Integration" and click "Edit". Tick "Enable API integration" and paste your SCIM
    bearer token into **API Token**.
 1. Click "Test API Credentials" to verify the connection, then save.
-1. Select "To App" and click "Edit", then enable "Create Users" and "Update User Attributes".
+1. Select "To App" and click "Edit", then enable "Create Users", "Update User Attributes" and "Deactivate Users".
 
-To deprovision a user, unassign them from the application in Okta. Okta sends a DELETE request and Flagsmith removes the
-user from your organisation.
+To deactivate a user, deactivate them in Okta or unassign them from the application. Reactivating them in Okta restores
+their access.
+
+To remove a user entirely, delete them from Okta. Okta sends a DELETE request and Flagsmith removes the user from your
+organisation along with their permissions.
 
 To sync groups, use the "Push Groups" tab to select the Okta groups you want to push to Flagsmith.
 
@@ -232,7 +240,8 @@ endpoints as defined by the SCIM 2.0 specification.
 
 ### Deprovisioned users still appear in the organisation
 
-- Check that your identity provider is sending a DELETE request when deprovisioning a user. Flagsmith does not act on
-  the `active` attribute, so a PATCH request setting `active` to `false` does not remove the user — it returns a 501
-  response. In Okta, this means removing the user from the application rather than deactivating them.
-- Some identity providers require explicit configuration to send deprovisioning events.
+- Deactivated users are intentionally retained. They keep their `active: false` membership so they can be reactivated
+  later, and they do not count towards your seat limit. If you want the membership gone entirely, your identity provider
+  must send a DELETE request.
+- Check that your identity provider is configured to send deprovisioning events at all — in Okta, for example,
+  "Deactivate Users" must be enabled under "Provisioning to App".

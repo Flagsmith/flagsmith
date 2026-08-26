@@ -1,5 +1,118 @@
 # Changelog
 
+## [2.266.0](https://github.com/Flagsmith/flagsmith/compare/v2.265.0...v2.266.0) (2026-08-26)
+
+
+### Features
+
+* cohort CSV sync endpoint and cohort summary on segments ([#8352](https://github.com/Flagsmith/flagsmith/issues/8352)) ([b9b32ba](https://github.com/Flagsmith/flagsmith/commit/b9b32ba4276163276cc02160319eb699d814c28f))
+* **cohorts:** Amplitude cohort sync endpoints and sync keys ([#8290](https://github.com/Flagsmith/flagsmith/issues/8290)) ([cc20443](https://github.com/Flagsmith/flagsmith/commit/cc204436c1d6a94de8e99df81d2006b5320c8642))
+* create segment from CSV drawer ([#8283](https://github.com/Flagsmith/flagsmith/issues/8283)) ([0102a0c](https://github.com/Flagsmith/flagsmith/commit/0102a0cda47426d265ecf06fd1f53dd323fc9b53))
+* Mixpanel cohort sync webhook ([#8338](https://github.com/Flagsmith/flagsmith/issues/8338)) ([c25dc8c](https://github.com/Flagsmith/flagsmith/commit/c25dc8c0fda0cd1fd7482cf1f1fcfe68e4db296a))
+* **onboarding:** gradual rollout quest screen ([#8286](https://github.com/Flagsmith/flagsmith/issues/8286)) ([2c313e0](https://github.com/Flagsmith/flagsmith/commit/2c313e0a9c6650457221584499d641b6d0d17cbf))
+* **SCIM:** Support deactivated user membership ([#8370](https://github.com/Flagsmith/flagsmith/issues/8370)) ([c0b2a31](https://github.com/Flagsmith/flagsmith/commit/c0b2a316e234ddf58be01f1e95acaf82546a2cff))
+* **usage:** Show usage against the plan limit for the current billing period ([#8320](https://github.com/Flagsmith/flagsmith/issues/8320)) ([763938b](https://github.com/Flagsmith/flagsmith/commit/763938ba33e636d23125126231774737672e1e81))
+* wire CSV segments to the cohorts API ([#8295](https://github.com/Flagsmith/flagsmith/issues/8295)) ([d0485cc](https://github.com/Flagsmith/flagsmith/commit/d0485ccfdd03fbb2618b8b1171af2fa9c8f628a4))
+
+
+### Bug Fixes
+
+* **deep-link:** feature value renders as [object Object] ([#8341](https://github.com/Flagsmith/flagsmith/issues/8341)) ([ac56c47](https://github.com/Flagsmith/flagsmith/commit/ac56c47c48953339293e850d1130b855cd4d9c77))
+* identify user before sending warehouse test event ([#8356](https://github.com/Flagsmith/flagsmith/issues/8356)) ([3ff27da](https://github.com/Flagsmith/flagsmith/commit/3ff27da1a604d495f61204cc8833db01110c46ab))
+* **identities:** label the rows in the identity override selector ([#8372](https://github.com/Flagsmith/flagsmith/issues/8372)) ([0be48ea](https://github.com/Flagsmith/flagsmith/commit/0be48ea8cec38089964a5d3f2a6360bdc05872d2))
+* **identities:** multivariate override editor hides the identity's override value ([#8279](https://github.com/Flagsmith/flagsmith/issues/8279)) ([2e5ea89](https://github.com/Flagsmith/flagsmith/commit/2e5ea89025370047ba9caeeb3589cbc9178a99b1))
+* keep experiment refresh state until requests settle ([#8351](https://github.com/Flagsmith/flagsmith/issues/8351)) ([0f81888](https://github.com/Flagsmith/flagsmith/commit/0f81888498f2168f4efc0bd2e83da8b9d969ba3c))
+* treat stale experiment refresh requests as settled ([#8347](https://github.com/Flagsmith/flagsmith/issues/8347)) ([66b630a](https://github.com/Flagsmith/flagsmith/commit/66b630aebf69bc880c41f90a837ffbca0007434f))
+
+
+### Refactoring
+
+* **featureStateToValue:** extract into a Flux-free module ([#8344](https://github.com/Flagsmith/flagsmith/issues/8344)) ([0212201](https://github.com/Flagsmith/flagsmith/commit/0212201961af0a7bb0e0cd1da4a11b38a5c4f293))
+
+## [2.265.0](https://github.com/Flagsmith/flagsmith/compare/v2.264.0...v2.265.0) (2026-08-21)
+
+
+### Features
+
+* Add EMAIL_FRONTEND_DOMAIN override to Djoser ([#8329](https://github.com/Flagsmith/flagsmith/issues/8329)) ([fe16f9b](https://github.com/Flagsmith/flagsmith/commit/fe16f9bd98e1292b65b516e84d2c78b015a5b985))
+* **OIDC:** stack the issuer and audience in one column ([#8324](https://github.com/Flagsmith/flagsmith/issues/8324)) ([34b9e67](https://github.com/Flagsmith/flagsmith/commit/34b9e67814b5b021327f4dd727b039e3ec85f407))
+
+
+### Bug Fixes
+
+* **ci:** Update API Flagsmith Defaults fails with jq compile errors ([#8333](https://github.com/Flagsmith/flagsmith/issues/8333)) ([4eeec59](https://github.com/Flagsmith/flagsmith/commit/4eeec597f04503f4e81392d109edaacd00aa1e54))
+* **e2e:** decide the signup flow from the redirect ([#8335](https://github.com/Flagsmith/flagsmith/issues/8335)) ([227fce1](https://github.com/Flagsmith/flagsmith/commit/227fce16fa0978583010a8eb3100b3cdd5a2d644))
+* **github:** Trust relationship cannot be created for a repository picked from the list ([#8332](https://github.com/Flagsmith/flagsmith/issues/8332)) ([74eace8](https://github.com/Flagsmith/flagsmith/commit/74eace836c5f310e0694795a2505384e52286f74))
+
+
+### Dependency Updates
+
+* **api:** update dependency django to v5.2.17 [security] ([#8326](https://github.com/Flagsmith/flagsmith/issues/8326)) ([5a52ccb](https://github.com/Flagsmith/flagsmith/commit/5a52ccbdbba5a0956abbf4921205ca22cdea75ab))
+* **frontend:** Bump `nanoid` from 3.3.16 to 3.3.18, `fast-uri` from 3.1.4. to 3.1.5, `brace-expansion` from 1.1.15/2.1.x/5.0.x to 1.1.18/2.1.4/5.0.9 ([#8342](https://github.com/Flagsmith/flagsmith/issues/8342)) ([b62cc1f](https://github.com/Flagsmith/flagsmith/commit/b62cc1fb5a3210baed45d97598289131791da64d))
+
+
+### CI
+
+* Migrate update-flagsmith-environment to Flagsmith/setup-cli action ([#8331](https://github.com/Flagsmith/flagsmith/issues/8331)) ([41e2c4e](https://github.com/Flagsmith/flagsmith/commit/41e2c4ebb701e80d2208ef4d7b9aaf4dbb77e53f))
+
+
+### Docs
+
+* **OIDC:** Document OIDC trust relationships and token exchange ([#8045](https://github.com/Flagsmith/flagsmith/issues/8045)) ([5e89680](https://github.com/Flagsmith/flagsmith/commit/5e8968055ade4649202165ae6aa274a33fe03027))
+
+## [2.264.0](https://github.com/Flagsmith/flagsmith/compare/v2.263.0...v2.264.0) (2026-08-19)
+
+
+### Features
+
+* **OIDC:** adjusts for the trust relationships UI ([#8313](https://github.com/Flagsmith/flagsmith/issues/8313)) ([aedcac7](https://github.com/Flagsmith/flagsmith/commit/aedcac7cdfadf5094777e601e8a99d355b430b1f))
+
+
+### Bug Fixes
+
+* First evaluation never reported for environments with compressed documents ([#8323](https://github.com/Flagsmith/flagsmith/issues/8323)) ([bf67ab5](https://github.com/Flagsmith/flagsmith/commit/bf67ab517467ca48bd521b33b9109731e00ef014))
+* **onboarding:** let segment overrides match the entry decision ([#8288](https://github.com/Flagsmith/flagsmith/issues/8288)) ([b563f09](https://github.com/Flagsmith/flagsmith/commit/b563f09f7148b0d64d9ad7b986cf5889e4ef9c86))
+* **value-editor:** restore the border on JSON values ([#8285](https://github.com/Flagsmith/flagsmith/issues/8285)) ([b367023](https://github.com/Flagsmith/flagsmith/commit/b3670237f47d42036b389630d0a11a9f6946b8d6))
+
+## [2.263.0](https://github.com/Flagsmith/flagsmith/compare/v2.262.0...v2.263.0) (2026-08-19)
+
+
+### Features
+
+* **__future__:** Delete a flag's segment override ([#8307](https://github.com/Flagsmith/flagsmith/issues/8307)) ([b3b2b31](https://github.com/Flagsmith/flagsmith/commit/b3b2b31bb5b88f4911b80abc97c31b1c2f0f810e))
+* **__future__:** Experimental new flag endpoint ([#8102](https://github.com/Flagsmith/flagsmith/issues/8102)) ([a013d7b](https://github.com/Flagsmith/flagsmith/commit/a013d7b4d30ed51dcb45f5419b5304705ef029f2))
+* **cohorts:** add environment cohort CRUD API ([#8248](https://github.com/Flagsmith/flagsmith/issues/8248)) ([5737118](https://github.com/Flagsmith/flagsmith/commit/57371184289d4b9d533185cdbd67067b3a59b928))
+* **cohorts:** apply cohort membership to Postgres identities ([#8315](https://github.com/Flagsmith/flagsmith/issues/8315)) ([65ce12c](https://github.com/Flagsmith/flagsmith/commit/65ce12c16257363612492bbd9f79e91034874158))
+* create segment sources fake door modal ([#8272](https://github.com/Flagsmith/flagsmith/issues/8272)) ([dc99d65](https://github.com/Flagsmith/flagsmith/commit/dc99d654ae6649a44912bf52f2900cdcbb94e7a2))
+* **identities:** evaluate system traits when matching segments for edge identities ([#8266](https://github.com/Flagsmith/flagsmith/issues/8266)) ([f977732](https://github.com/Flagsmith/flagsmith/commit/f977732e45190a9d09f762f95e3536e9c435de29))
+* load HubSpot script on staging ([#8293](https://github.com/Flagsmith/flagsmith/issues/8293)) ([75c1ad9](https://github.com/Flagsmith/flagsmith/commit/75c1ad9389aa877f6dd0bd008a9abd5818ba5276))
+* **OIDC:** Add OIDC token exchange endpoint ([#8043](https://github.com/Flagsmith/flagsmith/issues/8043)) ([14e860c](https://github.com/Flagsmith/flagsmith/commit/14e860cc14ecfd4d8bb430e20b5c78cc68139402))
+* **OIDC:** Add Trust Relationship CRUD API ([#8042](https://github.com/Flagsmith/flagsmith/issues/8042)) ([8b4d846](https://github.com/Flagsmith/flagsmith/commit/8b4d8466e14c9d5c08739dfe94eae6741f2cf56c))
+* **OIDC:** API Access tab with trust relationships UI ([#8044](https://github.com/Flagsmith/flagsmith/issues/8044)) ([b7676e4](https://github.com/Flagsmith/flagsmith/commit/b7676e4946e37cd35a4e7cc111cd7f1ffc0218fb))
+* **Segments:** Write rules as plain JSON ([#8245](https://github.com/Flagsmith/flagsmith/issues/8245)) ([8aca57e](https://github.com/Flagsmith/flagsmith/commit/8aca57e5f8664d631d808969d2ff5d2bca52b819))
+
+
+### Bug Fixes
+
+* **api:** update-traits returns 400 for malformed request body ([#8199](https://github.com/Flagsmith/flagsmith/issues/8199)) ([fccb632](https://github.com/Flagsmith/flagsmith/commit/fccb632aa106e009c863ddf9f6dedae43f68ef9e))
+* **edge:** tolerate null system_traits in set_system_trait ([#8270](https://github.com/Flagsmith/flagsmith/issues/8270)) ([6c88198](https://github.com/Flagsmith/flagsmith/commit/6c8819891f1266f7eea431ac041e97ae35b041a0))
+* **experimentation:** retry experiment computes on transient ClickHouse errors ([#8273](https://github.com/Flagsmith/flagsmith/issues/8273)) ([a62f3e5](https://github.com/Flagsmith/flagsmith/commit/a62f3e50b2abad79a1837af2befb6bfc55d3ef41))
+* **OAuth:** `flagsmith login` never completes for a new signup ([#8281](https://github.com/Flagsmith/flagsmith/issues/8281)) ([0ef78e8](https://github.com/Flagsmith/flagsmith/commit/0ef78e8a656f7dd3e3d5478fefd8bec0e19e219f))
+* remove segment_source_beta_requested fake door event ([#8291](https://github.com/Flagsmith/flagsmith/issues/8291)) ([608daaf](https://github.com/Flagsmith/flagsmith/commit/608daafd385ac435faa8ab87b4cf89a8676aff15))
+* **Segments:** delete_segment task crashes when segment already deleted ([#8136](https://github.com/Flagsmith/flagsmith/issues/8136)) ([79fc54c](https://github.com/Flagsmith/flagsmith/commit/79fc54cae298b7b8d9762f5192a463a63aa1fea4))
+* **Segments:** Flaky test fails because of unspecified Condition ordering ([#8284](https://github.com/Flagsmith/flagsmith/issues/8284)) ([dd04ba6](https://github.com/Flagsmith/flagsmith/commit/dd04ba6003b4a0ed768a580aa28588ea2e8f5fdb))
+
+
+### Dependency Updates
+
+* **frontend:** update dependency dompurify to v3.4.13 [security] ([#8246](https://github.com/Flagsmith/flagsmith/issues/8246)) ([15ab4ad](https://github.com/Flagsmith/flagsmith/commit/15ab4ad6406d63689cfc33fc18cb8a4a1768785c))
+
+
+### Docs
+
+* **segments:** Segment membership inspection ([#7399](https://github.com/Flagsmith/flagsmith/issues/7399)) ([bcce4d9](https://github.com/Flagsmith/flagsmith/commit/bcce4d92cdda5baf557e3f8ce290551eb3d29354))
+* Update docs custom ssr to use new instance instead of singleton ([#7653](https://github.com/Flagsmith/flagsmith/issues/7653)) ([4b39c43](https://github.com/Flagsmith/flagsmith/commit/4b39c43304a0b24482dac1e9fec12f558851b366))
+
 ## [2.262.0](https://github.com/Flagsmith/flagsmith/compare/v2.261.0...v2.262.0) (2026-08-11)
 
 

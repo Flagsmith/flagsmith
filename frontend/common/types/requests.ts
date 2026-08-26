@@ -5,6 +5,7 @@ import {
   FeatureStateValue,
   ImportStrategy,
   Approval,
+  Metadata,
   MultivariateOption,
   SAMLConfiguration,
   Segment,
@@ -33,6 +34,7 @@ import {
   TagStrategy,
   FeatureType,
   LifecycleStage,
+  TrustRelationshipClaimRule,
 } from './responses'
 import { UtmsType } from './utms'
 
@@ -73,7 +75,10 @@ export enum PermissionRoleType {
   GRANTED_FOR_TAGS = 'GRANTED_FOR_TAGS',
   NONE = 'NONE',
 }
-export const billingPeriods = [
+export type BillingPeriod = Req['getOrganisationUsage']['billing_period']
+export type PeriodOption = { label: string; value: BillingPeriod }
+
+export const periodOptions: PeriodOption[] = [
   {
     label: 'Current billing period',
     value: 'current_billing_period',
@@ -85,7 +90,7 @@ export const billingPeriods = [
   { label: 'Last 90 days', value: '90_day_period' },
   { label: 'Last 30 days', value: undefined },
 ]
-export const freePeriods = [
+export const rollingPeriodOptions: PeriodOption[] = [
   { label: 'Last 90 days', value: '90_day_period' },
   { label: 'Last 30 days', value: undefined },
 ]
@@ -168,6 +173,26 @@ export type Req = {
   createSegment: {
     projectId: number
     segment: Omit<Segment, 'id' | 'uuid' | 'project'>
+  }
+  createCohort: {
+    environmentApiKey: string
+    projectId: number
+    name: string
+    description?: string
+    metadata?: Metadata[]
+  }
+  deleteCohort: {
+    environmentApiKey: string
+    cohortId: number
+    projectId: number
+  }
+  syncCohortCsv: {
+    environmentApiKey: string
+    cohortId: number
+    projectId: number
+    file: File
+    identifier_column?: number
+    has_header?: boolean
   }
   cloneSegment: {
     projectId: number
@@ -496,7 +521,11 @@ export type Req = {
   getRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   updateRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   deleteRoleMasterApiKey: { org_id: number; role_id: number; id: string }
-  createRoleMasterApiKey: { org_id: number; role_id: number }
+  createRoleMasterApiKey: {
+    org_id: number
+    role_id: number
+    body: { master_api_key: string }
+  }
   getMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
   deleteMasterAPIKeyWithMasterAPIKeyRoles: {
     org_id: number
@@ -504,6 +533,29 @@ export type Req = {
     role_id: number
   }
   getRolesMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
+  getTrustRelationships: { organisation_id: number }
+  createTrustRelationship: {
+    organisation_id: number
+    body: {
+      name: string
+      issuer: string
+      audience: string
+      claim_rules: TrustRelationshipClaimRule[]
+      is_admin: boolean
+    }
+  }
+  updateTrustRelationship: {
+    organisation_id: number
+    id: number
+    body: {
+      name: string
+      issuer: string
+      audience: string
+      claim_rules: TrustRelationshipClaimRule[]
+      is_admin: boolean
+    }
+  }
+  deleteTrustRelationship: { organisation_id: number; id: number }
   createLaunchDarklyProjectImport: {
     project_id: number
     body: {

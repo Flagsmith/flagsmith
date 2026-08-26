@@ -174,6 +174,16 @@ export type SegmentMembersResponse = PagedResponse<SegmentMember> & {
   // Pass as `cursor` to fetch the next page; null when there are no more rows.
   next_cursor: string | null
 }
+export type SegmentCohort = {
+  id: number
+  environment: number
+  environment_api_key: string
+  environment_name: string
+  source_type: 'csv'
+  version: number
+  deletion_requested_at: string | null
+}
+
 export type Segment = {
   id: number
   rules: SegmentRule[]
@@ -184,6 +194,7 @@ export type Segment = {
   feature?: number
   metadata: Metadata[] | []
   membership_counts?: SegmentMembership[]
+  cohort?: SegmentCohort | null
 }
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
@@ -514,6 +525,7 @@ export type Subscription = {
   customer_id: string
   payment_method: string
   notes: string | null
+  has_active_billing_periods: boolean
 }
 
 export type OnboardingVariant = 'control' | 'single_page'
@@ -578,7 +590,7 @@ export type MultivariateFeatureStateValue = {
 export type FeatureStateValue = {
   boolean_value: boolean | null
   float_value?: number | null
-  integer_value?: boolean | null
+  integer_value?: number | null
   string_value: string
   type: 'int' | 'unicode' | 'bool' | 'float'
 }
@@ -994,6 +1006,29 @@ export type Metadata = {
   field_value: string
 }
 
+export type Cohort = {
+  id: number
+  uuid: string
+  name: string
+  description: string | null
+  segment: number
+  source_type: 'csv'
+  version: number
+  created_at: string
+}
+
+export type CohortCsvSyncResult = {
+  version: number
+  added: number
+  removed: number
+  unchanged: number
+  ignored: {
+    empty: number
+    duplicates: number
+    too_long: number
+  }
+}
+
 export type MetadataFieldModelField = {
   id: number
   content_type: number
@@ -1302,9 +1337,29 @@ export type WarehouseConnection = {
   unique_events_count: number | null
 }
 
+export type TrustRelationshipClaimRule = {
+  claim: string
+  values: string[]
+}
+
+export type TrustRelationship = {
+  id: number
+  name: string
+  issuer: string
+  audience: string
+  claim_rules: TrustRelationshipClaimRule[]
+  is_admin: boolean
+  master_api_key_id: string
+  master_api_key_prefix: string
+  created_at: string
+  created_by: number | null
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
+  cohort: Cohort
+  cohortCsvSync: CohortCsvSyncResult
   segmentMembers: SegmentMembersResponse
   auditLogs: PagedResponse<AuditLogItem>
   organisationLicence: {}
@@ -1392,11 +1447,14 @@ export type Res = {
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   roleMasterApiKey: { id: number; master_api_key: string; role: number }
+  trustRelationship: TrustRelationship
+  trustRelationships: PagedResponse<TrustRelationship>
   masterAPIKeyWithMasterAPIKeyRoles: {
     id: string
     prefix: string
     roles: RolePermissionUser[]
   }
+  rolesMasterAPIKeyWithMasterAPIKeyRoles: PagedResponse<Role>
   userWithRoles: PagedResponse<Role>
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>

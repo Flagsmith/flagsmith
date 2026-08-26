@@ -6925,6 +6925,17 @@
               }
             ],
             "readOnly": true
+          },
+          "cohort": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/_SegmentCohort"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true
           }
         },
         "required": [
@@ -6989,6 +7000,15 @@
           "ALL",
           "ANY",
           "NONE"
+        ]
+      },
+      "SourceTypeEnum": {
+        "description": "* `csv` - CSV\n* `amplitude` - Amplitude\n* `mixpanel` - Mixpanel",
+        "type": "string",
+        "enum": [
+          "csv",
+          "amplitude",
+          "mixpanel"
         ]
       },
       "StageAction": {
@@ -7753,9 +7773,57 @@
         "required": [
           "type"
         ]
+      },
+      "_SegmentCohort": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "environment": {
+            "type": "integer"
+          },
+          "environment_api_key": {
+            "type": "string",
+            "readOnly": true
+          },
+          "environment_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/SourceTypeEnum"
+          },
+          "version": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 0
+          },
+          "deletion_requested_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "environment"
+        ]
       }
     },
     "securitySchemes": {
+      "Cohort Sync Key": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "For cohort sync endpoints called by an external cohort source, such as Amplitude."
+      },
+      "Cohort Sync Key (Basic)": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "For cohort sync endpoints called by an external cohort source that can only send Basic credentials, such as Mixpanel. The key is the password; the username is ignored."
+      },
       "Environment API Key": {
         "type": "apiKey",
         "in": "header",

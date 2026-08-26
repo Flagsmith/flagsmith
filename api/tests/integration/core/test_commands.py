@@ -3,7 +3,7 @@ from django.core.management import call_command
 from django.db.models import Model
 from djoser.utils import decode_uid  # type: ignore[import-untyped]
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 
 from organisations.models import (
     Organisation,

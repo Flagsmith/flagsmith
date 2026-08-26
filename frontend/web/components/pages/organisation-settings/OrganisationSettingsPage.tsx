@@ -40,15 +40,20 @@ const OrganisationSettingsPage: FC = () => {
     API.trackPage(Constants.pages.ORGANISATION_SETTINGS)
   }, [])
 
-  // Back-compat: the SAML tab was renamed to SSO. Existing bookmarks and
-  // links pointing at ?tab=saml redirect to ?tab=sso so users land in the
-  // right place.
+  // Back-compat: renamed tabs redirect so existing bookmarks and links land
+  // in the right place (SAML became SSO; the API Keys tab became API Access
+  // with the `keys` slug).
   const history = useHistory()
   const location = useLocation()
   useEffect(() => {
+    const legacyTabs: Record<string, string> = {
+      'api-keys': 'keys',
+      'saml': 'sso',
+    }
     const params = new URLSearchParams(location.search)
-    if (params.get('tab') === 'saml') {
-      params.set('tab', 'sso')
+    const redirectTo = legacyTabs[params.get('tab') || '']
+    if (redirectTo) {
+      params.set('tab', redirectTo)
       history.replace(`${location.pathname}?${params.toString()}`)
     }
   }, [history, location])
@@ -116,7 +121,7 @@ const OrganisationSettingsPage: FC = () => {
       component: <APIKeysTab organisationId={organisation.id} />,
       isVisible: true,
       key: 'keys',
-      label: 'API Keys',
+      label: 'API Access',
     },
     {
       component: <WebhooksTab organisationId={organisation.id} />,
@@ -137,7 +142,12 @@ const OrganisationSettingsPage: FC = () => {
       <PageTitle title='Organisation Settings' />
       <Tabs urlParam='tab' className='mt-0' uncontrolled hideNavOnSingleTab>
         {tabs.map(({ component, key, label }) => (
-          <TabItem key={key} tabLabel={label} data-test={key}>
+          <TabItem
+            key={key}
+            tabLabel={label}
+            tabLabelString={key}
+            data-test={key}
+          >
             {component}
           </TabItem>
         ))}

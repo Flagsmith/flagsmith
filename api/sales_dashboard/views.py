@@ -89,7 +89,9 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
             ),
             num_users=Coalesce(
                 Subquery(
-                    UserOrganisation.objects.filter(organisation_id=OuterRef("pk"))
+                    UserOrganisation.objects.filter(
+                        organisation_id=OuterRef("pk"), is_active=True
+                    )
                     .values("organisation_id")
                     .annotate(count=Count("user_id", distinct=True))
                     .values("count")[:1]
