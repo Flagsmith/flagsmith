@@ -25,7 +25,7 @@ const List: FC<ListProps> = ({ rows }) => {
   const shares = sharesOf(rows.map((row) => row.value))
 
   return (
-    <>
+    <div>
       {rows.map((row, index) => (
         <Row
           key={row.key}
@@ -36,7 +36,7 @@ const List: FC<ListProps> = ({ rows }) => {
           share={shares[index]}
         />
       ))}
-    </>
+    </div>
   )
 }
 
