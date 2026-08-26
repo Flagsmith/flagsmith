@@ -223,11 +223,9 @@ class ValueEditor extends Component {
             </span>
             <BareButton
               disabled={!showFormat}
-              onMouseDown={(e) => {
-                // Keep the editor focused; the click still fires the format.
-                e.preventDefault()
-                e.stopPropagation()
-              }}
+              // Don't blur the editor (which would fire its onBlur commit);
+              // onClick still runs the format.
+              onMouseDown={(e) => e.preventDefault()}
               onClick={this.formatJson}
               className={cx('primary format-action', {
                 'is-visible': showFormat,
