@@ -28542,6 +28542,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/OrganisationSerializerBasic'
           readOnly: true
+        is_active:
+          description: 'Inactive members can still log in, but cannot access the organisation, and do not count towards its seat limit.'
+          type: boolean
+          readOnly: true
       required:
         - role
     UserOrganisationPermissionList:
