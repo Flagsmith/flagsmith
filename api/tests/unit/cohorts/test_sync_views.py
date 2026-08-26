@@ -1041,3 +1041,227 @@ def test_mixpanel_webhook__saas_free_plan__returns_403(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_webhook_add_members__csv_cohort__applies_memberships(
+    cohort: Cohort,
+) -> None:
+    # Given
+    _, plaintext = CohortSyncKey.objects.create_key(
+        name="test key", environment=cohort.environment
+    )
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:webhook-add", kwargs={"pk": str(cohort.uuid)})
+
+    # When
+    response = client.post(
+        url, data={"identifiers": ["user-1", "user-2"]}, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert sorted(
+        CohortMembership.objects.filter(cohort=cohort).values_list(
+            "identifier", "state"
+        )
+    ) == [
+        ("user-1", CohortMembershipState.APPLIED),
+        ("user-2", CohortMembershipState.APPLIED),
+    ]
+    identity = Identity.objects.get(environment=cohort.environment, identifier="user-1")
+    assert identity.system_traits == {cohort.system_trait_key: True}
+
+
+def test_webhook_remove_members__applied_member__removes_membership_and_trait(
+    cohort: Cohort,
+) -> None:
+    # Given
+    Identity.objects.create(
+        environment=cohort.environment,
+        identifier="member",
+        system_traits={cohort.system_trait_key: True},
+    )
+    CohortMembership.objects.create(
+        cohort=cohort, identifier="member", state=CohortMembershipState.APPLIED
+    )
+    _, plaintext = CohortSyncKey.objects.create_key(
+        name="test key", environment=cohort.environment
+    )
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:webhook-remove", kwargs={"pk": str(cohort.uuid)})
+
+    # When
+    response = client.post(url, data={"identifiers": ["member"]}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert not CohortMembership.objects.filter(cohort=cohort).exists()
+    identity = Identity.objects.get(environment=cohort.environment, identifier="member")
+    assert identity.system_traits == {}
+
+
+def test_webhook_add_members__non_csv_cohort__returns_404(
+    cohort_sync_key: _KeyAndPlaintext,
+    amplitude_cohort: Cohort,
+) -> None:
+    # Given
+    _, plaintext = cohort_sync_key
+    client = _authenticated_client(plaintext)
+    url = reverse(
+        "api-v1:cohort-sync:webhook-add", kwargs={"pk": str(amplitude_cohort.uuid)}
+    )
+
+    # When
+    response = client.post(url, data={"identifiers": ["user-1"]}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_webhook_add_members__other_environment_key__returns_404(
+    cohort: Cohort,
+) -> None:
+    # Given - a key scoped to a different environment than the cohort's
+    other_environment = Environment.objects.create(
+        name="Other environment", project=cohort.environment.project
+    )
+    _, plaintext = CohortSyncKey.objects.create_key(
+        name="other key", environment=other_environment
+    )
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:webhook-add", kwargs={"pk": str(cohort.uuid)})
+
+    # When
+    response = client.post(url, data={"identifiers": ["user-1"]}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert not CohortMembership.objects.exists()
+
+
+def test_webhook_add_members__identifier_over_1024_bytes__returns_400(
+    cohort: Cohort,
+) -> None:
+    # Given - 512 three-byte characters: few characters, too many bytes
+    multibyte_identifier = "€" * 512
+    _, plaintext = CohortSyncKey.objects.create_key(
+        name="test key", environment=cohort.environment
+    )
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:webhook-add", kwargs={"pk": str(cohort.uuid)})
+
+    # When
+    response = client.post(
+        url, data={"identifiers": [multibyte_identifier]}, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "1024 bytes" in str(response.json())
+    assert not CohortMembership.objects.exists()
+
+
+def test_webhook_add_members__over_10000_identifiers__returns_400(
+    cohort: Cohort,
+) -> None:
+    # Given
+    _, plaintext = CohortSyncKey.objects.create_key(
+        name="test key", environment=cohort.environment
+    )
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:webhook-add", kwargs={"pk": str(cohort.uuid)})
+
+    # When
+    response = client.post(
+        url,
+        data={"identifiers": [f"user-{i}" for i in range(10001)]},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert not CohortMembership.objects.exists()
+
+
+def test_webhook_add_members__empty_identifiers__returns_400(
+    cohort: Cohort,
+) -> None:
+    # Given
+    _, plaintext = CohortSyncKey.objects.create_key(
+        name="test key", environment=cohort.environment
+    )
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:webhook-add", kwargs={"pk": str(cohort.uuid)})
+
+    # When
+    response = client.post(url, data={"identifiers": []}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_webhook_add_members__malformed_uuid__returns_404(
+    cohort: Cohort,
+) -> None:
+    # Given
+    _, plaintext = CohortSyncKey.objects.create_key(
+        name="test key", environment=cohort.environment
+    )
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:webhook-add", kwargs={"pk": "not-a-uuid"})
+
+    # When
+    response = client.post(url, data={"identifiers": ["user-1"]}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_webhook_add_members__deletion_requested_cohort__returns_404(
+    cohort: Cohort,
+) -> None:
+    # Given
+    cohort.deletion_requested_at = timezone.now()
+    cohort.save()
+    _, plaintext = CohortSyncKey.objects.create_key(
+        name="test key", environment=cohort.environment
+    )
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:webhook-add", kwargs={"pk": str(cohort.uuid)})
+
+    # When
+    response = client.post(url, data={"identifiers": ["user-1"]}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_webhook_add_members__missing_credentials__returns_401(
+    cohort: Cohort,
+) -> None:
+    # Given
+    url = reverse("api-v1:cohort-sync:webhook-add", kwargs={"pk": str(cohort.uuid)})
+
+    # When
+    response = APIClient().post(url, data={"identifiers": ["user-1"]}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.saas_mode
+def test_webhook_add_members__saas_free_plan__returns_403(
+    cohort: Cohort,
+) -> None:
+    # Given
+    _, plaintext = CohortSyncKey.objects.create_key(
+        name="test key", environment=cohort.environment
+    )
+    client = _authenticated_client(plaintext)
+    url = reverse("api-v1:cohort-sync:webhook-add", kwargs={"pk": str(cohort.uuid)})
+
+    # When
+    response = client.post(url, data={"identifiers": ["user-1"]}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN

@@ -1,6 +1,7 @@
 import csv
 import io
 import typing
+from uuid import UUID
 
 import structlog
 from django.db import transaction
@@ -189,6 +190,25 @@ def create_cohort_for_source(
             f"(via {CohortSourceType(source_type).label} cohort sync)"
         ),
     )
+    return cohort
+
+
+def get_active_cohort(
+    *,
+    environment: "Environment",
+    source_type: CohortSourceType,
+    uuid: str,
+) -> Cohort | None:
+    try:
+        cohort_uuid = UUID(uuid)
+    except ValueError:
+        return None
+    cohort: Cohort | None = Cohort.objects.filter(
+        uuid=cohort_uuid,
+        environment=environment,
+        source_type=source_type,
+        deletion_requested_at__isnull=True,
+    ).first()
     return cohort
 
 
