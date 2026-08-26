@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.267.0](https://github.com/Flagsmith/flagsmith/compare/v2.266.0...v2.267.0) (2026-08-26)
+
+
+### Features
+
+* **usage:** break usage down by request type or SDK ([#8343](https://github.com/Flagsmith/flagsmith/issues/8343)) ([2fc223a](https://github.com/Flagsmith/flagsmith/commit/2fc223afc20b588fa608cdfebe2a057f4c23087d))
+
+
+### Bug Fixes
+
+* **segments:** Segment Change Requests bypassable via segment deletion ([#8358](https://github.com/Flagsmith/flagsmith/issues/8358)) ([56b6579](https://github.com/Flagsmith/flagsmith/commit/56b6579ec53957961f2d66177649386f07291741))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.13.0,&lt;1 ([#8384](https://github.com/Flagsmith/flagsmith/issues/8384)) ([bed0b2f](https://github.com/Flagsmith/flagsmith/commit/bed0b2f3f4d291baa32c28bde34470e613fe81ee))
+* **api:** Upgrade pytest to 9.0.3 and swap in pytest-lazy-fixtures ([#8375](https://github.com/Flagsmith/flagsmith/issues/8375)) ([0091e0c](https://github.com/Flagsmith/flagsmith/commit/0091e0c8ccdcbc2ef9c8f9c85fafe0d6e28a941e))
+
 ## [2.266.0](https://github.com/Flagsmith/flagsmith/compare/v2.265.0...v2.266.0) (2026-08-26)
 
 
