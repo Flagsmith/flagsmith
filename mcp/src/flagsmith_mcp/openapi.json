@@ -6936,6 +6936,11 @@
               }
             ],
             "readOnly": true
+          },
+          "has_overrides": {
+            "description": "Whether any feature override points at this segment, counting overrides that are live now or scheduled to go live.",
+            "type": "boolean",
+            "readOnly": true
           }
         },
         "required": [

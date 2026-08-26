@@ -2,12 +2,48 @@ import typing
 import uuid
 
 from django.db import models, transaction
+from django.db.models import QuerySet
 from django.utils import timezone
 
 from core.dataclasses import AuthorData
+from features.models import FeatureSegment
+from features.versioning.models import EnvironmentFeatureVersion
 
 if typing.TYPE_CHECKING:
     from segments.models import Segment
+
+
+def get_overrides_in_effect() -> "QuerySet[FeatureSegment]":
+    """
+    Get the feature overrides that are live now or scheduled to go live.
+
+    Returns a global queryset; narrow the result down with additional filters.
+    """
+    # Without v2 versioning, a feature segment is the current state, so it
+    # counts unless every feature state on it is held by an open change request.
+    without_v2_versioning = models.Q(
+        models.Q(environment__use_v2_feature_versioning=False),
+        models.Q(feature_states__change_request__isnull=True)
+        | models.Q(feature_states__change_request__committed_at__isnull=False),
+    )
+
+    # With v2 versioning, a published version counts unless another published
+    # version has gone live since, which covers both the version that is live
+    # now and any version scheduled to go live later.
+    with_v2_versioning = models.Q(
+        environment__use_v2_feature_versioning=True,
+        environment_feature_version__published_at__isnull=False,
+    ) & ~models.Exists(
+        EnvironmentFeatureVersion.objects.get_versions_live_since(
+            feature_id=models.OuterRef("feature_id"),
+            environment_id=models.OuterRef("environment_id"),
+            live_from=models.OuterRef("environment_feature_version__live_from"),
+        )
+    )
+
+    return FeatureSegment.objects.filter(  # type: ignore[no-any-return]
+        without_v2_versioning | with_v2_versioning
+    )
 
 
 def delete_segment(

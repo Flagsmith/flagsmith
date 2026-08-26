@@ -9,9 +9,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.exceptions import ChangeRequestsEnabledError
 from core.types import AuthenticatedRequest
 from environments.models import Environment
-from features.future.exceptions import ChangeRequestsEnabledError
 from features.future.permissions import (
     check_read_permissions,
     check_segment_overrides_permissions,

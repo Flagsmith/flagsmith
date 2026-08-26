@@ -676,14 +676,36 @@ Attributes:
  - `organisation.id`
  - `reason`
 
+### `segments.delete_rejected`
+
+Logged at `warning` from:
+ - `api/segments/views.py:277`
+
+Attributes:
+ - `organisation.id`
+ - `project.id`
+ - `reason`
+ - `segment.id`
+
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:215`
+ - `api/segments/serializers.py:231`
 
 Attributes:
  - `revision_id`
  - `segment_id`
+
+### `segments.update_rejected`
+
+Logged at `warning` from:
+ - `api/segments/views.py:253`
+
+Attributes:
+ - `organisation.id`
+ - `project.id`
+ - `reason`
+ - `segment.id`
 
 ### `sentry_change_tracking.integration_error`
 

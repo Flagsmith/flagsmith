@@ -1475,7 +1475,7 @@ def test_update_flag__change_requests_enabled__responds_409(
     # Then
     assert response.status_code == 409
     assert response.json() == {
-        "detail": "Cannot update flags in an environment with change requests enabled.",
+        "detail": "Cannot make this change where change requests are enabled.",
         "code": "change_requests_enabled",
     }
     environment_default = FeatureState.objects.get_live_feature_states(
@@ -2229,7 +2229,7 @@ def test_delete_segment_override__change_requests_enabled__responds_409(
     # Then
     assert response.status_code == 409
     assert response.json() == {
-        "detail": "Cannot update flags in an environment with change requests enabled.",
+        "detail": "Cannot make this change where change requests are enabled.",
         "code": "change_requests_enabled",
     }
     assert (
