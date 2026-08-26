@@ -1014,3 +1014,30 @@ def test_mixpanel_webhook__members_action_while_cohort_draining__returns_404_fai
         "error": {"message": "Cohort is being deleted.", "code": 404},
     }
     assert Cohort.objects.filter(source_type=CohortSourceType.MIXPANEL).count() == 1
+
+
+@pytest.mark.saas_mode
+def test_mixpanel_webhook__saas_free_plan__returns_403(
+    postgres_cohort_sync_key: _KeyAndPlaintext,
+) -> None:
+    # Given
+    _, plaintext = postgres_cohort_sync_key
+    client = _basic_auth_client(plaintext)
+    url = reverse("api-v1:cohort-sync:mixpanel")
+
+    # When
+    response = client.post(
+        url,
+        data={
+            "action": "members",
+            "parameters": {
+                "mixpanel_cohort_id": "mp-42",
+                "mixpanel_cohort_name": "Power users",
+                "members": [{"mixpanel_distinct_id": "user-1"}],
+            },
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN

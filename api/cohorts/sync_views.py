@@ -122,7 +122,7 @@ class MixpanelCohortSyncView(APIView):
     """
 
     authentication_classes = [CohortSyncKeyAuthentication]
-    permission_classes = [HasCohortSyncKey]
+    permission_classes = [HasCohortSyncKey, CohortSyncPlanPermission]
 
     @extend_schema(
         description=(
