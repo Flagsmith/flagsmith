@@ -4,6 +4,7 @@ import Project from 'common/project'
 import {
   ContentType,
   FeatureState,
+  FeatureStateValue,
   FlagsmithValue,
   MultivariateFeatureStateValue,
   MultivariateOption,
@@ -21,7 +22,6 @@ import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 import { getDefaultVariantKey } from './multivariate'
-import { featureStateToValue } from './featureStateToValue'
 import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
@@ -61,7 +61,7 @@ export type PaidFeature =
 export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
 
 // Define a type for plan categories
-type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
+type Plan = 'free' | 'start-up' | 'scale-up' | 'enterprise' | null
 
 export const planNames = {
   enterprise: 'Enterprise',
@@ -180,9 +180,23 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return null
   },
-  // Delegates to the standalone, Flux-free module so callers that can't import
-  // this file (e.g. unit-tested hooks) can use the same logic directly.
-  featureStateToValue,
+  featureStateToValue(featureState: FeatureStateValue) {
+    if (!featureState) {
+      return null
+    }
+
+    //@ts-ignore value_type is the type key on core traits
+    switch (featureState.value_type || featureState.type) {
+      case 'bool':
+        return featureState.boolean_value
+      case 'float':
+        return featureState.float_value
+      case 'int':
+        return featureState.integer_value
+      default:
+        return featureState.string_value
+    }
+  },
   findOperator(
     operator: SegmentCondition['operator'],
     value: string,
@@ -479,16 +493,19 @@ const Utils = Object.assign({}, BaseUtils, {
 
   getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
-    if (!plan || planName === planNames.free) {
-      return false
-    }
+    if (!plan) return false
+
+    const requiredPlan = Utils.getRequiredPlan(feature)
+    if (requiredPlan === 'free') return true
+
+    if (planName === planNames.free) return false
+
     const isScaleupOrGreater = planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
     if (feature === 'AUTO_SEATS') {
       return isScaleupOrGreater && !isEnterprise
     }
 
-    const requiredPlan = Utils.getRequiredPlan(feature)
     if (requiredPlan === 'enterprise') {
       return isEnterprise
     } else if (requiredPlan === 'scale-up') {
@@ -542,15 +559,23 @@ const Utils = Object.assign({}, BaseUtils, {
         break
       }
       case 'WAREHOUSE': {
-        const remotePlansValue = Utils.getFlagsmithJSONValue(
+        const remoteValue = Utils.getFlagsmithJSONValue(
           'experimentation_warehouse_connection',
           [],
         )
-        const remotePlans: string[] = Array.isArray(remotePlansValue)
-          ? remotePlansValue
-          : []
+        let remotePlans: string[] = []
+        if (Array.isArray(remoteValue)) {
+          remotePlans = remoteValue
+        } else if (Array.isArray(remoteValue?.allowed_plans)) {
+          remotePlans = remoteValue.allowed_plans
+        }
         const allowedPlans = [...remotePlans, 'enterprise']
-        const planHierarchy: Plan[] = ['start-up', 'scale-up', 'enterprise']
+        const planHierarchy: Plan[] = [
+          'free',
+          'start-up',
+          'scale-up',
+          'enterprise',
+        ]
         plan =
           planHierarchy.find((p) => allowedPlans.includes(p)) || 'enterprise'
         break
