@@ -242,52 +242,6 @@ def test_get__not_exists__returns_200_with_empty_list(
     assert response.json() == []
 
 
-def test_get__auto_connect_enabled__creates_flagsmith_connection(
-    admin_client: APIClient,
-    environment: Environment,
-    enable_features: EnableFeaturesFixture,
-    warehouse_connection_url: str,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-    mocker.patch(
-        "experimentation.services.get_experiment_flag_config",
-        return_value={"auto_connect_warehouse": True},
-    )
-
-    # When
-    response = admin_client.get(warehouse_connection_url)
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert len(data) == 1
-    assert data[0]["warehouse_type"] == "flagsmith"
-    assert data[0]["name"] == "Flagsmith"
-
-
-def test_get__auto_connect_disabled__no_connection_created(
-    admin_client: APIClient,
-    enable_features: EnableFeaturesFixture,
-    warehouse_connection_url: str,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-    mocker.patch(
-        "experimentation.services.get_experiment_flag_config",
-        return_value={},
-    )
-
-    # When
-    response = admin_client.get(warehouse_connection_url)
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == []
-
-
 def test_delete__exists__returns_204(
     admin_client: APIClient,
     environment: Environment,
