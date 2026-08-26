@@ -67,6 +67,7 @@ from experimentation.services import (
     create_metric_audit_log,
     create_warehouse_audit_log,
     enable_experiment_rollout,
+    ensure_flagsmith_warehouse_connection,
     get_warehouse_event_names,
     mark_warehouse_pending_connection,
     refresh_warehouse_connection_status,
@@ -142,6 +143,7 @@ class WarehouseConnectionViewSet(
         instance.delete()
 
     def list(self, request: Request, *args: object, **kwargs: object) -> Response:
+        ensure_flagsmith_warehouse_connection(self._get_environment())
         environment_api_key: str = self.kwargs["environment_api_key"]
         connections = list(self.filter_queryset(self.get_queryset()))
         exclude_event_stats = (
