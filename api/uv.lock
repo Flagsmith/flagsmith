@@ -32,7 +32,6 @@ overrides = [
     { name = "chargebee", specifier = "==3.18.2" },
     { name = "charset-normalizer", specifier = "==3.2.0" },
     { name = "click", specifier = "==8.1.6" },
-    { name = "clickhouse-driver", specifier = "==0.2.11" },
     { name = "colorama", specifier = "==0.4.6" },
     { name = "coreapi", specifier = "==2.3.3" },
     { name = "coreschema", specifier = "==0.0.4" },
@@ -156,7 +155,6 @@ overrides = [
     { name = "pep8", specifier = "==1.7.1" },
     { name = "pexpect", specifier = "==4.9.0" },
     { name = "platformdirs", specifier = "==3.10.0" },
-    { name = "pluggy", specifier = "==1.2.0" },
     { name = "pre-commit", specifier = "==4.0.1" },
     { name = "prometheus-client", specifier = "==0.21.1" },
     { name = "prompt-toolkit", specifier = "==3.0.52" },
@@ -172,7 +170,6 @@ overrides = [
     { name = "pydantic", specifier = "==2.12.5" },
     { name = "pydantic-collections", specifier = "==0.6.0" },
     { name = "pydantic-core", specifier = "==2.41.5" },
-    { name = "pyfakefs", specifier = "==5.7.4" },
     { name = "pygithub", specifier = "==2.8.1" },
     { name = "pygments", specifier = "==2.19.2" },
     { name = "pylint", specifier = "==2.16.4" },
@@ -185,11 +182,9 @@ overrides = [
     { name = "pyreadline", specifier = "==2.1" },
     { name = "pyrepl", specifier = "==0.9.0" },
     { name = "pysaml2", specifier = "==7.4.2" },
-    { name = "pytest", specifier = "==7.2.2" },
     { name = "pytest-cov", specifier = "==4.1.0" },
     { name = "pytest-django", specifier = "==4.8.0" },
     { name = "pytest-freezegun", specifier = "==0.4.2" },
-    { name = "pytest-lazy-fixture", specifier = "==0.6.3" },
     { name = "pytest-mock", specifier = "==3.10.0" },
     { name = "pytest-responses", specifier = "==0.5.1" },
     { name = "pytest-structlog", specifier = "==1.1" },
@@ -1043,11 +1038,15 @@ wheels = [
 
 [[package]]
 name = "django-clickhouse-backend"
-version = "1.6"
-source = { git = "https://github.com/jayvynl/django-clickhouse-backend?rev=d884c7d#d884c7d8d89fd94d79fca440e3965a931aa69435" }
+version = "2.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "clickhouse-driver" },
     { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e3/22/0ef2c0aa085d98705d143e68ffc1f163b220049e500a2638b03a5bf83066/django_clickhouse_backend-2.0.tar.gz", hash = "sha256:011b28c9786712d6f32d59d194859a97f7d0ab13631a258ff1d4b4a8a4923c6e", size = 91337, upload-time = "2026-08-09T14:03:10.617Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/f5/65082e6a59ba9b4c9e398b338006200b8ac1dbb7b6e433b1eb867098e5fa/django_clickhouse_backend-2.0-py3-none-any.whl", hash = "sha256:6b4ddab0bac1f3101d0b656a465c8a0eb5661a92d4bb25b32d4107ff8daafd30", size = 104161, upload-time = "2026-08-09T14:03:08.896Z" },
 ]
 
 [[package]]
@@ -1648,7 +1647,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-django" },
     { name = "pytest-freezegun" },
-    { name = "pytest-lazy-fixture" },
+    { name = "pytest-lazy-fixtures" },
     { name = "pytest-mock" },
     { name = "pytest-responses" },
     { name = "pytest-structlog" },
@@ -1687,7 +1686,7 @@ requires-dist = [
     { name = "django", specifier = ">=5,<6" },
     { name = "django-admin-sso", specifier = ">=5.2.0,<5.3.0" },
     { name = "django-axes", specifier = ">=8.1.0,<9.0.0" },
-    { name = "django-clickhouse-backend", git = "https://github.com/jayvynl/django-clickhouse-backend?rev=d884c7d" },
+    { name = "django-clickhouse-backend", specifier = ">=2,<3" },
     { name = "django-cockroachdb", specifier = ">=4.2,<4.3.0" },
     { name = "django-cors-headers", specifier = ">=3.5.0,<3.6.0" },
     { name = "django-debug-toolbar", marker = "extra == 'dev'" },
@@ -1721,7 +1720,7 @@ requires-dist = [
     { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.13.1,<4" },
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
     { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
-    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.11.4,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
+    { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.12,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "flagsmith-sql-flag-engine", specifier = ">=0.2.0,<0.3.0" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
     { name = "google-re2", specifier = ">=1.0,<2.0.0" },
@@ -1743,7 +1742,7 @@ requires-dist = [
     { name = "psycopg2-binary", specifier = ">=2.9.5,<2.10.0" },
     { name = "pydantic", specifier = ">=2.12.0,<3.0.0" },
     { name = "pydantic-collections", specifier = ">=0.6.0,<0.7.0" },
-    { name = "pyfakefs", marker = "extra == 'dev'", specifier = ">=5.7.4,<6.0.0" },
+    { name = "pyfakefs", marker = "extra == 'dev'", specifier = ">=6,<7" },
     { name = "pygithub", specifier = ">=2.8,<2.9.0" },
     { name = "pyjwt", marker = "extra == 'dev'", specifier = ">=2.13.0" },
     { name = "pylint", marker = "extra == 'dev'", specifier = ">=2.16.2,<2.17.0" },
@@ -1755,7 +1754,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0,<4.2.0" },
     { name = "pytest-django", marker = "extra == 'dev'", specifier = ">=4.8.0,<5.0.0" },
     { name = "pytest-freezegun", marker = "extra == 'dev'", specifier = ">=0.4.2,<0.5.0" },
-    { name = "pytest-lazy-fixture", marker = "extra == 'dev'", specifier = ">=0.6.3,<0.7.0" },
+    { name = "pytest-lazy-fixtures", marker = "extra == 'dev'", specifier = ">=1.4,<2" },
     { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.10.0,<3.11.0" },
     { name = "pytest-responses", marker = "extra == 'dev'", specifier = ">=0.5.1,<0.6.0" },
     { name = "pytest-structlog", marker = "extra == 'dev'", specifier = ">=1.1,<2.0.0" },
@@ -1859,19 +1858,20 @@ wheels = [
 
 [[package]]
 name = "flagsmith-private"
-version = "0.11.4"
+version = "0.12.0"
 source = { registry = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" }
 dependencies = [
     { name = "cryptography" },
     { name = "django-multiselectfield" },
     { name = "django-python3-ldap" },
     { name = "django-scim2" },
+    { name = "pyopenssl" },
     { name = "pysaml2" },
     { name = "scim2-filter-parser" },
 ]
-sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.11.4/flagsmith_private-0.11.4.tar.gz", hash = "sha512:af60583733cb6f2efbe347055f1dd61efe70536c93e05c4d931982fc136b995d6df0d69a085e89f67e295ee1902abb3dfd30d3f78d6f6061ac4db13e18c17481", size = 55385, upload-time = "2026-08-10T18:31:58.169Z" }
+sdist = { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.12.0/flagsmith_private-0.12.0.tar.gz", hash = "sha512:64ed7c3277086acfd895e052b455ff0e8b5e84a4a71228a871fec7e26764f789835672fc30064821ef0fe5360d5599605d90e18ed7e929398951096206743bed", size = 61028, upload-time = "2026-08-26T10:06:04.66Z" }
 wheels = [
-    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.11.4/flagsmith_private-0.11.4-py3-none-any.whl", hash = "sha512:86e39929b04553c8b5a1ae4c0c592eeb2ed26d2d28b962a0a42aeea3651eac2b83955efd21300aaee40a59eeee6efeb4bb6899b1918247d3b4b02c6119500b12", size = 93086, upload-time = "2026-08-10T18:31:57.749Z" },
+    { url = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/flagsmith-private/0.12.0/flagsmith_private-0.12.0-py3-none-any.whl", hash = "sha512:bfb35ba824fba9b30f4a27286afa2bd08c1cc08e944842431d09f359c2a3c366a29929e97338b2528d589a333677dccba03f95c10bddd07540cbc933c340d507", size = 102376, upload-time = "2026-08-26T10:06:04.2Z" },
 ]
 
 [[package]]
@@ -2934,14 +2934,11 @@ wheels = [
 
 [[package]]
 name = "pluggy"
-version = "1.2.0"
+version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "importlib-metadata" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8a/42/8f2833655a29c4e9cb52ee8a2be04ceac61bcff4a680fb338cbd3d1e322d/pluggy-1.2.0.tar.gz", hash = "sha256:d12f0c4b579b15f5e054301bb226ee85eeeba08ffec228092f8defbaa3a4c4b3", size = 61613, upload-time = "2023-06-21T09:12:28.745Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz", hash = "sha256:7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3", size = 69412, upload-time = "2025-05-15T12:30:07.975Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/51/32/4a79112b8b87b21450b066e102d6608907f4c885ed7b04c3fdb085d4d6ae/pluggy-1.2.0-py3-none-any.whl", hash = "sha256:c2fd55a7d7a3863cba1a013e4e2414658b1d07b6bc57b3919e0c63c9abb99849", size = 17695, upload-time = "2023-06-21T09:12:27.397Z" },
+    { url = "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl", hash = "sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746", size = 20538, upload-time = "2025-05-15T12:30:06.134Z" },
 ]
 
 [[package]]
@@ -3205,11 +3202,11 @@ wheels = [
 
 [[package]]
 name = "pyfakefs"
-version = "5.7.4"
+version = "6.2.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8e/f9/3a2f10b1b3e251cec47ab7581d15bc39553cd5a23893cbe0efe633856c4e/pyfakefs-5.7.4.tar.gz", hash = "sha256:4971e65cc80a93a1e6f1e3a4654909c0c493186539084dc9301da3d68c8878fe", size = 213382, upload-time = "2025-01-14T19:24:54.538Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/98/0d/c80012ee6e885c293ad63c5f5b049d3ef3fd2b32bbe6fa8739145f392ec6/pyfakefs-6.2.0.tar.gz", hash = "sha256:e59a36db447bf509ce9c97ab3d1510c08cc51895c5311325a560a5e5b5dc1940", size = 228273, upload-time = "2026-04-12T13:38:50.411Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b9/52/eb08c795d9159da167334a7fa8a23bd04112b4c8b63030a2600711a94143/pyfakefs-5.7.4-py3-none-any.whl", hash = "sha256:3e763d700b91c54ade6388be2cfa4e521abc00e34f7defb84ee511c73031f45f", size = 228706, upload-time = "2025-01-14T19:24:51.436Z" },
+    { url = "https://files.pythonhosted.org/packages/b2/80/97571ac8295289c267367b7b60aadeae1a9a841e83f0a96ad9b65d1dd3c0/pyfakefs-6.2.0-py3-none-any.whl", hash = "sha256:0968a49db692694ffed420e54a9f1cbae4636637b880e8ab09c8ccc0f11bd7ae", size = 241113, upload-time = "2026-04-12T13:38:48.927Z" },
 ]
 
 [[package]]
@@ -3383,19 +3380,18 @@ wheels = [
 
 [[package]]
 name = "pytest"
-version = "7.2.2"
+version = "9.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "attrs" },
     { name = "colorama" },
-    { name = "importlib-metadata" },
     { name = "iniconfig" },
     { name = "packaging" },
     { name = "pluggy" },
+    { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b9/29/311895d9cd3f003dd58e8fdea36dd895ba2da5c0c90601836f7de79f76fe/pytest-7.2.2.tar.gz", hash = "sha256:c99ab0c73aceb050f68929bc93af19ab6db0558791c6a0715723abe9d0ade9d4", size = 1320028, upload-time = "2023-03-03T19:12:29.775Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7d/0d/549bd94f1a0a402dc8cf64563a117c0f3765662e2e668477624baeec44d5/pytest-9.0.3.tar.gz", hash = "sha256:b86ada508af81d19edeb213c681b1d48246c1a91d304c6c81a427674c17eb91c", size = 1572165, upload-time = "2026-04-07T17:16:18.027Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b2/68/5321b5793bd506961bd40bdbdd0674e7de4fb873ee7cab33dd27283ad513/pytest-7.2.2-py3-none-any.whl", hash = "sha256:130328f552dcfac0b1cec75c12e3f005619dc5f874f0a06e8ff7263f0ee6225e", size = 317207, upload-time = "2023-03-03T19:12:27.611Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/24/a372aaf5c9b7208e7112038812994107bc65a84cd00e0354a88c2c77a617/pytest-9.0.3-py3-none-any.whl", hash = "sha256:2c5efc453d45394fdd706ade797c0a81091eccd1d6e4bccfcd476e2b8e0ab5d9", size = 375249, upload-time = "2026-04-07T17:16:16.13Z" },
 ]
 
 [[package]]
@@ -3437,15 +3433,15 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-lazy-fixture"
-version = "0.6.3"
+name = "pytest-lazy-fixtures"
+version = "1.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b2/82/ae6d2f6903719c4ec410dcd31ee24e3bce74b2cef3c5b9150ad36e8594b6/pytest-lazy-fixture-0.6.3.tar.gz", hash = "sha256:0e7d0c7f74ba33e6e80905e9bfd81f9d15ef9a790de97993e34213deb5ad10ac", size = 7878, upload-time = "2020-02-01T18:04:02.321Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/02/e9/19deae3ec38f0c09c59d5d4ba0b66786b49512a24a5307213956720efa69/pytest_lazy_fixtures-1.4.1.tar.gz", hash = "sha256:8684abfd4914ea01f1e2f7b24524739344421d8f3f12286fb3100fb5681e1181", size = 63077, upload-time = "2026-08-12T09:08:36.464Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2d/a1/2f2c1c2353350d66c4d110d283e422e4943eb5ad10effa9357ba66f7b5b9/pytest_lazy_fixture-0.6.3-py3-none-any.whl", hash = "sha256:e0b379f38299ff27a653f03eaa69b08a6fd4484e46fd1c9907d984b9f9daeda6", size = 4948, upload-time = "2020-02-01T18:04:00.347Z" },
+    { url = "https://files.pythonhosted.org/packages/18/c8/c7ba9d446a61293f037eff92f99f160d3a97c0da8315c9b6ea002b66cd3a/pytest_lazy_fixtures-1.4.1-py3-none-any.whl", hash = "sha256:42213af5859ea4a3c7ec86a7f9dbb43efa9b02547460bddad041e846cdcf921d", size = 10327, upload-time = "2026-08-12T09:08:35.404Z" },
 ]
 
 [[package]]
