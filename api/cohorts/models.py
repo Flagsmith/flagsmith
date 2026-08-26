@@ -36,6 +36,7 @@ class Cohort(SoftDeleteExportableModel):
     external_id = models.CharField(max_length=255, null=True, blank=True)
     version = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    last_synced_at = models.DateTimeField(null=True, blank=True)
     # Deletion drains memberships from the identity store first; the cohort is
     # only soft-deleted once drained. This marks it as awaiting that final step.
     deletion_requested_at = models.DateTimeField(null=True, blank=True)

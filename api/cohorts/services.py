@@ -404,8 +404,10 @@ def sync_cohort_memberships_from_csv(
             state=CohortMembershipState.PENDING_REMOVE, updated_at=timezone.now()
         )
 
-    Cohort.objects.filter(id=cohort.id).update(version=F("version") + 1)
-    cohort.refresh_from_db(fields=["version"])
+    Cohort.objects.filter(id=cohort.id).update(
+        version=F("version") + 1, last_synced_at=timezone.now()
+    )
+    cohort.refresh_from_db(fields=["version", "last_synced_at"])
     apply_cohort_membership_deltas.delay(kwargs={"cohort_id": cohort.id})
 
     flagsmith_cohorts_csv_syncs_total.inc()

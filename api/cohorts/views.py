@@ -29,6 +29,9 @@ from users.models import FFAdminUser
         description="Create a cohort and the managed segment that targets it."
     ),
     retrieve=extend_schema(description="Retrieve a cohort."),
+    partial_update=extend_schema(
+        description="Update the cohort's managed segment name and description."
+    ),
     destroy=extend_schema(
         description=(
             "Request cohort deletion. Memberships are drained from identity "
@@ -42,6 +45,7 @@ class CohortViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
     serializer_class = CohortSerializer
@@ -50,6 +54,8 @@ class CohortViewSet(
     model_class = Cohort
     lookup_field = "id"
     lookup_url_kwarg = "cohort_id"
+    # PATCH only: a cohort has no meaningful full replacement.
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
 
     def get_queryset(self) -> QuerySet[Cohort]:
         # A cohort awaiting drain-then-delete is already gone from the
