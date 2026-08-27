@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.268.0](https://github.com/Flagsmith/flagsmith/compare/v2.267.0...v2.268.0) (2026-08-27)
+
+
+### Features
+
+* **api:** auto-connect Flagsmith warehouse for new orgs via experimental_flags value ([#8377](https://github.com/Flagsmith/flagsmith/issues/8377)) ([27dbc25](https://github.com/Flagsmith/flagsmith/commit/27dbc25602ff097bd360d72b9a39976616e597c8))
+* **fe:** flag-driven warehouse plan gating for free orgs ([#8379](https://github.com/Flagsmith/flagsmith/issues/8379)) ([2be8a90](https://github.com/Flagsmith/flagsmith/commit/2be8a90aec6a73038b7f8c01f412551fe9920bdc))
+
 ## [2.267.0](https://github.com/Flagsmith/flagsmith/compare/v2.266.0...v2.267.0) (2026-08-26)
 
 
