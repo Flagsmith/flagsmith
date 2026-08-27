@@ -121,11 +121,11 @@ export const FeatureNameValidation = ({
           transition: 'opacity 0.4s ease-in-out, height 0.4s ease-in-out',
         }}
       >
-        <div className='form-group'>
-          <FieldLabel htmlFor='feature-name-regex'>
-            Feature Name RegEx
-          </FieldLabel>
-          <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}>
+          <div className='form-group'>
+            <FieldLabel htmlFor='feature-name-regex'>
+              Feature Name RegEx
+            </FieldLabel>
             <Row>
               <Flex>
                 <Input
@@ -160,8 +160,8 @@ export const FeatureNameValidation = ({
                 Test RegEx
               </Button>
             </Row>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </FormGroup>
   )
