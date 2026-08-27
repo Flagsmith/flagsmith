@@ -8,6 +8,7 @@ import TagValues from 'components/tags/TagValues'
 import { Link, useHistory, useLocation } from 'react-router-dom'
 import Panel from 'components/base/grid/Panel'
 import Button from 'components/base/forms/Button'
+import Input from 'components/base/forms/Input'
 import Switch from 'components/Switch'
 import { ProjectFlag, ProjectSummary } from 'common/types/responses'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
@@ -83,9 +84,9 @@ const ReleaseManagerPage: FC = () => {
             Search Flags and Tags
           </FieldLabel>
           <div className='d-flex gap-2'>
-            <input
+            <Input
               id='release-manager-search'
-              className='input full-width'
+              className='full-width'
               name='search'
               onKeyDown={handleKeyDown}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
