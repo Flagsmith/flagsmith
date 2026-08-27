@@ -8,6 +8,7 @@ import JSONReference from './JSONReference'
 import PageTitle from './PageTitle'
 import PlanBasedBanner from './PlanBasedAccess'
 import Button from './base/forms/Button'
+import FieldLabel from './base/forms/FieldLabel'
 import DateSelect from './DateSelect'
 import Icon from './icons/Icon'
 import Switch from './Switch'
@@ -268,7 +269,7 @@ export class CreateAPIKey extends PureComponent {
               </>
               <Flex>
                 <div>
-                  <label htmlFor='api-key-expiry'>Expiry</label>
+                  <FieldLabel htmlFor='api-key-expiry'>Expiry</FieldLabel>
                 </div>
                 <DateSelect
                   id='api-key-expiry'
