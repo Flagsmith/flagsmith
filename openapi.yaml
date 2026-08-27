@@ -29516,6 +29516,7 @@ components:
       type: object
       properties:
         identifiers:
+          description: 'Identity identifiers, each at most 1024 bytes of UTF-8.'
           type: array
           items:
             type: string
