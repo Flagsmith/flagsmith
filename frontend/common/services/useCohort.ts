@@ -67,13 +67,16 @@ export const cohortService = service
           { id: arg.segmentId, type: 'Segment' },
           { id: `LIST${arg.projectId}`, type: 'Segment' },
         ],
-        query: (query) => ({
-          body: {
-            description: query.description,
-            name: query.name,
-          },
+        query: ({
+          cohortId,
+          environmentApiKey,
+          projectId: _projectId,
+          segmentId: _segmentId,
+          ...body
+        }) => ({
+          body,
           method: 'PATCH',
-          url: `environments/${query.environmentApiKey}/cohorts/${query.cohortId}/`,
+          url: `environments/${environmentApiKey}/cohorts/${cohortId}/`,
         }),
       }),
       // END OF ENDPOINTS

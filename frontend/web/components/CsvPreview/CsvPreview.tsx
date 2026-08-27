@@ -28,9 +28,12 @@ const CsvPreview: FC<CsvPreviewType> = ({
             {columns.map((column, i) => (
               <th
                 key={i}
-                className={classNames('fw-semibold', {
-                  'csv-preview__cell--selected': i === selectedColumn,
-                })}
+                className={classNames(
+                  'fw-semibold',
+                  i === selectedColumn
+                    ? 'bg-surface-action-tint'
+                    : 'bg-surface-muted',
+                )}
               >
                 {column}
               </th>
@@ -44,7 +47,7 @@ const CsvPreview: FC<CsvPreviewType> = ({
                 <td
                   key={j}
                   className={classNames({
-                    'csv-preview__cell--selected': j === selectedColumn,
+                    'bg-surface-action-tint': j === selectedColumn,
                   })}
                 >
                   {row[j]}

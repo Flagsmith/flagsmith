@@ -197,6 +197,7 @@ export type Req = {
     segmentId: number
     name?: string
     description?: string
+    metadata?: Metadata[]
   }
   syncCohortCsv: {
     environmentApiKey: string

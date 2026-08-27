@@ -18,17 +18,9 @@
       white-space: nowrap;
     }
 
-    thead th {
-      background: var(--color-surface-muted);
-    }
-
     tbody tr {
       border-top: 1px solid var(--color-border-default);
       color: var(--color-text-secondary);
-    }
-
-    .csv-preview__cell--selected {
-      background: var(--color-surface-action-tint);
     }
   }
 }

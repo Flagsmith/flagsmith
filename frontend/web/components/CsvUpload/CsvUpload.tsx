@@ -98,7 +98,7 @@ const CsvUpload: FC<CsvUploadType> = ({
             className={classNames(
               'csv-upload__droparea text-center rounded-lg',
               {
-                'csv-upload__droparea--disabled': disabled,
+                'opacity-50 pe-none': disabled,
               },
             )}
           >

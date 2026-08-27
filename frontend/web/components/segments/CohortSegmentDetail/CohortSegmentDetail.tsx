@@ -19,6 +19,8 @@ import './CohortSegmentDetail.scss'
 const SYNC_POLL_INTERVAL_MS = 3000
 
 type CohortSegmentDetailType = {
+  // The page context already names the segment via its breadcrumb.
+  hideHeader?: boolean
   projectId: number | string
   readOnly?: boolean
   segment: Segment
@@ -37,6 +39,7 @@ const InfoRow: FC<{ label: string; children: ReactNode }> = ({
 )
 
 const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
+  hideHeader,
   projectId,
   readOnly,
   segment,
@@ -107,14 +110,27 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
   }
 
   return (
-    <div className='cohort-segment-detail rounded-lg bg-surface-default'>
-      <div className='cohort-segment-detail__header d-flex align-items-center gap-2 px-4 py-3'>
-        <h5 className='mb-0'>{segment.name}</h5>
-        <Chip size='xs' variant='accent'>
-          CSV list
-        </Chip>
-      </div>
-      <div className='p-4 d-flex flex-column mx-0 gap-4'>
+    <div
+      className={classNames(
+        'cohort-segment-detail',
+        !hideHeader &&
+          'cohort-segment-detail--card rounded-lg bg-surface-default',
+      )}
+    >
+      {!hideHeader && (
+        <div className='cohort-segment-detail__header d-flex align-items-center gap-2 px-4 py-3'>
+          <h5 className='mb-0'>{segment.name}</h5>
+          <Chip size='xs' variant='accent'>
+            CSV list
+          </Chip>
+        </div>
+      )}
+      <div
+        className={classNames(
+          'd-flex flex-column mx-0 gap-4',
+          hideHeader ? 'py-4' : 'p-4',
+        )}
+      >
         <div className='d-flex flex-column mx-0 gap-3'>
           <InputGroup
             className='mb-0'
@@ -192,7 +208,7 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
                 {syncDone.toLocaleString()} of {syncTotal.toLocaleString()}{' '}
                 applied
               </div>
-              <div className='cohort-segment-detail__progress-track'>
+              <div className='cohort-segment-detail__progress-track bg-surface-default'>
                 <div
                   className='cohort-segment-detail__progress-bar bg-surface-action'
                   style={{
