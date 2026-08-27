@@ -20,6 +20,7 @@ from cohorts.serializers import (
 )
 from environments.models import Environment
 from environments.views import NestedEnvironmentViewSet
+from users.models import FFAdminUser
 
 
 @extend_schema_view(
@@ -128,7 +129,13 @@ class CohortSyncKeyViewSet(
         environment = Environment.objects.get(
             api_key=self.kwargs.get("environment_api_key")
         )
-        serializer.save(environment=environment, created_by=self.request.user)
+        user = self.request.user
+        # A master API key caller has no user to record: assigning its
+        # APIKeyUser to the foreign key raises a server error.
+        serializer.save(
+            environment=environment,
+            created_by=user if isinstance(user, FFAdminUser) else None,
+        )
 
     def perform_destroy(self, instance: CohortSyncKey) -> None:
         instance.revoked = True
