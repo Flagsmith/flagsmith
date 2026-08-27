@@ -30,7 +30,9 @@ from users.models import FFAdminUser
     ),
     retrieve=extend_schema(description="Retrieve a cohort."),
     partial_update=extend_schema(
-        description="Update the cohort's managed segment name and description."
+        description=(
+            "Update the cohort's managed segment name, description and metadata."
+        )
     ),
     destroy=extend_schema(
         description=(

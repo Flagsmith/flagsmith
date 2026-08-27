@@ -78,13 +78,9 @@ class CohortSerializer(serializers.ModelSerializer[Cohort]):
 
     def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
         attrs = super().validate(attrs)
-        if self.instance is not None:
-            # Metadata is create-only; accepting it silently would misreport
-            # the PATCH as applied.
-            if "metadata" in attrs:
-                raise serializers.ValidationError(
-                    {"metadata": "Metadata cannot be updated."}
-                )
+        if self.instance is not None and "metadata" not in attrs:
+            # A partial update without metadata must not fail the
+            # required-metadata check.
             return attrs
         environment = Environment.objects.get(
             api_key=self.context["view"].kwargs["environment_api_key"]
@@ -109,12 +105,15 @@ class CohortSerializer(serializers.ModelSerializer[Cohort]):
 
     def update(self, instance: Cohort, validated_data: dict[str, typing.Any]) -> Cohort:
         # Only the managed segment's fields are updatable.
+        metadata_data = validated_data.pop("metadata", None)
         segment_data = validated_data.pop("segment", {})
         if segment_data:
             segment = instance.segment
             for field, value in segment_data.items():
                 setattr(segment, field, value)
             segment.save(update_fields=list(segment_data))
+        if metadata_data is not None:
+            _SegmentMetadataHandler()._update_metadata(instance.segment, metadata_data)
         return instance
 
 

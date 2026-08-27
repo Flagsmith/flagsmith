@@ -288,11 +288,12 @@ def test_update_cohort__staff_with_manage_segments__updates_segment_fields(
     assert response.json()["description"] == "Updated description"
 
 
-def test_update_cohort__metadata_supplied__returns_400(
+def test_update_cohort__metadata_supplied__updates_segment_metadata(
     staff_client: APIClient,
     dynamo_enabled_project: Project,
     edge_cohort: Cohort,
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    required_segment_metadata_field_for_dynamo_project: MetadataModelField,
     with_project_permissions: WithProjectPermissionsCallable,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
@@ -311,14 +312,25 @@ def test_update_cohort__metadata_supplied__returns_400(
 
     # When
     response = staff_client.patch(
-        url, data={"name": "renamed", "metadata": []}, format="json"
+        url,
+        data={
+            "metadata": [
+                {
+                    "model_field": required_segment_metadata_field_for_dynamo_project.id,
+                    "field_value": 10,
+                },
+            ],
+        },
+        format="json",
     )
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {"metadata": ["Metadata cannot be updated."]}
-    edge_cohort.segment.refresh_from_db()
-    assert edge_cohort.segment.name != "renamed"
+    assert response.status_code == status.HTTP_200_OK
+    metadata = Metadata.objects.get(
+        model_field=required_segment_metadata_field_for_dynamo_project
+    )
+    assert metadata.object_id == edge_cohort.segment_id
+    assert metadata.field_value == "10"
 
 
 def test_update_cohort__staff_without_permission__returns_403(
