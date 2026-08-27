@@ -1788,6 +1788,68 @@ paths:
       tags:
         - Webhooks
       x-flagsmith-minimum-plan: START_UP
+  '/api/v1/cohort-sync/webhook/cohorts/{id}/members/add/':
+    post:
+      operationId: api_v1_cohort_sync_webhook_cohorts_members_add_create
+      description: 'Add members to a CSV cohort. Accepted deltas are applied to identity data asynchronously. Re-adding a member is a no-op, so retries are safe.'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookSyncMembers'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WebhookSyncMembers'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WebhookSyncMembers'
+      responses:
+        '200':
+          description: No response body
+      security:
+        - Cohort Sync Key: []
+        - Cohort Sync Key (Basic): []
+      tags:
+        - Webhooks
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/cohort-sync/webhook/cohorts/{id}/members/remove/':
+    post:
+      operationId: api_v1_cohort_sync_webhook_cohorts_members_remove_create
+      description: 'Remove members from a CSV cohort. Accepted deltas are applied to identity data asynchronously. Removing a non-member is a no-op, so retries are safe.'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookSyncMembers'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WebhookSyncMembers'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WebhookSyncMembers'
+      responses:
+        '200':
+          description: No response body
+      security:
+        - Cohort Sync Key: []
+        - Cohort Sync Key (Basic): []
+      tags:
+        - Webhooks
+      x-flagsmith-minimum-plan: START_UP
   /api/v1/environment-document/:
     get:
       operationId: sdk_v1_environment_document
@@ -29450,6 +29512,17 @@ components:
       enum:
         - organisation
         - environment
+    WebhookSyncMembers:
+      type: object
+      properties:
+        identifiers:
+          type: array
+          items:
+            type: string
+          maxItems: 10000
+          minItems: 1
+      required:
+        - identifiers
     WorkflowsError:
       type: object
       properties:
