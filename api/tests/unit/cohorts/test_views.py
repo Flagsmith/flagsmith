@@ -6,6 +6,7 @@ from common.environments.permissions import (
     VIEW_ENVIRONMENT,
 )
 from common.projects.permissions import MANAGE_SEGMENTS
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
@@ -171,12 +172,12 @@ def test_list_cohorts__deletion_requested_cohort__excluded(
     assert response.json()[0]["name"] == edge_cohort.segment.name
 
 
-def test_list_cohorts__multiple_cohorts__membership_counts_in_constant_queries(
+def _assert_list_cohorts_membership_counts_in_constant_queries(
     staff_client: APIClient,
     edge_cohort: Cohort,
-    dynamodb_identity_wrapper: DynamoIdentityWrapper,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     django_assert_num_queries: "DjangoAssertNumQueries",
+    num_queries: int,
 ) -> None:
     # Given
     environment = edge_cohort.environment
@@ -202,7 +203,7 @@ def test_list_cohorts__multiple_cohorts__membership_counts_in_constant_queries(
     )
 
     # When
-    with django_assert_num_queries(10):
+    with django_assert_num_queries(num_queries):
         response = staff_client.get(url)
 
     # Then
@@ -211,6 +212,51 @@ def test_list_cohorts__multiple_cohorts__membership_counts_in_constant_queries(
         {"applied": 1, "pending_add": 0, "pending_remove": 0},
         {"applied": 0, "pending_add": 1, "pending_remove": 1},
     ]
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
+def test_list_cohorts__multiple_cohorts_without_rbac__membership_counts_in_constant_queries(
+    staff_client: APIClient,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    django_assert_num_queries: "DjangoAssertNumQueries",
+) -> None:
+    # Given / When
+    # Then
+    _assert_list_cohorts_membership_counts_in_constant_queries(
+        staff_client,
+        edge_cohort,
+        with_environment_permissions,
+        django_assert_num_queries,
+        num_queries=10,
+    )
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+def test_list_cohorts__multiple_cohorts_with_rbac__membership_counts_in_constant_queries(
+    staff_client: APIClient,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    django_assert_num_queries: "DjangoAssertNumQueries",
+) -> None:  # pragma: no cover
+    # Given / When
+    # Then
+    # RBAC's runtime role checks add two permission queries.
+    _assert_list_cohorts_membership_counts_in_constant_queries(
+        staff_client,
+        edge_cohort,
+        with_environment_permissions,
+        django_assert_num_queries,
+        num_queries=12,
+    )
 
 
 def test_retrieve_cohort__mixed_membership_states__returns_membership_counts(
