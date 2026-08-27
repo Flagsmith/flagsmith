@@ -2483,7 +2483,7 @@ paths:
       x-flagsmith-minimum-plan: START_UP
     patch:
       operationId: api_v1_environments_cohorts_partial_update
-      description: Update the cohort's managed segment name and description.
+      description: 'Update the cohort''s managed segment name, description and metadata.'
       parameters:
         - name: cohort_id
           in: path
