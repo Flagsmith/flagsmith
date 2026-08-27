@@ -42,6 +42,7 @@ import SegmentOverridesTab, {
   SegmentOverrideValue,
 } from './tabs/SegmentOverridesTab'
 import UsageTab from './tabs/UsageTab'
+import FlagDependencies from './tabs/FlagDependencies'
 import FeatureLimitAlert from './components/FeatureLimitAlert'
 import FeatureUpdateSummary from './components/FeatureUpdateSummary'
 import FeatureNameInput from './components/FeatureNameInput'
@@ -728,6 +729,17 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         />
                       </TabItem>
                     )}
+                  {!existingChangeRequest && (
+                    <TabItem
+                      data-test='flag_dependencies'
+                      tabLabel='Dependencies'
+                    >
+                      <FlagDependencies
+                        featureName={projectFlag.name}
+                        environmentName={environmentName}
+                      />
+                    </TabItem>
+                  )}
                   {!existingChangeRequest && !hideIdentityOverridesTab && (
                     <TabItem
                       data-test='identity_overrides'
