@@ -148,8 +148,9 @@ const CreateSegmentUsersTabContent: React.FC<
       <div className='mt-2'>
         <FormGroup>
           <div className='form-group col-4'>
-            <FieldLabel>Environment</FieldLabel>
+            <FieldLabel htmlFor='segment-environment'>Environment</FieldLabel>
             <EnvironmentSelect
+              inputId='segment-environment'
               projectId={`${projectId}`}
               value={environmentId}
               onChange={(environmentId: string) => {
