@@ -12,6 +12,7 @@ import {
   ProjectFlag,
   SegmentCondition,
   Tag,
+  TraitValue,
   UserPermissions,
 } from 'common/types/responses'
 import flagsmith from '@flagsmith/flagsmith'
@@ -892,7 +893,7 @@ const Utils = Object.assign({}, BaseUtils, {
       type: 'unicode',
     }
   },
-  valueToTrait(value: FlagsmithValue) {
+  valueToTrait(value: FlagsmithValue): TraitValue {
     const val = Utils.getTypedValue(value)
 
     if (typeof val === 'boolean') {
