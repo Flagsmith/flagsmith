@@ -163,4 +163,5 @@ class WebhookSyncMembersSerializer(serializers.Serializer[None]):
         child=serializers.CharField(validators=[_validate_identifier_byte_length]),
         min_length=1,
         max_length=10000,
+        help_text="Identity identifiers, each at most 1024 bytes of UTF-8.",
     )
