@@ -3,16 +3,23 @@
 
 ($environment | (.[0:1] | ascii_upcase) + .[1:]) as $env_name |
 
-# Only success and cancelled need their own words. Everything else GitHub
-# reports, timed_out and skipped included, means the deploy did not happen.
-(if $conclusion == "success" then
+# Only in_progress, success and cancelled need their own words. Everything
+# else, timed_out and skipped included, means the deploy did not happen.
+(if $state == "in_progress" then
+  {
+    headline: "⏳ \($service) deploying to \($environment)",
+    body: "Tests and deploy are running. \($env_name) is still on the previous release.",
+    actor_label: "Pushed by",
+    link_app: false
+  }
+elif $state == "success" then
   {
     headline: "🚀 \($service) deployed to \($environment)",
     body: "🧪 *\($env_name) smoke test required*\n\nPlease verify the application directly in \($environment).",
     actor_label: "Deployed by",
     link_app: true
   }
-elif $conclusion == "cancelled" then
+elif $state == "cancelled" then
   {
     headline: "⏭️ \($service) deploy to \($environment) stopped",
     # run-tests cancels itself in progress when the next commit lands on main,
