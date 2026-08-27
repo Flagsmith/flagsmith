@@ -60,7 +60,14 @@ class CohortSerializer(serializers.ModelSerializer[Cohort]):
 
     @extend_schema_field(CohortMembershipCountsSerializer)
     def get_membership_counts(self, cohort: Cohort) -> dict[str, int]:
-        # Clients derive sync status and progress from these.
+        # Clients derive sync status and progress from these. The viewset
+        # annotates the counts; a freshly created cohort isn't annotated.
+        if (applied := getattr(cohort, "applied_count", None)) is not None:
+            return {
+                "applied": applied,
+                "pending_add": getattr(cohort, "pending_add_count", 0),
+                "pending_remove": getattr(cohort, "pending_remove_count", 0),
+            }
         return cohort.memberships.aggregate(
             applied=Count("id", filter=Q(state=CohortMembershipState.APPLIED)),
             pending_add=Count("id", filter=Q(state=CohortMembershipState.PENDING_ADD)),
@@ -71,6 +78,14 @@ class CohortSerializer(serializers.ModelSerializer[Cohort]):
 
     def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
         attrs = super().validate(attrs)
+        if self.instance is not None:
+            # Metadata is create-only; accepting it silently would misreport
+            # the PATCH as applied.
+            if "metadata" in attrs:
+                raise serializers.ValidationError(
+                    {"metadata": "Metadata cannot be updated."}
+                )
+            return attrs
         environment = Environment.objects.get(
             api_key=self.context["view"].kwargs["environment_api_key"]
         )
@@ -94,7 +109,6 @@ class CohortSerializer(serializers.ModelSerializer[Cohort]):
 
     def update(self, instance: Cohort, validated_data: dict[str, typing.Any]) -> Cohort:
         # Only the managed segment's fields are updatable.
-        validated_data.pop("metadata", None)
         segment_data = validated_data.pop("segment", {})
         if segment_data:
             segment = instance.segment
