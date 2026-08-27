@@ -13,7 +13,7 @@ from clickhouse_driver import Client
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
 from django.core.cache import cache
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import timezone
 from flag_engine.segments.constants import ALL_RULE, PERCENTAGE_SPLIT
@@ -58,6 +58,7 @@ from experimentation.models import (
     ExperimentStatus,
     MetricAggregation,
     MetricDirection,
+    WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseDeliveryLog,
     WarehouseDeliveryOutcome,
@@ -91,7 +92,8 @@ if typing.TYPE_CHECKING:
 
     from clickhouse_connect.driver.client import Client as ClickHouseHTTPClient
 
-    from experimentation.models import Metric, WarehouseConnection
+    from environments.models import Environment
+    from experimentation.models import Metric
     from experimentation.types import ExposureGranularity
     from features.feature_states.models import FeatureValueType
     from features.models import FeatureStateValue
@@ -145,6 +147,47 @@ def is_experiment_feature_enabled(organisation: Organisation) -> bool:
         default_value=False,
         evaluation_context=organisation.openfeature_evaluation_context,
     )
+
+
+def get_experiment_flag_config(
+    organisation: Organisation,
+) -> dict[str, object]:
+    if not is_experiment_feature_enabled(organisation):
+        return {}
+    raw = get_openfeature_client().get_string_value(
+        EXPERIMENT_FLAG,
+        default_value="{}",
+        evaluation_context=organisation.openfeature_evaluation_context,
+    )
+    try:
+        parsed = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def ensure_flagsmith_warehouse_connection(
+    environment: Environment,
+) -> WarehouseConnection | None:
+    config = get_experiment_flag_config(environment.project.organisation)
+    if not config.get("auto_connect_warehouse"):
+        return None
+
+    if WarehouseConnection.objects.filter(
+        environment=environment,
+        deleted_at__isnull=True,
+    ).exists():
+        return None
+
+    try:
+        connection: WarehouseConnection = WarehouseConnection.objects.create(
+            environment=environment,
+            warehouse_type=WarehouseType.FLAGSMITH,
+            name="Flagsmith",
+        )
+        return connection
+    except IntegrityError:
+        return None
 
 
 @lru_cache(maxsize=2)
