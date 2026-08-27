@@ -4,7 +4,6 @@ import Project from 'common/project'
 import {
   ContentType,
   FeatureState,
-  FeatureStateValue,
   FlagsmithValue,
   MultivariateFeatureStateValue,
   MultivariateOption,
@@ -22,6 +21,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 import { getDefaultVariantKey } from './multivariate'
+import { featureStateToValue } from './featureStateToValue'
 import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
@@ -180,23 +180,7 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return null
   },
-  featureStateToValue(featureState: FeatureStateValue) {
-    if (!featureState) {
-      return null
-    }
-
-    //@ts-ignore value_type is the type key on core traits
-    switch (featureState.value_type || featureState.type) {
-      case 'bool':
-        return featureState.boolean_value
-      case 'float':
-        return featureState.float_value
-      case 'int':
-        return featureState.integer_value
-      default:
-        return featureState.string_value
-    }
-  },
+  featureStateToValue,
   findOperator(
     operator: SegmentCondition['operator'],
     value: string,
