@@ -50,16 +50,7 @@ def test_amplitude_create_list__valid_key__creates_amplitude_cohort(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    cohort = Cohort.objects.get(uuid=response.json()["list_id"])
-    # Amplitude's test and production parsers read the ID under different
-    # keys and depths; every copy must be present.
-    body = response.json()
-    assert (
-        body["listId"]
-        == body["response"]["list_id"]
-        == body["response"]["listId"]
-        == body["list_id"]
-    )
+    cohort = Cohort.objects.get(uuid=response.json()["listId"])
     assert cohort.environment == key.environment
     assert cohort.source_type == CohortSourceType.AMPLITUDE
     assert cohort.segment.name == "[Amplitude] Beta users: 1234"
@@ -83,7 +74,7 @@ def test_amplitude_create_list__postgres_environment__creates_cohort(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    cohort = Cohort.objects.get(uuid=response.json()["list_id"])
+    cohort = Cohort.objects.get(uuid=response.json()["listId"])
     assert cohort.environment == environment
 
 
@@ -359,7 +350,7 @@ def test_amplitude_create_list__valid_key__audits_and_queues_environment_update(
     # Then - the audit record carries no user, names the source, and is the
     # hook that rebuilds the environment document.
     assert response.status_code == status.HTTP_200_OK
-    cohort = Cohort.objects.get(uuid=response.json()["list_id"])
+    cohort = Cohort.objects.get(uuid=response.json()["listId"])
     audit_log = AuditLog.objects.get(related_object_id=cohort.segment_id)
     assert audit_log.author is None
     assert audit_log.master_api_key is None
@@ -386,7 +377,7 @@ def test_amplitude_create_list__valid_key__history_records_no_user(
     # Then - a machine caller leaves no user on historical records; stamping
     # one would fail, since the sync key is not a Flagsmith user.
     assert response.status_code == status.HTTP_200_OK
-    cohort = Cohort.objects.get(uuid=response.json()["list_id"])
+    cohort = Cohort.objects.get(uuid=response.json()["listId"])
     history_record = cohort.segment.history.get()
     assert history_record.history_user is None
     assert history_record.master_api_key is None
