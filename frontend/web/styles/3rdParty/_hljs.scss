@@ -60,6 +60,7 @@
       span {
         margin: 0;
         opacity: 1;
+        color: var(--color-text-default);
       }
       .language-icon {
         color: var(--color-text-default);
@@ -161,7 +162,7 @@
   font-family: $font-family-header;
   overflow: hidden;
   @include transition(all 0.2s ease-in-out);
-  color: $btn-code-button-color;
+  color: var(--color-text-default);
   display: inline-block;
   line-height: $line-height-xsm;
   font-weight: bold;
@@ -181,6 +182,9 @@
   }
   svg {
     vertical-align: sub;
+    path {
+      fill: currentColor;
+    }
   }
 }
 
@@ -307,30 +311,6 @@ code.txt {
     font-weight: 500;
     color: var(--color-text-default);
     border-color: var(--color-border-action);
-  }
-}
-
-.dark {
-  code.txt {
-    &:focus,
-    &:focus.empty {
-      color: white !important;
-    }
-    &.empty {
-      color: rgba(210, 210, 210, 0.5) !important;
-    }
-    border-color: transparent;
-    background: $input-bg-dark !important;
-    color: white;
-  }
-  .hljs-header {
-    color: white;
-    path {
-      fill: white;
-    }
-  }
-  .value-editor .select-language span.active {
-    color: white;
   }
 }
 
