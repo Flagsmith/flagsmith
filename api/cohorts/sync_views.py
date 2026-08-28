@@ -22,7 +22,13 @@ from cohorts.serializers import (
 )
 
 _LIST_RESPONSE = inline_serializer(
-    "AmplitudeListResponse", {"listId": serializers.UUIDField()}
+    "AmplitudeListResponse",
+    {
+        "list_id": serializers.UUIDField(),
+        "response": inline_serializer(
+            "AmplitudeListResponseEnvelope", {"list_id": serializers.UUIDField()}
+        ),
+    },
 )
 
 _MIXPANEL_RESPONSE = inline_serializer(
@@ -73,10 +79,15 @@ class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
             name=serializer.validated_data["name"],
             source_type=CohortSourceType.AMPLITUDE,
         )
-        # Amplitude's production sync worker reads the list ID from its
-        # documented default key, camelCase "listId", ignoring the response
-        # path configured in the Integration Portal.
-        return Response({"listId": str(cohort.uuid)})
+        # Amplitude reads the list ID from this body at the path configured
+        # in the Integration Portal, which their portal requires to start
+        # with "response." — but the two sides of Amplitude disagree on what
+        # that path is applied to. Their Testing tab wraps this body in a
+        # {"response": ...} envelope first, so it finds the flat copy; their
+        # production sync worker applies the same path to the raw body, so
+        # it needs the nested copy. Verified against both, 2026-08-28.
+        list_id = str(cohort.uuid)
+        return Response({"list_id": list_id, "response": {"list_id": list_id}})
 
     @action(detail=True, methods=["POST"])
     def add(self, request: Request, pk: str) -> Response:
