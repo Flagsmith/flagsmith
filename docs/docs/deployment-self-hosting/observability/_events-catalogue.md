@@ -86,7 +86,7 @@ Attributes:
 ### `cohorts.cohort.deleted`
 
 Logged at `info` from:
- - `api/cohorts/services.py:457`
+ - `api/cohorts/services.py:459`
 
 Attributes:
  - `cohort.id`
@@ -95,7 +95,7 @@ Attributes:
 ### `cohorts.cohort.deletion_requested`
 
 Logged at `info` from:
- - `api/cohorts/services.py:441`
+ - `api/cohorts/services.py:443`
 
 Attributes:
  - `cohort.id`
@@ -104,7 +104,7 @@ Attributes:
 ### `cohorts.csv.synced`
 
 Logged at `info` from:
- - `api/cohorts/services.py:413`
+ - `api/cohorts/services.py:415`
 
 Attributes:
  - `adds.count`
