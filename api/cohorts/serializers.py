@@ -156,3 +156,12 @@ class CohortCsvSyncResultSerializer(serializers.Serializer):  # type: ignore[typ
     removed = serializers.IntegerField(min_value=0)
     unchanged = serializers.IntegerField(min_value=0)
     ignored = CohortCsvSyncIgnoredRowsSerializer()
+
+
+class WebhookSyncMembersSerializer(serializers.Serializer[None]):
+    identifiers = serializers.ListField(
+        child=serializers.CharField(validators=[_validate_identifier_byte_length]),
+        min_length=1,
+        max_length=10000,
+        help_text="Identity identifiers, each at most 1024 bytes of UTF-8.",
+    )

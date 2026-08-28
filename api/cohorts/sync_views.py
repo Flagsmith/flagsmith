@@ -1,6 +1,5 @@
 import json
 import typing
-import uuid as uuid_module
 
 import structlog
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
@@ -19,6 +18,7 @@ from cohorts.serializers import (
     AmplitudeListSerializer,
     CohortSyncMembersSerializer,
     MixpanelWebhookSerializer,
+    WebhookSyncMembersSerializer,
 )
 
 _LIST_RESPONSE = inline_serializer(
@@ -96,16 +96,11 @@ class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
         return typing.cast(CohortSyncKey, request.auth)
 
     def _get_cohort(self, request: Request, pk: str) -> Cohort:
-        try:
-            list_uuid = uuid_module.UUID(pk)
-        except ValueError:
-            raise NotFound("List not found.")
-        cohort: Cohort | None = Cohort.objects.filter(
-            uuid=list_uuid,
+        cohort = services.get_active_cohort(
             environment=self._get_key(request).environment,
             source_type=CohortSourceType.AMPLITUDE,
-            deletion_requested_at__isnull=True,
-        ).first()
+            uuid=pk,
+        )
         if cohort is None:
             raise NotFound("List not found.")
         return cohort
@@ -241,3 +236,55 @@ class MixpanelCohortSyncView(APIView):
         ):
             return action_value
         return None
+
+
+@extend_schema_view(
+    add=extend_schema(
+        description=(
+            "Add members to a CSV cohort. Accepted deltas are applied to "
+            "identity data asynchronously. Re-adding a member is a no-op, "
+            "so retries are safe."
+        ),
+        request=WebhookSyncMembersSerializer,
+        responses={200: None},
+    ),
+    remove=extend_schema(
+        description=(
+            "Remove members from a CSV cohort. Accepted deltas are applied "
+            "to identity data asynchronously. Removing a non-member is a "
+            "no-op, so retries are safe."
+        ),
+        request=WebhookSyncMembersSerializer,
+        responses={200: None},
+    ),
+)
+class WebhookCohortSyncViewSet(viewsets.ViewSet):
+    authentication_classes = [CohortSyncKeyAuthentication]
+    permission_classes = [HasCohortSyncKey, CohortSyncPlanPermission]
+
+    @action(detail=True, methods=["POST"], url_path="members/add")
+    def add(self, request: Request, pk: str) -> Response:
+        cohort = self._get_cohort(request, pk)
+        serializer = WebhookSyncMembersSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        services.add_cohort_members(cohort, serializer.validated_data["identifiers"])
+        return Response()
+
+    @action(detail=True, methods=["POST"], url_path="members/remove")
+    def remove(self, request: Request, pk: str) -> Response:
+        cohort = self._get_cohort(request, pk)
+        serializer = WebhookSyncMembersSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        services.remove_cohort_members(cohort, serializer.validated_data["identifiers"])
+        return Response()
+
+    def _get_cohort(self, request: Request, pk: str) -> Cohort:
+        cohort = services.get_active_cohort(
+            # HasCohortSyncKey has already established the type.
+            environment=typing.cast(CohortSyncKey, request.auth).environment,
+            source_type=CohortSourceType.CSV,
+            uuid=pk,
+        )
+        if cohort is None:
+            raise NotFound("Cohort not found.")
+        return cohort
