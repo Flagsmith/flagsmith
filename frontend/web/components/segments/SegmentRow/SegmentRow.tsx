@@ -98,11 +98,6 @@ const SegmentRow: FC<SegmentRowProps> = ({ index, projectId, segment }) => {
               {cohort.source_type.toUpperCase()}
             </Chip>
           )}
-          {!!cohort && (
-            <Chip className='ml-2' size='xs'>
-              {cohort.environment_name}
-            </Chip>
-          )}
           {isPendingDeletion && (
             <Chip className='ml-2' size='xs'>
               Deleting

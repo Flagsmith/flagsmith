@@ -32,6 +32,12 @@ export const cohortService = service
           url: `environments/${query.environmentApiKey}/cohorts/${query.cohortId}/`,
         }),
       }),
+      getCohort: builder.query<Res['cohort'], Req['getCohort']>({
+        providesTags: (res, e, arg) => [{ id: arg.cohortId, type: 'Cohort' }],
+        query: (query) => ({
+          url: `environments/${query.environmentApiKey}/cohorts/${query.cohortId}/`,
+        }),
+      }),
       syncCohortCsv: builder.mutation<
         Res['cohortCsvSync'],
         Req['syncCohortCsv']
@@ -55,6 +61,24 @@ export const cohortService = service
           }
         },
       }),
+      updateCohort: builder.mutation<Res['cohort'], Req['updateCohort']>({
+        invalidatesTags: (q, e, arg) => [
+          { id: arg.cohortId, type: 'Cohort' },
+          { id: arg.segmentId, type: 'Segment' },
+          { id: `LIST${arg.projectId}`, type: 'Segment' },
+        ],
+        query: ({
+          cohortId,
+          environmentApiKey,
+          projectId: _projectId,
+          segmentId: _segmentId,
+          ...body
+        }) => ({
+          body,
+          method: 'PATCH',
+          url: `environments/${environmentApiKey}/cohorts/${cohortId}/`,
+        }),
+      }),
       // END OF ENDPOINTS
     }),
   })
@@ -72,7 +96,9 @@ export async function deleteCohort(
 export const {
   useCreateCohortMutation,
   useDeleteCohortMutation,
+  useGetCohortQuery,
   useSyncCohortCsvMutation,
+  useUpdateCohortMutation,
   // END OF EXPORTS
 } = cohortService
 

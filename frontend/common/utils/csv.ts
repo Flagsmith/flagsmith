@@ -14,6 +14,9 @@ export type ExtractedIdentifiers = {
 // DynamoDB sort keys, capped at 1024 bytes).
 export const MAX_IDENTIFIER_BYTES = 1024
 
+// Mirrors the API's COHORT_CSV_MAX_FILE_SIZE_BYTES.
+export const MAX_CSV_FILE_SIZE_BYTES = 10 * 1024 * 1024
+
 export function parseCsvText(text: string): string[][] {
   const rows: string[][] = []
   let row: string[] = []

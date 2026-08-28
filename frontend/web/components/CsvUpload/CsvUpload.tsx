@@ -1,4 +1,5 @@
 import { FC, useCallback, useState } from 'react'
+import classNames from 'classnames'
 import { useDropzone } from 'react-dropzone'
 import { colorIconAction } from 'common/theme/tokens'
 import DropIcon from 'components/icons/DropIcon'
@@ -11,6 +12,7 @@ export type CsvUploadType = {
   value: File | null
   maxSizeBytes?: number
   rowCount?: number
+  disabled?: boolean
   onChange: (file: File, text: string) => void
 }
 
@@ -22,6 +24,7 @@ const formatFileSize = (bytes: number) => {
 }
 
 const CsvUpload: FC<CsvUploadType> = ({
+  disabled,
   maxSizeBytes,
   onChange,
   rowCount,
@@ -52,6 +55,7 @@ const CsvUpload: FC<CsvUploadType> = ({
     accept: {
       'text/csv': ['.csv'],
     },
+    disabled,
     maxSize: maxSizeBytes,
     multiple: false,
     noClick: true,
@@ -90,7 +94,14 @@ const CsvUpload: FC<CsvUploadType> = ({
             </Button>
           </div>
         ) : (
-          <div className='csv-upload__droparea text-center rounded-lg'>
+          <div
+            className={classNames(
+              'csv-upload__droparea text-center rounded-lg',
+              {
+                'opacity-50 pe-none': disabled,
+              },
+            )}
+          >
             <DropIcon />
             <div className='mt-2 mb-2'>
               <strong>Drag and drop your CSV here</strong>
@@ -98,7 +109,9 @@ const CsvUpload: FC<CsvUploadType> = ({
             <div className='text-secondary fs-small mb-3'>
               or browse it from your computer
             </div>
-            <Button onClick={open}>Select file</Button>
+            <Button disabled={disabled} onClick={open}>
+              Select file
+            </Button>
           </div>
         )}
       </div>
