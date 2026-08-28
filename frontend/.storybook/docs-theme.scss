@@ -50,6 +50,15 @@
     color: var(--color-text-default, #ffffff);
   }
 
+  // Storybook marks rendered stories .sb-unstyled so docs typography stays out
+  // of them. The two rules above predate that, and were repainting any <pre> a
+  // component renders, e.g. every line of the diff viewer.
+  .sbdocs .sb-unstyled code,
+  .sbdocs .sb-unstyled pre {
+    background-color: transparent;
+    color: inherit;
+  }
+
   // Storybook Source/code block container and all its children
   .docblock-source,
   .docblock-source > * {
