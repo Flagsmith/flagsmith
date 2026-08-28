@@ -282,14 +282,13 @@ def test_feature_import__project_admin__creates_import(
     assert FeatureImport.objects.count() == 1
 
 
-def test_feature_import__environment_admin__creates_import(
+def test_feature_import__environment_admin__returns_forbidden(
     staff_client: APIClient,
     environment: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given
     with_environment_permissions(admin=True)  # type: ignore[call-arg]
-    assert FeatureImport.objects.count() == 0
     url = reverse(
         "api-v1:features:feature-import",
         args=[environment.id],
@@ -303,8 +302,8 @@ def test_feature_import__environment_admin__creates_import(
     response = staff_client.post(url, data=data, format="multipart")
 
     # Then
-    assert response.status_code == 201
-    assert FeatureImport.objects.count() == 1
+    assert response.status_code == 403
+    assert FeatureImport.objects.count() == 0
 
 
 def test_feature_import__non_admin_project_permissions__returns_forbidden(

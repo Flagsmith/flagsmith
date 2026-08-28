@@ -14,12 +14,11 @@ class FeatureImportPermissions(IsAuthenticated):
         if not super().has_permission(request, view):
             return False
 
-        environment = Environment.objects.get(id=view.kwargs["environment_id"])
+        environment = Environment.objects.select_related("project").get(
+            id=view.kwargs["environment_id"]
+        )
 
-        # Since feature imports can be destructive, use environment admin.
-        # This mirrors the feature export permissions, and is satisfied by
-        # organisation and project admins too.
-        return request.user.is_environment_admin(environment)  # type: ignore[union-attr,no-any-return]
+        return request.user.is_project_admin(environment.project)  # type: ignore[union-attr,no-any-return]
 
 
 class CreateFeatureExportPermissions(IsAuthenticated):
