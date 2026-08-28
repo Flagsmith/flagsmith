@@ -612,6 +612,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   projectId={projectId}
                   segment={_segment}
                   readOnly={readOnly}
+                  onDirtyChange={setValueChanged}
                 />
               ) : (
                 <CreateSegmentRulesTabForm
@@ -701,6 +702,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   projectId={projectId}
                   segment={_segment}
                   readOnly={readOnly}
+                  onDirtyChange={setValueChanged}
                 />
               ) : (
                 <CreateSegmentRulesTabForm
@@ -751,6 +753,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 projectId={projectId}
                 segment={_segment}
                 readOnly={readOnly}
+                onDirtyChange={setValueChanged}
               />
             ) : (
               <CreateSegmentRulesTabForm

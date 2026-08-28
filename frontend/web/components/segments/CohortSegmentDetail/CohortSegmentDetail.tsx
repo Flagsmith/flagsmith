@@ -21,6 +21,7 @@ const SYNC_POLL_INTERVAL_MS = 3000
 type CohortSegmentDetailType = {
   // The page context already names the segment via its breadcrumb.
   hideHeader?: boolean
+  onDirtyChange?: (dirty: boolean) => void
   projectId: number | string
   readOnly?: boolean
   segment: Segment
@@ -40,6 +41,7 @@ const InfoRow: FC<{ label: string; children: ReactNode }> = ({
 
 const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
   hideHeader,
+  onDirtyChange,
   projectId,
   readOnly,
   segment,
@@ -86,12 +88,16 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
     setDescription(segment.description || '')
   }, [segment.name, segment.description])
 
+  const isDirty =
+    name !== segment.name || description !== (segment.description || '')
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
+
   if (!cohort) {
     return null
   }
-
-  const isDirty =
-    name !== segment.name || description !== (segment.description || '')
 
   const save = async () => {
     try {
