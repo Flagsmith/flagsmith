@@ -4,7 +4,6 @@ import Icon from 'components/icons/Icon'
 import Tooltip, { TooltipProps } from 'components/Tooltip'
 
 interface FieldLabelProps {
-  // Associates the label with its control; required for accessibility.
   htmlFor?: string
   id?: string
   children: ReactNode
