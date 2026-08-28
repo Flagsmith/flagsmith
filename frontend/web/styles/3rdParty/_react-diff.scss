@@ -5,6 +5,14 @@
 // emotion styles at runtime, after this stylesheet, so it wins any tie.
 
 .react-diff-1n5o7vh-diff-container {
+  // The diff's two strengths, in one place. A changed row is faint, the words
+  // that changed inside it are stronger, which is what makes a diff readable.
+  // See-through layers, so one value works on light and dark alike.
+  --diff-row-removed: oklch(from var(--red-500) l c h / 0.16);
+  --diff-row-added: oklch(from var(--green-500) l c h / 0.16);
+  --diff-word-removed: oklch(from var(--red-500) l c h / 0.28);
+  --diff-word-added: oklch(from var(--green-500) l c h / 0.28);
+
   background-color: transparent !important;
 }
 
@@ -71,31 +79,23 @@
   padding: 0 !important;
 }
 
-// Rows take a 16% overlay, the gutter marker and the changed words 28%, so the
-// words read through the row behind them. Flatten these and word-level
-// highlighting disappears.
-//
-// Derived from the palette primitives rather than added as tokens: an alpha
-// overlay lightens whatever it sits on, so one value covers both themes, and
-// --red-500 / --green-500 are the same primitives the danger and success
-// surfaces are built from.
 .react-diff-1fxlvce-diff-removed {
-  background-color: oklch(from var(--red-500) l c h / 0.16) !important;
+  background-color: var(--diff-row-removed) !important;
 }
 .react-diff-1fqrsd-diff-added {
-  background-color: oklch(from var(--green-500) l c h / 0.16) !important;
+  background-color: var(--diff-row-added) !important;
 }
 .react-diff-1p2tkx4-marker.react-diff-1fxlvce-diff-removed {
-  background-color: oklch(from var(--red-500) l c h / 0.28) !important;
+  background-color: var(--diff-word-removed) !important;
 }
 .react-diff-1p2tkx4-marker.react-diff-1fqrsd-diff-added {
-  background-color: oklch(from var(--green-500) l c h / 0.28) !important;
+  background-color: var(--diff-word-added) !important;
 }
 .react-diff-hf3w1f-word-removed {
-  background-color: oklch(from var(--red-500) l c h / 0.28) !important;
+  background-color: var(--diff-word-removed) !important;
 }
 .react-diff-1u4zuq6-word-added {
-  background-color: oklch(from var(--green-500) l c h / 0.28) !important;
+  background-color: var(--diff-word-added) !important;
 }
 
 .react-diff-1n5o7vh-diff-container pre {
