@@ -1,7 +1,7 @@
 import React, { FC, forwardRef, useCallback, useEffect, useState } from 'react'
+import { find } from 'lodash'
 import Icon from './icons/Icon'
 import FieldLabel from './base/forms/FieldLabel'
-import { find } from 'lodash'
 import _data from 'common/data/base/_data'
 import {
   AvailablePermission,
