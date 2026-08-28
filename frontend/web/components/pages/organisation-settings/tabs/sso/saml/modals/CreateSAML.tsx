@@ -143,12 +143,14 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       />
       <div className='form-group mt-2 mb-4'>
         <FieldLabel
+          htmlFor='saml-allow-idp-initiated'
           tooltip="Enable this to allow logins initiated by your identity provider. If disabled, users can only log in from Flagsmith's login page."
           tooltipPlace='right'
         >
           Allow IdP-initiated logins
         </FieldLabel>
         <Switch
+          id='saml-allow-idp-initiated'
           checked={allowIdpInitiated || data?.allow_idp_initiated}
           onChange={() => {
             setAllowIdpInitiated(!allowIdpInitiated)
