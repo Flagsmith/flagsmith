@@ -55,6 +55,8 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "12.0.1",
         "12.1.0",
         "12.1.2",
+        "12.2.0",
+    
     ],
     "flagsmith-kotlin-android-sdk": [
         "unknown",
