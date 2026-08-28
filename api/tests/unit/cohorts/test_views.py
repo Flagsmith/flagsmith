@@ -1,9 +1,12 @@
+import typing
+
 import pytest
 from common.environments.permissions import (
     MANAGE_SEGMENT_OVERRIDES,
     VIEW_ENVIRONMENT,
 )
 from common.projects.permissions import MANAGE_SEGMENTS
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
@@ -27,6 +30,9 @@ from tests.types import (
     WithEnvironmentPermissionsCallable,
     WithProjectPermissionsCallable,
 )
+
+if typing.TYPE_CHECKING:
+    from pytest_django.fixtures import DjangoAssertNumQueries
 
 
 def test_create_cohort__staff_with_manage_segments__returns_201(
@@ -164,6 +170,237 @@ def test_list_cohorts__deletion_requested_cohort__excluded(
     assert response.status_code == status.HTTP_200_OK
     assert [row["id"] for row in response.json()] == [edge_cohort.id]
     assert response.json()[0]["name"] == edge_cohort.segment.name
+
+
+def _assert_list_cohorts_membership_counts_in_constant_queries(
+    staff_client: APIClient,
+    edge_cohort: Cohort,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    django_assert_num_queries: "DjangoAssertNumQueries",
+    num_queries: int,
+) -> None:
+    # Given
+    environment = edge_cohort.environment
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT], environment_id=environment.id
+    )
+    CohortMembership.objects.create(
+        cohort=edge_cohort, identifier="applied-1", state=CohortMembershipState.APPLIED
+    )
+    other_cohort = Cohort.objects.create(
+        environment=environment,
+        segment=Segment.objects.create(name="other", project=environment.project),
+    )
+    CohortMembership.objects.bulk_create(
+        CohortMembership(cohort=other_cohort, identifier=identifier, state=state)
+        for identifier, state in {
+            "pending-add-1": CohortMembershipState.PENDING_ADD,
+            "pending-remove-1": CohortMembershipState.PENDING_REMOVE,
+        }.items()
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-list", args=[environment.api_key]
+    )
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert [row["membership_counts"] for row in response.json()] == [
+        {"applied": 1, "pending_add": 0, "pending_remove": 0},
+        {"applied": 0, "pending_add": 1, "pending_remove": 1},
+    ]
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
+def test_list_cohorts__multiple_cohorts_without_rbac__membership_counts_in_constant_queries(
+    staff_client: APIClient,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    django_assert_num_queries: "DjangoAssertNumQueries",
+) -> None:
+    # Given / When
+    # Then
+    _assert_list_cohorts_membership_counts_in_constant_queries(
+        staff_client,
+        edge_cohort,
+        with_environment_permissions,
+        django_assert_num_queries,
+        num_queries=10,
+    )
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+def test_list_cohorts__multiple_cohorts_with_rbac__membership_counts_in_constant_queries(
+    staff_client: APIClient,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    django_assert_num_queries: "DjangoAssertNumQueries",
+) -> None:  # pragma: no cover
+    # Given / When
+    # Then
+    # RBAC's runtime role checks add two permission queries.
+    _assert_list_cohorts_membership_counts_in_constant_queries(
+        staff_client,
+        edge_cohort,
+        with_environment_permissions,
+        django_assert_num_queries,
+        num_queries=12,
+    )
+
+
+def test_retrieve_cohort__mixed_membership_states__returns_membership_counts(
+    staff_client: APIClient,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT], environment_id=edge_cohort.environment_id
+    )
+    memberships = {
+        "applied-1": CohortMembershipState.APPLIED,
+        "applied-2": CohortMembershipState.APPLIED,
+        "pending-add-1": CohortMembershipState.PENDING_ADD,
+        "pending-remove-1": CohortMembershipState.PENDING_REMOVE,
+    }
+    CohortMembership.objects.bulk_create(
+        CohortMembership(cohort=edge_cohort, identifier=identifier, state=state)
+        for identifier, state in memberships.items()
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-detail",
+        args=[edge_cohort.environment.api_key, edge_cohort.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["membership_counts"] == {
+        "applied": 2,
+        "pending_add": 1,
+        "pending_remove": 1,
+    }
+    assert response.json()["last_synced_at"] is None
+
+
+def test_update_cohort__staff_with_manage_segments__updates_segment_fields(
+    staff_client: APIClient,
+    dynamo_enabled_project: Project,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=edge_cohort.environment_id,
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-detail",
+        args=[edge_cohort.environment.api_key, edge_cohort.id],
+    )
+
+    # When
+    response = staff_client.patch(
+        url,
+        data={"name": "renamed", "description": "Updated description"},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    edge_cohort.segment.refresh_from_db()
+    assert edge_cohort.segment.name == "renamed"
+    assert edge_cohort.segment.description == "Updated description"
+    assert response.json()["name"] == "renamed"
+    assert response.json()["description"] == "Updated description"
+
+
+def test_update_cohort__metadata_supplied__updates_segment_metadata(
+    staff_client: APIClient,
+    dynamo_enabled_project: Project,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    required_segment_metadata_field_for_dynamo_project: MetadataModelField,
+    with_project_permissions: WithProjectPermissionsCallable,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions(  # type: ignore[call-arg]
+        [MANAGE_SEGMENTS], project_id=dynamo_enabled_project.id
+    )
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_SEGMENT_OVERRIDES],
+        environment_id=edge_cohort.environment_id,
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-detail",
+        args=[edge_cohort.environment.api_key, edge_cohort.id],
+    )
+
+    # When
+    response = staff_client.patch(
+        url,
+        data={
+            "metadata": [
+                {
+                    "model_field": required_segment_metadata_field_for_dynamo_project.id,
+                    "field_value": 10,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    metadata = Metadata.objects.get(
+        model_field=required_segment_metadata_field_for_dynamo_project
+    )
+    assert metadata.object_id == edge_cohort.segment_id
+    assert metadata.field_value == "10"
+
+
+def test_update_cohort__staff_without_permission__returns_403(
+    staff_client: APIClient,
+    edge_cohort: Cohort,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT], environment_id=edge_cohort.environment_id
+    )
+    url = reverse(
+        "api-v1:environments:cohorts:cohorts-detail",
+        args=[edge_cohort.environment.api_key, edge_cohort.id],
+    )
+
+    # When
+    response = staff_client.patch(url, data={"name": "renamed"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    edge_cohort.segment.refresh_from_db()
+    assert edge_cohort.segment.name != "renamed"
 
 
 def test_delete_cohort__staff_with_manage_segments__returns_202(
@@ -501,6 +738,7 @@ def test_sync_csv__staff_with_manage_segments__returns_202_with_counts(
     assert all(m.state == CohortMembershipState.APPLIED for m in memberships)
     edge_cohort.refresh_from_db()
     assert edge_cohort.version == 1
+    assert edge_cohort.last_synced_at is not None
 
 
 def test_sync_csv__without_permission__returns_403(

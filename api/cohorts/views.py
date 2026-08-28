@@ -1,4 +1,4 @@
-from django.db.models import QuerySet
+from django.db.models import Count, Q, QuerySet
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -10,7 +10,7 @@ from rest_framework.serializers import BaseSerializer
 
 from api.serializers import ErrorSerializer
 from cohorts import services
-from cohorts.models import Cohort, CohortSyncKey
+from cohorts.models import Cohort, CohortMembershipState, CohortSyncKey
 from cohorts.permissions import CohortPermission, CohortPlanPermission
 from cohorts.serializers import (
     CohortCsvSyncResultSerializer,
@@ -29,6 +29,11 @@ from users.models import FFAdminUser
         description="Create a cohort and the managed segment that targets it."
     ),
     retrieve=extend_schema(description="Retrieve a cohort."),
+    partial_update=extend_schema(
+        description=(
+            "Update the cohort's managed segment name, description and metadata."
+        )
+    ),
     destroy=extend_schema(
         description=(
             "Request cohort deletion. Memberships are drained from identity "
@@ -42,6 +47,7 @@ class CohortViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
     serializer_class = CohortSerializer
@@ -50,6 +56,8 @@ class CohortViewSet(
     model_class = Cohort
     lookup_field = "id"
     lookup_url_kwarg = "cohort_id"
+    # PATCH only: a cohort has no meaningful full replacement.
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
 
     def get_queryset(self) -> QuerySet[Cohort]:
         # A cohort awaiting drain-then-delete is already gone from the
@@ -59,6 +67,20 @@ class CohortViewSet(
             .get_queryset()
             .filter(deletion_requested_at__isnull=True)
             .select_related("segment")
+            .annotate(
+                applied_count=Count(
+                    "memberships",
+                    filter=Q(memberships__state=CohortMembershipState.APPLIED),
+                ),
+                pending_add_count=Count(
+                    "memberships",
+                    filter=Q(memberships__state=CohortMembershipState.PENDING_ADD),
+                ),
+                pending_remove_count=Count(
+                    "memberships",
+                    filter=Q(memberships__state=CohortMembershipState.PENDING_REMOVE),
+                ),
+            )
             .order_by("id")
         )
 

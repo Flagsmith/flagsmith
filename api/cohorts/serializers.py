@@ -1,11 +1,13 @@
 import typing
 
 from django.core.files.uploadedfile import UploadedFile
+from django.db.models import Count, Q
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from cohorts.constants import COHORT_CSV_MAX_FILE_SIZE_BYTES
 from cohorts.exceptions import CsvFileTooLargeError
-from cohorts.models import Cohort, CohortSyncKey
+from cohorts.models import Cohort, CohortMembershipState, CohortSyncKey
 from cohorts.services import create_cohort
 from environments.models import Environment
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
@@ -19,12 +21,19 @@ class _SegmentMetadataHandler(MetadataSerializerMixin):
         model = Segment
 
 
+class CohortMembershipCountsSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    applied = serializers.IntegerField(min_value=0)
+    pending_add = serializers.IntegerField(min_value=0)
+    pending_remove = serializers.IntegerField(min_value=0)
+
+
 class CohortSerializer(serializers.ModelSerializer[Cohort]):
     name = serializers.CharField(max_length=2000, source="segment.name")
     description = serializers.CharField(
         source="segment.description", required=False, allow_null=True
     )
     metadata = MetadataSerializer(required=False, many=True, write_only=True)
+    membership_counts = serializers.SerializerMethodField()
 
     class Meta:
         model = Cohort
@@ -38,11 +47,41 @@ class CohortSerializer(serializers.ModelSerializer[Cohort]):
             "source_type",
             "version",
             "created_at",
+            "last_synced_at",
+            "membership_counts",
         )
-        read_only_fields = ("segment", "source_type", "version", "created_at")
+        read_only_fields = (
+            "segment",
+            "source_type",
+            "version",
+            "created_at",
+            "last_synced_at",
+        )
+
+    @extend_schema_field(CohortMembershipCountsSerializer)
+    def get_membership_counts(self, cohort: Cohort) -> dict[str, int]:
+        # Clients derive sync status and progress from these. The viewset
+        # annotates the counts; a freshly created cohort isn't annotated.
+        if (applied := getattr(cohort, "applied_count", None)) is not None:
+            return {
+                "applied": applied,
+                "pending_add": getattr(cohort, "pending_add_count", 0),
+                "pending_remove": getattr(cohort, "pending_remove_count", 0),
+            }
+        return cohort.memberships.aggregate(
+            applied=Count("id", filter=Q(state=CohortMembershipState.APPLIED)),
+            pending_add=Count("id", filter=Q(state=CohortMembershipState.PENDING_ADD)),
+            pending_remove=Count(
+                "id", filter=Q(state=CohortMembershipState.PENDING_REMOVE)
+            ),
+        )
 
     def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
         attrs = super().validate(attrs)
+        if self.instance is not None and "metadata" not in attrs:
+            # A partial update without metadata must not fail the
+            # required-metadata check.
+            return attrs
         environment = Environment.objects.get(
             api_key=self.context["view"].kwargs["environment_api_key"]
         )
@@ -63,6 +102,19 @@ class CohortSerializer(serializers.ModelSerializer[Cohort]):
         if metadata_data:
             _SegmentMetadataHandler()._update_metadata(cohort.segment, metadata_data)
         return cohort
+
+    def update(self, instance: Cohort, validated_data: dict[str, typing.Any]) -> Cohort:
+        # Only the managed segment's fields are updatable.
+        metadata_data = validated_data.pop("metadata", None)
+        segment_data = validated_data.pop("segment", {})
+        if segment_data:
+            segment = instance.segment
+            for field, value in segment_data.items():
+                setattr(segment, field, value)
+            segment.save(update_fields=list(segment_data))
+        if metadata_data is not None:
+            _SegmentMetadataHandler()._update_metadata(instance.segment, metadata_data)
+        return instance
 
 
 class CohortSyncKeySerializer(serializers.ModelSerializer[CohortSyncKey]):
