@@ -165,9 +165,9 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
             placeholder="e.g. 'People who have spent over $100' "
           />
           {!!updateError && <ErrorMessage error={updateError} />}
-          {isDirty && !readOnly && (
+          {!readOnly && (
             <div className='text-right'>
-              <Button disabled={!name || isUpdating} onClick={save}>
+              <Button disabled={!isDirty || !name || isUpdating} onClick={save}>
                 {isUpdating ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
@@ -190,17 +190,21 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
             </InfoRow>
           )}
           <InfoRow label='Status'>
-            <span
-              className={classNames(
-                'cohort-segment-detail__status d-inline-flex align-items-center gap-1 fw-bold',
-                isSyncing
-                  ? 'bg-surface-action-tint text-action'
-                  : 'bg-surface-success text-success',
-              )}
-            >
-              <span className='cohort-segment-detail__status-dot rounded-circle' />
-              {isSyncing ? 'Synchronising' : 'Import completed'}
-            </span>
+            {counts ? (
+              <span
+                className={classNames(
+                  'cohort-segment-detail__status d-inline-flex align-items-center gap-1 fw-bold',
+                  isSyncing
+                    ? 'bg-surface-action-tint text-action'
+                    : 'bg-surface-success text-success',
+                )}
+              >
+                <span className='cohort-segment-detail__status-dot rounded-circle' />
+                {isSyncing ? 'Synchronising' : 'Import completed'}
+              </span>
+            ) : (
+              <span className='fw-semibold'>…</span>
+            )}
           </InfoRow>
           {isSyncing && (
             <div className='d-flex flex-column mx-0 gap-1'>
