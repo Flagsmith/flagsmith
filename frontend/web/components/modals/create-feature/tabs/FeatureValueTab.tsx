@@ -65,11 +65,10 @@ type FeatureValueTabProps = {
 }
 
 // No tooltip when using variations (no single value to describe).
-const getValueTooltip = (
-  hasVariations: boolean,
-  isEdit: boolean,
-): string | undefined => {
-  if (hasVariations) return undefined
+const getValueTooltip = (hasVariations: boolean, isEdit: boolean): string => {
+  if (hasVariations) {
+    return Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION
+  }
   const seedsAllEnvironments = isEdit
     ? ''
     : '<br/>Setting this when creating a feature will set the value for all environments. You can edit this individually for each environment once the feature is created.'
@@ -250,9 +249,6 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   const valueTitle = hasVariations ? (
     <span className='d-inline-flex align-items-center'>
       Control Value
-      <span className='ml-1'>
-        <Icon name='info-outlined' />
-      </span>
       <span className='chip chip--xs ml-2'>
         {Math.max(0, controlPercentage)}%
       </span>
@@ -477,20 +473,16 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
           {variationsInfo}
           {hasVariations && (
             <Row className='justify-content-between align-items-center mb-2'>
-              {Utils.getFlagsmithHasFeature('experimental_flags') ? (
-                <Tooltip
-                  title={
-                    <label className='mb-0 cursor-pointer'>
-                      Variants <Icon name='info-outlined' />
-                    </label>
-                  }
-                >
-                  To use this flag in an experiment, all the variants must have
-                  a label.
-                </Tooltip>
-              ) : (
-                <label className='mb-0'>Variants</label>
-              )}
+              <FieldLabel
+                className='mb-0'
+                tooltip={
+                  Utils.getFlagsmithHasFeature('experimental_flags')
+                    ? 'To use this flag in an experiment, all the variants must have a label.'
+                    : undefined
+                }
+              >
+                Variants
+              </FieldLabel>
               {Utils.renderWithPermission(
                 createFeature,
                 Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
