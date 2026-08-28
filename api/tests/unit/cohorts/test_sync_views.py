@@ -51,6 +51,15 @@ def test_amplitude_create_list__valid_key__creates_amplitude_cohort(
     # Then
     assert response.status_code == status.HTTP_200_OK
     cohort = Cohort.objects.get(uuid=response.json()["list_id"])
+    # Amplitude's test and production parsers read the ID under different
+    # keys and depths; every copy must be present.
+    body = response.json()
+    assert (
+        body["listId"]
+        == body["response"]["list_id"]
+        == body["response"]["listId"]
+        == body["list_id"]
+    )
     assert cohort.environment == key.environment
     assert cohort.source_type == CohortSourceType.AMPLITUDE
     assert cohort.segment.name == "[Amplitude] Beta users: 1234"

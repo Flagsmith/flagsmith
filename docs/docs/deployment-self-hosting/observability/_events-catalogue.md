@@ -166,7 +166,7 @@ Attributes:
 ### `cohorts.sync_webhook.rejected`
 
 Logged at `warning` from:
- - `api/cohorts/sync_views.py:214`
+ - `api/cohorts/sync_views.py:239`
 
 Attributes:
  - `action`

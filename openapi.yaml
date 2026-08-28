@@ -18946,7 +18946,26 @@ components:
         list_id:
           type: string
           format: uuid
+        listId:
+          type: string
+          format: uuid
+        response:
+          $ref: '#/components/schemas/AmplitudeListResponseEnvelope'
       required:
+        - listId
+        - list_id
+        - response
+    AmplitudeListResponseEnvelope:
+      type: object
+      properties:
+        list_id:
+          type: string
+          format: uuid
+        listId:
+          type: string
+          format: uuid
+      required:
+        - listId
         - list_id
     AuditLogList:
       type: object

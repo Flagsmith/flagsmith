@@ -22,7 +22,18 @@ from cohorts.serializers import (
 )
 
 _LIST_RESPONSE = inline_serializer(
-    "AmplitudeListResponse", {"list_id": serializers.UUIDField()}
+    "AmplitudeListResponse",
+    {
+        "list_id": serializers.UUIDField(),
+        "listId": serializers.UUIDField(),
+        "response": inline_serializer(
+            "AmplitudeListResponseEnvelope",
+            {
+                "list_id": serializers.UUIDField(),
+                "listId": serializers.UUIDField(),
+            },
+        ),
+    },
 )
 
 _MIXPANEL_RESPONSE = inline_serializer(
@@ -73,7 +84,21 @@ class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
             name=serializer.validated_data["name"],
             source_type=CohortSourceType.AMPLITUDE,
         )
-        return Response({"list_id": str(cohort.uuid)})
+        # Amplitude's Testing tab and production sync worker read the list
+        # ID from this body differently: the Testing tab wraps the body in a
+        # {"response": ...} envelope before applying the configured ID path,
+        # while the production worker appears to ignore the configured path
+        # and read the documented default key, camelCase "listId". Carrying
+        # the ID at every spelling and depth satisfies every parser
+        # observed.
+        list_id = str(cohort.uuid)
+        return Response(
+            {
+                "list_id": list_id,
+                "listId": list_id,
+                "response": {"list_id": list_id, "listId": list_id},
+            }
+        )
 
     @action(detail=True, methods=["POST"])
     def add(self, request: Request, pk: str) -> Response:
