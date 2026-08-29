@@ -9819,6 +9819,179 @@ paths:
         - Master API Key: []
       tags:
         - Audit
+  '/api/v1/organisations/{organisation_pk}/edge-proxy/keys/':
+    get:
+      operationId: api_v1_organisations_edge_proxy_keys_list
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Organisations
+    post:
+      operationId: api_v1_organisations_edge_proxy_keys_create
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProxyKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProxyKey'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Organisations
+  '/api/v1/organisations/{organisation_pk}/edge-proxy/keys/{prefix}/':
+    get:
+      operationId: api_v1_organisations_edge_proxy_keys_retrieve
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prefix
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Organisations
+    put:
+      operationId: api_v1_organisations_edge_proxy_keys_update
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prefix
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProxyKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProxyKey'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Organisations
+    patch:
+      operationId: api_v1_organisations_edge_proxy_keys_partial_update
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prefix
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProxyKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProxyKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProxyKey'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Organisations
+    delete:
+      operationId: api_v1_organisations_edge_proxy_keys_destroy
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prefix
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No response body
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Organisations
   '/api/v1/organisations/{organisation_pk}/github/create-cleanup-issue/':
     post:
       operationId: api_v1_organisations_github_create_cleanup_issue_create
@@ -18644,6 +18817,20 @@ paths:
         - Master API Key: []
       tags:
         - Projects
+  /api/v1/proxy/config/:
+    get:
+      operationId: api_v1_proxy_config_list
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EdgeProxyEnvironment'
+      tags:
+        - Other
   '/api/v1/segments/get-by-uuid/{uuid}/':
     get:
       operationId: api_v1_segments_get_by_uuid_retrieve
@@ -20542,6 +20729,48 @@ components:
       required:
         - multivariate_feature_option
         - percentage_allocation
+    EdgeProxyEnvironment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 2000
+        client_side_key:
+          type: string
+        server_side_keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/EdgeProxyServerSideKey'
+        updated_at:
+          description: 'Tracks changes to self and related entities, e.g. FeatureStates.'
+          type: string
+          format: date-time
+        project_id:
+          type: integer
+          readOnly: true
+        organisation_id:
+          type: integer
+          readOnly: true
+      required:
+        - client_side_key
+        - name
+        - server_side_keys
+    EdgeProxyServerSideKey:
+      type: object
+      properties:
+        key:
+          type: string
+          maxLength: 100
+        active:
+          type: boolean
+        expires_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
     EdgeV2MigrationStatusEnum:
       description: |-
         * `NOT_STARTED` - Not Started
@@ -25549,6 +25778,47 @@ components:
         enforce_feature_owners:
           description: Require at least one user or group owner when creating a feature.
           type: boolean
+    PatchedProxyKey:
+      type: object
+      properties:
+        prefix:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          description: A free-form name for the API key. Need not be unique. 50 characters max.
+          type: string
+          maxLength: 50
+        revoked:
+          description: 'If the API key is revoked, clients cannot use it anymore. (This cannot be undone.)'
+          type: boolean
+        expiry_date:
+          description: 'Once API key expires, clients cannot use it anymore.'
+          type:
+            - string
+            - 'null'
+          format: date-time
+          title: Expires
+        key:
+          description: 'Only the key hash is stored, so the full key is returned on create and is unavailable from every other endpoint.'
+          type: string
+          readOnly: true
+        has_expired:
+          type: boolean
+          readOnly: true
+        created_by_user:
+          type:
+            - integer
+            - 'null'
+          readOnly: true
+        created_by_master_api_key:
+          type:
+            - string
+            - 'null'
+          readOnly: true
     PatchedReleasePipeline:
       type: object
       properties:
@@ -27080,6 +27350,47 @@ components:
           type: boolean
       required:
         - name
+    ProxyKey:
+      type: object
+      properties:
+        prefix:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          description: A free-form name for the API key. Need not be unique. 50 characters max.
+          type: string
+          maxLength: 50
+        revoked:
+          description: 'If the API key is revoked, clients cannot use it anymore. (This cannot be undone.)'
+          type: boolean
+        expiry_date:
+          description: 'Once API key expires, clients cannot use it anymore.'
+          type:
+            - string
+            - 'null'
+          format: date-time
+          title: Expires
+        key:
+          description: 'Only the key hash is stored, so the full key is returned on create and is unavailable from every other endpoint.'
+          type: string
+          readOnly: true
+        has_expired:
+          type: boolean
+          readOnly: true
+        created_by_user:
+          type:
+            - integer
+            - 'null'
+          readOnly: true
+        created_by_master_api_key:
+          type:
+            - string
+            - 'null'
+          readOnly: true
     ReleasePipeline:
       type: object
       properties:
