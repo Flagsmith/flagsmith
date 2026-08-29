@@ -1,3 +1,4 @@
+import importlib
 from typing import Callable
 
 from common.core.utils import is_saas
@@ -39,9 +40,14 @@ class APIUsageMiddleware:
         # header presence is never trusted.
         self.is_edge_proxy_request: Callable[[HttpRequest], bool] | None = None
         if settings.EDGE_PROXY_INSTALLED and not is_saas():
-            from edge_proxy.authentication import is_edge_proxy_request
-
-            self.is_edge_proxy_request = is_edge_proxy_request
+            # getattr, not a hard import: the installed edge_proxy app may
+            # predate the helper — the proxy's fetches are then counted as
+            # before.
+            self.is_edge_proxy_request = getattr(
+                importlib.import_module("edge_proxy.authentication"),
+                "is_edge_proxy_request",
+                None,
+            )
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
         if (environment_key := request.headers.get("X-Environment-Key")) and not (
