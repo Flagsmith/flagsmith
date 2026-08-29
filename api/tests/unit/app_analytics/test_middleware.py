@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 from django.test import RequestFactory
 from pytest_django.fixtures import SettingsWrapper
@@ -6,6 +8,13 @@ from pytest_mock import MockerFixture
 from app_analytics.middleware import APIUsageMiddleware
 from app_analytics.models import Resource
 from tests.types import EnableFeaturesFixture
+
+
+@pytest.fixture(autouse=True)
+def edge_proxy_not_installed(settings: SettingsWrapper) -> None:
+    # Keep these tests hermetic: whether the private edge_proxy wheel is
+    # installed in the test environment must not change middleware wiring.
+    settings.EDGE_PROXY_INSTALLED = False
 
 
 @pytest.mark.parametrize(
@@ -131,3 +140,92 @@ def test_api_usage_middleware__request_not_tracked__not_calls_expected(
 
     # Then
     mocked_track_request.delay.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "edge_proxy_installed, saas, expect_wired",
+    [
+        (True, False, True),
+        (True, True, False),
+        (False, False, False),
+    ],
+)
+def test_api_usage_middleware__edge_proxy_check__wired_only_where_expected(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    edge_proxy_installed: bool,
+    saas: bool,
+    expect_wired: bool,
+) -> None:
+    # Given a deployment with/without the private edge_proxy app
+    settings.EDGE_PROXY_INSTALLED = edge_proxy_installed
+    mocker.patch("app_analytics.middleware.is_saas", return_value=saas)
+    is_edge_proxy_request = mocker.MagicMock()
+    mocker.patch.dict(
+        sys.modules,
+        {
+            "edge_proxy": mocker.MagicMock(),
+            "edge_proxy.authentication": mocker.MagicMock(
+                is_edge_proxy_request=is_edge_proxy_request
+            ),
+        },
+    )
+
+    # When
+    middleware = APIUsageMiddleware(mocker.MagicMock())
+
+    # Then the verifier is wired only where the proxy reports usage
+    # itself: a non-SaaS deployment with the edge_proxy app installed
+    assert middleware.is_edge_proxy_request is (
+        is_edge_proxy_request if expect_wired else None
+    )
+
+
+@pytest.mark.parametrize("is_verified_proxy_request", [True, False])
+def test_api_usage_middleware__edge_proxy_check_wired__tracks_unverified_only(
+    rf: RequestFactory,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    is_verified_proxy_request: bool,
+) -> None:
+    # Given a request bearing proxy headers the edge_proxy app does or
+    # does not verify
+    headers = {"HTTP_X-Environment-Key": "test", "HTTP_X-Proxy-Key": "pk.key"}
+    request = rf.get("/api/v1/environment-document", **headers)  # type: ignore[arg-type]
+    settings.EDGE_PROXY_INSTALLED = False
+    mocked_track_usage = mocker.patch(
+        "app_analytics.middleware.track_usage_by_resource_host_and_environment"
+    )
+    middleware = APIUsageMiddleware(mocker.MagicMock())
+    middleware.is_edge_proxy_request = mocker.MagicMock(
+        return_value=is_verified_proxy_request
+    )
+
+    # When
+    middleware(request)
+
+    # Then only a verified proxy request is exempt — a spoofed header is not
+    middleware.is_edge_proxy_request.assert_called_once_with(request)
+    assert mocked_track_usage.called is not is_verified_proxy_request
+
+
+def test_api_usage_middleware__edge_proxy_check_not_wired__proxy_header_still_tracked(
+    rf: RequestFactory,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given a request bearing an X-Proxy-Key on a deployment with no
+    # edge_proxy app to verify it
+    headers = {"HTTP_X-Environment-Key": "test", "HTTP_X-Proxy-Key": "pk.key"}
+    request = rf.get("/api/v1/environment-document", **headers)  # type: ignore[arg-type]
+    settings.EDGE_PROXY_INSTALLED = False
+    mocked_track_usage = mocker.patch(
+        "app_analytics.middleware.track_usage_by_resource_host_and_environment"
+    )
+
+    # When
+    middleware = APIUsageMiddleware(mocker.MagicMock())
+    middleware(request)
+
+    # Then
+    mocked_track_usage.assert_called_once()
