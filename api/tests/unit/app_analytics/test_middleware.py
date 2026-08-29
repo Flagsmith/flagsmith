@@ -196,16 +196,15 @@ def test_api_usage_middleware__edge_proxy_check_wired__tracks_unverified_only(
     mocked_track_usage = mocker.patch(
         "app_analytics.middleware.track_usage_by_resource_host_and_environment"
     )
+    is_edge_proxy_request = mocker.MagicMock(return_value=is_verified_proxy_request)
     middleware = APIUsageMiddleware(mocker.MagicMock())
-    middleware.is_edge_proxy_request = mocker.MagicMock(
-        return_value=is_verified_proxy_request
-    )
+    middleware.is_edge_proxy_request = is_edge_proxy_request
 
     # When
     middleware(request)
 
     # Then only a verified proxy request is exempt — a spoofed header is not
-    middleware.is_edge_proxy_request.assert_called_once_with(request)
+    is_edge_proxy_request.assert_called_once_with(request)
     assert mocked_track_usage.called is not is_verified_proxy_request
 
 
