@@ -181,6 +181,28 @@ def test_api_usage_middleware__edge_proxy_check__wired_only_where_expected(
     )
 
 
+def test_api_usage_middleware__edge_proxy_app_predates_helper__not_wired(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given an installed edge_proxy app without is_edge_proxy_request
+    settings.EDGE_PROXY_INSTALLED = True
+    mocker.patch("app_analytics.middleware.is_saas", return_value=False)
+    mocker.patch.dict(
+        sys.modules,
+        {
+            "edge_proxy": mocker.MagicMock(),
+            "edge_proxy.authentication": mocker.MagicMock(spec=[]),
+        },
+    )
+
+    # When
+    middleware = APIUsageMiddleware(mocker.MagicMock())
+
+    # Then requests are counted as before
+    assert middleware.is_edge_proxy_request is None
+
+
 @pytest.mark.parametrize("is_verified_proxy_request", [True, False])
 def test_api_usage_middleware__edge_proxy_check_wired__tracks_unverified_only(
     rf: RequestFactory,
