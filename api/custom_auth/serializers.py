@@ -7,10 +7,10 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 
-from organisations.invites.models import Invite, InviteLink
+from organisations.invites.services import is_valid_registration_invite
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
-from users.models import FFAdminUser, SignUpType
+from users.models import FFAdminUser
 
 from .constants import (
     FIELD_BLANK_ERROR,
@@ -32,17 +32,11 @@ class InviteLinkValidationMixin:
         if settings.ALLOW_REGISTRATION_WITHOUT_INVITE:
             return
 
-        valid = False
-
-        match sign_up_type:
-            case SignUpType.INVITE_LINK.value:
-                valid = InviteLink.objects.filter(
-                    hash=self.initial_data.get("invite_hash")  # type: ignore[attr-defined]
-                ).exists()
-            case SignUpType.INVITE_EMAIL.value:
-                valid = Invite.objects.filter(email__iexact=email.lower()).exists()
-
-        if not valid:
+        if not is_valid_registration_invite(
+            sign_up_type=sign_up_type,
+            email=email,
+            invite_hash=self.initial_data.get("invite_hash"),  # type: ignore[attr-defined]
+        ):
             raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)
 
 
