@@ -207,7 +207,7 @@ Attributes:
 ### `experimentation.ingestion_infra.bucket_created`
 
 Logged at `info` from:
- - `api/experimentation/ingestion_infra_service.py:110`
+ - `api/experimentation/ingestion_infra_service.py:111`
 
 Attributes:
  - `bucket.name`
@@ -216,7 +216,7 @@ Attributes:
 ### `experimentation.ingestion_infra.deprovisioned`
 
 Logged at `info` from:
- - `api/experimentation/ingestion_infra_service.py:267`
+ - `api/experimentation/ingestion_infra_service.py:289`
 
 Attributes:
  - `bucket.name`
@@ -245,7 +245,7 @@ Attributes:
 ### `experimentation.ingestion_infra.stream_created`
 
 Logged at `info` from:
- - `api/experimentation/ingestion_infra_service.py:221`
+ - `api/experimentation/ingestion_infra_service.py:243`
 
 Attributes:
  - `bucket.name`
