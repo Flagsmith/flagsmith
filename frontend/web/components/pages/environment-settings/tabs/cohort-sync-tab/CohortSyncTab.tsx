@@ -14,7 +14,6 @@ import { CohortSyncKey } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import Flex from 'components/base/grid/Flex'
 import FormGroup from 'components/base/grid/FormGroup'
-import Panel from 'components/base/grid/Panel'
 import Row from 'components/base/grid/Row'
 import Icon from 'components/icons/Icon'
 import PanelSearch from 'components/PanelSearch'
@@ -127,50 +126,48 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({
             Learn about Segments.
           </Button>
         </p>
-        <p className='fs-small lh-sm mb-0'>
+        <p className='fs-small lh-sm mb-4'>
           Key values are shown only once at creation and cannot be recovered
           afterwards.
         </p>
-        {canManage ? (
-          <Button
-            onClick={handleCreate}
-            className='my-4'
-            data-test='create-cohort-sync-key'
-          >
-            Create Cohort Synchronisation Key
-          </Button>
-        ) : (
-          <Tooltip
-            title={
-              <Button className='my-4' disabled>
-                Create Cohort Synchronisation Key
-              </Button>
-            }
-            place='right'
-          >
-            {Constants.cohortSyncKeyPermissions}
-          </Tooltip>
-        )}
       </div>
       {isLoading && !syncKeys ? (
         <Loader />
       ) : (
         <PanelSearch
           id='cohort-sync-keys-list'
-          title='Cohort Synchronisation Keys'
           className='no-pad'
           items={syncKeys}
           filterRow={filterByName}
           renderRow={renderRow}
+          renderSearchWithNoResults
+          actionButton={
+            canManage ? (
+              <Button
+                onClick={handleCreate}
+                className='ml-2'
+                data-test='create-cohort-sync-key'
+              >
+                Create Cohort Key
+              </Button>
+            ) : (
+              <Tooltip
+                title={
+                  <Button className='ml-2' disabled>
+                    Create Cohort Key
+                  </Button>
+                }
+                place='left'
+              >
+                {Constants.cohortSyncKeyPermissions}
+              </Tooltip>
+            )
+          }
           renderNoResults={
-            <Panel className='no-pad' title='Cohort Synchronisation Keys'>
-              <div className='search-list'>
-                <Row className='list-item p-3 text-muted'>
-                  You currently have no cohort synchronisation keys for this
-                  environment.
-                </Row>
-              </div>
-            </Panel>
+            <Row className='list-item p-3 text-muted'>
+              You currently have no cohort synchronisation keys for this
+              environment.
+            </Row>
           }
           isLoading={isLoading}
         />
