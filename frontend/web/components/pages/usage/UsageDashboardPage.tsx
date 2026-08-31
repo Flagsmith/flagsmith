@@ -97,6 +97,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   const {
     data: subscriptionMeta,
+    isError: limitFailed,
     isLoading: loadingLimit,
     refetch: refetchLimit,
   } = useGetSubscriptionMetadataQuery(
@@ -144,7 +145,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
           scope={scope}
         />
       }
-      isError={organisationFailed || usageFailed}
+      isError={organisationFailed || usageFailed || limitFailed}
       isLoading={loadingOrganisation || loadingPlan || loadingLimit}
       isExploring={loadingUsage}
       onRetry={() => {
