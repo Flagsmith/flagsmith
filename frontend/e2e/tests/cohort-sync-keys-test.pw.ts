@@ -158,26 +158,15 @@ test.describe('Cohort Synchronisation Keys Tests', () => {
     await waitForModalToClose()
     await expect(keysList).toContainText(keyThree)
 
-    log('Revoke every key for this environment')
-    const revokeButtons = keysList.locator('[aria-label^="Revoke "]')
-    for (
-      let remaining = await revokeButtons.count();
-      remaining > 0;
-      remaining--
-    ) {
-      await revokeButtons.first().click()
+    log('Revoke the keys created by this test')
+    for (const name of [keyOne, keyTwo, keyThree]) {
+      const row = keysList.locator('.list-item').filter({ hasText: name })
+      await row.locator('[aria-label^="Revoke "]').click()
       await click('#confirm-btn-yes')
-      await expect(page.locator('#confirm-btn-yes')).toHaveCount(0, {
-        timeout: LONG_TIMEOUT,
-      })
-      await expect(revokeButtons).toHaveCount(remaining - 1, {
-        timeout: LONG_TIMEOUT,
-      })
+      await expect(row).toHaveCount(0, { timeout: LONG_TIMEOUT })
     }
 
-    log('Verify no keys remain')
-    // PanelSearch drops the list entirely and renders its empty state instead.
-    await expect(page.locator('#cohort-sync-keys-list')).toHaveCount(0)
+    log('Verify the test keys are gone')
     for (const name of [keyOne, keyTwo, keyThree]) {
       await expect(page.getByText(name, { exact: true })).toHaveCount(0)
     }

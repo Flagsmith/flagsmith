@@ -148,9 +148,7 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({
             }
             place='right'
           >
-            {Constants.environmentPermissions(
-              EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
-            )}
+            {Constants.cohortSyncKeyPermissions}
           </Tooltip>
         )}
       </div>

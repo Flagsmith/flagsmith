@@ -108,8 +108,9 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
     if (!hasKeys && !canManage) {
       return (
         <div className='fs-small text-secondary'>
-          You do not have permission to create synchronisation keys in this
-          environment.
+          Creating synchronisation keys needs the Manage segment overrides
+          permission for this environment and the Manage segments permission for
+          this project.
         </div>
       )
     }
@@ -193,9 +194,7 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
             }
             place='right'
           >
-            {Constants.environmentPermissions(
-              EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
-            )}
+            {Constants.cohortSyncKeyPermissions}
           </Tooltip>
         )}
       </>
