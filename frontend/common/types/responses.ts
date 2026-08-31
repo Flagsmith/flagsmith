@@ -1037,6 +1037,13 @@ export type Cohort = {
   membership_counts: CohortMembershipCounts
 }
 
+export type CohortSyncKey = {
+  prefix: string
+  name: string
+  created: string
+  key: string | null
+}
+
 export type CohortCsvSyncResult = {
   version: number
   added: number
@@ -1379,6 +1386,8 @@ export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
   cohort: Cohort
+  cohortSyncKeys: CohortSyncKey[]
+  cohortSyncKey: CohortSyncKey
   cohortCsvSync: CohortCsvSyncResult
   segmentMembers: SegmentMembersResponse
   auditLogs: PagedResponse<AuditLogItem>

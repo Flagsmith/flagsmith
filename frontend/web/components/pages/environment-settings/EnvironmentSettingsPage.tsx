@@ -47,6 +47,8 @@ import { useRouteContext } from 'components/providers/RouteContext'
 import SettingTitle from 'components/SettingTitle'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
 import PlanBasedBanner from 'components/PlanBasedAccess'
+import { getSegmentSources } from 'components/modals/CreateSegmentSourcesModal'
+import CohortSyncTab from './tabs/cohort-sync-tab'
 import WarehouseTab from './tabs/warehouse-tab'
 
 const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
@@ -118,6 +120,11 @@ const EnvironmentSettingsPage: React.FC = () => {
   const metadataEnable = Utils.getPlansPermission('METADATA')
   const warehouseEnabled = Utils.getFlagsmithHasFeature(
     'experimentation_warehouse_connection',
+  )
+  const cohortSyncEnabled = getSegmentSources().some(
+    (source) =>
+      (source.key === 'amplitude' || source.key === 'mixpanel') &&
+      source.active,
   )
 
   const getEnvironment = useCallback(async () => {
@@ -918,6 +925,15 @@ const EnvironmentSettingsPage: React.FC = () => {
                           />
                         </div>
                       </PlanBasedBanner>
+                    </TabItem>
+                  )}
+                  {cohortSyncEnabled && (
+                    <TabItem tabLabel='Cohort Sync'>
+                      <div className='mt-4'>
+                        <CohortSyncTab
+                          environmentApiKey={match.params.environmentId}
+                        />
+                      </div>
                     </TabItem>
                   )}
                   {metadataEnable && environmentContentType?.id && (

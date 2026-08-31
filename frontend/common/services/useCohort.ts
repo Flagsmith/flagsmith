@@ -4,7 +4,7 @@ import { service } from 'common/service'
 import toFormData from 'common/utils/toFormData'
 
 export const cohortService = service
-  .enhanceEndpoints({ addTagTypes: ['Cohort', 'Segment'] })
+  .enhanceEndpoints({ addTagTypes: ['Cohort', 'CohortSyncKey', 'Segment'] })
   .injectEndpoints({
     endpoints: (builder) => ({
       createCohort: builder.mutation<Res['cohort'], Req['createCohort']>({
@@ -22,6 +22,17 @@ export const cohortService = service
           url: `environments/${query.environmentApiKey}/cohorts/`,
         }),
       }),
+      createCohortSyncKey: builder.mutation<
+        Res['cohortSyncKey'],
+        Req['createCohortSyncKey']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'CohortSyncKey' }],
+        query: (query) => ({
+          body: { name: query.name },
+          method: 'POST',
+          url: `environments/${query.environmentApiKey}/cohorts/sync-keys/`,
+        }),
+      }),
       deleteCohort: builder.mutation<void, Req['deleteCohort']>({
         invalidatesTags: (q, e, arg) => [
           { id: 'LIST', type: 'Cohort' },
@@ -36,6 +47,22 @@ export const cohortService = service
         providesTags: (res, e, arg) => [{ id: arg.cohortId, type: 'Cohort' }],
         query: (query) => ({
           url: `environments/${query.environmentApiKey}/cohorts/${query.cohortId}/`,
+        }),
+      }),
+      getCohortSyncKeys: builder.query<
+        Res['cohortSyncKeys'],
+        Req['getCohortSyncKeys']
+      >({
+        providesTags: [{ id: 'LIST', type: 'CohortSyncKey' }],
+        query: (query) => ({
+          url: `environments/${query.environmentApiKey}/cohorts/sync-keys/`,
+        }),
+      }),
+      revokeCohortSyncKey: builder.mutation<void, Req['revokeCohortSyncKey']>({
+        invalidatesTags: [{ id: 'LIST', type: 'CohortSyncKey' }],
+        query: (query) => ({
+          method: 'DELETE',
+          url: `environments/${query.environmentApiKey}/cohorts/sync-keys/${query.prefix}/`,
         }),
       }),
       syncCohortCsv: builder.mutation<
@@ -95,8 +122,11 @@ export async function deleteCohort(
 
 export const {
   useCreateCohortMutation,
+  useCreateCohortSyncKeyMutation,
   useDeleteCohortMutation,
   useGetCohortQuery,
+  useGetCohortSyncKeysQuery,
+  useRevokeCohortSyncKeyMutation,
   useSyncCohortCsvMutation,
   useUpdateCohortMutation,
   // END OF EXPORTS
