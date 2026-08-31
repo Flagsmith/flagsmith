@@ -1,0 +1,632 @@
+[
+  {
+    "day": "2026-08-01",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-02",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-03",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-04",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-05",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-06",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  },
+  {
+    "day": "2026-08-07",
+    "flags": 14251,
+    "identities": 5429,
+    "traits": 2036,
+    "environment_document": 905
+  },
+  {
+    "day": "2026-08-08",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-09",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-10",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-11",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-12",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-13",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  },
+  {
+    "day": "2026-08-14",
+    "flags": 14251,
+    "identities": 5429,
+    "traits": 2036,
+    "environment_document": 905
+  },
+  {
+    "day": "2026-08-15",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-16",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-17",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-18",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-19",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-20",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  },
+  {
+    "day": "2026-08-21",
+    "flags": 14251,
+    "identities": 5429,
+    "traits": 2036,
+    "environment_document": 905
+  },
+  {
+    "day": "2026-08-22",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-23",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-24",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-25",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-26",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-27",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  },
+  {
+    "day": "2026-08-28",
+    "flags": 14251,
+    "identities": 5429,
+    "traits": 2036,
+    "environment_document": 905
+  },
+  {
+    "day": "2026-08-29",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-30",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-31",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-32",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-33",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-34",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  },
+  {
+    "day": "2026-08-35",
+    "flags": 14251,
+    "identities": 5429,
+    "traits": 2036,
+    "environment_document": 905
+  },
+  {
+    "day": "2026-08-36",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-37",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-38",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-39",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-40",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-41",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  },
+  {
+    "day": "2026-08-42",
+    "flags": 14251,
+    "identities": 5429,
+    "traits": 2036,
+    "environment_document": 905
+  },
+  {
+    "day": "2026-08-43",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-44",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-45",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-46",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-47",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-48",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  },
+  {
+    "day": "2026-08-49",
+    "flags": 14251,
+    "identities": 5429,
+    "traits": 2036,
+    "environment_document": 905
+  },
+  {
+    "day": "2026-08-50",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-51",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-52",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-53",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-54",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-55",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  },
+  {
+    "day": "2026-08-56",
+    "flags": 14251,
+    "identities": 5429,
+    "traits": 2036,
+    "environment_document": 905
+  },
+  {
+    "day": "2026-08-57",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-58",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-59",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-60",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-61",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-62",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  },
+  {
+    "day": "2026-08-63",
+    "flags": 14251,
+    "identities": 5429,
+    "traits": 2036,
+    "environment_document": 905
+  },
+  {
+    "day": "2026-08-64",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-65",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-66",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-67",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-68",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-69",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  },
+  {
+    "day": "2026-08-70",
+    "flags": 14251,
+    "identities": 5429,
+    "traits": 2036,
+    "environment_document": 905
+  },
+  {
+    "day": "2026-08-71",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-72",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-73",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-74",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-75",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-76",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  },
+  {
+    "day": "2026-08-77",
+    "flags": 14251,
+    "identities": 5429,
+    "traits": 2036,
+    "environment_document": 905
+  },
+  {
+    "day": "2026-08-78",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-79",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-80",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-81",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-82",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-83",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  },
+  {
+    "day": "2026-08-84",
+    "flags": 14251,
+    "identities": 5429,
+    "traits": 2036,
+    "environment_document": 905
+  },
+  {
+    "day": "2026-08-85",
+    "flags": 26536,
+    "identities": 10109,
+    "traits": 3791,
+    "environment_document": 1685
+  },
+  {
+    "day": "2026-08-86",
+    "flags": 27518,
+    "identities": 10483,
+    "traits": 3931,
+    "environment_document": 1747
+  },
+  {
+    "day": "2026-08-87",
+    "flags": 25798,
+    "identities": 9828,
+    "traits": 3686,
+    "environment_document": 1638
+  },
+  {
+    "day": "2026-08-88",
+    "flags": 27027,
+    "identities": 10296,
+    "traits": 3861,
+    "environment_document": 1716
+  },
+  {
+    "day": "2026-08-89",
+    "flags": 24079,
+    "identities": 9173,
+    "traits": 3440,
+    "environment_document": 1529
+  },
+  {
+    "day": "2026-08-90",
+    "flags": 15233,
+    "identities": 5803,
+    "traits": 2176,
+    "environment_document": 967
+  }
+]
