@@ -79,12 +79,11 @@ class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
             name=serializer.validated_data["name"],
             source_type=CohortSourceType.AMPLITUDE,
         )
-        # Amplitude reads the list ID at the portal-configured path
-        # ("response.list_id"), but its two sides apply that path to
-        # different objects: the production sync worker reads this body as
-        # is, so it needs the nested copy, while the Testing tab first wraps
-        # the body in a {"response": ...} envelope of its own, so it finds
-        # the flat copy. Both verified against staging, 2026-08-31.
+        # Two different Amplitude systems read this response, and they look
+        # for the list ID in different places: the real cohort sync reads
+        # body["response"]["list_id"], the portal's Testing tab reads
+        # body["list_id"]. Send both so neither breaks. Verified on
+        # staging, 2026-08-31.
         list_id = str(cohort.uuid)
         return Response({"list_id": list_id, "response": {"list_id": list_id}})
 
