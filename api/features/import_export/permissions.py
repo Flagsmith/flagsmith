@@ -14,10 +14,11 @@ class FeatureImportPermissions(IsAuthenticated):
         if not super().has_permission(request, view):
             return False
 
-        environment = Environment.objects.select_related("project").get(
-            id=view.kwargs["environment_id"]
-        )
+        environment = Environment.objects.select_related(
+            "project__organisation",
+        ).get(id=view.kwargs["environment_id"])
 
+        # Since feature imports can be destructive, use project admin.
         return request.user.is_project_admin(environment.project)  # type: ignore[union-attr,no-any-return]
 
 

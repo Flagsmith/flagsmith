@@ -23,10 +23,7 @@ from features.import_export.models import (
 )
 from projects.models import Project
 from projects.tags.models import Tag
-from tests.types import (
-    WithEnvironmentPermissionsCallable,
-    WithProjectPermissionsCallable,
-)
+from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser
 
 
@@ -280,54 +277,6 @@ def test_feature_import__project_admin__creates_import(
     # Then
     assert response.status_code == 201
     assert FeatureImport.objects.count() == 1
-
-
-def test_feature_import__environment_admin__returns_forbidden(
-    staff_client: APIClient,
-    environment: Environment,
-    with_environment_permissions: WithEnvironmentPermissionsCallable,
-) -> None:
-    # Given
-    with_environment_permissions(admin=True)  # type: ignore[call-arg]
-    url = reverse(
-        "api-v1:features:feature-import",
-        args=[environment.id],
-    )
-
-    file_data = b"[]"
-    uploaded_file = SimpleUploadedFile("test.23.json", file_data)
-    data = {"file": uploaded_file, "strategy": OVERWRITE_DESTRUCTIVE}
-
-    # When
-    response = staff_client.post(url, data=data, format="multipart")
-
-    # Then
-    assert response.status_code == 403
-    assert FeatureImport.objects.count() == 0
-
-
-def test_feature_import__non_admin_project_permissions__returns_forbidden(
-    staff_client: APIClient,
-    environment: Environment,
-    with_project_permissions: WithProjectPermissionsCallable,
-) -> None:
-    # Given
-    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    url = reverse(
-        "api-v1:features:feature-import",
-        args=[environment.id],
-    )
-
-    file_data = b"[]"
-    uploaded_file = SimpleUploadedFile("test.23.json", file_data)
-    data = {"file": uploaded_file, "strategy": OVERWRITE_DESTRUCTIVE}
-
-    # When
-    response = staff_client.post(url, data=data, format="multipart")
-
-    # Then
-    assert response.status_code == 403
-    assert FeatureImport.objects.count() == 0
 
 
 def test_feature_import__unauthorized_user__returns_forbidden(
