@@ -51,15 +51,9 @@ def test_amplitude_create_list__valid_key__creates_amplitude_cohort(
     # Then
     assert response.status_code == status.HTTP_200_OK
     cohort = Cohort.objects.get(uuid=response.json()["list_id"])
-    # Without ?shape=, the body carries the list ID at every spelling and
-    # depth Amplitude might read.
-    body = response.json()
-    assert (
-        body["listId"]
-        == body["response"]["list_id"]
-        == body["response"]["listId"]
-        == body["list_id"]
-    )
+    # Amplitude's production worker reads the nested copy, its Testing tab
+    # the flat one.
+    assert response.json()["response"]["list_id"] == response.json()["list_id"]
     assert cohort.environment == key.environment
     assert cohort.source_type == CohortSourceType.AMPLITUDE
     assert cohort.segment.name == "[Amplitude] Beta users: 1234"
@@ -1274,23 +1268,3 @@ def test_webhook_add_members__saas_free_plan__returns_403(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_amplitude_create_list__shape_param__returns_only_that_shape(
-    cohort_sync_key: _KeyAndPlaintext,
-    dynamodb_identity_wrapper: DynamoIdentityWrapper,
-) -> None:
-    # Given
-    _, plaintext = cohort_sync_key
-    client = _authenticated_client(plaintext)
-    url = reverse("api-v1:cohort-sync:amplitude-list")
-
-    # When
-    response = client.post(
-        f"{url}?shape=nested_camel", data={"name": "Beta users"}, format="json"
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    cohort = Cohort.objects.get(source_type=CohortSourceType.AMPLITUDE)
-    assert response.json() == {"response": {"listId": str(cohort.uuid)}}

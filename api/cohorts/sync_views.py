@@ -79,25 +79,14 @@ class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
             name=serializer.validated_data["name"],
             source_type=CohortSourceType.AMPLITUDE,
         )
+        # Amplitude reads the list ID at the portal-configured path
+        # ("response.list_id"), but its two sides apply that path to
+        # different objects: the production sync worker reads this body as
+        # is, so it needs the nested copy, while the Testing tab first wraps
+        # the body in a {"response": ...} envelope of its own, so it finds
+        # the flat copy. Both verified against staging, 2026-08-31.
         list_id = str(cohort.uuid)
-        # TODO: temporary, while we pin down which copy of the list ID
-        # Amplitude's production sync worker actually reads. `?shape=`
-        # narrows the body to a single candidate so each portal-side retry
-        # tests one; the default carries every copy, which is known to work.
-        # Once the winning shape is confirmed, hardcode it and drop the
-        # parameter.
-        shapes = {
-            "flat_snake": {"list_id": list_id},
-            "flat_camel": {"listId": list_id},
-            "nested_snake": {"response": {"list_id": list_id}},
-            "nested_camel": {"response": {"listId": list_id}},
-        }
-        default = {
-            "list_id": list_id,
-            "listId": list_id,
-            "response": {"list_id": list_id, "listId": list_id},
-        }
-        return Response(shapes.get(request.query_params.get("shape", ""), default))
+        return Response({"list_id": list_id, "response": {"list_id": list_id}})
 
     @action(detail=True, methods=["POST"])
     def add(self, request: Request, pk: str) -> Response:
