@@ -44,15 +44,15 @@ export const planSectionCopy = (
 
   if (basis.window === 'rolling' && basis.reason === 'no-period') {
     return {
-      hint: 'Where your organisation stands against its allowance, measured over the last 30 days as this organisation has no billing period.',
+      hint: `Usage against your plan limit over ${allowanceWindowLabel(
+        basis,
+      )}. This organisation has no billing period.`,
       title: 'Your plan',
     }
   }
 
   return {
-    hint: `Where your organisation stands against its allowance, over ${allowanceWindowLabel(
-      basis,
-    )}.`,
+    hint: `Usage against your plan limit over ${allowanceWindowLabel(basis)}.`,
     title: 'Your plan',
   }
 }

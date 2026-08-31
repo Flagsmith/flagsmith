@@ -76,7 +76,7 @@ describe('UsageDashboard utils', () => {
       const copy = planSectionCopy(rolling, 50000)
 
       expect(copy.title).toBe('Your plan')
-      expect(copy.hint).toContain('against its allowance')
+      expect(copy.hint).toContain('against your plan limit')
     })
 
     it('claims no allowance where there is none to claim', () => {
