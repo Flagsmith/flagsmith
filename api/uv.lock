@@ -1231,7 +1231,7 @@ wheels = [
 
 [[package]]
 name = "flagsmith"
-version = "6.2.0"
+version = "6.2.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "flagsmith-flag-engine" },
@@ -1240,9 +1240,9 @@ dependencies = [
     { name = "sseclient-py" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/91/0e/061ecf0eaf8c3dfd6b45b6d403c9dc5d89eff921ed5fa3de91f41cb91e05/flagsmith-6.2.0.tar.gz", hash = "sha256:be0c144016c3cd5ea5c23de86df1d96b97c71a98594cf2b9a31a775f75ee8b11", size = 17209, upload-time = "2026-08-07T10:24:21.812Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8c/25/ee760a79c50d883aaeb72f8da142df3d78dbc647ecfd8583a2f018b2ba6d/flagsmith-6.2.2.tar.gz", hash = "sha256:4f309e6557904e83b6120db1c6e5c6f2b1a334d327bc9bc34eed01cb2f3b8760", size = 17280, upload-time = "2026-08-31T08:55:18.813Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f7/61/8972a9d4840306ffa8796fc95c257445a0f46e91a3088446c9368827aab8/flagsmith-6.2.0-py3-none-any.whl", hash = "sha256:2147c751461e8a056ad2a792105b9012938ee299b9108f92e457d396473aca1d", size = 22329, upload-time = "2026-08-07T10:24:20.559Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/8c/1a52dbeaacb6fbd05b2c75f42fbf8e12db3304db054ccb95c1044ef8f061/flagsmith-6.2.2-py3-none-any.whl", hash = "sha256:fefe46bd7e0e02bbb375f3e16ebd1b3ff851b4edadaa43560185921cce28a620", size = 22396, upload-time = "2026-08-31T08:55:17.554Z" },
 ]
 
 [[package]]
@@ -1422,7 +1422,7 @@ requires-dist = [
     { name = "flagsmith", specifier = ">=6.2.0,<7.0.0" },
     { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.13.1,<4" },
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
-    { name = "flagsmith-flag-engine", specifier = ">=10.1.0,<11.0.0" },
+    { name = "flagsmith-flag-engine", specifier = ">=11.0.0,<12.0.0" },
     { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.13.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "flagsmith-sql-flag-engine", specifier = ">=0.2.0,<0.3.0" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
@@ -1547,16 +1547,16 @@ test-tools = [
 
 [[package]]
 name = "flagsmith-flag-engine"
-version = "10.2.0"
+version = "11.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jsonpath-rfc9535" },
     { name = "semver" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f4/11/aa67ecac85d1879ff116f94c8518c922ed687908dc11f71aebb1a5be5a87/flagsmith_flag_engine-10.2.0.tar.gz", hash = "sha256:d935c9fb639e8acc5b9ff4599ec570e1b2f3f7b7874fc789a6eca3db5665a31b", size = 11056, upload-time = "2026-06-09T07:06:25.609Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1c/3f/4f5ecb3f13ebed87d4aacc86000917a98b1005f27a0df6281b7e30667148/flagsmith_flag_engine-11.0.0.tar.gz", hash = "sha256:0e00703b092c5b03f12bb4d24850ba0f6f13a7d32fb7a0e720ae80c86c6f2a56", size = 11131, upload-time = "2026-08-28T18:08:52.64Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/62/e5/1eb841fa1dfe6a0e3f53d54ac1cd9e8cdac0ab5cc96dfa58c1c70e8fe897/flagsmith_flag_engine-10.2.0-py3-none-any.whl", hash = "sha256:c9bed3ee15487057dc61144d34d101d98db255f17d2c739f02794841a5c98502", size = 14254, upload-time = "2026-06-09T07:06:24.487Z" },
+    { url = "https://files.pythonhosted.org/packages/21/1d/46e29be20fe490d345e14f0456a764b85a9c14d2062ef7f09755d048e5a4/flagsmith_flag_engine-11.0.0-py3-none-any.whl", hash = "sha256:f44551326064ae59f9280a39b7392912aa28bfeb8467f84fe95b97dfe4c537b2", size = 14267, upload-time = "2026-08-28T18:08:51.597Z" },
 ]
 
 [[package]]
