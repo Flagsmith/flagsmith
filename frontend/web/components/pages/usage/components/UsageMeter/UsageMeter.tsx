@@ -1,12 +1,7 @@
 import { FC, ReactNode } from 'react'
-import Format from 'common/utils/format'
 import UsageBar from 'components/shared/UsageBar'
-import {
-  PlanLimit,
-  toneFor,
-  usagePercent,
-} from 'components/shared/UsageBar/utils'
-import { meterCopy } from './utils'
+import { PlanLimit } from 'components/shared/UsageBar/utils'
+import { meterCopy, meterTone } from './utils'
 import './UsageMeter.scss'
 
 const WARN_AT = 75
@@ -20,7 +15,7 @@ export type UsageMeterProps = {
 
 const UsageMeter: FC<UsageMeterProps> = ({ limit, note, total }) => {
   const copy = meterCopy(total, limit)
-  const tone = toneFor(usagePercent(total, limit), WARN_AT)
+  const tone = meterTone(total, limit, WARN_AT)
 
   return (
     <div className='p-4 mb-3 border border-default rounded-lg bg-surface-default'>
@@ -28,7 +23,11 @@ const UsageMeter: FC<UsageMeterProps> = ({ limit, note, total }) => {
         <div>
           <p className='fs-caption text-secondary mb-1'>Plan usage</p>
           <div className='d-flex align-items-end gap-2'>
-            <span className={`usage-meter__percent fw-bold lh-1 text-${tone}`}>
+            <span
+              className={`usage-meter__percent fw-bold lh-1 ${
+                tone ? `text-${tone}` : ''
+              }`}
+            >
               {copy.headline}
             </span>
             <span className='fs-captionSmall text-secondary'>
@@ -36,15 +35,17 @@ const UsageMeter: FC<UsageMeterProps> = ({ limit, note, total }) => {
             </span>
           </div>
         </div>
-        <div className='usage-meter__fraction text-end'>
-          <div>
-            <strong>{Format.shortenNumber(total)}</strong>
-            {copy.fractionSuffix}
+        {copy.fraction && (
+          <div className='usage-meter__fraction text-end'>
+            <div>
+              <strong>{copy.fraction.value}</strong>
+              {copy.fraction.suffix}
+            </div>
+            <div className='fs-captionSmall text-secondary'>
+              {copy.fraction.caption}
+            </div>
           </div>
-          <div className='fs-captionSmall text-secondary'>
-            {copy.fractionCaption}
-          </div>
-        </div>
+        )}
       </div>
 
       {!!limit && (
@@ -57,7 +58,9 @@ const UsageMeter: FC<UsageMeterProps> = ({ limit, note, total }) => {
         />
       )}
 
-      {note}
+      <p className='usage-meter__note fs-captionSmall text-secondary mt-3 mb-0'>
+        {note}
+      </p>
     </div>
   )
 }

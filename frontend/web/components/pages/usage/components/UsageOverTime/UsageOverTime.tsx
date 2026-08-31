@@ -1,4 +1,5 @@
 import { FC, useMemo } from 'react'
+import Format from 'common/utils/format'
 import { Res } from 'common/types/responses'
 import { colorSurfaceAction } from 'common/theme/tokens'
 import EmptyState from 'components/EmptyState'
@@ -16,6 +17,7 @@ type UsageOverTimeProps = {
   data: Res['organisationUsage'] | undefined
   limit: PlanLimit
   isBillingPeriod: boolean
+  periodLabel: string
 }
 
 const headingFor = (isBillingPeriod: boolean, limit: PlanLimit) => {
@@ -27,6 +29,7 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
   data,
   isBillingPeriod,
   limit,
+  periodLabel,
 }) => {
   const daily = useMemo(() => dailyTotals(data), [data])
 
@@ -62,9 +65,8 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
       <div className='d-flex align-items-baseline justify-content-between gap-3 mb-3'>
         <strong>{headingFor(isBillingPeriod, limit)}</strong>
         <span className='fs-captionSmall text-secondary'>
-          {isBillingPeriod
-            ? 'Cumulative · this billing period'
-            : 'Per day · rolling window'}
+          {Format.shortenNumber(data?.totals?.total ?? 0)} API calls ·{' '}
+          {periodLabel}
         </span>
       </div>
       {daily.length ? (

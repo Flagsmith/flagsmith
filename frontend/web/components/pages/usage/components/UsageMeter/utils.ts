@@ -1,26 +1,40 @@
 import Format from 'common/utils/format'
-import { PlanLimit, usagePercent } from 'components/shared/UsageBar/utils'
+import {
+  PlanLimit,
+  toneFor,
+  usagePercent,
+  UsageTone,
+} from 'components/shared/UsageBar/utils'
 
-export type MeterCopy = {
+type MeterCopy = {
   headline: string
   headlineCaption: string
-  fractionSuffix: string
-  fractionCaption: string
+  fraction?: {
+    value: string
+    suffix?: string
+    caption: string
+  }
 }
 
-const withLimit = (total: number, limit: number): MeterCopy => ({
-  fractionCaption: 'API calls used / plan limit',
-  fractionSuffix: ` / ${Format.shortenNumber(limit)}`,
-  headline: `${usagePercent(total, limit)}%`,
-  headlineCaption: 'of plan consumed',
-})
-
-const withoutLimit = (total: number): MeterCopy => ({
-  fractionCaption: 'API calls used',
-  fractionSuffix: '',
-  headline: Format.shortenNumber(total),
-  headlineCaption: 'API calls',
-})
-
 export const meterCopy = (total: number, limit: PlanLimit): MeterCopy =>
-  limit ? withLimit(total, limit) : withoutLimit(total)
+  limit
+    ? {
+        fraction: {
+          caption: 'API calls used / plan limit',
+          suffix: ` / ${Format.shortenNumber(limit)}`,
+          value: Format.shortenNumber(total),
+        },
+        headline: `${usagePercent(total, limit)}%`,
+        headlineCaption: 'of plan consumed',
+      }
+    : {
+        headline: Format.shortenNumber(total),
+        headlineCaption: 'API calls',
+      }
+
+export const meterTone = (
+  total: number,
+  limit: PlanLimit,
+  warnAt: number,
+): UsageTone | undefined =>
+  limit ? toneFor(usagePercent(total, limit), warnAt) : undefined

@@ -3,6 +3,7 @@ import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
 import { Res } from 'common/types/responses'
 
 const meta: Meta<typeof UsageOverTime> = {
+  args: { periodLabel: 'Current billing period' },
   component: UsageOverTime,
   parameters: { layout: 'padded' },
   title: 'Pages/Usage Dashboard/Components/UsageOverTime',

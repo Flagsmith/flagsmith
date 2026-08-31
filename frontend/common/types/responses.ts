@@ -515,6 +515,8 @@ export type AuditLogDetail = AuditLogItem & {
     new: FlagsmithValue
   }[]
 }
+export type PaymentMethod = 'CHARGEBEE' | 'XERO' | 'AWS_MARKETPLACE'
+
 export type Subscription = {
   id: number
   uuid: string
@@ -525,7 +527,7 @@ export type Subscription = {
   max_api_calls: number
   cancellation_date: string | null
   customer_id: string
-  payment_method: string
+  payment_method: PaymentMethod | null
   notes: string | null
   has_active_billing_periods: boolean
 }
