@@ -423,6 +423,7 @@ const IdentityPage: FC = () => {
                         title='Check to see what features and traits are coming back for this user'
                         environmentId={environmentId}
                         userId={identityName}
+                        totalFeatures={paging?.count}
                       />
                     </FormGroup>
                     <FormGroup className='mt-5'>

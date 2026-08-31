@@ -413,6 +413,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({ forcedTagIds, pageTitle }) => {
             <FeaturesSDKIntegration
               projectId={projectId}
               environmentId={environmentId}
+              totalFeatures={data?.pagination?.count}
             />
           </>
         )}
