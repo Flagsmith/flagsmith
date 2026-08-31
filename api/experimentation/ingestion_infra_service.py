@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import typing
 from functools import lru_cache
 
@@ -120,6 +121,27 @@ def _create_events_bucket(bucket_name: str, *, organisation_id: int) -> None:
             "BlockPublicPolicy": True,
             "RestrictPublicBuckets": True,
         },
+    )
+    s3.put_bucket_policy(
+        Bucket=bucket_name,
+        Policy=json.dumps(
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Sid": "AllowSSLRequestsOnly",
+                        "Effect": "Deny",
+                        "Principal": "*",
+                        "Action": "s3:*",
+                        "Resource": [
+                            f"arn:aws:s3:::{bucket_name}",
+                            f"arn:aws:s3:::{bucket_name}/*",
+                        ],
+                        "Condition": {"Bool": {"aws:SecureTransport": "false"}},
+                    }
+                ],
+            }
+        ),
     )
     s3.put_bucket_lifecycle_configuration(
         Bucket=bucket_name,
