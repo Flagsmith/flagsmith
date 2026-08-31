@@ -76,20 +76,26 @@ export function getSegmentSources(): SegmentSource[] {
 
 type CreateSegmentSourcesModalType = {
   onManual: () => void
+  onAmplitude?: () => void
   onCsv?: () => void
+  onMixpanel?: () => void
   sources: SegmentSource[]
 }
 
 const CreateSegmentSourcesModal: FC<CreateSegmentSourcesModalType> = ({
+  onAmplitude,
   onCsv,
   onManual,
+  onMixpanel,
   sources,
 }) => {
   const [selected, setSelected] = useState<SelectedSegmentSource>(null)
   const [requested, setRequested] = useState<string[]>([])
 
   const sourceHandlers: Partial<Record<string, () => void>> = {
+    amplitude: onAmplitude,
     csv: onCsv,
+    mixpanel: onMixpanel,
   }
 
   const trackSourceEvent = (event: string, source: SegmentSource) => {

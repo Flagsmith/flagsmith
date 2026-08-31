@@ -928,7 +928,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                     </TabItem>
                   )}
                   {cohortSyncEnabled && (
-                    <TabItem tabLabel='Cohort Sync'>
+                    <TabItem tabLabel='Cohort Synchronisation'>
                       <div className='mt-4'>
                         <CohortSyncTab
                           environmentApiKey={match.params.environmentId}

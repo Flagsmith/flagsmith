@@ -38,7 +38,7 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({ environmentApiKey }) => {
 
   const handleCreate = () => {
     openModal(
-      'Create Cohort Sync Key',
+      'Create Cohort Synchronisation Key',
       <CreateCohortSyncKeyModal environmentApiKey={environmentApiKey} />,
       'p-0',
     )
@@ -48,18 +48,21 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({ environmentApiKey }) => {
     openConfirm({
       body: (
         <div>
-          Any provider using <strong>{syncKey.name}</strong> will stop syncing
-          cohorts into this environment immediately. This cannot be undone.
+          Any provider using <strong>{syncKey.name}</strong> will stop
+          synchronising cohorts into this environment immediately. This cannot
+          be undone.
         </div>
       ),
       destructive: true,
       onYes: () => {
         revokeCohortSyncKey({ environmentApiKey, prefix: syncKey.prefix })
           .unwrap()
-          .then(() => toast('Cohort sync key revoked'))
-          .catch(() => toast('Failed to revoke cohort sync key', 'danger'))
+          .then(() => toast('Cohort synchronisation key revoked'))
+          .catch(() =>
+            toast('Failed to revoke cohort synchronisation key', 'danger'),
+          )
       },
-      title: 'Revoke Cohort Sync Key',
+      title: 'Revoke Cohort Synchronisation Key',
       yesText: 'Revoke',
     })
   }
@@ -96,10 +99,10 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({ environmentApiKey }) => {
   return (
     <FormGroup className='my-4'>
       <div className='col-md-8'>
-        <h5 className='mb-2'>Cohort Sync Keys</h5>
+        <h5 className='mb-2'>Cohort Synchronisation Keys</h5>
         <p className='fs-small lh-sm mb-0'>
-          Cohort sync keys authenticate cohort synchronisation from providers
-          such as Mixpanel and Amplitude into this environment.{' '}
+          Cohort synchronisation keys authenticate cohort synchronisation from
+          providers such as Mixpanel and Amplitude into this environment.{' '}
           <Button
             theme='text'
             href='https://docs.flagsmith.com/basic-features/segments'
@@ -119,13 +122,13 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({ environmentApiKey }) => {
             className='my-4'
             data-test='create-cohort-sync-key'
           >
-            Create Cohort Sync Key
+            Create Cohort Synchronisation Key
           </Button>
         ) : (
           <Tooltip
             title={
               <Button className='my-4' disabled>
-                Create Cohort Sync Key
+                Create Cohort Synchronisation Key
               </Button>
             }
             place='right'
@@ -141,16 +144,17 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({ environmentApiKey }) => {
       ) : (
         <PanelSearch
           id='cohort-sync-keys-list'
-          title='Cohort Sync Keys'
+          title='Cohort Synchronisation Keys'
           className='no-pad'
           items={syncKeys}
           filterRow={filterByName}
           renderRow={renderRow}
           renderNoResults={
-            <Panel className='no-pad' title='Cohort Sync Keys'>
+            <Panel className='no-pad' title='Cohort Synchronisation Keys'>
               <div className='search-list'>
                 <Row className='list-item p-3 text-muted'>
-                  You currently have no cohort sync keys for this environment.
+                  You currently have no cohort synchronisation keys for this
+                  environment.
                 </Row>
               </div>
             </Panel>

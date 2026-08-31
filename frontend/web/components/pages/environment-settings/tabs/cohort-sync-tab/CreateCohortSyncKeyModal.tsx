@@ -34,14 +34,14 @@ const CreateCohortSyncKeyModal: FC<CreateCohortSyncKeyModalProps> = ({
       <div>
         <div className='modal-body'>
           <CopyField
-            title='Cohort sync key'
+            title='Cohort synchronisation key'
             value={createdKey}
             className='font-monospace'
             data-test='cohort-sync-key-value'
           />
           <WarningMessage
             warningMessage='This key is shown only once. Store it securely — you will not be able to see it again.'
-            warningMessageClass='mt-3'
+            warningMessageClass='mt-4'
           />
         </div>
         <ModalHR />
