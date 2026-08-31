@@ -18943,11 +18943,22 @@ components:
     AmplitudeListResponse:
       type: object
       properties:
-        listId:
+        list_id:
+          type: string
+          format: uuid
+        response:
+          $ref: '#/components/schemas/AmplitudeListResponseEnvelope'
+      required:
+        - list_id
+        - response
+    AmplitudeListResponseEnvelope:
+      type: object
+      properties:
+        list_id:
           type: string
           format: uuid
       required:
-        - listId
+        - list_id
     AuditLogList:
       type: object
       properties:

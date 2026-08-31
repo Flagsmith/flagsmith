@@ -22,7 +22,13 @@ from cohorts.serializers import (
 )
 
 _LIST_RESPONSE = inline_serializer(
-    "AmplitudeListResponse", {"listId": serializers.UUIDField()}
+    "AmplitudeListResponse",
+    {
+        "list_id": serializers.UUIDField(),
+        "response": inline_serializer(
+            "AmplitudeListResponseEnvelope", {"list_id": serializers.UUIDField()}
+        ),
+    },
 )
 
 _MIXPANEL_RESPONSE = inline_serializer(
@@ -73,10 +79,13 @@ class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
             name=serializer.validated_data["name"],
             source_type=CohortSourceType.AMPLITUDE,
         )
-        # Amplitude's production sync worker reads the list ID from its
-        # documented default key, camelCase "listId", ignoring the response
-        # path configured in the Integration Portal.
-        return Response({"listId": str(cohort.uuid)})
+        # Two different Amplitude systems read this response, and they look
+        # for the list ID in different places: the real cohort sync reads
+        # body["response"]["list_id"], the portal's Testing tab reads
+        # body["list_id"]. Send both so neither breaks. Verified on
+        # staging, 2026-08-31.
+        list_id = str(cohort.uuid)
+        return Response({"list_id": list_id, "response": {"list_id": list_id}})
 
     @action(detail=True, methods=["POST"])
     def add(self, request: Request, pk: str) -> Response:

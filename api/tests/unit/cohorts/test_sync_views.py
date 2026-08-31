@@ -50,7 +50,10 @@ def test_amplitude_create_list__valid_key__creates_amplitude_cohort(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    cohort = Cohort.objects.get(uuid=response.json()["listId"])
+    cohort = Cohort.objects.get(uuid=response.json()["list_id"])
+    # Amplitude's production worker reads the nested copy, its Testing tab
+    # the flat one.
+    assert response.json()["response"]["list_id"] == response.json()["list_id"]
     assert cohort.environment == key.environment
     assert cohort.source_type == CohortSourceType.AMPLITUDE
     assert cohort.segment.name == "[Amplitude] Beta users: 1234"
@@ -74,7 +77,7 @@ def test_amplitude_create_list__postgres_environment__creates_cohort(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    cohort = Cohort.objects.get(uuid=response.json()["listId"])
+    cohort = Cohort.objects.get(uuid=response.json()["list_id"])
     assert cohort.environment == environment
 
 
@@ -350,7 +353,7 @@ def test_amplitude_create_list__valid_key__audits_and_queues_environment_update(
     # Then - the audit record carries no user, names the source, and is the
     # hook that rebuilds the environment document.
     assert response.status_code == status.HTTP_200_OK
-    cohort = Cohort.objects.get(uuid=response.json()["listId"])
+    cohort = Cohort.objects.get(uuid=response.json()["list_id"])
     audit_log = AuditLog.objects.get(related_object_id=cohort.segment_id)
     assert audit_log.author is None
     assert audit_log.master_api_key is None
@@ -377,7 +380,7 @@ def test_amplitude_create_list__valid_key__history_records_no_user(
     # Then - a machine caller leaves no user on historical records; stamping
     # one would fail, since the sync key is not a Flagsmith user.
     assert response.status_code == status.HTTP_200_OK
-    cohort = Cohort.objects.get(uuid=response.json()["listId"])
+    cohort = Cohort.objects.get(uuid=response.json()["list_id"])
     history_record = cohort.segment.history.get()
     assert history_record.history_user is None
     assert history_record.master_api_key is None
