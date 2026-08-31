@@ -344,6 +344,15 @@
             "description": "Features to be evaluated in the context.",
             "title": "Features",
             "type": "object"
+        },
+        "flags": {
+            "additionalProperties": {
+                "$ref": "evaluation-result.json#/$defs/FlagResult"
+            },
+            "description": "Results of features already evaluated for this context, mapped by feature name. Populated by the engine as evaluation progresses, so that segment conditions may reference `$.flags.<feature name>.enabled`, `.value` and `.variant` to express feature dependencies.",
+            "readOnly": true,
+            "title": "Flags",
+            "type": "object"
         }
     },
     "required": [
