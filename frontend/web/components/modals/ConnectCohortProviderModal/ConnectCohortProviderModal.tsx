@@ -26,6 +26,7 @@ const ConnectCohortProviderModal: FC<ConnectCohortProviderModalProps> = ({
   provider,
 }) => {
   const config = COHORT_PROVIDERS[provider]
+  const endpointUrl = getCohortProviderEndpoint(provider)
   const [selectedEnvironment, setSelectedEnvironment] = useState('')
 
   const { data: environments, isLoading } = useGetEnvironmentsQuery({
@@ -76,12 +77,19 @@ const ConnectCohortProviderModal: FC<ConnectCohortProviderModalProps> = ({
               index={2}
               title={config.endpointStepTitle}
             >
-              <CopyField
-                title={config.endpointFieldTitle}
-                value={getCohortProviderEndpoint(provider)}
-                className='font-monospace'
-                data-test='connect-provider-url'
-              />
+              {!!config.endpointStepBody && (
+                <p className='fs-small text-secondary lh-sm mb-0'>
+                  {config.endpointStepBody}
+                </p>
+              )}
+              {!!endpointUrl && (
+                <CopyField
+                  title={config.endpoint?.fieldTitle}
+                  value={endpointUrl}
+                  className='font-monospace'
+                  data-test='connect-provider-url'
+                />
+              )}
               <div className='d-flex flex-column mx-0 gap-1 mt-3'>
                 {config.authRows.map((row) => (
                   <div
@@ -101,10 +109,12 @@ const ConnectCohortProviderModal: FC<ConnectCohortProviderModalProps> = ({
                   </div>
                 ))}
               </div>
-              <div className='fs-small text-secondary mt-3'>
-                This URL is the same for every environment — your key decides
-                where cohort members land.
-              </div>
+              {!!endpointUrl && (
+                <div className='fs-small text-secondary mt-3'>
+                  This URL is the same for every environment — your key decides
+                  where cohort members land.
+                </div>
+              )}
             </ConnectCohortProviderStep>
             <ConnectCohortProviderStep index={3} title={config.exportStepTitle}>
               <p className='fs-small text-secondary lh-sm mb-0'>

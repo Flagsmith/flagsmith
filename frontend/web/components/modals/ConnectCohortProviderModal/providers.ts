@@ -11,9 +11,14 @@ export type CohortProviderAuthRow = {
 export type CohortProviderConfig = {
   label: string
   authRows: CohortProviderAuthRow[]
-  endpointFieldTitle: string
-  endpointPath: string
+  // Providers where the user pastes a URL themselves carry an endpoint;
+  // Amplitude calls Flagsmith's portal-registered endpoints instead.
+  endpoint?: {
+    fieldTitle: string
+    path: string
+  }
   endpointStepTitle: string
+  endpointStepBody?: string
   exportStepTitle: string
   exportStepBody: string
 }
@@ -22,13 +27,10 @@ export const COHORT_PROVIDERS: Record<CohortProviderKey, CohortProviderConfig> =
   {
     amplitude: {
       authRows: [
-        { label: 'Authentication', value: 'Bearer token' },
-        { label: 'Token', mono: true, value: '{YOUR_SYNCHRONISATION_KEY}' },
+        { label: 'API key', mono: true, value: '{YOUR_SYNCHRONISATION_KEY}' },
       ],
-      // Amplitude posts cohort list creation here, then adds and removes
-      // members under `lists/{list_id}/add` and `lists/{list_id}/remove`.
-      endpointFieldTitle: 'List endpoint URL',
-      endpointPath: 'cohort-sync/amplitude/lists/',
+      endpointStepBody:
+        'In Amplitude, open Data → Destinations and add Flagsmith as a cohort destination. Paste your synchronisation key when asked for the API key.',
       endpointStepTitle: 'Add Flagsmith as a destination in Amplitude',
       exportStepBody:
         'In Amplitude, open the cohort you want to target and synchronise it to the Flagsmith destination. Flagsmith creates the managed segment automatically on the first synchronisation, then keeps its members up to date as people enter and leave the cohort.',
@@ -41,8 +43,10 @@ export const COHORT_PROVIDERS: Record<CohortProviderKey, CohortProviderConfig> =
         { label: 'Username', value: 'Any value' },
         { label: 'Password', mono: true, value: '{YOUR_SYNCHRONISATION_KEY}' },
       ],
-      endpointFieldTitle: 'Webhook URL',
-      endpointPath: 'cohort-sync/mixpanel/webhook/',
+      endpoint: {
+        fieldTitle: 'Webhook URL',
+        path: 'cohort-sync/mixpanel/webhook/',
+      },
       endpointStepTitle: 'Create a webhook in Mixpanel',
       exportStepBody:
         'In Mixpanel, open the cohort you want to target and export it to the webhook you just created. Flagsmith creates the managed segment automatically on the first synchronisation, then keeps its members up to date as people enter and leave the cohort.',
@@ -55,8 +59,13 @@ export const COHORT_PROVIDERS: Record<CohortProviderKey, CohortProviderConfig> =
 // providers need an absolute callback URL, so resolve against the page origin.
 export const getCohortProviderEndpoint = (
   provider: CohortProviderKey,
-): string =>
-  new URL(
-    COHORT_PROVIDERS[provider].endpointPath,
+): string | null => {
+  const endpoint = COHORT_PROVIDERS[provider].endpoint
+  if (!endpoint) {
+    return null
+  }
+  return new URL(
+    endpoint.path,
     new URL(Project.api, window.location.origin),
   ).toString()
+}
