@@ -22,7 +22,9 @@ const rollingReason = (
   if (isFreePlan) {
     return 'free'
   }
-  // Only Chargebee sends the billing terms, so the others never have one.
+  // Only a self-serve subscription carries billing terms, so anything invoiced
+  // directly never has one. Keep the copy free of the billing provider's name:
+  // customers do not know which one we use, and invoiced ones should not.
   return subscription?.payment_method === 'CHARGEBEE'
     ? 'unavailable'
     : 'invoiced'
@@ -67,9 +69,9 @@ export const basisExplanation = (basis: UsageBasis): string | undefined => {
 
   switch (basis.reason) {
     case 'invoiced':
-      return 'Billing periods come from Chargebee, and this organisation is invoiced outside it.'
+      return 'This organisation is invoiced directly, so it has no billing period.'
     case 'unavailable':
-      return 'No billing period has reached us from Chargebee for this organisation yet.'
+      return 'We do not have a billing period for this organisation yet.'
     default:
       return undefined
   }

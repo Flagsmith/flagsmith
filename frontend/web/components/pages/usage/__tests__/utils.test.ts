@@ -117,7 +117,7 @@ describe('UsageDashboard utils', () => {
       )
 
       expect(basis).toEqual({ reason: 'invoiced', window: 'rolling' })
-      expect(basisExplanation(basis)).toContain('invoiced outside it')
+      expect(basisExplanation(basis)).toContain('invoiced directly')
     })
 
     it('separates a Chargebee organisation whose period has not arrived', () => {
@@ -127,7 +127,7 @@ describe('UsageDashboard utils', () => {
       )
 
       expect(basis).toEqual({ reason: 'unavailable', window: 'rolling' })
-      expect(basisExplanation(basis)).toContain('has reached us')
+      expect(basisExplanation(basis)).toContain('do not have a billing period')
     })
   })
 
