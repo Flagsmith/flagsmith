@@ -99,6 +99,8 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "6.2.0",
         "6.2.1",
         "6.2.2",
+        "6.2.3",
+    
     ],
     "flagsmith-ruby-sdk": [
         "unknown",
