@@ -13,7 +13,6 @@ import {
   isBillingPeriodSelected,
   contributionNote,
   allowanceWindow,
-  basisExplanation,
   planSectionCopy,
   showsPlanCeiling,
   periodLabel,
@@ -126,7 +125,6 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       limit={subscriptionMeta?.max_api_calls}
       hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
       planCopy={planSectionCopy(basis, subscriptionMeta?.max_api_calls)}
-      basisExplanation={basisExplanation(basis)}
       periodLabel={periodLabel(periods, billingPeriod)}
       showPlanCeiling={showsPlanCeiling(billingPeriod, selectedProjectId)}
       meterNote={

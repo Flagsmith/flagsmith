@@ -11,7 +11,6 @@ export type UsageDashboardProps = {
   total: number
   limit: PlanLimit
   planCopy: { title: string; hint: string }
-  basisExplanation?: string
   periodLabel: string
   meterNote?: ReactNode
   showPlanCeiling?: boolean
@@ -25,7 +24,6 @@ export type UsageDashboardProps = {
 }
 
 const UsageDashboard: FC<UsageDashboardProps> = ({
-  basisExplanation,
   breakdown,
   data,
   filters,
@@ -67,10 +65,7 @@ const UsageDashboard: FC<UsageDashboardProps> = ({
   } else {
     content = (
       <>
-        <SectionHeading
-          title={planCopy.title}
-          hint={[planCopy.hint, basisExplanation].filter(Boolean).join(' ')}
-        />
+        <SectionHeading title={planCopy.title} hint={planCopy.hint} />
 
         <UsageMeter total={total} limit={limit} note={meterNote} />
 

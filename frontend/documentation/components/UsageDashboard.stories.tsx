@@ -6,7 +6,6 @@ import UsageBreakdown, {
 } from 'components/pages/usage/components/UsageBreakdown'
 import {
   allowanceWindow,
-  basisExplanation,
   contributionNote,
   isBilledOnAPeriod,
   isBillingPeriodSelected,
@@ -121,7 +120,6 @@ const UsagePage: FC<HarnessProps> = ({
 
   return (
     <UsageDashboard
-      basisExplanation={basisExplanation(basis)}
       breakdown={
         <UsageBreakdown
           {...breakdown}

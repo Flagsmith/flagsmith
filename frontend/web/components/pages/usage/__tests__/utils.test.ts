@@ -4,7 +4,6 @@ import {
   isBillingPeriodSelected,
   allowanceWindow,
   planSectionCopy,
-  basisExplanation,
   allowanceWindowLabel,
   showsPlanCeiling,
   usageBasisOf,
@@ -99,7 +98,6 @@ describe('UsageDashboard utils', () => {
       expect(basis).toEqual({ window: 'billing-period' })
       expect(allowanceWindow(basis)).toBe('current_billing_period')
       expect(allowanceWindowLabel(basis)).toBe('this billing period')
-      expect(basisExplanation(basis)).toBeUndefined()
     })
 
     it('measures a free plan over the trailing 30 days, by design', () => {
@@ -107,27 +105,21 @@ describe('UsageDashboard utils', () => {
 
       expect(basis).toEqual({ reason: 'free', window: 'rolling' })
       expect(allowanceWindow(basis)).toBeUndefined()
-      expect(basisExplanation(basis)).toBeUndefined()
+      expect(planSectionCopy(basis, 50000).hint).not.toContain(
+        'no billing period',
+      )
     })
 
-    it('says an invoiced organisation will never have a billing period', () => {
+    it('says so when a paid organisation has no billing period', () => {
       const basis = usageBasisOf(
         subscription({ payment_method: 'XERO' }),
         false,
       )
 
-      expect(basis).toEqual({ reason: 'invoiced', window: 'rolling' })
-      expect(basisExplanation(basis)).toContain('invoiced directly')
-    })
-
-    it('separates a Chargebee organisation whose period has not arrived', () => {
-      const basis = usageBasisOf(
-        subscription({ payment_method: 'CHARGEBEE' }),
-        false,
+      expect(basis).toEqual({ reason: 'no-period', window: 'rolling' })
+      expect(planSectionCopy(basis, 50000).hint).toContain(
+        'has no billing period',
       )
-
-      expect(basis).toEqual({ reason: 'unavailable', window: 'rolling' })
-      expect(basisExplanation(basis)).toContain('do not have a billing period')
     })
   })
 

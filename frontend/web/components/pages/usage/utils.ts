@@ -9,26 +9,11 @@ import { PlanLimit } from 'components/shared/UsageBar/utils'
 
 export type PeriodSelection = BillingPeriod | 'default'
 
-export type RollingReason = 'free' | 'invoiced' | 'unavailable'
+export type RollingReason = 'free' | 'no-period'
 
 export type UsageBasis =
   | { window: 'billing-period' }
   | { window: 'rolling'; reason: RollingReason }
-
-const rollingReason = (
-  subscription: Subscription | undefined,
-  isFreePlan: boolean,
-): RollingReason => {
-  if (isFreePlan) {
-    return 'free'
-  }
-  // Only a self-serve subscription carries billing terms, so anything invoiced
-  // directly never has one. Keep the copy free of the billing provider's name:
-  // customers do not know which one we use, and invoiced ones should not.
-  return subscription?.payment_method === 'CHARGEBEE'
-    ? 'unavailable'
-    : 'invoiced'
-}
 
 export const usageBasisOf = (
   subscription: Subscription | undefined,
@@ -36,7 +21,10 @@ export const usageBasisOf = (
 ): UsageBasis =>
   !isFreePlan && subscription?.has_active_billing_periods
     ? { window: 'billing-period' }
-    : { reason: rollingReason(subscription, isFreePlan), window: 'rolling' }
+    : // A free plan has no billing period by design and needs no explaining. A
+      // paid one is worth saying out loud, whether it is invoiced directly, was
+      // set up by hand, or the dates have gone stale.
+      { reason: isFreePlan ? 'free' : 'no-period', window: 'rolling' }
 
 export const isBilledOnAPeriod = (basis: UsageBasis): boolean =>
   basis.window === 'billing-period'
@@ -54,26 +42,18 @@ export const planSectionCopy = (
     }
   }
 
+  if (basis.window === 'rolling' && basis.reason === 'no-period') {
+    return {
+      hint: 'Where your organisation stands against its allowance, measured over the last 30 days as this organisation has no billing period.',
+      title: 'Your plan',
+    }
+  }
+
   return {
     hint: `Where your organisation stands against its allowance, over ${allowanceWindowLabel(
       basis,
     )}.`,
     title: 'Your plan',
-  }
-}
-
-export const basisExplanation = (basis: UsageBasis): string | undefined => {
-  if (basis.window === 'billing-period') {
-    return undefined
-  }
-
-  switch (basis.reason) {
-    case 'invoiced':
-      return 'This organisation is invoiced directly, so it has no billing period.'
-    case 'unavailable':
-      return 'We do not have a billing period for this organisation yet.'
-    default:
-      return undefined
   }
 }
 
