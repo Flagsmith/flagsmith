@@ -413,6 +413,12 @@ const FeaturesPage: FC<FeaturesPageProps> = ({ forcedTagIds, pageTitle }) => {
             <FeaturesSDKIntegration
               projectId={projectId}
               environmentId={environmentId}
+              totalFeatures={Math.max(
+                // The list count is filter-aware but live; the project
+                // total is unfiltered but cached.
+                data?.pagination?.count ?? 0,
+                project?.total_features ?? 0,
+              )}
             />
           </>
         )}
