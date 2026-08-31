@@ -1231,7 +1231,7 @@ wheels = [
 
 [[package]]
 name = "flagsmith"
-version = "6.2.2"
+version = "6.2.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "flagsmith-flag-engine" },
@@ -1240,9 +1240,9 @@ dependencies = [
     { name = "sseclient-py" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8c/25/ee760a79c50d883aaeb72f8da142df3d78dbc647ecfd8583a2f018b2ba6d/flagsmith-6.2.2.tar.gz", hash = "sha256:4f309e6557904e83b6120db1c6e5c6f2b1a334d327bc9bc34eed01cb2f3b8760", size = 17280, upload-time = "2026-08-31T08:55:18.813Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0e/31/7d358a3d3d7d773b09784a7a56ca44e0bbadce617c745a5c73c9e2cce539/flagsmith-6.2.3.tar.gz", hash = "sha256:392eebbba2f2490ff92273de59c3878a7fb649572fd178210bd28df2e6001e48", size = 17302, upload-time = "2026-08-31T13:13:57.669Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a3/8c/1a52dbeaacb6fbd05b2c75f42fbf8e12db3304db054ccb95c1044ef8f061/flagsmith-6.2.2-py3-none-any.whl", hash = "sha256:fefe46bd7e0e02bbb375f3e16ebd1b3ff851b4edadaa43560185921cce28a620", size = 22396, upload-time = "2026-08-31T08:55:17.554Z" },
+    { url = "https://files.pythonhosted.org/packages/0a/a4/45f046baf953c8a336496c1cf8aff398885d6293fce09c03bc0489ad8908/flagsmith-6.2.3-py3-none-any.whl", hash = "sha256:62e8bf47c0da16c58c49f064840708fbf89ef42eed3e41908aa03a9b3d49fd0b", size = 22410, upload-time = "2026-08-31T13:13:56.523Z" },
 ]
 
 [[package]]
