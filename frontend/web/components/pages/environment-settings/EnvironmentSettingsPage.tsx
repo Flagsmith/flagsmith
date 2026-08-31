@@ -932,6 +932,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                       <div className='mt-4'>
                         <CohortSyncTab
                           environmentApiKey={match.params.environmentId}
+                          projectId={projectId ?? ''}
                         />
                       </div>
                     </TabItem>

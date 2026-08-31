@@ -1,13 +1,15 @@
 import React, { FC, useState } from 'react'
 import moment from 'moment'
-import { Link } from 'react-router-dom'
 import Constants from 'common/constants'
 import { useHasPermission } from 'common/providers/Permission'
 import {
   useCreateCohortSyncKeyMutation,
   useGetCohortSyncKeysQuery,
 } from 'common/services/useCohort'
-import { EnvironmentPermission } from 'common/types/permissions.types'
+import {
+  EnvironmentPermission,
+  ProjectPermission,
+} from 'common/types/permissions.types'
 import { CohortSyncKey } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import InputGroup from 'components/base/forms/InputGroup'
@@ -36,12 +38,24 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
   const [createdKey, setCreatedKey] = useState<string | null>(null)
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
 
-  const { isLoading: isLoadingPermission, permission: canManage } =
+  // Key writes need both permissions; mirrors the API's CohortPermission.
+  const { isLoading: isLoadingEnvPermission, permission: canManageOverrides } =
     useHasPermission({
       id: environmentApiKey,
       level: 'environment',
       permission: EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
     })
+  const {
+    isLoading: isLoadingProjectPermission,
+    permission: canManageSegments,
+  } = useHasPermission({
+    id: `${projectId}`,
+    level: 'project',
+    permission: ProjectPermission.MANAGE_SEGMENTS,
+  })
+  const isLoadingPermission =
+    isLoadingEnvPermission || isLoadingProjectPermission
+  const canManage = !!canManageOverrides && !!canManageSegments
 
   const { data: syncKeys, isLoading } = useGetCohortSyncKeysQuery(
     { environmentApiKey },
@@ -152,12 +166,13 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
         </div>
         <div className='fs-small text-secondary'>
           You can revoke keys in{' '}
-          <Link
-            to={`/project/${projectId}/environment/${environmentApiKey}/settings?tab=cohort-synchronisation`}
+          {/* Plain anchor: this renders in the modal root, outside the Router. */}
+          <a
+            href={`/project/${projectId}/environment/${environmentApiKey}/settings?tab=cohort-synchronisation`}
             onClick={() => closeModal()}
           >
             Environment Settings
-          </Link>
+          </a>
           .
         </div>
         {canManage ? (

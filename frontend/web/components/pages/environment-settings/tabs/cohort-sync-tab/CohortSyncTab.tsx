@@ -6,7 +6,10 @@ import {
   useGetCohortSyncKeysQuery,
   useRevokeCohortSyncKeyMutation,
 } from 'common/services/useCohort'
-import { EnvironmentPermission } from 'common/types/permissions.types'
+import {
+  EnvironmentPermission,
+  ProjectPermission,
+} from 'common/types/permissions.types'
 import { CohortSyncKey } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import Flex from 'components/base/grid/Flex'
@@ -20,14 +23,25 @@ import CreateCohortSyncKeyModal from './CreateCohortSyncKeyModal'
 
 type CohortSyncTabProps = {
   environmentApiKey: string
+  projectId: number | string
 }
 
-const CohortSyncTab: FC<CohortSyncTabProps> = ({ environmentApiKey }) => {
-  const { permission: canManage } = useHasPermission({
+const CohortSyncTab: FC<CohortSyncTabProps> = ({
+  environmentApiKey,
+  projectId,
+}) => {
+  // Key writes need both permissions; mirrors the API's CohortPermission.
+  const { permission: canManageOverrides } = useHasPermission({
     id: environmentApiKey,
     level: 'environment',
     permission: EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
   })
+  const { permission: canManageSegments } = useHasPermission({
+    id: `${projectId}`,
+    level: 'project',
+    permission: ProjectPermission.MANAGE_SEGMENTS,
+  })
+  const canManage = !!canManageOverrides && !!canManageSegments
 
   const { data: syncKeys, isLoading } = useGetCohortSyncKeysQuery(
     { environmentApiKey },

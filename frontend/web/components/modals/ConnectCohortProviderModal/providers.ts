@@ -51,6 +51,12 @@ export const COHORT_PROVIDERS: Record<CohortProviderKey, CohortProviderConfig> =
     },
   }
 
+// Proxied self-hosted deployments configure a relative Project.api ('/api/v1/');
+// providers need an absolute callback URL, so resolve against the page origin.
 export const getCohortProviderEndpoint = (
   provider: CohortProviderKey,
-): string => `${Project.api}${COHORT_PROVIDERS[provider].endpointPath}`
+): string =>
+  new URL(
+    COHORT_PROVIDERS[provider].endpointPath,
+    new URL(Project.api, window.location.origin),
+  ).toString()
