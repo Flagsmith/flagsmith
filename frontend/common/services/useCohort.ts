@@ -23,7 +23,7 @@ export const cohortService = service
         }),
       }),
       createCohortSyncKey: builder.mutation<
-        Res['cohortSyncKey'],
+        Res['cohortSyncKeyCreated'],
         Req['createCohortSyncKey']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'CohortSyncKey' }],

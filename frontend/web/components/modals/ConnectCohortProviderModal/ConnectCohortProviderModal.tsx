@@ -4,7 +4,6 @@ import Button from 'components/base/forms/Button'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import CopyField from 'components/CopyField'
 import EnvironmentSelect from 'components/EnvironmentSelect'
-import Loader from 'components/Loader'
 import ModalHR from 'components/modals/ModalHR'
 import CohortSyncKeyStep from './CohortSyncKeyStep'
 import ConnectCohortProviderStep from './ConnectCohortProviderStep'
@@ -78,6 +77,7 @@ const ConnectCohortProviderModal: FC<ConnectCohortProviderModalProps> = ({
               title={config.endpointStepTitle}
             >
               <CopyField
+                title={config.endpointFieldTitle}
                 value={getCohortProviderEndpoint(provider)}
                 className='font-monospace'
                 data-test='connect-provider-url'

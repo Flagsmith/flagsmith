@@ -14,7 +14,6 @@ import FormGroup from 'components/base/grid/FormGroup'
 import Panel from 'components/base/grid/Panel'
 import Row from 'components/base/grid/Row'
 import Icon from 'components/icons/Icon'
-import Loader from 'components/Loader'
 import PanelSearch from 'components/PanelSearch'
 import Tooltip from 'components/Tooltip'
 import CreateCohortSyncKeyModal from './CreateCohortSyncKeyModal'
@@ -84,14 +83,16 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({ environmentApiKey }) => {
         </span>
       </div>
       <div className='table-column'>
-        <Button
-          type='button'
-          onClick={() => handleRevoke(syncKey)}
-          className='btn btn-with-icon'
-          aria-label={`Revoke ${syncKey.name}`}
-        >
-          <Icon name='trash-2' width={20} fill='#656D7B' />
-        </Button>
+        {canManage && (
+          <Button
+            type='button'
+            onClick={() => handleRevoke(syncKey)}
+            className='btn btn-with-icon'
+            aria-label={`Revoke ${syncKey.name}`}
+          >
+            <Icon name='trash-2' width={20} fill='#656D7B' />
+          </Button>
+        )}
       </div>
     </Row>
   )

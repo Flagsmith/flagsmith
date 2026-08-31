@@ -1,16 +1,19 @@
 import React, { FC, useState } from 'react'
 import moment from 'moment'
 import { Link } from 'react-router-dom'
+import Constants from 'common/constants'
+import { useHasPermission } from 'common/providers/Permission'
 import {
   useCreateCohortSyncKeyMutation,
   useGetCohortSyncKeysQuery,
 } from 'common/services/useCohort'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 import { CohortSyncKey } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import InputGroup from 'components/base/forms/InputGroup'
 import CopyField from 'components/CopyField'
 import ErrorMessage from 'components/ErrorMessage'
-import Loader from 'components/Loader'
+import Tooltip from 'components/Tooltip'
 import WarningMessage from 'components/WarningMessage'
 import ConnectCohortProviderStep from './ConnectCohortProviderStep'
 
@@ -32,6 +35,13 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
   const [name, setName] = useState('')
   const [createdKey, setCreatedKey] = useState<string | null>(null)
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
+
+  const { isLoading: isLoadingPermission, permission: canManage } =
+    useHasPermission({
+      id: environmentApiKey,
+      level: 'environment',
+      permission: EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
+    })
 
   const { data: syncKeys, isLoading } = useGetCohortSyncKeysQuery(
     { environmentApiKey },
@@ -56,11 +66,12 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
   const getTitle = () => {
     if (createdKey) return 'Synchronisation key'
     if (hasKeys && !isCreateFormOpen) return 'Use your existing key'
+    if (!canManage) return 'Synchronisation key'
     return 'Create a synchronisation key'
   }
 
   const renderBody = () => {
-    if (isLoading && !syncKeys) {
+    if ((isLoading && !syncKeys) || isLoadingPermission) {
       return <Loader />
     }
 
@@ -77,6 +88,15 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
             warningMessageClass='mt-4'
           />
         </>
+      )
+    }
+
+    if (!hasKeys && !canManage) {
+      return (
+        <div className='fs-small text-secondary'>
+          You do not have permission to create synchronisation keys in this
+          environment.
+        </div>
       )
     }
 
@@ -127,7 +147,8 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
           ))}
         </div>
         <div className='fs-small text-secondary mt-2'>
-          Key values are shown only at creation. Lost it? Create a new key.
+          Key values are shown only at creation.
+          {canManage && ' Lost it? Create a new key.'}
         </div>
         <div className='fs-small text-secondary'>
           You can revoke keys in{' '}
@@ -139,14 +160,29 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
           </Link>
           .
         </div>
-        <Button
-          theme='secondary'
-          className='mt-3'
-          onClick={() => setIsCreateFormOpen(true)}
-          data-test='connect-provider-new-key'
-        >
-          Create a new key
-        </Button>
+        {canManage ? (
+          <Button
+            theme='secondary'
+            className='mt-3'
+            onClick={() => setIsCreateFormOpen(true)}
+            data-test='connect-provider-new-key'
+          >
+            Create a new key
+          </Button>
+        ) : (
+          <Tooltip
+            title={
+              <Button theme='secondary' className='mt-3' disabled>
+                Create a new key
+              </Button>
+            }
+            place='right'
+          >
+            {Constants.environmentPermissions(
+              EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
+            )}
+          </Tooltip>
+        )}
       </>
     )
   }

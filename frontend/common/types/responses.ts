@@ -1044,6 +1044,9 @@ export type CohortSyncKey = {
   key: string | null
 }
 
+// The plaintext key only exists in the create response.
+export type CohortSyncKeyCreated = CohortSyncKey & { key: string }
+
 export type CohortCsvSyncResult = {
   version: number
   added: number
@@ -1387,7 +1390,7 @@ export type Res = {
   segment: Segment
   cohort: Cohort
   cohortSyncKeys: CohortSyncKey[]
-  cohortSyncKey: CohortSyncKey
+  cohortSyncKeyCreated: CohortSyncKeyCreated
   cohortCsvSync: CohortCsvSyncResult
   segmentMembers: SegmentMembersResponse
   auditLogs: PagedResponse<AuditLogItem>
