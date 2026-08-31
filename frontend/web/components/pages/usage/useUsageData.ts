@@ -1,0 +1,76 @@
+import { skipToken } from '@reduxjs/toolkit/query'
+import { BillingPeriod } from 'common/types/requests'
+import { Res } from 'common/types/responses'
+import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
+import { allowanceWindow, UsageBasis } from './utils'
+
+type UseUsageData = {
+  organisationId: number | undefined
+  ready: boolean
+  basis: UsageBasis
+  period: BillingPeriod
+  projectId: number | undefined
+}
+
+export type UsageData = {
+  /** The period and project on screen. Feeds the chart and the breakdown. */
+  scoped: Res['organisationUsage'] | undefined
+  /** The organisation over the window its allowance covers. Feeds the meter. */
+  allowanceTotal: number
+  /** The organisation over the period on screen. The note's denominator. */
+  periodTotal: number
+  isLoadingPlan: boolean
+  isLoadingScoped: boolean
+  scopedFailed: boolean
+  retry: () => void
+}
+
+// usage-data is throttled at five requests a minute per user, so refetching
+// every time the tab regains focus spends the budget the page needs.
+const OPTIONS = { refetchOnFocus: false }
+
+export const useUsageData = ({
+  basis,
+  organisationId,
+  period,
+  projectId,
+  ready,
+}: UseUsageData): UsageData => {
+  const forOrganisation = ready && organisationId ? { organisationId } : null
+
+  const scoped = useGetOrganisationUsageQuery(
+    forOrganisation
+      ? { ...forOrganisation, billing_period: period, projectId }
+      : skipToken,
+    OPTIONS,
+  )
+
+  const allowance = useGetOrganisationUsageQuery(
+    forOrganisation
+      ? { ...forOrganisation, billing_period: allowanceWindow(basis) }
+      : skipToken,
+    OPTIONS,
+  )
+
+  // Only needed while a project is chosen. Without one its arguments match
+  // `scoped`, so RTK would serve both from a single request anyway.
+  const forPeriod = useGetOrganisationUsageQuery(
+    forOrganisation && projectId
+      ? { ...forOrganisation, billing_period: period }
+      : skipToken,
+    OPTIONS,
+  )
+
+  return {
+    allowanceTotal: allowance.data?.totals?.total ?? 0,
+    isLoadingPlan: allowance.isFetching,
+    isLoadingScoped: scoped.isFetching,
+    periodTotal: forPeriod.data?.totals?.total ?? 0,
+    retry: () => {
+      if (!scoped.isUninitialized) scoped.refetch()
+      if (!allowance.isUninitialized) allowance.refetch()
+    },
+    scoped: scoped.data,
+    scopedFailed: scoped.isError,
+  }
+}

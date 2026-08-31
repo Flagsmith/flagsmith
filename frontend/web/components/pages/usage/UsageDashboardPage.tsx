@@ -2,17 +2,16 @@ import { FC, useState } from 'react'
 import { skipToken } from '@reduxjs/toolkit/query'
 import Utils, { planNames } from 'common/utils/utils'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
-import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import ProjectFilter from 'components/ProjectFilter'
 import { PeriodOption } from 'common/types/requests'
 import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
 import UsageDashboard from './UsageDashboard'
+import { useUsageData } from './useUsageData'
 import {
   isBilledOnAPeriod,
   isBillingPeriodSelected,
   contributionNote,
-  allowanceWindow,
   planSectionCopy,
   showsPlanCeiling,
   periodLabel,
@@ -51,48 +50,13 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   const [chosenPeriod, setChosenPeriod] = useState<PeriodSelection>('default')
   const billingPeriod = resolvePeriod(chosenPeriod, planIsBilled)
 
-  const {
-    data,
-    isError: usageFailed,
-    isFetching: loadingUsage,
-    isUninitialized: usageNotStarted,
-    refetch: refetchUsage,
-  } = useGetOrganisationUsageQuery(
-    organisationId && organisation
-      ? {
-          billing_period: billingPeriod,
-          organisationId,
-          projectId: selectedProjectId,
-        }
-      : skipToken,
-    // usage-data is throttled at five requests a minute per user, so
-    // refetching every time the tab regains focus spends that budget.
-    { refetchOnFocus: false },
-  )
-  const { data: organisationData, isFetching: loadingPlan } =
-    useGetOrganisationUsageQuery(
-      organisationId && organisation
-        ? {
-            // The meter answers for the allowance window, not the one on screen.
-            billing_period: allowanceWindow(basis),
-            organisationId,
-          }
-        : skipToken,
-      // usage-data is throttled at five requests a minute per user, so
-      // refetching every time the tab regains focus spends that budget.
-      { refetchOnFocus: false },
-    )
-
-  // The note compares a project with the organisation over the same period, so
-  // it needs the unfiltered total for the period on screen, not the allowance
-  // one. With no project chosen the arguments match the query above and RTK
-  // serves both from one request.
-  const { data: periodData } = useGetOrganisationUsageQuery(
-    organisationId && organisation && selectedProjectId
-      ? { billing_period: billingPeriod, organisationId }
-      : skipToken,
-    { refetchOnFocus: false },
-  )
+  const usage = useUsageData({
+    basis,
+    organisationId,
+    period: billingPeriod,
+    projectId: selectedProjectId,
+    ready: !!organisation,
+  })
 
   const {
     data: subscriptionMeta,
@@ -105,7 +69,9 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   const periods = periodsFor(planIsBilled)
 
-  const { setDimension, ...breakdown } = useUsageBreakdown({ data })
+  const { setDimension, ...breakdown } = useUsageBreakdown({
+    data: usage.scoped,
+  })
 
   const scope = [
     selectedProjectId ? projectName : 'All projects',
@@ -120,8 +86,8 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   return (
     <UsageDashboard
-      data={data}
-      total={organisationData?.totals?.total ?? 0}
+      data={usage.scoped}
+      total={usage.allowanceTotal}
       limit={subscriptionMeta?.max_api_calls}
       hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
       planCopy={planSectionCopy(basis, subscriptionMeta?.max_api_calls)}
@@ -131,8 +97,8 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         selectedProjectId && projectName
           ? contributionNote(
               projectName,
-              data?.totals?.total ?? 0,
-              periodData?.totals?.total ?? 0,
+              usage.scoped?.totals?.total ?? 0,
+              usage.periodTotal,
             )
           : undefined
       }
@@ -143,15 +109,13 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
           scope={scope}
         />
       }
-      isError={organisationFailed || usageFailed || limitFailed}
-      isLoading={loadingOrganisation || loadingPlan || loadingLimit}
-      isExploring={loadingUsage}
+      isError={organisationFailed || usage.scopedFailed || limitFailed}
+      isLoading={loadingOrganisation || usage.isLoadingPlan || loadingLimit}
+      isExploring={usage.isLoadingScoped}
       onRetry={() => {
         refetchOrganisation()
         refetchLimit()
-        if (!usageNotStarted) {
-          refetchUsage()
-        }
+        usage.retry()
       }}
       filters={
         <Row className='gap-2'>
