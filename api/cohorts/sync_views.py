@@ -79,15 +79,25 @@ class AmplitudeCohortSyncViewSet(viewsets.ViewSet):
             name=serializer.validated_data["name"],
             source_type=CohortSourceType.AMPLITUDE,
         )
-        # Amplitude reads the list ID from this body at the path configured
-        # in the Integration Portal, which their portal requires to start
-        # with "response." — but the two sides of Amplitude disagree on what
-        # that path is applied to. Their Testing tab wraps this body in a
-        # {"response": ...} envelope first, so it finds the flat copy; their
-        # production sync worker applies the same path to the raw body, so
-        # it needs the nested copy. Verified against both, 2026-08-28.
         list_id = str(cohort.uuid)
-        return Response({"list_id": list_id, "response": {"list_id": list_id}})
+        # TODO: temporary, while we pin down which copy of the list ID
+        # Amplitude's production sync worker actually reads. `?shape=`
+        # narrows the body to a single candidate so each portal-side retry
+        # tests one; the default carries every copy, which is known to work.
+        # Once the winning shape is confirmed, hardcode it and drop the
+        # parameter.
+        shapes = {
+            "flat_snake": {"list_id": list_id},
+            "flat_camel": {"listId": list_id},
+            "nested_snake": {"response": {"list_id": list_id}},
+            "nested_camel": {"response": {"listId": list_id}},
+        }
+        default = {
+            "list_id": list_id,
+            "listId": list_id,
+            "response": {"list_id": list_id, "listId": list_id},
+        }
+        return Response(shapes.get(request.query_params.get("shape", ""), default))
 
     @action(detail=True, methods=["POST"])
     def add(self, request: Request, pk: str) -> Response:
