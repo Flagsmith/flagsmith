@@ -69,6 +69,7 @@ export const DailyVolumeOnARollingWindow: Story = {
     data: usage(30, 2000),
     isBillingPeriod: false,
     limit: 50000,
+    periodLabel: 'Last 30 days',
   },
 }
 

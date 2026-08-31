@@ -1,181 +1,181 @@
 [
   {
-    "day": "2026-08-01",
+    "day": "2026-08-06",
     "flags": 51030,
     "identities": 19440,
     "traits": 7290,
     "environment_document": 3240
-  },
-  {
-    "day": "2026-08-02",
-    "flags": 52920,
-    "identities": 20160,
-    "traits": 7560,
-    "environment_document": 3360
-  },
-  {
-    "day": "2026-08-03",
-    "flags": 49612,
-    "identities": 18900,
-    "traits": 7088,
-    "environment_document": 3150
-  },
-  {
-    "day": "2026-08-04",
-    "flags": 51975,
-    "identities": 19800,
-    "traits": 7425,
-    "environment_document": 3300
-  },
-  {
-    "day": "2026-08-05",
-    "flags": 46305,
-    "identities": 17640,
-    "traits": 6615,
-    "environment_document": 2940
-  },
-  {
-    "day": "2026-08-06",
-    "flags": 29295,
-    "identities": 11160,
-    "traits": 4185,
-    "environment_document": 1860
   },
   {
     "day": "2026-08-07",
-    "flags": 27405,
-    "identities": 10440,
-    "traits": 3915,
-    "environment_document": 1740
+    "flags": 52920,
+    "identities": 20160,
+    "traits": 7560,
+    "environment_document": 3360
   },
   {
     "day": "2026-08-08",
-    "flags": 51030,
-    "identities": 19440,
-    "traits": 7290,
-    "environment_document": 3240
+    "flags": 49612,
+    "identities": 18900,
+    "traits": 7088,
+    "environment_document": 3150
   },
   {
     "day": "2026-08-09",
-    "flags": 52920,
-    "identities": 20160,
-    "traits": 7560,
-    "environment_document": 3360
+    "flags": 51975,
+    "identities": 19800,
+    "traits": 7425,
+    "environment_document": 3300
   },
   {
     "day": "2026-08-10",
-    "flags": 49612,
-    "identities": 18900,
-    "traits": 7088,
-    "environment_document": 3150
+    "flags": 46305,
+    "identities": 17640,
+    "traits": 6615,
+    "environment_document": 2940
   },
   {
     "day": "2026-08-11",
-    "flags": 51975,
-    "identities": 19800,
-    "traits": 7425,
-    "environment_document": 3300
+    "flags": 29295,
+    "identities": 11160,
+    "traits": 4185,
+    "environment_document": 1860
   },
   {
     "day": "2026-08-12",
-    "flags": 46305,
-    "identities": 17640,
-    "traits": 6615,
-    "environment_document": 2940
+    "flags": 27405,
+    "identities": 10440,
+    "traits": 3915,
+    "environment_document": 1740
   },
   {
     "day": "2026-08-13",
-    "flags": 29295,
-    "identities": 11160,
-    "traits": 4185,
-    "environment_document": 1860
-  },
-  {
-    "day": "2026-08-14",
-    "flags": 27405,
-    "identities": 10440,
-    "traits": 3915,
-    "environment_document": 1740
-  },
-  {
-    "day": "2026-08-15",
     "flags": 51030,
     "identities": 19440,
     "traits": 7290,
     "environment_document": 3240
   },
   {
-    "day": "2026-08-16",
+    "day": "2026-08-14",
     "flags": 52920,
     "identities": 20160,
     "traits": 7560,
     "environment_document": 3360
   },
   {
-    "day": "2026-08-17",
+    "day": "2026-08-15",
     "flags": 49612,
     "identities": 18900,
     "traits": 7088,
     "environment_document": 3150
   },
   {
-    "day": "2026-08-18",
+    "day": "2026-08-16",
     "flags": 51975,
     "identities": 19800,
     "traits": 7425,
     "environment_document": 3300
   },
   {
-    "day": "2026-08-19",
+    "day": "2026-08-17",
     "flags": 46305,
     "identities": 17640,
     "traits": 6615,
     "environment_document": 2940
   },
   {
-    "day": "2026-08-20",
+    "day": "2026-08-18",
     "flags": 29295,
     "identities": 11160,
     "traits": 4185,
     "environment_document": 1860
   },
   {
-    "day": "2026-08-21",
+    "day": "2026-08-19",
     "flags": 27405,
     "identities": 10440,
     "traits": 3915,
     "environment_document": 1740
   },
   {
-    "day": "2026-08-22",
+    "day": "2026-08-20",
     "flags": 51030,
     "identities": 19440,
     "traits": 7290,
     "environment_document": 3240
   },
   {
-    "day": "2026-08-23",
+    "day": "2026-08-21",
     "flags": 52920,
     "identities": 20160,
     "traits": 7560,
     "environment_document": 3360
   },
   {
-    "day": "2026-08-24",
+    "day": "2026-08-22",
     "flags": 49612,
     "identities": 18900,
     "traits": 7088,
     "environment_document": 3150
   },
   {
-    "day": "2026-08-25",
+    "day": "2026-08-23",
     "flags": 51975,
     "identities": 19800,
     "traits": 7425,
     "environment_document": 3300
   },
   {
+    "day": "2026-08-24",
+    "flags": 46305,
+    "identities": 17640,
+    "traits": 6615,
+    "environment_document": 2940
+  },
+  {
+    "day": "2026-08-25",
+    "flags": 29295,
+    "identities": 11160,
+    "traits": 4185,
+    "environment_document": 1860
+  },
+  {
     "day": "2026-08-26",
+    "flags": 27405,
+    "identities": 10440,
+    "traits": 3915,
+    "environment_document": 1740
+  },
+  {
+    "day": "2026-08-27",
+    "flags": 51030,
+    "identities": 19440,
+    "traits": 7290,
+    "environment_document": 3240
+  },
+  {
+    "day": "2026-08-28",
+    "flags": 52920,
+    "identities": 20160,
+    "traits": 7560,
+    "environment_document": 3360
+  },
+  {
+    "day": "2026-08-29",
+    "flags": 49612,
+    "identities": 18900,
+    "traits": 7088,
+    "environment_document": 3150
+  },
+  {
+    "day": "2026-08-30",
+    "flags": 51975,
+    "identities": 19800,
+    "traits": 7425,
+    "environment_document": 3300
+  },
+  {
+    "day": "2026-08-31",
     "flags": 46305,
     "identities": 17640,
     "traits": 6615,

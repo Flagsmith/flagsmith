@@ -1,209 +1,209 @@
 [
   {
-    "day": "2026-08-01",
+    "day": "2026-08-02",
     "flags": 1225,
     "identities": 467,
     "traits": 175,
     "environment_document": 78
-  },
-  {
-    "day": "2026-08-02",
-    "flags": 1270,
-    "identities": 484,
-    "traits": 181,
-    "environment_document": 81
   },
   {
     "day": "2026-08-03",
-    "flags": 1191,
-    "identities": 454,
-    "traits": 170,
-    "environment_document": 76
+    "flags": 1270,
+    "identities": 484,
+    "traits": 181,
+    "environment_document": 81
   },
   {
     "day": "2026-08-04",
-    "flags": 1247,
-    "identities": 475,
-    "traits": 178,
-    "environment_document": 79
+    "flags": 1191,
+    "identities": 454,
+    "traits": 170,
+    "environment_document": 76
   },
   {
     "day": "2026-08-05",
-    "flags": 1111,
-    "identities": 423,
-    "traits": 159,
-    "environment_document": 71
+    "flags": 1247,
+    "identities": 475,
+    "traits": 178,
+    "environment_document": 79
   },
   {
     "day": "2026-08-06",
-    "flags": 703,
-    "identities": 268,
-    "traits": 100,
-    "environment_document": 45
+    "flags": 1111,
+    "identities": 423,
+    "traits": 159,
+    "environment_document": 71
   },
   {
     "day": "2026-08-07",
-    "flags": 658,
-    "identities": 251,
-    "traits": 94,
-    "environment_document": 42
+    "flags": 703,
+    "identities": 268,
+    "traits": 100,
+    "environment_document": 45
   },
   {
     "day": "2026-08-08",
-    "flags": 1225,
-    "identities": 467,
-    "traits": 175,
-    "environment_document": 78
+    "flags": 658,
+    "identities": 251,
+    "traits": 94,
+    "environment_document": 42
   },
   {
     "day": "2026-08-09",
-    "flags": 1270,
-    "identities": 484,
-    "traits": 181,
-    "environment_document": 81
+    "flags": 1225,
+    "identities": 467,
+    "traits": 175,
+    "environment_document": 78
   },
   {
     "day": "2026-08-10",
-    "flags": 1191,
-    "identities": 454,
-    "traits": 170,
-    "environment_document": 76
+    "flags": 1270,
+    "identities": 484,
+    "traits": 181,
+    "environment_document": 81
   },
   {
     "day": "2026-08-11",
-    "flags": 1247,
-    "identities": 475,
-    "traits": 178,
-    "environment_document": 79
+    "flags": 1191,
+    "identities": 454,
+    "traits": 170,
+    "environment_document": 76
   },
   {
     "day": "2026-08-12",
-    "flags": 1111,
-    "identities": 423,
-    "traits": 159,
-    "environment_document": 71
+    "flags": 1247,
+    "identities": 475,
+    "traits": 178,
+    "environment_document": 79
   },
   {
     "day": "2026-08-13",
-    "flags": 703,
-    "identities": 268,
-    "traits": 100,
-    "environment_document": 45
+    "flags": 1111,
+    "identities": 423,
+    "traits": 159,
+    "environment_document": 71
   },
   {
     "day": "2026-08-14",
-    "flags": 658,
-    "identities": 251,
-    "traits": 94,
-    "environment_document": 42
+    "flags": 703,
+    "identities": 268,
+    "traits": 100,
+    "environment_document": 45
   },
   {
     "day": "2026-08-15",
-    "flags": 1225,
-    "identities": 467,
-    "traits": 175,
-    "environment_document": 78
+    "flags": 658,
+    "identities": 251,
+    "traits": 94,
+    "environment_document": 42
   },
   {
     "day": "2026-08-16",
-    "flags": 1270,
-    "identities": 484,
-    "traits": 181,
-    "environment_document": 81
+    "flags": 1225,
+    "identities": 467,
+    "traits": 175,
+    "environment_document": 78
   },
   {
     "day": "2026-08-17",
-    "flags": 1191,
-    "identities": 454,
-    "traits": 170,
-    "environment_document": 76
-  },
-  {
-    "day": "2026-08-18",
-    "flags": 1247,
-    "identities": 475,
-    "traits": 178,
-    "environment_document": 79
-  },
-  {
-    "day": "2026-08-19",
-    "flags": 1111,
-    "identities": 423,
-    "traits": 159,
-    "environment_document": 71
-  },
-  {
-    "day": "2026-08-20",
-    "flags": 703,
-    "identities": 268,
-    "traits": 100,
-    "environment_document": 45
-  },
-  {
-    "day": "2026-08-21",
-    "flags": 658,
-    "identities": 251,
-    "traits": 94,
-    "environment_document": 42
-  },
-  {
-    "day": "2026-08-22",
-    "flags": 1225,
-    "identities": 467,
-    "traits": 175,
-    "environment_document": 78
-  },
-  {
-    "day": "2026-08-23",
     "flags": 1270,
     "identities": 484,
     "traits": 181,
     "environment_document": 81
   },
   {
-    "day": "2026-08-24",
+    "day": "2026-08-18",
     "flags": 1191,
     "identities": 454,
     "traits": 170,
     "environment_document": 76
   },
   {
-    "day": "2026-08-25",
+    "day": "2026-08-19",
     "flags": 1247,
     "identities": 475,
     "traits": 178,
     "environment_document": 79
   },
   {
-    "day": "2026-08-26",
+    "day": "2026-08-20",
     "flags": 1111,
     "identities": 423,
     "traits": 159,
     "environment_document": 71
   },
   {
-    "day": "2026-08-27",
+    "day": "2026-08-21",
     "flags": 703,
     "identities": 268,
     "traits": 100,
     "environment_document": 45
   },
   {
-    "day": "2026-08-28",
+    "day": "2026-08-22",
     "flags": 658,
     "identities": 251,
     "traits": 94,
     "environment_document": 42
   },
   {
-    "day": "2026-08-29",
+    "day": "2026-08-23",
     "flags": 1225,
     "identities": 467,
     "traits": 175,
     "environment_document": 78
   },
   {
+    "day": "2026-08-24",
+    "flags": 1270,
+    "identities": 484,
+    "traits": 181,
+    "environment_document": 81
+  },
+  {
+    "day": "2026-08-25",
+    "flags": 1191,
+    "identities": 454,
+    "traits": 170,
+    "environment_document": 76
+  },
+  {
+    "day": "2026-08-26",
+    "flags": 1247,
+    "identities": 475,
+    "traits": 178,
+    "environment_document": 79
+  },
+  {
+    "day": "2026-08-27",
+    "flags": 1111,
+    "identities": 423,
+    "traits": 159,
+    "environment_document": 71
+  },
+  {
+    "day": "2026-08-28",
+    "flags": 703,
+    "identities": 268,
+    "traits": 100,
+    "environment_document": 45
+  },
+  {
+    "day": "2026-08-29",
+    "flags": 658,
+    "identities": 251,
+    "traits": 94,
+    "environment_document": 42
+  },
+  {
     "day": "2026-08-30",
+    "flags": 1225,
+    "identities": 467,
+    "traits": 175,
+    "environment_document": 78
+  },
+  {
+    "day": "2026-08-31",
     "flags": 1270,
     "identities": 484,
     "traits": 181,

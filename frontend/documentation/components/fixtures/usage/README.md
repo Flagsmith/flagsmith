@@ -1,3 +1,5 @@
+# Usage dashboard fixtures
+
 Daily API call counts for the usage dashboard stories.
 
 Each file is one scenario: an array of days, each with the four billable

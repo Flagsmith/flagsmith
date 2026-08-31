@@ -11,6 +11,7 @@ import {
   isBillingPeriodSelected,
   periodLabel,
   periodsFor,
+  PeriodSelection,
   planSectionCopy,
   resolvePeriod,
   showsPlanCeiling,
@@ -86,9 +87,7 @@ const UsagePage: FC<HarnessProps> = ({
   const planIsBilled = isBilledOnAPeriod(basis)
   const periods = periodsFor(planIsBilled)
 
-  const [chosenPeriod, setChosenPeriod] = useState<BillingPeriod | 'default'>(
-    'default',
-  )
+  const [chosenPeriod, setChosenPeriod] = useState<PeriodSelection>('default')
   const [project, setProject] = useState('All Projects')
 
   const billingPeriod = resolvePeriod(chosenPeriod, planIsBilled)

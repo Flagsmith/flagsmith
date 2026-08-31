@@ -21,7 +21,7 @@ export type UsageData = {
   periodTotal: number
   isLoadingPlan: boolean
   isLoadingScoped: boolean
-  scopedFailed: boolean
+  failed: boolean
   retry: () => void
 }
 
@@ -63,14 +63,19 @@ export const useUsageData = ({
 
   return {
     allowanceTotal: allowance.data?.totals?.total ?? 0,
+    // Either query failing leaves a number missing, so both are fatal.
+    failed: scoped.isError || allowance.isError,
+
     isLoadingPlan: allowance.isFetching,
+
     isLoadingScoped: scoped.isFetching,
+
     periodTotal: forPeriod.data?.totals?.total ?? 0,
+
     retry: () => {
       if (!scoped.isUninitialized) scoped.refetch()
       if (!allowance.isUninitialized) allowance.refetch()
     },
     scoped: scoped.data,
-    scopedFailed: scoped.isError,
   }
 }

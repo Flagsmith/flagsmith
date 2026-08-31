@@ -109,7 +109,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
           scope={scope}
         />
       }
-      isError={organisationFailed || usage.scopedFailed || limitFailed}
+      isError={organisationFailed || usage.failed || limitFailed}
       isLoading={loadingOrganisation || usage.isLoadingPlan || loadingLimit}
       isExploring={usage.isLoadingScoped}
       onRetry={() => {
