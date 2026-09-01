@@ -84,6 +84,15 @@ export const contributionNote = (
   return `${projectName} accounts for ${percent}% of that usage.`
 }
 
+// The note sits under the meter, so it can only compare over the window the
+// meter shows. On any other period "that usage" would name a figure that is
+// not on screen.
+export const showsContribution = (
+  basis: UsageBasis,
+  period: BillingPeriod,
+  projectId: number | undefined,
+): boolean => !!projectId && period === allowanceWindow(basis)
+
 export const showsPlanCeiling = (
   period: BillingPeriod,
   projectId: number | undefined,

@@ -13,6 +13,7 @@ import {
   isBillingPeriodSelected,
   contributionNote,
   planSectionCopy,
+  showsContribution,
   showsPlanCeiling,
   periodLabel,
   periodsFor,
@@ -94,11 +95,12 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       periodLabel={periodLabel(periods, billingPeriod)}
       showPlanCeiling={showsPlanCeiling(billingPeriod, selectedProjectId)}
       meterNote={
-        selectedProjectId && projectName
+        showsContribution(basis, billingPeriod, selectedProjectId) &&
+        projectName
           ? contributionNote(
               projectName,
               usage.scoped?.totals?.total ?? 0,
-              usage.periodTotal,
+              usage.allowanceTotal,
             )
           : undefined
       }

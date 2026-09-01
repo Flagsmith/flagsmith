@@ -5,6 +5,7 @@ import {
   allowanceWindow,
   planSectionCopy,
   allowanceWindowLabel,
+  showsContribution,
   showsPlanCeiling,
   usageBasisOf,
   periodsFor,
@@ -120,6 +121,27 @@ describe('UsageDashboard utils', () => {
       expect(planSectionCopy(basis, 50000).hint).toContain(
         'has no billing period',
       )
+    })
+  })
+
+  describe('showsContribution', () => {
+    const billed = { window: 'billing-period' } as const
+    const rolling = { reason: 'free', window: 'rolling' } as const
+
+    it('compares only over the window the meter is showing', () => {
+      expect(showsContribution(billed, 'current_billing_period', 12)).toBe(true)
+      expect(showsContribution(rolling, undefined, 12)).toBe(true)
+    })
+
+    it('says nothing on a period the meter does not cover', () => {
+      expect(showsContribution(billed, '90_day_period', 12)).toBe(false)
+      expect(showsContribution(rolling, '90_day_period', 12)).toBe(false)
+    })
+
+    it('says nothing without a project', () => {
+      expect(
+        showsContribution(billed, 'current_billing_period', undefined),
+      ).toBe(false)
     })
   })
 

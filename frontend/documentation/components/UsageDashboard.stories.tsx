@@ -14,6 +14,7 @@ import {
   PeriodSelection,
   planSectionCopy,
   resolvePeriod,
+  showsContribution,
   showsPlanCeiling,
   usageBasisOf,
 } from 'components/pages/usage/utils'
@@ -105,11 +106,6 @@ const UsagePage: FC<HarnessProps> = ({
 
   // The note needs the organisation over the period on screen, not over the
   // allowance window, or a project can read as more than all of it.
-  const periodTotal = toUsageResponse(
-    scenarioFor(billingPeriod, !!empty, isFreePlan),
-    scale,
-  ).totals.total
-
   const { setDimension, ...breakdown } = useUsageBreakdown({ data: scoped })
 
   const scope = `${filtered ? project : 'All projects'} · ${periodLabel(
@@ -152,8 +148,8 @@ const UsagePage: FC<HarnessProps> = ({
       isLoading={isLoading}
       limit={limit}
       meterNote={
-        filtered
-          ? contributionNote(project, scoped.totals.total, periodTotal)
+        showsContribution(basis, billingPeriod, filtered ? 1 : undefined)
+          ? contributionNote(project, scoped.totals.total, allowanceTotal)
           : undefined
       }
       onRetry={() => {}}

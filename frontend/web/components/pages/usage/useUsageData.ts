@@ -17,8 +17,6 @@ export type UsageData = {
   scoped: Res['organisationUsage'] | undefined
   /** The organisation over the window its allowance covers. Feeds the meter. */
   allowanceTotal: number
-  /** The organisation over the period on screen. The note's denominator. */
-  periodTotal: number
   isLoadingPlan: boolean
   isLoadingScoped: boolean
   failed: boolean
@@ -52,15 +50,6 @@ export const useUsageData = ({
     OPTIONS,
   )
 
-  // Only needed while a project is chosen. Without one its arguments match
-  // `scoped`, so RTK would serve both from a single request anyway.
-  const forPeriod = useGetOrganisationUsageQuery(
-    forOrganisation && projectId
-      ? { ...forOrganisation, billing_period: period }
-      : skipToken,
-    OPTIONS,
-  )
-
   return {
     allowanceTotal: allowance.data?.totals?.total ?? 0,
     // Either query failing leaves a number missing, so both are fatal.
@@ -69,8 +58,6 @@ export const useUsageData = ({
     isLoadingPlan: allowance.isFetching,
 
     isLoadingScoped: scoped.isFetching,
-
-    periodTotal: forPeriod.data?.totals?.total ?? 0,
 
     retry: () => {
       if (!scoped.isUninitialized) scoped.refetch()
