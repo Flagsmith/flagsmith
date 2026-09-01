@@ -7,7 +7,7 @@
 // =============================================================================
 
 // Light mode — fix invisible inline code
-.sbdocs code {
+.sbdocs code:not(.hljs) {
   color: #1a2634;
 }
 
@@ -48,6 +48,15 @@
   .sbdocs pre {
     background-color: var(--color-surface-emphasis, #202839);
     color: var(--color-text-default, #ffffff);
+  }
+
+  // Storybook marks rendered stories .sb-unstyled; the two rules above predate
+  // that and were repainting any <pre> a component renders. Skip .hljs, which
+  // brings its own surface.
+  .sbdocs .sb-unstyled code:not(.hljs),
+  .sbdocs .sb-unstyled pre:not(.hljs) {
+    background-color: transparent;
+    color: inherit;
   }
 
   // Storybook Source/code block container and all its children

@@ -1,0 +1,62 @@
+// _react-diff.scss repeats these two values for the library's own rows.
+.diff-row {
+  --diff-row-removed: oklch(from var(--red-500) l c h / 0.16);
+  --diff-row-added: oklch(from var(--green-500) l c h / 0.16);
+
+  line-height: 31px;
+
+  &__marker {
+    width: 31px;
+    height: 31px;
+    background-color: var(--color-surface-subtle);
+
+    > * {
+      margin: 0;
+    }
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+    padding-right: 0.5rem;
+
+    .rc-switch {
+      margin-bottom: 2px;
+    }
+  }
+
+  &--removed {
+    .diff-row__marker,
+    .diff-row__content {
+      background-color: var(--diff-row-removed);
+    }
+  }
+
+  &--added {
+    .diff-row__marker,
+    .diff-row__content {
+      background-color: var(--diff-row-added);
+    }
+  }
+
+  &--unchanged {
+    background-color: var(--color-surface-subtle);
+    font-size: 13px;
+
+    .diff-row__marker {
+      opacity: 0;
+    }
+
+    .diff-row__content {
+      padding-right: 0;
+
+      pre {
+        padding-left: 2px;
+        background-color: var(--color-surface-subtle);
+        font-family: var(--bs-font-monospace);
+        font-size: 13px;
+        line-height: 28px;
+      }
+    }
+  }
+}
