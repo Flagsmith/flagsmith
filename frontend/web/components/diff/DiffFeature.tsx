@@ -15,6 +15,7 @@ import {
 import DiffFeatureStateValues from './DiffFeatureStateValues'
 import DiffSegmentOverrides from './DiffSegmentOverrides'
 import DiffVariations from './DiffVariations'
+import './DiffFeature.scss'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/icons/Icon'
 import WarningMessage from 'components/WarningMessage'
