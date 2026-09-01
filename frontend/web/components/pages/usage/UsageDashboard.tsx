@@ -2,6 +2,9 @@ import { FC, ReactNode } from 'react'
 import { Res } from 'common/types/responses'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import EmptyState from 'components/EmptyState'
+import OverLimitBanner, {
+  OverLimitBannerProps,
+} from './components/OverLimitBanner'
 import SectionHeading from './components/SectionHeading'
 import UsageMeter from './components/UsageMeter'
 import UsageOverTime from './components/UsageOverTime'
@@ -21,6 +24,8 @@ export type UsageDashboardProps = {
   onRetry?: () => void
   filters?: ReactNode
   breakdown?: ReactNode
+  /** Set when the organisation has used more than its plan allows. */
+  overLimit?: OverLimitBannerProps
 }
 
 const UsageDashboard: FC<UsageDashboardProps> = ({
@@ -34,6 +39,7 @@ const UsageDashboard: FC<UsageDashboardProps> = ({
   limit,
   meterNote,
   onRetry,
+  overLimit,
   periodLabel,
   planCopy,
   showPlanCeiling,
@@ -65,6 +71,8 @@ const UsageDashboard: FC<UsageDashboardProps> = ({
   } else {
     content = (
       <>
+        {overLimit && <OverLimitBanner {...overLimit} />}
+
         <SectionHeading title={planCopy.title} hint={planCopy.hint} />
 
         <UsageMeter total={total} limit={limit} note={meterNote} />

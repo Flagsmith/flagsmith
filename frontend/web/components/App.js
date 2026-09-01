@@ -371,12 +371,17 @@ const App = class extends Component {
                     />
                     {user && (
                       <>
-                        <OrganisationLimit
-                          id={AccountStore.getOrganisation()?.id}
-                          organisationPlan={
-                            AccountStore.getOrganisation()?.subscription.plan
-                          }
-                        />
+                        {/* The usage page says the same thing with the
+                            figures to back it up, so the global banner would
+                            only repeat it. */}
+                        {!isUsagePage(pathname) && (
+                          <OrganisationLimit
+                            id={AccountStore.getOrganisation()?.id}
+                            organisationPlan={
+                              AccountStore.getOrganisation()?.subscription.plan
+                            }
+                          />
+                        )}
                         <div className='container announcement-container'>
                           <div>
                             <Announcement />

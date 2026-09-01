@@ -8,6 +8,7 @@ import { PeriodOption } from 'common/types/requests'
 import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
 import UsageDashboard from './UsageDashboard'
 import { useUsageData } from './useUsageData'
+import { overLimitNote, overLimitOf } from './overLimit'
 import {
   isBilledOnAPeriod,
   isBillingPeriodSelected,
@@ -68,6 +69,10 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     organisationId ? { id: organisationId } : skipToken,
   )
 
+  const limit = subscriptionMeta?.max_api_calls
+  const allowanceTotal = usage.allowance?.totals?.total ?? 0
+  const exceeded = overLimitOf(allowanceTotal, limit, usage.allowance)
+
   const periods = periodsFor(planIsBilled)
 
   const { setDimension, ...breakdown } = useUsageBreakdown({
@@ -81,6 +86,19 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     .filter(Boolean)
     .join(' · ')
 
+  const contribution =
+    showsContribution(basis, billingPeriod, selectedProjectId) && projectName
+      ? contributionNote(
+          projectName,
+          usage.scoped?.totals?.total ?? 0,
+          allowanceTotal,
+        )
+      : undefined
+
+  // Being over the limit outranks the project's share of usage: the slot holds
+  // one line and only one of them is urgent.
+  const meterNote = exceeded ? overLimitNote(exceeded) : contribution
+
   if (!organisationId) {
     return null
   }
@@ -88,22 +106,13 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   return (
     <UsageDashboard
       data={usage.scoped}
-      total={usage.allowanceTotal}
-      limit={subscriptionMeta?.max_api_calls}
+      total={allowanceTotal}
+      limit={limit}
       hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
-      planCopy={planSectionCopy(basis, subscriptionMeta?.max_api_calls)}
+      planCopy={planSectionCopy(basis, limit)}
       periodLabel={periodLabel(periods, billingPeriod)}
       showPlanCeiling={showsPlanCeiling(billingPeriod, selectedProjectId)}
-      meterNote={
-        showsContribution(basis, billingPeriod, selectedProjectId) &&
-        projectName
-          ? contributionNote(
-              projectName,
-              usage.scoped?.totals?.total ?? 0,
-              usage.allowanceTotal,
-            )
-          : undefined
-      }
+      meterNote={meterNote}
       breakdown={
         <UsageBreakdown
           {...breakdown}
@@ -114,6 +123,17 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       isError={organisationFailed || usage.failed || limitFailed}
       isLoading={loadingOrganisation || usage.isLoadingPlan || loadingLimit}
       isExploring={usage.isLoadingScoped}
+      // Restriction only ever applies to a free plan, so a paid organisation
+      // over its limit keeps serving flags and this only reports the overage.
+      overLimit={
+        exceeded
+          ? {
+              basis,
+              canUpgrade: Utils.getFlagsmithHasFeature('payments_enabled'),
+              over: exceeded,
+            }
+          : undefined
+      }
       onRetry={() => {
         refetchOrganisation()
         refetchLimit()

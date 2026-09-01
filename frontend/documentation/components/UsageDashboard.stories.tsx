@@ -4,6 +4,7 @@ import { UsageDashboard } from 'components/pages/usage'
 import UsageBreakdown, {
   useUsageBreakdown,
 } from 'components/pages/usage/components/UsageBreakdown'
+import { overLimitNote, overLimitOf } from 'components/pages/usage/overLimit'
 import {
   allowanceWindow,
   contributionNote,
@@ -99,10 +100,20 @@ const UsagePage: FC<HarnessProps> = ({
     scenarioFor(billingPeriod, !!empty, isFreePlan),
     share * scale,
   )
-  const allowanceTotal = toUsageResponse(
+  const allowance = toUsageResponse(
     scenarioFor(allowanceWindow(basis), !!empty, isFreePlan),
     scale,
-  ).totals.total
+  )
+  const allowanceTotal = allowance.totals.total
+  const exceeded = overLimitOf(allowanceTotal, limit, allowance)
+
+  const contribution = showsContribution(
+    basis,
+    billingPeriod,
+    filtered ? 1 : undefined,
+  )
+    ? contributionNote(project, scoped.totals.total, allowanceTotal)
+    : undefined
 
   // The note needs the organisation over the period on screen, not over the
   // allowance window, or a project can read as more than all of it.
@@ -147,12 +158,11 @@ const UsagePage: FC<HarnessProps> = ({
       isError={isError}
       isLoading={isLoading}
       limit={limit}
-      meterNote={
-        showsContribution(basis, billingPeriod, filtered ? 1 : undefined)
-          ? contributionNote(project, scoped.totals.total, allowanceTotal)
-          : undefined
-      }
+      meterNote={exceeded ? overLimitNote(exceeded) : contribution}
       onRetry={() => {}}
+      overLimit={
+        exceeded ? { basis, canUpgrade: true, over: exceeded } : undefined
+      }
       periodLabel={periodLabel(periods, billingPeriod)}
       planCopy={planSectionCopy(basis, limit)}
       showPlanCeiling={showsPlanCeiling(
@@ -183,6 +193,9 @@ export const PaidApproachingTheLimit: Story = {
   args: { limit: 1400000, subscription: billed },
 }
 
+// Over the limit on a paid plan. Flags keep being served, since restriction
+// only ever applies to a free plan, so the page reports the overage and says
+// the charge may follow.
 export const PaidOverTheLimit: Story = {
   args: { limit: 900000, subscription: billed },
 }

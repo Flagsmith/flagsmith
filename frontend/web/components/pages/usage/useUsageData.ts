@@ -15,8 +15,9 @@ type UseUsageData = {
 export type UsageData = {
   /** The period and project on screen. Feeds the chart and the breakdown. */
   scoped: Res['organisationUsage'] | undefined
-  /** The organisation over the window its allowance covers. Feeds the meter. */
-  allowanceTotal: number
+  /** The organisation over the window its allowance covers. Feeds the meter
+   * and the over-limit banner. */
+  allowance: Res['organisationUsage'] | undefined
   isLoadingPlan: boolean
   isLoadingScoped: boolean
   failed: boolean
@@ -51,7 +52,7 @@ export const useUsageData = ({
   )
 
   return {
-    allowanceTotal: allowance.data?.totals?.total ?? 0,
+    allowance: allowance.data,
     // Either query failing leaves a number missing, so both are fatal.
     failed: scoped.isError || allowance.isError,
 
