@@ -55,13 +55,13 @@ Providers authenticate with Flagsmith using a **cohort synchronisation key**:
 - Creating and revoking keys requires the _Manage segment overrides_ permission for the environment and the _Manage
   segments_ permission for the project.
 
-<!-- Screenshot: Environment Settings > Cohorts tab with the keys list -->
+![Environment Settings Cohorts tab](/img/cohort-synchronisation/environment-settings-cohorts.png)
 
 ## Using a synchronised segment
 
 Shortly after the first sync, a segment named after your cohort appears on the **Segments** page of your project.
 
-<!-- Screenshot: Segments page showing the synchronised segment -->
+![Segments page with a synchronised segment](/img/cohort-synchronisation/synchronised-segment-list.png)
 
 From there it behaves like any other segment: click on a feature in the connected environment, go to the **Segment
 Overrides** tab, and create an override for it. Identities that are members of the cohort — and are identified in your

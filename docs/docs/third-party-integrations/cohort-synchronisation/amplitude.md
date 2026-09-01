@@ -27,9 +27,7 @@ application uses as the Flagsmith [identity](/flagsmith-concepts/identities) ide
 4. Create a synchronisation key: give it a name (e.g. "Amplitude production") and copy the key value. It is shown only
    once. If the environment already has a key you created earlier and still have access to, you can reuse it instead.
 
-<!-- Screenshot: Create Segment page with the Amplitude source selected -->
-
-<!-- Screenshot: Connect Amplitude modal — synchronisation key created and shown once -->
+![Connect Amplitude modal](/img/cohort-synchronisation/connect-amplitude-modal.png)
 
 ## 2. Add Flagsmith as a destination in Amplitude
 
