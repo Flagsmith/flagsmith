@@ -1,6 +1,4 @@
 import React, { PureComponent } from 'react'
-import { close as closeIcon } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import data from 'common/data/base/_data'
 import AppActions from 'common/dispatcher/app-actions'
 import OrganisationStore from 'common/stores/organisation-store'
@@ -10,6 +8,7 @@ import JSONReference from './JSONReference'
 import PageTitle from './PageTitle'
 import PlanBasedBanner from './PlanBasedAccess'
 import Button from './base/forms/Button'
+import FieldLabel from './base/forms/FieldLabel'
 import DateSelect from './DateSelect'
 import Icon from './icons/Icon'
 import Switch from './Switch'
@@ -234,11 +233,8 @@ export class CreateAPIKey extends PureComponent {
                           className='chip'
                         >
                           <span className='font-weight-bold'>{r.name}</span>
-                          <span className='chip-icon ion'>
-                            <IonIcon
-                              icon={closeIcon}
-                              style={{ fontSize: '13px' }}
-                            />
+                          <span className='chip-icon'>
+                            <Icon name='close' width={18} />
                           </span>
                         </Row>
                       ))}
@@ -273,9 +269,10 @@ export class CreateAPIKey extends PureComponent {
               </>
               <Flex>
                 <div>
-                  <label>Expiry</label>
+                  <FieldLabel htmlFor='api-key-expiry'>Expiry</FieldLabel>
                 </div>
                 <DateSelect
+                  id='api-key-expiry'
                   onChange={(e) => {
                     this.setState({
                       expiry_date: e?.toISOString(),

@@ -1,5 +1,6 @@
 import React, { FormEvent, useState } from 'react'
 import classNames from 'classnames'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
 import PlanBasedBanner from 'components/PlanBasedAccess'
@@ -74,15 +75,17 @@ export const ProjectInformation = ({ project }: ProjectInformationProps) => {
               <PlanBasedBanner feature={'STALE_FLAGS'} theme={'badge'} />
             </div>
             <div className='d-flex align-items-center gap-2'>
-              <label
+              <FieldLabel
+                htmlFor='stale-flags-limit-days'
                 className={classNames('mb-0', {
                   'opacity-50': !hasStaleFlagsPermission,
                 })}
               >
                 Mark as stale after
-              </label>
+              </FieldLabel>
               <div style={{ width: 80 }} className='ml-0'>
                 <Input
+                  id='stale-flags-limit-days'
                   disabled={!hasStaleFlagsPermission}
                   value={staleFlagsLimitDays}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
