@@ -2,6 +2,7 @@ import React, { FC, useMemo, useState } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import Button from 'components/base/forms/Button'
 import FieldLabel from 'components/base/forms/FieldLabel'
+import Link from 'components/base/link/Link'
 import CopyField from 'components/CopyField'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import ModalHR from 'components/modals/ModalHR'
@@ -126,14 +127,9 @@ const ConnectCohortProviderModal: FC<ConnectCohortProviderModalProps> = ({
       </div>
       <ModalHR />
       <div className='modal-footer d-flex align-items-center justify-content-between'>
-        <Button
-          theme='text'
-          href={SEGMENTS_DOCS_URL}
-          target='_blank'
-          className='fw-normal'
-        >
+        <Link href={SEGMENTS_DOCS_URL} target='_blank'>
           Learn about Segments
-        </Button>
+        </Link>
         <Button onClick={() => closeModal()} data-test='connect-provider-done'>
           Done
         </Button>

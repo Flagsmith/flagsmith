@@ -13,6 +13,7 @@ import {
 import { CohortSyncKey } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
+import Link from 'components/base/link/Link'
 import Flex from 'components/base/grid/Flex'
 import FormGroup from 'components/base/grid/FormGroup'
 import Row from 'components/base/grid/Row'
@@ -122,14 +123,12 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({
         <p className='fs-small lh-sm mb-0'>
           Cohort synchronisation keys authenticate cohort synchronisation from
           providers such as Mixpanel and Amplitude into this environment.{' '}
-          <Button
-            theme='text'
+          <Link
             href='https://docs.flagsmith.com/basic-features/segments'
             target='_blank'
-            className='fw-normal'
           >
             Learn about Segments.
-          </Button>
+          </Link>
         </p>
         <p className='fs-small lh-sm mb-4'>
           Key values are shown only once at creation and cannot be recovered

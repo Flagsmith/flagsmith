@@ -13,6 +13,7 @@ import {
 import { CohortSyncKey } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import InputGroup from 'components/base/forms/InputGroup'
+import Link from 'components/base/link/Link'
 import CopyField from 'components/CopyField'
 import ErrorMessage from 'components/ErrorMessage'
 import Tooltip from 'components/Tooltip'
@@ -167,13 +168,13 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
         </div>
         <div className='fs-small text-secondary'>
           You can revoke keys in{' '}
-          {/* Plain anchor: this renders in the modal root, outside the Router. */}
-          <a
+          {/* href, not to: this renders in the modal root, outside the Router. */}
+          <Link
             href={`/project/${projectId}/environment/${environmentApiKey}/settings?tab=cohorts`}
             onClick={() => closeModal()}
           >
             Environment Settings
-          </a>
+          </Link>
           .
         </div>
         {canManage ? (
