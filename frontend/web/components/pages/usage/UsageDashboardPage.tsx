@@ -2,19 +2,23 @@ import { FC, useState } from 'react'
 import { skipToken } from '@reduxjs/toolkit/query'
 import Utils, { planNames } from 'common/utils/utils'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
-import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
-import FieldLabel from 'components/base/forms/FieldLabel'
 import ProjectFilter from 'components/ProjectFilter'
 import { PeriodOption } from 'common/types/requests'
 import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
 import UsageDashboard from './UsageDashboard'
+import { useUsageData } from './useUsageData'
 import {
+  isBilledOnAPeriod,
   isBillingPeriodSelected,
+  contributionNote,
+  planSectionCopy,
+  showsContribution,
+  showsPlanCeiling,
   periodLabel,
   periodsFor,
   PeriodSelection,
-  planHasBillingPeriod,
+  usageBasisOf,
   resolvePeriod,
 } from './utils'
 import './UsageDashboardPage.scss'
@@ -34,38 +38,41 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     data: organisation,
     isError: organisationFailed,
     isLoading: loadingOrganisation,
+    refetch: refetchOrganisation,
   } = useGetOrganisationQuery(
     organisationId ? { id: organisationId } : skipToken,
   )
   const subscription = organisation?.subscription
   const isFreePlan =
     planNames.free === Utils.getPlanName(subscription?.plan ?? '')
-  const planIsBilled = planHasBillingPeriod(subscription, isFreePlan)
+  const basis = usageBasisOf(subscription, isFreePlan)
+  const planIsBilled = isBilledOnAPeriod(basis)
 
   const [chosenPeriod, setChosenPeriod] = useState<PeriodSelection>('default')
   const billingPeriod = resolvePeriod(chosenPeriod, planIsBilled)
 
+  const usage = useUsageData({
+    basis,
+    organisationId,
+    period: billingPeriod,
+    projectId: selectedProjectId,
+    ready: !!organisation,
+  })
+
   const {
-    data,
-    isError: usageFailed,
-    isFetching: loadingUsage,
-  } = useGetOrganisationUsageQuery(
-    organisationId && organisation
-      ? {
-          billing_period: billingPeriod,
-          organisationId,
-          projectId: selectedProjectId,
-        }
-      : skipToken,
+    data: subscriptionMeta,
+    isError: limitFailed,
+    isLoading: loadingLimit,
+    refetch: refetchLimit,
+  } = useGetSubscriptionMetadataQuery(
+    organisationId ? { id: organisationId } : skipToken,
   )
-  const { data: subscriptionMeta, isLoading: loadingLimit } =
-    useGetSubscriptionMetadataQuery(
-      organisationId ? { id: organisationId } : skipToken,
-    )
 
   const periods = periodsFor(planIsBilled)
 
-  const { setDimension, ...breakdown } = useUsageBreakdown({ data })
+  const { setDimension, ...breakdown } = useUsageBreakdown({
+    data: usage.scoped,
+  })
 
   const scope = [
     selectedProjectId ? projectName : 'All projects',
@@ -80,10 +87,23 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   return (
     <UsageDashboard
-      data={data}
-      total={data?.totals?.total ?? 0}
+      data={usage.scoped}
+      total={usage.allowanceTotal}
       limit={subscriptionMeta?.max_api_calls}
       hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
+      planCopy={planSectionCopy(basis, subscriptionMeta?.max_api_calls)}
+      periodLabel={periodLabel(periods, billingPeriod)}
+      showPlanCeiling={showsPlanCeiling(billingPeriod, selectedProjectId)}
+      meterNote={
+        showsContribution(basis, billingPeriod, selectedProjectId) &&
+        projectName
+          ? contributionNote(
+              projectName,
+              usage.scoped?.totals?.total ?? 0,
+              usage.allowanceTotal,
+            )
+          : undefined
+      }
       breakdown={
         <UsageBreakdown
           {...breakdown}
@@ -91,13 +111,19 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
           scope={scope}
         />
       }
-      isError={organisationFailed || usageFailed}
-      isLoading={loadingOrganisation || loadingUsage || loadingLimit}
+      isError={organisationFailed || usage.failed || limitFailed}
+      isLoading={loadingOrganisation || usage.isLoadingPlan || loadingLimit}
+      isExploring={usage.isLoadingScoped}
+      onRetry={() => {
+        refetchOrganisation()
+        refetchLimit()
+        usage.retry()
+      }}
       filters={
-        <Row className='gap-3 align-items-end'>
+        <Row className='gap-2'>
           <div className='usage-dashboard__filter'>
-            <FieldLabel htmlFor='usage-period'>Period</FieldLabel>
             <Select
+              aria-label='Period'
               inputId='usage-period'
               onChange={(option: PeriodOption) => setChosenPeriod(option.value)}
               value={periods.find((period) => period.value === billingPeriod)}
@@ -105,8 +131,8 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
             />
           </div>
           <div className='usage-dashboard__filter'>
-            <FieldLabel htmlFor='usage-project'>Project</FieldLabel>
             <ProjectFilter
+              aria-label='Project'
               inputId='usage-project'
               showAll
               organisationId={organisationId}

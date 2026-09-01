@@ -3,6 +3,7 @@ import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
 import { Res } from 'common/types/responses'
 
 const meta: Meta<typeof UsageOverTime> = {
+  args: { periodLabel: 'Current billing period' },
   component: UsageOverTime,
   parameters: { layout: 'padded' },
   title: 'Pages/Usage Dashboard/Components/UsageOverTime',
@@ -68,6 +69,7 @@ export const DailyVolumeOnARollingWindow: Story = {
     data: usage(30, 2000),
     isBillingPeriod: false,
     limit: 50000,
+    periodLabel: 'Last 30 days',
   },
 }
 

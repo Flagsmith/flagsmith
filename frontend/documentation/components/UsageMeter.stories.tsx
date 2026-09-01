@@ -28,7 +28,10 @@ export const OverTheLimit: Story = {
 
 // Nothing to be a percentage of, so the total stands on its own.
 export const WithoutAPlanLimit: Story = {
-  args: { limit: null, total: 340000 },
+  args: {
+    limit: null,
+    total: 340000,
+  },
 }
 
 export const NoUsageYet: Story = {
