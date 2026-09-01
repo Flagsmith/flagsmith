@@ -36,7 +36,7 @@ application uses as the Flagsmith [identity](/flagsmith-concepts/identities) ide
 3. Give the destination a recognisable name — including the Flagsmith environment name is a good idea, since the key
    determines which environment cohorts are synchronised into.
 
-<!-- Screenshot: Amplitude destination catalogue showing Flagsmith -->
+![Amplitude destination catalogue showing Flagsmith](/img/cohort-synchronisation/amplitude-destination-catalogue.png)
 
 <!-- Screenshot: Amplitude Flagsmith destination configuration with the API Key field -->
 
