@@ -3,6 +3,7 @@ import Diff, { DiffMethod } from 'react-diff-viewer-continued'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-json'
 import { FlagsmithValue } from 'common/types/responses'
+import DiffRow from './DiffRow'
 
 type DiffType = {
   oldValue: FlagsmithValue
@@ -38,10 +39,7 @@ const DiffString: FC<DiffType> = ({
       return <div className='text-muted'>No Value.</div>
     }
     return (
-      <div className='react-diff react-diff-same overflow-auto react-diff-line d-flex align-items-center'>
-        <span className='react-diff-marker'>
-          <pre></pre>
-        </span>
+      <DiffRow state='unchanged' scrollable>
         <pre
           className='d-inline mb-0'
           dangerouslySetInnerHTML={{
@@ -52,7 +50,7 @@ const DiffString: FC<DiffType> = ({
             ),
           }}
         />
-      </div>
+      </DiffRow>
     )
   }
   return (
