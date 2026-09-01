@@ -15,14 +15,16 @@ type DailyCounts = {
   environment_document: number
 }
 
-const sum = (
-  events: UsageEventsList[],
-  key: 'flags' | 'identities' | 'traits' | 'environment_document',
-): number => events.reduce((running, event) => running + (event[key] ?? 0), 0)
+type UsageEventKey = 'flags' | 'identities' | 'traits' | 'environment_document'
+
+const sum = (events: UsageEventsList[], key: UsageEventKey): number =>
+  events.reduce((running, event) => running + (event[key] ?? 0), 0)
 
 // The API returns one row per day and client type, so the fixtures split each
 // day the same way, otherwise the SDK breakdown has nothing to group on.
-const SDK_SPLIT: [string | null, number][] = [
+type UserAgent = string | null
+
+const SDK_SPLIT: [UserAgent, number][] = [
   ['flagsmith-python/3.9.1', 0.42],
   ['flagsmith-java/7.2.0', 0.31],
   ['flagsmith-nodejs/5.0.4', 0.19],
