@@ -254,6 +254,31 @@ def test_feature_import__already_processing__returns_bad_request(
     ]
 
 
+def test_feature_import__project_admin__creates_import(
+    staff_client: APIClient,
+    environment: Environment,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions(admin=True)  # type: ignore[call-arg]
+    assert FeatureImport.objects.count() == 0
+    url = reverse(
+        "api-v1:features:feature-import",
+        args=[environment.id],
+    )
+
+    file_data = b"[]"
+    uploaded_file = SimpleUploadedFile("test.23.json", file_data)
+    data = {"file": uploaded_file, "strategy": OVERWRITE_DESTRUCTIVE}
+
+    # When
+    response = staff_client.post(url, data=data, format="multipart")
+
+    # Then
+    assert response.status_code == 201
+    assert FeatureImport.objects.count() == 1
+
+
 def test_feature_import__unauthorized_user__returns_forbidden(
     staff_client: APIClient,
     environment: Environment,
