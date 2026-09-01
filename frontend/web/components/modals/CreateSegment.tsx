@@ -827,6 +827,9 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
   useEffect(() => {
     if (segmentData) {
       props.onSegmentRetrieved?.(segmentData)
+      if (segmentData.cohort?.environment_api_key) {
+        setEnvironmentId(segmentData.cohort.environment_api_key)
+      }
     }
     //eslint-disable-next-line
   }, [segmentData])

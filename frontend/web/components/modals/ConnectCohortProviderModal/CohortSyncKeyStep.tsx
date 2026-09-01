@@ -81,7 +81,7 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
     if (createdKey) return 'Synchronisation key'
     if (hasKeys && !isCreateFormOpen) return 'Use your existing key'
     if (!canManage) return 'Synchronisation key'
-    return 'Create a synchronisation key'
+    return 'Generate a synchronisation key'
   }
 
   const renderBody = () => {
@@ -97,10 +97,9 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
             className='font-monospace'
             data-test='connect-provider-key-value'
           />
-          <WarningMessage
-            warningMessage='This key is shown only once. Store it securely — you will not be able to see it again.'
-            warningMessageClass='mt-4'
-          />
+          <div className='mt-4'>
+            <WarningMessage warningMessage='This key is shown only once. Store it securely — you will not be able to see it again.' />
+          </div>
         </>
       )
     }
@@ -119,6 +118,7 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
       return (
         <form onSubmit={handleSubmit}>
           <InputGroup
+            title='Name'
             value={name}
             data-test='connect-provider-key-name'
             inputProps={{

@@ -39,10 +39,9 @@ const CreateCohortSyncKeyModal: FC<CreateCohortSyncKeyModalProps> = ({
             className='font-monospace'
             data-test='cohort-sync-key-value'
           />
-          <WarningMessage
-            warningMessage='This key is shown only once. Store it securely — you will not be able to see it again.'
-            warningMessageClass='mt-4'
-          />
+          <div className='mt-4'>
+            <WarningMessage warningMessage='This key is shown only once. Store it securely — you will not be able to see it again.' />
+          </div>
         </div>
         <ModalHR />
         <div className='modal-footer'>
