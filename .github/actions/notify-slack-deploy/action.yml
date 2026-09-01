@@ -15,10 +15,11 @@ inputs:
     description: The environment that was deployed to.
     required: false
     default: production
-  conclusion:
+  state:
     description: >
-      The deploy run's conclusion, straight from workflow_run. Only success and
-      cancelled get their own copy; anything else reads as a failure.
+      in_progress before the deploy runs, otherwise the production job's
+      result. Only in_progress, success and cancelled get their own copy;
+      anything else reads as a failure.
     required: true
   commit_sha:
     description: The commit that was deployed.
@@ -47,7 +48,7 @@ runs:
         SERVICE: ${{ inputs.service }}
         APP_URL: ${{ inputs.app_url }}
         ENVIRONMENT: ${{ inputs.environment }}
-        CONCLUSION: ${{ inputs.conclusion }}
+        STATE: ${{ inputs.state }}
         COMMIT_SHA: ${{ inputs.commit_sha }}
         ACTOR: ${{ inputs.actor }}
         RUN_URL: ${{ inputs.run_url }}
@@ -77,7 +78,7 @@ runs:
         jq -n \
           --arg service "$SERVICE" \
           --arg environment "$ENVIRONMENT" \
-          --arg conclusion "$CONCLUSION" \
+          --arg state "$STATE" \
           --arg short_sha "${COMMIT_SHA:0:7}" \
           --arg actor "$ACTOR" \
           --arg app_url "$APP_URL" \
