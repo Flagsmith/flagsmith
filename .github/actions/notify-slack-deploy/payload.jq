@@ -43,11 +43,22 @@ end) as $copy |
   # comes from the icon set on the Slack app itself.
   username: "\($service) Deploy",
   text: $copy.headline,
-  blocks: [
+  blocks: (
+  [
     {
       type: "header",
       text: { type: "plain_text", text: $copy.headline }
-    },
+    }
+  ]
+  # What shipped, full width rather than in the field grid below, which is two
+  # narrow columns and would wrap a real title badly.
+  + (if $title == "" then []
+     elif $pr_url == "" then
+       [{ type: "context", elements: [{ type: "mrkdwn", text: $title }] }]
+     else
+       [{ type: "context", elements: [{ type: "mrkdwn", text: "<\($pr_url)|\($title)>" }] }]
+     end)
+  + [
     {
       type: "section",
       text: { type: "mrkdwn", text: $copy.body }
@@ -87,4 +98,5 @@ end) as $copy |
       )
     }
   ]
+  )
 }

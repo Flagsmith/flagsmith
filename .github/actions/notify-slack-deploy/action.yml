@@ -30,6 +30,14 @@ inputs:
   run_url:
     description: Link to the deploy run, not to the run posting this.
     required: true
+  repo_url:
+    description: Repository URL, used to link the pull request. Omit to leave the title unlinked.
+    required: false
+  commit_message:
+    description: >
+      The deployed commit's message. Only its first line is used, which on a
+      squash merge is the pull request title. Omitted from the card if absent.
+    required: false
   started_at:
     description: When the deploy run started, ISO 8601. Omitted from the message if absent.
     required: false
@@ -52,10 +60,25 @@ runs:
         COMMIT_SHA: ${{ inputs.commit_sha }}
         ACTOR: ${{ inputs.actor }}
         RUN_URL: ${{ inputs.run_url }}
+        REPO_URL: ${{ inputs.repo_url }}
+        COMMIT_MESSAGE: ${{ inputs.commit_message }}
         STARTED_AT: ${{ inputs.started_at }}
         ENDED_AT: ${{ inputs.ended_at }}
       run: |
         set -euo pipefail
+
+        # A squash merge puts the pull request title and number in the first
+        # line, as "title (#123)". A direct push or a merge commit will not
+        # match, so the number is optional and the title falls back to the
+        # whole line.
+        subject="$(printf '%s' "${COMMIT_MESSAGE:-}" | head -1)"
+        pr_number="$(printf '%s' "$subject" | sed -n 's/.*(#\([0-9]\{1,\}\))$/\1/p')"
+        title="$subject"
+        pr_url=''
+        if [ -n "$pr_number" ]; then
+          title="$(printf '%s' "$subject" | sed 's/ *(#[0-9]\{1,\})$//')"
+          [ -n "${REPO_URL:-}" ] && pr_url="$REPO_URL/pull/$pr_number"
+        fi
 
         # Best effort: a timestamp that will not parse costs the message two
         # fields rather than failing the run.
@@ -83,6 +106,8 @@ runs:
           --arg actor "$ACTOR" \
           --arg app_url "$APP_URL" \
           --arg run_url "$RUN_URL" \
+          --arg title "$title" \
+          --arg pr_url "$pr_url" \
           --arg started_epoch "$started_epoch" \
           --arg started_label "$started_label" \
           --arg duration "$duration" \
