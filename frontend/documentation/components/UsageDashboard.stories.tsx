@@ -1,6 +1,6 @@
 import { FC, useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
-import { UsageDashboard } from 'components/pages/usage'
+import { UsagePageLayout } from 'components/pages/usage'
 import OverLimitBanner from 'components/pages/usage/components/OverLimitBanner'
 import SectionHeading from 'components/pages/usage/components/SectionHeading'
 import UsageBreakdown, {
@@ -129,7 +129,7 @@ const UsagePage: FC<HarnessProps> = ({
   )}`
 
   return (
-    <UsageDashboard isError={isError} isLoading={isLoading} onRetry={() => {}}>
+    <UsagePageLayout isError={isError} isLoading={isLoading} onRetry={() => {}}>
       {exceeded && <OverLimitBanner over={exceeded} basis={basis} canUpgrade />}
 
       <SectionHeading {...planSectionCopy(basis, limit)} />
@@ -151,7 +151,7 @@ const UsagePage: FC<HarnessProps> = ({
         periodLabel={periodLabel(periods, billingPeriod)}
         filters={
           <Row className='gap-2'>
-            <div className='usage-dashboard__filter'>
+            <div className='usage-filters__field'>
               <Select
                 aria-label='Period'
                 onChange={(option: PeriodOption) =>
@@ -161,7 +161,7 @@ const UsagePage: FC<HarnessProps> = ({
                 value={periods.find((option) => option.value === billingPeriod)}
               />
             </div>
-            <div className='usage-dashboard__filter'>
+            <div className='usage-filters__field'>
               <Select
                 aria-label='Project'
                 onChange={(option: { value: string }) =>
@@ -181,7 +181,7 @@ const UsagePage: FC<HarnessProps> = ({
           />
         }
       />
-    </UsageDashboard>
+    </UsagePageLayout>
   )
 }
 

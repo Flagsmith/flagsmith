@@ -1,3 +1,3 @@
 export { default } from './UsageDashboardPage'
-export { default as UsageDashboard } from './UsageDashboard'
-export type { UsageDashboardProps } from './UsageDashboard'
+export { default as UsagePageLayout } from './components/UsagePageLayout'
+export type { UsagePageLayoutProps } from './components/UsagePageLayout'

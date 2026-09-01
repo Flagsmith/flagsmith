@@ -3,14 +3,13 @@ import { skipToken } from '@reduxjs/toolkit/query'
 import Utils, { planNames } from 'common/utils/utils'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
-import ProjectFilter from 'components/ProjectFilter'
-import { PeriodOption } from 'common/types/requests'
 import OverLimitBanner from './components/OverLimitBanner'
 import SectionHeading from './components/SectionHeading'
 import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
 import UsageExplorer from './components/UsageExplorer'
+import UsageFilters from './components/UsageFilters'
 import UsageMeter from './components/UsageMeter'
-import UsageDashboard from './UsageDashboard'
+import UsagePageLayout from './components/UsagePageLayout'
 import { useUsageData } from './useUsageData'
 import { overLimitNote, overLimitOf } from './overLimit'
 import {
@@ -26,7 +25,6 @@ import {
   usageBasisOf,
   resolvePeriod,
 } from './utils'
-import './UsageDashboardPage.scss'
 
 type UsageDashboardPageProps = {
   organisationId: number | undefined
@@ -108,7 +106,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   }
 
   return (
-    <UsageDashboard
+    <UsagePageLayout
       isError={organisationFailed || usage.failed || limitFailed}
       isLoading={loadingOrganisation || usage.isLoadingPlan || loadingLimit}
       onRetry={() => {
@@ -141,32 +139,17 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         periodLabel={periodLabel(periods, billingPeriod)}
         isLoading={usage.isLoadingScoped}
         filters={
-          <Row className='gap-2'>
-            <div className='usage-dashboard__filter'>
-              <Select
-                aria-label='Period'
-                inputId='usage-period'
-                onChange={(option: PeriodOption) =>
-                  setChosenPeriod(option.value)
-                }
-                value={periods.find((period) => period.value === billingPeriod)}
-                options={periods}
-              />
-            </div>
-            <div className='usage-dashboard__filter'>
-              <ProjectFilter
-                aria-label='Project'
-                inputId='usage-project'
-                showAll
-                organisationId={organisationId}
-                onChange={(id: string, name: string) => {
-                  setProject(id)
-                  setProjectName(name)
-                }}
-                value={project}
-              />
-            </div>
-          </Row>
+          <UsageFilters
+            organisationId={organisationId}
+            periods={periods}
+            period={billingPeriod}
+            onChangePeriod={setChosenPeriod}
+            projectId={project}
+            onChangeProject={(id, name) => {
+              setProject(id)
+              setProjectName(name)
+            }}
+          />
         }
         breakdown={
           <UsageBreakdown
@@ -176,7 +159,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
           />
         }
       />
-    </UsageDashboard>
+    </UsagePageLayout>
   )
 }
 

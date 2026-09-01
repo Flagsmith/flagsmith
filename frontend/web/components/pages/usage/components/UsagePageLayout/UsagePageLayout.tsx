@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react'
 import EmptyState from 'components/EmptyState'
 
-export type UsageDashboardProps = {
+export type UsagePageLayoutProps = {
   isError?: boolean
   isLoading?: boolean
   onRetry?: () => void
@@ -12,7 +12,7 @@ export type UsageDashboardProps = {
  * The page frame: heading, and the two states where there is nothing to lay
  * out. What the dashboard is made of is composed by the caller.
  */
-const UsageDashboard: FC<UsageDashboardProps> = ({
+const UsagePageLayout: FC<UsagePageLayoutProps> = ({
   children,
   isError,
   isLoading,
@@ -51,4 +51,4 @@ const UsageDashboard: FC<UsageDashboardProps> = ({
   )
 }
 
-export default UsageDashboard
+export default UsagePageLayout
