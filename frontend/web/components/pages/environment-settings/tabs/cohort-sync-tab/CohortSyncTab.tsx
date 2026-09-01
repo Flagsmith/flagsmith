@@ -12,6 +12,7 @@ import {
 } from 'common/types/permissions.types'
 import { CohortSyncKey } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
+import ErrorMessage from 'components/ErrorMessage'
 import Flex from 'components/base/grid/Flex'
 import FormGroup from 'components/base/grid/FormGroup'
 import Row from 'components/base/grid/Row'
@@ -42,7 +43,11 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({
   })
   const canManage = !!canManageOverrides && !!canManageSegments
 
-  const { data: syncKeys, isLoading } = useGetCohortSyncKeysQuery(
+  const {
+    data: syncKeys,
+    error,
+    isLoading,
+  } = useGetCohortSyncKeysQuery(
     { environmentApiKey },
     { skip: !environmentApiKey },
   )
@@ -131,9 +136,9 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({
           afterwards.
         </p>
       </div>
-      {isLoading && !syncKeys ? (
-        <Loader />
-      ) : (
+      {!!error && <ErrorMessage error={error} />}
+      {isLoading && !syncKeys && !error && <Loader />}
+      {!error && (!isLoading || !!syncKeys) && (
         <PanelSearch
           id='cohort-sync-keys-list'
           className='no-pad'
