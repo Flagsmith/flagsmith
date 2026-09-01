@@ -7,9 +7,8 @@
 .react-diff-1n5o7vh-diff-container {
   // The diff's two strengths, in one place. A changed row is faint, the words
   // that changed inside it are stronger, which is what makes a diff readable.
-  // See-through layers, so one value works on light and dark alike. The rows
-  // we build ourselves repeat the two row values in DiffRow.scss, so a change
-  // to either belongs in both.
+  // See-through layers, so one value works on light and dark alike.
+  // DiffRow.scss repeats the two row values for the rows we build ourselves.
   --diff-row-removed: oklch(from var(--red-500) l c h / 0.16);
   --diff-row-added: oklch(from var(--green-500) l c h / 0.16);
   --diff-word-removed: oklch(from var(--red-500) l c h / 0.28);

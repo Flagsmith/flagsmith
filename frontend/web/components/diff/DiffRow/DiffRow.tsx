@@ -7,7 +7,7 @@ export type DiffRowState = 'added' | 'removed' | 'unchanged'
 type DiffRowProps = {
   state: DiffRowState
   children: ReactNode
-  // Let long content scroll inside the row instead of widening its container.
+  // Scroll long content rather than widening the container.
   scrollable?: boolean
   className?: string
 }

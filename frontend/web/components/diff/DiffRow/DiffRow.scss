@@ -1,7 +1,4 @@
-// One row of a diff: a marker cell beside the content that changed.
-// Used for the rows we build ourselves, in DiffEnabled and DiffString. The
-// rows react-diff-viewer renders are styled in web/styles/3rdParty/_react-diff.scss,
-// which repeats the two values below; keep the pairs in step.
+// _react-diff.scss repeats these two values for the library's own rows.
 .diff-row {
   --diff-row-removed: oklch(from var(--red-500) l c h / 0.16);
   --diff-row-added: oklch(from var(--green-500) l c h / 0.16);
@@ -48,8 +45,6 @@
     }
   }
 
-  // Unchanged rows keep the gutter for alignment but show no marker glyph, and
-  // the content sits on the code surface rather than a diff colour.
   &--unchanged {
     background-color: var(--color-surface-subtle);
     font-size: 13px;
