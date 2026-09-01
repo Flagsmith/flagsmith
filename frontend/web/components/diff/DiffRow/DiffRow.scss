@@ -1,0 +1,79 @@
+// One row of a diff: a marker cell beside the content that changed.
+// Used for the rows we build ourselves, in DiffEnabled and DiffString. The
+// rows react-diff-viewer renders are styled in web/styles/3rdParty/_react-diff.scss,
+// which repeats the two values below; keep the pairs in step.
+.diff-row {
+  --diff-row-removed: oklch(from var(--red-500) l c h / 0.16);
+  --diff-row-added: oklch(from var(--green-500) l c h / 0.16);
+
+  display: flex;
+  align-items: center;
+  line-height: 31px;
+
+  &__marker {
+    display: flex;
+    width: 31px;
+    height: 31px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-surface-subtle);
+
+    > * {
+      margin: 0;
+    }
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+    padding-right: 0.5rem;
+
+    .rc-switch {
+      margin-bottom: 2px;
+    }
+  }
+
+  &--removed {
+    .diff-row__marker,
+    .diff-row__content {
+      background-color: var(--diff-row-removed);
+    }
+  }
+
+  &--added {
+    .diff-row__marker,
+    .diff-row__content {
+      background-color: var(--diff-row-added);
+    }
+  }
+
+  // Unchanged rows keep the gutter for alignment but show no marker glyph, and
+  // the content sits on the code surface rather than a diff colour.
+  &--unchanged {
+    background-color: var(--color-surface-subtle);
+    font-size: 13px;
+
+    .diff-row__marker {
+      opacity: 0;
+    }
+
+    .diff-row__content {
+      padding-right: 0;
+
+      pre {
+        display: flex;
+        flex: 1;
+        padding-left: 2px;
+        background-color: var(--color-surface-subtle);
+        font-family: var(--bs-font-monospace);
+        font-size: 13px;
+        line-height: 28px;
+      }
+    }
+  }
+
+  &--scrollable {
+    overflow: auto;
+  }
+}
