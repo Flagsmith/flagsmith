@@ -169,7 +169,7 @@ const CohortSyncKeyStep: FC<CohortSyncKeyStepProps> = ({
           You can revoke keys in{' '}
           {/* Plain anchor: this renders in the modal root, outside the Router. */}
           <a
-            href={`/project/${projectId}/environment/${environmentApiKey}/settings?tab=cohort-synchronisation`}
+            href={`/project/${projectId}/environment/${environmentApiKey}/settings?tab=cohorts`}
             onClick={() => closeModal()}
           >
             Environment Settings

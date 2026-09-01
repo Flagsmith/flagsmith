@@ -132,7 +132,7 @@ test.describe('Cohort Synchronisation Keys Tests', () => {
     // This link carries the environment the modal is working against, so
     // following it guarantees we inspect the keys we just created.
     const settingsLink = connectModal.locator(
-      'a[href*="tab=cohort-synchronisation"]',
+      'a[href*="tab=cohorts"]',
     )
     await expect(settingsLink).toBeVisible()
     const settingsHref = (await settingsLink.getAttribute('href')) ?? ''

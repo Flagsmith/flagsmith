@@ -799,7 +799,6 @@ const EnvironmentSettingsPage: React.FC = () => {
                     </FormGroup>
                   </TabItem>
                   <TabItem tabLabel='Webhooks'>
-                    <hr className='py-0 my-4' />
                     <FormGroup className='mt-4'>
                       <div className='col-md-8'>
                         <h5 className='mb-2'>Feature Webhooks</h5>
@@ -928,7 +927,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                     </TabItem>
                   )}
                   {cohortSyncEnabled && (
-                    <TabItem tabLabel='Cohort Synchronisation'>
+                    <TabItem tabLabel='Cohorts'>
                       <div className='mt-4'>
                         <CohortSyncTab
                           environmentApiKey={match.params.environmentId}
