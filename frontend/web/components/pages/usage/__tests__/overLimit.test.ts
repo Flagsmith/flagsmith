@@ -95,15 +95,27 @@ describe('overLimit', () => {
       )
     })
 
-    it('measures the overage over the window the meter shows', () => {
+    // Overages are billed against a Chargebee term, so nobody on a rolling
+    // window can be charged for one. Warning them would invent a worry.
+    it('warns about charges only where they can be charged', () => {
       const over = exceeding(60000, 50000, days([60000]))
 
       expect(overLimitBannerCopy(over, billed).body).toContain(
-        'this billing period',
+        'Overage charges may apply over this billing period.',
       )
       expect(
         overLimitBannerCopy(over, { window: 'rolling' } as UsageBasis).body,
-      ).toContain('the last 30 days')
+      ).not.toContain('Overage charges')
+    })
+
+    it('still reports the overage itself on a rolling window', () => {
+      const over = exceeding(60000, 50000, days([40000, 20000]))
+      const body = overLimitBannerCopy(over, {
+        window: 'rolling',
+      } as UsageBasis).body
+
+      expect(body).toContain('You reached 100% of your 50K plan limit on 2 Aug')
+      expect(body).toContain('Your usage stays visible below')
     })
 
     it('says how far over in the note under the meter', () => {

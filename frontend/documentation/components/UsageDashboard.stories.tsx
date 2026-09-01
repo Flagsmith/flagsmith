@@ -227,6 +227,18 @@ export const EnterpriseWithoutABillingPeriod: Story = {
   },
 }
 
+// Also invoiced outside Chargebee, so an overage can never be billed. The
+// banner reports the overage and says nothing about charges.
+export const EnterpriseOverTheLimit: Story = {
+  args: {
+    limit: 1000000,
+    subscription: subscriptionOf({
+      payment_method: 'XERO',
+      plan: 'enterprise',
+    }),
+  },
+}
+
 // On Chargebee, but no period has arrived. Reads differently from invoiced,
 // because this one may resolve itself.
 export const ChargebeeWithoutAPeriodYet: Story = {
