@@ -2,7 +2,7 @@
 ### `api_usage.notification.evaluated`
 
 Logged at `info` from:
- - `api/organisations/task_helpers.py:155`
+ - `api/organisations/task_helpers.py:153`
 
 Attributes:
  - `allowed_api_calls`
@@ -24,7 +24,7 @@ Attributes:
 ### `api_usage.notification.sent`
 
 Logged at `info` from:
- - `api/organisations/task_helpers.py:178`
+ - `api/organisations/task_helpers.py:176`
 
 Attributes:
  - `matched_threshold`
@@ -33,9 +33,9 @@ Attributes:
 ### `app_analytics.no_analytics_database_configured`
 
 Logged at `warning` from:
- - `api/app_analytics/analytics_db_service.py:74`
- - `api/app_analytics/analytics_db_service.py:187`
- - `api/app_analytics/analytics_db_service.py:278`
+ - `api/app_analytics/analytics_db_service.py:75`
+ - `api/app_analytics/analytics_db_service.py:188`
+ - `api/app_analytics/analytics_db_service.py:279`
 
 Attributes:
  - `details`
