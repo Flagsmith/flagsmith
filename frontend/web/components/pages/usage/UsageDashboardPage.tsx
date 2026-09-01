@@ -5,7 +5,11 @@ import { useGetOrganisationQuery } from 'common/services/useOrganisation'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import ProjectFilter from 'components/ProjectFilter'
 import { PeriodOption } from 'common/types/requests'
+import OverLimitBanner from './components/OverLimitBanner'
+import SectionHeading from './components/SectionHeading'
 import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
+import UsageExplorer from './components/UsageExplorer'
+import UsageMeter from './components/UsageMeter'
 import UsageDashboard from './UsageDashboard'
 import { useUsageData } from './useUsageData'
 import { overLimitNote, overLimitOf } from './overLimit'
@@ -105,67 +109,74 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   return (
     <UsageDashboard
-      data={usage.scoped}
-      total={allowanceTotal}
-      limit={limit}
-      hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
-      planCopy={planSectionCopy(basis, limit)}
-      periodLabel={periodLabel(periods, billingPeriod)}
-      showPlanCeiling={showsPlanCeiling(billingPeriod, selectedProjectId)}
-      meterNote={meterNote}
-      breakdown={
-        <UsageBreakdown
-          {...breakdown}
-          onChangeDimension={setDimension}
-          scope={scope}
-        />
-      }
       isError={organisationFailed || usage.failed || limitFailed}
       isLoading={loadingOrganisation || usage.isLoadingPlan || loadingLimit}
-      isExploring={usage.isLoadingScoped}
-      // Restriction only ever applies to a free plan, so a paid organisation
-      // over its limit keeps serving flags and this only reports the overage.
-      overLimit={
-        exceeded
-          ? {
-              basis,
-              canUpgrade: Utils.getFlagsmithHasFeature('payments_enabled'),
-              over: exceeded,
-            }
-          : undefined
-      }
       onRetry={() => {
         refetchOrganisation()
         refetchLimit()
         usage.retry()
       }}
-      filters={
-        <Row className='gap-2'>
-          <div className='usage-dashboard__filter'>
-            <Select
-              aria-label='Period'
-              inputId='usage-period'
-              onChange={(option: PeriodOption) => setChosenPeriod(option.value)}
-              value={periods.find((period) => period.value === billingPeriod)}
-              options={periods}
-            />
-          </div>
-          <div className='usage-dashboard__filter'>
-            <ProjectFilter
-              aria-label='Project'
-              inputId='usage-project'
-              showAll
-              organisationId={organisationId}
-              onChange={(id: string, name: string) => {
-                setProject(id)
-                setProjectName(name)
-              }}
-              value={project}
-            />
-          </div>
-        </Row>
-      }
-    />
+    >
+      {/* Restriction only ever applies to a free plan, so a paid organisation
+          over its limit keeps serving flags and this only reports the
+          overage. */}
+      {exceeded && (
+        <OverLimitBanner
+          over={exceeded}
+          basis={basis}
+          canUpgrade={Utils.getFlagsmithHasFeature('payments_enabled')}
+        />
+      )}
+
+      <SectionHeading {...planSectionCopy(basis, limit)} />
+
+      <UsageMeter total={allowanceTotal} limit={limit} note={meterNote} />
+
+      <UsageExplorer
+        data={usage.scoped}
+        limit={
+          showsPlanCeiling(billingPeriod, selectedProjectId) ? limit : undefined
+        }
+        isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
+        periodLabel={periodLabel(periods, billingPeriod)}
+        isLoading={usage.isLoadingScoped}
+        filters={
+          <Row className='gap-2'>
+            <div className='usage-dashboard__filter'>
+              <Select
+                aria-label='Period'
+                inputId='usage-period'
+                onChange={(option: PeriodOption) =>
+                  setChosenPeriod(option.value)
+                }
+                value={periods.find((period) => period.value === billingPeriod)}
+                options={periods}
+              />
+            </div>
+            <div className='usage-dashboard__filter'>
+              <ProjectFilter
+                aria-label='Project'
+                inputId='usage-project'
+                showAll
+                organisationId={organisationId}
+                onChange={(id: string, name: string) => {
+                  setProject(id)
+                  setProjectName(name)
+                }}
+                value={project}
+              />
+            </div>
+          </Row>
+        }
+        breakdown={
+          <UsageBreakdown
+            {...breakdown}
+            onChangeDimension={setDimension}
+            scope={scope}
+          />
+        }
+      />
+    </UsageDashboard>
   )
 }
 

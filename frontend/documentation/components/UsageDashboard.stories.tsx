@@ -1,9 +1,13 @@
 import { FC, useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 import { UsageDashboard } from 'components/pages/usage'
+import OverLimitBanner from 'components/pages/usage/components/OverLimitBanner'
+import SectionHeading from 'components/pages/usage/components/SectionHeading'
 import UsageBreakdown, {
   useUsageBreakdown,
 } from 'components/pages/usage/components/UsageBreakdown'
+import UsageExplorer from 'components/pages/usage/components/UsageExplorer'
+import UsageMeter from 'components/pages/usage/components/UsageMeter'
 import { overLimitNote, overLimitOf } from 'components/pages/usage/overLimit'
 import {
   allowanceWindow,
@@ -125,52 +129,59 @@ const UsagePage: FC<HarnessProps> = ({
   )}`
 
   return (
-    <UsageDashboard
-      breakdown={
-        <UsageBreakdown
-          {...breakdown}
-          onChangeDimension={setDimension}
-          scope={scope}
-        />
-      }
-      data={scoped}
-      filters={
-        <Row className='gap-2'>
-          <div style={{ minWidth: 210 }}>
-            <Select
-              aria-label='Period'
-              onChange={(option: PeriodOption) => setChosenPeriod(option.value)}
-              options={periods}
-              value={periods.find((option) => option.value === billingPeriod)}
-            />
-          </div>
-          <div style={{ minWidth: 210 }}>
-            <Select
-              aria-label='Project'
-              onChange={(option: { value: string }) => setProject(option.value)}
-              options={PROJECTS.map((name) => ({ label: name, value: name }))}
-              value={{ label: project, value: project }}
-            />
-          </div>
-        </Row>
-      }
-      hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
-      isError={isError}
-      isLoading={isLoading}
-      limit={limit}
-      meterNote={exceeded ? overLimitNote(exceeded) : contribution}
-      onRetry={() => {}}
-      overLimit={
-        exceeded ? { basis, canUpgrade: true, over: exceeded } : undefined
-      }
-      periodLabel={periodLabel(periods, billingPeriod)}
-      planCopy={planSectionCopy(basis, limit)}
-      showPlanCeiling={showsPlanCeiling(
-        billingPeriod,
-        filtered ? 1 : undefined,
-      )}
-      total={allowanceTotal}
-    />
+    <UsageDashboard isError={isError} isLoading={isLoading} onRetry={() => {}}>
+      {exceeded && <OverLimitBanner over={exceeded} basis={basis} canUpgrade />}
+
+      <SectionHeading {...planSectionCopy(basis, limit)} />
+
+      <UsageMeter
+        total={allowanceTotal}
+        limit={limit}
+        note={exceeded ? overLimitNote(exceeded) : contribution}
+      />
+
+      <UsageExplorer
+        data={scoped}
+        limit={
+          showsPlanCeiling(billingPeriod, filtered ? 1 : undefined)
+            ? limit
+            : undefined
+        }
+        isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
+        periodLabel={periodLabel(periods, billingPeriod)}
+        filters={
+          <Row className='gap-2'>
+            <div className='usage-dashboard__filter'>
+              <Select
+                aria-label='Period'
+                onChange={(option: PeriodOption) =>
+                  setChosenPeriod(option.value)
+                }
+                options={periods}
+                value={periods.find((option) => option.value === billingPeriod)}
+              />
+            </div>
+            <div className='usage-dashboard__filter'>
+              <Select
+                aria-label='Project'
+                onChange={(option: { value: string }) =>
+                  setProject(option.value)
+                }
+                options={PROJECTS.map((name) => ({ label: name, value: name }))}
+                value={{ label: project, value: project }}
+              />
+            </div>
+          </Row>
+        }
+        breakdown={
+          <UsageBreakdown
+            {...breakdown}
+            onChangeDimension={setDimension}
+            scope={scope}
+          />
+        }
+      />
+    </UsageDashboard>
   )
 }
 
