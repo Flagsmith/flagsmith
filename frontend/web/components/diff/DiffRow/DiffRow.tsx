@@ -25,11 +25,14 @@ const DiffRow: FC<DiffRowProps> = ({
   state,
 }) => (
   <div
-    className={classNames('diff-row', `diff-row--${state}`, className, {
-      'diff-row--scrollable': scrollable,
-    })}
+    className={classNames(
+      'diff-row d-flex align-items-center',
+      `diff-row--${state}`,
+      className,
+      { 'overflow-auto': scrollable },
+    )}
   >
-    <div className='diff-row__marker'>
+    <div className='diff-row__marker d-flex align-items-center justify-content-center flex-shrink-0'>
       <pre>{MARKERS[state]}</pre>
     </div>
     <div className='diff-row__content'>{children}</div>

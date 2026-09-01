@@ -105,13 +105,13 @@ const DiffFeature: FC<FeatureDiffType> = ({
           {(oldEnvName || newEnvName) && (
             <div className='d-flex gap-3 mb-3'>
               {oldEnvName && (
-                <span className='diff-removed-header'>
-                  <span className='diff-sign'>−</span> {oldEnvName}
+                <span className='diff-header py-1 px-2 rounded-sm bg-surface-danger text-danger'>
+                  <span className='me-1 fw-bold'>−</span> {oldEnvName}
                 </span>
               )}
               {newEnvName && (
-                <span className='diff-added-header'>
-                  <span className='diff-sign'>+</span> {newEnvName}
+                <span className='diff-header py-1 px-2 rounded-sm bg-surface-success text-success'>
+                  <span className='me-1 fw-bold'>+</span> {newEnvName}
                 </span>
               )}
             </div>

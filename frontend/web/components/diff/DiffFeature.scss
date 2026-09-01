@@ -1,22 +1,4 @@
-.diff-removed-header,
-.diff-added-header {
-  padding: 4px 8px;
-  border-radius: 4px;
+.diff-header {
   font-size: 13px;
   font-weight: 500;
-}
-
-.diff-removed-header {
-  background-color: var(--color-surface-danger);
-  color: var(--color-text-danger);
-}
-
-.diff-added-header {
-  background-color: var(--color-surface-success);
-  color: var(--color-text-success);
-}
-
-.diff-sign {
-  margin-right: 4px;
-  font-weight: bold;
 }

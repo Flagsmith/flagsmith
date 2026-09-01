@@ -3,17 +3,11 @@
   --diff-row-removed: oklch(from var(--red-500) l c h / 0.16);
   --diff-row-added: oklch(from var(--green-500) l c h / 0.16);
 
-  display: flex;
-  align-items: center;
   line-height: 31px;
 
   &__marker {
-    display: flex;
     width: 31px;
     height: 31px;
-    flex: none;
-    align-items: center;
-    justify-content: center;
     background-color: var(--color-surface-subtle);
 
     > * {
@@ -66,9 +60,5 @@
         line-height: 28px;
       }
     }
-  }
-
-  &--scrollable {
-    overflow: auto;
   }
 }
