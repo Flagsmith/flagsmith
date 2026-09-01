@@ -498,13 +498,13 @@ export type AuditLogItem = {
   related_object_uuid?: number
   related_feature_id?: number
   related_object_type:
-    | 'FEATURE'
-    | 'FEATURE_STATE'
-    | 'ENVIRONMENT'
-    | 'CHANGE_REQUEST'
-    | 'SEGMENT'
-    | 'EF_VERSION'
-    | 'EDGE_IDENTITY'
+  | 'FEATURE'
+  | 'FEATURE_STATE'
+  | 'ENVIRONMENT'
+  | 'CHANGE_REQUEST'
+  | 'SEGMENT'
+  | 'EF_VERSION'
+  | 'EDGE_IDENTITY'
   is_system_event: boolean
 }
 
@@ -837,6 +837,7 @@ export type ProjectFlag = {
   description?: string
   environment_feature_state?: FeatureState
   segment_feature_state?: FeatureState
+  identity_feature_state?: IdentityFeatureState
   id: number
   initial_value: FlagsmithValue
   is_archived: boolean
@@ -1566,6 +1567,7 @@ export type Res = {
     next: string | null
     previous: string | null
     environmentStates: Record<number, FeatureState>
+    identityStates: Record<number, IdentityFeatureState>
     pagination: {
       count: number
       next: string | null
