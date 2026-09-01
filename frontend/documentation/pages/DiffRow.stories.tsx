@@ -19,7 +19,7 @@ const meta: Meta<typeof DiffRow> = {
     },
     layout: 'padded',
   },
-  title: 'Components/DiffRow',
+  title: 'Components/Diff/DiffRow',
 }
 
 export default meta

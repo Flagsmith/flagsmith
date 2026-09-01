@@ -15,7 +15,7 @@ const meta: Meta<typeof DiffString> = {
     },
     layout: 'padded',
   },
-  title: 'Components/DiffString',
+  title: 'Components/Diff/DiffString',
 }
 
 export default meta

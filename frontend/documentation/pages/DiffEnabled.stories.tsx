@@ -18,7 +18,7 @@ const meta: Meta<typeof DiffEnabled> = {
     },
     layout: 'padded',
   },
-  title: 'Components/DiffEnabled',
+  title: 'Components/Diff/DiffEnabled',
 }
 
 export default meta
