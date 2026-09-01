@@ -30,7 +30,20 @@ import Announcement from './Announcement'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 import AccountProvider from 'common/providers/AccountProvider'
 import Nav from './navigation/Nav'
+import { routes } from 'web/routes'
 import 'project/darkMode'
+
+const isRoute = (pathname, path) =>
+  !!matchPath(pathname, { exact: true, path, strict: false })
+
+const isUsagePage = (pathname) =>
+  isRoute(pathname, routes['organisation-usage'])
+
+// A blocked organisation keeps the organisations list, so it can switch away,
+// and the usage page, which is where it finds out why it was blocked.
+const isAllowedWhileBlocked = (pathname) =>
+  isRoute(pathname, routes.organisations) || isUsagePage(pathname)
+
 const App = class extends Component {
   static propTypes = {
     children: propTypes.element.isRequired,
@@ -271,9 +284,8 @@ const App = class extends Component {
     const environmentId = this.getEnvironmentId(this.props)
 
     if (
-      AccountStore.getOrganisation() &&
-      AccountStore.getOrganisation().block_access_to_admin &&
-      pathname !== '/organisations'
+      AccountStore.getOrganisation()?.block_access_to_admin &&
+      !isAllowedWhileBlocked(pathname)
     ) {
       return <Blocked />
     }
