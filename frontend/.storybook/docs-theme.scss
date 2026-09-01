@@ -7,7 +7,7 @@
 // =============================================================================
 
 // Light mode — fix invisible inline code
-.sbdocs code {
+.sbdocs code:not(.hljs) {
   color: #1a2634;
 }
 
