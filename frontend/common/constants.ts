@@ -198,6 +198,8 @@ const Constants = {
       'React Native': 'javascript',
     },
   },
+  cohortSyncKeyPermissions:
+    'To manage cohort synchronisation keys you need the <i>Manage segment overrides</i> permission for this environment and the <i>Manage segments</i> permission for this project.<br/>Please contact an administrator.',
   colours: {
     primary: '#6837fc',
     white: '#ffffff',

@@ -739,6 +739,12 @@ class TheComponent extends Component {
     const filter = (segment) => {
       if (segment.feature && segment.feature !== this.props.feature)
         return false
+      // A cohort-managed segment only has members in its own environment.
+      if (
+        segment.cohort &&
+        segment.cohort.environment_api_key !== this.props.environmentId
+      )
+        return false
       if (this.props.id && this.props.id !== segment.id) return null
       const foundSegment = find(value, (v) => v.segment === segment.id)
       return !value || !foundSegment || (foundSegment && foundSegment.toRemove)
