@@ -11,6 +11,7 @@ export type CohortProviderAuthRow = {
 export type CohortProviderConfig = {
   label: string
   authRows: CohortProviderAuthRow[]
+  docsUrl: string
   // Providers where the user pastes a URL themselves carry an endpoint;
   // Amplitude calls Flagsmith's portal-registered endpoints instead.
   endpoint?: {
@@ -29,6 +30,8 @@ export const COHORT_PROVIDERS: Record<CohortProviderKey, CohortProviderConfig> =
       authRows: [
         { label: 'API key', mono: true, value: '{YOUR_SYNCHRONISATION_KEY}' },
       ],
+      docsUrl:
+        'https://docs.flagsmith.com/third-party-integrations/cohort-synchronisation/amplitude',
       endpointStepBody:
         'In Amplitude, open Data → Destinations and add Flagsmith as a cohort destination. Paste your synchronisation key when asked for the API key.',
       endpointStepTitle: 'Add Flagsmith as a destination in Amplitude',
@@ -43,6 +46,8 @@ export const COHORT_PROVIDERS: Record<CohortProviderKey, CohortProviderConfig> =
         { label: 'Username', value: 'Any value' },
         { label: 'Password', mono: true, value: '{YOUR_SYNCHRONISATION_KEY}' },
       ],
+      docsUrl:
+        'https://docs.flagsmith.com/third-party-integrations/cohort-synchronisation/mixpanel',
       endpoint: {
         fieldTitle: 'Webhook URL',
         path: 'cohort-sync/mixpanel/webhook/',

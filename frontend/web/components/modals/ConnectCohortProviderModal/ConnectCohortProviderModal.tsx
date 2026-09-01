@@ -15,8 +15,6 @@ import {
 } from './providers'
 import './ConnectCohortProviderModal.scss'
 
-const SEGMENTS_DOCS_URL = 'https://docs.flagsmith.com/basic-features/segments'
-
 type ConnectCohortProviderModalProps = {
   projectId: number | string
   provider: CohortProviderKey
@@ -127,8 +125,8 @@ const ConnectCohortProviderModal: FC<ConnectCohortProviderModalProps> = ({
       </div>
       <ModalHR />
       <div className='modal-footer d-flex align-items-center justify-content-between'>
-        <Link href={SEGMENTS_DOCS_URL} target='_blank'>
-          Learn about Segments
+        <Link href={config.docsUrl} target='_blank'>
+          Learn about cohort synchronisation
         </Link>
         <Button onClick={() => closeModal()} data-test='connect-provider-done'>
           Done
