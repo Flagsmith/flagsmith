@@ -298,7 +298,7 @@
 code.txt {
   font-size: $font-size-base;
   font-weight: 500;
-  background: transparent !important;
+  background: var(--color-surface-default) !important;
   border: 1px solid var(--color-border-default);
   font-family: 'OpenSans', sans-serif;
   color: var(--color-text-default);
