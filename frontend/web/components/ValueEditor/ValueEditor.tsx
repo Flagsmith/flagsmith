@@ -22,7 +22,6 @@ import './ValueEditor.scss'
 
 export interface ValueEditorProps {
   className?: string
-  'data-test'?: string
   disabled?: boolean
   // Rendered as a FieldLabel wired to the editor, so callers cannot get the
   // association wrong.
@@ -49,7 +48,6 @@ const ValueEditor: FC<ValueEditorProps> = ({
   onBlur,
   onChange,
   value,
-  ...rest
 }) => {
   const [language, setLanguage] = useState<ValueEditorLanguage>(
     languageProp ?? 'txt',
@@ -114,7 +112,6 @@ const ValueEditor: FC<ValueEditorProps> = ({
         <Highlight
           aria-labelledby={label ? labelId : undefined}
           aria-readonly={disabled || undefined}
-          data-test={rest['data-test']}
           disabled={disabled}
           onChange={disabled ? null : onChange}
           onBlur={disabled ? null : onBlur}

@@ -22,6 +22,7 @@ const variantCards = (page: Page) => page.locator('#create-feature-modal .varian
 test.describe('Multivariate Options', () => {
   test('Repeated saves keep the variant set stable @oss', async ({ page }) => {
     const {
+      variationValueField,
       closeModal,
       createRemoteConfig,
       editRemoteConfig,
@@ -62,6 +63,7 @@ test.describe('Multivariate Options', () => {
 
   test('Variants can be added and removed in a single save @oss', async ({ page }) => {
     const {
+      variationValueField,
       click,
       closeModal,
       createRemoteConfig,
@@ -90,7 +92,7 @@ test.describe('Multivariate Options', () => {
     await expect(variantCards(page)).toHaveCount(1);
     await click(byId('add-variation'));
     await page.waitForTimeout(200);
-    await setText(byId('featureVariationValue1'), 'added');
+    await setText(variationValueField(1), 'added');
     await page.waitForTimeout(500);
     await click(byId('update-feature-btn'));
     await waitForToast();
