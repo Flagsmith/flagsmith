@@ -18,6 +18,10 @@ import CreateSegmentFromCsv from 'components/modals/CreateSegmentFromCsv'
 import CreateSegmentSourcesModal, {
   getSegmentSources,
 } from 'components/modals/CreateSegmentSourcesModal'
+import ConnectCohortProviderModal, {
+  COHORT_PROVIDERS,
+  CohortProviderKey,
+} from 'components/modals/ConnectCohortProviderModal'
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 
@@ -117,6 +121,14 @@ const SegmentsPage: FC = () => {
     )
   }
 
+  const openConnectCohortProviderDrawer = (provider: CohortProviderKey) => {
+    openModal(
+      `Connect ${COHORT_PROVIDERS[provider].label}`,
+      <ConnectCohortProviderModal projectId={projectId} provider={provider} />,
+      'p-0 modal--wide',
+    )
+  }
+
   const newSegment = () => {
     const sources = getSegmentSources()
     if (
@@ -129,6 +141,8 @@ const SegmentsPage: FC = () => {
           sources={sources}
           onManual={openCreateSegmentDrawer}
           onCsv={openCreateSegmentFromCsvDrawer}
+          onMixpanel={() => openConnectCohortProviderDrawer('mixpanel')}
+          onAmplitude={() => openConnectCohortProviderDrawer('amplitude')}
         />,
         'p-0 modal--wide',
       )

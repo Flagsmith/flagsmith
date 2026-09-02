@@ -1,140 +1,230 @@
+import { FC, useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 import { UsageDashboard } from 'components/pages/usage'
-import { Res } from 'common/types/responses'
+import UsageBreakdown, {
+  useUsageBreakdown,
+} from 'components/pages/usage/components/UsageBreakdown'
+import {
+  allowanceWindow,
+  contributionNote,
+  isBilledOnAPeriod,
+  isBillingPeriodSelected,
+  periodLabel,
+  periodsFor,
+  PeriodSelection,
+  planSectionCopy,
+  resolvePeriod,
+  showsContribution,
+  showsPlanCeiling,
+  usageBasisOf,
+} from 'components/pages/usage/utils'
+import { BillingPeriod, PeriodOption } from 'common/types/requests'
+import { PlanLimit } from 'components/shared/UsageBar/utils'
+import { Subscription } from 'common/types/responses'
+import { toUsageResponse, USAGE_SCENARIOS } from './fixtures/usage'
 
-const meta: Meta<typeof UsageDashboard> = {
-  component: UsageDashboard,
+const PROJECTS = [
+  'All Projects',
+  'Checkout',
+  'Mobile app',
+  'Internal tools',
+  'Marketing site',
+]
+
+// Roughly how much of the organisation each project accounts for.
+const PROJECT_SHARE: Record<string, number> = {
+  'All Projects': 1,
+  'Checkout': 0.38,
+  'Internal tools': 0.07,
+  'Marketing site': 0.13,
+  'Mobile app': 0.42,
+}
+
+const SCENARIO_FOR: Record<string, keyof typeof USAGE_SCENARIOS> = {
+  '90_day_period': 'last90Days',
+  current_billing_period: 'currentBillingPeriod',
+  previous_billing_period: 'previousBillingPeriod',
+  rolling: 'last30Days',
+}
+
+const scenarioFor = (period: BillingPeriod, empty: boolean, free: boolean) => {
+  if (empty) return []
+  if (free) return USAGE_SCENARIOS.freePlan
+  return USAGE_SCENARIOS[SCENARIO_FOR[period ?? 'rolling']]
+}
+
+const subscriptionOf = (values: Partial<Subscription>): Subscription =>
+  ({
+    has_active_billing_periods: false,
+    payment_method: null,
+    plan: 'scale-up',
+    ...values,
+  } as Subscription)
+
+type HarnessProps = {
+  subscription: Subscription
+  limit: PlanLimit
+  /** Overrides the fixture so the meter reads a chosen percentage. */
+  scale?: number
+  empty?: boolean
+  isLoading?: boolean
+  isError?: boolean
+}
+
+/**
+ * Mirrors what UsageDashboardPage derives, using the real utils rather than a
+ * copy of them, so the selects behave here as they do in the app.
+ */
+const UsagePage: FC<HarnessProps> = ({
+  empty,
+  isError,
+  isLoading,
+  limit,
+  scale = 1,
+  subscription,
+}) => {
+  const isFreePlan = subscription.plan === 'free'
+  const basis = usageBasisOf(subscription, isFreePlan)
+  const planIsBilled = isBilledOnAPeriod(basis)
+  const periods = periodsFor(planIsBilled)
+
+  const [chosenPeriod, setChosenPeriod] = useState<PeriodSelection>('default')
+  const [project, setProject] = useState('All Projects')
+
+  const billingPeriod = resolvePeriod(chosenPeriod, planIsBilled)
+  const share = PROJECT_SHARE[project] ?? 1
+  const filtered = project !== 'All Projects'
+
+  const scoped = toUsageResponse(
+    scenarioFor(billingPeriod, !!empty, isFreePlan),
+    share * scale,
+  )
+  const allowanceTotal = toUsageResponse(
+    scenarioFor(allowanceWindow(basis), !!empty, isFreePlan),
+    scale,
+  ).totals.total
+
+  // The note needs the organisation over the period on screen, not over the
+  // allowance window, or a project can read as more than all of it.
+  const { setDimension, ...breakdown } = useUsageBreakdown({ data: scoped })
+
+  const scope = `${filtered ? project : 'All projects'} · ${periodLabel(
+    periods,
+    billingPeriod,
+  )}`
+
+  return (
+    <UsageDashboard
+      breakdown={
+        <UsageBreakdown
+          {...breakdown}
+          onChangeDimension={setDimension}
+          scope={scope}
+        />
+      }
+      data={scoped}
+      filters={
+        <Row className='gap-2'>
+          <div style={{ minWidth: 210 }}>
+            <Select
+              aria-label='Period'
+              onChange={(option: PeriodOption) => setChosenPeriod(option.value)}
+              options={periods}
+              value={periods.find((option) => option.value === billingPeriod)}
+            />
+          </div>
+          <div style={{ minWidth: 210 }}>
+            <Select
+              aria-label='Project'
+              onChange={(option: { value: string }) => setProject(option.value)}
+              options={PROJECTS.map((name) => ({ label: name, value: name }))}
+              value={{ label: project, value: project }}
+            />
+          </div>
+        </Row>
+      }
+      hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
+      isError={isError}
+      isLoading={isLoading}
+      limit={limit}
+      meterNote={
+        showsContribution(basis, billingPeriod, filtered ? 1 : undefined)
+          ? contributionNote(project, scoped.totals.total, allowanceTotal)
+          : undefined
+      }
+      onRetry={() => {}}
+      periodLabel={periodLabel(periods, billingPeriod)}
+      planCopy={planSectionCopy(basis, limit)}
+      showPlanCeiling={showsPlanCeiling(
+        billingPeriod,
+        filtered ? 1 : undefined,
+      )}
+      total={allowanceTotal}
+    />
+  )
+}
+
+const meta: Meta<typeof UsagePage> = {
+  component: UsagePage,
   parameters: { layout: 'fullscreen' },
   title: 'Pages/Usage Dashboard/Page',
 }
 export default meta
 
-type Story = StoryObj<typeof UsageDashboard>
+type Story = StoryObj<typeof UsagePage>
 
-const DAY_WEIGHTS = [1.08, 1.12, 1.05, 1.1, 0.98, 0.62, 0.58]
+const billed = subscriptionOf({ has_active_billing_periods: true })
 
-const usage = (days: number, perDay: number): Res['organisationUsage'] => {
-  const events = Array.from({ length: days }).map((_, index) => {
-    const weight = DAY_WEIGHTS[index % DAY_WEIGHTS.length]
-    return {
-      day: `2026-08-${`${index + 1}`.padStart(2, '0')}`,
-      environment_document: Math.round(perDay * weight * 0.04),
-      flags: Math.round(perDay * weight * 0.63),
-      identities: Math.round(perDay * weight * 0.24),
-      labels: { user_agent: null },
-      traits: Math.round(perDay * weight * 0.09),
-    }
-  })
-  const sum = (
-    key: 'flags' | 'identities' | 'traits' | 'environment_document',
-  ) => events.reduce((acc, event) => acc + event[key], 0)
-
-  return {
-    events_list: events,
-    totals: {
-      environmentDocument: sum('environment_document'),
-      flags: sum('flags'),
-      identities: sum('identities'),
-      total:
-        sum('flags') +
-        sum('identities') +
-        sum('traits') +
-        sum('environment_document'),
-      traits: sum('traits'),
-    },
-  }
-}
-
-const paid = usage(18, 70000)
-const free = usage(30, 1800)
-const paidApproaching = usage(26, 75000)
-const paidOver = usage(28, 92000)
-
-// A plan with a billing term: usage climbs towards a reset, so it is drawn
-// cumulatively against the ceiling.
 export const PaidWithABillingPeriod: Story = {
-  args: {
-    data: paid,
-    hasBillingPeriod: true,
-    limit: 2000000,
-    total: paid.totals.total,
-  },
+  args: { limit: 2000000, subscription: billed },
 }
 
 export const PaidApproachingTheLimit: Story = {
-  args: {
-    data: paidApproaching,
-    hasBillingPeriod: true,
-    limit: 2000000,
-    total: paidApproaching.totals.total,
-  },
+  args: { limit: 1400000, subscription: billed },
 }
 
 export const PaidOverTheLimit: Story = {
-  args: {
-    data: paidOver,
-    hasBillingPeriod: true,
-    limit: 2000000,
-    total: paidOver.totals.total,
-  },
+  args: { limit: 900000, subscription: billed },
 }
 
-// No billing term, so no reset to accumulate towards: daily volume instead.
 export const FreeOnARollingWindow: Story = {
-  args: {
-    data: free,
-    hasBillingPeriod: false,
-    limit: 50000,
-    total: free.totals.total,
-  },
+  args: { limit: 50000, subscription: subscriptionOf({ plan: 'free' }) },
 }
 
-// Enterprise agreements are not billed through Chargebee, so they have a real
-// limit and no period. The meter still works; the chart falls back to volume.
+// Enterprise agreements are invoiced outside Chargebee, so they have a real
+// limit and no period. The meter works; the chart falls back to daily volume.
 export const EnterpriseWithoutABillingPeriod: Story = {
   args: {
-    data: paid,
-    hasBillingPeriod: false,
     limit: 50000000,
-    total: paid.totals.total,
+    subscription: subscriptionOf({
+      payment_method: 'XERO',
+      plan: 'enterprise',
+    }),
   },
 }
 
-// Self-hosted has no subscription data at all, so there is nothing to be a
-// percentage of.
-export const WithoutAPlanLimit: Story = {
+// On Chargebee, but no period has arrived. Reads differently from invoiced,
+// because this one may resolve itself.
+export const ChargebeeWithoutAPeriodYet: Story = {
   args: {
-    data: paid,
-    hasBillingPeriod: false,
-    limit: null,
-    total: paid.totals.total,
+    limit: 2000000,
+    subscription: subscriptionOf({ payment_method: 'CHARGEBEE' }),
   },
+}
+
+// Self-hosted has no subscription data at all, so nothing to be a percentage of.
+export const WithoutAPlanLimit: Story = {
+  args: { limit: null, subscription: subscriptionOf({ plan: 'enterprise' }) },
 }
 
 export const NoUsageYet: Story = {
-  args: {
-    data: usage(0, 0),
-    hasBillingPeriod: true,
-    limit: 2000000,
-    total: 0,
-  },
+  args: { empty: true, limit: 2000000, subscription: billed },
 }
 
 export const Loading: Story = {
-  args: {
-    hasBillingPeriod: true,
-    isLoading: true,
-    limit: 2000000,
-    total: 0,
-  },
+  args: { isLoading: true, limit: 2000000, subscription: billed },
 }
 
-/** Distinct from NoUsageYet, which would otherwise look identical. */
 export const FailedToLoad: Story = {
-  args: {
-    hasBillingPeriod: true,
-    isError: true,
-    limit: 2000000,
-    total: 0,
-  },
+  args: { isError: true, limit: 2000000, subscription: billed },
 }

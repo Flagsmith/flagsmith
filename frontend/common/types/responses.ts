@@ -515,6 +515,8 @@ export type AuditLogDetail = AuditLogItem & {
     new: FlagsmithValue
   }[]
 }
+export type PaymentMethod = 'CHARGEBEE' | 'XERO' | 'AWS_MARKETPLACE'
+
 export type Subscription = {
   id: number
   uuid: string
@@ -525,7 +527,7 @@ export type Subscription = {
   max_api_calls: number
   cancellation_date: string | null
   customer_id: string
-  payment_method: string
+  payment_method: PaymentMethod | null
   notes: string | null
   has_active_billing_periods: boolean
 }
@@ -1037,6 +1039,16 @@ export type Cohort = {
   membership_counts: CohortMembershipCounts
 }
 
+export type CohortSyncKey = {
+  prefix: string
+  name: string
+  created: string
+  key: string | null
+}
+
+// The plaintext key only exists in the create response.
+export type CohortSyncKeyCreated = CohortSyncKey & { key: string }
+
 export type CohortCsvSyncResult = {
   version: number
   added: number
@@ -1379,6 +1391,8 @@ export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
   cohort: Cohort
+  cohortSyncKeys: CohortSyncKey[]
+  cohortSyncKeyCreated: CohortSyncKeyCreated
   cohortCsvSync: CohortCsvSyncResult
   segmentMembers: SegmentMembersResponse
   auditLogs: PagedResponse<AuditLogItem>

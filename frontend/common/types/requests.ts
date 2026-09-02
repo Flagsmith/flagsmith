@@ -207,6 +207,17 @@ export type Req = {
     identifier_column?: number
     has_header?: boolean
   }
+  getCohortSyncKeys: {
+    environmentApiKey: string
+  }
+  createCohortSyncKey: {
+    environmentApiKey: string
+    name: string
+  }
+  revokeCohortSyncKey: {
+    environmentApiKey: string
+    prefix: string
+  }
   cloneSegment: {
     projectId: number
     segmentId: number

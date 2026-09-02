@@ -2,6 +2,7 @@ import io
 
 import pytest
 from flag_engine.segments.constants import IS_SET
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 from rest_framework.exceptions import ValidationError
@@ -546,3 +547,21 @@ def test_sync_cohort_memberships_from_csv__edge_cohort__applies_traits(
     assert document["system_traits"] == {edge_cohort.system_trait_key: True}
     membership = CohortMembership.objects.get(cohort=edge_cohort)
     assert membership.state == CohortMembershipState.APPLIED
+
+
+def test_create_cohort__clickhouse_enabled__queues_membership_refresh(
+    environment: Environment,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.CLICKHOUSE_ENABLED = True
+    enqueue_mock = mocker.patch(
+        "segment_membership.services.enqueue_membership_refresh"
+    )
+
+    # When
+    create_cohort(environment=environment, name="Beta users")
+
+    # Then
+    enqueue_mock.assert_called_once_with(environment.project)

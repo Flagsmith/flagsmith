@@ -9,6 +9,35 @@ on:
       - .github/**
 
 jobs:
+  notify-production-deploy-started:
+    name: Notify Production Deploy Started
+    # No needs, so this lands within seconds of the push. Knowing a deploy is
+    # in flight is only useful while it still is.
+    runs-on: ubuntu-latest
+    permissions:
+      # Enough to resolve the local action below.
+      contents: read
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          # Nothing runs git after this, so the token need not persist.
+          persist-credentials: false
+
+      - name: Notify Slack
+        # A Slack outage must not hold up a deploy.
+        continue-on-error: true
+        uses: ./.github/actions/notify-slack-deploy
+        with:
+          webhook_url: ${{ secrets.SLACK_FRONTEND_DEPLOY_WEBHOOK }}
+          service: Frontend
+          app_url: https://app.flagsmith.com
+          state: in_progress
+          commit_sha: ${{ github.sha }}
+          actor: ${{ github.actor }}
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
   run-unit-tests:
     runs-on: ubuntu-latest
     name: Run Unit Tests
@@ -136,7 +165,7 @@ jobs:
           webhook_url: ${{ secrets.SLACK_FRONTEND_DEPLOY_WEBHOOK }}
           service: Frontend
           app_url: https://app.flagsmith.com
-          conclusion: ${{ steps.outcome.outputs.conclusion }}
+          state: ${{ steps.outcome.outputs.conclusion }}
           commit_sha: ${{ github.sha }}
           actor: ${{ github.actor }}
           run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
