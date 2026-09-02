@@ -17,7 +17,7 @@ const CopyValueButton: FC<CopyValueButtonProps> = ({ value }) => {
 
   return (
     <BareButton
-      className='value-editor__copy'
+      className='value-editor__copy position-absolute rounded-sm icon-secondary'
       aria-label='Copy value'
       onClick={copy}
     >
