@@ -1,4 +1,4 @@
-import React, { FC, ReactNode, useEffect, useId, useState } from 'react'
+import React, { FC, ReactNode, useEffect, useId, useRef, useState } from 'react'
 import cx from 'classnames'
 
 import FieldLabel from 'components/base/forms/FieldLabel'
@@ -51,28 +51,34 @@ const ValueEditor: FC<ValueEditorProps> = ({
   value,
   ...rest
 }) => {
-  const [language, setLanguage] = useState<ValueEditorLanguage>('txt')
+  const [language, setLanguage] = useState<ValueEditorLanguage>(
+    languageProp ?? 'txt',
+  )
   const labelId = useId()
-  const editorId = useId()
   const text = value === undefined || value === null ? '' : `${value}`
 
-  // Pick the initial language once: the caller's choice, overridden by JSON
-  // when the value parses as an object.
+  // True once the format is decided: the caller pinned it, we detected JSON, or
+  // someone picked one. Detection waits for a value rather than running on
+  // mount, because values load after mount and a mount-only check left a JSON
+  // value rendering as plaintext.
+  const formatSettled = useRef(!!languageProp)
+
   useEffect(() => {
-    if (languageProp) {
-      setLanguage(languageProp)
-    }
-    if (!value) return
+    if (formatSettled.current || !text) return
+    formatSettled.current = true
     try {
       if (typeof JSON.parse(text) === 'object') {
         setLanguage('json')
       }
     } catch (e) {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [text])
 
-  // Copy used to be the last item of the language row, so hiding that row hid
-  // copy too. It now lives inside the editor, so repeat the condition.
+  const pickLanguage = (next: ValueEditorLanguage) => {
+    formatSettled.current = true
+    setLanguage(next)
+  }
+
+  // The format row and copy are both editing affordances.
   const showControls = !disabled
 
   return (
@@ -96,7 +102,7 @@ const ValueEditor: FC<ValueEditorProps> = ({
           {showControls && (
             <LanguageSelector
               language={language}
-              onChange={setLanguage}
+              onChange={pickLanguage}
               value={text}
             />
           )}
@@ -111,7 +117,6 @@ const ValueEditor: FC<ValueEditorProps> = ({
             aria-labelledby={label ? labelId : undefined}
             data-test={rest['data-test']}
             disabled={disabled}
-            id={editorId}
             name={name}
             onBlur={onBlur}
             onChange={(e) => onChange?.(e.target.value)}
@@ -124,7 +129,6 @@ const ValueEditor: FC<ValueEditorProps> = ({
             aria-labelledby={label ? labelId : undefined}
             data-test={E2E ? rest['data-test'] : ''}
             disabled={disabled}
-            id={editorId}
             onChange={disabled ? null : onChange}
             onBlur={disabled ? null : onBlur}
             className={language}

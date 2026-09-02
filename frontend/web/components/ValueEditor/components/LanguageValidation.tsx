@@ -1,6 +1,7 @@
 import React, { FC, useMemo } from 'react'
 
 import Icon from 'components/icons/Icon'
+import Tooltip from 'components/Tooltip'
 
 import {
   LANGUAGE_LABELS,

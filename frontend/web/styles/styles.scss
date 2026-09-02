@@ -41,18 +41,6 @@ bold, strong {
   font-size: 0.8em;
 }
 
-.value-editor {
-  &.disabled {
-    code {
-      cursor: not-allowed;
-      opacity: 0.5;
-    }
-    .select-language {
-      display: none;
-    }
-  }
-}
-
 .cursor-pointer {
   cursor: pointer;
 }
