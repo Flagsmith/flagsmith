@@ -43,6 +43,23 @@
       padding: 9px 12px 9px 16px;
       min-height: $input-height;
     }
+    .value-editor__copy {
+      top: 11px;
+    }
+  }
+
+  .value-editor__copy {
+    top: 18px;
+    right: 12px;
+    z-index: 1;
+    padding: 2px;
+    &:hover {
+      color: var(--color-icon-action);
+    }
+  }
+
+  &:has(.value-editor__copy) .hljs {
+    padding-right: 44px;
   }
   textarea {
     min-height: 50px;
@@ -77,9 +94,6 @@
       &.active {
         color: var(--color-text-default);
         font-weight: 500;
-      }
-      &.primary {
-        color: var(--color-text-action);
       }
     }
   }
