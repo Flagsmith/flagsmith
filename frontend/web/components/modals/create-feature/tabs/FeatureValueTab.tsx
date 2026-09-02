@@ -375,7 +375,6 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                 )
               }
               labelTooltip={getValueTooltip(hasVariations, isEdit)}
-              data-test='featureValue'
               className={`full-width${hasVariations ? ' code-medium' : ''}`}
               value={`${
                 typeof initial_value === 'undefined' || initial_value === null

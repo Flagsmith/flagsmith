@@ -279,7 +279,6 @@ const SegmentOverrideInner = class Override extends React.Component {
                   label='Value'
                   disabled={readOnly}
                   value={v.value}
-                  data-test={`segment-override-value-${index}`}
                   onChange={
                     readOnly
                       ? null
@@ -298,7 +297,6 @@ const SegmentOverrideInner = class Override extends React.Component {
                 label='Segment Control Value'
                 labelAfter={<ControlWeightChip percentage={controlPercent} />}
                 value={v.value}
-                data-test={`segment-override-value-${index}`}
                 disabled={readOnly}
                 onChange={
                   readOnly
