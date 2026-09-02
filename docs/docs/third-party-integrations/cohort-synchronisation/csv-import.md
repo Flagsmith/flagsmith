@@ -1,11 +1,11 @@
 ---
-title: CSV Cohort Synchronisation
+title: CSV Import
 description: Create a Flagsmith segment from a CSV list of identifiers
-sidebar_label: CSV file
+sidebar_label: CSV Import
 sidebar_position: 2
 ---
 
-# CSV file
+# CSV Import
 
 Upload a list of identifiers and Flagsmith turns it into a segment you can use to override features. Use this when the
 group of users you want to target is a list you can export, such as beta signups from a spreadsheet, accounts from your

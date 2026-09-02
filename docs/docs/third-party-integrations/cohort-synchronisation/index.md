@@ -23,7 +23,7 @@ Cohort synchronisation is available on paid plans.
 
 ## Supported sources
 
-- [CSV file](/third-party-integrations/cohort-synchronisation/csv)
+- [CSV import](/third-party-integrations/cohort-synchronisation/csv-import)
 - [Amplitude](/third-party-integrations/cohort-synchronisation/amplitude)
 
 ## Creating a synchronised segment
