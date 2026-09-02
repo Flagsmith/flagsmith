@@ -25,8 +25,6 @@ Cohort synchronisation is available on paid plans.
 
 - [Amplitude](/third-party-integrations/cohort-synchronisation/amplitude)
 
-<!-- TODO: add the Mixpanel link once its page lands: /third-party-integrations/cohort-synchronisation/mixpanel -->
-
 ## How it works
 
 - **Each cohort becomes a segment.** When a cohort is synchronised for the first time, Flagsmith creates a segment with

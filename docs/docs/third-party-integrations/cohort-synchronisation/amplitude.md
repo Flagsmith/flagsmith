@@ -46,6 +46,7 @@ application uses as the Flagsmith [identity](/flagsmith-concepts/identities) ide
 1. In Amplitude, open the cohort you want to target and click **Target users**.
 2. Select your Flagsmith destination.
 3. Choose the cadence, then click **Sync**:
+
    - **One-Time Sync** sends the cohort's current members once.
    - **Scheduled Sync** resends the membership every hour or every day.
    - **Real-Time Sync** resends the membership every minute.
