@@ -1,6 +1,6 @@
 import { FC, useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
-import { UsagePageLayout } from 'components/pages/usage'
+import UsagePageLayout from 'components/pages/usage/components/UsagePageLayout'
 import OverLimitBanner from 'components/pages/usage/components/OverLimitBanner'
 import SectionHeading from 'components/pages/usage/components/SectionHeading'
 import UsageBreakdown, {
@@ -129,7 +129,12 @@ const UsagePage: FC<HarnessProps> = ({
   )}`
 
   return (
-    <UsagePageLayout isError={isError} isLoading={isLoading} onRetry={() => {}}>
+    <UsagePageLayout
+      isError={isError}
+      isLoading={isLoading}
+      // Nothing to refetch here; passed so FailedToLoad renders its button.
+      onRetry={() => {}}
+    >
       {exceeded && <OverLimitBanner over={exceeded} basis={basis} canUpgrade />}
 
       <SectionHeading {...planSectionCopy(basis, limit)} />
