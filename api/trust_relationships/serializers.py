@@ -63,13 +63,9 @@ class TrustRelationshipSerializer(serializers.ModelSerializer[TrustRelationship]
             "created_by",
         )
         read_only_fields = ("id", "created_at", "created_by")
-        # `unique_live_issuer_audience` is conditional on `deleted_at`, which
-        # this serializer does not expose. Since DRF 3.16, condition-aware
-        # unique validation silently drops the auto-generated validator unless
-        # every field the condition references is writable on the serializer,
-        # which would let a duplicate live pair reach the database and 500.
-        # The default manager already scopes to live rows, so validating
-        # against it keeps a soft-deleted pair reusable.
+        # Declared manually — DRF can't auto-generate a validator for
+        # `unique_live_issuer_audience`, whose condition is on `deleted_at`,
+        # a field not writable here. `objects` excludes soft-deleted rows.
         validators = [
             UniqueTogetherValidator(
                 queryset=TrustRelationship.objects.all(),
