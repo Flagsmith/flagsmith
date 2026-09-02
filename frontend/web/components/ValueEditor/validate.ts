@@ -9,8 +9,12 @@ const errorMessage = (e: unknown) =>
 function xmlError(xmlStr: string): string | false {
   const dom = new DOMParser().parseFromString(xmlStr, 'application/xml')
   for (const element of Array.from(dom.querySelectorAll('parsererror'))) {
-    if (element instanceof HTMLElement) {
-      return element.innerText
+    // Chrome puts parsererror in the XHTML namespace, so it is an HTMLElement
+    // with innerText. Firefox uses its own namespace and gives a plain Element
+    // with neither, which is why this reads textContent off Element.
+    const message = element.textContent?.trim()
+    if (message) {
+      return message
     }
   }
   return false
