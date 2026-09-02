@@ -32,6 +32,7 @@ jobs:
         with:
           client-id: ${{ vars.FLAGSMITH_ENGINEERING_GH_APP_ID }}
           private-key: ${{ secrets.FLAGSMITH_ENGINEERING_GH_APP_PRIVATE_KEY }}
+          permission-contents: write
 
       - name: Cloning repo
         uses: actions/checkout@v7
