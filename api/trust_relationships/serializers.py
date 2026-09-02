@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from trust_relationships.models import TrustRelationship
 from trust_relationships.services import (
@@ -62,6 +63,19 @@ class TrustRelationshipSerializer(serializers.ModelSerializer[TrustRelationship]
             "created_by",
         )
         read_only_fields = ("id", "created_at", "created_by")
+        # `unique_live_issuer_audience` is conditional on `deleted_at`, which
+        # this serializer does not expose. Since DRF 3.16, condition-aware
+        # unique validation silently drops the auto-generated validator unless
+        # every field the condition references is writable on the serializer,
+        # which would let a duplicate live pair reach the database and 500.
+        # The default manager already scopes to live rows, so validating
+        # against it keeps a soft-deleted pair reusable.
+        validators = [
+            UniqueTogetherValidator(
+                queryset=TrustRelationship.objects.all(),
+                fields=("issuer", "audience"),
+            )
+        ]
 
     def validate_issuer(self, issuer: str) -> str:
         parsed = urlparse(issuer)
