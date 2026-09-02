@@ -17,6 +17,10 @@ export interface ValueEditorProps {
   // render their own, which is why three different label treatments grew up
   // around this component and none of them named the editor.
   label?: ReactNode
+  // Sits beside the label, past the tooltip icon: a weight, a count, a
+  // status. A sibling rather than label content, so it stays out of the
+  // editor's accessible name.
+  labelAfter?: ReactNode
   labelTooltip?: string
   language?: ValueEditorLanguage
   name?: string
@@ -34,6 +38,7 @@ const ValueEditor: FC<ValueEditorProps> = ({
   className,
   disabled,
   label,
+  labelAfter,
   labelTooltip,
   language: languageProp,
   name,
@@ -79,9 +84,12 @@ const ValueEditor: FC<ValueEditorProps> = ({
       {(label || showControls) && (
         <div className='value-editor__header'>
           {label && (
-            <FieldLabel id={labelId} tooltip={labelTooltip}>
-              {label}
-            </FieldLabel>
+            <div className='value-editor__label'>
+              <FieldLabel id={labelId} tooltip={labelTooltip}>
+                {label}
+              </FieldLabel>
+              {labelAfter}
+            </div>
           )}
           {showControls && (
             <LanguageSelector

@@ -85,6 +85,13 @@
     }
   }
 
+  // Label plus whatever trails it (a weight chip), as one row.
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   &__field {
     position: relative;
   }

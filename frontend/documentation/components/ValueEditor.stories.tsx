@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from 'storybook'
 
 import Constants from 'common/constants'
 import ValueEditor from 'components/ValueEditor'
+import ControlWeightChip from 'components/mv/ControlWeightChip'
 
 const meta: Meta = {
   parameters: { chromatic: { disableSnapshot: false } },
@@ -82,17 +83,13 @@ export const Disabled: Story = {
 // The multivariate control value carries a weight chip and a tooltip, so it is
 // the widest label this component gets. Label and format buttons share one flex
 // row, so they compress rather than overlap.
-const ControlValueLabel = (
-  <span className='d-inline-flex align-items-center'>
-    Control Value
-    <span className='chip chip--xs ml-2'>100%</span>
-  </span>
-)
+const controlWeight = <ControlWeightChip percentage={100} />
 
 export const BadgeLabel: Story = {
   render: () => (
     <Interactive
-      label={ControlValueLabel}
+      label='Control Value'
+      labelAfter={controlWeight}
       labelTooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
       initialValue='DEFAULT_VALUE'
     />
@@ -103,7 +100,8 @@ export const BadgeLabel: Story = {
 export const BadgeLabelNarrow: Story = {
   render: () => (
     <Interactive
-      label={ControlValueLabel}
+      label='Control Value'
+      labelAfter={controlWeight}
       labelTooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
       initialValue='DEFAULT_VALUE'
       width={380}
