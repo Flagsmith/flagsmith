@@ -12,6 +12,7 @@ test.describe('Change Request Tests', () => {
     page,
   }, testInfo) => {
     const {
+      featureValueField,
       assertChangeRequestCount,
       approveChangeRequest,
       assertInputValue,
@@ -73,7 +74,7 @@ test.describe('Change Request Tests', () => {
     log('Create change request by editing feature value')
     await gotoFeatures()
     await gotoFeature(featureName)
-    await setText(byId('featureValue'), 'updated_value')
+    await setText(featureValueField(), 'updated_value')
 
     await createChangeRequest(
       'Update feature value',
@@ -126,7 +127,7 @@ test.describe('Change Request Tests', () => {
     await page.reload({ waitUntil: 'domcontentloaded' })
     await waitForElementVisible('#show-create-feature-btn')
     await gotoFeature(featureName)
-    await expect(page.locator(byId('featureValue'))).toHaveValue('updated_value', { timeout: 15000 })
+    await expect(featureValueField()).toHaveText('updated_value', { timeout: 15000 })
     await closeModal()
 
     log('Verify value via API')

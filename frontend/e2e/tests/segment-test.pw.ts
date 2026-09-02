@@ -84,6 +84,7 @@ const segmentAnyRules = [
 
 test('Segment test 1 - Create, update, and manage segments with multivariate flags @oss', async ({ page }, testInfo) => {
   const {
+      featureValueField,
     addSegmentOverride,
     assertInputValue,
     assertUserFeatureValue,
@@ -204,6 +205,7 @@ test('Segment test 1 - Create, update, and manage segments with multivariate fla
 
 test('Segment test 2 - Test segment priority and overrides @oss', async ({ page }) => {
   const {
+      featureValueField,
     addSegmentOverride,
     addSegmentOverrideConfig,
     assertUserFeatureValue,
@@ -312,6 +314,7 @@ test('Segment test 2 - Test segment priority and overrides @oss', async ({ page 
 
 test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page }, testInfo) => {
   const {
+      featureValueField,
     assertUserFeatureValue,
     click,
     clickUserFeature,
@@ -350,7 +353,7 @@ test('Segment test 3 - Test user-specific feature overrides @oss', async ({ page
 
   log('Edit flag for user')
   await clickUserFeature(REMOTE_CONFIG_FEATURE)
-  await setText(byId('featureValue'), 'small')
+  await setText(featureValueField(), 'small')
   await click('#update-feature-btn')
   await waitAndRefresh() // wait and refresh to avoid issues with data sync from UK -> US in github workflows
   await assertUserFeatureValue(REMOTE_CONFIG_FEATURE, '"small"')
@@ -393,6 +396,7 @@ test('Segment test 4 - Create ANY rule type segment and verify match changes whe
   const ANY_FEATURE = 'any_segment_feature'
   const ANY_SEGMENT = 'any_segment_test'
   const {
+      featureValueField,
     addSegmentOverrideConfig,
     assertUserFeatureValue,
     click,
