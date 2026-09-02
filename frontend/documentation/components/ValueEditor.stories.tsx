@@ -21,7 +21,12 @@ const Interactive = ({
   const [value, setValue] = useState(initialValue)
   return (
     <div style={{ maxWidth: width, padding: 16 }}>
-      <ValueEditor {...props} value={value} onChange={setValue} />
+      <ValueEditor
+        data-test='valueEditor'
+        {...props}
+        value={value}
+        onChange={setValue}
+      />
     </div>
   )
 }

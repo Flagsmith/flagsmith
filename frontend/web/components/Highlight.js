@@ -157,10 +157,12 @@ class Highlight extends React.Component {
             style={this.props.style}
             data-test={this.props['data-test']}
             aria-labelledby={this.props['aria-labelledby']}
-            // Without a role a contenteditable is announced as plain text, and
-            // aria-labelledby has nothing to name.
-            role={this.props.onChange ? 'textbox' : undefined}
-            aria-multiline={this.props.onChange ? true : undefined}
+            // Set by the caller: a value field wants role=textbox so its label
+            // names it, while the code blocks that also use Highlight are not
+            // form controls and pass nothing.
+            role={this.props.role}
+            aria-readonly={this.props['aria-readonly']}
+            aria-multiline={this.props.role === 'textbox' ? true : undefined}
             contentEditable={!!this.props.onChange}
             onBlur={this.onBlur}
             onFocus={this.onFocus}

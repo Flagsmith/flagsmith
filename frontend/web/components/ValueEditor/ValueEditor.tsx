@@ -32,15 +32,10 @@ export interface ValueEditorProps {
   labelAfter?: ReactNode
   labelTooltip?: string
   language?: ValueEditorLanguage
-  name?: string
   onBlur?: () => void
   // A string, not FlagsmithValue: deciding that "123" is a number is the
   // caller's job (Utils.getTypedValue, Utils.valueToFeatureState).
   onChange?: (value: string) => void
-  // placeholder and readOnly only reach the editor under E2E, which swaps
-  // Highlight for a textarea.
-  placeholder?: string
-  readOnly?: boolean
   value?: FlagsmithValue
 }
 
@@ -51,12 +46,8 @@ const ValueEditor: FC<ValueEditorProps> = ({
   labelAfter,
   labelTooltip,
   language: languageProp,
-  name,
   onBlur,
   onChange,
-  onValidityChange,
-  placeholder,
-  readOnly,
   value,
   ...rest
 }) => {
@@ -120,30 +111,18 @@ const ValueEditor: FC<ValueEditorProps> = ({
       <div className='value-editor__field position-relative'>
         {showControls && <CopyValueButton value={text} />}
 
-        {E2E ? (
-          <textarea
-            aria-labelledby={label ? labelId : undefined}
-            data-test={rest['data-test']}
-            disabled={disabled}
-            name={name}
-            onBlur={onBlur}
-            onChange={(e) => onChange?.(e.target.value)}
-            placeholder={placeholder}
-            readOnly={readOnly}
-            value={text}
-          />
-        ) : (
-          <Highlight
-            aria-labelledby={label ? labelId : undefined}
-            data-test={E2E ? rest['data-test'] : ''}
-            disabled={disabled}
-            onChange={disabled ? null : onChange}
-            onBlur={disabled ? null : onBlur}
-            className={language}
-          >
-            {text}
-          </Highlight>
-        )}
+        <Highlight
+          aria-labelledby={label ? labelId : undefined}
+          aria-readonly={disabled || undefined}
+          data-test={rest['data-test']}
+          disabled={disabled}
+          onChange={disabled ? null : onChange}
+          onBlur={disabled ? null : onBlur}
+          role='textbox'
+          className={language}
+        >
+          {text}
+        </Highlight>
       </div>
     </div>
   )
