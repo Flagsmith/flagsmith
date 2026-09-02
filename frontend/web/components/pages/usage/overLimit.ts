@@ -6,14 +6,12 @@ import { allowanceWindowLabel, isBilledOnAPeriod, UsageBasis } from './utils'
 
 export type OverLimit = {
   limit: number
-  /** Calls served beyond the plan limit. */
   overBy: number
-  /** The day the running total passed the limit, if it is in the data. */
+  /** Undefined when the rows do not cover the crossing. */
   crossedOn: string | undefined
 }
 
-// Read off the same running total the chart draws, so the day named here and
-// the point the line crosses the ceiling cannot disagree.
+// Same running total the chart draws, so the two cannot disagree.
 export const limitCrossedOn = (
   data: Res['organisationUsage'] | undefined,
   limit: PlanLimit,
@@ -33,10 +31,8 @@ export const overLimitOf = (
     ? { crossedOn: limitCrossedOn(data, limit), limit, overBy: total - limit }
     : undefined
 
-// Overages are only ever billed against a Chargebee billing term, so an
-// organisation on a rolling window cannot be charged for one and must not be
-// warned about it. Whether the ones that can are charged or covered by the
-// grace period is #8264, which needs the API to say so, so this still hedges.
+// Overages are only billed against a Chargebee term, so a rolling window
+// cannot be charged for one. Charged or covered by grace is #8264.
 const chargeWarning = (basis: UsageBasis): string =>
   isBilledOnAPeriod(basis)
     ? ` Overage charges may apply over ${allowanceWindowLabel(basis)}.`

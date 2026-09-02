@@ -97,8 +97,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         )
       : undefined
 
-  // Being over the limit outranks the project's share of usage: the slot holds
-  // one line and only one of them is urgent.
+  // One line, so being over the limit outranks the project's share.
   const meterNote = exceeded ? overLimitNote(exceeded) : contribution
 
   if (!organisationId) {
@@ -115,9 +114,8 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         usage.retry()
       }}
     >
-      {/* Restriction only ever applies to a free plan, so a paid organisation
-          over its limit keeps serving flags and this only reports the
-          overage. */}
+      {/* Only free plans are ever restricted, so this reports the overage
+          alone. */}
       {exceeded && (
         <OverLimitBanner
           over={exceeded}

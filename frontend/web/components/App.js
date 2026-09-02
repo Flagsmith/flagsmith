@@ -39,8 +39,8 @@ const isRoute = (pathname, path) =>
 const isUsagePage = (pathname) =>
   isRoute(pathname, routes['organisation-usage'])
 
-// A blocked organisation keeps the organisations list, so it can switch away,
-// and the usage page, which is where it finds out why it was blocked.
+// Blocked keeps the organisations list, to switch away, and the usage page,
+// which explains the block.
 const isAllowedWhileBlocked = (pathname) =>
   isRoute(pathname, routes.organisations) || isUsagePage(pathname)
 
@@ -371,9 +371,7 @@ const App = class extends Component {
                     />
                     {user && (
                       <>
-                        {/* The usage page says the same thing with the
-                            figures to back it up, so the global banner would
-                            only repeat it. */}
+                        {/* The usage page says this itself, with figures. */}
                         {!isUsagePage(pathname) && (
                           <OrganisationLimit
                             id={AccountStore.getOrganisation()?.id}

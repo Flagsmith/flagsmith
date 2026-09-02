@@ -6,7 +6,7 @@ import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
 
 export type UsageExplorerProps = {
   data: Res['organisationUsage'] | undefined
-  /** The plan ceiling to draw, or nothing when the view cannot be compared. */
+  /** The ceiling to draw, or nothing when the view is not comparable. */
   limit: PlanLimit
   isBillingPeriod: boolean
   periodLabel: string
@@ -15,10 +15,7 @@ export type UsageExplorerProps = {
   breakdown?: ReactNode
 }
 
-/**
- * Everything the period and project filters change. Its own loading state
- * keeps the plan meter above it still while a new period arrives.
- */
+// Its own loading state keeps the meter above it still while a period loads.
 const UsageExplorer: FC<UsageExplorerProps> = ({
   breakdown,
   data,

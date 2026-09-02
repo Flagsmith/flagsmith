@@ -8,10 +8,6 @@ export type UsagePageLayoutProps = {
   children?: ReactNode
 }
 
-/**
- * The page frame: heading, and the two states where there is nothing to lay
- * out. What the dashboard is made of is composed by the caller.
- */
 const UsagePageLayout: FC<UsagePageLayoutProps> = ({
   children,
   isError,

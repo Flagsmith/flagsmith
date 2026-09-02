@@ -15,8 +15,7 @@ type UseUsageData = {
 export type UsageData = {
   /** The period and project on screen. Feeds the chart and the breakdown. */
   scoped: Res['organisationUsage'] | undefined
-  /** The organisation over the window its allowance covers. Feeds the meter
-   * and the over-limit banner. */
+  /** The organisation over the window its allowance covers. */
   allowance: Res['organisationUsage'] | undefined
   isLoadingPlan: boolean
   isLoadingScoped: boolean
@@ -24,8 +23,7 @@ export type UsageData = {
   retry: () => void
 }
 
-// usage-data is throttled at five requests a minute per user, so refetching
-// every time the tab regains focus spends the budget the page needs.
+// usage-data is throttled at five requests a minute per user.
 const OPTIONS = { refetchOnFocus: false }
 
 export const useUsageData = ({
