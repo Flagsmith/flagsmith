@@ -1,6 +1,7 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, ReactNode, useEffect, useId, useState } from 'react'
 import cx from 'classnames'
 
+import FieldLabel from 'components/base/forms/FieldLabel'
 import Highlight from 'components/Highlight'
 import { FlagsmithValue } from 'common/types/responses'
 
@@ -12,6 +13,11 @@ export interface ValueEditorProps {
   className?: string
   'data-test'?: string
   disabled?: boolean
+  // Renders the field's label and wires it to the editor. Callers used to
+  // render their own, which is why three different label treatments grew up
+  // around this component and none of them named the editor.
+  label?: ReactNode
+  labelTooltip?: string
   language?: ValueEditorLanguage
   name?: string
   onBlur?: () => void
@@ -28,6 +34,8 @@ export interface ValueEditorProps {
 const ValueEditor: FC<ValueEditorProps> = ({
   className,
   disabled,
+  label,
+  labelTooltip,
   language: languageProp,
   name,
   onBlur,
@@ -39,6 +47,8 @@ const ValueEditor: FC<ValueEditorProps> = ({
   ...rest
 }) => {
   const [language, setLanguage] = useState<ValueEditorLanguage>('txt')
+  const labelId = useId()
+  const editorId = useId()
   const text = value === undefined || value === null ? '' : `${value}`
 
   // Pick the initial language once: the caller's choice, overridden by JSON
@@ -59,6 +69,7 @@ const ValueEditor: FC<ValueEditorProps> = ({
   // Copy used to be the last item of the language row, so hiding that row hid
   // copy too. It now lives inside the editor, so repeat the conditions.
   const showCopy = !onlyOneLang && !disabled
+  const showLanguages = !onlyOneLang && !disabled
 
   return (
     <div
@@ -68,38 +79,53 @@ const ValueEditor: FC<ValueEditorProps> = ({
         className,
       )}
     >
-      {!onlyOneLang && (
-        <LanguageSelector
-          language={language}
-          onChange={setLanguage}
-          value={text}
-        />
+      {(label || showLanguages) && (
+        <div className='value-editor__header'>
+          {label && (
+            <FieldLabel id={labelId} tooltip={labelTooltip}>
+              {label}
+            </FieldLabel>
+          )}
+          {showLanguages && (
+            <LanguageSelector
+              language={language}
+              onChange={setLanguage}
+              value={text}
+            />
+          )}
+        </div>
       )}
 
-      {showCopy && <CopyValueButton value={text} />}
+      <div className='value-editor__field'>
+        {showCopy && <CopyValueButton value={text} />}
 
-      {E2E ? (
-        <textarea
-          data-test={rest['data-test']}
-          disabled={disabled}
-          name={name}
-          onBlur={onBlur}
-          onChange={(e) => onChange?.(e.target.value)}
-          placeholder={placeholder}
-          readOnly={readOnly}
-          value={text}
-        />
-      ) : (
-        <Highlight
-          data-test={E2E ? rest['data-test'] : ''}
-          disabled={disabled}
-          onChange={disabled ? null : onChange}
-          onBlur={disabled ? null : onBlur}
-          className={language}
-        >
-          {text}
-        </Highlight>
-      )}
+        {E2E ? (
+          <textarea
+            aria-labelledby={label ? labelId : undefined}
+            data-test={rest['data-test']}
+            disabled={disabled}
+            id={editorId}
+            name={name}
+            onBlur={onBlur}
+            onChange={(e) => onChange?.(e.target.value)}
+            placeholder={placeholder}
+            readOnly={readOnly}
+            value={text}
+          />
+        ) : (
+          <Highlight
+            aria-labelledby={label ? labelId : undefined}
+            data-test={E2E ? rest['data-test'] : ''}
+            disabled={disabled}
+            id={editorId}
+            onChange={disabled ? null : onChange}
+            onBlur={disabled ? null : onBlur}
+            className={language}
+          >
+            {text}
+          </Highlight>
+        )}
+      </div>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import React, { FC, ReactNode } from 'react'
+import React, { FC } from 'react'
 import ValueEditor from 'components/ValueEditor'
 import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
@@ -39,17 +39,6 @@ interface VariationOptionsProps {
   weightTitle: string
 }
 
-interface ValueRowLabelProps {
-  children: ReactNode
-}
-
-// Each row shows a bare value, so it needs saying which value it is.
-const ValueRowLabel: FC<ValueRowLabelProps> = ({ children }) => (
-  <div className='mb-2'>
-    <span className='h6 mb-0 font-weight-semibold'>{children}</span>
-  </div>
-)
-
 export const VariationOptions: FC<VariationOptionsProps> = ({
   apiErrors,
   canCreateFeature,
@@ -87,10 +76,10 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
       {select && !!unmatchedOverride && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
-            <ValueRowLabel>Current override</ValueRowLabel>
             <Row>
               <Flex>
                 <ValueEditor
+                  label='Current override'
                   disabled
                   value={Utils.getTypedValue(unmatchedOverride.value)}
                 />
@@ -113,10 +102,10 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
       {select && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
-            <ValueRowLabel>Control value</ValueRowLabel>
             <Row>
               <Flex>
                 <ValueEditor
+                  label='Control value'
                   disabled
                   value={Utils.getTypedValue(controlValue)}
                 />
@@ -159,12 +148,10 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
         return select ? (
           <div key={i} className='panel panel--flat panel-without-heading mb-2'>
             <div className='panel-content'>
-              <ValueRowLabel>
-                {theValue.key || Utils.getDefaultVariantKey(i)}
-              </ValueRowLabel>
               <Row>
                 <Flex>
                   <ValueEditor
+                    label={theValue.key || Utils.getDefaultVariantKey(i)}
                     disabled={true}
                     value={Utils.getTypedValue(
                       Utils.featureStateToValue(theValue),

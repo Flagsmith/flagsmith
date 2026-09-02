@@ -375,10 +375,9 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
       {showValue && (
         <FormGroup className='mb-4'>
           <div className='form-group'>
-            <FieldLabel tooltip={getValueTooltip(hasVariations, isEdit)}>
-              {valueTitle}
-            </FieldLabel>
             <ValueEditor
+              label={valueTitle}
+              labelTooltip={getValueTooltip(hasVariations, isEdit)}
               data-test='featureValue'
               name='featureValue'
               className={`full-width${hasVariations ? ' code-medium' : ''}`}
@@ -387,11 +386,10 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                   ? ''
                   : initial_value
               }`}
-              onChange={(e: any) => {
-                const feature_state_value = Utils.getTypedValue(
-                  Utils.safeParseEventValue(e),
-                )
-                onEnvironmentFlagChange({ feature_state_value })
+              onChange={(newValue: string) => {
+                onEnvironmentFlagChange({
+                  feature_state_value: Utils.getTypedValue(newValue),
+                })
               }}
               disabled={isDisabled}
               placeholder="e.g. 'big' "
