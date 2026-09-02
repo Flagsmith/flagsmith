@@ -1,5 +1,49 @@
 # Changelog
 
+## [2.269.0](https://github.com/Flagsmith/flagsmith/compare/v2.268.0...v2.269.0) (2026-09-02)
+
+
+### Features
+
+* allow uppercase characters in trait keys ([#8403](https://github.com/Flagsmith/flagsmith/issues/8403)) ([4d39c39](https://github.com/Flagsmith/flagsmith/commit/4d39c392124aff651bfaf86e458055e71cc025e2))
+* cohort segment detail view with CSV re-synchronisation ([#8387](https://github.com/Flagsmith/flagsmith/issues/8387)) ([7cb90aa](https://github.com/Flagsmith/flagsmith/commit/7cb90aaa130608b5407c46655080fbe516dee2c5))
+* cohort synchronisation keys and provider connect modals ([#8420](https://github.com/Flagsmith/flagsmith/issues/8420)) ([9dd6141](https://github.com/Flagsmith/flagsmith/commit/9dd6141319fcdc96327d756295660566353ecbf5))
+* **cohorts:** expose sync state and allow updating the managed segment ([#8386](https://github.com/Flagsmith/flagsmith/issues/8386)) ([bbc4bd1](https://github.com/Flagsmith/flagsmith/commit/bbc4bd1e37d843124a76622189a90fc84d50bdeb))
+* generic cohort sync webhook ([#8380](https://github.com/Flagsmith/flagsmith/issues/8380)) ([0f0e09a](https://github.com/Flagsmith/flagsmith/commit/0f0e09a4f0da167bd31c13ae03a1fcad94d12680))
+* **ingestion:** Deny non-HTTPS traffic to S3 buckets ([#8411](https://github.com/Flagsmith/flagsmith/issues/8411)) ([8044b6d](https://github.com/Flagsmith/flagsmith/commit/8044b6d5419c4f2934a3df0e317edc812e94b709))
+* **sdk:** Add flag dependencies to the evaluation context ([#8396](https://github.com/Flagsmith/flagsmith/issues/8396)) ([58eb348](https://github.com/Flagsmith/flagsmith/commit/58eb34890f79b5574d82e9c9b66f9ff2668596d6))
+
+
+### Bug Fixes
+
+* 500 creating a cohort sync key with a master API key ([#8390](https://github.com/Flagsmith/flagsmith/issues/8390)) ([17243dc](https://github.com/Flagsmith/flagsmith/commit/17243dc6725fcb2efe8ff36b07b63f08658d7232))
+* Amplitude list creation response shape ([#8402](https://github.com/Flagsmith/flagsmith/issues/8402)) ([e7ffc35](https://github.com/Flagsmith/flagsmith/commit/e7ffc3565a96e5b5f1118b404b5aa74b25bf7d6c))
+* hide Try it out until the project has 3+ flags ([#8419](https://github.com/Flagsmith/flagsmith/issues/8419)) ([50e0309](https://github.com/Flagsmith/flagsmith/commit/50e0309871702c691c84c7f37310dfee3080a10f))
+* project admin feature import permissions ([#8421](https://github.com/Flagsmith/flagsmith/issues/8421)) ([cf77245](https://github.com/Flagsmith/flagsmith/commit/cf772452ab3e4d33161565bc5514dbd2c604dca4))
+* queue membership count refreshes for cohort segments ([#8438](https://github.com/Flagsmith/flagsmith/issues/8438)) ([37b5bdf](https://github.com/Flagsmith/flagsmith/commit/37b5bdff18047150fe4d52e26a319acc46f2aa11))
+* return only listId from Amplitude list creation ([#8400](https://github.com/Flagsmith/flagsmith/issues/8400)) ([e252a36](https://github.com/Flagsmith/flagsmith/commit/e252a363a9ccb297d350ea95d2bc3bd5561d34fa))
+* return the Amplitude list ID at every depth their parsers read ([#8399](https://github.com/Flagsmith/flagsmith/issues/8399)) ([ab19267](https://github.com/Flagsmith/flagsmith/commit/ab19267f822328df2e2d3e41676a465e00df5958))
+* **usage:** separate the plan meter from the filters ([#8357](https://github.com/Flagsmith/flagsmith/issues/8357)) ([93a6d02](https://github.com/Flagsmith/flagsmith/commit/93a6d02565fbb5a510f4579a3733bcc1e22fde73))
+
+
+### Dependency Updates
+
+* Bump flagsmith to 6.2.3 ([#8423](https://github.com/Flagsmith/flagsmith/issues/8423)) ([798b675](https://github.com/Flagsmith/flagsmith/commit/798b675fe0ff6e22489e96602df509eda4f0cae5))
+* Bump flagsmith-flag-engine to 11.0.0 ([#8410](https://github.com/Flagsmith/flagsmith/issues/8410)) ([c3cfb47](https://github.com/Flagsmith/flagsmith/commit/c3cfb47e7a23d2f399a9af8fa7a1f1b0bdd466e9))
+
+
+### CI
+
+* **frontend-deploy:** announce a deploy when it starts ([#8398](https://github.com/Flagsmith/flagsmith/issues/8398)) ([894bfa4](https://github.com/Flagsmith/flagsmith/commit/894bfa425db7552789d58b5dd9e07016cb5a8356))
+* **frontend-deploy:** report every deploy outcome in one Slack message ([#8371](https://github.com/Flagsmith/flagsmith/issues/8371)) ([cb66498](https://github.com/Flagsmith/flagsmith/commit/cb6649807a57329365fced2499258142b47c76b9))
+
+
+### Refactoring
+
+* **forms:** adopt FieldLabel and FieldError for hand-rolled labels ([#8117](https://github.com/Flagsmith/flagsmith/issues/8117)) ([cf98e07](https://github.com/Flagsmith/flagsmith/commit/cf98e0738d5796cf7b18efe923aeb4ceb8548781))
+* **styles:** diff view and code theme on shared tokens ([#8069](https://github.com/Flagsmith/flagsmith/issues/8069)) ([76da16c](https://github.com/Flagsmith/flagsmith/commit/76da16c557008a3bd9366c753f0e9ce5d3a1006f))
+* **types:** name the trait value shape ([#8366](https://github.com/Flagsmith/flagsmith/issues/8366)) ([bce2bf4](https://github.com/Flagsmith/flagsmith/commit/bce2bf4c79b79342483b436655e2eebaeb6c971d))
+
 ## [2.268.0](https://github.com/Flagsmith/flagsmith/compare/v2.267.0...v2.268.0) (2026-08-27)
 
 
