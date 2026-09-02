@@ -73,17 +73,9 @@
     position: absolute;
     top: -24px;
     right: 0;
-    .active {
-      span {
-        margin: 0;
-        opacity: 1;
-        color: var(--color-text-default);
-      }
-      .language-icon {
-        color: var(--color-text-default);
-      }
-    }
-    span {
+    // The format labels are buttons. BareButton resets them at zero
+    // specificity, so these rules win without needing to out-specify it.
+    .bare-btn {
       display: flex;
       align-items: center;
       gap: 2px;
@@ -95,6 +87,17 @@
         color: var(--color-text-default);
         font-weight: 500;
       }
+    }
+    .active .language-icon {
+      margin: 0;
+      opacity: 1;
+      // Keeps the tick and warning in body colour, which is how they have
+      // always rendered. It does mean .text-success/.text-danger never show.
+      color: var(--color-text-default);
+    }
+    .language-icon {
+      display: flex;
+      align-items: center;
     }
   }
 }

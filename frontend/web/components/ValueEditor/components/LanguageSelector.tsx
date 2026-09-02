@@ -1,6 +1,8 @@
 import React, { FC, MouseEvent } from 'react'
 import cx from 'classnames'
 
+import BareButton from 'components/base/forms/BareButton'
+
 import {
   LANGUAGES,
   LANGUAGE_LABELS,
@@ -20,24 +22,23 @@ const LanguageSelector: FC<LanguageSelectorProps> = ({
   onChange,
   value,
 }) => (
-  <Row className='select-language gap-1'>
+  <Row className='select-language gap-1' role='group' aria-label='Value format'>
     {LANGUAGES.map((option) => (
-      <span
+      <BareButton
         key={option}
-        // mousedown, not click: the editor is contenteditable and a click
-        // would blur it before the language change lands.
-        onMouseDown={(e: MouseEvent) => {
-          e.preventDefault()
-          e.stopPropagation()
-          onChange(option)
-        }}
+        // The editor is contenteditable, and pressing down on a button would
+        // blur it. preventDefault keeps the caret where it was; the click
+        // still fires, so the keyboard path works too.
+        onMouseDown={(e: MouseEvent) => e.preventDefault()}
+        onClick={() => onChange(option)}
+        aria-pressed={language === option}
         className={cx(option, { active: language === option })}
       >
         {LANGUAGE_LABELS[option]}{' '}
         {option !== 'txt' && language === option && (
           <LanguageValidation language={option} value={value} />
         )}
-      </span>
+      </BareButton>
     ))}
   </Row>
 )
