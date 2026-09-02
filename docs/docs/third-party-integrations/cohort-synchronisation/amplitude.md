@@ -31,14 +31,15 @@ application uses as the Flagsmith [identity](/flagsmith-concepts/identities) ide
 
 ## 2. Add Flagsmith as a destination in Amplitude
 
-1. In Amplitude, go to **Data > Destinations** and find **Flagsmith** in the cohort destinations catalogue.
-2. Add the destination and paste your synchronisation key into the **API Key** field.
-3. Give the destination a recognisable name — including the Flagsmith environment name is a good idea, since the key
+1. In Amplitude, go to **Data > Catalog > Destinations** and find **Flagsmith** in the cohort destinations catalogue.
+2. Give the destination a recognisable name — including the Flagsmith environment name is a good idea, since the key
    determines which environment cohorts are synchronised into.
+3. Paste your synchronisation key into the **Cohort sync api key** field.
+4. Check the **Identifier Mapping**: Amplitude's **User ID** must map to the Flagsmith **Identifier**.
 
 ![Amplitude destination catalogue showing Flagsmith](/img/cohort-synchronisation/amplitude-destination-catalogue.png)
 
-<!-- Screenshot: Amplitude Flagsmith destination configuration with the API Key field -->
+![Amplitude Flagsmith destination configuration](/img/cohort-synchronisation/amplitude-destination-config.png)
 
 ## 3. Synchronise a cohort
 
@@ -46,8 +47,6 @@ application uses as the Flagsmith [identity](/flagsmith-concepts/identities) ide
 2. Select your Flagsmith destination.
 3. Choose the sync cadence. Scheduled and real-time syncs keep the Flagsmith segment up to date automatically; a
    one-time sync sends the current membership once.
-
-<!-- Screenshot: Amplitude cohort sync dialog with the Flagsmith destination selected -->
 
 Shortly after the first sync, a segment named after your cohort appears on the **Segments** page of your project, ready
 to be used in [segment overrides](/third-party-integrations/cohort-synchronisation#using-a-synchronised-segment).
