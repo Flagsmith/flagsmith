@@ -4,6 +4,7 @@ import typing
 from uuid import UUID
 
 import structlog
+from django.conf import settings
 from django.db import transaction
 from django.db.models import F, QuerySet
 from django.utils import timezone
@@ -158,6 +159,13 @@ def create_cohort(
         project__id=environment.project_id,
         organisation__id=environment.project.organisation_id,
     )
+    if settings.CLICKHOUSE_ENABLED:
+        from segment_membership.services import enqueue_membership_refresh
+
+        # The segment is created directly rather than through the segment
+        # serializer, which is where membership count refreshes are normally
+        # queued from.
+        enqueue_membership_refresh(environment.project)
     return cohort
 
 
