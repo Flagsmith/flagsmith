@@ -34,14 +34,10 @@ import { routes } from 'web/routes'
 import 'project/darkMode'
 
 // Blocked keeps the organisations list, to switch away, and the usage page,
-// which explains the block.
-const ALLOWED_WHILE_BLOCKED = [
-  routes.organisations,
-  routes['organisation-usage'],
-]
-
+// which explains the block. Read inside the function, not at module level:
+// web/routes imports this file, so routes is still empty while this one runs.
 const isAllowedWhileBlocked = (pathname) =>
-  ALLOWED_WHILE_BLOCKED.some((path) =>
+  [routes.organisations, routes['organisation-usage']].some((path) =>
     matchPath(pathname, { exact: true, path, strict: false }),
   )
 
