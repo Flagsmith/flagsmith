@@ -76,7 +76,6 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
             data-test={`featureVariationValue${
               Utils.featureStateToValue(value) || index
             }`}
-            name='featureValue'
             className='full-width code-medium'
             value={Utils.getTypedValue(Utils.featureStateToValue(value))}
             disabled={!canCreateFeature || disabled || readOnly}
@@ -97,7 +96,6 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
                 ...Utils.valueToFeatureState(newValue, false),
               })
             }}
-            placeholder="e.g. 'big' "
           />,
         )}
       </div>

@@ -34,17 +34,11 @@ export interface ValueEditorProps {
   labelAfter?: ReactNode
   labelTooltip?: string
   language?: ValueEditorLanguage
-  name?: string
   onBlur?: () => void
   // The edited text. Deliberately a string, not FlagsmithValue: this edits
   // text, and deciding that "123" is a number is Flagsmith's domain logic.
   // Callers interpret it (Utils.getTypedValue, Utils.valueToFeatureState).
   onChange?: (value: string) => void
-  // placeholder and readOnly only reach the editor under E2E, which swaps
-  // Highlight for a plain textarea. Highlight renders its own
-  // 'Enter a value...' and stops accepting input while disabled.
-  placeholder?: string
-  readOnly?: boolean
   // Fires when the value stops or starts parsing under the active format.
   onValidityChange?: (error: string | false) => void
   value?: FlagsmithValue
@@ -57,11 +51,8 @@ const ValueEditor: FC<ValueEditorProps> = ({
   labelAfter,
   labelTooltip,
   language: languageProp,
-  name,
   onBlur,
   onChange,
-  placeholder,
-  readOnly,
   onValidityChange,
   value,
   ...rest
@@ -137,30 +128,18 @@ const ValueEditor: FC<ValueEditorProps> = ({
       <div className='value-editor__field'>
         {showControls && <CopyValueButton value={text} />}
 
-        {E2E ? (
-          <textarea
-            aria-labelledby={label ? labelId : undefined}
-            data-test={rest['data-test']}
-            disabled={disabled}
-            name={name}
-            onBlur={onBlur}
-            onChange={(e) => onChange?.(e.target.value)}
-            placeholder={placeholder}
-            readOnly={readOnly}
-            value={text}
-          />
-        ) : (
-          <Highlight
-            aria-labelledby={label ? labelId : undefined}
-            data-test={E2E ? rest['data-test'] : ''}
-            disabled={disabled}
-            onChange={disabled ? null : onChange}
-            onBlur={disabled ? null : onBlur}
-            className={language}
-          >
-            {text}
-          </Highlight>
-        )}
+        <Highlight
+          aria-labelledby={label ? labelId : undefined}
+          aria-readonly={disabled || undefined}
+          data-test={rest['data-test']}
+          disabled={disabled}
+          onChange={disabled ? null : onChange}
+          onBlur={disabled ? null : onBlur}
+          role='textbox'
+          className={language}
+        >
+          {text}
+        </Highlight>
       </div>
     </div>
   )
