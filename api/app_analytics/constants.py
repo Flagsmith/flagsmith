@@ -37,6 +37,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "unknown",
         "5.0.0",
         "5.1.0",
+        "5.2.0",
     ],
     "flagsmith-java-sdk": [
         "unknown",
@@ -54,6 +55,8 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "12.0.1",
         "12.1.0",
         "12.1.2",
+        "12.2.0",
+        "12.3.0",
     ],
     "flagsmith-kotlin-android-sdk": [
         "unknown",
@@ -71,6 +74,8 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "8.1.1",
         "8.1.2",
         "9.0.0",
+        "9.0.1",
+        "9.0.2",
     ],
     "flagsmith-php-sdk": [
         "unknown",
@@ -93,6 +98,10 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "5.5.0",
         "6.0.0",
         "6.1.0",
+        "6.2.0",
+        "6.2.1",
+        "6.2.2",
+        "6.2.3",
     ],
     "flagsmith-ruby-sdk": [
         "unknown",
@@ -102,6 +111,9 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "unknown",
         "2.1.0",
         "2.1.1",
+        "3.0.0",
+        "3.1.0",
+        "3.1.1",
     ],
     "flagsmith-swift-ios-sdk": [
         "unknown",

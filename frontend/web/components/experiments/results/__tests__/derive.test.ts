@@ -7,6 +7,8 @@ import {
   LiftTone,
   deriveSummary,
   formatBucketLabel,
+  formatChancePct,
+  getControlChanceToWin,
   getHeadlineTotal,
   getVariantIdentities,
   getVariantTotals,
@@ -289,6 +291,28 @@ describe('getWinningVariant', () => {
   })
 })
 
+describe('getControlChanceToWin', () => {
+  it('infers the control chance from the treatment chances', () => {
+    expect(getControlChanceToWin(losingMetricResult, identities)).toBeCloseTo(
+      0.85,
+    )
+  })
+
+  it('clamps the control chance at zero when treatment chances exceed one', () => {
+    expect(getControlChanceToWin(metricResult, identities)).toBe(0)
+  })
+
+  it.each<[string, BayesianMetricResult['inference']]>([
+    ['no treatment', {}],
+    ['only some treatments', { b: metricResult.inference.b }],
+    ['a null-inference treatment', { b: metricResult.inference.b, c: null }],
+  ])('returns null when %s has inference data', (_, inference) => {
+    expect(
+      getControlChanceToWin({ ...metricResult, inference }, identities),
+    ).toBeNull()
+  })
+})
+
 describe('deriveSummary', () => {
   const experiment: Experiment = {
     created_at: '2026-06-01T00:00:00Z',
@@ -325,22 +349,42 @@ describe('deriveSummary', () => {
   it('summarises the winning treatment with its lift vs control', () => {
     expect(deriveSummary(experiment, results(metricResult))).toMatchObject({
       chanceToBest: '75%',
+      chanceToBestHigh: false,
       controlWins: false,
+      liftLabel: 'Lift vs control',
       liftTone: 'success',
-      liftVsControl: '+8.0%',
+      liftValue: '+8.0%',
       winnerName: 'b',
     })
   })
 
-  it('summarises control as the winner with a baseline lift', () => {
+  it('summarises a winning control with the best treatment lift negated', () => {
     expect(
       deriveSummary(experiment, results(losingMetricResult)),
     ).toMatchObject({
       chanceToBest: '85%',
       controlWins: true,
-      liftTone: 'neutral',
-      liftVsControl: 'Baseline',
+      liftLabel: 'Control vs best variant',
+      liftTone: 'success',
+      liftValue: '+9.0%',
       winnerName: 'Control',
+    })
+  })
+
+  it('caps the winning control lead at +100% when a treatment collapses to zero', () => {
+    const wipedOut: BayesianMetricResult = {
+      ...losingMetricResult,
+      inference: {
+        b: { chance_to_win: 0.05, ci_high: -0.9, ci_low: -1, lift: -1 },
+        c: { chance_to_win: 0.03, ci_high: -0.3, ci_low: -0.7, lift: -0.5 },
+      },
+    }
+    expect(deriveSummary(experiment, results(wipedOut))).toMatchObject({
+      chanceToBestHigh: true,
+      controlWins: true,
+      liftLabel: 'Control vs best variant',
+      liftTone: 'success',
+      liftValue: '+100.0%',
     })
   })
 
@@ -359,6 +403,20 @@ describe('deriveSummary', () => {
       expect(deriveSummary(exp, results(metricResult))?.liftTone).toBe(tone)
     },
   )
+})
+
+describe('formatChancePct', () => {
+  it.each<[number, string]>([
+    [1, '> 99%'],
+    [0.996, '> 99%'],
+    [0.994, '99%'],
+    [0.75, '75%'],
+    [0.006, '1%'],
+    [0.004, '< 1%'],
+    [0, '< 1%'],
+  ])('formats a %d chance as %s', (chance, expected) => {
+    expect(formatChancePct(chance)).toBe(expected)
+  })
 })
 
 describe('isLiftFavourable', () => {

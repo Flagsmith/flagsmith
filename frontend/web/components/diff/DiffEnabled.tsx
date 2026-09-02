@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
-import classNames from 'classnames'
 import Switch from 'components/Switch'
+import DiffRow from './DiffRow'
 
 type DiffType = {
   oldValue: boolean
@@ -21,22 +21,12 @@ const DiffEnabled: FC<DiffType> = ({ newValue, oldValue }) => {
   }
   return (
     <>
-      <div className={'flex-row'}>
-        <div className='react-diff-marker react-diff-marker--removed'>
-          <pre>-</pre>
-        </div>
-        <div className='react-diff-line react-diff-line--removed pe-2 flex-fill'>
-          <Switch checked={oldValue} />
-        </div>
-      </div>
-      <div className={'flex-row'}>
-        <div className='react-diff-marker react-diff-marker--added'>
-          <pre>+</pre>
-        </div>
-        <div className='react-diff-line react-diff-line--added pe-2 flex-fill'>
-          <Switch checked={newValue} />
-        </div>
-      </div>
+      <DiffRow state='removed'>
+        <Switch checked={oldValue} />
+      </DiffRow>
+      <DiffRow state='added'>
+        <Switch checked={newValue} />
+      </DiffRow>
     </>
   )
 }

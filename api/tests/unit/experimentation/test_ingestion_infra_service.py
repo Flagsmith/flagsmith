@@ -1,3 +1,4 @@
+import json
 from collections.abc import Iterator
 from typing import Any
 
@@ -92,6 +93,21 @@ def test_provision_ingestion_infrastructure__fresh_account__creates_bucket_and_s
     tagging = s3.get_bucket_tagging(Bucket=result.bucket_name)
     assert tagging["TagSet"] == [{"Key": "organisation_id", "Value": "42"}]
 
+    policy = json.loads(s3.get_bucket_policy(Bucket=result.bucket_name)["Policy"])
+    assert policy["Statement"] == [
+        {
+            "Sid": "AllowSSLRequestsOnly",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:*",
+            "Resource": [
+                f"arn:aws:s3:::{result.bucket_name}",
+                f"arn:aws:s3:::{result.bucket_name}/*",
+            ],
+            "Condition": {"Bool": {"aws:SecureTransport": "false"}},
+        }
+    ]
+
     firehose = boto3.client("firehose", region_name="eu-west-2")
     stream = firehose.describe_delivery_stream(DeliveryStreamName=result.stream_name)[
         "DeliveryStreamDescription"
@@ -157,6 +173,10 @@ def test_provision_ingestion_infrastructure__fresh_account__creates_bucket_and_s
     assert stream_tags["Tags"] == [{"Key": "organisation_id", "Value": "42"}]
 
     logs = boto3.client("logs", region_name="eu-west-2")
+    log_groups = logs.describe_log_groups(
+        logGroupNamePrefix="/aws/kinesisfirehose/events-ingestion-org-42",
+    )["logGroups"]
+    assert [group["retentionInDays"] for group in log_groups] == [365]
     log_streams = logs.describe_log_streams(
         logGroupName="/aws/kinesisfirehose/events-ingestion-org-42",
     )["logStreams"]

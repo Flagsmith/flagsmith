@@ -9,7 +9,10 @@ from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
 from projects.models import Project
 from tests.types import WithProjectPermissionsCallable
-from users.models import FFAdminUser, UserPermissionGroup
+from users.models import (
+    FFAdminUser,
+    UserPermissionGroup,
+)
 
 
 def test_belongs_to__user_in_organisation__returns_true(
@@ -70,7 +73,7 @@ def test_get_admin_organisations__user_with_mixed_roles__returns_only_admin_orgs
     admin_user.add_organisation(non_admin_organisation, OrganisationRole.USER)
 
     # When
-    admin_orgs = admin_user.get_admin_organisations()  # type: ignore[no-untyped-call]
+    admin_orgs = admin_user.get_admin_organisations()
 
     # Then
     assert organisation in admin_orgs

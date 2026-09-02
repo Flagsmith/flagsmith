@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import time
 import typing
 from dataclasses import replace
@@ -11,10 +13,10 @@ from clickhouse_driver import Client
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
 from django.core.cache import cache
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import timezone
-from flag_engine.segments.constants import PERCENTAGE_SPLIT
+from flag_engine.segments.constants import ALL_RULE, PERCENTAGE_SPLIT
 from rest_framework.exceptions import ValidationError
 
 from audit.models import AuditLog
@@ -42,6 +44,7 @@ from experimentation.dataclasses import (
     ResultsAggregates,
     ResultsSummary,
     RolloutSpec,
+    WarehouseEventNames,
     WarehouseEventStats,
 )
 from experimentation.metrics import (
@@ -55,6 +58,7 @@ from experimentation.models import (
     ExperimentStatus,
     MetricAggregation,
     MetricDirection,
+    WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseDeliveryLog,
     WarehouseDeliveryOutcome,
@@ -67,8 +71,9 @@ from experimentation.stats import (
     compare_to_control,
     srm_p_value,
 )
+from features.feature_states.models import API_VALUE_TYPES
 from features.models import FeatureState
-from features.value_types import BOOLEAN, INTEGER, STRING
+from features.value_types import BOOLEAN, STRING
 from features.versioning.dataclasses import FlagChangeSet, MultivariateValueChangeSet
 from features.versioning.versioning_service import (
     get_environment_flags_list,
@@ -78,11 +83,8 @@ from features.versioning.versioning_service import (
 from integrations.flagsmith.client import get_openfeature_client
 from segments.models import Condition, Segment, SegmentRule
 
-_ROLLOUT_VALUE_TYPE: dict[str, "FeatureValueType"] = {
-    INTEGER: "integer",
-    STRING: "string",
-    BOOLEAN: "boolean",
-}
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
 
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
@@ -90,7 +92,8 @@ if typing.TYPE_CHECKING:
 
     from clickhouse_connect.driver.client import Client as ClickHouseHTTPClient
 
-    from experimentation.models import Metric, WarehouseConnection
+    from environments.models import Environment
+    from experimentation.models import Metric
     from experimentation.types import ExposureGranularity
     from features.feature_states.models import FeatureValueType
     from features.models import FeatureStateValue
@@ -101,10 +104,29 @@ logger = structlog.get_logger("warehouse")
 
 CLICKHOUSE_CONNECT_TIMEOUT_SECONDS = 5
 CLICKHOUSE_QUERY_TIMEOUT_SECONDS = 30
+CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS = 120
 CLICKHOUSE_VERIFY_TIMEOUT_SECONDS = 5
+CLICKHOUSE_EVENT_NAMES_TIMEOUT_SECONDS = 15
 CUSTOMER_EVENT_STATS_CACHE_SECONDS = 60
+EVENT_NAMES_CACHE_SECONDS = 300
+CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS = 60
+WAREHOUSE_EVENT_NAMES_LIMIT = 500
 
-_CUSTOMER_EVENT_STATS_UNAVAILABLE = "unavailable"
+_CUSTOMER_EVENT_UNAVAILABLE = "unavailable"
+
+
+def _customer_cache_key(kind: str, connection: "WarehouseConnection") -> str:
+    """Key cached warehouse reads by the connection's non-secret details, so a
+    config or type change can neither serve nor store stale reads. Credentials
+    stay out of the key material: they don't determine what the warehouse
+    holds, so rotating them keeps the cache valid."""
+    details = json.dumps(
+        [connection.warehouse_type, connection.config],
+        sort_keys=True,
+    )
+    digest = hashlib.sha256(details.encode()).hexdigest()[:12]
+    return f"experimentation:customer_{kind}:{connection.id}:{digest}"
+
 
 # A delivery run stops taking on new objects after this long, leaving room for
 # the slowest possible in-flight insert to still land inside the task timeout.
@@ -127,31 +149,130 @@ def is_experiment_feature_enabled(organisation: Organisation) -> bool:
     )
 
 
-@lru_cache(maxsize=1)
-def _get_clickhouse_client() -> Client:
+def get_experiment_flag_config(
+    organisation: Organisation,
+) -> dict[str, object]:
+    if not is_experiment_feature_enabled(organisation):
+        return {}
+    raw = get_openfeature_client().get_string_value(
+        EXPERIMENT_FLAG,
+        default_value="{}",
+        evaluation_context=organisation.openfeature_evaluation_context,
+    )
+    try:
+        parsed = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def ensure_flagsmith_warehouse_connection(
+    environment: Environment,
+) -> WarehouseConnection | None:
+    config = get_experiment_flag_config(environment.project.organisation)
+    if not config.get("auto_connect_warehouse"):
+        return None
+
+    if WarehouseConnection.objects.filter(
+        environment=environment,
+        deleted_at__isnull=True,
+    ).exists():
+        return None
+
+    try:
+        connection: WarehouseConnection = WarehouseConnection.objects.create(
+            environment=environment,
+            warehouse_type=WarehouseType.FLAGSMITH,
+            name="Flagsmith",
+        )
+        return connection
+    except IntegrityError:
+        return None
+
+
+@lru_cache(maxsize=2)
+def _get_clickhouse_client(
+    send_receive_timeout: int = CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
+) -> Client:
     """Build a clickhouse-driver client for the experimentation event store.
 
     The database is taken from the DSN path, so queries can reference the
     `events` table unqualified. Connect and query timeouts are bounded unless the
-    DSN overrides them.
+    DSN overrides them. One client is cached per requested timeout.
     """
     host, kwargs = parse_url(settings.EXPERIMENTATION_CLICKHOUSE_URL)
     kwargs.setdefault("connect_timeout", CLICKHOUSE_CONNECT_TIMEOUT_SECONDS)
-    kwargs.setdefault("send_receive_timeout", CLICKHOUSE_QUERY_TIMEOUT_SECONDS)
+    kwargs.setdefault("send_receive_timeout", send_receive_timeout)
     kwargs.setdefault("client_name", settings.CLICKHOUSE_CONNECTION_CLIENT_NAME)
     return Client(host, **kwargs)
 
 
-def get_unique_event_names(environment_key: str) -> list[str]:
-    """Return the distinct event names recorded for `environment_key`,
-    ordered alphabetically."""
-    rows = _get_clickhouse_client().execute(
-        "SELECT DISTINCT event FROM events "
-        "WHERE environment_key = %(environment_key)s "
-        "ORDER BY event",
-        {"environment_key": environment_key},
+_CLICKHOUSE_EVENT_NAMES_QUERY = (
+    "SELECT event FROM events "
+    "WHERE environment_key = %(environment_key)s "
+    "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s"
+)
+
+
+def _event_names_query_params(environment_key: str) -> dict[str, str | int]:
+    # Fetch one row past the limit so truncation is detectable.
+    return {
+        "environment_key": environment_key,
+        "limit": WAREHOUSE_EVENT_NAMES_LIMIT + 1,
+    }
+
+
+def _build_event_names(
+    rows: "Sequence[Sequence[typing.Any]]",
+) -> WarehouseEventNames:
+    names = [event for (event,) in rows]
+    return WarehouseEventNames(
+        events=names[:WAREHOUSE_EVENT_NAMES_LIMIT],
+        is_truncated=len(names) > WAREHOUSE_EVENT_NAMES_LIMIT,
     )
-    return [row[0] for row in rows]
+
+
+EVENT_NAMES_SUPPORTED_WAREHOUSE_TYPES = (
+    WarehouseType.FLAGSMITH,
+    WarehouseType.CLICKHOUSE,
+)
+
+
+def get_warehouse_event_names(
+    connection: "WarehouseConnection",
+    environment_key: str,
+) -> WarehouseEventNames | None:
+    if connection.warehouse_type == WarehouseType.CLICKHOUSE:
+        return _get_customer_clickhouse_event_names(connection, environment_key)
+    if connection.warehouse_type == WarehouseType.FLAGSMITH:
+        return _get_flagsmith_clickhouse_event_names(environment_key)
+    raise ValueError(f"Unsupported warehouse type: {connection.warehouse_type}")
+
+
+def _get_flagsmith_clickhouse_event_names(
+    environment_key: str,
+) -> WarehouseEventNames | None:
+    if not settings.EXPERIMENTATION_CLICKHOUSE_URL:
+        return None
+    cache_key = f"experimentation:event_names:{environment_key}"
+    cached = cache.get(cache_key)
+    if isinstance(cached, WarehouseEventNames):
+        return cached
+    try:
+        rows = _get_clickhouse_client().execute(
+            _CLICKHOUSE_EVENT_NAMES_QUERY,
+            _event_names_query_params(environment_key),
+        )
+    except Exception:
+        logger.warning(
+            "connection.event_names_failed",
+            environment__key=environment_key,
+            exc_info=True,
+        )
+        return None
+    event_names = _build_event_names(rows)
+    cache.set(cache_key, event_names, EVENT_NAMES_CACHE_SECONDS)
+    return event_names
 
 
 _EVENT_STATS_QUERY = (
@@ -267,7 +388,9 @@ def get_exposure_buckets(
     window_end: datetime,
     granularity: ExposureGranularity,
 ) -> list[ExposureBucket]:
-    rows = _get_clickhouse_client().execute(
+    rows = _get_clickhouse_client(
+        send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    ).execute(
         EXPOSURE_BUCKETS_QUERY.format(
             bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
         ),
@@ -310,9 +433,9 @@ def get_metric_variant_stats(
     }
     builder.add_metric_params(params)
 
-    rows, columns = _get_clickhouse_client().execute(
-        builder.build_query(), params, with_column_types=True
-    )
+    rows, columns = _get_clickhouse_client(
+        send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    ).execute(builder.build_query(), params, with_column_types=True)
     exposure_counts, metric_stats = builder.decode_rows(
         rows, [name for name, _type in columns]
     )
@@ -568,6 +691,23 @@ def transition_experiment_status(
     return experiment
 
 
+def _rollout_segment_rules(rollout_percentage: float) -> list[SegmentRuleType]:
+    return [
+        {
+            "type": ALL_RULE,
+            "conditions": [
+                {
+                    "property": "$.identity.key",
+                    "operator": PERCENTAGE_SPLIT,
+                    "value": str(rollout_percentage),
+                    "description": None,
+                }
+            ],
+            "rules": [],
+        }
+    ]
+
+
 def _create_rollout_segment(
     experiment: Experiment, rollout_percentage: float
 ) -> Segment:
@@ -575,7 +715,10 @@ def _create_rollout_segment(
         name=f"experiment-{experiment.id}-rollout",
         project=experiment.feature.project,
         is_system_segment=True,
+        rules_data=_rollout_segment_rules(rollout_percentage),
     )
+
+    # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
     rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
     Condition.objects.create(
         rule=rule,
@@ -583,6 +726,7 @@ def _create_rollout_segment(
         property="$.identity.key",
         value=str(rollout_percentage),
     )
+
     return segment
 
 
@@ -607,11 +751,16 @@ def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
 def _sync_rollout_segment(experiment: Experiment, rollout_percentage: float) -> Segment:
     segment = experiment.rollout_segment
     if segment is not None:
+        segment.rules_data = _rollout_segment_rules(rollout_percentage)
+        segment.save(update_fields=["rules_data"])
+
+        # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
         condition = Condition.objects.get(
             rule__segment=segment, operator=PERCENTAGE_SPLIT
         )
         condition.value = str(rollout_percentage)
         condition.save()
+
         return segment
     segment = _create_rollout_segment(experiment, rollout_percentage)
     experiment.rollout_segment = segment
@@ -747,7 +896,7 @@ def _serialize_feature_state_value(
         return "", "string"
     return (
         str(value.value).lower() if value.type == BOOLEAN else str(value.value),
-        _ROLLOUT_VALUE_TYPE.get(value.type or STRING, "string"),
+        API_VALUE_TYPES.get(value.type or STRING, "string"),
     )
 
 
@@ -1079,11 +1228,11 @@ def _get_customer_warehouse_event_stats_cached(
     ClickHouse instance, or None when it's unreachable. Results — including
     failures — are cached briefly so read endpoints don't open a connection to
     the customer's host on every request."""
-    cache_key = f"experimentation:customer_event_stats:{connection.id}"
+    cache_key = _customer_cache_key("event_stats", connection)
     cached = cache.get(cache_key)
     if isinstance(cached, WarehouseEventStats):
         return cached
-    if cached == _CUSTOMER_EVENT_STATS_UNAVAILABLE:
+    if cached == _CUSTOMER_EVENT_UNAVAILABLE:
         return None
     try:
         with warehouse_delivery_service.delivery_client(
@@ -1098,7 +1247,7 @@ def _get_customer_warehouse_event_stats_cached(
     except Exception:
         cache.set(
             cache_key,
-            _CUSTOMER_EVENT_STATS_UNAVAILABLE,
+            _CUSTOMER_EVENT_UNAVAILABLE,
             CUSTOMER_EVENT_STATS_CACHE_SECONDS,
         )
         logger.warning(
@@ -1109,3 +1258,41 @@ def _get_customer_warehouse_event_stats_cached(
         return None
     cache.set(cache_key, stats, CUSTOMER_EVENT_STATS_CACHE_SECONDS)
     return stats
+
+
+def _get_customer_clickhouse_event_names(
+    connection: "WarehouseConnection",
+    environment_key: str,
+) -> WarehouseEventNames | None:
+    """Query the customer's ClickHouse instance, caching results — including
+    failures — to spare their host repeated connections."""
+    cache_key = _customer_cache_key("event_names", connection)
+    cached = cache.get(cache_key)
+    if isinstance(cached, WarehouseEventNames):
+        return cached
+    if cached == _CUSTOMER_EVENT_UNAVAILABLE:
+        return None
+    try:
+        with warehouse_delivery_service.delivery_client(
+            connection,
+            send_receive_timeout=CLICKHOUSE_EVENT_NAMES_TIMEOUT_SECONDS,
+        ) as client:
+            rows = client.query(
+                _CLICKHOUSE_EVENT_NAMES_QUERY,
+                parameters=_event_names_query_params(environment_key),
+            ).result_rows
+    except Exception:
+        cache.set(
+            cache_key,
+            _CUSTOMER_EVENT_UNAVAILABLE,
+            CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS,
+        )
+        logger.warning(
+            "connection.event_names_failed",
+            environment__id=connection.environment_id,
+            exc_info=True,
+        )
+        return None
+    event_names = _build_event_names(rows)
+    cache.set(cache_key, event_names, EVENT_NAMES_CACHE_SECONDS)
+    return event_names

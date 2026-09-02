@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { FC, ReactNode } from 'react'
 import ValueEditor from 'components/ValueEditor'
 import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
 import Utils from 'common/utils/utils'
 import { FlagsmithValue, MultivariateOption } from 'common/types/responses'
+import { UnmatchedOverride } from 'common/utils/multivariate'
 
 type VariationOverride = {
   id?: number
@@ -22,6 +23,10 @@ interface VariationOptionsProps {
   readOnly?: boolean
   removeVariation: (i: number) => void
   select?: boolean
+  // An override value that is neither the control value nor one of the
+  // variations. Shown read-only, so the identity does not read as being on the
+  // control value. Stays listed once deselected — it is only gone on save.
+  unmatchedOverride?: UnmatchedOverride
   setValue: (value: FlagsmithValue) => void
   setVariations: (variations: VariationOverride[]) => void
   unsavedVariations?: boolean[]
@@ -34,7 +39,18 @@ interface VariationOptionsProps {
   weightTitle: string
 }
 
-export const VariationOptions: React.FC<VariationOptionsProps> = ({
+interface ValueRowLabelProps {
+  children: ReactNode
+}
+
+// Each row shows a bare value, so it needs saying which value it is.
+const ValueRowLabel: FC<ValueRowLabelProps> = ({ children }) => (
+  <div className='mb-2'>
+    <span className='h6 mb-0 font-weight-semibold'>{children}</span>
+  </div>
+)
+
+export const VariationOptions: FC<VariationOptionsProps> = ({
   apiErrors,
   canCreateFeature,
   controlPercentage,
@@ -46,6 +62,7 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
   select,
   setValue,
   setVariations,
+  unmatchedOverride,
   unsavedVariations,
   updateVariation,
   variationOverrides,
@@ -56,8 +73,9 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
     return null
   }
   const controlSelected =
-    !variationOverrides ||
-    !variationOverrides.find((v) => v.percentage_allocation === 100)
+    !unmatchedOverride?.selected &&
+    (!variationOverrides ||
+      !variationOverrides.find((v) => v.percentage_allocation === 100))
   return (
     <>
       {invalid && (
@@ -66,9 +84,36 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           error='Your variation percentage splits total to over 100%'
         />
       )}
+      {select && !!unmatchedOverride && (
+        <div className='panel panel--flat panel-without-heading mb-2'>
+          <div className='panel-content'>
+            <ValueRowLabel>Current override</ValueRowLabel>
+            <Row>
+              <Flex>
+                <ValueEditor
+                  disabled
+                  value={Utils.getTypedValue(unmatchedOverride.value)}
+                />
+              </Flex>
+              <div
+                data-test='select-unmatched-override'
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                  setVariations([])
+                  setValue?.(unmatchedOverride.value)
+                }}
+                className={`btn-radio ml-2 ${
+                  unmatchedOverride.selected ? 'btn-radio-on' : ''
+                }`}
+              />
+            </Row>
+          </div>
+        </div>
+      )}
       {select && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
+            <ValueRowLabel>Control value</ValueRowLabel>
             <Row>
               <Flex>
                 <ValueEditor
@@ -112,8 +157,11 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           )
         }
         return select ? (
-          <div className='panel panel--flat panel-without-heading mb-2'>
+          <div key={i} className='panel panel--flat panel-without-heading mb-2'>
             <div className='panel-content'>
+              <ValueRowLabel>
+                {theValue.key || Utils.getDefaultVariantKey(i)}
+              </ValueRowLabel>
               <Row>
                 <Flex>
                   <ValueEditor

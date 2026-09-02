@@ -4,8 +4,8 @@ import Icon from 'components/icons/Icon'
 import Tooltip, { TooltipProps } from 'components/Tooltip'
 
 interface FieldLabelProps {
-  // Associates the label with its control; required for accessibility.
   htmlFor?: string
+  id?: string
   children: ReactNode
   // Shows a danger asterisk after the label.
   required?: boolean
@@ -22,11 +22,12 @@ const FieldLabel: FC<FieldLabelProps> = ({
   children,
   className,
   htmlFor,
+  id,
   required,
   tooltip,
   tooltipPlace = 'top',
 }) => (
-  <label htmlFor={htmlFor} className={cn('control-label', className)}>
+  <label id={id} htmlFor={htmlFor} className={cn('control-label', className)}>
     {children}
     {required && (
       <span className='text-danger ml-1' aria-hidden>

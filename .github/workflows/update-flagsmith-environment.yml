@@ -5,40 +5,40 @@ on:
     - cron: 0 8 * * *
   workflow_dispatch:
 
-defaults:
-  run:
-    working-directory: api
-
 permissions:
   contents: read
+  id-token: write # For the Flagsmith trust relationship
 
 jobs:
   update_server_defaults:
     runs-on: depot-ubuntu-latest
     name: Update API Flagsmith Defaults
-    env:
-      FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL: https://edge.api.flagsmith.com/api/v1
-      FLAGSMITH_ON_FLAGSMITH_SERVER_KEY: ${{ secrets.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
-      - name: Install uv
-        uses: ./.github/actions/install-uv
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
         with:
-          working-directory: api
+          client-id: ${{ vars.FLAGSMITH_ENGINEERING_GH_APP_ID }}
+          private-key: ${{ secrets.FLAGSMITH_ENGINEERING_GH_APP_PRIVATE_KEY }}
+          # Only what create-pull-request needs: push the branch, open and label
+          # the pull request.
+          permission-contents: write
+          permission-pull-requests: write
 
-      - name: Install Dependencies
-        run: make install-packages
+      - name: Install Flagsmith CLI
+        uses: Flagsmith/setup-cli@c7154aaa37dff8aca0b66afc1e6722e7ad00c115 # v1.0.0
 
       - name: Update defaults
-        run: uv run python manage.py updateflagsmithenvironment
+        run: make -C api update-flagsmith-environment
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           commit-message: Update API Flagsmith Defaults
           delete-branch: true
-          title: 'chore: Update Flagsmith environment document'
+          title: "chore: Update Flagsmith environment document"
           labels: api
-          token: ${{ secrets.UPDATE_ENVIRONMENT_DOCUMENT_WORKFLOW_GH_PAT }}
+          token: ${{ steps.app-token.outputs.token }}

@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import { ProjectFlag } from 'common/types/responses'
 import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
@@ -32,6 +33,8 @@ import AccountStore from 'common/stores/account-store'
 import { ProjectPermission } from 'common/types/permissions.types'
 import { getStore } from 'common/store'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
+import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
+import { useRemoveFeatureWithToast } from 'components/pages/features/hooks/useRemoveFeatureWithToast'
 
 type FeatureSettingsTabProps = {
   identity?: string
@@ -106,8 +109,32 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
     level: 'project',
     permission: ProjectPermission.CREATE_FEATURE,
   })
+  const { permission: deleteFeature } = useHasPermission({
+    id: projectId,
+    level: 'project',
+    permission: ProjectPermission.DELETE_FEATURE,
+  })
+  const [removeFeature] = useRemoveFeatureWithToast()
 
-  if (!createFeature) {
+  const handleRemove = () => {
+    if (!projectFlag) return
+    openModal2(
+      'Remove Feature',
+      <ConfirmRemoveFeature
+        projectFlag={projectFlag}
+        cb={() => {
+          removeFeature(projectFlag, numericProjectId, {
+            onSuccess: closeModal,
+          }).catch(() => {
+            // toast already shown by useRemoveFeatureWithToast
+          })
+        }}
+      />,
+      'p-0',
+    )
+  }
+
+  if (!createFeature && !deleteFeature) {
     return (
       <InfoMessage>
         <div
@@ -127,211 +154,254 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
 
   return (
     <div className={`${identity ? 'mx-3' : ''}`}>
-      {freeze?.isFrozen && freeze.experiment && environmentId && (
-        <ExperimentFreezeNotice
-          experiment={freeze.experiment}
-          projectId={projectId}
-          environmentId={environmentId}
-        />
+      {!createFeature && (
+        <InfoMessage>
+          <div
+            dangerouslySetInnerHTML={{
+              __html: Constants.projectPermissions(
+                ProjectPermission.CREATE_FEATURE,
+              ),
+            }}
+          />
+        </InfoMessage>
       )}
-      {!identity && projectFlag?.tags && (
-        <FormGroup className='mb-3 setting'>
-          <InputGroup
-            title={'Tags'}
-            tooltip={Constants.strings.TAGS_DESCRIPTION}
-            component={
-              <AddEditTags
-                readOnly={!!identity || !createFeature}
-                projectId={`${projectId}`}
-                value={projectFlag.tags}
-                onChange={(tags) => onChange({ ...projectFlag, tags })}
+      {createFeature && (
+        <>
+          {freeze?.isFrozen && freeze.experiment && environmentId && (
+            <ExperimentFreezeNotice
+              experiment={freeze.experiment}
+              projectId={projectId}
+              environmentId={environmentId}
+            />
+          )}
+          {!identity && projectFlag?.tags && (
+            <FormGroup className='mb-3 setting'>
+              <div className='form-group'>
+                <FieldLabel tooltip={Constants.strings.TAGS_DESCRIPTION}>
+                  Tags
+                </FieldLabel>
+                <AddEditTags
+                  readOnly={!!identity || !createFeature}
+                  projectId={`${projectId}`}
+                  value={projectFlag.tags}
+                  onChange={(tags) => onChange({ ...projectFlag, tags })}
+                />
+              </div>
+            </FormGroup>
+          )}
+          {metadataEnable && featureContentType?.id && !identity && (
+            <>
+              <label className='mt-1'>Custom Fields</label>
+              <AddMetadataToEntity
+                organisationId={AccountStore.getOrganisation().id}
+                projectId={
+                  typeof projectId === 'string'
+                    ? parseInt(projectId, 10)
+                    : projectId
+                }
+                entityId={projectFlag?.id}
+                entityContentType={featureContentType?.id}
+                entity={featureContentType?.model}
+                setHasMetadataRequired={onHasMetadataRequiredChange}
+                onChange={(metadata) => onChange({ ...projectFlag, metadata })}
               />
-            }
-          />
-        </FormGroup>
-      )}
-      {metadataEnable && featureContentType?.id && !identity && (
-        <>
-          <label className='mt-1'>Custom Fields</label>
-          <AddMetadataToEntity
-            organisationId={AccountStore.getOrganisation().id}
-            projectId={
-              typeof projectId === 'string'
-                ? parseInt(projectId, 10)
-                : projectId
-            }
-            entityId={projectFlag?.id}
-            entityContentType={featureContentType?.id}
-            entity={featureContentType?.model}
-            setHasMetadataRequired={onHasMetadataRequiredChange}
-            onChange={(metadata) => onChange({ ...projectFlag, metadata })}
-          />
-        </>
-      )}
-      {!identity && projectFlag?.id && createFeature && (
-        <>
+            </>
+          )}
+          {!identity && projectFlag?.id && createFeature && (
+            <>
+              <FormGroup className='mb-3 setting'>
+                <FlagOwners
+                  selectedIds={(flagData?.owners ?? []).map((o) => o.id)}
+                  onAdd={(id) =>
+                    addOwners({
+                      feature_id: projectFlag.id,
+                      project_id: numericProjectId,
+                      user_ids: [id],
+                    })
+                  }
+                  onRemove={(id) =>
+                    removeOwners({
+                      feature_id: projectFlag.id,
+                      project_id: numericProjectId,
+                      user_ids: [id],
+                    })
+                      .unwrap()
+                      .catch((e) =>
+                        toast(
+                          e?.data?.[0] || 'Failed to remove owner.',
+                          'danger',
+                        ),
+                      )
+                  }
+                />
+              </FormGroup>
+              <FormGroup className='mb-3 setting'>
+                <FlagOwnerGroups
+                  selectedIds={(flagData?.group_owners ?? []).map((g) => g.id)}
+                  onAdd={(id) =>
+                    addGroupOwners({
+                      feature_id: projectFlag.id,
+                      group_ids: [id],
+                      project_id: numericProjectId,
+                    })
+                  }
+                  onRemove={(id) =>
+                    removeGroupOwners({
+                      feature_id: projectFlag.id,
+                      group_ids: [id],
+                      project_id: numericProjectId,
+                    })
+                      .unwrap()
+                      .catch((e) =>
+                        toast(
+                          e?.data?.[0] || 'Failed to remove group owner.',
+                          'danger',
+                        ),
+                      )
+                  }
+                />
+              </FormGroup>
+              <PlanBasedBanner
+                className='mb-3'
+                feature={'FLAG_OWNERS'}
+                theme={'description'}
+              />
+            </>
+          )}
+          {!identity &&
+            !projectFlag?.id &&
+            enforceFeatureOwners &&
+            onOwnerIdsChange &&
+            onGroupOwnerIdsChange && (
+              <>
+                <FormGroup className='mb-3 setting'>
+                  <FlagOwners
+                    selectedIds={ownerIds ?? []}
+                    onAdd={(id: number) =>
+                      onOwnerIdsChange([...(ownerIds ?? []), id])
+                    }
+                    onRemove={(id: number) =>
+                      onOwnerIdsChange(
+                        (ownerIds ?? []).filter((uid) => uid !== id),
+                      )
+                    }
+                  />
+                </FormGroup>
+                <FormGroup className='mb-3 setting'>
+                  <FlagOwnerGroups
+                    selectedIds={groupOwnerIds ?? []}
+                    onAdd={(id: number) =>
+                      onGroupOwnerIdsChange([...(groupOwnerIds ?? []), id])
+                    }
+                    onRemove={(id: number) =>
+                      onGroupOwnerIdsChange(
+                        (groupOwnerIds ?? []).filter((gid) => gid !== id),
+                      )
+                    }
+                  />
+                </FormGroup>
+                <PlanBasedBanner
+                  className='mb-3'
+                  feature={'FLAG_OWNERS'}
+                  theme={'description'}
+                />
+              </>
+            )}
           <FormGroup className='mb-3 setting'>
-            <FlagOwners
-              selectedIds={(flagData?.owners ?? []).map((o) => o.id)}
-              onAdd={(id) =>
-                addOwners({
-                  feature_id: projectFlag.id,
-                  project_id: numericProjectId,
-                  user_ids: [id],
+            <InputGroup
+              value={projectFlag?.description || ''}
+              data-test='featureDesc'
+              inputProps={{
+                className: 'full-width',
+                name: 'featureDesc',
+                readOnly: !!identity,
+              }}
+              onChange={(e: InputEvent) =>
+                onChange({
+                  ...projectFlag,
+                  description: Utils.safeParseEventValue(e),
                 })
               }
-              onRemove={(id) =>
-                removeOwners({
-                  feature_id: projectFlag.id,
-                  project_id: numericProjectId,
-                  user_ids: [id],
-                })
-                  .unwrap()
-                  .catch((e) =>
-                    toast(e?.data?.[0] || 'Failed to remove owner.', 'danger'),
-                  )
-              }
+              type='text'
+              title={identity ? 'Description' : 'Description (optional)'}
+              placeholder="e.g. 'This determines what size the header is' "
             />
           </FormGroup>
-          <FormGroup className='mb-3 setting'>
-            <FlagOwnerGroups
-              selectedIds={(flagData?.group_owners ?? []).map((g) => g.id)}
-              onAdd={(id) =>
-                addGroupOwners({
-                  feature_id: projectFlag.id,
-                  group_ids: [id],
-                  project_id: numericProjectId,
-                })
-              }
-              onRemove={(id) =>
-                removeGroupOwners({
-                  feature_id: projectFlag.id,
-                  group_ids: [id],
-                  project_id: numericProjectId,
-                })
-                  .unwrap()
-                  .catch((e) =>
-                    toast(
-                      e?.data?.[0] || 'Failed to remove group owner.',
-                      'danger',
-                    ),
-                  )
-              }
-            />
-          </FormGroup>
-          <PlanBasedBanner
-            className='mb-3'
-            feature={'FLAG_OWNERS'}
-            theme={'description'}
-          />
-        </>
-      )}
-      {!identity &&
-        !projectFlag?.id &&
-        enforceFeatureOwners &&
-        onOwnerIdsChange &&
-        onGroupOwnerIdsChange && (
-          <>
-            <FormGroup className='mb-3 setting'>
-              <FlagOwners
-                selectedIds={ownerIds ?? []}
-                onAdd={(id: number) =>
-                  onOwnerIdsChange([...(ownerIds ?? []), id])
-                }
-                onRemove={(id: number) =>
-                  onOwnerIdsChange((ownerIds ?? []).filter((uid) => uid !== id))
-                }
-              />
-            </FormGroup>
-            <FormGroup className='mb-3 setting'>
-              <FlagOwnerGroups
-                selectedIds={groupOwnerIds ?? []}
-                onAdd={(id: number) =>
-                  onGroupOwnerIdsChange([...(groupOwnerIds ?? []), id])
-                }
-                onRemove={(id: number) =>
-                  onGroupOwnerIdsChange(
-                    (groupOwnerIds ?? []).filter((gid) => gid !== id),
-                  )
-                }
-              />
-            </FormGroup>
-            <PlanBasedBanner
-              className='mb-3'
-              feature={'FLAG_OWNERS'}
-              theme={'description'}
-            />
-          </>
-        )}
-      <FormGroup className='mb-3 setting'>
-        <InputGroup
-          value={projectFlag?.description || ''}
-          data-test='featureDesc'
-          inputProps={{
-            className: 'full-width',
-            name: 'featureDesc',
-            readOnly: !!identity,
-          }}
-          onChange={(e: InputEvent) =>
-            onChange({
-              ...projectFlag,
-              description: Utils.safeParseEventValue(e),
-            })
-          }
-          type='text'
-          title={identity ? 'Description' : 'Description (optional)'}
-          placeholder="e.g. 'This determines what size the header is' "
-        />
-      </FormGroup>
 
-      {!identity && (
-        <FormGroup className='mb-3 mt-3 setting'>
-          <Row>
-            <Switch
-              checked={projectFlag?.is_server_key_only || false}
-              onChange={(is_server_key_only) =>
-                onChange({ ...projectFlag, is_server_key_only })
-              }
-              disabled={!!freeze?.isFrozen}
-              className='ml-0'
-            />
-            <Tooltip
-              title={
-                <label className='cols-sm-2 control-label mb-0 ml-3'>
-                  Server-side only <Icon name='info-outlined' />
-                </label>
-              }
-            >
-              Prevent this feature from being accessed with client-side SDKs.
-            </Tooltip>
-          </Row>
-        </FormGroup>
-      )}
+          {!identity && (
+            <FormGroup className='mb-3 mt-3 setting'>
+              <Row>
+                <Switch
+                  checked={projectFlag?.is_server_key_only || false}
+                  onChange={(is_server_key_only) =>
+                    onChange({ ...projectFlag, is_server_key_only })
+                  }
+                  disabled={!!freeze?.isFrozen}
+                  className='ml-0'
+                />
+                <Tooltip
+                  title={
+                    <label className='cols-sm-2 control-label mb-0 ml-3'>
+                      Server-side only <Icon name='info-outlined' />
+                    </label>
+                  }
+                >
+                  Prevent this feature from being accessed with client-side
+                  SDKs.
+                </Tooltip>
+              </Row>
+            </FormGroup>
+          )}
 
-      {!identity && isEdit && (
-        <FormGroup className='mb-3 setting'>
-          <Row>
-            <Switch
-              checked={projectFlag?.is_archived || false}
-              onChange={(is_archived) =>
-                onChange({ ...projectFlag, is_archived })
-              }
-              disabled={!!freeze?.isFrozen}
-              className='ml-0'
-            />
-            <Tooltip
-              title={
-                <label className='cols-sm-2 control-label mb-0 ml-3'>
-                  Archived <Icon name='info-outlined' />
-                </label>
-              }
-            >
-              {`Archiving a flag allows you to filter out flags from the
+          {!identity && isEdit && (
+            <FormGroup className='mb-3 setting'>
+              <Row>
+                <Switch
+                  checked={projectFlag?.is_archived || false}
+                  onChange={(is_archived) =>
+                    onChange({ ...projectFlag, is_archived })
+                  }
+                  disabled={!!freeze?.isFrozen}
+                  className='ml-0'
+                />
+                <Tooltip
+                  title={
+                    <label className='cols-sm-2 control-label mb-0 ml-3'>
+                      Archived <Icon name='info-outlined' />
+                    </label>
+                  }
+                >
+                  {`Archiving a flag allows you to filter out flags from the
                 Flagsmith dashboard that are no longer relevant.
                 <br />
                 An archived flag will still return as normal in all SDK
                 endpoints.`}
-            </Tooltip>
+                </Tooltip>
+              </Row>
+            </FormGroup>
+          )}
+        </>
+      )}
+
+      {!identity && isEdit && (
+        <FormGroup className='mb-3 setting'>
+          <Row space>
+            <div className='col-md-8'>
+              <label className='cols-sm-2 control-label mb-0'>
+                Remove Feature
+              </label>
+              <p className='fs-small lh-sm mb-0'>
+                This will remove the feature for all environments. This action
+                cannot be undone.
+              </p>
+            </div>
+            <Button
+              theme='danger'
+              disabled={!deleteFeature}
+              onClick={handleRemove}
+            >
+              Remove Feature
+            </Button>
           </Row>
         </FormGroup>
       )}

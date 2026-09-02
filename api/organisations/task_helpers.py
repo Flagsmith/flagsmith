@@ -27,6 +27,7 @@ logger = structlog.get_logger("api_usage")
 def send_api_flags_blocked_notification(organisation: Organisation) -> None:
     recipient_list = FFAdminUser.objects.filter(
         userorganisation__organisation=organisation,
+        userorganisation__is_active=True,
     )
 
     url = get_current_site_url()
@@ -61,6 +62,7 @@ def _send_api_usage_notification(
 
     recipient_list = FFAdminUser.objects.filter(
         userorganisation__organisation=organisation,
+        userorganisation__is_active=True,
     )
 
     if matched_threshold < 100:

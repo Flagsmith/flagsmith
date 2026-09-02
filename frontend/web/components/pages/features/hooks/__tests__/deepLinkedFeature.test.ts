@@ -59,21 +59,36 @@ describe('shouldDeepFetchFeature', () => {
 })
 
 describe('pickEnvironmentFlag', () => {
-  const make = (id: number, feature: number) =>
-    ({ feature, id } as FeatureState)
+  const make = (id: number, feature: number, feature_state_value?: unknown) =>
+    ({ feature, feature_state_value, id } as unknown as FeatureState)
 
   it('returns the state matching the feature id', () => {
     const results = [make(10, 1), make(11, 99), make(12, 2)]
-    expect(pickEnvironmentFlag(results, 99)).toBe(results[1])
+    expect(pickEnvironmentFlag(results, 99)).toMatchObject({
+      feature: 99,
+      id: 11,
+    })
   })
 
   it('falls back to the first result when there is no exact match', () => {
     const results = [make(10, 1), make(12, 2)]
-    expect(pickEnvironmentFlag(results, 99)).toBe(results[0])
+    expect(pickEnvironmentFlag(results, 99)).toMatchObject({
+      feature: 1,
+      id: 10,
+    })
   })
 
   it('returns undefined when there are no results', () => {
     expect(pickEnvironmentFlag([], 99)).toBeUndefined()
     expect(pickEnvironmentFlag(undefined, 99)).toBeUndefined()
+  })
+
+  it('flattens the nested feature_state_value via featureStateToValue', () => {
+    // Branch coverage lives in featureStateToValue.test.ts; this just proves the
+    // nested value is flattened rather than passed through as an object.
+    const results = [make(11, 99, { string_value: '{"a":1}', type: 'unicode' })]
+    expect(pickEnvironmentFlag(results, 99)?.feature_state_value).toBe(
+      '{"a":1}',
+    )
   })
 })

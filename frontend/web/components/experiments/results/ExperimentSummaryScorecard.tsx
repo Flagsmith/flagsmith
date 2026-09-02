@@ -3,6 +3,7 @@ import InfoMessage from 'components/InfoMessage'
 import { BayesianResultsSummary, Experiment } from 'common/types/responses'
 import { deriveSummary } from './derive'
 import StatCard from './StatCard'
+import VariantName from './VariantName'
 
 type ExperimentSummaryScorecardProps = {
   usersEnrolled: number | null
@@ -25,6 +26,9 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
   if (summary?.liftTone === 'success') liftClassName = 'text-success'
   if (summary?.liftTone === 'danger') liftClassName = 'text-danger'
 
+  // Give long winner names room by borrowing a column from Users enrolled.
+  const wideWinner = (summary?.winnerName.length ?? 0) > 15
+
   return (
     <>
       {!summary && hasResults && (
@@ -34,24 +38,25 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
         </InfoMessage>
       )}
       <div className='row g-3 mb-4'>
-        <div className='col-md-3'>
+        <div className={wideWinner ? 'col-md-2' : 'col-md-3'}>
           <StatCard
             label='Users enrolled'
             loading={usersEnrolled === null}
             value={usersEnrolled?.toLocaleString()}
           />
         </div>
-        <div className='col-md-3'>
+        <div className={wideWinner ? 'col-md-4' : 'col-md-3'}>
           <StatCard
             label='Winning variation'
             loading={!hasResults}
             value={
               summary?.winnerName ? (
-                <span
-                  className={summary.controlWins ? undefined : 'text-success'}
-                >
-                  {summary.winnerName}
-                </span>
+                <VariantName
+                  fit
+                  colour={summary.winnerColour}
+                  fontSize={24}
+                  name={summary.winnerName}
+                />
               ) : undefined
             }
           />
@@ -60,16 +65,26 @@ const ExperimentSummaryScorecard: FC<ExperimentSummaryScorecardProps> = ({
           <StatCard
             label='Chance to be best'
             loading={!hasResults}
-            value={summary?.chanceToBest}
+            value={
+              summary?.chanceToBest ? (
+                <span
+                  className={
+                    summary.chanceToBestHigh ? 'text-success' : undefined
+                  }
+                >
+                  {summary.chanceToBest}
+                </span>
+              ) : undefined
+            }
           />
         </div>
         <div className='col-md-3'>
           <StatCard
-            label='Lift vs control'
+            label={summary?.liftLabel ?? 'Lift vs control'}
             loading={!hasResults}
             value={
-              summary?.liftVsControl ? (
-                <span className={liftClassName}>{summary.liftVsControl}</span>
+              summary?.liftValue ? (
+                <span className={liftClassName}>{summary.liftValue}</span>
               ) : undefined
             }
           />

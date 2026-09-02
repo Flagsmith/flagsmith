@@ -113,6 +113,9 @@ from projects.models import (
 )
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
+
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
 from tests.types import (
     AdminClientAuthType,
     EnableFeaturesFixture,
@@ -147,7 +150,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-@pytest.hookimpl(trylast=True)  # type: ignore[misc]
+@pytest.hookimpl(trylast=True)
 def pytest_configure(config: pytest.Config) -> None:
     if (
         config.option.ci
@@ -426,8 +429,51 @@ def project_b(organisation: Organisation) -> Project:
 
 
 @pytest.fixture()
-def segment(project: Project) -> Segment:
-    segment: Segment = Segment.objects.create(name="segment", project=project)
+def segment_rules() -> list[SegmentRuleType]:
+    return [
+        {
+            "type": "ALL",
+            "conditions": [
+                {
+                    "property": "pill-taken",
+                    "operator": "EQUAL",
+                    "value": "red",
+                    "description": "Offered by Morpheus.",
+                }
+            ],
+            "rules": [
+                {
+                    "type": "ANY",
+                    "conditions": [
+                        {
+                            "property": "oracle_confidence",
+                            "operator": "GREATER_THAN_INCLUSIVE",
+                            "value": "90",
+                            "description": None,
+                        },
+                        {
+                            "property": "can_fly",
+                            "operator": "EQUAL",
+                            "value": "True",
+                            "description": "Jumping very high does not count!",
+                        },
+                    ],
+                    # Cleanup type-ignore as per https://github.com/Flagsmith/flagsmith/issues/8280
+                    "rules": [],  # type: ignore[typeddict-unknown-key]
+                },
+            ],
+        }
+    ]
+
+
+@pytest.fixture()
+def segment(project: Project, segment_rules: list[SegmentRuleType]) -> Segment:
+    segment: Segment = Segment.objects.create(
+        project=project,
+        name="segment",
+        description="description",
+        rules_data=segment_rules,
+    )
     return segment
 
 

@@ -127,7 +127,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           setFileData(null)
           refetch()
         } else {
-          toast('Failed to import flags')
+          toast('Failed to import flags', 'danger')
         }
       })
     }

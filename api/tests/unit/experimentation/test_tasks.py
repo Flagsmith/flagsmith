@@ -14,6 +14,7 @@ from moto import mock_s3  # type: ignore[import-untyped]
 from prometheus_client import REGISTRY
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
+from task_processor.exceptions import TaskBackoffError
 
 from environments.models import Environment, EnvironmentAPIKey
 from experimentation import warehouse_delivery_service
@@ -39,6 +40,7 @@ from experimentation.models import (
     WarehouseDeliveryOutcome,
     WarehouseType,
 )
+from experimentation.services import CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS
 from experimentation.stats import VariantStats
 from experimentation.tasks import (
     clean_up_old_warehouse_delivery_logs,
@@ -355,6 +357,30 @@ def test_compute_experiment_exposures__warehouse_error__records_failure(
     )
 
 
+def test_compute_experiment_exposures__transient_warehouse_error__records_failure_and_backs_off(
+    experiment: Experiment,
+    mocker: MockerFixture,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mocker.patch(
+        "experimentation.tasks.compute_exposures_summary",
+        side_effect=TimeoutError("The read operation timed out"),
+    )
+
+    # When
+    with pytest.raises(TaskBackoffError):
+        compute_experiment_exposures(experiment_id=experiment.id)
+
+    # Then
+    exposures = ExperimentExposures.objects.get(experiment=experiment)
+    assert exposures.last_error_at is not None
+    assert log.has("exposures.compute_failed", level="error")
+
+
 def test_compute_experiment_exposures__not_started_experiment__skips(
     experiment: Experiment,
     mocker: MockerFixture,
@@ -529,6 +555,55 @@ def test_compute_experiment_results__warehouse_error__records_failure(
             "organisation__id": experiment.environment.project.organisation_id,
         }
     ]
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        TimeoutError("The read operation timed out"),
+        ConnectionResetError("Connection reset by peer"),
+    ],
+    ids=["timeout", "reset"],
+)
+def test_compute_experiment_results__transient_warehouse_error__records_failure_and_backs_off(
+    experiment: Experiment,
+    mocker: MockerFixture,
+    log: StructuredLogCapture,
+    exc: Exception,
+) -> None:
+    # Given
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mocker.patch(
+        "experimentation.tasks.compute_results_summary",
+        side_effect=exc,
+    )
+
+    # When
+    with pytest.raises(TaskBackoffError):
+        compute_experiment_results(experiment_id=experiment.id)
+
+    # Then
+    results = ExperimentResults.objects.get(experiment=experiment)
+    assert results.last_error_at is not None
+    assert log.has("results.compute_failed", level="error")
+
+
+@pytest.mark.parametrize(
+    "task_handler",
+    [compute_experiment_exposures, compute_experiment_results],
+    ids=["exposures", "results"],
+)
+def test_compute_experiment_task_handlers__task_timeout__exceeds_background_query_timeout(
+    task_handler: Any,
+) -> None:
+    # Given
+    task_timeout = task_handler.timeout
+
+    # When / Then
+    assert task_timeout is not None
+    assert task_timeout.total_seconds() > CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS
 
 
 def test_compute_experiment_results__not_started_experiment__skips(

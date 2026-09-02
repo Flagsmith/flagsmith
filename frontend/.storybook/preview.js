@@ -15,6 +15,8 @@ import ReactSelect, { components as selectComponents } from 'react-select'
 // Only import components that use the automatic JSX transform (TSX files).
 // Legacy .js files (Flex, Column, Input) use old JSX transform and crash here.
 import Tooltip from '../web/components/Tooltip'
+import Button from '../web/components/base/forms/Button'
+import Loader from '../web/components/Loader'
 import Row from '../web/components/base/grid/Row'
 import FormGroup from '../web/components/base/grid/FormGroup'
 
@@ -53,6 +55,8 @@ global.Select = (props) =>
     }),
   )
 window.Tooltip = Tooltip
+window.Button = Button
+window.Loader = Loader
 window.Row = Row
 window.FormGroup = FormGroup
 // isMobile is set at app boot; stub it so components that read it render in Storybook.
@@ -106,6 +110,10 @@ const preview = {
       container: DocsContainer,
     },
     chromatic: {
+      // Off by default; opt in per story with `disableSnapshot: false`. Opted
+      // in: components still styling dark mode with hand-written `.dark` blocks,
+      // plus SemanticTokens for token values no component exercises.
+      disableSnapshot: true,
       modes: {
         light: allModes.light,
         dark: allModes.dark,

@@ -2,13 +2,16 @@ import { getTestFailureWarning } from 'components/pages/environment-settings/tab
 
 describe('getTestFailureWarning', () => {
   it.each([
-    ['Authentication failed.', ': Authentication failed. You can save anyway'],
-    ['Connection refused', ': Connection refused. You can save anyway'],
-    ['Timed out!', ': Timed out! You can save anyway'],
-    [null, '. You can save anyway'],
-  ])('formats detail %p with a single sentence break', (detail, expected) => {
-    expect(getTestFailureWarning(detail)).toContain(expected)
-  })
+    ['Authentication failed.', ': Authentication failed.\nYou can save anyway'],
+    ['Connection refused', ': Connection refused.\nYou can save anyway'],
+    ['Timed out!', ': Timed out!\nYou can save anyway'],
+    [null, '.\nYou can save anyway'],
+  ])(
+    'formats detail %p with the save-anyway hint on its own line',
+    (detail, expected) => {
+      expect(getTestFailureWarning(detail)).toContain(expected)
+    },
+  )
 
   it('does not claim a failed connection when only the events table is missing', () => {
     const detail =
@@ -25,7 +28,7 @@ describe('getTestFailureWarning', () => {
 
   it('keeps the sentence boundary when the missing-table detail lacks punctuation', () => {
     expect(getTestFailureWarning('Events table not found')).toContain(
-      'Events table not found. You can save anyway',
+      'Events table not found.\nYou can save anyway',
     )
   })
 })

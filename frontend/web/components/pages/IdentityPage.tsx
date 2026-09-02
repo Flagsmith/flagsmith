@@ -71,7 +71,9 @@ const IdentityPage: FC = () => {
       { skip: !projectId },
     )
 
-  const { getEnvironmentIdFromKey } = useProjectEnvironments(projectId!)
+  const { getEnvironmentIdFromKey, project } = useProjectEnvironments(
+    projectId!,
+  )
 
   const apiParams = environmentId
     ? buildApiFilterParams(
@@ -423,6 +425,12 @@ const IdentityPage: FC = () => {
                         title='Check to see what features and traits are coming back for this user'
                         environmentId={environmentId}
                         userId={identityName}
+                        totalFeatures={Math.max(
+                          // The list count is filter-aware but live; the
+                          // project total is unfiltered but cached.
+                          paging?.count ?? 0,
+                          project?.total_features ?? 0,
+                        )}
                       />
                     </FormGroup>
                     <FormGroup className='mt-5'>

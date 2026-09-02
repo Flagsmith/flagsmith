@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import openfeature.api as openfeature_api
 import pytest
+from flagsmith.analytics import EventProcessorConfig
 from flagsmith.offline_handlers import LocalFileHandler
 from openfeature.provider.in_memory_provider import InMemoryProvider
 from openfeature.provider.metadata import Metadata
@@ -16,8 +17,8 @@ from integrations.flagsmith.client import (
     get_provider_kwargs,
     initialise_provider,
 )
+from integrations.flagsmith.constants import ENVIRONMENT_JSON_PATH
 from integrations.flagsmith.exceptions import FlagsmithIntegrationError
-from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
 
 
 @pytest.fixture()
@@ -155,11 +156,22 @@ def test_initialise_provider__offline_mode_disabled__initialises_with_server_key
     settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = api_url
     settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = False
 
-    mock_flagsmith_class = mocker.patch("integrations.flagsmith.client.Flagsmith")
-    mock_provider_class = mocker.patch(
-        "integrations.flagsmith.client.FlagsmithProvider"
+    mock_flagsmith_class = mocker.patch(
+        "integrations.flagsmith.client.Flagsmith",
+        autospec=True,
     )
-    mock_openfeature_api = mocker.patch("integrations.flagsmith.client.openfeature_api")
+    mock_provider_class = mocker.patch(
+        "integrations.flagsmith.client.FlagsmithProvider",
+        autospec=True,
+    )
+    mock_exposure_hook_class = mocker.patch(
+        "integrations.flagsmith.client.FlagsmithExposureHook",
+        autospec=True,
+    )
+    mock_openfeature_api = mocker.patch(
+        "integrations.flagsmith.client.openfeature_api",
+        autospec=True,
+    )
 
     # When
     initialise_provider(**get_provider_kwargs())
@@ -181,6 +193,11 @@ def test_initialise_provider__offline_mode_disabled__initialises_with_server_key
         domain=DEFAULT_OPENFEATURE_DOMAIN,
     )
 
+    mock_exposure_hook_class.assert_called_once_with(mock_provider_class.return_value)
+    mock_openfeature_api.add_hooks.assert_called_once_with(
+        [mock_exposure_hook_class.return_value]
+    )
+
     mock_local_file_handler_class.assert_called_once_with(ENVIRONMENT_JSON_PATH)
 
 
@@ -193,11 +210,18 @@ def test_initialise_provider__offline_mode_enabled__initialises_with_offline_han
     # Given
     settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = True
 
-    mock_flagsmith_class = mocker.patch("integrations.flagsmith.client.Flagsmith")
-    mock_provider_class = mocker.patch(
-        "integrations.flagsmith.client.FlagsmithProvider"
+    mock_flagsmith_class = mocker.patch(
+        "integrations.flagsmith.client.Flagsmith",
+        autospec=True,
     )
-    mock_openfeature_api = mocker.patch("integrations.flagsmith.client.openfeature_api")
+    mock_provider_class = mocker.patch(
+        "integrations.flagsmith.client.FlagsmithProvider",
+        autospec=True,
+    )
+    mock_openfeature_api = mocker.patch(
+        "integrations.flagsmith.client.openfeature_api",
+        autospec=True,
+    )
 
     # When
     initialise_provider(**get_provider_kwargs())
@@ -230,3 +254,60 @@ def test_get_provider_kwargs__missing_server_key__raises_error(
     # When / Then
     with pytest.raises(FlagsmithIntegrationError):
         get_provider_kwargs()
+
+
+def test_get_provider_kwargs__events_api_url_set__enables_events(
+    settings: SettingsWrapper, mock_local_file_handler_class: MagicMock
+) -> None:
+    # Given
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = False
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY = "ser.some-key"
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = "https://my.flagsmith.api/api/v1/"
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_EVENTS_API_URL = (
+        "https://events.my.flagsmith.api/"
+    )
+
+    # When
+    kwargs = get_provider_kwargs()
+
+    # Then
+    assert kwargs["enable_events"] is True
+    assert kwargs["event_processor_config"] == EventProcessorConfig(
+        events_api_url="https://events.my.flagsmith.api/",
+    )
+
+
+def test_get_provider_kwargs__no_events_api_url__events_not_enabled(
+    settings: SettingsWrapper, mock_local_file_handler_class: MagicMock
+) -> None:
+    # Given
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = False
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY = "ser.some-key"
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = "https://my.flagsmith.api/api/v1/"
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_EVENTS_API_URL = None
+
+    # When
+    kwargs = get_provider_kwargs()
+
+    # Then
+    assert "enable_events" not in kwargs
+    assert "event_processor_config" not in kwargs
+
+
+def test_get_provider_kwargs__offline_mode_with_events_api_url__events_not_enabled(
+    settings: SettingsWrapper, mock_local_file_handler_class: MagicMock
+) -> None:
+    # Given
+    # The SDK never initialises events in offline mode; don't pretend otherwise.
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE = True
+    settings.FLAGSMITH_ON_FLAGSMITH_SERVER_EVENTS_API_URL = (
+        "https://events.my.flagsmith.api/"
+    )
+
+    # When
+    kwargs = get_provider_kwargs()
+
+    # Then
+    assert kwargs["offline_mode"] is True
+    assert "enable_events" not in kwargs
+    assert "event_processor_config" not in kwargs

@@ -1,6 +1,8 @@
 import typing
+from datetime import datetime
 from pathlib import Path
 
+from django.db.models import OuterRef
 from django.db.models.query import QuerySet, RawQuerySet
 from django.utils import timezone
 from softdelete.models import SoftDeleteManager  # type: ignore[import-untyped]
@@ -14,6 +16,23 @@ with open(Path(__file__).parent.resolve() / "sql/get_latest_versions.sql") as f:
 
 
 class EnvironmentFeatureVersionManager(SoftDeleteManager):  # type: ignore[misc]
+    def get_versions_live_since(
+        self,
+        feature_id: int | OuterRef,
+        environment_id: int | OuterRef,
+        live_from: datetime | OuterRef,
+    ) -> QuerySet["EnvironmentFeatureVersion"]:
+        """
+        Get the published versions of a flag that went live between the provided `live_from` and now.
+        """
+        return self.filter(  # type: ignore[no-any-return]
+            feature_id=feature_id,
+            environment_id=environment_id,
+            published_at__isnull=False,
+            live_from__lte=timezone.now(),
+            live_from__gt=live_from,
+        )
+
     def get_latest_versions_by_environment_id(self, environment_id: int) -> RawQuerySet:  # type: ignore[type-arg]
         """
         Get the latest EnvironmentFeatureVersion objects for a given environment.

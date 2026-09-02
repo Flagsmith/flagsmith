@@ -464,12 +464,17 @@ def map_environment_to_evaluation_context(
         trait_items: "Iterable[Trait]" = (
             traits if traits is not None else identity.identity_traits.all()
         )
+        identity_traits = {trait.trait_key: trait.trait_value for trait in trait_items}
+        if identity.system_traits:
+            # System-owned traits are not user data: on a key clash, the system
+            # value wins.
+            identity_traits.update(identity.system_traits)
         context["identity"] = {
             "identifier": identity.identifier,
             "key": identity.get_hash_key(
                 environment.use_identity_composite_key_for_hashing
             ),
-            "traits": {trait.trait_key: trait.trait_value for trait in trait_items},
+            "traits": identity_traits,
         }
     if segments is not None:
         context["segments"] = {

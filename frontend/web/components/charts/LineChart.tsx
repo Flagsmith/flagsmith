@@ -1,9 +1,11 @@
 import React, { FC } from 'react'
+import { AxisDomain } from 'recharts/types/util/types'
 import {
   CartesianGrid,
   Legend,
   Line,
   LineChart as RawLineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -22,12 +24,34 @@ type LineChartProps = {
   showLegend?: boolean
   seriesLabels?: Record<string, string>
   verticalGrid?: boolean
+  referenceLine?: Threshold
 }
+
+type Threshold = { value: number; label?: string; colour: string }
+
+const axisDomainFor = (referenceLine?: Threshold): AxisDomain | undefined =>
+  referenceLine
+    ? [
+        0,
+        (max: number) => Math.round(Math.max(max, referenceLine.value) * 1.08),
+      ]
+    : undefined
+
+const thresholdLabelFor = (referenceLine?: Threshold) =>
+  referenceLine?.label
+    ? {
+        fill: referenceLine.colour,
+        fontSize: 11,
+        position: 'insideTopRight' as const,
+        value: referenceLine.label,
+      }
+    : undefined
 
 const LineChart: FC<LineChartProps> = ({
   colorMap,
   data,
   height = 400,
+  referenceLine,
   series,
   seriesLabels,
   showLegend = false,
@@ -56,6 +80,7 @@ const LineChart: FC<LineChartProps> = ({
         <YAxis
           tick={{ fill: colorTextSecondary, fontSize: 11 }}
           axisLine={{ stroke: colorTextSecondary }}
+          domain={axisDomainFor(referenceLine)}
           tickFormatter={(value) =>
             value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value
           }
@@ -70,6 +95,14 @@ const LineChart: FC<LineChartProps> = ({
             formatter={(value) =>
               seriesLabels?.[String(value)] ?? String(value)
             }
+          />
+        )}
+        {referenceLine && (
+          <ReferenceLine
+            y={referenceLine.value}
+            stroke={referenceLine.colour}
+            strokeWidth={2}
+            label={thresholdLabelFor(referenceLine)}
           />
         )}
         {series.map((label, index) => (

@@ -7,7 +7,7 @@ from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock import MockerFixture
 from task_processor.task_run_method import TaskRunMethod
 

@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { IonIcon } from '@ionic/react'
-import { close as closeIcon } from 'ionicons/icons'
+import Icon from 'components/icons/Icon'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
@@ -17,6 +16,7 @@ import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
 import API from 'project/api'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import InputGroup from 'components/base/forms/InputGroup'
 import { Environment, Role, User } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
@@ -337,8 +337,8 @@ const CreateEnvironmentPage: React.FC = () => {
                                           className='chip mr-2'
                                         >
                                           <span>{getUserDisplayName(u)}</span>
-                                          <span className='chip-icon ion'>
-                                            <IonIcon icon={closeIcon} />
+                                          <span className='chip-icon'>
+                                            <Icon name='close' width={18} />
                                           </span>
                                         </Row>
                                       ))}
@@ -389,8 +389,8 @@ const CreateEnvironmentPage: React.FC = () => {
                                           className='chip mr-2'
                                         >
                                           <span>{r.name}</span>
-                                          <span className='chip-icon ion'>
-                                            <IonIcon icon={closeIcon} />
+                                          <span className='chip-icon'>
+                                            <Icon name='close' width={18} />
                                           </span>
                                         </Row>
                                       ))}
@@ -414,28 +414,27 @@ const CreateEnvironmentPage: React.FC = () => {
                       envContentType?.id && (
                         <CondensedRow>
                           <FormGroup className='mt-2 setting'>
-                            <InputGroup
-                              title='Custom fields'
-                              tooltip='You need to add a value to the custom field if it is required to successfully clone the environment'
-                              tooltipPlace='right'
-                              component={
-                                <AddMetadataToEntity
-                                  organisationId={
-                                    AccountStore.getOrganisation().id
-                                  }
-                                  projectId={projectId}
-                                  entityId={selectedEnv?.api_key}
-                                  envName={name}
-                                  entityContentType={envContentType.id}
-                                  entity={envContentType.model}
-                                  isCloningEnvironment
-                                  onChange={setMetadata}
-                                  setHasMetadataRequired={
-                                    setHasMetadataRequired
-                                  }
-                                />
-                              }
-                            />
+                            <div className='form-group'>
+                              <FieldLabel
+                                tooltip='You need to add a value to the custom field if it is required to successfully clone the environment'
+                                tooltipPlace='right'
+                              >
+                                Custom fields
+                              </FieldLabel>
+                              <AddMetadataToEntity
+                                organisationId={
+                                  AccountStore.getOrganisation().id
+                                }
+                                projectId={projectId}
+                                entityId={selectedEnv?.api_key}
+                                envName={name}
+                                entityContentType={envContentType.id}
+                                entity={envContentType.model}
+                                isCloningEnvironment
+                                onChange={setMetadata}
+                                setHasMetadataRequired={setHasMetadataRequired}
+                              />
+                            </div>
                           </FormGroup>
                         </CondensedRow>
                       )}

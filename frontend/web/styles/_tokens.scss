@@ -92,6 +92,7 @@
   --color-surface-action-hover: var(--purple-700);
   --color-surface-action-muted: oklch(from var(--purple-600) l c h / 0.16);
   --color-surface-action-subtle: oklch(from var(--purple-600) l c h / 0.08);
+  --color-surface-action-tint: oklch(from var(--purple-600) l c h / 0.12);
   --color-surface-active: oklch(from var(--slate-1000) l c h / 0.16);
   --color-surface-danger: oklch(from var(--red-500) l c h / 0.08);
   --color-surface-default: var(--slate-0);
@@ -105,14 +106,14 @@
 
   // Text
   --color-text-action: var(--purple-600);
-  --color-text-danger: var(--red-500);
+  --color-text-danger: var(--red-700);
   --color-text-default: var(--slate-600);
   --color-text-disabled: var(--slate-300);
   --color-text-info: var(--blue-500);
   --color-text-secondary: var(--slate-500);
-  --color-text-success: var(--green-500);
+  --color-text-success: var(--green-600);
   --color-text-tertiary: var(--slate-300);
-  --color-text-warning: var(--orange-500);
+  --color-text-warning: var(--orange-800);
 
   // Code
   --color-code-builtin: var(--gold-700);
@@ -197,6 +198,7 @@
   --color-surface-action-hover: var(--purple-600);
   --color-surface-action-muted: oklch(from var(--slate-0) l c h / 0.16);
   --color-surface-action-subtle: oklch(from var(--slate-0) l c h / 0.08);
+  --color-surface-action-tint: oklch(from var(--purple-400) l c h / 0.16);
   --color-surface-active: oklch(from var(--slate-0) l c h / 0.16);
   --color-surface-danger: oklch(from var(--red-500) 0.18 0.02 h);
   --color-surface-default: var(--slate-950);
@@ -208,10 +210,13 @@
   --color-surface-success: oklch(from var(--green-500) 0.18 0.02 h);
   --color-surface-warning: oklch(from var(--orange-500) 0.18 0.02 h);
   --color-text-action: var(--purple-400);
+  --color-text-danger: var(--red-500);
   --color-text-default: var(--slate-0);
   --color-text-disabled: oklch(from var(--slate-0) l c h / 0.32);
   --color-text-secondary: var(--slate-300);
+  --color-text-success: var(--green-500);
   --color-text-tertiary: oklch(from var(--slate-0) l c h / 0.48);
+  --color-text-warning: var(--orange-500);
   --color-code-builtin: var(--gold-400);
   --color-code-comment: var(--slate-500);
   --color-code-keyword: var(--purple-400);

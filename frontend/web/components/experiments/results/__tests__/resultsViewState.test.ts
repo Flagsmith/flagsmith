@@ -2,6 +2,7 @@ import {
   canRefreshResults,
   deriveResultsViewState,
   getResultsRefreshLabel,
+  hasRefreshSettled,
 } from 'components/experiments/results/resultsViewState'
 import {
   ExperimentBayesianResults,
@@ -25,6 +26,13 @@ const loaded = results({
 })
 
 describe('deriveResultsViewState', () => {
+  beforeAll(() => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-06-12T11:05:00Z'))
+  })
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
   it('is empty when there is no payload and nothing in flight', () => {
     expect(deriveResultsViewState(results()).kind).toBe('empty')
   })
@@ -57,6 +65,28 @@ describe('deriveResultsViewState', () => {
     })
     expect(state.kind).toBe('refreshing')
   })
+
+  const staleCases: [string, Partial<ExperimentBayesianResults>, string][] = [
+    ['loaded', loaded, 'loaded'],
+    ['empty', results(), 'empty'],
+  ]
+  staleCases.forEach(([name, base, expected]) => {
+    it(`ignores a refresh request older than the cutoff (${name})`, () => {
+      const state = deriveResultsViewState({
+        ...results(base),
+        refresh_requested_at: '2026-06-12T10:54:00Z',
+      })
+      expect(state.kind).toBe(expected)
+    })
+  })
+
+  it('still refreshes just inside the cutoff', () => {
+    const state = deriveResultsViewState({
+      ...loaded,
+      refresh_requested_at: '2026-06-12T10:56:00Z',
+    })
+    expect(state.kind).toBe('refreshing')
+  })
 })
 
 describe('canRefreshResults', () => {
@@ -79,6 +109,45 @@ describe('canRefreshResults', () => {
         reason: 'final',
       },
     )
+  })
+})
+
+describe('hasRefreshSettled', () => {
+  const settledCases: [
+    string,
+    Parameters<typeof hasRefreshSettled>,
+    boolean,
+  ][] = [
+    [
+      'settled view states with nothing in flight',
+      [{ kind: 'loaded' }, { kind: 'loaded' }, false],
+      true,
+    ],
+    [
+      'stale settled view states while requests are still in flight',
+      [{ kind: 'loaded' }, { kind: 'loaded' }, true],
+      false,
+    ],
+    [
+      'results still refreshing',
+      [{ kind: 'refreshing' }, { kind: 'loaded' }, false],
+      false,
+    ],
+    [
+      'exposures still refreshing',
+      [{ kind: 'loaded' }, { kind: 'refreshing' }, false],
+      false,
+    ],
+    [
+      'error view state with nothing in flight',
+      [{ kind: 'error', staleAvailable: true }, { kind: 'empty' }, false],
+      true,
+    ],
+  ]
+  settledCases.forEach(([name, args, expected]) => {
+    it(`${name} → ${expected}`, () => {
+      expect(hasRefreshSettled(...args)).toBe(expected)
+    })
   })
 })
 

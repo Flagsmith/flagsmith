@@ -1,13 +1,14 @@
 import React, { PureComponent } from 'react'
-import { close as closeIcon } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 import data from 'common/data/base/_data'
 import AppActions from 'common/dispatcher/app-actions'
 import OrganisationStore from 'common/stores/organisation-store'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import Token from './Token'
 import JSONReference from './JSONReference'
+import PageTitle from './PageTitle'
+import PlanBasedBanner from './PlanBasedAccess'
 import Button from './base/forms/Button'
+import FieldLabel from './base/forms/FieldLabel'
 import DateSelect from './DateSelect'
 import Icon from './icons/Icon'
 import Switch from './Switch'
@@ -201,8 +202,8 @@ export class CreateAPIKey extends PureComponent {
                 />
               </Flex>
               <>
-                <Row className='mb-3 mt-4'>
-                  <label className='mr-2'>Is admin</label>
+                <Row className='mb-3 mt-4 gap-2'>
+                  <label className='mb-0'>Is admin</label>
                   <Switch
                     onChange={() => {
                       this.setState({
@@ -212,7 +213,13 @@ export class CreateAPIKey extends PureComponent {
                     checked={is_admin}
                     disabled={!Utils.getPlansPermission('RBAC') && is_admin}
                   />
+                  <PlanBasedBanner feature='RBAC' theme='badge' />
                 </Row>
+                <PlanBasedBanner
+                  feature='RBAC'
+                  theme='description'
+                  className='mb-4'
+                />
                 {!is_admin && (
                   <>
                     <Row className='mb-3 mt-4'>
@@ -226,11 +233,8 @@ export class CreateAPIKey extends PureComponent {
                           className='chip'
                         >
                           <span className='font-weight-bold'>{r.name}</span>
-                          <span className='chip-icon ion'>
-                            <IonIcon
-                              icon={closeIcon}
-                              style={{ fontSize: '13px' }}
-                            />
+                          <span className='chip-icon'>
+                            <Icon name='close' width={18} />
                           </span>
                         </Row>
                       ))}
@@ -265,9 +269,10 @@ export class CreateAPIKey extends PureComponent {
               </>
               <Flex>
                 <div>
-                  <label>Expiry</label>
+                  <FieldLabel htmlFor='api-key-expiry'>Expiry</FieldLabel>
                 </div>
                 <DateSelect
+                  id='api-key-expiry'
                   onChange={(e) => {
                     this.setState({
                       expiry_date: e?.toISOString(),
@@ -405,6 +410,9 @@ export default class AdminAPIKeys extends PureComponent {
           isLoading: false,
         })
       })
+      .catch(() => {
+        this.setState({ isLoading: false })
+      })
   }
 
   remove = (v) => {
@@ -439,12 +447,19 @@ export default class AdminAPIKeys extends PureComponent {
           title={'API Keys'}
           json={apiKeys}
         />
-        <Column className='my-4 ml-0 col-md-6'>
-          <h5 className='mb-1'>{`${'Manage'} API Keys`}</h5>
-          <p className='mb-0 fs-small lh-sm'>
-            {`API keys are used to authenticate with the Admin API.`}
-          </p>
-          <div className='mb-4 fs-small lh-sm'>
+        <div className='mt-4'>
+          <PageTitle
+            title='API keys'
+            cta={
+              <Button
+                onClick={this.createAPIKey}
+                disabled={this.state.isLoading}
+              >
+                {`Create API Key`}
+              </Button>
+            }
+          >
+            {`API keys are used to authenticate with the Admin API. `}
             <Button
               theme='text'
               href='https://docs.flagsmith.com/integrations/terraform#terraform-api-key'
@@ -453,11 +468,8 @@ export default class AdminAPIKeys extends PureComponent {
             >
               {`Learn about API Keys.`}
             </Button>
-          </div>
-          <Button onClick={this.createAPIKey} disabled={this.state.isLoading}>
-            {`Create API Key`}
-          </Button>
-        </Column>
+          </PageTitle>
+        </div>
         {(this.state.isLoading || !OrganisationStore.model?.users) && (
           <div className='text-center'>
             <Loader />

@@ -65,7 +65,7 @@ class OrganisationRole(models.TextChoices):
     USER = ("USER", "User")
 
 
-class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[misc]
+class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[django-manager-missing,misc]
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)
@@ -90,6 +90,12 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         default=False, help_text="Record feature analytics in InfluxDB"
     )
     force_2fa = models.BooleanField(default=False)
+    targeting_key = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        help_text="Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.",
+    )
 
     class Meta:
         ordering = ["id"]
@@ -103,7 +109,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
     @property
     def num_seats(self) -> int:
-        return self.users.count()
+        return self.userorganisation_set.filter(is_active=True).count()
 
     def has_paid_subscription(self) -> bool:
         # Includes subscriptions that are canceled.
@@ -134,7 +140,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     @property
     def openfeature_evaluation_context(self) -> EvaluationContext:
         return EvaluationContext(
-            targeting_key=f"org.{self.id}",
+            targeting_key=self.targeting_key or f"org.{self.id}",
             attributes={
                 "organisation.id": self.id,
                 "organisation.name": self.name,
@@ -203,21 +209,30 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         ).values_list("id", flat=True):
             rebuild_environment_document.delay(args=(environment_id,))
 
-    def cancel_users(self):  # type: ignore[no-untyped-def]
+    def cancel_users(self) -> None:
+        """
+        Reduce the organisation to the single seat the free plan allows.
+
+        The retained member must hold an active membership, otherwise the
+        organisation would be left with nobody able to access it.
+        """
+        active_memberships = UserOrganisation.objects.filter(
+            organisation=self,
+            is_active=True,
+        )
         remaining_seat_holder = (
-            UserOrganisation.objects.filter(
-                organisation=self,
-                role=OrganisationRole.ADMIN,
-            )
+            active_memberships.filter(role=OrganisationRole.ADMIN)
             .order_by("date_joined")
             .first()
+            or active_memberships.order_by("date_joined").first()
         )
+        if remaining_seat_holder is None:
+            # No seat is in use, so there is nothing to cancel down to.
+            return
 
         UserOrganisation.objects.filter(
             organisation=self,
-        ).exclude(
-            id=remaining_seat_holder.id  # type: ignore[union-attr]
-        ).delete()
+        ).exclude(id=remaining_seat_holder.id).delete()
 
 
 class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
@@ -225,6 +240,13 @@ class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     date_joined = models.DateTimeField(auto_now_add=True)
     role = models.CharField(max_length=50, choices=OrganisationRole.choices)
+    is_active = models.BooleanField(
+        default=True,
+        help_text=(
+            "Inactive members can still log in, but cannot access the "
+            "organisation, and do not count towards its seat limit."
+        ),
+    )
 
     class Meta:
         unique_together = (
@@ -312,7 +334,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return self.subscription_plan_family == SubscriptionPlanFamily.ENTERPRISE
 
     def get_scaleup_plan_version(self) -> int:
-        if match := re.match(r"scale-up-v(\d+)", self.plan or ""):
+        if match := re.match(r"scale-up-v(\d+)", self.plan or "", re.IGNORECASE):
             return int(match.group(1))
         return 1
 
@@ -376,7 +398,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
         if cancellation_date <= timezone.now():
             # Since the date is immediate, wipe data right away.
-            self.organisation.cancel_users()  # type: ignore[no-untyped-call]
+            self.organisation.cancel_users()
             self.save_as_free_subscription()  # type: ignore[no-untyped-call]
             return
 

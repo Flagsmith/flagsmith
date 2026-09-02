@@ -20,6 +20,7 @@ const sendWarehouseTestEvent = async (environmentId: string): Promise<void> => {
     enableEvents: true,
     environmentID: environmentId,
     fetch: globalThis.fetch.bind(globalThis),
+    identity: 'test_warehouse_user',
     preventFetch: true,
     ...(Project.flagsmithClientEventsAPI && {
       eventProcessorConfig: {

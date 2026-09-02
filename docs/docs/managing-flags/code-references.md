@@ -53,7 +53,7 @@ jobs:
 This workflow needs the following added to [_Settings > Secrets and variables > Actions_](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) in GitHub:
 
 - `FLAGSMITH_PROJECT_ID` (variable): obtain from the Flagsmith dashboard URL, e.g. `/project/<id>/...`
-- `FLAGSMITH_CODE_REFERENCES_API_KEY` (secret): obtain from _Organisation Settings > API Keys_ in Flagsmith
+- `FLAGSMITH_CODE_REFERENCES_API_KEY` (secret): obtain from _Organisation Settings > API Access_ in Flagsmith
 
 ### Advanced configuration
 
@@ -109,7 +109,7 @@ jobs:
 This workflow needs the following added to [_Settings > Secrets and variables > Actions_](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) in GitHub:
 
 - `FLAGSMITH_PROJECT_ID` (variable): obtain from the Flagsmith dashboard URL, e.g. `/project/<id>/...`
-- `FLAGSMITH_CODE_REFERENCES_API_KEY` (secret): obtain from _Organisation Settings > API Keys_ in Flagsmith
+- `FLAGSMITH_CODE_REFERENCES_API_KEY` (secret): obtain from _Organisation Settings > API Access_ in Flagsmith
 
 ---
 

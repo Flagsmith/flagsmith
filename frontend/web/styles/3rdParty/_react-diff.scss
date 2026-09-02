@@ -1,121 +1,71 @@
-@import "../variables";
-.react-diff-1n5o7vh-diff-container {
-  background-color: transparent !important;
+@import '../variables';
 
+// Diff view: react-diff-viewer, with Prism for the JSON. The hashed
+// react-diff-* classes need !important because the library injects its
+// emotion styles at runtime, after this stylesheet, so it wins any tie.
+
+.react-diff-1n5o7vh-diff-container {
+  // The diff's two strengths, in one place. A changed row is faint, the words
+  // that changed inside it are stronger, which is what makes a diff readable.
+  // See-through layers, so one value works on light and dark alike.
+  // DiffRow.scss repeats the two row values for the rows we build ourselves.
+  --diff-row-removed: oklch(from var(--red-500) l c h / 0.16);
+  --diff-row-added: oklch(from var(--green-500) l c h / 0.16);
+  --diff-word-removed: oklch(from var(--red-500) l c h / 0.28);
+  --diff-word-added: oklch(from var(--green-500) l c h / 0.28);
+
+  background-color: transparent !important;
 }
+
+// Prism's JSON tokens, on the same palette as highlight.js in _hljs.scss.
 .token.property {
-  color: $success;
+  color: var(--color-code-variable);
 }
-.token.number,.token.boolean {
-  color: $info;
+.token.number,
+.token.boolean,
+.token.null {
+  color: var(--color-code-literal);
 }
-.react-diff-1igno8l-gutter,.react-diff-1wdmqof-code-fold {
-  background-color: $black-alpha-8 !important;
+.token.string {
+  color: var(--color-code-string);
+}
+.token.punctuation,
+.token.operator {
+  color: var(--color-code-text);
+}
+
+.react-diff-1igno8l-gutter,
+.react-diff-1wdmqof-code-fold {
+  background-color: var(--color-surface-subtle) !important;
 }
 .react-diff-1989f1g-code-fold-gutter {
-  background-color: $black-alpha-8 !important;
-}
-.react-diff-same {
-  font-size: 13px;
-  background-color: rgba(0, 0, 0, 0.08);
-  .react-diff-marker {
-    opacity: 0;
-  }
-  pre {
-    padding-left: 2px;
-  }
-}
-.react-diff-marker {
-  background-color: $black-alpha-8;
-  width: 31px;
-  height: 31px;
-  justify-content: center;
-  display: flex;
-  align-items: center;
-  >* {
-    margin: 0;
-  }
-  &.react-diff-marker--added {
-    background-color: $success-alfa-16 !important;
-
-  }
-  &.react-diff-marker--removed {
-    background-color: $danger-alfa-16 !important;
-  }
-}
-.react-diff-line {
-  line-height: 31px;
-  &.react-diff-line--added {
-    background-color: $success-alfa-16 !important;
-  }
-  &.react-diff-line--removed {
-    background-color: $danger-alfa-16 !important;
-  }
-  .rc-switch {
-    margin-bottom: 2px;
-  }
-}
-.react-diff-line pre {
-  background-color: $black-alpha-8;
-  display: flex;
-  flex:1;
-  line-height: 28px;
-  font-family: $font-family-code;
-  font-size: 13px !important;
+  background-color: var(--color-surface-subtle) !important;
 }
 .react-diff-42iver-word-diff {
-  padding:0 !important;
+  padding: 0 !important;
+}
+
+.react-diff-1fxlvce-diff-removed {
+  background-color: var(--diff-row-removed) !important;
+}
+.react-diff-1fqrsd-diff-added {
+  background-color: var(--diff-row-added) !important;
 }
 .react-diff-1p2tkx4-marker.react-diff-1fxlvce-diff-removed {
-  background-color: $danger-alfa-16 !important;
+  background-color: var(--diff-word-removed) !important;
 }
 .react-diff-1p2tkx4-marker.react-diff-1fqrsd-diff-added {
-  background-color: $success-alfa-16 !important;
+  background-color: var(--diff-word-added) !important;
 }
 .react-diff-hf3w1f-word-removed {
-  background-color: $danger-alfa-16 !important;
+  background-color: var(--diff-word-removed) !important;
 }
 .react-diff-1u4zuq6-word-added {
-  background-color: $success-alfa-16 !important;
+  background-color: var(--diff-word-added) !important;
 }
+
 .react-diff-1n5o7vh-diff-container pre {
   font-family: $font-family-monospace;
   font-size: $font-caption !important;
-  color: $body-color !important;
-}
-.react-diff-1fxlvce-diff-removed {
-  background-color: $danger-alfa-8 !important;
-}
-.react-diff-1fqrsd-diff-added {
-  background-color: $success-alfa-8 !important;
-}
-
-.dark {
-  .react-diff-1n5o7vh-diff-container pre {
-    color: $body-color-dark !important;
-  }
-}
-
-// Environment name legend for diff headers
-.diff-removed-header,
-.diff-added-header {
-  font-weight: 500;
-  font-size: $font-caption;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
-.diff-removed-header {
-  background-color: var(--color-surface-danger);
-  color: var(--color-text-danger);
-}
-
-.diff-added-header {
-  background-color: var(--color-surface-success);
-  color: var(--color-text-success);
-}
-
-.diff-sign {
-  font-weight: bold;
-  margin-right: 4px;
+  color: var(--color-text-default) !important;
 }

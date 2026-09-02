@@ -1,23 +1,26 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import OnboardingHeader from 'components/pages/onboarding/OnboardingHeader'
-import ThemeToggle from 'components/pages/onboarding/ThemeToggle'
+import ThemeToggle from 'components/ThemeToggle'
 import OnboardingConnectPanel from 'components/pages/onboarding/OnboardingConnectPanel'
 import OnboardingTerminal from 'components/pages/onboarding/OnboardingTerminal'
 import OnboardingFlagsTable from 'components/pages/onboarding/OnboardingFlagsTable'
 import OnboardingNextSteps, {
   OnboardingNextStep,
 } from 'components/pages/onboarding/OnboardingNextSteps'
+import { openRolloutQuest } from 'components/pages/onboarding/OnboardingRolloutQuest'
 import { useEnsureOnboardingResources } from 'components/pages/onboarding/hooks/useEnsureOnboardingResources'
 import { useOnboardingFlagRename } from 'components/pages/onboarding/hooks/useOnboardingFlagRename'
 import { useOnboardingFlag } from 'components/pages/onboarding/hooks/useOnboardingFlag'
 import { useOnboardingConnection } from 'components/pages/onboarding/hooks/useOnboardingConnection'
 import { useUpdateOrganisationMutation } from 'common/services/useOrganisation'
 import { useUpdateProjectMutation } from 'common/services/useProject'
+import { useGetProfileQuery } from 'common/services/useProfile'
 import API from 'project/api'
 import Constants from 'common/constants'
+import { isPendingAuthorisation } from 'common/utils/pendingAuthorisation'
 import './OnboardingFlow.scss'
 
 type OnboardingSnippet = 'install' | 'wire'
@@ -40,6 +43,25 @@ const OnboardingFlow: FC = () => {
   const history = useHistory()
   const [updateOrganisation] = useUpdateOrganisationMutation()
   const [updateProject] = useUpdateProjectMutation()
+  // Already fetched by useEnsureOnboardingResources, so this is a cache read.
+  const { data: profile } = useGetProfileQuery({})
+
+  // A client waiting on the consent screen sent this user here to sign up. It
+  // is answered once the workspace exists, never on load: bootstrapping is a
+  // chain of creates, and navigating away mid-chain leaves it half done. The
+  // client returns the browser here afterwards, by then with nothing pending.
+  const [leavingForConsent, setLeavingForConsent] = useState(false)
+  useEffect(() => {
+    if (status !== 'ready') {
+      return
+    }
+    const pending = API.getRedirect()
+    if (isPendingAuthorisation(pending)) {
+      API.setRedirect('')
+      setLeavingForConsent(true)
+      history.replace(pending)
+    }
+  }, [status, history])
 
   // Chromeless flow, so it owns its only exit.
   const skipToApp = () =>
@@ -126,8 +148,8 @@ const OnboardingFlow: FC = () => {
     }
   }
 
-  // Each next-step card deep-links to the flag's real config; nothing faked.
-  const goToNextStep = (step: OnboardingNextStep) => {
+  // Where a quest ends up: the flag's real config, nothing faked.
+  const goToFlagConfig = (step: OnboardingNextStep) => {
     if (projectId === null) {
       return
     }
@@ -149,6 +171,20 @@ const OnboardingFlow: FC = () => {
     organisation_id: organisationId,
     project_id: projectId,
   }
+
+  // Off, rollout deep-links to the overrides tab like every other next step.
+  // Read on click rather than on render: hasFeature counts an evaluation, and
+  // this page re-renders on every connection poll.
+  const goToNextStep = (step: OnboardingNextStep) =>
+    step === 'rollout' &&
+    Utils.getFlagsmithHasFeature('onboarding_rollout_quest')
+      ? openRolloutQuest({
+          diagnosticIds,
+          featureName,
+          onContinue: () => goToFlagConfig('rollout'),
+          who: { email: profile?.email, organisation: organisationDisplayName },
+        })
+      : goToFlagConfig(step)
   const trackSnippetCopied = (snippet: OnboardingSnippet) =>
     API.trackEvent({
       ...Constants.events.ONBOARDING_SNIPPET_COPIED,
@@ -176,7 +212,7 @@ const OnboardingFlow: FC = () => {
     }
   }
 
-  if (status === 'creating') {
+  if (status === 'creating' || leavingForConsent) {
     return (
       <div className='onboarding-flow mx-auto text-center'>
         <Loader />

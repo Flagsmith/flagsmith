@@ -17,10 +17,9 @@ class FeatureImportPermissions(IsAuthenticated):
         environment = Environment.objects.select_related(
             "project__organisation",
         ).get(id=view.kwargs["environment_id"])
-        organisation = environment.project.organisation
 
-        # Since feature imports can be destructive, use org admin.
-        return request.user.is_organisation_admin(organisation)  # type: ignore[union-attr,no-any-return]
+        # Since feature imports can be destructive, use project admin.
+        return request.user.is_project_admin(environment.project)  # type: ignore[union-attr,no-any-return]
 
 
 class CreateFeatureExportPermissions(IsAuthenticated):

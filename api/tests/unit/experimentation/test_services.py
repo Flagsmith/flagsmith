@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 import pytest
+from django.db import IntegrityError
 from django.db.models import Q
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from prometheus_client import REGISTRY
@@ -22,6 +23,7 @@ from experimentation.dataclasses import (
     MetricSpec,
     ResultsAggregates,
     RolloutSpec,
+    WarehouseEventNames,
     WarehouseEventStats,
 )
 from experimentation.models import (
@@ -47,7 +49,8 @@ from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.versioning.dataclasses import MultivariateValueChangeSet
-from segments.models import Condition
+from organisations.models import Organisation
+from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
 
@@ -108,28 +111,240 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
     services._get_clickhouse_client.cache_clear()
 
 
-def test_get_unique_event_names__events_present__returns_ordered_names(
+def test_get_clickhouse_client__per_timeout__caches_distinct_clients(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://ch.example.com/db"
+    mock_client_cls = mocker.patch(
+        "experimentation.services.Client",
+        side_effect=lambda *args, **kwargs: mocker.Mock(),
+    )
+    services._get_clickhouse_client.cache_clear()
+
+    # When
+    client = services._get_clickhouse_client()
+    same_client = services._get_clickhouse_client()
+    background_client = services._get_clickhouse_client(
+        send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    )
+
+    # Then
+    assert client is same_client
+    assert background_client is not client
+    assert mock_client_cls.call_count == 2
+    assert (
+        mock_client_cls.call_args_list[1].kwargs["send_receive_timeout"]
+        == services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS
+    )
+    services._get_clickhouse_client.cache_clear()
+
+
+@pytest.mark.parametrize(
+    "rows, expected",
+    [
+        (
+            [("conversion",), ("page_view",)],
+            WarehouseEventNames(events=["conversion", "page_view"], is_truncated=False),
+        ),
+        ([], WarehouseEventNames(events=[], is_truncated=False)),
+        (
+            [(f"event_{i:03d}",) for i in range(501)],
+            WarehouseEventNames(
+                events=[f"event_{i:03d}" for i in range(500)], is_truncated=True
+            ),
+        ),
+    ],
+    ids=["few", "none", "truncated"],
+)
+def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
+    warehouse_connection: WarehouseConnection,
+    settings: SettingsWrapper,
+    reset_cache: None,
+    rows: list[tuple[str]],
+    expected: WarehouseEventNames,
     mocker: MockerFixture,
 ) -> None:
     # Given
+    settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://ch.example.com/db"
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = [("conversion",), ("page_view",)]
+    mock_client.execute.return_value = rows
     mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
     )
 
     # When
-    result = services.get_unique_event_names("env-key-123")
+    result = services.get_warehouse_event_names(warehouse_connection, "env-key-123")
 
     # Then
-    assert result == ["conversion", "page_view"]
+    assert result == expected
     mock_client.execute.assert_called_once_with(
-        "SELECT DISTINCT event FROM events "
+        "SELECT event FROM events "
         "WHERE environment_key = %(environment_key)s "
-        "ORDER BY event",
-        {"environment_key": "env-key-123"},
+        "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s",
+        {"environment_key": "env-key-123", "limit": 501},
     )
+
+    # When — the result is cached, so a second request doesn't hit the warehouse
+    second_result = services.get_warehouse_event_names(
+        warehouse_connection, "env-key-123"
+    )
+
+    # Then
+    mock_client.execute.assert_called_once()
+    assert second_result == expected
+
+
+@pytest.mark.parametrize(
+    "clickhouse_url, execute_side_effect",
+    [
+        ("", None),
+        ("clickhouse://ch.example.com/db", Exception("connection refused")),
+    ],
+    ids=["unconfigured", "unreachable"],
+)
+def test_get_warehouse_event_names__flagsmith_warehouse_unavailable__returns_none(
+    warehouse_connection: WarehouseConnection,
+    settings: SettingsWrapper,
+    reset_cache: None,
+    clickhouse_url: str,
+    execute_side_effect: Exception | None,
+    log: StructuredLogCapture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.EXPERIMENTATION_CLICKHOUSE_URL = clickhouse_url
+    mock_client = mocker.Mock()
+    mock_client.execute.side_effect = execute_side_effect
+    mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
+
+    # When
+    result = services.get_warehouse_event_names(warehouse_connection, "env-key-123")
+
+    # Then
+    assert result is None
+    assert any(
+        event["event"] == "connection.event_names_failed" for event in log.events
+    ) == (execute_side_effect is not None)
+
+
+@pytest.mark.parametrize(
+    "query_result, expected",
+    [
+        (
+            [("conversion",), ("page_view",)],
+            WarehouseEventNames(events=["conversion", "page_view"], is_truncated=False),
+        ),
+        (Exception("connection refused"), None),
+    ],
+    ids=["reachable", "unreachable"],
+)
+def test_get_warehouse_event_names__clickhouse_connection__queries_customer_instance(
+    clickhouse_connection: WarehouseConnection,
+    reset_cache: None,
+    query_result: Exception | list[tuple[str]],
+    expected: WarehouseEventNames | None,
+    log: StructuredLogCapture,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+    if isinstance(query_result, Exception):
+        get_client.return_value.query.side_effect = query_result
+    else:
+        get_client.return_value.query.return_value = mocker.Mock(
+            result_rows=query_result
+        )
+
+    # When
+    result = services.get_warehouse_event_names(clickhouse_connection, "test-env-key")
+
+    # Then
+    assert result == expected
+    get_client.return_value.query.assert_called_once_with(
+        "SELECT event FROM events "
+        "WHERE environment_key = %(environment_key)s "
+        "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s",
+        parameters={"environment_key": "test-env-key", "limit": 501},
+    )
+    get_client.return_value.close.assert_called_once_with()
+    assert any(
+        event["event"] == "connection.event_names_failed" for event in log.events
+    ) == (expected is None)
+
+    # When — the outcome is cached, so a second request doesn't reconnect
+    fresh_connection = WarehouseConnection.objects.get(id=clickhouse_connection.id)
+    second_result = services.get_warehouse_event_names(fresh_connection, "test-env-key")
+
+    # Then
+    get_client.assert_called_once()
+    assert second_result == expected
+
+
+@pytest.mark.parametrize(
+    "changed_field, new_value, expected_events, expected_query_count",
+    [
+        ("config", {"host": "new.acme-corp.example"}, ["new_event"], 2),
+        ("credentials", {"password": "rotated"}, ["old_event"], 1),
+    ],
+    ids=["config-bypasses-cache", "credentials-keep-cache"],
+)
+def test_get_warehouse_event_names__connection_details_changed__cache_keyed_by_config(
+    clickhouse_connection: WarehouseConnection,
+    reset_cache: None,
+    changed_field: str,
+    new_value: dict[str, str],
+    expected_events: list[str],
+    expected_query_count: int,
+    mocker: MockerFixture,
+) -> None:
+    # Given — a cached result for the connection's current details
+    get_client = mocker.patch(
+        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+    )
+    get_client.return_value.query.return_value = mocker.Mock(
+        result_rows=[("old_event",)]
+    )
+    services.get_warehouse_event_names(clickhouse_connection, "test-env-key")
+
+    # When — the connection details change
+    setattr(
+        clickhouse_connection,
+        changed_field,
+        {**getattr(clickhouse_connection, changed_field), **new_value},
+    )
+    clickhouse_connection.save()
+    get_client.return_value.query.return_value = mocker.Mock(
+        result_rows=[("new_event",)]
+    )
+    result = services.get_warehouse_event_names(clickhouse_connection, "test-env-key")
+
+    # Then — a config change re-queries; a credential rotation keeps the cache
+    assert result == WarehouseEventNames(events=expected_events, is_truncated=False)
+    assert get_client.return_value.query.call_count == expected_query_count
+
+
+def test_get_warehouse_event_names__unsupported_type__raises(
+    environment: Environment,
+) -> None:
+    # Given
+    connection = WarehouseConnection(
+        environment=environment,
+        warehouse_type=WarehouseType.SNOWFLAKE,
+        name="Snowflake",
+        config={"account_identifier": "acme"},
+    )
+
+    # When / Then
+    with pytest.raises(ValueError, match="Unsupported warehouse type"):
+        services.get_warehouse_event_names(connection, "test-env-key")
 
 
 def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
@@ -144,7 +359,7 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
     ]
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
-    mocker.patch(
+    mock_get_client = mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
     )
@@ -195,6 +410,9 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
         "window_start": window_start,
         "window_end": window_end,
     }
+    mock_get_client.assert_called_once_with(
+        send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    )
 
 
 def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
@@ -393,24 +611,6 @@ def test_build_exposures_summary__no_buckets__empty_summary() -> None:
         excluded_identities=0,
         timeseries=ExposuresTimeseries(granularity="hour", points=[]),
     )
-
-
-def test_get_unique_event_names__no_events__returns_empty_list(
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mock_client = mocker.Mock()
-    mock_client.execute.return_value = []
-    mocker.patch(
-        "experimentation.services._get_clickhouse_client",
-        return_value=mock_client,
-    )
-
-    # When
-    result = services.get_unique_event_names("env-key-123")
-
-    # Then
-    assert result == []
 
 
 @pytest.mark.parametrize(
@@ -630,7 +830,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     ]
     mock_client = mocker.Mock()
     mock_client.execute.return_value = (rows, _result_columns(4))
-    mocker.patch(
+    mock_get_client = mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
     )
@@ -697,6 +897,9 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     assert params["metric_2_event"] == "page_view"
     assert params["metric_3_event"] == "session"
     assert params["window_end"] == window_end
+    mock_get_client.assert_called_once_with(
+        send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    )
 
 
 def test_get_metric_variant_stats__three_variants__maps_all_variants(
@@ -1349,6 +1552,64 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
     segment = experiment.rollout_segment
     assert segment is not None
     assert segment.is_system_segment is True
+    assert segment.rules_data == [
+        {
+            "type": SegmentRule.ALL_RULE,
+            "conditions": [
+                {
+                    "property": "$.identity.key",
+                    "operator": PERCENTAGE_SPLIT,
+                    "value": "42.0",
+                    "description": None,
+                }
+            ],
+            "rules": [],
+        }
+    ]
+
+    override = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__segment=segment,
+    )
+    assert override.enabled is True
+    allocations = {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in override.multivariate_feature_state_values.all()
+    }
+    assert allocations == {option_a.id: 60.0, option_b.id: 40.0}
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+def test_apply_experiment_rollout__no_segment__creates_segment_and_override_x_replaced_above(
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=42.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 60.0),
+                MultivariateValueChangeSet(option_b.id, 40.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then
+    experiment.refresh_from_db()
+    segment = experiment.rollout_segment
+    assert segment is not None
+    assert segment.is_system_segment is True
     condition = Condition.objects.get(rule__segment=segment)
     assert condition.operator == PERCENTAGE_SPLIT
     assert condition.value == "42.0"
@@ -1511,6 +1772,56 @@ def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
 
 
 def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enabled(
+    experiment_with_rollout: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    experiment = experiment_with_rollout
+    option_a, option_b, _ = multivariate_options
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=False,
+            rollout_percentage=80.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+
+    # Then
+    segment = Segment.objects.get(pk=experiment.rollout_segment_id)
+    assert segment.rules_data == [
+        {
+            "type": SegmentRule.ALL_RULE,
+            "conditions": [
+                {
+                    "property": "$.identity.key",
+                    "operator": PERCENTAGE_SPLIT,
+                    "value": "80.0",
+                    "description": None,
+                }
+            ],
+            "rules": [],
+        }
+    ]
+    override = FeatureState.objects.get(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        feature_segment__segment=experiment.rollout_segment,
+    )
+    assert override.enabled is False
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enabled_x_replaced_above(
     experiment_with_rollout: Experiment,
     multivariate_options: list[MultivariateFeatureOption],
     admin_user: FFAdminUser,
@@ -2196,3 +2507,184 @@ def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer
     # Then
     get_client.assert_called_once()
     assert getattr(fresh_connection, "event_stats", None) == expected_stats
+
+
+def test_get_experiment_flag_config__flag_disabled__returns_empty(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = MagicMock()
+    mock_client.get_boolean_value.return_value = False
+    mocker.patch(
+        "experimentation.services.get_openfeature_client",
+        return_value=mock_client,
+    )
+
+    # When
+    result = services.get_experiment_flag_config(organisation)
+
+    # Then
+    assert result == {}
+    mock_client.get_string_value.assert_not_called()
+
+
+def test_get_experiment_flag_config__flag_enabled_with_valid_json__returns_parsed(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = MagicMock()
+    mock_client.get_boolean_value.return_value = True
+    mock_client.get_string_value.return_value = '{"auto_connect_warehouse": true}'
+    mocker.patch(
+        "experimentation.services.get_openfeature_client",
+        return_value=mock_client,
+    )
+
+    # When
+    result = services.get_experiment_flag_config(organisation)
+
+    # Then
+    assert result == {"auto_connect_warehouse": True}
+
+
+@pytest.mark.parametrize(
+    "raw_value",
+    ["not-json", "", None],
+    ids=["invalid-json", "empty-string", "none"],
+)
+def test_get_experiment_flag_config__flag_enabled_with_bad_value__returns_empty(
+    organisation: Organisation,
+    mocker: MockerFixture,
+    raw_value: str | None,
+) -> None:
+    # Given
+    mock_client = MagicMock()
+    mock_client.get_boolean_value.return_value = True
+    mock_client.get_string_value.return_value = raw_value
+    mocker.patch(
+        "experimentation.services.get_openfeature_client",
+        return_value=mock_client,
+    )
+
+    # When
+    result = services.get_experiment_flag_config(organisation)
+
+    # Then
+    assert result == {}
+
+
+def test_get_experiment_flag_config__flag_enabled_with_non_dict_json__returns_empty(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mock_client = MagicMock()
+    mock_client.get_boolean_value.return_value = True
+    mock_client.get_string_value.return_value = '["free"]'
+    mocker.patch(
+        "experimentation.services.get_openfeature_client",
+        return_value=mock_client,
+    )
+
+    # When
+    result = services.get_experiment_flag_config(organisation)
+
+    # Then
+    assert result == {}
+
+
+@pytest.mark.django_db()
+def test_ensure_flagsmith_warehouse_connection__auto_connect_disabled__returns_none(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.services.get_experiment_flag_config",
+        return_value={},
+    )
+
+    # When
+    result = services.ensure_flagsmith_warehouse_connection(environment)
+
+    # Then
+    assert result is None
+    assert not WarehouseConnection.objects.filter(
+        environment=environment,
+    ).exists()
+
+
+@pytest.mark.django_db()
+def test_ensure_flagsmith_warehouse_connection__auto_connect_enabled__creates_connection(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.services.get_experiment_flag_config",
+        return_value={"auto_connect_warehouse": True},
+    )
+
+    # When
+    result = services.ensure_flagsmith_warehouse_connection(environment)
+
+    # Then
+    assert result is not None
+    assert result.warehouse_type == WarehouseType.FLAGSMITH
+    assert result.name == "Flagsmith"
+    assert result.environment == environment
+
+
+@pytest.mark.django_db()
+def test_ensure_flagsmith_warehouse_connection__connection_already_exists__returns_none(
+    environment: Environment,
+    warehouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.services.get_experiment_flag_config",
+        return_value={"auto_connect_warehouse": True},
+    )
+
+    # When
+    result = services.ensure_flagsmith_warehouse_connection(environment)
+
+    # Then
+    assert result is None
+    assert (
+        WarehouseConnection.objects.filter(
+            environment=environment,
+            deleted_at__isnull=True,
+        ).count()
+        == 1
+    )
+
+
+def test_ensure_flagsmith_warehouse_connection__race_condition__handles_integrity_error(
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.services.get_experiment_flag_config",
+        return_value={"auto_connect_warehouse": True},
+    )
+    mocker.patch.object(
+        WarehouseConnection.objects,
+        "filter",
+        return_value=MagicMock(exists=MagicMock(return_value=False)),
+    )
+    mocker.patch.object(
+        WarehouseConnection.objects,
+        "create",
+        side_effect=IntegrityError("duplicate"),
+    )
+
+    # When
+    result = services.ensure_flagsmith_warehouse_connection(environment)
+
+    # Then
+    assert result is None

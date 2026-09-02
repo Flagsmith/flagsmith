@@ -6,6 +6,7 @@ import { Req } from 'common/types/requests'
 import { components } from 'react-select'
 import Utils from 'common/utils/utils'
 import Button from './base/forms/Button'
+import Chip from './base/Chip'
 
 type SegmentSelectType = {
   disabled: boolean
@@ -31,12 +32,19 @@ const SegmentSelect: FC<SegmentSelectType> = ({
 
   let filteredResults: Res['segments']['results'] = []
   if (data) {
-    filteredResults = filter
-      ? (data.results.filter(filter) as Res['segments']['results'])
-      : data.results
+    // A cohort awaiting deletion is already gone from the user's point of view.
+    filteredResults = data.results.filter(
+      (segment) => !segment.cohort?.deletion_requested_at,
+    )
+    if (filter) {
+      filteredResults = filteredResults.filter(
+        filter,
+      ) as Res['segments']['results']
+    }
   }
   const options = filteredResults.map(
-    ({ feature, id: value, name: label }) => ({
+    ({ cohort, feature, id: value, name: label }) => ({
+      cohort,
       feature,
       label,
       value,
@@ -83,6 +91,11 @@ const SegmentSelect: FC<SegmentSelectType> = ({
             {children}
             {!!data.feature && (
               <div className='unread ml-2 px-2'>Feature-Specific</div>
+            )}
+            {!!data.cohort && (
+              <Chip className='ml-2' size='xs' variant='accent'>
+                {data.cohort.source_type.toUpperCase()}
+              </Chip>
             )}
           </div>
         ),

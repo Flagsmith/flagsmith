@@ -97,7 +97,11 @@ def test_no_ssrf_url_field__public_address__returns_value(
     label: str,
 ) -> None:
     # Given / When
-    result = field.run_validation(url)
+    with mock.patch(
+        "core.network.socket.getaddrinfo",
+        return_value=[(socket.AF_INET, None, None, None, ("8.8.8.8", 0))],
+    ):
+        result = field.run_validation(url)
 
     # Then
     assert result == url
@@ -116,3 +120,24 @@ def test_no_ssrf_url_field__unresolvable_hostname__returns_value(
 
     # Then
     assert result == "https://unresolvable.example.com/hook"
+
+
+@pytest.mark.parametrize(
+    "url,label",
+    [
+        ("ftp://example.com/hook", "ftp"),
+        ("ftps://example.com/hook", "ftps"),
+        ("file:///etc/passwd", "file"),
+        ("gopher://example.com/hook", "gopher"),
+    ],
+)
+def test_no_ssrf_url_field__non_http_scheme__raises_validation_error(  # noqa: FT004
+    field: NoSSRFURLField,
+    url: str,
+    label: str,
+) -> None:
+    # Given / When / Then
+    with pytest.raises(ValidationError) as exc_info:
+        field.run_validation(url)
+
+    assert "invalid" in str(exc_info.value.detail)

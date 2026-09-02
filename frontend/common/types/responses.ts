@@ -174,6 +174,18 @@ export type SegmentMembersResponse = PagedResponse<SegmentMember> & {
   // Pass as `cursor` to fetch the next page; null when there are no more rows.
   next_cursor: string | null
 }
+export type CohortSourceType = 'csv' | 'amplitude' | 'mixpanel'
+
+export type SegmentCohort = {
+  id: number
+  environment: number
+  environment_api_key: string
+  environment_name: string
+  source_type: CohortSourceType
+  version: number
+  deletion_requested_at: string | null
+}
+
 export type Segment = {
   id: number
   rules: SegmentRule[]
@@ -184,6 +196,7 @@ export type Segment = {
   feature?: number
   metadata: Metadata[] | []
   membership_counts?: SegmentMembership[]
+  cohort?: SegmentCohort | null
 }
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
@@ -502,6 +515,8 @@ export type AuditLogDetail = AuditLogItem & {
     new: FlagsmithValue
   }[]
 }
+export type PaymentMethod = 'CHARGEBEE' | 'XERO' | 'AWS_MARKETPLACE'
+
 export type Subscription = {
   id: number
   uuid: string
@@ -512,10 +527,17 @@ export type Subscription = {
   max_api_calls: number
   cancellation_date: string | null
   customer_id: string
-  payment_method: string
+  payment_method: PaymentMethod | null
   notes: string | null
+  has_active_billing_periods: boolean
 }
 
+export type OnboardingVariant = 'control' | 'single_page'
+// What consenting to an OAuth scope grants, as the API describes it.
+export type OAuthScopeDescription = {
+  label: string
+  grants: string[]
+}
 export type Organisation = {
   id: number
   name: string
@@ -572,9 +594,19 @@ export type MultivariateFeatureStateValue = {
 export type FeatureStateValue = {
   boolean_value: boolean | null
   float_value?: number | null
-  integer_value?: boolean | null
+  integer_value?: number | null
   string_value: string
   type: 'int' | 'unicode' | 'bool' | 'float'
+}
+
+// The trait shape from the core API, which keys its type as `value_type`
+// where feature states use `type`.
+export type TraitValue = {
+  boolean_value: boolean | null
+  float_value?: number | null
+  integer_value: number | null
+  string_value: string | null
+  value_type: 'int' | 'unicode' | 'bool' | 'float'
 }
 
 export type MultivariateOption = {
@@ -988,6 +1020,47 @@ export type Metadata = {
   field_value: string
 }
 
+export type CohortMembershipCounts = {
+  applied: number
+  pending_add: number
+  pending_remove: number
+}
+
+export type Cohort = {
+  id: number
+  uuid: string
+  name: string
+  description: string | null
+  segment: number
+  source_type: CohortSourceType
+  version: number
+  created_at: string
+  last_synced_at: string | null
+  membership_counts: CohortMembershipCounts
+}
+
+export type CohortSyncKey = {
+  prefix: string
+  name: string
+  created: string
+  key: string | null
+}
+
+// The plaintext key only exists in the create response.
+export type CohortSyncKeyCreated = CohortSyncKey & { key: string }
+
+export type CohortCsvSyncResult = {
+  version: number
+  added: number
+  removed: number
+  unchanged: number
+  ignored: {
+    empty: number
+    duplicates: number
+    too_long: number
+  }
+}
+
 export type MetadataFieldModelField = {
   id: number
   content_type: number
@@ -1279,6 +1352,11 @@ export type WarehouseConnectionTestResult = {
   status_detail: string | null
 }
 
+export type WarehouseConnectionEvents = {
+  events: string[]
+  is_truncated: boolean
+}
+
 export type WarehouseConnection = {
   id: number
   warehouse_type: WarehouseType
@@ -1291,9 +1369,31 @@ export type WarehouseConnection = {
   unique_events_count: number | null
 }
 
+export type TrustRelationshipClaimRule = {
+  claim: string
+  values: string[]
+}
+
+export type TrustRelationship = {
+  id: number
+  name: string
+  issuer: string
+  audience: string
+  claim_rules: TrustRelationshipClaimRule[]
+  is_admin: boolean
+  master_api_key_id: string
+  master_api_key_prefix: string
+  created_at: string
+  created_by: number | null
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
+  cohort: Cohort
+  cohortSyncKeys: CohortSyncKey[]
+  cohortSyncKeyCreated: CohortSyncKeyCreated
+  cohortCsvSync: CohortCsvSyncResult
   segmentMembers: SegmentMembersResponse
   auditLogs: PagedResponse<AuditLogItem>
   organisationLicence: {}
@@ -1381,11 +1481,14 @@ export type Res = {
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   roleMasterApiKey: { id: number; master_api_key: string; role: number }
+  trustRelationship: TrustRelationship
+  trustRelationships: PagedResponse<TrustRelationship>
   masterAPIKeyWithMasterAPIKeyRoles: {
     id: string
     prefix: string
     roles: RolePermissionUser[]
   }
+  rolesMasterAPIKeyWithMasterAPIKeyRoles: PagedResponse<Role>
   userWithRoles: PagedResponse<Role>
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
@@ -1510,7 +1613,7 @@ export type Res = {
   }
   validateOAuthAuthorize: {
     application: { name: string; client_id: string }
-    scopes: Record<string, string>
+    scopes: Record<string, OAuthScopeDescription>
     redirect_uri: string
     is_verified: boolean
   }
@@ -1523,6 +1626,7 @@ export type Res = {
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
   warehouseConnections: WarehouseConnection[]
+  warehouseConnectionEvents: WarehouseConnectionEvents
   warehouseConnectionTestResult: WarehouseConnectionTestResult
   experiments: PagedResponse<Experiment> & {
     currentPage: number

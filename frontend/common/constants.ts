@@ -198,6 +198,8 @@ const Constants = {
       'React Native': 'javascript',
     },
   },
+  cohortSyncKeyPermissions:
+    'To manage cohort synchronisation keys you need the <i>Manage segment overrides</i> permission for this environment and the <i>Manage segments</i> permission for this project.<br/>Please contact an administrator.',
   colours: {
     primary: '#6837fc',
     white: '#ffffff',
@@ -283,6 +285,29 @@ const Constants = {
     'ONBOARDING_FLAG_TOGGLED': {
       'category': 'Onboarding',
       'event': 'Onboarding flag toggled',
+    },
+    'ONBOARDING_ROLLOUT_CONTINUED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout quest continued',
+    },
+    // Only "Maybe later". Closing the modal from its chrome is not tracked, so
+    // abandonment is viewed minus continued minus this.
+    'ONBOARDING_ROLLOUT_DISMISSED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout quest dismissed',
+    },
+    'ONBOARDING_ROLLOUT_FEEDBACK': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout feedback opened',
+    },
+    // The fake door's only real signal: demand for one-click rollouts.
+    'ONBOARDING_ROLLOUT_NOTIFY_ME': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout notify me',
+    },
+    'ONBOARDING_ROLLOUT_VIEWED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout quest viewed',
     },
     'ONBOARDING_SNIPPET_COPIED': {
       'category': 'Onboarding',

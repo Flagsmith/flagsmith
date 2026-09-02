@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import typing
 from functools import lru_cache
 
@@ -50,6 +51,8 @@ ORGANISATION_TAG_KEY = "organisation_id"
 # Firehose writes delivery failures to this CloudWatch log group and stream.
 LOG_GROUP_NAME_PREFIX = "/aws/kinesisfirehose/"
 LOG_STREAM_NAME = "DestinationDelivery"
+# Must be one of the values accepted by CloudWatch Logs PutRetentionPolicy.
+LOG_RETENTION_DAYS = 365
 
 
 def _add_account_regional_namespace_header(
@@ -118,6 +121,27 @@ def _create_events_bucket(bucket_name: str, *, organisation_id: int) -> None:
             "BlockPublicPolicy": True,
             "RestrictPublicBuckets": True,
         },
+    )
+    s3.put_bucket_policy(
+        Bucket=bucket_name,
+        Policy=json.dumps(
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Sid": "AllowSSLRequestsOnly",
+                        "Effect": "Deny",
+                        "Principal": "*",
+                        "Action": "s3:*",
+                        "Resource": [
+                            f"arn:aws:s3:::{bucket_name}",
+                            f"arn:aws:s3:::{bucket_name}/*",
+                        ],
+                        "Condition": {"Bool": {"aws:SecureTransport": "false"}},
+                    }
+                ],
+            }
+        ),
     )
     s3.put_bucket_lifecycle_configuration(
         Bucket=bucket_name,
@@ -199,6 +223,10 @@ def _create_delivery_stream(
     log_group_name = get_log_group_name(organisation_id)
     logs = _get_logs_client()
     logs.create_log_group(logGroupName=log_group_name)
+    logs.put_retention_policy(
+        logGroupName=log_group_name,
+        retentionInDays=LOG_RETENTION_DAYS,
+    )
     logs.create_log_stream(
         logGroupName=log_group_name,
         logStreamName=LOG_STREAM_NAME,

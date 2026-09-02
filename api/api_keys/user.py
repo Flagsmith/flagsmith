@@ -42,6 +42,11 @@ class APIKeyUser(UserABC):
     def organisations(self) -> QuerySet[Organisation]:
         return Organisation.objects.filter(id=self.key.organisation_id)  # type: ignore[no-any-return]
 
+    def get_active_organisations(self) -> QuerySet[Organisation]:
+        # Master API keys are scoped to a single organisation, and are not
+        # subject to membership deactivation.
+        return self.organisations
+
     def belongs_to(self, organisation_id: int) -> bool:
         return self.key.organisation_id == organisation_id
 

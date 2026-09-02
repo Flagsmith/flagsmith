@@ -5,7 +5,7 @@ from unittest import mock
 
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -73,14 +73,14 @@ def test_get_feature_states_for_identity__mv_percentage_allocation__returns_corr
     create_mv_option_with_api(
         admin_client,
         project,
-        multivariate_feature_id,  # type: ignore[arg-type]
+        multivariate_feature_id,
         variant_1_percentage_allocation,
         variant_1_value,
     )
     variant_2_mvfo_id = create_mv_option_with_api(
         admin_client,
         project,
-        multivariate_feature_id,  # type: ignore[arg-type]
+        multivariate_feature_id,
         variant_2_percentage_allocation,
         variant_2_value,
     )
@@ -193,7 +193,7 @@ def test_get_feature_states_for_identity__mv_allocation__returns_variant(  # typ
     create_mv_option_with_api(
         admin_client,
         project,
-        multivariate_feature_id,  # type: ignore[arg-type]
+        multivariate_feature_id,
         variant_1_percentage_allocation,
         variant_1_value,
         key="variant-1",
@@ -201,7 +201,7 @@ def test_get_feature_states_for_identity__mv_allocation__returns_variant(  # typ
     create_mv_option_with_api(
         admin_client,
         project,
-        multivariate_feature_id,  # type: ignore[arg-type]
+        multivariate_feature_id,
         variant_2_percentage_allocation,
         variant_2_value,
         key="variant-2",
@@ -242,7 +242,7 @@ def test_get_flags__multivariate_feature__response_excludes_variant(  # type: ig
     create_mv_option_with_api(
         admin_client,
         project,
-        multivariate_feature_id,  # type: ignore[arg-type]
+        multivariate_feature_id,
         100,
         variant_1_value,
         key="variant-1",
@@ -279,14 +279,14 @@ def test_get_feature_states_for_identity__multiple_mv_features__single_mv_query(
         create_mv_option_with_api(
             admin_client,
             project,
-            feature_id,  # type: ignore[arg-type]
+            feature_id,
             variant_1_percentage_allocation,
             variant_1_value,
         )
         create_mv_option_with_api(
             admin_client,
             project,
-            feature_id,  # type: ignore[arg-type]
+            feature_id,
             variant_2_percentage_allocation,
             variant_2_value,
         )
@@ -314,14 +314,14 @@ def test_get_feature_states_for_identity__multiple_mv_features__single_mv_query(
     create_mv_option_with_api(
         admin_client,
         project,
-        feature_id,  # type: ignore[arg-type]
+        feature_id,
         variant_1_percentage_allocation,
         variant_1_value,
     )
     create_mv_option_with_api(
         admin_client,
         project,
-        feature_id,  # type: ignore[arg-type]
+        feature_id,
         variant_2_percentage_allocation,
         variant_2_value,
     )

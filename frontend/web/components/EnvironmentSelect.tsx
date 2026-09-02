@@ -18,6 +18,7 @@ type EnvironmentSelectType = Partial<Omit<Props, 'value'>> & {
   readOnly?: boolean
   idField?: 'id' | 'api_key'
   ignore?: string[]
+  size?: 'default' | 'select-sm' | 'select-xsm'
   dataTest?: (value: { label: string }) => string
 }
 
@@ -30,6 +31,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
   projectId,
   readOnly,
   showAll,
+  size = 'select-xsm',
   value,
   ...rest
 }) => {
@@ -64,7 +66,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
     <div data-test={dataTestProp}>
       <Select
         {...rest}
-        className='react-select select-xsm'
+        size={size === 'default' ? undefined : size}
         value={
           foundValue
             ? foundValue

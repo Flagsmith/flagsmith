@@ -9,6 +9,7 @@ from django.utils import timezone
 from environments.dynamodb.constants import (
     ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
 )
+from util.engine_models.identities.models import IdentityModel
 from util.mappers import dynamodb
 from util.mappers.engine import map_feature_state_to_engine
 
@@ -154,6 +155,58 @@ def test_map_identity_to_identity_document__valid_identity__returns_expected_doc
     assert uuid.UUID(result["identity_uuid"])  # type: ignore[arg-type]
 
 
+def test_map_engine_identity_to_identity_document__system_traits_set__included_in_document() -> (
+    None
+):
+    # Given
+    engine_identity = IdentityModel(
+        identifier="test_identity",
+        environment_api_key="api-key",
+        system_traits={"flagsmith_cohort_2b6d1f5f": True},
+    )
+
+    # When
+    result = dynamodb.map_engine_identity_to_identity_document(engine_identity)
+
+    # Then
+    assert result["system_traits"] == {"flagsmith_cohort_2b6d1f5f": True}
+
+
+def test_map_engine_identity_to_identity_document__no_system_traits__key_absent() -> (
+    None
+):
+    # Given
+    engine_identity = IdentityModel(
+        identifier="test_identity",
+        environment_api_key="api-key",
+    )
+
+    # When
+    result = dynamodb.map_engine_identity_to_identity_document(engine_identity)
+
+    # Then
+    assert "system_traits" not in result
+
+
+def test_identity_document__system_traits_set__round_trip_preserves_system_traits() -> (
+    None
+):
+    # Given
+    document = dynamodb.map_engine_identity_to_identity_document(
+        IdentityModel(
+            identifier="test_identity",
+            environment_api_key="api-key",
+            system_traits={"flagsmith_cohort_2b6d1f5f": True},
+        )
+    )
+
+    # When
+    parsed = IdentityModel.model_validate(document)
+
+    # Then
+    assert parsed.system_traits == {"flagsmith_cohort_2b6d1f5f": True}
+
+
 def test_map_environment_to_environment_v2_document__valid_environment__returns_expected_document(
     environment: "Environment",
     feature_state: "FeatureState",
@@ -279,6 +332,19 @@ def test_map_environment_to_compressed_environment_document__valid_environment__
         json.loads(gzip.decompress(compressed_feature_states).decode("utf-8"))
         == uncompressed_document["feature_states"]
     )
+
+
+def test_map_environment_to_compressed_environment_document__not_evaluated__onboarding_pending_retained(
+    environment: "Environment",
+) -> None:
+    # Given
+    assert environment.first_evaluated_at is None
+
+    # When
+    result = dynamodb.map_environment_to_compressed_environment_document(environment)
+
+    # Then
+    assert result.document["onboarding_pending"] is True
 
 
 def test_map_environment_to_compressed_environment_document__mv_option_with_key__key_preserved(

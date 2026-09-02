@@ -1,5 +1,5 @@
-import React, { FC, useEffect, useState } from 'react'
-import InputGroup from 'components/base/forms/InputGroup'
+import React, { FC, useEffect, useRef, useState } from 'react'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import ValueEditor from 'components/ValueEditor'
 import Constants from 'common/constants'
 import { VariationOptions } from 'components/mv/VariationOptions'
@@ -20,6 +20,11 @@ import {
   MultivariateOption,
   ProjectFlag,
 } from 'common/types/responses'
+import {
+  hasUnmatchedIdentityOverride,
+  LatchedOverrideValue,
+  resolveUnmatchedOverride,
+} from 'common/utils/multivariate'
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { useHasPermission } from 'common/providers/Permission'
@@ -60,11 +65,10 @@ type FeatureValueTabProps = {
 }
 
 // No tooltip when using variations (no single value to describe).
-const getValueTooltip = (
-  hasVariations: boolean,
-  isEdit: boolean,
-): string | undefined => {
-  if (hasVariations) return undefined
+const getValueTooltip = (hasVariations: boolean, isEdit: boolean): string => {
+  if (hasVariations) {
+    return Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION
+  }
   const seedsAllEnvironments = isEdit
     ? ''
     : '<br/>Setting this when creating a feature will set the value for all environments. You can edit this individually for each environment once the feature is created.'
@@ -245,9 +249,6 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   const valueTitle = hasVariations ? (
     <span className='d-inline-flex align-items-center'>
       Control Value
-      <span className='ml-1'>
-        <Icon name='info-outlined' />
-      </span>
       <span className='chip chip--xs ml-2'>
         {Math.max(0, controlPercentage)}%
       </span>
@@ -280,6 +281,34 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     multivariate_options &&
     !!multivariate_options.length
   )
+
+  // Left undefined while unloaded rather than coerced to null, which is itself
+  // a valid value — see hasUnmatchedIdentityOverride.
+  const controlValue =
+    projectFlag.environment_feature_state?.feature_state_value
+
+  // An override that predates the flag becoming multivariate holds a value the
+  // control/variation radios cannot express, so surface it rather than letting
+  // the control row imply the identity is on the environment default.
+  const unmatchedOverrideSelected =
+    !!identity &&
+    hasVariations &&
+    hasUnmatchedIdentityOverride({
+      controlValue,
+      overrideValue: featureState.feature_state_value,
+      variationOverrides: identityVariations,
+    })
+
+  // Held in a ref rather than read once on mount, as the feature state loads
+  // async — there is no single render at which the override is known to be
+  // there. See resolveUnmatchedOverride for why presence outlives selection.
+  const latchedOverrideValue = useRef<LatchedOverrideValue>(undefined)
+  const unmatchedOverride = resolveUnmatchedOverride({
+    isSelected: unmatchedOverrideSelected,
+    latchedValue: latchedOverrideValue.current,
+    overrideValue: featureState.feature_state_value,
+  })
+  latchedOverrideValue.current = unmatchedOverride?.value
 
   if (compareOpen && canCompareValue && environmentId) {
     return (
@@ -345,30 +374,29 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
       {showValue && (
         <FormGroup className='mb-4'>
-          <InputGroup
-            component={
-              <ValueEditor
-                data-test='featureValue'
-                name='featureValue'
-                className={`full-width${hasVariations ? ' code-medium' : ''}`}
-                value={`${
-                  typeof initial_value === 'undefined' || initial_value === null
-                    ? ''
-                    : initial_value
-                }`}
-                onChange={(e: any) => {
-                  const feature_state_value = Utils.getTypedValue(
-                    Utils.safeParseEventValue(e),
-                  )
-                  onEnvironmentFlagChange({ feature_state_value })
-                }}
-                disabled={isDisabled}
-                placeholder="e.g. 'big' "
-              />
-            }
-            tooltip={getValueTooltip(hasVariations, isEdit)}
-            title={valueTitle}
-          />
+          <div className='form-group'>
+            <FieldLabel tooltip={getValueTooltip(hasVariations, isEdit)}>
+              {valueTitle}
+            </FieldLabel>
+            <ValueEditor
+              data-test='featureValue'
+              name='featureValue'
+              className={`full-width${hasVariations ? ' code-medium' : ''}`}
+              value={`${
+                typeof initial_value === 'undefined' || initial_value === null
+                  ? ''
+                  : initial_value
+              }`}
+              onChange={(e: any) => {
+                const feature_state_value = Utils.getTypedValue(
+                  Utils.safeParseEventValue(e),
+                )
+                onEnvironmentFlagChange({ feature_state_value })
+              }}
+              disabled={isDisabled}
+              placeholder="e.g. 'big' "
+            />
+          </div>
           {canCompareValue && (
             <div className='text-end mt-2'>
               <Button
@@ -412,14 +440,15 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         <div>
           <FormGroup className='mb-4'>
             {variationsInfo}
+            {unmatchedOverrideSelected && (
+              <WarningMessage warningMessage="This identity override contains a value that is not one of this flag's variations. We recommend changing it." />
+            )}
             <VariationOptions
               canCreateFeature={false}
               disabled
               select
-              controlValue={
-                projectFlag.environment_feature_state?.feature_state_value ??
-                null
-              }
+              unmatchedOverride={unmatchedOverride}
+              controlValue={controlValue ?? null}
               controlPercentage={controlPercentage}
               variationOverrides={identityVariations as any}
               setValue={(value) =>
@@ -444,20 +473,16 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
           {variationsInfo}
           {hasVariations && (
             <Row className='justify-content-between align-items-center mb-2'>
-              {Utils.getFlagsmithHasFeature('experimental_flags') ? (
-                <Tooltip
-                  title={
-                    <label className='mb-0 cursor-pointer'>
-                      Variants <Icon name='info-outlined' />
-                    </label>
-                  }
-                >
-                  To use this flag in an experiment, all the variants must have
-                  a label.
-                </Tooltip>
-              ) : (
-                <label className='mb-0'>Variants</label>
-              )}
+              <FieldLabel
+                className='mb-0'
+                tooltip={
+                  Utils.getFlagsmithHasFeature('experimental_flags')
+                    ? 'To use this flag in an experiment, all the variants must have a label.'
+                    : undefined
+                }
+              >
+                Variants
+              </FieldLabel>
               {Utils.renderWithPermission(
                 createFeature,
                 Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),

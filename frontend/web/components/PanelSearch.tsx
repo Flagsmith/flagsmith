@@ -319,7 +319,12 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
               </Row>
             )}
             {onRefresh && (
-              <Button theme='text' size='xSmall' onClick={onRefresh}>
+              <Button
+                theme='text'
+                size='xSmall'
+                className='mr-2'
+                onClick={onRefresh}
+              >
                 <Icon name='refresh' fill='#6837FC' width={16} /> Refresh
               </Button>
             )}
