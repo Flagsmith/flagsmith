@@ -1,6 +1,7 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import ValueEditor from 'components/ValueEditor'
+import ControlWeightChip from 'components/mv/ControlWeightChip'
 import Constants from 'common/constants'
 import { VariationOptions } from 'components/mv/VariationOptions'
 import { AddVariationButton } from 'components/mv/AddVariationButton'
@@ -246,16 +247,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
       'Failed to save this variation.'
     )
   })
-  const valueTitle = hasVariations ? (
-    <span className='d-inline-flex align-items-center'>
-      Control Value
-      <span className='chip chip--xs ml-2'>
-        {Math.max(0, controlPercentage)}%
-      </span>
-    </span>
-  ) : (
-    'Value'
-  )
+  const valueTitle = hasVariations ? 'Control Value' : 'Value'
 
   const variationsInfo = hasVariations && (
     <p className='mb-4'>
@@ -377,6 +369,11 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
           <div className='form-group'>
             <ValueEditor
               label={valueTitle}
+              labelAfter={
+                hasVariations && (
+                  <ControlWeightChip percentage={controlPercentage} />
+                )
+              }
               labelTooltip={getValueTooltip(hasVariations, isEdit)}
               data-test='featureValue'
               name='featureValue'
