@@ -43,10 +43,17 @@ application uses as the Flagsmith [identity](/flagsmith-concepts/identities) ide
 
 ## 3. Synchronise a cohort
 
-1. In Amplitude, open the cohort you want to use and choose **Sync** (or **Export Cohort**).
+1. In Amplitude, open the cohort you want to target and click **Target users**.
 2. Select your Flagsmith destination.
-3. Choose the sync cadence. Scheduled and real-time syncs keep the Flagsmith segment up to date automatically; a
-   one-time sync sends the current membership once.
+3. Choose the cadence, then click **Sync**:
+   - **One-Time Sync** sends the cohort's current members once.
+   - **Scheduled Sync** resends the membership every hour or every day.
+   - **Real-Time Sync** resends the membership every minute.
+
+   Scheduled and real-time syncs keep the Flagsmith segment up to date on their own; with a one-time sync, later changes
+   to the cohort do not reach Flagsmith until you sync it again.
+
+![Amplitude Define Cadence dialog](/img/cohort-synchronisation/amplitude-define-cadence.png)
 
 Shortly after the first sync, a segment named after your cohort appears on the **Segments** page of your project, ready
 to be used in [segment overrides](/third-party-integrations/cohort-synchronisation#using-a-synchronised-segment).
