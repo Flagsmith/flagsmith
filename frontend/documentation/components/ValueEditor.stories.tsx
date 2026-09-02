@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import Constants from 'common/constants'
@@ -57,6 +57,26 @@ export const Json: Story = {
   ),
 }
 
+// A value that arrives after mount, the way a loaded feature does. Detection
+// has to wait for it: a mount-only check left JSON rendering as .txt.
+const LateLoading = () => {
+  const [value, setValue] = useState<string>('')
+  useEffect(() => {
+    const timer = setTimeout(() => setValue('{ "colour": "blue" }'), 150)
+    return () => clearTimeout(timer)
+  }, [])
+  return (
+    <div style={{ maxWidth: 640, padding: 16 }}>
+      <ValueEditor label='Value' value={value} onChange={setValue} />
+    </div>
+  )
+}
+
+export const ValueArrivesAfterMount: Story = {
+  render: () => <LateLoading />,
+}
+
+// Invalid JSON surfaces a warning against the active language label.
 export const InvalidJson: Story = {
   render: () => (
     <Interactive label='Value' language='json' initialValue='{ "colour": ' />
