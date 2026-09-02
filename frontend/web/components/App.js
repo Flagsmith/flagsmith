@@ -33,16 +33,17 @@ import Nav from './navigation/Nav'
 import { routes } from 'web/routes'
 import 'project/darkMode'
 
-const isRoute = (pathname, path) =>
-  !!matchPath(pathname, { exact: true, path, strict: false })
-
-const isUsagePage = (pathname) =>
-  isRoute(pathname, routes['organisation-usage'])
-
 // Blocked keeps the organisations list, to switch away, and the usage page,
 // which explains the block.
+const ALLOWED_WHILE_BLOCKED = [
+  routes.organisations,
+  routes['organisation-usage'],
+]
+
 const isAllowedWhileBlocked = (pathname) =>
-  isRoute(pathname, routes.organisations) || isUsagePage(pathname)
+  ALLOWED_WHILE_BLOCKED.some((path) =>
+    matchPath(pathname, { exact: true, path, strict: false }),
+  )
 
 const App = class extends Component {
   static propTypes = {
@@ -371,15 +372,12 @@ const App = class extends Component {
                     />
                     {user && (
                       <>
-                        {/* The usage page says this itself, with figures. */}
-                        {!isUsagePage(pathname) && (
-                          <OrganisationLimit
-                            id={AccountStore.getOrganisation()?.id}
-                            organisationPlan={
-                              AccountStore.getOrganisation()?.subscription.plan
-                            }
-                          />
-                        )}
+                        <OrganisationLimit
+                          id={AccountStore.getOrganisation()?.id}
+                          organisationPlan={
+                            AccountStore.getOrganisation()?.subscription.plan
+                          }
+                        />
                         <div className='container announcement-container'>
                           <div>
                             <Announcement />
