@@ -6,8 +6,8 @@ import SectionHeading from 'components/pages/usage/components/SectionHeading'
 import UsageBreakdown, {
   useUsageBreakdown,
 } from 'components/pages/usage/components/UsageBreakdown'
-import UsageExplorer from 'components/pages/usage/components/UsageExplorer'
 import UsageMeter from 'components/pages/usage/components/UsageMeter'
+import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
 import { overLimitNote, overLimitOf } from 'components/pages/usage/overLimit'
 import {
   allowanceWindow,
@@ -145,16 +145,10 @@ const UsagePage: FC<HarnessProps> = ({
         note={exceeded ? overLimitNote(exceeded) : contribution}
       />
 
-      <UsageExplorer
-        data={scoped}
-        limit={
-          showsPlanCeiling(billingPeriod, filtered ? 1 : undefined)
-            ? limit
-            : undefined
-        }
-        isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
-        periodLabel={periodLabel(periods, billingPeriod)}
-        filters={
+      <SectionHeading
+        title='Explore usage'
+        hint='Narrow the chart and the breakdown by period or project.'
+        action={
           <Row className='gap-2'>
             <div className='usage-filters__field'>
               <Select
@@ -178,13 +172,23 @@ const UsagePage: FC<HarnessProps> = ({
             </div>
           </Row>
         }
-        breakdown={
-          <UsageBreakdown
-            {...breakdown}
-            onChangeDimension={setDimension}
-            scope={scope}
-          />
+      />
+
+      <UsageOverTime
+        data={scoped}
+        limit={
+          showsPlanCeiling(billingPeriod, filtered ? 1 : undefined)
+            ? limit
+            : undefined
         }
+        isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
+        periodLabel={periodLabel(periods, billingPeriod)}
+      />
+
+      <UsageBreakdown
+        {...breakdown}
+        onChangeDimension={setDimension}
+        scope={scope}
       />
     </UsagePageLayout>
   )

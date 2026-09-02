@@ -6,9 +6,9 @@ import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscription
 import OverLimitBanner from './components/OverLimitBanner'
 import SectionHeading from './components/SectionHeading'
 import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
-import UsageExplorer from './components/UsageExplorer'
 import UsageFilters from './components/UsageFilters'
 import UsageMeter from './components/UsageMeter'
+import UsageOverTime from './components/UsageOverTime'
 import UsagePageLayout from './components/UsagePageLayout'
 import { useUsageData } from './useUsageData'
 import { overLimitNote, overLimitOf } from './overLimit'
@@ -128,15 +128,10 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
       <UsageMeter total={allowanceTotal} limit={limit} note={meterNote} />
 
-      <UsageExplorer
-        data={usage.scoped}
-        limit={
-          showsPlanCeiling(billingPeriod, selectedProjectId) ? limit : undefined
-        }
-        isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
-        periodLabel={periodLabel(periods, billingPeriod)}
-        isLoading={usage.isLoadingScoped}
-        filters={
+      <SectionHeading
+        title='Explore usage'
+        hint='Narrow the chart and the breakdown by period or project.'
+        action={
           <UsageFilters
             organisationId={organisationId}
             periods={periods}
@@ -149,14 +144,33 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
             }}
           />
         }
-        breakdown={
+      />
+
+      {/* Only the filtered half reloads, so the meter above stays put. */}
+      {usage.isLoadingScoped ? (
+        <div className='text-center py-5'>
+          <Loader />
+        </div>
+      ) : (
+        <>
+          <UsageOverTime
+            data={usage.scoped}
+            limit={
+              showsPlanCeiling(billingPeriod, selectedProjectId)
+                ? limit
+                : undefined
+            }
+            isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
+            periodLabel={periodLabel(periods, billingPeriod)}
+          />
+
           <UsageBreakdown
             {...breakdown}
             onChangeDimension={setDimension}
             scope={scope}
           />
-        }
-      />
+        </>
+      )}
     </UsagePageLayout>
   )
 }
