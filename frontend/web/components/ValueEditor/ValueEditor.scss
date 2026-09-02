@@ -1,0 +1,140 @@
+// ValueEditor's own styles. They lived in styles/3rdParty/_hljs.scss, which is
+// for overriding highlight.js and Pylon; these are first-party and belong with
+// the component. The `code.txt` and `.hljs` selectors stay because the editor
+// renders through Highlight, which sets the language as the class name.
+// Imports _variables for the six input sizing values it needs
+// ($input-height and friends); they have no token equivalent yet. Nothing
+// else here reaches for a SCSS variable.
+@import '../../styles/variables';
+
+.invalid .value-editor .hljs {
+  border: 2px solid var(--color-border-danger);
+}
+.value-editor {
+  position: relative;
+  textarea,
+  .hljs {
+    padding: $input-padding-lg;
+    line-height: $line-height-lg;
+  }
+  &.code-medium {
+    .hljs {
+      // Match adjacent inputs' height ($input-height); min-height holds the
+      // empty state, and the editor still grows for multi-line values.
+      padding: 9px 12px 9px 16px;
+      min-height: $input-height;
+    }
+    .value-editor__copy {
+      top: 11px;
+    }
+  }
+
+  // Copy sits inside the editor, pinned to the first line rather than centred:
+  // the editor grows with multi-line values.
+  // Position, radius and resting colour come from utilities on the button.
+  .value-editor__copy {
+    top: 18px;
+    right: 12px;
+    z-index: 1;
+    padding: 2px;
+    &:hover {
+      color: var(--color-icon-action);
+    }
+  }
+
+  // Keep long values clear of the copy button.
+  &__field:has(.value-editor__copy) .hljs {
+    padding-right: 44px;
+  }
+  textarea {
+    min-height: 50px;
+    padding-bottom: 5px;
+    text-indent: 10px;
+  }
+  code {
+    outline-color: transparent !important;
+  }
+  // Label on the left, format buttons on the right. They used to be separate
+  // layers (the row was absolutely positioned over the caller's own label),
+  // so nothing stopped a long label running under the buttons.
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+    min-height: 20px;
+    .control-label {
+      margin-bottom: 0;
+    }
+  }
+
+  // Label plus whatever trails it (a weight chip), as one row.
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__field {
+    position: relative;
+  }
+
+  .select-language {
+    margin-left: auto;
+    // The format labels are buttons. BareButton resets them at zero
+    // specificity, so these rules win without needing to out-specify it.
+    .bare-btn {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      font-size: $font-caption-sm;
+      line-height: $line-height-xxsm;
+      &.active {
+        color: var(--color-text-default);
+        font-weight: 500;
+      }
+    }
+    .active .language-icon {
+      margin: 0;
+      opacity: 1;
+      // Keeps the tick and warning in body colour, which is how they have
+      // always rendered. It does mean .text-success/.text-danger never show.
+      color: var(--color-text-default);
+    }
+    .language-icon {
+      display: flex;
+      align-items: center;
+    }
+  }
+}
+
+.value-editor pre {
+  overflow: hidden;
+}
+.value-editor pre code {
+  height: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+code.txt {
+  font-size: $font-size-base;
+  font-weight: 500;
+  background: var(--color-surface-default) !important;
+  border: 1px solid var(--color-border-default);
+  font-family: 'OpenSans', sans-serif;
+  color: var(--color-text-default);
+  &.empty {
+    font-weight: normal;
+    color: var(--color-text-tertiary);
+  }
+  &:focus,
+  &:focus.empty {
+    font-weight: 500;
+    color: var(--color-text-default);
+    border-color: var(--color-border-action);
+  }
+}

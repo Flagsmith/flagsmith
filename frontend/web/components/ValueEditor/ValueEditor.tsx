@@ -9,6 +9,8 @@ import CopyValueButton from './components/CopyValueButton'
 import LanguageSelector from './components/LanguageSelector'
 import { ValueEditorLanguage } from './types'
 
+import './ValueEditor.scss'
+
 export interface ValueEditorProps {
   className?: string
   'data-test'?: string
