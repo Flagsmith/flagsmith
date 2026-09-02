@@ -156,7 +156,6 @@ class Highlight extends React.Component {
           <code
             style={this.props.style}
             data-test={this.props['data-test']}
-            id={this.props.id}
             aria-labelledby={this.props['aria-labelledby']}
             // Without a role a contenteditable is announced as plain text, and
             // aria-labelledby has nothing to name.

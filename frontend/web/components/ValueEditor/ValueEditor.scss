@@ -12,6 +12,10 @@
 }
 .value-editor {
   position: relative;
+  &.disabled code {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
   textarea,
   .hljs {
     padding: $input-padding-lg;
@@ -120,7 +124,7 @@
   word-break: break-word;
 }
 
-code.txt {
+.value-editor code.txt {
   font-size: $font-size-base;
   font-weight: 500;
   background: var(--color-surface-default) !important;

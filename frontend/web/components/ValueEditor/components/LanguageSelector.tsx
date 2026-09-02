@@ -2,6 +2,7 @@ import React, { FC, MouseEvent } from 'react'
 import cx from 'classnames'
 
 import BareButton from 'components/base/forms/BareButton'
+import Row from 'components/base/grid/Row'
 
 import {
   LANGUAGES,
