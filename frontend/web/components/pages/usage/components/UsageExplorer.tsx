@@ -1,8 +1,8 @@
 import { FC, ReactNode } from 'react'
 import { Res } from 'common/types/responses'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
-import SectionHeading from 'components/pages/usage/components/SectionHeading'
-import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
+import SectionHeading from './SectionHeading'
+import UsageOverTime from './UsageOverTime'
 
 export type UsageExplorerProps = {
   data: Res['organisationUsage'] | undefined

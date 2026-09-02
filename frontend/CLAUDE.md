@@ -19,7 +19,7 @@
 5. **Linting**: ALWAYS run `npx eslint --fix <file>` on any files you modify
 6. **Type Enums**: Extract inline union types to named types (e.g., `type Status = 'A' | 'B'` instead of inline)
 7. **NO FETCH**: NEVER use `fetch()` directly - ALWAYS use RTK Query mutations/queries (inject endpoints into services in `common/services/`), see api-integration context
-8. **Component structure**: Each new component lives in its own folder with an `index.ts` barrel - `ComponentName/ComponentName.tsx`, co-located `ComponentName.scss`, any sub-components, and an `index.ts` that re-exports the default (and public types). Import via the folder (`components/.../ComponentName`), never the inner file. Keep files focused (~100 lines as a target); split by concern, not to hit a number. Data tables/constant maps are exempt.
+8. **Component structure**: A component with nothing to keep beside it is a single `ComponentName.tsx`. It gets a folder once it has a co-located `ComponentName.scss`, sub-components, tests or hooks: `ComponentName/ComponentName.tsx` plus an `index.ts` re-exporting the default (and public types). Import via `components/.../ComponentName` either way, never the inner file, so promoting a file to a folder changes no imports. Keep files focused (~100 lines as a target); split by concern, not to hit a number. Data tables/constant maps are exempt.
 
 ## Key Files
 - Store: `common/store.ts`
