@@ -1,7 +1,6 @@
 import csv
 import io
 import typing
-from datetime import timedelta
 from uuid import UUID
 
 import structlog
@@ -103,21 +102,6 @@ def apply_pending_memberships(cohort: Cohort) -> bool:
         removed_count
     )
     if added_count or removed_count:
-        if settings.CLICKHOUSE_ENABLED:
-            from segment_membership.services import enqueue_membership_refresh
-
-            # Cohort membership is the one way a segment's members change
-            # without a segment or identity edit, so nothing else queues a
-            # count refresh. The delay lets the identity changes reach
-            # ClickHouse before the recount; repeated batches collapse into
-            # the one pending refresh.
-            enqueue_membership_refresh(
-                environment.project,
-                delay_until=timezone.now()
-                + timedelta(
-                    seconds=settings.SEGMENT_MEMBERSHIP_DELETE_REFRESH_DELAY_SECONDS
-                ),
-            )
         logger.info(
             "membership.applied",
             cohort__id=cohort.id,
