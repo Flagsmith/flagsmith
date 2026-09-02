@@ -18,6 +18,9 @@ module.exports = {
   roots: ['<rootDir>'],
   testEnvironment: 'node',
   testMatch: ['**/__tests__/**/*.test.ts', '**/*.test.ts'],
+  // A Storybook build copies the source into storybook-static, so without
+  // this jest runs a stale second copy of every test.
+  testPathIgnorePatterns: ['/node_modules/', '/storybook-static/'],
   transform: {
     // Code-help snippet templates are ESM .js, so they need transforming too.
     // node_modules stays untransformed, hence the ignore pattern below.
