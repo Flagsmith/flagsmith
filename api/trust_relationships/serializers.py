@@ -66,7 +66,7 @@ class TrustRelationshipSerializer(serializers.ModelSerializer[TrustRelationship]
         # Declared manually — since DRF 3.16 it can't auto-generate a validator
         # for `unique_live_issuer_audience`, whose condition is on `deleted_at`,
         # a field not writable here. `objects` excludes soft-deleted rows.
-        # https://github.com/encode/django-rest-framework/pull/9360
+        # https://github.com/encode/django-rest-framework/discussions/9777
         validators = [
             UniqueTogetherValidator(
                 queryset=TrustRelationship.objects.all(),
