@@ -47,7 +47,7 @@ export const COHORT_PROVIDERS: Record<CohortProviderKey, CohortProviderConfig> =
         { label: 'Password', mono: true, value: '{YOUR_SYNCHRONISATION_KEY}' },
       ],
       docsUrl:
-        'https://docs.flagsmith.com/third-party-integrations/cohort-synchronisation/mixpanel',
+        'https://docs.flagsmith.com/third-party-integrations/cohort-synchronisation',
       endpoint: {
         fieldTitle: 'Webhook URL',
         path: 'cohort-sync/mixpanel/webhook/',
