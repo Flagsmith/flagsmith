@@ -5,6 +5,11 @@ const Project = {
     site: 'flagsmith-test',
   },
 
+  // Local dev is served over plain HTTP, so cookies cannot be Secure. Browsers
+  // reject SameSite=None cookies that are not Secure, which would drop the auth
+  // cookie on every page load.
+  cookieSameSite: 'lax',
+
   debug: false,
 
   env: 'dev',

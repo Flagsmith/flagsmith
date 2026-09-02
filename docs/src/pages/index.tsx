@@ -118,7 +118,7 @@ export default function Home() {
           <Card 
             title="Flagsmith API" 
             description="REST API reference and usage examples" 
-            link="/integrating-with-flagsmith/flagsmith-api-overview/admin-api/"
+            link="/integrating-with-flagsmith/flagsmith-api-overview/management-api/"
             icon={codeWorking} 
           />
         </Section>
