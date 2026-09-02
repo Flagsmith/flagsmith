@@ -14,14 +14,16 @@ import LanguageValidation from './LanguageValidation'
 interface LanguageSelectorProps {
   language: ValueEditorLanguage
   onChange: (language: ValueEditorLanguage) => void
-  value: string
+  // The active language's parse error, or false. Passed through rather than
+  // computed here so the row does not own validity.
+  error: string | false
 }
 
 /** The .txt/.json/.xml/.toml/.yaml row above the editor. */
 const LanguageSelector: FC<LanguageSelectorProps> = ({
+  error,
   language,
   onChange,
-  value,
 }) => (
   <Row className='select-language gap-1' role='group' aria-label='Value format'>
     {LANGUAGES.map((option) => (
@@ -37,7 +39,7 @@ const LanguageSelector: FC<LanguageSelectorProps> = ({
       >
         {LANGUAGE_LABELS[option]}{' '}
         {option !== 'txt' && language === option && (
-          <LanguageValidation language={option} value={value} />
+          <LanguageValidation language={option} error={error} />
         )}
       </BareButton>
     ))}

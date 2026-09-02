@@ -217,11 +217,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                       onCompare={onCompare}
                       onCopyValue={() => {
                         this.setState({ changed: true })
-                        setValue(
-                          Utils.getTypedValue(
-                            Utils.safeParseEventValue(controlValue),
-                          ),
-                        )
+                        setValue(Utils.getTypedValue(controlValue))
                       }}
                       canCopyValue={
                         permission &&
@@ -288,11 +284,9 @@ const SegmentOverrideInner = class Override extends React.Component {
                   onChange={
                     readOnly
                       ? null
-                      : (e) => {
+                      : (newValue) => {
                           this.setState({ changed: true })
-                          setValue(
-                            Utils.getTypedValue(Utils.safeParseEventValue(e)),
-                          )
+                          setValue(Utils.getTypedValue(newValue))
                         }
                   }
                   placeholder="Value e.g. 'big' "
@@ -311,11 +305,9 @@ const SegmentOverrideInner = class Override extends React.Component {
                 onChange={
                   readOnly
                     ? null
-                    : (e) => {
+                    : (newValue) => {
                         this.setState({ changed: true })
-                        setValue(
-                          Utils.getTypedValue(Utils.safeParseEventValue(e)),
-                        )
+                        setValue(Utils.getTypedValue(newValue))
                       }
                 }
               />

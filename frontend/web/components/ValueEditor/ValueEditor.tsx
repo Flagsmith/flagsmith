@@ -1,4 +1,12 @@
-import React, { FC, ReactNode, useEffect, useId, useRef, useState } from 'react'
+import React, {
+  FC,
+  ReactNode,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import cx from 'classnames'
 
 import FieldLabel from 'components/base/forms/FieldLabel'
@@ -8,6 +16,7 @@ import { FlagsmithValue } from 'common/types/responses'
 import CopyValueButton from './components/CopyValueButton'
 import LanguageSelector from './components/LanguageSelector'
 import { ValueEditorLanguage } from './types'
+import { validateValue } from './validate'
 
 import './ValueEditor.scss'
 
@@ -27,6 +36,9 @@ export interface ValueEditorProps {
   language?: ValueEditorLanguage
   name?: string
   onBlur?: () => void
+  // The edited text. Deliberately a string, not FlagsmithValue: this edits
+  // text, and deciding that "123" is a number is Flagsmith's domain logic.
+  // Callers interpret it (Utils.getTypedValue, Utils.valueToFeatureState).
   onChange?: (value: string) => void
   // placeholder and readOnly only reach the editor under E2E, which swaps
   // Highlight for a plain textarea. Highlight renders its own
@@ -73,6 +85,11 @@ const ValueEditor: FC<ValueEditorProps> = ({
     } catch (e) {}
   }, [text])
 
+  // Validity lives here rather than in the format row, so it can be reported
+  // to callers and rendered anywhere. Keeping it in the row is what left the
+  // SAML field with language='xml' and no XML validation at all.
+  const error = useMemo(() => validateValue(language, text), [language, text])
+
   const pickLanguage = (next: ValueEditorLanguage) => {
     formatSettled.current = true
     setLanguage(next)
@@ -101,9 +118,9 @@ const ValueEditor: FC<ValueEditorProps> = ({
           )}
           {showControls && (
             <LanguageSelector
+              error={error}
               language={language}
               onChange={pickLanguage}
-              value={text}
             />
           )}
         </div>
