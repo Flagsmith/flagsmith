@@ -27,7 +27,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "ded4f142-aabc-4297-9752-115f0ef4065b",
+      "featurestate_uuid": "9baf5aed-0829-4cff-8300-1c13cd78d5da",
       "multivariate_feature_state_values": []
     },
     {
@@ -40,7 +40,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "fc3c0163-b8cd-458f-a1b8-8dff9e76e011",
+      "featurestate_uuid": "9ca35f12-ac79-497d-8d57-0931aa397949",
       "multivariate_feature_state_values": []
     },
     {
@@ -187,7 +187,7 @@
   ],
   "project": {
     "id": 0,
-    "name": "Flagsmith Website",
+    "name": "Flagsmith",
     "hide_disabled_flags": false,
     "segments": [],
     "organisation": {
