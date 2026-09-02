@@ -69,6 +69,7 @@ In your tests, verify your logs with the `caplog` fixture:
 ```python
 from pytest_structlog import StructuredLogCapture
 
+
 def test_my_view__success__logs_expected(
     log: StructuredLogCapture,
 ) -> None:
