@@ -74,7 +74,7 @@ Attributes:
 ### `cohorts.cohort.created`
 
 Logged at `info` from:
- - `api/cohorts/services.py:170`
+ - `api/cohorts/services.py:154`
 
 Attributes:
  - `cohort.id`
@@ -86,7 +86,7 @@ Attributes:
 ### `cohorts.cohort.deleted`
 
 Logged at `info` from:
- - `api/cohorts/services.py:483`
+ - `api/cohorts/services.py:467`
 
 Attributes:
  - `cohort.id`
@@ -95,7 +95,7 @@ Attributes:
 ### `cohorts.cohort.deletion_requested`
 
 Logged at `info` from:
- - `api/cohorts/services.py:467`
+ - `api/cohorts/services.py:451`
 
 Attributes:
  - `cohort.id`
@@ -104,7 +104,7 @@ Attributes:
 ### `cohorts.csv.synced`
 
 Logged at `info` from:
- - `api/cohorts/services.py:439`
+ - `api/cohorts/services.py:423`
 
 Attributes:
  - `adds.count`
@@ -117,7 +117,7 @@ Attributes:
 ### `cohorts.membership.adds_received`
 
 Logged at `info` from:
- - `api/cohorts/services.py:290`
+ - `api/cohorts/services.py:274`
 
 Attributes:
  - `cohort.id`
@@ -127,7 +127,7 @@ Attributes:
 ### `cohorts.membership.applied`
 
 Logged at `info` from:
- - `api/cohorts/services.py:121`
+ - `api/cohorts/services.py:105`
 
 Attributes:
  - `adds.count`
@@ -155,7 +155,7 @@ Attributes:
 ### `cohorts.membership.removals_received`
 
 Logged at `info` from:
- - `api/cohorts/services.py:315`
+ - `api/cohorts/services.py:299`
 
 Attributes:
  - `cohort.id`
