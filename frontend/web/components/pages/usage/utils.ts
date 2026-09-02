@@ -46,7 +46,7 @@ export const planSectionCopy = (
     return {
       hint: `Usage against your plan limit over ${allowanceWindowLabel(
         basis,
-      )}. This organisation has no billing period.`,
+      )}. We are unable to show exact billing periods for your subscription plan.`,
       title: 'Your plan',
     }
   }
