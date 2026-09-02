@@ -27,7 +27,6 @@ export interface ValueEditorProps {
   // 'Enter a value...' and stops accepting input while disabled.
   placeholder?: string
   readOnly?: boolean
-  onlyOneLang?: boolean
   value?: FlagsmithValue
 }
 
@@ -40,7 +39,6 @@ const ValueEditor: FC<ValueEditorProps> = ({
   name,
   onBlur,
   onChange,
-  onlyOneLang,
   placeholder,
   readOnly,
   value,
@@ -67,9 +65,8 @@ const ValueEditor: FC<ValueEditorProps> = ({
   }, [])
 
   // Copy used to be the last item of the language row, so hiding that row hid
-  // copy too. It now lives inside the editor, so repeat the conditions.
-  const showCopy = !onlyOneLang && !disabled
-  const showLanguages = !onlyOneLang && !disabled
+  // copy too. It now lives inside the editor, so repeat the condition.
+  const showControls = !disabled
 
   return (
     <div
@@ -79,14 +76,14 @@ const ValueEditor: FC<ValueEditorProps> = ({
         className,
       )}
     >
-      {(label || showLanguages) && (
+      {(label || showControls) && (
         <div className='value-editor__header'>
           {label && (
             <FieldLabel id={labelId} tooltip={labelTooltip}>
               {label}
             </FieldLabel>
           )}
-          {showLanguages && (
+          {showControls && (
             <LanguageSelector
               language={language}
               onChange={setLanguage}
@@ -97,7 +94,7 @@ const ValueEditor: FC<ValueEditorProps> = ({
       )}
 
       <div className='value-editor__field'>
-        {showCopy && <CopyValueButton value={text} />}
+        {showControls && <CopyValueButton value={text} />}
 
         {E2E ? (
           <textarea
