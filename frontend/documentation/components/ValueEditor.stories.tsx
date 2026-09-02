@@ -79,17 +79,6 @@ export const Disabled: Story = {
   ),
 }
 
-export const OnlyOneLang: Story = {
-  render: () => (
-    <Interactive
-      label='IDP metadata XML'
-      onlyOneLang
-      language='xml'
-      initialValue={'<EntityDescriptor entityID="https://example.com" />'}
-    />
-  ),
-}
-
 // The multivariate control value carries a weight chip and a tooltip, so it is
 // the widest label this component gets. Label and format buttons share one flex
 // row, so they compress rather than overlap.
