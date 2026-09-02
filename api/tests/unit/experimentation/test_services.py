@@ -1,21 +1,32 @@
 from dataclasses import asdict, replace
 from datetime import datetime, timezone
+from typing import Any, Callable
 from unittest.mock import MagicMock
 
 import pytest
-from django.db import IntegrityError
+from django.db import IntegrityError, connection
 from django.db.models import Q
-from flag_engine.segments.constants import PERCENTAGE_SPLIT
+from django.test.utils import CaptureQueriesContext
+from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from prometheus_client import REGISTRY
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 from rest_framework.exceptions import ValidationError
 
+from api_keys.models import MasterAPIKey
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
+from cohorts.models import CohortMembership, CohortSourceType
+from cohorts.services import apply_pending_memberships, create_cohort
 from core.dataclasses import AuthorData
+from environments.identities.models import Identity
+from environments.identities.traits.models import Trait
 from environments.models import Environment
 from experimentation import services
+from experimentation.constants import MAX_AUDIENCE_SEGMENTS
 from experimentation.dataclasses import (
+    AudienceSpec,
     ConversionBucket,
     ConversionsTimeseries,
     ConversionsTimeseriesPoint,
@@ -53,7 +64,9 @@ from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
 from features.versioning.dataclasses import MultivariateValueChangeSet
 from organisations.models import Organisation
+from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+from tests.unit.experimentation.conftest import RolloutSpecFactory
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
 
@@ -1937,52 +1950,8 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
         }
     ]
 
-    override = FeatureState.objects.get(
-        environment=experiment.environment,
-        feature=experiment.feature,
-        feature_segment__segment=segment,
-    )
-    assert override.enabled is True
-    allocations = {
-        mv.multivariate_feature_option_id: mv.percentage_allocation
-        for mv in override.multivariate_feature_state_values.all()
-    }
-    assert allocations == {option_a.id: 60.0, option_b.id: 40.0}
-
-
-# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
-def test_apply_experiment_rollout__no_segment__creates_segment_and_override_x_replaced_above(
-    experiment: Experiment,
-    multivariate_options: list[MultivariateFeatureOption],
-    admin_user: FFAdminUser,
-) -> None:
-    # Given
-    option_a, option_b, _ = multivariate_options
-
-    # When
-    services.apply_experiment_rollout(
-        experiment,
-        RolloutSpec(
-            enabled=True,
-            rollout_percentage=42.0,
-            feature_state_value="control",
-            value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 60.0),
-                MultivariateValueChangeSet(option_b.id, 40.0),
-            ],
-            author=AuthorData(user=admin_user),
-        ),
-    )
-
-    # Then
-    experiment.refresh_from_db()
-    segment = experiment.rollout_segment
-    assert segment is not None
-    assert segment.is_system_segment is True
-    condition = Condition.objects.get(rule__segment=segment)
-    assert condition.operator == PERCENTAGE_SPLIT
-    assert condition.value == "42.0"
+    # TODO: Drop the legacy rows as per https://github.com/Flagsmith/flagsmith/issues/7818
+    assert _rules_from_orm(segment) == segment.rules_data
 
     override = FeatureState.objects.get(
         environment=experiment.environment,
@@ -2182,43 +2151,9 @@ def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enab
             "rules": [],
         }
     ]
-    override = FeatureState.objects.get(
-        environment=experiment.environment,
-        feature=experiment.feature,
-        feature_segment__segment=experiment.rollout_segment,
-    )
-    assert override.enabled is False
+    # TODO: Drop the legacy rows as per https://github.com/Flagsmith/flagsmith/issues/7818
+    assert _rules_from_orm(segment) == segment.rules_data
 
-
-# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
-def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enabled_x_replaced_above(
-    experiment_with_rollout: Experiment,
-    multivariate_options: list[MultivariateFeatureOption],
-    admin_user: FFAdminUser,
-) -> None:
-    # Given
-    experiment = experiment_with_rollout
-    option_a, option_b, _ = multivariate_options
-
-    # When
-    services.apply_experiment_rollout(
-        experiment,
-        RolloutSpec(
-            enabled=False,
-            rollout_percentage=80.0,
-            feature_state_value="control",
-            value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
-            ],
-            author=AuthorData(user=admin_user),
-        ),
-    )
-
-    # Then
-    condition = Condition.objects.get(rule__segment=experiment.rollout_segment)
-    assert condition.value == "80.0"
     override = FeatureState.objects.get(
         environment=experiment.environment,
         feature=experiment.feature,
@@ -3058,3 +2993,1067 @@ def test_ensure_flagsmith_warehouse_connection__race_condition__handles_integrit
 
     # Then
     assert result is None
+
+
+def _split_rule(rollout_percentage: str) -> dict[str, Any]:
+    return {
+        "type": SegmentRule.ALL_RULE,
+        "conditions": [
+            {
+                "property": "$.identity.key",
+                "operator": PERCENTAGE_SPLIT,
+                "value": rollout_percentage,
+                "description": None,
+            }
+        ],
+        "rules": [],
+    }
+
+
+def _audience_rule(
+    *segment_rules: list[dict[str, Any]],
+    match: str = SegmentRule.ANY_RULE,
+) -> dict[str, Any]:
+    """A segment with a single top-level rule is inlined; a multi-rule segment
+    is wrapped in an ALL rule, mirroring ``_compile_audience``."""
+    return {
+        "type": match,
+        "conditions": [],
+        "rules": [
+            (
+                rules[0]
+                if len(rules) == 1
+                else {"type": SegmentRule.ALL_RULE, "conditions": [], "rules": rules}
+            )
+            for rules in segment_rules
+        ],
+    }
+
+
+def _condition_rule(property: str, value: str) -> list[dict[str, Any]]:
+    return [
+        {
+            "type": SegmentRule.ALL_RULE,
+            "conditions": [
+                {
+                    "property": property,
+                    "operator": EQUAL,
+                    "value": value,
+                    "description": None,
+                }
+            ],
+            "rules": [],
+        }
+    ]
+
+
+def _snapshot_ids(experiment: Experiment) -> list[int]:
+    """The segment ids recorded in the experiment's stored audience snapshot."""
+    return [segment["id"] for segment in experiment.audience.get("segments", [])]
+
+
+def _rules_from_orm(segment: Segment) -> list[dict[str, Any]]:
+    """Read the segment's legacy rule rows back into the shape ``rules_data``
+    holds, so the two representations can be compared."""
+
+    def _rule(rule: SegmentRule) -> dict[str, Any]:
+        return {
+            "type": rule.type,
+            "conditions": [
+                {
+                    "property": condition.property,
+                    "operator": condition.operator,
+                    "value": condition.value,
+                    "description": condition.description,
+                }
+                for condition in rule.conditions.order_by("id")
+            ],
+            "rules": [_rule(sub_rule) for sub_rule in rule.rules.order_by("id")],
+        }
+
+    return [_rule(rule) for rule in segment.rules.order_by("id")]
+
+
+def test_apply_experiment_rollout__audience_segment__compiles_rules_into_both_representations(
+    experiment: Experiment,
+    audience_segment: Segment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    nested_rule = SegmentRule.objects.create(
+        rule=audience_segment.rules.get(), type=SegmentRule.ANY_RULE
+    )
+    Condition.objects.create(
+        rule=nested_rule, property="plan", operator=EQUAL, value="pro"
+    )
+    second_top_rule = SegmentRule.objects.create(
+        segment=audience_segment, type=SegmentRule.ALL_RULE
+    )
+    Condition.objects.create(
+        rule=second_top_rule, property="device", operator=EQUAL, value="mobile"
+    )
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            rollout_percentage=25.0,
+            audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
+        ),
+    )
+
+    # Then
+    experiment.refresh_from_db()
+    segment = experiment.rollout_segment
+    assert segment is not None
+    expected = [
+        _split_rule("25.0"),
+        _audience_rule(
+            [
+                {
+                    "type": SegmentRule.ALL_RULE,
+                    "conditions": [
+                        {
+                            "property": "country",
+                            "operator": EQUAL,
+                            "value": "uk",
+                            "description": None,
+                        }
+                    ],
+                    "rules": [
+                        {
+                            "type": SegmentRule.ANY_RULE,
+                            "conditions": [
+                                {
+                                    "property": "plan",
+                                    "operator": EQUAL,
+                                    "value": "pro",
+                                    "description": None,
+                                }
+                            ],
+                            "rules": [],
+                        }
+                    ],
+                },
+                *_condition_rule("device", "mobile"),
+            ]
+        ),
+    ]
+    assert segment.rules_data == expected
+
+    assert _rules_from_orm(segment) == expected
+
+    assert experiment.audience["match"] == "any"
+    assert experiment.audience["segments"] == [
+        {
+            "id": audience_segment.id,
+            "uuid": str(audience_segment.uuid),
+            "name": "UK users",
+            "is_cohort": False,
+            "cohort_source_type": None,
+        }
+    ]
+    assert experiment.audience["taken_at"]
+    assert experiment.audience["rules"] == segment.rules_data[1:]
+
+
+@pytest.mark.parametrize(
+    "use_new_segment, expected_extra_rules",
+    [
+        pytest.param(
+            True,
+            [
+                _audience_rule(
+                    _condition_rule("plan", "pro"), match=SegmentRule.ALL_RULE
+                )
+            ],
+            id="replaced",
+        ),
+        pytest.param(False, [], id="removed"),
+    ],
+)
+def test_apply_experiment_rollout__audience_changed_while_created__recompiles(
+    use_new_segment: bool,
+    expected_extra_rules: list[dict[str, Any]],
+    experiment: Experiment,
+    audience_segment: Segment,
+    other_audience_segment: Segment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            enabled=False,
+            audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
+        ),
+    )
+    experiment.refresh_from_db()
+
+    # When
+    new_segment_ids = [other_audience_segment.id] if use_new_segment else []
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            enabled=False,
+            audience=AudienceSpec(match="all", segment_ids=new_segment_ids),
+        ),
+    )
+
+    # Then
+    segment = Segment.objects.get(pk=experiment.rollout_segment_id)
+    expected = [_split_rule("100.0"), *expected_extra_rules]
+    assert segment.rules_data == expected
+    assert _rules_from_orm(segment) == expected
+    assert _snapshot_ids(experiment) == new_segment_ids
+    assert experiment.audience["rules"] == expected_extra_rules
+
+
+def test_apply_experiment_rollout__same_audience_while_created__recompiles_fresh_copy(
+    experiment: Experiment,
+    audience_segment: Segment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            enabled=False,
+            audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
+        ),
+    )
+    experiment.refresh_from_db()
+    Condition.objects.filter(rule__segment=audience_segment).update(value="fr")
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            enabled=False,
+            audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
+        ),
+    )
+
+    # Then
+    segment = Segment.objects.get(pk=experiment.rollout_segment_id)
+    expected = [
+        _split_rule("100.0"),
+        _audience_rule(_condition_rule("country", "fr")),
+    ]
+    assert segment.rules_data == expected
+    assert experiment.audience["rules"] == expected[1:]
+
+
+def test_apply_experiment_rollout__empty_audience_match_toggled_while_created__stored(
+    experiment: Experiment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(enabled=False, audience=AudienceSpec(match="any", segment_ids=[])),
+    )
+    experiment.refresh_from_db()
+    assert experiment.audience["match"] == "any"
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(enabled=False, audience=AudienceSpec(match="all", segment_ids=[])),
+    )
+
+    # Then
+    assert experiment.audience["match"] == "all"
+
+
+def test_get_environment_document__nested_audience_rules__no_lazy_queries(
+    experiment: Experiment,
+    audience_segment: Segment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    api_key = experiment.environment.api_key
+    audience = AudienceSpec(match="any", segment_ids=[audience_segment.id])
+    services.apply_experiment_rollout(
+        experiment, rollout_spec(enabled=False, audience=audience)
+    )
+    with CaptureQueriesContext(connection) as shallow_queries:
+        Environment.get_environment_document(api_key)
+
+    # When the copied audience gains a level of nested rules
+    for index in range(3):
+        nested_rule = SegmentRule.objects.create(
+            rule=audience_segment.rules.get(), type=SegmentRule.ANY_RULE
+        )
+        Condition.objects.create(
+            rule=nested_rule, property=f"prop{index}", operator=EQUAL, value="yes"
+        )
+    experiment.refresh_from_db()
+    services.apply_experiment_rollout(
+        experiment, rollout_spec(enabled=False, audience=audience)
+    )
+
+    # Then the extra level costs two prefetch queries (its conditions and its
+    # empty sub-rules), not one query per nested rule
+    with CaptureQueriesContext(connection) as nested_queries:
+        Environment.get_environment_document(api_key)
+    assert len(nested_queries) == len(shallow_queries) + 2
+
+
+def test_apply_experiment_rollout__rules_unchanged__keeps_rule_rows(
+    experiment: Experiment,
+    audience_segment: Segment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
+        ),
+    )
+    experiment.refresh_from_db()
+    rollout_segment_id = experiment.rollout_segment_id
+    assert rollout_segment_id is not None
+    rule_ids = set(
+        SegmentRule.objects.filter(segment_id=rollout_segment_id).values_list(
+            "id", flat=True
+        )
+    )
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        replace(
+            rollout_spec(
+                audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
+            ),
+            feature_state_value="updated",
+        ),
+    )
+
+    # Then
+    assert (
+        set(
+            SegmentRule.objects.filter(segment_id=rollout_segment_id).values_list(
+                "id", flat=True
+            )
+        )
+        == rule_ids
+    )
+
+
+@pytest.mark.parametrize(
+    "status",
+    [ExperimentStatus.RUNNING, ExperimentStatus.PAUSED],
+)
+def test_apply_experiment_rollout__new_audience_while_running__raises(
+    status: ExperimentStatus,
+    experiment: Experiment,
+    audience_segment: Segment,
+    other_audience_segment: Segment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
+        ),
+    )
+    experiment.refresh_from_db()
+    Experiment.objects.filter(pk=experiment.pk).update(status=status)
+    assert experiment.status == ExperimentStatus.CREATED
+
+    # When / Then
+    with pytest.raises(ValidationError, match="Cannot change the audience"):
+        services.apply_experiment_rollout(
+            experiment,
+            rollout_spec(
+                audience=AudienceSpec(
+                    match="any",
+                    segment_ids=[audience_segment.id, other_audience_segment.id],
+                ),
+            ),
+        )
+    assert Segment.objects.get(pk=experiment.rollout_segment_id).rules_data == [
+        _split_rule("100.0"),
+        _audience_rule(_condition_rule("country", "uk")),
+    ]
+
+
+def test_apply_experiment_rollout__audience__logs_rollout_applied_on_commit(  # type: ignore[no-untyped-def]
+    experiment: Experiment,
+    audience_segment: Segment,
+    rollout_spec: RolloutSpecFactory,
+    admin_user: FFAdminUser,
+    log: StructuredLogCapture,
+    django_capture_on_commit_callbacks,
+) -> None:
+    # Given / When
+    with django_capture_on_commit_callbacks(execute=True):
+        services.apply_experiment_rollout(
+            experiment,
+            rollout_spec(
+                rollout_percentage=40.0,
+                audience=AudienceSpec(match="all", segment_ids=[audience_segment.id]),
+            ),
+        )
+        # Then
+        assert not any(event["event"] == "rollout.applied" for event in log.events)
+
+    # Then
+    assert {
+        "level": "info",
+        "event": "rollout.applied",
+        "experiment__id": experiment.id,
+        "environment__id": experiment.environment_id,
+        "feature__id": experiment.feature_id,
+        "author__id": admin_user.pk,
+        "rollout__percentage": 40.0,
+        "audience__match": "all",
+        "author__api_key_id": None,
+        "audience__segments_count": 1,
+        "audience__segment_ids": [audience_segment.id],
+    } in log.events
+
+
+@pytest.mark.parametrize(
+    "change_source",
+    [
+        pytest.param(lambda segment: None, id="unchanged"),
+        pytest.param(
+            lambda segment: Condition.objects.filter(rule__segment=segment).update(
+                value="fr"
+            ),
+            id="condition_edited",
+        ),
+        pytest.param(lambda segment: segment.delete(), id="deleted"),
+        pytest.param(
+            lambda segment: Condition.objects.create(
+                rule=segment.rules.get(),
+                property="$.identity.key",
+                operator=PERCENTAGE_SPLIT,
+                value="50",
+            ),
+            id="percentage_split_added",
+        ),
+    ],
+)
+def test_apply_experiment_rollout__same_audience_while_running__keeps_frozen_rules(
+    change_source: Callable[[Segment], object],
+    experiment: Experiment,
+    audience_segment: Segment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            rollout_percentage=20.0,
+            audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
+        ),
+    )
+    experiment.refresh_from_db()
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.save()
+    change_source(audience_segment)
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            rollout_percentage=60.0,
+            audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
+        ),
+    )
+
+    # Then
+    segment = Segment.objects.get(pk=experiment.rollout_segment_id)
+    expected = [
+        _split_rule("60.0"),
+        _audience_rule(_condition_rule("country", "uk")),
+    ]
+    assert segment.rules_data == expected
+    assert _rules_from_orm(segment) == expected
+    rollout = services.get_experiment_rollout(experiment)
+    assert rollout is not None
+    assert rollout["rollout_percentage"] == 60.0
+
+
+def _foreign_project_segment(project_b: Project, **_: Any) -> list[int]:
+    segment = Segment.objects.create(project=project_b, name="Elsewhere")
+    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(rule=rule, property="a", operator=EQUAL, value="b")
+    return [segment.id]
+
+
+def _system_segment(project: Project, **_: Any) -> list[int]:
+    segment = Segment.objects.create(
+        project=project, name="System", is_system_segment=True
+    )
+    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(rule=rule, property="a", operator=EQUAL, value="b")
+    return [segment.id]
+
+
+def _feature_specific_segment(
+    project: Project, feature: Feature, **_: Any
+) -> list[int]:
+    segment = Segment.objects.create(
+        project=project, name="Feature specific", feature=feature
+    )
+    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(rule=rule, property="a", operator=EQUAL, value="b")
+    return [segment.id]
+
+
+def _other_environment_cohort_segment(project: Project, **_: Any) -> list[int]:
+    other_environment = Environment.objects.create(
+        name="Other environment", project=project
+    )
+    cohort = create_cohort(environment=other_environment, name="Elsewhere cohort")
+    return [cohort.segment_id]
+
+
+def _pending_deletion_cohort_segment(environment: Environment, **_: Any) -> list[int]:
+    cohort = create_cohort(environment=environment, name="Draining cohort")
+    cohort.deletion_requested_at = datetime.now(timezone.utc)
+    cohort.save()
+    return [cohort.segment_id]
+
+
+def _percentage_split_segment(project: Project, **_: Any) -> list[int]:
+    segment = Segment.objects.create(project=project, name="Half of everyone")
+    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    nested_rule = SegmentRule.objects.create(rule=rule, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(
+        rule=nested_rule,
+        property="$.identity.key",
+        operator=PERCENTAGE_SPLIT,
+        value="50",
+    )
+    return [segment.id]
+
+
+def _rule_less_segment(project: Project, **_: Any) -> list[int]:
+    return [Segment.objects.create(project=project, name="No rules").id]
+
+
+def _too_many_segments(project: Project, **_: Any) -> list[int]:
+    segment_ids = []
+    for index in range(MAX_AUDIENCE_SEGMENTS + 1):
+        segment = Segment.objects.create(project=project, name=f"Segment {index}")
+        rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(rule=rule, property="a", operator=EQUAL, value="b")
+        segment_ids.append(segment.id)
+    return segment_ids
+
+
+def _duplicate_segments(project: Project, **_: Any) -> list[int]:
+    segment_id = _system_segment(project)[0]
+    return [segment_id, segment_id]
+
+
+def _unknown_segment(**_: Any) -> list[int]:
+    return [999999]
+
+
+@pytest.mark.parametrize(
+    "build_segment_ids, expected_error",
+    [
+        pytest.param(
+            _foreign_project_segment,
+            "do not belong to the project",
+            id="foreign_project",
+        ),
+        pytest.param(_unknown_segment, "do not belong to the project", id="unknown"),
+        pytest.param(_system_segment, "cannot be targeted", id="system"),
+        pytest.param(
+            _feature_specific_segment, "specific to a feature", id="feature_specific"
+        ),
+        pytest.param(
+            _other_environment_cohort_segment,
+            "cohort in another environment",
+            id="other_environment_cohort",
+        ),
+        pytest.param(
+            _pending_deletion_cohort_segment,
+            "cohort that is being deleted",
+            id="pending_deletion_cohort",
+        ),
+        pytest.param(
+            _percentage_split_segment,
+            "contains a percentage split",
+            id="percentage_split",
+        ),
+        pytest.param(_rule_less_segment, "has no rules", id="no_rules"),
+        pytest.param(
+            _too_many_segments,
+            f"no more than {MAX_AUDIENCE_SEGMENTS} segments",
+            id="over_cap",
+        ),
+        pytest.param(_duplicate_segments, "must be unique", id="duplicates"),
+    ],
+)
+def test_apply_experiment_rollout__ineligible_audience_segment__raises(
+    build_segment_ids: Callable[..., list[int]],
+    expected_error: str,
+    experiment: Experiment,
+    environment: Environment,
+    project: Project,
+    project_b: Project,
+    feature: Feature,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    segment_ids = build_segment_ids(
+        environment=environment, project=project, project_b=project_b, feature=feature
+    )
+
+    # When / Then
+    with pytest.raises(ValidationError, match=expected_error):
+        services.apply_experiment_rollout(
+            experiment,
+            rollout_spec(audience=AudienceSpec(match="any", segment_ids=segment_ids)),
+        )
+    experiment.refresh_from_db()
+    assert experiment.rollout_segment_id is None
+
+
+def _identity_flag_value(
+    identity: Identity, feature: Feature
+) -> tuple[Any, int | None]:
+    """The value the identity is served for the feature, and the id of the
+    feature segment it came from (``None`` for the environment default)."""
+    (feature_state,) = [
+        feature_state
+        for feature_state in identity.get_all_feature_states()
+        if feature_state.feature_id == feature.id
+    ]
+    return (
+        feature_state.get_feature_state_value(identity=identity),
+        (
+            feature_state.feature_segment.segment_id
+            if feature_state.feature_segment
+            else None
+        ),
+    )
+
+
+@pytest.fixture()
+def experiment_with_audience_rollout(
+    experiment: Experiment,
+    multivariate_options: list[MultivariateFeatureOption],
+    rollout_spec: RolloutSpecFactory,
+) -> Callable[[str, list[int]], Experiment]:
+    """Roll the experiment out to every identity in the given audience, serving
+    them all the first variant."""
+    option_a, _, _ = multivariate_options
+
+    def _apply(match: str, segment_ids: list[int]) -> Experiment:
+        services.apply_experiment_rollout(
+            experiment,
+            rollout_spec(
+                rollout_percentage=100.0,
+                multivariate_values=[MultivariateValueChangeSet(option_a.id, 100.0)],
+                audience=AudienceSpec(match=match, segment_ids=segment_ids),
+            ),
+        )
+        experiment.refresh_from_db()
+        return experiment
+
+    return _apply
+
+
+@pytest.mark.parametrize(
+    "match, traits, is_enrolled",
+    [
+        pytest.param("all", {"country": "uk", "plan": "pro"}, True, id="all_both"),
+        pytest.param("all", {"country": "uk"}, False, id="all_one"),
+        pytest.param("any", {"plan": "pro"}, True, id="any_one"),
+        pytest.param("any", {"country": "de"}, False, id="any_neither"),
+        pytest.param("any", {}, False, id="no_traits"),
+    ],
+)
+def test_experiment_rollout__two_segment_audience__enrolment_follows_any_all_match(
+    match: str,
+    traits: dict[str, str],
+    is_enrolled: bool,
+    multi_segment_audiences: None,
+    environment: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    audience_segment: Segment,
+    other_audience_segment: Segment,
+    experiment_with_audience_rollout: Callable[[str, list[int]], Experiment],
+) -> None:
+    # Given
+    option_a, _, _ = multivariate_options
+    experiment = experiment_with_audience_rollout(
+        match, [audience_segment.id, other_audience_segment.id]
+    )
+    identity = Identity.objects.create(
+        identifier="test-identity", environment=environment
+    )
+    for trait_key, trait_value in traits.items():
+        Trait.objects.create(
+            identity=identity, trait_key=trait_key, string_value=trait_value
+        )
+
+    # When
+    value, segment_id = _identity_flag_value(identity, multivariate_feature)
+
+    # Then
+    if is_enrolled:
+        assert (value, segment_id) == (
+            option_a.string_value,
+            experiment.rollout_segment_id,
+        )
+    else:
+        assert (value, segment_id) == ("control", None)
+
+
+def test_experiment_rollout__cohort_audience__enrols_members_only(
+    environment: Environment,
+    multivariate_feature: Feature,
+    experiment_with_audience_rollout: Callable[[str, list[int]], Experiment],
+) -> None:
+    # Given
+    cohort = create_cohort(environment=environment, name="Beta users")
+    CohortMembership.objects.create(cohort=cohort, identifier="member")
+    apply_pending_memberships(cohort)
+    member = Identity.objects.get(environment=environment, identifier="member")
+    outsider = Identity.objects.create(environment=environment, identifier="outsider")
+
+    # When
+    experiment = experiment_with_audience_rollout("any", [cohort.segment_id])
+
+    # Then
+    assert _identity_flag_value(member, multivariate_feature)[1] == (
+        experiment.rollout_segment_id
+    )
+    assert _identity_flag_value(outsider, multivariate_feature)[1] is None
+
+
+def test_get_experiment_rollout__audience__returns_segment_details(
+    multi_segment_audiences: None,
+    experiment: Experiment,
+    environment: Environment,
+    audience_segment: Segment,
+    other_audience_segment: Segment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    cohort = create_cohort(environment=environment, name="Beta users")
+    cohort_segment = cohort.segment
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            audience=AudienceSpec(
+                match="all",
+                segment_ids=[
+                    audience_segment.id,
+                    other_audience_segment.id,
+                    cohort_segment.id,
+                ],
+            ),
+        ),
+    )
+    other_audience_segment.delete()
+    cohort.delete()
+    cohort_segment.delete()
+
+    # When
+    rollout = services.get_experiment_rollout(experiment)
+
+    # Then
+    assert rollout is not None
+    assert rollout["audience"] == {
+        "match": "all",
+        "segments": [
+            {
+                "id": audience_segment.id,
+                "name": "UK users",
+                "is_cohort": False,
+                "cohort_source_type": None,
+                "deleted": False,
+            },
+            {
+                "id": other_audience_segment.id,
+                "name": "Pro plan",
+                "is_cohort": False,
+                "cohort_source_type": None,
+                "deleted": True,
+            },
+            {
+                "id": cohort_segment.id,
+                "name": "Beta users",
+                "is_cohort": True,
+                "cohort_source_type": CohortSourceType.CSV,
+                "deleted": True,
+            },
+        ],
+    }
+
+
+def test_get_experiment_rollout__no_audience__returns_empty_audience(
+    experiment_with_rollout: Experiment,
+) -> None:
+    # Given / When
+    rollout = services.get_experiment_rollout(experiment_with_rollout)
+
+    # Then
+    assert rollout is not None
+    assert rollout["audience"] == {"match": "any", "segments": []}
+
+
+@pytest.mark.parametrize(
+    "with_audience", [True, False], ids=["audience", "no_audience"]
+)
+def test_apply_experiment_rollout__rollout_segment_edited__restored_from_snapshot(
+    with_audience: bool,
+    experiment: Experiment,
+    audience_segment: Segment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    audience = (
+        AudienceSpec(match="any", segment_ids=[audience_segment.id])
+        if with_audience
+        else None
+    )
+    services.apply_experiment_rollout(
+        experiment, rollout_spec(rollout_percentage=20.0, audience=audience)
+    )
+    experiment.refresh_from_db()
+    Segment.objects.filter(pk=experiment.rollout_segment_id).update(
+        rules_data=[_split_rule("20.0"), _audience_rule(_condition_rule("hax", "yes"))]
+    )
+
+    # When
+    services.apply_experiment_rollout(experiment, rollout_spec(rollout_percentage=60.0))
+
+    # Then
+    segment = Segment.objects.get(pk=experiment.rollout_segment_id)
+    expected = [_split_rule("60.0")]
+    if with_audience:
+        expected.append(_audience_rule(_condition_rule("country", "uk")))
+    assert segment.rules_data == expected
+    assert _rules_from_orm(segment) == expected
+
+
+def test_apply_experiment_rollout__snapshot_without_rules__falls_back_and_backfills(
+    experiment: Experiment,
+    audience_segment: Segment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            rollout_percentage=20.0,
+            audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
+        ),
+    )
+    experiment.refresh_from_db()
+    legacy_snapshot = {
+        key: value for key, value in experiment.audience.items() if key != "rules"
+    }
+    Experiment.objects.filter(pk=experiment.pk).update(audience=legacy_snapshot)
+    experiment.refresh_from_db()
+    assert "rules" not in experiment.audience
+
+    # When
+    services.apply_experiment_rollout(experiment, rollout_spec(rollout_percentage=60.0))
+
+    # Then
+    segment = Segment.objects.get(pk=experiment.rollout_segment_id)
+    assert segment.rules_data == [
+        _split_rule("60.0"),
+        _audience_rule(_condition_rule("country", "uk")),
+    ]
+    experiment.refresh_from_db()
+    assert experiment.audience["rules"] == [
+        _audience_rule(_condition_rule("country", "uk"))
+    ]
+
+
+def test_apply_experiment_rollout__empty_audience_resubmitted_while_running__allowed(
+    experiment: Experiment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    services.apply_experiment_rollout(experiment, rollout_spec(rollout_percentage=20.0))
+    experiment.refresh_from_db()
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.save()
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            rollout_percentage=60.0,
+            audience=AudienceSpec(match="all", segment_ids=[]),
+        ),
+    )
+
+    # Then
+    segment = Segment.objects.get(pk=experiment.rollout_segment_id)
+    assert segment.rules_data == [_split_rule("60.0")]
+
+
+def test_apply_experiment_rollout__audience_change_while_enabled__raises(
+    experiment: Experiment,
+    audience_segment: Segment,
+    other_audience_segment: Segment,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            enabled=True,
+            audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
+        ),
+    )
+    experiment.refresh_from_db()
+    assert experiment.status == ExperimentStatus.CREATED
+
+    # When / Then
+    with pytest.raises(ValidationError, match="while the rollout is enabled"):
+        services.apply_experiment_rollout(
+            experiment,
+            rollout_spec(
+                enabled=True,
+                audience=AudienceSpec(
+                    match="any", segment_ids=[other_audience_segment.id]
+                ),
+            ),
+        )
+    assert _snapshot_ids(experiment) == [audience_segment.id]
+
+
+def test_apply_experiment_rollout__any_audience__writes_audit_log(
+    experiment: Experiment,
+    audience_segment: Segment,
+    admin_user: FFAdminUser,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given / When
+    services.apply_experiment_rollout(
+        experiment,
+        rollout_spec(
+            rollout_percentage=40.0,
+            audience=AudienceSpec(match="all", segment_ids=[audience_segment.id]),
+        ),
+    )
+
+    # Then
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.EXPERIMENT.name,
+        related_object_id=experiment.id,
+    )
+    assert audit_log.log == (
+        f"Experiment 'Test Experiment' rollout set to 40.0% of "
+        f"segments [{audience_segment.id}] (all)"
+    )
+    assert audit_log.author_id == admin_user.pk
+    assert audit_log.environment_id == experiment.environment_id
+
+
+def test_apply_experiment_rollout__no_audience__names_all_identities_and_stores_empty_snapshot(
+    experiment: Experiment,
+    admin_user: FFAdminUser,
+    rollout_spec: RolloutSpecFactory,
+) -> None:
+    # Given / When
+    services.apply_experiment_rollout(experiment, rollout_spec(rollout_percentage=25.0))
+
+    # Then
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.EXPERIMENT.name,
+        related_object_id=experiment.id,
+    )
+    assert audit_log.log == (
+        "Experiment 'Test Experiment' rollout set to 25.0% of all identities"
+    )
+    experiment.refresh_from_db()
+    assert experiment.audience["match"] == "any"
+    assert experiment.audience["segments"] == []
+    assert experiment.audience["rules"] == []
+    assert experiment.audience["taken_at"]
+
+
+def test_apply_experiment_rollout__master_api_key_author__attributes_audit_log(
+    experiment: Experiment,
+    admin_master_api_key: tuple[MasterAPIKey, str],
+    multivariate_options: list[MultivariateFeatureOption],
+) -> None:
+    # Given
+    master_api_key, _ = admin_master_api_key
+
+    # When
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=30.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[],
+            author=AuthorData(api_key=master_api_key),
+        ),
+    )
+
+    # Then
+    audit_log = AuditLog.objects.get(
+        related_object_type=RelatedObjectType.EXPERIMENT.name,
+        related_object_id=experiment.id,
+    )
+    assert audit_log.author_id is None
+    assert audit_log.master_api_key_id == master_api_key.id
+
+
+def test_apply_experiment_rollout__resubmitted__records_history_only_on_change(  # type: ignore[no-untyped-def]
+    experiment: Experiment,
+    audience_segment: Segment,
+    multivariate_options: list[MultivariateFeatureOption],
+    rollout_spec: RolloutSpecFactory,
+    log: StructuredLogCapture,
+    django_capture_on_commit_callbacks,
+) -> None:
+    # Given
+    option_a, _, _ = multivariate_options
+
+    def _spec() -> RolloutSpec:
+        return rollout_spec(
+            rollout_percentage=40.0,
+            multivariate_values=[MultivariateValueChangeSet(option_a.id, 100.0)],
+            audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
+        )
+
+    def _audit_log_count() -> int:
+        count: int = AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.EXPERIMENT.name,
+            related_object_id=experiment.id,
+        ).count()
+        return count
+
+    services.apply_experiment_rollout(experiment, _spec())
+    experiment.refresh_from_db()
+    assert _audit_log_count() == 1
+
+    # When
+    with django_capture_on_commit_callbacks(execute=True):
+        services.apply_experiment_rollout(experiment, _spec())
+
+    # Then
+    assert _audit_log_count() == 1
+    assert not any(event["event"] == "rollout.applied" for event in log.events)
+
+    # When / Then
+    services.apply_experiment_rollout(
+        experiment, replace(_spec(), feature_state_value="updated")
+    )
+    assert _audit_log_count() == 2

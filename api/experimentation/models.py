@@ -20,7 +20,7 @@ from experimentation.dataclasses import (
     ResultsSummary,
     WarehouseEventStats,
 )
-from experimentation.types import MetricDefinition
+from experimentation.types import AudienceSnapshot, MetricDefinition
 
 # A computation's payload is the serialised form of its summary dataclass; the
 # concrete subclass binds which one, so record_refresh stays type-safe per panel.
@@ -161,6 +161,11 @@ class ExperimentStatus(models.TextChoices):
     COMPLETED = "completed", "Completed"
 
 
+class AudienceMatch(models.TextChoices):
+    ANY = "any", "Any"
+    ALL = "all", "All"
+
+
 VALID_STATUS_TRANSITIONS: dict[str, set[str]] = {
     ExperimentStatus.CREATED: {ExperimentStatus.RUNNING},
     ExperimentStatus.RUNNING: {ExperimentStatus.PAUSED, ExperimentStatus.COMPLETED},
@@ -197,6 +202,13 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
         related_name="experiment_rollout",
         null=True,
         blank=True,
+    )
+    # The segments an identity must match to enter the rollout split, snapshot
+    # as at configure time. An empty dict means every identity in the
+    # environment is eligible. Descriptive only — the rules the engine evaluates
+    # are copied into the rollout segment. See ``AudienceSnapshot``.
+    audience: models.JSONField[AudienceSnapshot, AudienceSnapshot] = models.JSONField(
+        default=dict
     )
 
     class Meta:

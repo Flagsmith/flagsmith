@@ -9,6 +9,7 @@ from django.db import IntegrityError
 from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
+from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from freezegun import freeze_time
 from pytest_mock import MockerFixture
 from rest_framework import status
@@ -16,10 +17,12 @@ from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from cohorts.services import create_cohort
 from environments.models import Environment
 from experimentation.constants import (
     EXPERIMENT_FLAG,
     EXPOSURES_REFRESH_MIN_INTERVAL,
+    MAX_AUDIENCE_SEGMENTS,
     RESULTS_REFRESH_MIN_INTERVAL,
 )
 from experimentation.models import (
@@ -38,7 +41,7 @@ from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
-from segments.models import Condition
+from segments.models import Condition, Segment, SegmentRule
 from tests.types import EnableFeaturesFixture
 
 if TYPE_CHECKING:
@@ -2353,3 +2356,257 @@ def test_get_detail__without_rollout__returns_null(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["experiment_rollout"] is None
+
+
+def _rollout_payload(**overrides: object) -> dict[str, object]:
+    return {
+        "enabled": True,
+        "rollout_percentage": 30,
+        "feature_state_value": {"type": "string", "value": "control"},
+        **overrides,
+    }
+
+
+def test_post__with_audience__creates_rollout_and_returns_audience(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    audience_segment: Segment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "Rollout experiment",
+            "hypothesis": "It will work",
+            "experiment_rollout": _rollout_payload(
+                audience={"match": "all", "segment_ids": [audience_segment.id]}
+            ),
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    experiment = Experiment.objects.get(id=response.json()["id"])
+    detail = admin_client_new.get(_detail_url(environment, experiment))
+    assert detail.json()["experiment_rollout"]["audience"] == {
+        "match": "all",
+        "segments": [
+            {
+                "id": audience_segment.id,
+                "name": audience_segment.name,
+                "is_cohort": False,
+                "cohort_source_type": None,
+                "deleted": False,
+            }
+        ],
+    }
+
+
+def test_action_rollout__audience_while_not_serving__updates_audience(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    audience_segment: Segment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a rollout taken out of service, since an enabled one freezes the
+    # audience it enrolled identities by
+    enable_features(EXPERIMENT_FLAG)
+    disable = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data=_rollout_payload(enabled=False),
+        format="json",
+    )
+    assert disable.status_code == status.HTTP_200_OK
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data=_rollout_payload(
+            enabled=False,
+            audience={"match": "any", "segment_ids": [audience_segment.id]},
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    detail = admin_client_new.get(_detail_url(environment, experiment_with_rollout))
+    assert detail.json()["experiment_rollout"]["audience"] == {
+        "match": "any",
+        "segments": [
+            {
+                "id": audience_segment.id,
+                "name": audience_segment.name,
+                "is_cohort": False,
+                "cohort_source_type": None,
+                "deleted": False,
+            }
+        ],
+    }
+
+
+def test_action_rollout__audience_change_while_enabled__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    audience_segment: Segment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a rollout that is enabled and serving
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data=_rollout_payload(
+            audience={"match": "any", "segment_ids": [audience_segment.id]}
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "while the rollout is enabled" in str(response.json())
+
+
+def test_action_rollout__audience_change_while_running__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    audience_segment: Segment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a running experiment
+    enable_features(EXPERIMENT_FLAG)
+    experiment_with_rollout.status = ExperimentStatus.RUNNING
+    experiment_with_rollout.save()
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data=_rollout_payload(
+            audience={"match": "any", "segment_ids": [audience_segment.id]}
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    # The full message, since the enabled-rollout guard shares its prefix.
+    assert "Cannot change the audience of a running experiment." in str(response.json())
+
+
+def test_action_rollout__more_segments_than_the_cap__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    audience_segment: Segment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data=_rollout_payload(
+            audience={
+                "match": "any",
+                "segment_ids": [audience_segment.id] * (MAX_AUDIENCE_SEGMENTS + 1),
+            }
+        ),
+        format="json",
+    )
+
+    # Then the field rejects it before the service is reached
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "no more than" in str(response.json())
+
+
+def test_action_rollout__foreign_project_segment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    project_b: Project,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    segment = Segment.objects.create(project=project_b, name="Elsewhere")
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment, "rollout"),
+        data=_rollout_payload(audience={"match": "any", "segment_ids": [segment.id]}),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "do not belong to the project" in str(response.json())
+
+
+def test_action_rollout__cohort_segment_from_another_environment__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    project: Project,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given a cohort in a sibling environment of the same project
+    enable_features(EXPERIMENT_FLAG)
+    other_environment = Environment.objects.create(
+        name="Other environment", project=project
+    )
+    cohort = create_cohort(environment=other_environment, name="Elsewhere cohort")
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment, "rollout"),
+        data=_rollout_payload(
+            audience={"match": "any", "segment_ids": [cohort.segment_id]}
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "cohort in another environment" in str(response.json())
+
+
+def test_action_rollout__segment_with_percentage_split__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment: Experiment,
+    project: Project,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    segment = Segment.objects.create(project=project, name="Half of everyone")
+    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(
+        rule=rule,
+        property="$.identity.key",
+        operator=PERCENTAGE_SPLIT,
+        value="50",
+    )
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment, "rollout"),
+        data=_rollout_payload(audience={"match": "any", "segment_ids": [segment.id]}),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "contains a percentage split" in str(response.json())

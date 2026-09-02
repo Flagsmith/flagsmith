@@ -23,6 +23,8 @@ from cohorts.services import (
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.models import Identity
 from environments.models import Environment
+from experimentation.models import Experiment, ExperimentStatus
+from features.models import Feature
 from segments.models import SegmentManagedBy, SegmentRule
 
 
@@ -565,3 +567,72 @@ def test_create_cohort__clickhouse_enabled__queues_membership_refresh(
 
     # Then
     enqueue_mock.assert_called_once_with(environment.project)
+
+
+@pytest.mark.parametrize(
+    "status, is_blocked",
+    [
+        pytest.param(ExperimentStatus.CREATED, True, id="created"),
+        pytest.param(ExperimentStatus.RUNNING, True, id="running"),
+        pytest.param(ExperimentStatus.PAUSED, True, id="paused"),
+        pytest.param(ExperimentStatus.COMPLETED, False, id="completed"),
+    ],
+)
+def test_delete_cohort__targeted_by_experiment_audience__blocked_unless_completed(
+    status: str,
+    is_blocked: bool,
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given a cohort an experiment's audience targets
+    cohort = create_cohort(environment=environment, name="Beta users")
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=multivariate_feature,
+        name="Checkout copy",
+        hypothesis="h",
+        status=status,
+        audience={
+            "match": "any",
+            "segments": [{"id": cohort.segment_id, "name": "Beta users"}],
+        },
+    )
+
+    # When / Then
+    if is_blocked:
+        with pytest.raises(ValidationError, match="'Checkout copy'"):
+            delete_cohort(cohort)
+        cohort.refresh_from_db()
+        assert cohort.deletion_requested_at is None
+    else:
+        delete_cohort(cohort)
+        cohort.refresh_from_db()
+        assert cohort.deletion_requested_at is not None
+    assert experiment.name == "Checkout copy"
+
+
+def test_delete_cohort__audience_targets_another_cohort__allowed(
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given an experiment targeting a different cohort
+    cohort = create_cohort(environment=environment, name="Beta users")
+    other = create_cohort(environment=environment, name="Power users")
+    Experiment.objects.create(
+        environment=environment,
+        feature=multivariate_feature,
+        name="Checkout copy",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+        audience={
+            "match": "any",
+            "segments": [{"id": other.segment_id, "name": "Power users"}],
+        },
+    )
+
+    # When
+    delete_cohort(cohort)
+
+    # Then
+    cohort.refresh_from_db()
+    assert cohort.deletion_requested_at is not None

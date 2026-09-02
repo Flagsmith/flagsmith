@@ -1,5 +1,10 @@
 from typing import Literal, TypedDict
 
+from typing_extensions import NotRequired
+
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
+
 ExposureGranularity = Literal["hour", "day"]
 
 
@@ -25,6 +30,36 @@ class MetricExperimentResult(TypedDict):
     id: int
     name: str
     status: str
+
+
+class AudienceSegmentSnapshot(TypedDict):
+    """One targeted segment as it stood when the audience was configured. Names
+    and cohort badges freeze alongside the copied rules, so the stored audience
+    keeps describing what the experiment actually launched with. The uuid
+    survives the segment's deletion, which its id does not meaningfully."""
+
+    id: int
+    uuid: str
+    name: str
+    is_cohort: bool
+    cohort_source_type: str | None
+
+
+class AudienceSnapshot(TypedDict):
+    """A configured audience, self-contained: it carries the compiled rules the
+    rollout segment is built from, so that segment is a pure derivation of
+    (percentage, snapshot) and never a source of truth.
+
+    Every key is absent exactly when there is no audience, which is the stored
+    default and means every identity in the environment is eligible. ``rules``
+    is also absent on experiments configured before the snapshot carried it.
+    """
+
+    match: NotRequired[str]
+    segments: NotRequired[list[AudienceSegmentSnapshot]]
+    # The compiled audience rule(s), exactly as appended to the rollout segment.
+    rules: NotRequired[list[SegmentRuleType]]
+    taken_at: NotRequired[str]
 
 
 class SnowflakeConfig(TypedDict):
