@@ -42,6 +42,14 @@ application uses as the Flagsmith [identity](/flagsmith-concepts/identities) ide
 
 ![Amplitude Flagsmith destination configuration](/img/cohort-synchronisation/amplitude-destination-config.png)
 
+:::warning The key decides the environment
+
+Every cohort sent to this destination is synchronised into the environment its key belongs to, and nothing in Amplitude
+shows which one that is. To synchronise cohorts into a second environment, create a key there and add a second Flagsmith
+destination for it.
+
+:::
+
 ## 3. Synchronise a cohort
 
 1. In Amplitude, open the cohort you want to target and click **Target users**.

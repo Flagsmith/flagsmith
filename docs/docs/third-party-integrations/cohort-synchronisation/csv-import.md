@@ -26,13 +26,20 @@ Other columns are ignored, so you can upload an export without stripping it down
 1. Go to the **Segments** page in your project and click **Create Segment**.
 2. Choose **From a CSV list**.
 3. Give the segment a name and, optionally, a description.
-4. Select the environment the identities should be targeted in. The segment will only have members in that environment.
+4. Select the environment the identities should be targeted in.
 5. Drag your CSV file onto the upload area, or click **Select file** to browse for it.
 6. Check the **Identifier column** that Flagsmith has picked, and change it if the identifiers are in a different
    column. Untick **First row contains headers** if your file starts with data rather than column names.
 7. Review the preview and the number of identifiers detected, then click **Create Segment**.
 
 ![Creating a segment from a CSV list](/img/cohort-synchronisation/csv-create-segment.png)
+
+:::warning Choose the environment carefully
+
+The identities you upload are only targeted in the environment you select, and that choice cannot be changed later. To
+target the same list in another environment, create a second segment there and upload the same file.
+
+:::
 
 ## Updating the members
 

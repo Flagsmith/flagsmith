@@ -21,6 +21,14 @@ Cohort synchronisation is available on paid plans.
 
 :::
 
+:::warning Synchronised segments belong to one environment
+
+You choose the environment when you set the segment up, and it cannot be changed afterwards. The segment has no members
+in any other environment, so an override you add in, say, Production will not match anyone if the segment was
+synchronised into Development. To target the same group in another environment, set the segment up again there.
+
+:::
+
 ## Supported sources
 
 - [CSV import](/third-party-integrations/cohort-synchronisation/csv-import)
