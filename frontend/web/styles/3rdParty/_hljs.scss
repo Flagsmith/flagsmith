@@ -58,7 +58,8 @@
     }
   }
 
-  &:has(.value-editor__copy) .hljs {
+  // Keep long values clear of the copy button.
+  &__field:has(.value-editor__copy) .hljs {
     padding-right: 44px;
   }
   textarea {
@@ -69,10 +70,27 @@
   code {
     outline-color: transparent !important;
   }
+  // Label on the left, format buttons on the right. They used to be separate
+  // layers (the row was absolutely positioned over the caller's own label),
+  // so nothing stopped a long label running under the buttons.
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+    min-height: 20px;
+    .control-label {
+      margin-bottom: 0;
+    }
+  }
+
+  &__field {
+    position: relative;
+  }
+
   .select-language {
-    position: absolute;
-    top: -24px;
-    right: 0;
+    margin-left: auto;
     // The format labels are buttons. BareButton resets them at zero
     // specificity, so these rules win without needing to out-specify it.
     .bare-btn {

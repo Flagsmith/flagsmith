@@ -278,8 +278,8 @@ const SegmentOverrideInner = class Override extends React.Component {
           {showValue ? (
             <>
               <div className='flex-fill overflow-hidden'>
-                <label>Value</label>
                 <ValueEditor
+                  label='Value'
                   readOnly={readOnly}
                   disabled={readOnly}
                   value={v.value}
@@ -300,8 +300,8 @@ const SegmentOverrideInner = class Override extends React.Component {
             </>
           ) : (
             <div className='flex-1 flex-column'>
-              <label>Segment Control Value - {controlPercent}%</label>
               <ValueEditor
+                label={`Segment Control Value - ${controlPercent}%`}
                 value={v.value}
                 data-test={`segment-override-value-${index}`}
                 placeholder="Value e.g. 'big' "

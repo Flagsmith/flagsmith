@@ -183,6 +183,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
               ((data.name && !data.idp_metadata_xml) ||
                 data.idp_metadata_xml))) && (
             <ValueEditor
+              label='IDP metadata XML'
               data-test='featureValue'
               name='featureValue'
               className='full-width'
