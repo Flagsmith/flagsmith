@@ -206,7 +206,7 @@ export const colorTextDisabled = 'var(--color-text-disabled, #9da4ae)'
 export const colorTextInfo = 'var(--color-text-info, #0aaddf)'
 export const colorTextSecondary = 'var(--color-text-secondary, #656d7b)'
 export const colorTextSuccess = 'var(--color-text-success, #13787b)'
-export const colorTextTertiary = 'var(--color-text-tertiary, #9da4ae)'
+export const colorTextTertiary = 'var(--color-text-tertiary, #656d7b)'
 export const colorTextWarning = 'var(--color-text-warning, #9f5208)'
 
 // Chart
