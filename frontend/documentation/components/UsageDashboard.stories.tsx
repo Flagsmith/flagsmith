@@ -213,9 +213,7 @@ export const PaidApproachingTheLimit: Story = {
   args: { limit: 1400000, subscription: billed },
 }
 
-// Over the limit on a paid plan. Flags keep being served, since restriction
-// only ever applies to a free plan, so the page reports the overage and says
-// the charge may follow.
+// Billed on a term, so the banner mentions charges.
 export const PaidOverTheLimit: Story = {
   args: { limit: 900000, subscription: billed },
 }
@@ -236,8 +234,7 @@ export const EnterpriseWithoutABillingPeriod: Story = {
   },
 }
 
-// Also invoiced outside Chargebee, so an overage can never be billed. The
-// banner reports the overage and says nothing about charges.
+// Invoiced outside Chargebee, so no charge line.
 export const EnterpriseOverTheLimit: Story = {
   args: {
     limit: 1000000,

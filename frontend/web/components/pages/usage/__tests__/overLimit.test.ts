@@ -17,7 +17,7 @@ const days = (perDay: number[]) =>
     ),
   )
 
-// overLimitOf is undefined below the limit; every copy test is above it.
+// Every copy test is above the limit, so the cast holds.
 const exceeding = (
   total: number,
   limit: number,
@@ -48,8 +48,6 @@ describe('overLimit', () => {
       expect(limitCrossedOn(days([40, 40, 40, 40]), 100)).toBe('3 Aug')
     })
 
-    // The API returns a row per day per user agent, so a day only counts once
-    // its rows are added together.
     it('adds up the rows a day is split across', () => {
       const data = usageResponse([
         usageEvent({ day: '2026-08-01', flags: 60 }),
@@ -85,8 +83,7 @@ describe('overLimit', () => {
       )
     })
 
-    // Defensive: the totals and the daily rows come from one response, so a
-    // total over the limit normally has a crossing day somewhere in the rows.
+    // Artificial: totals and rows always arrive in the same response.
     it('leaves the day out when the rows are missing', () => {
       const over = exceeding(60000, 50000)
 
@@ -95,8 +92,6 @@ describe('overLimit', () => {
       )
     })
 
-    // Overages are billed against a Chargebee term, so nobody on a rolling
-    // window can be charged for one. Warning them would invent a worry.
     it('warns about charges only where they can be charged', () => {
       const over = exceeding(60000, 50000, days([60000]))
 

@@ -33,9 +33,8 @@ import Nav from './navigation/Nav'
 import { routes } from 'web/routes'
 import 'project/darkMode'
 
-// Blocked keeps the organisations list, to switch away, and the usage page,
-// which explains the block. Read inside the function, not at module level:
-// web/routes imports this file, so routes is still empty while this one runs.
+// The usage page explains the block, so it stays reachable. Read inside the
+// function: web/routes imports this file, so routes is empty at module level.
 const isAllowedWhileBlocked = (pathname) =>
   [routes.organisations, routes['organisation-usage']].some((path) =>
     matchPath(pathname, { exact: true, path, strict: false }),

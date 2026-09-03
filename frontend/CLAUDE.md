@@ -13,7 +13,7 @@
 
 ## Rules
 1. **API Integration**: Use `npx ssg` CLI + check `../api` backend
-2. **Imports**: Use `common/`, `components/`, `project/` (NO relative imports)
+2. **Imports**: Use the `common/`, `components/`, `project/` aliases when the relative path would go up (`../`); use a relative path for same-folder or descendant imports. This is enforced by `@dword-design/import-alias/prefer-alias`, and `eslint --fix` will rewrite an alias back to relative inside its own alias root (e.g. `components/base/forms/X` becomes `./base/forms/X` in a file under `web/components/`).
 3. **State**: Redux Toolkit + RTK Query, store in `common/store.ts`
 4. **Feature Flags**: When user says "create a feature flag", you MUST: (1) Create it in Flagsmith using MCP tools (`mcp__flagsmith__create_feature`), (2) Implement code with `useFlags` hook. See `.claude/context/feature-flags/` for details
 5. **Linting**: ALWAYS run `npx eslint --fix <file>` on any files you modify
