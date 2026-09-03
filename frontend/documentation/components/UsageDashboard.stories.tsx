@@ -27,6 +27,9 @@ import { BillingPeriod, PeriodOption } from 'common/types/requests'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import { Subscription } from 'common/types/responses'
 import { toUsageResponse, USAGE_SCENARIOS } from './fixtures/usage'
+// The harness fakes the project select, so it never renders UsageFilters and
+// would otherwise miss the width its stylesheet sets.
+import 'components/pages/usage/components/UsageFilters/UsageFilters.scss'
 
 const PROJECTS = [
   'All Projects',
