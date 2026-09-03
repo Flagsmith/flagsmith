@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import typing
+
 from common.projects.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_PROJECT,
 )
 from django.conf import settings
+from django.db import transaction
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
@@ -16,6 +19,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from audit.constants import PROJECT_CREATED_MESSAGE, PROJECT_DELETED_MESSAGE
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from environments.serializers import EnvironmentSerializerLight
@@ -106,10 +112,40 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
     def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         project = serializer.save()
+        is_master_api_key_user = getattr(
+            self.request.user, "is_master_api_key_user", False
+        )
         if getattr(self.request.user, "is_master_api_key_user", False) is False:
             UserProjectPermission.objects.create(  # type: ignore[misc]
                 user=self.request.user, project=project, admin=True
             )
+        AuditLog.objects.create(
+            project=project,
+            author=None if is_master_api_key_user else self.request.user,
+            master_api_key=getattr(self.request.user, "key", None)
+            if is_master_api_key_user
+            else None,
+            related_object_id=project.id,
+            related_object_type=RelatedObjectType.PROJECT.name,
+            log=PROJECT_CREATED_MESSAGE % project.name,
+        )
+
+    def perform_destroy(self, instance: typing.Any) -> None:
+        with transaction.atomic():
+            is_master_api_key_user = getattr(
+                self.request.user, "is_master_api_key_user", False
+            )
+            AuditLog.objects.create(
+                project=None,
+                author=None if is_master_api_key_user else self.request.user,
+                master_api_key=getattr(self.request.user, "key", None)
+                if is_master_api_key_user
+                else None,
+                related_object_id=instance.id,
+                related_object_type=RelatedObjectType.PROJECT.name,
+                log=PROJECT_DELETED_MESSAGE % instance.name,
+            )
+            instance.delete()
 
     @action(
         detail=False,
