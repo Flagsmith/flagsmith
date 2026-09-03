@@ -25891,6 +25891,7 @@ components:
         is_system_tag:
           description: 'Indicates that a tag was created by the system, not the user.'
           type: boolean
+          default: false
           readOnly: true
         type:
           description: |-
@@ -27985,6 +27986,7 @@ components:
         is_system_tag:
           description: 'Indicates that a tag was created by the system, not the user.'
           type: boolean
+          default: false
           readOnly: true
         type:
           description: |-

@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from trust_relationships.models import TrustRelationship
 from trust_relationships.services import (
@@ -62,6 +63,16 @@ class TrustRelationshipSerializer(serializers.ModelSerializer[TrustRelationship]
             "created_by",
         )
         read_only_fields = ("id", "created_at", "created_by")
+        # Declared manually — since DRF 3.16 it can't auto-generate a validator
+        # for `unique_live_issuer_audience`, whose condition is on `deleted_at`,
+        # a field not writable here. `objects` excludes soft-deleted rows.
+        # https://github.com/encode/django-rest-framework/discussions/9777
+        validators = [
+            UniqueTogetherValidator(
+                queryset=TrustRelationship.objects.all(),
+                fields=("issuer", "audience"),
+            )
+        ]
 
     def validate_issuer(self, issuer: str) -> str:
         parsed = urlparse(issuer)
