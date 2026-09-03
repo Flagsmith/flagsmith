@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 from core.dataclasses import AuthorData
@@ -57,6 +57,26 @@ class ExposuresSummary:
 
 
 @dataclass(frozen=True)
+class ConversionBucket:
+    metric_id: int
+    variant: str
+    bucket: datetime
+    converted_identities: int
+
+
+@dataclass(frozen=True)
+class ConversionsTimeseriesPoint:
+    bucket: str
+    converted_identities: dict[str, int]
+
+
+@dataclass(frozen=True)
+class ConversionsTimeseries:
+    granularity: ExposureGranularity
+    points: list[ConversionsTimeseriesPoint]
+
+
+@dataclass(frozen=True)
 class MetricSpec:
     metric_id: int
     event: str
@@ -68,11 +88,17 @@ class MetricSpec:
 class ResultsAggregates:
     """Sufficient statistics gathered from the warehouse for one experiment:
     the specs they were computed from, per-variant identity counts, and per
-    metric the per-variant ``VariantStats``. Bundled so the keys can't drift."""
+    metric the per-variant ``VariantStats``. Bundled so the keys can't drift.
+
+    The bucket rows feed the over-time charts and are left empty by callers
+    that only need the headline statistics."""
 
     specs: list[MetricSpec]
     exposure_counts: dict[str, int]
     metric_stats: dict[int, dict[str, VariantStats]]
+    granularity: ExposureGranularity | None = None
+    exposure_buckets: list[ExposureBucket] = field(default_factory=list)
+    conversion_buckets: list[ConversionBucket] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -80,12 +106,17 @@ class MetricResult:
     metric_id: int
     variants: dict[str, VariantStats]
     inference: dict[str, Inference | None]
+    # Only occurrence metrics chart a conversion rate; None for the rest.
+    timeseries: ConversionsTimeseries | None = None
 
 
 @dataclass(frozen=True)
 class ResultsSummary:
     srm_p_value: float | None
     metrics: list[MetricResult]
+    # Denominator for the conversion charts, computed in the same run as the
+    # metrics so both sides of the rate share one as_of.
+    exposures_timeseries: ExposuresTimeseries | None = None
 
 
 @dataclass(frozen=True)

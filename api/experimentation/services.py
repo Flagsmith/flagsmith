@@ -35,6 +35,9 @@ from experimentation.constants import (
     WAREHOUSE_CONNECTION_FLAG,
 )
 from experimentation.dataclasses import (
+    ConversionBucket,
+    ConversionsTimeseries,
+    ConversionsTimeseriesPoint,
     ExposureBucket,
     ExposuresSummary,
     ExposuresTimeseries,
@@ -347,27 +350,61 @@ def build_exposures_summary(
         excluded_identities=sum(
             b.first_exposed_identities for b in buckets if b.quarantined
         ),
-        timeseries=ExposuresTimeseries(
-            granularity=granularity,
-            points=_timeseries_points([b for b in buckets if not b.quarantined]),
-        ),
+        timeseries=_exposures_timeseries(buckets, granularity=granularity),
     )
 
 
-def _timeseries_points(
+def _exposures_timeseries(
     buckets: Sequence[ExposureBucket],
-) -> list[ExposuresTimeseriesPoint]:
-    new_identities_by_bucket: dict[datetime, dict[str, int]] = {}
-    for b in buckets:
-        new_identities_by_bucket.setdefault(b.bucket, {})[b.variant] = (
-            b.first_exposed_identities
-        )
+    *,
+    granularity: ExposureGranularity,
+) -> ExposuresTimeseries:
+    return ExposuresTimeseries(
+        granularity=granularity,
+        points=[
+            ExposuresTimeseriesPoint(bucket=bucket, new_identities=counts)
+            for bucket, counts in _counts_by_bucket(
+                (b.bucket, b.variant, b.first_exposed_identities)
+                for b in buckets
+                if not b.quarantined
+            )
+        ],
+    )
+
+
+def _conversions_timeseries(
+    spec: MetricSpec,
+    aggregates: ResultsAggregates,
+) -> ConversionsTimeseries | None:
+    if (
+        aggregates.granularity is None
+        or spec.aggregation != MetricAggregation.OCCURRENCE
+    ):
+        return None
+    return ConversionsTimeseries(
+        granularity=aggregates.granularity,
+        points=[
+            ConversionsTimeseriesPoint(bucket=bucket, converted_identities=counts)
+            for bucket, counts in _counts_by_bucket(
+                (b.bucket, b.variant, b.converted_identities)
+                for b in aggregates.conversion_buckets
+                if b.metric_id == spec.metric_id
+            )
+        ],
+    )
+
+
+def _counts_by_bucket(
+    rows: typing.Iterable[tuple[datetime, str, int]],
+) -> list[tuple[str, dict[str, int]]]:
+    """Group (bucket, variant, count) rows into one per-variant dict per bucket,
+    keyed by the bucket's ISO timestamp, in bucket order."""
+    counts_by_bucket: dict[datetime, dict[str, int]] = {}
+    for bucket, variant, count in rows:
+        counts_by_bucket.setdefault(bucket, {})[variant] = count
     return [
-        ExposuresTimeseriesPoint(
-            bucket=bucket_start.isoformat(),
-            new_identities=new_identities_by_bucket[bucket_start],
-        )
-        for bucket_start in sorted(new_identities_by_bucket)
+        (bucket.isoformat(), counts_by_bucket[bucket])
+        for bucket in sorted(counts_by_bucket)
     ]
 
 
@@ -447,6 +484,37 @@ def get_metric_variant_stats(
     )
 
 
+def get_conversion_buckets(
+    *,
+    environment_key: str,
+    feature_name: str,
+    window_start: datetime,
+    window_end: datetime,
+    specs: Sequence[MetricSpec],
+    granularity: ExposureGranularity,
+) -> list[ConversionBucket]:
+    """Per occurrence metric, variant and time bucket: identities whose first
+    post-exposure conversion landed in that bucket."""
+    builder = ResultsQueryBuilder(specs)
+    query = builder.build_conversions_query(
+        bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
+    )
+    if query is None:
+        return []
+    params: dict[str, object] = {
+        "environment_key": environment_key,
+        "exposure_event": EXPOSURE_EVENT_NAME,
+        "feature_name": feature_name,
+        "window_start": window_start,
+        "window_end": window_end,
+    }
+    builder.add_metric_params(params)
+    rows = _get_clickhouse_client(
+        send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    ).execute(query, params)
+    return builder.decode_conversion_rows(rows)
+
+
 def build_results_summary(
     aggregates: ResultsAggregates,
     *,
@@ -470,9 +538,17 @@ def build_results_summary(
                 inference=_metric_inference(
                     spec, aggregates.metric_stats.get(spec.metric_id, {})
                 ),
+                timeseries=_conversions_timeseries(spec, aggregates),
             )
             for spec in aggregates.specs
         ],
+        exposures_timeseries=(
+            _exposures_timeseries(
+                aggregates.exposure_buckets, granularity=aggregates.granularity
+            )
+            if aggregates.granularity is not None
+            else None
+        ),
     )
 
 
@@ -482,15 +558,36 @@ def compute_results_summary(
     window_start: "datetime",
     window_end: "datetime",
 ) -> ResultsSummary:
-    """Gather an experiment's metric statistics from the warehouse and reduce
-    them to the stored results payload."""
+    """Gather an experiment's metric statistics and chart rows from the
+    warehouse and reduce them to the stored results payload."""
     specs = _experiment_metric_specs(experiment)
-    aggregates = get_metric_variant_stats(
-        environment_key=experiment.environment.api_key,
-        feature_name=experiment.feature.name,
-        window_start=window_start,
-        window_end=window_end,
-        specs=specs,
+    environment_key = experiment.environment.api_key
+    feature_name = experiment.feature.name
+    granularity = _select_exposure_granularity(window_start, window_end)
+    aggregates = replace(
+        get_metric_variant_stats(
+            environment_key=environment_key,
+            feature_name=feature_name,
+            window_start=window_start,
+            window_end=window_end,
+            specs=specs,
+        ),
+        granularity=granularity,
+        exposure_buckets=get_exposure_buckets(
+            environment_key=environment_key,
+            feature_name=feature_name,
+            window_start=window_start,
+            window_end=window_end,
+            granularity=granularity,
+        ),
+        conversion_buckets=get_conversion_buckets(
+            environment_key=environment_key,
+            feature_name=feature_name,
+            window_start=window_start,
+            window_end=window_end,
+            specs=specs,
+            granularity=granularity,
+        ),
     )
     return build_results_summary(
         aggregates,

@@ -198,8 +198,10 @@ def test_experiment_results__record_refresh__stores_payload_and_clears_error(
                     "control": {"n": 1000, "sum": 100.0, "sum_squares": 100.0}
                 },
                 "inference": {},
+                "timeseries": None,
             }
         ],
+        "exposures_timeseries": None,
     }
     assert results.as_of == as_of
     assert results.last_error_at is None
