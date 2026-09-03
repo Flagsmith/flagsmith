@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import Format from 'common/utils/format'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import { cumulativeTotals, dailyTotals } from './components/UsageOverTime/utils'
-import { allowanceWindowLabel, isBilledOnAPeriod, UsageBasis } from './utils'
+import { allowanceWindowLabel, UsageBasis } from './utils'
 
 export type OverLimit = {
   limit: number
@@ -31,22 +31,23 @@ export const overLimitOf = (
     ? { crossedOn: limitCrossedOn(data, limit), limit, overBy: total - limit }
     : undefined
 
-// Overages are only billed against a Chargebee term, so a rolling window
-// cannot be charged for one. Charged or covered by grace is #8264.
-const chargeWarning = (basis: UsageBasis): string =>
-  isBilledOnAPeriod(basis)
+// Whether the charge lands at all is #8264, which needs the API to say so,
+// so this still hedges.
+const chargeWarning = (basis: UsageBasis, mayBeCharged: boolean): string =>
+  mayBeCharged
     ? ` Overage charges may apply over ${allowanceWindowLabel(basis)}.`
     : ''
 
 export const overLimitBannerCopy = (
   over: OverLimit,
   basis: UsageBasis,
+  mayBeCharged = false,
 ): { title: string; body: string } => ({
   body: [
     `You reached 100% of your ${Format.shortenNumber(over.limit)} plan limit`,
     over.crossedOn ? ` on ${over.crossedOn}` : '',
     '.',
-    chargeWarning(basis),
+    chargeWarning(basis, mayBeCharged),
     ' Your usage stays visible below so you can see what happened.',
   ].join(''),
   title: 'Your organisation has exceeded its plan limit',

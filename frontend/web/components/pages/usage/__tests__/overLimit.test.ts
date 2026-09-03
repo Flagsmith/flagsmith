@@ -87,20 +87,25 @@ describe('overLimit', () => {
     it('leaves the day out when the rows are missing', () => {
       const over = exceeding(60000, 50000)
 
-      expect(overLimitBannerCopy(over, billed).body).toContain(
-        'plan limit. Overage',
-      )
+      const { body } = overLimitBannerCopy(over, billed)
+
+      expect(body).toContain('your 50K plan limit.')
+      expect(body).not.toContain(' on ')
     })
 
     it('warns about charges only where they can be charged', () => {
       const over = exceeding(60000, 50000, days([60000]))
 
-      expect(overLimitBannerCopy(over, billed).body).toContain(
+      expect(overLimitBannerCopy(over, billed, true).body).toContain(
         'Overage charges may apply over this billing period.',
       )
+      expect(overLimitBannerCopy(over, billed).body).not.toContain(
+        'Overage charges',
+      )
       expect(
-        overLimitBannerCopy(over, { window: 'rolling' } as UsageBasis).body,
-      ).not.toContain('Overage charges')
+        overLimitBannerCopy(over, { window: 'rolling' } as UsageBasis, true)
+          .body,
+      ).not.toContain('this billing period')
     })
 
     it('still reports the overage itself on a rolling window', () => {

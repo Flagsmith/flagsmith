@@ -29,6 +29,16 @@ export const usageBasisOf = (
 export const isBilledOnAPeriod = (basis: UsageBasis): boolean =>
   basis.window === 'billing-period'
 
+// charge_for_api_call_count_overages only bills Start-Up and Scale-Up.
+// Enterprise falls through its match and is never charged. Mirrors
+// SubscriptionPlanFamily.get_by_plan_id.
+export const isChargedForOverages = (
+  subscription: Subscription | undefined,
+): boolean => {
+  const plan = (subscription?.plan ?? '').replace(/-/g, '').toLowerCase()
+  return plan.startsWith('startup') || plan.startsWith('scaleup')
+}
+
 export const planSectionCopy = (
   basis: UsageBasis,
   limit: PlanLimit,

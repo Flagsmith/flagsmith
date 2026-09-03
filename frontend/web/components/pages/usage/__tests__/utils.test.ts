@@ -2,6 +2,7 @@ import { Subscription } from 'common/types/responses'
 import {
   contributionNote,
   isBillingPeriodSelected,
+  isChargedForOverages,
   allowanceWindow,
   planSectionCopy,
   allowanceWindowLabel,
@@ -86,6 +87,21 @@ describe('UsageDashboard utils', () => {
       expect(copy.title).toBe('Your usage')
       expect(copy.hint).toContain('no plan limit')
       expect(copy.hint).not.toContain('allowance')
+    })
+  })
+
+  // charge_for_api_call_count_overages bills Start-Up and Scale-Up only.
+  describe('isChargedForOverages', () => {
+    it.each`
+      plan             | expected
+      ${'start-up'}    | ${true}
+      ${'startup-v2'}  | ${true}
+      ${'scale-up-v2'} | ${true}
+      ${'enterprise'}  | ${false}
+      ${'free'}        | ${false}
+      ${null}          | ${false}
+    `('$plan is charged for overages: $expected', ({ expected, plan }) => {
+      expect(isChargedForOverages(subscription({ plan }))).toBe(expected)
     })
   })
 

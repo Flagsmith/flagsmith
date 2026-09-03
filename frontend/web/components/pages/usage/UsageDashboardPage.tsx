@@ -15,6 +15,7 @@ import { overLimitNote, overLimitOf } from './overLimit'
 import {
   isBilledOnAPeriod,
   isBillingPeriodSelected,
+  isChargedForOverages,
   contributionNote,
   planSectionCopy,
   showsContribution,
@@ -71,6 +72,12 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     organisationId ? { id: organisationId } : skipToken,
   )
 
+  // Upgrading goes to organisation settings, which a blocked organisation
+  // cannot open, so it would bounce them to the blocked screen.
+  const isBlocked = !!organisation?.block_access_to_admin
+  const mayBeCharged =
+    isBilledOnAPeriod(basis) && isChargedForOverages(subscription)
+
   const limit = subscriptionMeta?.max_api_calls
   const allowanceTotal = usage.allowance?.totals?.total ?? 0
   // Walks every day in the window to find the crossing, so not per render.
@@ -124,7 +131,10 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         <OverLimitBanner
           over={exceeded}
           basis={basis}
-          canUpgrade={Utils.getFlagsmithHasFeature('payments_enabled')}
+          canUpgrade={
+            Utils.getFlagsmithHasFeature('payments_enabled') && !isBlocked
+          }
+          mayBeCharged={mayBeCharged}
         />
       )}
 

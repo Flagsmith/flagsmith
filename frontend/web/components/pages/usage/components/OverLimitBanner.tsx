@@ -12,14 +12,16 @@ export type OverLimitBannerProps = {
   over: OverLimit
   basis: UsageBasis
   canUpgrade?: boolean
+  mayBeCharged?: boolean
 }
 
 const OverLimitBanner: FC<OverLimitBannerProps> = ({
   basis,
   canUpgrade,
+  mayBeCharged,
   over,
 }) => {
-  const { body, title } = overLimitBannerCopy(over, basis)
+  const { body, title } = overLimitBannerCopy(over, basis, mayBeCharged)
 
   return (
     <div
