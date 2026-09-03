@@ -106,8 +106,8 @@ describe('UsageDashboard utils', () => {
 
       expect(basis).toEqual({ reason: 'free', window: 'rolling' })
       expect(allowanceWindow(basis)).toBeUndefined()
-      expect(planSectionCopy(basis, 50000).hint).not.toContain(
-        'no billing period',
+      expect(planSectionCopy(basis, 50000).hint).toBe(
+        'Usage against your plan limit over the last 30 days.',
       )
     })
 
@@ -119,7 +119,7 @@ describe('UsageDashboard utils', () => {
 
       expect(basis).toEqual({ reason: 'no-period', window: 'rolling' })
       expect(planSectionCopy(basis, 50000).hint).toContain(
-        'has no billing period',
+        'unable to show exact billing periods',
       )
     })
   })
