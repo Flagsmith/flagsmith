@@ -43,9 +43,7 @@ from common.projects.permissions import CREATE_ENVIRONMENT, DELETE_FEATURE, VIEW
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
-from django.db import connections
-from django.db.backends.base.creation import TEST_DATABASE_PREFIX
-from django.test.utils import setup_databases
+from django.db import DEFAULT_DB_ALIAS, connections
 from django_test_migrations.migrator import Migrator
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb  # type: ignore[import-untyped]
@@ -54,13 +52,12 @@ from openfeature.provider.in_memory_provider import InMemoryFlag, InMemoryProvid
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest import FixtureRequest
 from pytest_django.fixtures import SettingsWrapper
-from pytest_django.plugin import blocking_manager_key
+from pytest_django.plugin import DjangoDbBlocker
 from pytest_mock import MockerFixture
 from rest_framework.test import APIClient
 from task_processor.task_run_method import TaskRunMethod
 from urllib3 import BaseHTTPResponse
 from urllib3.connectionpool import HTTPConnectionPool
-from xdist import get_xdist_worker_id  # type: ignore[import-untyped]
 
 from api_keys.models import MasterAPIKey
 from api_keys.user import APIKeyUser
@@ -116,6 +113,12 @@ from segments.models import Condition, Segment, SegmentRule
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
+from tests.migration_snapshots import (
+    MigrationSnapshots,
+    SnapshotMigrator,
+    build_snapshots,
+    template_backed_test_databases,
+)
 from tests.types import (
     AdminClientAuthType,
     EnableFeaturesFixture,
@@ -141,28 +144,15 @@ trait_value = "value1"
 # ---------------------------------------------------------------------------
 
 
-def pytest_addoption(parser: pytest.Parser) -> None:
-    parser.addoption(
-        "--ci",
-        action="store_true",
-        default=False,
-        help="Enable CI mode",
-    )
+@pytest.fixture(scope="session", autouse=True)
+def _template_backed_test_databases() -> typing.Generator[None, None, None]:
+    """Clone test databases from a migrated template rather than migrating.
 
-
-@pytest.hookimpl(trylast=True)
-def pytest_configure(config: pytest.Config) -> None:
-    if (
-        config.option.ci
-        and config.option.dist != "no"
-        and not hasattr(config, "workerinput")
-    ):
-        with config.stash[blocking_manager_key].unblock():
-            setup_databases(
-                verbosity=config.option.verbose,
-                interactive=False,
-                parallel=config.option.numprocesses,
-            )
+    Autouse and session scoped so that it wraps `django_db_setup`, whichever
+    worker gets there first. See `tests.migration_snapshots`.
+    """
+    with template_backed_test_databases():
+        yield
 
 
 # ---------------------------------------------------------------------------
@@ -211,27 +201,6 @@ def fs(fs: FakeFilesystem) -> FakeFilesystem:
             paths_to_add.append(site_package_path)  # pragma: no cover
     fs.add_real_paths(paths_to_add)
     return fs
-
-
-@pytest.fixture(scope="session")
-def django_db_setup(request: pytest.FixtureRequest) -> None:
-    if (
-        request.config.option.ci
-        # xdist worker id is either `gw[0-9]+` or `master`
-        and (xdist_worker_id_suffix := get_xdist_worker_id(request)[2:]).isnumeric()
-    ):
-        # Django's test database clone indices start at 1,
-        # Pytest's worker indices are 0-based
-        test_db_suffix = str(int(xdist_worker_id_suffix) + 1)
-    else:
-        # Tests are run on main node, which assumes -n0
-        return request.getfixturevalue("django_db_setup")  # type: ignore[no-any-return] # pragma: no cover
-
-    from django.conf import settings
-
-    for db_settings in settings.DATABASES.values():
-        test_db_name = f"{TEST_DATABASE_PREFIX}{db_settings['NAME']}_{test_db_suffix}"
-        db_settings["NAME"] = test_db_name
 
 
 @pytest.fixture()
@@ -1613,6 +1582,53 @@ def dynamo_environment_wrapper(
     wrapper = DynamoEnvironmentWrapper()
     wrapper.table_name = flagsmith_environment_table.name
     return wrapper
+
+
+@pytest.fixture(scope="session")
+def migration_snapshots(
+    django_db_setup: None,
+    django_db_blocker: DjangoDbBlocker,
+) -> typing.Generator[dict[str, MigrationSnapshots], None, None]:
+    """Cache each database's migration states as template databases.
+
+    Built lazily, on the first migration test a worker runs, from a database
+    that `django_db_setup` has just migrated -- so the `latest` snapshot the
+    `migrator` fixture restores on teardown carries the rows that data
+    migrations create, which the old `migrate`-forward teardown could not.
+    """
+    snapshots: dict[str, MigrationSnapshots] = {}
+    with django_db_blocker.unblock():
+        yield snapshots
+        for snapshot in snapshots.values():
+            snapshot.close()
+
+
+@pytest.fixture()
+def migrator_factory(
+    request: pytest.FixtureRequest,
+    transactional_db: None,
+    django_db_use_migrations: bool,
+    migration_snapshots: dict[str, MigrationSnapshots],
+) -> MigratorFactory:
+    """Override `django_test_migrations`' fixture of the same name.
+
+    Identical in behaviour -- including keeping the name, so the plugin still
+    recognises these tests and marks them `migration_test` -- except that
+    migration states are cloned from template databases rather than replayed
+    migration by migration.
+    """
+    if not django_db_use_migrations:  # pragma: no cover
+        pytest.skip("--no-migrations was specified")
+
+    def factory(database_name: str | None = None) -> Migrator:
+        alias = database_name or DEFAULT_DB_ALIAS
+        if alias not in migration_snapshots:
+            migration_snapshots[alias] = build_snapshots(alias)
+        migrator = SnapshotMigrator(alias, migration_snapshots[alias])
+        request.addfinalizer(migrator.reset)
+        return migrator
+
+    return typing.cast(MigratorFactory, factory)
 
 
 @pytest.fixture()

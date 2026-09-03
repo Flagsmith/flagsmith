@@ -21,6 +21,11 @@ services:
     environment:
       POSTGRES_DB: flagsmith
       POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d flagsmith"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
 
   analytics-db:
     image: postgres:15.5-alpine
@@ -34,6 +39,69 @@ services:
     environment:
       POSTGRES_DB: analytics
       POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d analytics"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  # The test suite's own database, deliberately kept apart from `db` above.
+  #
+  # Nothing in here outlives a run: the suite clones a fresh database per xdist
+  # worker from a template it builds on demand, and drops them at the end. That
+  # makes durability pure overhead, and it makes a Docker volume -- whose I/O
+  # is virtualised, and slow, on macOS -- the suite's bottleneck. Holding it in
+  # RAM instead roughly halves the suite's wall time and, more importantly,
+  # stops the runtime depending on how busy the host's disk happens to be.
+  #
+  # Losing the lot on restart costs nothing. The template cache is keyed on a
+  # digest of the migrations, so an empty server simply rebuilds it.
+  #
+  # Both test databases live here: `default` and `analytics` are separate
+  # servers in production, and in `db`/`analytics-db` above, but tests only
+  # need them to be separate databases.
+  test-db:
+    image: postgres:15.5-alpine
+    pull_policy: always
+    restart: unless-stopped
+    command:
+      - "-c"
+      - "max_locks_per_transaction=256"
+      # Nothing here is worth surviving a crash.
+      - "-c"
+      - "fsync=off"
+      - "-c"
+      - "synchronous_commit=off"
+      - "-c"
+      - "full_page_writes=off"
+      # Cloning a database writes it through the WAL, so keep checkpoints out
+      # of the way of a run that clones one per worker and per migration test.
+      - "-c"
+      - "wal_level=minimal"
+      - "-c"
+      - "max_wal_senders=0"
+      - "-c"
+      - "max_wal_size=4GB"
+      - "-c"
+      - "checkpoint_timeout=30min"
+      # Comfortably fits every worker's database and the templates.
+      - "-c"
+      - "shared_buffers=1GB"
+      # One connection per worker, plus a maintenance connection each.
+      - "-c"
+      - "max_connections=200"
+    tmpfs:
+      - /var/lib/postgresql/data:size=3g
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_DB: flagsmith
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d flagsmith"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
 
   influxdb:
     image: influxdb:2-alpine

@@ -13,9 +13,17 @@ To run linters, run `make lint`.
 
 To run tests, run `make test`.
 
-To run a subset of tests or an individual test, run `make test opts='<pytest args>'`. If the number of test is too low for xdist, consider adding `-n0` to pytest args.
+To run a subset of tests or an individual test, run `make test opts='<pytest args>'`. A bare `make test` fans out across your cores with xdist; passing `opts` is taken to mean a focused run and stays in-process, since each worker costs a Python start, a Django setup and a database clone. Put `-n auto` in `opts` to fan out anyway.
+
+To measure coverage, run `make test-coverage`. It is not part of `make test` because it roughly doubles the runtime.
 
 To prepare a dev database, run `make docker-up django-migrate`.
+
+#### Test databases
+
+Tests run against `test-db`, a separate PostgreSQL service that keeps its data in RAM. It is deliberately not the `db` service `make serve` uses: nothing the suite writes is worth keeping, and holding it in memory keeps the suite off the host's disk. Losing it costs nothing, so `docker compose restart test-db` is always a safe reset.
+
+You should never need `--reuse-db`. Rather than running the ~600 migrations for every worker on every run, the suite migrates once into a template database and clones it, which takes about a tenth of a second. The template is keyed on a digest of the migration files, so editing a migration -- or switching to a branch that has different ones -- silently builds a new template instead of handing you a stale schema. Migration tests use the same mechanism to reach the state they test, rather than replaying history for each one. See `tests/migration_snapshots.py`.
 
 To bring up a dev server, run `make serve`, or `make serve-with-task-processor` to run the Task processor alongside the server.
 
