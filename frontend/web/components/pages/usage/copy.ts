@@ -19,19 +19,23 @@ const limitReached = (over: OverLimit | undefined): string | undefined =>
     over.crossedOn ? ` on ${over.crossedOn}` : ''
   }.`
 
-// Says access, not flags: the API does not expose stop_serving_flags.
-const RECOVERY =
-  'Upgrading restores access straight away. Otherwise access returns once' +
-  ' your usage has stayed under the limit for 30 days.'
-
-// Neither route works for a block support set by hand: the plan-change hook
-// and the unrestricting task both skip organisations with no
-// APILimitAccessBlock. With no overage in evidence we cannot tell the two
-// apart, so we promise nothing.
-const ASK_SUPPORT = 'Contact support to restore access.'
-
-const STAYS_VISIBLE =
-  'Your usage stays visible below so you can see what happened.'
+/** Every sentence that does not depend on a number. */
+const COPY = {
+  // Neither route works for a block support set by hand: the plan-change hook
+  // and the unrestricting task both skip organisations with no
+  // APILimitAccessBlock, so this is all we can offer without evidence.
+  askSupport: 'Contact support to restore access.',
+  noBillingPeriod:
+    'We are unable to show exact billing periods for your subscription plan.',
+  noPlanLimit: 'This installation has no plan limit.',
+  overLimitTitle: 'Your organisation has exceeded its plan limit',
+  // Says access, not flags: the API does not expose stop_serving_flags.
+  recovery:
+    'Upgrading restores access straight away. Otherwise access returns once' +
+    ' your usage has stayed under the limit for 30 days.',
+  restrictedTitle: 'Your organisation is restricted',
+  staysVisible: 'Your usage stays visible below so you can see what happened.',
+}
 
 export type BannerContext = {
   /** The organisation is on a plan that gets billed for overages. */
@@ -42,8 +46,8 @@ export type BannerContext = {
 export const restrictedBannerCopy = (
   over: OverLimit | undefined,
 ): { title: string; body: string } => ({
-  body: over ? sentences(limitReached(over), RECOVERY) : ASK_SUPPORT,
-  title: 'Your organisation is restricted',
+  body: over ? sentences(limitReached(over), COPY.recovery) : COPY.askSupport,
+  title: COPY.restrictedTitle,
 })
 
 export const overLimitBannerCopy = (
@@ -56,9 +60,9 @@ export const overLimitBannerCopy = (
     // Hedged: the API does not say whether the charge actually lands.
     mayBeCharged &&
       `Overage charges may apply over ${allowanceWindowLabel(basis)}.`,
-    STAYS_VISIBLE,
+    COPY.staysVisible,
   ),
-  title: 'Your organisation has exceeded its plan limit',
+  title: COPY.overLimitTitle,
 })
 
 export const overLimitNote = (over: OverLimit): string =>
@@ -74,7 +78,7 @@ export const planSectionCopy = (
 
   if (!limit) {
     return {
-      hint: `API calls over ${window}. This installation has no plan limit.`,
+      hint: sentences(`API calls over ${window}.`, COPY.noPlanLimit),
       title: 'Your usage',
     }
   }
@@ -84,7 +88,7 @@ export const planSectionCopy = (
       `Usage against your plan limit over ${window}.`,
       basis.window === 'rolling' &&
         basis.reason === 'no-period' &&
-        'We are unable to show exact billing periods for your subscription plan.',
+        COPY.noBillingPeriod,
     ),
     title: 'Your plan',
   }
