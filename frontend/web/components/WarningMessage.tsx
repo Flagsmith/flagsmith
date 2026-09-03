@@ -3,22 +3,9 @@ import Banner from './Banner'
 
 type WarningMessageType = {
   warningMessage: ReactNode
-  warningMessageClass?: string
 }
 
-const WarningMessage: FC<WarningMessageType> = ({
-  warningMessage,
-  warningMessageClass,
-}) => {
-  if (!warningMessage) {
-    return null
-  }
-
-  return (
-    <Banner variant='warning' className={warningMessageClass}>
-      {warningMessage}
-    </Banner>
-  )
-}
+const WarningMessage: FC<WarningMessageType> = ({ warningMessage }) =>
+  warningMessage ? <Banner variant='warning'>{warningMessage}</Banner> : null
 
 export default WarningMessage

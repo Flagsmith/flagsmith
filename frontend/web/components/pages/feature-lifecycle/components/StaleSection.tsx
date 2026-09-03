@@ -81,17 +81,18 @@ const StaleSection: FC<StaleSectionProps> = ({
             This will create a GitHub issue in{' '}
             <strong>flagsmith/flagsmith</strong> to clean up{' '}
             <strong>{flag.name}</strong>.
-            <WarningMessage
-              warningMessageClass='d-block mt-4'
-              warningMessage={
-                <>
-                  Cleaning up a feature flag means removing the flag checks from
-                  code so that the code behaves as if the flag were{' '}
-                  <strong>enabled for everyone</strong>, allowing you to then
-                  delete the feature in Flagsmith.
-                </>
-              }
-            />
+            <div className='mt-4'>
+              <WarningMessage
+                warningMessage={
+                  <>
+                    Cleaning up a feature flag means removing the flag checks
+                    from code so that the code behaves as if the flag were{' '}
+                    <strong>enabled for everyone</strong>, allowing you to then
+                    delete the feature in Flagsmith.
+                  </>
+                }
+              />
+            </div>
           </div>
         ),
         onYes: async () => {

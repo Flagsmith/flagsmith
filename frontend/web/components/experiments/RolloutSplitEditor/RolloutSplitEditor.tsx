@@ -43,10 +43,9 @@ const RolloutSplitEditor: FC<RolloutSplitEditorProps> = ({
   return (
     <div className='rollout-split'>
       {invalid && (
-        <ErrorMessage
-          errorMessageClass='mb-2'
-          error='Your variation percentage splits total to over 100%'
-        />
+        <div className='mb-2'>
+          <ErrorMessage error='Your variation percentage splits total to over 100%' />
+        </div>
       )}
 
       <div className='rollout-split__rows'>

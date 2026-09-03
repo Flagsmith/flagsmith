@@ -79,10 +79,9 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
   return (
     <>
       {invalid && (
-        <ErrorMessage
-          className='mt-2'
-          error='Your variation percentage splits total to over 100%'
-        />
+        <div className='mt-2'>
+          <ErrorMessage error='Your variation percentage splits total to over 100%' />
+        </div>
       )}
       {select && !!unmatchedOverride && (
         <div className='panel panel--flat panel-without-heading mb-2'>

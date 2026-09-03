@@ -285,12 +285,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
           </div>
         )}
         {testState === 'errored' && (
-          <div className='d-flex'>
-            <ErrorMessage
-              error={getTestFailureWarning(testDetail)}
-              errorMessageClass='mb-0 flex-1 wh-config-form__test-error'
-            />
-          </div>
+          <ErrorMessage error={getTestFailureWarning(testDetail)} />
         )}
       </div>
     </form>

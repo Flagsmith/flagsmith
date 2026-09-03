@@ -24,12 +24,3 @@ export const Default: Story = {
     <WarningMessage warningMessage='This feature is deprecated and will be removed.' />
   ),
 }
-
-export const WithCustomClass: Story = {
-  render: () => (
-    <WarningMessage
-      warningMessage='You have reached 80% of your identity limit.'
-      warningMessageClass='text-center'
-    />
-  ),
-}

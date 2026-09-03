@@ -21,12 +21,7 @@ const TestWebhook: FC<TestWebhookType> = ({ scope, secret, webhookUrl }) => {
   ] = useTestWebhookMutation()
   return (
     <>
-      {backendError && (
-        <ErrorMessage
-          error={backendError}
-          errorStyles={{ marginBottom: '0' }}
-        />
-      )}
+      {backendError && <ErrorMessage error={backendError} />}
       {isBackendSuccess && (
         <div style={{ maxWidth: 'fit-content' }}>
           <SuccessMessage

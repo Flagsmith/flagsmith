@@ -80,10 +80,7 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
       {Utils.getFlagsmithHasFeature('payments_enabled') &&
         Utils.getFlagsmithHasFeature('max_api_calls_alert') &&
         (maxApiCallsPercentage < 100 ? (
-          <WarningMessage
-            warningMessage={alertMaxApiCallsText}
-            warningMessageClass={'announcement'}
-          />
+          <WarningMessage warningMessage={alertMaxApiCallsText} />
         ) : (
           maxApiCallsPercentage >= 100 && <QuotaExceededMessage />
         ))}
