@@ -9,6 +9,12 @@ import { PlanLimit } from 'components/shared/UsageBar/utils'
 
 export type PeriodSelection = BillingPeriod | 'default'
 
+// 'free' reads the same as any other rolling window on purpose. A free plan
+// over its limit has seven days before flags stop, but only the first time:
+// OrganisationBreachedGracePeriod is written on the first restriction and
+// never deleted, and restrict_use_due_to_api_limit_grace_period_over drops
+// the wait once it exists. The API does not say which case an organisation is
+// in (#8256), so promising the deadline would be a lie to repeat offenders.
 export type RollingReason = 'free' | 'no-period'
 
 export type UsageBasis =

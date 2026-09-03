@@ -117,6 +117,19 @@ describe('UsageDashboard utils', () => {
       expect(allowanceWindowLabel(basis)).toBe('this billing period')
     })
 
+    // Deliberate: see RollingReason. The seven-day window is spent after the
+    // first restriction and the API cannot tell us whether it has been.
+    it('promises a free plan no deadline it cannot keep', () => {
+      const hint = planSectionCopy(
+        usageBasisOf(subscription({}), true),
+        50000,
+      ).hint
+
+      expect(hint).not.toContain('7 day')
+      expect(hint).not.toContain('seven day')
+      expect(hint).not.toContain('pause')
+    })
+
     it('measures a free plan over the trailing 30 days, by design', () => {
       const basis = usageBasisOf(subscription({}), true)
 
