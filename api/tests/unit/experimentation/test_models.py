@@ -169,8 +169,10 @@ def _results_summary() -> ResultsSummary:
                     "control": VariantStats(n=1000, sum=100.0, sum_squares=100.0)
                 },
                 inference={},
+                conversions_timeseries=None,
             )
         ],
+        exposures_timeseries=ExposuresTimeseries(granularity="day", points=[]),
     )
 
 
@@ -198,10 +200,10 @@ def test_experiment_results__record_refresh__stores_payload_and_clears_error(
                     "control": {"n": 1000, "sum": 100.0, "sum_squares": 100.0}
                 },
                 "inference": {},
-                "timeseries": None,
+                "conversions_timeseries": None,
             }
         ],
-        "exposures_timeseries": None,
+        "exposures_timeseries": {"granularity": "day", "points": []},
     }
     assert results.as_of == as_of
     assert results.last_error_at is None

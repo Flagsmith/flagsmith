@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 
 from core.dataclasses import AuthorData
@@ -58,7 +58,6 @@ class ExposuresSummary:
 
 @dataclass(frozen=True)
 class ConversionBucket:
-    metric_id: int
     variant: str
     bucket: datetime
     converted_identities: int
@@ -86,19 +85,18 @@ class MetricSpec:
 
 @dataclass(frozen=True)
 class ResultsAggregates:
-    """Sufficient statistics gathered from the warehouse for one experiment:
-    the specs they were computed from, per-variant identity counts, and per
-    metric the per-variant ``VariantStats``. Bundled so the keys can't drift.
-
-    The bucket rows feed the over-time charts and are left empty by callers
-    that only need the headline statistics."""
+    """Everything one results refresh reads from the warehouse: the specs it
+    was computed from, per-variant identity counts, per metric the per-variant
+    ``VariantStats``, and the time-bucketed rows behind the over-time charts.
+    Bundled so the keys can't drift."""
 
     specs: list[MetricSpec]
     exposure_counts: dict[str, int]
     metric_stats: dict[int, dict[str, VariantStats]]
-    granularity: ExposureGranularity | None = None
-    exposure_buckets: list[ExposureBucket] = field(default_factory=list)
-    conversion_buckets: list[ConversionBucket] = field(default_factory=list)
+    granularity: ExposureGranularity
+    exposure_buckets: list[ExposureBucket]
+    # Keyed by metric id, one entry per charted metric.
+    conversion_buckets: dict[int, list[ConversionBucket]]
 
 
 @dataclass(frozen=True)
@@ -107,7 +105,7 @@ class MetricResult:
     variants: dict[str, VariantStats]
     inference: dict[str, Inference | None]
     # Only occurrence metrics chart a conversion rate; None for the rest.
-    timeseries: ConversionsTimeseries | None = None
+    conversions_timeseries: ConversionsTimeseries | None
 
 
 @dataclass(frozen=True)
@@ -116,7 +114,7 @@ class ResultsSummary:
     metrics: list[MetricResult]
     # Denominator for the conversion charts, computed in the same run as the
     # metrics so both sides of the rate share one as_of.
-    exposures_timeseries: ExposuresTimeseries | None = None
+    exposures_timeseries: ExposuresTimeseries
 
 
 @dataclass(frozen=True)

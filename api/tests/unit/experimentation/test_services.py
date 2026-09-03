@@ -1,4 +1,4 @@
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
@@ -799,6 +799,9 @@ def _aggregates(
         specs=specs,
         exposure_counts=exposure_counts,
         metric_stats=metric_stats,
+        granularity="day",
+        exposure_buckets=[],
+        conversion_buckets={},
     )
 
 
@@ -810,6 +813,16 @@ def _result_columns(metric_count: int) -> list[tuple[str, str]]:
         columns.append((f"m{i}_sum", "Float64"))
         columns.append((f"m{i}_sum_squares", "Float64"))
     return columns
+
+
+def _conversion_columns() -> list[tuple[str, str]]:
+    """Column metadata for the conversions query, in SELECT order."""
+    return [
+        ("variant", "String"),
+        ("metric_index", "UInt8"),
+        ("bucket", "DateTime('UTC')"),
+        ("converted_identities", "UInt64"),
+    ]
 
 
 def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
@@ -832,7 +845,11 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
         ),
     ]
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = (rows, _result_columns(4))
+    mock_client.execute.side_effect = [
+        (rows, _result_columns(4)),
+        ([], _conversion_columns()),
+        [],
+    ]
     mock_get_client = mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
@@ -847,12 +864,13 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
 
     # When
-    aggregates = services.get_metric_variant_stats(
+    aggregates = services.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=window_start,
         window_end=window_end,
         specs=specs,
+        granularity="day",
     )
 
     # Then per-variant counts and sufficient statistics are mapped per metric
@@ -869,8 +887,9 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     assert aggregates.metric_stats[13]["variant_a"] == VariantStats(
         n=1000, sum=210.0, sum_squares=520.0
     )
-    # And the query joins post-exposure metric events and excludes quarantined
-    sql, params = mock_client.execute.call_args.args
+    # And the results query joins post-exposure metric events and excludes
+    # quarantined identities
+    sql, params = mock_client.execute.call_args_list[0].args
     assert "LEFT JOIN events AS m" in sql
     assert "m.timestamp >= e.first_exposure" in sql
     assert "m.timestamp >= %(window_start)s" in sql
@@ -900,7 +919,9 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     assert params["metric_2_event"] == "page_view"
     assert params["metric_3_event"] == "session"
     assert params["window_end"] == window_end
-    mock_get_client.assert_called_once_with(
+    # And the conversions join is narrowed to the occurrence metric's event
+    assert params["conversion_events"] == ["purchase"]
+    mock_get_client.assert_called_with(
         send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
 
@@ -915,7 +936,11 @@ def test_get_metric_variant_stats__three_variants__maps_all_variants(
         ("variant_b", 950, 110.0, 110.0, 5100.0, 29000.0),
     ]
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = (rows, _result_columns(2))
+    mock_client.execute.side_effect = [
+        (rows, _result_columns(2)),
+        ([], _conversion_columns()),
+        [],
+    ]
     mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
@@ -926,12 +951,13 @@ def test_get_metric_variant_stats__three_variants__maps_all_variants(
     ]
 
     # When
-    aggregates = services.get_metric_variant_stats(
+    aggregates = services.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
         window_end=datetime(2026, 6, 10, tzinfo=timezone.utc),
         specs=specs,
+        granularity="day",
     )
 
     # Then all three variants are decoded into counts and metric stats
@@ -951,28 +977,32 @@ def test_get_metric_variant_stats__no_metrics__counts_variants_only(
 ) -> None:
     # Given an experiment with no attached metrics
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = (
-        [("control", 1000), ("variant_a", 900)],
-        _result_columns(0),
-    )
+    mock_client.execute.side_effect = [
+        ([("control", 1000), ("variant_a", 900)], _result_columns(0)),
+        [],
+    ]
     mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
     )
 
     # When
-    aggregates = services.get_metric_variant_stats(
+    aggregates = services.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
         window_end=datetime(2026, 6, 10, tzinfo=timezone.utc),
         specs=[],
+        granularity="day",
     )
 
-    # Then only the per-variant counts are returned, with no metric join
+    # Then only the per-variant counts are returned, with no metric join, and
+    # no conversions query is run
     assert aggregates.exposure_counts == {"control": 1000, "variant_a": 900}
     assert aggregates.metric_stats == {}
-    sql, params = mock_client.execute.call_args.args
+    assert aggregates.conversion_buckets == {}
+    assert mock_client.execute.call_count == 2
+    sql, params = mock_client.execute.call_args_list[0].args
     assert "SELECT variant, count() AS n" in sql
     assert "LEFT JOIN" not in sql
     assert "metric_events" not in params
@@ -993,7 +1023,11 @@ def test_get_metric_variant_stats__shuffled_columns__maps_by_name(
     ]
     rows = [(30000.0, "control", 100.0, 1000, 5000.0, 100.0)]
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = (rows, columns)
+    mock_client.execute.side_effect = [
+        (rows, columns),
+        ([], _conversion_columns()),
+        [],
+    ]
     mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
@@ -1004,12 +1038,13 @@ def test_get_metric_variant_stats__shuffled_columns__maps_by_name(
     ]
 
     # When
-    aggregates = services.get_metric_variant_stats(
+    aggregates = services.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
         window_end=datetime(2026, 6, 10, tzinfo=timezone.utc),
         specs=specs,
+        granularity="day",
     )
 
     # Then values are decoded by column name, not position
@@ -1096,6 +1131,8 @@ def test_build_conversions_query__mixed_slots__occurrence_slots_only() -> None:
     assert "WHERE first_conversion IS NOT NULL" in sql
     assert "GROUP BY variant, metric_index, bucket" in sql
     assert "WHERE e.quarantined = 0" in sql
+    # And the join is narrowed to the charted metrics' events
+    assert "AND m.event IN %(conversion_events)s" in sql
 
 
 def test_build_conversions_query__no_occurrence_slots__returns_none() -> None:
@@ -1111,8 +1148,9 @@ def test_build_conversions_query__no_occurrence_slots__returns_none() -> None:
     assert builder.build_conversions_query(bucket_function="toStartOfDay") is None
 
 
-def test_decode_conversion_rows__rows__maps_slot_index_to_metric_id() -> None:
-    # Given occurrence slots at index 0 and 2, and one warehouse row for each
+def test_decode_conversion_rows__rows__groups_by_metric_behind_slot_index() -> None:
+    # Given occurrence slots at index 0 and 2, rows for slot 0 only, and
+    # columns in a different order than the SELECT
     builder = ResultsQueryBuilder(
         [
             _spec(metric_id=7, event="purchase", aggregation="occurrence"),
@@ -1121,34 +1159,39 @@ def test_decode_conversion_rows__rows__maps_slot_index_to_metric_id() -> None:
         ]
     )
     bucket = datetime(2026, 6, 1, tzinfo=timezone.utc)
-    rows = [("control", 0, bucket, 12), ("variant_a", 2, bucket, 3)]
+    columns = ["converted_identities", "variant", "bucket", "metric_index"]
+    rows = [(12, "control", bucket, 0), (3, "variant_a", bucket, 0)]
 
     # When
-    buckets = builder.decode_conversion_rows(rows)
+    buckets = builder.decode_conversion_rows(rows, columns)
 
-    # Then each row is attributed to the metric behind its slot index
-    assert buckets == [
-        ConversionBucket(
-            metric_id=7, variant="control", bucket=bucket, converted_identities=12
-        ),
-        ConversionBucket(
-            metric_id=11, variant="variant_a", bucket=bucket, converted_identities=3
-        ),
-    ]
+    # Then rows are decoded by column name under the metric behind their slot,
+    # and the charted metric nobody converted on still gets an empty entry
+    assert buckets == {
+        7: [
+            ConversionBucket("control", bucket, converted_identities=12),
+            ConversionBucket("variant_a", bucket, converted_identities=3),
+        ],
+        11: [],
+    }
 
 
-def test_get_conversion_buckets__day_granularity__queries_and_maps_rows(
+def test_get_results_aggregates__occurrence_metric__gathers_chart_rows(
     mocker: MockerFixture,
 ) -> None:
-    # Given the warehouse returns one conversion row per variant for the
-    # occurrence metric in slot 0
+    # Given the warehouse answers the results query, then one conversion row
+    # per variant for the occurrence metric in slot 0, then one exposure row
     bucket = datetime(2026, 6, 1, tzinfo=timezone.utc)
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = [
-        ("control", 0, bucket, 12),
-        ("variant_a", 0, bucket, 15),
+    mock_client.execute.side_effect = [
+        ([("control", 1000, 12.0, 12.0, 500.0, 900.0)], _result_columns(2)),
+        (
+            [("control", 0, bucket, 12), ("variant_a", 0, bucket, 15)],
+            _conversion_columns(),
+        ),
+        [(0, "control", bucket, 1000)],
     ]
-    mock_get_client = mocker.patch(
+    mocker.patch(
         "experimentation.services._get_clickhouse_client",
         return_value=mock_client,
     )
@@ -1160,7 +1203,7 @@ def test_get_conversion_buckets__day_granularity__queries_and_maps_rows(
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
 
     # When
-    result = services.get_conversion_buckets(
+    aggregates = services.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=window_start,
@@ -1169,18 +1212,20 @@ def test_get_conversion_buckets__day_granularity__queries_and_maps_rows(
         granularity="day",
     )
 
-    # Then the rows are mapped to dataclasses
-    assert result == [
-        ConversionBucket(
-            metric_id=7, variant="control", bucket=bucket, converted_identities=12
-        ),
-        ConversionBucket(
-            metric_id=7, variant="variant_a", bucket=bucket, converted_identities=15
-        ),
+    # Then the chart rows are mapped, conversions under the occurrence metric only
+    assert aggregates.granularity == "day"
+    assert aggregates.conversion_buckets == {
+        7: [
+            ConversionBucket("control", bucket, converted_identities=12),
+            ConversionBucket("variant_a", bucket, converted_identities=15),
+        ]
+    }
+    assert aggregates.exposure_buckets == [
+        ExposureBucket("control", bucket, first_exposed_identities=1000)
     ]
-    # And the query buckets first conversions by UTC day, over the same window
-    # and metric events as the results query
-    sql, params = mock_client.execute.call_args.args
+    # And the conversions query buckets first conversions by UTC day, joining
+    # only the occurrence metric's events over the results query's window
+    sql, params = mock_client.execute.call_args_list[1].args
     assert "toStartOfDay(first_conversion, 'UTC') AS bucket" in sql
     assert params == {
         "environment_key": "env-key-123",
@@ -1189,22 +1234,28 @@ def test_get_conversion_buckets__day_granularity__queries_and_maps_rows(
         "window_start": window_start,
         "window_end": window_end,
         "metric_events": ["purchase", "revenue"],
+        "conversion_events": ["purchase"],
         "metric_0_event": "purchase",
         "metric_1_event": "revenue",
     }
-    mock_get_client.assert_called_once_with(
-        send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
-    )
 
 
-def test_get_conversion_buckets__no_occurrence_metrics__skips_query(
+def test_get_results_aggregates__value_metrics_only__skips_conversions_query(
     mocker: MockerFixture,
 ) -> None:
-    # Given only value metrics are attached
-    mock_get_client = mocker.patch("experimentation.services._get_clickhouse_client")
+    # Given only a value metric is attached
+    mock_client = mocker.Mock()
+    mock_client.execute.side_effect = [
+        ([("control", 1000, 500.0, 900.0)], _result_columns(1)),
+        [],
+    ]
+    mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
 
     # When
-    result = services.get_conversion_buckets(
+    aggregates = services.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -1213,9 +1264,11 @@ def test_get_conversion_buckets__no_occurrence_metrics__skips_query(
         granularity="day",
     )
 
-    # Then nothing is charted and the warehouse is not queried
-    assert result == []
-    mock_get_client.assert_not_called()
+    # Then nothing is charted and only the results and exposures queries run
+    assert aggregates.conversion_buckets == {}
+    assert mock_client.execute.call_count == 2
+    _, params = mock_client.execute.call_args_list[0].args
+    assert params["conversion_events"] == []
 
 
 def test_build_results_summary__healthy_arms__infers_each_treatment() -> None:
@@ -1418,9 +1471,9 @@ def test_build_results_summary__computed__serialises_to_wire_shape() -> None:
         "ci_high",
         "chance_to_win",
     }
-    # And a run without bucket rows still carries the chart keys, as null
-    assert payload["exposures_timeseries"] is None
-    assert payload["metrics"][0]["timeseries"] is None
+    # And the chart series sit alongside, empty for a run with no bucket rows
+    assert payload["exposures_timeseries"] == {"granularity": "day", "points": []}
+    assert payload["metrics"][0]["conversions_timeseries"] is None
 
 
 def test_build_results_summary__exposure_rows__attaches_exposures_timeseries() -> None:
@@ -1438,6 +1491,7 @@ def test_build_results_summary__exposure_rows__attaches_exposures_timeseries() -
             ExposureBucket("variant_a", day_1, first_exposed_identities=1000),
             ExposureBucket("", day_1, first_exposed_identities=5, quarantined=True),
         ],
+        conversion_buckets={},
     )
 
     # When
@@ -1472,19 +1526,22 @@ def test_build_results_summary__occurrence_metrics__attach_conversions() -> None
         exposure_counts={"control": 1000, "variant_a": 1000},
         metric_stats={},
         granularity="day",
-        conversion_buckets=[
-            ConversionBucket(7, "variant_a", day_3, converted_identities=20),
-            ConversionBucket(7, "control", day_1, converted_identities=100),
-            ConversionBucket(7, "variant_a", day_1, converted_identities=100),
-            ConversionBucket(11, "control", day_1, converted_identities=7),
-        ],
+        exposure_buckets=[],
+        conversion_buckets={
+            7: [
+                ConversionBucket("variant_a", day_3, converted_identities=20),
+                ConversionBucket("control", day_1, converted_identities=100),
+                ConversionBucket("variant_a", day_1, converted_identities=100),
+            ],
+            11: [ConversionBucket("control", day_1, converted_identities=7)],
+        },
     )
 
     # When
     summary = services.build_results_summary(aggregates, expected_shares={})
 
     # Then each metric gets only its own rows, per variant, in bucket order
-    assert summary.metrics[0].timeseries == ConversionsTimeseries(
+    assert summary.metrics[0].conversions_timeseries == ConversionsTimeseries(
         granularity="day",
         points=[
             ConversionsTimeseriesPoint(
@@ -1497,7 +1554,7 @@ def test_build_results_summary__occurrence_metrics__attach_conversions() -> None
             ),
         ],
     )
-    assert summary.metrics[1].timeseries == ConversionsTimeseries(
+    assert summary.metrics[1].conversions_timeseries == ConversionsTimeseries(
         granularity="day",
         points=[
             ConversionsTimeseriesPoint(
@@ -1515,13 +1572,15 @@ def test_build_results_summary__value_metric__timeseries_none() -> None:
         exposure_counts={"control": 1000},
         metric_stats={},
         granularity="day",
+        exposure_buckets=[],
+        conversion_buckets={},
     )
 
     # When
     summary = services.build_results_summary(aggregates, expected_shares={})
 
     # Then a value metric has no conversion rate to chart
-    assert summary.metrics[0].timeseries is None
+    assert summary.metrics[0].conversions_timeseries is None
 
 
 @pytest.mark.django_db
@@ -1755,25 +1814,21 @@ def test_compute_results_summary__experiment__queries_warehouse_and_builds(
             }
         },
     )
-    mock_stats = mocker.patch(
-        "experimentation.services.get_metric_variant_stats",
-        return_value=aggregates,
-    )
     window_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
-    mock_exposures = mocker.patch(
-        "experimentation.services.get_exposure_buckets",
-        return_value=[
-            ExposureBucket("control", window_start, first_exposed_identities=1000)
-        ],
-    )
-    mock_conversions = mocker.patch(
-        "experimentation.services.get_conversion_buckets",
-        return_value=[
-            ConversionBucket(
-                metric.id, "control", window_start, converted_identities=100
-            )
-        ],
+    mock_gather = mocker.patch(
+        "experimentation.services.get_results_aggregates",
+        return_value=replace(
+            aggregates,
+            exposure_buckets=[
+                ExposureBucket("control", window_start, first_exposed_identities=1000)
+            ],
+            conversion_buckets={
+                metric.id: [
+                    ConversionBucket("control", window_start, converted_identities=100)
+                ]
+            },
+        ),
     )
 
     # When
@@ -1783,36 +1838,21 @@ def test_compute_results_summary__experiment__queries_warehouse_and_builds(
         window_end=window_end,
     )
 
-    # Then the warehouse is queried with the experiment's metric specs
-    mock_stats.assert_called_once_with(
+    # Then the warehouse is read once for the experiment's metric specs,
+    # bucketed by day because the window is longer than 72 hours
+    mock_gather.assert_called_once_with(
         environment_key=environment.api_key,
         feature_name=feature.name,
         window_start=window_start,
         window_end=window_end,
         specs=expected_specs,
+        granularity="day",
     )
     # And the summary carries the metric result with an SRM verdict from the
-    # configured 50/50 split
+    # configured 50/50 split, plus both chart series
     assert summary.srm_p_value == pytest.approx(1.0)
     assert summary.metrics[0].metric_id == metric.id
     assert summary.metrics[0].inference["variant_a"] is not None
-    # And the chart rows are gathered over the same window, bucketed by day
-    # because the window is longer than 72 hours
-    mock_exposures.assert_called_once_with(
-        environment_key=environment.api_key,
-        feature_name=feature.name,
-        window_start=window_start,
-        window_end=window_end,
-        granularity="day",
-    )
-    mock_conversions.assert_called_once_with(
-        environment_key=environment.api_key,
-        feature_name=feature.name,
-        window_start=window_start,
-        window_end=window_end,
-        specs=expected_specs,
-        granularity="day",
-    )
     assert summary.exposures_timeseries == ExposuresTimeseries(
         granularity="day",
         points=[
@@ -1821,7 +1861,7 @@ def test_compute_results_summary__experiment__queries_warehouse_and_builds(
             )
         ],
     )
-    assert summary.metrics[0].timeseries == ConversionsTimeseries(
+    assert summary.metrics[0].conversions_timeseries == ConversionsTimeseries(
         granularity="day",
         points=[
             ConversionsTimeseriesPoint(
