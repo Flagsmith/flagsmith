@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.269.1](https://github.com/Flagsmith/flagsmith/compare/v2.269.0...v2.269.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **usage:** reword the plan hint when we have no billing period ([#8430](https://github.com/Flagsmith/flagsmith/issues/8430)) ([bf1052e](https://github.com/Flagsmith/flagsmith/commit/bf1052ece2e69a132e097114ba8d8f45f860a7e3))
+
+
+### Dependency Updates
+
+* **api:** update dependency djangorestframework to &gt;=3.17.2,&lt;3.18.0 [security] ([#8436](https://github.com/Flagsmith/flagsmith/issues/8436)) ([3fd1643](https://github.com/Flagsmith/flagsmith/commit/3fd1643df601e5a78451b536eb55ebf64dde91d0))
+
+
+### CI
+
+* actions/create-github-app-token -&gt; v3 ([#8240](https://github.com/Flagsmith/flagsmith/issues/8240)) ([2d18e02](https://github.com/Flagsmith/flagsmith/commit/2d18e02ba3a29afd166d0d549cd2352117ba74da))
+* pre-commit autoupdate ([#8255](https://github.com/Flagsmith/flagsmith/issues/8255)) ([e936e4c](https://github.com/Flagsmith/flagsmith/commit/e936e4c186f135502cd0a28aa26cd020dfa859bf))
+
 ## [2.269.0](https://github.com/Flagsmith/flagsmith/compare/v2.268.0...v2.269.0) (2026-09-02)
 
 
