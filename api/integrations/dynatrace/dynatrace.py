@@ -7,6 +7,9 @@ from audit.models import AuditLog
 from audit.services import get_audited_instance_from_audit_log_record
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.common.constants import (
+    INTEGRATION_REQUEST_TIMEOUT_SECONDS,
+)
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 from segments.models import Segment
 
@@ -29,7 +32,10 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
     def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]
         event["entitySelector"] = self.entity_selector
         response = requests.post(
-            self.url, headers=self._headers(), data=json.dumps(event)
+            self.url,
+            headers=self._headers(),
+            data=json.dumps(event),
+            timeout=INTEGRATION_REQUEST_TIMEOUT_SECONDS,
         )
         logger.debug(
             "Sent event to Dynatrace. Response code was %s" % response.status_code

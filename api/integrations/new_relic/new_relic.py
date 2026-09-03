@@ -4,6 +4,9 @@ import logging
 import requests
 
 from audit.models import AuditLog
+from integrations.common.constants import (
+    INTEGRATION_REQUEST_TIMEOUT_SECONDS,
+)
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 
 logger = logging.getLogger(__name__)
@@ -20,7 +23,10 @@ class NewRelicWrapper(AbstractBaseEventIntegrationWrapper):
 
     def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]
         response = requests.post(
-            self.url, headers=self._headers(), data=json.dumps(event)
+            self.url,
+            headers=self._headers(),
+            data=json.dumps(event),
+            timeout=INTEGRATION_REQUEST_TIMEOUT_SECONDS,
         )
         logger.debug(
             "Sent event to NewRelic. Response code was %s" % response.status_code
