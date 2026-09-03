@@ -61,6 +61,9 @@ def seed_organisation_identities(organisation_id: int) -> None:
 
     Rows are versioned at scan start via `inserted_at`
     so writes arriving mid-scan win ReplacingMergeTree dedup over the seeded row.
+
+    Identities carrying no traits at all are skipped, keeping the mirror off the
+    large populations of empty identities some environments accumulate.
     """
     log = logger.bind(organisation__id=organisation_id)
     if not settings.CLICKHOUSE_ENABLED:
@@ -104,7 +107,13 @@ def seed_organisation_identities(organisation_id: int) -> None:
                                     scan_started_at,
                                 )
                                 for doc in batch
+                                # An identity with nothing on it can only match
+                                # a segment by percentage split or `is not set`.
+                                if doc.get("identity_traits")
+                                or doc.get("system_traits")
                             ]
+                            if not rows:
+                                continue
                             # Django's CursorWrapper stub forbids dicts in
                             # the params sequence; clickhouse-driver accepts
                             # them as JSON-column payloads.
