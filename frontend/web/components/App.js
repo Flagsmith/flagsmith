@@ -30,15 +30,8 @@ import Announcement from './Announcement'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 import AccountProvider from 'common/providers/AccountProvider'
 import Nav from './navigation/Nav'
-import { routes } from 'web/routes'
+import { isAllowedWhileBlocked } from 'web/routePaths'
 import 'project/darkMode'
-
-// The usage page explains the block, so it stays reachable. Read inside the
-// function: web/routes imports this file, so routes is empty at module level.
-const isAllowedWhileBlocked = (pathname) =>
-  [routes.organisations, routes['organisation-usage']].some((path) =>
-    matchPath(pathname, { exact: true, path, strict: false }),
-  )
 
 const App = class extends Component {
   static propTypes = {

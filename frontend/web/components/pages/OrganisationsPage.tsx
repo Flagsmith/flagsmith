@@ -10,7 +10,7 @@ import PanelSearch from 'components/PanelSearch'
 import AppActions from 'common/dispatcher/app-actions'
 import { useHistory } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import { routes } from 'web/routes'
+import { routes } from 'web/routePaths'
 
 const OrganisationsPage: FC = () => {
   const history = useHistory()

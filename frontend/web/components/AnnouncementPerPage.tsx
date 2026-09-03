@@ -4,7 +4,7 @@ import flagsmith from '@flagsmith/flagsmith'
 import Utils from 'common/utils/utils'
 import { AnnouncementValueType } from './Announcement'
 import { matchPath } from 'react-router-dom'
-import { routes } from 'web/routes'
+import { routes } from 'web/routePaths'
 
 type AnnouncementPerPageValueType = AnnouncementValueType & {
   pages: string[]
