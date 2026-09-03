@@ -22,8 +22,11 @@ const OverLimitBanner: FC<OverLimitBannerProps> = ({
   const { body, title } = overLimitBannerCopy(over, basis)
 
   return (
-    <div className='alert alert-danger d-flex align-items-start gap-3 mb-4'>
-      <Icon name='close-circle' />
+    <div
+      role='alert'
+      className='alert alert-danger d-flex align-items-start gap-3 mb-4'
+    >
+      <Icon name='close-circle' aria-hidden />
       <div className='flex-fill'>
         <strong className='d-block'>{title}</strong>
         {body}

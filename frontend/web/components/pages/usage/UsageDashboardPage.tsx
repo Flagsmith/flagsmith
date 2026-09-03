@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useMemo, useState } from 'react'
 import { skipToken } from '@reduxjs/toolkit/query'
 import Utils, { planNames } from 'common/utils/utils'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
@@ -73,7 +73,11 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   const limit = subscriptionMeta?.max_api_calls
   const allowanceTotal = usage.allowance?.totals?.total ?? 0
-  const exceeded = overLimitOf(allowanceTotal, limit, usage.allowance)
+  // Walks every day in the window to find the crossing, so not per render.
+  const exceeded = useMemo(
+    () => overLimitOf(allowanceTotal, limit, usage.allowance),
+    [allowanceTotal, limit, usage.allowance],
+  )
 
   const periods = periodsFor(planIsBilled)
 
