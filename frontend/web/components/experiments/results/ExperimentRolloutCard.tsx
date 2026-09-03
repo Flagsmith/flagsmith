@@ -7,9 +7,13 @@ import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import { Experiment } from 'common/types/responses'
 import { useUpdateExperimentRolloutMutation } from 'common/services/useExperiment'
+import AudienceSegmentList from 'components/experiments/AudienceSegmentList'
+import { experimentErrorMessage } from 'components/experiments/errors'
 import {
   VariationSplitEntry,
+  buildRolloutBody,
   getControlPercentage,
+  joinSegmentNames,
 } from 'components/experiments/rollout'
 import isValidPercentage from 'common/utils/isValidPercentage'
 import { getVariantIdentities } from './derive'
@@ -29,6 +33,8 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
   )
 
   const rollout = experiment.experiment_rollout
+  // The audience is frozen once the experiment starts, so it is display-only.
+  const audience = rollout?.audience
   const mvOptions = experiment.feature.multivariate_options ?? []
 
   const getTreatmentAllocation = (optionId: number): number =>
@@ -81,21 +87,26 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
       onYes: async () => {
         try {
           await updateRollout({
-            body: {
+            // No audience: it is frozen once running, and omitting the key
+            // leaves the stored one untouched.
+            body: buildRolloutBody({
               enabled: rollout?.enabled ?? true,
-              feature_state_value: rollout?.feature_state_value ?? {
+              featureStateValue: rollout?.feature_state_value ?? {
                 type: 'string',
                 value: experiment.feature.initial_value ?? '',
               },
-              multivariate_feature_state_values: draftSplit,
-              rollout_percentage: draftRollout,
-            },
+              rolloutPercentage: draftRollout,
+              variationSplit: draftSplit,
+            }),
             environmentId,
             experimentId: experiment.id,
           }).unwrap()
           setIsEditing(false)
-        } catch {
-          toast('Failed to update rollout', 'danger')
+        } catch (error) {
+          toast(
+            experimentErrorMessage(error, 'Failed to update rollout'),
+            'danger',
+          )
         }
       },
       title: 'Update rollout configuration',
@@ -130,8 +141,48 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
       }
     >
       <div className='d-flex flex-column gap-3 mx-0'>
+        {!!audience && (
+          <>
+            <div className='d-flex flex-column gap-2'>
+              <span>
+                Audience
+                {audience.segments.length > 1 && (
+                  <span className='text-muted ml-1'>
+                    (matches {audience.match === 'all' ? 'all' : 'any'})
+                  </span>
+                )}
+              </span>
+              {audience.segments.length ? (
+                <AudienceSegmentList
+                  segments={audience.segments.map((segment) => ({
+                    cohortSourceType: segment.is_cohort
+                      ? segment.cohort_source_type
+                      : null,
+                    deleted: segment.deleted,
+                    id: segment.id,
+                    name: segment.name,
+                  }))}
+                />
+              ) : (
+                <span className='text-muted'>
+                  All identities in this environment
+                </span>
+              )}
+            </div>
+
+            <hr className='my-0 mx-0' />
+          </>
+        )}
+
         <div className='d-flex align-items-center justify-content-between'>
-          <span>Current rollout</span>
+          <span>
+            {audience?.segments.length
+              ? joinSegmentNames(
+                  audience.segments.map((segment) => segment.name),
+                  audience.match === 'all' ? 'and' : 'or',
+                )
+              : 'Current rollout'}
+          </span>
           {isEditing ? (
             <span className='d-flex align-items-center gap-1 justify-content-end'>
               <Input

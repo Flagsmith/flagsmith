@@ -677,6 +677,24 @@ export type Experiment = {
   experiment_rollout?: ExperimentRollout
 }
 
+export type ExperimentAudienceMatch = 'any' | 'all'
+
+// Provenance of the audience segments compiled into the rollout segment. The
+// rules themselves are a frozen copy, so a source segment can be deleted while
+// the experiment keeps evaluating it.
+export type ExperimentAudienceSegment = {
+  id: number
+  name: string
+  is_cohort: boolean
+  cohort_source_type: CohortSourceType | null
+  deleted: boolean
+}
+
+export type ExperimentAudience = {
+  match: ExperimentAudienceMatch
+  segments: ExperimentAudienceSegment[]
+}
+
 export type ExperimentRollout = {
   enabled: boolean
   rollout_percentage: number
@@ -688,6 +706,7 @@ export type ExperimentRollout = {
     multivariate_feature_option: number
     percentage_allocation: number
   }[]
+  audience?: ExperimentAudience
 }
 
 export type ExpectedDirection =

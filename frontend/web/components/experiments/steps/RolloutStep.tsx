@@ -1,26 +1,40 @@
 import { FC } from 'react'
-import { ProjectFlag } from 'common/types/responses'
+import { ExperimentAudienceMatch, ProjectFlag } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import ContentCard from 'components/base/grid/ContentCard'
+import AudiencePicker from 'components/experiments/AudiencePicker'
 import RolloutSlider from 'components/experiments/RolloutSlider'
 import RolloutSplitEditor from 'components/experiments/RolloutSplitEditor'
 import RolloutSummary from 'components/experiments/RolloutSummary'
 import {
+  AudienceSegment,
   VariationSplitEntry,
   getEvenSplit,
 } from 'components/experiments/rollout'
 
 type RolloutStepProps = {
   selectedFeature: ProjectFlag | null
+  projectId: number
+  environmentId: string
   rolloutPercentage: number
   variationSplit: VariationSplitEntry[]
+  audienceSegments: AudienceSegment[]
+  audienceMatch: ExperimentAudienceMatch
   onRolloutChange: (value: number) => void
   onSplitChange: (entries: VariationSplitEntry[]) => void
+  onAudienceSegmentsChange: (segments: AudienceSegment[]) => void
+  onAudienceMatchChange: (match: ExperimentAudienceMatch) => void
 }
 
 const RolloutStep: FC<RolloutStepProps> = ({
+  audienceMatch,
+  audienceSegments,
+  environmentId,
+  onAudienceMatchChange,
+  onAudienceSegmentsChange,
   onRolloutChange,
   onSplitChange,
+  projectId,
   rolloutPercentage,
   selectedFeature,
   variationSplit,
@@ -37,6 +51,21 @@ const RolloutStep: FC<RolloutStepProps> = ({
 
   return (
     <div className='d-flex flex-column gap-4'>
+      <ContentCard
+        background='white'
+        title='Targeted audience'
+        description='Limit the experiment to identities in one or more segments. The segment rules are copied when the experiment starts, so later edits to a segment leave the experiment untouched.'
+      >
+        <AudiencePicker
+          projectId={projectId}
+          environmentId={environmentId}
+          segments={audienceSegments}
+          match={audienceMatch}
+          onSegmentsChange={onAudienceSegmentsChange}
+          onMatchChange={onAudienceMatchChange}
+        />
+      </ContentCard>
+
       <ContentCard
         background='white'
         title='Rollout'
@@ -73,6 +102,7 @@ const RolloutStep: FC<RolloutStepProps> = ({
         selectedFeature={selectedFeature}
         rolloutPercentage={rolloutPercentage}
         variationSplit={variationSplit}
+        audience={{ match: audienceMatch, segments: audienceSegments }}
       />
     </div>
   )

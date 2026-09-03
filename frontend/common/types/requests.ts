@@ -26,6 +26,7 @@ import {
   StageActionBody,
   ChangeRequest,
   ExpectedDirection,
+  ExperimentAudienceMatch,
   ExperimentStatus,
   MetricAggregation,
   MetricDirection,
@@ -153,6 +154,27 @@ export interface PipelineStageRequest {
 }
 
 type WarehouseConfigValue = string | number | boolean
+
+// Omitting `audience` leaves the stored audience untouched; an empty
+// `segment_ids` clears it back to every identity in the environment.
+export type ExperimentAudienceBody = {
+  match: ExperimentAudienceMatch
+  segment_ids: number[]
+}
+
+export type ExperimentRolloutBody = {
+  enabled: boolean
+  rollout_percentage: number
+  feature_state_value: {
+    type: 'integer' | 'string' | 'boolean'
+    value: string
+  }
+  multivariate_feature_state_values: {
+    multivariate_feature_option: number
+    percentage_allocation: number
+  }[]
+  audience?: ExperimentAudienceBody
+}
 
 export type Req = {
   getFeatureCodeReferences: {
@@ -1141,18 +1163,7 @@ export type Req = {
       hypothesis: string
       feature: number
       metrics: { metric: number; expected_direction: ExpectedDirection }[]
-      experiment_rollout: {
-        enabled: boolean
-        rollout_percentage: number
-        feature_state_value: {
-          type: 'integer' | 'string' | 'boolean'
-          value: string
-        }
-        multivariate_feature_state_values: {
-          multivariate_feature_option: number
-          percentage_allocation: number
-        }[]
-      }
+      experiment_rollout: ExperimentRolloutBody
     }
   }
   experimentAction: { environmentId: string; experimentId: number }
@@ -1164,18 +1175,7 @@ export type Req = {
   updateExperimentRollout: {
     environmentId: string
     experimentId: number
-    body: {
-      enabled: boolean
-      rollout_percentage: number
-      feature_state_value: {
-        type: 'integer' | 'string' | 'boolean'
-        value: string
-      }
-      multivariate_feature_state_values: {
-        multivariate_feature_option: number
-        percentage_allocation: number
-      }[]
-    }
+    body: ExperimentRolloutBody
   }
   deleteExperiment: { environmentId: string; experimentId: number }
   getExperiment: { environmentId: string; experimentId: number }
