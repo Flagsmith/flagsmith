@@ -96,15 +96,16 @@ describe('overLimit', () => {
     it('warns about charges only where they can be charged', () => {
       const over = exceeding(60000, 50000, days([60000]))
 
-      expect(overLimitBannerCopy(over, billed, true).body).toContain(
-        'Overage charges may apply over this billing period.',
-      )
+      expect(
+        overLimitBannerCopy(over, billed, { mayBeCharged: true }).body,
+      ).toContain('Overage charges may apply over this billing period.')
       expect(overLimitBannerCopy(over, billed).body).not.toContain(
         'Overage charges',
       )
       expect(
-        overLimitBannerCopy(over, { window: 'rolling' } as UsageBasis, true)
-          .body,
+        overLimitBannerCopy(over, { window: 'rolling' } as UsageBasis, {
+          mayBeCharged: true,
+        }).body,
       ).not.toContain('this billing period')
     })
 
@@ -116,6 +117,23 @@ describe('overLimit', () => {
 
       expect(body).toContain('You reached 100% of your 50K plan limit on 2 Aug')
       expect(body).toContain('Your usage stays visible below')
+    })
+
+    // A restricted organisation lands here too, and needs to know what gets
+    // them out rather than that they went over.
+    it('tells a restricted organisation how to get access back', () => {
+      const over = exceeding(60000, 50000, days([40000, 20000]))
+      const { body, title } = overLimitBannerCopy(over, billed, {
+        isRestricted: true,
+        mayBeCharged: true,
+      })
+
+      expect(title).toBe('Your organisation is restricted')
+      expect(body).toContain('Upgrading restores access straight away')
+      expect(body).toContain('30 days')
+      expect(body).toContain('on 2 Aug')
+      // The charge is not the point once they are already cut off.
+      expect(body).not.toContain('Overage charges')
     })
 
     it('says how far over in the note under the meter', () => {

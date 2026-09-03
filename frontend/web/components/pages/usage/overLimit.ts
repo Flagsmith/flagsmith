@@ -38,20 +38,46 @@ const chargeWarning = (basis: UsageBasis, mayBeCharged: boolean): string =>
     ? ` Overage charges may apply over ${allowanceWindowLabel(basis)}.`
     : ''
 
+// unrestrict_after_api_limit_grace_period_is_stale lifts the block once no
+// 100% notification has fired for 30 days, and a plan change clears it at
+// once. What is actually paused needs stop_serving_flags on the response
+// (#8256), so this says access rather than naming a service.
+const restrictedCopy = (over: OverLimit): { title: string; body: string } => ({
+  body: [
+    `You went over your ${Format.shortenNumber(over.limit)} plan limit`,
+    over.crossedOn ? ` on ${over.crossedOn}` : '',
+    '. Upgrading restores access straight away. Otherwise it returns 30 days',
+    ' after your usage drops back under the limit.',
+  ].join(''),
+  title: 'Your organisation is restricted',
+})
+
+export type BannerContext = {
+  /** The organisation is on a plan that gets billed for overages. */
+  mayBeCharged?: boolean
+  /** Admin access has already been cut off. */
+  isRestricted?: boolean
+}
+
 export const overLimitBannerCopy = (
   over: OverLimit,
   basis: UsageBasis,
-  mayBeCharged = false,
-): { title: string; body: string } => ({
-  body: [
-    `You reached 100% of your ${Format.shortenNumber(over.limit)} plan limit`,
-    over.crossedOn ? ` on ${over.crossedOn}` : '',
-    '.',
-    chargeWarning(basis, mayBeCharged),
-    ' Your usage stays visible below so you can see what happened.',
-  ].join(''),
-  title: 'Your organisation has exceeded its plan limit',
-})
+  { isRestricted, mayBeCharged }: BannerContext = {},
+): { title: string; body: string } =>
+  isRestricted
+    ? restrictedCopy(over)
+    : {
+        body: [
+          `You reached 100% of your ${Format.shortenNumber(
+            over.limit,
+          )} plan limit`,
+          over.crossedOn ? ` on ${over.crossedOn}` : '',
+          '.',
+          chargeWarning(basis, !!mayBeCharged),
+          ' Your usage stays visible below so you can see what happened.',
+        ].join(''),
+        title: 'Your organisation has exceeded its plan limit',
+      }
 
 export const overLimitNote = (over: OverLimit): string =>
   `${Format.shortenNumber(over.overBy)} calls over your ${Format.shortenNumber(

@@ -130,6 +130,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
           basis={basis}
           canUpgrade={Utils.getFlagsmithHasFeature('payments_enabled')}
           mayBeCharged={mayBeCharged}
+          isRestricted={!!organisation?.block_access_to_admin}
         />
       )}
 

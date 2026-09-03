@@ -14,6 +14,7 @@ import {
   contributionNote,
   isBilledOnAPeriod,
   isBillingPeriodSelected,
+  isChargedForOverages,
   periodLabel,
   periodsFor,
   PeriodSelection,
@@ -77,6 +78,7 @@ type HarnessProps = {
   empty?: boolean
   isLoading?: boolean
   isError?: boolean
+  isRestricted?: boolean
 }
 
 /**
@@ -87,6 +89,7 @@ const UsagePage: FC<HarnessProps> = ({
   empty,
   isError,
   isLoading,
+  isRestricted,
   limit,
   scale = 1,
   subscription,
@@ -138,7 +141,17 @@ const UsagePage: FC<HarnessProps> = ({
       // Nothing to refetch here; passed so FailedToLoad renders its button.
       onRetry={() => {}}
     >
-      {exceeded && <OverLimitBanner over={exceeded} basis={basis} canUpgrade />}
+      {exceeded && (
+        <OverLimitBanner
+          over={exceeded}
+          basis={basis}
+          canUpgrade
+          isRestricted={isRestricted}
+          mayBeCharged={
+            isBilledOnAPeriod(basis) && isChargedForOverages(subscription)
+          }
+        />
+      )}
 
       <SectionHeading {...planSectionCopy(basis, limit)} />
 
@@ -219,6 +232,16 @@ export const PaidApproachingTheLimit: Story = {
 // Billed on a term, so the banner mentions charges.
 export const PaidOverTheLimit: Story = {
   args: { limit: 900000, subscription: billed },
+}
+
+// Already cut off. Only free plans are ever restricted, and this is the page
+// they are sent to, so the banner says what gets access back.
+export const FreeAndRestricted: Story = {
+  args: {
+    isRestricted: true,
+    limit: 50000,
+    subscription: subscriptionOf({ plan: 'free' }),
+  },
 }
 
 export const FreeOnARollingWindow: Story = {
