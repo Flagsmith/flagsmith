@@ -127,7 +127,7 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         month_delta = _get_total_months(relativedelta(now, billing_starts_at))
         period_starts_at = relativedelta(months=month_delta) + billing_starts_at
 
-        allowed_api_calls = subscription_cache.allowed_30d_api_calls
+        allowed_api_calls = organisation.subscription.max_api_calls
 
     openfeature_client = get_openfeature_client()
     # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
