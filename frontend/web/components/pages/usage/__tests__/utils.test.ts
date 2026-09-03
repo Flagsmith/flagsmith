@@ -1,10 +1,8 @@
 import { Subscription } from 'common/types/responses'
 import {
-  contributionNote,
   isBillingPeriodSelected,
   isChargedForOverages,
   allowanceWindow,
-  planSectionCopy,
   allowanceWindowLabel,
   showsContribution,
   showsPlanCeiling,
@@ -12,6 +10,7 @@ import {
   periodsFor,
   resolvePeriod,
 } from 'components/pages/usage/utils'
+import { contributionNote, planSectionCopy } from 'components/pages/usage/copy'
 
 const subscription = (values: Partial<Subscription>): Subscription =>
   ({ has_active_billing_periods: false, plan: null, ...values } as Subscription)

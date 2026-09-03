@@ -5,7 +5,6 @@ import {
   rollingPeriodOptions,
 } from 'common/types/requests'
 import { Subscription } from 'common/types/responses'
-import { PlanLimit } from 'components/shared/UsageBar/utils'
 
 export type PeriodSelection = BillingPeriod | 'default'
 
@@ -43,34 +42,6 @@ export const isChargedForOverages = (
   return plan.startsWith('startup') || plan.startsWith('scaleup')
 }
 
-export const planSectionCopy = (
-  basis: UsageBasis,
-  limit: PlanLimit,
-): { title: string; hint: string } => {
-  if (!limit) {
-    return {
-      hint: `API calls over ${allowanceWindowLabel(
-        basis,
-      )}. This installation has no plan limit.`,
-      title: 'Your usage',
-    }
-  }
-
-  if (basis.window === 'rolling' && basis.reason === 'no-period') {
-    return {
-      hint: `Usage against your plan limit over ${allowanceWindowLabel(
-        basis,
-      )}. We are unable to show exact billing periods for your subscription plan.`,
-      title: 'Your plan',
-    }
-  }
-
-  return {
-    hint: `Usage against your plan limit over ${allowanceWindowLabel(basis)}.`,
-    title: 'Your plan',
-  }
-}
-
 export const resolvePeriod = (
   chosen: PeriodSelection,
   billingPeriodAvailable: boolean,
@@ -83,20 +54,6 @@ export const resolvePeriod = (
 
 export const isBillingPeriodSelected = (period: BillingPeriod): boolean =>
   period === 'current_billing_period' || period === 'previous_billing_period'
-
-export const contributionNote = (
-  projectName: string,
-  scopedTotal: number,
-  organisationTotal: number,
-): string | undefined => {
-  if (organisationTotal <= 0) {
-    return undefined
-  }
-
-  const percent = Math.round((scopedTotal / organisationTotal) * 100)
-
-  return `${projectName} accounts for ${percent}% of that usage.`
-}
 
 // The note sits under the meter, so it can only compare over the window the
 // meter shows. On any other period "that usage" would name a figure that is

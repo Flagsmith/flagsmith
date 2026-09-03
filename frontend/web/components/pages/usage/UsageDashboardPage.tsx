@@ -11,13 +11,12 @@ import UsageMeter from './components/UsageMeter'
 import UsageOverTime from './components/UsageOverTime'
 import UsagePageLayout from './components/UsagePageLayout'
 import { useUsageData } from './useUsageData'
-import { overLimitNote, overLimitOf } from './overLimit'
+import { contributionNote, overLimitNote, planSectionCopy } from './copy'
+import { overLimitOf } from './overLimit'
 import {
   isBilledOnAPeriod,
   isBillingPeriodSelected,
   isChargedForOverages,
-  contributionNote,
-  planSectionCopy,
   showsContribution,
   showsPlanCeiling,
   periodLabel,

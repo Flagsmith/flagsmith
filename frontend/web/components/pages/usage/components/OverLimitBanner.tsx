@@ -5,9 +5,9 @@ import Icon from 'components/icons/Icon'
 import {
   BannerContext,
   overLimitBannerCopy,
-  OverLimit,
   restrictedBannerCopy,
-} from 'components/pages/usage/overLimit'
+} from 'components/pages/usage/copy'
+import { OverLimit } from 'components/pages/usage/overLimit'
 import { UsageBasis } from 'components/pages/usage/utils'
 
 export type OverLimitBannerProps = BannerContext & {

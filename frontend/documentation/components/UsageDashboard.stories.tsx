@@ -8,17 +8,20 @@ import UsageBreakdown, {
 } from 'components/pages/usage/components/UsageBreakdown'
 import UsageMeter from 'components/pages/usage/components/UsageMeter'
 import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
-import { overLimitNote, overLimitOf } from 'components/pages/usage/overLimit'
+import {
+  contributionNote,
+  overLimitNote,
+  planSectionCopy,
+} from 'components/pages/usage/copy'
+import { overLimitOf } from 'components/pages/usage/overLimit'
 import {
   allowanceWindow,
-  contributionNote,
   isBilledOnAPeriod,
   isBillingPeriodSelected,
   isChargedForOverages,
   periodLabel,
   periodsFor,
   PeriodSelection,
-  planSectionCopy,
   resolvePeriod,
   showsContribution,
   showsPlanCeiling,
