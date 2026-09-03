@@ -1,5 +1,6 @@
 import uuid
 from typing import Any
+from unittest.mock import ANY
 
 from boto3.dynamodb.types import Binary
 from common.test_tools import AssertMetricFixture
@@ -315,6 +316,13 @@ def test_environment_v2_wrapper__write_environments_with_compression__logs_expec
             "environment_api_key": environment.api_key,
             "environment_id": environment.id,
             "event": "environment-document-compressed",
+            "level": "info",
+        },
+        {
+            "environment__id": environment.id,
+            "feature_states__count": 0,
+            "document__bytes": ANY,
+            "event": "environment_document.written",
             "level": "info",
         },
     ]
