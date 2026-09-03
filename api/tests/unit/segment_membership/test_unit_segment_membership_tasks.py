@@ -164,6 +164,8 @@ def test_seed_organisation_identities__traitless_identities__are_not_mirrored(
     # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
+    # One identity per batch, so `dave` forms a batch with nothing left to write.
+    mocker.patch.object(tasks, "_INSERT_BATCH_SIZE", 1)
     for identifier, extra in (
         ("dave", {}),
         ("erin", {"system_traits": {"flagsmith_cohort_e2b1": True}}),
@@ -189,10 +191,11 @@ def test_seed_organisation_identities__traitless_identities__are_not_mirrored(
     # Then
     # `dave` has nothing on him at all; `erin`'s cohort membership lives in
     # `system_traits`, so she stays in the mirror.
-    mirrored_identifiers = sorted(
-        row[1] for call in cursor.executemany.call_args_list for row in call.args[1]
-    )
+    payloads = [call.args[1] for call in cursor.executemany.call_args_list]
+    mirrored_identifiers = sorted(row[1] for payload in payloads for row in payload)
     assert mirrored_identifiers == ["alice", "carol", "erin"]
+    # `dave`'s batch is skipped outright rather than written as an empty INSERT.
+    assert all(payloads)
 
 
 @pytest.mark.clickhouse
