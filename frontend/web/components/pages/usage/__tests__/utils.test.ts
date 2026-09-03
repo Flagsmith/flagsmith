@@ -2,6 +2,7 @@ import { Subscription } from 'common/types/responses'
 import {
   contributionNote,
   isBillingPeriodSelected,
+  isChargedForOverages,
   allowanceWindow,
   planSectionCopy,
   allowanceWindowLabel,
@@ -89,6 +90,20 @@ describe('UsageDashboard utils', () => {
     })
   })
 
+  describe('isChargedForOverages', () => {
+    it.each`
+      plan             | expected
+      ${'start-up'}    | ${true}
+      ${'startup-v2'}  | ${true}
+      ${'scale-up-v2'} | ${true}
+      ${'enterprise'}  | ${false}
+      ${'free'}        | ${false}
+      ${null}          | ${false}
+    `('$plan is charged for overages: $expected', ({ expected, plan }) => {
+      expect(isChargedForOverages(subscription({ plan }))).toBe(expected)
+    })
+  })
+
   describe('usageBasisOf', () => {
     it('measures a billed organisation over its billing period', () => {
       const basis = usageBasisOf(
@@ -99,6 +114,18 @@ describe('UsageDashboard utils', () => {
       expect(basis).toEqual({ window: 'billing-period' })
       expect(allowanceWindow(basis)).toBe('current_billing_period')
       expect(allowanceWindowLabel(basis)).toBe('this billing period')
+    })
+
+    // Deliberate: see RollingReason.
+    it('promises a free plan no deadline it cannot keep', () => {
+      const hint = planSectionCopy(
+        usageBasisOf(subscription({}), true),
+        50000,
+      ).hint
+
+      expect(hint).not.toContain('7 day')
+      expect(hint).not.toContain('seven day')
+      expect(hint).not.toContain('pause')
     })
 
     it('measures a free plan over the trailing 30 days, by design', () => {

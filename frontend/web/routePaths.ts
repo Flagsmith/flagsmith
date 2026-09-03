@@ -1,8 +1,7 @@
 import { matchPath } from 'react-router-dom'
 
 // Kept out of web/routes, which imports App: reading a path from there in a
-// component is a cycle, and it already left this map empty at module level
-// once, taking the app down with it.
+// component is a cycle, and it took the app down once.
 export const ORGANISATIONS = '/organisations'
 export const ORGANISATION_USAGE = '/organisation/:organisationId/usage'
 

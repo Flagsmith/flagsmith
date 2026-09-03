@@ -1,8 +1,7 @@
 import { isAllowedWhileBlocked } from 'web/routePaths'
 
 // App renders <Blocked /> wherever this is false, so a wrong answer either
-// locks a blocked organisation out of the page explaining the block, or lets
-// it back into the app.
+// locks a blocked organisation out, or lets it back in.
 describe('isAllowedWhileBlocked', () => {
   it.each`
     pathname                                 | allowed
