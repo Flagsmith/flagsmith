@@ -113,7 +113,10 @@ class ResultsSummary:
     srm_p_value: float | None
     metrics: list[MetricResult]
     # Denominator for the conversion charts, computed in the same run as the
-    # metrics so both sides of the rate share one as_of.
+    # metrics so both sides of the rate share one as_of. Exposures are bucketed
+    # by first exposure and conversions by first conversion, so only running
+    # totals divide: a bucket's own conversions over its own new identities
+    # compares different people and can exceed 100%.
     exposures_timeseries: ExposuresTimeseries
 
 
