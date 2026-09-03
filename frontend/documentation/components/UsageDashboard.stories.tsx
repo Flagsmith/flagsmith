@@ -247,8 +247,9 @@ export const FreeAndRestricted: Story = {
   },
 }
 
-// The block outlives the overage, which is most of that 30 day window.
-export const RestrictedButBackUnderTheLimit: Story = {
+// The block outlives the overage, and support can set it by hand, so with
+// nothing in evidence the banner promises nothing.
+export const RestrictedWithNoOverageInEvidence: Story = {
   args: {
     isRestricted: true,
     limit: 5000000,

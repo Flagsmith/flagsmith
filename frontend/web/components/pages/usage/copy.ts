@@ -24,6 +24,12 @@ const RECOVERY =
   'Upgrading restores access straight away. Otherwise access returns once' +
   ' your usage has stayed under the limit for 30 days.'
 
+// Neither route works for a block support set by hand: the plan-change hook
+// and the unrestricting task both skip organisations with no
+// APILimitAccessBlock. With no overage in evidence we cannot tell the two
+// apart, so we promise nothing.
+const ASK_SUPPORT = 'Contact support to restore access.'
+
 const STAYS_VISIBLE =
   'Your usage stays visible below so you can see what happened.'
 
@@ -36,7 +42,7 @@ export type BannerContext = {
 export const restrictedBannerCopy = (
   over: OverLimit | undefined,
 ): { title: string; body: string } => ({
-  body: sentences(limitReached(over), RECOVERY),
+  body: over ? sentences(limitReached(over), RECOVERY) : ASK_SUPPORT,
   title: 'Your organisation is restricted',
 })
 

@@ -84,10 +84,12 @@ describe('usage copy', () => {
     const { body, title } = restrictedBannerCopy(undefined)
 
     expect(title).toBe('Your organisation is restricted')
-    expect(body).toContain('stayed under the limit for 30 days')
-    // block_access_to_admin can be set by hand, so with no overage in
-    // evidence the copy must not claim the limit was reached.
+    expect(body).toBe('Contact support to restore access.')
+    // block_access_to_admin can be set by hand, and neither recovery route
+    // works for such a block, so with no overage in evidence we promise
+    // nothing.
     expect(body).not.toContain('plan limit')
+    expect(body).not.toContain('Upgrading')
   })
 
   it('says how far over in the note under the meter', () => {
