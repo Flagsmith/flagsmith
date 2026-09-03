@@ -83,7 +83,6 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
           <WarningMessage
             warningMessage={alertMaxApiCallsText}
             warningMessageClass={'announcement'}
-            enabledButton
           />
         ) : (
           maxApiCallsPercentage >= 100 && <QuotaExceededMessage />
