@@ -81,9 +81,11 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     data: usage.scoped,
   })
 
+  const selectedPeriod = periodLabel(periods, billingPeriod)
+
   const scope = [
     selectedProjectId ? projectName : 'All projects',
-    periodLabel(periods, billingPeriod),
+    selectedPeriod,
   ]
     .filter(Boolean)
     .join(' · ')
@@ -114,8 +116,6 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         usage.retry()
       }}
     >
-      {/* Only free plans are ever restricted, so this reports the overage
-          alone. */}
       {exceeded && (
         <OverLimitBanner
           over={exceeded}
@@ -161,7 +161,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
                 : undefined
             }
             isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
-            periodLabel={periodLabel(periods, billingPeriod)}
+            periodLabel={selectedPeriod}
           />
 
           <UsageBreakdown
