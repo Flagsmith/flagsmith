@@ -24,12 +24,7 @@ const TestWebhook: FC<TestWebhookType> = ({ scope, secret, webhookUrl }) => {
       {backendError && <ErrorMessage error={backendError} />}
       {isBackendSuccess && (
         <div style={{ maxWidth: 'fit-content' }}>
-          <SuccessMessage
-            successStyles={{
-              marginBottom: '0',
-              width: 'fit-content !important',
-            }}
-          >
+          <SuccessMessage>
             {'Your API returned with a successful 200 response.'}
           </SuccessMessage>
         </div>
