@@ -1583,6 +1583,28 @@ def test_build_results_summary__value_metric__timeseries_none() -> None:
     assert summary.metrics[0].conversions_timeseries is None
 
 
+def test_build_results_summary__occurrence_metric_no_conversions__empty_series() -> (
+    None
+):
+    # Given an occurrence metric that was charted but nobody converted on yet
+    aggregates = ResultsAggregates(
+        specs=[_spec(metric_id=7, event="purchase")],
+        exposure_counts={"control": 1000},
+        metric_stats={},
+        granularity="day",
+        exposure_buckets=[],
+        conversion_buckets={7: []},
+    )
+
+    # When
+    summary = services.build_results_summary(aggregates, expected_shares={})
+
+    # Then the chart is present and empty, not absent
+    assert summary.metrics[0].conversions_timeseries == ConversionsTimeseries(
+        granularity="day", points=[]
+    )
+
+
 @pytest.mark.django_db
 def test_experiment_metric_specs__attached_metrics__maps_definition_and_direction(
     experiment: Experiment,
