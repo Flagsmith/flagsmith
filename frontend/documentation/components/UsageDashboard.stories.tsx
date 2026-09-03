@@ -141,7 +141,7 @@ const UsagePage: FC<HarnessProps> = ({
       // Nothing to refetch here; passed so FailedToLoad renders its button.
       onRetry={() => {}}
     >
-      {exceeded && (
+      {(exceeded || isRestricted) && (
         <OverLimitBanner
           over={exceeded}
           basis={basis}
