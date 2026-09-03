@@ -8,6 +8,11 @@ export default function BlockedOrgInfo() {
       <div>Organisation name: {AccountStore.getOrganisation().name}</div>
       <div>Organisation ID: {AccountStore.getOrganisation().id}</div>
       <div>
+        <a href={`/organisation/${AccountStore.getOrganisation().id}/usage`}>
+          See your usage
+        </a>
+      </div>
+      <div>
         <a href='/organisations'>Switch to a different organisation</a>
       </div>
       <div>
