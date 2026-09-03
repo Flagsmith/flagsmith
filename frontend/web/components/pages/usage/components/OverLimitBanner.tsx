@@ -6,11 +6,13 @@ import {
   BannerContext,
   overLimitBannerCopy,
   OverLimit,
+  restrictedBannerCopy,
 } from 'components/pages/usage/overLimit'
 import { UsageBasis } from 'components/pages/usage/utils'
 
 export type OverLimitBannerProps = BannerContext & {
-  over: OverLimit
+  /** Absent while restricted but back under the limit. */
+  over?: OverLimit
   basis: UsageBasis
   canUpgrade?: boolean
 }
@@ -22,10 +24,15 @@ const OverLimitBanner: FC<OverLimitBannerProps> = ({
   mayBeCharged,
   over,
 }) => {
-  const { body, title } = overLimitBannerCopy(over, basis, {
-    isRestricted,
-    mayBeCharged,
-  })
+  const copy = isRestricted
+    ? restrictedBannerCopy(over)
+    : over && overLimitBannerCopy(over, basis, { mayBeCharged })
+
+  if (!copy) {
+    return null
+  }
+
+  const { body, title } = copy
 
   return (
     <div

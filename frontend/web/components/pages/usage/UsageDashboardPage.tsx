@@ -72,6 +72,8 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     organisationId ? { id: organisationId } : skipToken,
   )
 
+  // The block outlives going over the limit, so this cannot key off exceeded.
+  const isRestricted = !!organisation?.block_access_to_admin
   const mayBeCharged =
     isBilledOnAPeriod(basis) && isChargedForOverages(subscription)
 
@@ -124,13 +126,13 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         usage.retry()
       }}
     >
-      {exceeded && (
+      {(exceeded || isRestricted) && (
         <OverLimitBanner
           over={exceeded}
           basis={basis}
           canUpgrade={Utils.getFlagsmithHasFeature('payments_enabled')}
           mayBeCharged={mayBeCharged}
-          isRestricted={!!organisation?.block_access_to_admin}
+          isRestricted={isRestricted}
         />
       )}
 

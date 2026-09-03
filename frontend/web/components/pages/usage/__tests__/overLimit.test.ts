@@ -1,6 +1,7 @@
 import {
   limitCrossedOn,
   OverLimit,
+  restrictedBannerCopy,
   overLimitBannerCopy,
   overLimitNote,
   overLimitOf,
@@ -134,6 +135,17 @@ describe('overLimit', () => {
       expect(body).toContain('on 2 Aug')
       // The charge is not the point once they are already cut off.
       expect(body).not.toContain('Overage charges')
+    })
+
+    // The block lifts 30 days after usage drops back under, so for most of
+    // that window there is no overage left to report and the banner still has
+    // to explain why they are cut off.
+    it('explains the restriction with no overage to report', () => {
+      const { body, title } = restrictedBannerCopy(undefined)
+
+      expect(title).toBe('Your organisation is restricted')
+      expect(body).toContain('Upgrading restores access straight away')
+      expect(body).not.toContain('You went over')
     })
 
     it('says how far over in the note under the meter', () => {

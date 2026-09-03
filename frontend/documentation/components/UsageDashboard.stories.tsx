@@ -244,6 +244,16 @@ export const FreeAndRestricted: Story = {
   },
 }
 
+// The block outlives the overage: usage is back under the limit but access
+// has not returned yet, which is most of that 30 day window.
+export const RestrictedButBackUnderTheLimit: Story = {
+  args: {
+    isRestricted: true,
+    limit: 5000000,
+    subscription: subscriptionOf({ plan: 'free' }),
+  },
+}
+
 export const FreeOnARollingWindow: Story = {
   args: { limit: 50000, subscription: subscriptionOf({ plan: 'free' }) },
 }

@@ -42,11 +42,18 @@ const chargeWarning = (basis: UsageBasis, mayBeCharged: boolean): string =>
 // 100% notification has fired for 30 days, and a plan change clears it at
 // once. What is actually paused needs stop_serving_flags on the response
 // (#8256), so this says access rather than naming a service.
-const restrictedCopy = (over: OverLimit): { title: string; body: string } => ({
+// Takes no OverLimit: the block outlives going over it, so through that
+// 30 day window usage is back under the limit and there is nothing to report.
+export const restrictedBannerCopy = (
+  over: OverLimit | undefined,
+): { title: string; body: string } => ({
   body: [
-    `You went over your ${Format.shortenNumber(over.limit)} plan limit`,
-    over.crossedOn ? ` on ${over.crossedOn}` : '',
-    '. Upgrading restores access straight away. Otherwise it returns 30 days',
+    over
+      ? `You went over your ${Format.shortenNumber(over.limit)} plan limit${
+          over.crossedOn ? ` on ${over.crossedOn}` : ''
+        }. `
+      : '',
+    'Upgrading restores access straight away. Otherwise it returns 30 days',
     ' after your usage drops back under the limit.',
   ].join(''),
   title: 'Your organisation is restricted',
@@ -65,7 +72,7 @@ export const overLimitBannerCopy = (
   { isRestricted, mayBeCharged }: BannerContext = {},
 ): { title: string; body: string } =>
   isRestricted
-    ? restrictedCopy(over)
+    ? restrictedBannerCopy(over)
     : {
         body: [
           `You reached 100% of your ${Format.shortenNumber(
