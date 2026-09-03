@@ -14,6 +14,13 @@ if LDAP_INSTALLED:
     INSTALLED_APPS = INSTALLED_APPS + ["flagsmith_ldap"]
     LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID = None
 
+# Otherwise rule and condition ordering is whatever the database returns.
+# ConfiguredOrderManager reads these when the manager is constructed, so they
+# cannot be set per test, and both derived names are needed because common.py
+# resolves them at import time.
+SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED = True
+SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED = True
+
 # We dont want to track tests
 ENABLE_TELEMETRY = False
 MAX_PROJECTS_IN_FREE_PLAN = 10
