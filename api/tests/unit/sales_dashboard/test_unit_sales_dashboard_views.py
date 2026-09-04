@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 
 import pytest
 from django.test import Client, RequestFactory
@@ -8,6 +8,7 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework.test import APIClient
 
+from app_analytics.dataclasses import UsageData
 from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from organisations.models import (
     Organisation,
@@ -65,23 +66,35 @@ def test_get_organisation_info__valid_organisation__returns_event_list(
 
     url = reverse("sales_dashboard:organisation_info", args=[organisation.id])
 
-    event_list_mock = mocker.patch(
-        "sales_dashboard.views.get_event_list_for_organisation"
-    )
-    event_list_mock.return_value = (
-        {"traits": [], "identities": [], "flags": [], "environment-document": []},
-        ["label1", "label2"],
-    )
+    usage_data_mock = mocker.patch("sales_dashboard.views.get_usage_data")
+    usage_data_mock.return_value = [
+        UsageData(
+            day=date(2026, 6, 27),
+            flags=3_158,
+            labels={"client_application_name": "small-app"},
+        ),
+        UsageData(
+            day=date(2026, 6, 27),
+            flags=238_574,
+            labels={"client_application_name": "busy-app"},
+        ),
+    ]
     mocker.patch("sales_dashboard.views.get_events_for_organisation")
 
     # When
     response = superuser_client.get(url)
 
     # Then
-    assert "label1" in str(response.content)
-    assert "label2" in str(response.content)
-    date_start = timezone.now() - timedelta(days=180)
-    event_list_mock.assert_called_once_with(organisation.id, date_start)
+    content = str(response.content)
+    assert "2026-06-27" in content
+    # Both client applications' usage for the day, not just one of them.
+    assert "241732" in content
+    now = timezone.now()
+    usage_data_mock.assert_called_once_with(
+        organisation.id,
+        date_start=now - timedelta(days=180),
+        date_stop=now,
+    )
 
 
 def test_list_organisations__search_by_name__returns_matching_organisation(
