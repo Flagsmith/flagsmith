@@ -17,7 +17,7 @@ For example, RBAC allows you to achieve the following scenarios:
 
 - Only allow certain users to modify your production environments.
 - Grant a default set of permissions to all users that join your Flagsmith organisation.
-- Lock down an [Management API](/integrating-with-flagsmith/flagsmith-api-overview/management-api) key to a specific set of permissions.
+- Lock down a [Management API](/integrating-with-flagsmith/flagsmith-api-overview/management-api) key to a specific set of permissions.
 - Provide Flagsmith permissions based on your enterprise identity provider's groups when using
   [SAML single sign-on](/administration-and-security/access-control/saml).
 
