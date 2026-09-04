@@ -189,7 +189,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-tertiary</code>
             </td>
             <td>
-              <code>var(--slate-300)</code>
+              <code>var(--slate-500)</code>
             </td>
           </tr>
           <tr>
