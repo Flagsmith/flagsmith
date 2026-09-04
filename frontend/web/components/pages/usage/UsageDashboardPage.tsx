@@ -1,18 +1,22 @@
-import { FC, useState } from 'react'
+import { FC, useMemo, useState } from 'react'
 import { skipToken } from '@reduxjs/toolkit/query'
 import Utils, { planNames } from 'common/utils/utils'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
-import ProjectFilter from 'components/ProjectFilter'
-import { PeriodOption } from 'common/types/requests'
+import OverLimitBanner from './components/OverLimitBanner'
+import SectionHeading from './components/SectionHeading'
 import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
-import UsageDashboard from './UsageDashboard'
+import UsageFilters from './components/UsageFilters'
+import UsageMeter from './components/UsageMeter'
+import UsageOverTime from './components/UsageOverTime'
+import UsagePageLayout from './components/UsagePageLayout'
 import { useUsageData } from './useUsageData'
+import { contributionNote, overLimitNote, planSectionCopy } from './copy'
+import { overLimitOf } from './overLimit'
 import {
   isBilledOnAPeriod,
   isBillingPeriodSelected,
-  contributionNote,
-  planSectionCopy,
+  isChargedForOverages,
   showsContribution,
   showsPlanCeiling,
   periodLabel,
@@ -21,7 +25,6 @@ import {
   usageBasisOf,
   resolvePeriod,
 } from './utils'
-import './UsageDashboardPage.scss'
 
 type UsageDashboardPageProps = {
   organisationId: number | undefined
@@ -68,84 +71,119 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     organisationId ? { id: organisationId } : skipToken,
   )
 
+  // The block outlives going over the limit, so this cannot key off exceeded.
+  const isRestricted = !!organisation?.block_access_to_admin
+  const mayBeCharged =
+    isBilledOnAPeriod(basis) && isChargedForOverages(subscription)
+
+  const limit = subscriptionMeta?.max_api_calls
+  const allowanceTotal = usage.allowance?.totals?.total ?? 0
+  // Walks every day in the window to find the crossing, so not per render.
+  const exceeded = useMemo(
+    () => overLimitOf(allowanceTotal, limit, usage.allowance),
+    [allowanceTotal, limit, usage.allowance],
+  )
+
   const periods = periodsFor(planIsBilled)
 
   const { setDimension, ...breakdown } = useUsageBreakdown({
     data: usage.scoped,
   })
 
+  const selectedPeriod = periodLabel(periods, billingPeriod)
+
   const scope = [
     selectedProjectId ? projectName : 'All projects',
-    periodLabel(periods, billingPeriod),
+    selectedPeriod,
   ]
     .filter(Boolean)
     .join(' · ')
+
+  const contribution =
+    showsContribution(basis, billingPeriod, selectedProjectId) && projectName
+      ? contributionNote(
+          projectName,
+          usage.scoped?.totals?.total ?? 0,
+          allowanceTotal,
+        )
+      : undefined
+
+  // One line, so being over the limit outranks the project's share.
+  const meterNote = exceeded ? overLimitNote(exceeded) : contribution
 
   if (!organisationId) {
     return null
   }
 
   return (
-    <UsageDashboard
-      data={usage.scoped}
-      total={usage.allowanceTotal}
-      limit={subscriptionMeta?.max_api_calls}
-      hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
-      planCopy={planSectionCopy(basis, subscriptionMeta?.max_api_calls)}
-      periodLabel={periodLabel(periods, billingPeriod)}
-      showPlanCeiling={showsPlanCeiling(billingPeriod, selectedProjectId)}
-      meterNote={
-        showsContribution(basis, billingPeriod, selectedProjectId) &&
-        projectName
-          ? contributionNote(
-              projectName,
-              usage.scoped?.totals?.total ?? 0,
-              usage.allowanceTotal,
-            )
-          : undefined
-      }
-      breakdown={
-        <UsageBreakdown
-          {...breakdown}
-          onChangeDimension={setDimension}
-          scope={scope}
-        />
-      }
+    <UsagePageLayout
       isError={organisationFailed || usage.failed || limitFailed}
       isLoading={loadingOrganisation || usage.isLoadingPlan || loadingLimit}
-      isExploring={usage.isLoadingScoped}
+      alert={
+        (exceeded || isRestricted) && (
+          <OverLimitBanner
+            over={exceeded}
+            basis={basis}
+            canUpgrade={Utils.getFlagsmithHasFeature('payments_enabled')}
+            mayBeCharged={mayBeCharged}
+            isRestricted={isRestricted}
+          />
+        )
+      }
       onRetry={() => {
         refetchOrganisation()
         refetchLimit()
         usage.retry()
       }}
-      filters={
-        <Row className='gap-2'>
-          <div className='usage-dashboard__filter'>
-            <Select
-              aria-label='Period'
-              inputId='usage-period'
-              onChange={(option: PeriodOption) => setChosenPeriod(option.value)}
-              value={periods.find((period) => period.value === billingPeriod)}
-              options={periods}
-            />
-          </div>
-          <div className='usage-dashboard__filter'>
-            <ProjectFilter
-              aria-label='Project'
-              inputId='usage-project'
-              showAll
-              organisationId={organisationId}
-              onChange={(id: string, name: string) => {
-                setProject(id)
-                setProjectName(name)
-              }}
-              value={project}
-            />
-          </div>
-        </Row>
-      }
-    />
+    >
+      <SectionHeading {...planSectionCopy(basis, limit)} />
+
+      <UsageMeter total={allowanceTotal} limit={limit} note={meterNote} />
+
+      <SectionHeading
+        title='Explore usage'
+        hint='Narrow the chart and the breakdown by period or project.'
+        action={
+          <UsageFilters
+            organisationId={organisationId}
+            periods={periods}
+            period={billingPeriod}
+            onChangePeriod={setChosenPeriod}
+            projectId={project}
+            onChangeProject={(id, name) => {
+              setProject(id)
+              setProjectName(name)
+            }}
+          />
+        }
+      />
+
+      {/* Only the filtered half reloads, so the meter above stays put. */}
+      {usage.isLoadingScoped ? (
+        <div className='text-center py-5'>
+          <Loader />
+        </div>
+      ) : (
+        <>
+          <UsageOverTime
+            data={usage.scoped}
+            limit={
+              showsPlanCeiling(billingPeriod, selectedProjectId)
+                ? limit
+                : undefined
+            }
+            isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
+            periodLabel={selectedPeriod}
+          />
+
+          <UsageBreakdown
+            {...breakdown}
+            onChangeDimension={setDimension}
+            scope={scope}
+          />
+        </>
+      )}
+    </UsagePageLayout>
   )
 }
 

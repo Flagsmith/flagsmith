@@ -1,18 +1,27 @@
 import { FC, useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
-import { UsageDashboard } from 'components/pages/usage'
+import UsagePageLayout from 'components/pages/usage/components/UsagePageLayout'
+import OverLimitBanner from 'components/pages/usage/components/OverLimitBanner'
+import SectionHeading from 'components/pages/usage/components/SectionHeading'
 import UsageBreakdown, {
   useUsageBreakdown,
 } from 'components/pages/usage/components/UsageBreakdown'
+import UsageMeter from 'components/pages/usage/components/UsageMeter'
+import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
+import {
+  contributionNote,
+  overLimitNote,
+  planSectionCopy,
+} from 'components/pages/usage/copy'
+import { overLimitOf } from 'components/pages/usage/overLimit'
 import {
   allowanceWindow,
-  contributionNote,
   isBilledOnAPeriod,
   isBillingPeriodSelected,
+  isChargedForOverages,
   periodLabel,
   periodsFor,
   PeriodSelection,
-  planSectionCopy,
   resolvePeriod,
   showsContribution,
   showsPlanCeiling,
@@ -22,6 +31,10 @@ import { BillingPeriod, PeriodOption } from 'common/types/requests'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import { Subscription } from 'common/types/responses'
 import { toUsageResponse, USAGE_SCENARIOS } from './fixtures/usage'
+
+// UsageFilters sets this in its stylesheet, which the harness never loads:
+// it fakes the project select rather than rendering the real component.
+const FILTER_WIDTH = { minWidth: 210 }
 
 const PROJECTS = [
   'All Projects',
@@ -69,6 +82,7 @@ type HarnessProps = {
   empty?: boolean
   isLoading?: boolean
   isError?: boolean
+  isRestricted?: boolean
 }
 
 /**
@@ -79,6 +93,7 @@ const UsagePage: FC<HarnessProps> = ({
   empty,
   isError,
   isLoading,
+  isRestricted,
   limit,
   scale = 1,
   subscription,
@@ -99,10 +114,20 @@ const UsagePage: FC<HarnessProps> = ({
     scenarioFor(billingPeriod, !!empty, isFreePlan),
     share * scale,
   )
-  const allowanceTotal = toUsageResponse(
+  const allowance = toUsageResponse(
     scenarioFor(allowanceWindow(basis), !!empty, isFreePlan),
     scale,
-  ).totals.total
+  )
+  const allowanceTotal = allowance.totals.total
+  const exceeded = overLimitOf(allowanceTotal, limit, allowance)
+
+  const contribution = showsContribution(
+    basis,
+    billingPeriod,
+    filtered ? 1 : undefined,
+  )
+    ? contributionNote(project, scoped.totals.total, allowanceTotal)
+    : undefined
 
   // The note needs the organisation over the period on screen, not over the
   // allowance window, or a project can read as more than all of it.
@@ -114,53 +139,79 @@ const UsagePage: FC<HarnessProps> = ({
   )}`
 
   return (
-    <UsageDashboard
-      breakdown={
-        <UsageBreakdown
-          {...breakdown}
-          onChangeDimension={setDimension}
-          scope={scope}
-        />
-      }
-      data={scoped}
-      filters={
-        <Row className='gap-2'>
-          <div style={{ minWidth: 210 }}>
-            <Select
-              aria-label='Period'
-              onChange={(option: PeriodOption) => setChosenPeriod(option.value)}
-              options={periods}
-              value={periods.find((option) => option.value === billingPeriod)}
-            />
-          </div>
-          <div style={{ minWidth: 210 }}>
-            <Select
-              aria-label='Project'
-              onChange={(option: { value: string }) => setProject(option.value)}
-              options={PROJECTS.map((name) => ({ label: name, value: name }))}
-              value={{ label: project, value: project }}
-            />
-          </div>
-        </Row>
-      }
-      hasBillingPeriod={isBillingPeriodSelected(billingPeriod)}
+    <UsagePageLayout
       isError={isError}
       isLoading={isLoading}
-      limit={limit}
-      meterNote={
-        showsContribution(basis, billingPeriod, filtered ? 1 : undefined)
-          ? contributionNote(project, scoped.totals.total, allowanceTotal)
-          : undefined
+      alert={
+        (exceeded || isRestricted) && (
+          <OverLimitBanner
+            over={exceeded}
+            basis={basis}
+            canUpgrade
+            isRestricted={isRestricted}
+            mayBeCharged={
+              isBilledOnAPeriod(basis) && isChargedForOverages(subscription)
+            }
+          />
+        )
       }
+      // Nothing to refetch here; passed so FailedToLoad renders its button.
       onRetry={() => {}}
-      periodLabel={periodLabel(periods, billingPeriod)}
-      planCopy={planSectionCopy(basis, limit)}
-      showPlanCeiling={showsPlanCeiling(
-        billingPeriod,
-        filtered ? 1 : undefined,
-      )}
-      total={allowanceTotal}
-    />
+    >
+      <SectionHeading {...planSectionCopy(basis, limit)} />
+
+      <UsageMeter
+        total={allowanceTotal}
+        limit={limit}
+        note={exceeded ? overLimitNote(exceeded) : contribution}
+      />
+
+      <SectionHeading
+        title='Explore usage'
+        hint='Narrow the chart and the breakdown by period or project.'
+        action={
+          <Row className='gap-2'>
+            <div style={FILTER_WIDTH}>
+              <Select
+                aria-label='Period'
+                onChange={(option: PeriodOption) =>
+                  setChosenPeriod(option.value)
+                }
+                options={periods}
+                value={periods.find((option) => option.value === billingPeriod)}
+              />
+            </div>
+            <div style={FILTER_WIDTH}>
+              <Select
+                aria-label='Project'
+                onChange={(option: { value: string }) =>
+                  setProject(option.value)
+                }
+                options={PROJECTS.map((name) => ({ label: name, value: name }))}
+                value={{ label: project, value: project }}
+              />
+            </div>
+          </Row>
+        }
+      />
+
+      <UsageOverTime
+        data={scoped}
+        limit={
+          showsPlanCeiling(billingPeriod, filtered ? 1 : undefined)
+            ? limit
+            : undefined
+        }
+        isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
+        periodLabel={periodLabel(periods, billingPeriod)}
+      />
+
+      <UsageBreakdown
+        {...breakdown}
+        onChangeDimension={setDimension}
+        scope={scope}
+      />
+    </UsagePageLayout>
   )
 }
 
@@ -183,8 +234,28 @@ export const PaidApproachingTheLimit: Story = {
   args: { limit: 1400000, subscription: billed },
 }
 
+// Billed on a term, so the banner mentions charges.
 export const PaidOverTheLimit: Story = {
   args: { limit: 900000, subscription: billed },
+}
+
+// Only free plans are ever restricted, and this is where they are sent.
+export const FreeAndRestricted: Story = {
+  args: {
+    isRestricted: true,
+    limit: 50000,
+    subscription: subscriptionOf({ plan: 'free' }),
+  },
+}
+
+// The block outlives the overage, and support can set it by hand, so with
+// nothing in evidence the banner promises nothing.
+export const RestrictedWithNoOverageInEvidence: Story = {
+  args: {
+    isRestricted: true,
+    limit: 5000000,
+    subscription: subscriptionOf({ plan: 'free' }),
+  },
 }
 
 export const FreeOnARollingWindow: Story = {
@@ -196,6 +267,17 @@ export const FreeOnARollingWindow: Story = {
 export const EnterpriseWithoutABillingPeriod: Story = {
   args: {
     limit: 50000000,
+    subscription: subscriptionOf({
+      payment_method: 'XERO',
+      plan: 'enterprise',
+    }),
+  },
+}
+
+// Invoiced outside Chargebee, so no charge line.
+export const EnterpriseOverTheLimit: Story = {
+  args: {
+    limit: 1000000,
     subscription: subscriptionOf({
       payment_method: 'XERO',
       plan: 'enterprise',
