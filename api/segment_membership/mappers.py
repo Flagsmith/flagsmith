@@ -17,7 +17,6 @@ def map_identity_document_to_clickhouse_row(
     composite_key = identity_doc["composite_key"]
     raw_traits = identity_doc.get("identity_traits")
     traits = _flatten_traits(raw_traits) if raw_traits else None
-    # The stored `system_traits` attribute may be NULL, which counts as absent.
     if raw_system_traits := identity_doc.get("system_traits"):
         # System-owned traits are not user data: on a key clash, the system
         # value wins — the same precedence flag evaluation applies. Dropping
