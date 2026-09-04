@@ -28115,7 +28115,7 @@ components:
       type: object
       properties:
         access_token:
-          description: Short-lived access token for the Admin API.
+          description: Short-lived access token for the Management API.
           type: string
         token_type:
           description: Always "Bearer".
@@ -29884,7 +29884,7 @@ components:
       type: apiKey
       in: header
       name: Authorization
-      description: 'For Admin API endpoints. <a href=''https://docs.flagsmith.com/clients/rest#private-api-endpoints''>Find out more</a>.'
+      description: 'For Management API endpoints. <a href=''https://docs.flagsmith.com/integrating-with-flagsmith/flagsmith-api-overview/management-api''>Find out more</a>.'
     basicAuth:
       type: http
       scheme: basic
