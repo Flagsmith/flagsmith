@@ -9,6 +9,11 @@ type ColorSwatchProps = {
   size?: ColorSwatchSize
   shape?: ColorSwatchShape
   className?: string
+  /**
+   * Fade the swatch, for series drawn with an SVG `fill-opacity`. Colours can
+   * be CSS `var()` strings, so transparency can't come from an alpha channel.
+   */
+  opacity?: number
 }
 
 const SIZE_MAP: Record<ColorSwatchSize, number> = {
@@ -25,6 +30,7 @@ const SHAPE_CLASS: Record<ColorSwatchShape, string> = {
 const ColorSwatch: FC<ColorSwatchProps> = ({
   className,
   color,
+  opacity,
   shape = 'square',
   size = 'md',
 }) => (
@@ -38,6 +44,7 @@ const ColorSwatch: FC<ColorSwatchProps> = ({
     style={{
       backgroundColor: color,
       height: SIZE_MAP[size],
+      opacity,
       width: SIZE_MAP[size],
     }}
   />

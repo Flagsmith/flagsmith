@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { ChartDataPoint } from 'components/charts'
+import { BarSeries, ChartDataPoint } from 'components/charts'
 import {
   BayesianResultsSummary,
   ConversionsTimeseries,
@@ -156,11 +156,7 @@ export type ConversionStackMode = 'cumulative' | 'daily'
 
 export type ConversionStackChartData = {
   points: ChartDataPoint[]
-  series: string[]
-  seriesLabels: Record<string, string>
-  colorMap: Record<string, string>
-  opacityMap: Record<string, number>
-  stackMap: Record<string, string>
+  series: BarSeries[]
 }
 
 // Stacked-bar encodings of exposures vs conversions per variant.
@@ -180,27 +176,29 @@ export const buildConversionStackChartData = (
   if (!exposures || !conversions) return null
 
   const daily = mode === 'daily'
-  const series: string[] = []
-  const seriesLabels: Record<string, string> = {}
-  const colorMap: Record<string, string> = {}
-  const opacityMap: Record<string, number> = {}
-  const stackMap: Record<string, string> = {}
-  identities.forEach((v) => {
+  const series: BarSeries[] = identities.flatMap((v) => {
     const restKey = `${v.key}${REST_SUFFIX}`
-    series.push(v.key, restKey)
-    seriesLabels[v.key] = daily
-      ? `${v.name} conversions`
-      : `${v.name} converted`
-    seriesLabels[restKey] = daily
-      ? `${v.name} new exposures`
-      : `${v.name} exposures`
-    colorMap[v.key] = v.colour
-    // The faded series reuses the variant colour via fill-opacity (palette
-    // colours are CSS var() strings, so no alpha channel can be appended).
-    colorMap[restKey] = v.colour
-    opacityMap[restKey] = 0.25
-    stackMap[v.key] = v.key
-    stackMap[restKey] = daily ? restKey : v.key
+    return [
+      {
+        colour: v.colour,
+        key: v.key,
+        label: daily ? `${v.name} conversions` : `${v.name} converted`,
+        stackId: v.key,
+      },
+      {
+        // The faded segment reuses the variant colour via fill-opacity
+        // (palette colours are CSS var() strings, so no alpha channel can be
+        // appended).
+        colour: v.colour,
+        key: restKey,
+        label: daily ? `${v.name} new exposures` : `${v.name} exposures`,
+        opacity: 0.25,
+        // Cumulative segments are part-of-whole, so they share the variant's
+        // stack. Daily ones are not (a day's first conversions can exceed its
+        // new exposures), so they sit side by side.
+        stackId: daily ? restKey : v.key,
+      },
+    ]
   })
 
   const points: ChartDataPoint[] = accumulateBuckets(
@@ -217,5 +215,5 @@ export const buildConversionStackChartData = (
     })
     return point
   })
-  return { colorMap, opacityMap, points, series, seriesLabels, stackMap }
+  return { points, series }
 }

@@ -3,6 +3,7 @@ import EmptyState from 'components/EmptyState'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentTagSelect from 'components/EnvironmentTagSelect'
 import BarChart from 'components/charts/BarChart'
+import { toBarSeries } from 'components/charts/toBarSeries'
 import { MultiSelect } from 'components/base/select/multi-select'
 import { useGetFeatureAnalyticsQuery } from 'common/services/useFeatureAnalytics'
 import Utils from 'common/utils/utils'
@@ -136,17 +137,18 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
           (isLabelled ? (
             <BarChart
               data={labelledChartData}
-              series={filteredLabels}
-              colorMap={labelColorMap}
+              series={toBarSeries(filteredLabels, labelColorMap)}
               xAxisInterval={2}
               showLegend
             />
           ) : (
             <BarChart
               data={data?.chartData || []}
-              series={envChart.series}
-              colorMap={envChart.colorMap}
-              seriesLabels={envChart.seriesLabels}
+              series={toBarSeries(
+                envChart.series,
+                envChart.colorMap,
+                envChart.seriesLabels,
+              )}
               xAxisInterval={2}
             />
           ))}

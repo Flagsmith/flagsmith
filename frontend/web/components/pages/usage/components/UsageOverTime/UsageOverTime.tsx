@@ -51,9 +51,9 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
   ) : (
     <BarChart
       data={daily}
-      series={['total']}
-      seriesLabels={{ total: 'API calls' }}
-      colorMap={{ total: colorSurfaceAction }}
+      series={[
+        { colour: colorSurfaceAction, key: 'total', label: 'API calls' },
+      ]}
       xAxisInterval={xAxisInterval}
       verticalGrid={false}
       barSize={14}

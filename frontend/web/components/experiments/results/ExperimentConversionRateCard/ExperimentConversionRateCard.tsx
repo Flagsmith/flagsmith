@@ -117,16 +117,11 @@ const ExperimentConversionRateCard: FC<ExperimentConversionRateCardProps> = ({
             />
           </div>
           <BarChart
-            colorMap={chart.colorMap}
             data={chart.points}
             height={260}
-            opacityMap={chart.opacityMap}
             series={chart.series}
-            seriesLabels={chart.seriesLabels}
             showLegend
-            stackMap={chart.stackMap}
-            tooltipHideTotal
-            tooltipValueFormatter={formatTooltipValue}
+            tooltip={{ formatValue: formatTooltipValue }}
           />
           <span className='text-muted fs-caption'>
             {asOf

@@ -3,6 +3,7 @@ import {
   buildConversionRateChartData,
   buildConversionStackChartData,
 } from 'components/experiments/results/deriveConversionRate'
+import type { ConversionStackChartData } from 'components/experiments/results/deriveConversionRate'
 import type { VariantIdentity } from 'components/experiments/results/derive'
 import {
   BayesianMetricResult,
@@ -204,6 +205,9 @@ describe('buildConversionRateChartData', () => {
   })
 })
 
+const seriesFor = (chart: ConversionStackChartData | null, key: string) =>
+  chart?.series.find((s) => s.key === key)
+
 describe('buildConversionStackChartData', () => {
   const exposures = exposuresTs([
     {
@@ -273,12 +277,14 @@ describe('buildConversionStackChartData', () => {
       },
     ])
     // Segments stack per variant; the remainder fades the variant colour.
-    expect(chart?.stackMap[`control${REST_SUFFIX}`]).toBe('control')
-    expect(chart?.stackMap.control).toBe('control')
-    expect(chart?.opacityMap[`control${REST_SUFFIX}`]).toBe(0.25)
-    expect(chart?.seriesLabels[`control${REST_SUFFIX}`]).toBe(
-      'Control exposures',
-    )
+    expect(seriesFor(chart, 'control')?.stackId).toBe('control')
+    expect(seriesFor(chart, `control${REST_SUFFIX}`)).toEqual({
+      colour: '#111111',
+      key: `control${REST_SUFFIX}`,
+      label: 'Control exposures',
+      opacity: 0.25,
+      stackId: 'control',
+    })
   })
 
   it('plots raw per-bucket increments side by side in daily mode', () => {
@@ -309,12 +315,13 @@ describe('buildConversionStackChartData', () => {
     // Daily quantities are not part-of-whole (a day's first conversions can
     // exceed its new exposures), so each series gets its own stack
     // (side-by-side bars) and the faded series becomes "new exposures".
-    expect(chart?.stackMap.control).toBe('control')
-    expect(chart?.stackMap[`control${REST_SUFFIX}`]).toBe(
-      `control${REST_SUFFIX}`,
-    )
-    expect(chart?.seriesLabels[`control${REST_SUFFIX}`]).toBe(
-      'Control new exposures',
-    )
+    expect(seriesFor(chart, 'control')?.stackId).toBe('control')
+    expect(seriesFor(chart, `control${REST_SUFFIX}`)).toEqual({
+      colour: '#111111',
+      key: `control${REST_SUFFIX}`,
+      label: 'Control new exposures',
+      opacity: 0.25,
+      stackId: `control${REST_SUFFIX}`,
+    })
   })
 })
