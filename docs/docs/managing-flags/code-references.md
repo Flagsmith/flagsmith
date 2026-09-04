@@ -133,5 +133,5 @@ Feature details will expand on the _Usage_ tab, and list locations of each code 
 
 ## Related
 
-- [Admin API Authentication](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication): Generate API keys for Code References
+- [Management API Authentication](/integrating-with-flagsmith/flagsmith-api-overview/management-api/authentication): Generate API keys for Code References
 - [Flag Lifecycle](/best-practices/flag-lifecycle): Learn when to remove short-lived flags from your code

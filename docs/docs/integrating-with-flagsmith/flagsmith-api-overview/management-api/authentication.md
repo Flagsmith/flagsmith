@@ -3,7 +3,7 @@ title: Authentication
 sidebar_label: Authentication
 ---
 
-To interact with the Admin API, you need to authenticate your requests using an API Token associated with your
+To interact with the Management API, you need to authenticate your requests using an API Token associated with your
 Organisation, or a short-lived access token obtained through an [OIDC trust relationship](#oidc-trust-relationships).
 
 :::info
@@ -36,13 +36,13 @@ An API token acts with the permissions selected when it was created: either full
 projects within that organisation — or a set of RBAC roles. Be sure to keep it secure and never expose it in client-side
 applications.
 
-For SaaS customers, the base URL for the Admin API is `https://api.flagsmith.com/`. If you are self-hosting, you will
+For SaaS customers, the base URL for the Management API is `https://api.flagsmith.com/`. If you are self-hosting, you will
 need to use your own API URL.
 
 ## OIDC trust relationships
 
 Trust relationships let a workload that already has an OIDC identity — for example, a GitHub Actions job — call the
-Admin API without any stored secrets. The workload exchanges its OIDC token for a short-lived Flagsmith access token, in
+Management API without any stored secrets. The workload exchanges its OIDC token for a short-lived Flagsmith access token, in
 the same way cloud providers implement workload identity federation.
 
 ### Configuring a trust relationship
@@ -99,7 +99,7 @@ A successful exchange returns a short-lived access token:
 }
 ```
 
-Use it as a bearer token on Admin API requests:
+Use it as a bearer token on Management API requests:
 
 ```bash
 Authorization: Bearer <ACCESS TOKEN>

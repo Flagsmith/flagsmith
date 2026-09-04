@@ -77,7 +77,7 @@ flagsmith api /projects/                         # call any Flagsmith endpoint w
 Common conventions:
 
 - `--json` for machine-readable output; `--jq <expr>` to filter it.
-- Static credentials: `FLAGSMITH_API_KEY` (Admin API) or `FLAGSMITH_ENVIRONMENT_KEY` (SDK).
+- Static credentials: `FLAGSMITH_API_KEY` (Management API) or `FLAGSMITH_ENVIRONMENT_KEY` (SDK).
 - Self-hosted: `--api-url` or `FLAGSMITH_API_URL`.
 
 For the full command reference, see the [README](https://github.com/Flagsmith/flagsmith-cli#commands).
@@ -87,7 +87,7 @@ For the full command reference, see the [README](https://github.com/Flagsmith/fl
 ### GitHub Actions
 
 Configure an
-[OIDC trust relationship](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication#oidc-trust-relationships)
+[OIDC trust relationship](/integrating-with-flagsmith/flagsmith-api-overview/management-api/authentication#oidc-trust-relationships)
 for your repository, then use the [`Flagsmith/setup-cli`](https://github.com/Flagsmith/setup-cli) action:
 
 <!-- prettier-ignore -->
@@ -110,7 +110,7 @@ them explicitly with `--project` and `--environment`.
 ### Other providers
 
 If your CI provider supports OIDC, you can set up
-[a generic trust relationship](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication#other-oidc-providers)
+[a generic trust relationship](/integrating-with-flagsmith/flagsmith-api-overview/management-api/authentication#other-oidc-providers)
 for it.
 
 Here are some of the CI providers that support OIDC:
@@ -129,7 +129,7 @@ Here are some of the CI providers that support OIDC:
 
 On CI systems that don't support OIDC, pass a static credential instead. Management commands expect a
 `FLAGSMITH_API_KEY` variable (a
-[Master API Key](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication#generating-an-api-token)).
+[Master API Key](/integrating-with-flagsmith/flagsmith-api-overview/management-api/authentication#generating-an-api-token)).
 
 If you only need `flagsmith eval`, providing an environment key via `FLAGSMITH_ENVIRONMENT_KEY` variable containing a
 [client-side](/integrating-with-flagsmith/flagsmith-api-overview/flags-api/authentication) or

@@ -46,7 +46,7 @@ We **will not** export the following entities:
 - Audit logs
 - Change requests
 - Scheduled flag changes
-- Admin API keys
+- Management API keys
 - Groups and custom roles
 - SAML configurations and login method restrictions
 
@@ -179,7 +179,7 @@ following methods:
   the URL bar: `https://flagsmith.example.com/organisation/YOUR_ORGANISATION_ID/...`.
 * From [Django Admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin), browse to the Organisations section in the sidebar. 
   Here you can see all of your organisations and their IDs. 
-* If you have an Admin API key, call the
+* If you have a Management API key, call the
   [List Organisations API endpoint](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_organisations_list). This 
   returns all the organisations that your API key is a member of.
 

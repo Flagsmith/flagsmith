@@ -987,7 +987,9 @@ OAUTH2_PROVIDER = {
     "ALLOWED_CODE_CHALLENGE_METHODS": ["S256"],
     "SCOPES": {
         "mcp": "MCP access",
-        "admin-api": "Admin API access",
+        # NB: the `admin-api` key is a published OAuth scope identifier sent by
+        # the Flagsmith CLI — only the human-readable label may change.
+        "admin-api": "Management API access",
     },
     "DEFAULT_SCOPES": ["mcp"],
     "SCOPES_BACKEND_CLASS": "oauth2_metadata.scopes.FlagsmithScopes",
