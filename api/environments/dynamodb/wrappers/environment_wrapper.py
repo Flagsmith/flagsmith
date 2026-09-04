@@ -3,7 +3,7 @@ import typing
 from typing import Any, Iterable
 
 import structlog
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import ConditionBase, Key
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import prefetch_related_objects
@@ -35,7 +35,7 @@ from util.util import iter_paired_chunks
 from .base import BaseDynamoWrapper
 
 if typing.TYPE_CHECKING:
-    from mypy_boto3_dynamodb.type_defs import QueryInputRequestTypeDef
+    from mypy_boto3_dynamodb.type_defs import QueryInputTableQueryTypeDef
 
     from environments.models import Environment
     from util.dataclasses import CompressedEnvironmentDocument
@@ -63,6 +63,9 @@ class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper, abc.ABC):
     ) -> "CompressedEnvironmentDocument": ...
 
     def _write_environments(self, environments: Iterable["Environment"]) -> None:
+        # Materialise once: prefetch_related_objects needs a Sequence, and the write
+        # loop below iterates again, which would come up empty for a generator.
+        environments = list(environments)
         openfeature_client = get_openfeature_client()
         prefetch_related_objects(
             environments,
@@ -157,8 +160,8 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         self,
         environment_id: int,
         feature_id: None | int,
-    ) -> Key:
-        return Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(  # type: ignore[return-value]
+    ) -> ConditionBase:
+        return Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
             str(environment_id),
         ) & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
             get_environments_v2_identity_override_document_key(
@@ -202,8 +205,8 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
     def delete_environment(self, environment_id: int):  # type: ignore[no-untyped-def]
         environment_id = str(environment_id)  # type: ignore[assignment]
         filter_expression = Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(environment_id)
-        query_kwargs: "QueryInputRequestTypeDef" = {  # type: ignore[typeddict-item]
-            "KeyConditionExpression": filter_expression,  # type: ignore[typeddict-item]
+        query_kwargs: "QueryInputTableQueryTypeDef" = {
+            "KeyConditionExpression": filter_expression,
             "ProjectionExpression": "document_key",
         }
         with self.table.batch_writer() as writer:  # type: ignore[union-attr]
@@ -219,8 +222,8 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         filter_expression = self.get_identity_overrides_key_condition_expression(
             environment_id=environment_id, feature_id=feature_id
         )
-        query_kwargs: "QueryInputRequestTypeDef" = {  # type: ignore[typeddict-item]
-            "KeyConditionExpression": filter_expression,  # type: ignore[typeddict-item]
+        query_kwargs: "QueryInputTableQueryTypeDef" = {
+            "KeyConditionExpression": filter_expression,
             "ProjectionExpression": "document_key",
         }
 

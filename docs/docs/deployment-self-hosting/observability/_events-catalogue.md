@@ -186,7 +186,7 @@ Attributes:
 ### `dynamodb.environment_document_compressed`
 
 Logged at `info` from:
- - `api/environments/dynamodb/wrappers/environment_wrapper.py:92`
+ - `api/environments/dynamodb/wrappers/environment_wrapper.py:95`
 
 Attributes:
  - `environment_api_key`
