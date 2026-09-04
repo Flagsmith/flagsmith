@@ -1,5 +1,4 @@
 import logging
-import secrets
 import string
 import typing
 import uuid
@@ -12,6 +11,7 @@ from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_SAVE,
     LifecycleModel,
@@ -110,10 +110,10 @@ class UserManager(BaseUserManager):  # type: ignore[type-arg]
 
     def make_random_password(
         self,
-        length: int = 10,
+        length: int = 14,
         allowed_chars: str = string.ascii_letters + string.digits,
     ) -> str:
-        return "".join(secrets.choice(allowed_chars) for _ in range(length))
+        return get_random_string(length, allowed_chars)
 
 
 class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-missing,misc]
