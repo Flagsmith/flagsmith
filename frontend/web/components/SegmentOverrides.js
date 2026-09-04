@@ -9,6 +9,7 @@ import { RestrictToVerticalAxis } from '@dnd-kit/abstract/modifiers'
 import { arrayMove } from '@dnd-kit/helpers'
 import ProjectStore from 'common/stores/project-store'
 import ValueEditor from './ValueEditor'
+import ControlWeightChip from './mv/ControlWeightChip'
 import { VariationOptions } from './mv/VariationOptions'
 import FeatureListStore from 'common/stores/feature-list-store'
 import CreateSegmentModal from './modals/CreateSegment'
@@ -216,11 +217,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                       onCompare={onCompare}
                       onCopyValue={() => {
                         this.setState({ changed: true })
-                        setValue(
-                          Utils.getTypedValue(
-                            Utils.safeParseEventValue(controlValue),
-                          ),
-                        )
+                        setValue(Utils.getTypedValue(controlValue))
                       }}
                       canCopyValue={
                         permission &&
@@ -278,8 +275,8 @@ const SegmentOverrideInner = class Override extends React.Component {
           {showValue ? (
             <>
               <div className='flex-fill overflow-hidden'>
-                <label>Value</label>
                 <ValueEditor
+                  label='Value'
                   readOnly={readOnly}
                   disabled={readOnly}
                   value={v.value}
@@ -287,11 +284,9 @@ const SegmentOverrideInner = class Override extends React.Component {
                   onChange={
                     readOnly
                       ? null
-                      : (e) => {
+                      : (newValue) => {
                           this.setState({ changed: true })
-                          setValue(
-                            Utils.getTypedValue(Utils.safeParseEventValue(e)),
-                          )
+                          setValue(Utils.getTypedValue(newValue))
                         }
                   }
                   placeholder="Value e.g. 'big' "
@@ -300,8 +295,9 @@ const SegmentOverrideInner = class Override extends React.Component {
             </>
           ) : (
             <div className='flex-1 flex-column'>
-              <label>Segment Control Value - {controlPercent}%</label>
               <ValueEditor
+                label='Segment Control Value'
+                labelAfter={<ControlWeightChip percentage={controlPercent} />}
                 value={v.value}
                 data-test={`segment-override-value-${index}`}
                 placeholder="Value e.g. 'big' "
@@ -309,11 +305,9 @@ const SegmentOverrideInner = class Override extends React.Component {
                 onChange={
                   readOnly
                     ? null
-                    : (e) => {
+                    : (newValue) => {
                         this.setState({ changed: true })
-                        setValue(
-                          Utils.getTypedValue(Utils.safeParseEventValue(e)),
-                        )
+                        setValue(Utils.getTypedValue(newValue))
                       }
                 }
               />

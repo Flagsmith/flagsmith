@@ -3,7 +3,6 @@ import FieldLabel from 'components/base/forms/FieldLabel'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import Switch from 'components/Switch'
-import ValueEditor from 'components/ValueEditor'
 import {
   useCreateSamlConfigurationMutation,
   useUpdateSamlConfigurationMutation,
@@ -16,8 +15,6 @@ import { Req } from 'common/types/requests'
 import ErrorMessage from 'components/ErrorMessage'
 import { getStore } from 'common/store'
 import XMLUpload from 'components/XMLUpload'
-import { IonIcon } from '@ionic/react'
-import { cloudDownloadOutline } from 'ionicons/icons'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import { AttributeName } from 'common/types/responses'
@@ -63,6 +60,9 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
   useEffect(() => {
     if (isSuccess && data) {
       setPreviousName(data.name)
+      // Seed the editor rather than falling back to data at render time: with
+      // a fallback the field refills itself the moment you clear it.
+      setMetadataXml(data.idp_metadata_xml ?? '')
     }
   }, [data, isSuccess])
 
@@ -159,38 +159,21 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       </div>
       <FormGroup className='mb-1'>
         <div className='mt-2 p-0'>
-          <Row>
-            <label className='form-label'>IdP metadata XML</label>
-            {data?.idp_metadata_xml && (
-              <div className='ml-2 clickable' onClick={downloadIDPMetadata}>
-                <Tooltip
-                  title={
-                    <IonIcon
-                      className='icon-action'
-                      icon={cloudDownloadOutline}
-                      style={{ fontSize: '18px' }}
-                    />
-                  }
-                  place='right'
-                >
-                  Download IDP Metadata
-                </Tooltip>
-              </div>
-            )}
-          </Row>
           {(!samlName ||
             (data &&
               ((data.name && !data.idp_metadata_xml) ||
                 data.idp_metadata_xml))) && (
-            <ValueEditor
-              data-test='featureValue'
-              name='featureValue'
-              className='full-width'
-              value={metadataXml || data?.idp_metadata_xml}
-              onChange={setMetadataXml}
+            <InputGroup
+              title='IdP metadata XML'
+              textarea
+              className='full-width mb-0'
+              data-test='idpMetadataXml'
+              inputProps={{ name: 'idpMetadataXml' }}
+              value={metadataXml}
+              onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
+                setMetadataXml(Utils.safeParseEventValue(event))
+              }
               placeholder="e.g. '<xml>time<xml>' "
-              onlyOneLang
-              language='xml'
             />
           )}
           <Row className='or-divider my-1'>
@@ -224,6 +207,15 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
         </div>
       )}
       <div className='text-right py-2'>
+        {!!data?.idp_metadata_xml && (
+          <Button
+            theme='secondary'
+            onClick={downloadIDPMetadata}
+            className='mr-2'
+          >
+            Download IdP Metadata
+          </Button>
+        )}
         {isEdit && (
           <Button
             disabled={isLoading}

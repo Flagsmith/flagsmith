@@ -156,6 +156,11 @@ class Highlight extends React.Component {
           <code
             style={this.props.style}
             data-test={this.props['data-test']}
+            aria-labelledby={this.props['aria-labelledby']}
+            // Without a role a contenteditable is announced as plain text, and
+            // aria-labelledby has nothing to name.
+            role={this.props.onChange ? 'textbox' : undefined}
+            aria-multiline={this.props.onChange ? true : undefined}
             contentEditable={!!this.props.onChange}
             onBlur={this.onBlur}
             onFocus={this.onFocus}

@@ -71,6 +71,7 @@ export const planNames = {
   startup: 'Startup',
 }
 import BaseUtils from './base/_utils'
+import { copyToClipboard } from './copyToClipboard'
 const Utils = Object.assign({}, BaseUtils, {
   appendImage: (src: string) => {
     const img = document.createElement('img')
@@ -148,19 +149,7 @@ const Utils = Object.assign({}, BaseUtils, {
     return res
   },
 
-  copyToClipboard: async (
-    value: string,
-    successMessage?: string,
-    errorMessage?: string,
-  ) => {
-    try {
-      await navigator.clipboard.writeText(value)
-      toast(successMessage ?? 'Copied to clipboard')
-    } catch (error) {
-      toast(errorMessage ?? 'Failed to copy to clipboard')
-      throw error
-    }
-  },
+  copyToClipboard,
 
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
