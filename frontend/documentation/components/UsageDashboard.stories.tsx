@@ -31,9 +31,10 @@ import { BillingPeriod, PeriodOption } from 'common/types/requests'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import { Subscription } from 'common/types/responses'
 import { toUsageResponse, USAGE_SCENARIOS } from './fixtures/usage'
-// The harness fakes the project select, so it never renders UsageFilters and
-// would otherwise miss the width its stylesheet sets.
-import 'components/pages/usage/components/UsageFilters/UsageFilters.scss'
+
+// UsageFilters sets this in its stylesheet, which the harness never loads:
+// it fakes the project select rather than rendering the real component.
+const FILTER_WIDTH = { minWidth: 210 }
 
 const PROJECTS = [
   'All Projects',
@@ -170,7 +171,7 @@ const UsagePage: FC<HarnessProps> = ({
         hint='Narrow the chart and the breakdown by period or project.'
         action={
           <Row className='gap-2'>
-            <div className='usage-filters__field'>
+            <div style={FILTER_WIDTH}>
               <Select
                 aria-label='Period'
                 onChange={(option: PeriodOption) =>
@@ -180,7 +181,7 @@ const UsagePage: FC<HarnessProps> = ({
                 value={periods.find((option) => option.value === billingPeriod)}
               />
             </div>
-            <div className='usage-filters__field'>
+            <div style={FILTER_WIDTH}>
               <Select
                 aria-label='Project'
                 onChange={(option: { value: string }) =>
