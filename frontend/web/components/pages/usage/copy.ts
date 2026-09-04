@@ -29,12 +29,14 @@ const COPY = {
     'We are unable to show exact billing periods for your subscription plan.',
   noPlanLimit: 'This installation has no plan limit.',
   overLimitTitle: 'Your organisation has exceeded its plan limit',
+  planTitle: 'Your plan',
   // Says access, not flags: the API does not expose stop_serving_flags.
   recovery:
     'Upgrading restores access straight away. Otherwise access returns once' +
     ' your usage has stayed under the limit for 30 days.',
   restrictedTitle: 'Your organisation is restricted',
   staysVisible: 'Your usage stays visible below so you can see what happened.',
+  usageTitle: 'Your usage',
 }
 
 export type BannerContext = {
@@ -79,7 +81,7 @@ export const planSectionCopy = (
   if (!limit) {
     return {
       hint: sentences(`API calls over ${window}.`, COPY.noPlanLimit),
-      title: 'Your usage',
+      title: COPY.usageTitle,
     }
   }
 
@@ -90,7 +92,7 @@ export const planSectionCopy = (
         basis.reason === 'no-period' &&
         COPY.noBillingPeriod,
     ),
-    title: 'Your plan',
+    title: COPY.planTitle,
   }
 }
 
