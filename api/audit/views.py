@@ -109,7 +109,7 @@ class AllAuditLogViewSet(_BaseAuditLogViewSet):
 
         Since we're applying the base filters to the query set
         """
-        return (  # type: ignore[no-any-return]
+        return (
             self.request.user.get_admin_organisations()  # type: ignore[union-attr]
             .select_related("subscription", "subscription_information_cache")
             .first()
