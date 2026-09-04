@@ -153,6 +153,39 @@ def map_flux_tables_to_usage_data(
     return list(data_by_key.values())
 
 
+USAGE_DATA_RESOURCE_ATTRIBUTES: tuple[str, ...] = tuple(
+    column_name for resource in Resource if (column_name := resource.column_name)
+)
+
+
+def map_usage_data_to_daily_totals(
+    usage_data: Iterable[UsageData],
+) -> tuple[list[str], dict[str, list[int]]]:
+    """
+    Collapse usage data into a single total per day for each resource.
+
+    Usage data holds a row per day *and* labels combination, so a day with
+    traffic from more than one client application appears more than once. Any
+    caller wanting whole-organisation totals has to sum across those rows.
+
+    :return: the days covered, and a list of totals per resource aligned to them
+    """
+    totals_by_day: dict[str, dict[str, int]] = {}
+    for data in usage_data:
+        totals = totals_by_day.setdefault(
+            str(data.day),
+            dict.fromkeys(USAGE_DATA_RESOURCE_ATTRIBUTES, 0),
+        )
+        for resource_attr in USAGE_DATA_RESOURCE_ATTRIBUTES:
+            totals[resource_attr] += getattr(data, resource_attr)
+
+    days = sorted(totals_by_day)
+    return days, {
+        resource_attr: [totals_by_day[day][resource_attr] for day in days]
+        for resource_attr in USAGE_DATA_RESOURCE_ATTRIBUTES
+    }
+
+
 def map_flux_tables_to_feature_evaluation_data(
     flux_tables: list[FluxTable],
 ) -> list[FeatureEvaluationData]:

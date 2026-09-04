@@ -23,9 +23,10 @@ from django.utils.safestring import mark_safe
 from django.views.generic import ListView, TemplateView
 
 from app_analytics.influxdb_wrapper import (
-    get_event_list_for_organisation,
     get_events_for_organisation,
+    get_usage_data,
 )
+from app_analytics.mappers import map_usage_data_to_daily_totals
 from core.helpers import get_current_site_url
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
@@ -227,15 +228,14 @@ def organisation_info(request: HttpRequest, organisation_id: int) -> HttpRespons
         assert date_range.endswith("d")
         now = timezone.now()
         date_start = now - timedelta(days=int(date_range[:-1]))
-        event_list, labels = get_event_list_for_organisation(
-            organisation_id, date_start
+        labels, totals = map_usage_data_to_daily_totals(
+            get_usage_data(organisation_id, date_start=date_start, date_stop=now)
         )
-        context["event_list"] = event_list
-        context["traits"] = mark_safe(json.dumps(event_list["traits"]))
-        context["identities"] = mark_safe(json.dumps(event_list["identities"]))
-        context["flags"] = mark_safe(json.dumps(event_list["flags"]))
+        context["traits"] = mark_safe(json.dumps(totals["traits"]))
+        context["identities"] = mark_safe(json.dumps(totals["identities"]))
+        context["flags"] = mark_safe(json.dumps(totals["flags"]))
         context["environment_documents"] = mark_safe(
-            json.dumps(event_list["environment-document"])
+            json.dumps(totals["environment_document"])
         )
         context["labels"] = mark_safe(json.dumps(labels))
 
