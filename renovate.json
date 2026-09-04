@@ -4,7 +4,16 @@
     "security:only-security-updates",
     ":semanticCommitTypeAll(deps)"
   ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 4am on monday"]
+  },
   "packageRules": [
+    {
+      "description": "Re-enable lock file maintenance, which security:only-security-updates disables via its blanket matchPackageNames ['*'] rule. Renovate raises security PRs from manifest entries, so a CVE in a package that appears only in a lock file is never actioned; refreshing the lock file within existing ranges is the only mechanism that reaches transitive pins.",
+      "matchUpdateTypes": ["lockFileMaintenance"],
+      "enabled": true
+    },
     {
       "matchManagers": ["pep621"],
       "matchFileNames": ["api/**"],
