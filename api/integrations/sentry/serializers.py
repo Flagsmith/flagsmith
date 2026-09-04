@@ -8,5 +8,5 @@ class SentryChangeTrackingConfigurationSerializer(
 ):
     class Meta:
         model = SentryChangeTrackingConfiguration
-        fields = ["id", "environment", "webhook_url", "secret"]
+        fields = ["id", "environment", "webhook_url", "secret", "latest_health"]
         read_only_fields = ["id", "environment"]

@@ -1,7 +1,10 @@
 import typing
 
 from django.db.models import Model
+from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
+
+from .services import get_latest_integration_health
 
 
 class _BaseIntegrationModelSerializer(ModelSerializer):  # type: ignore[type-arg]
@@ -31,6 +34,10 @@ class _BaseIntegrationModelSerializer(ModelSerializer):  # type: ignore[type-arg
 
 class BaseEnvironmentIntegrationModelSerializer(_BaseIntegrationModelSerializer):
     one_to_one_field_name = "environment"  # type: ignore[assignment]
+    latest_health = SerializerMethodField()
+
+    def get_latest_health(self, obj: Model) -> dict[str, typing.Any] | None:
+        return get_latest_integration_health(obj)
 
 
 class BaseProjectIntegrationModelSerializer(_BaseIntegrationModelSerializer):
