@@ -17,6 +17,7 @@ import ExperimentSummaryScorecard from 'components/experiments/results/Experimen
 import ExperimentMetricScorecard from 'components/experiments/results/ExperimentMetricScorecard'
 import ExperimentExposuresPanel from 'components/experiments/results/ExperimentExposuresPanel'
 import ExperimentResultsRefreshControl from 'components/experiments/results/ExperimentResultsRefreshControl'
+import ExperimentConversionRateCard from 'components/experiments/results/ExperimentConversionRateCard'
 
 type ExperimentDetailParams = {
   projectId: string
@@ -118,6 +119,11 @@ const ExperimentDetailPage: FC = () => {
 
           <h5 className='mb-3 mt-5'>Analysis</h5>
           <ExperimentMetricScorecard
+            experiment={experiment}
+            results={results}
+          />
+          <ExperimentConversionRateCard
+            asOf={bayesianResults?.as_of ?? null}
             experiment={experiment}
             results={results}
           />

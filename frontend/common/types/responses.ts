@@ -727,6 +727,16 @@ export type ExposuresSummary = {
   timeseries: ExposuresTimeseries
 }
 
+export type ConversionsTimeseriesPoint = {
+  bucket: string
+  converted_identities: Record<string, number>
+}
+
+export type ConversionsTimeseries = {
+  granularity: ExposureGranularity
+  points: ConversionsTimeseriesPoint[]
+}
+
 export type ExperimentExposures = {
   as_of: string | null
   last_error_at: string | null
@@ -760,11 +770,19 @@ export type BayesianMetricResult = {
   metric_id: number
   variants: Record<string, VariantStats>
   inference: Record<string, Inference | null>
+  // Occurrence metrics only; null for value metrics. Absent from payloads
+  // stored before the backend shipped it (finalised experiments never gain it).
+  conversions_timeseries?: ConversionsTimeseries | null
 }
 
 export type BayesianResultsSummary = {
   srm_p_value: number | null
   metrics: BayesianMetricResult[]
+  // Denominator for the conversion-rate charts, same warehouse run as the
+  // metrics. Exposures bucket by first exposure and conversions by first
+  // conversion, so only running totals may be divided — a per-bucket division
+  // can exceed 100%. Absent from payloads stored before the backend shipped it.
+  exposures_timeseries?: ExposuresTimeseries
 }
 
 export enum TagStrategy {
