@@ -90,7 +90,7 @@ const FeatureHistoryPage: FC = () => {
         </div>
       </PageTitle>
       {!!(error || versionsError) && (
-        <ErrorMessage>{error || versionsError}</ErrorMessage>
+        <ErrorMessage error={error || versionsError} />
       )}
 
       {(isLoading || versionsLoading) && (
