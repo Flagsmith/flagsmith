@@ -233,9 +233,8 @@ main.container {
 
 
 /* Section background alternation for dark mode.
-   Scoped to [data-section] so these full-bleed rules only apply to the
-   landing page sections, and never to a bare <section> elsewhere — the
-   Algolia DocSearch modal renders its result groups as <section> too. */
+   Scoped to [data-section] so these rules only apply to the
+   landing page sections. */
 [data-theme='dark'] section[data-section]:nth-child(4n+1),
 [data-theme='dark'] section[data-section]:nth-child(4n+2) {
   background: #111111;
