@@ -1,4 +1,4 @@
-import { Page, expect } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
 import { LONG_TIMEOUT, SHORT_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith } from './utils.playwright';
 
 // Re-export for backwards compatibility
@@ -18,13 +18,33 @@ export type Rule = {
 export class E2EHelpers {
   constructor(private page: Page) {}
 
+  // The value editors are selected by role and accessible name rather than a
+  // data-test. The feature value label switches to "Control Value <weight>%"
+  // once the feature has variations, hence the alternation.
+  featureValueField(): Locator {
+    return this.page.getByRole('textbox', { name: /^(Value|Control Value)/ });
+  }
+
+  variationValueField(index: number): Locator {
+    return this.page.getByRole('textbox', { name: 'Variation Value' }).nth(index);
+  }
+
+  // The override's own label is "Value", or "Segment Control Value" once the
+  // feature has variations. Anchored, because getByRole matches the name as a
+  // substring and the row also holds read-only "Variation Value" editors.
+  segmentOverrideValueField(index: number): Locator {
+    return this.page
+      .locator(byId(`segment-override-${index}`))
+      .getByRole('textbox', { name: /^(Value|Segment Control Value)$/ });
+  }
+
   async isElementExists(selector: string): Promise<boolean> {
     return await this.page.locator(byId(selector)).count() > 0;
   }
 
-  async setText(selector: string, text: string) {
+  async setText(selector: string | Locator, text: string) {
     logUsingLastSection(`Set text ${selector} : ${text}`);
-    const element = this.page.locator(selector).first();
+    const element = typeof selector === 'string' ? this.page.locator(selector).first() : selector;
     await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await element.clear();
     if (text) {
@@ -32,9 +52,10 @@ export class E2EHelpers {
     }
   }
 
-  async waitForElementVisible(selector: string, timeout: number = LONG_TIMEOUT) {
+  async waitForElementVisible(selector: string | Locator, timeout: number = LONG_TIMEOUT) {
     logUsingLastSection(`Waiting element visible ${selector}`);
-    await this.page.locator(selector).first().waitFor({
+    const element = typeof selector === 'string' ? this.page.locator(selector).first() : selector;
+    await element.waitFor({
       state: 'visible',
       timeout
     });
@@ -269,7 +290,7 @@ export class E2EHelpers {
     await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await featureRow.dispatchEvent('click');
     await this.waitForElementVisible('#create-feature-modal');
-    await this.waitForElementVisible(byId('featureValue'));
+    await this.waitForElementVisible(this.featureValueField());
   }
 
   // Create a feature
@@ -296,7 +317,7 @@ export class E2EHelpers {
     await this.gotoFeatures();
     await this.click('#show-create-feature-btn');
     await this.setText(byId('featureID'), name);
-    await this.setText(byId('featureValue'), `${value}`);
+    await this.setText(this.featureValueField(), `${value}`);
     await this.setText(byId('featureDesc'), description);
     if (!defaultOff) {
       await this.click(byId('toggle-feature-button'));
@@ -305,7 +326,7 @@ export class E2EHelpers {
       const v = mvs[i];
       await this.click(byId('add-variation'));
       await this.page.waitForTimeout(200);
-      await this.setText(byId(`featureVariationValue${i}`), v.value);
+      await this.setText(this.variationValueField(i), v.value);
       await this.setText(byId(`featureVariationWeight${v.value}`), `${v.weight}`);
       await this.page.waitForTimeout(100);
     }
@@ -588,7 +609,7 @@ export class E2EHelpers {
       await this.click(byId('segment_overrides'));
     }
     await this.click(dropdownSelector);
-    await this.waitForElementVisible(byId(`segment-override-value-${index}`));
+    await this.waitForElementVisible(this.segmentOverrideValueField(index));
   }
 
   // Add segment override for boolean flags
@@ -611,7 +632,7 @@ export class E2EHelpers {
   // Add segment override for remote configs
   async addSegmentOverrideConfig(index: number, value: string | number | boolean, selectionIndex: number = 0) {
     await this.openSegmentOverride(index, selectionIndex);
-    await this.setText(byId(`segment-override-value-${index}`), `${value}`);
+    await this.setText(this.segmentOverrideValueField(index), `${value}`);
     await this.click(byId(`segment-override-toggle-${index}`));
   }
 
@@ -631,7 +652,7 @@ export class E2EHelpers {
     await featureRow.dispatchEvent('click');
     await this.waitForElementVisible(byId('update-feature-btn'));
     if (value !== '') {
-      await this.setText(byId('featureValue'), `${value}`);
+      await this.setText(this.featureValueField(), `${value}`);
     }
     if (mvs.length > 0) {
       await this.page.waitForTimeout(500);
