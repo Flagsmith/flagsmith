@@ -27,7 +27,6 @@ from experimentation import warehouse_delivery_service
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
-    EXPOSURE_EVENT_NAME,
     EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
     RESULTS_MIN_CONVERSIONS_PER_VARIANT,
     RESULTS_MIN_IDENTITIES_PER_VARIANT,
@@ -35,6 +34,9 @@ from experimentation.constants import (
     WAREHOUSE_CONNECTION_FLAG,
 )
 from experimentation.dataclasses import (
+    ConversionBucket,
+    ConversionsTimeseries,
+    ConversionsTimeseriesPoint,
     ExposureBucket,
     ExposuresSummary,
     ExposuresTimeseries,
@@ -64,7 +66,11 @@ from experimentation.models import (
     WarehouseDeliveryOutcome,
     WarehouseType,
 )
-from experimentation.results_query import _EXPOSURES_CTE, ResultsQueryBuilder
+from experimentation.results_query import (
+    _EXPOSURES_CTE,
+    ResultsQueryBuilder,
+    exposure_window_params,
+)
 from experimentation.stats import (
     Inference,
     VariantStats,
@@ -347,27 +353,58 @@ def build_exposures_summary(
         excluded_identities=sum(
             b.first_exposed_identities for b in buckets if b.quarantined
         ),
-        timeseries=ExposuresTimeseries(
-            granularity=granularity,
-            points=_timeseries_points([b for b in buckets if not b.quarantined]),
-        ),
+        timeseries=_exposures_timeseries(buckets, granularity=granularity),
     )
 
 
-def _timeseries_points(
+def _exposures_timeseries(
     buckets: Sequence[ExposureBucket],
-) -> list[ExposuresTimeseriesPoint]:
-    new_identities_by_bucket: dict[datetime, dict[str, int]] = {}
-    for b in buckets:
-        new_identities_by_bucket.setdefault(b.bucket, {})[b.variant] = (
-            b.first_exposed_identities
-        )
+    *,
+    granularity: ExposureGranularity,
+) -> ExposuresTimeseries:
+    return ExposuresTimeseries(
+        granularity=granularity,
+        points=[
+            ExposuresTimeseriesPoint(bucket=bucket, new_identities=counts)
+            for bucket, counts in _counts_by_bucket(
+                (b.bucket, b.variant, b.first_exposed_identities)
+                for b in buckets
+                if not b.quarantined
+            )
+        ],
+    )
+
+
+def _conversions_timeseries(
+    metric_id: int,
+    aggregates: ResultsAggregates,
+) -> ConversionsTimeseries | None:
+    buckets = aggregates.conversion_buckets.get(metric_id)
+    if buckets is None:
+        return None
+    return ConversionsTimeseries(
+        granularity=aggregates.granularity,
+        points=[
+            ConversionsTimeseriesPoint(bucket=bucket, converted_identities=counts)
+            for bucket, counts in _counts_by_bucket(
+                (b.bucket, b.variant, b.converted_identities) for b in buckets
+            )
+        ],
+    )
+
+
+def _counts_by_bucket(
+    rows: typing.Iterable[tuple[datetime, str, int]],
+) -> list[tuple[str, dict[str, int]]]:
+    """Group rows into one per-variant dict per bucket, in bucket order. The
+    bucket becomes an ISO string because the summary lands in a JSONField as
+    is, and datetimes wouldn't serialise."""
+    counts_by_bucket: dict[datetime, dict[str, int]] = {}
+    for bucket, variant, count in rows:
+        counts_by_bucket.setdefault(bucket, {})[variant] = count
     return [
-        ExposuresTimeseriesPoint(
-            bucket=bucket_start.isoformat(),
-            new_identities=new_identities_by_bucket[bucket_start],
-        )
-        for bucket_start in sorted(new_identities_by_bucket)
+        (bucket.isoformat(), counts_by_bucket[bucket])
+        for bucket in sorted(counts_by_bucket)
     ]
 
 
@@ -394,13 +431,12 @@ def get_exposure_buckets(
         EXPOSURE_BUCKETS_QUERY.format(
             bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
         ),
-        {
-            "environment_key": environment_key,
-            "exposure_event": EXPOSURE_EVENT_NAME,
-            "feature_name": feature_name,
-            "window_start": window_start,
-            "window_end": window_end,
-        },
+        exposure_window_params(
+            environment_key=environment_key,
+            feature_name=feature_name,
+            window_start=window_start,
+            window_end=window_end,
+        ),
     )
     return [
         ExposureBucket(
@@ -413,37 +449,64 @@ def get_exposure_buckets(
     ]
 
 
-def get_metric_variant_stats(
+def get_results_aggregates(
     *,
     environment_key: str,
     feature_name: str,
     window_start: datetime,
     window_end: datetime,
     specs: Sequence[MetricSpec],
+    granularity: ExposureGranularity,
 ) -> ResultsAggregates:
-    """Run the warehouse query, returning per-variant identity counts and, per
-    metric, per-variant sufficient statistics."""
-    builder = ResultsQueryBuilder(specs)
-    params: dict[str, object] = {
-        "environment_key": environment_key,
-        "exposure_event": EXPOSURE_EVENT_NAME,
-        "feature_name": feature_name,
-        "window_start": window_start,
-        "window_end": window_end,
-    }
-    builder.add_metric_params(params)
+    """Run the warehouse reads behind one results refresh: per-variant identity
+    counts and sufficient statistics, exposure buckets, and per charted metric
+    the buckets of first post-exposure conversions.
 
-    rows, columns = _get_clickhouse_client(
+    Three separate reads, so events landing mid-run can leave the chart's last
+    point a few identities off the table until the next refresh."""
+    builder = ResultsQueryBuilder(specs)
+    params = builder.params(
+        environment_key=environment_key,
+        feature_name=feature_name,
+        window_start=window_start,
+        window_end=window_end,
+    )
+    client = _get_clickhouse_client(
         send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
-    ).execute(builder.build_query(), params, with_column_types=True)
+    )
+
+    rows, columns = client.execute(
+        builder.build_query(), params, with_column_types=True
+    )
     exposure_counts, metric_stats = builder.decode_rows(
         rows, [name for name, _type in columns]
     )
+
+    conversion_buckets: dict[int, list[ConversionBucket]] = {}
+    conversions_query = builder.build_conversions_query(
+        bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
+    )
+    if conversions_query is not None:
+        rows, columns = client.execute(
+            conversions_query, params, with_column_types=True
+        )
+        conversion_buckets = builder.decode_conversion_rows(
+            rows, [name for name, _type in columns]
+        )
 
     return ResultsAggregates(
         specs=list(specs),
         exposure_counts=exposure_counts,
         metric_stats=metric_stats,
+        granularity=granularity,
+        exposure_buckets=get_exposure_buckets(
+            environment_key=environment_key,
+            feature_name=feature_name,
+            window_start=window_start,
+            window_end=window_end,
+            granularity=granularity,
+        ),
+        conversion_buckets=conversion_buckets,
     )
 
 
@@ -470,9 +533,15 @@ def build_results_summary(
                 inference=_metric_inference(
                     spec, aggregates.metric_stats.get(spec.metric_id, {})
                 ),
+                conversions_timeseries=_conversions_timeseries(
+                    spec.metric_id, aggregates
+                ),
             )
             for spec in aggregates.specs
         ],
+        exposures_timeseries=_exposures_timeseries(
+            aggregates.exposure_buckets, granularity=aggregates.granularity
+        ),
     )
 
 
@@ -482,15 +551,15 @@ def compute_results_summary(
     window_start: "datetime",
     window_end: "datetime",
 ) -> ResultsSummary:
-    """Gather an experiment's metric statistics from the warehouse and reduce
-    them to the stored results payload."""
-    specs = _experiment_metric_specs(experiment)
-    aggregates = get_metric_variant_stats(
+    """Gather an experiment's metric statistics and chart rows from the
+    warehouse and reduce them to the stored results payload."""
+    aggregates = get_results_aggregates(
         environment_key=experiment.environment.api_key,
         feature_name=experiment.feature.name,
         window_start=window_start,
         window_end=window_end,
-        specs=specs,
+        specs=_experiment_metric_specs(experiment),
+        granularity=_select_exposure_granularity(window_start, window_end),
     )
     return build_results_summary(
         aggregates,
