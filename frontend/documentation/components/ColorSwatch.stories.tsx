@@ -115,6 +115,29 @@ export const Shapes: Story = {
   ),
 }
 
+export const Faded: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '`opacity` fades the swatch to match a series drawn with an SVG `fill-opacity`, such as the remainder segment of a part-of-whole bar. Colours can be CSS `var()` strings, so transparency cannot come from an alpha channel.',
+      },
+    },
+  },
+  render: () => (
+    <div className='d-flex flex-column gap-1 fs-small'>
+      <div className='d-flex align-items-center gap-2'>
+        <ColorSwatch color={colorChart1} />
+        <span className='text-default'>Converted</span>
+      </div>
+      <div className='d-flex align-items-center gap-2'>
+        <ColorSwatch color={colorChart1} opacity={0.25} />
+        <span className='text-default'>Exposures</span>
+      </div>
+    </div>
+  ),
+}
+
 export const Palette: Story = {
   parameters: {
     docs: {
