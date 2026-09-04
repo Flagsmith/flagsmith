@@ -110,7 +110,7 @@ class UserManager(BaseUserManager):  # type: ignore[type-arg]
 
     def make_random_password(
         self,
-        length: int = 10,
+        length: int = 14,
         allowed_chars: str = string.ascii_letters + string.digits,
     ) -> str:
         return "".join(secrets.choice(allowed_chars) for _ in range(length))
