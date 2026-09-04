@@ -15,9 +15,7 @@ if LDAP_INSTALLED:
     LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID = None
 
 # Otherwise rule and condition ordering is whatever the database returns.
-# ConfiguredOrderManager reads these when the manager is constructed, so they
-# cannot be set per test, and both derived names are needed because common.py
-# resolves them at import time.
+# Can cause issues downstream when using other database engines.
 SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED = True
 SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED = True
 
