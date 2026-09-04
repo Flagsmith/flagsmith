@@ -151,6 +151,53 @@ def test_seed_organisation_identities__insert_fails__logs_and_continues(
     ]
 
 
+def test_seed_organisation_identities__traitless_identities__are_not_mirrored(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    flagsmith_identities_table: Table,
+    dynamo_identities: None,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    # One identity per batch, so `dave` forms a batch with nothing left to write.
+    mocker.patch.object(tasks, "_INSERT_BATCH_SIZE", 1)
+    for identifier, extra in (
+        ("dave", {}),
+        ("erin", {"system_traits": {"flagsmith_cohort_e2b1": True}}),
+    ):
+        flagsmith_identities_table.put_item(
+            Item={
+                "composite_key": f"{environment.api_key}_{identifier}",
+                "environment_api_key": environment.api_key,
+                "identifier": identifier,
+                "identity_uuid": f"f47ac10b-58cc-4372-a567-0e02b2c3d4{identifier[:2]}",
+                "identity_traits": [],
+                **extra,
+            }
+        )
+    cursor = MagicMock()
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
+    mocker.patch.object(tasks, "enqueue_membership_refresh")
+
+    # When
+    seed_organisation_identities(project.organisation_id)
+
+    # Then
+    # `dave` has nothing on him at all; `erin`'s cohort membership lives in
+    # `system_traits`, so she stays in the mirror.
+    payloads = [call.args[1] for call in cursor.executemany.call_args_list]
+    mirrored_identifiers = sorted(row[1] for payload in payloads for row in payload)
+    assert mirrored_identifiers == ["alice", "carol", "erin"]
+    # `dave`'s batch is skipped outright rather than written as an empty INSERT.
+    assert all(payloads)
+
+
 @pytest.mark.clickhouse
 def test_seed_organisation_identities__matching_identities__inserts_rows_versioned_at_scan_start(
     mocker: MockerFixture,
