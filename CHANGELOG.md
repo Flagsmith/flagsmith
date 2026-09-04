@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.270.0](https://github.com/Flagsmith/flagsmith/compare/v2.269.1...v2.270.0) (2026-09-04)
+
+
+### Features
+
+* **experimentation:** add conversion-over-time rows to experiment results ([#8451](https://github.com/Flagsmith/flagsmith/issues/8451)) ([72bb92f](https://github.com/Flagsmith/flagsmith/commit/72bb92fb76d6082889274610bb480ee36a613ead))
+
+
+### Bug Fixes
+
+* **features:** darken placeholder text and move copy inside the value editor field ([#8446](https://github.com/Flagsmith/flagsmith/issues/8446)) ([2f1a915](https://github.com/Flagsmith/flagsmith/commit/2f1a9159f28c80168ccaa4ebc46b91426f75ae4c))
+* **segment_membership:** preserve system traits when seeding identities into ClickHouse ([#8458](https://github.com/Flagsmith/flagsmith/issues/8458)) ([e6aea0f](https://github.com/Flagsmith/flagsmith/commit/e6aea0f797ae41968e945321da1449540ce0e3ad))
+* **tests:** avoid flaky password_too_similar registration failures ([#8460](https://github.com/Flagsmith/flagsmith/issues/8460)) ([2ce9498](https://github.com/Flagsmith/flagsmith/commit/2ce9498bf9a49cdacba2e187ef58c93df5709889))
+* **tests:** make segment rule and condition ordering deterministic ([#8454](https://github.com/Flagsmith/flagsmith/issues/8454)) ([cc4c7b9](https://github.com/Flagsmith/flagsmith/commit/cc4c7b95a682062c75b6aeb6b58f20fb66149be1))
+
+
+### Dependency Updates
+
+* **frontend:** update dependency toml to v4 [security] ([#8457](https://github.com/Flagsmith/flagsmith/issues/8457)) ([6f2f901](https://github.com/Flagsmith/flagsmith/commit/6f2f9018d3fee80a3879294f08d3e844192f4d94))
+
+
+### Docs
+
+* fixed custom CSS in dark mode making search results unreadable  ([#8461](https://github.com/Flagsmith/flagsmith/issues/8461)) ([d1907da](https://github.com/Flagsmith/flagsmith/commit/d1907daed5546db641d2a60bf7181a5f0fd5d86c))
+
 ## [2.269.1](https://github.com/Flagsmith/flagsmith/compare/v2.269.0...v2.269.1) (2026-09-03)
 
 
