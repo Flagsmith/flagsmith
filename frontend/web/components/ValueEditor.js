@@ -4,6 +4,7 @@ import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { Clipboard } from 'polyfill-react-native'
 import Icon from './icons/Icon'
+import BareButton from './base/forms/BareButton'
 import { IonIcon } from '@ionic/react'
 import { checkmarkCircle, warning } from 'ionicons/icons'
 
@@ -141,8 +142,25 @@ class ValueEditor extends Component {
     />
   )
 
+  formatJson = () => {
+    if (this.props.disabled || !this.props.onChange) return
+    try {
+      const formatted = JSON.stringify(JSON.parse(this.props.value), null, 2)
+      // Don't emit a no-op change; the parent flags dirty on any onChange.
+      if (formatted !== this.props.value) {
+        this.props.onChange(formatted)
+      }
+    } catch (e) {
+      toast('Cannot format invalid JSON', 'danger')
+    }
+  }
+
   render() {
     const { ...rest } = this.props
+    const showFormat =
+      this.state.language === 'json' &&
+      !this.props.disabled &&
+      !!this.props.value
     return (
       <div
         className={cx(
@@ -207,6 +225,19 @@ class ValueEditor extends Component {
             >
               .yaml {this.state.language === 'yaml' && this.renderValidation()}
             </span>
+            <BareButton
+              disabled={!showFormat}
+              // Don't blur the editor (which would fire its onBlur commit);
+              // onClick still runs the format.
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={this.formatJson}
+              className={cx('primary format-action', {
+                'is-visible': showFormat,
+              })}
+            >
+              <Icon name='code' />
+              format
+            </BareButton>
             <span
               onMouseDown={() => {
                 const res = Clipboard.setString(this.props.value)
