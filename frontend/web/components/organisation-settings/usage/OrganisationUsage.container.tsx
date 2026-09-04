@@ -3,6 +3,7 @@ import moment from 'moment'
 import { AggregateUsageDataItem } from 'common/types/responses'
 import EmptyState from 'components/EmptyState'
 import BarChart, { ChartDataPoint } from 'components/charts/BarChart'
+import { toBarSeries } from 'components/charts/toBarSeries'
 import UsageAPIDefinitions from './components/UsageAPIDefinitions'
 
 type OrganisationUsageProps = {
@@ -94,9 +95,7 @@ const OrganisationUsage: FC<OrganisationUsageProps> = ({
       ) : (
         <BarChart
           data={formattedData}
-          series={series}
-          colorMap={colorMap}
-          seriesLabels={seriesLabels}
+          series={toBarSeries(series, colorMap, seriesLabels)}
           xAxisInterval={chartData?.length > 31 ? 7 : 0}
           barSize={14}
           verticalGrid={false}

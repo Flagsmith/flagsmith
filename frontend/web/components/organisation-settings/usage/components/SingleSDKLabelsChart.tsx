@@ -1,5 +1,6 @@
 import React, { FC } from 'react'
 import BarChart, { ChartDataPoint } from 'components/charts/BarChart'
+import { toBarSeries } from 'components/charts/toBarSeries'
 import EmptyState from 'components/EmptyState'
 
 interface SingleSDKLabelsChartProps {
@@ -23,8 +24,7 @@ const SingleSDKLabelsChart: FC<SingleSDKLabelsChartProps> = ({
       {hasData ? (
         <BarChart
           data={data}
-          series={userAgents}
-          colorMap={userAgentsColorMap}
+          series={toBarSeries(userAgents, userAgentsColorMap)}
           xAxisInterval={data?.length > 31 ? 7 : 0}
           showLegend
         />
