@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Any, cast
 
 from flagsmith_schemas import dynamodb
 
@@ -17,6 +18,21 @@ def map_identity_document_to_clickhouse_row(
     composite_key = identity_doc["composite_key"]
     raw_traits = identity_doc.get("identity_traits")
     traits = _flatten_traits(raw_traits) if raw_traits else None
+    # Read off an untyped view: `flagsmith_schemas.dynamodb.Identity` doesn't
+    # declare `system_traits` yet. The stored attribute may be NULL, which
+    # counts as absent.
+    if raw_system_traits := cast("dict[str, Any]", identity_doc).get("system_traits"):
+        # System-owned traits are not user data: on a key clash, the system
+        # value wins — the same precedence flag evaluation applies. Dropping
+        # them instead would erase cohort membership for every seeded
+        # identity, as the seeded row supersedes older CDC rows at dedup.
+        traits = {
+            **(traits or {}),
+            **{
+                trait_key: _coerce_trait_value(trait_value)
+                for trait_key, trait_value in raw_system_traits.items()
+            },
+        }
     return (
         env_key,
         identifier,
