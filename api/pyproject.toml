@@ -243,6 +243,10 @@ module = ["rbac.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+module = ["edge_proxy.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = ["saml.*"]
 ignore_missing_imports = true
 
