@@ -26,10 +26,12 @@ from environments.models import Environment
 pytestmark = pytest.mark.use_analytics_db
 
 
-def _create_api_usage_event(environment_id: int, when: datetime) -> APIUsageRaw:
+def _create_api_usage_event(
+    environment_id: int, when: datetime, host: str = "host1"
+) -> APIUsageRaw:
     event = APIUsageRaw.objects.create(
         environment_id=environment_id,
-        host="host1",
+        host=host,
         resource=Resource.FLAGS,
     )
     # update created_at
@@ -532,6 +534,28 @@ def test_populate_api_usage_bucket__source_bucket_size__aggregates_correctly(
 
     # Then
     assert APIUsageBucket.objects.filter(bucket_size=15, total_count=300).count() == 1
+
+
+def test_populate_api_usage_bucket__multiple_hosts__preserves_host(
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    # Given events from two hosts in the same bucket window
+    environment_id = 1
+    when = timezone.now() - timedelta(minutes=90)
+    for _ in range(3):
+        _create_api_usage_event(environment_id, when, host="edge-proxy")
+    _create_api_usage_event(environment_id, when)
+
+    # When
+    freezer.move_to(timezone.now() - timedelta(hours=1))
+    populate_api_usage_bucket(bucket_size=15, run_every=60)
+
+    # Then the buckets are split by host, each keeping its host
+    buckets = APIUsageBucket.objects.filter(environment_id=environment_id)
+    assert {(bucket.host, bucket.total_count) for bucket in buckets} == {
+        ("edge-proxy", 3),
+        ("host1", 1),
+    }
 
 
 def _create_feature_evaluation_event(
