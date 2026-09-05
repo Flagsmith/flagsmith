@@ -38,21 +38,21 @@ class APIUsageMiddleware:
         # edge_proxy app decides what counts as the proxy's own: a verified
         # X-Proxy-Key whose grants cover the presented environment — bare
         # header presence is never trusted.
-        self.is_edge_proxy_request: Callable[[HttpRequest], bool] | None = None
+        self.is_valid_edge_proxy_request: Callable[[HttpRequest], bool] | None = None
         if settings.EDGE_PROXY_INSTALLED and not is_saas():
             # getattr, not a hard import: the installed edge_proxy app may
             # predate the helper — the proxy's fetches are then counted as
             # before.
-            self.is_edge_proxy_request = getattr(
+            self.is_valid_edge_proxy_request = getattr(
                 importlib.import_module("edge_proxy.authentication"),
-                "is_edge_proxy_request",
+                "is_valid_edge_proxy_request",
                 None,
             )
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
         if (environment_key := request.headers.get("X-Environment-Key")) and not (
-            self.is_edge_proxy_request is not None
-            and self.is_edge_proxy_request(request)
+            self.is_valid_edge_proxy_request is not None
+            and self.is_valid_edge_proxy_request(request)
         ):
             track_usage_by_resource_host_and_environment(
                 resource=get_resource_from_uri(request.path),
