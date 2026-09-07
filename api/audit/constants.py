@@ -81,3 +81,5 @@ PHASED_ROLLOUT_STATE_CREATED_MESSAGE = (
     "Phased rollout created for feature: %s by release pipeline: %s (stage: %s)"
 )
 PHASED_ROLLOUT_STATE_UPDATED_MESSAGE = "Phased rollout split changed from '%s%%' to '%s%%' for feature '%s' by release pipeline '%s' (stage: '%s')"
+PROJECT_CREATED_MESSAGE = "New Project created: %s"
+PROJECT_DELETED_MESSAGE = "Project deleted: %s"
