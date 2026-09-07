@@ -205,7 +205,6 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
             <textarea
               autoFocus
               disabled={isUpdating}
-              className='form-control'
               rows={3}
               value={hypothesisDraft}
               onChange={(e) => setHypothesisDraft(e.target.value)}
