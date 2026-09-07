@@ -15,7 +15,7 @@ import { FlagsmithValue } from 'common/types/responses'
 
 import CopyValueButton from './components/CopyValueButton'
 import LanguageSelector from './components/LanguageSelector'
-import { ValueEditorLanguage } from './types'
+import { ValueEditorError, ValueEditorLanguage } from './types'
 import { validateValue } from './validate'
 
 import './ValueEditor.scss'
@@ -42,7 +42,7 @@ export interface ValueEditorProps {
   placeholder?: string
   readOnly?: boolean
   // Fires when the value stops or starts parsing under the active format.
-  onValidityChange?: (error: string | false) => void
+  onValidityChange?: (error: ValueEditorError) => void
   value?: FlagsmithValue
 }
 

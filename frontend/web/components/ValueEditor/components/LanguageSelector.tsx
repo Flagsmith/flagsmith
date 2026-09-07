@@ -7,6 +7,7 @@ import Row from 'components/base/grid/Row'
 import {
   LANGUAGES,
   LANGUAGE_LABELS,
+  ValueEditorError,
   ValueEditorLanguage,
 } from 'components/ValueEditor/types'
 import LanguageValidation from './LanguageValidation'
@@ -14,7 +15,7 @@ import LanguageValidation from './LanguageValidation'
 interface LanguageSelectorProps {
   language: ValueEditorLanguage
   onChange: (language: ValueEditorLanguage) => void
-  error: string | false
+  error: ValueEditorError
 }
 
 /** The .txt/.json/.xml/.toml/.yaml row above the editor. */

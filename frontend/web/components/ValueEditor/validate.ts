@@ -1,12 +1,12 @@
 import toml from 'toml'
 import yaml from 'yaml'
 
-import { ValueEditorLanguage } from './types'
+import { ValueEditorError, ValueEditorLanguage } from './types'
 
 const errorMessage = (e: unknown) =>
   e instanceof Error ? e.message : String(e)
 
-function xmlError(xmlStr: string): string | false {
+function xmlError(xmlStr: string): ValueEditorError {
   const dom = new DOMParser().parseFromString(xmlStr, 'application/xml')
   for (const element of Array.from(dom.querySelectorAll('parsererror'))) {
     // Chrome puts parsererror in the XHTML namespace, so it is an HTMLElement
@@ -24,7 +24,7 @@ function xmlError(xmlStr: string): string | false {
 export function validateValue(
   language: ValueEditorLanguage,
   value: string,
-): string | false {
+): ValueEditorError {
   try {
     switch (language) {
       case 'json':

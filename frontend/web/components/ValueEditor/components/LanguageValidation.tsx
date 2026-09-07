@@ -5,18 +5,21 @@ import Tooltip from 'components/Tooltip'
 
 import {
   LANGUAGE_LABELS,
+  ValueEditorError,
   ValueEditorLanguage,
 } from 'components/ValueEditor/types'
 
 interface LanguageValidationProps {
   language: ValueEditorLanguage
-  error: string | false
+  error: ValueEditorError
 }
 
 // Icon drops className for most icons, so the colour class goes on a wrapper
 // and the icon inherits it via currentColor.
+type ValidationTone = 'success' | 'danger'
+
 const Wrapper: FC<{
-  tone: 'success' | 'danger'
+  tone: ValidationTone
   children: ReactNode
   id?: string
 }> = ({ children, id, tone }) => (
