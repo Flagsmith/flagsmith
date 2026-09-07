@@ -14,8 +14,6 @@ import LanguageValidation from './LanguageValidation'
 interface LanguageSelectorProps {
   language: ValueEditorLanguage
   onChange: (language: ValueEditorLanguage) => void
-  // The active language's parse error, or false. Passed through rather than
-  // computed here so the row does not own validity.
   error: string | false
 }
 
@@ -25,17 +23,22 @@ const LanguageSelector: FC<LanguageSelectorProps> = ({
   language,
   onChange,
 }) => (
-  <Row className='select-language gap-1' role='group' aria-label='Value format'>
+  <Row
+    className='select-language gap-1 ms-auto'
+    role='group'
+    aria-label='Value format'
+  >
     {LANGUAGES.map((option) => (
       <BareButton
         key={option}
-        // The editor is contenteditable, and pressing down on a button would
-        // blur it. preventDefault keeps the caret where it was; the click
-        // still fires, so the keyboard path works too.
+        // The editor is contenteditable: pressing down on a button would blur
+        // it. preventDefault keeps the caret; the click still fires.
         onMouseDown={(e: MouseEvent) => e.preventDefault()}
         onClick={() => onChange(option)}
         aria-pressed={language === option}
-        className={cx(option, { active: language === option })}
+        className={cx(option, 'd-flex align-items-center text-secondary', {
+          active: language === option,
+        })}
       >
         {LANGUAGE_LABELS[option]}{' '}
         {option !== 'txt' && language === option && (
