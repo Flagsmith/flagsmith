@@ -1,3 +1,21 @@
+// navigator.clipboard exists only in a secure context, and self-hosted
+// dashboards are often served over plain http on a private network, so keep
+// the execCommand path for them.
+const copyWithExecCommand = (value: string): boolean => {
+  const textarea = document.createElement('textarea')
+  textarea.value = value
+  textarea.setAttribute('readonly', '')
+  textarea.style.position = 'fixed'
+  textarea.style.opacity = '0'
+  document.body.appendChild(textarea)
+  textarea.select()
+  try {
+    return document.execCommand('copy')
+  } finally {
+    document.body.removeChild(textarea)
+  }
+}
+
 /**
  * Write `value` to the clipboard and toast the outcome.
  *
@@ -10,7 +28,11 @@ export const copyToClipboard = async (
   errorMessage?: string,
 ) => {
   try {
-    await navigator.clipboard.writeText(value)
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(value)
+    } else if (!copyWithExecCommand(value)) {
+      throw new Error('Clipboard copy was rejected')
+    }
     toast(successMessage ?? 'Copied to clipboard')
   } catch (error) {
     toast(errorMessage ?? 'Failed to copy to clipboard')
