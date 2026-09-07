@@ -5,10 +5,14 @@ import {
   rollingPeriodOptions,
 } from 'common/types/requests'
 import { Subscription } from 'common/types/responses'
-import { PlanLimit } from 'components/shared/UsageBar/utils'
 
 export type PeriodSelection = BillingPeriod | 'default'
 
+// 'free' reads like any other rolling window on purpose. The seven days
+// before flags stop only applies to a first breach: OrganisationBreachedGracePeriod
+// is written on the first restriction and never deleted, and
+// restrict_use_due_to_api_limit_grace_period_over drops the wait once it exists.
+// The API does not say which case an organisation is in.
 export type RollingReason = 'free' | 'no-period'
 
 export type UsageBasis =
@@ -29,32 +33,13 @@ export const usageBasisOf = (
 export const isBilledOnAPeriod = (basis: UsageBasis): boolean =>
   basis.window === 'billing-period'
 
-export const planSectionCopy = (
-  basis: UsageBasis,
-  limit: PlanLimit,
-): { title: string; hint: string } => {
-  if (!limit) {
-    return {
-      hint: `API calls over ${allowanceWindowLabel(
-        basis,
-      )}. This installation has no plan limit.`,
-      title: 'Your usage',
-    }
-  }
-
-  if (basis.window === 'rolling' && basis.reason === 'no-period') {
-    return {
-      hint: `Usage against your plan limit over ${allowanceWindowLabel(
-        basis,
-      )}. We are unable to show exact billing periods for your subscription plan.`,
-      title: 'Your plan',
-    }
-  }
-
-  return {
-    hint: `Usage against your plan limit over ${allowanceWindowLabel(basis)}.`,
-    title: 'Your plan',
-  }
+// Only Start-Up and Scale-Up are billed for overages. Mirrors
+// SubscriptionPlanFamily.get_by_plan_id.
+export const isChargedForOverages = (
+  subscription: Subscription | undefined,
+): boolean => {
+  const plan = (subscription?.plan ?? '').replace(/-/g, '').toLowerCase()
+  return plan.startsWith('startup') || plan.startsWith('scaleup')
 }
 
 export const resolvePeriod = (
@@ -69,20 +54,6 @@ export const resolvePeriod = (
 
 export const isBillingPeriodSelected = (period: BillingPeriod): boolean =>
   period === 'current_billing_period' || period === 'previous_billing_period'
-
-export const contributionNote = (
-  projectName: string,
-  scopedTotal: number,
-  organisationTotal: number,
-): string | undefined => {
-  if (organisationTotal <= 0) {
-    return undefined
-  }
-
-  const percent = Math.round((scopedTotal / organisationTotal) * 100)
-
-  return `${projectName} accounts for ${percent}% of that usage.`
-}
 
 // The note sits under the meter, so it can only compare over the window the
 // meter shows. On any other period "that usage" would name a figure that is

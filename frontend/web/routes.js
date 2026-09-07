@@ -56,6 +56,7 @@ import DevViewPage from './components/pages/DevViewPage'
 import AdminDashboardPage from './components/pages/admin-dashboard/AdminDashboardPage'
 import CleanupPage from './components/pages/feature-lifecycle'
 import OAuthAuthorizePage from './components/pages/OAuthAuthorizePage'
+import { ORGANISATION_USAGE, ORGANISATIONS } from './routePaths'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 export const routes = {
@@ -115,8 +116,8 @@ export const routes = {
   'organisation-projects': '/organisation/:organisationId/projects',
   'organisation-settings': '/organisation/:organisationId/settings',
   'organisation-settings-redirect': '/organisation-settings',
-  'organisation-usage': '/organisation/:organisationId/usage',
-  'organisations': '/organisations',
+  'organisation-usage': ORGANISATION_USAGE,
+  'organisations': ORGANISATIONS,
   'password-reset': '/password-reset/confirm/:uid/:token/',
   'permissions': '/project/:projectId/permissions',
   'project-redirect': '/project/:projectId',
