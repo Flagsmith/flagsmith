@@ -82,6 +82,33 @@ def test_environment_save__feature_default_enabled_changed__preserves_feature_st
     assert FeatureState.objects.count() == 1
 
 
+def test_environment_create__seeding_feature_states__is_marked_as_creating(
+    project: Project,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    is_creating_while_seeding: list[bool] = []
+
+    def _record_is_creating(environment: Environment) -> None:
+        is_creating_while_seeding.append(
+            Environment.objects.filter(id=environment.id, is_creating=True).exists()
+        )
+
+    mocker.patch.object(
+        FeatureState,
+        "create_initial_feature_states_for_environment",
+        side_effect=_record_is_creating,
+    )
+
+    # When
+    environment = Environment.objects.create(name="Test environment", project=project)
+
+    # Then
+    assert is_creating_while_seeding == [True]
+    assert environment.is_creating is False
+    assert Environment.objects.get(id=environment.id).is_creating is False
+
+
 def test_environment_clone__default__does_not_modify_original_instance(
     environment: Environment,
 ) -> None:

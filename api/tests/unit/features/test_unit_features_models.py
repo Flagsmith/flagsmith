@@ -35,6 +35,34 @@ yesterday = now - timedelta(days=1)
 tomorrow = now + timedelta(days=1)
 
 
+def test_feature_create__seeding_feature_states__is_marked_as_creating(
+    db: None,
+    project: Project,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    is_creating_while_seeding: list[bool] = []
+
+    def _record_is_creating(feature: Feature) -> None:
+        is_creating_while_seeding.append(
+            Feature.objects.filter(id=feature.id, is_creating=True).exists()
+        )
+
+    mocker.patch.object(
+        FeatureState,
+        "create_initial_feature_states_for_feature",
+        side_effect=_record_is_creating,
+    )
+
+    # When
+    feature = Feature.objects.create(name="test_feature", project=project)
+
+    # Then
+    assert is_creating_while_seeding == [True]
+    assert feature.is_creating is False
+    assert Feature.objects.get(id=feature.id).is_creating is False
+
+
 def test_feature_create__multiple_environments__creates_feature_states_for_all(
     db: None,
     environment: Environment,

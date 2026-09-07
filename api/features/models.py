@@ -92,7 +92,9 @@ if typing.TYPE_CHECKING:
 class Feature(  # type: ignore[django-manager-missing]
     SoftDeleteExportableModel,
     CustomLifecycleModelMixin,
-    abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
+    # `is_creating` is an internal lifecycle flag, and is cleared without a historical
+    # record, so it is kept out of the feature's history entirely.
+    abstract_base_auditable_model_factory(["uuid", "is_creating"]),  # type: ignore[misc]
 ):
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
@@ -127,6 +129,14 @@ class Feature(  # type: ignore[django-manager-missing]
     )
 
     is_server_key_only = models.BooleanField(default=False)
+
+    is_creating = models.BooleanField(
+        default=False,
+        help_text=(
+            "Attribute used to indicate when a feature is still being created, and its"
+            " initial feature states are not yet guaranteed to exist"
+        ),
+    )
 
     history_record_class_path = "features.models.HistoricalFeature"
     related_object_type = RelatedObjectType.FEATURE
@@ -178,9 +188,20 @@ class Feature(  # type: ignore[django-manager-missing]
                 args=(self.name, self.id, self.project_id),
             )
 
+    @hook(BEFORE_CREATE)  # type: ignore[misc]
+    def mark_as_creating(self) -> None:
+        # The feature row is committed before `create_feature_states` seeds its feature
+        # states, so anything reading the project in between sees a feature with no
+        # states in any environment. `is_creating` marks that window for the
+        # environment document writer.
+        self.is_creating = True
+
     @hook(AFTER_CREATE)
     def create_feature_states(self):  # type: ignore[no-untyped-def]
         FeatureState.create_initial_feature_states_for_feature(feature=self)
+        self.is_creating = False
+        # Update the row directly to avoid re-triggering hooks for a lifecycle flag.
+        Feature.objects.filter(id=self.id).update(is_creating=False)
 
     @hook(AFTER_SAVE)  # type: ignore[misc]
     def delete_identity_overrides(self) -> None:
