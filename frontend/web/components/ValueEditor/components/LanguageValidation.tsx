@@ -10,25 +10,21 @@ import {
 
 interface LanguageValidationProps {
   language: ValueEditorLanguage
-  // The parse error for the current value, or false when it is valid. Computed
-  // by ValueEditor, so this stays presentational and can be rendered anywhere,
-  // not only inside the format row.
   error: string | false
 }
 
-// Icon drops className for most icons and only a few spread their rest props,
-// so the colour class goes on a wrapper and the icon inherits via currentColor.
+// Icon drops className for most icons, so the colour class goes on a wrapper
+// and the icon inherits it via currentColor.
 const Wrapper: FC<{
   tone: 'success' | 'danger'
   children: ReactNode
   id?: string
 }> = ({ children, id, tone }) => (
-  <span id={id} className={`language-icon text-${tone}`}>
+  <span id={id} className={`d-flex align-items-center text-${tone}`}>
     {children}
   </span>
 )
 
-/** Tick or warning for the current value under the active format. */
 const LanguageValidation: FC<LanguageValidationProps> = ({
   error,
   language,
@@ -45,9 +41,8 @@ const LanguageValidation: FC<LanguageValidationProps> = ({
   return (
     <Tooltip
       title={
-        // saveFeatureWithValidation reads this id off the DOM to decide
-        // whether to warn before saving. ValueEditor now reports validity
-        // through onValidityChange; the id stays until that caller moves over.
+        // saveFeatureWithValidation reads this id off the DOM to decide whether
+        // to warn before saving, so it stays until that caller moves over.
         <Wrapper tone='danger' id='language-validation-error'>
           <Icon name='warning' width={14} fill='currentColor' />
         </Wrapper>

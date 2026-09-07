@@ -24,25 +24,21 @@ export interface ValueEditorProps {
   className?: string
   'data-test'?: string
   disabled?: boolean
-  // Renders the field's label and wires it to the editor. Callers used to
-  // render their own, which is why three different label treatments grew up
-  // around this component and none of them named the editor.
+  // Rendered as a FieldLabel wired to the editor, so callers cannot get the
+  // association wrong.
   label?: ReactNode
-  // Sits beside the label, past the tooltip icon: a weight, a count, a
-  // status. A sibling rather than label content, so it stays out of the
-  // editor's accessible name.
+  // Sits beside the label, outside it, so it stays out of the editor's
+  // accessible name.
   labelAfter?: ReactNode
   labelTooltip?: string
   language?: ValueEditorLanguage
   name?: string
   onBlur?: () => void
-  // The edited text. Deliberately a string, not FlagsmithValue: this edits
-  // text, and deciding that "123" is a number is Flagsmith's domain logic.
-  // Callers interpret it (Utils.getTypedValue, Utils.valueToFeatureState).
+  // A string, not FlagsmithValue: deciding that "123" is a number is the
+  // caller's job (Utils.getTypedValue, Utils.valueToFeatureState).
   onChange?: (value: string) => void
   // placeholder and readOnly only reach the editor under E2E, which swaps
-  // Highlight for a plain textarea. Highlight renders its own
-  // 'Enter a value...' and stops accepting input while disabled.
+  // Highlight for a textarea.
   placeholder?: string
   readOnly?: boolean
   // Fires when the value stops or starts parsing under the active format.
@@ -60,9 +56,9 @@ const ValueEditor: FC<ValueEditorProps> = ({
   name,
   onBlur,
   onChange,
+  onValidityChange,
   placeholder,
   readOnly,
-  onValidityChange,
   value,
   ...rest
 }) => {
@@ -72,10 +68,8 @@ const ValueEditor: FC<ValueEditorProps> = ({
   const labelId = useId()
   const text = value === undefined || value === null ? '' : `${value}`
 
-  // True once the format is decided: the caller pinned it, we detected JSON, or
-  // someone picked one. Detection waits for a value rather than running on
-  // mount, because values load after mount and a mount-only check left a JSON
-  // value rendering as plaintext.
+  // Detection waits for a value rather than running on mount: values load
+  // after mount, and a mount-only check left JSON rendering as plaintext.
   const formatSettled = useRef(!!languageProp)
 
   useEffect(() => {
@@ -88,9 +82,6 @@ const ValueEditor: FC<ValueEditorProps> = ({
     } catch (e) {}
   }, [text])
 
-  // Validity lives here rather than in the format row, so it can be reported
-  // to callers and rendered anywhere. Keeping it in the row is what left the
-  // SAML field with language='xml' and no XML validation at all.
   const error = useMemo(() => validateValue(language, text), [language, text])
 
   useEffect(() => {
@@ -103,7 +94,6 @@ const ValueEditor: FC<ValueEditorProps> = ({
     setLanguage(next)
   }
 
-  // The format row and copy are both editing affordances.
   const showControls = !disabled
 
   return (
@@ -115,10 +105,10 @@ const ValueEditor: FC<ValueEditorProps> = ({
       )}
     >
       {(label || showControls) && (
-        <div className='value-editor__header'>
+        <div className='value-editor__header d-flex align-items-center justify-content-between gap-2 mb-1'>
           {label && (
-            <div className='value-editor__label'>
-              <FieldLabel id={labelId} tooltip={labelTooltip}>
+            <div className='d-flex align-items-center gap-2'>
+              <FieldLabel className='mb-0' id={labelId} tooltip={labelTooltip}>
                 {label}
               </FieldLabel>
               {labelAfter}
@@ -134,7 +124,7 @@ const ValueEditor: FC<ValueEditorProps> = ({
         </div>
       )}
 
-      <div className='value-editor__field'>
+      <div className='value-editor__field position-relative'>
         {showControls && <CopyValueButton value={text} />}
 
         {E2E ? (
