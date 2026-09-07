@@ -985,10 +985,11 @@ OAUTH2_PROVIDER = {
     "REFRESH_TOKEN_GRACE_PERIOD_SECONDS": 60 * 2,
     "PKCE_REQUIRED": True,
     "ALLOWED_CODE_CHALLENGE_METHODS": ["S256"],
+    # Keys are wire values: published as `scopes_supported`, requested by the
+    # CLI and MCP clients, and recorded on issued tokens. Only the labels,
+    # shown on the consent screen, are safe to reword.
     "SCOPES": {
         "mcp": "MCP access",
-        # NB: the `admin-api` key is a published OAuth scope identifier sent by
-        # the Flagsmith CLI — only the human-readable label may change.
         "admin-api": "Management API access",
     },
     "DEFAULT_SCOPES": ["mcp"],
