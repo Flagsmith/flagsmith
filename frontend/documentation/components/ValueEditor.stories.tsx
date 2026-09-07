@@ -51,7 +51,6 @@ export const Json: Story = {
   render: () => (
     <Interactive
       label='Value'
-      language='json'
       initialValue='{ "colour": "blue", "size": 12 }'
     />
   ),
@@ -76,13 +75,6 @@ export const ValueArrivesAfterMount: Story = {
   render: () => <LateLoading />,
 }
 
-// Invalid JSON surfaces a warning against the active language label.
-export const InvalidJson: Story = {
-  render: () => (
-    <Interactive label='Value' language='json' initialValue='{ "colour": ' />
-  ),
-}
-
 export const CodeMedium: Story = {
   render: () => (
     <Interactive
@@ -97,6 +89,18 @@ export const CodeMedium: Story = {
 export const Disabled: Story = {
   render: () => (
     <Interactive label='Control value' disabled initialValue='DEFAULT_VALUE' />
+  ),
+}
+
+// A pinned format hides the row, since there is nothing to switch to. This is
+// what the SAML IdP metadata field renders.
+export const XmlOnly: Story = {
+  render: () => (
+    <Interactive
+      label='IdP metadata XML'
+      language='xml'
+      initialValue={'<EntityDescriptor entityID="https://example.com" />'}
+    />
   ),
 }
 

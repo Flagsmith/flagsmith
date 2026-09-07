@@ -76,7 +76,9 @@ const ValueEditor: FC<ValueEditorProps> = ({
     setLanguage(next)
   }
 
-  const showControls = !disabled
+  // A caller that pins the format has nothing to switch, so the row goes, and
+  // copy goes with it as it always has.
+  const showControls = !disabled && !languageProp
 
   return (
     <div
