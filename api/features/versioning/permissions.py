@@ -34,9 +34,11 @@ class EnvironmentFeatureVersionPermissions(BasePermission):
         return request.user.has_environment_permission(  # type: ignore[union-attr]
             permission=required_permission,
             environment=environment,
-            tag_ids=tag_ids,  # type: ignore[arg-type]
+            tag_ids=tag_ids,
         )
 
+    # django-stubs types FeatureState.environment as Optional, but every path that
+    # reaches these checks has one; hence the arg-type suppressions below.
     def has_object_permission(
         self,
         request: Request,
@@ -56,7 +58,7 @@ class EnvironmentFeatureVersionPermissions(BasePermission):
         return request.user.has_environment_permission(  # type: ignore[union-attr]
             permission=required_permission,
             environment=obj.environment,
-            tag_ids=tag_ids,  # type: ignore[arg-type]
+            tag_ids=tag_ids,
         )
 
 

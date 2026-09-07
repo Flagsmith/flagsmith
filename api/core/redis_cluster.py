@@ -100,6 +100,8 @@ class ClusterConnectionFactory(ConnectionFactory):  # type: ignore[misc]
                     params = self.make_connection_params(url)
                     self._clients[url] = self.get_connection(params)
 
+        # redis-py ships no annotations for the cluster client, so the cache lookup
+        # is Any. Remove once redis-py is typed or a stub package is added.
         return self._clients[url]  # type: ignore[no-any-return]
 
     def get_connection(self, connection_params: dict) -> RedisCluster:  # type: ignore[type-arg]
@@ -129,7 +131,8 @@ class ClusterConnectionFactory(ConnectionFactory):  # type: ignore[misc]
             client_cls_kwargs["read_from_replicas"] = (
                 settings.REDIS_CLUSTER_READ_FROM_REPLICAS
             )
-            # ... and then build and return the client
+            # ... and then build and return the client. redis-py is unannotated, so
+            # the constructor result is Any; see the note on get_client above.
             return RedisCluster(**client_cls_kwargs)  # type: ignore[no-any-return]
         except Exception as e:
             # Let django redis handle the exception

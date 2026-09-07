@@ -346,7 +346,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         permission_key: str,
         tag_ids: list[int] | None = None,
     ) -> QuerySet[Project]:
-        return get_permitted_projects_for_user(self, permission_key, tag_ids)  # type: ignore[arg-type]
+        return get_permitted_projects_for_user(self, permission_key, tag_ids)
 
     def has_project_permission(
         self,
@@ -362,7 +362,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self,
         permission: str,
         environment: "Environment",
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
     ) -> bool:
         return environment in self.get_permitted_environments(
             permission, environment.project, tag_ids=tag_ids
@@ -382,7 +382,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
             self,
             project,
             permission_key,
-            tag_ids,  # type: ignore[arg-type]
+            tag_ids,
             prefetch_metadata=prefetch_metadata,
         )
 
