@@ -81,8 +81,6 @@ class EnvironmentFeatureVersionFeatureStatePermissions(BasePermission):
             permission=UPDATE_FEATURE_STATE, environment=environment
         )
 
-    # django-stubs types FeatureState.environment as Optional, but every path that
-    # reaches these checks has one; hence the arg-type suppressions below.
     def has_object_permission(
         self,
         request: Request,

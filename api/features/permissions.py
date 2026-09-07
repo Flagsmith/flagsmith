@@ -130,8 +130,6 @@ class FeatureStatePermissions(IsAuthenticated):
         except (Environment.DoesNotExist, Feature.DoesNotExist):
             return False
 
-    # django-stubs types FeatureState.environment as Optional, but every path that
-    # reaches this check has one; hence the arg-type suppression below.
     def has_object_permission(
         self,
         request: Request,

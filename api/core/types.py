@@ -11,8 +11,4 @@ class AuthenticatedRequest(Request):
     which DRF types as possibly anonymous, wherever `IsAuthenticated` guarantees a user.
     """
 
-    # Narrowing an attribute in a subclass is unsound in the general case, so mypy
-    # rejects it. This class is annotation-only and never instantiated, so the
-    # narrowing is safe: it only describes a request a permission class has already
-    # validated. Remove if DRF ever makes Request generic over its user type.
     user: FFAdminUser | APIKeyUser  # type: ignore[assignment]

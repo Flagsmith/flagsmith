@@ -63,8 +63,6 @@ class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper, abc.ABC):
     ) -> "CompressedEnvironmentDocument": ...
 
     def _write_environments(self, environments: Iterable["Environment"]) -> None:
-        # Materialise once: prefetch_related_objects needs a Sequence, and the write
-        # loop below iterates again, which would come up empty for a generator.
         environments = list(environments)
         openfeature_client = get_openfeature_client()
         prefetch_related_objects(
