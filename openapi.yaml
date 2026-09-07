@@ -4071,7 +4071,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/experiments/{experiment_id}/rollout/':
     patch:
       operationId: api_v1_environments_experiments_rollout_partial_update
-      description: Manage experiments for an environment.
+      description: 'Sets an experiment''s rollout: the percentage of eligible identities enrolled, the variant weights they are split across, and optionally the targeted audience. The audience can only be changed before the experiment starts serving traffic.'
       parameters:
         - name: environment_api_key
           in: path
@@ -4088,13 +4088,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedExperimentList'
+              $ref: '#/components/schemas/PatchedExperimentRollout'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedExperimentList'
+              $ref: '#/components/schemas/PatchedExperimentRollout'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedExperimentList'
+              $ref: '#/components/schemas/PatchedExperimentRollout'
       responses:
         '200':
           description: ''
@@ -21119,6 +21119,20 @@ components:
         - feature
         - hypothesis
         - name
+    ExperimentAudience:
+      type: object
+      properties:
+        match:
+          default: any
+          allOf:
+            - $ref: '#/components/schemas/MatchEnum'
+        segment_ids:
+          type: array
+          items:
+            type: integer
+          maxItems: 1
+      required:
+        - segment_ids
     ExperimentDetail:
       type: object
       properties:
@@ -21316,6 +21330,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MultivariateValue'
+        audience:
+          $ref: '#/components/schemas/ExperimentAudience'
       required:
         - enabled
         - feature_state_value
@@ -22838,6 +22854,14 @@ components:
           readOnly: true
       required:
         - master_api_key
+    MatchEnum:
+      description: |-
+        * `any` - Any
+        * `all` - All
+      type: string
+      enum:
+        - any
+        - all
     MetaDataModelField:
       description: Adds nested create feature
       type: object
@@ -24861,54 +24885,6 @@ components:
             - 'null'
           format: date-time
           readOnly: true
-    PatchedExperimentList:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        feature:
-          allOf:
-            - $ref: '#/components/schemas/ExperimentFeature'
-          readOnly: true
-        name:
-          type: string
-          maxLength: 255
-        hypothesis:
-          type: string
-        status:
-          allOf:
-            - $ref: '#/components/schemas/Status7a8Enum'
-          readOnly: true
-        metrics:
-          type: array
-          items:
-            $ref: '#/components/schemas/ExperimentMetric'
-          readOnly: true
-        experiment_rollout:
-          allOf:
-            - $ref: '#/components/schemas/ExperimentRollout'
-          writeOnly: true
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        started_at:
-          type:
-            - string
-            - 'null'
-          format: date-time
-          readOnly: true
-        ended_at:
-          type:
-            - string
-            - 'null'
-          format: date-time
-          readOnly: true
     PatchedExperimentMetric:
       type: object
       properties:
@@ -24933,6 +24909,24 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedExperimentRollout:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        rollout_percentage:
+          type: number
+          format: double
+          maximum: 100
+          minimum: 0
+        feature_state_value:
+          $ref: '#/components/schemas/FeatureValue'
+        multivariate_feature_state_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/MultivariateValue'
+        audience:
+          $ref: '#/components/schemas/ExperimentAudience'
     PatchedFeatureExternalResource:
       type: object
       properties:
