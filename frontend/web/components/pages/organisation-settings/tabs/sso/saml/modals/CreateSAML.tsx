@@ -234,7 +234,10 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
               name: name,
               organisation: organisationId,
             } as Req['updateSamlConfiguration']['body']
-            if (metadataXml) {
+            // Sent even when empty on edit, so clearing the field reaches the
+            // server. The update is a PUT, and an omitted optional field
+            // leaves the stored value alone.
+            if (isEdit || metadataXml) {
               body.idp_metadata_xml = metadataXml
             }
             if (allowIdpInitiated) {
