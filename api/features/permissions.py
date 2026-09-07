@@ -67,8 +67,6 @@ class FeaturePermissions(IsAuthenticated):
         except Project.DoesNotExist:
             return False
 
-    # django-stubs types FeatureState.environment as Optional, but every path that
-    # reaches these checks has one; hence the arg-type suppressions below.
     def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         # map of actions and their required permission
         if view.action in ACTION_PERMISSIONS_MAP:
@@ -132,6 +130,8 @@ class FeatureStatePermissions(IsAuthenticated):
         except (Environment.DoesNotExist, Feature.DoesNotExist):
             return False
 
+    # django-stubs types FeatureState.environment as Optional, but every path that
+    # reaches this check has one; hence the arg-type suppression below.
     def has_object_permission(
         self,
         request: Request,
