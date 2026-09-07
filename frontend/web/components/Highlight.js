@@ -85,6 +85,15 @@ class Highlight extends React.Component {
     if (nextState.expandable !== this.state.expandable) return true
     if (nextState.expanded !== this.state.expanded) return true
     if (nextProps['data-test'] !== this.props['data-test']) return true
+    // Without these a value editor that turns read-only keeps its old
+    // contentEditable and never gains aria-readonly, because the text and
+    // className are unchanged.
+    if (nextProps.disabled !== this.props.disabled) return true
+    if (nextProps.role !== this.props.role) return true
+    if (nextProps['aria-readonly'] !== this.props['aria-readonly']) return true
+    if (nextProps['aria-labelledby'] !== this.props['aria-labelledby'])
+      return true
+    if (!nextProps.onChange !== !this.props.onChange) return true
     return this.state.value.__html !== `${nextProps.children}`
   }
 

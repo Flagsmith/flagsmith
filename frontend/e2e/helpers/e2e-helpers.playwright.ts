@@ -22,7 +22,9 @@ export class E2EHelpers {
   // data-test. The feature value label switches to "Control Value <weight>%"
   // once the feature has variations, hence the alternation.
   featureValueField(): Locator {
-    return this.page.getByRole('textbox', { name: /^(Value|Control Value)/ });
+    return this.page
+      .locator('#create-feature-modal')
+      .getByRole('textbox', { name: /^(Value|Control Value)$/ });
   }
 
   variationValueField(index: number): Locator {

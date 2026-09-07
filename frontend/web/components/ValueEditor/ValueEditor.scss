@@ -1,6 +1,6 @@
 // The `code.txt` and `.hljs` selectors are Highlight's markup: it renders the
 // editor and sets the language as the class name. Imports _variables for the
-// input sizing values, which have no token equivalent yet.
+// input and type scalars, the same way the stylesheets in styles/components do.
 @import '../../styles/variables';
 
 .invalid .value-editor .hljs {

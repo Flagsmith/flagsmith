@@ -287,7 +287,6 @@ const SegmentOverrideInner = class Override extends React.Component {
                           setValue(Utils.getTypedValue(newValue))
                         }
                   }
-                  placeholder="Value e.g. 'big' "
                 />
               </div>
             </>
