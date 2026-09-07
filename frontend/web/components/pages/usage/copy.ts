@@ -11,13 +11,17 @@ import { allowanceWindowLabel, UsageBasis } from './utils'
 const sentences = (...parts: (string | false | undefined)[]): string =>
   parts.filter(Boolean).join(' ')
 
+const calls = (count: number): string => (count === 1 ? 'call' : 'calls')
+
 // Only the overage is evidence the limit was reached. block_access_to_admin
 // says an organisation is blocked, not why, and support can set it by hand.
+// Names no window: the same sentence serves a limit measured over a billing
+// period and one measured over the last 30 days.
 const limitReached = (over: OverLimit | undefined): string | undefined =>
   over &&
-  `You reached your ${Format.shortenNumber(over.limit)} plan limit${
-    over.crossedOn ? ` on ${over.crossedOn}` : ''
-  }.`
+  `You reached your plan limit of ${Format.shortenNumber(
+    over.limit,
+  )} API ${calls(over.limit)}${over.crossedOn ? ` on ${over.crossedOn}` : ''}.`
 
 /** Every sentence that does not depend on a number. */
 const COPY = {
@@ -68,9 +72,9 @@ export const overLimitBannerCopy = (
 })
 
 export const overLimitNote = (over: OverLimit): string =>
-  `${Format.shortenNumber(over.overBy)} ${
-    over.overBy === 1 ? 'call' : 'calls'
-  } over your ${Format.shortenNumber(over.limit)} limit.`
+  `${Format.shortenNumber(over.overBy)} ${calls(
+    over.overBy,
+  )} over your ${Format.shortenNumber(over.limit)} limit.`
 
 export const planSectionCopy = (
   basis: UsageBasis,

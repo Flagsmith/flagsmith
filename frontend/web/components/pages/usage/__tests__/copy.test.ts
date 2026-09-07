@@ -28,7 +28,7 @@ describe('usage copy', () => {
     const over = exceeding(60000, 50000, days([40000, 20000]))
 
     expect(overLimitBannerCopy(over, billed).body).toContain(
-      'plan limit on 2 Aug',
+      'API calls on 2 Aug',
     )
   })
 
@@ -38,7 +38,7 @@ describe('usage copy', () => {
 
     const { body } = overLimitBannerCopy(over, billed)
 
-    expect(body).toContain('your 50K plan limit.')
+    expect(body).toContain('your plan limit of 50K API calls.')
     expect(body).not.toContain(' on ')
   })
 
@@ -64,7 +64,9 @@ describe('usage copy', () => {
       window: 'rolling',
     } as UsageBasis).body
 
-    expect(body).toContain('You reached your 50K plan limit on 2 Aug.')
+    expect(body).toContain(
+      'You reached your plan limit of 50K API calls on 2 Aug.',
+    )
     expect(body).toContain('Your usage stays visible below')
   })
 
@@ -73,7 +75,9 @@ describe('usage copy', () => {
     const { body, title } = restrictedBannerCopy(over)
 
     expect(title).toBe('Your organisation is restricted')
-    expect(body).toContain('You reached your 50K plan limit on 2 Aug.')
+    expect(body).toContain(
+      'You reached your plan limit of 50K API calls on 2 Aug.',
+    )
     expect(body).toContain('stayed under the limit for 30 days')
     // The charge is not the point once they are already cut off.
     expect(body).not.toContain('Overage charges')
