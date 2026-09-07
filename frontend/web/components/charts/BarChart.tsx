@@ -35,90 +35,20 @@ type BarChartProps = {
   barSize?: number
   /** Render vertical grid lines (one per x tick). Default `true`. */
   verticalGrid?: boolean
-  /** Chart height in pixels. Default 400. */
-  height?: number
-  /**
-   * dataKey → stack id, for part-of-whole bars: series sharing a stack id
-   * stack together, distinct ids sit side by side (e.g. converted/remainder
-   * segments stacked per variant, variants grouped). Default: all series
-   * share one stack.
-   */
-  stackMap?: Record<string, string>
-  /**
-   * dataKey → fill opacity (0–1). Colours are CSS `var()` strings, so
-   * transparency must come from SVG fill-opacity, not an alpha channel.
-   */
-  opacityMap?: Record<string, number>
-  /**
-   * Per-entry tooltip value renderer, threaded to ChartTooltip. Skipped for
-   * missing or non-numeric values, which render blank.
-   */
-  tooltipValueFormatter?: (
-    value: number,
-    seriesKey: string,
-    label: string,
-  ) => string
-  /**
-   * Hide the tooltip's total row — required when `tooltipValueFormatter`
-   * renders a non-additive unit such as a percentage.
-   */
-  tooltipHideTotal?: boolean
 }
-
-type LegendValue = string | number
-
-type FadedSwatchLegendProps = {
-  opacityMap: Record<string, number>
-  seriesLabels?: Record<string, string>
-  // Injected by recharts' <Legend content={...}>.
-  payload?: { value?: LegendValue; color?: string }[]
-}
-
-const FadedSwatchLegend: FC<FadedSwatchLegendProps> = ({
-  opacityMap,
-  payload,
-  seriesLabels,
-}) => (
-  <div className='d-flex justify-content-center flex-wrap gap-3'>
-    {payload?.map((entry) => {
-      const key = String(entry.value)
-      return (
-        <span className='d-flex align-items-center gap-1' key={key}>
-          <span
-            style={{
-              backgroundColor: entry.color,
-              display: 'inline-block',
-              height: 10,
-              opacity: opacityMap[key] ?? 1,
-              width: 10,
-            }}
-          />
-          <span style={{ color: entry.color, fontSize: 12 }}>
-            {seriesLabels?.[key] ?? key}
-          </span>
-        </span>
-      )
-    })}
-  </div>
-)
 
 const BarChart: FC<BarChartProps> = ({
   barSize,
   colorMap,
   data,
-  height = 400,
-  opacityMap,
   series,
   seriesLabels,
   showLegend = false,
-  stackMap,
-  tooltipHideTotal,
-  tooltipValueFormatter,
   verticalGrid = true,
   xAxisInterval = 0,
 }) => {
   return (
-    <ResponsiveContainer height={height} width='100%'>
+    <ResponsiveContainer height={400} width='100%'>
       <RawBarChart data={data}>
         <CartesianGrid
           strokeDasharray='3 5'
@@ -145,13 +75,7 @@ const BarChart: FC<BarChartProps> = ({
         />
         <Tooltip
           cursor={{ fill: 'transparent' }}
-          content={
-            <ChartTooltip
-              hideTotal={tooltipHideTotal}
-              seriesLabels={seriesLabels}
-              valueFormatter={tooltipValueFormatter}
-            />
-          }
+          content={<ChartTooltip seriesLabels={seriesLabels} />}
         />
         {showLegend && (
           <Legend
@@ -159,25 +83,14 @@ const BarChart: FC<BarChartProps> = ({
             formatter={(value) =>
               seriesLabels?.[String(value)] ?? String(value)
             }
-            content={
-              // The default legend swatch ignores fillOpacity, so faded
-              // series need their own renderer to match the bars.
-              opacityMap ? (
-                <FadedSwatchLegend
-                  opacityMap={opacityMap}
-                  seriesLabels={seriesLabels}
-                />
-              ) : undefined
-            }
           />
         )}
         {series.map((label, index) => (
           <Bar
             key={label}
             dataKey={label}
-            stackId={stackMap?.[label] ?? 'series'}
+            stackId='series'
             fill={colorMap[label]}
-            fillOpacity={opacityMap?.[label]}
             barSize={barSize}
             animationBegin={index * 80}
             animationDuration={600}

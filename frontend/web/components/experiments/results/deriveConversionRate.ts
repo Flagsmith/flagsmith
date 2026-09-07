@@ -14,30 +14,25 @@ import {
 
 type AccumulatedBucket = {
   day: string
-  exposed: Record<string, number>
   converted: Record<string, number>
   // Raw per-bucket increments, for discrete (per-day) displays. Never divide
   // these — a bucket's first conversions can exceed its new exposures.
-  newExposed: Record<string, number>
   newConverted: Record<string, number>
 }
 
-// Walks the union of both series' buckets in time order, carrying running
-// totals forward across buckets missing from either series. Exposures bucket
-// by first exposure and conversions by first conversion, so only these
-// running totals may be divided (see ResultsSummary.exposures_timeseries in
-// api/experimentation/dataclasses.py).
+// The backend returns every bucket since the experiment started, uncapped.
+const MAX_DAY_BUCKETS = 30
+
+// Walks the union of both series' buckets in time order, so a bucket carrying
+// exposures but no conversions still appears, and carries the running
+// conversion total forward across it.
 const accumulateBuckets = (
   exposures: ExposuresTimeseries,
   identities: VariantIdentity[],
-  conversions?: ConversionsTimeseries | null,
+  conversions: ConversionsTimeseries,
 ): AccumulatedBucket[] => {
-  const exposedByBucket: Record<string, Record<string, number>> = {}
-  exposures.points.forEach((p) => {
-    exposedByBucket[p.bucket] = p.new_identities
-  })
   const convertedByBucket: Record<string, Record<string, number>> = {}
-  conversions?.points.forEach((p) => {
+  conversions.points.forEach((p) => {
     convertedByBucket[p.bucket] = p.converted_identities
   })
 
@@ -46,16 +41,23 @@ const accumulateBuckets = (
   // labelling).
   const buckets = Array.from(
     new Set([
-      ...Object.keys(exposedByBucket),
+      ...exposures.points.map((p) => p.bucket),
       ...Object.keys(convertedByBucket),
     ]),
   ).sort()
 
-  // Labels key countsByDay and the chart category, so they must be unique:
-  // a series spanning calendar years adds the year to avoid '1 Jun'
-  // colliding with the same day a year later.
+  // Only the rendered window is trimmed: running totals still accumulate from
+  // the experiment start.
+  const from =
+    exposures.granularity === 'day'
+      ? Math.max(0, buckets.length - MAX_DAY_BUCKETS)
+      : 0
+
+  // Labels key the chart category, so they must be unique: a window spanning
+  // calendar years adds the year to avoid '1 Jun' colliding with the same day
+  // a year later.
   const spansYears =
-    new Set(buckets.map((bucket) => bucket.slice(0, 4))).size > 1
+    new Set(buckets.slice(from).map((bucket) => bucket.slice(0, 4))).size > 1
   const toLabel = (bucket: string) =>
     spansYears
       ? moment
@@ -67,114 +69,38 @@ const accumulateBuckets = (
           )
       : formatBucketLabel(bucket, exposures.granularity)
 
-  const cumExposed: Record<string, number> = {}
   const cumConverted: Record<string, number> = {}
   identities.forEach((v) => {
-    cumExposed[v.key] = 0
     cumConverted[v.key] = 0
   })
 
-  return buckets.map((bucket) => {
-    const newExposed: Record<string, number> = {}
+  const accumulated: AccumulatedBucket[] = []
+  buckets.forEach((bucket, index) => {
     const newConverted: Record<string, number> = {}
     identities.forEach((v) => {
-      newExposed[v.key] = exposedByBucket[bucket]?.[v.key] ?? 0
       newConverted[v.key] = convertedByBucket[bucket]?.[v.key] ?? 0
-      cumExposed[v.key] += newExposed[v.key]
       cumConverted[v.key] += newConverted[v.key]
     })
-    return {
+    if (index < from) return
+    accumulated.push({
       converted: { ...cumConverted },
       day: toLabel(bucket),
-      exposed: { ...cumExposed },
       newConverted,
-      newExposed,
-    }
-  })
-}
-
-// Rounded to one decimal for stable display.
-const toRatePct = (converted: number, exposed: number): number =>
-  Math.round((converted / exposed) * 1000) / 10
-
-const seriesMeta = (identities: VariantIdentity[]) => {
-  const seriesLabels: Record<string, string> = {}
-  const colorMap: Record<string, string> = {}
-  identities.forEach((v) => {
-    seriesLabels[v.key] = v.name
-    colorMap[v.key] = v.colour
-  })
-  return { colorMap, seriesLabels }
-}
-
-export type ConversionCounts = Record<
-  string,
-  { converted: number; exposed: number }
->
-
-export type ConversionRateChartData = ExposuresChartData & {
-  // Running numerator/denominator per bucket label, for tooltips.
-  countsByDay: Record<string, ConversionCounts>
-}
-
-// Cumulative conversion rate per variant: running conversions over running
-// exposures. A variant with no exposures yet is omitted from the point rather
-// than shown as 0%.
-export const buildConversionRateChartData = (
-  results: BayesianResultsSummary,
-  metricId: number,
-  identities: VariantIdentity[],
-): ConversionRateChartData | null => {
-  const exposures = results.exposures_timeseries
-  const conversions = getMetricResult(results, metricId)?.conversions_timeseries
-  if (!exposures || !conversions) return null
-
-  const series = identities.map((v) => v.key)
-  const countsByDay: Record<string, ConversionCounts> = {}
-  const points: ChartDataPoint[] = accumulateBuckets(
-    exposures,
-    identities,
-    conversions,
-  ).map((b) => {
-    const point: ChartDataPoint = { day: b.day }
-    const counts: ConversionCounts = {}
-    identities.forEach((v) => {
-      const exposed = b.exposed[v.key]
-      if (exposed === 0) return
-      point[v.key] = toRatePct(b.converted[v.key], exposed)
-      counts[v.key] = { converted: b.converted[v.key], exposed }
     })
-    countsByDay[b.day] = counts
-    return point
   })
-  return { countsByDay, points, series, ...seriesMeta(identities) }
+  return accumulated
 }
 
-export const REST_SUFFIX = '__rest'
+export type ConversionMode = 'cumulative' | 'daily'
 
-export type ConversionStackMode = 'cumulative' | 'daily'
-
-export type ConversionStackChartData = {
-  points: ChartDataPoint[]
-  series: string[]
-  seriesLabels: Record<string, string>
-  colorMap: Record<string, string>
-  opacityMap: Record<string, number>
-  stackMap: Record<string, string>
-}
-
-// Stacked-bar encodings of exposures vs conversions per variant.
-// 'cumulative': part-of-whole — the full bar is running exposures and the
-// solid segment is running conversions (always a subset, since a first
-// conversion can't precede a first exposure). 'daily': the raw per-bucket
-// increments side by side — NOT part-of-whole, because a day's first
-// conversions can exceed its new exposures, so no rate is implied.
-export const buildConversionStackChartData = (
+// Conversions per variant over time: 'cumulative' plots running totals,
+// 'daily' the raw per-bucket increments.
+export const buildConversionChartData = (
   results: BayesianResultsSummary,
   metricId: number,
   identities: VariantIdentity[],
-  mode: ConversionStackMode,
-): ConversionStackChartData | null => {
+  mode: ConversionMode,
+): ExposuresChartData | null => {
   const exposures = results.exposures_timeseries
   const conversions = getMetricResult(results, metricId)?.conversions_timeseries
   if (!exposures || !conversions) return null
@@ -183,24 +109,12 @@ export const buildConversionStackChartData = (
   const series: string[] = []
   const seriesLabels: Record<string, string> = {}
   const colorMap: Record<string, string> = {}
-  const opacityMap: Record<string, number> = {}
-  const stackMap: Record<string, string> = {}
   identities.forEach((v) => {
-    const restKey = `${v.key}${REST_SUFFIX}`
-    series.push(v.key, restKey)
+    series.push(v.key)
+    colorMap[v.key] = v.colour
     seriesLabels[v.key] = daily
       ? `${v.name} conversions`
       : `${v.name} converted`
-    seriesLabels[restKey] = daily
-      ? `${v.name} new exposures`
-      : `${v.name} exposures`
-    colorMap[v.key] = v.colour
-    // The faded series reuses the variant colour via fill-opacity (palette
-    // colours are CSS var() strings, so no alpha channel can be appended).
-    colorMap[restKey] = v.colour
-    opacityMap[restKey] = 0.25
-    stackMap[v.key] = v.key
-    stackMap[restKey] = daily ? restKey : v.key
   })
 
   const points: ChartDataPoint[] = accumulateBuckets(
@@ -211,11 +125,8 @@ export const buildConversionStackChartData = (
     const point: ChartDataPoint = { day: b.day }
     identities.forEach((v) => {
       point[v.key] = daily ? b.newConverted[v.key] : b.converted[v.key]
-      point[`${v.key}${REST_SUFFIX}`] = daily
-        ? b.newExposed[v.key]
-        : b.exposed[v.key] - b.converted[v.key]
     })
     return point
   })
-  return { colorMap, opacityMap, points, series, seriesLabels, stackMap }
+  return { colorMap, points, series, seriesLabels }
 }

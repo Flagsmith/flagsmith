@@ -25,16 +25,9 @@ type ChartTooltipProps = TooltipProps<ValueType, NameType> & {
   /**
    * Hide the total row at the bottom. Useful for single-entry payloads
    * (e.g. a pie-slice hover) where the total just repeats the entry value.
-   * Also required when `valueFormatter` renders a non-additive unit such as a
-   * percentage, since the total row stays plain-number formatted.
    * Default: false.
    */
   hideTotal?: boolean
-  /**
-   * Optional per-entry value renderer, e.g. to append units ("8.3%") or
-   * counts ("120 of 1,450"). Falls back to localised number formatting.
-   */
-  valueFormatter?: (value: number, seriesKey: string, label: string) => string
 }
 
 const ChartTooltip: FC<ChartTooltipProps> = ({
@@ -43,7 +36,6 @@ const ChartTooltip: FC<ChartTooltipProps> = ({
   label,
   payload,
   seriesLabels,
-  valueFormatter,
 }) => {
   if (!active || !payload || payload.length === 0) return null
   const total = payload.reduce<number>(
@@ -74,9 +66,7 @@ const ChartTooltip: FC<ChartTooltipProps> = ({
             <ColorSwatch color={entry.color ?? ''} size='sm' />
             <span className='text-default'>{displayName}:</span>
             <span className='fw-semibold text-default'>
-              {typeof entry.value === 'number' && valueFormatter
-                ? valueFormatter(entry.value, key, String(label ?? ''))
-                : formatNumber(entry.value)}
+              {formatNumber(entry.value)}
             </span>
           </div>
         )
