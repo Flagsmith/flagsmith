@@ -1,6 +1,6 @@
-import { FC, useCallback, useMemo, useState } from 'react'
+import { FC, useMemo, useState } from 'react'
 import moment from 'moment'
-import { BarChart } from 'components/charts'
+import { LineChart } from 'components/charts'
 import ContentCard from 'components/base/grid/ContentCard'
 import InlinePillToggle from 'components/base/forms/InlinePillToggle'
 import { BayesianResultsSummary, Experiment } from 'common/types/responses'
@@ -10,10 +10,8 @@ import {
   getVariantIdentities,
 } from 'components/experiments/results/derive'
 import {
-  ConversionStackMode,
-  REST_SUFFIX,
-  buildConversionRateChartData,
-  buildConversionStackChartData,
+  ConversionMode,
+  buildConversionChartData,
 } from 'components/experiments/results/deriveConversionRate'
 
 type ExperimentConversionRateCardProps = {
@@ -27,7 +25,7 @@ const ExperimentConversionRateCard: FC<ExperimentConversionRateCardProps> = ({
   experiment,
   results,
 }) => {
-  const [mode, setMode] = useState<ConversionStackMode>('cumulative')
+  const [mode, setMode] = useState<ConversionMode>('cumulative')
   const metric = getPrimaryMetric(experiment)
   const identities = useMemo(
     () => getVariantIdentities(experiment.feature),
@@ -36,45 +34,12 @@ const ExperimentConversionRateCard: FC<ExperimentConversionRateCardProps> = ({
   const chart = useMemo(
     () =>
       metric && results
-        ? buildConversionStackChartData(
-            results,
-            metric.metric,
-            identities,
-            mode,
-          )
+        ? buildConversionChartData(results, metric.metric, identities, mode)
         : null,
     [metric, results, identities, mode],
   )
-  // Running counts and rates, for the cumulative tooltip ("x of y (z%)").
-  const rateChart = useMemo(
-    () =>
-      metric && results
-        ? buildConversionRateChartData(results, metric.metric, identities)
-        : null,
-    [metric, results, identities],
-  )
 
-  const formatTooltipValue = useCallback(
-    (value: number, seriesKey: string, label: string) => {
-      if (mode === 'daily') return value.toLocaleString()
-      if (seriesKey.endsWith(REST_SUFFIX)) {
-        // The faded segment is labelled "exposures", so report the full bar
-        // total rather than the plotted remainder (exposures − conversions).
-        const variantKey = seriesKey.slice(0, -REST_SUFFIX.length)
-        const counts = rateChart?.countsByDay[label]?.[variantKey]
-        return (counts?.exposed ?? value).toLocaleString()
-      }
-      const counts = rateChart?.countsByDay[label]?.[seriesKey]
-      if (!counts) return value.toLocaleString()
-      const rate = rateChart?.points.find((p) => p.day === label)?.[seriesKey]
-      return `${counts.converted.toLocaleString()} of ${counts.exposed.toLocaleString()}${
-        typeof rate === 'number' ? ` (${rate}%)` : ''
-      }`
-    },
-    [mode, rateChart],
-  )
-
-  // Hidden entirely when no rate can be charted: value metrics, and
+  // Hidden entirely when no conversions can be charted: value metrics, and
   // payloads stored before the backend shipped the timeseries.
   if (!metric || !results || !chart) return null
 
@@ -99,13 +64,13 @@ const ExperimentConversionRateCard: FC<ExperimentConversionRateCardProps> = ({
           </div>
         ) : undefined
       }
-      title='Conversion rate over time'
+      title='Conversions over time'
     >
       {hasConversions ? (
         <>
           {/* mt-n2 halves the card's 16px child gap after the title. */}
           <div className='d-flex mt-n2'>
-            <InlinePillToggle<ConversionStackMode>
+            <InlinePillToggle<ConversionMode>
               size='small'
               options={[
                 { label: 'Cumulative', value: 'cumulative' },
@@ -115,17 +80,13 @@ const ExperimentConversionRateCard: FC<ExperimentConversionRateCardProps> = ({
               onChange={setMode}
             />
           </div>
-          <BarChart
+          <LineChart
             colorMap={chart.colorMap}
             data={chart.points}
             height={260}
-            opacityMap={chart.opacityMap}
             series={chart.series}
             seriesLabels={chart.seriesLabels}
             showLegend
-            stackMap={chart.stackMap}
-            tooltipHideTotal
-            tooltipValueFormatter={formatTooltipValue}
           />
           <span className='text-muted fs-caption'>
             {asOf
