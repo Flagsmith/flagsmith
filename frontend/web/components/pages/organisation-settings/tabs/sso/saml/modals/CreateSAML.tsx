@@ -1,5 +1,6 @@
 import React, { FC, useEffect, useState } from 'react'
 import FieldLabel from 'components/base/forms/FieldLabel'
+import BareButton from 'components/base/forms/BareButton'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import Switch from 'components/Switch'
@@ -167,20 +168,27 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
               label='IdP metadata XML'
               labelAfter={
                 data?.idp_metadata_xml && (
-                  <div className='clickable' onClick={downloadIDPMetadata}>
-                    <Tooltip
-                      title={
+                  // A button, not a clickable div: this was unreachable by
+                  // keyboard and had no accessible name. The tooltip wraps it
+                  // rather than nesting inside, since it renders a div.
+                  <Tooltip
+                    title={
+                      <BareButton
+                        aria-label='Download IdP metadata'
+                        className='d-inline-flex align-items-center'
+                        onClick={downloadIDPMetadata}
+                      >
                         <IonIcon
                           className='icon-action'
                           icon={cloudDownloadOutline}
                           style={{ fontSize: '18px' }}
                         />
-                      }
-                      place='right'
-                    >
-                      Download IDP Metadata
-                    </Tooltip>
-                  </div>
+                      </BareButton>
+                    }
+                    place='right'
+                  >
+                    Download IdP metadata
+                  </Tooltip>
                 )
               }
               className='full-width'

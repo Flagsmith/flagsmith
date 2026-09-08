@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import Constants from 'common/constants'
-import ValueEditor from 'components/ValueEditor'
+import ValueEditor, { ValueEditorProps } from 'components/ValueEditor'
 import ControlWeightChip from 'components/mv/ControlWeightChip'
 
 const meta: Meta = {
@@ -13,11 +13,17 @@ export default meta
 
 type Story = StoryObj
 
+// The real props, so a story cannot drift from the component's contract.
+type InteractiveProps = Omit<ValueEditorProps, 'value' | 'onChange'> & {
+  initialValue?: string
+  width?: number
+}
+
 const Interactive = ({
   initialValue = '',
   width = 640,
   ...props
-}: Record<string, any>) => {
+}: InteractiveProps) => {
   const [value, setValue] = useState(initialValue)
   return (
     <div style={{ maxWidth: width, padding: 16 }}>
@@ -73,6 +79,20 @@ const LateLoading = () => {
 
 export const ValueArrivesAfterMount: Story = {
   render: () => <LateLoading />,
+}
+
+// The danger tone, which no other story shows. The format has to be chosen
+// rather than pinned: a pinned editor has no format row to render the warning
+// against.
+export const InvalidJson: Story = {
+  play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const buttons = canvasElement.querySelectorAll('.select-language button')
+    const json = Array.from(buttons).find(
+      (button) => button.textContent?.trim() === '.json',
+    )
+    ;(json as HTMLButtonElement | undefined)?.click()
+  },
+  render: () => <Interactive label='Value' initialValue='{ "colour": ' />,
 }
 
 export const CodeMedium: Story = {

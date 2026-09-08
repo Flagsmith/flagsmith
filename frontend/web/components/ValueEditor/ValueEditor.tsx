@@ -23,9 +23,9 @@ import './ValueEditor.scss'
 export interface ValueEditorProps {
   className?: string
   disabled?: boolean
-  // Rendered as a FieldLabel wired to the editor, so callers cannot get the
-  // association wrong.
-  label?: ReactNode
+  // Required: it is what names the editor. Rendered as a FieldLabel wired to
+  // it, so callers cannot get the association wrong.
+  label: ReactNode
   // Sits beside the label, outside it, so it stays out of the editor's
   // accessible name.
   labelAfter?: ReactNode
@@ -49,36 +49,40 @@ const ValueEditor: FC<ValueEditorProps> = ({
   onChange,
   value,
 }) => {
-  const [language, setLanguage] = useState<ValueEditorLanguage>(
-    languageProp ?? 'txt',
-  )
+  const [picked, setPicked] = useState<ValueEditorLanguage>()
+  const [detected, setDetected] = useState<ValueEditorLanguage>()
+  // Derived, not state: a caller that changes `language` has to win on the
+  // next render, and useState would keep whatever it read on mount.
+  const language = languageProp ?? picked ?? detected ?? 'txt'
   const labelId = useId()
   const text = value === undefined || value === null ? '' : `${value}`
 
   // Detection waits for a value rather than running on mount: values load
   // after mount, and a mount-only check left JSON rendering as plaintext.
-  const formatSettled = useRef(!!languageProp)
+  const detectionDone = useRef(false)
 
   useEffect(() => {
-    if (formatSettled.current || !text) return
-    formatSettled.current = true
+    if (languageProp || picked || detectionDone.current || !text) return
+    detectionDone.current = true
     try {
       if (typeof JSON.parse(text) === 'object') {
-        setLanguage('json')
+        setDetected('json')
       }
     } catch (e) {}
-  }, [text])
+  }, [text, languageProp, picked])
 
-  const error = useMemo(() => validateValue(language, text), [language, text])
-
-  const pickLanguage = (next: ValueEditorLanguage) => {
-    formatSettled.current = true
-    setLanguage(next)
-  }
+  const pickLanguage = (next: ValueEditorLanguage) => setPicked(next)
 
   // A caller that pins the format has nothing to switch, so the row goes, and
   // copy goes with it as it always has.
   const showControls = !disabled && !languageProp
+
+  // Only rendered alongside the format row, so a pinned caller does not need a
+  // DOMParser run on every keystroke.
+  const error = useMemo(
+    () => (showControls ? validateValue(language, text) : false),
+    [language, text, showControls],
+  )
 
   return (
     <div

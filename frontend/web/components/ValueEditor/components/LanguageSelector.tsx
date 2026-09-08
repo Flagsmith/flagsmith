@@ -1,4 +1,4 @@
-import React, { FC, MouseEvent } from 'react'
+import React, { FC, Fragment, MouseEvent } from 'react'
 import cx from 'classnames'
 
 import BareButton from 'components/base/forms/BareButton'
@@ -30,22 +30,26 @@ const LanguageSelector: FC<LanguageSelectorProps> = ({
     aria-label='Value format'
   >
     {LANGUAGES.map((option) => (
-      <BareButton
-        key={option}
-        // The editor is contenteditable: pressing down on a button would blur
-        // it. preventDefault keeps the caret; the click still fires.
-        onMouseDown={(e: MouseEvent) => e.preventDefault()}
-        onClick={() => onChange(option)}
-        aria-pressed={language === option}
-        className={cx(option, 'd-flex align-items-center text-secondary', {
-          active: language === option,
-        })}
-      >
-        {LANGUAGE_LABELS[option]}{' '}
+      <Fragment key={option}>
+        <BareButton
+          // The editor is contenteditable: pressing down on a button would
+          // blur it. preventDefault keeps the caret; the click still fires.
+          onMouseDown={(e: MouseEvent) => e.preventDefault()}
+          onClick={() => onChange(option)}
+          aria-pressed={language === option}
+          className={cx(option, 'd-flex align-items-center text-secondary', {
+            active: language === option,
+          })}
+        >
+          {LANGUAGE_LABELS[option]}
+        </BareButton>
+        {/* Beside the active button, not inside it: the tooltip mounts a div,
+            which a button cannot contain, and it would otherwise join the
+            button's accessible name while shown. */}
         {option !== 'txt' && language === option && (
           <LanguageValidation language={option} error={error} />
         )}
-      </BareButton>
+      </Fragment>
     ))}
   </Row>
 )

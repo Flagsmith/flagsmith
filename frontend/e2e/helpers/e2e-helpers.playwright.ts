@@ -1,4 +1,7 @@
 import { Locator, Page, expect } from '@playwright/test';
+
+// A CSS/data-test string, or a Locator built from role and accessible name.
+type SelectorOrLocator = string | Locator;
 import { LONG_TIMEOUT, SHORT_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith } from './utils.playwright';
 
 // Re-export for backwards compatibility
@@ -19,8 +22,9 @@ export class E2EHelpers {
   constructor(private page: Page) {}
 
   // The value editors are selected by role and accessible name rather than a
-  // data-test. The feature value label switches to "Control Value <weight>%"
-  // once the feature has variations, hence the alternation.
+  // data-test. The label reads "Control Value" once the feature has variations,
+  // hence the alternation; the weight chip is a labelAfter sibling, so it stays
+  // out of the accessible name.
   featureValueField(): Locator {
     return this.page
       .locator('#create-feature-modal')
@@ -44,7 +48,7 @@ export class E2EHelpers {
     return await this.page.locator(byId(selector)).count() > 0;
   }
 
-  async setText(selector: string | Locator, text: string) {
+  async setText(selector: SelectorOrLocator, text: string) {
     logUsingLastSection(`Set text ${selector} : ${text}`);
     const element = typeof selector === 'string' ? this.page.locator(selector).first() : selector;
     await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
@@ -54,7 +58,7 @@ export class E2EHelpers {
     }
   }
 
-  async waitForElementVisible(selector: string | Locator, timeout: number = LONG_TIMEOUT) {
+  async waitForElementVisible(selector: SelectorOrLocator, timeout: number = LONG_TIMEOUT) {
     logUsingLastSection(`Waiting element visible ${selector}`);
     const element = typeof selector === 'string' ? this.page.locator(selector).first() : selector;
     await element.waitFor({
