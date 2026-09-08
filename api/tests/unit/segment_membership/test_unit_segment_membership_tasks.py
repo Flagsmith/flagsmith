@@ -164,8 +164,13 @@ def test_seed_organisation_identities__traitless_identities__are_not_mirrored(
     # Given
     enable_features("segment_membership_inspection")
     settings.CLICKHOUSE_ENABLED = True
-    # One identity per batch, so `dave` forms a batch with nothing left to write.
     mocker.patch.object(tasks, "_INSERT_BATCH_SIZE", 1)
+
+    cursor = MagicMock()
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
+    mocker.patch.object(tasks, "enqueue_membership_refresh")
+
     for identifier, extra in (
         ("dave", {}),
         ("erin", {"system_traits": {"flagsmith_cohort_e2b1": True}}),
@@ -180,22 +185,18 @@ def test_seed_organisation_identities__traitless_identities__are_not_mirrored(
                 **extra,
             }
         )
-    cursor = MagicMock()
-    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
-    open_cursor.return_value.__enter__.return_value = cursor
-    mocker.patch.object(tasks, "enqueue_membership_refresh")
 
     # When
     seed_organisation_identities(project.organisation_id)
 
     # Then
-    # `dave` has nothing on him at all; `erin`'s cohort membership lives in
-    # `system_traits`, so she stays in the mirror.
-    payloads = [call.args[1] for call in cursor.executemany.call_args_list]
-    mirrored_identifiers = sorted(row[1] for payload in payloads for row in payload)
-    assert mirrored_identifiers == ["alice", "carol", "erin"]
-    # `dave`'s batch is skipped outright rather than written as an empty INSERT.
-    assert all(payloads)
+    insert_identity_payloads = [
+        call.args[1][0] for call in cursor.executemany.call_args_list
+    ]
+    inserted_identifiers = sorted(payload[1] for payload in insert_identity_payloads)
+
+    # 'dave' is not included in the list of inserted identities
+    assert inserted_identifiers == ["alice", "carol", "erin"]
 
 
 @pytest.mark.clickhouse
