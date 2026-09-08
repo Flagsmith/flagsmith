@@ -252,9 +252,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                 }
             )
         for rule in rules:
-            self._validate_rules_depth(
-                cast(list[LegacySegmentRule], rule.get("rules", [])), _depth + 1
-            )
+            self._validate_rules_depth(rule.get("rules", []), _depth + 1)
 
     def _validate_rules_condition_count(self, rules: list[LegacySegmentRule]) -> None:
         condition_count = self._count_conditions(rules)
@@ -317,8 +315,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                     for condition in rule.get("conditions", [])
                     if not condition.get("delete")
                 ],
-                # Cleanup type-ignore as per https://github.com/Flagsmith/flagsmith/issues/8280
-                "rules": self._get_clean_rules_and_conditions(rule.get("rules", [])),  # type: ignore[typeddict-item,arg-type]
+                "rules": self._get_clean_rules_and_conditions(rule.get("rules", [])),
             }
             for rule in rules
             if not rule.get("delete")

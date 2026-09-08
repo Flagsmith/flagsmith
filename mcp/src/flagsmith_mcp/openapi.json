@@ -4329,6 +4329,29 @@
           "name"
         ]
       },
+      "ExperimentAudience": {
+        "type": "object",
+        "properties": {
+          "match": {
+            "default": "any",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MatchEnum"
+              }
+            ]
+          },
+          "segment_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 1
+          }
+        },
+        "required": [
+          "segment_ids"
+        ]
+      },
       "ExperimentDetail": {
         "type": "object",
         "properties": {
@@ -4592,6 +4615,9 @@
             "items": {
               "$ref": "#/components/schemas/MultivariateValue"
             }
+          },
+          "audience": {
+            "$ref": "#/components/schemas/ExperimentAudience"
           }
         },
         "required": [
@@ -5465,6 +5491,14 @@
         "type": "string",
         "enum": [
           "cohort"
+        ]
+      },
+      "MatchEnum": {
+        "description": "* `any` - Any\n* `all` - All",
+        "type": "string",
+        "enum": [
+          "any",
+          "all"
         ]
       },
       "Metadata": {

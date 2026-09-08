@@ -14,6 +14,10 @@ RESULTS_REFRESH_MIN_INTERVAL = timedelta(minutes=5)
 
 CONTROL_VARIANT_KEY = "control"
 
+# Capped at one: the Java SDK ANDs sub-rules regardless of the rule type, so a
+# multi-segment `any` audience would evaluate as `all` under local evaluation.
+MAX_AUDIENCE_SEGMENTS = 1
+
 DELIVERY_INTERVAL = timedelta(minutes=10)
 DELIVERY_LOG_RETENTION = timedelta(days=60)
 

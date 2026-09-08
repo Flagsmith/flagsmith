@@ -477,6 +477,19 @@ class ExperimentViewSet(
     def complete(self, request: Request, **kwargs: object) -> Response:
         return self._transition_status(ExperimentStatus.COMPLETED)
 
+    # Deliberately not tagged for MCP: the sibling mutating actions (start,
+    # pause, complete) are not agent-exposed either, and this one re-targets a
+    # live experiment.
+    @extend_schema(
+        description=(
+            "Sets an experiment's rollout: the percentage of eligible "
+            "identities enrolled, the variant weights they are split across, "
+            "and optionally the targeted audience. The audience can only be "
+            "changed before the experiment starts serving traffic."
+        ),
+        request=ExperimentRolloutSerializer,
+        responses={200: ExperimentListSerializer},
+    )
     @action(detail=True, methods=["patch"])
     def rollout(self, request: Request, **kwargs: object) -> Response:
         experiment: Experiment = self.get_object()

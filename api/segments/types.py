@@ -18,12 +18,9 @@ class _BaseSegmentRule(TypedDict):
     conditions: list[SegmentCondition]
 
 
-class _NestedSegmentRule(_BaseSegmentRule):
-    pass
-
-
 class SegmentRule(_BaseSegmentRule):
-    rules: list[_NestedSegmentRule]
+    # Nested rules are absent rather than empty in some stored trees.
+    rules: NotRequired[list["SegmentRule"]]
 
 
 class LegacySegmentCondition(SegmentCondition):
@@ -40,9 +37,5 @@ class _BaseLegacySegmentRule(TypedDict):
     conditions: list[LegacySegmentCondition]
 
 
-class _LegacyNestedSegmentRule(_BaseLegacySegmentRule):
-    pass
-
-
 class LegacySegmentRule(_BaseLegacySegmentRule):
-    rules: list[_LegacyNestedSegmentRule]
+    rules: NotRequired[list["LegacySegmentRule"]]

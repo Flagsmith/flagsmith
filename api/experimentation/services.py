@@ -16,11 +16,13 @@ from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import timezone
-from flag_engine.segments.constants import ALL_RULE, PERCENTAGE_SPLIT
+from flag_engine.segments.constants import ALL_RULE, ANY_RULE, PERCENTAGE_SPLIT
 from rest_framework.exceptions import ValidationError
 
+from audit.constants import EXPERIMENT_ROLLOUT_APPLIED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from cohorts.models import Cohort
 from core.dataclasses import AuthorData
 from environments.tasks import rebuild_environment_document
 from experimentation import warehouse_delivery_service
@@ -28,12 +30,14 @@ from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
     EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
+    MAX_AUDIENCE_SEGMENTS,
     RESULTS_MIN_CONVERSIONS_PER_VARIANT,
     RESULTS_MIN_IDENTITIES_PER_VARIANT,
     SRM_MIN_TOTAL_IDENTITIES,
     WAREHOUSE_CONNECTION_FLAG,
 )
 from experimentation.dataclasses import (
+    AudienceSpec,
     ConversionBucket,
     ConversionsTimeseries,
     ConversionsTimeseriesPoint,
@@ -56,6 +60,7 @@ from experimentation.metrics import (
 )
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
+    AudienceMatch,
     Experiment,
     ExperimentStatus,
     MetricAggregation,
@@ -97,6 +102,7 @@ if typing.TYPE_CHECKING:
     from datetime import datetime
 
     from clickhouse_connect.driver.client import Client as ClickHouseHTTPClient
+    from flag_engine.segments.types import ConditionOperator, RuleType
 
     from environments.models import Environment
     from experimentation.models import Metric
@@ -107,6 +113,7 @@ if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
 
 logger = structlog.get_logger("warehouse")
+experimentation_logger = structlog.get_logger("experimentation")
 
 CLICKHOUSE_CONNECT_TIMEOUT_SECONDS = 5
 CLICKHOUSE_QUERY_TIMEOUT_SECONDS = 30
@@ -737,6 +744,39 @@ def create_experiment_audit_log(
     )
 
 
+def _resolve_audit_log_author_data(author: AuthorData) -> dict[str, int | str | None]:
+    if author.api_key is not None:
+        return {"author_id": None, "master_api_key_id": author.api_key.id}
+    return {
+        "author_id": author.user.pk if author.user else None,
+        "master_api_key_id": None,
+    }
+
+
+def create_rollout_audit_log(
+    experiment: Experiment,
+    author: AuthorData,
+    *,
+    rollout_percentage: float,
+    audience_match: str,
+    audience_segment_ids: list[int],
+) -> None:
+    audience = (
+        f"segments {audience_segment_ids} ({audience_match})"
+        if audience_segment_ids
+        else "all identities"
+    )
+    AuditLog.objects.create(
+        environment=experiment.environment,
+        project=experiment.environment.project,
+        **_resolve_audit_log_author_data(author),
+        related_object_id=experiment.id,
+        related_object_type=RelatedObjectType.EXPERIMENT.name,
+        log=EXPERIMENT_ROLLOUT_APPLIED_MESSAGE
+        % (experiment.name, rollout_percentage, audience),
+    )
+
+
 def transition_experiment_status(
     experiment: Experiment,
     target_status: str,
@@ -760,7 +800,84 @@ def transition_experiment_status(
     return experiment
 
 
-def _rollout_segment_rules(rollout_percentage: float) -> list[SegmentRuleType]:
+def _copy_segment_rule(rule: SegmentRule) -> SegmentRuleType:
+    return {
+        "type": typing.cast("RuleType", rule.type),
+        "conditions": [
+            {
+                "property": condition.property,
+                "operator": typing.cast("ConditionOperator", condition.operator),
+                "value": condition.value,
+                "description": condition.description,
+            }
+            for condition in rule.conditions.all()
+        ],
+        "rules": [_copy_segment_rule(sub_rule) for sub_rule in rule.rules.all()],
+    }
+
+
+def _copy_segment_rules(segment: Segment) -> list[SegmentRuleType]:
+    # Read from the ORM rows: the only representation cohort segments have.
+    return [_copy_segment_rule(rule) for rule in segment.rules.all()]
+
+
+def _compile_audience_rules(
+    match: str,
+    copied_rules: list[list[SegmentRuleType]],
+) -> list[SegmentRuleType]:
+    if not copied_rules:
+        return []
+    return [
+        {
+            "type": ALL_RULE if match == AudienceMatch.ALL else ANY_RULE,
+            "conditions": [],
+            # A segment's own top-level rules are AND-quantified, so a
+            # multi-rule segment needs its own ALL wrapper. A single rule is
+            # inlined, keeping the tree within the document builder's
+            # prefetch depth and the org exporter's two-level selection.
+            "rules": [
+                (
+                    rules[0]
+                    if len(rules) == 1
+                    else {"type": ALL_RULE, "conditions": [], "rules": rules}
+                )
+                for rules in copied_rules
+            ],
+        }
+    ]
+
+
+def _compile_audience(
+    experiment: Experiment,
+    audience: AudienceSpec,
+) -> tuple[list[SegmentRuleType], list[int]]:
+    segments = _get_audience_segments(experiment, audience.segment_ids)
+    # Locked against ``delete_cohort``, which locks the same rows before
+    # deciding no experiment targets them.
+    cohorts_by_segment_id = {
+        cohort.segment_id: cohort
+        for cohort in Cohort.objects.select_for_update()
+        .filter(segment__in=segments)
+        # A stable lock order, so two rollouts targeting overlapping cohorts
+        # cannot deadlock each other.
+        .order_by("pk")
+    }
+    copied_rules: list[list[SegmentRuleType]] = []
+    for segment in segments:
+        rules = _copy_segment_rules(segment)
+        _validate_audience_segment(
+            experiment, segment, rules, cohorts_by_segment_id.get(segment.id)
+        )
+        copied_rules.append(rules)
+    return _compile_audience_rules(audience.match, copied_rules), [
+        segment.id for segment in segments
+    ]
+
+
+def _rollout_segment_rules(
+    rollout_percentage: float,
+    audience_rules: list[SegmentRuleType],
+) -> list[SegmentRuleType]:
     return [
         {
             "type": ALL_RULE,
@@ -773,30 +890,159 @@ def _rollout_segment_rules(rollout_percentage: float) -> list[SegmentRuleType]:
                 }
             ],
             "rules": [],
-        }
+        },
+        *audience_rules,
     ]
 
 
-def _create_rollout_segment(
-    experiment: Experiment, rollout_percentage: float
-) -> Segment:
-    segment: Segment = Segment.objects.create(
-        name=f"experiment-{experiment.id}-rollout",
-        project=experiment.feature.project,
-        is_system_segment=True,
-        rules_data=_rollout_segment_rules(rollout_percentage),
-    )
-
+def _write_segment_rule(
+    rule: SegmentRuleType,
+    *,
+    segment: Segment | None = None,
+    parent: SegmentRule | None = None,
+) -> None:
     # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
-    rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
-    Condition.objects.create(
-        rule=rule,
-        operator=PERCENTAGE_SPLIT,
-        property="$.identity.key",
-        value=str(rollout_percentage),
+    written = SegmentRule.objects.create(
+        segment=segment, rule=parent, type=rule["type"]
+    )
+    for condition in rule["conditions"]:
+        Condition.objects.create(
+            rule=written,
+            operator=condition["operator"],
+            property=condition["property"],
+            value=condition["value"],
+            description=condition["description"],
+        )
+    for sub_rule in rule.get("rules", []):
+        _write_segment_rule(sub_rule, parent=written)
+
+
+def _write_segment_rules(segment: Segment, rules: list[SegmentRuleType]) -> None:
+    """Rebuild the segment's legacy rule rows from the compiled tree. Nothing
+    hashes on rule ids, so replacing them wholesale is safe."""
+    # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+    SegmentRule.objects.filter(segment=segment).delete()
+    for rule in rules:
+        _write_segment_rule(rule, segment=segment)
+
+
+def _audience_segment_ids(experiment: Experiment) -> list[int]:
+    # Through the join table, so soft-deleted segments still count.
+    return sorted(
+        Experiment.audience_segments.through.objects.filter(
+            experiment=experiment
+        ).values_list("segment_id", flat=True)
     )
 
-    return segment
+
+def _frozen_audience_rules(experiment: Experiment) -> list[SegmentRuleType]:
+    # The percentage split is always the rollout segment's first rule.
+    segment = experiment.rollout_segment
+    if segment is None or not (rules := segment.rules_data):
+        return []
+    return rules[1:]
+
+
+def _audience_match_of(audience_rules: list[SegmentRuleType]) -> str:
+    if audience_rules and audience_rules[0]["type"] == ALL_RULE:
+        return AudienceMatch.ALL.value
+    return AudienceMatch.ANY.value
+
+
+def _audience_changed(experiment: Experiment, audience: AudienceSpec) -> bool:
+    stored_ids = _audience_segment_ids(experiment)
+    requested_ids = sorted(audience.segment_ids)
+    if not stored_ids and not requested_ids:
+        return False
+    return requested_ids != stored_ids or audience.match != _audience_match_of(
+        _frozen_audience_rules(experiment)
+    )
+
+
+def _get_audience_segments(
+    experiment: Experiment,
+    segment_ids: list[int],
+) -> list[Segment]:
+    segments = list(
+        Segment.live_objects.filter(
+            project_id=experiment.feature.project_id, id__in=segment_ids
+        ).order_by("id")
+    )
+    if missing := set(segment_ids) - {segment.id for segment in segments}:
+        raise ValidationError(
+            f"Audience segments {sorted(missing)} do not belong to the project"
+        )
+    return segments
+
+
+def _rules_contain_percentage_split(rules: list[SegmentRuleType]) -> bool:
+    return any(
+        any(
+            condition["operator"] == PERCENTAGE_SPLIT
+            for condition in rule["conditions"]
+        )
+        or _rules_contain_percentage_split(rule.get("rules", []))
+        for rule in rules
+    )
+
+
+def _validate_audience_segment(
+    experiment: Experiment,
+    segment: Segment,
+    rules: list[SegmentRuleType],
+    cohort: Cohort | None,
+) -> None:
+    if segment.is_system_segment:
+        raise ValidationError(f"Audience segment {segment.id} cannot be targeted")
+    if segment.feature_id is not None:
+        raise ValidationError(f"Audience segment {segment.id} is specific to a feature")
+    if cohort is not None:
+        if cohort.environment_id != experiment.environment_id:
+            raise ValidationError(
+                f"Audience segment {segment.id} belongs to a cohort in another "
+                f"environment"
+            )
+        if cohort.deletion_requested_at is not None:
+            # Its memberships are draining, so the audience would decay to zero.
+            raise ValidationError(
+                f"Audience segment {segment.id} belongs to a cohort that is being "
+                f"deleted"
+            )
+    if not rules:
+        # An empty tree compiles to a rule that matches everyone, which would
+        # silently widen the audience instead of narrowing it.
+        raise ValidationError(f"Audience segment {segment.id} has no rules")
+    if _rules_contain_percentage_split(rules):
+        raise ValidationError(
+            f"Audience segment {segment.id} contains a percentage split"
+        )
+
+
+def _rollout_override_enabled(experiment: Experiment) -> bool:
+    return experiment.rollout_segment_id is not None and bool(
+        (override := _get_live_rollout_override(experiment)) and override.enabled
+    )
+
+
+def _validate_audience_change(experiment: Experiment, audience: AudienceSpec) -> None:
+    """Checks that only apply when the audience is actually being replaced."""
+    if experiment.status != ExperimentStatus.CREATED:
+        raise ValidationError(
+            f"Cannot change the audience of a {experiment.status} experiment."
+        )
+    if _rollout_override_enabled(experiment):
+        # An enabled override is already enrolling identities, whatever the
+        # experiment's status says, and they were enrolled by these rules.
+        raise ValidationError(
+            "Cannot change the audience while the rollout is enabled and "
+            "serving traffic. Disable the rollout first."
+        )
+    if len(audience.segment_ids) != len(set(audience.segment_ids)):
+        raise ValidationError("Audience segments must be unique")
+    if len(audience.segment_ids) > MAX_AUDIENCE_SEGMENTS:
+        raise ValidationError(
+            f"An audience must target no more than {MAX_AUDIENCE_SEGMENTS} segments"
+        )
 
 
 def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
@@ -817,21 +1063,73 @@ def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
         )
 
 
-def _sync_rollout_segment(experiment: Experiment, rollout_percentage: float) -> Segment:
+def _resolve_audience(
+    experiment: Experiment,
+    audience: AudienceSpec | None,
+) -> tuple[list[SegmentRuleType], list[int]]:
+    if audience is not None and _audience_changed(experiment, audience):
+        _validate_audience_change(experiment, audience)
+        return _compile_audience(experiment, audience)
+    return _frozen_audience_rules(experiment), _audience_segment_ids(experiment)
+
+
+def _is_noop_rollout(
+    experiment: Experiment,
+    spec: RolloutSpec,
+    rules: list[SegmentRuleType],
+) -> bool:
+    """True when the request asks for exactly what is already live. Such a
+    request still succeeds, but writes no audit history and announces nothing:
+    a re-submitted form is not a rollout change."""
+    segment = experiment.rollout_segment
+    if segment is None or segment.rules_data != rules:
+        return False
+    override = _get_live_rollout_override(experiment)
+    if override is None or override.enabled != spec.enabled:
+        return False
+    if _serialize_feature_state_value(override.feature_state_value) != (
+        spec.feature_state_value,
+        spec.value_type,
+    ):
+        return False
+    return {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in override.multivariate_feature_state_values.all()
+    } == {
+        mv.multivariate_feature_option_id: mv.percentage_allocation
+        for mv in spec.multivariate_values
+    }
+
+
+def _create_rollout_segment(
+    experiment: Experiment,
+    rules: list[SegmentRuleType],
+) -> Segment:
+    segment: Segment = Segment.objects.create(
+        name=f"experiment-{experiment.id}-rollout",
+        project=experiment.feature.project,
+        is_system_segment=True,
+        rules_data=rules,
+    )
+    _write_segment_rules(segment, rules)
+    return segment
+
+
+def _sync_rollout_segment(
+    experiment: Experiment,
+    rules: list[SegmentRuleType],
+) -> Segment:
     segment = experiment.rollout_segment
     if segment is not None:
-        segment.rules_data = _rollout_segment_rules(rollout_percentage)
+        if segment.rules_data == rules:
+            # Nothing to rewrite: a value- or enabled-only change must not
+            # churn the rule rows.
+            return segment
+        segment.rules_data = rules
         segment.save(update_fields=["rules_data"])
-
-        # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
-        condition = Condition.objects.get(
-            rule__segment=segment, operator=PERCENTAGE_SPLIT
-        )
-        condition.value = str(rollout_percentage)
-        condition.save()
-
+        _write_segment_rules(segment, rules)
         return segment
-    segment = _create_rollout_segment(experiment, rollout_percentage)
+    segment = _create_rollout_segment(experiment, rules)
     experiment.rollout_segment = segment
     experiment.save()
     return segment
@@ -925,7 +1223,6 @@ def _reset_default_allocations_to_control(
 
 
 def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
-    validate_rollout_spec(experiment, spec)
     environment_id = experiment.environment_id
     with transaction.atomic():
         experiment.refresh_from_db(from_queryset=Experiment.objects.select_for_update())
@@ -933,8 +1230,25 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
             raise ValidationError(
                 f"Cannot change the rollout of a {experiment.status} experiment."
             )
+        # Validated under the lock, so a concurrent start cannot let an audience
+        # change through the frozen-once-running check on a stale status.
+        validate_rollout_spec(experiment, spec)
+        audience_rules, audience_segment_ids = _resolve_audience(
+            experiment, spec.audience
+        )
+        rollout_rules = _rollout_segment_rules(spec.rollout_percentage, audience_rules)
+        stored_segment_ids = _audience_segment_ids(experiment)
+        if (
+            _is_noop_rollout(experiment, spec, rollout_rules)
+            # A retarget to segments compiling to identical rules is still a
+            # change worth recording.
+            and audience_segment_ids == stored_segment_ids
+        ):
+            return
+        if audience_segment_ids != stored_segment_ids:
+            experiment.audience_segments.set(audience_segment_ids)
         is_first_rollout = experiment.rollout_segment_id is None
-        segment = _sync_rollout_segment(experiment, spec.rollout_percentage)
+        segment = _sync_rollout_segment(experiment, rollout_rules)
         if is_first_rollout:
             _reset_default_allocations_to_control(experiment, spec.author)
         _update_rollout_in_place(
@@ -952,6 +1266,32 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
         transaction.on_commit(
             lambda: rebuild_environment_document.delay(
                 kwargs={"environment_id": environment_id}
+            )
+        )
+        audience_match = _audience_match_of(audience_rules)
+        create_rollout_audit_log(
+            experiment,
+            spec.author,
+            rollout_percentage=spec.rollout_percentage,
+            audience_match=audience_match,
+            audience_segment_ids=audience_segment_ids,
+        )
+        # Announced only once durable: experiment creation nests this call in an
+        # outer transaction that can still roll back.
+        transaction.on_commit(
+            lambda: experimentation_logger.info(
+                "rollout.applied",
+                experiment__id=experiment.id,
+                environment__id=environment_id,
+                feature__id=experiment.feature_id,
+                author__id=spec.author.user.pk if spec.author.user else None,
+                author__api_key_id=(
+                    spec.author.api_key.pk if spec.author.api_key else None
+                ),
+                rollout__percentage=spec.rollout_percentage,
+                audience__match=audience_match,
+                audience__segments_count=len(audience_segment_ids),
+                audience__segment_ids=audience_segment_ids,
             )
         )
 
@@ -998,6 +1338,30 @@ def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | No
                 "percentage_allocation": mv.percentage_allocation,
             }
             for mv in feature_state.multivariate_feature_state_values.all()
+        ],
+        "audience": _get_experiment_audience(experiment),
+    }
+
+
+def _get_experiment_audience(experiment: Experiment) -> dict[str, typing.Any]:
+    segments = (
+        Segment.objects.all_with_deleted()
+        .filter(id__in=_audience_segment_ids(experiment))
+        .prefetch_related("cohorts")
+        .order_by("id")
+    )
+    return {
+        "match": _audience_match_of(_frozen_audience_rules(experiment)),
+        "segments": [
+            {
+                "id": segment.id,
+                "name": segment.name,
+                "is_cohort": (cohort := next(iter(segment.cohorts.all()), None))
+                is not None,
+                "cohort_source_type": cohort.source_type if cohort else None,
+                "deleted": segment.deleted_at is not None,
+            }
+            for segment in segments
         ],
     }
 

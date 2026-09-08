@@ -442,10 +442,34 @@ def sync_cohort_memberships_from_csv(
     )
 
 
+def _get_active_experiment_names_targeting_cohort(cohort: Cohort) -> list[str]:
+    from experimentation.models import Experiment, ExperimentStatus
+
+    return list(
+        Experiment.objects.filter(audience_segments=cohort.segment_id)
+        .exclude(status=ExperimentStatus.COMPLETED)
+        .order_by("name")
+        .values_list("name", flat=True)
+    )
+
+
 def delete_cohort(cohort: Cohort) -> None:
     from cohorts.tasks import apply_cohort_membership_deltas
 
     with transaction.atomic():
+        # Lock the row before scanning: audience compilation locks the same row
+        # while it validates and copies, so a rollout cannot read this cohort
+        # as live and commit after we have decided nothing targets it.
+        locked = Cohort.objects.select_for_update().get(pk=cohort.pk)
+        if experiment_names := _get_active_experiment_names_targeting_cohort(locked):
+            # Deleting would drain the memberships the experiment enrols on,
+            # emptying its audience mid-flight.
+            names = ", ".join(f"'{name}'" for name in experiment_names)
+            raise ValidationError(
+                f"This cohort is targeted by the audience of experiment {names}. "
+                f"Complete or delete the experiment before deleting the cohort."
+            )
+
         cohort.deletion_requested_at = timezone.now()
         cohort.save(update_fields=["deletion_requested_at"])
         logger.info(

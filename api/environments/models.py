@@ -550,6 +550,14 @@ class Environment(
                     "rules__rules",
                     "rules__rules__conditions",
                     "rules__rules__rules",
+                    # Experiment rollout segments copy audience rules up to two
+                    # levels deeper than user-authored segments; the trailing
+                    # empty levels terminate the engine mapper's recursion
+                    # without lazy queries.
+                    "rules__rules__rules__conditions",
+                    "rules__rules__rules__rules",
+                    "rules__rules__rules__rules__conditions",
+                    "rules__rules__rules__rules__rules",
                 )
             )
             environment_segments_cache.set(self.id, segments)

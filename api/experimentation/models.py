@@ -161,6 +161,11 @@ class ExperimentStatus(models.TextChoices):
     COMPLETED = "completed", "Completed"
 
 
+class AudienceMatch(models.TextChoices):
+    ANY = "any", "Any"
+    ALL = "all", "All"
+
+
 VALID_STATUS_TRANSITIONS: dict[str, set[str]] = {
     ExperimentStatus.CREATED: {ExperimentStatus.RUNNING},
     ExperimentStatus.RUNNING: {ExperimentStatus.PAUSED, ExperimentStatus.COMPLETED},
@@ -196,6 +201,12 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
         on_delete=models.SET_NULL,
         related_name="experiment_rollout",
         null=True,
+        blank=True,
+    )
+    # Their rules are copied into the rollout segment; empty targets everyone.
+    audience_segments = models.ManyToManyField(
+        "segments.Segment",
+        related_name="audience_experiments",
         blank=True,
     )
 

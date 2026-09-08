@@ -6,9 +6,15 @@ from rest_framework import serializers
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
-from experimentation.dataclasses import RolloutSpec, WarehouseEventStats
+from experimentation.constants import MAX_AUDIENCE_SEGMENTS
+from experimentation.dataclasses import (
+    AudienceSpec,
+    RolloutSpec,
+    WarehouseEventStats,
+)
 from experimentation.metric_definitions import validate_metric_definition
 from experimentation.models import (
+    AudienceMatch,
     ExpectedDirection,
     Experiment,
     ExperimentExposures,
@@ -234,6 +240,15 @@ class ExperimentMetricInlineSerializer(serializers.Serializer):  # type: ignore[
     expected_direction = serializers.ChoiceField(choices=ExpectedDirection.choices)
 
 
+class ExperimentAudienceSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    match = serializers.ChoiceField(
+        choices=AudienceMatch.choices, default=AudienceMatch.ANY
+    )
+    segment_ids = serializers.ListField(
+        child=serializers.IntegerField(), max_length=MAX_AUDIENCE_SEGMENTS
+    )
+
+
 class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-arg]
     enabled = serializers.BooleanField(required=True)
     rollout_percentage = serializers.FloatField(
@@ -243,10 +258,14 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
     multivariate_feature_state_values = MultivariateValueSerializer(
         many=True, required=False
     )
+    # Omitted leaves the stored audience unchanged; an empty segment_ids list
+    # targets every identity in the environment.
+    audience = ExperimentAudienceSerializer(required=False)
 
     @staticmethod
     def to_spec(data: dict[str, Any], request: Any) -> RolloutSpec:
         value = data["feature_state_value"]
+        audience = data.get("audience")
         return RolloutSpec(
             enabled=data["enabled"],
             rollout_percentage=data["rollout_percentage"],
@@ -260,6 +279,14 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
                 for mv in data.get("multivariate_feature_state_values", [])
             ],
             author=AuthorData.from_request(request),
+            audience=(
+                AudienceSpec(
+                    match=audience["match"],
+                    segment_ids=audience["segment_ids"],
+                )
+                if audience is not None
+                else None
+            ),
         )
 
 

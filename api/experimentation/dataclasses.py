@@ -9,6 +9,12 @@ from features.versioning.dataclasses import MultivariateValueChangeSet
 
 
 @dataclass(frozen=True)
+class AudienceSpec:
+    match: str
+    segment_ids: list[int]
+
+
+@dataclass(frozen=True)
 class RolloutSpec:
     enabled: bool
     rollout_percentage: float
@@ -16,6 +22,7 @@ class RolloutSpec:
     value_type: FeatureValueType
     multivariate_values: list[MultivariateValueChangeSet]
     author: AuthorData
+    audience: AudienceSpec | None = None
 
 
 @dataclass(frozen=True)
