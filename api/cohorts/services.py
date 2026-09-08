@@ -442,7 +442,7 @@ def sync_cohort_memberships_from_csv(
     )
 
 
-def _experiments_targeting(cohort: Cohort) -> list[str]:
+def _get_active_experiment_names_targeting_cohort(cohort: Cohort) -> list[str]:
     from experimentation.models import Experiment, ExperimentStatus
 
     return list(
@@ -461,7 +461,7 @@ def delete_cohort(cohort: Cohort) -> None:
         # while it validates and copies, so a rollout cannot read this cohort
         # as live and commit after we have decided nothing targets it.
         locked = Cohort.objects.select_for_update().get(pk=cohort.pk)
-        if experiment_names := _experiments_targeting(locked):
+        if experiment_names := _get_active_experiment_names_targeting_cohort(locked):
             # Deleting would drain the memberships the experiment enrols on,
             # emptying its audience mid-flight.
             names = ", ".join(f"'{name}'" for name in experiment_names)

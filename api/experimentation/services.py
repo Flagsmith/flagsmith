@@ -19,6 +19,7 @@ from django.utils import timezone
 from flag_engine.segments.constants import ALL_RULE, ANY_RULE, PERCENTAGE_SPLIT
 from rest_framework.exceptions import ValidationError
 
+from audit.constants import EXPERIMENT_ROLLOUT_APPLIED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from cohorts.models import Cohort
@@ -771,10 +772,8 @@ def create_rollout_audit_log(
         **_resolve_audit_log_author_data(author),
         related_object_id=experiment.id,
         related_object_type=RelatedObjectType.EXPERIMENT.name,
-        log=(
-            f"Experiment '{experiment.name}' rollout set to "
-            f"{rollout_percentage}% of {audience}"
-        ),
+        log=EXPERIMENT_ROLLOUT_APPLIED_MESSAGE
+        % (experiment.name, rollout_percentage, audience),
     )
 
 
