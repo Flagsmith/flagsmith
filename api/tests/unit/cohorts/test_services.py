@@ -592,11 +592,8 @@ def test_delete_cohort__targeted_by_experiment_audience__blocked_unless_complete
         name="Checkout copy",
         hypothesis="h",
         status=status,
-        audience={
-            "match": "any",
-            "segments": [{"id": cohort.segment_id, "name": "Beta users"}],
-        },
     )
+    experiment.audience_segments.add(cohort.segment)
 
     # When / Then
     if is_blocked:
@@ -624,11 +621,7 @@ def test_delete_cohort__audience_targets_another_cohort__allowed(
         name="Checkout copy",
         hypothesis="h",
         status=ExperimentStatus.RUNNING,
-        audience={
-            "match": "any",
-            "segments": [{"id": other.segment_id, "name": "Power users"}],
-        },
-    )
+    ).audience_segments.add(other.segment)
 
     # When
     delete_cohort(cohort)

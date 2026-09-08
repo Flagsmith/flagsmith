@@ -4,15 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("experimentation", "0012_warehouse_delivery_log"),
+        ("segments", "0032_add_segment_rules_data"),
     ]
 
     operations = [
         migrations.AddField(
             model_name="experiment",
-            name="audience",
-            field=models.JSONField(default=dict),
+            name="audience_segments",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="audience_experiments",
+                to="segments.segment",
+            ),
         ),
     ]

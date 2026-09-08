@@ -443,23 +443,14 @@ def sync_cohort_memberships_from_csv(
 
 
 def _experiments_targeting(cohort: Cohort) -> list[str]:
-    """The names of live experiments whose audience targets this cohort's
-    segment. Audiences are stored as JSON snapshots, so the segment ids are
-    matched in Python; an environment holds few enough experiments for that."""
     from experimentation.models import Experiment, ExperimentStatus
 
-    return [
-        experiment.name
-        for experiment in Experiment.objects.filter(
-            environment_id=cohort.environment_id
-        )
+    return list(
+        Experiment.objects.filter(audience_segments=cohort.segment_id)
         .exclude(status=ExperimentStatus.COMPLETED)
-        .only("name", "audience")
-        if any(
-            segment["id"] == cohort.segment_id
-            for segment in experiment.audience.get("segments", [])
-        )
-    ]
+        .order_by("name")
+        .values_list("name", flat=True)
+    )
 
 
 def delete_cohort(cohort: Cohort) -> None:

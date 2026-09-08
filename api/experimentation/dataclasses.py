@@ -22,7 +22,6 @@ class RolloutSpec:
     value_type: FeatureValueType
     multivariate_values: list[MultivariateValueChangeSet]
     author: AuthorData
-    # None leaves the stored audience untouched.
     audience: AudienceSpec | None = None
 
 

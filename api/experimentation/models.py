@@ -20,7 +20,7 @@ from experimentation.dataclasses import (
     ResultsSummary,
     WarehouseEventStats,
 )
-from experimentation.types import AudienceSnapshot, MetricDefinition
+from experimentation.types import MetricDefinition
 
 # A computation's payload is the serialised form of its summary dataclass; the
 # concrete subclass binds which one, so record_refresh stays type-safe per panel.
@@ -203,12 +203,11 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
         null=True,
         blank=True,
     )
-    # The segments an identity must match to enter the rollout split, snapshot
-    # as at configure time. An empty dict means every identity in the
-    # environment is eligible. Descriptive only — the rules the engine evaluates
-    # are copied into the rollout segment. See ``AudienceSnapshot``.
-    audience: models.JSONField[AudienceSnapshot, AudienceSnapshot] = models.JSONField(
-        default=dict
+    # Their rules are copied into the rollout segment; empty targets everyone.
+    audience_segments = models.ManyToManyField(
+        "segments.Segment",
+        related_name="audience_experiments",
+        blank=True,
     )
 
     class Meta:

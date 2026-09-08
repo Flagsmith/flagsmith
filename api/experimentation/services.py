@@ -105,11 +105,7 @@ if typing.TYPE_CHECKING:
 
     from environments.models import Environment
     from experimentation.models import Metric
-    from experimentation.types import (
-        AudienceSegmentSnapshot,
-        AudienceSnapshot,
-        ExposureGranularity,
-    )
+    from experimentation.types import ExposureGranularity
     from features.feature_states.models import FeatureValueType
     from features.models import FeatureStateValue
     from organisations.models import Organisation
@@ -822,23 +818,43 @@ def _copy_segment_rule(rule: SegmentRule) -> SegmentRuleType:
 
 
 def _copy_segment_rules(segment: Segment) -> list[SegmentRuleType]:
-    """Snapshot a segment's rule tree. Read from the ORM rows rather than
-    ``rules_data``: they are the evaluated representation, and the only one
-    cohort segments have."""
+    # Read from the ORM rows: the only representation cohort segments have.
     return [_copy_segment_rule(rule) for rule in segment.rules.all()]
+
+
+def _compile_audience_rules(
+    match: str,
+    copied_rules: list[list[SegmentRuleType]],
+) -> list[SegmentRuleType]:
+    if not copied_rules:
+        return []
+    return [
+        {
+            "type": ALL_RULE if match == AudienceMatch.ALL else ANY_RULE,
+            "conditions": [],
+            # A segment's own top-level rules are AND-quantified, so a
+            # multi-rule segment needs its own ALL wrapper. A single rule is
+            # inlined, keeping the tree within the document builder's
+            # prefetch depth and the org exporter's two-level selection.
+            "rules": [
+                (
+                    rules[0]
+                    if len(rules) == 1
+                    else {"type": ALL_RULE, "conditions": [], "rules": rules}
+                )
+                for rules in copied_rules
+            ],
+        }
+    ]
 
 
 def _compile_audience(
     experiment: Experiment,
     audience: AudienceSpec,
-) -> tuple[list[SegmentRuleType], AudienceSnapshot]:
-    """Validate, freeze and describe the audience in one pass: each segment is
-    read once, then checked, compiled and snapshot from that same read, so a
-    concurrent edit cannot slip rules past validation into the frozen copy."""
+) -> tuple[list[SegmentRuleType], list[int]]:
     segments = _get_audience_segments(experiment, audience.segment_ids)
-    # Locked because cohort deletion locks the same rows before it scans for
-    # experiments targeting them: without this a rollout could read a cohort as
-    # live and commit after a concurrent deletion decided nothing targeted it.
+    # Locked against ``delete_cohort``, which locks the same rows before
+    # deciding no experiment targets them.
     cohorts_by_segment_id = {
         cohort.segment_id: cohort
         for cohort in Cohort.objects.select_for_update()
@@ -848,59 +864,21 @@ def _compile_audience(
         .order_by("pk")
     }
     copied_rules: list[list[SegmentRuleType]] = []
-    snapshot_segments: list[AudienceSegmentSnapshot] = []
     for segment in segments:
         rules = _copy_segment_rules(segment)
-        cohort = cohorts_by_segment_id.get(segment.id)
-        _validate_audience_segment(experiment, segment, rules, cohort)
-        copied_rules.append(rules)
-        snapshot_segments.append(
-            {
-                "id": segment.id,
-                "uuid": str(segment.uuid),
-                "name": segment.name,
-                "is_cohort": cohort is not None,
-                "cohort_source_type": cohort.source_type if cohort else None,
-            }
+        _validate_audience_segment(
+            experiment, segment, rules, cohorts_by_segment_id.get(segment.id)
         )
-    # An empty audience targets every identity, so there is no rule to add.
-    compiled: list[SegmentRuleType] = (
-        [
-            {
-                "type": ALL_RULE if audience.match == AudienceMatch.ALL else ANY_RULE,
-                "conditions": [],
-                # A segment's own top-level rules are AND-quantified, so a
-                # multi-rule segment needs its own ALL wrapper. A single rule is
-                # inlined: the shallower tree keeps the whole audience within
-                # the document builder's prefetch depth and the org exporter's
-                # two-level rule selection.
-                "rules": [
-                    (
-                        rules[0]
-                        if len(rules) == 1
-                        else {"type": ALL_RULE, "conditions": [], "rules": rules}
-                    )
-                    for rules in copied_rules
-                ],
-            }
-        ]
-        if copied_rules
-        else []
-    )
-    return compiled, {
-        "match": audience.match,
-        "segments": snapshot_segments,
-        "rules": compiled,
-        "taken_at": timezone.now().isoformat(),
-    }
+        copied_rules.append(rules)
+    return _compile_audience_rules(audience.match, copied_rules), [
+        segment.id for segment in segments
+    ]
 
 
 def _rollout_segment_rules(
     rollout_percentage: float,
     audience_rules: list[SegmentRuleType],
 ) -> list[SegmentRuleType]:
-    """The rollout segment's rule tree: the percentage split, ANDed with the
-    audience rule when there is one."""
     return [
         {
             "type": ALL_RULE,
@@ -942,43 +920,44 @@ def _write_segment_rule(
 
 def _write_segment_rules(segment: Segment, rules: list[SegmentRuleType]) -> None:
     """Rebuild the segment's legacy rule rows from the compiled tree. Nothing
-    hashes on rule ids, so replacing them wholesale keeps every identity's
-    enrolment and variant stable."""
+    hashes on rule ids, so replacing them wholesale is safe."""
     # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
     SegmentRule.objects.filter(segment=segment).delete()
     for rule in rules:
         _write_segment_rule(rule, segment=segment)
 
 
-def _audience_match(experiment: Experiment) -> str:
-    return experiment.audience.get("match", AudienceMatch.ANY.value)
+def _audience_segment_ids(experiment: Experiment) -> list[int]:
+    # Through the join table, so soft-deleted segments still count.
+    return sorted(
+        Experiment.audience_segments.through.objects.filter(
+            experiment=experiment
+        ).values_list("segment_id", flat=True)
+    )
 
 
-def _audience_snapshot_segments(
-    experiment: Experiment,
-) -> list[AudienceSegmentSnapshot]:
-    return experiment.audience.get("segments", [])
+def _frozen_audience_rules(experiment: Experiment) -> list[SegmentRuleType]:
+    # The percentage split is always the rollout segment's first rule.
+    segment = experiment.rollout_segment
+    if segment is None or not (rules := segment.rules_data):
+        return []
+    return rules[1:]
+
+
+def _audience_match_of(audience_rules: list[SegmentRuleType]) -> str:
+    if audience_rules and audience_rules[0]["type"] == ALL_RULE:
+        return AudienceMatch.ALL.value
+    return AudienceMatch.ANY.value
 
 
 def _audience_changed(experiment: Experiment, audience: AudienceSpec) -> bool:
-    stored_ids = sorted(
-        segment["id"] for segment in _audience_snapshot_segments(experiment)
-    )
+    stored_ids = _audience_segment_ids(experiment)
     requested_ids = sorted(audience.segment_ids)
     if not stored_ids and not requested_ids:
-        # With no segments on either side the combinator has nothing to
-        # combine, so both describe the same "everyone" whatever the match.
         return False
-    return requested_ids != stored_ids or audience.match != _audience_match(experiment)
-
-
-def _audience_snapshots_equal(a: AudienceSnapshot, b: AudienceSnapshot) -> bool:
-    """Whether two snapshots describe the same audience. `taken_at` only says
-    when the copy was made, so it never makes two otherwise identical
-    snapshots different."""
-    return {key: value for key, value in a.items() if key != "taken_at"} == {
-        key: value for key, value in b.items() if key != "taken_at"
-    }
+    return requested_ids != stored_ids or audience.match != _audience_match_of(
+        _frozen_audience_rules(experiment)
+    )
 
 
 def _get_audience_segments(
@@ -1047,8 +1026,7 @@ def _rollout_override_enabled(experiment: Experiment) -> bool:
 
 
 def _validate_audience_change(experiment: Experiment, audience: AudienceSpec) -> None:
-    """Checks that only apply when the audience is actually being replaced. The
-    caller has already established that it differs from the stored one."""
+    """Checks that only apply when the audience is actually being replaced."""
     if experiment.status != ExperimentStatus.CREATED:
         raise ValidationError(
             f"Cannot change the audience of a {experiment.status} experiment."
@@ -1086,72 +1064,14 @@ def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
         )
 
 
-def _legacy_audience_rules(experiment: Experiment) -> list[SegmentRuleType]:
-    """The audience rules of an experiment configured before the snapshot
-    carried them, read back off the rollout segment: the percentage split is
-    always its first rule."""
-    segment = experiment.rollout_segment
-    if segment is None or not (rules := segment.rules_data):
-        return []
-    return rules[1:]
-
-
-def _frozen_audience_rules(experiment: Experiment) -> list[SegmentRuleType]:
-    """The compiled audience rules to rebuild the rollout segment from. The
-    snapshot is authoritative once it carries them, so a rollout segment that
-    has since drifted is repaired rather than read back."""
-    if (rules := experiment.audience.get("rules")) is not None:
-        return rules
-    return _legacy_audience_rules(experiment)
-
-
-def _canonical_audience(experiment: Experiment) -> AudienceSnapshot:
-    """The stored snapshot in canonical form. An experiment configured before
-    the snapshot carried its compiled rules has them recovered from the rollout
-    segment; a rollout with no audience gets an explicit empty snapshot rather
-    than staying ``{}``. Either way the next sync reads the snapshot and not
-    the segment."""
-    snapshot = experiment.audience
-    if "rules" in snapshot:
-        return snapshot
-    return {
-        "match": _audience_match(experiment),
-        "segments": _audience_snapshot_segments(experiment),
-        "rules": _legacy_audience_rules(experiment),
-        "taken_at": timezone.now().isoformat(),
-    }
-
-
 def _resolve_audience(
     experiment: Experiment,
     audience: AudienceSpec | None,
-) -> tuple[list[SegmentRuleType], AudienceSnapshot]:
-    """The rules to compile into the rollout segment and the snapshot describing
-    them. Copies the audience segments when the audience is being set, and
-    reuses the existing copy and snapshot otherwise, so that later edits to a
-    source segment never drift a running experiment.
-
-    Freezing only starts with enrolment: until the experiment leaves CREATED and
-    the override serves traffic, a named audience is recompiled even when it
-    matches the stored one, so pre-start edits to a source segment are picked
-    up. Once frozen, an unchanged audience is never recompiled or revalidated:
-    its rules already feed evaluation, and the source segments may since have
-    been deleted or edited into something we would refuse to copy today."""
-    if audience is None:
-        return _frozen_audience_rules(experiment), _canonical_audience(experiment)
-    if _audience_changed(experiment, audience):
+) -> tuple[list[SegmentRuleType], list[int]]:
+    if audience is not None and _audience_changed(experiment, audience):
         _validate_audience_change(experiment, audience)
         return _compile_audience(experiment, audience)
-    if experiment.status == ExperimentStatus.CREATED and not (
-        _rollout_override_enabled(experiment)
-    ):
-        return _compile_audience(experiment, audience)
-    return _frozen_audience_rules(experiment), _canonical_audience(experiment)
-
-
-def _store_audience(experiment: Experiment, snapshot: AudienceSnapshot) -> None:
-    experiment.audience = snapshot
-    experiment.save()
+    return _frozen_audience_rules(experiment), _audience_segment_ids(experiment)
 
 
 def _is_noop_rollout(
@@ -1311,21 +1231,23 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
             raise ValidationError(
                 f"Cannot change the rollout of a {experiment.status} experiment."
             )
-        # Validate under the lock, against the status we just read: a concurrent
-        # start must not let an audience change through the frozen-once-running
-        # check on the strength of a stale instance.
+        # Validated under the lock, so a concurrent start cannot let an audience
+        # change through the frozen-once-running check on a stale status.
         validate_rollout_spec(experiment, spec)
-        audience_rules, audience_snapshot = _resolve_audience(experiment, spec.audience)
+        audience_rules, audience_segment_ids = _resolve_audience(
+            experiment, spec.audience
+        )
         rollout_rules = _rollout_segment_rules(spec.rollout_percentage, audience_rules)
+        stored_segment_ids = _audience_segment_ids(experiment)
         if (
             _is_noop_rollout(experiment, spec, rollout_rules)
             # A retarget to segments compiling to identical rules is still a
             # change worth recording.
-            and _audience_snapshots_equal(audience_snapshot, experiment.audience)
+            and audience_segment_ids == stored_segment_ids
         ):
             return
-        if not _audience_snapshots_equal(audience_snapshot, experiment.audience):
-            _store_audience(experiment, audience_snapshot)
+        if audience_segment_ids != stored_segment_ids:
+            experiment.audience_segments.set(audience_segment_ids)
         is_first_rollout = experiment.rollout_segment_id is None
         segment = _sync_rollout_segment(experiment, rollout_rules)
         if is_first_rollout:
@@ -1347,11 +1269,7 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
                 kwargs={"environment_id": environment_id}
             )
         )
-        audience_match = _audience_match(experiment)
-        audience_segment_ids = [
-            audience_segment["id"]
-            for audience_segment in _audience_snapshot_segments(experiment)
-        ]
+        audience_match = _audience_match_of(audience_rules)
         create_rollout_audit_log(
             experiment,
             spec.author,
@@ -1359,9 +1277,8 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
             audience_match=audience_match,
             audience_segment_ids=audience_segment_ids,
         )
-        # Read the audience now, but only announce the rollout once it is
-        # durable: experiment creation nests this call in an outer transaction
-        # that can still roll back.
+        # Announced only once durable: experiment creation nests this call in an
+        # outer transaction that can still roll back.
         transaction.on_commit(
             lambda: experimentation_logger.info(
                 "rollout.applied",
@@ -1428,26 +1345,22 @@ def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | No
 
 
 def _get_experiment_audience(experiment: Experiment) -> dict[str, typing.Any]:
-    """The stored snapshot, plus each segment's live deletion state. Names and
-    cohort badges come from the snapshot, so they keep describing the audience
-    the experiment launched with even once the source segment is gone."""
-    segments = _audience_snapshot_segments(experiment)
-    live_segment_ids = set(
-        Segment.live_objects.filter(
-            id__in=[segment["id"] for segment in segments]
-        ).values_list("id", flat=True)
+    segments = (
+        Segment.objects.all_with_deleted()
+        .filter(id__in=_audience_segment_ids(experiment))
+        .prefetch_related("cohorts")
+        .order_by("id")
     )
-    # Projected field by field rather than spread: the snapshot also carries
-    # the compiled rules and provenance, which are ours and not the API's.
     return {
-        "match": _audience_match(experiment),
+        "match": _audience_match_of(_frozen_audience_rules(experiment)),
         "segments": [
             {
-                "id": segment["id"],
-                "name": segment["name"],
-                "is_cohort": segment["is_cohort"],
-                "cohort_source_type": segment["cohort_source_type"],
-                "deleted": segment["id"] not in live_segment_ids,
+                "id": segment.id,
+                "name": segment.name,
+                "is_cohort": (cohort := next(iter(segment.cohorts.all()), None))
+                is not None,
+                "cohort_source_type": cohort.source_type if cohort else None,
+                "deleted": segment.deleted_at is not None,
             }
             for segment in segments
         ],
