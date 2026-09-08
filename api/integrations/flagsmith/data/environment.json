@@ -53,16 +53,16 @@
       },
       "feature_segment": null,
       "feature_state_value": "",
-      "featurestate_uuid": "844544cb-bd95-41c5-8755-f511a5fbfc4c",
+      "featurestate_uuid": "e23e8e9f-f3a4-42db-85ee-1e0a099872fa",
       "multivariate_feature_state_values": [
         {
-          "id": 364746,
+          "id": 367626,
           "multivariate_feature_option": {
             "id": 30000,
             "key": "single_page",
             "value": ""
           },
-          "mv_fs_value_uuid": "d5dc0913-af52-47df-a9a9-f43161a54cd0",
+          "mv_fs_value_uuid": "5748944c-39f9-4662-8cdb-66567a292e14",
           "percentage_allocation": 0
         }
       ]
