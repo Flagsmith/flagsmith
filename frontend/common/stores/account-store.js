@@ -350,6 +350,14 @@ const controller = {
     API.setCookie('organisation', `${id}`)
     store.organisation = find(store.model.organisations, { id })
     getStore().dispatch(setSelectedOrganisationId(id))
+    // Keep the org-scoped traits pointing at the organisation on screen, so
+    // org-scoped segments are evaluated against it. setTraits rather than
+    // identify: the identity is unchanged, so bucketing is undisturbed.
+    flagsmith.setTraits({
+      'organisation.id': String(id),
+      'organisation.name': store.organisation?.name ?? '',
+      'subscription.plan': store.organisation?.subscription?.plan ?? '',
+    })
     store.changed()
     identifyChatUser()
   },
