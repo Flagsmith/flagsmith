@@ -51,7 +51,7 @@ services:
 
   clickhouse:
     # Match the version Flagsmith runs on ClickHouse Cloud.
-    image: clickhouse/clickhouse-server:25.12
+    image: clickhouse/clickhouse-server:26.2
     pull_policy: always
     restart: unless-stopped
     # ClickHouse opens a file descriptor per column/part, so it needs a far
