@@ -140,7 +140,7 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
       }
     >
       <div className='d-flex flex-column gap-3 mx-0'>
-        {!!audience && (
+        {!!audience?.segments.length && (
           <>
             <div className='d-flex flex-column gap-2'>
               <span>
@@ -151,22 +151,16 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
                   </span>
                 )}
               </span>
-              {audience.segments.length ? (
-                <AudienceSegmentList
-                  segments={audience.segments.map((segment) => ({
-                    cohortSourceType: segment.is_cohort
-                      ? segment.cohort_source_type
-                      : null,
-                    deleted: segment.deleted,
-                    id: segment.id,
-                    name: segment.name,
-                  }))}
-                />
-              ) : (
-                <span className='text-muted'>
-                  All identities in this environment
-                </span>
-              )}
+              <AudienceSegmentList
+                segments={audience.segments.map((segment) => ({
+                  cohortSourceType: segment.is_cohort
+                    ? segment.cohort_source_type
+                    : null,
+                  deleted: segment.deleted,
+                  id: segment.id,
+                  name: segment.name,
+                }))}
+              />
             </div>
 
             <hr className='my-0 mx-0' />

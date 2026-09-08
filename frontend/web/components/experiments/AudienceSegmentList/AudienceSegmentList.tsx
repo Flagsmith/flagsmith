@@ -5,7 +5,6 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import SegmentsIcon from 'components/icons/SegmentsIcon'
 import { CohortSourceType } from 'common/types/responses'
-import './AudienceSegmentList.scss'
 
 export type AudienceSegmentItem = {
   id: number
@@ -25,19 +24,25 @@ const AudienceSegmentList: FC<AudienceSegmentListProps> = ({
   onRemove,
   segments,
 }) => (
-  <div className='audience-segment-list'>
+  <div className='d-flex flex-column gap-2'>
     {segments.map((segment) => (
-      <div key={segment.id} className='audience-segment-list__row'>
+      <div
+        key={segment.id}
+        className='d-flex align-items-center gap-3 py-2 ps-3 pe-1 border border-default rounded-md bg-surface-default'
+      >
         <SegmentsIcon
-          className='audience-segment-list__icon'
+          className='flex-shrink-0'
           width={18}
           height={18}
           fill='#656D7B'
         />
-        <span className='audience-segment-list__body' title={segment.name}>
-          <span className='audience-segment-list__title'>
+        <span
+          className='d-flex flex-column flex-1 overflow-hidden gap-1'
+          title={segment.name}
+        >
+          <span className='d-flex align-items-center gap-2 overflow-hidden'>
             <span
-              className={cn('audience-segment-list__name-text', {
+              className={cn('fw-semibold text-truncate', {
                 'text-muted': segment.deleted,
               })}
             >
@@ -51,7 +56,7 @@ const AudienceSegmentList: FC<AudienceSegmentListProps> = ({
             )}
           </span>
           {!!segment.description && (
-            <span className='audience-segment-list__description text-muted'>
+            <span className='text-truncate text-muted'>
               {segment.description}
             </span>
           )}

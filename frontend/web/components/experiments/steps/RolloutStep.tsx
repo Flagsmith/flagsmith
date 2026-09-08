@@ -54,7 +54,7 @@ const RolloutStep: FC<RolloutStepProps> = ({
       <ContentCard
         background='white'
         title='Targeted audience'
-        description='Limit the experiment to identities in one or more segments. The segment rules are copied when the experiment starts, so later edits to a segment leave the experiment untouched.'
+        description='Limit the experiment to identities in a segment. The segment rules are copied when the experiment starts, so later edits to the segment leave the experiment untouched.'
       >
         <AudiencePicker
           projectId={projectId}
