@@ -102,7 +102,7 @@ def test_seed_organisation_identities__happy_path__rows_land_in_clickhouse(
                 "composite_key": "k2",
                 "environment_api_key": environment_api_key,
                 "created_date": "2026-05-08T00:00:00Z",
-                "identity_traits": [],
+                "identity_traits": [{"trait_key": "foo2", "trait_value": "bar2"}],
             },
         ]
     )
