@@ -33,7 +33,6 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
   )
 
   const rollout = experiment.experiment_rollout
-  // The audience is frozen once the experiment starts, so it is display-only.
   const audience = rollout?.audience
   const mvOptions = experiment.feature.multivariate_options ?? []
 
@@ -87,7 +86,7 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
       onYes: async () => {
         try {
           await updateRollout({
-            // No audience: it is frozen once running, and omitting the key
+            // No audience: it is display-only here, and omitting the key
             // leaves the stored one untouched.
             body: buildRolloutBody({
               enabled: rollout?.enabled ?? true,

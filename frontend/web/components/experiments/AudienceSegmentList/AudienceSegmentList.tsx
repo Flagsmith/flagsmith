@@ -13,8 +13,6 @@ export type AudienceSegmentItem = {
   cohortSourceType?: CohortSourceType | null
   description?: string
   membershipCount?: number
-  // Set on segments deleted after the experiment was configured. The frozen
-  // rule copy keeps evaluating, so the segment is shown, only muted.
   deleted?: boolean
 }
 

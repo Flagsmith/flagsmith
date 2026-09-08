@@ -679,9 +679,8 @@ export type Experiment = {
 
 export type ExperimentAudienceMatch = 'any' | 'all'
 
-// Provenance of the audience segments compiled into the rollout segment. The
-// rules themselves are a frozen copy, so a source segment can be deleted while
-// the experiment keeps evaluating it.
+// Provenance only: the rules are a frozen copy on the rollout segment, so a
+// source segment can be deleted while the experiment keeps evaluating it.
 export type ExperimentAudienceSegment = {
   id: number
   name: string

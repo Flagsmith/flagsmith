@@ -1,8 +1,6 @@
-// Audience and rollout rejections are raised as DRF ValidationErrors from the
-// service layer, so the body arrives as a bare list of strings. Serializer-level
-// failures arrive keyed by field instead — nested one level under
-// `experiment_rollout` for the rollout body — and auth or routing failures as
-// {detail: "..."}. Walking the structure covers all of them.
+// A rejection arrives as a bare list of strings (service-layer ValidationError),
+// keyed by field and sometimes nested under `experiment_rollout` (serializer),
+// or as {detail: "..."}. Walking the structure covers all three.
 const firstMessage = (value: unknown): string | undefined => {
   if (typeof value === 'string') return value || undefined
   if (Array.isArray(value) || (value && typeof value === 'object')) {

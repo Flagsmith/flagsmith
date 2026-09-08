@@ -2,8 +2,7 @@ import { Segment, SegmentRule } from 'common/types/responses'
 import { AudienceSegment } from 'components/experiments/rollout'
 
 // Copying a split re-salts it against the rollout segment, so it would match a
-// different set of identities than the source segment does elsewhere. The
-// server rejects these; the picker hides them so the choice never dead-ends.
+// different set of identities than the source segment does elsewhere.
 const containsPercentageSplit = (rules: SegmentRule[]): boolean =>
   rules.some(
     (rule) =>
@@ -12,10 +11,8 @@ const containsPercentageSplit = (rules: SegmentRule[]): boolean =>
       ) || containsPercentageSplit(rule.rules ?? []),
   )
 
-// The segments list already excludes system segments, so the remaining server
-// rules the picker can enforce itself are these. Anything left over (a cohort
-// pending deletion racing the request, say) still fails server-side, and the
-// caller surfaces that message.
+// The server rules the picker can enforce itself, so a choice never dead-ends.
+// Anything left over still fails server-side and the caller surfaces that.
 export const isSelectableAudienceSegment = (
   segment: Segment,
   environmentId: string,

@@ -124,8 +124,7 @@ export const getTrafficSegments = (
 // Matches the API cap, held at one until the Java SDK respects sub-rule types.
 export const MAX_AUDIENCE_SEGMENTS = 1
 
-// The subset of a segment the wizard keeps once it has been picked — all the
-// `SegmentSelect` option carries, and all the audience needs.
+// The subset of a segment the wizard keeps once it has been picked.
 export type AudienceSegment = {
   id: number
   name: string
@@ -166,8 +165,6 @@ export const buildRolloutSummary = (
     .map((row) => `${row.label} ${row.percentage}%`)
     .join(', ')}.`
 
-// An audience is only sent when segments are picked; the wizard never needs to
-// clear one, so an empty selection omits the field entirely.
 export const toAudiencePayload = (
   segments: AudienceSegment[],
   match: ExperimentAudienceMatch,
@@ -176,10 +173,9 @@ export const toAudiencePayload = (
     ? { match, segment_ids: segments.map((segment) => segment.id) }
     : undefined
 
-// The single place the rollout request body is shaped, so both the wizard and
-// the detail-page editor agree on it. An absent audience must leave the key off
-// entirely: the API reads a present `audience` as a replacement, and the detail
-// page never edits one.
+// The single place the rollout request body is shaped, so the wizard and the
+// detail-page editor agree on it. An absent audience leaves the key off
+// entirely, since the API reads a present `audience` as a replacement.
 export const buildRolloutBody = ({
   audience,
   enabled,
