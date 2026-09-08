@@ -353,11 +353,13 @@ const controller = {
     // Keep the org-scoped traits pointing at the organisation on screen, so
     // org-scoped segments are evaluated against it. setTraits rather than
     // identify: the identity is unchanged, so bucketing is undisturbed.
-    flagsmith.setTraits({
-      'organisation.id': String(id),
-      'organisation.name': store.organisation?.name ?? '',
-      'subscription.plan': store.organisation?.subscription?.plan ?? '',
-    })
+    flagsmith
+      .setTraits({
+        'organisation.id': String(id),
+        'organisation.name': store.organisation?.name ?? '',
+        'subscription.plan': store.organisation?.subscription?.plan ?? '',
+      })
+      .catch(() => {})
     store.changed()
     identifyChatUser()
   },
