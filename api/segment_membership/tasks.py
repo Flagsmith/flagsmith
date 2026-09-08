@@ -107,8 +107,6 @@ def seed_organisation_identities(organisation_id: int) -> None:
                                     scan_started_at,
                                 )
                                 for doc in batch
-                                # 'empty' identities carry little to no value
-                                # so we skip them here to save on resources
                                 if not _is_empty_identity(doc)
                             ]
                             if not rows:
