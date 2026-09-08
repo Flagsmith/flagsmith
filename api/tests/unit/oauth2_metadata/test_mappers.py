@@ -20,7 +20,7 @@ def test_map_scopes_to_descriptions__described_scopes__returns_labels_and_grants
             "grants": list(SCOPE_GRANTS[SCOPE_MCP]),
         },
         SCOPE_ADMIN_API: {
-            "label": "Admin API access",
+            "label": "Management API access",
             "grants": list(SCOPE_GRANTS[SCOPE_ADMIN_API]),
         },
     }

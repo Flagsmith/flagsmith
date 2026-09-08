@@ -22,7 +22,7 @@ class TokenExchangeRequestSerializer(serializers.Serializer[None]):
 
 class TokenExchangeResponseSerializer(serializers.Serializer[dict[str, Any]]):
     access_token = serializers.CharField(
-        help_text="Short-lived access token for the Admin API.",
+        help_text="Short-lived access token for the Management API.",
     )
     token_type = serializers.CharField(help_text='Always "Bearer".')
     expires_in = serializers.IntegerField(

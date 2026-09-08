@@ -28,7 +28,7 @@ def test_token_exchange__matching_token__returns_usable_access_token(
     assert response_json["token_type"] == "Bearer"
     assert response_json["expires_in"] == 3600
 
-    # And the minted token authenticates against the admin API
+    # And the minted token authenticates against the Management API
     machine_client.credentials(
         HTTP_AUTHORIZATION=f"Bearer {response_json['access_token']}"
     )

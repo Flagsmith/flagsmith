@@ -198,7 +198,7 @@ export class CreateAPIKey extends PureComponent {
                   isValid={!!this.state.name}
                   type='text'
                   inputClassName='input--wide'
-                  placeholder='e.g. Admin API Key'
+                  placeholder='e.g. Management API Key'
                 />
               </Flex>
               <>
@@ -335,7 +335,7 @@ export class CreateAPIKey extends PureComponent {
   }
 }
 
-export default class AdminAPIKeys extends PureComponent {
+export default class ManagementAPIKeys extends PureComponent {
   static displayName = 'TheComponent'
 
   state = {
@@ -369,7 +369,7 @@ export default class AdminAPIKeys extends PureComponent {
 
   createAPIKey = () => {
     openModal(
-      'New Admin API Key',
+      'New Management API Key',
       <CreateAPIKey
         organisationId={this.props.organisationId}
         onSuccess={() => {
@@ -459,7 +459,7 @@ export default class AdminAPIKeys extends PureComponent {
               </Button>
             }
           >
-            {`API keys are used to authenticate with the Admin API. `}
+            {`API keys are used to authenticate with the Management API. `}
             <Button
               theme='text'
               href='https://docs.flagsmith.com/integrations/terraform#terraform-api-key'
