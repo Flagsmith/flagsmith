@@ -18,7 +18,7 @@ SOCKET_TIMEOUT = 1
 
 @lru_cache(maxsize=1)
 def _get_client() -> RedisCluster:
-    return RedisCluster.from_url(  # type: ignore[no-untyped-call,no-any-return]
+    return RedisCluster.from_url(  # type: ignore[no-any-return]
         settings.INGESTION_REDIS_URL,
         socket_timeout=SOCKET_TIMEOUT,
         socket_keepalive=True,

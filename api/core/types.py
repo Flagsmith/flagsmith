@@ -11,4 +11,4 @@ class AuthenticatedRequest(Request):
     which DRF types as possibly anonymous, wherever `IsAuthenticated` guarantees a user.
     """
 
-    user: FFAdminUser | APIKeyUser
+    user: FFAdminUser | APIKeyUser  # type: ignore[assignment]

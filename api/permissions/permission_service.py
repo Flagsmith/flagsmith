@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Set, Union
+from typing import TYPE_CHECKING, Set, Union
 
 from django.conf import settings
 from django.db.models import Q, QuerySet
@@ -82,7 +82,7 @@ def is_master_api_key_environment_admin(
 def get_permitted_projects_for_user(
     user: "FFAdminUser",
     permission_key: str,
-    tag_ids: List[int] = None,  # type: ignore[assignment]
+    tag_ids: list[int] | None = None,
 ) -> QuerySet[Project]:
     """
     Get all projects that the user has the given permissions for.
@@ -131,7 +131,7 @@ def get_permitted_projects_for_user(
 def get_permitted_projects_for_master_api_key(
     master_api_key: "MasterAPIKey",
     permission_key: str,
-    tag_ids: List[int] = None,  # type: ignore[assignment]
+    tag_ids: list[int] | None = None,
 ) -> QuerySet[Project]:
     if master_api_key.is_admin:
         return Project.objects.filter(organisation_id=master_api_key.organisation_id)
@@ -145,7 +145,7 @@ def get_permitted_environments_for_user(
     user: "FFAdminUser",
     project: Project,
     permission_key: str,
-    tag_ids: List[int] = None,  # type: ignore[assignment]
+    tag_ids: list[int] | None = None,
     prefetch_metadata: bool = False,
 ) -> QuerySet[Environment]:
     """
@@ -201,7 +201,7 @@ def get_permitted_environments_for_master_api_key(
     master_api_key: "MasterAPIKey",
     project: Project,
     permission_key: str,
-    tag_ids: List[int] = None,  # type: ignore[assignment]
+    tag_ids: list[int] | None = None,
     prefetch_metadata: bool = False,
 ) -> QuerySet[Environment]:
     if is_master_api_key_project_admin(master_api_key, project):

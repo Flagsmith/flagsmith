@@ -232,20 +232,11 @@ main.container {
 
 
 
-/* Section background alternation for dark mode */
-[data-theme='dark'] section:nth-child(even) {
-  background: var(--ifm-background-surface-color);
-  padding: 3rem 0;
-  margin: 0;
-  width: 100vw;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-}
-
-[data-theme='dark'] section:nth-child(odd) {
+/* Section background alternation for dark mode.
+   Scoped to [data-section] so these rules only apply to the
+   landing page sections. */
+[data-theme='dark'] section[data-section]:nth-child(4n+1),
+[data-theme='dark'] section[data-section]:nth-child(4n+2) {
   background: #111111;
   padding: 3rem 0;
   margin: 0;
@@ -257,21 +248,8 @@ main.container {
   margin-right: -50vw;
 }
 
-[data-theme='dark'] section:nth-child(4n+1),
-[data-theme='dark'] section:nth-child(4n+2) {
-  background: #111111;
-  padding: 3rem 0;
-  margin: 0;
-  width: 100vw;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
-}
-
-[data-theme='dark'] section:nth-child(4n+3),
-[data-theme='dark'] section:nth-child(4n+4) {
+[data-theme='dark'] section[data-section]:nth-child(4n+3),
+[data-theme='dark'] section[data-section]:nth-child(4n+4) {
   background: var(--ifm-background-surface-color);
   padding: 3rem 0;
   margin: 0;
@@ -283,15 +261,15 @@ main.container {
   margin-right: -50vw;
 }
 
-section > div,
-section > h2 {
+section[data-section] > div,
+section[data-section] > h2 {
   margin: 0 auto;
   max-width: var(--ifm-container-width);
   padding: 0 var(--ifm-spacing-horizontal);
   width: 100%;
 }
 
-section > h2 {
+section[data-section] > h2 {
   padding-left: var(--ifm-spacing-horizontal);
 }
 
@@ -303,12 +281,10 @@ section > h2 {
 }
 
 @media (max-width: 996px) {
-  [data-theme='dark'] section:nth-child(4n+1),
-  [data-theme='dark'] section:nth-child(4n+2),
-  [data-theme='dark'] section:nth-child(4n+3),
-  [data-theme='dark'] section:nth-child(4n+4),
-  [data-theme='dark'] section:nth-child(odd),
-  [data-theme='dark'] section:nth-child(even) {
+  [data-theme='dark'] section[data-section]:nth-child(4n+1),
+  [data-theme='dark'] section[data-section]:nth-child(4n+2),
+  [data-theme='dark'] section[data-section]:nth-child(4n+3),
+  [data-theme='dark'] section[data-section]:nth-child(4n+4) {
     width: 100%;
     left: auto;
     right: auto;

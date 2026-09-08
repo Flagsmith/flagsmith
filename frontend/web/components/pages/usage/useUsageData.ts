@@ -15,16 +15,15 @@ type UseUsageData = {
 export type UsageData = {
   /** The period and project on screen. Feeds the chart and the breakdown. */
   scoped: Res['organisationUsage'] | undefined
-  /** The organisation over the window its allowance covers. Feeds the meter. */
-  allowanceTotal: number
+  /** The organisation over the window its allowance covers. */
+  allowance: Res['organisationUsage'] | undefined
   isLoadingPlan: boolean
   isLoadingScoped: boolean
   failed: boolean
   retry: () => void
 }
 
-// usage-data is throttled at five requests a minute per user, so refetching
-// every time the tab regains focus spends the budget the page needs.
+// usage-data is throttled at five requests a minute per user.
 const OPTIONS = { refetchOnFocus: false }
 
 export const useUsageData = ({
@@ -51,7 +50,7 @@ export const useUsageData = ({
   )
 
   return {
-    allowanceTotal: allowance.data?.totals?.total ?? 0,
+    allowance: allowance.data,
     // Either query failing leaves a number missing, so both are fatal.
     failed: scoped.isError || allowance.isError,
 

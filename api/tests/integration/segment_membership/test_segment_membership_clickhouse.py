@@ -1,4 +1,6 @@
+import json
 import uuid
+from datetime import datetime
 
 import pytest
 from pytest_django.fixtures import SettingsWrapper
@@ -124,6 +126,67 @@ def test_seed_organisation_identities__happy_path__rows_land_in_clickhouse(
         e["event"] == "seed.environment.completed" and e["rows__count"] == 2
         for e in log.events
     )
+
+
+@pytest.mark.clickhouse
+def test_seed_organisation_identities__cohort_system_traits__survive_reseed(
+    clickhouse_db: None,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+    project: int,
+    environment: int,
+    environment_api_key: str,
+    segment: int,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given an identity whose CDC-written row already carries a cohort trait
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    mocker.patch("segment_membership.tasks.refresh_project_segment_counts")
+    cdc_rows = [
+        (
+            environment_api_key,
+            "a",
+            "k1",
+            {"foo": "bar", "flagsmith_cohort_abc": True},
+            datetime(2026, 5, 8, 12, 0, 0),
+        )
+    ]
+    with open_clickhouse_cursor() as cursor:
+        cursor.executemany(
+            "INSERT INTO IDENTITIES "
+            "(environment_id, identifier, identity_key, traits, inserted_at) VALUES",
+            cdc_rows,  # type: ignore[arg-type]
+        )
+    # and Dynamo holds the same identity with the cohort in `system_traits`
+    wrapper = mocker.MagicMock(is_enabled=True)
+    wrapper.iter_all_items_paginated.return_value = iter(
+        [
+            {
+                "identity_uuid": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                "identifier": "a",
+                "composite_key": "k1",
+                "environment_api_key": environment_api_key,
+                "created_date": "2026-05-08T00:00:00Z",
+                "identity_traits": [{"trait_key": "foo", "trait_value": "bar"}],
+                "system_traits": {"flagsmith_cohort_abc": True},
+            },
+        ]
+    )
+    mocker.patch("segment_membership.tasks.DynamoIdentityWrapper", return_value=wrapper)
+
+    # When the org is (re-)seeded
+    seed_organisation_identities(Project.objects.get(pk=project).organisation_id)
+
+    # Then the seeded row that supersedes the CDC row still carries the cohort
+    with open_clickhouse_cursor() as cursor:
+        cursor.execute(
+            "SELECT toJSONString(traits) FROM IDENTITIES FINAL "
+            "WHERE environment_id = %(env)s AND identifier = 'a'",
+            {"env": environment_api_key},
+        )
+        [(traits_json,)] = cursor.fetchall()
+    assert json.loads(traits_json) == {"foo": "bar", "flagsmith_cohort_abc": True}
 
 
 @pytest.mark.clickhouse

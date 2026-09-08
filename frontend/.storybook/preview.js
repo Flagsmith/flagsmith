@@ -61,6 +61,7 @@ window.Row = Row
 window.FormGroup = FormGroup
 // isMobile is set at app boot; stub it so components that read it render in Storybook.
 window.isMobile = false
+window.toast = (message) => console.log('[toast]', message)
 
 /** @type { import('storybook').Preview } */
 const preview = {

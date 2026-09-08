@@ -48,7 +48,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     font-weight: normal;
-    color: $input-placeholder-color;
+    color: var(--color-text-tertiary);
   }
   &__indicator {
     color: $text-icon-light-grey;

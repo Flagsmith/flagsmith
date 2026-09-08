@@ -129,8 +129,8 @@ class ClusterConnectionFactory(ConnectionFactory):  # type: ignore[misc]
             client_cls_kwargs["read_from_replicas"] = (
                 settings.REDIS_CLUSTER_READ_FROM_REPLICAS
             )
-            # ... and then build and return the client
-            return RedisCluster(**client_cls_kwargs)  # type: ignore[abstract]
+            # ... and then build and return the client.
+            return RedisCluster(**client_cls_kwargs)  # type: ignore[no-any-return]
         except Exception as e:
             # Let django redis handle the exception
             raise ConnectionInterrupted(connection=None) from e

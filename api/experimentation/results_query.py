@@ -15,16 +15,18 @@ can't silently misalign them.
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
-from experimentation.dataclasses import MetricSpec
+from experimentation.constants import EXPOSURE_EVENT_NAME
+from experimentation.dataclasses import ConversionBucket, MetricSpec
 from experimentation.models import MetricAggregation
 from experimentation.stats import VariantStats
 
 _FLOAT_VALUE = "toFloat64OrZero(m.value)"
 
 # Events are delivered at-least-once, so dedup keeps duplicates from inflating
-# counts. Shared by the exposures and results queries.
+# counts. Shared by the exposures, results and conversions queries.
 _EXPOSURES_CTE = """
 WITH exposures AS (
     SELECT
@@ -50,10 +52,33 @@ WHERE quarantined = 0
 GROUP BY variant"""
 )
 
-_METRIC_JOIN = """    LEFT JOIN events AS m
+
+def exposure_window_params(
+    *,
+    environment_key: str,
+    feature_name: str,
+    window_start: datetime,
+    window_end: datetime,
+) -> dict[str, object]:
+    """The parameters ``_EXPOSURES_CTE`` binds, for every query that starts
+    from it."""
+    return {
+        "environment_key": environment_key,
+        "exposure_event": EXPOSURE_EVENT_NAME,
+        "feature_name": feature_name,
+        "window_start": window_start,
+        "window_end": window_end,
+    }
+
+
+def _metric_join(events_param: str) -> str:
+    """Join each exposed identity to its metric events. ``events_param`` names
+    the bound list of event names, so a query can join only the events it
+    aggregates."""
+    return f"""    LEFT JOIN events AS m
         ON m.identifier = e.identifier
         AND m.environment_key = %(environment_key)s
-        AND m.event IN %(metric_events)s
+        AND m.event IN %({events_param})s
         AND m.timestamp >= %(window_start)s
         AND m.timestamp < %(window_end)s"""
 
@@ -104,6 +129,23 @@ class _MetricSlot:
         a = self._alias
         return f"sum({a}) AS {a}_sum, sum({a} * {a}) AS {a}_sum_squares"
 
+    @property
+    def conversion_alias(self) -> str:
+        return f"c{self.index}"
+
+    def first_conversion_select(self) -> str | None:
+        """Per-identity timestamp of the first post-exposure conversion, NULL
+        when the identity never converted. Same attribution condition as
+        unit_select, so bucket totals add up to the metric's ``sum``.
+
+        None for value metrics: a count or sum accrues per event rather than
+        once per identity, so a first-conversion timestamp can't chart it."""
+        if self.spec.aggregation != MetricAggregation.OCCURRENCE:
+            return None
+        return (
+            f"minIfOrNull(m.timestamp, {self._condition()}) AS {self.conversion_alias}"
+        )
+
     def decode(self, n: int, row: Sequence[Any], index: dict[str, int]) -> VariantStats:
         """Read this slot's two columns (sum, sum_squares) from a row by name."""
         return VariantStats(
@@ -134,7 +176,7 @@ unit_values AS (
         e.variant AS variant,
         {unit_selects}
     FROM exposures AS e
-{_METRIC_JOIN}
+{_metric_join("metric_events")}
     WHERE e.quarantined = 0
     GROUP BY e.identifier, e.variant
 )
@@ -144,13 +186,92 @@ FROM unit_values
 GROUP BY variant"""
         )
 
-    def add_metric_params(self, params: dict[str, object]) -> None:
-        """Add per-metric query parameters into an existing params dict."""
+    def build_conversions_query(self, *, bucket_function: str) -> str | None:
+        """Per variant and charted metric, how many identities first converted
+        in each time bucket. None when no attached metric charts, since there
+        is nothing to query."""
+        slots = self._charted_slots
+        if not slots:
+            return None
+
+        first_conversion_selects = ",\n        ".join(
+            select for s in slots if (select := s.first_conversion_select())
+        )
+        indexes = ", ".join(str(s.index) for s in slots)
+        aliases = ", ".join(s.conversion_alias for s in slots)
+
+        return (
+            _EXPOSURES_CTE
+            + f""",
+first_conversions AS (
+    SELECT
+        e.variant AS variant,
+        {first_conversion_selects}
+    FROM exposures AS e
+{_metric_join("conversion_events")}
+    WHERE e.quarantined = 0
+    GROUP BY e.identifier, e.variant
+)
+SELECT
+    variant,
+    metric_index,
+    {bucket_function}(first_conversion, 'UTC') AS bucket,
+    count() AS converted_identities
+FROM first_conversions
+ARRAY JOIN [{indexes}] AS metric_index, [{aliases}] AS first_conversion
+WHERE first_conversion IS NOT NULL
+GROUP BY variant, metric_index, bucket
+ORDER BY bucket"""
+        )
+
+    @property
+    def _charted_slots(self) -> list[_MetricSlot]:
+        return [s for s in self._slots if s.first_conversion_select() is not None]
+
+    def params(
+        self,
+        *,
+        environment_key: str,
+        feature_name: str,
+        window_start: datetime,
+        window_end: datetime,
+    ) -> dict[str, object]:
+        """Every parameter the results and conversions queries bind: the
+        exposure window, each metric's event, and the event lists each join
+        narrows to."""
+        params = exposure_window_params(
+            environment_key=environment_key,
+            feature_name=feature_name,
+            window_start=window_start,
+            window_end=window_end,
+        )
         if not self._slots:
-            return
+            return params
         params["metric_events"] = [s.spec.event for s in self._slots]
+        params["conversion_events"] = [s.spec.event for s in self._charted_slots]
         for slot in self._slots:
             params[f"metric_{slot.index}_event"] = slot.spec.event
+        return params
+
+    def decode_conversion_rows(
+        self, rows: Sequence[Sequence[Any]], column_names: Sequence[str]
+    ) -> dict[int, list[ConversionBucket]]:
+        """Group conversions-query rows by the metric behind each slot index.
+        Every charted metric gets a key, empty when nobody converted yet."""
+        index = {name: position for position, name in enumerate(column_names)}
+        buckets: dict[int, list[ConversionBucket]] = {
+            slot.spec.metric_id: [] for slot in self._charted_slots
+        }
+        for row in rows:
+            metric_id = self._slots[int(row[index["metric_index"]])].spec.metric_id
+            buckets[metric_id].append(
+                ConversionBucket(
+                    variant=str(row[index["variant"]]),
+                    bucket=row[index["bucket"]],
+                    converted_identities=int(row[index["converted_identities"]]),
+                )
+            )
+        return buckets
 
     def decode_rows(
         self, rows: list[Any], column_names: Sequence[str]

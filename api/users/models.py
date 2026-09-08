@@ -1,5 +1,4 @@
 import logging
-import secrets
 import string
 import typing
 import uuid
@@ -12,6 +11,7 @@ from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_SAVE,
     LifecycleModel,
@@ -110,10 +110,10 @@ class UserManager(BaseUserManager):  # type: ignore[type-arg]
 
     def make_random_password(
         self,
-        length: int = 10,
+        length: int = 14,
         allowed_chars: str = string.ascii_letters + string.digits,
     ) -> str:
-        return "".join(secrets.choice(allowed_chars) for _ in range(length))
+        return get_random_string(length, allowed_chars)
 
 
 class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-missing,misc]
@@ -344,7 +344,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     def get_permitted_projects(
         self,
         permission_key: str,
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
     ) -> QuerySet[Project]:
         return get_permitted_projects_for_user(self, permission_key, tag_ids)
 
@@ -352,7 +352,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self,
         permission: str,
         project: Project,
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
     ) -> bool:
         if self.is_project_admin(project):
             return True
@@ -362,7 +362,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self,
         permission: str,
         environment: "Environment",
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
     ) -> bool:
         return environment in self.get_permitted_environments(
             permission, environment.project, tag_ids=tag_ids
@@ -375,11 +375,15 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self,
         permission_key: str,
         project: Project,
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
         prefetch_metadata: bool = False,
     ) -> QuerySet["Environment"]:
         return get_permitted_environments_for_user(
-            self, project, permission_key, tag_ids, prefetch_metadata=prefetch_metadata
+            self,
+            project,
+            permission_key,
+            tag_ids,
+            prefetch_metadata=prefetch_metadata,
         )
 
     @staticmethod

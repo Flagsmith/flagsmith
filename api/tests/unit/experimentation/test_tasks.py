@@ -453,8 +453,10 @@ def _results_summary() -> ResultsSummary:
                     "control": VariantStats(n=1000, sum=100.0, sum_squares=100.0)
                 },
                 inference={},
+                conversions_timeseries=None,
             )
         ],
+        exposures_timeseries=ExposuresTimeseries(granularity="day", points=[]),
     )
 
 

@@ -1,11 +1,9 @@
 import React, { Component } from 'react'
 import cx from 'classnames'
 import Highlight from './Highlight'
-import ConfigProvider from 'common/providers/ConfigProvider'
 import { Clipboard } from 'polyfill-react-native'
 import Icon from './icons/Icon'
-import { IonIcon } from '@ionic/react'
-import { checkmarkCircle, warning } from 'ionicons/icons'
+import BareButton from './base/forms/BareButton'
 
 import toml from 'toml'
 import yaml from 'yaml'
@@ -95,23 +93,24 @@ class Validation extends Component {
       this.props.language === 'ini' ? 'toml' : this.props.language
     return this.state.error ? (
       <Tooltip
-        position='top'
         title={
-          <IonIcon
+          <span
             id='language-validation-error'
             className='language-icon text-danger'
-            icon={warning}
-          />
+          >
+            <Icon name='warning' width={14} fill='currentColor' />
+          </span>
         }
       >
         {`${displayLanguage} validation error, please check your value.<br/>Error: ${this.state.error}`}
       </Tooltip>
     ) : (
-      <IonIcon
+      <span
         id='language-validation-success'
         className='language-icon text-success'
-        icon={checkmarkCircle}
-      />
+      >
+        <Icon name='checkmark-circle' width={14} />
+      </span>
     )
   }
 }
@@ -141,8 +140,17 @@ class ValueEditor extends Component {
     />
   )
 
+  copyValue = () => {
+    const res = Clipboard.setString(this.props.value)
+    toast(
+      res ? 'Clipboard set' : 'Could not set clipboard :(',
+      res ? '' : 'danger',
+    )
+  }
+
   render() {
     const { ...rest } = this.props
+    const showCopy = !this.props.onlyOneLang && !this.props.disabled
     return (
       <div
         className={cx(
@@ -207,20 +215,17 @@ class ValueEditor extends Component {
             >
               .yaml {this.state.language === 'yaml' && this.renderValidation()}
             </span>
-            <span
-              onMouseDown={() => {
-                const res = Clipboard.setString(this.props.value)
-                toast(
-                  res ? 'Clipboard set' : 'Could not set clipboard :(',
-                  res ? '' : 'danger',
-                )
-              }}
-              className={cx('txt primary')}
-            >
-              <Icon name='copy-outlined' fill={'#6837fc'} />
-              copy
-            </span>
           </Row>
+        )}
+
+        {showCopy && (
+          <BareButton
+            className='value-editor__copy position-absolute rounded-sm icon-secondary'
+            aria-label='Copy value'
+            onClick={this.copyValue}
+          >
+            <Icon name='copy-outlined' width={20} />
+          </BareButton>
         )}
 
         {E2E ? (
@@ -243,4 +248,4 @@ class ValueEditor extends Component {
   }
 }
 
-export default ConfigProvider(ValueEditor)
+export default ValueEditor

@@ -13,13 +13,13 @@
 
 ## Rules
 1. **API Integration**: Use `npx ssg` CLI + check `../api` backend
-2. **Imports**: Use `common/`, `components/`, `project/` (NO relative imports)
+2. **Imports**: Use the `common/`, `components/`, `project/` aliases when the relative path would go up (`../`); use a relative path for same-folder or descendant imports. This is enforced by `@dword-design/import-alias/prefer-alias`, and `eslint --fix` will rewrite an alias back to relative inside its own alias root (e.g. `components/base/forms/X` becomes `./base/forms/X` in a file under `web/components/`).
 3. **State**: Redux Toolkit + RTK Query, store in `common/store.ts`
 4. **Feature Flags**: When user says "create a feature flag", you MUST: (1) Create it in Flagsmith using MCP tools (`mcp__flagsmith__create_feature`), (2) Implement code with `useFlags` hook. See `.claude/context/feature-flags/` for details
 5. **Linting**: ALWAYS run `npx eslint --fix <file>` on any files you modify
 6. **Type Enums**: Extract inline union types to named types (e.g., `type Status = 'A' | 'B'` instead of inline)
 7. **NO FETCH**: NEVER use `fetch()` directly - ALWAYS use RTK Query mutations/queries (inject endpoints into services in `common/services/`), see api-integration context
-8. **Component structure**: Each new component lives in its own folder with an `index.ts` barrel - `ComponentName/ComponentName.tsx`, co-located `ComponentName.scss`, any sub-components, and an `index.ts` that re-exports the default (and public types). Import via the folder (`components/.../ComponentName`), never the inner file. Keep files focused (~100 lines as a target); split by concern, not to hit a number. Data tables/constant maps are exempt.
+8. **Component structure**: A component with nothing to keep beside it is a single `ComponentName.tsx`. It gets a folder once it has a co-located `ComponentName.scss`, sub-components, tests or hooks: `ComponentName/ComponentName.tsx` plus an `index.ts` re-exporting the default (and public types). Import via `components/.../ComponentName` either way, never the inner file, so promoting a file to a folder changes no imports. Keep files focused (~100 lines as a target); split by concern, not to hit a number. Data tables/constant maps are exempt.
 
 ## Key Files
 - Store: `common/store.ts`
