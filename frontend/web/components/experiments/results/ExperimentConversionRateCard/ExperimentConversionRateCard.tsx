@@ -1,18 +1,14 @@
-import { FC, useMemo, useState } from 'react'
+import { FC, useMemo } from 'react'
 import moment from 'moment'
 import { LineChart } from 'components/charts'
 import ContentCard from 'components/base/grid/ContentCard'
-import InlinePillToggle from 'components/base/forms/InlinePillToggle'
 import { BayesianResultsSummary, Experiment } from 'common/types/responses'
 import { getPrimaryMetric } from 'components/experiments/constants'
 import {
   getMetricResult,
   getVariantIdentities,
 } from 'components/experiments/results/derive'
-import {
-  ConversionMode,
-  buildConversionChartData,
-} from 'components/experiments/results/deriveConversionRate'
+import { buildConversionChartData } from 'components/experiments/results/deriveConversionRate'
 
 type ExperimentConversionRateCardProps = {
   experiment: Experiment
@@ -25,7 +21,6 @@ const ExperimentConversionRateCard: FC<ExperimentConversionRateCardProps> = ({
   experiment,
   results,
 }) => {
-  const [mode, setMode] = useState<ConversionMode>('cumulative')
   const metric = getPrimaryMetric(experiment)
   const identities = useMemo(
     () => getVariantIdentities(experiment.feature),
@@ -34,9 +29,9 @@ const ExperimentConversionRateCard: FC<ExperimentConversionRateCardProps> = ({
   const chart = useMemo(
     () =>
       metric && results
-        ? buildConversionChartData(results, metric.metric, identities, mode)
+        ? buildConversionChartData(results, metric.metric, identities)
         : null,
-    [metric, results, identities, mode],
+    [metric, results, identities],
   )
 
   // Hidden entirely when no conversions can be charted: value metrics, and
@@ -68,18 +63,6 @@ const ExperimentConversionRateCard: FC<ExperimentConversionRateCardProps> = ({
     >
       {hasConversions ? (
         <>
-          {/* mt-n2 halves the card's 16px child gap after the title. */}
-          <div className='d-flex mt-n2'>
-            <InlinePillToggle<ConversionMode>
-              size='small'
-              options={[
-                { label: 'Cumulative', value: 'cumulative' },
-                { label: 'Daily', value: 'daily' },
-              ]}
-              value={mode}
-              onChange={setMode}
-            />
-          </div>
           <LineChart
             colorMap={chart.colorMap}
             data={chart.points}

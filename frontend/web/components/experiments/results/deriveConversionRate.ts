@@ -15,9 +15,6 @@ import {
 type AccumulatedBucket = {
   day: string
   converted: Record<string, number>
-  // Raw per-bucket increments, for discrete (per-day) displays. Never divide
-  // these — a bucket's first conversions can exceed its new exposures.
-  newConverted: Record<string, number>
 }
 
 // The backend returns every bucket since the experiment started, uncapped.
@@ -76,45 +73,35 @@ const accumulateBuckets = (
 
   const accumulated: AccumulatedBucket[] = []
   buckets.forEach((bucket, index) => {
-    const newConverted: Record<string, number> = {}
     identities.forEach((v) => {
-      newConverted[v.key] = convertedByBucket[bucket]?.[v.key] ?? 0
-      cumConverted[v.key] += newConverted[v.key]
+      cumConverted[v.key] += convertedByBucket[bucket]?.[v.key] ?? 0
     })
     if (index < from) return
     accumulated.push({
       converted: { ...cumConverted },
       day: toLabel(bucket),
-      newConverted,
     })
   })
   return accumulated
 }
 
-export type ConversionMode = 'cumulative' | 'daily'
-
-// Conversions per variant over time: 'cumulative' plots running totals,
-// 'daily' the raw per-bucket increments.
+// Conversions per variant over time, as running totals.
 export const buildConversionChartData = (
   results: BayesianResultsSummary,
   metricId: number,
   identities: VariantIdentity[],
-  mode: ConversionMode,
 ): ExposuresChartData | null => {
   const exposures = results.exposures_timeseries
   const conversions = getMetricResult(results, metricId)?.conversions_timeseries
   if (!exposures || !conversions) return null
 
-  const daily = mode === 'daily'
   const series: string[] = []
   const seriesLabels: Record<string, string> = {}
   const colorMap: Record<string, string> = {}
   identities.forEach((v) => {
     series.push(v.key)
     colorMap[v.key] = v.colour
-    seriesLabels[v.key] = daily
-      ? `${v.name} conversions`
-      : `${v.name} converted`
+    seriesLabels[v.key] = `${v.name} converted`
   })
 
   const points: ChartDataPoint[] = accumulateBuckets(
@@ -124,7 +111,7 @@ export const buildConversionChartData = (
   ).map((b) => {
     const point: ChartDataPoint = { day: b.day }
     identities.forEach((v) => {
-      point[v.key] = daily ? b.newConverted[v.key] : b.converted[v.key]
+      point[v.key] = b.converted[v.key]
     })
     return point
   })
