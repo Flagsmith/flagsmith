@@ -4608,7 +4608,7 @@ def test_delete_feature__dynamo_identity_overrides__deletes_overrides(
 
     assert (
         flagsmith_environments_v2_table.query(
-            KeyConditionExpression=dynamodb_wrapper_v2.get_identity_overrides_key_condition_expression(  # type: ignore[arg-type]  # noqa: E501
+            KeyConditionExpression=dynamodb_wrapper_v2.get_identity_overrides_key_condition_expression(  # noqa: E501
                 environment_id=environment.id, feature_id=feature.id
             )
         )["Count"]

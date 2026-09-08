@@ -37,7 +37,7 @@ from .base import BaseDynamoWrapper
 if typing.TYPE_CHECKING:
     from boto3.dynamodb.conditions import ConditionBase
     from mypy_boto3_dynamodb.type_defs import (
-        QueryInputRequestTypeDef,
+        QueryInputTableQueryTypeDef,
         QueryOutputTableTypeDef,
         TableAttributeValueTypeDef,
     )
@@ -246,15 +246,15 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         return_consumed_capacity: bool = False,
     ) -> "QueryOutputTableTypeDef":
         key_condition_expression = Key("environment_api_key").eq(environment_api_key)
-        query_kwargs: "QueryInputRequestTypeDef" = {  # type: ignore[typeddict-item]
+        query_kwargs: "QueryInputTableQueryTypeDef" = {
             "IndexName": "environment_api_key-identifier-index",
-            "KeyConditionExpression": key_condition_expression,  # type: ignore[typeddict-item]
+            "KeyConditionExpression": key_condition_expression,
             "Limit": limit,
         }
         if start_key:
             query_kwargs["ExclusiveStartKey"] = start_key
         if filter_expression:
-            query_kwargs["FilterExpression"] = filter_expression  # type: ignore[typeddict-item]
+            query_kwargs["FilterExpression"] = filter_expression
         if projection_expression:
             query_kwargs["ProjectionExpression"] = projection_expression
         if return_consumed_capacity:

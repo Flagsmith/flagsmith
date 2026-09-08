@@ -81,7 +81,7 @@ class APIKeyUser(UserABC):
         self,
         permission: str,
         project: "Project",
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
     ) -> bool:
         return project in self.get_permitted_projects(permission, tag_ids)
 
@@ -89,7 +89,7 @@ class APIKeyUser(UserABC):
         self,
         permission: str,
         environment: "Environment",
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
     ) -> bool:
         return environment in self.get_permitted_environments(
             permission, environment.project, tag_ids
@@ -105,7 +105,7 @@ class APIKeyUser(UserABC):
     def get_permitted_projects(
         self,
         permission_key: str,
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
     ) -> QuerySet["Project"]:
         return get_permitted_projects_for_master_api_key(
             self.key, permission_key, tag_ids
@@ -115,7 +115,7 @@ class APIKeyUser(UserABC):
         self,
         permission_key: str,
         project: "Project",
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
         prefetch_metadata: bool = False,
     ) -> QuerySet["Environment"]:
         return get_permitted_environments_for_master_api_key(
