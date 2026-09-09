@@ -5,6 +5,7 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import SegmentsIcon from 'components/icons/SegmentsIcon'
 import { CohortSourceType } from 'common/types/responses'
+import { colorIconSecondary } from 'common/theme/tokens'
 
 export type AudienceSegmentItem = {
   id: number
@@ -34,7 +35,7 @@ const AudienceSegmentList: FC<AudienceSegmentListProps> = ({
           className='flex-shrink-0'
           width={18}
           height={18}
-          fill='#656D7B'
+          fill={colorIconSecondary}
         />
         <span
           className='d-flex flex-column flex-1 overflow-hidden gap-1'
@@ -75,7 +76,7 @@ const AudienceSegmentList: FC<AudienceSegmentListProps> = ({
             onClick={() => onRemove(segment.id)}
             data-test={`remove-audience-segment-${segment.id}`}
           >
-            <Icon name='trash-2' width={20} fill='#656D7B' />
+            <Icon name='trash-2' width={20} fill={colorIconSecondary} />
           </Button>
         )}
       </div>

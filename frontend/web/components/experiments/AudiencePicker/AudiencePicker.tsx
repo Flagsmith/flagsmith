@@ -1,11 +1,11 @@
-import { FC, useCallback, useMemo } from 'react'
+import { FC, useCallback } from 'react'
 import {
   ExperimentAudienceMatch,
   Segment,
   SegmentCohort,
   SegmentMembership,
 } from 'common/types/responses'
-import ProjectStore from 'common/stores/project-store'
+import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import InlinePillToggle from 'components/base/forms/InlinePillToggle'
 import SegmentSelect from 'components/SegmentSelect'
 import AudienceSegmentList from 'components/experiments/AudienceSegmentList'
@@ -42,13 +42,8 @@ const AudiencePicker: FC<AudiencePickerProps> = ({
 }) => {
   const isAtCap = segments.length >= MAX_AUDIENCE_SEGMENTS
 
-  const environmentDbId = useMemo(
-    () =>
-      (ProjectStore.getEnvironmentIdFromKey(environmentId) as
-        | number
-        | undefined) ?? undefined,
-    [environmentId],
-  )
+  const { getEnvironmentIdFromKey } = useProjectEnvironments(projectId)
+  const environmentDbId = getEnvironmentIdFromKey(environmentId)
 
   const handleSelect = useCallback(
     (option: SegmentOption | null) => {
