@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.271.0](https://github.com/Flagsmith/flagsmith/compare/v2.270.0...v2.271.0) (2026-09-09)
+
+
+### Features
+
+* experiment conversion rate chart ([#8463](https://github.com/Flagsmith/flagsmith/issues/8463)) ([9324047](https://github.com/Flagsmith/flagsmith/commit/93240473ea79eca5eba0597dd3e827085b2f1ac1))
+* experiment conversions over time chart ([#8476](https://github.com/Flagsmith/flagsmith/issues/8476)) ([4f551d9](https://github.com/Flagsmith/flagsmith/commit/4f551d9ee3017998fc6943a6e8c4f74f7a140345))
+* **experimentation:** targeted audience for experiment rollouts ([#8472](https://github.com/Flagsmith/flagsmith/issues/8472)) ([e5a1ec0](https://github.com/Flagsmith/flagsmith/commit/e5a1ec087366fb5f9694981ce114c0baf476043b))
+* **experiments:** targeted audience selection in rollout configuration ([#8475](https://github.com/Flagsmith/flagsmith/issues/8475)) ([cfdc8d3](https://github.com/Flagsmith/flagsmith/commit/cfdc8d30aa8377200c37e1b50629da277017cb42))
+* rename admin api to management ([#8464](https://github.com/Flagsmith/flagsmith/issues/8464)) ([f504f16](https://github.com/Flagsmith/flagsmith/commit/f504f160dcf40b16baace0506a04dfda8fd6332c))
+* **usage:** show when an organisation is over its plan limit ([#8432](https://github.com/Flagsmith/flagsmith/issues/8432)) ([8cba01d](https://github.com/Flagsmith/flagsmith/commit/8cba01d416a8b5d179d6447488b7b75330881201))
+
+
+### Bug Fixes
+
+* hypothesis textarea dark mode focus ([#8473](https://github.com/Flagsmith/flagsmith/issues/8473)) ([936905c](https://github.com/Flagsmith/flagsmith/commit/936905c52f0fe4bec2c6e775ffc68d229c18e2a9))
+* refresh Flagsmith organisation traits when the selected organisation changes ([#8485](https://github.com/Flagsmith/flagsmith/issues/8485)) ([f16ad68](https://github.com/Flagsmith/flagsmith/commit/f16ad68c6bf82dab7bcb35d62edfb98e58a6a516))
+* **sales-dashboard:** Correct understated API usage on the organisation chart ([#8468](https://github.com/Flagsmith/flagsmith/issues/8468)) ([e54bab4](https://github.com/Flagsmith/flagsmith/commit/e54bab40ea80f01278f48a225d19ae861b9b0c67))
+
+
+### Dependency Updates
+
+* **mcp:** bump cryptography to 50.0.1 ([#8467](https://github.com/Flagsmith/flagsmith/issues/8467)) ([c3ef832](https://github.com/Flagsmith/flagsmith/commit/c3ef83244bfb4b1d65ab6fc5ff45412659dd61f3))
+
+
+### CI
+
+* pre-commit autoupdate ([#8479](https://github.com/Flagsmith/flagsmith/issues/8479)) ([2fe6510](https://github.com/Flagsmith/flagsmith/commit/2fe651067c4bb138e20311379c5b3dadf37f17c2))
+
+
+### Docs
+
+* [ImgBot] Optimize images ([#8481](https://github.com/Flagsmith/flagsmith/issues/8481)) ([8c664ff](https://github.com/Flagsmith/flagsmith/commit/8c664ff3451f9ad3b74fe0d6dbef3d5b23c71ab9))
+* cohort synchronisation ([#8425](https://github.com/Flagsmith/flagsmith/issues/8425)) ([e6d212a](https://github.com/Flagsmith/flagsmith/commit/e6d212a9249ac7c0b5219257e06bef40afafff96))
+* Optimize images ([#8483](https://github.com/Flagsmith/flagsmith/issues/8483)) ([13e8543](https://github.com/Flagsmith/flagsmith/commit/13e8543d098b74a4368006f2de9b2f8d1814c4e1))
+
+
+### Refactoring
+
+* **experiments:** drop conversions chart mode toggle ([#8484](https://github.com/Flagsmith/flagsmith/issues/8484)) ([bc605fe](https://github.com/Flagsmith/flagsmith/commit/bc605fee8b0f3adc4abf73b85d11f08dbd029a69))
+
 ## [2.270.0](https://github.com/Flagsmith/flagsmith/compare/v2.269.1...v2.270.0) (2026-09-07)
 
 
