@@ -59,6 +59,54 @@ def test_invite_link_is_expired__no_expiry_date__returns_false(
     assert not is_expired
 
 
+def test_create_invite_link__default_expiry_setting__sets_expires_at(
+    organisation: Organisation,
+    settings: "SettingsWrapper",
+) -> None:
+    # Given
+    settings.INVITE_LINK_EXPIRY_DAYS = 7
+    before = timezone.now()
+
+    # When
+    invite_link = InviteLink.objects.create(organisation=organisation)
+
+    # Then
+    assert invite_link.expires_at is not None
+    expected = before + timedelta(days=7)
+    assert abs((invite_link.expires_at - expected).total_seconds()) < 60
+
+
+def test_create_invite_link__no_default_expiry_setting__stays_indefinite(
+    organisation: Organisation,
+    settings: "SettingsWrapper",
+) -> None:
+    # Given
+    settings.INVITE_LINK_EXPIRY_DAYS = None
+
+    # When
+    invite_link = InviteLink.objects.create(organisation=organisation)
+
+    # Then
+    assert invite_link.expires_at is None
+
+
+def test_create_invite_link__explicit_expiry__not_overridden_by_default(
+    organisation: Organisation,
+    settings: "SettingsWrapper",
+) -> None:
+    # Given
+    settings.INVITE_LINK_EXPIRY_DAYS = 7
+    explicit_expiry = timezone.now() + timedelta(days=1)
+
+    # When
+    invite_link = InviteLink.objects.create(
+        organisation=organisation, expires_at=explicit_expiry
+    )
+
+    # Then
+    assert invite_link.expires_at == explicit_expiry
+
+
 @pytest.mark.django_db
 def test_create_invite_link__invite_links_disabled__raises_error(
     settings: "SettingsWrapper",
