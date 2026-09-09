@@ -3,7 +3,9 @@ import { ProjectFlag } from 'common/types/responses'
 import Icon from 'components/icons/Icon'
 import DistributionBar from 'components/experiments/DistributionBar'
 import {
+  RolloutAudience,
   VariationSplitEntry,
+  buildAudienceDescription,
   getRolloutSummaryRows,
   getTrafficSegments,
 } from 'components/experiments/rollout'
@@ -13,12 +15,14 @@ type RolloutSummaryProps = {
   selectedFeature: ProjectFlag
   rolloutPercentage: number
   variationSplit: VariationSplitEntry[]
+  audience?: RolloutAudience
 }
 
 const formatPercentage = (value: number): string =>
   `${Number(value.toFixed(1))}%`
 
 const RolloutSummary: FC<RolloutSummaryProps> = ({
+  audience,
   rolloutPercentage,
   selectedFeature,
   variationSplit,
@@ -77,7 +81,8 @@ const RolloutSummary: FC<RolloutSummaryProps> = ({
       <div className='rollout-summary__note'>
         <Icon name='people' width={20} />
         <span>
-          {rolloutPercentage}% of eligible identities enter the experiment.
+          {rolloutPercentage}% of {buildAudienceDescription(audience)} enter the
+          experiment.
           <br />
           Actual time-to-significance depends on traffic, baseline rate, and the
           lift you're trying to detect.

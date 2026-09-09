@@ -1,8 +1,14 @@
 import {
+  ExperimentAudienceMatch,
   FlagsmithValue,
   MultivariateOption,
   ProjectFlag,
+  SegmentCohort,
 } from 'common/types/responses'
+import {
+  ExperimentAudienceBody,
+  ExperimentRolloutBody,
+} from 'common/types/requests'
 import { getDefaultVariantKey } from 'common/utils/multivariate'
 import {
   CHART_COLOURS,
@@ -115,10 +121,79 @@ export const getTrafficSegments = (
     percentage: (rolloutPercentage * row.percentage) / 100,
   }))
 
+// Matches the API cap, held at one until the Java SDK respects sub-rule types.
+export const MAX_AUDIENCE_SEGMENTS = 1
+
+// The subset of a segment the wizard keeps once it has been picked.
+export type AudienceSegment = {
+  id: number
+  name: string
+  cohort?: SegmentCohort | null
+  description?: string
+  membershipCount?: number
+}
+
+export type RolloutAudience = {
+  match: ExperimentAudienceMatch
+  segments: { name: string }[]
+}
+
+export const joinSegmentNames = (names: string[], joiner: string): string =>
+  names.length < 2
+    ? names.join('')
+    : `${names.slice(0, -1).join(', ')} ${joiner} ${names[names.length - 1]}`
+
+export const buildAudienceDescription = (
+  audience?: RolloutAudience,
+): string => {
+  const names = audience?.segments.map((segment) => segment.name) ?? []
+  if (!names.length) return 'eligible identities'
+  return `identities in ${joinSegmentNames(
+    names,
+    audience?.match === 'all' ? 'and' : 'or',
+  )}`
+}
+
 export const buildRolloutSummary = (
   rolloutPercentage: number,
   rows: RolloutSummaryRow[],
+  audience?: RolloutAudience,
 ): string =>
-  `${rolloutPercentage}% of eligible identities enter the experiment. Split: ${rows
+  `${rolloutPercentage}% of ${buildAudienceDescription(
+    audience,
+  )} enter the experiment. Split: ${rows
     .map((row) => `${row.label} ${row.percentage}%`)
     .join(', ')}.`
+
+export const toAudiencePayload = (
+  segments: AudienceSegment[],
+  match: ExperimentAudienceMatch,
+): ExperimentAudienceBody | undefined =>
+  segments.length
+    ? { match, segment_ids: segments.map((segment) => segment.id) }
+    : undefined
+
+// The single place the rollout request body is shaped, so the wizard and the
+// detail-page editor agree on it. An absent audience leaves the key off
+// entirely, since the API reads a present `audience` as a replacement.
+export const buildRolloutBody = ({
+  audience,
+  enabled,
+  featureStateValue,
+  rolloutPercentage,
+  variationSplit,
+}: {
+  enabled: boolean
+  rolloutPercentage: number
+  featureStateValue: RolloutFeatureValue
+  variationSplit: VariationSplitEntry[]
+  audience?: ExperimentAudienceBody
+}): ExperimentRolloutBody => {
+  const body: ExperimentRolloutBody = {
+    enabled,
+    feature_state_value: featureStateValue,
+    multivariate_feature_state_values: variationSplit,
+    rollout_percentage: rolloutPercentage,
+  }
+  return audience ? { ...body, audience } : body
+}

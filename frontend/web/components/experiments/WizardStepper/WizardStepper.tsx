@@ -13,7 +13,7 @@ const STEPS: StepDef[] = [
     title: 'Setup',
   },
   {
-    subtitle: "Select how much traffic enters and how it's split",
+    subtitle: "Choose the audience, how much traffic enters and how it's split",
     title: 'Rollout configuration',
   },
   {

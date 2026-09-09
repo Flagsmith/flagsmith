@@ -1,10 +1,14 @@
 import {
+  AudienceSegment,
+  buildAudienceDescription,
+  buildRolloutBody,
   buildRolloutSummary,
   getControlPercentage,
   getEvenSplit,
   getRolloutSummaryRows,
   getTrafficSegments,
   getVariationSplitDefaults,
+  toAudiencePayload,
   toRolloutFeatureValue,
 } from 'components/experiments/rollout'
 import { MultivariateOption, ProjectFlag } from 'common/types/responses'
@@ -114,5 +118,102 @@ describe('rollout helpers', () => {
     ).toBe(
       '42% of eligible identities enter the experiment. Split: Control 0%, big 60%, small 40%.',
     )
+  })
+
+  it('buildRolloutSummary names the audience when segments are targeted', () => {
+    expect(
+      buildRolloutSummary(100, [{ label: 'Control', percentage: 100 }], {
+        match: 'any',
+        segments: [{ name: 'Beta users' }],
+      }),
+    ).toBe(
+      '100% of identities in Beta users enter the experiment. Split: Control 100%.',
+    )
+  })
+})
+
+describe('buildAudienceDescription', () => {
+  const named = (...names: string[]) => names.map((name) => ({ name }))
+
+  it.each([
+    ['no audience', undefined, 'eligible identities'],
+    [
+      'an empty audience',
+      { match: 'any' as const, segments: [] },
+      'eligible identities',
+    ],
+    [
+      'one segment',
+      { match: 'any' as const, segments: named('Beta users') },
+      'identities in Beta users',
+    ],
+    [
+      'two segments matching any',
+      { match: 'any' as const, segments: named('Beta users', 'EU cohort') },
+      'identities in Beta users or EU cohort',
+    ],
+    [
+      'two segments matching all',
+      { match: 'all' as const, segments: named('Beta users', 'EU cohort') },
+      'identities in Beta users and EU cohort',
+    ],
+    [
+      'three segments matching any',
+      { match: 'any' as const, segments: named('Beta', 'EU', 'Mobile') },
+      'identities in Beta, EU or Mobile',
+    ],
+  ])('%s', (_, audience, expected) => {
+    expect(buildAudienceDescription(audience)).toBe(expected)
+  })
+})
+
+const segment = (id: number): AudienceSegment => ({ id, name: `S${id}` })
+
+describe('toAudiencePayload', () => {
+  it('omits the audience when nothing is selected', () => {
+    expect(toAudiencePayload([], 'any')).toBeUndefined()
+  })
+
+  it('maps the selection to ids, keeping the chosen match', () => {
+    expect(toAudiencePayload([segment(12), segment(34)], 'all')).toEqual({
+      match: 'all',
+      segment_ids: [12, 34],
+    })
+  })
+})
+
+describe('buildRolloutBody', () => {
+  const base = {
+    enabled: false,
+    featureStateValue: { type: 'string' as const, value: 'control' },
+    rolloutPercentage: 100,
+    variationSplit: [
+      { multivariate_feature_option: 10, percentage_allocation: 50 },
+    ],
+  }
+
+  // A present `audience` key is read as a replacement, so an experiment with no
+  // audience and the detail page's save must both leave it off entirely rather
+  // than send null or an empty list.
+  it.each([
+    ['the detail-page save, which passes no audience', undefined],
+    ['the wizard with nothing selected', toAudiencePayload([], 'any')],
+  ])('omits the audience key for %s', (_, audience) => {
+    expect('audience' in buildRolloutBody({ ...base, audience })).toBe(false)
+  })
+
+  it('carries the match and segment ids when the wizard has a selection', () => {
+    expect(
+      buildRolloutBody({
+        ...base,
+        audience: toAudiencePayload([segment(12)], 'all'),
+      }),
+    ).toEqual({
+      audience: { match: 'all', segment_ids: [12] },
+      enabled: false,
+      feature_state_value: { type: 'string', value: 'control' },
+      multivariate_feature_state_values: base.variationSplit,
+      rollout_percentage: 100,
+    })
   })
 })

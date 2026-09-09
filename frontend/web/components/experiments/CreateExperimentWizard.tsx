@@ -1,5 +1,10 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
-import { ExpectedDirection, Metric, ProjectFlag } from 'common/types/responses'
+import {
+  ExpectedDirection,
+  ExperimentAudienceMatch,
+  Metric,
+  ProjectFlag,
+} from 'common/types/responses'
 import {
   useCreateExperimentMutation,
   useStartExperimentMutation,
@@ -14,11 +19,16 @@ import LivePreviewPanel from './LivePreviewPanel'
 import SetupStep from './steps/SetupStep'
 import RolloutStep from './steps/RolloutStep'
 import {
+  AudienceSegment,
   VariationSplitEntry,
+  buildAudienceDescription,
+  buildRolloutBody,
   getControlPercentage,
   getEvenSplit,
+  toAudiencePayload,
   toRolloutFeatureValue,
 } from './rollout'
+import { experimentErrorMessage } from './errors'
 import isValidPercentage from 'common/utils/isValidPercentage'
 import MeasurementStep from './steps/MeasurementStep'
 import ReviewStep from './steps/ReviewStep'
@@ -51,6 +61,11 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
   const [variationSplit, setVariationSplit] = useState<VariationSplitEntry[]>(
     [],
   )
+  const [audienceSegments, setAudienceSegments] = useState<AudienceSegment[]>(
+    [],
+  )
+  const [audienceMatch, setAudienceMatch] =
+    useState<ExperimentAudienceMatch>('any')
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
 
   useEffect(() => {
@@ -124,12 +139,13 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
         selectedFeature.environment_feature_state?.feature_state_value ?? ''
       const experiment = await createExperiment({
         body: {
-          experiment_rollout: {
+          experiment_rollout: buildRolloutBody({
+            audience: toAudiencePayload(audienceSegments, audienceMatch),
             enabled: false,
-            feature_state_value: toRolloutFeatureValue(controlValue),
-            multivariate_feature_state_values: variationSplit,
-            rollout_percentage: rolloutPercentage,
-          },
+            featureStateValue: toRolloutFeatureValue(controlValue),
+            rolloutPercentage,
+            variationSplit,
+          }),
           feature: selectedFeature.id,
           hypothesis: hypothesis.trim(),
           metrics: [
@@ -160,10 +176,15 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
       }
       toast('Experiment created and started')
       onCreated()
-    } catch {
-      toast('Failed to create experiment', 'danger')
+    } catch (error) {
+      toast(
+        experimentErrorMessage(error, 'Failed to create experiment'),
+        'danger',
+      )
     }
   }, [
+    audienceMatch,
+    audienceSegments,
     createExperiment,
     environmentId,
     expectedDirection,
@@ -185,7 +206,12 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
           This will start serving variations of{' '}
           <strong>{selectedFeature.name}</strong> to{' '}
           <strong>
-            {rolloutPercentage}% of eligible identities in the environment
+            {rolloutPercentage}% of{' '}
+            {buildAudienceDescription({
+              match: audienceMatch,
+              segments: audienceSegments,
+            })}
+            {!audienceSegments.length && ' in the environment'}
           </strong>
           . While the experiment is running, the flag value will not be
           editable.
@@ -196,7 +222,14 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
       title: 'Create experiment?',
       yesText: 'Create',
     })
-  }, [selectedFeature, isMeasurementValid, rolloutPercentage, doCreate])
+  }, [
+    selectedFeature,
+    isMeasurementValid,
+    rolloutPercentage,
+    doCreate,
+    audienceMatch,
+    audienceSegments,
+  ])
 
   const renderStep = () => {
     switch (currentStep) {
@@ -217,10 +250,16 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
         return (
           <RolloutStep
             selectedFeature={selectedFeature}
+            projectId={projectId}
+            environmentId={environmentId}
             rolloutPercentage={rolloutPercentage}
             variationSplit={variationSplit}
+            audienceSegments={audienceSegments}
+            audienceMatch={audienceMatch}
             onRolloutChange={setRolloutPercentage}
             onSplitChange={setVariationSplit}
+            onAudienceSegmentsChange={setAudienceSegments}
+            onAudienceMatchChange={setAudienceMatch}
           />
         )
       case 2:
@@ -243,6 +282,8 @@ const CreateExperimentWizard: FC<CreateExperimentWizardProps> = ({
             expectedDirection={expectedDirection}
             rolloutPercentage={rolloutPercentage}
             variationSplit={variationSplit}
+            audienceSegments={audienceSegments}
+            audienceMatch={audienceMatch}
             onEditSetup={() => setCurrentStep(0)}
             onEditMeasurement={() => setCurrentStep(MEASUREMENT_STEP)}
             onEditRollout={() => setCurrentStep(1)}

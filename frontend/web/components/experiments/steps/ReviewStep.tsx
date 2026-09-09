@@ -1,10 +1,17 @@
 import { FC } from 'react'
-import { ExpectedDirection, Metric, ProjectFlag } from 'common/types/responses'
+import {
+  ExpectedDirection,
+  ExperimentAudienceMatch,
+  Metric,
+  ProjectFlag,
+} from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import ContentCard from 'components/base/grid/ContentCard'
+import AudienceSegmentList from 'components/experiments/AudienceSegmentList'
 import VariationTable from 'components/experiments/VariationTable'
 import { getExpectedDirectionLabel } from 'components/experiments/constants'
 import {
+  AudienceSegment,
   VariationSplitEntry,
   buildRolloutSummary,
   getRolloutSummaryRows,
@@ -19,12 +26,16 @@ type ReviewStepProps = {
   expectedDirection: ExpectedDirection | null
   rolloutPercentage: number
   variationSplit: VariationSplitEntry[]
+  audienceSegments: AudienceSegment[]
+  audienceMatch: ExperimentAudienceMatch
   onEditSetup: () => void
   onEditMeasurement: () => void
   onEditRollout: () => void
 }
 
 const ReviewStep: FC<ReviewStepProps> = ({
+  audienceMatch,
+  audienceSegments,
   expectedDirection,
   hypothesis,
   name,
@@ -96,12 +107,24 @@ const ReviewStep: FC<ReviewStepProps> = ({
             </Button>
           }
         >
-          <p className='mb-0'>
+          <p className={audienceSegments.length ? 'mb-3' : 'mb-0'}>
             {buildRolloutSummary(
               rolloutPercentage,
               getRolloutSummaryRows(selectedFeature, variationSplit),
+              { match: audienceMatch, segments: audienceSegments },
             )}
           </p>
+          {!!audienceSegments.length && (
+            <AudienceSegmentList
+              segments={audienceSegments.map((segment) => ({
+                cohortSourceType: segment.cohort?.source_type,
+                description: segment.description,
+                id: segment.id,
+                membershipCount: segment.membershipCount,
+                name: segment.name,
+              }))}
+            />
+          )}
         </ContentCard>
       )}
 
