@@ -79,7 +79,6 @@ def test_get_organisation_info__valid_organisation__returns_event_list(
             labels={"client_application_name": "busy-app"},
         ),
     ]
-    mocker.patch("sales_dashboard.views.get_events_for_organisation")
 
     # When
     response = superuser_client.get(url)

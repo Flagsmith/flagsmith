@@ -113,12 +113,6 @@ def test_map_influx_record_values_to_labels__various_user_agents__returns_expect
 def test_map_usage_data_to_daily_totals__multiple_labels_per_day__sums_across_labels() -> (
     None
 ):
-    """
-    Usage data holds a row per day and labels combination, so a day with
-    traffic from several client applications arrives as several rows. Totals
-    must sum across them, or a single client is reported as the whole
-    organisation's usage.
-    """
     # Given
     usage_data = [
         UsageData(
