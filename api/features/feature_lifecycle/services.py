@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from django.db.models.expressions import Case, Exists, OuterRef, Value, When
 from django.db.models.fields import BooleanField
-from django.db.models.functions import Cast
 from django.db.models.query import QuerySet
 from django.utils import timezone
 
@@ -42,7 +41,7 @@ def annotate_feature_queryset_with_lifecycle_stage(
         has_recent_usage=(
             Exists(features_in_use.filter(pk=OuterRef("pk")))
             if features_in_use is not None
-            else Cast(Value(None), output_field=BooleanField())
+            else Value(None, output_field=BooleanField())
         ),
         has_permanent_tag=Exists(
             Tag.objects.filter(feature=OuterRef("pk"), is_permanent=True),
