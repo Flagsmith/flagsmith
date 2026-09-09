@@ -68,17 +68,28 @@ const METRICS = [
   },
   {
     fixed: true,
-    mode: 'files',
-    name: 'flux_store_files',
-    note: 'Flux to RTK: files importing any common/stores module',
+    mode: 'matches',
+    name: 'flux_store_imports',
+    // Counted as imports rather than files on purpose: splitting one
+    // Flux-reading component into five does not deepen the coupling, but it
+    // would triple a file count and read as a regression.
+    note: 'Flux to RTK: imports of any common/stores module',
     paths: SRC,
     pattern: "from 'common/stores/",
   },
   {
     fixed: true,
-    mode: 'files',
-    name: 'project_store_files',
-    note: 'Flux to RTK: files importing ProjectStore specifically',
+    mode: 'matches',
+    name: 'account_store_imports',
+    note: 'Flux to RTK: imports of AccountStore, blocked on its own migration',
+    paths: SRC,
+    pattern: "from 'common/stores/account-store'",
+  },
+  {
+    fixed: true,
+    mode: 'matches',
+    name: 'project_store_imports',
+    note: 'Flux to RTK: imports of ProjectStore',
     paths: SRC,
     pattern: "from 'common/stores/project-store'",
   },
