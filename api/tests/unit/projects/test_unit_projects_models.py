@@ -142,6 +142,31 @@ def test_is_feature_name_valid__regex_and_name__returns_expected(  # type: ignor
     assert result == expected_result
 
 
+@pytest.mark.parametrize(
+    "only_allow_lower_case_feature_names, feature_name, expected_result",
+    (
+        (True, "lowercasefeature", True),
+        (True, "MixedCaseFeature", False),
+        (True, "UPPERCASEFEATURE", False),
+        (False, "MixedCaseFeature", True),
+    ),
+)
+def test_is_feature_name_valid__lower_case_setting_and_name__returns_expected(  # type: ignore[no-untyped-def]
+    only_allow_lower_case_feature_names, feature_name, expected_result
+):
+    # Given
+    project = Project(
+        name="test",
+        only_allow_lower_case_feature_names=only_allow_lower_case_feature_names,
+    )
+
+    # When
+    result = project.is_feature_name_valid(feature_name)
+
+    # Then
+    assert result == expected_result
+
+
 def test_save_project__name_updated__clears_environment_caches(  # type: ignore[no-untyped-def]
     environment, project, mocker
 ):
