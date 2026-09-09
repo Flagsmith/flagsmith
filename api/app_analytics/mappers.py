@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Annotated, Any, Iterable, cast
 
 from django.http import HttpRequest
@@ -18,6 +18,7 @@ from app_analytics.models import FeatureEvaluationRaw, Resource
 from app_analytics.types import (
     AnnotatedAPIUsageBucket,
     AnnotatedAPIUsageKey,
+    DailyUsageData,
     FeatureEvaluationCacheKey,
     InputLabels,
     KnownSDK,
@@ -151,6 +152,36 @@ def map_flux_tables_to_usage_data(
                     values["_value"],
                 )
     return list(data_by_key.values())
+
+
+USAGE_DATA_RESOURCE_ATTRIBUTES: tuple[str, ...] = tuple(
+    column_name for resource in Resource if (column_name := resource.column_name)
+)
+
+
+def map_usage_data_to_daily_totals(
+    usage_data: Iterable[UsageData],
+) -> DailyUsageData:
+    """
+    Collapse usage data into a single total per day for each resource.
+
+    Usage data holds a row per day *and* labels combination, so a day with
+    traffic from more than one client application appears more than once. Any
+    caller wanting whole-organisation totals has to sum across those rows.
+    """
+    totals_by_date: defaultdict[str, Counter[str]] = defaultdict(Counter)
+    for data in usage_data:
+        for resource_attr in USAGE_DATA_RESOURCE_ATTRIBUTES:
+            totals_by_date[str(data.day)][resource_attr] += getattr(data, resource_attr)
+
+    dates = sorted(totals_by_date)
+    return DailyUsageData(
+        dates=dates,
+        daily_totals_by_resource={
+            resource_attr: [totals_by_date[date][resource_attr] for date in dates]
+            for resource_attr in USAGE_DATA_RESOURCE_ATTRIBUTES
+        },
+    )
 
 
 def map_flux_tables_to_feature_evaluation_data(

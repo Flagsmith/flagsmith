@@ -80,3 +80,8 @@ InputLabel = Label | Literal["sdk_user_agent"]
 
 Labels: TypeAlias = dict[Label, str]
 InputLabels: TypeAlias = dict[InputLabel, str]
+
+
+class DailyUsageData(NamedTuple):
+    dates: list[str]
+    daily_totals_by_resource: dict[str, list[int]]

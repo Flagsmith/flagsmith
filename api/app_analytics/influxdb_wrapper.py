@@ -200,47 +200,6 @@ def get_events_for_organisation(
     return total
 
 
-def get_event_list_for_organisation(
-    organisation_id: int,
-    date_start: datetime | None = None,
-    date_stop: datetime | None = None,
-) -> tuple[dict[str, list[int]], list[str]]:
-    """
-    Query influx db for usage for given organisation id
-
-    :param organisation_id: an id of the organisation to get usage for
-
-    :return: a number of request counts for organisation in chart.js scheme
-    """
-    now = timezone.now()
-    if date_start is None:
-        date_start = now - timedelta(days=30)
-
-    if date_stop is None:
-        date_stop = now
-
-    results = InfluxDBWrapper.influx_query_manager(
-        filters=(
-            '|> filter(fn:(r) => r._measurement == "api_call") '
-            f'|> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")'
-        ),
-        extra='|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")',
-        date_start=date_start,
-        date_stop=date_stop,
-    )
-    dataset = defaultdict(list)
-    labels = []  # type: ignore[var-annotated]
-
-    date_difference = date_stop - date_start
-    required_records = date_difference.days + 1
-    for result in results:
-        for record in result.records:
-            dataset[record["resource"]].append(record["_value"])
-            if len(labels) != required_records:
-                labels.append(record.values["_time"].strftime("%Y-%m-%d"))
-    return dataset, labels
-
-
 def get_multiple_event_list_for_organisation(
     organisation_id: int,
     project_id: int | None = None,

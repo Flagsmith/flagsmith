@@ -17,7 +17,6 @@ from app_analytics.influxdb_wrapper import (
     InfluxDBWrapper,
     build_filter_string,
     get_current_api_usage,
-    get_event_list_for_organisation,
     get_events_for_organisation,
     get_feature_evaluation_data,
     get_multiple_event_list_for_feature,
@@ -25,7 +24,6 @@ from app_analytics.influxdb_wrapper import (
     get_top_organisations,
     get_usage_data,
 )
-from organisations.models import Organisation
 
 # Given
 org_id = 123
@@ -125,29 +123,6 @@ def test_get_events_for_organisation__default_params__calls_query_api_with_expec
     call = mock_query_api.query.mock_calls[0]
     assert call[2]["org"] == influx_org
     assert call[2]["query"].replace(" ", "").replace("\n", "") == expected_query
-
-
-@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_event_list_for_organisation__default_params__calls_query_api_with_expected_query(
-    mock_influxdb_client: MagicMock,
-) -> None:
-    # Given
-    query = (
-        f'from(bucket:"{read_bucket}") '
-        f"|> range(start: 2022-12-20T09:09:47.325132+00:00, stop: 2023-01-19T09:09:47.325132+00:00) "
-        f'|> filter(fn:(r) => r._measurement == "api_call") '
-        f'|> filter(fn: (r) => r["organisation_id"] == "{org_id}") '
-        f'|> drop(columns: ["organisation", "organisation_id", "type", "project", '
-        f'"project_id", "environment", "environment_id", "host"]) '
-        f'|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
-    )
-    mock_query_api = mock_influxdb_client.query_api.return_value
-
-    # When
-    get_event_list_for_organisation(org_id)
-
-    # Then
-    mock_query_api.query.assert_called_once_with(org=influx_org, query=query)
 
 
 @pytest.mark.parametrize(
@@ -438,52 +413,6 @@ def test_get_feature_evaluation_data__default_params__calls_get_multiple_event_l
         date_start=date_start,
         labels_filter=None,
     )
-
-
-@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_event_list_for_organisation__date_stop_set__returns_grouped_data(
-    mocker: MockerFixture,
-    organisation: Organisation,
-) -> None:
-    # Given
-
-    now = timezone.now()
-    one_day_ago = now - timedelta(days=1)
-    two_days_ago = now - timedelta(days=2)
-    date_stop = now
-
-    record_mock1 = mock.MagicMock()
-    record_mock1.__getitem__.side_effect = lambda key: {
-        "resource": "resource23",
-        "_value": 23,
-    }.get(key)
-    record_mock1.values = {"_time": one_day_ago}
-
-    record_mock2 = mock.MagicMock()
-    record_mock2.__getitem__.side_effect = lambda key: {
-        "resource": "resource24",
-        "_value": 24,
-    }.get(key)
-    record_mock2.values = {"_time": two_days_ago}
-
-    result = mock.MagicMock()
-    result.records = [record_mock1, record_mock2]
-
-    influx_mock = mocker.patch(
-        "app_analytics.influxdb_wrapper.InfluxDBWrapper.influx_query_manager"
-    )
-
-    influx_mock.return_value = [result]
-
-    # When
-    dataset, labels = get_event_list_for_organisation(
-        organisation_id=organisation.id,
-        date_stop=date_stop,
-    )
-
-    # Then
-    assert dataset == {"resource23": [23], "resource24": [24]}
-    assert labels == ["2023-01-18", "2023-01-17"]
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
