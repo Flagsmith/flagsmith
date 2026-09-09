@@ -5809,6 +5809,19 @@
             "type": "boolean",
             "readOnly": true
           },
+          "stop_serving_flags": {
+            "description": "Enable this to cease serving flags for this organisation.",
+            "type": "boolean",
+            "readOnly": true
+          },
+          "api_limit_restriction_enabled": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "overage_charges_enabled": {
+            "type": "boolean",
+            "readOnly": true
+          },
           "restrict_project_create_to_admin": {
             "type": "boolean"
           },
