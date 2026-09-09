@@ -1,6 +1,7 @@
 import importlib
 
 from common.core.urls import urlpatterns as core_urlpatterns
+from common.core.utils import is_saas
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
@@ -122,6 +123,16 @@ if settings.SCIM_INSTALLED:  # pragma: no cover
             "api/v1/organisations/<int:organisation_pk>/scim/",
             include("scim.urls"),
         ),
+    ]
+
+# SaaS images ship the private wheel, so is_saas() is the gate, not module presence.
+if settings.EDGE_PROXY_INSTALLED and not is_saas():  # pragma: no cover
+    urlpatterns += [
+        path(
+            "api/v1/organisations/<int:organisation_pk>/edge-proxy/",
+            include("edge_proxy.management_urls"),
+        ),
+        path("api/v1/proxy/", include("edge_proxy.urls")),
     ]
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
