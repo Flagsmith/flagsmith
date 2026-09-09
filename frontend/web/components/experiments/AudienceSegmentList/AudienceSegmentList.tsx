@@ -6,6 +6,7 @@ import Icon from 'components/icons/Icon'
 import SegmentsIcon from 'components/icons/SegmentsIcon'
 import { CohortSourceType } from 'common/types/responses'
 import { colorIconSecondary } from 'common/theme/tokens'
+import './AudienceSegmentList.scss'
 
 export type AudienceSegmentItem = {
   id: number
@@ -25,11 +26,11 @@ const AudienceSegmentList: FC<AudienceSegmentListProps> = ({
   onRemove,
   segments,
 }) => (
-  <div className='d-flex flex-column gap-2'>
+  <div className='d-flex flex-column gap-2 mx-0'>
     {segments.map((segment) => (
       <div
         key={segment.id}
-        className='d-flex align-items-center gap-3 py-2 ps-3 pe-1 border border-default rounded-md bg-surface-default'
+        className='audience-segment-row d-flex align-items-center gap-3'
       >
         <SegmentsIcon
           className='flex-shrink-0'
@@ -70,7 +71,7 @@ const AudienceSegmentList: FC<AudienceSegmentListProps> = ({
         )}
         {onRemove && (
           <Button
-            className='btn btn-with-icon'
+            className='btn btn-with-icon audience-segment-row__remove'
             type='button'
             aria-label={`Remove ${segment.name} from audience`}
             onClick={() => onRemove(segment.id)}

@@ -1,0 +1,11 @@
+.audience-segment-row {
+  min-height: 60px; // 44px icon button + 8px vertical padding
+  padding: 8px 16px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-default);
+
+  &__remove {
+    margin-right: -8px;
+  }
+}
