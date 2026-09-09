@@ -69,7 +69,9 @@ jobs:
           linters: mypy
 
       - name: Run Tests
-        run: make test
+        env:
+          format: xml
+        run: make test-coverage
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v5
