@@ -86,19 +86,15 @@ describe('buildConversionChartData', () => {
       summary({ exposures_timeseries: exposures, metrics: [metricResult()] }),
     ],
   ])('returns null when %s', (_, res) => {
-    expect(
-      buildConversionChartData(res, 7, identities, 'cumulative'),
-    ).toBeNull()
+    expect(buildConversionChartData(res, 7, identities)).toBeNull()
   })
 
   it('returns null when no metric matches the requested id', () => {
-    expect(
-      buildConversionChartData(results, 999, identities, 'daily'),
-    ).toBeNull()
+    expect(buildConversionChartData(results, 999, identities)).toBeNull()
   })
 
-  it('accumulates running totals over the bucket union in cumulative mode', () => {
-    const chart = buildConversionChartData(results, 7, identities, 'cumulative')
+  it('accumulates running totals over the bucket union', () => {
+    const chart = buildConversionChartData(results, 7, identities)
     expect(chart?.points).toEqual([
       { control: 60, day: '1 Jun', variant_a: 100 },
       { control: 90, day: '2 Jun', variant_a: 100 },
@@ -106,16 +102,6 @@ describe('buildConversionChartData', () => {
       { control: 90, day: '3 Jun', variant_a: 100 },
     ])
     expect(chart?.seriesLabels.control).toBe('Control converted')
-  })
-
-  it('plots raw per-bucket increments in daily mode', () => {
-    const chart = buildConversionChartData(results, 7, identities, 'daily')
-    expect(chart?.points).toEqual([
-      { control: 60, day: '1 Jun', variant_a: 100 },
-      { control: 30, day: '2 Jun', variant_a: 0 },
-      { control: 0, day: '3 Jun', variant_a: 0 },
-    ])
-    expect(chart?.seriesLabels.control).toBe('Control conversions')
   })
 
   it('adds the year to labels when the series spans calendar years', () => {
@@ -132,7 +118,7 @@ describe('buildConversionChartData', () => {
       ]),
       metrics: [metricResult({ conversions_timeseries: conversions })],
     })
-    const chart = buildConversionChartData(res, 7, identities, 'cumulative')
+    const chart = buildConversionChartData(res, 7, identities)
     expect(chart?.points.map((p) => p.day)).toEqual([
       '1 Jun 2026',
       '2 Jun 2026',
@@ -159,7 +145,7 @@ describe('buildConversionChartData', () => {
         }),
       ],
     })
-    const chart = buildConversionChartData(res, 7, identities, 'cumulative')
+    const chart = buildConversionChartData(res, 7, identities)
     expect(chart?.points).toHaveLength(30)
     // The window opens on day 11, carrying the 11 conversions to date.
     expect(chart?.points[0]).toEqual({
