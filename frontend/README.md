@@ -57,6 +57,24 @@ To run a specific test file: `npm run test:unit -- --testPathPatterns={filename}
 
 To run E2E tests (requires the API running on localhost:8000), run `npm run test`.
 
+#### Migration metrics
+
+Several migrations are in flight at once: JavaScript to TypeScript, Flux stores to RTK Query,
+hardcoded colours to semantic tokens, and `.dark` branches to theme-aware tokens. Each one is
+counted so we can see the trend and stop any of them going backwards.
+
+To see where things stand, run `npm run quality:metrics`.
+
+To see the quarter-by-quarter trend, run `npm run quality:history` (writes `scripts/quality-history.json`).
+
+CI runs `npm run quality:check` on every frontend pull request. It compares the counts against
+`scripts/quality-baseline.json` and fails only when one of them moves the wrong way, so a pull
+request is never blocked by debt it did not add. If an increase is deliberate, explain it in the
+pull request and update the baseline in the same commit.
+
+Everything except the type-check count is measured with `git grep` against a commit, so any past
+quarter can be counted without checking it out.
+
 #### Typing
 
 This codebase uses TypeScript. Run `npm run typecheck` to check for type errors.

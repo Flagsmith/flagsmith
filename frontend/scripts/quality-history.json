@@ -1,0 +1,73 @@
+{
+  "generatedAt": "2026-09-09",
+  "quarters": [
+    {
+      "date": "2025-12-31",
+      "metrics": {
+        "js_jsx_files": 143,
+        "ts_tsx_files": 523,
+        "any_annotations": 316,
+        "ts_suppressions": 46,
+        "flux_store_files": 82,
+        "project_store_files": 32,
+        "dark_selectors": 48,
+        "raw_colour_hex": 342
+      },
+      "ref": "ed2f460c3dfcebee1b30ed22f71040b447675b42",
+      "sha": "ed2f460c3dfcebee1b30ed22f71040b447675b42",
+      "inProgress": false,
+      "quarter": "2025-Q4"
+    },
+    {
+      "date": "2026-04-01",
+      "metrics": {
+        "js_jsx_files": 135,
+        "ts_tsx_files": 604,
+        "any_annotations": 358,
+        "ts_suppressions": 47,
+        "flux_store_files": 90,
+        "project_store_files": 31,
+        "dark_selectors": 51,
+        "raw_colour_hex": 349
+      },
+      "ref": "9a6aa071b178118880658af40d9df07906d712c6",
+      "sha": "9a6aa071b178118880658af40d9df07906d712c6",
+      "inProgress": false,
+      "quarter": "2026-Q1"
+    },
+    {
+      "date": "2026-07-01",
+      "metrics": {
+        "js_jsx_files": 109,
+        "ts_tsx_files": 816,
+        "any_annotations": 378,
+        "ts_suppressions": 41,
+        "flux_store_files": 91,
+        "project_store_files": 28,
+        "dark_selectors": 48,
+        "raw_colour_hex": 285
+      },
+      "ref": "debfb7b1b020e3995f138c19d7fadae86fcde5fc",
+      "sha": "debfb7b1b020e3995f138c19d7fadae86fcde5fc",
+      "inProgress": false,
+      "quarter": "2026-Q2"
+    },
+    {
+      "date": "2026-09-09",
+      "metrics": {
+        "js_jsx_files": 106,
+        "ts_tsx_files": 974,
+        "any_annotations": 383,
+        "ts_suppressions": 42,
+        "flux_store_files": 91,
+        "project_store_files": 26,
+        "dark_selectors": 45,
+        "raw_colour_hex": 274
+      },
+      "ref": "cfdc8d30aa8377200c37e1b50629da277017cb42",
+      "sha": "cfdc8d30aa8377200c37e1b50629da277017cb42",
+      "inProgress": true,
+      "quarter": "2026-Q3"
+    }
+  ]
+}

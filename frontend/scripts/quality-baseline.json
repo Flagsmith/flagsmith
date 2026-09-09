@@ -1,0 +1,16 @@
+{
+  "date": "2026-09-09",
+  "metrics": {
+    "js_jsx_files": 106,
+    "ts_tsx_files": 974,
+    "any_annotations": 383,
+    "ts_suppressions": 42,
+    "flux_store_files": 91,
+    "project_store_files": 26,
+    "dark_selectors": 45,
+    "raw_colour_hex": 274,
+    "typecheck_errors": 949
+  },
+  "ref": "HEAD",
+  "sha": "cfdc8d30aa8377200c37e1b50629da277017cb42"
+}

@@ -34,7 +34,10 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "build-storybook:dev": "STORYBOOK_DISABLE_TELEMETRY=1 NODE_ENV=development storybook build",
-    "generate:tokens": "node scripts/generate-tokens.mjs"
+    "generate:tokens": "node scripts/generate-tokens.mjs",
+    "quality:metrics": "node scripts/quality-metrics.mjs --typecheck",
+    "quality:history": "node scripts/quality-history.mjs --write",
+    "quality:check": "node scripts/quality-metrics.mjs --typecheck --check scripts/quality-baseline.json"
   },
   "engines": {
     "node": "22.x",
