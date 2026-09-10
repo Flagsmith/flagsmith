@@ -106,7 +106,7 @@ export const VARIATION_VALUE_FIELDS = [
 ] as const
 
 // Per environment, so it can.
-export const VARIATION_WEIGHT_FIELD = 'default_percentage_allocation' as const
+export const VARIATION_WEIGHT_FIELD = 'default_percentage_allocation'
 
 const same = (a: unknown, b: unknown): boolean => (a ?? null) === (b ?? null)
 
