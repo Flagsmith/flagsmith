@@ -1,5 +1,7 @@
 import {
+  diffVariations,
   getDefaultVariantKey,
+  hasApprovableChanges,
   hasUnmatchedIdentityOverride,
   resolveUnmatchedOverride,
   sortMultivariateOptions,
@@ -134,6 +136,123 @@ describe('multivariate', () => {
         ).toBe(expected)
       },
     )
+  })
+
+  describe('diffVariations', () => {
+    const stored = [
+      {
+        default_percentage_allocation: 60,
+        id: 1,
+        key: 'a',
+        string_value: 'va',
+        type: 'unicode',
+      },
+      {
+        default_percentage_allocation: 40,
+        id: 2,
+        key: 'b',
+        string_value: 'vb',
+        type: 'unicode',
+      },
+    ]
+
+    it('reports nothing when nothing was touched', () => {
+      expect(diffVariations({ edited: stored, stored })).toEqual({
+        values: false,
+        weights: false,
+      })
+    })
+
+    it('separates a value edit from a weight edit', () => {
+      const edited = [
+        { ...stored[0], string_value: 'va_changed' },
+        { ...stored[1], default_percentage_allocation: 35 },
+      ]
+
+      expect(diffVariations({ edited, stored })).toEqual({
+        values: true,
+        weights: true,
+      })
+    })
+
+    it('reports a weight edit on its own, leaving values untouched', () => {
+      const edited = [
+        { ...stored[0], default_percentage_allocation: 70 },
+        stored[1],
+      ]
+
+      expect(diffVariations({ edited, stored })).toEqual({
+        values: false,
+        weights: true,
+      })
+    })
+
+    it('counts a renamed label as a value change, since labels are shared too', () => {
+      const edited = [{ ...stored[0], key: 'a_renamed' }, stored[1]]
+
+      expect(diffVariations({ edited, stored }).values).toBe(true)
+    })
+
+    it('counts an added variation as a value change', () => {
+      const edited = [
+        ...stored,
+        {
+          default_percentage_allocation: 0,
+          string_value: 'vc',
+          type: 'unicode',
+        },
+      ]
+
+      expect(diffVariations({ edited, stored }).values).toBe(true)
+    })
+
+    it('counts a removed variation as a value change', () => {
+      expect(diffVariations({ edited: [stored[0]], stored }).values).toBe(true)
+    })
+
+    it('reports nothing for a standard flag with no variations', () => {
+      expect(diffVariations({ edited: undefined, stored: undefined })).toEqual({
+        values: false,
+        weights: false,
+      })
+    })
+  })
+
+  describe('hasApprovableChanges', () => {
+    const unchanged = {
+      editedEnabled: true,
+      editedValue: 'same',
+      segmentOverridesChanged: false,
+      storedEnabled: true,
+      storedValue: 'same',
+      weightsChanged: false,
+    }
+
+    it('is false when only variation values were edited', () => {
+      // The case that files an empty change request today: values are not part of
+      // the environment's feature state, so there is nothing to approve.
+      expect(hasApprovableChanges(unchanged)).toBe(false)
+    })
+
+    it.each`
+      field                        | value
+      ${'weightsChanged'}          | ${true}
+      ${'segmentOverridesChanged'} | ${true}
+      ${'editedEnabled'}           | ${false}
+      ${'editedValue'}             | ${'different'}
+    `('is true when $field changes', ({ field, value }) => {
+      expect(hasApprovableChanges({ ...unchanged, [field]: value })).toBe(true)
+    })
+
+    it('treats an undefined value as equal to null rather than a change', () => {
+      expect(
+        hasApprovableChanges({
+          ...unchanged,
+          editedValue: undefined,
+          storedValue: null,
+        }),
+      ).toBe(false)
+    })
   })
 
   describe('resolveUnmatchedOverride', () => {

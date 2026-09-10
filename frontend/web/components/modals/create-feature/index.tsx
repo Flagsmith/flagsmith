@@ -27,7 +27,11 @@ import ExternalResourcesTable from 'components/ExternalResourcesTable'
 import GitHubLinkSection from 'components/GitHubLinkSection'
 import GitLabLinkSection from 'components/GitLabLinkSection'
 import type { ExternalResource } from 'common/types/responses'
-import { hasUnmatchedIdentityOverride } from 'common/utils/multivariate'
+import {
+  diffVariations,
+  hasApprovableChanges,
+  hasUnmatchedIdentityOverride,
+} from 'common/utils/multivariate'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
@@ -512,6 +516,39 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
         const saveFeatureValue = saveFeatureWithValidation(
           (schedule?: boolean) => {
             if ((is4Eyes || schedule) && !identity) {
+              // Variation values and labels belong to the feature, not to this
+              // environment, so a change request cannot carry them. Say so before
+              // the user fills in a request, rather than applying them anyway.
+              const variationChanges = diffVariations({
+                edited: projectFlag.multivariate_options,
+                stored: props.projectFlag?.multivariate_options,
+              })
+              const approvable = hasApprovableChanges({
+                editedEnabled: environmentFlag.enabled,
+                editedValue: environmentFlag.feature_state_value,
+                segmentOverridesChanged: segmentsChanged,
+                storedEnabled: props.environmentFlag?.enabled,
+                storedValue: props.environmentFlag?.feature_state_value,
+                weightsChanged: variationChanges.weights,
+              })
+
+              if (!approvable) {
+                toast(
+                  variationChanges.values
+                    ? 'Variation values apply to every environment, so they cannot go through a change request. Nothing has been saved. Ask an administrator to change the variation on the feature instead.'
+                    : 'Nothing has changed, so there is nothing to request.',
+                  'danger',
+                )
+                return
+              }
+
+              if (variationChanges.values) {
+                toast(
+                  'Your variation value changes have not been saved. Only the weights and the environment value are included in this change request.',
+                  'warning',
+                )
+              }
+
               setSegmentsChanged(false)
               setValueChanged(false)
               const segmentFeatureStates = (segmentOverrides || [])

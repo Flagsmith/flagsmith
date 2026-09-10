@@ -199,48 +199,37 @@ const FeatureListProvider = class extends React.Component {
     changeRequest,
     commit,
   ) => {
-    AppActions.editFeatureMv(
+    // A variation's value and label live on the feature, shared by every
+    // environment, so a change request scoped to one environment cannot carry
+    // them. Writing them here anyway is what applied edits before approval and
+    // left the request itself empty. Send only the weights, which are per
+    // environment, and leave the stored variations alone.
+    const storedVariations = projectFlag.multivariate_options || []
+    const weightedVariations = storedVariations.map((option) => {
+      const edited = flag.multivariate_options?.find((v) => v.id === option.id)
+      return {
+        ...option,
+        default_percentage_allocation:
+          edited?.default_percentage_allocation ??
+          option.default_percentage_allocation,
+      }
+    })
+
+    AppActions.editEnvironmentFlagChangeRequest(
       projectId,
-      Object.assign({}, projectFlag, flag, {
-        multivariate_options:
-          flag.multivariate_options &&
-          flag.multivariate_options.map((v, i) => {
-            const matchingProjectVariate =
-              (projectFlag.multivariate_options &&
-                projectFlag.multivariate_options.find((p) => p.id === v.id)) ||
-              v
-            return {
-              ...v,
-              default_percentage_allocation:
-                matchingProjectVariate.default_percentage_allocation,
-              key: v.key || Utils.getDefaultVariantKey(i),
-            }
-          }),
-      }),
-      (newProjectFlag) => {
-        AppActions.editEnvironmentFlagChangeRequest(
-          projectId,
-          environmentId,
-          flag,
-          newProjectFlag,
-          {
-            ...environmentFlag,
-            multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
-              newProjectFlag.multivariate_options?.map((opt, i) => ({
-                ...opt,
-                default_percentage_allocation:
-                  flag.multivariate_options?.[i]
-                    ?.default_percentage_allocation ??
-                  opt.default_percentage_allocation,
-              })),
-              environmentFlag.multivariate_feature_state_values,
-            ),
-          },
-          segmentOverrides,
-          changeRequest,
-          commit,
-        )
+      environmentId,
+      flag,
+      projectFlag,
+      {
+        ...environmentFlag,
+        multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
+          weightedVariations,
+          environmentFlag.multivariate_feature_state_values,
+        ),
       },
+      segmentOverrides,
+      changeRequest,
+      commit,
     )
   }
 

@@ -78,6 +78,106 @@ export const resolveUnmatchedOverride = ({
   return value === undefined ? undefined : { selected: isSelected, value }
 }
 
+// A variation's value lives on the feature, shared by every environment, while its
+// weight lives on the environment's feature state. A change request covers one
+// environment, so it can carry the weight and never the value. Telling the two apart
+// is what lets the save path send the weight for approval and refuse the value.
+//
+// Adding or removing a variation counts as a value change: both alter the set of
+// variations every environment sees.
+export type VariationChanges = {
+  values: boolean
+  weights: boolean
+}
+
+type ComparableVariation = {
+  id?: number | null
+  key?: string | null
+  type?: string | null
+  string_value?: string | null
+  integer_value?: number | null
+  boolean_value?: boolean | null
+  default_percentage_allocation?: number | null
+}
+
+const VALUE_FIELDS = [
+  'key',
+  'type',
+  'string_value',
+  'integer_value',
+  'boolean_value',
+] as const
+
+const same = (a: unknown, b: unknown): boolean => (a ?? null) === (b ?? null)
+
+export const diffVariations = ({
+  edited,
+  stored,
+}: {
+  edited: ComparableVariation[] | undefined
+  stored: ComparableVariation[] | undefined
+}): VariationChanges => {
+  const editedList = edited ?? []
+  const storedList = stored ?? []
+
+  // An entry with no id has never been saved, so it is an addition.
+  const isUnsaved = (variation: ComparableVariation): boolean =>
+    variation.id === null || variation.id === undefined
+  const added = editedList.some(isUnsaved)
+  const removed = storedList.some(
+    (storedVariation) =>
+      !editedList.some((variation) => variation.id === storedVariation.id),
+  )
+
+  let values = added || removed
+  let weights = false
+
+  for (const variation of editedList) {
+    if (isUnsaved(variation)) {
+      continue
+    }
+    const before = storedList.find((candidate) => candidate.id === variation.id)
+    if (!before) {
+      continue
+    }
+    if (VALUE_FIELDS.some((field) => !same(variation[field], before[field]))) {
+      values = true
+    }
+    if (
+      !same(
+        variation.default_percentage_allocation,
+        before.default_percentage_allocation,
+      )
+    ) {
+      weights = true
+    }
+  }
+
+  return { values, weights }
+}
+
+// Whether a change request would carry anything at all. Without this a request is
+// filed for an unchanged feature state, which approvers receive with nothing in it.
+export const hasApprovableChanges = ({
+  editedEnabled,
+  editedValue,
+  segmentOverridesChanged,
+  storedEnabled,
+  storedValue,
+  weightsChanged,
+}: {
+  editedEnabled: boolean | undefined
+  editedValue: FlagsmithValue | undefined
+  segmentOverridesChanged: boolean
+  storedEnabled: boolean | undefined
+  storedValue: FlagsmithValue | undefined
+  weightsChanged: boolean
+}): boolean =>
+  weightsChanged ||
+  segmentOverridesChanged ||
+  !same(editedEnabled, storedEnabled) ||
+  !same(editedValue, storedValue)
+
 // Options not yet saved have no id and sort last, in input order.
 export const sortMultivariateOptions = <T extends { id?: number | null }>(
   options: T[],
