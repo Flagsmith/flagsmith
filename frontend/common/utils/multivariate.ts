@@ -82,8 +82,11 @@ export const resolveUnmatchedOverride = ({
 // weight can go in a change request, so the save path needs the two apart. Adding
 // or removing a variation counts as a value change: both alter the shared set.
 export type VariationChanges = {
+  // Edited or removed. Both alter what existing environments already serve.
   values: boolean
   weights: boolean
+  // New variations, which land at 0% allocation and so serve nothing yet.
+  added: boolean
 }
 
 type ComparableVariation = {
@@ -129,7 +132,7 @@ export const diffVariations = ({
       !editedList.some((variation) => variation.id === storedVariation.id),
   )
 
-  let values = added || removed
+  let values = removed
   let weights = false
 
   for (const variation of editedList) {
@@ -157,7 +160,7 @@ export const diffVariations = ({
     }
   }
 
-  return { values, weights }
+  return { added, values, weights }
 }
 
 // Whether a change request would carry anything. Without it, one is filed against an

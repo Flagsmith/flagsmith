@@ -200,33 +200,43 @@ const FeatureListProvider = class extends React.Component {
     commit,
   ) => {
     // Variation values are shared by every environment, so an environment-scoped
-    // change request cannot carry them. Send only the weights.
-    const storedVariations = projectFlag.multivariate_options || []
-    const weightedVariations = storedVariations.map((option) => {
-      const edited = flag.multivariate_options?.find((v) => v.id === option.id)
-      return {
-        ...option,
-        default_percentage_allocation:
-          edited?.default_percentage_allocation ??
-          option.default_percentage_allocation,
-      }
-    })
-
-    AppActions.editEnvironmentFlagChangeRequest(
+    // change request cannot carry them. New variations are created, since they
+    // land at 0% and serve nothing until a weight change, which the request does
+    // carry. Existing ones are left alone and none are deleted.
+    AppActions.editFeatureMv(
       projectId,
-      environmentId,
-      flag,
-      projectFlag,
-      {
-        ...environmentFlag,
-        multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
-          weightedVariations,
-          environmentFlag.multivariate_feature_state_values,
-        ),
+      Object.assign({}, projectFlag, {
+        createOnlyVariations: true,
+        multivariate_options: flag.multivariate_options?.map((v, i) => ({
+          ...v,
+          key: v.key || Utils.getDefaultVariantKey(i),
+        })),
+      }),
+      (savedProjectFlag) => {
+        const storedVariations = savedProjectFlag.multivariate_options || []
+        const weightedVariations = storedVariations.map((option, i) => ({
+          ...option,
+          default_percentage_allocation:
+            flag.multivariate_options?.[i]?.default_percentage_allocation ??
+            option.default_percentage_allocation,
+        }))
+        AppActions.editEnvironmentFlagChangeRequest(
+          projectId,
+          environmentId,
+          flag,
+          savedProjectFlag,
+          {
+            ...environmentFlag,
+            multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
+              weightedVariations,
+              environmentFlag.multivariate_feature_state_values,
+            ),
+          },
+          segmentOverrides,
+          changeRequest,
+          commit,
+        )
       },
-      segmentOverrides,
-      changeRequest,
-      commit,
     )
   }
 

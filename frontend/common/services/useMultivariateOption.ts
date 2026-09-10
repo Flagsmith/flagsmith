@@ -52,6 +52,10 @@ export const multivariateOptionService = service.injectEndpoints({
             default_percentage_allocation: 0,
             feature: args.feature_id,
           }
+          if (original && args.create_only) {
+            ordered[i] = original
+            continue
+          }
           const res = await baseQuery(
             original
               ? {
@@ -74,9 +78,9 @@ export const multivariateOptionService = service.injectEndpoints({
         if (Object.keys(errors).length) {
           return { data: { errors, multivariate_options: ordered } }
         }
-        const deleted = serverOptions.filter(
-          (m) => !ordered.find((o) => o?.id === m.id),
-        )
+        const deleted = args.create_only
+          ? []
+          : serverOptions.filter((m) => !ordered.find((o) => o?.id === m.id))
         const deleteResults = await Promise.all(
           deleted.map((m) =>
             baseQuery({

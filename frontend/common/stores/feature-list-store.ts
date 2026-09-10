@@ -266,6 +266,7 @@ const controller = {
       return
     }
     saveMultivariateOptions(getStore(), {
+      create_only: !!flag.createOnlyVariations,
       feature_id: flag.id,
       multivariate_options: flag.multivariate_options || [],
       project_id: projectId,

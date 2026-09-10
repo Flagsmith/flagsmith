@@ -530,11 +530,12 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                 weightsChanged: variationChanges.weights,
               })
 
+              const what = schedule ? 'a scheduled change' : 'a change request'
               if (!approvable) {
                 toast(
                   variationChanges.values
-                    ? 'Variation values apply to every environment, so they cannot go through a change request. Nothing has been saved. Ask an administrator to change the variation on the feature instead.'
-                    : 'Nothing has changed, so there is nothing to request.',
+                    ? `Variation values apply to every environment, so they cannot go through ${what}. Nothing has been saved.`
+                    : `Nothing has changed, so there is nothing to put in ${what}.`,
                   'danger',
                 )
                 return
@@ -542,7 +543,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
 
               if (variationChanges.values) {
                 toast(
-                  'Your variation value changes have not been saved. Only the weights and the environment value are included in this change request.',
+                  `Your variation value changes have not been saved. Only the weights and the environment value are included in ${what}.`,
                   'warning',
                 )
               }

@@ -158,6 +158,7 @@ describe('multivariate', () => {
 
     it('reports nothing when nothing was touched', () => {
       expect(diffVariations({ edited: stored, stored })).toEqual({
+        added: false,
         values: false,
         weights: false,
       })
@@ -170,6 +171,7 @@ describe('multivariate', () => {
       ]
 
       expect(diffVariations({ edited, stored })).toEqual({
+        added: false,
         values: true,
         weights: true,
       })
@@ -182,6 +184,7 @@ describe('multivariate', () => {
       ]
 
       expect(diffVariations({ edited, stored })).toEqual({
+        added: false,
         values: false,
         weights: true,
       })
@@ -193,7 +196,7 @@ describe('multivariate', () => {
       expect(diffVariations({ edited, stored }).values).toBe(true)
     })
 
-    it('counts an added variation as a value change', () => {
+    it('reports an addition separately, since it serves nothing yet', () => {
       const edited = [
         ...stored,
         {
@@ -203,7 +206,11 @@ describe('multivariate', () => {
         },
       ]
 
-      expect(diffVariations({ edited, stored }).values).toBe(true)
+      expect(diffVariations({ edited, stored })).toEqual({
+        added: true,
+        values: false,
+        weights: false,
+      })
     })
 
     it('counts a removed variation as a value change', () => {
@@ -212,6 +219,7 @@ describe('multivariate', () => {
 
     it('reports nothing for a standard flag with no variations', () => {
       expect(diffVariations({ edited: undefined, stored: undefined })).toEqual({
+        added: false,
         values: false,
         weights: false,
       })
