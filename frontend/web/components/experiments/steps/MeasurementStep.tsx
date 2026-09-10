@@ -27,7 +27,7 @@ const MeasurementStep: FC<MeasurementStepProps> = ({
   const [isCreateMetricOpen, setIsCreateMetricOpen] = useState(false)
 
   return (
-    <div className='d-flex flex-column gap-4'>
+    <div className='d-flex flex-column gap-4 mx-0'>
       <ContentCard
         background='white'
         title='Metrics'

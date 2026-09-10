@@ -72,7 +72,7 @@ const AudiencePicker: FC<AudiencePickerProps> = ({
   )
 
   return (
-    <div className='d-flex flex-column gap-3'>
+    <div className='d-flex flex-column gap-3 mx-0'>
       {segments.length ? (
         <AudienceSegmentList
           segments={segments.map((segment) => ({

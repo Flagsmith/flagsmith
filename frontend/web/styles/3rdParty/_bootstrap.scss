@@ -99,3 +99,9 @@ $utilities: map-merge($utilities, ("shadow": $_shadow-util));
 .modal-footer {
   padding: 0;
 }
+
+// Bootstrap's `.border*` utilities paint `--bs-border-color` with `!important`,
+// so `.border-default` can never win. Point the Bootstrap variable at the token.
+:root {
+  --bs-border-color: var(--color-border-default);
+}
