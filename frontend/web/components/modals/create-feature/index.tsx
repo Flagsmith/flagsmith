@@ -516,9 +516,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
         const saveFeatureValue = saveFeatureWithValidation(
           (schedule?: boolean) => {
             if ((is4Eyes || schedule) && !identity) {
-              // Variation values and labels belong to the feature, not to this
-              // environment, so a change request cannot carry them. Say so before
-              // the user fills in a request, rather than applying them anyway.
+              // Say this before the user fills in a request, not after applying it.
               const variationChanges = diffVariations({
                 edited: projectFlag.multivariate_options,
                 stored: props.projectFlag?.multivariate_options,

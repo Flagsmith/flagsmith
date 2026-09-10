@@ -78,13 +78,9 @@ export const resolveUnmatchedOverride = ({
   return value === undefined ? undefined : { selected: isSelected, value }
 }
 
-// A variation's value lives on the feature, shared by every environment, while its
-// weight lives on the environment's feature state. A change request covers one
-// environment, so it can carry the weight and never the value. Telling the two apart
-// is what lets the save path send the weight for approval and refuse the value.
-//
-// Adding or removing a variation counts as a value change: both alter the set of
-// variations every environment sees.
+// Values are shared by every environment; weights are per environment. Only the
+// weight can go in a change request, so the save path needs the two apart. Adding
+// or removing a variation counts as a value change: both alter the shared set.
 export type VariationChanges = {
   values: boolean
   weights: boolean
@@ -156,8 +152,8 @@ export const diffVariations = ({
   return { values, weights }
 }
 
-// Whether a change request would carry anything at all. Without this a request is
-// filed for an unchanged feature state, which approvers receive with nothing in it.
+// Whether a change request would carry anything. Without it, one is filed against an
+// unchanged feature state and approvers receive an empty request.
 export const hasApprovableChanges = ({
   editedEnabled,
   editedValue,

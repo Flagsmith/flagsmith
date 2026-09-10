@@ -199,11 +199,8 @@ const FeatureListProvider = class extends React.Component {
     changeRequest,
     commit,
   ) => {
-    // A variation's value and label live on the feature, shared by every
-    // environment, so a change request scoped to one environment cannot carry
-    // them. Writing them here anyway is what applied edits before approval and
-    // left the request itself empty. Send only the weights, which are per
-    // environment, and leave the stored variations alone.
+    // Variation values are shared by every environment, so an environment-scoped
+    // change request cannot carry them. Send only the weights.
     const storedVariations = projectFlag.multivariate_options || []
     const weightedVariations = storedVariations.map((option) => {
       const edited = flag.multivariate_options?.find((v) => v.id === option.id)
