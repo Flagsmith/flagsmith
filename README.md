@@ -70,13 +70,13 @@ flagsmith.init({
 
 As this example runs in the browser, you should use your client-side environment key. Server-side keys must stay secret and never appear in browser code.
 
-Follow the [quick start guide](https://docs.flagsmith.com/getting-started/quick-start) for the full walkthrough, or pick your language from our [SDK docs](https://docs.flagsmith.com/integrating-with-flagsmith/sdks/) to see the same thing in Python, Java, Go, .NET, and more.
+Follow the [quick start guide](https://docs.flagsmith.com/getting-started/quick-start) for the full walkthrough, or pick your language from our [SDK docs](https://docs.flagsmith.com/integrating-with-flagsmith/sdks) to see the same thing in Python, Java, Go, .NET, and more.
 
 ![Flagsmith Screenshot](static-files/screenshot.png)
 
 ## Contribute to Flagsmith Open Source
 
-We love contributions from the community and are always looking to improve our [open-source feature management platform](https://www.flagsmith.com/)! Here are our [contribution guidelines](https://docs.flagsmith.com/platform/contributing).
+We love contributions from the community and are always looking to improve our [open-source feature management platform](https://www.flagsmith.com/)! Here are our [contribution guidelines](https://docs.flagsmith.com/project-and-community/contributing).
 
 ## Flagsmith hosted SaaS
 
@@ -90,7 +90,7 @@ You can try our hosted version for free at [app.flagsmith.com/signup](https://ap
 
 ## Available SDKs
 
-### Client side ([docs](https://docs.flagsmith.com/integrating-with-flagsmith/sdks/client-side-sdks/))
+### Client side ([docs](https://docs.flagsmith.com/integrating-with-flagsmith/sdks/client-side-sdks))
 
 * [JavaScript](https://docs.flagsmith.com/integrating-with-flagsmith/sdks/client-side-sdks/javascript)
 * [React](https://docs.flagsmith.com/integrating-with-flagsmith/sdks/client-side-sdks/react)
