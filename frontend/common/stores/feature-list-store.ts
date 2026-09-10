@@ -268,7 +268,6 @@ const controller = {
     saveMultivariateOptions(getStore(), {
       feature_id: flag.id,
       multivariate_options: flag.multivariate_options || [],
-      no_delete: !!flag.neverDeleteVariations,
       project_id: projectId,
     }).then((res) => {
       if (res.error) {

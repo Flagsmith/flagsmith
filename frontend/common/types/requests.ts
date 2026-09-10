@@ -1216,9 +1216,6 @@ export type Req = {
     project_id: string | number
     feature_id: number
     multivariate_options: Partial<MultivariateOption>[]
-    // Never delete variations missing from the payload. Deleting one re-buckets
-    // every identity allocated to it, so it must not happen before approval.
-    no_delete?: boolean
   }
   // END OF TYPES
 }
