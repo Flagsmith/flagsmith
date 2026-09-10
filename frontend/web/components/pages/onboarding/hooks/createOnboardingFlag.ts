@@ -12,8 +12,8 @@ export const ONBOARDING_FLAG_VARIATION = 'variant'
 export type CreateOnboardingFlagInput = {
   projectId: number
   name: string
-  description?: string | null
-  tags?: number[]
+  description?: ProjectFlag['description']
+  tags?: ProjectFlag['tags']
 }
 
 export async function ensureOnboardingVariation(
