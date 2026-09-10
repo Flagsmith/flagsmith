@@ -995,6 +995,10 @@ OAUTH2_PROVIDER = {
         "authorization_code",
         "refresh_token",
     ],
+    # MCP clients bind tokens to the MCP server URL (RFC 8707), which the API
+    # then receives as a forwarded bearer token. The API is the only resource
+    # server, so audience checks would reject every such token.
+    "RESOURCE_SERVER_TOKEN_RESOURCE_VALIDATOR": None,
 }
 
 # Github OAuth credentials
