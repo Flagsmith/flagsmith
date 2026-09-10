@@ -1,8 +1,9 @@
 import re
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from common.core.utils import is_enterprise, is_saas
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.cache import caches
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -322,6 +323,12 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         )
 
     @property
+    def current_billing_period(self) -> tuple[datetime, datetime] | None:
+        if not self.organisation.has_subscription_information_cache():
+            return None
+        return self.organisation.subscription_information_cache.current_billing_period()
+
+    @property
     def is_free_plan(self) -> bool:
         return self.subscription_plan_family == SubscriptionPlanFamily.FREE
 
@@ -614,6 +621,22 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
             return False
 
         return starts_at <= timezone.now() <= ends_at
+
+    def current_billing_period(self) -> tuple[datetime, datetime] | None:
+        """
+        Returns the monthly allowance window, or None outside a billing term.
+        A term can run longer than a month, so the window opens at the most
+        recent monthly anniversary of its start.
+        """
+        starts_at = self.current_billing_term_starts_at
+        if starts_at is None or not self.has_active_billing_periods():
+            return None
+
+        elapsed = relativedelta(timezone.now(), starts_at)
+        period_starts_at = starts_at + relativedelta(
+            months=elapsed.years * 12 + elapsed.months
+        )
+        return period_starts_at, period_starts_at + relativedelta(months=1)
 
 
 class OrganisationAPIUsageNotification(models.Model):
