@@ -16,7 +16,7 @@ Flagsmith is an open-source feature management platform that offers remote confi
 
 As an open-source solution, Flagsmith provides greater flexibility and a more complete feature set than other flagging tools, as well as greater control over your choices—you are never locked into one vendor, thanks to our partnership with [OpenFeature](https://openfeature.dev/).
 
-With Flagsmith, you can evolve how your team releases software. Roll out, segment, experiment, and optimise with granular control. Stay secure with on-premises and private cloud hosting.
+With Flagsmith, you can evolve how your team releases software. Roll out, segment, experiment, and optimise with granular control. Stay secure by self-hosting, or choosing our private cloud deployment option.
 
 * Feature flags: Release features behind the safety of a feature flag
 * Make changes remotely: Easily toggle individual features on and off, and make changes without deploying new code
