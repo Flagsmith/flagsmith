@@ -1216,10 +1216,9 @@ export type Req = {
     project_id: string | number
     feature_id: number
     multivariate_options: Partial<MultivariateOption>[]
-    // Create new variations but leave existing ones untouched, and delete none.
-    // A new variation lands at 0% allocation, so it serves nothing until a
-    // weight change, which a change request can carry.
-    create_only?: boolean
+    // Never delete variations missing from the payload. Deleting one re-buckets
+    // every identity allocated to it, so it must not happen before approval.
+    no_delete?: boolean
   }
   // END OF TYPES
 }

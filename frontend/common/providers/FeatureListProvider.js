@@ -199,36 +199,43 @@ const FeatureListProvider = class extends React.Component {
     changeRequest,
     commit,
   ) => {
-    // Variation values are shared by every environment, so an environment-scoped
-    // change request cannot carry them. New variations are created, since they
-    // land at 0% and serve nothing until a weight change, which the request does
-    // carry. Existing ones are left alone and none are deleted.
     AppActions.editFeatureMv(
       projectId,
-      Object.assign({}, projectFlag, {
-        createOnlyVariations: true,
-        multivariate_options: flag.multivariate_options?.map((v, i) => ({
-          ...v,
-          key: v.key || Utils.getDefaultVariantKey(i),
-        })),
+      Object.assign({}, projectFlag, flag, {
+        multivariate_options:
+          flag.multivariate_options &&
+          flag.multivariate_options.map((v, i) => {
+            const matchingProjectVariate =
+              (projectFlag.multivariate_options &&
+                projectFlag.multivariate_options.find((p) => p.id === v.id)) ||
+              v
+            return {
+              ...v,
+              default_percentage_allocation:
+                matchingProjectVariate.default_percentage_allocation,
+              key: v.key || Utils.getDefaultVariantKey(i),
+            }
+          }),
+        // Removing a variation re-buckets every identity allocated to it, in
+        // every environment, so it must not happen before anyone has approved.
+        neverDeleteVariations: true,
       }),
-      (savedProjectFlag) => {
-        const storedVariations = savedProjectFlag.multivariate_options || []
-        const weightedVariations = storedVariations.map((option, i) => ({
-          ...option,
-          default_percentage_allocation:
-            flag.multivariate_options?.[i]?.default_percentage_allocation ??
-            option.default_percentage_allocation,
-        }))
+      (newProjectFlag) => {
         AppActions.editEnvironmentFlagChangeRequest(
           projectId,
           environmentId,
           flag,
-          savedProjectFlag,
+          newProjectFlag,
           {
             ...environmentFlag,
             multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
-              weightedVariations,
+              newProjectFlag.multivariate_options?.map((opt, i) => ({
+                ...opt,
+                default_percentage_allocation:
+                  flag.multivariate_options?.[i]
+                    ?.default_percentage_allocation ??
+                  opt.default_percentage_allocation,
+              })),
               environmentFlag.multivariate_feature_state_values,
             ),
           },

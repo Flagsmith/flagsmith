@@ -531,21 +531,22 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
               })
 
               const what = schedule ? 'a scheduled change' : 'a change request'
+              if (variationChanges.values || variationChanges.added) {
+                // Variations belong to the feature, so these apply now whatever
+                // happens next. Say so rather than letting the request imply they
+                // were approved.
+                toast(
+                  `Variation changes apply to every environment immediately and are not part of ${what}. Only the weights and the environment value are.`,
+                  'warning',
+                )
+              }
+
               if (!approvable) {
                 toast(
-                  variationChanges.values
-                    ? `Variation values apply to every environment, so they cannot go through ${what}. Nothing has been saved.`
-                    : `Nothing has changed, so there is nothing to put in ${what}.`,
+                  `Nothing else has changed, so there is nothing to put in ${what}.`,
                   'danger',
                 )
                 return
-              }
-
-              if (variationChanges.values) {
-                toast(
-                  `Your variation value changes have not been saved. Only the weights and the environment value are included in ${what}.`,
-                  'warning',
-                )
               }
 
               setSegmentsChanged(false)
