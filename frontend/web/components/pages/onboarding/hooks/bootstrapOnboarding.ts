@@ -17,7 +17,10 @@ import {
 } from 'common/types/responses'
 import { SmartDefaults } from './useSmartDefaults'
 import { createOrganisationViaAccountStore } from './createOrganisationViaAccountStore'
-import { createOnboardingFlag } from './createOnboardingFlag'
+import {
+  createOnboardingFlag,
+  ensureOnboardingVariation,
+} from './createOnboardingFlag'
 import API from 'project/api'
 import Constants from 'common/constants'
 
@@ -160,6 +163,7 @@ async function ensureFlag(
       flags?.results?.find((f) => f.tags?.includes(onboardingTag.id))) ||
     flags?.results?.find((f) => f.name === FLAG_NAME)
   if (existing) {
+    await ensureOnboardingVariation(store, existing)
     return existing
   }
   const isFirstFeature = !flags?.results?.length

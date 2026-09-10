@@ -3,12 +3,11 @@ import { projectFlagService } from 'common/services/useProjectFlag'
 import { createMultivariateOption } from 'common/services/useMultivariateOption'
 import { Req } from 'common/types/requests'
 import { ProjectFlag } from 'common/types/responses'
-import Utils from 'common/utils/utils'
 
 type Store = ReturnType<typeof getStore>
 
 export const ONBOARDING_FLAG_CONTROL_VALUE = 'control'
-export const ONBOARDING_FLAG_VARIATIONS = ['variant']
+export const ONBOARDING_FLAG_VARIATION = 'variant'
 
 export type CreateOnboardingFlagInput = {
   projectId: number
@@ -17,8 +16,29 @@ export type CreateOnboardingFlagInput = {
   tags?: number[]
 }
 
-// The onboarding flag is multivariate (control + one 0% variation) so a
-// fresh user can start an experiment on it straight away.
+export async function ensureOnboardingVariation(
+  store: Store,
+  flag: ProjectFlag,
+): Promise<void> {
+  if (flag.multivariate_options?.length) {
+    return
+  }
+  const res = await createMultivariateOption(store, {
+    body: {
+      default_percentage_allocation: 0,
+      feature: flag.id,
+      key: ONBOARDING_FLAG_VARIATION,
+      string_value: ONBOARDING_FLAG_VARIATION,
+      type: 'unicode',
+    },
+    feature_id: flag.id,
+    project_id: flag.project,
+  })
+  if (res.error) {
+    throw res.error
+  }
+}
+
 export async function createOnboardingFlag(
   store: Store,
   { description, name, projectId, tags }: CreateOnboardingFlagInput,
@@ -38,18 +58,6 @@ export async function createOnboardingFlag(
       }),
     )
     .unwrap()
-  // Sequential so options get ascending ids in input order.
-  for (const value of ONBOARDING_FLAG_VARIATIONS) {
-    await createMultivariateOption(store, {
-      body: {
-        ...Utils.valueToFeatureState(value),
-        default_percentage_allocation: 0,
-        feature: flag.id,
-        key: value,
-      },
-      feature_id: flag.id,
-      project_id: projectId,
-    })
-  }
+  await ensureOnboardingVariation(store, flag)
   return flag
 }
