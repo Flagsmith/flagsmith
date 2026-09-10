@@ -15,7 +15,7 @@ type StatusBadgeProps = {
 }
 
 const StatusBadge: FC<StatusBadgeProps> = ({ status }) => (
-  <Chip variant={STATUS_VARIANTS[status]} size='sm' pill>
+  <Chip variant={STATUS_VARIANTS[status]} size='sm'>
     <ChipDot />
     {EXPERIMENT_STATUS_LABELS[status]}
   </Chip>

@@ -19,8 +19,6 @@ export type ChipProps = {
   children: ReactNode
   variant?: ChipVariant
   size?: ChipSize
-  /** Fully rounded ends, for status and count badges. */
-  pill?: boolean
   truncate?: boolean
   onRemove?: () => void
   onClick?: () => void
@@ -66,7 +64,6 @@ const Chip = ({
   onClick,
   onKeyDown,
   onRemove,
-  pill = false,
   ref,
   role,
   size = 'default',
@@ -79,9 +76,9 @@ const Chip = ({
     <span
       ref={ref}
       className={classNames(
-        'ds-chip d-inline-flex align-items-center align-middle gap-1',
-        // 6px per the tags frame in Figma, which is the source of truth.
-        pill ? 'rounded-full' : 'rounded-md',
+        // rounded-md is 6px, fixed by the tags frame in Figma. Not a prop:
+        // every chip is the same shape.
+        'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-md',
         VARIANT_UTILITIES[variant],
         `ds-chip--${variant}`,
         {

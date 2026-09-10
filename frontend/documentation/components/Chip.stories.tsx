@@ -11,7 +11,7 @@ const meta: Meta<typeof Chip> = {
     docs: {
       description: {
         component:
-          'Canonical token-based chip primitive: a small labelled pill token. Layout via Bootstrap utilities, colour/radius via token utilities, padding/sizes/border/truncation in SCSS. Leading/trailing icons go in as children. `variant` covers neutral, accent, the five status colours and `solid`; `pill` gives the fully rounded ends that status and count badges use, and `ChipDot` adds the leading dot in `currentColor`. Selection lives in ToggleChip. The legacy `.chip` (old SCSS vars + manual dark-mode block, ~35×) migrates onto this under #6606.',
+          'Canonical token-based chip primitive: a small labelled pill token. Layout via Bootstrap utilities, colour/radius via token utilities, padding/sizes/border/truncation in SCSS. Leading/trailing icons go in as children. `variant` covers neutral, accent, the five status colours and `solid`; `ChipDot` adds the leading dot in `currentColor`. Radius is a fixed 6px from the tags frame, so there is no shape prop. Selection lives in ToggleChip. The legacy `.chip` (old SCSS vars + manual dark-mode block, ~35×) migrates onto this under #6606.',
       },
     },
     layout: 'centered',
@@ -45,23 +45,23 @@ export const Sizes: Story = {
 export const StatusVariants: Story = {
   render: () => (
     <div className='d-flex align-items-center gap-2'>
-      <Chip variant='info' size='sm' pill>
+      <Chip variant='info' size='sm'>
         <ChipDot />
         Draft
       </Chip>
-      <Chip variant='success' size='sm' pill>
+      <Chip variant='success' size='sm'>
         <ChipDot />
         Running
       </Chip>
-      <Chip variant='warning' size='sm' pill>
+      <Chip variant='warning' size='sm'>
         <ChipDot />
         Paused
       </Chip>
-      <Chip variant='danger' size='sm' pill>
+      <Chip variant='danger' size='sm'>
         <ChipDot />
         Failed
       </Chip>
-      <Chip variant='muted' size='sm' pill>
+      <Chip variant='muted' size='sm'>
         <ChipDot />
         Completed
       </Chip>
@@ -72,13 +72,13 @@ export const StatusVariants: Story = {
 export const Counts: Story = {
   render: () => (
     <div className='d-flex align-items-center gap-2'>
-      <Chip variant='accent' size='xs' pill>
+      <Chip variant='accent' size='xs'>
         5
       </Chip>
-      <Chip variant='neutral' size='xs' pill>
+      <Chip variant='neutral' size='xs'>
         0
       </Chip>
-      <Chip variant='neutral' size='xs' pill>
+      <Chip variant='neutral' size='xs'>
         128
       </Chip>
     </div>
