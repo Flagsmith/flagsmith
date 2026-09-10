@@ -109,6 +109,22 @@ You can try our hosted version for free at [app.flagsmith.com/signup](https://ap
 * [Rust](https://github.com/Flagsmith/flagsmith-rust-client)
 * [Elixir](https://github.com/Flagsmith/flagsmith-elixir-client)
 
+### Using OpenFeature
+ 
+Prefer the vendor-neutral route? You can use Flagsmith through [OpenFeature](https://openfeature.dev/) with providers for the following languages:
+ 
+* [Go](https://github.com/open-feature/go-sdk-contrib/tree/main/providers/flagsmith)
+* [Java](https://github.com/open-feature/java-sdk-contrib/tree/main/providers/flagsmith)
+* [JavaScript (client-side)](https://github.com/open-feature/js-sdk-contrib/tree/main/libs/providers/flagsmith-client)
+* [JavaScript (server-side)](https://github.com/open-feature/js-sdk-contrib/tree/main/libs/providers/flagsmith)
+* [Kotlin](https://github.com/Flagsmith/flagsmith-openfeature-provider-kotlin)
+* [.NET](https://github.com/open-feature/dotnet-sdk-contrib/tree/main/src/OpenFeature.Contrib.Providers.Flagsmith)
+* [Python](https://github.com/Flagsmith/flagsmith-openfeature-provider-python)
+* [Ruby](https://github.com/open-feature/ruby-sdk-contrib/tree/main/providers/openfeature-flagsmith-provider)
+* [Rust](https://github.com/open-feature/rust-sdk-contrib/tree/main/crates/flagsmith)
+
+Check out the [OpenFeature docs](https://docs.flagsmith.com/integrating-with-flagsmith/openfeature) for setup.
+
 ## Open Source Philosophy
 
 The majority of our platform is open source under the [BSD-3-Clause license](https://github.com/Flagsmith/flagsmith?tab=BSD-3-Clause-1-ov-file#readme). A small number of repositories are under the MIT license.
