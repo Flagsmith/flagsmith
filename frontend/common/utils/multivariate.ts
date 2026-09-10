@@ -96,13 +96,17 @@ type ComparableVariation = {
   default_percentage_allocation?: number | null
 }
 
-const VALUE_FIELDS = [
+// Shared by every environment, so a change request cannot carry them.
+export const VARIATION_VALUE_FIELDS = [
   'key',
   'type',
   'string_value',
   'integer_value',
   'boolean_value',
 ] as const
+
+// Per environment, so it can.
+export const VARIATION_WEIGHT_FIELD = 'default_percentage_allocation' as const
 
 const same = (a: unknown, b: unknown): boolean => (a ?? null) === (b ?? null)
 
@@ -136,7 +140,11 @@ export const diffVariations = ({
     if (!before) {
       continue
     }
-    if (VALUE_FIELDS.some((field) => !same(variation[field], before[field]))) {
+    if (
+      VARIATION_VALUE_FIELDS.some(
+        (field) => !same(variation[field], before[field]),
+      )
+    ) {
       values = true
     }
     if (

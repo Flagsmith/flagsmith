@@ -24,6 +24,8 @@ import {
   hasUnmatchedIdentityOverride,
   LatchedOverrideValue,
   resolveUnmatchedOverride,
+  VARIATION_VALUE_FIELDS,
+  VARIATION_WEIGHT_FIELD,
 } from 'common/utils/multivariate'
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
@@ -207,14 +209,11 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   const canCompareValue =
     isEdit && !!environmentId && !identity && !hasVariations
 
-  // Fields the user can change on a variant from this tab.
+  // Fields the user can change on a variant from this tab. Unlike a change
+  // request, the unsaved marker counts a weight edit too.
   const variantFields: (keyof MultivariateOption)[] = [
-    'key',
-    'type',
-    'string_value',
-    'integer_value',
-    'boolean_value',
-    'default_percentage_allocation',
+    ...VARIATION_VALUE_FIELDS,
+    VARIATION_WEIGHT_FIELD,
   ]
   const unsavedVariations = multivariate_options.map((option) => {
     if (!originalMultivariateOptions) {
