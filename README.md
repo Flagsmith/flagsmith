@@ -115,7 +115,7 @@ The majority of our platform is open source under the [BSD-3-Clause license](htt
 
 We built Flagsmith as the open-source feature flag tool we needed but couldn't find on GitHub. Our core functionality stays open, always. Read our [open letter to developers](https://www.flagsmith.com/about-us).
 
-## Open Source vs. Paid
+## Open Source vs Paid
 
 As our core functionality is open, you can use our open-source feature flag and remote config management platform no matter what. Enterprise-level governance and management features are available with a valid Flagsmith Enterprise license.
 
