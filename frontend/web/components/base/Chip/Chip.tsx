@@ -80,7 +80,8 @@ const Chip = ({
       ref={ref}
       className={classNames(
         'ds-chip d-inline-flex align-items-center align-middle gap-1',
-        pill ? 'rounded-full' : 'rounded-sm',
+        // 6px per the tags frame in Figma, which is the source of truth.
+        pill ? 'rounded-full' : 'rounded-md',
         VARIANT_UTILITIES[variant],
         `ds-chip--${variant}`,
         {
