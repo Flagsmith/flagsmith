@@ -27856,6 +27856,18 @@ components:
         has_active_billing_periods:
           type: boolean
           readOnly: true
+        current_billing_period:
+          type:
+            - object
+            - 'null'
+          properties:
+            starts_at:
+              type: string
+              format: date-time
+            ends_at:
+              type: string
+              format: date-time
+          readOnly: true
         deleted_at:
           type:
             - string
