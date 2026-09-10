@@ -5818,10 +5818,6 @@
             "type": "boolean",
             "readOnly": true
           },
-          "overage_charges_enabled": {
-            "type": "boolean",
-            "readOnly": true
-          },
           "restrict_project_create_to_admin": {
             "type": "boolean"
           },
