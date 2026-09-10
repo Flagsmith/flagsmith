@@ -1,22 +1,8 @@
 from dataclasses import dataclass
-from datetime import timedelta
 
 from integrations.flagsmith.client import get_openfeature_client
 from organisations.models import Organisation
-from organisations.subscriptions.constants import (
-    FREE_PLAN_ID,
-    SubscriptionPlanFamily,
-)
-
-# Mirrors charge_for_api_call_count_overages, which only bills terms roughly a
-# month long, so an annual subscription is never charged for an overage.
-MONTHLY_TERM_MIN = timedelta(days=25)
-MONTHLY_TERM_MAX = timedelta(days=35)
-
-CHARGEABLE_PLAN_FAMILIES = (
-    SubscriptionPlanFamily.START_UP,
-    SubscriptionPlanFamily.SCALE_UP,
-)
+from organisations.subscriptions.constants import FREE_PLAN_ID
 
 
 @dataclass(frozen=True)
@@ -62,37 +48,4 @@ def get_api_limit_restrictions(organisation: Organisation) -> APILimitRestrictio
             default_value=False,
             evaluation_context=evaluation_context,
         ),
-    )
-
-
-def is_overage_charging_enabled(organisation: Organisation) -> bool:
-    """
-    Whether going over the API limit can put a charge on this organisation's
-    next invoice.
-    """
-    if not hasattr(organisation, "subscription"):
-        return False
-
-    subscription = organisation.subscription
-    if subscription.subscription_plan_family not in CHARGEABLE_PLAN_FAMILIES:
-        return False
-    if subscription.cancellation_date is not None:
-        return False
-    if not organisation.has_subscription_information_cache():
-        return False
-
-    cache = organisation.subscription_information_cache
-    starts_at = cache.current_billing_term_starts_at
-    ends_at = cache.current_billing_term_ends_at
-    if starts_at is None or ends_at is None:
-        return False
-    if not cache.has_active_billing_periods():
-        return False
-    if not MONTHLY_TERM_MIN <= ends_at - starts_at <= MONTHLY_TERM_MAX:
-        return False
-
-    return get_openfeature_client().get_boolean_value(
-        "api_usage_overage_charges",
-        default_value=False,
-        evaluation_context=organisation.openfeature_evaluation_context,
     )
