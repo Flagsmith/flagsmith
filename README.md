@@ -68,6 +68,8 @@ flagsmith.init({
 });
 ```
 
+As this example runs in the browser, you should use your client-side environment key. Server-side keys must stay secret and never appear in browser code.
+
 Follow the [quick start guide](https://docs.flagsmith.com/getting-started/quick-start) for the full walkthrough, or pick your language from our [SDK docs](https://docs.flagsmith.com/integrating-with-flagsmith/sdks/) to see the same thing in Python, Java, Go, .NET, and more.
 
 ![Flagsmith Screenshot](static-files/screenshot.png)
