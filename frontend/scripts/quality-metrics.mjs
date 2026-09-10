@@ -140,17 +140,17 @@ const lines = (out) => out.split('\n').filter(Boolean)
 const count = (metric, ref) => {
   if (metric.exts) {
     // `ls-tree` only prefix-matches, so list the roots and filter here.
-    const suffixes = metric.exts.map((glob) => glob.replace('*', ''))
+    const suffixes = metric.exts.map((glob) => glob.replaceAll('*', ''))
     return lines(
       git(['ls-tree', '-r', '--name-only', ref, '--', ...SRC]),
     ).filter((path) => suffixes.some((suffix) => path.endsWith(suffix))).length
   }
   const flags = ['grep', metric.fixed ? '-F' : '-E', '--no-color']
-  flags.push(metric.mode === 'files' ? '-l' : '-c')
-  const out = lines(git([...flags, metric.pattern, ref, '--', ...metric.paths]))
-  if (metric.mode === 'files') return out.length
-  // `-c` gives `<ref>:<path>:<n>`; the count is the last field.
-  return out.reduce((sum, line) => sum + Number(line.split(':').pop()), 0)
+  // `-o` prints one line per match, where `-c` would print one per matching
+  // line and undercount two hex colours declared on the same line.
+  flags.push(metric.mode === 'files' ? '-l' : '-o')
+  return lines(git([...flags, metric.pattern, ref, '--', ...metric.paths]))
+    .length
 }
 
 const typecheckErrors = () => {
@@ -162,9 +162,13 @@ const typecheckErrors = () => {
     })
     return 0
   } catch (error) {
-    return lines(String(error.stdout ?? '')).filter((line) =>
+    const errors = lines(String(error.stdout ?? '')).filter((line) =>
       line.includes('error TS'),
     ).length
+    // No diagnostics means tsc itself failed (bad config, out of memory).
+    // Returning 0 would read as every error having been fixed.
+    if (errors === 0) throw error
+    return errors
   }
 }
 

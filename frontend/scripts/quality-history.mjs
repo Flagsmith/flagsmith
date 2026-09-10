@@ -9,14 +9,34 @@
 import { execFileSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 
-// Quarter starts, from the first quarter we want to report on.
-const QUARTER_STARTS = [
-  '2025-10-01',
-  '2026-01-01',
-  '2026-04-01',
-  '2026-07-01',
-  '2026-10-01',
-]
+// The first quarter to report on; the rest are derived up to the quarter we
+// are in, so the list cannot go stale and mislabel HEAD as a past quarter.
+const FIRST_QUARTER_START = '2025-10-01'
+
+// Quarters are counted as a single index (year * 4 + quarter) so the wrap from
+// Q4 to Q1 needs no special case.
+const quarterIndex = (year, month) => year * 4 + Math.floor((month - 1) / 3)
+
+const startOfQuarter = (index) =>
+  `${Math.floor(index / 4)}-${String((index % 4) * 3 + 1).padStart(2, '0')}-01`
+
+const quarterStarts = (from) => {
+  const [fromYear, fromMonth] = from.split('-').map(Number)
+  const now = new Date()
+  const last = quarterIndex(now.getUTCFullYear(), now.getUTCMonth() + 1)
+  const starts = []
+  for (let i = quarterIndex(fromYear, fromMonth); i <= last; i += 1) {
+    starts.push(startOfQuarter(i))
+  }
+  return starts
+}
+
+const nextQuarterStart = (start) => {
+  const [year, month] = start.split('-').map(Number)
+  return startOfQuarter(quarterIndex(year, month) + 1)
+}
+
+const QUARTER_STARTS = quarterStarts(FIRST_QUARTER_START)
 
 const root = execFileSync('git', ['rev-parse', '--show-toplevel'], {
   encoding: 'utf8',
@@ -34,8 +54,8 @@ const label = (start) => {
 // The quarter in progress is reported at HEAD instead.
 const snapshots = []
 for (const [i, start] of QUARTER_STARTS.entries()) {
-  const next = QUARTER_STARTS[i + 1]
-  const inProgress = !next || new Date(next) > new Date()
+  const next = QUARTER_STARTS[i + 1] ?? nextQuarterStart(start)
+  const inProgress = new Date(`${next}T00:00:00Z`) > new Date()
   const sha = inProgress
     ? git(['rev-parse', 'HEAD'])
     : git(['rev-list', '-1', `--before=${next}`, 'HEAD'])
