@@ -448,8 +448,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.is_valid(raise_exception=True)
         self._validate_owner_removal(
             feature,
-            owners_to_remove=0,
-            group_owners_to_remove=len(serializer.validated_data["group_ids"]),
+            owner_ids=set(),
+            group_owner_ids=set(serializer.validated_data["group_ids"]),
         )
         serializer.remove_group_owners(feature)
         response = Response(self.get_serializer(instance=feature).data)
@@ -486,8 +486,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         feature = self.get_object()
         self._validate_owner_removal(
             feature,
-            owners_to_remove=len(serializer.validated_data["user_ids"]),
-            group_owners_to_remove=0,
+            owner_ids=set(serializer.validated_data["user_ids"]),
+            group_owner_ids=set(),
         )
         serializer.remove_users(feature)
 
@@ -496,18 +496,22 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def _validate_owner_removal(
         self,
         feature: Feature,
-        owners_to_remove: int,
-        group_owners_to_remove: int,
+        owner_ids: set[int],
+        group_owner_ids: set[int],
     ) -> None:
         if not feature.project.enforce_feature_owners:
             return
-        remaining = (
-            feature.owners.count()
-            - owners_to_remove
-            + feature.group_owners.count()
-            - group_owners_to_remove
-        )
-        if remaining < 1:
+
+        existing_owners = feature.owners.all()
+        existing_group_owners = feature.group_owners.all()
+
+        existing_owner_ids = {owner.id for owner in existing_owners}
+        existing_group_owner_ids = {group.id for group in existing_group_owners}
+
+        if not (
+            (existing_owner_ids - owner_ids)
+            or (existing_group_owner_ids - group_owner_ids)
+        ):
             raise serializers.ValidationError(
                 "This project requires at least one owner or group owner per feature."
             )
