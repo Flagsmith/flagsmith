@@ -43,6 +43,36 @@ def test_map_flux_tables_to_feature_evaluation_data__single_record__returns_expe
     ]
 
 
+def test_map_flux_tables_to_feature_evaluation_data__null_value__returns_zero_count() -> (
+    None
+):
+    # Given
+    flux_table = FluxTable()
+    flux_table.records.append(
+        FluxRecord(
+            flux_table,
+            values={
+                "_time": datetime.fromisoformat("2023-10-01T00:00:00Z"),
+                "_value": None,
+                "feature_name": "feature_1",
+                "client_application_name": "test-app",
+            },
+        )
+    )
+
+    # When
+    result = map_flux_tables_to_feature_evaluation_data(flux_tables=[flux_table])
+
+    # Then
+    assert result == [
+        FeatureEvaluationData(
+            day=date(2023, 10, 1),
+            count=0,
+            labels={"client_application_name": "test-app"},
+        )
+    ]
+
+
 def test_map_flux_tables_to_usage_data__multiple_resources__returns_aggregated_data() -> (
     None
 ):
@@ -67,6 +97,18 @@ def test_map_flux_tables_to_usage_data__multiple_resources__returns_aggregated_d
                 "_time": datetime.fromisoformat("2023-10-01T00:00:00Z"),
                 "_value": 10,
                 "resource": "identities",
+                "client_application_name": "test-app",
+                "unrelated": "value",
+            },
+        ),
+    )
+    flux_table.records.append(
+        FluxRecord(
+            flux_table,
+            values={
+                "_time": datetime.fromisoformat("2023-10-01T00:00:00Z"),
+                "_value": None,
+                "resource": "traits",
                 "client_application_name": "test-app",
                 "unrelated": "value",
             },
