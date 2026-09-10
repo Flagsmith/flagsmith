@@ -22,13 +22,8 @@ NO_RESTRICTIONS = APILimitRestrictions(
 
 
 def get_api_limit_restrictions(organisation: Organisation) -> APILimitRestrictions:
-    """
-    Return the restrictions that apply to an organisation which stays over its
-    API limit. Both are off for an organisation that is never restricted.
-    """
-    # Matches the queryset in restrict_use_due_to_api_limit_grace_period_over,
-    # which filters on the plan id rather than the plan family, so an
-    # organisation with no plan set is left alone.
+    """Restrictions that apply once an organisation stays over its API limit."""
+    # Plan id, not plan family, to match restrict_use_due_to_api_limit_grace_period_over.
     if not hasattr(organisation, "subscription"):
         return NO_RESTRICTIONS
     if organisation.subscription.plan != FREE_PLAN_ID:
