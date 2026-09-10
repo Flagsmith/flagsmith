@@ -59,6 +59,8 @@ type FeatureValueTabProps = {
   isSaving?: boolean
   existingChangeRequest?: boolean
   onSaveFeatureValue?: (schedule?: boolean) => void
+  hasVariationChanges?: boolean
+  onSaveVariationValues?: () => void
   // The persisted variants, used to tag edited ones as not saved.
   originalMultivariateOptions?: MultivariateOption[]
   onEnvironmentFlagChange: (changes: Partial<FeatureState>) => void
@@ -85,6 +87,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   existingChangeRequest,
   featureState,
   freeze,
+  hasVariationChanges,
   identity,
   is4Eyes,
   isSaving,
@@ -94,6 +97,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   onProjectFlagChange,
   onRemoveMultivariateOption,
   onSaveFeatureValue,
+  onSaveVariationValues,
   originalMultivariateOptions,
   projectFlag,
   projectId,
@@ -567,7 +571,9 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               featureName={projectFlag.name}
               isInvalid={!!invalid}
               existingChangeRequest={!!existingChangeRequest}
+              hasVariationChanges={hasVariationChanges}
               onSaveFeatureValue={onSaveFeatureValue}
+              onSaveVariationValues={onSaveVariationValues}
             />
           </>
         )}

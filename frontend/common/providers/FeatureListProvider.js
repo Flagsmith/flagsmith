@@ -199,51 +199,53 @@ const FeatureListProvider = class extends React.Component {
     changeRequest,
     commit,
   ) => {
+    // Variations belong to the feature, so a request scoped to one environment
+    // cannot carry them. saveVariationValues is where they change. Take the ids
+    // from what is stored and the weights from what the user edited.
+    const weightedVariations = (projectFlag.multivariate_options || []).map(
+      (option) => {
+        const edited = flag.multivariate_options?.find(
+          (v) => v.id === option.id,
+        )
+        return {
+          ...option,
+          default_percentage_allocation:
+            edited?.default_percentage_allocation ??
+            option.default_percentage_allocation,
+        }
+      },
+    )
+
+    AppActions.editEnvironmentFlagChangeRequest(
+      projectId,
+      environmentId,
+      flag,
+      projectFlag,
+      {
+        ...environmentFlag,
+        multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
+          weightedVariations,
+          environmentFlag.multivariate_feature_state_values,
+        ),
+      },
+      segmentOverrides,
+      changeRequest,
+      commit,
+    )
+  }
+
+  // The deliberate variation save: applies values, labels, additions and
+  // removals to the feature, and so to every environment at once.
+  saveVariationValues = (projectId, flag, projectFlag, onComplete) => {
     AppActions.editFeatureMv(
       projectId,
-      Object.assign({}, projectFlag, flag, {
-        multivariate_options:
-          flag.multivariate_options &&
-          flag.multivariate_options.map((v, i) => {
-            const matchingProjectVariate =
-              (projectFlag.multivariate_options &&
-                projectFlag.multivariate_options.find((p) => p.id === v.id)) ||
-              v
-            return {
-              ...v,
-              default_percentage_allocation:
-                matchingProjectVariate.default_percentage_allocation,
-              key: v.key || Utils.getDefaultVariantKey(i),
-            }
-          }),
-        // Removing a variation re-buckets every identity allocated to it, in
-        // every environment, so it must not happen before anyone has approved.
-        neverDeleteVariations: true,
+      Object.assign({}, projectFlag, {
+        multivariate_options: flag.multivariate_options?.map((v, i) => ({
+          ...v,
+          key: v.key || Utils.getDefaultVariantKey(i),
+        })),
       }),
-      (newProjectFlag) => {
-        AppActions.editEnvironmentFlagChangeRequest(
-          projectId,
-          environmentId,
-          flag,
-          newProjectFlag,
-          {
-            ...environmentFlag,
-            multivariate_feature_state_values: Utils.mapMvOptionsToStateValues(
-              newProjectFlag.multivariate_options?.map((opt, i) => ({
-                ...opt,
-                default_percentage_allocation:
-                  flag.multivariate_options?.[i]
-                    ?.default_percentage_allocation ??
-                  opt.default_percentage_allocation,
-              })),
-              environmentFlag.multivariate_feature_state_values,
-            ),
-          },
-          segmentOverrides,
-          changeRequest,
-          commit,
-        )
-      },
+      onComplete,
     )
   }
 
@@ -259,6 +261,7 @@ const FeatureListProvider = class extends React.Component {
         editFeatureSettings: this.editFeatureSettings,
         editFeatureValue: this.editFeatureValue,
         environmentHasFlag: FeatureListStore.hasFlagInEnvironment,
+        saveVariationValues: this.saveVariationValues,
         toggleFlag: this.toggleFlag,
       },
     )

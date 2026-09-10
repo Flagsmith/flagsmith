@@ -511,16 +511,42 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           editFeatureSegments,
           editFeatureSettings,
           editFeatureValue,
+          saveVariationValues,
         }: any,
       ) => {
+        // Variations belong to the feature, so they get their own action rather
+        // than riding along with a request scoped to one environment.
+        const variationChanges = diffVariations({
+          edited: projectFlag.multivariate_options,
+          stored: props.projectFlag?.multivariate_options,
+        })
+        const hasVariationChanges =
+          variationChanges.values || variationChanges.added
+
+        const onSaveVariationValues = () =>
+          openConfirm({
+            body: 'Variation values belong to the feature, so this applies to every environment straight away and is not part of a change request.',
+            noText: 'Cancel',
+            onYes: () => {
+              mvBaselineRefreshRef.current = true
+              saveVariationValues(
+                projectId,
+                projectFlag,
+                props.projectFlag,
+                () => {
+                  FeatureListStore.isSaving = false
+                  FeatureListStore.trigger('saved', {})
+                  FeatureListStore.trigger('change')
+                },
+              )
+            },
+            title: 'Save variation values',
+            yesText: 'Save for all environments',
+          })
+
         const saveFeatureValue = saveFeatureWithValidation(
           (schedule?: boolean) => {
             if ((is4Eyes || schedule) && !identity) {
-              // Say this before the user fills in a request, not after applying it.
-              const variationChanges = diffVariations({
-                edited: projectFlag.multivariate_options,
-                stored: props.projectFlag?.multivariate_options,
-              })
               const approvable = hasApprovableChanges({
                 editedEnabled: environmentFlag.enabled,
                 editedValue: environmentFlag.feature_state_value,
@@ -530,20 +556,14 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                 weightsChanged: variationChanges.weights,
               })
 
-              const what = schedule ? 'a scheduled change' : 'a change request'
-              if (variationChanges.values || variationChanges.added) {
-                // Variations belong to the feature, so these apply now whatever
-                // happens next. Say so rather than letting the request imply they
-                // were approved.
-                toast(
-                  `Variation changes apply to every environment immediately and are not part of ${what}. Only the weights and the environment value are.`,
-                  'warning',
-                )
-              }
-
               if (!approvable) {
+                const what = schedule
+                  ? 'a scheduled change'
+                  : 'a change request'
                 toast(
-                  `Nothing else has changed, so there is nothing to put in ${what}.`,
+                  hasVariationChanges
+                    ? `Variation changes are saved separately, and nothing else has changed, so there is nothing to put in ${what}.`
+                    : `Nothing has changed, so there is nothing to put in ${what}.`,
                   'danger',
                 )
                 return
@@ -719,6 +739,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       isVersioned={isVersioned}
                       isSaving={isSaving}
                       existingChangeRequest={!!existingChangeRequest}
+                      hasVariationChanges={hasVariationChanges}
+                      onSaveVariationValues={onSaveVariationValues}
                       originalMultivariateOptions={originalMultivariateOptions}
                       onSaveFeatureValue={saveFeatureValue}
                       onEnvironmentFlagChange={(changes: any) => {

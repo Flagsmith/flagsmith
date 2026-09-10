@@ -22,6 +22,10 @@ interface FlagValueFooterProps {
   isInvalid: boolean
   existingChangeRequest: boolean
   onSaveFeatureValue: (schedule?: boolean) => void
+  // Variation values belong to the feature, so they cannot travel in a change
+  // request. When any are edited they get their own action instead.
+  hasVariationChanges?: boolean
+  onSaveVariationValues?: () => void
 }
 
 const FlagValueFooter = ({
@@ -29,11 +33,13 @@ const FlagValueFooter = ({
   environmentName,
   existingChangeRequest,
   featureName,
+  hasVariationChanges,
   is4Eyes,
   isInvalid,
   isSaving,
   isVersioned,
   onSaveFeatureValue,
+  onSaveVariationValues,
   projectFlag,
   projectId,
 }: FlagValueFooterProps) => {
@@ -148,6 +154,19 @@ const FlagValueFooter = ({
                             ? 'Update Change Request'
                             : 'Schedule Update'
                         })()}
+                      </Button>
+                    )}
+                    {hasVariationChanges && onSaveVariationValues && (
+                      <Button
+                        theme='secondary'
+                        onClick={onSaveVariationValues}
+                        className='mr-2'
+                        type='button'
+                        data-test='save-variation-values'
+                        id='save-variation-values-btn'
+                        disabled={isSaving || isInvalid || !savePermission}
+                      >
+                        {isSaving ? 'Saving' : 'Save variation values'}
                       </Button>
                     )}
                     <ButtonDropdown
