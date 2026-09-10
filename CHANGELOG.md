@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.271.1](https://github.com/Flagsmith/flagsmith/compare/v2.271.0...v2.271.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **experiments:** audience card spacing and dark theme borders ([#8494](https://github.com/Flagsmith/flagsmith/issues/8494)) ([907f84e](https://github.com/Flagsmith/flagsmith/commit/907f84eae79ca87b33e9da36bff156752aadcb4e))
+* Handle null values from Influx ([#8497](https://github.com/Flagsmith/flagsmith/issues/8497)) ([ddb8ea8](https://github.com/Flagsmith/flagsmith/commit/ddb8ea8938aef6e2b1f364c445eca535e7dec10c))
+* **OAuth:** MCP tool calls return 401 after django-oauth-toolkit 3.4 upgrade ([#8502](https://github.com/Flagsmith/flagsmith/issues/8502)) ([ffbc3ec](https://github.com/Flagsmith/flagsmith/commit/ffbc3ec33b6ee08dff0b3ddd26edfbeb6696b272))
+
+
+### Docs
+
+* **OpenFeature:** update references to OpenFeature ecosystem ([#8495](https://github.com/Flagsmith/flagsmith/issues/8495)) ([23bfcdb](https://github.com/Flagsmith/flagsmith/commit/23bfcdba15763e25c5f22ef0ec660ff2b2f92158))
+
 ## [2.271.0](https://github.com/Flagsmith/flagsmith/compare/v2.270.0...v2.271.0) (2026-09-09)
 
 
