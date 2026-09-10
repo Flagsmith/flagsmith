@@ -8,7 +8,6 @@ import {
 } from 'common/services/useEnvironment'
 import { projectFlagService } from 'common/services/useProjectFlag'
 import { tagService } from 'common/services/useTag'
-import { Req } from 'common/types/requests'
 import {
   Environment,
   PagedResponse,
@@ -18,6 +17,7 @@ import {
 } from 'common/types/responses'
 import { SmartDefaults } from './useSmartDefaults'
 import { createOrganisationViaAccountStore } from './createOrganisationViaAccountStore'
+import { createOnboardingFlag } from './createOnboardingFlag'
 import API from 'project/api'
 import Constants from 'common/constants'
 
@@ -163,18 +163,10 @@ async function ensureFlag(
     return existing
   }
   const isFirstFeature = !flags?.results?.length
-  const created = await store
-    .dispatch(
-      projectFlagService.endpoints.createProjectFlag.initiate({
-        body: {
-          name: FLAG_NAME,
-          project: project.id,
-          type: 'STANDARD',
-        } as Req['createProjectFlag']['body'],
-        project_id: project.id,
-      }),
-    )
-    .unwrap()
+  const created = await createOnboardingFlag(store, {
+    name: FLAG_NAME,
+    projectId: project.id,
+  })
   if (isFirstFeature) {
     API.trackEvent(Constants.events.CREATE_FIRST_FEATURE)
   }
