@@ -995,6 +995,7 @@ OAUTH2_PROVIDER = {
         "authorization_code",
         "refresh_token",
     ],
+    "RESOURCE_SERVER_TOKEN_RESOURCE_VALIDATOR": None,
 }
 
 # Github OAuth credentials
