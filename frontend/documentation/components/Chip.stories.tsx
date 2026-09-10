@@ -11,7 +11,7 @@ const meta: Meta<typeof Chip> = {
     docs: {
       description: {
         component:
-          'Canonical token-based chip primitive: a small labelled pill token. Layout via Bootstrap utilities, colour/radius via token utilities, padding/sizes/border/truncation in SCSS. Leading/trailing icons go in as children. `variant` covers neutral, accent and the four status colours; `pill` gives the fully rounded ends that status and count badges use, and `ChipDot` adds the leading dot in `currentColor`. Selection lives in ToggleChip. The legacy `.chip` (old SCSS vars + manual dark-mode block, ~35×) migrates onto this under #6606.',
+          'Canonical token-based chip primitive: a small labelled pill token. Layout via Bootstrap utilities, colour/radius via token utilities, padding/sizes/border/truncation in SCSS. Leading/trailing icons go in as children. `variant` covers neutral, accent, the five status colours and `solid`; `pill` gives the fully rounded ends that status and count badges use, and `ChipDot` adds the leading dot in `currentColor`. Selection lives in ToggleChip. The legacy `.chip` (old SCSS vars + manual dark-mode block, ~35×) migrates onto this under #6606.',
       },
     },
     layout: 'centered',
@@ -26,6 +26,10 @@ export const Neutral: Story = {}
 
 export const Accent: Story = {
   args: { children: '"hello"', variant: 'accent' },
+}
+
+export const Solid: Story = {
+  args: { children: 'Enterprise', variant: 'solid' },
 }
 
 export const Sizes: Story = {
@@ -52,6 +56,10 @@ export const StatusVariants: Story = {
       <Chip variant='warning' size='sm' pill>
         <ChipDot />
         Paused
+      </Chip>
+      <Chip variant='danger' size='sm' pill>
+        <ChipDot />
+        Failed
       </Chip>
       <Chip variant='muted' size='sm' pill>
         <ChipDot />

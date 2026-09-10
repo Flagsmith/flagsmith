@@ -18,8 +18,10 @@
   // height as a bordered one beside it.
   &--success,
   &--warning,
+  &--danger,
   &--info,
-  &--muted {
+  &--muted,
+  &--solid {
     border-color: transparent;
   }
 
