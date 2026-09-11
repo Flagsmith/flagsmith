@@ -4,6 +4,7 @@ import Utils, { planNames } from 'common/utils/utils'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import OverLimitBanner from './components/OverLimitBanner'
+import BillingStrip from './components/BillingStrip'
 import SectionHeading from './components/SectionHeading'
 import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
 import UsageFilters from './components/UsageFilters'
@@ -137,6 +138,8 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       }}
     >
       <SectionHeading {...planSectionCopy(basis, limit)} />
+
+      <BillingStrip period={subscription?.current_billing_period} />
 
       <UsageMeter total={allowanceTotal} limit={limit} note={meterNote} />
 
