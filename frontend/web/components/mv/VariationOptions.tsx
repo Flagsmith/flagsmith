@@ -4,7 +4,10 @@ import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
 import Utils from 'common/utils/utils'
 import { FlagsmithValue, MultivariateOption } from 'common/types/responses'
-import { UnmatchedOverride } from 'common/utils/multivariate'
+import {
+  DivergedVariantOverride,
+  UnmatchedOverride,
+} from 'common/utils/multivariate'
 
 type VariationOverride = {
   id?: number
@@ -19,6 +22,7 @@ interface VariationOptionsProps {
   controlPercentage: number
   controlValue: FlagsmithValue
   disabled: boolean
+  divergedOverride?: DivergedVariantOverride
   multivariateOptions: MultivariateOption[]
   readOnly?: boolean
   removeVariation: (i: number) => void
@@ -56,6 +60,7 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
   controlPercentage,
   controlValue,
   disabled,
+  divergedOverride,
   multivariateOptions,
   readOnly,
   removeVariation,
@@ -83,6 +88,19 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
           errorMessageClass='mt-2'
           error='Your variation percentage splits total to over 100%'
         />
+      )}
+      {/* No radio, unlike the row below: selecting it would save the stale
+          value as a literal override. */}
+      {select && !!divergedOverride && (
+        <div className='panel panel--flat panel-without-heading mb-2'>
+          <div className='panel-content'>
+            <ValueRowLabel>Currently served</ValueRowLabel>
+            <ValueEditor
+              disabled
+              value={Utils.getTypedValue(divergedOverride.servedValue)}
+            />
+          </div>
+        </div>
       )}
       {select && !!unmatchedOverride && (
         <div className='panel panel--flat panel-without-heading mb-2'>

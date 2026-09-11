@@ -21,6 +21,8 @@ import {
   ProjectFlag,
 } from 'common/types/responses'
 import {
+  getDefaultVariantKey,
+  getDivergedVariantOverride,
   hasUnmatchedIdentityOverride,
   LatchedOverrideValue,
   resolveUnmatchedOverride,
@@ -310,6 +312,26 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   })
   latchedOverrideValue.current = unmatchedOverride?.value
 
+  // Only edge-featurestates returns identity_uuid, and only it returns the value
+  // the identity is served. Core returns the stored value, which here is the
+  // control value, so comparing that would report every override as diverged.
+  const isEdgeIdentity = !!featureState.identity_uuid
+
+  // An override keeps its own copy of the variation's value, so editing the
+  // variation leaves the identity on the old one.
+  const divergedVariantOverride =
+    identity && hasVariations && isEdgeIdentity
+      ? getDivergedVariantOverride({
+          overrideValue: featureState.feature_state_value,
+          variants: multivariate_options.map((option, index) => ({
+            id: option.id,
+            key: option.key || getDefaultVariantKey(index),
+            value: Utils.featureStateToValue(option),
+          })),
+          variationOverrides: identityVariations,
+        })
+      : undefined
+
   if (compareOpen && canCompareValue && environmentId) {
     return (
       <div className={`${identity ? 'mx-3' : ''}`}>
@@ -443,10 +465,16 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
             {unmatchedOverrideSelected && (
               <WarningMessage warningMessage="This identity override contains a value that is not one of this flag's variations. We recommend changing it." />
             )}
+            {!!divergedVariantOverride && (
+              <WarningMessage
+                warningMessage={`This identity is served an out of date copy of variation '${divergedVariantOverride.key}', taken when the override was saved. Select the variation again to update it to the current value.`}
+              />
+            )}
             <VariationOptions
               canCreateFeature={false}
               disabled
               select
+              divergedOverride={divergedVariantOverride}
               unmatchedOverride={unmatchedOverride}
               controlValue={controlValue ?? null}
               controlPercentage={controlPercentage}
