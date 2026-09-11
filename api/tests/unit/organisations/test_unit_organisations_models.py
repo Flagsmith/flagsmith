@@ -1084,6 +1084,33 @@ def test_current_billing_period__within_term__returns_monthly_window(
     )
 
 
+# February clamps a 31st term start to the 28th. Counting the end from that
+# clamped date rather than the term start would close the window on 28 March.
+@pytest.mark.freeze_time("2026-03-01T00:00:00+00:00")
+def test_current_billing_period__term_starts_on_the_31st__ends_on_the_anniversary(
+    organisation: Organisation,
+) -> None:
+    # Given
+    cache = OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=datetime.fromisoformat(
+            "2026-01-31T00:00:00+00:00"
+        ),
+        current_billing_term_ends_at=datetime.fromisoformat(
+            "2027-01-31T00:00:00+00:00"
+        ),
+    )
+
+    # When
+    period = cache.current_billing_period()
+
+    # Then
+    assert period == (
+        datetime.fromisoformat("2026-02-28T00:00:00+00:00"),
+        datetime.fromisoformat("2026-03-31T00:00:00+00:00"),
+    )
+
+
 @pytest.mark.freeze_time("2026-09-10T12:00:00+00:00")
 @pytest.mark.parametrize(
     "term_starts_at, term_ends_at",

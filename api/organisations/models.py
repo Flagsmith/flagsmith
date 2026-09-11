@@ -633,10 +633,13 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
             return None
 
         elapsed = relativedelta(timezone.now(), starts_at)
-        period_starts_at = starts_at + relativedelta(
-            months=elapsed.years * 12 + elapsed.months
+        months = elapsed.years * 12 + elapsed.months
+        # Both ends count from the term start. Counting the second from the
+        # first loses the original day when a month is too short for it.
+        return (
+            starts_at + relativedelta(months=months),
+            starts_at + relativedelta(months=months + 1),
         )
-        return period_starts_at, period_starts_at + relativedelta(months=1)
 
 
 class OrganisationAPIUsageNotification(models.Model):
