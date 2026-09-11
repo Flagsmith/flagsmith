@@ -32,6 +32,7 @@ CURRENT_BILLING_PERIOD_SCHEMA = {
         "starts_at": {"type": "string", "format": "date-time"},
         "ends_at": {"type": "string", "format": "date-time"},
     },
+    "required": ["starts_at", "ends_at"],
 }
 
 
