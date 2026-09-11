@@ -1122,6 +1122,9 @@ def test_current_billing_period__term_starts_on_the_31st__ends_on_the_anniversar
         (None, "2026-10-01T00:00:00+00:00"),
         # Term ended, cache not caught up.
         ("2026-07-01T00:00:00+00:00", "2026-08-01T00:00:00+00:00"),
+        # The term's final instant. has_active_billing_periods admits it, but
+        # a window opened here would run past the end of the term.
+        ("2026-08-10T12:00:00+00:00", "2026-09-10T12:00:00+00:00"),
         # Term not started.
         ("2026-10-01T00:00:00+00:00", "2026-11-01T00:00:00+00:00"),
     ],
