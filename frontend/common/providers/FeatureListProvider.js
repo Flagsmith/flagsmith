@@ -1,6 +1,8 @@
 import React from 'react'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ProjectStore from 'common/stores/project-store'
+import { getStore } from 'common/store'
+import { projectFlagService } from 'common/services/useProjectFlag'
 
 const FeatureListProvider = class extends React.Component {
   static displayName = 'FeatureListProvider'
@@ -232,8 +234,13 @@ const FeatureListProvider = class extends React.Component {
     )
   }
 
-  // Applies to the feature, and so to every environment at once.
+  // Applies to the feature, and so to every environment at once. Unlike the
+  // other save paths this does not continue into an environment state save, so
+  // it owns both the saving flag and the cache invalidation that would
+  // otherwise happen there.
   saveVariationValues = (projectId, flag, projectFlag, onComplete) => {
+    FeatureListStore.isSaving = true
+    FeatureListStore.trigger('change')
     AppActions.editFeatureMv(
       projectId,
       Object.assign({}, projectFlag, {
@@ -242,7 +249,18 @@ const FeatureListProvider = class extends React.Component {
           key: v.key || Utils.getDefaultVariantKey(i),
         })),
       }),
-      onComplete,
+      (savedProjectFlag) => {
+        getStore().dispatch(
+          projectFlagService.util.invalidateTags([
+            'ProjectFlag',
+            'FeatureList',
+          ]),
+        )
+        FeatureListStore.isSaving = false
+        FeatureListStore.trigger('saved', {})
+        FeatureListStore.trigger('change')
+        onComplete && onComplete(savedProjectFlag)
+      },
     )
   }
 

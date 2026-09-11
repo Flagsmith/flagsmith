@@ -531,16 +531,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
             noText: 'Cancel',
             onYes: () => {
               mvBaselineRefreshRef.current = true
-              saveVariationValues(
-                projectId,
-                projectFlag,
-                props.projectFlag,
-                () => {
-                  FeatureListStore.isSaving = false
-                  FeatureListStore.trigger('saved', {})
-                  FeatureListStore.trigger('change')
-                },
-              )
+              saveVariationValues(projectId, projectFlag, props.projectFlag)
             },
             title: 'Save variation values',
             yesText: 'Save for all environments',
