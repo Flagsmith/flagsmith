@@ -22,6 +22,8 @@ interface FlagValueFooterProps {
   isInvalid: boolean
   existingChangeRequest: boolean
   onSaveFeatureValue: (schedule?: boolean) => void
+  hasVariationChanges?: boolean
+  onSaveVariationValues?: () => void
 }
 
 const FlagValueFooter = ({
@@ -29,11 +31,13 @@ const FlagValueFooter = ({
   environmentName,
   existingChangeRequest,
   featureName,
+  hasVariationChanges,
   is4Eyes,
   isInvalid,
   isSaving,
   isVersioned,
   onSaveFeatureValue,
+  onSaveVariationValues,
   projectFlag,
   projectId,
 }: FlagValueFooterProps) => {
@@ -150,6 +154,21 @@ const FlagValueFooter = ({
                         })()}
                       </Button>
                     )}
+                    {is4Eyes &&
+                      hasVariationChanges &&
+                      onSaveVariationValues && (
+                        <Button
+                          theme='secondary'
+                          onClick={onSaveVariationValues}
+                          className='mr-2'
+                          type='button'
+                          data-test='save-variation-values'
+                          id='save-variation-values-btn'
+                          disabled={isSaving || isInvalid || !savePermission}
+                        >
+                          {isSaving ? 'Saving' : 'Save variation values'}
+                        </Button>
+                      )}
                     <ButtonDropdown
                       onClick={() => onSaveFeatureValue()}
                       type='button'

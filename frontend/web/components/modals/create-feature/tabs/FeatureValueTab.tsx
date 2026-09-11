@@ -24,6 +24,8 @@ import {
   hasUnmatchedIdentityOverride,
   LatchedOverrideValue,
   resolveUnmatchedOverride,
+  VARIATION_VALUE_FIELDS,
+  VARIATION_WEIGHT_FIELD,
 } from 'common/utils/multivariate'
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
@@ -57,6 +59,8 @@ type FeatureValueTabProps = {
   isSaving?: boolean
   existingChangeRequest?: boolean
   onSaveFeatureValue?: (schedule?: boolean) => void
+  hasVariationChanges?: boolean
+  onSaveVariationValues?: () => void
   // The persisted variants, used to tag edited ones as not saved.
   originalMultivariateOptions?: MultivariateOption[]
   onEnvironmentFlagChange: (changes: Partial<FeatureState>) => void
@@ -83,6 +87,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   existingChangeRequest,
   featureState,
   freeze,
+  hasVariationChanges,
   identity,
   is4Eyes,
   isSaving,
@@ -92,6 +97,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   onProjectFlagChange,
   onRemoveMultivariateOption,
   onSaveFeatureValue,
+  onSaveVariationValues,
   originalMultivariateOptions,
   projectFlag,
   projectId,
@@ -207,14 +213,10 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   const canCompareValue =
     isEdit && !!environmentId && !identity && !hasVariations
 
-  // Fields the user can change on a variant from this tab.
+  // Unlike a change request, the unsaved marker counts a weight edit too.
   const variantFields: (keyof MultivariateOption)[] = [
-    'key',
-    'type',
-    'string_value',
-    'integer_value',
-    'boolean_value',
-    'default_percentage_allocation',
+    ...VARIATION_VALUE_FIELDS,
+    VARIATION_WEIGHT_FIELD,
   ]
   const unsavedVariations = multivariate_options.map((option) => {
     if (!originalMultivariateOptions) {
@@ -258,12 +260,14 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   )
 
   const variationsInfo = hasVariations && (
-    <p className='mb-4'>
+    // A div, not a p: InfoMessage renders a block, which closes a p early and
+    // drops the margin onto the empty paragraph left behind.
+    <div className='mb-4'>
       <InfoMessage collapseId={'variation-value'}>
         Changing a Variation Value will affect <strong>all environments</strong>
         , their weights are specific to this environment. Existing users will
         see the new variation value if it is changed. These values will only
-        apply when you identify via the SDK.
+        apply when you identify via the SDK.{' '}
         <a
           target='_blank'
           href='https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags'
@@ -273,7 +277,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         </a>
         .
       </InfoMessage>
-    </p>
+    </div>
   )
 
   const showValue = !(
@@ -568,7 +572,9 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               featureName={projectFlag.name}
               isInvalid={!!invalid}
               existingChangeRequest={!!existingChangeRequest}
+              hasVariationChanges={hasVariationChanges}
               onSaveFeatureValue={onSaveFeatureValue}
+              onSaveVariationValues={onSaveVariationValues}
             />
           </>
         )}
