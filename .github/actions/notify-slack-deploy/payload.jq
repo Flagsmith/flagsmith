@@ -1,6 +1,12 @@
 # Slack Block Kit payload for a deploy notification.
 # Run with jq -n and the --arg values listed in action.yml.
 
+# Slack only needs these three escaped, ampersand first so the entities the
+# other two produce are not re-encoded. Without it a commit subject reading
+# "<!channel>" would ping the channel, and "<url|text>" would render as a
+# disguised link.
+def mrkdwn: gsub("&"; "&amp;") | gsub("<"; "&lt;") | gsub(">"; "&gt;");
+
 ($environment | (.[0:1] | ascii_upcase) + .[1:]) as $env_name |
 
 # Only in_progress, success and cancelled need their own words. Everything
@@ -54,9 +60,9 @@ end) as $copy |
   # narrow columns and would wrap a real title badly.
   + (if $title == "" then []
      elif $pr_url == "" then
-       [{ type: "context", elements: [{ type: "mrkdwn", text: $title }] }]
+       [{ type: "context", elements: [{ type: "mrkdwn", text: ($title | mrkdwn) }] }]
      else
-       [{ type: "context", elements: [{ type: "mrkdwn", text: "<\($pr_url)|\($title)>" }] }]
+       [{ type: "context", elements: [{ type: "mrkdwn", text: "<\($pr_url)|\($title | mrkdwn)>" }] }]
      end)
   + [
     {
