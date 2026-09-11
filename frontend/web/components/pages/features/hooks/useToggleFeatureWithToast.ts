@@ -1,6 +1,5 @@
 import { useCallback } from 'react'
-import { useUpdateFeatureStateMutation } from 'common/services/useFeatureState'
-import { useCreateAndSetFeatureVersionMutation } from 'common/services/useFeatureVersion'
+import { useToggleFeatureMutation } from 'common/services/useFeatureState'
 import type {
   Environment,
   FeatureState,
@@ -16,9 +15,7 @@ type ToggleFeatureOptions = {
 
 /** Toggles a feature flag's enabled state with toast notifications. */
 export const useToggleFeatureWithToast = () => {
-  const [updateFeatureState, updateState] = useUpdateFeatureStateMutation()
-  const [createAndSetFeatureVersion, versionState] =
-    useCreateAndSetFeatureVersionMutation()
+  const [toggleFeature, { isLoading }] = useToggleFeatureMutation()
 
   const toggleWithToast = useCallback(
     async (
@@ -33,30 +30,11 @@ export const useToggleFeatureWithToast = () => {
         return
       }
       try {
-        if (environment.use_v2_feature_versioning) {
-          // Versioned environment: use versioning API
-          await createAndSetFeatureVersion({
-            environmentApiKey: environment.api_key,
-            environmentId: environment.id,
-            featureId: flag.id,
-            featureStates: [
-              {
-                ...environmentFlag,
-                enabled: !environmentFlag.enabled,
-              },
-            ],
-            projectId: flag.project,
-          }).unwrap()
-        } else {
-          // Non-versioned environment: use simple PUT
-          await updateFeatureState({
-            body: {
-              enabled: !environmentFlag.enabled,
-            },
-            environmentFlagId: environmentFlag.id,
-            environmentId: environment.api_key,
-          }).unwrap()
-        }
+        await toggleFeature({
+          environment,
+          environmentFlag,
+          projectFlag: flag,
+        }).unwrap()
 
         if (options?.successMessage) {
           toast(options.successMessage)
@@ -72,10 +50,8 @@ export const useToggleFeatureWithToast = () => {
         options?.onError?.(error)
       }
     },
-    [updateFeatureState, createAndSetFeatureVersion],
+    [toggleFeature],
   )
-
-  const isLoading = updateState.isLoading || versionState.isLoading
 
   return [toggleWithToast, { isLoading }] as const
 }
