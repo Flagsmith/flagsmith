@@ -79,7 +79,7 @@ const AuditLogItemPage: FC = () => {
         </div>
       ) : (
         <div>
-          <ErrorMessage>{error}</ErrorMessage>
+          <ErrorMessage error={error} />
           {!!data && (
             <>
               <Panel title={'Details'} className='no-pad mb-2'>

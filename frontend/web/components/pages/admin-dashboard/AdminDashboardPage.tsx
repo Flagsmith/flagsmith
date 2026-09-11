@@ -104,7 +104,7 @@ const AdminDashboardPage: FC = () => {
         </div>
       )}
 
-      <ErrorMessage>{error}</ErrorMessage>
+      <ErrorMessage error={error} />
 
       {data && (
         <>
