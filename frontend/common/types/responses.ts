@@ -517,6 +517,12 @@ export type AuditLogDetail = AuditLogItem & {
 }
 export type PaymentMethod = 'CHARGEBEE' | 'XERO' | 'AWS_MARKETPLACE'
 
+/** The monthly allowance window, null outside an active billing term. */
+export type CurrentBillingPeriod = {
+  starts_at: string
+  ends_at: string
+}
+
 export type Subscription = {
   id: number
   uuid: string
@@ -530,6 +536,7 @@ export type Subscription = {
   payment_method: PaymentMethod | null
   notes: string | null
   has_active_billing_periods: boolean
+  current_billing_period: CurrentBillingPeriod | null
 }
 
 export type OnboardingVariant = 'control' | 'single_page'

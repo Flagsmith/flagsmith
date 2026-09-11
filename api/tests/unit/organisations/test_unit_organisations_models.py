@@ -1024,3 +1024,158 @@ def test_organisation_openfeature_evaluation_context__targeting_key_set__uses_it
 
     # Then
     assert context.targeting_key == "a" * 32
+
+
+@pytest.mark.freeze_time("2026-09-10T12:00:00+00:00")
+@pytest.mark.parametrize(
+    "term_starts_at, term_ends_at, expected_starts_at, expected_ends_at",
+    [
+        # Monthly term.
+        (
+            "2026-09-01T00:00:00+00:00",
+            "2026-10-01T00:00:00+00:00",
+            "2026-09-01T00:00:00+00:00",
+            "2026-10-01T00:00:00+00:00",
+        ),
+        # Annual term, first year.
+        (
+            "2026-01-05T00:00:00+00:00",
+            "2027-01-05T00:00:00+00:00",
+            "2026-09-05T00:00:00+00:00",
+            "2026-10-05T00:00:00+00:00",
+        ),
+        # Over a year old. Ignoring the year would land in 2025 (#6099).
+        (
+            "2024-09-03T00:00:00+00:00",
+            "2027-04-03T00:00:00+00:00",
+            "2026-09-03T00:00:00+00:00",
+            "2026-10-03T00:00:00+00:00",
+        ),
+        # Exactly on an anniversary.
+        (
+            "2025-09-10T12:00:00+00:00",
+            "2027-09-10T12:00:00+00:00",
+            "2026-09-10T12:00:00+00:00",
+            "2026-10-10T12:00:00+00:00",
+        ),
+    ],
+)
+def test_current_billing_period__within_term__returns_monthly_window(
+    organisation: Organisation,
+    term_starts_at: str,
+    term_ends_at: str,
+    expected_starts_at: str,
+    expected_ends_at: str,
+) -> None:
+    # Given
+    cache = OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=datetime.fromisoformat(term_starts_at),
+        current_billing_term_ends_at=datetime.fromisoformat(term_ends_at),
+    )
+
+    # When
+    period = cache.current_billing_period()
+
+    # Then
+    assert period == (
+        datetime.fromisoformat(expected_starts_at),
+        datetime.fromisoformat(expected_ends_at),
+    )
+
+
+# February clamps a 31st term start to the 28th. Counting the end from that
+# clamped date rather than the term start would close the window on 28 March.
+@pytest.mark.freeze_time("2026-03-01T00:00:00+00:00")
+def test_current_billing_period__term_starts_on_the_31st__ends_on_the_anniversary(
+    organisation: Organisation,
+) -> None:
+    # Given
+    cache = OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=datetime.fromisoformat(
+            "2026-01-31T00:00:00+00:00"
+        ),
+        current_billing_term_ends_at=datetime.fromisoformat(
+            "2027-01-31T00:00:00+00:00"
+        ),
+    )
+
+    # When
+    period = cache.current_billing_period()
+
+    # Then
+    assert period == (
+        datetime.fromisoformat("2026-02-28T00:00:00+00:00"),
+        datetime.fromisoformat("2026-03-31T00:00:00+00:00"),
+    )
+
+
+@pytest.mark.freeze_time("2026-09-10T12:00:00+00:00")
+@pytest.mark.parametrize(
+    "term_starts_at, term_ends_at",
+    [
+        # No term, ie every free plan.
+        (None, None),
+        # Half a term.
+        ("2026-09-01T00:00:00+00:00", None),
+        (None, "2026-10-01T00:00:00+00:00"),
+        # Term ended, cache not caught up.
+        ("2026-07-01T00:00:00+00:00", "2026-08-01T00:00:00+00:00"),
+        # The term's final instant. has_active_billing_periods admits it, but
+        # a window opened here would run past the end of the term.
+        ("2026-08-10T12:00:00+00:00", "2026-09-10T12:00:00+00:00"),
+        # Term not started.
+        ("2026-10-01T00:00:00+00:00", "2026-11-01T00:00:00+00:00"),
+    ],
+)
+def test_current_billing_period__no_active_term__returns_none(
+    organisation: Organisation,
+    term_starts_at: str | None,
+    term_ends_at: str | None,
+) -> None:
+    # Given
+    cache = OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=(
+            datetime.fromisoformat(term_starts_at) if term_starts_at else None
+        ),
+        current_billing_term_ends_at=(
+            datetime.fromisoformat(term_ends_at) if term_ends_at else None
+        ),
+    )
+
+    # When / Then
+    assert cache.current_billing_period() is None
+
+
+@pytest.mark.freeze_time("2026-09-10T12:00:00+00:00")
+def test_subscription_current_billing_period__with_cache__reads_through(
+    organisation: Organisation,
+) -> None:
+    # Given
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=datetime.fromisoformat(
+            "2026-09-01T00:00:00+00:00"
+        ),
+        current_billing_term_ends_at=datetime.fromisoformat(
+            "2026-10-01T00:00:00+00:00"
+        ),
+    )
+
+    # When / Then
+    assert organisation.subscription.current_billing_period == (
+        datetime.fromisoformat("2026-09-01T00:00:00+00:00"),
+        datetime.fromisoformat("2026-10-01T00:00:00+00:00"),
+    )
+
+
+def test_subscription_current_billing_period__no_cache__returns_none(
+    organisation: Organisation,
+) -> None:
+    # Given
+    assert not organisation.has_subscription_information_cache()
+
+    # When / Then
+    assert organisation.subscription.current_billing_period is None
