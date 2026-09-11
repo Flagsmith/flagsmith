@@ -8,6 +8,7 @@ import {
   dailyTotals,
   planLimitThreshold,
   xAxisIntervalFor,
+  withProjection,
 } from 'components/pages/usage/components/UsageOverTime/utils'
 
 describe('UsageOverTime utils', () => {
@@ -120,5 +121,42 @@ describe('UsageOverTime utils', () => {
     `('thins $points points to every $expected', ({ expected, points }) => {
       expect(xAxisIntervalFor(points)).toBe(expected)
     })
+  })
+})
+
+describe('withProjection', () => {
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-07-10T00:00:00Z'))
+  })
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  const measured = [
+    { cumulative: 100, day: '8 Jul' },
+    { cumulative: 300, day: '9 Jul' },
+    { cumulative: 400, day: '10 Jul' },
+  ]
+
+  it('runs a straight line from the last measured day to the projection', () => {
+    const points = withProjection(measured, 700, '2026-07-13T00:00:00Z')
+
+    // The last measured day carries both, so the lines meet.
+    expect(points[2]).toEqual({
+      cumulative: 400,
+      day: '10 Jul',
+      projected: 400,
+    })
+    expect(points.slice(3).map((p) => p.projected)).toEqual([500, 600, 700])
+    // Future days have no measurement, so the solid line stops.
+    expect(points.slice(3).every((p) => p.cumulative === null)).toBe(true)
+  })
+
+  it('leaves the line alone once the period has ended', () => {
+    expect(withProjection(measured, 700, '2026-07-09T00:00:00Z')).toBe(measured)
+  })
+
+  it('leaves an empty series alone', () => {
+    expect(withProjection([], 700, '2026-07-13T00:00:00Z')).toEqual([])
   })
 })

@@ -23,6 +23,8 @@ type LineChartProps = {
   xAxisInterval?: number
   showLegend?: boolean
   seriesLabels?: Record<string, string>
+  /** Series drawn dashed, to mark an estimate rather than a measurement. */
+  dashedSeries?: string[]
   verticalGrid?: boolean
   referenceLine?: Threshold
 }
@@ -49,6 +51,7 @@ const thresholdLabelFor = (referenceLine?: Threshold) =>
 
 const LineChart: FC<LineChartProps> = ({
   colorMap,
+  dashedSeries,
   data,
   height = 400,
   referenceLine,
@@ -112,7 +115,9 @@ const LineChart: FC<LineChartProps> = ({
             dataKey={label}
             stroke={colorMap[label]}
             strokeWidth={2}
+            strokeDasharray={dashedSeries?.includes(label) ? '6 6' : undefined}
             dot={false}
+            connectNulls={false}
             animationBegin={index * 80}
             animationDuration={600}
             animationEasing='ease-out'

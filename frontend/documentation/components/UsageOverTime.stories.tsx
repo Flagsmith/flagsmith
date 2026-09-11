@@ -1,3 +1,4 @@
+import moment from 'moment'
 import type { Meta, StoryObj } from 'storybook'
 import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
 import { Res } from 'common/types/responses'
@@ -64,6 +65,27 @@ export const CumulativeCrossingTheCeiling: Story = {
 
 // A rolling window's total falls as old days drop out, so it gets daily volume
 // rather than a line that only ever climbs.
+// The dashed run carries on from the last measured day to the period end.
+export const CumulativeWithAProjection: Story = {
+  args: {
+    data: usage(18, 70000),
+    isBillingPeriod: true,
+    limit: 2000000,
+    periodEndsAt: moment.utc().add(12, 'days').toISOString(),
+    projectedTotal: 1800000,
+  },
+}
+
+export const ProjectionLandingOverTheCeiling: Story = {
+  args: {
+    data: usage(18, 70000),
+    isBillingPeriod: true,
+    limit: 1000000,
+    periodEndsAt: moment.utc().add(12, 'days').toISOString(),
+    projectedTotal: 1800000,
+  },
+}
+
 export const DailyVolumeOnARollingWindow: Story = {
   args: {
     data: usage(30, 2000),

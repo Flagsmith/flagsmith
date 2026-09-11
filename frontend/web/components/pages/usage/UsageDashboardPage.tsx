@@ -12,7 +12,13 @@ import UsageMeter from './components/UsageMeter'
 import UsageOverTime from './components/UsageOverTime'
 import UsagePageLayout from './components/UsagePageLayout'
 import { useUsageData } from './useUsageData'
-import { contributionNote, overLimitNote, planSectionCopy } from './copy'
+import {
+  contributionNote,
+  overLimitNote,
+  planSectionCopy,
+  projectionNote,
+} from './copy'
+import { projectUsage } from './projection'
 import { overLimitOf } from './overLimit'
 import {
   isBilledOnAPeriod,
@@ -109,8 +115,17 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         )
       : undefined
 
-  // One line, so being over the limit outranks the project's share.
-  const meterNote = exceeded ? overLimitNote(exceeded) : contribution
+  const period = subscription?.current_billing_period
+  const projection = projectUsage(allowanceTotal, limit, period)
+
+  // One line. Being over the limit outranks where usage is heading, which
+  // outranks the project's share.
+  const meterNote =
+    [
+      exceeded && overLimitNote(exceeded),
+      projection && period && projectionNote(projection, period.ends_at),
+      contribution,
+    ].find(Boolean) || undefined
 
   if (!organisationId) {
     return null
@@ -139,7 +154,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     >
       <SectionHeading {...planSectionCopy(basis, limit)} />
 
-      <BillingStrip period={subscription?.current_billing_period} />
+      <BillingStrip period={period} />
 
       <UsageMeter total={allowanceTotal} limit={limit} note={meterNote} />
 
@@ -177,6 +192,14 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
             }
             isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
             periodLabel={selectedPeriod}
+            projectedTotal={
+              // Only against the organisation's own allowance window: a
+              // project's share or another period has nothing to project to.
+              showsContribution(basis, billingPeriod, selectedProjectId)
+                ? undefined
+                : projection?.total
+            }
+            periodEndsAt={period?.ends_at}
           />
 
           <UsageBreakdown

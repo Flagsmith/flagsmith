@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react'
 import Format from 'common/utils/format'
 import { Res } from 'common/types/responses'
-import { colorSurfaceAction } from 'common/theme/tokens'
+import { colorSurfaceAction, colorTextSecondary } from 'common/theme/tokens'
 import EmptyState from 'components/EmptyState'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import BarChart from 'components/charts/BarChart'
@@ -10,6 +10,7 @@ import {
   cumulativeTotals,
   dailyTotals,
   planLimitThreshold,
+  withProjection,
   xAxisIntervalFor,
 } from './utils'
 
@@ -18,6 +19,9 @@ type UsageOverTimeProps = {
   limit: PlanLimit
   isBillingPeriod: boolean
   periodLabel: string
+  /** Where usage is heading, and when the period it runs to ends. */
+  projectedTotal?: number
+  periodEndsAt?: string
 }
 
 const headingFor = (isBillingPeriod: boolean, limit: PlanLimit) => {
@@ -29,20 +33,38 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
   data,
   isBillingPeriod,
   limit,
+  periodEndsAt,
   periodLabel,
+  projectedTotal,
 }) => {
   const daily = useMemo(() => dailyTotals(data), [data])
 
   const cumulative = useMemo(() => cumulativeTotals(daily), [daily])
 
+  const showsProjection = projectedTotal !== undefined && !!periodEndsAt
+  const line = useMemo(
+    () =>
+      showsProjection
+        ? withProjection(cumulative, projectedTotal, periodEndsAt)
+        : cumulative,
+    [cumulative, periodEndsAt, projectedTotal, showsProjection],
+  )
+
   const xAxisInterval = xAxisIntervalFor(daily.length)
 
   const chart = isBillingPeriod ? (
     <LineChart
-      data={cumulative}
-      series={['cumulative']}
-      seriesLabels={{ cumulative: 'API calls used' }}
-      colorMap={{ cumulative: colorSurfaceAction }}
+      data={line}
+      series={showsProjection ? ['cumulative', 'projected'] : ['cumulative']}
+      dashedSeries={['projected']}
+      seriesLabels={{
+        cumulative: 'API calls used',
+        projected: 'Projected',
+      }}
+      colorMap={{
+        cumulative: colorSurfaceAction,
+        projected: colorTextSecondary,
+      }}
       xAxisInterval={xAxisInterval}
       verticalGrid={false}
       height={320}

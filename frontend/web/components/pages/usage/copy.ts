@@ -1,6 +1,8 @@
+import moment from 'moment'
 import Format from 'common/utils/format'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import { OverLimit } from './overLimit'
+import { Projection } from './projection'
 import { allowanceWindowLabel, UsageBasis } from './utils'
 
 /**
@@ -110,3 +112,19 @@ export const contributionNote = (
         (scopedTotal / organisationTotal) * 100,
       )}% of that usage.`
     : undefined
+
+// Hedged on purpose: a straight line through usage so far, not a forecast.
+export const projectionNote = (
+  projection: Projection,
+  periodEndsAt: string,
+): string => {
+  const landing = `On track to use ~${Format.shortenNumber(projection.total)}`
+  const share = projection.percentOfLimit
+    ? ` (${projection.percentOfLimit}% of your limit)`
+    : ''
+  const by = ` by ${moment.utc(periodEndsAt).format('D MMM')}.`
+
+  return projection.overLimit
+    ? `${landing}${share}${by} That lands over your limit.`
+    : `${landing}${share}${by}`
+}

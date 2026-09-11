@@ -45,3 +45,42 @@ export const planLimitThreshold = (limit: PlanLimit) =>
 
 export const xAxisIntervalFor = (pointCount: number) =>
   Math.max(0, Math.ceil(pointCount / 12) - 1)
+
+export type ProjectedPoint = CumulativePoint & { projected?: number }
+
+/**
+ * Extends the cumulative line to the end of the period with a straight run to
+ * the projected total. The last measured day carries both values so the two
+ * lines meet rather than leaving a gap.
+ */
+export const withProjection = (
+  cumulative: CumulativePoint[],
+  projectedTotal: number,
+  periodEndsAt: string,
+): ProjectedPoint[] => {
+  const last = cumulative[cumulative.length - 1]
+  const end = moment.utc(periodEndsAt).startOf('day')
+  const daysAhead = end.diff(moment.utc().startOf('day'), 'days')
+
+  if (!last || daysAhead <= 0) {
+    return cumulative
+  }
+
+  const step = (projectedTotal - last.cumulative) / daysAhead
+
+  const future = Array.from({ length: daysAhead }, (_, index) => ({
+    cumulative: null as unknown as number,
+    day: moment
+      .utc()
+      .startOf('day')
+      .add(index + 1, 'days')
+      .format('D MMM'),
+    projected: Math.round(last.cumulative + step * (index + 1)),
+  }))
+
+  return [
+    ...cumulative.slice(0, -1),
+    { ...last, projected: last.cumulative },
+    ...future,
+  ]
+}
