@@ -467,7 +467,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
             )}
             {!!divergedVariantOverride && (
               <WarningMessage
-                warningMessage={`This identity is served an out of date copy of variation '${divergedVariantOverride.key}', taken when the override was saved. Select the variation again to update it to the current value.`}
+                warningMessage={`This identity is served a stale copy of variation '${divergedVariantOverride.key}', taken when the override was saved. Press Update Feature to refresh it.`}
               />
             )}
             <VariationOptions
