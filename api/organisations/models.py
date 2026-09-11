@@ -608,19 +608,8 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         }
 
     def has_active_billing_periods(self) -> bool:
-        """
-        Returns True if current date is within the billing term.
-        If either start or end date is None, returns False.
-        """
-        starts_at, ends_at = (
-            self.current_billing_term_starts_at,
-            self.current_billing_term_ends_at,
-        )
-
-        if starts_at is None or ends_at is None:
-            return False
-
-        return starts_at <= timezone.now() <= ends_at
+        """Whether the organisation is inside a billing term."""
+        return self.current_billing_period() is not None
 
     def current_billing_period(self) -> tuple[datetime, datetime] | None:
         """
@@ -634,8 +623,8 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
             return None
 
         # One reading, so a clock crossing the term end mid-method cannot open
-        # a window past it. Exclusive of the end, which
-        # has_active_billing_periods admits.
+        # a window past it. The end is exclusive: at that instant the term is
+        # over and the next one has not been written yet.
         now = timezone.now()
         if not starts_at <= now < ends_at:
             return None
