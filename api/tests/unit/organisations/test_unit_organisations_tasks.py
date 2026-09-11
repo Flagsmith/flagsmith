@@ -1873,6 +1873,56 @@ def test_restrict_use_due_to_api_limit_grace_period_over__previously_breached__b
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over__restriction_off__does_not_block(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMultiAlternatives],
+    admin_user: FFAdminUser,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    # Neither api_limiting flag, so this organisation is exempt.
+    enable_features()
+
+    now = timezone.now()
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=10_000,
+        chargebee_email="test@example.com",
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 12_005
+
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=100,
+    )
+    freezer.move_to(now + timedelta(days=API_USAGE_GRACE_PERIOD + 1))
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    organisation.refresh_from_db()
+    assert organisation.stop_serving_flags is False
+    assert organisation.block_access_to_admin is False
+    assert not OrganisationBreachedGracePeriod.objects.filter(
+        organisation=organisation
+    ).exists()
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_restrict_use_due_to_api_limit_grace_period_over__missing_subscription_cache__does_not_block(
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
