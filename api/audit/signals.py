@@ -141,11 +141,7 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):  # type: ignore
     if not data_dog_config:
         return
 
-    data_dog = DataDogWrapper(
-        base_url=data_dog_config.base_url,  # type: ignore[arg-type]
-        api_key=data_dog_config.api_key,
-        use_custom_source=data_dog_config.use_custom_source,
-    )
+    data_dog = DataDogWrapper(data_dog_config)
     _track_event_async(instance, data_dog)  # type: ignore[no-untyped-call]
 
 
@@ -156,11 +152,7 @@ def send_audit_log_event_to_new_relic(sender, instance, **kwargs):  # type: igno
     if not new_relic_config:
         return
 
-    new_relic = NewRelicWrapper(
-        base_url=new_relic_config.base_url,  # type: ignore[arg-type]
-        api_key=new_relic_config.api_key,
-        app_id=new_relic_config.app_id,
-    )
+    new_relic = NewRelicWrapper(new_relic_config)
     _track_event_async(instance, new_relic)  # type: ignore[no-untyped-call]
 
 
@@ -171,11 +163,7 @@ def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):  # type: igno
     if not dynatrace_config:
         return
 
-    dynatrace = DynatraceWrapper(
-        base_url=dynatrace_config.base_url,  # type: ignore[arg-type]
-        api_key=dynatrace_config.api_key,
-        entity_selector=dynatrace_config.entity_selector,
-    )
+    dynatrace = DynatraceWrapper(dynatrace_config)
     _track_event_async(instance, dynatrace)  # type: ignore[no-untyped-call]
 
 
@@ -186,10 +174,7 @@ def send_audit_log_event_to_grafana(sender, instance, **kwargs):  # type: ignore
     if not grafana_config:
         return
 
-    grafana = GrafanaWrapper(
-        base_url=grafana_config.base_url,  # type: ignore[arg-type]
-        api_key=grafana_config.api_key,
-    )
+    grafana = GrafanaWrapper(grafana_config)
     _track_event_async(instance, grafana)  # type: ignore[no-untyped-call]
 
 
@@ -238,10 +223,7 @@ def send_audit_log_event_to_sentry(sender: FeatureState, **kwargs: Any) -> None:
     ).first()
     if not config:
         return
-    sentry = SentryChangeTracking(
-        webhook_url=config.webhook_url,
-        secret=config.secret,
-    )
+    sentry = SentryChangeTracking(config)
     if event_data := sentry.generate_event_data(sender):
         sentry.track_event_async(event=event_data)
 

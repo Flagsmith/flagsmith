@@ -112,6 +112,7 @@ def test_list_rudderstack_config__existing_config__returns_200(
             "api_key": config.api_key,
             "base_url": config.base_url,
             "id": config.id,
+            "latest_health": None,
         }
     ]
 

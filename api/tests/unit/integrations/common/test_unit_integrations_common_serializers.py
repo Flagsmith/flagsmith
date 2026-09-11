@@ -1,5 +1,6 @@
 from django.utils import timezone
 
+from integrations.common.services import record_integration_health
 from integrations.datadog.models import DataDogConfiguration
 from integrations.datadog.serializers import DataDogConfigurationSerializer
 from integrations.webhook.models import WebhookConfiguration
@@ -37,6 +38,63 @@ def test_base_environment_integration_model_serializer__soft_deleted_exists__upd
     assert updated_webhook_config is not None
     assert updated_webhook_config.url == new_url
     assert updated_webhook_config.deleted_at is None
+
+
+def test_base_environment_integration_model_serializer__latest_health__no_record(  # type: ignore[no-untyped-def]
+    environment,
+):
+    # Given
+    webhook_config = WebhookConfiguration.objects.create(
+        environment=environment, url="https://webhook.url"
+    )
+
+    # When
+    serializer = WebhookConfigurationSerializer(webhook_config)
+    data = serializer.data
+
+    # Then
+    assert "latest_health" in data
+    assert data["latest_health"] is None
+
+
+def test_base_environment_integration_model_serializer__latest_health__has_record(  # type: ignore[no-untyped-def]
+    environment,
+):
+    # Given
+    webhook_config = WebhookConfiguration.objects.create(
+        environment=environment, url="https://webhook.url"
+    )
+    record_integration_health(webhook_config, 200)
+
+    # When
+    serializer = WebhookConfigurationSerializer(webhook_config)
+    data = serializer.data
+
+    # Then
+    assert data["latest_health"] is not None
+    assert data["latest_health"]["status_code"] == 200
+    assert data["latest_health"]["is_healthy"] is True
+    assert data["latest_health"]["created_at"] is not None
+
+
+def test_base_environment_integration_model_serializer__latest_health__unhealthy_status(  # type: ignore[no-untyped-def]  # noqa: E501
+    environment,
+):
+    # Given
+    webhook_config = WebhookConfiguration.objects.create(
+        environment=environment, url="https://webhook.url"
+    )
+    record_integration_health(webhook_config, 500)
+
+    # When
+    serializer = WebhookConfigurationSerializer(webhook_config)
+    data = serializer.data
+
+    # Then
+    assert data["latest_health"] is not None
+    assert data["latest_health"]["status_code"] == 500
+    assert data["latest_health"]["is_healthy"] is False
+    assert data["latest_health"]["created_at"] is not None
 
 
 def test_base_project_integration_model_serializer__soft_deleted_exists__updates_existing(  # type: ignore[no-untyped-def]  # noqa: E501
