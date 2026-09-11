@@ -7,6 +7,7 @@ from pytest_mock import MockerFixture
 from rest_framework.exceptions import NotFound
 
 from app_analytics.analytics_db_service import (
+    _get_start_date_and_stop_date_for_subscribed_organisation,
     get_feature_evaluation_data,
     get_feature_evaluation_data_from_local_db,
     get_top_organisations_from_local_db,
@@ -966,3 +967,40 @@ def test_get_usage_data_for_window__no_analytics_configured__returns_empty(
 
     # Then
     assert result == []
+
+
+# A term over a year old resolved to the wrong year before #6099, so the current
+# period opened twelve months early and the usage shown was not the period's.
+@pytest.mark.freeze_time("2026-09-11T00:00:00+00:00")
+@pytest.mark.parametrize(
+    "period, expected_start",
+    [
+        (CURRENT_BILLING_PERIOD, "2026-09-07T00:00:00+00:00"),
+        (PREVIOUS_BILLING_PERIOD, "2026-08-07T00:00:00+00:00"),
+    ],
+)
+def test_get_start_date_and_stop_date__term_over_a_year_old__counts_the_years(
+    db: None,
+    organisation: Organisation,
+    period: PeriodType,
+    expected_start: str,
+) -> None:
+    # Given
+    sub_cache = OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=datetime.fromisoformat(
+            "2025-08-07T00:00:00+00:00"
+        ),
+        current_billing_term_ends_at=datetime.fromisoformat(
+            "2027-08-07T00:00:00+00:00"
+        ),
+    )
+
+    # When
+    date_start, _ = _get_start_date_and_stop_date_for_subscribed_organisation(
+        sub_cache=sub_cache,
+        period=period,
+    )
+
+    # Then
+    assert date_start == datetime.fromisoformat(expected_start)
