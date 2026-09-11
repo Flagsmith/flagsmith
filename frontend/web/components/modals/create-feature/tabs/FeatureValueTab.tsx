@@ -52,8 +52,7 @@ type FeatureValueTabProps = {
   noPermissions: boolean
   freeze?: FeatureExperimentFreeze
   featureState: FeatureState
-  // The feature state as saved. featureState is the editor's copy, which moves
-  // with every radio click.
+  // As saved. featureState is the editor's copy, which moves with every click.
   storedFeatureState?: FeatureState
   projectFlag: ProjectFlag
   environmentFlag?: FeatureState
@@ -320,15 +319,12 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   })
   latchedOverrideValue.current = unmatchedOverride?.value
 
-  // Only edge-featurestates returns identity_uuid, and only it returns the value
-  // the identity is served. Core returns the stored value, which here is the
-  // control value, so comparing that would report every override as diverged.
+  // Only edge returns the value the identity is served. Core returns the
+  // control value, which would report every override as diverged.
   const isEdgeIdentity = !!storedFeatureState?.identity_uuid
 
-  // An override keeps its own copy of the variation's value, so editing the
-  // variation leaves the identity on the old one. Read from the saved state,
-  // not the editor's: picking a variation moves the selection without moving
-  // the value, which would read as a divergence the user just created.
+  // From the saved state, not the editor's: picking a variation moves the
+  // selection without moving the value.
   const divergedVariantOverride =
     identity && hasVariations && isEdgeIdentity
       ? getDivergedVariantOverride({

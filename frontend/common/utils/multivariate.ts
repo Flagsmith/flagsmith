@@ -183,7 +183,7 @@ export const hasApprovableChanges = ({
   !same(editedValue, storedValue)
 
 // Separate from hasUnmatchedIdentityOverride, which also decides whether saving
-// keeps the override's own value: reporting a diverged pin there would write the
+// keeps the override's own value: reporting a divergence there would write the
 // stale value into the record.
 export type DivergedVariantOverride = {
   key: string
@@ -206,8 +206,8 @@ export const getDivergedVariantOverride = ({
   variants: PinnableVariant[] | undefined
   variationOverrides: VariationOverrides
 }): DivergedVariantOverride | undefined => {
-  // `undefined` means the feature state has not loaded, which is not the same as an
-  // override of `null`. Answering from absent data would report every pin as diverged.
+  // `undefined` means not loaded, unlike an override of `null`. Answering from
+  // absent data would report every override as diverged.
   if (overrideValue === undefined || !variants?.length) {
     return undefined
   }
@@ -217,7 +217,7 @@ export const getDivergedVariantOverride = ({
   if (!pinned) {
     return undefined
   }
-  // An unsaved variant has no id either, so an absent id would match on both sides.
+  // An unsaved variation has no id either, so absent would match absent.
   const pinnedOptionId = pinned.multivariate_feature_option
   if (pinnedOptionId === null || pinnedOptionId === undefined) {
     return undefined

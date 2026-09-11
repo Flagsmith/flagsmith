@@ -856,8 +856,7 @@ export type FeatureState = {
   feature_state_value: FlagsmithValue
   id: number
   identity?: number
-  // Edge only: edge-featurestates returns the identity on the feature state
-  // itself, where core's featurestates returns the numeric `identity` above.
+  // Edge only. Core returns the numeric `identity` above instead.
   identity_uuid?: string
   live_from?: string
   multivariate_feature_state_values: MultivariateFeatureStateValue[]

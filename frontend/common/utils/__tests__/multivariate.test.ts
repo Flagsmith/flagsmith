@@ -346,10 +346,7 @@ describe('multivariate', () => {
       ).toEqual({ key: 'variant_b', servedValue: null })
     })
 
-    it('leaves the save-path predicate untouched for a diverged pin', () => {
-      // hasUnmatchedIdentityOverride also decides whether saving preserves the
-      // override's own value. Reporting a diverged pin there would write the
-      // stale value into the record.
+    it('leaves the save-path predicate untouched for a diverged override', () => {
       expect(
         hasUnmatchedIdentityOverride({
           controlValue: 'control',

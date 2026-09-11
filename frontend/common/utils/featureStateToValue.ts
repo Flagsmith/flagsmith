@@ -35,7 +35,6 @@ export function featureStateToValue(
   const type = 'value_type' in value ? value.value_type : value.type
   switch (type) {
     case 'bool':
-      // Optional on multivariate options, so it can be absent.
       return value.boolean_value ?? null
     case 'float':
       // Only traits carry a float. Feature state values and variations do not.
