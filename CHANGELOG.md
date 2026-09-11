@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.272.0](https://github.com/Flagsmith/flagsmith/compare/v2.271.1...v2.272.0) (2026-09-11)
+
+
+### Features
+
+* **onboarding:** create the demo flag as multivariate ([#8503](https://github.com/Flagsmith/flagsmith/issues/8503)) ([d5c499d](https://github.com/Flagsmith/flagsmith/commit/d5c499d0866aef2a86161b803be1d5f4fef82246))
+* **Segment Membership:** Skip traitless identities when seeding ([#8455](https://github.com/Flagsmith/flagsmith/issues/8455)) ([9180452](https://github.com/Flagsmith/flagsmith/commit/9180452d338ef2af20b13e6ba219f8953957ce97))
+
+
+### Bug Fixes
+
+* **change-requests:** stop variation values applying outside the request ([#8506](https://github.com/Flagsmith/flagsmith/issues/8506)) ([355392b](https://github.com/Flagsmith/flagsmith/commit/355392b809f2d72f983885ca296c2d00fe0df35c))
+* **errors:** render the error banners that were being swallowed ([#8453](https://github.com/Flagsmith/flagsmith/issues/8453)) ([6b4c10e](https://github.com/Flagsmith/flagsmith/commit/6b4c10ee1c444748578fdb9a155b5f52a5e94e76))
+* **identities:** flag when an identity override diverges from its variation ([#8500](https://github.com/Flagsmith/flagsmith/issues/8500)) ([787c927](https://github.com/Flagsmith/flagsmith/commit/787c927fdebc90035640bda8cb92852fa8a28707))
+
+
+### Refactoring
+
+* **value-editor:** migrate to TypeScript and split by concern ([#8447](https://github.com/Flagsmith/flagsmith/issues/8447)) ([a82c3d6](https://github.com/Flagsmith/flagsmith/commit/a82c3d6c24b05fbd0be9c10244418a39382983b4))
+
 ## [2.271.1](https://github.com/Flagsmith/flagsmith/compare/v2.271.0...v2.271.1) (2026-09-10)
 
 
