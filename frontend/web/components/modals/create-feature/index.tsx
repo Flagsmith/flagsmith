@@ -514,10 +514,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           saveVariationValues,
         }: any,
       ) => {
-        // originalMultivariateOptions, not props.projectFlag: the edited copy
-        // carries this environment's weights, the stored one carries the
-        // project defaults, so comparing them reports a weight edit that is not
-        // one.
+        // Not props.projectFlag: that carries the project default weights, so
+        // comparing against it reports a weight edit that is not one.
         const variationChanges = diffVariations({
           edited: projectFlag.multivariate_options,
           stored: originalMultivariateOptions,
@@ -535,10 +533,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                 projectFlag,
                 props.projectFlag,
                 (savedProjectFlag: any) => {
-                  // Only the response carries ids for variations created here,
-                  // and without them the editor keeps calling them unsaved.
-                  // It reports every allocation as 0, because those are per
-                  // environment and this save is not, so keep the edited ones.
+                  // Only the response carries ids for variations created
+                  // here, but it zeroes every weight, so keep the edited ones.
                   const persisted = savedProjectFlag?.multivariate_options
                   if (!persisted?.length) {
                     return
@@ -588,8 +584,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
               }
 
               setSegmentsChanged(false)
-              // Variation edits do not travel in the request, so they are still
-              // unsaved if the user cancels it.
+              // Variation edits stay unsaved if the user cancels the request.
               setValueChanged(hasVariationChanges)
               const segmentFeatureStates = (segmentOverrides || [])
                 .filter((override: any) => !override.toRemove)

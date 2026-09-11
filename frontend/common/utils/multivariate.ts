@@ -78,12 +78,12 @@ export const resolveUnmatchedOverride = ({
   return value === undefined ? undefined : { selected: isSelected, value }
 }
 
-// Only the weight is per environment, so only it can go in a change request.
+// A variation's value is shared by every environment and only its weight is
+// per environment, so a change request can carry the weight and nothing else.
 export type VariationChanges = {
-  // Edited or removed. Both change what environments already serve.
   values: boolean
   weights: boolean
-  // New variations, which land at 0% allocation and so serve nothing yet.
+  // New variations land at 0% allocation, so they serve nothing yet.
   added: boolean
 }
 
@@ -97,7 +97,6 @@ type ComparableVariation = {
   default_percentage_allocation?: number | null
 }
 
-// Shared by every environment, so a change request cannot carry them.
 export const VARIATION_VALUE_FIELDS = [
   'key',
   'type',
@@ -106,7 +105,6 @@ export const VARIATION_VALUE_FIELDS = [
   'boolean_value',
 ] as const
 
-// Per environment, so it can.
 export const VARIATION_WEIGHT_FIELD = 'default_percentage_allocation'
 
 const same = (a: unknown, b: unknown): boolean => (a ?? null) === (b ?? null)
@@ -121,7 +119,6 @@ export const diffVariations = ({
   const editedList = edited ?? []
   const storedList = stored ?? []
 
-  // An entry with no id has never been saved, so it is an addition.
   const isUnsaved = (variation: ComparableVariation): boolean =>
     variation.id === null || variation.id === undefined
   const added = editedList.some(isUnsaved)
@@ -161,8 +158,8 @@ export const diffVariations = ({
   return { added, values, weights }
 }
 
-// Without this, a request is filed against an unchanged feature state and
-// approvers receive an empty one.
+// Without this, an unchanged feature state is filed and approvers get an
+// empty request.
 export const hasApprovableChanges = ({
   editedEnabled,
   editedValue,

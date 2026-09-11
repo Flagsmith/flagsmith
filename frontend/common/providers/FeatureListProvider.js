@@ -201,7 +201,7 @@ const FeatureListProvider = class extends React.Component {
     changeRequest,
     commit,
   ) => {
-    // A request is scoped to one environment, so it cannot carry a variation.
+    // Only the weight belongs to this environment, so take the rest as stored.
     const weightedVariations = (projectFlag.multivariate_options || []).map(
       (option) => {
         const edited = flag.multivariate_options?.find(
@@ -234,10 +234,8 @@ const FeatureListProvider = class extends React.Component {
     )
   }
 
-  // Applies to the feature, and so to every environment at once. Unlike the
-  // other save paths this does not continue into an environment state save, so
-  // it owns both the saving flag and the cache invalidation that would
-  // otherwise happen there.
+  // Unlike the other save paths this does not continue into an environment
+  // state save, so it owns the saving flag and the cache invalidation.
   saveVariationValues = (projectId, flag, projectFlag, onComplete) => {
     FeatureListStore.saving()
     AppActions.editFeatureMv(
