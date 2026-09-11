@@ -1,5 +1,6 @@
 import React, { FC, useEffect, useState } from 'react'
 import FieldLabel from 'components/base/forms/FieldLabel'
+import BareButton from 'components/base/forms/BareButton'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import Switch from 'components/Switch'
@@ -159,37 +160,40 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       </div>
       <FormGroup className='mb-1'>
         <div className='mt-2 p-0'>
-          <Row>
-            <label className='form-label'>IdP metadata XML</label>
-            {data?.idp_metadata_xml && (
-              <div className='ml-2 clickable' onClick={downloadIDPMetadata}>
-                <Tooltip
-                  title={
-                    <IonIcon
-                      className='icon-action'
-                      icon={cloudDownloadOutline}
-                      style={{ fontSize: '18px' }}
-                    />
-                  }
-                  place='right'
-                >
-                  Download IDP Metadata
-                </Tooltip>
-              </div>
-            )}
-          </Row>
           {(!samlName ||
             (data &&
               ((data.name && !data.idp_metadata_xml) ||
                 data.idp_metadata_xml))) && (
             <ValueEditor
-              data-test='featureValue'
-              name='featureValue'
+              label='IdP metadata XML'
+              labelAfter={
+                data?.idp_metadata_xml && (
+                  // A button, not a clickable div: this was unreachable by
+                  // keyboard and had no accessible name. The tooltip wraps it
+                  // rather than nesting inside, since it renders a div.
+                  <Tooltip
+                    title={
+                      <BareButton
+                        aria-label='Download IdP metadata'
+                        className='d-inline-flex align-items-center'
+                        onClick={downloadIDPMetadata}
+                      >
+                        <IonIcon
+                          className='icon-action'
+                          icon={cloudDownloadOutline}
+                          style={{ fontSize: '18px' }}
+                        />
+                      </BareButton>
+                    }
+                    place='right'
+                  >
+                    Download IdP metadata
+                  </Tooltip>
+                )
+              }
               className='full-width'
               value={metadataXml || data?.idp_metadata_xml}
               onChange={setMetadataXml}
-              placeholder="e.g. '<xml>time<xml>' "
-              onlyOneLang
               language='xml'
             />
           )}

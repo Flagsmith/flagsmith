@@ -1,6 +1,7 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import ValueEditor from 'components/ValueEditor'
+import ControlWeightChip from 'components/mv/ControlWeightChip'
 import Constants from 'common/constants'
 import { VariationOptions } from 'components/mv/VariationOptions'
 import { AddVariationButton } from 'components/mv/AddVariationButton'
@@ -253,16 +254,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
       'Failed to save this variation.'
     )
   })
-  const valueTitle = hasVariations ? (
-    <span className='d-inline-flex align-items-center'>
-      Control Value
-      <span className='chip chip--xs ml-2'>
-        {Math.max(0, controlPercentage)}%
-      </span>
-    </span>
-  ) : (
-    'Value'
-  )
+  const valueTitle = hasVariations ? 'Control Value' : 'Value'
 
   const variationsInfo = hasVariations && (
     // A div, not a p: InfoMessage renders a block, which closes a p early and
@@ -404,26 +396,26 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
       {showValue && (
         <FormGroup className='mb-4'>
           <div className='form-group'>
-            <FieldLabel tooltip={getValueTooltip(hasVariations, isEdit)}>
-              {valueTitle}
-            </FieldLabel>
             <ValueEditor
-              data-test='featureValue'
-              name='featureValue'
+              label={valueTitle}
+              labelAfter={
+                hasVariations && (
+                  <ControlWeightChip percentage={controlPercentage} />
+                )
+              }
+              labelTooltip={getValueTooltip(hasVariations, isEdit)}
               className={`full-width${hasVariations ? ' code-medium' : ''}`}
               value={`${
                 typeof initial_value === 'undefined' || initial_value === null
                   ? ''
                   : initial_value
               }`}
-              onChange={(e: any) => {
-                const feature_state_value = Utils.getTypedValue(
-                  Utils.safeParseEventValue(e),
-                )
-                onEnvironmentFlagChange({ feature_state_value })
+              onChange={(newValue: string) => {
+                onEnvironmentFlagChange({
+                  feature_state_value: Utils.getTypedValue(newValue),
+                })
               }}
               disabled={isDisabled}
-              placeholder="e.g. 'big' "
             />
           </div>
           {canCompareValue && (
