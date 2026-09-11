@@ -514,9 +514,13 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           saveVariationValues,
         }: any,
       ) => {
+        // originalMultivariateOptions, not props.projectFlag: the edited copy
+        // carries this environment's weights, the stored one carries the
+        // project defaults, so comparing them reports a weight edit that is not
+        // one.
         const variationChanges = diffVariations({
           edited: projectFlag.multivariate_options,
-          stored: props.projectFlag?.multivariate_options,
+          stored: originalMultivariateOptions,
         })
         const hasVariationChanges =
           variationChanges.values || variationChanges.added
@@ -568,7 +572,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
               }
 
               setSegmentsChanged(false)
-              setValueChanged(false)
+              // Variation edits do not travel in the request, so they are still
+              // unsaved if the user cancels it.
+              setValueChanged(hasVariationChanges)
               const segmentFeatureStates = (segmentOverrides || [])
                 .filter((override: any) => !override.toRemove)
                 .map((override: any) => ({
