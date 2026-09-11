@@ -21,6 +21,8 @@ import {
   ProjectFlag,
 } from 'common/types/responses'
 import {
+  getDefaultVariantKey,
+  getDivergedVariantOverride,
   hasUnmatchedIdentityOverride,
   LatchedOverrideValue,
   resolveUnmatchedOverride,
@@ -50,6 +52,8 @@ type FeatureValueTabProps = {
   noPermissions: boolean
   freeze?: FeatureExperimentFreeze
   featureState: FeatureState
+  // As saved. featureState is the editor's copy, which moves with every click.
+  storedFeatureState?: FeatureState
   projectFlag: ProjectFlag
   environmentFlag?: FeatureState
   environmentId?: string
@@ -101,6 +105,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   originalMultivariateOptions,
   projectFlag,
   projectId,
+  storedFeatureState,
 }) => {
   const isEdit = !!projectFlag?.id
   const isDisabled = !!noPermissions || !!freeze?.isFrozen
@@ -314,6 +319,26 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   })
   latchedOverrideValue.current = unmatchedOverride?.value
 
+  // Only edge returns the value the identity is served. Core returns the
+  // control value, which would report every override as diverged.
+  const isEdgeIdentity = !!storedFeatureState?.identity_uuid
+
+  // From the saved state, not the editor's: picking a variation moves the
+  // selection without moving the value.
+  const divergedVariantOverride =
+    identity && hasVariations && isEdgeIdentity
+      ? getDivergedVariantOverride({
+          overrideValue: storedFeatureState?.feature_state_value,
+          variants: multivariate_options.map((option, index) => ({
+            id: option.id,
+            key: option.key || getDefaultVariantKey(index),
+            value: Utils.featureStateToValue(option),
+          })),
+          variationOverrides:
+            storedFeatureState?.multivariate_feature_state_values,
+        })
+      : undefined
+
   if (compareOpen && canCompareValue && environmentId) {
     return (
       <div className={`${identity ? 'mx-3' : ''}`}>
@@ -447,10 +472,16 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
             {unmatchedOverrideSelected && (
               <WarningMessage warningMessage="This identity override contains a value that is not one of this flag's variations. We recommend changing it." />
             )}
+            {!!divergedVariantOverride && (
+              <WarningMessage
+                warningMessage={`This identity is served a stale copy of variation '${divergedVariantOverride.key}', taken when the override was saved. Press Update Feature to refresh it.`}
+              />
+            )}
             <VariationOptions
               canCreateFeature={false}
               disabled
               select
+              divergedOverride={divergedVariantOverride}
               unmatchedOverride={unmatchedOverride}
               controlValue={controlValue ?? null}
               controlPercentage={controlPercentage}

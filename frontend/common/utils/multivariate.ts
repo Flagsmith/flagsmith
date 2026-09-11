@@ -20,10 +20,12 @@ export const getDefaultVariantKey = (index: number): string =>
 // is only gone once saved.
 // Only the allocation matters here: a variation pinned at 100% is what makes
 // an override expressible as a variation rather than a free-form value.
-export type VariationOverrides =
-  | { percentage_allocation: number }[]
-  | null
-  | undefined
+export type VariationOverride = {
+  multivariate_feature_option?: number | null
+  percentage_allocation: number
+}
+
+export type VariationOverrides = VariationOverride[] | null | undefined
 
 // An override the variation radios cannot express, and whether it is still the
 // value in play.
@@ -180,6 +182,55 @@ export const hasApprovableChanges = ({
   !same(editedEnabled, storedEnabled) ||
   !same(editedValue, storedValue)
 
+// Separate from hasUnmatchedIdentityOverride, which also decides whether saving
+// keeps the override's own value: reporting a divergence there would write the
+// stale value into the record.
+export type DivergedVariantOverride = {
+  key: string
+  servedValue: FlagsmithValue
+}
+
+// Value resolved by the caller, so this module stays free of Utils.
+export type PinnableVariant = {
+  id?: number | null
+  key: string
+  value: FlagsmithValue
+}
+
+export const getDivergedVariantOverride = ({
+  overrideValue,
+  variants,
+  variationOverrides,
+}: {
+  overrideValue: FlagsmithValue | undefined
+  variants: PinnableVariant[] | undefined
+  variationOverrides: VariationOverrides
+}): DivergedVariantOverride | undefined => {
+  // `undefined` means not loaded, unlike an override of `null`. Answering from
+  // absent data would report every override as diverged.
+  if (overrideValue === undefined || !variants?.length) {
+    return undefined
+  }
+  const pinned = variationOverrides?.find(
+    (variation) => variation.percentage_allocation === 100,
+  )
+  if (!pinned) {
+    return undefined
+  }
+  // An unsaved variation has no id either, so absent would match absent.
+  const pinnedOptionId = pinned.multivariate_feature_option
+  if (pinnedOptionId === null || pinnedOptionId === undefined) {
+    return undefined
+  }
+  const variant = variants.find((candidate) => candidate.id === pinnedOptionId)
+  if (!variant || variant.value === undefined) {
+    return undefined
+  }
+  if (variant.value === overrideValue) {
+    return undefined
+  }
+  return { key: variant.key, servedValue: overrideValue }
+}
 // Options not yet saved have no id and sort last, in input order.
 export const sortMultivariateOptions = <T extends { id?: number | null }>(
   options: T[],

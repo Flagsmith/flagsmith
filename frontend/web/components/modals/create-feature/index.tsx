@@ -958,6 +958,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   projectId={projectId}
                   error={error}
                   featureState={props.environmentFlag || environmentFlag}
+                  storedFeatureState={
+                    props.identityFlag || props.environmentFlag
+                  }
                   projectFlag={projectFlag}
                   identity={identity}
                   overrideFeatureState={

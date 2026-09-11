@@ -1,6 +1,7 @@
 import {
   diffVariations,
   getDefaultVariantKey,
+  getDivergedVariantOverride,
   hasApprovableChanges,
   hasUnmatchedIdentityOverride,
   resolveUnmatchedOverride,
@@ -256,6 +257,101 @@ describe('multivariate', () => {
           ...unchanged,
           editedValue: undefined,
           storedValue: null,
+        }),
+      ).toBe(false)
+    })
+  })
+
+  describe('getDivergedVariantOverride', () => {
+    const variants = [
+      { id: 1, key: 'variant_a', value: 'old_a' },
+      { id: 2, key: 'variant_b', value: 'current_b' },
+    ]
+    const pinnedToVariant2 = [
+      { multivariate_feature_option: 2, percentage_allocation: 100 },
+    ]
+
+    it('reports the served value when the pinned variation has since changed', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: 'stale_b',
+          variants,
+          variationOverrides: pinnedToVariant2,
+        }),
+      ).toEqual({ key: 'variant_b', servedValue: 'stale_b' })
+    })
+
+    it('reports nothing when the served value matches the pinned variation', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: 'current_b',
+          variants,
+          variationOverrides: pinnedToVariant2,
+        }),
+      ).toBeUndefined()
+    })
+
+    it('reports nothing when no variation is pinned', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: 'stale_b',
+          variants,
+          variationOverrides: [
+            { multivariate_feature_option: 1, percentage_allocation: 50 },
+            { multivariate_feature_option: 2, percentage_allocation: 50 },
+          ],
+        }),
+      ).toBeUndefined()
+    })
+
+    it('reports nothing when the pinned variation no longer exists', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: 'stale_b',
+          variants,
+          variationOverrides: [
+            { multivariate_feature_option: 99, percentage_allocation: 100 },
+          ],
+        }),
+      ).toBeUndefined()
+    })
+
+    it('withholds a verdict while the feature state has not loaded', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: undefined,
+          variants,
+          variationOverrides: pinnedToVariant2,
+        }),
+      ).toBeUndefined()
+    })
+
+    it('withholds a verdict while the variations have not loaded', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: 'stale_b',
+          variants: undefined,
+          variationOverrides: pinnedToVariant2,
+        }),
+      ).toBeUndefined()
+    })
+
+    it('treats a null served value as a value, not as unloaded', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: null,
+          variants,
+          variationOverrides: pinnedToVariant2,
+        }),
+      ).toEqual({ key: 'variant_b', servedValue: null })
+    })
+
+    it('leaves the save-path predicate untouched for a diverged override', () => {
+      expect(
+        hasUnmatchedIdentityOverride({
+          controlValue: 'control',
+          overrideValue: 'stale_b',
+          variationOverrides: pinnedToVariant2,
         }),
       ).toBe(false)
     })
