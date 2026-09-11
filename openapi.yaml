@@ -27868,6 +27868,9 @@ components:
               type: string
               format: date-time
           readOnly: true
+          required:
+            - starts_at
+            - ends_at
         deleted_at:
           type:
             - string
