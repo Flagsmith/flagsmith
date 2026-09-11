@@ -20129,6 +20129,17 @@ components:
           type: integer
       required:
         - user
+    CurrentBillingPeriod:
+      type: object
+      properties:
+        starts_at:
+          type: string
+          format: date-time
+          readOnly: true
+        ends_at:
+          type: string
+          format: date-time
+          readOnly: true
     CustomCreateSegmentOverrideFeatureSegment:
       type: object
       properties:
@@ -27857,20 +27868,10 @@ components:
           type: boolean
           readOnly: true
         current_billing_period:
-          type:
-            - object
-            - 'null'
-          properties:
-            starts_at:
-              type: string
-              format: date-time
-            ends_at:
-              type: string
-              format: date-time
+          oneOf:
+            - $ref: '#/components/schemas/CurrentBillingPeriod'
+            - type: 'null'
           readOnly: true
-          required:
-            - starts_at
-            - ends_at
         deleted_at:
           type:
             - string
