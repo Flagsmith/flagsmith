@@ -7126,7 +7126,11 @@
                 "format": "date-time"
               }
             },
-            "readOnly": true
+            "readOnly": true,
+            "required": [
+              "starts_at",
+              "ends_at"
+            ]
           },
           "deleted_at": {
             "type": [
