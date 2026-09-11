@@ -260,12 +260,14 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   )
 
   const variationsInfo = hasVariations && (
-    <p className='mb-4'>
+    // A div, not a p: InfoMessage renders a block, which closes a p early and
+    // drops the margin onto the empty paragraph left behind.
+    <div className='mb-4'>
       <InfoMessage collapseId={'variation-value'}>
         Changing a Variation Value will affect <strong>all environments</strong>
         , their weights are specific to this environment. Existing users will
         see the new variation value if it is changed. These values will only
-        apply when you identify via the SDK.
+        apply when you identify via the SDK.{' '}
         <a
           target='_blank'
           href='https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags'
@@ -275,7 +277,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         </a>
         .
       </InfoMessage>
-    </p>
+    </div>
   )
 
   const showValue = !(

@@ -550,7 +550,20 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                     ...prev,
                     multivariate_options: merged,
                   }))
-                  setSavedMultivariateOptions(cloneDeep(merged))
+                  // Weights are not part of this save, so the baseline keeps
+                  // the ones it had and an edited weight stays dirty. A new
+                  // variation has none, and the server starts it at 0.
+                  setSavedMultivariateOptions(
+                    cloneDeep(
+                      merged.map((option: any) => ({
+                        ...option,
+                        default_percentage_allocation:
+                          originalMultivariateOptions?.find(
+                            (stored: any) => stored.id === option.id,
+                          )?.default_percentage_allocation ?? 0,
+                      })),
+                    ),
+                  )
                 },
               )
             },
