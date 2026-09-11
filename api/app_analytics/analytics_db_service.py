@@ -28,6 +28,7 @@ from app_analytics.models import (
 from app_analytics.types import Labels, PeriodType
 from environments.models import Environment
 from features.models import Feature
+from organisations.billing_periods import months_elapsed, period_start
 from organisations.models import Organisation, OrganisationSubscriptionInformationCache
 
 logger = structlog.get_logger("app_analytics")
@@ -341,9 +342,7 @@ def _get_start_date_and_stop_date_for_subscribed_organisation(
             else:
                 raise NotFound("No billing periods found for this organisation.")
 
-            month_delta = relativedelta(now, starts_at).months
-            date_start = relativedelta(months=month_delta) + starts_at
-            return date_start, now
+            return period_start(starts_at, now), now
 
         case constants.PREVIOUS_BILLING_PERIOD:
             if sub_cache and sub_cache.current_billing_term_starts_at:
@@ -351,11 +350,13 @@ def _get_start_date_and_stop_date_for_subscribed_organisation(
             else:
                 raise NotFound("No billing periods found for this organisation.")
 
-            month_delta = relativedelta(now, starts_at).months - 1
-            month_delta += relativedelta(now, starts_at).years * 12
-            date_start = relativedelta(months=month_delta) + starts_at
-            date_stop = relativedelta(months=month_delta + 1) + starts_at
-            return date_start, date_stop
+            # Both ends count from the term start, so a month too short
+            # for its day does not shift the window.
+            months = months_elapsed(starts_at, now)
+            return (
+                starts_at + relativedelta(months=months - 1),
+                starts_at + relativedelta(months=months),
+            )
 
         case constants.NINETY_DAY_PERIOD:
             date_start = now - relativedelta(days=90)

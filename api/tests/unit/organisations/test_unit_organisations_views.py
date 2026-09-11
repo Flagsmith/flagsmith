@@ -2234,3 +2234,47 @@ def test_get_detailed_permissions__other_user_as_admin__returns_permissions(
             "derived_from": {"groups": [], "roles": []},
         }
     ]
+
+
+# A term over a year old resolved to the wrong year before #6099, so the window
+# opened twelve months early and swept up notifications from previous periods.
+@pytest.mark.freeze_time("2026-09-11T00:00:00+00:00")
+def test_get_api_usage_notifications__term_over_a_year_old__excludes_earlier_periods(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=datetime.fromisoformat(
+            "2025-08-07T00:00:00+00:00"
+        ),
+        current_billing_term_ends_at=datetime.fromisoformat(
+            "2027-08-07T00:00:00+00:00"
+        ),
+    )
+    # Inside the current window, which opens on 7 September 2026.
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=90,
+        notified_at=now,
+    )
+    # A year earlier, only reachable if the year is dropped.
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=datetime.fromisoformat("2025-09-20T00:00:00+00:00"),
+    )
+
+    url = reverse(
+        "api-v1:organisations:organisation-api-usage-notification",
+        args=[organisation.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert [r["percent_usage"] for r in response.data["results"]] == [90]
