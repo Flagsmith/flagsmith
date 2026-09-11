@@ -155,19 +155,21 @@ const FlagValueFooter = ({
                         })()}
                       </Button>
                     )}
-                    {hasVariationChanges && onSaveVariationValues && (
-                      <Button
-                        theme='secondary'
-                        onClick={onSaveVariationValues}
-                        className='mr-2'
-                        type='button'
-                        data-test='save-variation-values'
-                        id='save-variation-values-btn'
-                        disabled={isSaving || isInvalid || !savePermission}
-                      >
-                        {isSaving ? 'Saving' : 'Save variation values'}
-                      </Button>
-                    )}
+                    {is4Eyes &&
+                      hasVariationChanges &&
+                      onSaveVariationValues && (
+                        <Button
+                          theme='secondary'
+                          onClick={onSaveVariationValues}
+                          className='mr-2'
+                          type='button'
+                          data-test='save-variation-values'
+                          id='save-variation-values-btn'
+                          disabled={isSaving || isInvalid || !savePermission}
+                        >
+                          {isSaving ? 'Saving' : 'Save variation values'}
+                        </Button>
+                      )}
                     <ButtonDropdown
                       onClick={() => onSaveFeatureValue()}
                       type='button'
