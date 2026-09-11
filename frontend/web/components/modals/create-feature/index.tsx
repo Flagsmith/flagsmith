@@ -674,9 +674,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       noPermissions={!!noPermissions}
                       freeze={freeze}
                       featureState={environmentFlag}
-                      storedFeatureState={
-                        props.identityFlag || props.environmentFlag
-                      }
                       projectFlag={projectFlag}
                       environmentFlag={props.environmentFlag}
                       environmentId={environmentId}
@@ -874,6 +871,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   projectId={projectId}
                   error={error}
                   featureState={props.environmentFlag || environmentFlag}
+                  storedFeatureState={
+                    props.identityFlag || props.environmentFlag
+                  }
                   projectFlag={projectFlag}
                   identity={identity}
                   overrideFeatureState={
