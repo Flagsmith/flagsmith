@@ -213,8 +213,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   const canCompareValue =
     isEdit && !!environmentId && !identity && !hasVariations
 
-  // Fields the user can change on a variant from this tab. Unlike a change
-  // request, the unsaved marker counts a weight edit too.
+  // Unlike a change request, the unsaved marker counts a weight edit too.
   const variantFields: (keyof MultivariateOption)[] = [
     ...VARIATION_VALUE_FIELDS,
     VARIATION_WEIGHT_FIELD,

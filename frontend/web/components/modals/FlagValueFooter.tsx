@@ -22,8 +22,7 @@ interface FlagValueFooterProps {
   isInvalid: boolean
   existingChangeRequest: boolean
   onSaveFeatureValue: (schedule?: boolean) => void
-  // Variation values belong to the feature, so they cannot travel in a change
-  // request. When any are edited they get their own action instead.
+  // Variations cannot travel in a change request, so they get their own action.
   hasVariationChanges?: boolean
   onSaveVariationValues?: () => void
 }

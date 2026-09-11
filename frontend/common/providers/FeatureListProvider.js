@@ -199,9 +199,7 @@ const FeatureListProvider = class extends React.Component {
     changeRequest,
     commit,
   ) => {
-    // Variations belong to the feature, so a request scoped to one environment
-    // cannot carry them. saveVariationValues is where they change. Take the ids
-    // from what is stored and the weights from what the user edited.
+    // A request is scoped to one environment, so it cannot carry a variation.
     const weightedVariations = (projectFlag.multivariate_options || []).map(
       (option) => {
         const edited = flag.multivariate_options?.find(
@@ -234,8 +232,7 @@ const FeatureListProvider = class extends React.Component {
     )
   }
 
-  // The deliberate variation save: applies values, labels, additions and
-  // removals to the feature, and so to every environment at once.
+  // Applies to the feature, and so to every environment at once.
   saveVariationValues = (projectId, flag, projectFlag, onComplete) => {
     AppActions.editFeatureMv(
       projectId,

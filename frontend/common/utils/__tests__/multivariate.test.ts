@@ -237,8 +237,6 @@ describe('multivariate', () => {
     }
 
     it('is false when only variation values were edited', () => {
-      // The case that files an empty change request today: values are not part of
-      // the environment's feature state, so there is nothing to approve.
       expect(hasApprovableChanges(unchanged)).toBe(false)
     })
 

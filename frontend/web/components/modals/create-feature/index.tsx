@@ -514,8 +514,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           saveVariationValues,
         }: any,
       ) => {
-        // Variations belong to the feature, so they get their own action rather
-        // than riding along with a request scoped to one environment.
         const variationChanges = diffVariations({
           edited: projectFlag.multivariate_options,
           stored: props.projectFlag?.multivariate_options,
