@@ -163,7 +163,9 @@ async function ensureFlag(
       flags?.results?.find((f) => f.tags?.includes(onboardingTag.id))) ||
     flags?.results?.find((f) => f.name === FLAG_NAME)
   if (existing) {
-    await ensureOnboardingVariation(store, existing)
+    if (existing.name === FLAG_NAME) {
+      await ensureOnboardingVariation(store, existing)
+    }
     return existing
   }
   const isFirstFeature = !flags?.results?.length

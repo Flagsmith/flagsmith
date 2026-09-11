@@ -1,5 +1,8 @@
 import { getStore } from 'common/store'
-import { projectFlagService } from 'common/services/useProjectFlag'
+import {
+  projectFlagService,
+  removeProjectFlag,
+} from 'common/services/useProjectFlag'
 import { createMultivariateOption } from 'common/services/useMultivariateOption'
 import { Req } from 'common/types/requests'
 import { ProjectFlag } from 'common/types/responses'
@@ -58,6 +61,11 @@ export async function createOnboardingFlag(
       }),
     )
     .unwrap()
-  await ensureOnboardingVariation(store, flag)
+  try {
+    await ensureOnboardingVariation(store, flag)
+  } catch (error) {
+    await removeProjectFlag(store, { flag_id: flag.id, project_id: projectId })
+    throw error
+  }
   return flag
 }

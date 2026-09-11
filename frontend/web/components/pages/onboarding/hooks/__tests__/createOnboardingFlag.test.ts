@@ -7,10 +7,13 @@ import { ProjectFlag } from 'common/types/responses'
 const initiate = jest.fn((args: unknown) => ({ args, type: 'createFlag' }))
 const createMultivariateOption = jest.fn()
 
+const removeProjectFlag = jest.fn()
+
 jest.mock('common/services/useProjectFlag', () => ({
   projectFlagService: {
     endpoints: { createProjectFlag: { initiate: (a: unknown) => initiate(a) } },
   },
+  removeProjectFlag: (...a: unknown[]) => removeProjectFlag(...a),
 }))
 jest.mock('common/services/useMultivariateOption', () => ({
   createMultivariateOption: (...a: unknown[]) => createMultivariateOption(...a),
@@ -43,6 +46,7 @@ const expectedOption = {
 
 beforeEach(() => {
   initiate.mockClear()
+  removeProjectFlag.mockReset().mockResolvedValue({ data: undefined })
   createMultivariateOption.mockReset().mockResolvedValue({ data: {} })
 })
 
@@ -71,17 +75,21 @@ describe('createOnboardingFlag', () => {
     })
     expect(createMultivariateOption).toHaveBeenCalledTimes(1)
     expect(createMultivariateOption).toHaveBeenCalledWith(store, expectedOption)
+    expect(removeProjectFlag).not.toHaveBeenCalled()
   })
 
-  it('throws when the variation request fails', async () => {
+  it('removes the new flag and throws when the variation request fails', async () => {
     createMultivariateOption.mockResolvedValue({ error: { status: 500 } })
+    const store = storeReturning(flag())
 
     await expect(
-      createOnboardingFlag(storeReturning(flag()), {
-        name: 'show_demo_button',
-        projectId: 3,
-      }),
+      createOnboardingFlag(store, { name: 'show_demo_button', projectId: 3 }),
     ).rejects.toEqual({ status: 500 })
+
+    expect(removeProjectFlag).toHaveBeenCalledWith(store, {
+      flag_id: 7,
+      project_id: 3,
+    })
   })
 })
 
