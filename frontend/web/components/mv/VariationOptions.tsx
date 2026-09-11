@@ -92,20 +92,16 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
       {/* No radio, unlike the row below: selecting it would save the stale
           value as a literal override. */}
       {select && !!divergedOverride && (
-        <div className='panel panel--flat panel-without-heading mb-2 bg-surface-warning border-warning'>
-          <div className='panel-content'>
-            <ValueRowLabel>
-              <span className='text-warning'>Currently served</span>
-            </ValueRowLabel>
-            <div className='panel panel--flat panel-without-heading border-warning mb-0'>
-              <div className='panel-content'>
-                <ValueRowLabel>{divergedOverride.key}</ValueRowLabel>
-                <ValueEditor
-                  disabled
-                  value={Utils.getTypedValue(divergedOverride.servedValue)}
-                />
-              </div>
-            </div>
+        <div className='border border-warning bg-surface-warning rounded p-3 mb-2'>
+          <ValueRowLabel>
+            <span className='text-warning'>Currently served</span>
+          </ValueRowLabel>
+          <div className='border border-warning rounded p-3'>
+            <ValueRowLabel>{divergedOverride.key}</ValueRowLabel>
+            <ValueEditor
+              disabled
+              value={Utils.getTypedValue(divergedOverride.servedValue)}
+            />
           </div>
         </div>
       )}
