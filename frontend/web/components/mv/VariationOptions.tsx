@@ -95,14 +95,17 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
         <div className='panel panel--flat panel-without-heading mb-2 bg-surface-warning border-warning'>
           <div className='panel-content'>
             <ValueRowLabel>
-              <span className='text-warning'>
-                Currently served, a stale copy of {divergedOverride.key}
-              </span>
+              <span className='text-warning'>Currently served</span>
             </ValueRowLabel>
-            <ValueEditor
-              disabled
-              value={Utils.getTypedValue(divergedOverride.servedValue)}
-            />
+            <div className='panel panel--flat panel-without-heading border-warning mb-0'>
+              <div className='panel-content'>
+                <ValueRowLabel>{divergedOverride.key}</ValueRowLabel>
+                <ValueEditor
+                  disabled
+                  value={Utils.getTypedValue(divergedOverride.servedValue)}
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}
