@@ -25,15 +25,9 @@ from .subscriptions.constants import CHARGEBEE
 logger = logging.getLogger(__name__)
 
 
-CURRENT_BILLING_PERIOD_SCHEMA = {
-    "type": "object",
-    "nullable": True,
-    "properties": {
-        "starts_at": {"type": "string", "format": "date-time"},
-        "ends_at": {"type": "string", "format": "date-time"},
-    },
-    "required": ["starts_at", "ends_at"],
-}
+class CurrentBillingPeriodSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    starts_at = serializers.DateTimeField(read_only=True)
+    ends_at = serializers.DateTimeField(read_only=True)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -48,12 +42,16 @@ class SubscriptionSerializer(serializers.ModelSerializer):  # type: ignore[type-
     def get_has_active_billing_periods(self, obj):  # type: ignore[no-untyped-def]
         return obj.has_active_billing_periods
 
-    @extend_schema_field(CURRENT_BILLING_PERIOD_SCHEMA)
-    def get_current_billing_period(self, obj: Subscription) -> dict[str, str] | None:
+    @extend_schema_field(CurrentBillingPeriodSerializer(allow_null=True))
+    def get_current_billing_period(
+        self, obj: Subscription
+    ) -> dict[str, typing.Any] | None:
         if (period := obj.current_billing_period) is None:
             return None
         starts_at, ends_at = period
-        return {"starts_at": starts_at.isoformat(), "ends_at": ends_at.isoformat()}
+        return CurrentBillingPeriodSerializer(
+            {"ends_at": ends_at, "starts_at": starts_at}
+        ).data
 
 
 class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
