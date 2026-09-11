@@ -582,7 +582,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   hasVariationChanges
                     ? `Variation changes are saved separately, and nothing else has changed, so there is nothing to put in ${what}.`
                     : `Nothing has changed, so there is nothing to put in ${what}.`,
-                  'danger',
+                  'warning',
                 )
                 return
               }
