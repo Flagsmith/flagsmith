@@ -530,8 +530,33 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
             body: 'Variation values belong to the feature, so this applies to every environment straight away and is not part of a change request.',
             noText: 'Cancel',
             onYes: () => {
-              mvBaselineRefreshRef.current = true
-              saveVariationValues(projectId, projectFlag, props.projectFlag)
+              saveVariationValues(
+                projectId,
+                projectFlag,
+                props.projectFlag,
+                (savedProjectFlag: any) => {
+                  // Only the response carries ids for variations created here,
+                  // and without them the editor keeps calling them unsaved.
+                  // It reports every allocation as 0, because those are per
+                  // environment and this save is not, so keep the edited ones.
+                  const persisted = savedProjectFlag?.multivariate_options
+                  if (!persisted?.length) {
+                    return
+                  }
+                  const merged = persisted.map((option: any, i: number) => ({
+                    ...option,
+                    default_percentage_allocation:
+                      projectFlag.multivariate_options?.[i]
+                        ?.default_percentage_allocation ??
+                      option.default_percentage_allocation,
+                  }))
+                  setProjectFlag((prev: any) => ({
+                    ...prev,
+                    multivariate_options: merged,
+                  }))
+                  setSavedMultivariateOptions(cloneDeep(merged))
+                },
+              )
             },
             title: 'Save variation values',
             yesText: 'Save for all environments',

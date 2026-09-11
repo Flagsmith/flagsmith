@@ -239,8 +239,7 @@ const FeatureListProvider = class extends React.Component {
   // it owns both the saving flag and the cache invalidation that would
   // otherwise happen there.
   saveVariationValues = (projectId, flag, projectFlag, onComplete) => {
-    FeatureListStore.isSaving = true
-    FeatureListStore.trigger('change')
+    FeatureListStore.saving()
     AppActions.editFeatureMv(
       projectId,
       Object.assign({}, projectFlag, {
@@ -256,9 +255,7 @@ const FeatureListProvider = class extends React.Component {
             'FeatureList',
           ]),
         )
-        FeatureListStore.isSaving = false
-        FeatureListStore.trigger('saved', {})
-        FeatureListStore.trigger('change')
+        FeatureListStore.saved({})
         onComplete && onComplete(savedProjectFlag)
       },
     )
