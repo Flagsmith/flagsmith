@@ -92,9 +92,13 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
       {/* No radio, unlike the row below: selecting it would save the stale
           value as a literal override. */}
       {select && !!divergedOverride && (
-        <div className='panel panel--flat panel-without-heading mb-2'>
+        <div className='panel panel--flat panel-without-heading mb-2 bg-surface-warning border-warning'>
           <div className='panel-content'>
-            <ValueRowLabel>Currently served</ValueRowLabel>
+            <ValueRowLabel>
+              <span className='text-warning'>
+                Currently served, a stale copy of {divergedOverride.key}
+              </span>
+            </ValueRowLabel>
             <ValueEditor
               disabled
               value={Utils.getTypedValue(divergedOverride.servedValue)}
