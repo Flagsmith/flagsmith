@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import logging
 from datetime import timedelta
 
-from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status, viewsets
@@ -23,6 +22,7 @@ from app_analytics.influxdb_wrapper import (
 )
 from app_analytics.throttles import InfluxQueryThrottle
 from core.helpers import get_current_site_url
+from organisations.billing_periods import period_start
 from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
@@ -393,8 +393,7 @@ class OrganisationAPIUsageNotificationView(ListAPIView):  # type: ignore[type-ar
         # by defaulting to something as a reasonable default.
         billing_starts_at = billing_starts_at or now - timedelta(days=30)
 
-        month_delta = relativedelta(now, billing_starts_at).months
-        period_starts_at = relativedelta(months=month_delta) + billing_starts_at
+        period_starts_at = period_start(billing_starts_at, now)
 
         queryset = OrganisationAPIUsageNotification.objects.filter(
             organisation_id=organisation.id,

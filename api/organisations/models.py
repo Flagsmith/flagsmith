@@ -25,6 +25,7 @@ from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_lead_v2,
 )
+from organisations.billing_periods import months_elapsed
 from organisations.chargebee import (  # type: ignore[attr-defined]
     get_customer_id_from_subscription_id,
     get_max_api_calls_for_plan,
@@ -619,8 +620,7 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
             )
             return None
 
-        elapsed = relativedelta(now, starts_at)
-        months = elapsed.years * 12 + elapsed.months
+        months = months_elapsed(starts_at, now)
         # Both ends count from the term start; counting the end from the start
         # of the window loses the original day when a month is too short for it.
         return BillingPeriod(
