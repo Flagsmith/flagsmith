@@ -18,11 +18,11 @@ from organisations.billing_periods import months_elapsed, period_start
 def test_months_elapsed__spans_years__counts_them(
     since: str, now: str, expected: int
 ) -> None:
-    # Given / When / Then
-    assert (
-        months_elapsed(datetime.fromisoformat(since), datetime.fromisoformat(now))
-        == expected
-    )
+    # Given / When
+    elapsed = months_elapsed(datetime.fromisoformat(since), datetime.fromisoformat(now))
+
+    # Then
+    assert elapsed == expected
 
 
 @pytest.mark.parametrize(
@@ -45,7 +45,10 @@ def test_months_elapsed__spans_years__counts_them(
 def test_period_start__long_term__opens_on_the_latest_anniversary(
     term_starts_at: str, now: str, expected: str
 ) -> None:
-    # Given / When / Then
-    assert period_start(
+    # Given / When
+    start = period_start(
         datetime.fromisoformat(term_starts_at), datetime.fromisoformat(now)
-    ) == datetime.fromisoformat(expected)
+    )
+
+    # Then
+    assert start == datetime.fromisoformat(expected)
