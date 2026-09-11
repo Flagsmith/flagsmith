@@ -632,12 +632,15 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         ends_at = self.current_billing_term_ends_at
         if starts_at is None or ends_at is None:
             return None
-        # Exclusive of the term end, which has_active_billing_periods admits,
-        # so the last instant of a term does not open a window beyond it.
-        if not starts_at <= timezone.now() < ends_at:
+
+        # One reading, so a clock crossing the term end mid-method cannot open
+        # a window past it. Exclusive of the end, which
+        # has_active_billing_periods admits.
+        now = timezone.now()
+        if not starts_at <= now < ends_at:
             return None
 
-        elapsed = relativedelta(timezone.now(), starts_at)
+        elapsed = relativedelta(now, starts_at)
         months = elapsed.years * 12 + elapsed.months
         # Both ends count from the term start. Counting the second from the
         # first loses the original day when a month is too short for it.
