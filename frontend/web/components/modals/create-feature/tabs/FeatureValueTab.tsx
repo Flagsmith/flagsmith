@@ -50,6 +50,9 @@ type FeatureValueTabProps = {
   noPermissions: boolean
   freeze?: FeatureExperimentFreeze
   featureState: FeatureState
+  // The feature state as saved. featureState is the editor's copy, which moves
+  // with every radio click.
+  storedFeatureState?: FeatureState
   projectFlag: ProjectFlag
   environmentFlag?: FeatureState
   environmentId?: string
@@ -97,6 +100,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   originalMultivariateOptions,
   projectFlag,
   projectId,
+  storedFeatureState,
 }) => {
   const isEdit = !!projectFlag?.id
   const isDisabled = !!noPermissions || !!freeze?.isFrozen
@@ -315,20 +319,23 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   // Only edge-featurestates returns identity_uuid, and only it returns the value
   // the identity is served. Core returns the stored value, which here is the
   // control value, so comparing that would report every override as diverged.
-  const isEdgeIdentity = !!featureState.identity_uuid
+  const isEdgeIdentity = !!storedFeatureState?.identity_uuid
 
   // An override keeps its own copy of the variation's value, so editing the
-  // variation leaves the identity on the old one.
+  // variation leaves the identity on the old one. Read from the saved state,
+  // not the editor's: picking a variation moves the selection without moving
+  // the value, which would read as a divergence the user just created.
   const divergedVariantOverride =
     identity && hasVariations && isEdgeIdentity
       ? getDivergedVariantOverride({
-          overrideValue: featureState.feature_state_value,
+          overrideValue: storedFeatureState?.feature_state_value,
           variants: multivariate_options.map((option, index) => ({
             id: option.id,
             key: option.key || getDefaultVariantKey(index),
             value: Utils.featureStateToValue(option),
           })),
-          variationOverrides: identityVariations,
+          variationOverrides:
+            storedFeatureState?.multivariate_feature_state_values,
         })
       : undefined
 
