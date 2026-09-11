@@ -1,4 +1,4 @@
-import { isAllowedWhileBlocked } from 'web/routePaths'
+import { isAllowedWhileBlocked, isOrganisationUsage } from 'web/routePaths'
 
 // App renders <Blocked /> wherever this is false, so a wrong answer either
 // locks a blocked organisation out, or lets it back in.
@@ -24,5 +24,18 @@ describe('isAllowedWhileBlocked', () => {
     expect(isAllowedWhileBlocked('/organisation/7528/usage/breakdown')).toBe(
       false,
     )
+  })
+})
+
+// App hides its app-wide quota banner here, where the page has its own.
+describe('isOrganisationUsage', () => {
+  it.each`
+    pathname                             | isUsage
+    ${'/organisation/7528/usage'}        | ${true}
+    ${'/organisation/7528/projects'}     | ${false}
+    ${'/organisation/7528/usage/charts'} | ${false}
+    ${'/organisations'}                  | ${false}
+  `('$pathname is the usage page: $isUsage', ({ isUsage, pathname }) => {
+    expect(isOrganisationUsage(pathname)).toBe(isUsage)
   })
 })
