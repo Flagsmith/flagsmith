@@ -27,7 +27,11 @@ import ExternalResourcesTable from 'components/ExternalResourcesTable'
 import GitHubLinkSection from 'components/GitHubLinkSection'
 import GitLabLinkSection from 'components/GitLabLinkSection'
 import type { ExternalResource } from 'common/types/responses'
-import { hasUnmatchedIdentityOverride } from 'common/utils/multivariate'
+import {
+  diffVariations,
+  hasApprovableChanges,
+  hasUnmatchedIdentityOverride,
+} from 'common/utils/multivariate'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
@@ -507,13 +511,94 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           editFeatureSegments,
           editFeatureSettings,
           editFeatureValue,
+          saveVariationValues,
         }: any,
       ) => {
+        // Not props.projectFlag: that carries the project default weights, so
+        // comparing against it reports a weight edit that is not one.
+        const variationChanges = diffVariations({
+          edited: projectFlag.multivariate_options,
+          stored: originalMultivariateOptions,
+        })
+        const hasVariationChanges =
+          variationChanges.values || variationChanges.added
+
+        const onSaveVariationValues = () =>
+          openConfirm({
+            body: 'Variation values belong to the feature, so this applies to every environment straight away and is not part of a change request.',
+            noText: 'Cancel',
+            onYes: () => {
+              saveVariationValues(
+                projectId,
+                projectFlag,
+                props.projectFlag,
+                (savedProjectFlag: any) => {
+                  // Only the response carries ids for variations created
+                  // here, but it zeroes every weight, so keep the edited ones.
+                  const persisted = savedProjectFlag?.multivariate_options
+                  if (!persisted?.length) {
+                    return
+                  }
+                  const merged = persisted.map((option: any, i: number) => ({
+                    ...option,
+                    default_percentage_allocation:
+                      projectFlag.multivariate_options?.[i]
+                        ?.default_percentage_allocation ??
+                      option.default_percentage_allocation,
+                  }))
+                  setProjectFlag((prev: any) => ({
+                    ...prev,
+                    multivariate_options: merged,
+                  }))
+                  // Weights are not part of this save, so the baseline keeps
+                  // the ones it had and an edited weight stays dirty. A new
+                  // variation has none, and the server starts it at 0.
+                  setSavedMultivariateOptions(
+                    cloneDeep(
+                      merged.map((option: any) => ({
+                        ...option,
+                        default_percentage_allocation:
+                          originalMultivariateOptions?.find(
+                            (stored: any) => stored.id === option.id,
+                          )?.default_percentage_allocation ?? 0,
+                      })),
+                    ),
+                  )
+                },
+              )
+            },
+            title: 'Save variation values',
+            yesText: 'Save for all environments',
+          })
+
         const saveFeatureValue = saveFeatureWithValidation(
           (schedule?: boolean) => {
             if ((is4Eyes || schedule) && !identity) {
+              const approvable = hasApprovableChanges({
+                editedEnabled: environmentFlag.enabled,
+                editedValue: environmentFlag.feature_state_value,
+                segmentOverridesChanged: segmentsChanged,
+                storedEnabled: props.environmentFlag?.enabled,
+                storedValue: props.environmentFlag?.feature_state_value,
+                weightsChanged: variationChanges.weights,
+              })
+
+              if (!approvable) {
+                const what = schedule
+                  ? 'a scheduled change'
+                  : 'a change request'
+                toast(
+                  hasVariationChanges
+                    ? `Variation changes are saved separately, and nothing else has changed, so there is nothing to put in ${what}.`
+                    : `Nothing has changed, so there is nothing to put in ${what}.`,
+                  'warning',
+                )
+                return
+              }
+
               setSegmentsChanged(false)
-              setValueChanged(false)
+              // Variation edits stay unsaved if the user cancels the request.
+              setValueChanged(hasVariationChanges)
               const segmentFeatureStates = (segmentOverrides || [])
                 .filter((override: any) => !override.toRemove)
                 .map((override: any) => ({
@@ -682,6 +767,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       isVersioned={isVersioned}
                       isSaving={isSaving}
                       existingChangeRequest={!!existingChangeRequest}
+                      hasVariationChanges={hasVariationChanges}
+                      onSaveVariationValues={onSaveVariationValues}
                       originalMultivariateOptions={originalMultivariateOptions}
                       onSaveFeatureValue={saveFeatureValue}
                       onEnvironmentFlagChange={(changes: any) => {

@@ -86,6 +86,7 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
       {invalid && (
         <ErrorMessage
           errorMessageClass='mt-2'
+          errorStyles={{ display: 'block' }}
           error='Your variation percentage splits total to over 100%'
         />
       )}
