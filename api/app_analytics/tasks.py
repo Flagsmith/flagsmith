@@ -183,14 +183,32 @@ def populate_api_usage_bucket(
     source_bucket_size: int | None = None,
 ) -> None:
     for bucket_start_time, bucket_end_time in get_time_buckets(bucket_size, run_every):
-        data = _get_api_usage_source_data(
-            bucket_start_time, bucket_end_time, source_bucket_size
+        rows = list(
+            _get_api_usage_source_data(
+                bucket_start_time, bucket_end_time, source_bucket_size
+            )
         )
-        for row in data:
+        # Buckets created before the `host` column existed hold the
+        # window's whole count under host "". Raw data recomputes that
+        # window per host with the same total, so the old row is removed
+        # rather than left to double the window. Removed before any upsert,
+        # so a row this pass writes under host "" is never taken for old.
+        if source_bucket_size is None:
+            for row in rows:
+                APIUsageBucket.objects.filter(
+                    environment_id=row["environment_id"],
+                    resource=row["resource"],
+                    host="",
+                    bucket_size=bucket_size,
+                    created_at=bucket_start_time,
+                    labels=row["labels"],
+                ).delete()
+        for row in rows:
             APIUsageBucket.objects.update_or_create(
                 defaults={"total_count": row["count"]},
                 environment_id=row["environment_id"],
                 resource=row["resource"],
+                host=row["host"],
                 bucket_size=bucket_size,
                 created_at=bucket_start_time,
                 labels=row["labels"],
@@ -229,12 +247,12 @@ def _get_api_usage_source_data(
     if source_bucket_size:
         return (
             APIUsageBucket.objects.filter(filters, bucket_size=source_bucket_size)
-            .values("environment_id", "resource", "labels")
+            .values("environment_id", "resource", "host", "labels")
             .annotate(count=Sum("total_count"))
         )
     return (
         APIUsageRaw.objects.filter(filters)
-        .values("environment_id", "resource", "labels")
+        .values("environment_id", "resource", "host", "labels")
         .annotate(
             count=Sum("count"),
         )
