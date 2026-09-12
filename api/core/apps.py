@@ -32,3 +32,14 @@ class CoreAppConfig(BaseAppConfig):
     name = "core"
     label = "outer_core"
     default = True
+
+    def ready(self) -> None:
+        super().ready()
+
+        from health_check.plugins import (  # type: ignore[import-untyped]
+            plugin_dir,
+        )
+
+        from core.health import CacheTablesHealthCheck
+
+        plugin_dir.register(CacheTablesHealthCheck)
