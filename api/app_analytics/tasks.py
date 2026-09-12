@@ -187,10 +187,14 @@ def populate_api_usage_bucket(
             bucket_start_time, bucket_end_time, source_bucket_size
         )
         for row in data:
-            if source_bucket_size is None and row["host"]:
-                # Buckets written before `host` existed hold every host's
-                # count under "". Raw data recomputes the window per host,
-                # so the legacy row must go or the window counts twice.
+            # Buckets created before the `host` column existed hold the
+            # window's whole count under host "". Raw data recomputes that
+            # window per host with the same total, so the old row is removed
+            # rather than left to double the window.
+            # This only applies when the source is raw data. When the source
+            # is smaller buckets, an old bucket with host "" correctly
+            # produces a bigger bucket with host "".
+            if source_bucket_size is None:
                 APIUsageBucket.objects.filter(
                     environment_id=row["environment_id"],
                     resource=row["resource"],
