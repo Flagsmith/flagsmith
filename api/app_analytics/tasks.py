@@ -191,9 +191,6 @@ def populate_api_usage_bucket(
             # window's whole count under host "". Raw data recomputes that
             # window per host with the same total, so the old row is removed
             # rather than left to double the window.
-            # This only applies when the source is raw data. When the source
-            # is smaller buckets, an old bucket with host "" correctly
-            # produces a bigger bucket with host "".
             if source_bucket_size is None:
                 APIUsageBucket.objects.filter(
                     environment_id=row["environment_id"],
