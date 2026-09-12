@@ -187,6 +187,18 @@ def populate_api_usage_bucket(
             bucket_start_time, bucket_end_time, source_bucket_size
         )
         for row in data:
+            if source_bucket_size is None and row["host"]:
+                # Buckets written before `host` existed hold every host's
+                # count under "". Raw data recomputes the window per host,
+                # so the legacy row must go or the window counts twice.
+                APIUsageBucket.objects.filter(
+                    environment_id=row["environment_id"],
+                    resource=row["resource"],
+                    host="",
+                    bucket_size=bucket_size,
+                    created_at=bucket_start_time,
+                    labels=row["labels"],
+                ).delete()
             APIUsageBucket.objects.update_or_create(
                 defaults={"total_count": row["count"]},
                 environment_id=row["environment_id"],
