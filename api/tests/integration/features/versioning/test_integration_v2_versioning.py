@@ -651,3 +651,58 @@ def test_identities__segment_override_deleted__returns_default_environment_value
         environment_document_response_json["project"]["segments"][0]["feature_states"]
         == []
     )
+
+
+def test_versioned_featurestate__patch_without_feature_segment_id__updates_in_place(  # type: ignore[no-untyped-def]  # noqa: FT004
+    admin_client: "APIClient",
+    environment_v2_versioning: int,
+    feature: int,
+    segment: int,
+) -> None:
+    # Given
+    environment = environment_v2_versioning
+    version_list_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment, feature],
+    )
+    create_version_response = admin_client.post(version_list_url)
+    assert create_version_response.status_code == status.HTTP_201_CREATED
+    version_uuid = create_version_response.json()["uuid"]
+    featurestates_url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-list",
+        args=[environment, feature, version_uuid],
+    )
+    create_override_response = admin_client.post(
+        featurestates_url,
+        data=json.dumps(
+            {
+                "enabled": True,
+                "feature_state_value": {
+                    "string_value": "v2-value",
+                    "value_type": "unicode",
+                },
+                "feature_segment": {"segment": segment},
+            }
+        ),
+        content_type="application/json",
+    )
+    assert create_override_response.status_code == status.HTTP_201_CREATED
+    override_id = create_override_response.json()["id"]
+    detail_url = reverse(
+        "api-v1:versioning:environment-feature-version-featurestates-detail",
+        args=[environment, feature, version_uuid, override_id],
+    )
+    original_feature_segment_id = admin_client.get(detail_url).json()[
+        "feature_segment"
+    ]["id"]
+
+    # When
+    response = admin_client.patch(
+        detail_url,
+        data=json.dumps({"feature_segment": {"priority": 0, "segment": segment}}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["feature_segment"]["id"] == original_feature_segment_id
