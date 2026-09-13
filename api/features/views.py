@@ -875,7 +875,12 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         if getattr(self, "swagger_fake_view", False):
             return FeatureState.objects.none()
 
-        return super().get_queryset().filter(identity__pk=self.kwargs["identity_pk"])  # type: ignore[no-untyped-call]
+        try:
+            identity_pk = int(self.kwargs["identity_pk"])
+        except ValueError:
+            raise NotFound("Identity not found.")
+
+        return super().get_queryset().filter(identity__pk=identity_pk)  # type: ignore[no-untyped-call]
 
     @action(methods=["GET"], detail=False)
     def all(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
