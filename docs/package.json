@@ -79,6 +79,7 @@
     "@docusaurus/utils": "~3.9.2",
     "@docusaurus/utils-common": "~3.9.2",
     "@docusaurus/utils-validation": "~3.9.2",
+    "qs": "^6.14.2",
     "webpack": "~5.105.0"
   }
 }
