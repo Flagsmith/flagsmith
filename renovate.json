@@ -4,9 +4,10 @@
     "security:only-security-updates",
     ":semanticCommitTypeAll(deps)"
   ],
+  "gitIgnoredAuthors": ["flagsmith-engineering[bot]@users.noreply.github.com"],
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["before 4am on monday"]
+    "schedule": ["before 9am on monday"]
   },
   "packageRules": [
     {
