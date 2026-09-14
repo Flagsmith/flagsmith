@@ -273,6 +273,24 @@ def test_delete_identity_feature_state__existing_state__creates_audit_log(
     )
 
 
+def test_list_identity_feature_states__non_integer_identity_pk__returns_404(
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:identity-featurestates-list",
+        args=[environment.api_key, "org_notanumber"],
+    )
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {"detail": "Identity not found."}
+
+
 def test_create_feature__tags_from_different_project__returns_400(
     project: Project,
     admin_client_new: APIClient,
