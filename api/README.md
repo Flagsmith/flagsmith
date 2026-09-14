@@ -31,7 +31,7 @@ We avoid class-based tests. To manage test lifecycle and dependencies, we rely o
 
 We enforce the `test_{subject}__{condition}__{expected outcome}` template for test names, e.g. `test_get_version__valid_file_contents__returns_version_number`.
 
-We use the Given When Then structure in all our tests.
+We follow the Given-When-Then structure and mark up test bodies with Given / When / Then comments, collapsed when empty, e.g. `# Given / When`. We avoid extra comments in tests beyond the GWT markers. We prefer to rely on the test name and body to communicate the intent.
 
 ### Code guidelines: metrics
 
@@ -136,6 +136,8 @@ Squash newly added migrations whenever you can.
 ### Code guidelines: typing
 
 This codebase, including tests, is fully type-checked by Mypy in strict mode. Resolving existing `# type: ignore` comments is always welcome. If you happen to bring a new `# type: ignore` comment, please document the reason, and consider fixing a small number of adjacent `# type: ignore` comments, if possible and appropriate for the scope of your task.
+
+We resort to using `# type: ignore` comments only when upstream typing is absent or incomplete. We prefer `# type: ignore` over `typing.cast` calls because the comments will reveal themselves removable once upstream typing is improved, while `cast` remains silent.
 
 To run a full type check, run `make typecheck`.
 
