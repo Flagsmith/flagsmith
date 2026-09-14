@@ -28,6 +28,7 @@ from organisations.models import (
     OrganisationBreachedGracePeriod,
     Subscription,
 )
+from organisations.services import get_api_limit_restrictions
 from organisations.subscriptions.constants import FREE_PLAN_ID
 from organisations.usage_reporting.services import push_usage_snapshots
 from users.models import FFAdminUser
@@ -343,18 +344,9 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     for organisation in organisations:
         ctx = organisation.openfeature_evaluation_context
 
-        stop_serving = openfeature_client.get_boolean_value(
-            "api_limiting_stop_serving_flags",
-            default_value=False,
-            evaluation_context=ctx,
-        )
-        block_access = openfeature_client.get_boolean_value(
-            "api_limiting_block_access_to_admin",
-            default_value=False,
-            evaluation_context=ctx,
-        )
+        restrictions = get_api_limit_restrictions(organisation)
 
-        if not stop_serving and not block_access:
+        if not restrictions.enabled:
             continue
 
         if not organisation.has_subscription_information_cache():
@@ -384,10 +376,10 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
             )
             continue
 
-        organisation.stop_serving_flags = stop_serving
-        organisation.block_access_to_admin = block_access
+        organisation.stop_serving_flags = restrictions.stop_serving_flags
+        organisation.block_access_to_admin = restrictions.block_access_to_admin
 
-        if stop_serving:
+        if restrictions.stop_serving_flags:
             send_api_flags_blocked_notification(organisation)
 
         # Save models individually to allow lifecycle hooks to fire.

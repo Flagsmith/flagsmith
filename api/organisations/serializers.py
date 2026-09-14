@@ -11,6 +11,7 @@ from organisations.chargebee import (  # type: ignore[attr-defined]
     get_subscription_data_from_hosted_page,
 )
 from organisations.invites.models import Invite
+from organisations.services import get_api_limit_restrictions
 from users.models import FFAdminUser, UserPermissionGroup
 
 from .models import (
@@ -40,6 +41,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):  # type: ignore[type-
 class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
     subscription = SubscriptionSerializer(required=False)
     role = serializers.SerializerMethodField()
+    api_limit_restriction_enabled = serializers.SerializerMethodField()
 
     class Meta:
         model = Organisation
@@ -54,6 +56,8 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "role",
             "persist_trait_data",
             "block_access_to_admin",
+            "stop_serving_flags",
+            "api_limit_restriction_enabled",
             "restrict_project_create_to_admin",
             "force_2fa",
             "targeting_key",
@@ -65,6 +69,8 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "role",
             "persist_trait_data",
             "block_access_to_admin",
+            "stop_serving_flags",
+            "api_limit_restriction_enabled",
         )
         extra_kwargs = {
             "targeting_key": {"write_only": True},
@@ -85,6 +91,10 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
         if self.context.get("request"):
             user = self.context["request"].user
             return user.get_organisation_role(instance)
+
+    @extend_schema_field({"type": "boolean"})
+    def get_api_limit_restriction_enabled(self, instance: Organisation) -> bool:
+        return get_api_limit_restrictions(instance).enabled
 
 
 class OrganisationSerializerBasic(serializers.ModelSerializer):  # type: ignore[type-arg]
