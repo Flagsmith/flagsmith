@@ -47,7 +47,7 @@
       "rangeStrategy": "bump"
     },
     {
-      "description": "Re-enable lock file maintenance, which security:only-security-updates disables — it is the only mechanism that reaches CVEs pinned solely in lock files. Keep last with an empty scope: packageRules are re-applied after the updateType config, so the per-path rules above would otherwise scope this PR to one arbitrary workspace.",
+      "description": "Re-enable lock file maintenance, which security:only-security-updates disables. Keep last with an empty scope to ensure commit scope is applied correctly.",
       "matchUpdateTypes": ["lockFileMaintenance"],
       "enabled": true,
       "semanticCommitScope": ""
