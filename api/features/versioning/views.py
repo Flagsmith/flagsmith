@@ -288,6 +288,26 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         context["environment_feature_version"] = self.environment_feature_version
         return context
 
+    def get_serializer(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        instance = kwargs.get("instance", args[0] if args else None)
+        data = kwargs.get("data")
+        if (
+            self.action in ("update", "partial_update")
+            and instance is not None
+            and getattr(instance, "feature_segment_id", None)
+            and isinstance(data, dict)
+            and isinstance(data.get("feature_segment"), dict)
+            and "id" not in data["feature_segment"]
+        ):
+            kwargs["data"] = {
+                **data,
+                "feature_segment": {
+                    **data["feature_segment"],
+                    "id": instance.feature_segment_id,
+                },
+            }
+        return super().get_serializer(*args, **kwargs)
+
     def perform_create(
         self,
         serializer: CustomCreateSegmentOverrideFeatureStateSerializer,  # type: ignore[override]
