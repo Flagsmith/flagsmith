@@ -5,6 +5,7 @@ import pytest
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import FeatureState
+from integrations.common.models import IntegrationHealthRecord
 from integrations.heap.heap import HeapWrapper
 from integrations.heap.models import HeapConfiguration
 from integrations.integration import identify_integrations
@@ -89,6 +90,11 @@ def test_identify_integrations__heap_configured__posts_to_expected_url(
         base_url=base_url,
     )
     mocked_post = mocker.patch("integrations.heap.heap.requests.post")
+    mocked_post.return_value.status_code = 200
+    record_integration_health_mock = mocker.patch(
+        "integrations.heap.heap.record_integration_health",
+        autospec=True,
+    )
 
     # When
     identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
@@ -96,3 +102,42 @@ def test_identify_integrations__heap_configured__posts_to_expected_url(
     # Then
     assert mocked_post.call_args.args[0] == expected_url
     assert mocked_post.call_args.kwargs["json"]["app_id"] == api_key
+    record_integration_health_mock.assert_called_once()
+
+
+@pytest.mark.django_db
+def test_heap_wrapper__identify_user__records_health_status(
+    mocker: "MockerFixture",
+    environment: Environment,
+) -> None:
+    # Given
+    config = HeapConfiguration.objects.create(environment=environment, api_key="123key")
+    heap_wrapper = HeapWrapper(config)
+    mocked_post = mocker.patch("integrations.heap.heap.requests.post")
+    mocked_post.return_value.status_code = 200
+
+    # When
+    heap_wrapper._identify_user({"identity": "identity-1"})
+
+    # Then
+    health_record = IntegrationHealthRecord.objects.get(object_id=config.id)
+    assert health_record.status_code == 200
+
+
+@pytest.mark.django_db
+def test_heap_wrapper__identify_user__record_health_raises__does_not_propagate(
+    mocker: "MockerFixture",
+    environment: Environment,
+) -> None:
+    # Given
+    config = HeapConfiguration.objects.create(environment=environment, api_key="123key")
+    heap_wrapper = HeapWrapper(config)
+    mocked_post = mocker.patch("integrations.heap.heap.requests.post")
+    mocked_post.return_value.status_code = 200
+    mocker.patch(
+        "integrations.heap.heap.record_integration_health",
+        side_effect=Exception("boom"),
+    )
+
+    # When
+    heap_wrapper._identify_user({"identity": "identity-1"})  # does not raise

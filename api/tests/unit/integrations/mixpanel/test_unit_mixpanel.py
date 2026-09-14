@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from integrations.common.models import IntegrationHealthRecord
 from integrations.mixpanel.constants import DEFAULT_MIXPANEL_API_URL
 from integrations.mixpanel.mixpanel import MixpanelWrapper
 from integrations.mixpanel.models import MixpanelConfiguration
@@ -77,10 +78,14 @@ def test_mixpanel_identify_user__valid_identity__posts_to_api(
     caplog: "LogCaptureFixture",
     feature: "Feature",
     identity: "Identity",
+    environment: "Environment",
 ) -> None:
     # Given
     caplog.set_level(DEBUG)
-    config = MixpanelConfiguration(api_key="123key")
+    config = MixpanelConfiguration.objects.create(
+        environment=environment,
+        api_key="123key",
+    )
     feature_states = [*feature.feature_states.all()]
 
     mixpanel = MixpanelWrapper(config)
@@ -92,6 +97,10 @@ def test_mixpanel_identify_user__valid_identity__posts_to_api(
     post_mock = mocker.patch("integrations.mixpanel.mixpanel.requests.post")
     post_mock.return_value.status_code = 200
     post_mock.return_value.text = expected_response_text = "test content"
+    record_integration_health_mock = mocker.patch(
+        "integrations.mixpanel.mixpanel.record_integration_health",
+        autospec=True,
+    )
 
     # When
     mixpanel._identify_user(expected_user_data)
@@ -114,6 +123,53 @@ def test_mixpanel_identify_user__valid_identity__posts_to_api(
             f"Sent event to Mixpanel. Response content was: {expected_response_text}",
         ),
     ]
+    record_integration_health_mock.assert_called_once_with(config, 200)
+
+
+@pytest.mark.django_db
+def test_mixpanel_identify_user__records_health_status(
+    mocker: "MockerFixture",
+    environment: "Environment",
+) -> None:
+    # Given
+    config = MixpanelConfiguration.objects.create(
+        environment=environment,
+        api_key="123key",
+    )
+    mixpanel = MixpanelWrapper(config)
+    post_mock = mocker.patch("integrations.mixpanel.mixpanel.requests.post")
+    post_mock.return_value.status_code = 200
+    post_mock.return_value.text = "ok"
+
+    # When
+    mixpanel._identify_user([{"$distinct_id": "identity-1"}])
+
+    # Then
+    health_record = IntegrationHealthRecord.objects.get(object_id=config.id)
+    assert health_record.status_code == 200
+
+
+@pytest.mark.django_db
+def test_mixpanel_identify_user__record_health_raises__does_not_propagate(
+    mocker: "MockerFixture",
+    environment: "Environment",
+) -> None:
+    # Given
+    config = MixpanelConfiguration.objects.create(
+        environment=environment,
+        api_key="123key",
+    )
+    mixpanel = MixpanelWrapper(config)
+    post_mock = mocker.patch("integrations.mixpanel.mixpanel.requests.post")
+    post_mock.return_value.status_code = 200
+    post_mock.return_value.text = "ok"
+    mocker.patch(
+        "integrations.mixpanel.mixpanel.record_integration_health",
+        side_effect=Exception("boom"),
+    )
+
+    # When
+    mixpanel._identify_user([{"$distinct_id": "identity-1"}])  # does not raise
 
 
 def test_mixpanel_generate_user_data__identity_with_features__returns_expected_format(
@@ -192,6 +248,11 @@ def test_identify_integrations__mixpanel_configured__posts_to_expected_url(
         base_url=base_url,
     )
     mocked_post = mocker.patch("integrations.mixpanel.mixpanel.requests.post")
+    mocked_post.return_value.status_code = 200
+    record_integration_health_mock = mocker.patch(
+        "integrations.mixpanel.mixpanel.record_integration_health",
+        autospec=True,
+    )
 
     # When
     identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
@@ -199,3 +260,4 @@ def test_identify_integrations__mixpanel_configured__posts_to_expected_url(
     # Then
     assert mocked_post.call_args.args[0] == expected_url
     assert mocked_post.call_args.kwargs["json"][0]["$token"] == api_key
+    record_integration_health_mock.assert_called_once()
