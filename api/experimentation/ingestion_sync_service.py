@@ -44,9 +44,9 @@ def delete_ingestion_key(key: str) -> None:
     _get_client().delete(redis_key)
 
 
-def set_ingestion_destination(client_api_key: str, *, stream_name: str) -> None:
+def set_ingestion_destination(client_api_key: str, *, topic: str) -> None:
     redis_key = f"{INGESTION_ENVIRONMENT_DESTINATION_PREFIX}{client_api_key}"
-    _get_client().set(redis_key, stream_name)
+    _get_client().set(redis_key, topic)
 
 
 def delete_ingestion_destination(client_api_key: str) -> None:
