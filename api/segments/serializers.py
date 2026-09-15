@@ -218,8 +218,9 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     def create(self, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
         metadata_data = validated_data.pop("metadata", [])
         self._set_rules_data(validated_data)
-        segment = super().create(validated_data)  # type: ignore[no-untyped-call]
-        index_segment_flag_references(segment)
+        with transaction.atomic():
+            segment = super().create(validated_data)  # type: ignore[no-untyped-call]
+            index_segment_flag_references(segment)
         self._update_metadata(segment, metadata_data)
         enqueue_membership_refresh(segment.project)
         return segment

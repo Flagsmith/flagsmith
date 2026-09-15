@@ -3,6 +3,7 @@ from jsonpath_rfc9535.exceptions import JSONPathError
 from jsonpath_rfc9535.segments import JSONPathChildSegment, JSONPathSegment
 from jsonpath_rfc9535.selectors import NameSelector
 
+from features.dependencies.exceptions import PrerequisiteFeatureNotFoundError
 from features.dependencies.models import SegmentFlagReference
 from features.models import Feature
 from segments.models import Segment
@@ -28,6 +29,12 @@ def index_segment_flag_references(segment: Segment) -> None:
             name__in=set(feature_names_by_json_path.values()),
         ).values_list("name", "id")
     )
+    for condition_json_path, feature_name in feature_names_by_json_path.items():
+        if feature_name not in feature_ids_by_name:
+            raise PrerequisiteFeatureNotFoundError(
+                prerequisite_feature=feature_name,
+                condition_json_path=condition_json_path,
+            )
     SegmentFlagReference.objects.bulk_create(
         SegmentFlagReference(
             segment=segment,
