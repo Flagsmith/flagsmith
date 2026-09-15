@@ -1,8 +1,9 @@
 import re
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from common.core.utils import is_enterprise, is_saas
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.cache import caches
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -322,6 +323,12 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         )
 
     @property
+    def current_billing_period(self) -> tuple[datetime, datetime] | None:
+        if not self.organisation.has_subscription_information_cache():
+            return None
+        return self.organisation.subscription_information_cache.current_billing_period()
+
+    @property
     def is_free_plan(self) -> bool:
         return self.subscription_plan_family == SubscriptionPlanFamily.FREE
 
@@ -601,19 +608,35 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         }
 
     def has_active_billing_periods(self) -> bool:
-        """
-        Returns True if current date is within the billing term.
-        If either start or end date is None, returns False.
-        """
-        starts_at, ends_at = (
-            self.current_billing_term_starts_at,
-            self.current_billing_term_ends_at,
-        )
+        """Whether the organisation is inside a billing term."""
+        return self.current_billing_period() is not None
 
+    def current_billing_period(self) -> tuple[datetime, datetime] | None:
+        """
+        Returns the monthly allowance window, or None outside a billing term.
+        A term can run longer than a month, so the window opens at the most
+        recent monthly anniversary of its start.
+        """
+        starts_at = self.current_billing_term_starts_at
+        ends_at = self.current_billing_term_ends_at
         if starts_at is None or ends_at is None:
-            return False
+            return None
 
-        return starts_at <= timezone.now() <= ends_at
+        # One reading, so a clock crossing the term end mid-method cannot open
+        # a window past it. The end is exclusive: at that instant the term is
+        # over and the next one has not been written yet.
+        now = timezone.now()
+        if not starts_at <= now < ends_at:
+            return None
+
+        elapsed = relativedelta(now, starts_at)
+        months = elapsed.years * 12 + elapsed.months
+        # Both ends count from the term start. Counting the second from the
+        # first loses the original day when a month is too short for it.
+        return (
+            starts_at + relativedelta(months=months),
+            starts_at + relativedelta(months=months + 1),
+        )
 
 
 class OrganisationAPIUsageNotification(models.Model):

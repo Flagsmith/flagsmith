@@ -3759,6 +3759,21 @@
           "feature"
         ]
       },
+      "CurrentBillingPeriod": {
+        "type": "object",
+        "properties": {
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
       "CustomCreateSegmentOverrideFeatureSegment": {
         "type": "object",
         "properties": {
@@ -7109,6 +7124,17 @@
           },
           "has_active_billing_periods": {
             "type": "boolean",
+            "readOnly": true
+          },
+          "current_billing_period": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CurrentBillingPeriod"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "readOnly": true
           },
           "deleted_at": {
