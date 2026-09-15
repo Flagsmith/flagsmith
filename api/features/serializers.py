@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Any
+from functools import cached_property
+from typing import Any, Callable
 from uuid import UUID
 
 import django.core.exceptions
@@ -25,6 +26,7 @@ from environments.identities.models import Identity
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
+from experimentation.types import FEATURE_STATE_METADATA_SCHEMA
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
 from integrations.gitlab.services import (
@@ -644,9 +646,10 @@ class SDKFeatureStateSerializer(
 
 class SDKIdentityFeatureStateSerializer(SDKFeatureStateSerializer):
     variant = serializers.SerializerMethodField()
+    metadata = serializers.SerializerMethodField()
 
     class Meta(SDKFeatureStateSerializer.Meta):
-        fields = SDKFeatureStateSerializer.Meta.fields + ("variant",)  # type: ignore[assignment]
+        fields = SDKFeatureStateSerializer.Meta.fields + ("variant", "metadata")  # type: ignore[assignment]
 
     @extend_schema_field({"type": "string", "nullable": True})
     def get_variant(self, obj: FeatureState) -> str | None:
@@ -661,6 +664,27 @@ class SDKIdentityFeatureStateSerializer(SDKFeatureStateSerializer):
         if isinstance(value_object, MultivariateFeatureOption):
             return value_object.key
         return CONTROL_VARIANT_KEY
+
+    @cached_property
+    def _build_metadata(self) -> Callable[[FeatureState], dict[str, Any] | None]:
+        # One child serializer serves the whole list, so this runs once per response.
+        from experimentation.feature_state_metadata import (  # avoid circular import
+            get_feature_state_metadata_builder,
+        )
+
+        if (environment := self.context.get("environment")) is None:
+            return lambda feature_state: None  # schema generation
+        return get_feature_state_metadata_builder(environment)
+
+    @extend_schema_field(FEATURE_STATE_METADATA_SCHEMA)
+    def get_metadata(self, obj: FeatureState) -> dict[str, Any] | None:
+        return self._build_metadata(obj)
+
+    def to_representation(self, instance: FeatureState) -> dict[str, Any]:
+        representation: dict[str, Any] = super().to_representation(instance)  # type: ignore[no-untyped-call]
+        if not representation.get("metadata"):
+            representation.pop("metadata", None)
+        return representation
 
 
 class FeatureStateSerializerBasic(WritableNestedModelSerializer):

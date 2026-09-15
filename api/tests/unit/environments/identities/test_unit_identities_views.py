@@ -28,6 +28,7 @@ from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
 from environments.permissions.permissions import NestedEnvironmentPermissions
+from experimentation.models import Experiment, ExperimentStatus
 from features.models import Feature, FeatureSegment, FeatureState
 from integrations.amplitude.models import AmplitudeConfiguration
 from organisations.models import Organisation
@@ -1410,14 +1411,14 @@ def test_SDKIdentitiesDeprecated__given_identifier__retrieves_identity(
 @pytest.mark.parametrize(
     ["use_replica", "is_new_identity", "is_transient", "num_queries"],
     [
-        pytest.param(False, True, False, 10, id="default_db,new_identity"),
-        pytest.param(False, False, False, 6, id="default_db,old_identity"),
-        pytest.param(True, True, False, 10, id="replica_db,new_identity"),
-        pytest.param(True, False, False, 8, id="replica_db,old_identity"),
-        pytest.param(False, True, True, 4, id="default_db,new_identity,transient"),
-        pytest.param(False, False, True, 4, id="default_db,old_identity,transient"),
-        pytest.param(True, True, True, 4, id="replica_db,new_identity,transient"),
-        pytest.param(True, False, True, 4, id="replica_db,old_identity,transient"),
+        pytest.param(False, True, False, 11, id="default_db,new_identity"),
+        pytest.param(False, False, False, 7, id="default_db,old_identity"),
+        pytest.param(True, True, False, 11, id="replica_db,new_identity"),
+        pytest.param(True, False, False, 9, id="replica_db,old_identity"),
+        pytest.param(False, True, True, 5, id="default_db,new_identity,transient"),
+        pytest.param(False, False, True, 5, id="default_db,old_identity,transient"),
+        pytest.param(True, True, True, 5, id="replica_db,new_identity,transient"),
+        pytest.param(True, False, True, 5, id="replica_db,old_identity,transient"),
     ],
 )
 def test_sdk_identities_get__given_identifier__retrieves_feature_states(
@@ -1447,3 +1448,162 @@ def test_sdk_identities_get__given_identifier__retrieves_feature_states(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+
+
+def _get_identity_flags(
+    api_client: APIClient,
+    environment: Environment,
+    identity: Identity,
+) -> dict[str, Any]:
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    response = api_client.get(
+        f"{reverse('api-v1:sdk-identities')}?identifier={identity.identifier}",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    return {flag["feature"]["name"]: flag for flag in response.json()["flags"]}
+
+
+@pytest.mark.parametrize(
+    "cohort, expected_in_experiment",
+    [
+        pytest.param("in", True, id="in-cohort"),
+        pytest.param("out", False, id="out-of-cohort"),
+    ],
+)
+def test_sdk_identities_get__running_experiment__metadata_reports_enrolment(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    running_experiment: Experiment,
+    cohort: str,
+    expected_in_experiment: bool,
+) -> None:
+    # Given
+    Trait.objects.create(
+        identity=identity,
+        trait_key="cohort",
+        value_type=STRING,
+        string_value=cohort,
+    )
+    other_feature = Feature.objects.create(
+        project=environment.project,
+        name="unexperimented_feature",
+    )
+
+    # When
+    flags = _get_identity_flags(api_client, environment, identity)
+
+    # Then
+    assert flags[feature.name]["metadata"] == {
+        "experiment": {
+            "id": running_experiment.id,
+            "name": "New checkout CTA",
+            "in_experiment": expected_in_experiment,
+        },
+    }
+    assert "metadata" not in flags[other_feature.name]
+
+
+def test_sdk_identities_get__identity_override__metadata_reports_no_enrolment(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    running_experiment: Experiment,
+) -> None:
+    # Given - an identity in the rollout cohort, with an identity override on the feature
+    Trait.objects.create(
+        identity=identity,
+        trait_key="cohort",
+        value_type=STRING,
+        string_value="in",
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+
+    # When
+    flags = _get_identity_flags(api_client, environment, identity)
+
+    # Then
+    assert flags[feature.name]["metadata"]["experiment"]["in_experiment"] is False
+
+
+def test_sdk_identities_get__no_experiment__metadata_absent(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    identity: Identity,
+) -> None:
+    # Given / When
+    flags = _get_identity_flags(api_client, environment, identity)
+
+    # Then
+    assert "metadata" not in flags[feature.name]
+
+
+@pytest.mark.parametrize(
+    "status_",
+    [ExperimentStatus.CREATED, ExperimentStatus.PAUSED, ExperimentStatus.COMPLETED],
+)
+def test_sdk_identities_get__experiment_not_running__metadata_absent(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    running_experiment: Experiment,
+    status_: str,
+) -> None:
+    # Given
+    Trait.objects.create(
+        identity=identity,
+        trait_key="cohort",
+        value_type=STRING,
+        string_value="in",
+    )
+    Experiment.objects.filter(pk=running_experiment.pk).update(status=status_)
+
+    # When
+    flags = _get_identity_flags(api_client, environment, identity)
+
+    # Then
+    assert "metadata" not in flags[feature.name]
+
+
+@pytest.mark.parametrize("extra_experimented_features", [0, 5])
+def test_sdk_identities_get__many_experimented_flags__single_experiment_query(
+    api_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    identity: Identity,
+    running_experiment: Experiment,
+    extra_experimented_features: int,
+) -> None:
+    # Given
+    for i in range(extra_experimented_features):
+        other_feature = Feature.objects.create(
+            project=environment.project,
+            name=f"other_feature_{i}",
+        )
+        Experiment.objects.create(
+            environment=environment,
+            feature=other_feature,
+            name=f"Experiment {i}",
+            hypothesis="h",
+            status=ExperimentStatus.RUNNING,
+        )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    url = f"{reverse('api-v1:sdk-identities')}?identifier={identity.identifier}"
+
+    # When
+    with django_assert_num_queries(10):
+        response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()["flags"]) == 1 + extra_experimented_features

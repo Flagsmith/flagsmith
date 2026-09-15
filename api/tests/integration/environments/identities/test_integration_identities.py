@@ -251,9 +251,10 @@ def test_get_flags__multivariate_feature__response_excludes_variant(  # type: ig
     # When - the environment flags are fetched (no identity / remote evaluation)
     response = sdk_client.get(reverse("api-v1:flags"))
 
-    # Then - the variant field is scoped to the identities endpoint only
+    # Then - variant and metadata are scoped to the identities endpoint only
     assert response.status_code == status.HTTP_200_OK
     assert all("variant" not in flag for flag in response.json())
+    assert all("metadata" not in flag for flag in response.json())
 
 
 def test_get_feature_states_for_identity__multiple_mv_features__single_mv_query(  # type: ignore[no-untyped-def]
@@ -294,7 +295,7 @@ def test_get_feature_states_for_identity__multiple_mv_features__single_mv_query(
     base_url = reverse("api-v1:sdk-identities")
     url = f"{base_url}?identifier={identity_identifier}"
 
-    with django_assert_num_queries(6) as captured:
+    with django_assert_num_queries(7) as captured:
         first_identity_response = sdk_client.get(url)
     expected_queries = [
         query
@@ -326,7 +327,7 @@ def test_get_feature_states_for_identity__multiple_mv_features__single_mv_query(
         variant_2_value,
     )
 
-    with django_assert_num_queries(5) as captured:
+    with django_assert_num_queries(6) as captured:
         second_identity_response = sdk_client.get(url)
     expected_queries = [
         query
