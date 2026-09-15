@@ -81,6 +81,7 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
+from experimentation.models import Experiment, ExperimentStatus
 from features.feature_external_resources.models import FeatureExternalResource
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
@@ -667,6 +668,46 @@ def project_change_request(project: Project, admin_user: FFAdminUser) -> ChangeR
 @pytest.fixture()
 def feature_state(feature: Feature, environment: Environment) -> FeatureState:
     return FeatureState.objects.get(environment=environment, feature=feature)  # type: ignore[no-any-return]
+
+
+@pytest.fixture()
+def running_experiment(
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> Experiment:
+    """A running experiment on `feature`, rolled out to identities with trait `cohort=in`."""
+    rollout_segment = Segment.objects.create(
+        project=environment.project,
+        name="Experiment rollout",
+    )
+    Condition.objects.create(
+        rule=SegmentRule.objects.create(
+            segment=rollout_segment,
+            type=SegmentRule.ALL_RULE,
+        ),
+        property="cohort",
+        operator=EQUAL,
+        value="in",
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=rollout_segment,
+            environment=environment,
+        ),
+        enabled=True,
+    )
+    return Experiment.objects.create(  # type: ignore[no-any-return]
+        environment=environment,
+        feature=feature,
+        name="New checkout CTA",
+        hypothesis="Buy now converts better",
+        status=ExperimentStatus.RUNNING,
+        rollout_segment=rollout_segment,
+    )
 
 
 @pytest.fixture()

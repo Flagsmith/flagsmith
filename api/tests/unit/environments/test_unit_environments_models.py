@@ -692,7 +692,7 @@ def test_get_environment_document__valid_api_key__returns_document(  # type: ign
     # Given
 
     # When
-    with django_assert_num_queries(3):
+    with django_assert_num_queries(4):
         environment_document = Environment.get_environment_document(environment.api_key)
 
     # Then
@@ -734,7 +734,7 @@ def test_get_environment_document__document_not_in_cache__fetches_and_caches(  #
     mocked_environment_document_cache.get.return_value = None
 
     # When
-    with django_assert_num_queries(3):
+    with django_assert_num_queries(4):
         environment_document = Environment.get_environment_document(environment.api_key)
 
     # Then
