@@ -5,28 +5,19 @@ from flagsmith_schemas.api import FeatureStateMetadata
 from experimentation.models import Experiment, ExperimentStatus
 
 if TYPE_CHECKING:  # pragma: no cover
-    from django.db.models import QuerySet
-
     from environments.models import Environment
     from features.models import FeatureState
-
-
-def get_running_experiments_queryset() -> "QuerySet[Experiment]":
-    queryset: "QuerySet[Experiment]" = Experiment.objects.filter(
-        status=ExperimentStatus.RUNNING,
-    )
-    return queryset
 
 
 def get_feature_state_metadata_builder(
     environment: "Environment",
 ) -> Callable[["FeatureState"], dict[str, Any] | None]:
-    if (experiments := getattr(environment, "running_experiments", None)) is None:
-        experiments = get_running_experiments_queryset().filter(
-            environment_id=environment.pk,
-        )
     experiment_by_feature_id = {
-        experiment.feature_id: experiment for experiment in experiments
+        experiment.feature_id: experiment
+        for experiment in Experiment.objects.filter(
+            environment_id=environment.pk,
+            status=ExperimentStatus.RUNNING,
+        )
     }
 
     def build(feature_state: "FeatureState") -> dict[str, Any] | None:

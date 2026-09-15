@@ -14,10 +14,6 @@ class EnvironmentManager(SoftDeleteManager):  # type: ignore[misc]
         extra_prefetch_related: list[Prefetch | str] | None = None,  # type: ignore[type-arg]
         **kwargs,
     ):
-        from experimentation.feature_state_metadata import (  # avoid circular import
-            get_running_experiments_queryset,
-        )
-
         return (
             super()
             .select_related(
@@ -61,11 +57,6 @@ class EnvironmentManager(SoftDeleteManager):  # type: ignore[misc]
                     queryset=MultivariateFeatureStateValue.objects.select_related(
                         "multivariate_feature_option"
                     ),
-                ),
-                Prefetch(
-                    "experiments",
-                    queryset=get_running_experiments_queryset(),
-                    to_attr="running_experiments",
                 ),
                 *extra_prefetch_related or (),
             )
