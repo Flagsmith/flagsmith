@@ -73,11 +73,16 @@ repos:
   - repo: https://github.com/astral-sh/uv-pre-commit
     rev: 0.12.13 # Ensure this matches the version in api/pyproject.toml
     hooks:
+      # astral-sh/uv-pre-commit ships `files` anchored at the repo root, which
+      # assumes the project sits there. Ours are in subdirectories, so without
+      # an override neither instance matches a file and both always skip.
       - id: uv-lock
         name: api-lockcheck
+        files: ^api/(uv\.lock|pyproject\.toml|uv\.toml)$
         args: ["--project", "api", "--check"]
       - id: uv-lock
         name: mcp-lockcheck
+        files: ^mcp/(uv\.lock|pyproject\.toml|uv\.toml)$
         args: ["--project", "mcp", "--check"]
 
   - repo: https://github.com/renovatebot/pre-commit-hooks
