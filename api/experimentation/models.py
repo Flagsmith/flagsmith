@@ -15,6 +15,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 from core.fields import EncryptedJSONField
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
+from experimentation.constants import EXTERNAL_WAREHOUSE_EVENTS_TOPIC
 from experimentation.dataclasses import (
     ExposuresSummary,
     ResultsSummary,
@@ -78,19 +79,20 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def sync_to_ingestion_on_create(self) -> None:
-        from experimentation.tasks import (
-            provision_external_warehouse_ingestion_infrastructure,
-            write_environment_ingestion_keys,
+        from experimentation.tasks import write_environment_ingestion_keys
+
+        # Flagsmith connections follow the default pipeline; external ones are
+        # routed to the shared external warehouse topic.
+        destination = (
+            None
+            if self.warehouse_type == WarehouseType.FLAGSMITH
+            else EXTERNAL_WAREHOUSE_EVENTS_TOPIC
         )
-
-        if self.warehouse_type == WarehouseType.FLAGSMITH:
-            write_environment_ingestion_keys.delay(
-                kwargs={"environment_id": self.environment_id},
-            )
-            return
-
-        provision_external_warehouse_ingestion_infrastructure.delay(
-            kwargs={"environment_id": self.environment_id},
+        write_environment_ingestion_keys.delay(
+            kwargs={
+                "environment_id": self.environment_id,
+                "destination": destination,
+            },
         )
 
     @hook(AFTER_DELETE)  # type: ignore[misc]
@@ -100,58 +102,6 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
         remove_environment_ingestion_keys.delay(
             kwargs={"environment_id": self.environment_id},
         )
-
-
-class IngestionInfrastructureStatus(models.TextChoices):
-    PENDING = "pending", "Pending"
-    CREATED = "created", "Created"
-    ERRORED = "errored", "Errored"
-
-
-class OrganisationIngestionInfrastructure(models.Model):
-    organisation = models.OneToOneField(
-        "organisations.Organisation",
-        on_delete=models.DO_NOTHING,
-        related_name="ingestion_infrastructure",
-    )
-    status = models.CharField(
-        max_length=50,
-        choices=IngestionInfrastructureStatus.choices,
-        default=IngestionInfrastructureStatus.PENDING,
-    )
-    bucket_name = models.CharField(max_length=255, null=True, blank=True)
-    stream_name = models.CharField(max_length=255, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-class WarehouseDeliveryOutcome(models.TextChoices):
-    DELIVERED = "delivered", "Delivered"
-    REJECTED = "rejected", "Rejected"
-
-
-class WarehouseDeliveryLog(models.Model):
-    connection = models.ForeignKey(
-        WarehouseConnection,
-        on_delete=models.CASCADE,
-        related_name="delivery_logs",
-    )
-    # S3's own key length limit.
-    s3_key = models.CharField(max_length=1024)
-    outcome = models.CharField(
-        max_length=50,
-        choices=WarehouseDeliveryOutcome.choices,
-    )
-    rows_count = models.PositiveIntegerField(null=True, blank=True)
-    error = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        indexes = [
-            models.Index(fields=["connection", "created_at"]),
-            # Serves the retention cleanup, which filters on created_at alone.
-            models.Index(fields=["created_at"]),
-        ]
 
 
 class ExperimentStatus(models.TextChoices):

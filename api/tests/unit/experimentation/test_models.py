@@ -41,21 +41,18 @@ def test_warehouse_connection__after_create__enqueues_ingestion_write_task(
         name="warehouse",
     )
 
-    # Then
+    # Then the environment follows the default pipeline
     mock_task.delay.assert_called_once_with(
-        kwargs={"environment_id": environment.id},
+        kwargs={"environment_id": environment.id, "destination": None},
     )
 
 
-def test_warehouse_connection__after_create_external_type__enqueues_provision_task(
+def test_warehouse_connection__after_create_external_type__enqueues_write_task_with_topic(
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_provision = mocker.patch(
-        "experimentation.tasks.provision_external_warehouse_ingestion_infrastructure",
-    )
-    mock_write_keys = mocker.patch(
+    mock_task = mocker.patch(
         "experimentation.tasks.write_environment_ingestion_keys",
     )
 
@@ -66,11 +63,13 @@ def test_warehouse_connection__after_create_external_type__enqueues_provision_ta
         name="external warehouse",
     )
 
-    # Then the per-org infrastructure is provisioned, which chains the key sync
-    mock_provision.delay.assert_called_once_with(
-        kwargs={"environment_id": environment.id},
+    # Then the environment is routed to the shared external warehouse topic
+    mock_task.delay.assert_called_once_with(
+        kwargs={
+            "environment_id": environment.id,
+            "destination": "external_wh_events",
+        },
     )
-    mock_write_keys.delay.assert_not_called()
 
 
 def test_warehouse_connection__after_delete__enqueues_ingestion_remove_task(

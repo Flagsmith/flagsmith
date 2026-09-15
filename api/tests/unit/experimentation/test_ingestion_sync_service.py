@@ -99,7 +99,7 @@ def test_delete_ingestion_key__valid_key__deletes_from_redis(
     )
 
 
-def test_set_ingestion_destination__valid_stream__writes_stream_name(
+def test_set_ingestion_destination__valid_topic__writes_topic(
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -112,13 +112,13 @@ def test_set_ingestion_destination__valid_stream__writes_stream_name(
     # When
     ingestion_sync_service.set_ingestion_destination(
         "client-env-key",
-        stream_name="events-ingestion-org-1",
+        topic="external_wh_events",
     )
 
     # Then
     mock_client.set.assert_called_once_with(
         "experimentation:environment_destinations:client-env-key",
-        "events-ingestion-org-1",
+        "external_wh_events",
     )
 
 

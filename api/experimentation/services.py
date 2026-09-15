@@ -2,13 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-import time
 import typing
 from dataclasses import replace
 from functools import lru_cache
 
 import structlog
-from clickhouse_connect.driver.exceptions import ClickHouseError
 from clickhouse_driver import Client
 from clickhouse_driver.util.helpers import parse_url
 from django.conf import settings
@@ -55,8 +53,6 @@ from experimentation.dataclasses import (
 )
 from experimentation.metrics import (
     flagsmith_experimentation_warehouse_connection_verifications_total,
-    flagsmith_experimentation_warehouse_delivery_objects_total,
-    flagsmith_experimentation_warehouse_delivery_runs_total,
 )
 from experimentation.models import (
     VALID_STATUS_TRANSITIONS,
@@ -67,8 +63,6 @@ from experimentation.models import (
     MetricDirection,
     WarehouseConnection,
     WarehouseConnectionStatus,
-    WarehouseDeliveryLog,
-    WarehouseDeliveryOutcome,
     WarehouseType,
 )
 from experimentation.results_query import (
@@ -101,7 +95,6 @@ if typing.TYPE_CHECKING:
     from collections.abc import Sequence
     from datetime import datetime
 
-    from clickhouse_connect.driver.client import Client as ClickHouseHTTPClient
     from flag_engine.segments.types import ConditionOperator, RuleType
 
     from environments.models import Environment
@@ -139,11 +132,6 @@ def _customer_cache_key(kind: str, connection: "WarehouseConnection") -> str:
     )
     digest = hashlib.sha256(details.encode()).hexdigest()[:12]
     return f"experimentation:customer_{kind}:{connection.id}:{digest}"
-
-
-# A delivery run stops taking on new objects after this long, leaving room for
-# the slowest possible in-flight insert to still land inside the task timeout.
-DELIVERY_TIME_BUDGET_SECONDS = 210
 
 
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
@@ -1400,172 +1388,6 @@ def mark_warehouse_pending_connection(
         organisation__id=connection.environment.project.organisation_id,
     )
     return connection
-
-
-def mark_warehouse_delivery_failed(
-    connection: WarehouseConnection,
-    detail: str,
-) -> None:
-    connection.status = WarehouseConnectionStatus.ERRORED
-    connection.status_detail = detail[:255]
-    connection.save(update_fields=["status", "status_detail"])
-
-
-def mark_warehouse_delivery_succeeded(connection: WarehouseConnection) -> None:
-    if connection.status == WarehouseConnectionStatus.CONNECTED:
-        return
-
-    connection.status = WarehouseConnectionStatus.CONNECTED
-    connection.status_detail = None
-    connection.save(update_fields=["status", "status_detail"])
-
-
-def _deliver_pending_objects(
-    client: ClickHouseHTTPClient,
-    *,
-    bucket_name: str,
-    pending: list[str],
-    connection: WarehouseConnection,
-) -> tuple[int, int, int]:
-    log = logger.bind(
-        connection__id=connection.id,
-        environment__id=connection.environment_id,
-        organisation__id=connection.environment.project.organisation_id,
-    )
-    # A run that outlives the task timeout is retried while its own thread
-    # keeps delivering, so it must finish first: whatever is left is picked up
-    # on the next tick.
-    deadline = time.monotonic() + DELIVERY_TIME_BUDGET_SECONDS
-    delivered_count = rejected_count = rows_count = 0
-    for index, s3_key in enumerate(pending):
-        if time.monotonic() > deadline:
-            log.info(
-                "delivery.budget_exhausted",
-                objects__remaining_count=len(pending) - index,
-            )
-            break
-        try:
-            object_rows_count = warehouse_delivery_service.deliver_object(
-                client,
-                bucket_name,
-                s3_key,
-            )
-        except warehouse_delivery_service.ObjectRejectedError as exc:
-            # This object's contents are the problem; the ones behind it are
-            # still deliverable.
-            warehouse_delivery_service.move_object(
-                bucket_name,
-                s3_key,
-                to_prefix=warehouse_delivery_service.FAILED_PREFIX,
-            )
-            WarehouseDeliveryLog.objects.create(
-                connection=connection,
-                s3_key=s3_key,
-                outcome=WarehouseDeliveryOutcome.REJECTED,
-                error=str(exc),
-            )
-            rejected_count += 1
-            flagsmith_experimentation_warehouse_delivery_objects_total.labels(
-                result="rejected"
-            ).inc()
-            log.error(
-                "delivery.object_rejected",
-                s3__key=s3_key,
-                exc_info=True,
-            )
-            continue
-        warehouse_delivery_service.move_object(
-            bucket_name,
-            s3_key,
-            to_prefix=warehouse_delivery_service.ARCHIVE_PREFIX,
-        )
-        WarehouseDeliveryLog.objects.create(
-            connection=connection,
-            s3_key=s3_key,
-            outcome=WarehouseDeliveryOutcome.DELIVERED,
-            rows_count=object_rows_count,
-        )
-        rows_count += object_rows_count
-        delivered_count += 1
-        flagsmith_experimentation_warehouse_delivery_objects_total.labels(
-            result="delivered"
-        ).inc()
-    return delivered_count, rejected_count, rows_count
-
-
-def deliver_warehouse_events(
-    connection: WarehouseConnection,
-    *,
-    bucket_name: str,
-) -> None:
-    """Deliver the environment's pending event objects to the connection's
-    warehouse, surfacing the outcome on the connection's status."""
-    log = logger.bind(
-        connection__id=connection.id,
-        environment__id=connection.environment_id,
-        organisation__id=connection.environment.project.organisation_id,
-    )
-    pending = warehouse_delivery_service.list_pending_objects(
-        bucket_name,
-        environment_key=connection.environment.api_key,
-    )
-    if not pending:
-        return
-
-    try:
-        with warehouse_delivery_service.delivery_client(connection) as client:
-            delivered_count, rejected_count, rows_count = _deliver_pending_objects(
-                client,
-                bucket_name=bucket_name,
-                pending=pending,
-                connection=connection,
-            )
-    except (warehouse_delivery_service.DeliveryConfigError, ClickHouseError) as exc:
-        # The warehouse itself is unusable; deliver nothing, leave every
-        # remaining object in place for the next run, and surface the
-        # breakage on the connection. Anything else — an S3 failure, a bug
-        # here — is ours, so it propagates and fails the task instead of
-        # blaming the customer's warehouse.
-        mark_warehouse_delivery_failed(
-            connection,
-            detail=warehouse_delivery_service.describe_warehouse_error(exc),
-        )
-        flagsmith_experimentation_warehouse_delivery_runs_total.labels(
-            result="failure"
-        ).inc()
-        log.error("delivery.failed", exc_info=exc)
-        return
-
-    if delivered_count == 0 and rejected_count:
-        # Records all come from one ingestion pipeline, so every object being
-        # rejected points at the table's schema rather than the objects.
-        mark_warehouse_delivery_failed(
-            connection,
-            detail=(
-                f"The warehouse rejected every event object. Check that the "
-                f"`{warehouse_delivery_service.EVENTS_TABLE_NAME}` table "
-                f"matches the expected schema."
-            ),
-        )
-        flagsmith_experimentation_warehouse_delivery_runs_total.labels(
-            result="failure"
-        ).inc()
-        log.error(
-            "delivery.all_objects_rejected",
-            objects__rejected_count=rejected_count,
-        )
-        return
-
-    mark_warehouse_delivery_succeeded(connection)
-    flagsmith_experimentation_warehouse_delivery_runs_total.labels(
-        result="success"
-    ).inc()
-    log.info(
-        "delivery.completed",
-        objects__count=delivered_count,
-        objects__rejected_count=rejected_count,
-        rows__count=rows_count,
-    )
 
 
 def verify_clickhouse_connection(
