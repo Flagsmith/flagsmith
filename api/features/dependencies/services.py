@@ -14,7 +14,7 @@ from segments.types import SegmentRule
 if typing.TYPE_CHECKING:
     from segments.models import Segment
 
-logger = structlog.get_logger(__name__)
+logger = structlog.get_logger("features")
 
 JSONPathStr = str
 

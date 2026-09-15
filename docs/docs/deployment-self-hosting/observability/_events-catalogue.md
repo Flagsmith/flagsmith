@@ -325,7 +325,7 @@ Attributes:
  - `environment.id`
  - `organisation.id`
 
-### `features.dependencies.services.dependencies.created`
+### `features.dependencies.created`
 
 Logged at `info` from:
  - `api/features/dependencies/services.py:73`
@@ -337,7 +337,7 @@ Attributes:
  - `prerequisite_feature.name`
  - `project.id`
 
-### `features.dependencies.services.dependencies.deleted`
+### `features.dependencies.deleted`
 
 Logged at `info` from:
  - `api/features/dependencies/services.py:63`
