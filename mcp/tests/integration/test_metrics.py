@@ -1,3 +1,4 @@
+import httpx
 import pytest
 from common.test_tools import AssertMetricFixture
 from fastmcp import Client
@@ -65,6 +66,54 @@ async def test_metrics__failing_tool_call__records_error_duration_only(
         )
         is None
     )
+
+
+async def test_metrics__upstream_client_error__counts_status_code(
+    client: Client[FastMCPTransport],
+    respx_mock: MockRouter,
+    assert_metric: AssertMetricFixture,
+) -> None:
+    # Given the Flagsmith API rejects the caller's credential
+    respx_mock.get("https://api.flagsmith.com/environments/").respond(status_code=401)
+
+    # When
+    with pytest.raises(ToolError):
+        await client.call_tool("list_environments", {})
+
+    # Then the 4xx stays visible here, since Sentry no longer reports it
+    assert_metric(
+        name="flagsmith_mcp_tool_call_upstream_errors_total",
+        labels={"tool": "list_environments", "status_code": "401"},
+        value=1,
+    )
+
+
+async def test_metrics__transport_failure__counts_no_status_code(
+    client: Client[FastMCPTransport],
+    respx_mock: MockRouter,
+    assert_metric: AssertMetricFixture,
+) -> None:
+    # Given the Flagsmith API never answers, so there is no status to record
+    respx_mock.get("https://api.flagsmith.com/environments/").mock(
+        side_effect=httpx.ConnectTimeout("timed out")
+    )
+
+    # When
+    with pytest.raises(ToolError):
+        await client.call_tool("list_environments", {})
+
+    # Then the duration is recorded, but the upstream error counter is not
+    assert_metric(
+        name="flagsmith_mcp_tool_call_duration_seconds_count",
+        labels={"tool": "list_environments", "status": "error"},
+        value=1,
+    )
+    assert not [
+        sample
+        for metric in REGISTRY.collect()
+        if metric.name == "flagsmith_mcp_tool_call_upstream_errors"
+        for sample in metric.samples
+    ]
 
 
 async def test_metrics__tools_list__records_catalogue_size(

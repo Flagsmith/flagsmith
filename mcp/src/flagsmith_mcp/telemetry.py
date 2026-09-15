@@ -11,9 +11,11 @@ from opentelemetry import baggage, trace
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.context import Context
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor, TracerProvider
+from sentry_sdk.types import Event, Hint
 from structlog.typing import Processor
 
 from flagsmith_mcp import config, constants
+from flagsmith_mcp.errors import upstream_status_code
 from flagsmith_mcp.events import get_client_info
 
 APPLICATION_LOGGERS = ["flagsmith_mcp", "fastmcp", "mcp"]
@@ -75,6 +77,23 @@ def setup_telemetry(settings: config.Settings) -> None:
     )
 
 
+def drop_upstream_client_errors(event: Event, hint: Hint) -> Event | None:
+    """Discard errors that a 4xx from the Flagsmith API caused.
+
+    A 4xx means the caller's credential, arguments or target were wrong. The
+    server relayed that faithfully, and the client sees the error, so it is
+    not a fault anyone can act on here — only noise that buries real ones.
+    Server faults (5xx) and transport failures still report, and 4xx rates
+    stay visible via `flagsmith_mcp_tool_call_upstream_errors_total`.
+    """
+    if (exc_info := hint.get("exc_info")) is None:
+        return event
+    status_code = upstream_status_code(exc_info[1])
+    if status_code is not None and httpx.codes.is_client_error(status_code):
+        return None
+    return event
+
+
 def setup_sentry(settings: config.Settings) -> None:
     """Initialise Sentry for error capture when a DSN is configured."""
     if not settings.sentry_dsn:
@@ -82,4 +101,5 @@ def setup_sentry(settings: config.Settings) -> None:
     sentry_sdk.init(
         dsn=str(settings.sentry_dsn),
         environment=settings.environment,
+        before_send=drop_upstream_client_errors,
     )

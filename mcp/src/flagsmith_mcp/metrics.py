@@ -5,7 +5,9 @@ import mcp.types as mt
 import pydantic_core
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from fastmcp.tools.base import Tool, ToolResult
-from prometheus_client import Gauge, Histogram
+from prometheus_client import Counter, Gauge, Histogram
+
+from flagsmith_mcp.errors import upstream_status_code
 
 flagsmith_mcp_tool_call_duration_seconds = Histogram(
     "flagsmith_mcp_tool_call_duration_seconds",
@@ -20,6 +22,13 @@ flagsmith_mcp_tool_result_bytes = Histogram(
     "render either or both into the agent's context.",
     labelnames=["tool", "content"],
     buckets=(256, 1024, 4096, 16384, 65536, 262144, 1048576, float("inf")),
+)
+flagsmith_mcp_tool_call_upstream_errors = Counter(
+    "flagsmith_mcp_tool_call_upstream_errors",
+    "Error responses the Flagsmith API returned to an MCP tool call. A 4xx "
+    "reflects the caller's credential, arguments or target rather than a "
+    "fault in this server; watch it here, as these are not sent to Sentry.",
+    labelnames=["tool", "status_code"],
 )
 flagsmith_mcp_tool_catalogue_bytes = Gauge(
     "flagsmith_mcp_tool_catalogue_bytes",
@@ -40,10 +49,14 @@ class PrometheusMiddleware(Middleware):
         start = time.perf_counter()
         try:
             result = await call_next(context)
-        except Exception:
+        except Exception as exc:
             flagsmith_mcp_tool_call_duration_seconds.labels(
                 tool=tool, status="error"
             ).observe(time.perf_counter() - start)
+            if (status_code := upstream_status_code(exc)) is not None:
+                flagsmith_mcp_tool_call_upstream_errors.labels(
+                    tool=tool, status_code=str(status_code)
+                ).inc()
             raise
         flagsmith_mcp_tool_call_duration_seconds.labels(
             tool=tool, status="success"

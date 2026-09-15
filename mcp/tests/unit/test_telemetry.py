@@ -1,11 +1,13 @@
 import os
 
 import httpx
+import pytest
 from common.core.otel import add_otel_trace_context
 from opentelemetry import trace
 from opentelemetry.sdk.trace import ReadableSpan
 from pydantic import HttpUrl
 from pytest_mock import MockerFixture
+from sentry_sdk.types import Event
 
 from flagsmith_mcp import config, constants, telemetry
 
@@ -151,7 +153,81 @@ def test_setup_sentry__dsn_set__initialises_error_capture(
     sentry_sdk_mock.init.assert_called_once_with(
         dsn="https://public@sentry.example/1",
         environment="staging",
+        before_send=telemetry.drop_upstream_client_errors,
     )
+
+
+def test_drop_upstream_client_errors__no_exception__keeps_event() -> None:
+    # Given a message event, which carries no exception
+    event: Event = {"message": "hello"}
+
+    # When
+    result = telemetry.drop_upstream_client_errors(event, {})
+
+    # Then
+    assert result is event
+
+
+@pytest.mark.parametrize("status_code", [400, 401, 403, 404, 429])
+def test_drop_upstream_client_errors__upstream_4xx__drops_event(
+    status_code: int,
+) -> None:
+    # Given a tool call that failed because the caller's request was rejected
+    event: Event = {"message": "Error calling tool 'list_organizations'"}
+    exc = _tool_error_caused_by(status_code)
+
+    # When
+    result = telemetry.drop_upstream_client_errors(
+        event, {"exc_info": (type(exc), exc, None)}
+    )
+
+    # Then it never reaches Sentry
+    assert result is None
+
+
+@pytest.mark.parametrize("status_code", [500, 502, 503])
+def test_drop_upstream_client_errors__upstream_5xx__keeps_event(
+    status_code: int,
+) -> None:
+    # Given a tool call that failed because the Flagsmith API faulted
+    event: Event = {"message": "Error calling tool 'list_organizations'"}
+    exc = _tool_error_caused_by(status_code)
+
+    # When
+    result = telemetry.drop_upstream_client_errors(
+        event, {"exc_info": (type(exc), exc, None)}
+    )
+
+    # Then it still reports
+    assert result is event
+
+
+def test_drop_upstream_client_errors__unrelated_exception__keeps_event() -> None:
+    # Given a failure with no upstream response behind it
+    event: Event = {"message": "boom"}
+    exc = RuntimeError("boom")
+
+    # When
+    result = telemetry.drop_upstream_client_errors(
+        event, {"exc_info": (type(exc), exc, None)}
+    )
+
+    # Then
+    assert result is event
+
+
+def _tool_error_caused_by(status_code: int) -> Exception:
+    """A tool call failure chained to a Flagsmith API response, as FastMCP's
+    OpenAPI provider raises it."""
+    request = httpx.Request("GET", "https://api.flagsmith.com/api/v1/organisations/")
+    status_error = httpx.HTTPStatusError(
+        f"HTTP error {status_code}",
+        request=request,
+        response=httpx.Response(status_code, request=request),
+    )
+    tool_error = RuntimeError("Error calling tool 'list_organizations'")
+    tool_error.__cause__ = status_error
+    return tool_error
 
 
 async def test_propagate_span_attributes__no_recording_span__headers_untouched() -> (
