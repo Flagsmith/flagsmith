@@ -23,6 +23,7 @@ from experimentation.models import (
     ExperimentExposures,
     ExperimentResults,
     ExperimentStatus,
+    WarehouseConnection,
 )
 from experimentation.services import CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS
 from experimentation.stats import VariantStats
@@ -30,13 +31,13 @@ from experimentation.tasks import (
     compute_experiment_exposures,
     compute_experiment_results,
     remove_environment_ingestion_key,
-    remove_environment_ingestion_keys,
+    sync_environment_ingestion,
     write_environment_ingestion_key,
-    write_environment_ingestion_keys,
 )
 
 
-def test_write_environment_ingestion_keys__valid_keys__whitelists_client_and_server(
+def test_sync_environment_ingestion__flagsmith_connection__whitelists_valid_keys_only(
+    warehouse_connection: WarehouseConnection,
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
@@ -55,17 +56,20 @@ def test_write_environment_ingestion_keys__valid_keys__whitelists_client_and_ser
         name="expired",
         expires_at=timezone.now() - timedelta(days=1),
     )
-    mock_set = mocker.patch(
-        "experimentation.tasks.ingestion_sync_service.set_ingestion_key",
-    )
+    mock_service = mocker.patch("experimentation.tasks.ingestion_sync_service")
 
     # When
-    write_environment_ingestion_keys(environment_id=environment.id)
+    sync_environment_ingestion(environment_id=environment.id)
 
-    # Then only the client key and the valid server-side key are whitelisted
-    assert mock_set.call_args_list == [
-        mocker.call(environment.api_key, environment_key=environment.api_key),
-        mocker.call(
+    # Then the environment follows the default pipeline, and only the client
+    # key and the valid server-side key are whitelisted
+    assert mock_service.mock_calls == [
+        mocker.call.delete_ingestion_destination(environment.api_key),
+        mocker.call.set_ingestion_key(
+            environment.api_key,
+            environment_key=environment.api_key,
+        ),
+        mocker.call.set_ingestion_key(
             valid_key.key,
             environment_key=environment.api_key,
             expires_at=valid_key.expires_at,
@@ -73,7 +77,8 @@ def test_write_environment_ingestion_keys__valid_keys__whitelists_client_and_ser
     ]
 
 
-def test_write_environment_ingestion_keys__destination_given__routes_before_whitelisting(
+def test_sync_environment_ingestion__external_connection__routes_before_whitelisting(
+    clickhouse_connection: WarehouseConnection,
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
@@ -81,10 +86,7 @@ def test_write_environment_ingestion_keys__destination_given__routes_before_whit
     mock_service = mocker.patch("experimentation.tasks.ingestion_sync_service")
 
     # When
-    write_environment_ingestion_keys(
-        environment_id=environment.id,
-        destination="external_warehouse_events",
-    )
+    sync_environment_ingestion(environment_id=environment.id)
 
     # Then the environment is routed to the topic before its key is whitelisted,
     # so no event can reach the default topic in between
@@ -100,67 +102,47 @@ def test_write_environment_ingestion_keys__destination_given__routes_before_whit
     ]
 
 
-def test_write_environment_ingestion_keys__missing_environment__does_nothing(
-    db: None,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mock_set = mocker.patch(
-        "experimentation.tasks.ingestion_sync_service.set_ingestion_key",
-    )
-
-    # When
-    write_environment_ingestion_keys(environment_id=404404)
-
-    # Then
-    mock_set.assert_not_called()
-
-
-def test_remove_environment_ingestion_keys__client_and_server_keys__all_removed(
+def test_sync_environment_ingestion__connection_deleted__removes_keys_and_destination(
+    clickhouse_connection: WarehouseConnection,
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
-    # Given an environment with active and inactive server-side keys
+    # Given the environment's only connection is soft-deleted, and it has active
+    # and inactive server-side keys
+    clickhouse_connection.delete()
     active_key = EnvironmentAPIKey.objects.create(
         environment=environment, name="active"
     )
     inactive_key = EnvironmentAPIKey.objects.create(
         environment=environment, name="inactive", active=False
     )
-    mock_delete = mocker.patch(
-        "experimentation.tasks.ingestion_sync_service.delete_ingestion_key",
-    )
-    mock_delete_destination = mocker.patch(
-        "experimentation.tasks.ingestion_sync_service.delete_ingestion_destination",
-    )
+    mock_service = mocker.patch("experimentation.tasks.ingestion_sync_service")
 
     # When
-    remove_environment_ingestion_keys(environment_id=environment.id)
+    sync_environment_ingestion(environment_id=environment.id)
 
-    # Then the client key and every server-side key are removed regardless of state
-    assert mock_delete.call_args_list == [
-        mocker.call(environment.api_key),
-        mocker.call(active_key.key),
-        mocker.call(inactive_key.key),
+    # Then the client key and every server-side key are removed regardless of
+    # state, and the destination routing is cleared
+    assert mock_service.mock_calls == [
+        mocker.call.delete_ingestion_key(environment.api_key),
+        mocker.call.delete_ingestion_key(active_key.key),
+        mocker.call.delete_ingestion_key(inactive_key.key),
+        mocker.call.delete_ingestion_destination(environment.api_key),
     ]
-    # And the environment's destination routing is cleared
-    mock_delete_destination.assert_called_once_with(environment.api_key)
 
 
-def test_remove_environment_ingestion_keys__missing_environment__does_nothing(
+def test_sync_environment_ingestion__missing_environment__does_nothing(
     db: None,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_delete = mocker.patch(
-        "experimentation.tasks.ingestion_sync_service.delete_ingestion_key",
-    )
+    mock_service = mocker.patch("experimentation.tasks.ingestion_sync_service")
 
     # When
-    remove_environment_ingestion_keys(environment_id=404404)
+    sync_environment_ingestion(environment_id=404404)
 
     # Then
-    mock_delete.assert_not_called()
+    assert mock_service.mock_calls == []
 
 
 def test_write_environment_ingestion_key__valid_key__whitelists_it(

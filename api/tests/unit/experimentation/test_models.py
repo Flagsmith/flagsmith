@@ -25,13 +25,13 @@ from experimentation.models import (
 from experimentation.stats import VariantStats
 
 
-def test_warehouse_connection__after_create__enqueues_ingestion_write_task(
+def test_warehouse_connection__after_create__enqueues_ingestion_sync_task(
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
     # Given
     mock_task = mocker.patch(
-        "experimentation.tasks.write_environment_ingestion_keys",
+        "experimentation.tasks.sync_environment_ingestion",
     )
 
     # When
@@ -41,44 +41,19 @@ def test_warehouse_connection__after_create__enqueues_ingestion_write_task(
         name="warehouse",
     )
 
-    # Then the environment follows the default pipeline
+    # Then
     mock_task.delay.assert_called_once_with(
-        kwargs={"environment_id": environment.id, "destination": None},
+        kwargs={"environment_id": environment.id},
     )
 
 
-def test_warehouse_connection__after_create_external_type__enqueues_write_task_with_topic(
-    environment: Environment,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mock_task = mocker.patch(
-        "experimentation.tasks.write_environment_ingestion_keys",
-    )
-
-    # When
-    WarehouseConnection.objects.create(
-        environment=environment,
-        warehouse_type=WarehouseType.CLICKHOUSE,
-        name="external warehouse",
-    )
-
-    # Then the environment is routed to the shared external warehouse topic
-    mock_task.delay.assert_called_once_with(
-        kwargs={
-            "environment_id": environment.id,
-            "destination": "external_warehouse_events",
-        },
-    )
-
-
-def test_warehouse_connection__after_delete__enqueues_ingestion_remove_task(
+def test_warehouse_connection__after_delete__enqueues_ingestion_sync_task(
     warehouse_connection: WarehouseConnection,
     mocker: MockerFixture,
 ) -> None:
     # Given
     mock_task = mocker.patch(
-        "experimentation.tasks.remove_environment_ingestion_keys",
+        "experimentation.tasks.sync_environment_ingestion",
     )
     environment_id = warehouse_connection.environment_id
 

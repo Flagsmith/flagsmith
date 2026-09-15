@@ -7,10 +7,12 @@ from task_processor.exceptions import TaskBackoffError
 
 from environments.models import Environment, EnvironmentAPIKey
 from experimentation import ingestion_sync_service
+from experimentation.constants import EXTERNAL_WAREHOUSE_EVENTS_TOPIC
 from experimentation.models import (
     Experiment,
     ExperimentExposures,
     ExperimentResults,
+    WarehouseType,
 )
 from experimentation.services import (
     compute_exposures_summary,
@@ -23,10 +25,9 @@ logger = structlog.get_logger("experimentation")
 
 
 @register_task_handler()
-def write_environment_ingestion_keys(
-    environment_id: int,
-    destination: str | None = None,
-) -> None:
+def sync_environment_ingestion(environment_id: int) -> None:
+    """Bring the ingestion server's keys and destination for an environment in
+    line with its active warehouse connection, or remove them when it has none."""
     environment = (
         Environment.objects.filter(id=environment_id)
         .prefetch_related("api_keys")
@@ -35,13 +36,23 @@ def write_environment_ingestion_keys(
     if environment is None:
         return
 
-    if destination is not None:
-        # Set the destination before publishing the ingestion keys: the keys
-        # gate the pipeline, so a key without a destination would route events
-        # to the default topic until this write lands.
+    connection = environment.warehouse_connections.first()
+    if connection is None:
+        ingestion_sync_service.delete_ingestion_key(environment.api_key)
+        for api_key in environment.api_keys.all():
+            ingestion_sync_service.delete_ingestion_key(api_key.key)
+        ingestion_sync_service.delete_ingestion_destination(environment.api_key)
+        return
+
+    # Destination first, then keys. As soon as a key is in Redis the ingestion
+    # server accepts events for it, and if no destination is stored yet those
+    # events go to Flagsmith's own topic instead of the external warehouse one.
+    if connection.warehouse_type == WarehouseType.FLAGSMITH:
+        ingestion_sync_service.delete_ingestion_destination(environment.api_key)
+    else:
         ingestion_sync_service.set_ingestion_destination(
             environment.api_key,
-            topic=destination,
+            topic=EXTERNAL_WAREHOUSE_EVENTS_TOPIC,
         )
     ingestion_sync_service.set_ingestion_key(
         environment.api_key,
@@ -54,22 +65,6 @@ def write_environment_ingestion_keys(
                 environment_key=environment.api_key,
                 expires_at=api_key.expires_at,
             )
-
-
-@register_task_handler()
-def remove_environment_ingestion_keys(environment_id: int) -> None:
-    environment = (
-        Environment.objects.filter(id=environment_id)
-        .prefetch_related("api_keys")
-        .first()
-    )
-    if environment is None:
-        return
-
-    ingestion_sync_service.delete_ingestion_key(environment.api_key)
-    for api_key in environment.api_keys.all():
-        ingestion_sync_service.delete_ingestion_key(api_key.key)
-    ingestion_sync_service.delete_ingestion_destination(environment.api_key)
 
 
 @register_task_handler()

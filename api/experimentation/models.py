@@ -15,7 +15,6 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 from core.fields import EncryptedJSONField
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
-from experimentation.constants import EXTERNAL_WAREHOUSE_EVENTS_TOPIC
 from experimentation.dataclasses import (
     ExposuresSummary,
     ResultsSummary,
@@ -78,28 +77,11 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
         ]
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
-    def sync_to_ingestion_on_create(self) -> None:
-        from experimentation.tasks import write_environment_ingestion_keys
-
-        # Flagsmith connections follow the default pipeline; external ones are
-        # routed to the shared external warehouse topic.
-        destination = (
-            None
-            if self.warehouse_type == WarehouseType.FLAGSMITH
-            else EXTERNAL_WAREHOUSE_EVENTS_TOPIC
-        )
-        write_environment_ingestion_keys.delay(
-            kwargs={
-                "environment_id": self.environment_id,
-                "destination": destination,
-            },
-        )
-
     @hook(AFTER_DELETE)  # type: ignore[misc]
-    def sync_to_ingestion_on_delete(self) -> None:
-        from experimentation.tasks import remove_environment_ingestion_keys
+    def sync_to_ingestion(self) -> None:
+        from experimentation.tasks import sync_environment_ingestion
 
-        remove_environment_ingestion_keys.delay(
+        sync_environment_ingestion.delay(
             kwargs={"environment_id": self.environment_id},
         )
 
