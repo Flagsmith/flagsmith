@@ -112,13 +112,13 @@ def test_set_ingestion_destination__valid_topic__writes_topic(
     # When
     ingestion_sync_service.set_ingestion_destination(
         "client-env-key",
-        topic="external_wh_events",
+        topic="external_warehouse_events",
     )
 
     # Then
     mock_client.set.assert_called_once_with(
         "experimentation:environment_destinations:client-env-key",
-        "external_wh_events",
+        "external_warehouse_events",
     )
 
 

@@ -20,7 +20,7 @@ MAX_AUDIENCE_SEGMENTS = 1
 
 # Kafka topic the ingestion server produces external warehouse connections'
 # events to, in place of the default topic.
-EXTERNAL_WAREHOUSE_EVENTS_TOPIC = "external_wh_events"
+EXTERNAL_WAREHOUSE_EVENTS_TOPIC = "external_warehouse_events"
 
 # Below these per-variant floors a metric shows "collecting data" rather than
 # inference; sample-ratio is only checked once there is enough traffic to judge.

@@ -83,7 +83,7 @@ def test_write_environment_ingestion_keys__destination_given__routes_before_whit
     # When
     write_environment_ingestion_keys(
         environment_id=environment.id,
-        destination="external_wh_events",
+        destination="external_warehouse_events",
     )
 
     # Then the environment is routed to the topic before its key is whitelisted,
@@ -91,7 +91,7 @@ def test_write_environment_ingestion_keys__destination_given__routes_before_whit
     assert mock_service.mock_calls == [
         mocker.call.set_ingestion_destination(
             environment.api_key,
-            topic="external_wh_events",
+            topic="external_warehouse_events",
         ),
         mocker.call.set_ingestion_key(
             environment.api_key,

@@ -67,7 +67,7 @@ def test_warehouse_connection__after_create_external_type__enqueues_write_task_w
     mock_task.delay.assert_called_once_with(
         kwargs={
             "environment_id": environment.id,
-            "destination": "external_wh_events",
+            "destination": "external_warehouse_events",
         },
     )
 
