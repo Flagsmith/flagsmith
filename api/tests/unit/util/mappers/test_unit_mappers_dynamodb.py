@@ -410,6 +410,15 @@ def test_map_environment_to_compressed_environment_document__running_experiment_
     environment: "Environment",
     running_experiment: "Experiment",
 ) -> None:
+    # Given
+    expected_metadata = {
+        "experiment": {
+            "id": running_experiment.id,
+            "name": "New checkout CTA",
+            "in_experiment": False,
+        }
+    }
+
     # When
     result = dynamodb.map_environment_to_compressed_environment_document(environment)
 
@@ -417,10 +426,4 @@ def test_map_environment_to_compressed_environment_document__running_experiment_
     compressed_feature_states = result.document["feature_states"]
     assert isinstance(compressed_feature_states, bytes)
     feature_states = json.loads(gzip.decompress(compressed_feature_states))
-    assert feature_states[0]["metadata"] == {
-        "experiment": {
-            "id": running_experiment.id,
-            "name": "New checkout CTA",
-            "in_experiment": False,
-        }
-    }
+    assert feature_states[0]["metadata"] == expected_metadata

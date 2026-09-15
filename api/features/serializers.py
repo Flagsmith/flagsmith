@@ -27,6 +27,9 @@ from environments.identities.models import Identity
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
+from experimentation.feature_state_metadata import (
+    get_feature_state_metadata_builder,
+)
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
 from integrations.gitlab.services import (
@@ -667,14 +670,7 @@ class SDKIdentityFeatureStateSerializer(SDKFeatureStateSerializer):
 
     @cached_property
     def _build_metadata(self) -> Callable[[FeatureState], dict[str, Any] | None]:
-        # One child serializer serves the whole list, so this runs once per response.
-        from experimentation.feature_state_metadata import (  # avoid circular import
-            get_feature_state_metadata_builder,
-        )
-
-        if (environment := self.context.get("environment")) is None:
-            return lambda feature_state: None  # schema generation
-        return get_feature_state_metadata_builder(environment)
+        return get_feature_state_metadata_builder(self.context["environment"])
 
     @extend_schema_field(OpenApiTypes.OBJECT)
     def get_metadata(self, obj: FeatureState) -> dict[str, Any] | None:

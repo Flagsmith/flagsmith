@@ -222,7 +222,6 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
 
     @hook(AFTER_UPDATE, when_any=["status", "name"], has_changed=True)  # type: ignore[misc]
     def rebuild_environment_document(self) -> None:
-        # Status and name are served on the environment document via `metadata.experiment`.
         from environments.tasks import rebuild_environment_document
 
         environment_id = self.environment_id

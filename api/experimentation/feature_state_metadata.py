@@ -1,5 +1,3 @@
-"""`metadata.experiment` for the feature states of a feature under a running experiment."""
-
 from typing import TYPE_CHECKING, Any, Callable
 
 from flagsmith_schemas.api import FeatureStateMetadata
@@ -23,11 +21,6 @@ def get_running_experiments_queryset() -> "QuerySet[Experiment]":
 def get_feature_state_metadata_builder(
     environment: "Environment",
 ) -> Callable[["FeatureState"], dict[str, Any] | None]:
-    """Return a callable resolving a feature state's `metadata` without hitting the database.
-
-    Uses `running_experiments` when prefetched by `filter_for_document_builder`,
-    otherwise costs one query.
-    """
     if (experiments := getattr(environment, "running_experiments", None)) is None:
         experiments = get_running_experiments_queryset().filter(
             environment_id=environment.pk,
