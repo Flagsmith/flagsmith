@@ -325,6 +325,31 @@ Attributes:
  - `environment.id`
  - `organisation.id`
 
+### `features.dependencies.services.dependencies.created`
+
+Logged at `info` from:
+ - `api/features/dependencies/services.py:73`
+
+Attributes:
+ - `environment.key`
+ - `feature.name`
+ - `organisation.id`
+ - `prerequisite_feature.name`
+ - `project.id`
+
+### `features.dependencies.services.dependencies.deleted`
+
+Logged at `info` from:
+ - `api/features/dependencies/services.py:63`
+ - `api/features/dependencies/services.py:93`
+
+Attributes:
+ - `environment.key`
+ - `feature.name`
+ - `organisation.id`
+ - `prerequisite_feature.name`
+ - `project.id`
+
 ### `features.flag.update_rejected`
 
 Logged at `warning` from:
@@ -706,7 +731,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:231`
+ - `api/segments/serializers.py:234`
 
 Attributes:
  - `revision_id`

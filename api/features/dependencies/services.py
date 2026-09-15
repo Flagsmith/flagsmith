@@ -42,6 +42,11 @@ def index_segment_flag_references(segment: "Segment") -> None:
                 prerequisite_feature=feature_name,
                 condition_json_path=condition_json_path,
             )
+    references = SegmentFlagReference.objects.filter(segment=segment)
+    previous_feature_names = set(
+        references.values_list("prerequisite_feature__name", flat=True)
+    )
+    references.delete()
     SegmentFlagReference.objects.bulk_create(
         SegmentFlagReference(
             segment=segment,
@@ -50,6 +55,29 @@ def index_segment_flag_references(segment: "Segment") -> None:
         )
         for condition_json_path, feature_name in feature_names_by_json_path.items()
     )
+    overrides = FeatureSegment.objects.filter(segment=segment).select_related(
+        "environment", "feature"
+    )
+    for feature_name in previous_feature_names - feature_ids_by_name.keys():
+        for override in overrides:
+            logger.info(
+                "dependencies.deleted",
+                organisation__id=segment.project.organisation_id,
+                project__id=segment.project_id,
+                environment__key=override.environment.api_key,
+                feature__name=override.feature.name,
+                prerequisite_feature__name=feature_name,
+            )
+    for feature_name in feature_ids_by_name.keys() - previous_feature_names:
+        for override in overrides:
+            logger.info(
+                "dependencies.created",
+                organisation__id=segment.project.organisation_id,
+                project__id=segment.project_id,
+                environment__key=override.environment.api_key,
+                feature__name=override.feature.name,
+                prerequisite_feature__name=feature_name,
+            )
 
 
 def delete_segment_flag_references(segment: "Segment") -> None:

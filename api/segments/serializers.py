@@ -237,6 +237,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                     revision_id=segment_revision.id,
                 )
             segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
+            index_segment_flag_references(segment)
         self._update_metadata(segment, metadata)
         enqueue_membership_refresh(segment.project)
         return segment
