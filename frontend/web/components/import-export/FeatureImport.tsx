@@ -438,7 +438,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
             prevPage={() => setPage(page - 1)}
             goToPage={setPage}
           />
-          <ErrorMessage>{error}</ErrorMessage>
+          <ErrorMessage error={error} />
           <div className='mt-4 text-right'>
             <Button disabled={isLoading} onClick={onSubmit}>
               Import Features

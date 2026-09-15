@@ -1,10 +1,13 @@
-import React, { FC, ReactNode } from 'react'
+import React, { FC } from 'react'
 import ValueEditor from 'components/ValueEditor'
 import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
 import Utils from 'common/utils/utils'
 import { FlagsmithValue, MultivariateOption } from 'common/types/responses'
-import { UnmatchedOverride } from 'common/utils/multivariate'
+import {
+  DivergedVariantOverride,
+  UnmatchedOverride,
+} from 'common/utils/multivariate'
 
 type VariationOverride = {
   id?: number
@@ -19,6 +22,7 @@ interface VariationOptionsProps {
   controlPercentage: number
   controlValue: FlagsmithValue
   disabled: boolean
+  divergedOverride?: DivergedVariantOverride
   multivariateOptions: MultivariateOption[]
   readOnly?: boolean
   removeVariation: (i: number) => void
@@ -39,23 +43,13 @@ interface VariationOptionsProps {
   weightTitle: string
 }
 
-interface ValueRowLabelProps {
-  children: ReactNode
-}
-
-// Each row shows a bare value, so it needs saying which value it is.
-const ValueRowLabel: FC<ValueRowLabelProps> = ({ children }) => (
-  <div className='mb-2'>
-    <span className='h6 mb-0 font-weight-semibold'>{children}</span>
-  </div>
-)
-
 export const VariationOptions: FC<VariationOptionsProps> = ({
   apiErrors,
   canCreateFeature,
   controlPercentage,
   controlValue,
   disabled,
+  divergedOverride,
   multivariateOptions,
   readOnly,
   removeVariation,
@@ -80,17 +74,34 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
     <>
       {invalid && (
         <ErrorMessage
-          className='mt-2'
+          errorMessageClass='mt-2'
+          errorStyles={{ display: 'block' }}
           error='Your variation percentage splits total to over 100%'
         />
+      )}
+      {/* No radio, unlike the row below: selecting it would save the stale
+          value as a literal override. */}
+      {select && !!divergedOverride && (
+        <div className='border border-warning bg-surface-warning rounded p-3 mb-2'>
+          <ValueRowLabel>
+            <span className='text-warning'>Currently served</span>
+          </ValueRowLabel>
+          <div className='border border-warning rounded p-3'>
+            <ValueRowLabel>{divergedOverride.key}</ValueRowLabel>
+            <ValueEditor
+              disabled
+              value={Utils.getTypedValue(divergedOverride.servedValue)}
+            />
+          </div>
+        </div>
       )}
       {select && !!unmatchedOverride && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
-            <ValueRowLabel>Current override</ValueRowLabel>
             <Row>
               <Flex>
                 <ValueEditor
+                  label='Current override'
                   disabled
                   value={Utils.getTypedValue(unmatchedOverride.value)}
                 />
@@ -113,10 +124,10 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
       {select && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
-            <ValueRowLabel>Control value</ValueRowLabel>
             <Row>
               <Flex>
                 <ValueEditor
+                  label='Control value'
                   disabled
                   value={Utils.getTypedValue(controlValue)}
                 />
@@ -159,12 +170,10 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
         return select ? (
           <div key={i} className='panel panel--flat panel-without-heading mb-2'>
             <div className='panel-content'>
-              <ValueRowLabel>
-                {theValue.key || Utils.getDefaultVariantKey(i)}
-              </ValueRowLabel>
               <Row>
                 <Flex>
                   <ValueEditor
+                    label={theValue.key || Utils.getDefaultVariantKey(i)}
                     disabled={true}
                     value={Utils.getTypedValue(
                       Utils.featureStateToValue(theValue),

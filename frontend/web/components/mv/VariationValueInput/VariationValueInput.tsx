@@ -1,5 +1,4 @@
 import React from 'react'
-import FieldLabel from 'components/base/forms/FieldLabel'
 import ValueEditor from 'components/ValueEditor'
 import ErrorMessage from 'components/ErrorMessage'
 import Constants from 'common/constants'
@@ -66,21 +65,14 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
         </div>
       </Row>
       <div>
-        <FieldLabel
-          tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
-        >
-          Variation Value
-        </FieldLabel>
         {Utils.renderWithPermission(
           canCreateFeature,
           readOnly
             ? 'Variation values are defined at the feature level and cannot be changed per segment.'
             : Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
           <ValueEditor
-            data-test={`featureVariationValue${
-              Utils.featureStateToValue(value) || index
-            }`}
-            name='featureValue'
+            label='Variation Value'
+            labelTooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
             className='full-width code-medium'
             value={Utils.getTypedValue(Utils.featureStateToValue(value))}
             disabled={!canCreateFeature || disabled || readOnly}
@@ -95,16 +87,12 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
                 onChange(newValue)
               }
             }}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            onChange={(newValue: string) => {
               onChange({
                 ...value,
-                ...Utils.valueToFeatureState(
-                  Utils.safeParseEventValue(e),
-                  false,
-                ),
+                ...Utils.valueToFeatureState(newValue, false),
               })
             }}
-            placeholder="e.g. 'big' "
           />,
         )}
       </div>

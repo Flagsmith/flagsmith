@@ -1,5 +1,8 @@
 import {
+  diffVariations,
   getDefaultVariantKey,
+  getDivergedVariantOverride,
+  hasApprovableChanges,
   hasUnmatchedIdentityOverride,
   resolveUnmatchedOverride,
   sortMultivariateOptions,
@@ -134,6 +137,224 @@ describe('multivariate', () => {
         ).toBe(expected)
       },
     )
+  })
+
+  describe('diffVariations', () => {
+    const stored = [
+      {
+        default_percentage_allocation: 60,
+        id: 1,
+        key: 'a',
+        string_value: 'va',
+        type: 'unicode',
+      },
+      {
+        default_percentage_allocation: 40,
+        id: 2,
+        key: 'b',
+        string_value: 'vb',
+        type: 'unicode',
+      },
+    ]
+
+    it('reports nothing when nothing was touched', () => {
+      expect(diffVariations({ edited: stored, stored })).toEqual({
+        added: false,
+        values: false,
+        weights: false,
+      })
+    })
+
+    it('separates a value edit from a weight edit', () => {
+      const edited = [
+        { ...stored[0], string_value: 'va_changed' },
+        { ...stored[1], default_percentage_allocation: 35 },
+      ]
+
+      expect(diffVariations({ edited, stored })).toEqual({
+        added: false,
+        values: true,
+        weights: true,
+      })
+    })
+
+    it('reports a weight edit on its own, leaving values untouched', () => {
+      const edited = [
+        { ...stored[0], default_percentage_allocation: 70 },
+        stored[1],
+      ]
+
+      expect(diffVariations({ edited, stored })).toEqual({
+        added: false,
+        values: false,
+        weights: true,
+      })
+    })
+
+    it('counts a renamed label as a value change, since labels are shared too', () => {
+      const edited = [{ ...stored[0], key: 'a_renamed' }, stored[1]]
+
+      expect(diffVariations({ edited, stored }).values).toBe(true)
+    })
+
+    it('reports an addition separately, since it serves nothing yet', () => {
+      const edited = [
+        ...stored,
+        {
+          default_percentage_allocation: 0,
+          string_value: 'vc',
+          type: 'unicode',
+        },
+      ]
+
+      expect(diffVariations({ edited, stored })).toEqual({
+        added: true,
+        values: false,
+        weights: false,
+      })
+    })
+
+    it('counts a removed variation as a value change', () => {
+      expect(diffVariations({ edited: [stored[0]], stored }).values).toBe(true)
+    })
+
+    it('reports nothing for a standard flag with no variations', () => {
+      expect(diffVariations({ edited: undefined, stored: undefined })).toEqual({
+        added: false,
+        values: false,
+        weights: false,
+      })
+    })
+  })
+
+  describe('hasApprovableChanges', () => {
+    const unchanged = {
+      editedEnabled: true,
+      editedValue: 'same',
+      segmentOverridesChanged: false,
+      storedEnabled: true,
+      storedValue: 'same',
+      weightsChanged: false,
+    }
+
+    it('is false when only variation values were edited', () => {
+      expect(hasApprovableChanges(unchanged)).toBe(false)
+    })
+
+    it.each`
+      field                        | value
+      ${'weightsChanged'}          | ${true}
+      ${'segmentOverridesChanged'} | ${true}
+      ${'editedEnabled'}           | ${false}
+      ${'editedValue'}             | ${'different'}
+    `('is true when $field changes', ({ field, value }) => {
+      expect(hasApprovableChanges({ ...unchanged, [field]: value })).toBe(true)
+    })
+
+    it('treats an undefined value as equal to null rather than a change', () => {
+      expect(
+        hasApprovableChanges({
+          ...unchanged,
+          editedValue: undefined,
+          storedValue: null,
+        }),
+      ).toBe(false)
+    })
+  })
+
+  describe('getDivergedVariantOverride', () => {
+    const variants = [
+      { id: 1, key: 'variant_a', value: 'old_a' },
+      { id: 2, key: 'variant_b', value: 'current_b' },
+    ]
+    const pinnedToVariant2 = [
+      { multivariate_feature_option: 2, percentage_allocation: 100 },
+    ]
+
+    it('reports the served value when the pinned variation has since changed', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: 'stale_b',
+          variants,
+          variationOverrides: pinnedToVariant2,
+        }),
+      ).toEqual({ key: 'variant_b', servedValue: 'stale_b' })
+    })
+
+    it('reports nothing when the served value matches the pinned variation', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: 'current_b',
+          variants,
+          variationOverrides: pinnedToVariant2,
+        }),
+      ).toBeUndefined()
+    })
+
+    it('reports nothing when no variation is pinned', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: 'stale_b',
+          variants,
+          variationOverrides: [
+            { multivariate_feature_option: 1, percentage_allocation: 50 },
+            { multivariate_feature_option: 2, percentage_allocation: 50 },
+          ],
+        }),
+      ).toBeUndefined()
+    })
+
+    it('reports nothing when the pinned variation no longer exists', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: 'stale_b',
+          variants,
+          variationOverrides: [
+            { multivariate_feature_option: 99, percentage_allocation: 100 },
+          ],
+        }),
+      ).toBeUndefined()
+    })
+
+    it('withholds a verdict while the feature state has not loaded', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: undefined,
+          variants,
+          variationOverrides: pinnedToVariant2,
+        }),
+      ).toBeUndefined()
+    })
+
+    it('withholds a verdict while the variations have not loaded', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: 'stale_b',
+          variants: undefined,
+          variationOverrides: pinnedToVariant2,
+        }),
+      ).toBeUndefined()
+    })
+
+    it('treats a null served value as a value, not as unloaded', () => {
+      expect(
+        getDivergedVariantOverride({
+          overrideValue: null,
+          variants,
+          variationOverrides: pinnedToVariant2,
+        }),
+      ).toEqual({ key: 'variant_b', servedValue: null })
+    })
+
+    it('leaves the save-path predicate untouched for a diverged override', () => {
+      expect(
+        hasUnmatchedIdentityOverride({
+          controlValue: 'control',
+          overrideValue: 'stale_b',
+          variationOverrides: pinnedToVariant2,
+        }),
+      ).toBe(false)
+    })
   })
 
   describe('resolveUnmatchedOverride', () => {

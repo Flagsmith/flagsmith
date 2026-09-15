@@ -143,13 +143,15 @@ def map_flux_tables_to_usage_data(
                     day=date,
                     labels=labels,
                 )
-            if (resource := Resource.get_from_name(values["resource"])) and (
-                resource_attr := resource.column_name
+            if (
+                (value := values["_value"]) is not None
+                and (resource := Resource.get_from_name(values["resource"]))
+                and (resource_attr := resource.column_name)
             ):
                 setattr(
                     data_by_key[key],
                     resource_attr,
-                    values["_value"],
+                    value,
                 )
     return list(data_by_key.values())
 
@@ -190,7 +192,7 @@ def map_flux_tables_to_feature_evaluation_data(
     return [
         FeatureEvaluationData(
             day=(values := record.values)["_time"].date(),
-            count=values["_value"],
+            count=values["_value"] or 0,
             labels=map_influx_record_values_to_labels(values),
         )
         for flux_table in flux_tables

@@ -20,10 +20,12 @@ export const getDefaultVariantKey = (index: number): string =>
 // is only gone once saved.
 // Only the allocation matters here: a variation pinned at 100% is what makes
 // an override expressible as a variation rather than a free-form value.
-export type VariationOverrides =
-  | { percentage_allocation: number }[]
-  | null
-  | undefined
+export type VariationOverride = {
+  multivariate_feature_option?: number | null
+  percentage_allocation: number
+}
+
+export type VariationOverrides = VariationOverride[] | null | undefined
 
 // An override the variation radios cannot express, and whether it is still the
 // value in play.
@@ -78,6 +80,157 @@ export const resolveUnmatchedOverride = ({
   return value === undefined ? undefined : { selected: isSelected, value }
 }
 
+// A variation's value is shared by every environment and only its weight is
+// per environment, so a change request can carry the weight and nothing else.
+export type VariationChanges = {
+  values: boolean
+  weights: boolean
+  // New variations land at 0% allocation, so they serve nothing yet.
+  added: boolean
+}
+
+type ComparableVariation = {
+  id?: number | null
+  key?: string | null
+  type?: string | null
+  string_value?: string | null
+  integer_value?: number | null
+  boolean_value?: boolean | null
+  default_percentage_allocation?: number | null
+}
+
+export const VARIATION_VALUE_FIELDS = [
+  'key',
+  'type',
+  'string_value',
+  'integer_value',
+  'boolean_value',
+] as const
+
+export const VARIATION_WEIGHT_FIELD = 'default_percentage_allocation'
+
+const same = (a: unknown, b: unknown): boolean => (a ?? null) === (b ?? null)
+
+export const diffVariations = ({
+  edited,
+  stored,
+}: {
+  edited: ComparableVariation[] | undefined
+  stored: ComparableVariation[] | undefined
+}): VariationChanges => {
+  const editedList = edited ?? []
+  const storedList = stored ?? []
+
+  const isUnsaved = (variation: ComparableVariation): boolean =>
+    variation.id === null || variation.id === undefined
+  const added = editedList.some(isUnsaved)
+  const removed = storedList.some(
+    (storedVariation) =>
+      !editedList.some((variation) => variation.id === storedVariation.id),
+  )
+
+  let values = removed
+  let weights = false
+
+  for (const variation of editedList) {
+    if (isUnsaved(variation)) {
+      continue
+    }
+    const before = storedList.find((candidate) => candidate.id === variation.id)
+    if (!before) {
+      continue
+    }
+    if (
+      VARIATION_VALUE_FIELDS.some(
+        (field) => !same(variation[field], before[field]),
+      )
+    ) {
+      values = true
+    }
+    if (
+      !same(
+        variation.default_percentage_allocation,
+        before.default_percentage_allocation,
+      )
+    ) {
+      weights = true
+    }
+  }
+
+  return { added, values, weights }
+}
+
+// Without this, an unchanged feature state is filed and approvers get an
+// empty request.
+export const hasApprovableChanges = ({
+  editedEnabled,
+  editedValue,
+  segmentOverridesChanged,
+  storedEnabled,
+  storedValue,
+  weightsChanged,
+}: {
+  editedEnabled: boolean | undefined
+  editedValue: FlagsmithValue | undefined
+  segmentOverridesChanged: boolean
+  storedEnabled: boolean | undefined
+  storedValue: FlagsmithValue | undefined
+  weightsChanged: boolean
+}): boolean =>
+  weightsChanged ||
+  segmentOverridesChanged ||
+  !same(editedEnabled, storedEnabled) ||
+  !same(editedValue, storedValue)
+
+// Separate from hasUnmatchedIdentityOverride, which also decides whether saving
+// keeps the override's own value: reporting a divergence there would write the
+// stale value into the record.
+export type DivergedVariantOverride = {
+  key: string
+  servedValue: FlagsmithValue
+}
+
+// Value resolved by the caller, so this module stays free of Utils.
+export type PinnableVariant = {
+  id?: number | null
+  key: string
+  value: FlagsmithValue
+}
+
+export const getDivergedVariantOverride = ({
+  overrideValue,
+  variants,
+  variationOverrides,
+}: {
+  overrideValue: FlagsmithValue | undefined
+  variants: PinnableVariant[] | undefined
+  variationOverrides: VariationOverrides
+}): DivergedVariantOverride | undefined => {
+  // `undefined` means not loaded, unlike an override of `null`. Answering from
+  // absent data would report every override as diverged.
+  if (overrideValue === undefined || !variants?.length) {
+    return undefined
+  }
+  const pinned = variationOverrides?.find(
+    (variation) => variation.percentage_allocation === 100,
+  )
+  if (!pinned) {
+    return undefined
+  }
+  // An unsaved variation has no id either, so absent would match absent.
+  const pinnedOptionId = pinned.multivariate_feature_option
+  if (pinnedOptionId === null || pinnedOptionId === undefined) {
+    return undefined
+  }
+  const variant = variants.find((candidate) => candidate.id === pinnedOptionId)
+  if (!variant || variant.value === undefined) {
+    return undefined
+  }
+  if (variant.value === overrideValue) {
+    return undefined
+  }
+  return { key: variant.key, servedValue: overrideValue }
+}
 // Options not yet saved have no id and sort last, in input order.
 export const sortMultivariateOptions = <T extends { id?: number | null }>(
   options: T[],

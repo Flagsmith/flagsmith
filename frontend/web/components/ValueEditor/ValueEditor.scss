@@ -1,0 +1,105 @@
+// The `code.txt` and `.hljs` selectors are Highlight's markup: it renders the
+// editor and sets the language as the class name. Imports _variables for the
+// input and type scalars, the same way the stylesheets in styles/components do.
+@import '../../styles/variables';
+
+.invalid .value-editor .hljs {
+  border: 2px solid var(--color-border-danger);
+}
+.value-editor {
+  position: relative;
+  &.disabled code {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  textarea,
+  .hljs {
+    padding: $input-padding-lg;
+    line-height: $line-height-lg;
+  }
+  &.code-medium {
+    .hljs {
+      // Matches the height of adjacent inputs ($input-height).
+      padding: 9px 12px 9px 16px;
+      min-height: $input-height;
+    }
+    .value-editor__copy {
+      top: 11px;
+    }
+  }
+
+  // Pinned to the first line rather than centred: the editor grows with
+  // multi-line values.
+  .value-editor__copy {
+    top: 18px;
+    right: 12px;
+    z-index: 1;
+    padding: 2px;
+    &:hover {
+      color: var(--color-icon-action);
+    }
+  }
+
+  // Keep long values clear of the copy button.
+  &__field:has(.value-editor__copy) .hljs {
+    padding-right: 44px;
+  }
+  textarea {
+    min-height: 50px;
+    padding-bottom: 5px;
+    text-indent: 10px;
+  }
+  code {
+    outline-color: transparent !important;
+  }
+
+  // The outline above is suppressed for every language, so focus needs a
+  // border of its own. code.txt restyles it further.
+  code:focus-visible {
+    border-color: var(--color-border-action);
+  }
+  &__header {
+    min-height: 20px;
+  }
+
+  .select-language {
+    .bare-btn {
+      gap: 2px;
+      cursor: pointer;
+      font-size: $font-caption-sm;
+      line-height: $line-height-xxsm;
+      &.active {
+        color: var(--color-text-default);
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+.value-editor pre {
+  overflow: hidden;
+}
+.value-editor pre code {
+  height: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.value-editor code.txt {
+  font-size: $font-size-base;
+  font-weight: 500;
+  background: var(--color-surface-default) !important;
+  border: 1px solid var(--color-border-default);
+  font-family: $font-family;
+  color: var(--color-text-default);
+  &.empty {
+    font-weight: normal;
+    color: var(--color-text-tertiary);
+  }
+  &:focus,
+  &:focus.empty {
+    font-weight: 500;
+    color: var(--color-text-default);
+    border-color: var(--color-border-action);
+  }
+}

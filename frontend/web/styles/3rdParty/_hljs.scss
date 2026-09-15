@@ -26,78 +26,6 @@
 // highlight.js and Pylon's chat widget both use .hljs. We win two ways: feed
 // our tokens into Pylon's --hljs-* vars, and nest our palette under .hljs to
 // out-specify its global rules. Also paints Pylon's chat code, which is fine.
-.invalid .value-editor .hljs {
-  border: 2px solid var(--color-border-danger);
-}
-.value-editor {
-  position: relative;
-  textarea,
-  .hljs {
-    padding: $input-padding-lg;
-    line-height: $line-height-lg;
-  }
-  &.code-medium {
-    .hljs {
-      // Match adjacent inputs' height ($input-height); min-height holds the
-      // empty state, and the editor still grows for multi-line values.
-      padding: 9px 12px 9px 16px;
-      min-height: $input-height;
-    }
-    .value-editor__copy {
-      top: 11px;
-    }
-  }
-
-  .value-editor__copy {
-    top: 18px;
-    right: 12px;
-    z-index: 1;
-    padding: 2px;
-    &:hover {
-      color: var(--color-icon-action);
-    }
-  }
-
-  &:has(.value-editor__copy) .hljs {
-    padding-right: 44px;
-  }
-  textarea {
-    min-height: 50px;
-    padding-bottom: 5px;
-    text-indent: 10px;
-  }
-  code {
-    outline-color: transparent !important;
-  }
-  .select-language {
-    position: absolute;
-    top: -24px;
-    right: 0;
-    .active {
-      span {
-        margin: 0;
-        opacity: 1;
-        color: var(--color-text-default);
-      }
-      .language-icon {
-        color: var(--color-text-default);
-      }
-    }
-    span {
-      display: flex;
-      align-items: center;
-      gap: 2px;
-      color: var(--color-text-secondary);
-      cursor: pointer;
-      font-size: $font-caption-sm;
-      line-height: $line-height-xxsm;
-      &.active {
-        color: var(--color-text-default);
-        font-weight: 500;
-      }
-    }
-  }
-}
 .hljs {
   a {
     color: var(--color-text-action) !important;
@@ -300,33 +228,7 @@
   }
 }
 
-.value-editor pre {
-  overflow: hidden;
-}
-.value-editor pre code {
-  height: 100%;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
 
-code.txt {
-  font-size: $font-size-base;
-  font-weight: 500;
-  background: var(--color-surface-default) !important;
-  border: 1px solid var(--color-border-default);
-  font-family: 'OpenSans', sans-serif;
-  color: var(--color-text-default);
-  &.empty {
-    font-weight: normal;
-    color: var(--color-text-tertiary);
-  }
-  &:focus,
-  &:focus.empty {
-    font-weight: 500;
-    color: var(--color-text-default);
-    border-color: var(--color-border-action);
-  }
-}
 
 code[contenteditable='false'].hljs {
   cursor: default;

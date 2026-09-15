@@ -1,6 +1,7 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import ValueEditor from 'components/ValueEditor'
+import ControlWeightChip from 'components/mv/ControlWeightChip'
 import Constants from 'common/constants'
 import { VariationOptions } from 'components/mv/VariationOptions'
 import { AddVariationButton } from 'components/mv/AddVariationButton'
@@ -21,9 +22,13 @@ import {
   ProjectFlag,
 } from 'common/types/responses'
 import {
+  getDefaultVariantKey,
+  getDivergedVariantOverride,
   hasUnmatchedIdentityOverride,
   LatchedOverrideValue,
   resolveUnmatchedOverride,
+  VARIATION_VALUE_FIELDS,
+  VARIATION_WEIGHT_FIELD,
 } from 'common/utils/multivariate'
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
@@ -48,6 +53,8 @@ type FeatureValueTabProps = {
   noPermissions: boolean
   freeze?: FeatureExperimentFreeze
   featureState: FeatureState
+  // As saved. featureState is the editor's copy, which moves with every click.
+  storedFeatureState?: FeatureState
   projectFlag: ProjectFlag
   environmentFlag?: FeatureState
   environmentId?: string
@@ -57,6 +64,8 @@ type FeatureValueTabProps = {
   isSaving?: boolean
   existingChangeRequest?: boolean
   onSaveFeatureValue?: (schedule?: boolean) => void
+  hasVariationChanges?: boolean
+  onSaveVariationValues?: () => void
   // The persisted variants, used to tag edited ones as not saved.
   originalMultivariateOptions?: MultivariateOption[]
   onEnvironmentFlagChange: (changes: Partial<FeatureState>) => void
@@ -83,6 +92,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   existingChangeRequest,
   featureState,
   freeze,
+  hasVariationChanges,
   identity,
   is4Eyes,
   isSaving,
@@ -92,9 +102,11 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   onProjectFlagChange,
   onRemoveMultivariateOption,
   onSaveFeatureValue,
+  onSaveVariationValues,
   originalMultivariateOptions,
   projectFlag,
   projectId,
+  storedFeatureState,
 }) => {
   const isEdit = !!projectFlag?.id
   const isDisabled = !!noPermissions || !!freeze?.isFrozen
@@ -207,14 +219,10 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   const canCompareValue =
     isEdit && !!environmentId && !identity && !hasVariations
 
-  // Fields the user can change on a variant from this tab.
+  // Unlike a change request, the unsaved marker counts a weight edit too.
   const variantFields: (keyof MultivariateOption)[] = [
-    'key',
-    'type',
-    'string_value',
-    'integer_value',
-    'boolean_value',
-    'default_percentage_allocation',
+    ...VARIATION_VALUE_FIELDS,
+    VARIATION_WEIGHT_FIELD,
   ]
   const unsavedVariations = multivariate_options.map((option) => {
     if (!originalMultivariateOptions) {
@@ -246,24 +254,17 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
       'Failed to save this variation.'
     )
   })
-  const valueTitle = hasVariations ? (
-    <span className='d-inline-flex align-items-center'>
-      Control Value
-      <span className='chip chip--xs ml-2'>
-        {Math.max(0, controlPercentage)}%
-      </span>
-    </span>
-  ) : (
-    'Value'
-  )
+  const valueTitle = hasVariations ? 'Control Value' : 'Value'
 
   const variationsInfo = hasVariations && (
-    <p className='mb-4'>
+    // A div, not a p: InfoMessage renders a block, which closes a p early and
+    // drops the margin onto the empty paragraph left behind.
+    <div className='mb-4'>
       <InfoMessage collapseId={'variation-value'}>
         Changing a Variation Value will affect <strong>all environments</strong>
         , their weights are specific to this environment. Existing users will
         see the new variation value if it is changed. These values will only
-        apply when you identify via the SDK.
+        apply when you identify via the SDK.{' '}
         <a
           target='_blank'
           href='https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags'
@@ -273,7 +274,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         </a>
         .
       </InfoMessage>
-    </p>
+    </div>
   )
 
   const showValue = !(
@@ -309,6 +310,26 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     overrideValue: featureState.feature_state_value,
   })
   latchedOverrideValue.current = unmatchedOverride?.value
+
+  // Only edge returns the value the identity is served. Core returns the
+  // control value, which would report every override as diverged.
+  const isEdgeIdentity = !!storedFeatureState?.identity_uuid
+
+  // From the saved state, not the editor's: picking a variation moves the
+  // selection without moving the value.
+  const divergedVariantOverride =
+    identity && hasVariations && isEdgeIdentity
+      ? getDivergedVariantOverride({
+          overrideValue: storedFeatureState?.feature_state_value,
+          variants: multivariate_options.map((option, index) => ({
+            id: option.id,
+            key: option.key || getDefaultVariantKey(index),
+            value: Utils.featureStateToValue(option),
+          })),
+          variationOverrides:
+            storedFeatureState?.multivariate_feature_state_values,
+        })
+      : undefined
 
   if (compareOpen && canCompareValue && environmentId) {
     return (
@@ -375,26 +396,26 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
       {showValue && (
         <FormGroup className='mb-4'>
           <div className='form-group'>
-            <FieldLabel tooltip={getValueTooltip(hasVariations, isEdit)}>
-              {valueTitle}
-            </FieldLabel>
             <ValueEditor
-              data-test='featureValue'
-              name='featureValue'
+              label={valueTitle}
+              labelAfter={
+                hasVariations && (
+                  <ControlWeightChip percentage={controlPercentage} />
+                )
+              }
+              labelTooltip={getValueTooltip(hasVariations, isEdit)}
               className={`full-width${hasVariations ? ' code-medium' : ''}`}
               value={`${
                 typeof initial_value === 'undefined' || initial_value === null
                   ? ''
                   : initial_value
               }`}
-              onChange={(e: any) => {
-                const feature_state_value = Utils.getTypedValue(
-                  Utils.safeParseEventValue(e),
-                )
-                onEnvironmentFlagChange({ feature_state_value })
+              onChange={(newValue: string) => {
+                onEnvironmentFlagChange({
+                  feature_state_value: Utils.getTypedValue(newValue),
+                })
               }}
               disabled={isDisabled}
-              placeholder="e.g. 'big' "
             />
           </div>
           {canCompareValue && (
@@ -443,10 +464,16 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
             {unmatchedOverrideSelected && (
               <WarningMessage warningMessage="This identity override contains a value that is not one of this flag's variations. We recommend changing it." />
             )}
+            {!!divergedVariantOverride && (
+              <WarningMessage
+                warningMessage={`This identity is served a stale copy of variation '${divergedVariantOverride.key}', taken when the override was saved. Press Update Feature to refresh it.`}
+              />
+            )}
             <VariationOptions
               canCreateFeature={false}
               disabled
               select
+              divergedOverride={divergedVariantOverride}
               unmatchedOverride={unmatchedOverride}
               controlValue={controlValue ?? null}
               controlPercentage={controlPercentage}
@@ -568,7 +595,9 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               featureName={projectFlag.name}
               isInvalid={!!invalid}
               existingChangeRequest={!!existingChangeRequest}
+              hasVariationChanges={hasVariationChanges}
               onSaveFeatureValue={onSaveFeatureValue}
+              onSaveVariationValues={onSaveVariationValues}
             />
           </>
         )}

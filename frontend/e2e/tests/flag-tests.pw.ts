@@ -115,6 +115,48 @@ test.describe('Flag Tests', () => {
     await deleteFeature('header_enabled')
   });
 
+  test('Value editor validates the value against the chosen format @oss', async ({
+    page,
+  }) => {
+    const {
+      click,
+      closeModal,
+      featureValueField,
+      gotoProject,
+      login,
+      waitForElementVisible,
+    } = createHelpers(page)
+
+    log('Login')
+    await login(E2E_USER, PASSWORD)
+    await gotoProject(E2E_TEST_PROJECT)
+    await waitForElementVisible(byId('features-page'))
+
+    log('Open the create feature drawer')
+    await click('#show-create-feature-btn')
+    await waitForElementVisible(featureValueField())
+
+    const formats = page.getByRole('group', { name: 'Value format' })
+    const validationError = page.locator('#language-validation-error')
+
+    log('Malformed XML reports an error against the .xml format')
+    await featureValueField().fill('<a></b>')
+    await formats.getByRole('button', { name: '.xml' }).click()
+    await expect(validationError).toBeVisible()
+
+    log('A well-formed document clears it')
+    await featureValueField().fill('<a>value</a>')
+    await expect(validationError).toHaveCount(0)
+
+    log('Invalid JSON reports against .json, valid JSON clears it')
+    await formats.getByRole('button', { name: '.json' }).click()
+    await expect(validationError).toBeVisible()
+    await featureValueField().fill('{ "colour": "blue" }')
+    await expect(validationError).toHaveCount(0)
+
+    await closeModal()
+  })
+
   test('Feature flags can have tags added and be archived @oss', async ({ page }, testInfo) => {
     const {
       addTagToFeature,

@@ -4,13 +4,22 @@ import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 
 import Utils from 'common/utils/utils'
+import { colorIconWarning } from 'common/theme/tokens'
+import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 
-type ThemeType = 'danger' | 'success'
+type ThemeType = 'danger' | 'success' | 'warning'
 
 const themeClassNames: Record<ThemeType, string> = {
   danger: 'alert-danger',
   success: 'alert',
+  warning: 'alert-warning',
+}
+
+const themeHeadings: Record<ThemeType, string> = {
+  danger: 'Error',
+  success: 'Success',
+  warning: 'Warning',
 }
 
 interface MessageProps {
@@ -25,6 +34,9 @@ interface MessageProps {
 type ToastIconType = { theme: ThemeType }
 
 const ToastIcon: FC<ToastIconType> = ({ theme }) => {
+  if (theme === 'warning') {
+    return <Icon name='warning' width={28} fill={colorIconWarning} />
+  }
   return theme === 'danger' ? (
     <svg
       width='28'
@@ -89,7 +101,7 @@ const Message: FC<MessageProps> = ({
         <ToastIcon theme={theme} />
         <div className='flex-1 flex-column'>
           <div className='text-default mb-1 fw-semibold'>
-            {theme === 'success' ? 'Success' : 'Error'}
+            {themeHeadings[theme]}
           </div>
           <div className='fw-normal mb-1'>{children} </div>
           {hasAction && (
@@ -97,7 +109,7 @@ const Message: FC<MessageProps> = ({
               <Button
                 className='text-wrap mt-2'
                 size='xSmall'
-                theme={theme}
+                theme={theme === 'warning' ? 'secondary' : theme}
                 onClick={action?.onClick}
               >
                 {action?.buttonText}

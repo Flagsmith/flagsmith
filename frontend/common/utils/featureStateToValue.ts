@@ -1,6 +1,7 @@
 import type {
   FeatureStateValue,
   FlagsmithValue,
+  MultivariateOption,
   TraitValue,
 } from 'common/types/responses'
 
@@ -9,12 +10,20 @@ import type {
  *
  * Accepts either the nested `{ type, string_value, ... }` shape returned by the
  * featurestates endpoint or an already-flat value, and returns the flat value.
+ * Multivariate options carry that same nested shape, so they are accepted too.
  *
  * Kept in its own module, free of `common/utils` imports, so consumers (and
  * their unit tests) don't pull the Flux stores in through `utils.tsx`.
  */
+export type FeatureStateToValueInput =
+  | FlagsmithValue
+  | FeatureStateValue
+  | MultivariateOption
+  | TraitValue
+  | undefined
+
 export function featureStateToValue(
-  value: FlagsmithValue | FeatureStateValue | TraitValue | undefined,
+  value: FeatureStateToValueInput,
 ): FlagsmithValue {
   if (value === null || value === undefined) {
     return null
@@ -26,9 +35,10 @@ export function featureStateToValue(
   const type = 'value_type' in value ? value.value_type : value.type
   switch (type) {
     case 'bool':
-      return value.boolean_value
+      return value.boolean_value ?? null
     case 'float':
-      return value.float_value ?? null
+      // Only traits carry a float. Feature state values and variations do not.
+      return 'float_value' in value ? value.float_value ?? null : null
     case 'int':
       return value.integer_value ?? null
     default:

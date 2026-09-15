@@ -13,6 +13,7 @@ type CreateFeatureTabProps = {
   projectId: number
   error: any
   featureState: FeatureState
+  storedFeatureState?: FeatureState
   overrideFeatureState?: FeatureState
   projectFlag: ProjectFlag | null
   identity?: string
@@ -45,6 +46,7 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
   ownerIds,
   projectFlag,
   projectId,
+  storedFeatureState,
 }) => {
   const { permission: createFeature } = useHasPermission({
     id: projectId,
@@ -83,6 +85,7 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
             noPermissions={noPermissions}
             projectFlag={projectFlag}
             featureState={overrideFeatureState || featureState}
+            storedFeatureState={storedFeatureState}
             onEnvironmentFlagChange={onEnvironmentFlagChange}
             onProjectFlagChange={onProjectFlagChange}
             onRemoveMultivariateOption={onRemoveMultivariateOption}
