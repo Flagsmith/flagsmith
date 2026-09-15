@@ -274,6 +274,52 @@ def test_experiment_results__is_final__reflects_window_coverage(
     assert results.is_final is expected
 
 
+@pytest.mark.parametrize(
+    "field, value",
+    [
+        pytest.param("status", "running", id="resume"),
+        pytest.param("status", "paused", id="pause"),
+        pytest.param("name", "Renamed experiment", id="rename"),
+    ],
+)
+def test_experiment__wire_field_changed__rebuilds_environment_document(  # type: ignore[no-untyped-def]
+    experiment: Experiment,
+    mocker: MockerFixture,
+    django_capture_on_commit_callbacks,
+    field: str,
+    value: str,
+) -> None:
+    # Given
+    mock_task = mocker.patch("environments.tasks.rebuild_environment_document")
+    setattr(experiment, field, value)
+
+    # When
+    with django_capture_on_commit_callbacks(execute=True):
+        experiment.save()
+
+    # Then
+    mock_task.delay.assert_called_once_with(
+        kwargs={"environment_id": experiment.environment_id},
+    )
+
+
+def test_experiment__unrelated_field_changed__no_rebuild(  # type: ignore[no-untyped-def]
+    experiment: Experiment,
+    mocker: MockerFixture,
+    django_capture_on_commit_callbacks,
+) -> None:
+    # Given
+    mock_task = mocker.patch("environments.tasks.rebuild_environment_document")
+    experiment.hypothesis = "A different hypothesis"
+
+    # When
+    with django_capture_on_commit_callbacks(execute=True):
+        experiment.save()
+
+    # Then
+    mock_task.delay.assert_not_called()
+
+
 def test_warehouse_connection_credentials__saved__ciphertext_in_db_and_roundtrips(
     clickhouse_connection: WarehouseConnection,
 ) -> None:

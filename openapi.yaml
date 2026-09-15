@@ -9213,6 +9213,24 @@ paths:
                     reason:
                       type: string
                       nullable: true
+                    metadata:
+                      description: 'Additional, non-evaluation data about a feature state.'
+                      type: object
+                      properties:
+                        experiment:
+                          description: Represents the experiment a feature state is part of. Only present while the experiment is running.
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                            in_experiment:
+                              type: boolean
+                          required:
+                            - id
+                            - in_experiment
+                            - name
                   required:
                     - enabled
                     - feature
@@ -9313,6 +9331,24 @@ paths:
                     reason:
                       type: string
                       nullable: true
+                    metadata:
+                      description: 'Additional, non-evaluation data about a feature state.'
+                      type: object
+                      properties:
+                        experiment:
+                          description: Represents the experiment a feature state is part of. Only present while the experiment is running.
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                            in_experiment:
+                              type: boolean
+                          required:
+                            - id
+                            - in_experiment
+                            - name
                   required:
                     - enabled
                     - feature
@@ -29063,6 +29099,24 @@ components:
         - name
         - project
       title: V1EnvironmentDocumentResponse
+    V1EnvironmentDocumentResponseExperimentMetadata:
+      description: Represents the experiment a feature state is part of. Only present while the experiment is running.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        in_experiment:
+          type: boolean
+          title: In Experiment
+      required:
+        - id
+        - name
+        - in_experiment
+      title: ExperimentMetadata
     V1EnvironmentDocumentResponseFeature:
       description: 'Represents a Flagsmith feature, defined at project level.'
       type: object
@@ -29123,6 +29177,8 @@ components:
           items:
             $ref: '#/components/schemas/V1EnvironmentDocumentResponseMultivariateFeatureStateValue'
           title: Multivariate Feature State Values
+        metadata:
+          $ref: '#/components/schemas/V1EnvironmentDocumentResponseFeatureStateMetadata'
       required:
         - feature
         - enabled
@@ -29131,6 +29187,14 @@ components:
         - feature_segment
         - multivariate_feature_state_values
       title: FeatureState
+    V1EnvironmentDocumentResponseFeatureStateMetadata:
+      description: 'Additional, non-evaluation data about a feature state.'
+      type: object
+      properties:
+        experiment:
+          $ref: '#/components/schemas/V1EnvironmentDocumentResponseExperimentMetadata'
+      additionalProperties: true
+      title: FeatureStateMetadata
     V1EnvironmentDocumentResponseIdentityOverride:
       description: 'Represents an identity override, defining feature states specific to an identity.'
       type: object
@@ -29359,6 +29423,24 @@ components:
         - flags
         - traits
       title: V1IdentitiesResponse
+    V1IdentitiesResponseExperimentMetadata:
+      description: Represents the experiment a feature state is part of. Only present while the experiment is running.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        in_experiment:
+          type: boolean
+          title: In Experiment
+      required:
+        - id
+        - name
+        - in_experiment
+      title: ExperimentMetadata
     V1IdentitiesResponseFeature:
       description: 'Represents a Flagsmith feature, defined at project level.'
       type: object
@@ -29378,6 +29460,14 @@ components:
         - name
         - type
       title: Feature
+    V1IdentitiesResponseFeatureStateMetadata:
+      description: 'Additional, non-evaluation data about a feature state.'
+      type: object
+      properties:
+        experiment:
+          $ref: '#/components/schemas/V1IdentitiesResponseExperimentMetadata'
+      additionalProperties: true
+      title: FeatureStateMetadata
     V1IdentitiesResponseTrait:
       description: Represents a key-value pair associated with an identity.
       type: object
@@ -29423,6 +29513,8 @@ components:
             - type: string
             - type: 'null'
           title: Reason
+        metadata:
+          $ref: '#/components/schemas/V1IdentitiesResponseFeatureStateMetadata'
       required:
         - feature
         - enabled
