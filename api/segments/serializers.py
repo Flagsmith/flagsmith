@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 
 from cohorts.models import Cohort
 from edge_api.utils import is_edge_enabled
+from features.dependencies.services import index_segment_flag_references
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
 from segment_membership.constants import MAX_SEGMENT_MEMBERS_PAGE_SIZE
@@ -218,6 +219,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         metadata_data = validated_data.pop("metadata", [])
         self._set_rules_data(validated_data)
         segment = super().create(validated_data)  # type: ignore[no-untyped-call]
+        index_segment_flag_references(segment)
         self._update_metadata(segment, metadata_data)
         enqueue_membership_refresh(segment.project)
         return segment
