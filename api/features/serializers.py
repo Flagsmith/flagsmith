@@ -13,6 +13,7 @@ from common.features.serializers import (
 )
 from common.projects.permissions import VIEW_PROJECT
 from django.db import models
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
@@ -26,7 +27,6 @@ from environments.identities.models import Identity
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
-from experimentation.types import FEATURE_STATE_METADATA_SCHEMA
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
 from integrations.gitlab.services import (
@@ -676,7 +676,7 @@ class SDKIdentityFeatureStateSerializer(SDKFeatureStateSerializer):
             return lambda feature_state: None  # schema generation
         return get_feature_state_metadata_builder(environment)
 
-    @extend_schema_field(FEATURE_STATE_METADATA_SCHEMA)
+    @extend_schema_field(OpenApiTypes.OBJECT)
     def get_metadata(self, obj: FeatureState) -> dict[str, Any] | None:
         return self._build_metadata(obj)
 

@@ -2,8 +2,9 @@
 
 from typing import TYPE_CHECKING, Any, Callable
 
+from flagsmith_schemas.api import FeatureStateMetadata
+
 from experimentation.models import Experiment, ExperimentStatus
-from experimentation.types import FeatureStateMetadata
 
 if TYPE_CHECKING:  # pragma: no cover
     from django.db.models import QuerySet

@@ -27,39 +27,6 @@ class MetricExperimentResult(TypedDict):
     status: str
 
 
-class ExperimentMetadata(TypedDict):
-    """Present on a feature state only while the experiment is running."""
-
-    id: int
-    name: str
-    in_experiment: bool
-
-
-class FeatureStateMetadata(TypedDict, total=False):
-    experiment: ExperimentMetadata
-
-
-FEATURE_STATE_METADATA_SCHEMA: dict[str, object] = {
-    "type": "object",
-    "description": "Absent when the feature state carries no metadata.",
-    "properties": {
-        "experiment": {
-            "type": "object",
-            "description": "Present only while the feature's experiment is running.",
-            "properties": {
-                "id": {"type": "integer"},
-                "name": {"type": "string"},
-                "in_experiment": {
-                    "type": "boolean",
-                    "description": "Whether the identity is enrolled in the experiment.",
-                },
-            },
-            "required": ["id", "name", "in_experiment"],
-        },
-    },
-}
-
-
 class SnowflakeConfig(TypedDict):
     account_identifier: str
     warehouse: str
