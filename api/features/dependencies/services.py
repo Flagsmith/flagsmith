@@ -1,18 +1,25 @@
+import typing
+
 import jsonpath_rfc9535
+import structlog
 from jsonpath_rfc9535.exceptions import JSONPathError
 from jsonpath_rfc9535.segments import JSONPathChildSegment, JSONPathSegment
 from jsonpath_rfc9535.selectors import NameSelector
 
 from features.dependencies.exceptions import PrerequisiteFeatureNotFoundError
 from features.dependencies.models import SegmentFlagReference
-from features.models import Feature
-from segments.models import Segment
+from features.models import Feature, FeatureSegment
 from segments.types import SegmentRule
+
+if typing.TYPE_CHECKING:
+    from segments.models import Segment
+
+logger = structlog.get_logger(__name__)
 
 JSONPathStr = str
 
 
-def index_segment_flag_references(segment: Segment) -> None:
+def index_segment_flag_references(segment: "Segment") -> None:
     """Materialise the segment's `$.flags` conditions as SegmentFlagReference rows."""
     feature_names_by_json_path = {
         f"{rule_json_path}.conditions[{condition_index}]": feature_name
@@ -43,6 +50,27 @@ def index_segment_flag_references(segment: Segment) -> None:
         )
         for condition_json_path, feature_name in feature_names_by_json_path.items()
     )
+
+
+def delete_segment_flag_references(segment: "Segment") -> None:
+    """Drop the segment's index rows, reporting every dependency lost."""
+    references = SegmentFlagReference.objects.filter(segment=segment).select_related(
+        "prerequisite_feature"
+    )
+    overrides = FeatureSegment.objects.filter(segment=segment).select_related(
+        "environment", "feature"
+    )
+    for override in overrides:
+        for reference in references:
+            logger.info(
+                "dependencies.deleted",
+                organisation__id=segment.project.organisation_id,
+                project__id=segment.project_id,
+                environment__key=override.environment.api_key,
+                feature__name=override.feature.name,
+                prerequisite_feature__name=reference.prerequisite_feature.name,
+            )
+    references.delete()
 
 
 def _get_rules_by_json_path(
