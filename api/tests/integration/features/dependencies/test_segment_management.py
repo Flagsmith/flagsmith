@@ -147,11 +147,17 @@ def test_update_segment_update_rules__valid_flag_dependency__indexes_updated(
     chicken = Feature.objects.create(name="chicken", project_id=project)
     egg = Feature.objects.create(name="egg", project_id=project)
     rooster = Feature.objects.create(name="rooster", project_id=project)
+    hen = Feature.objects.create(name="hen", project_id=project)
     segment = Segment.objects.create(name="segment", project_id=project)
     SegmentFlagReference.objects.create(
         segment=segment,
         prerequisite_feature=egg,
         condition_json_path="$[0].conditions[0]",
+    )
+    SegmentFlagReference.objects.create(
+        segment=segment,
+        prerequisite_feature=hen,
+        condition_json_path="$[0].conditions[1]",
     )
     FeatureSegment.objects.create(
         segment=segment,
@@ -171,6 +177,11 @@ def test_update_segment_update_rules__valid_flag_dependency__indexes_updated(
                     "conditions": [
                         {
                             "property": "$.flags.rooster.enabled",
+                            "operator": "EQUAL",
+                            "value": True,
+                        },
+                        {
+                            "property": "$.flags.hen.enabled",
                             "operator": "EQUAL",
                             "value": True,
                         },
@@ -195,7 +206,14 @@ def test_update_segment_update_rules__valid_flag_dependency__indexes_updated(
             "prerequisite_feature": rooster.id,
             "condition_json_path": "$[0].conditions[0]",
         },
+        {
+            "segment": segment.id,
+            "prerequisite_feature": hen.id,
+            "condition_json_path": "$[0].conditions[1]",
+        },
     ]
+    assert not log.has("dependencies.deleted", prerequisite_feature__name="hen")
+    assert not log.has("dependencies.created", prerequisite_feature__name="hen")
     assert log.has(
         "dependencies.deleted",
         level="info",
