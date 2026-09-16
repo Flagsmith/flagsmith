@@ -5,26 +5,10 @@ from rest_framework.test import APIClient
 from features.dependencies.models import SegmentFlagReference
 from features.future.types import UpdateFlagRequest
 from features.models import Feature, FeatureSegment
-from projects.models import Project
 from segments.models import Segment
 from tests.types import CreateSegmentOverrideFixture
 
 
-@pytest.fixture(
-    params=[False, True],
-    ids=["change_requests_disabled", "change_requests_enabled"],
-)
-def with_and_without_segment_change_requests(
-    request: pytest.FixtureRequest,
-    project: int,
-) -> bool:
-    enabled: bool = request.param
-    if enabled:
-        Project.objects.filter(id=project).update(minimum_change_request_approvals=0)
-    return enabled
-
-
-@pytest.mark.usefixtures("with_and_without_segment_change_requests")
 def test_create_segment__valid_flag_dependency__indexes_created(
     admin_client: APIClient,
     project: int,
@@ -100,7 +84,6 @@ def test_create_segment__valid_flag_dependency__indexes_created(
     ]
 
 
-@pytest.mark.usefixtures("with_and_without_segment_change_requests")
 def test_create_segment__nonexistent_prerequisite__responds_400(
     admin_client: APIClient,
     project: int,
@@ -176,9 +159,10 @@ def test_update_segment_update_rules__nonexistent_prerequisite__responds_400(
     assert not SegmentFlagReference.objects.exists()
 
 
+@pytest.mark.usefixtures("versioned_environment")
 def test_update_segment_update_rules__valid_flag_dependency__indexes_updated(
     admin_client: APIClient,
-    environment: int,
+    create_segment_override: CreateSegmentOverrideFixture,
     environment_api_key: str,
     log: StructuredLogCapture,
     organisation: int,
@@ -190,6 +174,11 @@ def test_update_segment_update_rules__valid_flag_dependency__indexes_updated(
     rooster = Feature.objects.create(name="rooster", project_id=project)
     hen = Feature.objects.create(name="hen", project_id=project)
     segment = Segment.objects.create(name="segment", project_id=project)
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=chicken.id,
+        segment_id=segment.id,
+    )
     SegmentFlagReference.objects.create(
         segment=segment,
         prerequisite_feature=egg,
@@ -199,11 +188,6 @@ def test_update_segment_update_rules__valid_flag_dependency__indexes_updated(
         segment=segment,
         prerequisite_feature=hen,
         condition_json_path="$[0].conditions[1]",
-    )
-    FeatureSegment.objects.create(
-        segment=segment,
-        feature=chicken,
-        environment_id=environment,
     )
 
     # When
@@ -275,9 +259,10 @@ def test_update_segment_update_rules__valid_flag_dependency__indexes_updated(
     )
 
 
+@pytest.mark.usefixtures("versioned_environment")
 def test_delete_segment__flag_dependency__indexes_removed(
     admin_client: APIClient,
-    environment: int,
+    create_segment_override: CreateSegmentOverrideFixture,
     environment_api_key: str,
     log: StructuredLogCapture,
     organisation: int,
@@ -287,15 +272,15 @@ def test_delete_segment__flag_dependency__indexes_removed(
     chicken = Feature.objects.create(name="chicken", project_id=project)
     egg = Feature.objects.create(name="egg", project_id=project)
     segment = Segment.objects.create(name="segment", project_id=project)
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=chicken.id,
+        segment_id=segment.id,
+    )
     SegmentFlagReference.objects.create(
         segment=segment,
         prerequisite_feature=egg,
         condition_json_path="$[0].conditions[0]",
-    )
-    FeatureSegment.objects.create(
-        segment=segment,
-        feature=chicken,
-        environment_id=environment,
     )
 
     # When
@@ -317,7 +302,6 @@ def test_delete_segment__flag_dependency__indexes_removed(
     )
 
 
-@pytest.mark.usefixtures("with_and_without_segment_change_requests")
 def test_update_segment_add_override__circular_flag_dependency__responds_400(
     admin_client: APIClient,
     environment: int,
@@ -554,9 +538,10 @@ def test_update_flag_add_override__circular_flag_dependency__responds_400(
     )
 
 
+@pytest.mark.usefixtures("versioned_environment")
 def test_update_segment_update_rules__circular_flag_dependency__responds_400(
     admin_client: APIClient,
-    environment: int,
+    create_segment_override: CreateSegmentOverrideFixture,
     environment_api_key: str,
     log: StructuredLogCapture,
     organisation: int,
@@ -567,20 +552,20 @@ def test_update_segment_update_rules__circular_flag_dependency__responds_400(
     egg = Feature.objects.create(name="egg", project_id=project)
     segment1 = Segment.objects.create(name="segment1", project_id=project)
     segment2 = Segment.objects.create(name="segment2", project_id=project)
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=chicken.id,
+        segment_id=segment1.id,
+    )
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=egg.id,
+        segment_id=segment2.id,
+    )
     SegmentFlagReference.objects.create(
         segment=segment1,
         prerequisite_feature=egg,
         condition_json_path="$[0].conditions[1]",
-    )
-    FeatureSegment.objects.create(
-        segment=segment1,
-        feature=chicken,
-        environment_id=environment,
-    )
-    FeatureSegment.objects.create(
-        segment=segment2,
-        feature=egg,
-        environment_id=environment,
     )
 
     # When
@@ -642,9 +627,10 @@ def test_update_segment_update_rules__circular_flag_dependency__responds_400(
     )
 
 
+@pytest.mark.usefixtures("versioned_environment")
 def test_update_segment_update_rules__longer_dependency_cycle_path__responds_400(
     admin_client: APIClient,
-    environment: int,
+    create_segment_override: CreateSegmentOverrideFixture,
     environment_api_key: str,
     log: StructuredLogCapture,
     organisation: int,
@@ -662,25 +648,25 @@ def test_update_segment_update_rules__longer_dependency_cycle_path__responds_400
         prerequisite_feature=egg,
         condition_json_path="$[0].conditions[0]",
     )
-    FeatureSegment.objects.create(
-        segment=segment1,
-        feature=chicken,
-        environment_id=environment,
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=chicken.id,
+        segment_id=segment1.id,
     )
     SegmentFlagReference.objects.create(
         segment=segment2,
         prerequisite_feature=rooster,
         condition_json_path="$[0].conditions[0]",
     )
-    FeatureSegment.objects.create(
-        segment=segment2,
-        feature=egg,
-        environment_id=environment,
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=egg.id,
+        segment_id=segment2.id,
     )
-    FeatureSegment.objects.create(
-        segment=segment3,
-        feature=rooster,
-        environment_id=environment,
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=rooster.id,
+        segment_id=segment3.id,
     )
 
     # When
@@ -753,6 +739,7 @@ def test_update_segment_update_rules__longer_dependency_cycle_path__responds_400
 
 def test_create_feature_segment__circular_flag_dependency__responds_400(
     admin_client: APIClient,
+    create_segment_override: CreateSegmentOverrideFixture,
     environment: int,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -769,10 +756,10 @@ def test_create_feature_segment__circular_flag_dependency__responds_400(
         prerequisite_feature=egg,
         condition_json_path="$[0].conditions[1]",
     )
-    FeatureSegment.objects.create(
-        segment=chicken_segment,
-        feature=chicken,
-        environment_id=environment,
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=chicken.id,
+        segment_id=chicken_segment.id,
     )
     SegmentFlagReference.objects.create(
         segment=egg_segment,

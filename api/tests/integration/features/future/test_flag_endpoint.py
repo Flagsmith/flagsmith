@@ -12,21 +12,15 @@ from environments.models import Environment
 from features.future.types import UpdateFlagRequest
 from features.models import FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
-from features.versioning.tasks import enable_v2_versioning
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
 from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
 
 
-@pytest.fixture(params=["feature_versioning_v1", "feature_versioning_v2"], autouse=True)
-def versioned_environment(
-    request: pytest.FixtureRequest,
-    environment: int,
-) -> Environment:
-    if request.param == "feature_versioning_v2":
-        enable_v2_versioning(environment_id=environment)
-    return Environment.objects.get(id=environment)  # type: ignore[no-any-return]
+@pytest.fixture(autouse=True)
+def versioned_environment(versioned_environment: Environment) -> Environment:
+    return versioned_environment
 
 
 @pytest.fixture()
