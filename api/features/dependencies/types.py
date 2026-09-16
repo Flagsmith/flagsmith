@@ -12,6 +12,13 @@ class ReferencingSegment(typing.TypedDict):
     condition_json_path: str
 
 
+class ReferencingEnvironment(typing.TypedDict):
+    """The environment whose live overrides make up a dependency graph."""
+
+    key: str
+    name: str
+
+
 class DependencyEdge(typing.TypedDict):
     """One feature's dependency on another."""
 

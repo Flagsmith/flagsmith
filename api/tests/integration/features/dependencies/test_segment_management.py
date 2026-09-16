@@ -2,6 +2,7 @@ import pytest
 from pytest_structlog import StructuredLogCapture
 from rest_framework.test import APIClient
 
+from environments.models import Environment
 from features.dependencies.models import SegmentFlagReference
 from features.future.types import UpdateFlagRequest
 from features.models import Feature, FeatureSegment
@@ -306,6 +307,7 @@ def test_update_segment_add_override__circular_flag_dependency__responds_400(
     admin_client: APIClient,
     environment: int,
     environment_api_key: str,
+    environment_name: str,
     log: StructuredLogCapture,
     organisation: int,
     project: int,
@@ -346,6 +348,7 @@ def test_update_segment_add_override__circular_flag_dependency__responds_400(
     assert response.status_code == 400
     assert response.json() == {
         "code": "circular_dependency",
+        "environment": {"key": environment_api_key, "name": environment_name},
         "path": [
             {
                 "feature": "egg",
@@ -467,6 +470,7 @@ def test_update_flag_add_override__circular_flag_dependency__responds_400(
     admin_client: APIClient,
     create_segment_override: CreateSegmentOverrideFixture,
     environment_api_key: str,
+    environment_name: str,
     log: StructuredLogCapture,
     organisation: int,
     project: int,
@@ -505,6 +509,7 @@ def test_update_flag_add_override__circular_flag_dependency__responds_400(
     assert response.status_code == 400
     assert response.json() == {
         "code": "circular_dependency",
+        "environment": {"key": environment_api_key, "name": environment_name},
         "path": [
             {
                 "feature": "egg",
@@ -543,6 +548,7 @@ def test_update_segment_update_rules__circular_flag_dependency__responds_400(
     admin_client: APIClient,
     create_segment_override: CreateSegmentOverrideFixture,
     environment_api_key: str,
+    environment_name: str,
     log: StructuredLogCapture,
     organisation: int,
     project: int,
@@ -594,6 +600,7 @@ def test_update_segment_update_rules__circular_flag_dependency__responds_400(
     assert response.status_code == 400
     assert response.json() == {
         "code": "circular_dependency",
+        "environment": {"key": environment_api_key, "name": environment_name},
         "path": [
             {
                 "feature": "egg",
@@ -628,10 +635,110 @@ def test_update_segment_update_rules__circular_flag_dependency__responds_400(
 
 
 @pytest.mark.usefixtures("versioned_environment")
+def test_update_segment_update_rules__cycle_in_another_environment__responds_400(
+    admin_client: APIClient,
+    create_segment_override: CreateSegmentOverrideFixture,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    organisation: int,
+    other_environment: Environment,
+    project: int,
+) -> None:
+    # Given
+    chicken = Feature.objects.create(name="chicken", project_id=project)
+    egg = Feature.objects.create(name="egg", project_id=project)
+    segment1 = Segment.objects.create(name="segment1", project_id=project)
+    segment2 = Segment.objects.create(name="segment2", project_id=project)
+    SegmentFlagReference.objects.create(
+        segment=segment1,
+        prerequisite_feature=egg,
+        condition_json_path="$[0].conditions[0]",
+    )
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=egg.id,
+        segment_id=segment2.id,
+    )
+    create_segment_override(
+        environment_api_key=other_environment.api_key,
+        feature_id=egg.id,
+        segment_id=segment2.id,
+    )
+    create_segment_override(
+        environment_api_key=other_environment.api_key,
+        feature_id=chicken.id,
+        segment_id=segment1.id,
+    )
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/projects/{project}/segments/{segment2.id}/",
+        data={
+            "name": "segment2",
+            "project": project,
+            "rules": [
+                {
+                    "type": "ALL",
+                    "conditions": [
+                        {
+                            "property": "$.flags.chicken.enabled",
+                            "operator": "EQUAL",
+                            "value": True,
+                        },
+                    ],
+                }
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "code": "circular_dependency",
+        "environment": {
+            "key": other_environment.api_key,
+            "name": other_environment.name,
+        },
+        "path": [
+            {
+                "feature": "egg",
+                "needs": "chicken",
+                "segment": {
+                    "id": segment2.id,
+                    "name": segment2.name,
+                    "condition_json_path": "$[0].conditions[0]",
+                },
+            },
+            {
+                "feature": "chicken",
+                "needs": "egg",
+                "segment": {
+                    "id": segment1.id,
+                    "name": segment1.name,
+                    "condition_json_path": "$[0].conditions[0]",
+                },
+            },
+        ],
+    }
+    assert not SegmentFlagReference.objects.filter(segment=segment2).exists()
+    assert log.has(
+        "dependencies.create_failed",
+        level="info",
+        organisation__id=organisation,
+        project__id=project,
+        environment__key=other_environment.api_key,
+        feature__name="egg",
+        prerequisite_feature__name="chicken",
+    )
+
+
+@pytest.mark.usefixtures("versioned_environment")
 def test_update_segment_update_rules__longer_dependency_cycle_path__responds_400(
     admin_client: APIClient,
     create_segment_override: CreateSegmentOverrideFixture,
     environment_api_key: str,
+    environment_name: str,
     log: StructuredLogCapture,
     organisation: int,
     project: int,
@@ -695,6 +802,7 @@ def test_update_segment_update_rules__longer_dependency_cycle_path__responds_400
     assert response.status_code == 400
     assert response.json() == {
         "code": "circular_dependency",
+        "environment": {"key": environment_api_key, "name": environment_name},
         "path": [
             {
                 "feature": "rooster",
@@ -742,6 +850,7 @@ def test_create_feature_segment__circular_flag_dependency__responds_400(
     create_segment_override: CreateSegmentOverrideFixture,
     environment: int,
     environment_api_key: str,
+    environment_name: str,
     log: StructuredLogCapture,
     organisation: int,
     project: int,
@@ -782,6 +891,7 @@ def test_create_feature_segment__circular_flag_dependency__responds_400(
     assert response.status_code == 400
     assert response.json() == {
         "code": "circular_dependency",
+        "environment": {"key": environment_api_key, "name": environment_name},
         "path": [
             {
                 "feature": "egg",

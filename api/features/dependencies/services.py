@@ -159,6 +159,12 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
                     feature__name=override.feature.name,
                     prerequisite_feature__name=path[0]["needs"],
                 )
-                raise CircularDependencyError(path=path)
+                raise CircularDependencyError(
+                    environment={
+                        "key": override.environment.api_key,
+                        "name": override.environment.name,
+                    },
+                    path=path,
+                )
             visited.add(prerequisite_feature_name)
             pending += [[*path, edge] for edge in edges[prerequisite_feature_name]]

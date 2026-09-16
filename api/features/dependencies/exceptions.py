@@ -3,13 +3,14 @@ from typing import TypedDict
 from rest_framework import status
 from rest_framework.exceptions import APIException
 
-from features.dependencies.types import DependencyPath
+from features.dependencies.types import DependencyPath, ReferencingEnvironment
 
 
 class _CircularDependencyDetail(TypedDict):
     """The body served where a feature is refused for depending on itself."""
 
     code: str
+    environment: ReferencingEnvironment
     path: DependencyPath
 
 
@@ -19,9 +20,15 @@ class CircularDependencyError(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_code = "circular_dependency"
 
-    def __init__(self, path: DependencyPath) -> None:
+    def __init__(
+        self, environment: ReferencingEnvironment, path: DependencyPath
+    ) -> None:
         super().__init__()
-        detail: _CircularDependencyDetail = {"code": self.default_code, "path": path}
+        detail: _CircularDependencyDetail = {
+            "code": self.default_code,
+            "environment": environment,
+            "path": path,
+        }
         self.detail = detail  # type: ignore[assignment]
 
 
