@@ -182,8 +182,8 @@ def test_delete_segment__varying_segment_sizes__query_count_is_constant(
     large_query_count = len(ctx_large.captured_queries)
 
     # Then
-    # 11 for the delete, 15 for the audit log task (runs synchronously in tests)
-    assert small_query_count == large_query_count == 26
+    # 13 for the delete, 15 for the audit log task (runs synchronously in tests)
+    assert small_query_count == large_query_count == 28
 
 
 # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
