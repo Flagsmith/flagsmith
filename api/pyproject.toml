@@ -19,7 +19,6 @@ dependencies = [
     "django-cors-headers>=3.5.0,<3.6.0",
     "djangorestframework>=3.17.2,<3.18.0",
     "gunicorn>=23.0.0,<23.1.0",
-    "pyparsing>=2.4.7,<2.5.0",
     "requests>=2.33.0,<2.34.0",
     "six>=1.16.0,<1.17.0",
     "whitenoise>=6.0.0,<6.1.0",
@@ -76,7 +75,7 @@ dependencies = [
     "hubspot-api-client>=12.0.0,<13.0.0",
     "djangorestframework-dataclasses>=1.3.1,<2.0.0",
     "pyotp>=2.9.0,<3.0.0",
-    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.14.0,<4",
+    "flagsmith-common[common-core,flagsmith-schemas,task-processor]>=3.15.0,<4",
     "django-stubs>=5.1.3,<6.0.0",
     "tzdata>=2024.1,<2025.0.0",
     "djangorestframework-simplejwt>=5.5.1,<6.0.0",
@@ -88,7 +87,7 @@ dependencies = [
 
 [project.optional-dependencies]
 private = [
-    "flagsmith-private>=0.13.0,<1",
+    "flagsmith-private>=0.14.0,<1",
 ]
 dev = [
     "django-test-migrations>=1.2.0,<2.0.0",
@@ -240,6 +239,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["rbac.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["edge_control_plane.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

@@ -825,11 +825,6 @@ REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
 # Redis Cluster URL used to communicate with the event ingestion server.
 INGESTION_REDIS_URL = env.str("INGESTION_REDIS_URL", default="")
 
-# ARN of the IAM role Firehose assumes to deliver experiment events to S3.
-INGESTION_FIREHOSE_DELIVERY_ROLE_ARN = env.str(
-    "INGESTION_FIREHOSE_DELIVERY_ROLE_ARN", default=""
-)
-
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -1161,6 +1156,12 @@ if SCIM_INSTALLED:
         "USER_ADAPTER": "scim.adapters.UserAdapter",
         "USER_FILTER_PARSER": "scim.filters.UserFilterQuery",
     }
+
+EDGE_CONTROL_PLANE_INSTALLED = (
+    importlib.util.find_spec("edge_control_plane") is not None
+)
+if EDGE_CONTROL_PLANE_INSTALLED:
+    INSTALLED_APPS.append("edge_control_plane")
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 

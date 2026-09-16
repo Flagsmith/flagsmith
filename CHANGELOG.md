@@ -1,5 +1,54 @@
 # Changelog
 
+## [2.273.0](https://github.com/Flagsmith/flagsmith/compare/v2.272.0...v2.273.0) (2026-09-16)
+
+
+### Features
+
+* **edge-proxy:** Wire the flagsmith-private edge_control_plane app into the api ([#8305](https://github.com/Flagsmith/flagsmith/issues/8305)) ([5b54de7](https://github.com/Flagsmith/flagsmith/commit/5b54de78fc913ecb99cca2d8b854488446f93784))
+* **experimentation:** experiment metadata on feature states ([#8532](https://github.com/Flagsmith/flagsmith/issues/8532)) ([6def014](https://github.com/Flagsmith/flagsmith/commit/6def014c5115b8f13b4ddf3ca58fd138b6e4f168))
+* **experimentation:** route external warehouse events to a static Kafka topic ([#8530](https://github.com/Flagsmith/flagsmith/issues/8530)) ([89ce13c](https://github.com/Flagsmith/flagsmith/commit/89ce13c608c70f547f31331926a471cd4be7cdb1))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.14.0,&lt;1 ([#8540](https://github.com/Flagsmith/flagsmith/issues/8540)) ([2b5fa4e](https://github.com/Flagsmith/flagsmith/commit/2b5fa4efdff7efbbcf6159e03c07af20cc9b117e))
+* resolve high-severity advisories in docs and api ([#8536](https://github.com/Flagsmith/flagsmith/issues/8536)) ([7efa778](https://github.com/Flagsmith/flagsmith/commit/7efa7788ab024686fd196e1ba6d479107e9d8ca6))
+
+## [2.272.0](https://github.com/Flagsmith/flagsmith/compare/v2.271.1...v2.272.0) (2026-09-15)
+
+
+### Features
+
+* **onboarding:** create the demo flag as multivariate ([#8503](https://github.com/Flagsmith/flagsmith/issues/8503)) ([d5c499d](https://github.com/Flagsmith/flagsmith/commit/d5c499d0866aef2a86161b803be1d5f4fef82246))
+* **Segment Membership:** Skip traitless identities when seeding ([#8455](https://github.com/Flagsmith/flagsmith/issues/8455)) ([9180452](https://github.com/Flagsmith/flagsmith/commit/9180452d338ef2af20b13e6ba219f8953957ce97))
+
+
+### Bug Fixes
+
+* **change-requests:** stop variation values applying outside the request ([#8506](https://github.com/Flagsmith/flagsmith/issues/8506)) ([355392b](https://github.com/Flagsmith/flagsmith/commit/355392b809f2d72f983885ca296c2d00fe0df35c))
+* **docs:** pin openapi-docs plugin and theme to 4.2.x ([#8520](https://github.com/Flagsmith/flagsmith/issues/8520)) ([446b73b](https://github.com/Flagsmith/flagsmith/commit/446b73b4cf29000866d27609379cabea45ac7b2a))
+* **errors:** render the error banners that were being swallowed ([#8453](https://github.com/Flagsmith/flagsmith/issues/8453)) ([6b4c10e](https://github.com/Flagsmith/flagsmith/commit/6b4c10ee1c444748578fdb9a155b5f52a5e94e76))
+* **frontend:** allow npm 11 so Renovate can refresh the lock file ([#8519](https://github.com/Flagsmith/flagsmith/issues/8519)) ([22bbb04](https://github.com/Flagsmith/flagsmith/commit/22bbb04e912bf84b20161405f7c96bf70e891c11))
+* **identities:** flag when an identity override diverges from its variation ([#8500](https://github.com/Flagsmith/flagsmith/issues/8500)) ([787c927](https://github.com/Flagsmith/flagsmith/commit/787c927fdebc90035640bda8cb92852fa8a28707))
+
+
+### Dependency Updates
+
+* **docs:** upgrade openapi-docs plugin and theme to 5.x ([#8527](https://github.com/Flagsmith/flagsmith/issues/8527)) ([9fe3c5c](https://github.com/Flagsmith/flagsmith/commit/9fe3c5c44ea47b2db719bdcf64eb149020721779))
+* lock file maintenance ([#8518](https://github.com/Flagsmith/flagsmith/issues/8518)) ([e2fb680](https://github.com/Flagsmith/flagsmith/commit/e2fb680a0ce68c09597a7e65db04037961fac42c))
+
+
+### CI
+
+* pre-commit autoupdate ([#8529](https://github.com/Flagsmith/flagsmith/issues/8529)) ([c97e663](https://github.com/Flagsmith/flagsmith/commit/c97e6633aac618a31eae114e96376b577165e569))
+* **renovate:** fix lock file maintenance author, schedule and scope ([#8516](https://github.com/Flagsmith/flagsmith/issues/8516)) ([f95f709](https://github.com/Flagsmith/flagsmith/commit/f95f70900f5e46cc1e2abf27b551e676b7f90b0c))
+
+
+### Refactoring
+
+* **value-editor:** migrate to TypeScript and split by concern ([#8447](https://github.com/Flagsmith/flagsmith/issues/8447)) ([a82c3d6](https://github.com/Flagsmith/flagsmith/commit/a82c3d6c24b05fbd0be9c10244418a39382983b4))
+
 ## [2.271.1](https://github.com/Flagsmith/flagsmith/compare/v2.271.0...v2.271.1) (2026-09-10)
 
 

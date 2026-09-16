@@ -139,6 +139,7 @@ def map_feature_state_to_engine(
     feature_state: "FeatureState",
     *,
     mv_fs_values: Optional[Iterable["MultivariateFeatureStateValue"]] = None,
+    metadata: Optional[dict[str, object]] = None,
 ) -> FeatureStateModel:
     feature = feature_state.feature
     feature_segment: Optional["FeatureSegment"] = feature_state.feature_segment
@@ -151,6 +152,7 @@ def map_feature_state_to_engine(
         feature_segment_model = None
 
     return FeatureStateModel(
+        metadata=metadata,
         enabled=feature_state.enabled,
         # The engine and SDKs seed multivariate variant allocation on django_id,
         # so feeding it the bucketing seed keeps variant assignment stable when
@@ -208,10 +210,16 @@ def map_environment_to_engine(
     :param Environment environment: the environment to map
     :rtype EnvironmentModel
     """
+    from experimentation.feature_state_metadata import (  # avoid circular import
+        get_feature_state_metadata_builder,
+    )
+
     project: "Project" = environment.project
     organisation: "Organisation" = project.organisation
 
     # Read relationships - grab all the data needed from the ORM here.
+
+    get_feature_state_metadata = get_feature_state_metadata_builder(environment)
 
     project_segments = [
         ps for ps in project.segments.all() if ps.id == ps.version_of_id
@@ -295,6 +303,7 @@ def map_environment_to_engine(
                     mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
                         feature_state.pk,
                     ),
+                    metadata=get_feature_state_metadata(feature_state),
                 )
                 for feature_state in project_segment_feature_states_by_segment_id.pop(
                     segment.pk
@@ -322,6 +331,7 @@ def map_environment_to_engine(
             mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
                 feature_state.pk,
             ),
+            metadata=get_feature_state_metadata(feature_state),
         )
         for feature_state in environment_feature_states
     ]

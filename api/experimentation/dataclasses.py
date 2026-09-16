@@ -125,9 +125,3 @@ class ResultsSummary:
     # totals divide: a bucket's own conversions over its own new identities
     # compares different people and can exceed 100%.
     exposures_timeseries: ExposuresTimeseries
-
-
-@dataclass(frozen=True)
-class IngestionInfrastructure:
-    bucket_name: str
-    stream_name: str

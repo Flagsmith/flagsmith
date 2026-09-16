@@ -13,6 +13,7 @@ from rest_framework.test import APIClient
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
+from experimentation.models import Experiment, ExperimentStatus
 from features.feature_types import MULTIVARIATE
 from features.models import (  # type: ignore[attr-defined]
     STRING,
@@ -34,7 +35,12 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize(
-    "use_v2_feature_versioning, total_queries", [(True, 12), (False, 11)]
+    "use_v2_feature_versioning, with_running_experiment, total_queries",
+    [
+        (True, False, 13),
+        (False, False, 12),
+        (False, True, 12),
+    ],
 )
 def test_get_environment_document__valid_api_key__returns_full_document(
     organisation_one: "Organisation",
@@ -42,6 +48,7 @@ def test_get_environment_document__valid_api_key__returns_full_document(
     organisation_one_project_one: "Project",
     django_assert_num_queries: "DjangoAssertNumQueries",
     use_v2_feature_versioning: bool,
+    with_running_experiment: bool,
     total_queries: int,
 ) -> None:
     # Given
@@ -105,6 +112,16 @@ def test_get_environment_document__valid_api_key__returns_full_document(
             string_value="option-2",
         )
 
+    if with_running_experiment:
+        experiment = Experiment.objects.create(
+            environment=environment,
+            feature=feature,
+            name="New checkout CTA",
+            hypothesis="Buy now converts better",
+            status=ExperimentStatus.RUNNING,
+            rollout_segment=segment,
+        )
+
     if use_v2_feature_versioning:
         enable_v2_versioning(environment.id)
 
@@ -128,6 +145,32 @@ def test_get_environment_document__valid_api_key__returns_full_document(
     assert len(response.data["project"]["segments"]) == 10
     assert len(response.data["feature_states"]) == 11
     assert len(response.data["identity_overrides"]) == 10
+
+    experimented_states = {
+        state["feature"]["name"]: state.get("metadata")
+        for state in response.data["feature_states"]
+    }
+    if with_running_experiment:
+        expected_experiment = {
+            "id": experiment.id,
+            "name": "New checkout CTA",
+        }
+        assert experimented_states["test_feature"] == {
+            "experiment": {**expected_experiment, "in_experiment": False},
+        }
+        rollout_segment_document = next(
+            segment_document
+            for segment_document in response.data["project"]["segments"]
+            if segment_document["id"] == segment.id
+        )
+        assert [
+            state["metadata"] for state in rollout_segment_document["feature_states"]
+        ] == [{"experiment": {**expected_experiment, "in_experiment": True}}]
+    assert not any(
+        metadata
+        for name, metadata in experimented_states.items()
+        if name != "test_feature"
+    )
 
     environment.refresh_from_db()
     assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(

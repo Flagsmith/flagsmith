@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
     from environments.models import Environment, EnvironmentAPIKey
+    from experimentation.models import Experiment
     from features.models import Feature, FeatureState
 
 
@@ -403,3 +404,26 @@ def test_map_environment_to_compressed_environment_v2_document__valid_environmen
         json.loads(gzip.decompress(compressed_feature_states).decode("utf-8"))
         == uncompressed_document["feature_states"]
     )
+
+
+def test_map_environment_to_compressed_environment_document__running_experiment__metadata_preserved(
+    environment: "Environment",
+    running_experiment: "Experiment",
+) -> None:
+    # Given
+    expected_metadata = {
+        "experiment": {
+            "id": running_experiment.id,
+            "name": "New checkout CTA",
+            "in_experiment": False,
+        }
+    }
+
+    # When
+    result = dynamodb.map_environment_to_compressed_environment_document(environment)
+
+    # Then
+    compressed_feature_states = result.document["feature_states"]
+    assert isinstance(compressed_feature_states, bytes)
+    feature_states = json.loads(gzip.decompress(compressed_feature_states))
+    assert feature_states[0]["metadata"] == expected_metadata
