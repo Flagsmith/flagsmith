@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.273.0](https://github.com/Flagsmith/flagsmith/compare/v2.272.0...v2.273.0) (2026-09-16)
+
+
+### Features
+
+* **edge-proxy:** Wire the flagsmith-private edge_control_plane app into the api ([#8305](https://github.com/Flagsmith/flagsmith/issues/8305)) ([5b54de7](https://github.com/Flagsmith/flagsmith/commit/5b54de78fc913ecb99cca2d8b854488446f93784))
+* **experimentation:** experiment metadata on feature states ([#8532](https://github.com/Flagsmith/flagsmith/issues/8532)) ([6def014](https://github.com/Flagsmith/flagsmith/commit/6def014c5115b8f13b4ddf3ca58fd138b6e4f168))
+* **experimentation:** route external warehouse events to a static Kafka topic ([#8530](https://github.com/Flagsmith/flagsmith/issues/8530)) ([89ce13c](https://github.com/Flagsmith/flagsmith/commit/89ce13c608c70f547f31331926a471cd4be7cdb1))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.14.0,&lt;1 ([#8540](https://github.com/Flagsmith/flagsmith/issues/8540)) ([2b5fa4e](https://github.com/Flagsmith/flagsmith/commit/2b5fa4efdff7efbbcf6159e03c07af20cc9b117e))
+* resolve high-severity advisories in docs and api ([#8536](https://github.com/Flagsmith/flagsmith/issues/8536)) ([7efa778](https://github.com/Flagsmith/flagsmith/commit/7efa7788ab024686fd196e1ba6d479107e9d8ca6))
+
 ## [2.272.0](https://github.com/Flagsmith/flagsmith/compare/v2.271.1...v2.272.0) (2026-09-15)
 
 
