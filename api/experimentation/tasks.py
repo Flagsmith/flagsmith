@@ -28,15 +28,20 @@ logger = structlog.get_logger("experimentation")
 def sync_environment_ingestion(environment_id: int) -> None:
     """Bring the ingestion server's keys and destination for an environment in
     line with its active warehouse connection, or remove them when it has none."""
+    # Deleting an environment soft-deletes its connection, which enqueues this
+    # task, so the environment has to be found even once it is deleted.
     environment = (
-        Environment.objects.filter(id=environment_id)
+        Environment.objects.all_with_deleted()
+        .filter(id=environment_id)
         .prefetch_related("api_keys")
         .first()
     )
     if environment is None:
         return
 
-    connection = environment.warehouse_connections.first()
+    connection = (
+        None if environment.deleted_at else environment.warehouse_connections.first()
+    )
     if connection is None:
         ingestion_sync_service.delete_ingestion_key(environment.api_key)
         for api_key in environment.api_keys.all():

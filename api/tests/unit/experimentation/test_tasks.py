@@ -131,6 +131,26 @@ def test_sync_environment_ingestion__connection_deleted__removes_keys_and_destin
     ]
 
 
+def test_sync_environment_ingestion__environment_deleted__removes_keys_and_destination(
+    clickhouse_connection: WarehouseConnection,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given the environment is soft-deleted, taking its connection with it
+    environment.delete()
+    mock_service = mocker.patch("experimentation.tasks.ingestion_sync_service")
+
+    # When
+    sync_environment_ingestion(environment_id=environment.id)
+
+    # Then the deleted environment is still found, so its key and destination
+    # are removed rather than left accepting events
+    assert mock_service.mock_calls == [
+        mocker.call.delete_ingestion_key(environment.api_key),
+        mocker.call.delete_ingestion_destination(environment.api_key),
+    ]
+
+
 def test_sync_environment_ingestion__missing_environment__does_nothing(
     db: None,
     mocker: MockerFixture,

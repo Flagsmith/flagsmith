@@ -66,6 +66,38 @@ def test_warehouse_connection__after_delete__enqueues_ingestion_sync_task(
     )
 
 
+@pytest.mark.parametrize(
+    "field, value, expected_enqueued",
+    [
+        pytest.param("warehouse_type", WarehouseType.CLICKHOUSE, True, id="type"),
+        pytest.param("name", "renamed", False, id="name"),
+    ],
+)
+def test_warehouse_connection__after_update__enqueues_ingestion_sync_task_on_type_change(
+    warehouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+    field: str,
+    value: str,
+    expected_enqueued: bool,
+) -> None:
+    # Given
+    mock_task = mocker.patch(
+        "experimentation.tasks.sync_environment_ingestion",
+    )
+
+    # When
+    setattr(warehouse_connection, field, value)
+    warehouse_connection.save()
+
+    # Then switching warehouse type re-routes the environment; other edits don't
+    if expected_enqueued:
+        mock_task.delay.assert_called_once_with(
+            kwargs={"environment_id": warehouse_connection.environment_id},
+        )
+    else:
+        mock_task.delay.assert_not_called()
+
+
 def _summary() -> ExposuresSummary:
     return ExposuresSummary(
         excluded_identities=1,
