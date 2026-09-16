@@ -8,6 +8,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
 
 from environments.models import Environment
 from features.dependencies.services import validate_segment_flag_dependencies
@@ -82,14 +83,14 @@ class FeatureSegmentViewSet(
         return queryset
 
     @transaction.atomic
-    def perform_create(self, serializer: FeatureSegmentCreateSerializer) -> None:
-        super().perform_create(serializer)
-        validate_segment_flag_dependencies(serializer.instance.segment)
+    def perform_create(self, serializer: BaseSerializer[FeatureSegment]) -> None:
+        feature_segment = serializer.save()
+        validate_segment_flag_dependencies(feature_segment.segment)
 
     @transaction.atomic
-    def perform_update(self, serializer: FeatureSegmentCreateSerializer) -> None:
-        super().perform_update(serializer)
-        validate_segment_flag_dependencies(serializer.instance.segment)
+    def perform_update(self, serializer: BaseSerializer[FeatureSegment]) -> None:
+        feature_segment = serializer.save()
+        validate_segment_flag_dependencies(feature_segment.segment)
 
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action in ["create", "update", "partial_update"]:
