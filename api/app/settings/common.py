@@ -1156,6 +1156,12 @@ if SCIM_INSTALLED:
         "USER_FILTER_PARSER": "scim.filters.UserFilterQuery",
     }
 
+EDGE_CONTROL_PLANE_INSTALLED = (
+    importlib.util.find_spec("edge_control_plane") is not None
+)
+if EDGE_CONTROL_PLANE_INSTALLED:
+    INSTALLED_APPS.append("edge_control_plane")
+
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Used to keep edge identities in sync by forwarding the http requests
