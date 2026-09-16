@@ -74,7 +74,7 @@ def test_create_segment__valid_flag_dependency__indexes_created(
     assert response.status_code == 201
     segment_id = response.json()["id"]
     assert list(
-        SegmentFlagReference.objects.values(
+        SegmentFlagReference.objects.order_by("condition_json_path").values(
             "segment",
             "prerequisite_feature",
             "condition_json_path",
@@ -195,7 +195,7 @@ def test_update_segment_update_rules__valid_flag_dependency__indexes_updated(
     # Then
     assert response.status_code == 200
     assert list(
-        SegmentFlagReference.objects.values(
+        SegmentFlagReference.objects.order_by("condition_json_path").values(
             "segment",
             "prerequisite_feature",
             "condition_json_path",
