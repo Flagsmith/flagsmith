@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from datetime import timedelta
 
 import freezegun
@@ -44,6 +45,9 @@ from features.workflows.core.models import (
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
 from users.models import FFAdminUser
 
 now = timezone.now()
@@ -861,6 +865,45 @@ def test_change_request_live_from__with_change_set__sets_live_from_to_commit_tim
 
 
 def test_change_request_commit__with_draft_segment__publishes_segment_rules(
+    segment: Segment,
+    segment_rules: list[SegmentRuleType],
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    draft_rules = deepcopy(segment_rules)
+    draft_rules[0]["conditions"][0]["value"] = "blue"
+    draft_segment = Segment.objects.create(
+        name="new-name",
+        description="new-description",
+        change_request=change_request,
+        project=segment.project,
+        version_of=segment,
+        rules_data=draft_rules,
+    )
+
+    # When
+    change_request.commit(admin_user)
+
+    # Then
+    segment.refresh_from_db()
+    assert segment.version == 2
+    assert segment.name == "new-name"
+    assert segment.description == "new-description"
+    assert segment.rules_data == draft_rules
+    revision = segment.versioned_segments.exclude(
+        id__in=[segment.id, draft_segment.id]
+    ).get()
+    assert revision.version == 1
+    assert revision.rules_data == segment_rules
+    assert log.has(
+        "segment-revision-created", segment_id=segment.id, revision_id=revision.id
+    )
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+def test_change_request_commit__with_draft_segment__publishes_segment_rules_x_replaced_above(
     segment: Segment,
     change_request: ChangeRequest,
     admin_user: FFAdminUser,
