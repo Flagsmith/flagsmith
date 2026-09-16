@@ -19,7 +19,6 @@ dependencies = [
     "django-cors-headers>=3.5.0,<3.6.0",
     "djangorestframework>=3.17.2,<3.18.0",
     "gunicorn>=23.0.0,<23.1.0",
-    "pyparsing>=2.4.7,<2.5.0",
     "requests>=2.33.0,<2.34.0",
     "six>=1.16.0,<1.17.0",
     "whitenoise>=6.0.0,<6.1.0",
