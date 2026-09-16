@@ -7,7 +7,6 @@ from django.db.models import QuerySet
 from django.utils import timezone
 
 from core.dataclasses import AuthorData
-from features.dependencies.services import delete_segment_flag_references
 from features.models import FeatureSegment
 from features.versioning.models import EnvironmentFeatureVersion
 
@@ -53,6 +52,7 @@ def delete_segment(
     author: AuthorData,
 ) -> None:
     """Delete a segment and all of its components"""
+    from features.dependencies.services import delete_segment_flag_references
     from features.models import FeatureSegment
     from segments.models import Segment
     from segments.tasks import create_segment_deleted_audit_log

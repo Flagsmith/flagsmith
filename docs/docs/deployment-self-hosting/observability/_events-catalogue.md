@@ -325,10 +325,22 @@ Attributes:
  - `environment.id`
  - `organisation.id`
 
+### `features.dependencies.create_failed`
+
+Logged at `info` from:
+ - `api/features/dependencies/services.py:158`
+
+Attributes:
+ - `environment.key`
+ - `feature.name`
+ - `organisation.id`
+ - `prerequisite_feature.name`
+ - `project.id`
+
 ### `features.dependencies.created`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:73`
+ - `api/features/dependencies/services.py:79`
 
 Attributes:
  - `environment.key`
@@ -340,8 +352,8 @@ Attributes:
 ### `features.dependencies.deleted`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:63`
- - `api/features/dependencies/services.py:93`
+ - `api/features/dependencies/services.py:69`
+ - `api/features/dependencies/services.py:99`
 
 Attributes:
  - `environment.key`
@@ -731,7 +743,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:234`
+ - `api/segments/serializers.py:237`
 
 Attributes:
  - `revision_id`

@@ -1,4 +1,5 @@
 import typing
+from collections import defaultdict
 
 import jsonpath_rfc9535
 import structlog
@@ -6,9 +7,14 @@ from jsonpath_rfc9535.exceptions import JSONPathError
 from jsonpath_rfc9535.segments import JSONPathChildSegment, JSONPathSegment
 from jsonpath_rfc9535.selectors import NameSelector
 
-from features.dependencies.exceptions import PrerequisiteFeatureNotFoundError
+from features.dependencies.exceptions import (
+    CircularDependencyError,
+    PrerequisiteFeatureNotFoundError,
+)
 from features.dependencies.models import SegmentFlagReference
+from features.dependencies.types import DependencyEdge, DependencyPath
 from features.models import Feature, FeatureSegment
+from segments.services import get_overrides_in_effect
 from segments.types import SegmentRule
 
 if typing.TYPE_CHECKING:
@@ -99,6 +105,67 @@ def delete_segment_flag_references(segment: "Segment") -> None:
                 prerequisite_feature__name=reference.prerequisite_feature.name,
             )
     references.delete()
+
+
+def validate_segment_flag_dependencies(segment: "Segment") -> None:
+    """Raise if any feature the segment overrides ends up depending on itself."""
+    for override in (
+        get_overrides_in_effect()
+        .filter(segment=segment)
+        .select_related("environment", "feature")
+    ):
+        edges: dict[str, list[DependencyEdge]] = defaultdict(list)
+        for (
+            feature_name,
+            prerequisite_feature_name,
+            segment_id,
+            segment_name,
+            condition_json_path,
+        ) in (
+            get_overrides_in_effect()
+            .filter(
+                environment=override.environment,
+                segment__flag_references__isnull=False,
+            )
+            .values_list(
+                "feature__name",
+                "segment__flag_references__prerequisite_feature__name",
+                "segment_id",
+                "segment__name",
+                "segment__flag_references__condition_json_path",
+            )
+        ):
+            edges[feature_name].append(
+                {
+                    "feature": feature_name,
+                    "needs": prerequisite_feature_name,
+                    "segment": {
+                        "id": segment_id,
+                        "name": segment_name,
+                        "condition_json_path": condition_json_path,
+                    },
+                }
+            )
+        pending: list[DependencyPath] = [
+            [edge] for edge in edges[override.feature.name]
+        ]
+        visited: set[str] = set()
+        while pending:
+            path = pending.pop()
+            if (prerequisite_feature_name := path[-1]["needs"]) in visited:
+                continue
+            if prerequisite_feature_name == override.feature.name:
+                logger.info(
+                    "dependencies.create_failed",
+                    organisation__id=segment.project.organisation_id,
+                    project__id=segment.project_id,
+                    environment__key=override.environment.api_key,
+                    feature__name=override.feature.name,
+                    prerequisite_feature__name=path[0]["needs"],
+                )
+                raise CircularDependencyError(path=path)
+            visited.add(prerequisite_feature_name)
+            pending += [[*path, edge] for edge in edges[prerequisite_feature_name]]
 
 
 def _get_rules_by_json_path(
