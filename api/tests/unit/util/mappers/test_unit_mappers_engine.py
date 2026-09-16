@@ -9,7 +9,8 @@ from pytest_mock import MockerFixture
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
-from features.models import FeatureSegment, FeatureState
+from experimentation.models import Experiment, ExperimentStatus
+from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from integrations.common.models import IntegrationsModel
@@ -1002,3 +1003,116 @@ def test_map_condition_to_segment_condition__valid_condition__returns_expected(
         "operator": condition.operator,
         "value": condition.value,
     }
+
+
+def test_map_environment_to_engine__running_experiment__stamps_every_state_of_feature(
+    environment: Environment,
+    feature: "Feature",
+    segment: Segment,
+    running_experiment: Experiment,
+) -> None:
+    # Given - a second segment override on the feature, outside the experiment
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment,
+        ),
+    )
+    expected_experiment = {
+        "id": running_experiment.id,
+        "name": "New checkout CTA",
+    }
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    (default_state,) = [
+        fs for fs in result.feature_states if fs.feature.id == feature.id
+    ]
+    assert default_state.metadata == {
+        "experiment": {**expected_experiment, "in_experiment": False},
+    }
+    assert {
+        segment.name: fs.metadata
+        for segment in result.project.segments
+        for fs in segment.feature_states
+    } == {
+        "Experiment rollout": {
+            "experiment": {**expected_experiment, "in_experiment": True},
+        },
+        "segment": {
+            "experiment": {**expected_experiment, "in_experiment": False},
+        },
+    }
+
+
+def test_map_environment_to_engine__running_experiment__other_features_unstamped(
+    environment: Environment,
+    running_experiment: Experiment,
+) -> None:
+    # Given
+    other_feature = Feature.objects.create(
+        name="unexperimented_feature",
+        project=environment.project,
+    )
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    (other_state,) = [
+        fs for fs in result.feature_states if fs.feature.id == other_feature.id
+    ]
+    assert other_state.metadata is None
+    assert "metadata" not in other_state.dict()
+
+
+@pytest.mark.parametrize(
+    "status",
+    (
+        ExperimentStatus.CREATED,
+        ExperimentStatus.PAUSED,
+        ExperimentStatus.COMPLETED,
+    ),
+)
+def test_map_environment_to_engine__experiment_not_running__no_metadata(
+    environment: Environment,
+    running_experiment: Experiment,
+    status: str,
+) -> None:
+    # Given
+    Experiment.objects.filter(pk=running_experiment.pk).update(status=status)
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    assert all(fs.metadata is None for fs in result.feature_states)
+    assert all(
+        fs.metadata is None
+        for segment in result.project.segments
+        for fs in segment.feature_states
+    )
+
+
+def test_map_environment_to_engine__experiment_without_rollout_segment__no_enrolment(
+    environment: Environment,
+    feature: "Feature",
+    running_experiment: Experiment,
+) -> None:
+    # Given
+    Experiment.objects.filter(pk=running_experiment.pk).update(rollout_segment=None)
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    assert not any(
+        fs.metadata["experiment"]["in_experiment"]  # type: ignore[index]
+        for segment in result.project.segments
+        for fs in segment.feature_states
+    )

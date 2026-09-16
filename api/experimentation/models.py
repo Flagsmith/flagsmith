@@ -2,7 +2,7 @@ from dataclasses import asdict
 from datetime import datetime
 from typing import TYPE_CHECKING, Generic, TypeVar
 
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
@@ -152,6 +152,17 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
                 name="unique_active_experiment_per_feature_env",
             ),
         ]
+
+    @hook(AFTER_UPDATE, when_any=["status", "name"], has_changed=True)  # type: ignore[misc]
+    def rebuild_environment_document(self) -> None:
+        from environments.tasks import rebuild_environment_document
+
+        environment_id = self.environment_id
+        transaction.on_commit(
+            lambda: rebuild_environment_document.delay(
+                kwargs={"environment_id": environment_id},
+            )
+        )
 
 
 class ExperimentComputation(models.Model, Generic[SummaryT]):
