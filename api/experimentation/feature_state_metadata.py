@@ -22,7 +22,8 @@ def get_feature_state_metadata_builder(
 
     def build(feature_state: "FeatureState") -> dict[str, Any] | None:
         experiment = experiment_by_feature_id.get(feature_state.feature_id)
-        if experiment is None:
+        if experiment is None or feature_state.identity_id is not None:
+            # Identity overrides are hand-picked, never part of an experiment.
             return None
         return dict(
             build_feature_state_metadata(

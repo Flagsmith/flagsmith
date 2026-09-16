@@ -1515,7 +1515,7 @@ def test_sdk_identities_get__experiment__metadata_reports_enrolment(
     assert "metadata" not in flags[other_feature.name]
 
 
-def test_sdk_identities_get__identity_override__metadata_reports_no_enrolment(
+def test_sdk_identities_get__identity_override__metadata_absent(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -1540,7 +1540,7 @@ def test_sdk_identities_get__identity_override__metadata_reports_no_enrolment(
     flags = _get_identity_flags(api_client, environment, identity)
 
     # Then
-    assert flags[feature.name]["metadata"]["experiment"]["in_experiment"] is False
+    assert "metadata" not in flags[feature.name]
 
 
 def test_sdk_identities_get__many_experimented_flags__single_experiment_query(
