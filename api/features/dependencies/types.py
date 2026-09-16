@@ -1,5 +1,8 @@
 import typing
 
+FeatureName = str
+JSONPathStr = str
+
 
 class ReferencingSegment(typing.TypedDict):
     """The segment whose rules hold the `$.flags` condition making up a dependency."""
