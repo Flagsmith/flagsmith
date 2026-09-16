@@ -9,6 +9,12 @@ from django.db.models import Count, Q
 
 from api_keys.user import APIKeyUser
 from environments.models import Environment
+from features.dependencies.models import SegmentFlagReference
+from features.dependencies.services import (
+    report_flag_dependencies,
+    validate_segment_flag_dependencies,
+)
+from features.dependencies.types import FeatureName
 from features.future.exceptions import (
     DuplicatePriorityError,
     SegmentOverrideNotFoundError,
@@ -29,9 +35,16 @@ from features.models import Feature, FeatureSegment, FeatureState, FeatureStateV
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import get_environment_flags_list
+from segments.models import Segment
 from users.models import FFAdminUser
 
 logger = structlog.get_logger("features")
+
+
+class _OverriddenSegments(NamedTuple):
+    created: list[int]
+    updated: list[int]
+    deleted: list[int]
 
 
 def _get_feature_states(
@@ -234,12 +247,6 @@ def _check_priorities(
         raise DuplicatePriorityError(f"Duplicate priority: {duplicate}.")
 
 
-class WrittenSegmentOverrides(NamedTuple):
-    created: list[int]
-    updated: list[int]
-    deleted: list[int]
-
-
 def _write_segment_overrides(
     *,
     environment: Environment,
@@ -249,24 +256,24 @@ def _write_segment_overrides(
     overrides: dict[int, FeatureState],
     changes: Sequence[SegmentOverrideRequest],
     replace: bool,
-) -> WrittenSegmentOverrides:
-    written = WrittenSegmentOverrides([], [], [])
+) -> _OverriddenSegments:
+    segments = _OverriddenSegments([], [], [])
 
     if replace:
-        written.deleted.extend(
+        segments.deleted.extend(
             sorted(overrides.keys() - {change["segment"]["id"] for change in changes})
         )
         _delete_segment_overrides(
             environment=environment,
             feature=feature,
             version=version,
-            segment_ids=written.deleted,
+            segment_ids=segments.deleted,
         )
 
     for position, change in enumerate(changes):
         segment_id = change["segment"]["id"]
         if feature_state := overrides.get(segment_id):
-            written.updated.append(segment_id)
+            segments.updated.append(segment_id)
         else:
             feature_state = _create_segment_override(
                 environment=environment,
@@ -275,17 +282,31 @@ def _write_segment_overrides(
                 segment_id=segment_id,
                 priority=change.get("priority", position),
             )
-            written.created.append(segment_id)
+            segments.created.append(segment_id)
         _write_segment_override(
             feature_state,
             change,
-            replace=replace or segment_id in written.created,
+            replace=replace or segment_id in segments.created,
             environment_default=environment_default,
         )
 
     _check_priorities(environment, feature, version)
 
-    return written
+    return segments
+
+
+def _get_prerequisite_feature_names(
+    segments: _OverriddenSegments,
+) -> tuple[set[FeatureName], set[FeatureName]]:
+    """Return the prerequisite feature names the flag gains and loses."""
+    created: set[FeatureName] = set()
+    deleted: set[FeatureName] = set()
+    for segment_id, feature_name in SegmentFlagReference.objects.filter(
+        segment_id__in=[*segments.created, *segments.deleted]
+    ).values_list("segment_id", "prerequisite_feature__name"):
+        names = created if segment_id in segments.created else deleted
+        names.add(feature_name)
+    return created, deleted
 
 
 def update_flag(
@@ -301,7 +322,7 @@ def update_flag(
     if writes_nothing:
         return get_flag(environment=environment, feature=feature)
 
-    written = WrittenSegmentOverrides([], [], [])
+    segments = _OverriddenSegments([], [], [])
 
     with transaction.atomic():
         version = _create_draft_version(environment, feature)
@@ -318,7 +339,7 @@ def update_flag(
             )
 
         if (override_changes := changes.get("segment_overrides")) is not None:
-            written = _write_segment_overrides(
+            segments = _write_segment_overrides(
                 environment=environment,
                 feature=feature,
                 version=version,
@@ -331,15 +352,25 @@ def update_flag(
         if version is not None:
             _publish_version(version, author)
 
+        for segment in Segment.objects.filter(id__in=segments.created):
+            validate_segment_flag_dependencies(segment)
+        created, deleted = _get_prerequisite_feature_names(segments)
+        report_flag_dependencies(
+            environment=environment,
+            feature=feature,
+            created=created,
+            deleted=deleted,
+        )
+
     logger.info(
         "flag.updated",
         organisation__id=environment.project.organisation_id,
         project__id=environment.project_id,
         environment__id=environment.id,
         feature__id=feature.id,
-        segment_overrides__created__segment__ids=written.created,
-        segment_overrides__updated__segment__ids=written.updated,
-        segment_overrides__deleted__segment__ids=written.deleted,
+        segment_overrides__created__segment__ids=segments.created,
+        segment_overrides__updated__segment__ids=segments.updated,
+        segment_overrides__deleted__segment__ids=segments.deleted,
     )
 
     return get_flag(environment=environment, feature=feature)
@@ -369,6 +400,16 @@ def delete_segment_override(
 
         if version is not None:
             _publish_version(version, author)
+
+        _, deleted = _get_prerequisite_feature_names(
+            _OverriddenSegments([], [], [segment_id])
+        )
+        report_flag_dependencies(
+            environment=environment,
+            feature=feature,
+            created=[],
+            deleted=deleted,
+        )
 
     logger.info(
         "flag.updated",

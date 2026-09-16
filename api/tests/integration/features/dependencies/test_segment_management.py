@@ -3,9 +3,11 @@ from pytest_structlog import StructuredLogCapture
 from rest_framework.test import APIClient
 
 from features.dependencies.models import SegmentFlagReference
+from features.future.types import UpdateFlagRequest
 from features.models import Feature, FeatureSegment
 from projects.models import Project
 from segments.models import Segment
+from tests.types import CreateSegmentOverrideFixture
 
 
 @pytest.fixture(
@@ -132,6 +134,45 @@ def test_create_segment__nonexistent_prerequisite__responds_400(
         "condition_json_path": "$[0].conditions[0]",
     }
     assert not Segment.objects.exists()
+    assert not SegmentFlagReference.objects.exists()
+
+
+def test_update_segment_update_rules__nonexistent_prerequisite__responds_400(
+    admin_client: APIClient,
+    project: int,
+) -> None:
+    # Given
+    segment = Segment.objects.create(name="segment", project_id=project)
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/projects/{project}/segments/{segment.id}/",
+        data={
+            "name": "segment",
+            "project": project,
+            "rules": [
+                {
+                    "type": "ALL",
+                    "conditions": [
+                        {
+                            "property": "$.flags.unicorn.enabled",
+                            "operator": "EQUAL",
+                            "value": True,
+                        },
+                    ],
+                }
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "code": "prerequisite_feature_not_found",
+        "prerequisite_feature": "unicorn",
+        "condition_json_path": "$[0].conditions[0]",
+    }
     assert not SegmentFlagReference.objects.exists()
 
 
@@ -354,10 +395,9 @@ def test_update_segment_add_override__circular_flag_dependency__responds_400(
     )
 
 
-@pytest.mark.usefixtures("with_and_without_segment_change_requests")
-def test_update_segment_add_override__longer_dependency_cycle_path__responds_400(
+@pytest.mark.usefixtures("versioned_environment")
+def test_update_flag_add_override__flag_dependency__reports_dependency_created(
     admin_client: APIClient,
-    environment: int,
     environment_api_key: str,
     log: StructuredLogCapture,
     organisation: int,
@@ -366,44 +406,114 @@ def test_update_segment_add_override__longer_dependency_cycle_path__responds_400
     # Given
     chicken = Feature.objects.create(name="chicken", project_id=project)
     egg = Feature.objects.create(name="egg", project_id=project)
-    rooster = Feature.objects.create(name="rooster", project_id=project)
-    segment1 = Segment.objects.create(name="segment1", project_id=project)
-    segment2 = Segment.objects.create(name="segment2", project_id=project)
-    segment3 = Segment.objects.create(name="segment3", project_id=project)
+    segment = Segment.objects.create(name="segment", project_id=project)
     SegmentFlagReference.objects.create(
-        segment=segment1,
+        segment=segment,
         prerequisite_feature=egg,
-        condition_json_path="$[0].conditions[0]",
-    )
-    FeatureSegment.objects.create(
-        segment=segment1,
-        feature=chicken,
-        environment_id=environment,
-    )
-    SegmentFlagReference.objects.create(
-        segment=segment2,
-        prerequisite_feature=rooster,
-        condition_json_path="$[0].conditions[0]",
-    )
-    FeatureSegment.objects.create(
-        segment=segment2,
-        feature=egg,
-        environment_id=environment,
-    )
-    SegmentFlagReference.objects.create(
-        segment=segment3,
-        prerequisite_feature=chicken,
         condition_json_path="$[0].conditions[0]",
     )
 
     # When
-    response = admin_client.post(
-        f"/api/v1/environments/{environment_api_key}/features/{rooster.id}/create-segment-override/",
-        data={
-            "feature_state_value": {},
-            "feature_segment": {"segment": segment3.id},
-            "enabled": True,
-        },
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{chicken.id}/",
+        UpdateFlagRequest(
+            {"segment_overrides": [{"segment": {"id": segment.id}, "enabled": True}]}
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert log.has(
+        "dependencies.created",
+        level="info",
+        organisation__id=organisation,
+        project__id=project,
+        environment__key=environment_api_key,
+        feature__name="chicken",
+        prerequisite_feature__name="egg",
+    )
+
+
+@pytest.mark.usefixtures("versioned_environment")
+def test_delete_override__flag_dependency__reports_dependency_deleted(
+    admin_client: APIClient,
+    create_segment_override: CreateSegmentOverrideFixture,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+) -> None:
+    # Given
+    chicken = Feature.objects.create(name="chicken", project_id=project)
+    egg = Feature.objects.create(name="egg", project_id=project)
+    segment = Segment.objects.create(name="segment", project_id=project)
+    SegmentFlagReference.objects.create(
+        segment=segment,
+        prerequisite_feature=egg,
+        condition_json_path="$[0].conditions[0]",
+    )
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=chicken.id,
+        segment_id=segment.id,
+    )
+
+    # When
+    response = admin_client.delete(
+        f"/api/__future__/environments/{environment_api_key}"
+        f"/features/{chicken.id}/segment-overrides/{segment.id}/",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert log.has(
+        "dependencies.deleted",
+        level="info",
+        organisation__id=organisation,
+        project__id=project,
+        environment__key=environment_api_key,
+        feature__name="chicken",
+        prerequisite_feature__name="egg",
+    )
+
+
+@pytest.mark.usefixtures("versioned_environment")
+def test_update_flag_add_override__circular_flag_dependency__responds_400(
+    admin_client: APIClient,
+    create_segment_override: CreateSegmentOverrideFixture,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+) -> None:
+    # Given
+    chicken = Feature.objects.create(name="chicken", project_id=project)
+    egg = Feature.objects.create(name="egg", project_id=project)
+    segment1 = Segment.objects.create(name="segment1", project_id=project)
+    segment2 = Segment.objects.create(name="segment2", project_id=project)
+    SegmentFlagReference.objects.create(
+        segment=segment1,
+        prerequisite_feature=egg,
+        condition_json_path="$[0].conditions[1]",
+    )
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=chicken.id,
+        segment_id=segment1.id,
+    )
+    SegmentFlagReference.objects.create(
+        segment=segment2,
+        prerequisite_feature=chicken,
+        condition_json_path="$[1].conditions[2]",
+    )
+
+    # When
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{egg.id}/",
+        UpdateFlagRequest(
+            {"segment_overrides": [{"segment": {"id": segment2.id}, "enabled": True}]}
+        ),
         format="json",
     )
 
@@ -413,12 +523,12 @@ def test_update_segment_add_override__longer_dependency_cycle_path__responds_400
         "code": "circular_dependency",
         "path": [
             {
-                "feature": "rooster",
+                "feature": "egg",
                 "needs": "chicken",
                 "segment": {
-                    "id": segment3.id,
-                    "name": segment3.name,
-                    "condition_json_path": "$[0].conditions[0]",
+                    "id": segment2.id,
+                    "name": segment2.name,
+                    "condition_json_path": "$[1].conditions[2]",
                 },
             },
             {
@@ -427,28 +537,19 @@ def test_update_segment_add_override__longer_dependency_cycle_path__responds_400
                 "segment": {
                     "id": segment1.id,
                     "name": segment1.name,
-                    "condition_json_path": "$[0].conditions[0]",
-                },
-            },
-            {
-                "feature": "egg",
-                "needs": "rooster",
-                "segment": {
-                    "id": segment2.id,
-                    "name": segment2.name,
-                    "condition_json_path": "$[0].conditions[0]",
+                    "condition_json_path": "$[0].conditions[1]",
                 },
             },
         ],
     }
-    assert not FeatureSegment.objects.filter(segment=segment3, feature=rooster).exists()
+    assert not FeatureSegment.objects.filter(segment=segment2, feature=egg).exists()
     assert log.has(
         "dependencies.create_failed",
         level="info",
         organisation__id=organisation,
         project__id=project,
         environment__key=environment_api_key,
-        feature__name="rooster",
+        feature__name="egg",
         prerequisite_feature__name="chicken",
     )
 

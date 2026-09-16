@@ -1,15 +1,17 @@
 import typing
 from collections import defaultdict
+from collections.abc import Collection
 
 import structlog
 
+from environments.models import Environment
 from features.dependencies.exceptions import (
     CircularDependencyError,
     PrerequisiteFeatureNotFoundError,
 )
 from features.dependencies.mappers import map_rules_to_prerequisite_feature_names
 from features.dependencies.models import SegmentFlagReference
-from features.dependencies.types import DependencyEdge, DependencyPath
+from features.dependencies.types import DependencyEdge, DependencyPath, FeatureName
 from features.models import Feature, FeatureSegment
 from segments.services import get_overrides_in_effect
 
@@ -49,29 +51,15 @@ def index_segment_flag_references(segment: "Segment") -> None:
         )
         for condition_json_path, feature_name in feature_names_by_json_path.items()
     )
-    overrides = FeatureSegment.objects.filter(segment=segment).select_related(
-        "environment", "feature"
-    )
-    for feature_name in previous_feature_names - feature_ids_by_name.keys():
-        for override in overrides:
-            logger.info(
-                "dependencies.deleted",
-                organisation__id=segment.project.organisation_id,
-                project__id=segment.project_id,
-                environment__key=override.environment.api_key,
-                feature__name=override.feature.name,
-                prerequisite_feature__name=feature_name,
-            )
-    for feature_name in feature_ids_by_name.keys() - previous_feature_names:
-        for override in overrides:
-            logger.info(
-                "dependencies.created",
-                organisation__id=segment.project.organisation_id,
-                project__id=segment.project_id,
-                environment__key=override.environment.api_key,
-                feature__name=override.feature.name,
-                prerequisite_feature__name=feature_name,
-            )
+    for override in FeatureSegment.objects.filter(segment=segment).select_related(
+        "environment__project", "feature"
+    ):
+        report_flag_dependencies(
+            environment=override.environment,
+            feature=override.feature,
+            created=feature_ids_by_name.keys() - previous_feature_names,
+            deleted=previous_feature_names - feature_ids_by_name.keys(),
+        )
 
 
 def delete_segment_flag_references(segment: "Segment") -> None:
@@ -93,6 +81,26 @@ def delete_segment_flag_references(segment: "Segment") -> None:
                 prerequisite_feature__name=reference.prerequisite_feature.name,
             )
     references.delete()
+
+
+def report_flag_dependencies(
+    *,
+    environment: Environment,
+    feature: Feature,
+    created: Collection[FeatureName],
+    deleted: Collection[FeatureName],
+) -> None:
+    """Report the prerequisites a feature gains and loses in an environment."""
+    log = logger.bind(
+        organisation__id=environment.project.organisation_id,
+        project__id=environment.project_id,
+        environment__key=environment.api_key,
+        feature__name=feature.name,
+    )
+    for feature_name in deleted:
+        log.info("dependencies.deleted", prerequisite_feature__name=feature_name)
+    for feature_name in created:
+        log.info("dependencies.created", prerequisite_feature__name=feature_name)
 
 
 def validate_segment_flag_dependencies(segment: "Segment") -> None:
