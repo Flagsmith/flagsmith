@@ -1,6 +1,7 @@
 import logging
 
 from common.projects.permissions import VIEW_PROJECT
+from django.db import transaction
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
@@ -9,6 +10,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from environments.models import Environment
+from features.dependencies.services import validate_segment_flag_dependencies
 from features.feature_segments.serializers import (
     FeatureSegmentChangePrioritiesSerializer,
     FeatureSegmentCreateSerializer,
@@ -78,6 +80,16 @@ class FeatureSegmentViewSet(
             return queryset.select_related("segment").filter(**filter_serializer.data)
 
         return queryset
+
+    @transaction.atomic
+    def perform_create(self, serializer: FeatureSegmentCreateSerializer) -> None:
+        super().perform_create(serializer)
+        validate_segment_flag_dependencies(serializer.instance.segment)
+
+    @transaction.atomic
+    def perform_update(self, serializer: FeatureSegmentCreateSerializer) -> None:
+        super().perform_update(serializer)
+        validate_segment_flag_dependencies(serializer.instance.segment)
 
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action in ["create", "update", "partial_update"]:
