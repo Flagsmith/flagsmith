@@ -75,9 +75,11 @@ repos:
     hooks:
       - id: uv-lock
         name: api-lockcheck
+        files: ^api/(uv\.lock|pyproject\.toml|uv\.toml)$
         args: ["--project", "api", "--check"]
       - id: uv-lock
         name: mcp-lockcheck
+        files: ^mcp/(uv\.lock|pyproject\.toml|uv\.toml)$
         args: ["--project", "mcp", "--check"]
 
   - repo: https://github.com/renovatebot/pre-commit-hooks
