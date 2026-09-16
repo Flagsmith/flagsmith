@@ -18,8 +18,9 @@ CONTROL_VARIANT_KEY = "control"
 # multi-segment `any` audience would evaluate as `all` under local evaluation.
 MAX_AUDIENCE_SEGMENTS = 1
 
-DELIVERY_INTERVAL = timedelta(minutes=10)
-DELIVERY_LOG_RETENTION = timedelta(days=60)
+# Kafka topic the ingestion server produces external warehouse connections'
+# events to, in place of the default topic.
+EXTERNAL_WAREHOUSE_EVENTS_TOPIC = "external_warehouse_events"
 
 # Below these per-variant floors a metric shows "collecting data" rather than
 # inference; sample-ratio is only checked once there is enough traffic to judge.

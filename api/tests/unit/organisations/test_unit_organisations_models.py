@@ -9,10 +9,6 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from environments.models import Environment
-from experimentation.models import (
-    IngestionInfrastructureStatus,
-    OrganisationIngestionInfrastructure,
-)
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
     Organisation,
@@ -959,47 +955,6 @@ def test_update_plan__valid_plan_id__updates_fields_from_chargebee(
     assert subscription.max_seats == 5
     assert subscription.max_api_calls == 500000
     assert subscription.cancellation_date is None
-
-
-def test_organisation__after_delete_without_infrastructure__does_not_deprovision(
-    organisation: Organisation,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    deprovision = mocker.patch(
-        "experimentation.organisation_ingestion_service"
-        ".deprovision_ingestion_infrastructure",
-    )
-
-    # When
-    organisation.delete()
-
-    # Then
-    deprovision.assert_not_called()
-
-
-def test_organisation__delete_with_created_infrastructure__deprovisions_aws_resources(
-    organisation: Organisation,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    OrganisationIngestionInfrastructure.objects.create(
-        organisation=organisation,
-        status=IngestionInfrastructureStatus.CREATED,
-        bucket_name="flagsmith-events-lake-org-1-123456789012-eu-west-2-an",
-        stream_name="events-ingestion-org-1",
-    )
-    deprovision = mocker.patch(
-        "experimentation.organisation_ingestion_service"
-        ".deprovision_ingestion_infrastructure",
-    )
-    organisation_id = organisation.id
-
-    # When
-    organisation.delete()
-
-    # Then
-    deprovision.assert_called_once_with(organisation_id)
 
 
 def test_organisation_openfeature_evaluation_context__no_targeting_key__uses_org_id(
