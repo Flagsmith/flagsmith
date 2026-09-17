@@ -15,7 +15,7 @@ from rest_framework.test import APIClient
 from app.utils import create_hash
 from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.enums import EnvironmentDocumentCacheMode
-from features.future.types import UpdateFlagRequest
+from features.future.types import SegmentOverrideRequest, UpdateFlagRequest
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
 from tests.types import CreateSegmentOverrideFixture
@@ -396,16 +396,16 @@ def create_segment_override(admin_client: APIClient) -> CreateSegmentOverrideFix
         feature_id: int,
         segment_id: int,
         enabled: bool = True,
+        priority: int | None = None,
     ) -> None:
+        segment_override = SegmentOverrideRequest(
+            {"segment": {"id": segment_id}, "enabled": enabled}
+        )
+        if priority is not None:
+            segment_override["priority"] = priority
         response = admin_client.patch(
             f"/api/__future__/environments/{environment_api_key}/features/{feature_id}/",
-            UpdateFlagRequest(
-                {
-                    "segment_overrides": [
-                        {"segment": {"id": segment_id}, "enabled": enabled}
-                    ]
-                }
-            ),
+            UpdateFlagRequest({"segment_overrides": [segment_override]}),
             format="json",
         )
         assert response.status_code == status.HTTP_200_OK

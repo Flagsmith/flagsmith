@@ -845,6 +845,83 @@ def test_update_segment_update_rules__longer_dependency_cycle_path__responds_400
     )
 
 
+@pytest.mark.usefixtures("versioned_environment")
+def test_update_segment_update_rules__shared_prerequisite__responds_200(
+    admin_client: APIClient,
+    create_segment_override: CreateSegmentOverrideFixture,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+) -> None:
+    # Given
+    chicken = Feature.objects.create(name="chicken", project_id=project)
+    egg = Feature.objects.create(name="egg", project_id=project)
+    other_segment = Segment.objects.create(name="other_segment", project_id=project)
+    segment = Segment.objects.create(name="segment", project_id=project)
+    SegmentFlagReference.objects.create(
+        segment=other_segment,
+        prerequisite_feature=egg,
+        condition_json_path="$[0].conditions[0]",
+    )
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=chicken.id,
+        segment_id=other_segment.id,
+        priority=0,
+    )
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=chicken.id,
+        segment_id=segment.id,
+        priority=1,
+    )
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/projects/{project}/segments/{segment.id}/",
+        data={
+            "name": "segment",
+            "project": project,
+            "rules": [
+                {
+                    "type": "ALL",
+                    "conditions": [
+                        {
+                            "property": "$.flags.egg.enabled",
+                            "operator": "EQUAL",
+                            "value": True,
+                        },
+                    ],
+                }
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert list(
+        SegmentFlagReference.objects.filter(segment=segment).values(
+            "prerequisite_feature", "condition_json_path"
+        )
+    ) == [
+        {
+            "prerequisite_feature": egg.id,
+            "condition_json_path": "$[0].conditions[0]",
+        },
+    ]
+    assert log.has(
+        "dependencies.created",
+        level="info",
+        organisation__id=organisation,
+        project__id=project,
+        environment__key=environment_api_key,
+        feature__name="chicken",
+        prerequisite_feature__name="egg",
+    )
+
+
 def test_create_feature_segment__circular_flag_dependency__responds_400(
     admin_client: APIClient,
     create_segment_override: CreateSegmentOverrideFixture,

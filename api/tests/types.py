@@ -53,4 +53,5 @@ class CreateSegmentOverrideFixture(Protocol):
         feature_id: int,
         segment_id: int,
         enabled: bool = True,
+        priority: int | None = None,
     ) -> None: ...

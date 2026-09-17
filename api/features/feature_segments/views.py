@@ -87,11 +87,6 @@ class FeatureSegmentViewSet(
         feature_segment = serializer.save()
         validate_segment_flag_dependencies(feature_segment.segment)
 
-    @transaction.atomic
-    def perform_update(self, serializer: BaseSerializer[FeatureSegment]) -> None:
-        feature_segment = serializer.save()
-        validate_segment_flag_dependencies(feature_segment.segment)
-
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action in ["create", "update", "partial_update"]:
             return FeatureSegmentCreateSerializer
