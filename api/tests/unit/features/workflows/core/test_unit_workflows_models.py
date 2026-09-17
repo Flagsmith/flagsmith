@@ -864,7 +864,7 @@ def test_change_request_live_from__with_change_set__sets_live_from_to_commit_tim
     assert change_request.live_from == now
 
 
-def test_change_request_commit__with_draft_segment__publishes_segment_rules(
+def test_change_request_commit__with_draft_segment__publishes_draft(
     segment: Segment,
     segment_rules: list[SegmentRuleType],
     change_request: ChangeRequest,
