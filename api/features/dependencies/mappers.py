@@ -17,6 +17,7 @@ def map_rules_to_prerequisite_feature_names(
         for condition_index, condition in enumerate(rule["conditions"])
         if (condition_property := condition["property"])
         and (feature_name := _get_prerequisite_feature_name(condition_property))
+        is not None
     }
 
 

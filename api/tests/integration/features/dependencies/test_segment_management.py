@@ -85,9 +85,18 @@ def test_create_segment__valid_flag_dependency__indexes_created(
     ]
 
 
+@pytest.mark.parametrize(
+    ("property", "prerequisite_feature"),
+    [
+        ("$.flags.unicorn.enabled", "unicorn"),
+        ("$.flags[''].enabled", ""),
+    ],
+)
 def test_create_segment__nonexistent_prerequisite__responds_400(
     admin_client: APIClient,
     project: int,
+    property: str,
+    prerequisite_feature: str,
 ) -> None:
     # Given / When
     response = admin_client.post(
@@ -99,7 +108,7 @@ def test_create_segment__nonexistent_prerequisite__responds_400(
                     "type": "ALL",
                     "conditions": [
                         {
-                            "property": "$.flags.unicorn.enabled",
+                            "property": property,
                             "operator": "EQUAL",
                             "value": True,
                         },
@@ -114,7 +123,7 @@ def test_create_segment__nonexistent_prerequisite__responds_400(
     assert response.status_code == 400
     assert response.json() == {
         "code": "prerequisite_feature_not_found",
-        "prerequisite_feature": "unicorn",
+        "prerequisite_feature": prerequisite_feature,
         "condition_json_path": "$[0].conditions[0]",
     }
     assert not Segment.objects.exists()
