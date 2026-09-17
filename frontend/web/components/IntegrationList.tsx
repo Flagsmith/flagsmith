@@ -459,7 +459,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
       setIsLoading(false)
     })
     const params = Utils.fromParam()
-    if (params && params.configure) {
+    if (params?.configure && props.integrations.includes(params.configure)) {
       const integrationList = Utils.getIntegrationData()
 
       if (integrationList && integrationList[params.configure]) {
@@ -543,7 +543,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
             : null
         }
         githubMeta={{ githubId: githubId, installationId: installationId }}
-        projectId={props.projectId}
+        projectId={params.project || props.projectId}
         requiresProjectSelection={requiresProjectSelection}
         onComplete={(result) => {
           if (requiresProjectSelection && result?.projectId) {
