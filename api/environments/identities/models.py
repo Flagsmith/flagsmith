@@ -1,16 +1,15 @@
 from itertools import chain
 
 from django.db import models
-from django.db.models import Prefetch, Q
+from django.db.models import Q
 from flag_engine.engine import get_evaluation_result
 
+from environments.identities.evaluation import evaluate_identity
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from environments.sdk.types import SDKTraitData
 from features.models import FeatureState
-from features.multivariate.models import MultivariateFeatureStateValue
-from features.versioning.versioning_service import get_environment_flags_list
 from segments.models import Segment
 from util.mappers.engine import map_environment_to_evaluation_context
 
@@ -70,62 +69,20 @@ class Identity(models.Model):
         :return: (list) flags for an identity with the correct values based on
             identity / segment priorities
         """
-        segments = self.get_segments(traits=traits, overrides_only=True)
-
-        # define sub queries
-        belongs_to_environment_query = Q(environment=self.environment)
-        if self.id:
-            overridden_for_identity_query = Q(identity=self)
-        else:
-            # skip identity overrides for transient identities
-            overridden_for_identity_query = Q()
-
-        overridden_for_segment_query = Q(
-            feature_segment__segment__in=segments,
-            feature_segment__environment=self.environment,
-        )
-        environment_default_query = Q(identity=None, feature_segment=None)
-
-        # define the full query
-        full_query = belongs_to_environment_query & (
-            overridden_for_identity_query
-            | overridden_for_segment_query
-            | environment_default_query
-        )
-
-        if additional_filters:
-            full_query &= additional_filters
-
-        all_flags = get_environment_flags_list(
-            environment=self.environment,
+        result, feature_states_by_id = evaluate_identity(
+            self,
+            traits=traits,
             feature_name=feature_name,
-            additional_filters=full_query,
-            additional_prefetch_related_args=[
-                Prefetch(
-                    "multivariate_feature_state_values",
-                    queryset=MultivariateFeatureStateValue.objects.select_related(
-                        "multivariate_feature_option"
-                    ),
-                )
-            ],
+            additional_filters=additional_filters,
         )
 
-        # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
-        # for the given identity as the value.
-        identity_flags = {}
-        for flag in all_flags:
-            if flag.feature_id not in identity_flags:
-                identity_flags[flag.feature_id] = flag
-            else:
-                current_flag = identity_flags[flag.feature_id]
-                if flag > current_flag:
-                    identity_flags[flag.feature_id] = flag
+        hide_disabled_flags = self.environment.get_hide_disabled_flags() is True
 
-        if self.environment.get_hide_disabled_flags() is True:
-            # filter out any flags that are disabled
-            return [value for value in identity_flags.values() if value.enabled]
-
-        return list(identity_flags.values())
+        return [
+            feature_states_by_id[flag["metadata"]["feature_state_id"]]
+            for flag in result["flags"].values()
+            if not (hide_disabled_flags and not flag["enabled"])
+        ]
 
     def get_overridden_feature_states(self) -> dict[int, FeatureState]:
         """
@@ -166,8 +123,11 @@ class Identity(models.Model):
         )
         result = get_evaluation_result(context)
         return [
-            segments_by_pk[segment_result["metadata"]["pk"]]
+            segments_by_pk[pk]
             for segment_result in result["segments"]
+            # Synthetic identity-override segments carry no pk, and are not
+            # segments as far as any caller is concerned.
+            if (pk := segment_result["metadata"].get("pk")) is not None
         ]
 
     def get_all_user_traits(self):  # type: ignore[no-untyped-def]
