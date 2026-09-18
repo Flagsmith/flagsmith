@@ -105,6 +105,9 @@ def report_flag_dependencies(
 
 def validate_segment_flag_dependencies(segment: "Segment") -> None:
     """Raise if any feature the segment overrides ends up depending on itself."""
+    existing_references = SegmentFlagReference.objects.filter(segment=segment)
+    if not existing_references.exists():
+        return
     edges_by_environment_id: dict[int, dict[FeatureName, list[DependencyEdge]]] = {}
     for override in (
         get_all_live_or_scheduled_overrides()
