@@ -78,7 +78,11 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
         ]
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
-    @hook(AFTER_UPDATE, when="warehouse_type", has_changed=True)  # type: ignore[misc]
+    @hook(  # type: ignore[misc]
+        AFTER_UPDATE,
+        when_any=["warehouse_type", "config", "credentials"],
+        has_changed=True,
+    )
     @hook(AFTER_DELETE)  # type: ignore[misc]
     def sync_to_ingestion(self) -> None:
         from experimentation.tasks import sync_environment_ingestion

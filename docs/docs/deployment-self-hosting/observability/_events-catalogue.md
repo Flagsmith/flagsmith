@@ -178,7 +178,7 @@ Attributes:
 ### `core.encrypted_field.decrypt_failed`
 
 Logged at `warning` from:
- - `api/core/fields.py:62`
+ - `api/core/fields.py:69`
 
 Attributes:
  - `exc_info`
@@ -192,10 +192,28 @@ Attributes:
  - `environment_api_key`
  - `environment_id`
 
+### `experimentation.delivery_status.unknown`
+
+Logged at `warning` from:
+ - `api/experimentation/tasks.py:126`
+
+Attributes:
+ - `connection.id`
+ - `status`
+
+### `experimentation.delivery_status.unreadable`
+
+Logged at `warning` from:
+ - `api/experimentation/ingestion_sync_service.py:128`
+
+Attributes:
+ - `exc_info`
+ - `field`
+
 ### `experimentation.exposures.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:124`
+ - `api/experimentation/tasks.py:170`
 
 Attributes:
  - `environment.id`
@@ -207,7 +225,7 @@ Attributes:
 ### `experimentation.results.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:162`
+ - `api/experimentation/tasks.py:208`
 
 Attributes:
  - `environment.id`
@@ -230,6 +248,15 @@ Attributes:
  - `experiment.id`
  - `feature.id`
  - `rollout.percentage`
+
+### `experimentation.warehouse_connection.delivery_errored`
+
+Logged at `warning` from:
+ - `api/experimentation/tasks.py:139`
+
+Attributes:
+ - `connection.id`
+ - `status.detail`
 
 ### `feature_health.feature_health_event_dismissal_not_supported`
 

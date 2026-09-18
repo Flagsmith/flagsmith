@@ -42,11 +42,18 @@ def _get_fernet() -> Fernet:
     return Fernet(base64.urlsafe_b64encode(digest))
 
 
+def encrypt_json(value: Any) -> str:
+    """Encrypts a JSON value exactly as ``EncryptedJSONField`` stores it, so the
+    same ciphertext can be handed to another service that holds
+    ``WAREHOUSE_CREDENTIALS_SECRET``."""
+    return _get_fernet().encrypt(json.dumps(value).encode()).decode()
+
+
 class EncryptedJSONField(models.TextField[Any, Any]):
     def get_prep_value(self, value: Any) -> str | None:
         if value is None:
             return None
-        return _get_fernet().encrypt(json.dumps(value).encode()).decode()
+        return encrypt_json(value)
 
     def from_db_value(
         self,

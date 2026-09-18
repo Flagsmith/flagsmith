@@ -1,8 +1,12 @@
 from datetime import timedelta
 
 import structlog
+from django.conf import settings
 from django.utils import timezone
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import (
+    register_recurring_task,
+    register_task_handler,
+)
 from task_processor.exceptions import TaskBackoffError
 
 from environments.models import Environment, EnvironmentAPIKey
@@ -12,6 +16,8 @@ from experimentation.models import (
     Experiment,
     ExperimentExposures,
     ExperimentResults,
+    WarehouseConnection,
+    WarehouseConnectionStatus,
     WarehouseType,
 )
 from experimentation.services import (
@@ -47,14 +53,24 @@ def sync_environment_ingestion(environment_id: int) -> None:
         for api_key in environment.api_keys.all():
             ingestion_sync_service.delete_ingestion_key(api_key.key)
         ingestion_sync_service.delete_ingestion_destination(environment.api_key)
+        ingestion_sync_service.delete_ingestion_warehouse(environment.api_key)
         return
 
-    # Destination first, then keys. As soon as a key is in Redis the ingestion
-    # server accepts events for it, and if no destination is stored yet those
-    # events go to Flagsmith's own topic instead of the external warehouse one.
+    # Connection details, then destination, then keys. Each step makes the next
+    # one safe: the warehouse-delivery service drops events for an environment
+    # whose connection it cannot find in Redis, and the ingestion server sends
+    # events for an environment with no destination to Flagsmith's own topic.
     if connection.warehouse_type == WarehouseType.FLAGSMITH:
         ingestion_sync_service.delete_ingestion_destination(environment.api_key)
+        ingestion_sync_service.delete_ingestion_warehouse(environment.api_key)
     else:
+        ingestion_sync_service.set_ingestion_warehouse(
+            environment.api_key,
+            connection_id=connection.id,
+            warehouse_type=connection.warehouse_type,
+            config=connection.config or {},
+            credentials=connection.credentials,
+        )
         ingestion_sync_service.set_ingestion_destination(
             environment.api_key,
             topic=EXTERNAL_WAREHOUSE_EVENTS_TOPIC,
@@ -95,6 +111,36 @@ def write_environment_ingestion_key(environment_api_key_id: int) -> None:
 @register_task_handler()
 def remove_environment_ingestion_key(key: str) -> None:
     ingestion_sync_service.delete_ingestion_key(key)
+
+
+@register_recurring_task(run_every=timedelta(minutes=1), timeout=timedelta(minutes=1))
+def apply_warehouse_delivery_statuses() -> None:
+    """Copies the outcomes the warehouse-delivery service left in Redis onto
+    the connections, so the dashboard shows whether a customer's warehouse is
+    taking their events. That service never writes to Postgres; this task is
+    the only path from it to the connection row."""
+    if not settings.INGESTION_REDIS_URL:
+        return
+    for outcome in ingestion_sync_service.pop_warehouse_delivery_statuses():
+        if outcome.status not in WarehouseConnectionStatus.values:
+            logger.warning(
+                "delivery_status.unknown",
+                connection__id=outcome.connection_id,
+                status=outcome.status,
+            )
+            continue
+        updated = WarehouseConnection.objects.filter(id=outcome.connection_id).update(
+            status=outcome.status,
+            status_detail=outcome.detail[:255] if outcome.detail else None,
+        )
+        # A connected outcome arrives for every live connection every minute,
+        # so only the failures are worth an event.
+        if updated and outcome.status == WarehouseConnectionStatus.ERRORED:
+            logger.warning(
+                "warehouse_connection.delivery_errored",
+                connection__id=outcome.connection_id,
+                status__detail=outcome.detail,
+            )
 
 
 @register_task_handler(timeout=COMPUTE_TASK_TIMEOUT)

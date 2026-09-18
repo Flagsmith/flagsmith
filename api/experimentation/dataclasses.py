@@ -125,3 +125,14 @@ class ResultsSummary:
     # totals divide: a bucket's own conversions over its own new identities
     # compares different people and can exceed 100%.
     exposures_timeseries: ExposuresTimeseries
+
+
+@dataclass(frozen=True)
+class WarehouseDeliveryStatus:
+    """One outcome the warehouse-delivery service left for a connection:
+    whether its last insert into the customer's warehouse worked and, if not,
+    the sentence the dashboard should show."""
+
+    connection_id: int
+    status: str
+    detail: str | None
