@@ -5,6 +5,7 @@ from common.projects.permissions import (
     CREATE_ENVIRONMENT,
 )
 from pytest_mock import MockerFixture
+from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -399,3 +400,109 @@ def test_nested_environment_permissions__regular_user_destroys__returns_false(
 
     # Then
     assert result is False
+
+
+def test_environment_permissions__create_at_limit__raises_validation_error(
+    admin_user: FFAdminUser,
+    project: Project,
+    environment: Environment,
+) -> None:
+    # Given
+    project.max_environments_allowed = 1
+    project.save()
+
+    mock_view.action = "create"
+    mock_view.detail = False
+    mock_request.user = admin_user
+    mock_request.data = {"project": project.id, "name": "Another environment"}
+    mock_request.is_e2e = False
+
+    # When / Then
+    with pytest.raises(ValidationError, match="maximum number of allowed environments"):
+        environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+
+
+def test_environment_permissions__create_below_limit__returns_true(
+    admin_user: FFAdminUser,
+    project: Project,
+    environment: Environment,
+) -> None:
+    # Given
+    project.max_environments_allowed = 100
+    project.save()
+
+    mock_view.action = "create"
+    mock_view.detail = False
+    mock_request.user = admin_user
+    mock_request.data = {"project": project.id, "name": "Another environment"}
+
+    # When
+    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is True
+
+
+def test_environment_permissions__clone_at_limit__raises_validation_error(
+    admin_user: FFAdminUser,
+    project: Project,
+    environment: Environment,
+) -> None:
+    # Given
+    project.max_environments_allowed = 1
+    project.save()
+
+    mock_view.action = "clone"
+    mock_view.detail = True
+    mock_request.user = admin_user
+    mock_request.is_e2e = False
+
+    # When / Then
+    with pytest.raises(ValidationError, match="maximum number of allowed environments"):
+        environment_permissions.has_object_permission(  # type: ignore[no-untyped-call]
+            mock_request, mock_view, environment
+        )
+
+
+def test_environment_permissions__clone_below_limit__returns_true(
+    admin_user: FFAdminUser,
+    project: Project,
+    environment: Environment,
+) -> None:
+    # Given
+    project.max_environments_allowed = 100
+    project.save()
+
+    mock_view.action = "clone"
+    mock_view.detail = True
+    mock_request.user = admin_user
+
+    # When
+    result = environment_permissions.has_object_permission(  # type: ignore[no-untyped-call]
+        mock_request, mock_view, environment
+    )
+
+    # Then
+    assert result is True
+
+
+def test_environment_permissions__create_at_limit_with_increased_limit__returns_true(
+    admin_user: FFAdminUser,
+    project: Project,
+    environment: Environment,
+) -> None:
+    """Grandfathering: projects with a higher limit can still create environments."""
+    # Given
+    project.max_environments_allowed = 200
+    project.save()
+
+    mock_view.action = "create"
+    mock_view.detail = False
+    mock_request.user = admin_user
+    mock_request.data = {"project": project.id, "name": "Another environment"}
+
+    # When
+    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert result is True
