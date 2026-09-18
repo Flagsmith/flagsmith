@@ -1,7 +1,10 @@
 import json
+from collections.abc import Iterable, Sequence
 from typing import cast
 
 import structlog
+from django.conf import settings
+from redis.exceptions import RedisError
 
 from experimentation.dataclasses import WarehouseDeliveryStatus
 from experimentation.ingestion_redis import get_client
@@ -12,18 +15,8 @@ from experimentation.warehouse_credentials import encrypt_warehouse_credentials
 # same value the ingestion server puts on each Kafka message.
 WAREHOUSE_CONNECTION_KEY_PREFIX = "experimentation:environment_warehouses:"
 # One hash the warehouse-delivery service writes each connection's latest
-# outcome into, under the connection id. Emptied by
-# apply_warehouse_delivery_statuses once a minute.
+# outcome into, under the connection id, overwriting the previous one.
 WAREHOUSE_DELIVERY_STATUS_KEY = "experimentation:warehouse_delivery_status"
-
-# Returns every field and value of the hash and deletes it in the same step,
-# so an outcome the delivery service writes while we are reading is never
-# deleted unread.
-_POP_HASH_SCRIPT = """
-local entries = redis.call('HGETALL', KEYS[1])
-redis.call('DEL', KEYS[1])
-return entries
-"""
 
 logger = structlog.get_logger("experimentation")
 
@@ -54,37 +47,60 @@ def publish_warehouse_connection(
     get_client().set(redis_key, json.dumps(document))
 
 
-def remove_warehouse_connection(client_api_key: str) -> None:
+def remove_warehouse_connection(
+    client_api_key: str,
+    *,
+    connection_ids: Iterable[int],
+) -> None:
+    """Stops the warehouse-delivery service delivering for the environment and
+    forgets the outcomes it left for these connections, so a connection that
+    is deleted or switched back to Flagsmith's warehouse never shows a stale
+    failure."""
     redis_key = f"{WAREHOUSE_CONNECTION_KEY_PREFIX}{client_api_key}"
-    get_client().delete(redis_key)
+    client = get_client()
+    client.delete(redis_key)
+    fields = [str(connection_id) for connection_id in connection_ids]
+    if fields:
+        client.hdel(WAREHOUSE_DELIVERY_STATUS_KEY, *fields)
 
 
-def pop_warehouse_delivery_statuses() -> list[WarehouseDeliveryStatus]:
-    """Takes every outcome the warehouse-delivery service has left in Redis,
-    emptying the hash as it goes. An entry that cannot be read is logged and
-    skipped rather than blocking the others."""
-    # The stub types eval for the async client too; this client is synchronous
-    # and a Lua HGETALL comes back as a flat field, value, field, value list.
-    entries = cast(
-        list[bytes],
-        get_client().eval(_POP_HASH_SCRIPT, 1, WAREHOUSE_DELIVERY_STATUS_KEY),
-    )
-    statuses: list[WarehouseDeliveryStatus] = []
-    for field, value in zip(entries[::2], entries[1::2], strict=True):
+def get_warehouse_delivery_statuses(
+    connection_ids: Sequence[int],
+) -> dict[int, WarehouseDeliveryStatus]:
+    """The latest outcome the warehouse-delivery service left for each of these
+    connections, by id. A connection it has never delivered for is absent.
+
+    Returns nothing at all when the ingestion Redis is not configured or does
+    not answer, so the connections page never depends on it being up."""
+    if not connection_ids or not settings.INGESTION_REDIS_URL:
+        return {}
+    fields = [str(connection_id) for connection_id in connection_ids]
+    try:
+        # The stub types hmget for the async client too; this client is
+        # synchronous.
+        values = cast(
+            list[bytes | None],
+            get_client().hmget(WAREHOUSE_DELIVERY_STATUS_KEY, fields),
+        )
+    except RedisError:
+        logger.warning("delivery_status.unavailable", exc_info=True)
+        return {}
+    statuses: dict[int, WarehouseDeliveryStatus] = {}
+    for connection_id, value in zip(connection_ids, values, strict=True):
+        if value is None:
+            continue
         try:
             outcome = json.loads(value)
             detail = outcome.get("detail")
-            status = WarehouseDeliveryStatus(
-                connection_id=int(field),
+            statuses[connection_id] = WarehouseDeliveryStatus(
+                connection_id=connection_id,
                 status=str(outcome["status"]),
                 detail=str(detail) if detail is not None else None,
             )
         except (ValueError, KeyError, TypeError, AttributeError):
             logger.warning(
                 "delivery_status.unreadable",
-                field=field.decode(errors="replace"),
+                connection__id=connection_id,
                 exc_info=True,
             )
-            continue
-        statuses.append(status)
     return statuses

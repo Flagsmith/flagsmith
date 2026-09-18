@@ -23,7 +23,10 @@ from audit.related_object_type import RelatedObjectType
 from cohorts.models import Cohort
 from core.dataclasses import AuthorData
 from environments.tasks import rebuild_environment_document
-from experimentation import warehouse_verification_service
+from experimentation import (
+    warehouse_delivery_sync_service,
+    warehouse_verification_service,
+)
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -1448,6 +1451,32 @@ def refresh_warehouse_connection_status(
             organisation__id=connection.environment.project.organisation_id,
         )
     return connection
+
+
+def annotate_warehouse_delivery_statuses(
+    connections: Sequence[WarehouseConnection],
+) -> None:
+    """For external connections that passed verification, show what the
+    warehouse-delivery service last saw: a warehouse that has started refusing
+    events reads as errored with the reason, instead of the connected status
+    stored when it was saved. A connection that failed verification keeps that
+    result. Read-only: nothing is saved."""
+    verified = [
+        connection
+        for connection in connections
+        if connection.warehouse_type != WarehouseType.FLAGSMITH
+        and connection.status == WarehouseConnectionStatus.CONNECTED
+    ]
+    if not verified:
+        return
+    statuses = warehouse_delivery_sync_service.get_warehouse_delivery_statuses(
+        [connection.id for connection in verified]
+    )
+    for connection in verified:
+        outcome = statuses.get(connection.id)
+        if outcome is not None and outcome.status == WarehouseConnectionStatus.ERRORED:
+            connection.status = WarehouseConnectionStatus.ERRORED
+            connection.status_detail = outcome.detail
 
 
 def annotate_warehouse_event_stats(

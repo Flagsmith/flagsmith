@@ -13,7 +13,11 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from experimentation import services
-from experimentation.dataclasses import WarehouseEventNames, WarehouseEventStats
+from experimentation.dataclasses import (
+    WarehouseDeliveryStatus,
+    WarehouseEventNames,
+    WarehouseEventStats,
+)
 from experimentation.models import (
     WarehouseConnection,
     WarehouseConnectionStatus,
@@ -1922,3 +1926,42 @@ def test_get_events__unsupported_type__returns_400(
         "detail": "Event listing is not supported for this warehouse type."
     }
     get_event_names.assert_not_called()
+
+
+def test_list__verified_connection_failing_delivery__shows_errored_without_saving(
+    admin_client: APIClient,
+    environment: Environment,
+    enable_features: EnableFeaturesFixture,
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given a connection that passed verification when saved, whose warehouse
+    # has since started refusing the events the delivery service sends
+    enable_features("experimentation_warehouse_connection")
+    clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
+    clickhouse_connection.save()
+    mocker.patch(
+        "experimentation.services.warehouse_delivery_sync_service.get_warehouse_delivery_statuses",
+        return_value={
+            clickhouse_connection.id: WarehouseDeliveryStatus(
+                connection_id=clickhouse_connection.id,
+                status="errored",
+                detail="Authentication failed.",
+            )
+        },
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-list",
+        args=[environment.api_key],
+    )
+
+    # When
+    response = admin_client.get(url, {"exclude_event_stats": "true"})
+
+    # Then the dashboard sees the failure, while the stored verification stands
+    assert response.status_code == status.HTTP_200_OK
+    (connection,) = response.json()
+    assert connection["status"] == "errored"
+    assert connection["status_detail"] == "Authentication failed."
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED

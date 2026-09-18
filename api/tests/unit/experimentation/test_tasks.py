@@ -6,7 +6,6 @@ from typing import Any
 import pytest
 from django.utils import timezone
 from freezegun import freeze_time
-from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 from task_processor.exceptions import TaskBackoffError
@@ -18,7 +17,6 @@ from experimentation.dataclasses import (
     ExposuresTimeseriesPoint,
     MetricResult,
     ResultsSummary,
-    WarehouseDeliveryStatus,
 )
 from experimentation.models import (
     Experiment,
@@ -26,12 +24,10 @@ from experimentation.models import (
     ExperimentResults,
     ExperimentStatus,
     WarehouseConnection,
-    WarehouseConnectionStatus,
 )
 from experimentation.services import CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS
 from experimentation.stats import VariantStats
 from experimentation.tasks import (
-    apply_warehouse_delivery_statuses,
     compute_experiment_exposures,
     compute_experiment_results,
     remove_environment_ingestion_key,
@@ -77,7 +73,9 @@ def test_sync_environment_ingestion__flagsmith_connection__whitelists_valid_keys
     # whitelisted
     assert mock_service.mock_calls == [
         mocker.call.ingestion.delete_ingestion_destination(environment.api_key),
-        mocker.call.delivery.remove_warehouse_connection(environment.api_key),
+        mocker.call.delivery.remove_warehouse_connection(
+            environment.api_key, connection_ids=[warehouse_connection.id]
+        ),
         mocker.call.ingestion.set_ingestion_key(
             environment.api_key,
             environment_key=environment.api_key,
@@ -162,7 +160,9 @@ def test_sync_environment_ingestion__connection_deleted__removes_keys_and_destin
         mocker.call.ingestion.delete_ingestion_key(active_key.key),
         mocker.call.ingestion.delete_ingestion_key(inactive_key.key),
         mocker.call.ingestion.delete_ingestion_destination(environment.api_key),
-        mocker.call.delivery.remove_warehouse_connection(environment.api_key),
+        mocker.call.delivery.remove_warehouse_connection(
+            environment.api_key, connection_ids=[clickhouse_connection.id]
+        ),
     ]
 
 
@@ -190,7 +190,9 @@ def test_sync_environment_ingestion__environment_deleted__removes_keys_and_desti
     assert mock_service.mock_calls == [
         mocker.call.ingestion.delete_ingestion_key(environment.api_key),
         mocker.call.ingestion.delete_ingestion_destination(environment.api_key),
-        mocker.call.delivery.remove_warehouse_connection(environment.api_key),
+        mocker.call.delivery.remove_warehouse_connection(
+            environment.api_key, connection_ids=[clickhouse_connection.id]
+        ),
     ]
 
 
@@ -724,149 +726,3 @@ def test_compute_experiment_results__experiment_deleted_after_enqueue__skips(
 
     # Then the task exits without raising into the task processor
     mock_compute.assert_not_called()
-
-
-def test_apply_warehouse_delivery_statuses__errored_outcome__marks_connection_and_logs(
-    clickhouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
-    settings: SettingsWrapper,
-    log: StructuredLogCapture,
-) -> None:
-    # Given the delivery service found the customer's warehouse refusing our
-    # login, and also left an outcome for a connection that no longer exists
-    settings.INGESTION_REDIS_URL = "redis://ingestion:6379"
-    mocker.patch(
-        "experimentation.tasks.warehouse_delivery_sync_service.pop_warehouse_delivery_statuses",
-        return_value=[
-            WarehouseDeliveryStatus(
-                connection_id=clickhouse_connection.id,
-                status="errored",
-                detail="Authentication failed.",
-            ),
-            WarehouseDeliveryStatus(
-                connection_id=404404, status="connected", detail=None
-            ),
-        ],
-    )
-
-    # When
-    apply_warehouse_delivery_statuses()
-
-    # Then the dashboard shows the failure, and the missing connection is ignored
-    clickhouse_connection.refresh_from_db()
-    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
-    assert clickhouse_connection.status_detail == "Authentication failed."
-    assert log.events == [
-        {
-            "event": "warehouse_connection.delivery_errored",
-            "level": "warning",
-            "connection__id": clickhouse_connection.id,
-            "status__detail": "Authentication failed.",
-        }
-    ]
-
-
-def test_apply_warehouse_delivery_statuses__connected_outcome__clears_detail_quietly(
-    clickhouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
-    settings: SettingsWrapper,
-    log: StructuredLogCapture,
-) -> None:
-    # Given a connection the dashboard currently shows as errored, whose
-    # warehouse has started taking events again
-    settings.INGESTION_REDIS_URL = "redis://ingestion:6379"
-    clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
-    clickhouse_connection.status_detail = "Could not connect to the host."
-    clickhouse_connection.save()
-    mocker.patch(
-        "experimentation.tasks.warehouse_delivery_sync_service.pop_warehouse_delivery_statuses",
-        return_value=[
-            WarehouseDeliveryStatus(
-                connection_id=clickhouse_connection.id, status="connected", detail=None
-            )
-        ],
-    )
-
-    # When
-    apply_warehouse_delivery_statuses()
-
-    # Then the connection recovers, and a routine success is not logged
-    clickhouse_connection.refresh_from_db()
-    assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
-    assert clickhouse_connection.status_detail is None
-    assert log.events == []
-
-
-def test_apply_warehouse_delivery_statuses__unknown_status__skipped_and_logged(
-    clickhouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
-    settings: SettingsWrapper,
-    log: StructuredLogCapture,
-) -> None:
-    # Given a status value the connection model has no choice for
-    settings.INGESTION_REDIS_URL = "redis://ingestion:6379"
-    mocker.patch(
-        "experimentation.tasks.warehouse_delivery_sync_service.pop_warehouse_delivery_statuses",
-        return_value=[
-            WarehouseDeliveryStatus(
-                connection_id=clickhouse_connection.id, status="retrying", detail=None
-            )
-        ],
-    )
-
-    # When
-    apply_warehouse_delivery_statuses()
-
-    # Then the connection is left as it was rather than failing the save
-    clickhouse_connection.refresh_from_db()
-    assert clickhouse_connection.status == WarehouseConnectionStatus.CREATED
-    assert log.has(
-        "delivery_status.unknown",
-        level="warning",
-        connection__id=clickhouse_connection.id,
-        status="retrying",
-    )
-
-
-def test_apply_warehouse_delivery_statuses__long_detail__cut_to_the_column_length(
-    clickhouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
-    settings: SettingsWrapper,
-) -> None:
-    # Given a detail longer than status_detail can hold
-    settings.INGESTION_REDIS_URL = "redis://ingestion:6379"
-    mocker.patch(
-        "experimentation.tasks.warehouse_delivery_sync_service.pop_warehouse_delivery_statuses",
-        return_value=[
-            WarehouseDeliveryStatus(
-                connection_id=clickhouse_connection.id,
-                status="errored",
-                detail="x" * 300,
-            )
-        ],
-    )
-
-    # When
-    apply_warehouse_delivery_statuses()
-
-    # Then
-    clickhouse_connection.refresh_from_db()
-    assert clickhouse_connection.status_detail == "x" * 255
-
-
-def test_apply_warehouse_delivery_statuses__ingestion_redis_not_configured__does_nothing(
-    db: None,
-    mocker: MockerFixture,
-    settings: SettingsWrapper,
-) -> None:
-    # Given a self-hosted installation with no ingestion Redis
-    settings.INGESTION_REDIS_URL = ""
-    mock_pop = mocker.patch(
-        "experimentation.tasks.warehouse_delivery_sync_service.pop_warehouse_delivery_statuses",
-    )
-
-    # When
-    apply_warehouse_delivery_statuses()
-
-    # Then
-    mock_pop.assert_not_called()
