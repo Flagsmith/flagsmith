@@ -46,7 +46,7 @@ from .serializers import (
     SegmentMembersResponseSerializer,
     SegmentSerializer,
 )
-from .services import delete_segment, get_overrides_in_effect
+from .services import delete_segment, get_all_live_or_scheduled_overrides
 
 if TYPE_CHECKING:
     from users.models import FFAdminUser
@@ -106,7 +106,9 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             project=project, is_system_segment=False
         ).annotate(
             has_overrides=models.Exists(
-                get_overrides_in_effect().filter(segment_id=models.OuterRef("pk"))
+                get_all_live_or_scheduled_overrides().filter(
+                    segment_id=models.OuterRef("pk")
+                )
             )
         )
 
@@ -268,7 +270,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         """
         if not segment.project.is_workflow_enabled:
             return
-        if not get_overrides_in_effect().filter(segment=segment).exists():
+        if not get_all_live_or_scheduled_overrides().filter(segment=segment).exists():
             return
         api_error = ChangeRequestsEnabledError(
             "Cannot delete a segment with feature overrides in a project with "
