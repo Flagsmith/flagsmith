@@ -54,6 +54,13 @@
       "feature_segment": null,
       "feature_state_value": "",
       "featurestate_uuid": "e23e8e9f-f3a4-42db-85ee-1e0a099872fa",
+      "metadata": {
+        "experiment": {
+          "id": 134,
+          "in_experiment": false,
+          "name": "New onboarding Flow - v2"
+        }
+      },
       "multivariate_feature_state_values": [
         {
           "id": 367626,
