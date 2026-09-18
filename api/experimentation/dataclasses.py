@@ -129,10 +129,6 @@ class ResultsSummary:
 
 @dataclass(frozen=True)
 class WarehouseDeliveryStatus:
-    """One outcome the warehouse-delivery service left for a connection:
-    whether its last insert into the customer's warehouse worked and, if not,
-    the sentence the dashboard should show."""
-
     connection_id: int
     status: str
     detail: str | None
