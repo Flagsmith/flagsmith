@@ -1226,7 +1226,7 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
     # Given
     enable_features("experimentation_warehouse_connection")
     mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
 
     # When
@@ -1523,7 +1523,7 @@ def test_post__clickhouse_verification_outcome__returns_201_with_status(
     # Given
     enable_features("experimentation_warehouse_connection")
     mock_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     mock_client.return_value.query.side_effect = query_side_effect
 
@@ -1576,7 +1576,7 @@ def test_patch__clickhouse_config_without_credentials__keeps_stored_password(
     # Given
     enable_features("experimentation_warehouse_connection")
     mock_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
@@ -1611,7 +1611,7 @@ def test_patch__clickhouse_name_only__does_not_reverify(
     # Given
     enable_features("experimentation_warehouse_connection")
     mock_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
@@ -1636,7 +1636,7 @@ def test_put__clickhouse_name_only__preserves_config_and_credentials(
     # Given
     enable_features("experimentation_warehouse_connection")
     mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
@@ -1672,7 +1672,7 @@ def test_test_warehouse_connection__clickhouse__reverifies_and_returns_status(
     clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
     clickhouse_connection.save()
     mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     url = reverse(
         "api-v1:environments:experimentation:"
@@ -1743,7 +1743,7 @@ def test_test_warehouse_connection_config__payload__returns_expected_response(
     # Given
     enable_features("experimentation_warehouse_connection")
     mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
         side_effect=client_side_effect,
     )
     url = reverse(

@@ -3,7 +3,7 @@ from clickhouse_connect.driver.exceptions import DatabaseError, OperationalError
 from pytest_mock import MockerFixture
 from urllib3 import PoolManager
 
-from experimentation import warehouse_delivery_service
+from experimentation import warehouse_verification_service
 from experimentation.models import WarehouseConnection
 
 
@@ -15,10 +15,10 @@ def test_delivery_client__incomplete_config__raises_config_error(
 
     # When / Then
     with pytest.raises(
-        warehouse_delivery_service.DeliveryConfigError,
+        warehouse_verification_service.DeliveryConfigError,
         match="incomplete",
     ):
-        with warehouse_delivery_service.delivery_client(
+        with warehouse_verification_service.delivery_client(
             clickhouse_connection,
             send_receive_timeout=5,
         ):
@@ -33,10 +33,10 @@ def test_delivery_client__internal_host__raises_config_error(
 
     # When / Then
     with pytest.raises(
-        warehouse_delivery_service.DeliveryConfigError,
+        warehouse_verification_service.DeliveryConfigError,
         match="internal or private",
     ):
-        with warehouse_delivery_service.delivery_client(
+        with warehouse_verification_service.delivery_client(
             clickhouse_connection,
             send_receive_timeout=5,
         ):
@@ -49,11 +49,11 @@ def test_delivery_client__valid_config__yields_http_client_and_closes(
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
 
     # When
-    with warehouse_delivery_service.delivery_client(
+    with warehouse_verification_service.delivery_client(
         clickhouse_connection,
         send_receive_timeout=5,
     ) as client:
@@ -75,7 +75,7 @@ def test_delivery_client__valid_config__yields_http_client_and_closes(
         pool_manager = get_client.call_args.kwargs["pool_mgr"]
         assert isinstance(
             pool_manager,
-            warehouse_delivery_service._NoRedirectPoolManager,
+            warehouse_verification_service._NoRedirectPoolManager,
         )
         get_client.return_value.close.assert_not_called()
 
@@ -88,12 +88,12 @@ def test_delivery_client__body_raises__still_closes_client(
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
 
     # When a query inside the block fails
     with pytest.raises(RuntimeError, match="boom"):
-        with warehouse_delivery_service.delivery_client(
+        with warehouse_verification_service.delivery_client(
             clickhouse_connection,
             send_receive_timeout=5,
         ):
@@ -121,10 +121,10 @@ def test_check_events_table_exists__exists_query_result__raises_only_when_missin
 
     # When / Then
     if expected_raise:
-        with pytest.raises(warehouse_delivery_service.MissingEventsTableError):
-            warehouse_delivery_service.check_events_table_exists(client)
+        with pytest.raises(warehouse_verification_service.MissingEventsTableError):
+            warehouse_verification_service.check_events_table_exists(client)
     else:
-        warehouse_delivery_service.check_events_table_exists(client)
+        warehouse_verification_service.check_events_table_exists(client)
     client.query.assert_called_once_with("EXISTS TABLE events")
 
 
@@ -132,7 +132,7 @@ def test_check_events_table_exists__exists_query_result__raises_only_when_missin
     "error, expected_detail",
     [
         pytest.param(
-            warehouse_delivery_service.DeliveryConfigError(
+            warehouse_verification_service.DeliveryConfigError(
                 "Stored connection details are incomplete."
             ),
             "Stored connection details are incomplete.",
@@ -165,7 +165,7 @@ def test_check_events_table_exists__exists_query_result__raises_only_when_missin
             id="other-server-error",
         ),
         pytest.param(
-            warehouse_delivery_service.MissingEventsTableError(),
+            warehouse_verification_service.MissingEventsTableError(),
             "Events table not found in the configured database. "
             "Run the setup SQL to create it.",
             id="missing-events-table",
@@ -184,7 +184,7 @@ def test_describe_warehouse_error__known_failures__returns_user_facing_detail(
     # Given a parametrised verification failure
 
     # When
-    detail = warehouse_delivery_service.describe_warehouse_error(error)
+    detail = warehouse_verification_service.describe_warehouse_error(error)
 
     # Then
     assert detail == expected_detail
@@ -196,7 +196,7 @@ def test_no_redirect_pool_manager__urlopen__refuses_to_follow_redirects(
     # Given a manager asked to follow redirects, as clickhouse-connect's own
     # request path does
     urlopen = mocker.patch.object(PoolManager, "urlopen")
-    manager = warehouse_delivery_service._NoRedirectPoolManager()
+    manager = warehouse_verification_service._NoRedirectPoolManager()
 
     # When
     manager.urlopen("POST", "https://ch.acme-corp.example/", redirect=True)

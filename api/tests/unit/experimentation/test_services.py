@@ -270,7 +270,7 @@ def test_get_warehouse_event_names__clickhouse_connection__queries_customer_inst
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     if isinstance(query_result, Exception):
         get_client.return_value.query.side_effect = query_result
@@ -323,7 +323,7 @@ def test_get_warehouse_event_names__connection_details_changed__cache_keyed_by_c
 ) -> None:
     # Given — a cached result for the connection's current details
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     get_client.return_value.query.return_value = mocker.Mock(
         result_rows=[("old_event",)]
@@ -2646,7 +2646,7 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     success_count_before = _verification_count("success")
     clickhouse_connection.status_detail = "stale detail"
@@ -2709,7 +2709,7 @@ def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     if isinstance(query_results, list):
         get_client.return_value.query.side_effect = [
@@ -2740,7 +2740,7 @@ def test_verify_clickhouse_connection__internal_host__sets_errored_without_conne
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     clickhouse_connection.config = {
         **(clickhouse_connection.config or {}),
@@ -2782,7 +2782,7 @@ def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     if isinstance(query_result, Exception):
         get_client.return_value.query.side_effect = query_result

@@ -196,7 +196,7 @@ Attributes:
 ### `experimentation.delivery_status.unreadable`
 
 Logged at `warning` from:
- - `api/experimentation/ingestion_sync_service.py:130`
+ - `api/experimentation/warehouse_delivery_sync_service.py:83`
 
 Attributes:
  - `exc_info`

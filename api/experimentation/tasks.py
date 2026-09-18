@@ -10,7 +10,7 @@ from task_processor.decorators import (
 from task_processor.exceptions import TaskBackoffError
 
 from environments.models import Environment, EnvironmentAPIKey
-from experimentation import ingestion_sync_service
+from experimentation import ingestion_sync_service, warehouse_delivery_sync_service
 from experimentation.constants import EXTERNAL_WAREHOUSE_EVENTS_TOPIC
 from experimentation.models import (
     Experiment,
@@ -53,7 +53,7 @@ def sync_environment_ingestion(environment_id: int) -> None:
         for api_key in environment.api_keys.all():
             ingestion_sync_service.delete_ingestion_key(api_key.key)
         ingestion_sync_service.delete_ingestion_destination(environment.api_key)
-        ingestion_sync_service.delete_ingestion_warehouse(environment.api_key)
+        warehouse_delivery_sync_service.remove_warehouse_connection(environment.api_key)
         return
 
     # Connection details, then destination, then keys. Each step makes the next
@@ -62,9 +62,9 @@ def sync_environment_ingestion(environment_id: int) -> None:
     # events for an environment with no destination to Flagsmith's own topic.
     if connection.warehouse_type == WarehouseType.FLAGSMITH:
         ingestion_sync_service.delete_ingestion_destination(environment.api_key)
-        ingestion_sync_service.delete_ingestion_warehouse(environment.api_key)
+        warehouse_delivery_sync_service.remove_warehouse_connection(environment.api_key)
     else:
-        ingestion_sync_service.set_ingestion_warehouse(
+        warehouse_delivery_sync_service.publish_warehouse_connection(
             environment.api_key,
             connection_id=connection.id,
             warehouse_type=connection.warehouse_type,
@@ -121,7 +121,7 @@ def apply_warehouse_delivery_statuses() -> None:
     the only path from it to the connection row."""
     if not settings.INGESTION_REDIS_URL:
         return
-    for outcome in ingestion_sync_service.pop_warehouse_delivery_statuses():
+    for outcome in warehouse_delivery_sync_service.pop_warehouse_delivery_statuses():
         if outcome.status not in WarehouseConnectionStatus.values:
             logger.warning(
                 "delivery_status.unknown",
