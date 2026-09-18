@@ -1457,10 +1457,7 @@ def annotate_warehouse_delivery_statuses(
     connections: Sequence[WarehouseConnection],
 ) -> None:
     """For external connections that passed verification, show what the
-    warehouse-delivery service last saw: a warehouse that has started refusing
-    events reads as errored with the reason, instead of the connected status
-    stored when it was saved. A connection that failed verification keeps that
-    result. Read-only: nothing is saved."""
+    warehouse-delivery service last saw. Read-only: nothing is saved."""
     verified = [
         connection
         for connection in connections

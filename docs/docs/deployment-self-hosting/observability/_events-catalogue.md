@@ -825,7 +825,7 @@ Attributes:
 
 Logged at `warning` from:
  - `api/experimentation/services.py:271`
- - `api/experimentation/services.py:1574`
+ - `api/experimentation/services.py:1571`
 
 Attributes:
  - `environment.id`
@@ -835,7 +835,7 @@ Attributes:
 ### `warehouse.connection.event_stats_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1537`
+ - `api/experimentation/services.py:1534`
 
 Attributes:
  - `environment.id`
