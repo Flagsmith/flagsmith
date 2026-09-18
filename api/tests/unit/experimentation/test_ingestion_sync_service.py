@@ -7,7 +7,7 @@ from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 from redis.exceptions import RedisError
 
-from core.fields import EncryptedJSONField
+from core.warehouse_credentials import decrypt_warehouse_credentials
 from experimentation import ingestion_sync_service
 from experimentation.dataclasses import WarehouseDeliveryStatus
 
@@ -210,7 +210,7 @@ def test_set_ingestion_warehouse__connection_details__writes_document_with_encry
     assert document["connection_id"] == 42
     assert document["warehouse_type"] == "clickhouse"
     assert document["config"] == config
-    assert EncryptedJSONField().from_db_value(document["credentials"], None, None) == {
+    assert decrypt_warehouse_credentials(document["credentials"]) == {
         "password": "hunter2"
     }
 

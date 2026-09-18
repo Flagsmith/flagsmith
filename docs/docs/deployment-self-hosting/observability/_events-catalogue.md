@@ -178,7 +178,7 @@ Attributes:
 ### `core.encrypted_field.decrypt_failed`
 
 Logged at `warning` from:
- - `api/core/fields.py:69`
+ - `api/core/fields.py:56`
 
 Attributes:
  - `exc_info`
@@ -204,7 +204,7 @@ Attributes:
 ### `experimentation.delivery_status.unreadable`
 
 Logged at `warning` from:
- - `api/experimentation/ingestion_sync_service.py:128`
+ - `api/experimentation/ingestion_sync_service.py:130`
 
 Attributes:
  - `exc_info`

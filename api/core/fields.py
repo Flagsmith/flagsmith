@@ -1,14 +1,14 @@
-import base64
-import hashlib
-import json
 from typing import Any, TypeVar
 
 import structlog
-from cryptography.fernet import Fernet, InvalidToken
-from django.conf import settings
+from cryptography.fernet import InvalidToken
 from django.db import models
 
 from core.validators import validate_http_url_scheme, validate_no_internal_address
+from core.warehouse_credentials import (
+    decrypt_warehouse_credentials,
+    encrypt_warehouse_credentials,
+)
 
 logger = structlog.get_logger("core")
 
@@ -36,24 +36,11 @@ class NoSSRFURLField(models.URLField[_ST, _GT]):
     ]
 
 
-def _get_fernet() -> Fernet:
-    secret: str = settings.WAREHOUSE_CREDENTIALS_SECRET
-    digest = hashlib.sha256(secret.encode()).digest()
-    return Fernet(base64.urlsafe_b64encode(digest))
-
-
-def encrypt_json(value: Any) -> str:
-    """Encrypts a JSON value exactly as ``EncryptedJSONField`` stores it, so the
-    same ciphertext can be handed to another service that holds
-    ``WAREHOUSE_CREDENTIALS_SECRET``."""
-    return _get_fernet().encrypt(json.dumps(value).encode()).decode()
-
-
 class EncryptedJSONField(models.TextField[Any, Any]):
     def get_prep_value(self, value: Any) -> str | None:
         if value is None:
             return None
-        return encrypt_json(value)
+        return encrypt_warehouse_credentials(value)
 
     def from_db_value(
         self,
@@ -64,11 +51,10 @@ class EncryptedJSONField(models.TextField[Any, Any]):
         if value is None:
             return None
         try:
-            plaintext = _get_fernet().decrypt(value.encode())
+            return decrypt_warehouse_credentials(value)
         except InvalidToken:
             logger.warning("encrypted_field.decrypt_failed", exc_info=True)
             return None
-        return json.loads(plaintext)
 
     def get_lookup(self, lookup_name: str) -> Any:
         if lookup_name != "isnull":

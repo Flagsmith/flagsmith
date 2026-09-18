@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from pytest_django.fixtures import SettingsWrapper
 from pytest_structlog import StructuredLogCapture
 
-from core.fields import EncryptedJSONField, NoSSRFURLField, encrypt_json
+from core.fields import EncryptedJSONField, NoSSRFURLField
 from integrations.gitlab.serializers import GitLabConfigurationSerializer
 
 
@@ -118,14 +118,3 @@ def test_get_lookup__non_isnull__raises_not_implemented() -> None:
     with pytest.raises(NotImplementedError):
         field.get_lookup("exact")
     assert field.get_lookup("isnull") is not None
-
-
-def test_encrypt_json__value__is_what_the_field_reads_back() -> None:
-    # Given
-    field = EncryptedJSONField()
-
-    # When
-    token = encrypt_json({"password": "hunter2"})
-
-    # Then another holder of the secret, or the field itself, reads the value
-    assert field.from_db_value(token, None, None) == {"password": "hunter2"}

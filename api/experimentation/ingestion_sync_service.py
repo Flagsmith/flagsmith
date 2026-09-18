@@ -8,7 +8,7 @@ import structlog
 from django.conf import settings
 from redis.cluster import RedisCluster
 
-from core.fields import encrypt_json
+from core.warehouse_credentials import encrypt_warehouse_credentials
 from experimentation.dataclasses import WarehouseDeliveryStatus
 
 if TYPE_CHECKING:
@@ -94,7 +94,9 @@ def set_ingestion_warehouse(
         "connection_id": connection_id,
         "warehouse_type": warehouse_type,
         "config": config,
-        "credentials": encrypt_json(credentials) if credentials is not None else None,
+        "credentials": encrypt_warehouse_credentials(credentials)
+        if credentials is not None
+        else None,
     }
     _get_client().set(redis_key, json.dumps(document))
 
