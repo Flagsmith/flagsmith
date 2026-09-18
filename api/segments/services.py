@@ -7,43 +7,34 @@ from django.db.models import QuerySet
 from django.utils import timezone
 
 from core.dataclasses import AuthorData
-from features.models import FeatureSegment
+from features.models import FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 
 if typing.TYPE_CHECKING:
     from segments.models import Segment
 
 
-def get_overrides_in_effect() -> "QuerySet[FeatureSegment]":
-    """
-    Get the feature overrides that are live now or scheduled to go live.
+def get_all_live_or_scheduled_overrides() -> "QuerySet[FeatureSegment]":
+    """Get the feature overrides that are live now or scheduled to go live."""
+    no_change_request = models.Q(change_request__isnull=True)
+    committed_change_request = models.Q(change_request__committed_at__isnull=False)
+    with_feature_versioning_v1 = models.Q(
+        environment__use_v2_feature_versioning=False,
+    ) & (no_change_request | committed_change_request)
 
-    Returns a global queryset; narrow the result down with additional filters.
-    """
-    # Without v2 versioning, a feature segment is the current state, so it
-    # counts unless every feature state on it is held by an open change request.
-    without_v2_versioning = models.Q(
-        models.Q(environment__use_v2_feature_versioning=False),
-        models.Q(feature_states__change_request__isnull=True)
-        | models.Q(feature_states__change_request__committed_at__isnull=False),
-    )
-
-    # With v2 versioning, a published version counts unless another published
-    # version has gone live since, which covers both the version that is live
-    # now and any version scheduled to go live later.
-    with_v2_versioning = models.Q(
+    with_feature_versioning_v2 = models.Q(
         environment__use_v2_feature_versioning=True,
-        environment_feature_version__published_at__isnull=False,
-    ) & ~models.Exists(
-        EnvironmentFeatureVersion.objects.get_versions_live_since(
-            feature_id=models.OuterRef("feature_id"),
-            environment_id=models.OuterRef("environment_id"),
-            live_from=models.OuterRef("environment_feature_version__live_from"),
-        )
+        environment_feature_version__in=(
+            EnvironmentFeatureVersion.objects.get_live_or_scheduled()
+        ),
     )
 
+    live_or_scheduled_feature_states = FeatureState.objects.filter(
+        with_feature_versioning_v1 | with_feature_versioning_v2,
+        feature_segment_id=models.OuterRef("pk"),
+    )
     return FeatureSegment.objects.filter(  # type: ignore[no-any-return]
-        without_v2_versioning | with_v2_versioning
+        models.Exists(live_or_scheduled_feature_states)
     )
 
 

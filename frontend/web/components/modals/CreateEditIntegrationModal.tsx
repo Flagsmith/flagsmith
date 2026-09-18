@@ -239,8 +239,11 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
   const handleOauthSignature = (res: { signature: string } | null) => {
     const signature = res && res.signature
     if (signature) {
+      const returnUrl = `${document.location.href}?environment=${
+        formData.flagsmithEnvironment
+      }&configure=${id}${projectId ? `&project=${projectId}` : ''}`
       const postfix = `?redirect_url=${encodeURIComponent(
-        `${document.location.href}?environment=${formData.flagsmithEnvironment}&configure=${id}`,
+        returnUrl,
       )}&signature=${signature}`
       document.location = `${constructBaseUrl({
         environmentApiKey: formData.flagsmithEnvironment,
@@ -483,6 +486,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
             </label>
             <ProjectSelect
               organisationId={AccountStore.getOrganisation()?.id}
+              readOnly={authorised}
               value={selectedProjectId}
               onChange={(v) => setSelectedProjectId(v)}
             />
@@ -495,7 +499,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
             </label>
             <EnvironmentSelect
               projectId={projectId}
-              readOnly={!!data}
+              readOnly={!!data?.id}
               value={formData.flagsmithEnvironment}
               onChange={(environment) =>
                 update('flagsmithEnvironment', environment)

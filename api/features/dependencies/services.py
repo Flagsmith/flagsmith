@@ -13,7 +13,7 @@ from features.dependencies.mappers import map_rules_to_prerequisite_feature_name
 from features.dependencies.models import SegmentFlagReference
 from features.dependencies.types import DependencyEdge, DependencyPath, FeatureName
 from features.models import Feature, FeatureSegment
-from segments.services import get_overrides_in_effect
+from segments.services import get_all_live_or_scheduled_overrides
 
 if typing.TYPE_CHECKING:
     from segments.models import Segment
@@ -107,7 +107,7 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
     """Raise if any feature the segment overrides ends up depending on itself."""
     edges_by_environment_id: dict[int, dict[FeatureName, list[DependencyEdge]]] = {}
     for override in (
-        get_overrides_in_effect()
+        get_all_live_or_scheduled_overrides()
         .filter(segment=segment)
         .select_related("environment", "feature")
     ):
@@ -155,7 +155,7 @@ def _get_dependency_edges(
         segment_name,
         condition_json_path,
     ) in (
-        get_overrides_in_effect()
+        get_all_live_or_scheduled_overrides()
         .filter(
             environment=environment,
             segment__flag_references__isnull=False,
