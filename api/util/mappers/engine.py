@@ -1,13 +1,18 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from itertools import chain
-from typing import TYPE_CHECKING, Dict, List, Optional
+from math import inf
+from operator import attrgetter
+from typing import TYPE_CHECKING, Dict, List, Optional, TypeAlias
 from uuid import UUID
 
 from flag_engine.context import types as engine_types
+from flag_engine.result import types as engine_result_types
+from flag_engine.segments.constants import IS_SET
 from flag_engine.segments.types import ConditionOperator, RuleType
 from pydantic import TypeAdapter
 
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
+from features.types import FeatureEngineMetadata
 from features.versioning.models import EnvironmentFeatureVersion
 from segments.types import SegmentEngineMetadata
 from util.engine_models.environments.integrations.models import IntegrationModel
@@ -51,10 +56,38 @@ if TYPE_CHECKING:  # pragma: no cover
     from segments.models import Condition, Segment, SegmentRule
 
 
+#: `EvaluationContext` and friends, parameterised with Core API's metadata
+#: types. Prefer these aliases over the bare generics so that reading metadata
+#: off a result stays type-checked.
+EvaluationContext: TypeAlias = engine_types.EvaluationContext[
+    SegmentEngineMetadata, FeatureEngineMetadata
+]
+SegmentContext: TypeAlias = engine_types.SegmentContext[
+    SegmentEngineMetadata, FeatureEngineMetadata
+]
+EvaluationResult: TypeAlias = engine_result_types.EvaluationResult[
+    SegmentEngineMetadata, FeatureEngineMetadata
+]
+FlagResult: TypeAlias = engine_result_types.FlagResult[FeatureEngineMetadata]
+
+MultivariateValuesByFeatureStateId: TypeAlias = Mapping[
+    int, "Iterable[MultivariateFeatureStateValue]"
+]
+
+#: Context key and name of the synthetic segment carrying identity overrides.
+#: Not a segment id — prefixed so it cannot collide with one.
+IDENTITY_OVERRIDES_SEGMENT_KEY = "$identity_overrides"
+IDENTITY_OVERRIDES_SEGMENT_NAME = "identity_overrides"
+
 __all__ = (
+    "EvaluationContext",
+    "EvaluationResult",
+    "FlagResult",
+    "SegmentContext",
     "map_condition_to_segment_condition",
     "map_environment_api_key_to_engine",
     "map_environment_to_engine",
+    "map_feature_state_to_feature_context",
     "map_feature_to_engine",
     "map_identity_to_engine",
     "map_environment_to_evaluation_context",
@@ -462,9 +495,26 @@ def map_environment_to_evaluation_context(
     identity: "Identity | None" = None,
     traits: "Iterable[Trait] | None" = None,
     segments: "Iterable[Segment] | None" = None,
-) -> "engine_types.EvaluationContext[SegmentEngineMetadata, object]":
-    """Map Django ORM Environment (and optionally Identity) to a flag-engine EvaluationContext."""
-    context: engine_types.EvaluationContext[SegmentEngineMetadata, object] = {
+    features: "Iterable[FeatureState] | None" = None,
+    segment_overrides: "Mapping[int, Iterable[FeatureState]] | None" = None,
+    identity_overrides: "Iterable[FeatureState] | None" = None,
+    mv_fs_values_by_feature_state_id: "MultivariateValuesByFeatureStateId | None" = None,
+) -> EvaluationContext:
+    """Map Django ORM models to a flag-engine `EvaluationContext`.
+
+    All arguments are expected to be resolved already: this function does not
+    read from the ORM beyond traversing prefetched relations. See
+    `environments.identities.evaluation` for the query side.
+
+    :param features: environment default feature states, keyed into
+        `$.features` by feature name. Required for the engine to produce flags
+        at all — without it `get_evaluation_result` returns segments only.
+    :param segment_overrides: feature states overriding `features`, by segment id.
+    :param identity_overrides: feature states overriding `features` for
+        `identity`. Expressed as a synthetic segment (see
+        `_map_identity_overrides_to_segment_context`).
+    """
+    context: EvaluationContext = {
         "environment": {
             "key": environment.api_key,
             "name": environment.name or "",
@@ -472,7 +522,13 @@ def map_environment_to_evaluation_context(
     }
     if identity is not None:
         trait_items: "Iterable[Trait]" = (
-            traits if traits is not None else identity.identity_traits.all()
+            traits
+            if traits is not None
+            # A transient identity was never persisted, so it has no stored
+            # traits to read, and asking for them would raise.
+            else identity.identity_traits.all()
+            if identity.pk
+            else ()
         )
         identity_traits = {trait.trait_key: trait.trait_value for trait in trait_items}
         if identity.system_traits:
@@ -486,23 +542,166 @@ def map_environment_to_evaluation_context(
             ),
             "traits": identity_traits,
         }
+
+    mv_fs_values_by_feature_state_id = mv_fs_values_by_feature_state_id or {}
+
+    def to_feature_context(
+        feature_state: "FeatureState",
+        *,
+        segment_id: int | None = None,
+        priority: float | None = None,
+    ) -> engine_types.FeatureContext[FeatureEngineMetadata]:
+        return map_feature_state_to_feature_context(
+            feature_state,
+            mv_fs_values=mv_fs_values_by_feature_state_id.get(feature_state.pk),
+            segment_id=segment_id,
+            priority=priority,
+        )
+
     if segments is not None:
+        segment_overrides = segment_overrides or {}
         context["segments"] = {
-            str(segment.pk): map_segment_to_segment_context(segment)
+            str(segment.pk): map_segment_to_segment_context(
+                segment,
+                overrides=[
+                    to_feature_context(feature_state, segment_id=segment.pk)
+                    for feature_state in segment_overrides.get(segment.pk) or ()
+                ],
+            )
             for segment in segments
         }
+
+    if identity_overrides:
+        # An identity override outranks every segment override, which the
+        # engine expresses as a priority no segment can beat.
+        context.setdefault("segments", {})[IDENTITY_OVERRIDES_SEGMENT_KEY] = (
+            _map_identity_overrides_to_segment_context(
+                [
+                    to_feature_context(feature_state, priority=-inf)
+                    for feature_state in identity_overrides
+                ]
+            )
+        )
+
+    if features is not None:
+        context["features"] = {
+            (feature_context := to_feature_context(feature_state))[
+                "name"
+            ]: feature_context
+            for feature_state in features
+        }
+
     return context
+
+
+def map_feature_state_to_feature_context(
+    feature_state: "FeatureState",
+    *,
+    mv_fs_values: "Iterable[MultivariateFeatureStateValue] | None" = None,
+    segment_id: int | None = None,
+    priority: float | None = None,
+) -> engine_types.FeatureContext[FeatureEngineMetadata]:
+    """Map a Django ORM FeatureState to a flag-engine FeatureContext TypedDict."""
+    feature = feature_state.feature
+    metadata = FeatureEngineMetadata(
+        feature_id=feature.pk,
+        feature_state_id=feature_state.pk,
+    )
+    if segment_id is not None:
+        metadata["segment_id"] = segment_id
+    if feature_state.identity_id is not None:
+        metadata["identity_id"] = feature_state.identity_id
+
+    feature_context: engine_types.FeatureContext[FeatureEngineMetadata] = {
+        # The engine seeds multivariate variant allocation on the feature
+        # context key, so it has to be the bucketing seed rather than the
+        # feature state id, or recreating a feature state would move every
+        # enrolled identity to a different variant. See issue #7913.
+        "key": str(feature_state.mv_hashing_seed),
+        "name": feature.name,
+        "enabled": feature_state.enabled,
+        # Deliberately unparameterised by identity: picking a multivariate
+        # value is the engine's job now.
+        "value": feature_state.get_feature_state_value(),
+        "metadata": metadata,
+    }
+
+    if variants := _map_mv_fs_values_to_feature_values(mv_fs_values or ()):
+        feature_context["variants"] = variants
+
+    if priority is not None:
+        feature_context["priority"] = priority
+    elif (feature_segment := feature_state.feature_segment) is not None:
+        feature_context["priority"] = feature_segment.priority
+
+    return feature_context
+
+
+def _map_mv_fs_values_to_feature_values(
+    mv_fs_values: "Iterable[MultivariateFeatureStateValue]",
+) -> list[engine_types.FeatureValue]:
+    # Ordered by id, and weighted by position in that order, because that is
+    # the order Core API has always allocated percentages in. The engine
+    # orders by `priority`, so the two only agree if we hand it the id order.
+    feature_values: list[engine_types.FeatureValue] = []
+    for index, mv_fs_value in enumerate(sorted(mv_fs_values, key=attrgetter("id"))):
+        mv_option = mv_fs_value.multivariate_feature_option
+        feature_value: engine_types.FeatureValue = {
+            "value": mv_option.value,
+            "weight": mv_fs_value.percentage_allocation,
+            "priority": index,
+        }
+        if mv_option.key is not None:
+            # An unkeyed option resolves to a null variant, as it does today.
+            feature_value["key"] = mv_option.key
+        feature_values.append(feature_value)
+    return feature_values
 
 
 def map_segment_to_segment_context(
     segment: "Segment",
-) -> "engine_types.SegmentContext[SegmentEngineMetadata, object]":
+    *,
+    overrides: "list[engine_types.FeatureContext[FeatureEngineMetadata]] | None" = None,
+) -> SegmentContext:
     """Map a Django ORM Segment to a flag-engine SegmentContext TypedDict."""
-    return {
+    segment_context: SegmentContext = {
         "key": str(segment.pk),
         "name": segment.name,
         "rules": [map_rule_to_segment_rule(rule) for rule in segment.rules.all()],
-        "metadata": SegmentEngineMetadata(pk=segment.pk),
+        "metadata": SegmentEngineMetadata(source="segment", pk=segment.pk),
+    }
+    if overrides:
+        segment_context["overrides"] = overrides
+    return segment_context
+
+
+def _map_identity_overrides_to_segment_context(
+    overrides: "list[engine_types.FeatureContext[FeatureEngineMetadata]]",
+) -> SegmentContext:
+    """Express identity overrides as a segment matching only that identity.
+
+    The engine has no identity-override concept, so SDKs model them as a
+    segment keyed on the identifier. Core API does the same, for one identity
+    at a time — the identity being evaluated is the only one whose overrides
+    are ever in the context.
+    """
+    return {
+        "key": IDENTITY_OVERRIDES_SEGMENT_KEY,
+        "name": IDENTITY_OVERRIDES_SEGMENT_NAME,
+        "rules": [
+            {
+                "type": "ALL",
+                "conditions": [
+                    {
+                        "property": "$.identity.key",
+                        "operator": IS_SET,
+                        "value": "",
+                    }
+                ],
+            }
+        ],
+        "overrides": overrides,
+        "metadata": SegmentEngineMetadata(source="identity_overrides"),
     }
 
 
