@@ -2,7 +2,7 @@ import logging
 import typing
 from contextlib import suppress
 from decimal import Decimal
-from typing import Iterable
+from typing import Generator, Iterable
 
 from boto3.dynamodb.conditions import Attr, Key
 from botocore.exceptions import ClientError
@@ -12,6 +12,7 @@ from rest_framework.exceptions import NotFound
 
 from edge_api.identities.search import EdgeIdentitySearchData
 from environments.dynamodb.constants import (
+    DYNAMODB_MAX_BATCH_GET_ITEM_COUNT,
     IDENTITIES_PAGINATION_LIMIT,
     SYSTEM_TRAIT_WRITE_MAX_ATTEMPTS,
 )
@@ -31,12 +32,14 @@ from util.mappers import (
     map_engine_identity_to_identity_document,
     map_identity_to_identity_document,
 )
+from util.util import iter_chunks
 
 from .base import BaseDynamoWrapper
 
 if typing.TYPE_CHECKING:
     from boto3.dynamodb.conditions import ConditionBase
     from mypy_boto3_dynamodb.type_defs import (
+        KeysAndAttributesServiceResourceTypeDef,
         QueryInputTableQueryTypeDef,
         QueryOutputTableTypeDef,
         TableAttributeValueTypeDef,
@@ -86,6 +89,35 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
 
     def get_item(self, composite_key: str) -> typing.Optional[dict]:  # type: ignore[type-arg]
         return self.table.get_item(Key={"composite_key": composite_key}).get("Item")  # type: ignore[union-attr]
+
+    def iter_items_by_composite_keys(
+        self,
+        composite_keys: Iterable[str],
+        projection_expression: str | None = None,
+    ) -> Generator[dict[str, typing.Any], None, None]:
+        """
+        Read identity documents in batches, yielding only those that exist.
+
+        Keys with no document are silently absent from the results — callers that
+        care about the difference should compare against the keys they asked for.
+        """
+        table_name = self.get_table_name()
+        assert table_name is not None
+        for chunk in iter_chunks(
+            composite_keys, chunk_size=DYNAMODB_MAX_BATCH_GET_ITEM_COUNT
+        ):
+            keys_and_attributes: "KeysAndAttributesServiceResourceTypeDef" = {
+                "Keys": [{"composite_key": composite_key} for composite_key in chunk]
+            }
+            if projection_expression:
+                keys_and_attributes["ProjectionExpression"] = projection_expression
+            request_items = {table_name: keys_and_attributes}
+            while request_items:
+                response = self.resource.batch_get_item(RequestItems=request_items)
+                yield from response["Responses"].get(table_name, [])
+                # DynamoDB returns keys it declined to read — e.g. when the
+                # response would exceed 16MB — and expects them to be retried.
+                request_items = response.get("UnprocessedKeys")  # type: ignore[assignment]
 
     def set_system_trait(
         self,
