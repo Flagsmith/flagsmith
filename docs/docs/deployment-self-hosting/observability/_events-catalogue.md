@@ -272,7 +272,7 @@ Attributes:
 ### `features.dependencies.create_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:154`
+ - `api/features/dependencies/services.py:128`
 
 Attributes:
  - `environment.key`

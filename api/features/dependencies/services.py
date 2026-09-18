@@ -105,43 +105,17 @@ def report_flag_dependencies(
 
 def validate_segment_flag_dependencies(segment: "Segment") -> None:
     """Raise if any feature the segment overrides ends up depending on itself."""
+    edges_by_environment_id: dict[int, dict[FeatureName, list[DependencyEdge]]] = {}
     for override in (
         get_overrides_in_effect()
         .filter(segment=segment)
         .select_related("environment", "feature")
     ):
-        edges: dict[str, list[DependencyEdge]] = defaultdict(list)
-        for (
-            feature_name,
-            prerequisite_feature_name,
-            segment_id,
-            segment_name,
-            condition_json_path,
-        ) in (
-            get_overrides_in_effect()
-            .filter(
-                environment=override.environment,
-                segment__flag_references__isnull=False,
+        if override.environment_id not in edges_by_environment_id:
+            edges_by_environment_id[override.environment_id] = _get_dependency_edges(
+                override.environment
             )
-            .values_list(
-                "feature__name",
-                "segment__flag_references__prerequisite_feature__name",
-                "segment_id",
-                "segment__name",
-                "segment__flag_references__condition_json_path",
-            )
-        ):
-            edges[feature_name].append(
-                {
-                    "feature": feature_name,
-                    "needs": prerequisite_feature_name,
-                    "segment": {
-                        "id": segment_id,
-                        "name": segment_name,
-                        "condition_json_path": condition_json_path,
-                    },
-                }
-            )
+        edges = edges_by_environment_id[override.environment_id]
         pending: list[DependencyPath] = [
             [edge] for edge in edges[override.feature.name]
         ]
@@ -168,3 +142,41 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
                 )
             visited.add(prerequisite_feature_name)
             pending += [[*path, edge] for edge in edges[prerequisite_feature_name]]
+
+
+def _get_dependency_edges(
+    environment: Environment,
+) -> dict[FeatureName, list[DependencyEdge]]:
+    edges: dict[FeatureName, list[DependencyEdge]] = defaultdict(list)
+    for (
+        feature_name,
+        prerequisite_feature_name,
+        segment_id,
+        segment_name,
+        condition_json_path,
+    ) in (
+        get_overrides_in_effect()
+        .filter(
+            environment=environment,
+            segment__flag_references__isnull=False,
+        )
+        .values_list(
+            "feature__name",
+            "segment__flag_references__prerequisite_feature__name",
+            "segment_id",
+            "segment__name",
+            "segment__flag_references__condition_json_path",
+        )
+    ):
+        edges[feature_name].append(
+            {
+                "feature": feature_name,
+                "needs": prerequisite_feature_name,
+                "segment": {
+                    "id": segment_id,
+                    "name": segment_name,
+                    "condition_json_path": condition_json_path,
+                },
+            }
+        )
+    return edges
