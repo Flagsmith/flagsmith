@@ -15,8 +15,10 @@ from rest_framework.test import APIClient
 from app.utils import create_hash
 from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.enums import EnvironmentDocumentCacheMode
+from features.future.types import SegmentOverrideRequest, UpdateFlagRequest
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
+from tests.types import CreateSegmentOverrideFixture
 from users.models import FFAdminUser
 
 
@@ -383,6 +385,32 @@ def feature_segment(admin_client, segment, feature, environment):  # type: ignor
         url, data=json.dumps(data), content_type="application/json"
     )
     return response.json()["id"]
+
+
+@pytest.fixture()
+def create_segment_override(admin_client: APIClient) -> CreateSegmentOverrideFixture:
+    """Return a callable putting a segment override live, whichever versioning is in use."""
+
+    def _create_segment_override(
+        environment_api_key: str,
+        feature_id: int,
+        segment_id: int,
+        enabled: bool = True,
+        priority: int | None = None,
+    ) -> None:
+        segment_override = SegmentOverrideRequest(
+            {"segment": {"id": segment_id}, "enabled": enabled}
+        )
+        if priority is not None:
+            segment_override["priority"] = priority
+        response = admin_client.patch(
+            f"/api/__future__/environments/{environment_api_key}/features/{feature_id}/",
+            UpdateFlagRequest({"segment_overrides": [segment_override]}),
+            format="json",
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    return _create_segment_override
 
 
 @pytest.fixture()

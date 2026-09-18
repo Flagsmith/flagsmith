@@ -7,6 +7,7 @@ from common.core.utils import is_database_replica_setup, using_database_replica
 from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from django.core.cache import caches
+from django.db import transaction
 from django.db.models import (
     BooleanField,
     Case,
@@ -62,6 +63,7 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from features.dependencies.services import validate_segment_flag_dependencies
 from features.feature_lifecycle.services import (
     annotate_feature_queryset_with_lifecycle_stage,
     is_feature_lifecycle_enabled,
@@ -1221,5 +1223,8 @@ def create_segment_override(  # type: ignore[no-untyped-def]
         data=request.data, context={"environment": environment, "feature": feature}
     )
     serializer.is_valid(raise_exception=True)
-    serializer.save(environment=environment, feature=feature)  # type: ignore[no-untyped-call]
+    with transaction.atomic():
+        feature_state = serializer.save(environment=environment, feature=feature)  # type: ignore[no-untyped-call]
+        if feature_segment := feature_state.feature_segment:
+            validate_segment_flag_dependencies(feature_segment.segment)
     return Response(serializer.data, status=201)
