@@ -116,6 +116,67 @@ def test_search_gitlab_issues__default_params__returns_issues() -> None:
 
 
 @responses.activate
+def test_fetch_gitlab_projects__with_search_text__sends_search_param() -> None:
+    # Given
+    responses.get(
+        f"{INSTANCE_URL}/api/v4/projects",
+        json=[],
+        headers={"x-page": "1", "x-total-pages": "1", "x-total": "0"},
+        match=[
+            responses.matchers.header_matcher({"PRIVATE-TOKEN": ACCESS_TOKEN}),
+            responses.matchers.query_param_matcher(
+                {
+                    "membership": "true",
+                    "per_page": "100",
+                    "page": "1",
+                    "search": "my-project",
+                },
+                strict_match=False,
+            ),
+        ],
+    )
+
+    # When
+    result = fetch_gitlab_projects(
+        instance_url=INSTANCE_URL,
+        access_token=ACCESS_TOKEN,
+        page=1,
+        page_size=100,
+        search_text="my-project",
+    )
+
+    # Then
+    assert result["results"] == []
+
+
+@responses.activate
+def test_fetch_gitlab_projects__without_search_text__omits_search_param() -> None:
+    # Given
+    responses.get(
+        f"{INSTANCE_URL}/api/v4/projects",
+        json=[],
+        headers={"x-page": "1", "x-total-pages": "1", "x-total": "0"},
+        match=[
+            responses.matchers.query_param_matcher(
+                {"membership": "true", "per_page": "100", "page": "1"},
+                strict_match=True,
+            ),
+        ],
+    )
+
+    # When
+    result = fetch_gitlab_projects(
+        instance_url=INSTANCE_URL,
+        access_token=ACCESS_TOKEN,
+        page=1,
+        page_size=100,
+    )
+
+    # Then
+    assert result["results"] == []
+
+
+@responses.activate
 def test_search_gitlab_issues__with_search_text__sends_search_param() -> None:
     # Given
     responses.get(
