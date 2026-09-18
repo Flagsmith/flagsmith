@@ -1,6 +1,6 @@
 from django.db import migrations, models
 
-import core.fields
+import experimentation.fields
 
 
 class Migration(migrations.Migration):
@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="warehouseconnection",
             name="credentials",
-            field=core.fields.EncryptedJSONField(blank=True, null=True),
+            field=experimentation.fields.EncryptedJSONField(blank=True, null=True),
         ),
         migrations.AddField(
             model_name="warehouseconnection",

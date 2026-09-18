@@ -7,9 +7,9 @@ from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 from redis.exceptions import RedisError
 
-from core.warehouse_credentials import decrypt_warehouse_credentials
 from experimentation import ingestion_sync_service
 from experimentation.dataclasses import WarehouseDeliveryStatus
+from experimentation.warehouse_credentials import decrypt_warehouse_credentials
 
 
 def test_get_client__configured_url__builds_redis_cluster_with_socket_options(

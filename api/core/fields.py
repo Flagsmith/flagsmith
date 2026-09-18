@@ -1,16 +1,8 @@
-from typing import Any, TypeVar
+from typing import TypeVar
 
-import structlog
-from cryptography.fernet import InvalidToken
 from django.db import models
 
 from core.validators import validate_http_url_scheme, validate_no_internal_address
-from core.warehouse_credentials import (
-    decrypt_warehouse_credentials,
-    encrypt_warehouse_credentials,
-)
-
-logger = structlog.get_logger("core")
 
 _ST = TypeVar("_ST")
 _GT = TypeVar("_GT")
@@ -34,31 +26,3 @@ class NoSSRFURLField(models.URLField[_ST, _GT]):
         validate_http_url_scheme,
         validate_no_internal_address,
     ]
-
-
-class EncryptedJSONField(models.TextField[Any, Any]):
-    def get_prep_value(self, value: Any) -> str | None:
-        if value is None:
-            return None
-        return encrypt_warehouse_credentials(value)
-
-    def from_db_value(
-        self,
-        value: str | None,
-        expression: object,
-        connection: object,
-    ) -> Any:
-        if value is None:
-            return None
-        try:
-            return decrypt_warehouse_credentials(value)
-        except InvalidToken:
-            logger.warning("encrypted_field.decrypt_failed", exc_info=True)
-            return None
-
-    def get_lookup(self, lookup_name: str) -> Any:
-        if lookup_name != "isnull":
-            raise NotImplementedError(
-                "EncryptedJSONField only supports isnull lookups."
-            )
-        return super().get_lookup(lookup_name)

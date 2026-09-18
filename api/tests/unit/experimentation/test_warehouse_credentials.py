@@ -2,7 +2,7 @@ import pytest
 from cryptography.fernet import InvalidToken
 from pytest_django.fixtures import SettingsWrapper
 
-from core.warehouse_credentials import (
+from experimentation.warehouse_credentials import (
     decrypt_warehouse_credentials,
     encrypt_warehouse_credentials,
 )

@@ -175,14 +175,6 @@ Attributes:
  - `error.message`
  - `source`
 
-### `core.encrypted_field.decrypt_failed`
-
-Logged at `warning` from:
- - `api/core/fields.py:56`
-
-Attributes:
- - `exc_info`
-
 ### `dynamodb.environment_document_compressed`
 
 Logged at `info` from:
@@ -209,6 +201,14 @@ Logged at `warning` from:
 Attributes:
  - `exc_info`
  - `field`
+
+### `experimentation.encrypted_field.decrypt_failed`
+
+Logged at `warning` from:
+ - `api/experimentation/fields.py:37`
+
+Attributes:
+ - `exc_info`
 
 ### `experimentation.exposures.compute_failed`
 

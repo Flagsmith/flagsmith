@@ -8,8 +8,8 @@ import structlog
 from django.conf import settings
 from redis.cluster import RedisCluster
 
-from core.warehouse_credentials import encrypt_warehouse_credentials
 from experimentation.dataclasses import WarehouseDeliveryStatus
+from experimentation.warehouse_credentials import encrypt_warehouse_credentials
 
 if TYPE_CHECKING:
     from datetime import datetime

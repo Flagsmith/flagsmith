@@ -13,7 +13,6 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     hook,
 )
 
-from core.fields import EncryptedJSONField
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
 from experimentation.dataclasses import (
@@ -21,6 +20,7 @@ from experimentation.dataclasses import (
     ResultsSummary,
     WarehouseEventStats,
 )
+from experimentation.fields import EncryptedJSONField
 from experimentation.types import MetricDefinition
 
 # A computation's payload is the serialised form of its summary dataclass; the
