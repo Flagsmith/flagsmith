@@ -57,16 +57,21 @@ def fetch_gitlab_projects(
     *,
     page: int,
     page_size: int,
+    search_text: str | None = None,
 ) -> GitLabPage[GitLabProject]:
+    params = {
+        "membership": "true",
+        "per_page": str(page_size),
+        "page": str(page),
+    }
+    if search_text:
+        params["search"] = search_text
+
     response = _get_from_gitlab_api(
         instance_url,
         access_token,
         path="projects",
-        params={
-            "membership": "true",
-            "per_page": str(page_size),
-            "page": str(page),
-        },
+        params=params,
     )
 
     results: list[GitLabProject] = [

@@ -299,7 +299,7 @@ Attributes:
 ### `gitlab.api_call.failed`
 
 Logged at `error` from:
- - `api/integrations/gitlab/views/browse_gitlab.py:59`
+ - `api/integrations/gitlab/views/browse_gitlab.py:60`
 
 Attributes:
  - `exc_info`
