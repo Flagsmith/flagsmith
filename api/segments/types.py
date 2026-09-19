@@ -1,9 +1,18 @@
+from typing import Literal
+
 from flag_engine.segments.types import ConditionOperator, RuleType
 from typing_extensions import NotRequired, TypedDict
 
+#: Where a `SegmentContext` came from. Identity overrides have no segment of
+#: their own; they are expressed to the engine as a synthetic segment, so that
+#: the engine resolves them by priority like any other override.
+SegmentSource = Literal["segment", "identity_overrides"]
+
 
 class SegmentEngineMetadata(TypedDict):
-    pk: int
+    source: SegmentSource
+    #: Absent on synthetic identity-override segments.
+    pk: NotRequired[int]
 
 
 class SegmentCondition(TypedDict):

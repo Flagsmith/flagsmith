@@ -950,7 +950,7 @@ def test_map_segment_to_segment_context__segment_with_rule__returns_expected(
                 "rules": [],
             },
         ],
-        "metadata": {"pk": identity_matching_segment.pk},
+        "metadata": {"source": "segment", "pk": identity_matching_segment.pk},
     }
 
 
