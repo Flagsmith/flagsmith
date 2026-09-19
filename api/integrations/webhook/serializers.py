@@ -17,7 +17,7 @@ from .models import WebhookConfiguration
 class WebhookConfigurationSerializer(BaseEnvironmentIntegrationModelSerializer):
     class Meta:
         model = WebhookConfiguration
-        fields = ("id", "url", "secret")
+        fields = ("id", "url", "secret", "latest_health")
 
 
 class SegmentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
