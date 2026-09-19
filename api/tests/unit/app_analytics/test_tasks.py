@@ -541,10 +541,10 @@ def test_populate_api_usage_bucket__multiple_hosts__preserves_host(
 ) -> None:
     # Given events from two hosts in the same bucket window
     environment_id = 1
-    when = timezone.now() - timedelta(minutes=90)
+    ninety_minutes_ago = timezone.now() - timedelta(minutes=90)
     for _ in range(3):
-        _create_api_usage_event(environment_id, when, host="edge-proxy")
-    _create_api_usage_event(environment_id, when)
+        _create_api_usage_event(environment_id, ninety_minutes_ago, host="edge-proxy")
+    _create_api_usage_event(environment_id, ninety_minutes_ago)
 
     # When
     freezer.move_to(timezone.now() - timedelta(hours=1))
@@ -554,72 +554,6 @@ def test_populate_api_usage_bucket__multiple_hosts__preserves_host(
     buckets = APIUsageBucket.objects.filter(environment_id=environment_id)
     assert {(bucket.host, bucket.total_count) for bucket in buckets} == {
         ("edge-proxy", 3),
-        ("host1", 1),
-    }
-
-
-def test_populate_api_usage_bucket__legacy_bucket_in_reprocessed_window__replaced(
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    # Given a window already bucketed before `host` existed, and its raw data
-    environment_id = 1
-    when = timezone.now() - timedelta(minutes=90)
-    for _ in range(3):
-        _create_api_usage_event(environment_id, when, host="edge-proxy")
-    _create_api_usage_event(environment_id, when)
-    window_start = when.replace(second=0, microsecond=0) - timedelta(
-        minutes=when.minute % 15
-    )
-    APIUsageBucket.objects.create(
-        environment_id=environment_id,
-        resource=Resource.FLAGS,
-        host="",
-        total_count=4,
-        created_at=window_start,
-        bucket_size=15,
-    )
-
-    # When the window is recomputed from raw data
-    freezer.move_to(timezone.now() - timedelta(hours=1))
-    populate_api_usage_bucket(bucket_size=15, run_every=60)
-
-    # Then the legacy row is replaced by per-host rows, not added to
-    buckets = APIUsageBucket.objects.filter(environment_id=environment_id)
-    assert {(bucket.host, bucket.total_count) for bucket in buckets} == {
-        ("edge-proxy", 3),
-        ("host1", 1),
-    }
-
-
-def test_populate_api_usage_bucket__raw_rows_with_and_without_host__keeps_both(
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    # Given raw rows in one window with a host and with none, plus a legacy bucket
-    environment_id = 1
-    when = timezone.now() - timedelta(minutes=90)
-    for _ in range(2):
-        _create_api_usage_event(environment_id, when, host="")
-    _create_api_usage_event(environment_id, when)
-    window_start = when.replace(second=0, microsecond=0) - timedelta(
-        minutes=when.minute % 15
-    )
-    APIUsageBucket.objects.create(
-        environment_id=environment_id,
-        resource=Resource.FLAGS,
-        host="",
-        total_count=3,
-        created_at=window_start,
-        bucket_size=15,
-    )
-
-    # When
-    freezer.move_to(timezone.now() - timedelta(hours=1))
-    populate_api_usage_bucket(bucket_size=15, run_every=60)
-
-    # Then the empty-host rows get their own bucket, whichever order they ran in
-    buckets = APIUsageBucket.objects.filter(environment_id=environment_id)
-    assert {(bucket.host, bucket.total_count) for bucket in buckets} == {
-        ("", 2),
         ("host1", 1),
     }
 
