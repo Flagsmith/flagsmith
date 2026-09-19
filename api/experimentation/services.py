@@ -23,7 +23,10 @@ from audit.related_object_type import RelatedObjectType
 from cohorts.models import Cohort
 from core.dataclasses import AuthorData
 from environments.tasks import rebuild_environment_document
-from experimentation import warehouse_delivery_service
+from experimentation import (
+    warehouse_delivery_sync_service,
+    warehouse_verification_service,
+)
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -1402,15 +1405,15 @@ def verify_clickhouse_connection(
     log = logger.bind(environment__id=connection.environment_id)
     try:
         log = log.bind(organisation__id=connection.environment.project.organisation_id)
-        with warehouse_delivery_service.delivery_client(
+        with warehouse_verification_service.delivery_client(
             connection,
             send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
         ) as client:
-            warehouse_delivery_service.check_events_table_exists(client)
+            warehouse_verification_service.check_events_table_exists(client)
     except Exception as error:
         connection.status = WarehouseConnectionStatus.ERRORED
-        connection.status_detail = warehouse_delivery_service.describe_warehouse_error(
-            error
+        connection.status_detail = (
+            warehouse_verification_service.describe_warehouse_error(error)
         )
         if persist:
             connection.save(update_fields=["status", "status_detail"])
@@ -1448,6 +1451,32 @@ def refresh_warehouse_connection_status(
             organisation__id=connection.environment.project.organisation_id,
         )
     return connection
+
+
+def annotate_warehouse_delivery_statuses(
+    connections: Sequence[WarehouseConnection],
+) -> None:
+    """For external connections that passed verification, show what the
+    warehouse-delivery service last saw: a warehouse that has started refusing
+    events reads as errored with the reason, instead of the connected status
+    stored when it was saved. A connection that failed verification keeps that
+    result. Read-only: nothing is saved."""
+    verified = [
+        connection
+        for connection in connections
+        if connection.warehouse_type != WarehouseType.FLAGSMITH
+        and connection.status == WarehouseConnectionStatus.CONNECTED
+    ]
+    if not verified:
+        return
+    statuses = warehouse_delivery_sync_service.get_warehouse_delivery_statuses(
+        [connection.id for connection in verified]
+    )
+    for connection in verified:
+        outcome = statuses.get(connection.id)
+        if outcome is not None and outcome.status == WarehouseConnectionStatus.ERRORED:
+            connection.status = WarehouseConnectionStatus.ERRORED
+            connection.status_detail = outcome.detail
 
 
 def annotate_warehouse_event_stats(
@@ -1490,7 +1519,7 @@ def _get_customer_warehouse_event_stats_cached(
     if cached == _CUSTOMER_EVENT_UNAVAILABLE:
         return None
     try:
-        with warehouse_delivery_service.delivery_client(
+        with warehouse_verification_service.delivery_client(
             connection,
             send_receive_timeout=CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
         ) as client:
@@ -1528,7 +1557,7 @@ def _get_customer_clickhouse_event_names(
     if cached == _CUSTOMER_EVENT_UNAVAILABLE:
         return None
     try:
-        with warehouse_delivery_service.delivery_client(
+        with warehouse_verification_service.delivery_client(
             connection,
             send_receive_timeout=CLICKHOUSE_EVENT_NAMES_TIMEOUT_SECONDS,
         ) as client:
