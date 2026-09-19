@@ -1,14 +1,34 @@
+import dj_database_url
+
 from app.settings.common import *  # noqa
 from app.settings.common import (
     DATABASES,
     INSTALLED_APPS,
     LDAP_INSTALLED,
     REST_FRAMEWORK,
+    env,
 )
+
+# Point the suite at its own PostgreSQL server when one is configured, so it
+# never shares a disk -- or a page cache -- with the database `make serve`
+# keeps your local data in. See `test-db` in the dev Compose file.
+for alias, variable in (
+    ("default", "TEST_DATABASE_URL"),
+    ("analytics", "TEST_ANALYTICS_DATABASE_URL"),
+):
+    if alias in DATABASES and (url := env.str(variable, default="")):
+        DATABASES[alias] = {**DATABASES[alias], **dj_database_url.parse(url)}
+
+# Django's default hasher deliberately costs ~350ms per call. Fixtures like
+# `admin_user` and `admin_master_api_key` hash a password on nearly every test,
+# which made hashing one of the suite's largest line items. Nothing here
+# depends on the algorithm, so use the cheapest one.
+PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 # TODO: remove once permissions are an enum --
 # https://github.com/Flagsmith/flagsmith/issues/7850
 DATABASES["default"]["ENGINE"] = "core.db_backends.postgresql"
+
 
 if LDAP_INSTALLED:
     INSTALLED_APPS = INSTALLED_APPS + ["flagsmith_ldap"]
