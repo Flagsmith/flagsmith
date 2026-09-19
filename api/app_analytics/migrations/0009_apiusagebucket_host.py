@@ -7,12 +7,12 @@ from django.utils import timezone
 
 
 def delete_buckets_the_rollup_may_recompute(apps, schema_editor):  # type: ignore[no-untyped-def]
-    # Buckets created before the `host` column existed hold the window's
-    # whole count in one row with host "". The rollup recomputes the last
-    # hour of windows on every run, and a recomputed window now gets one row
-    # per host next to that host "" row, counting the window twice. Delete
-    # the rows the rollup can still reach; its next run rebuilds them from
-    # raw data.
+    # Buckets created before this migration have host "" and hold the full
+    # count for their 15 minute window. The bucketing task rebuilds the last
+    # hour of buckets on every run, one bucket per host now, so an old bucket
+    # in that range would get new per-host buckets added next to it and the
+    # same requests would be counted twice. Delete the old buckets the task
+    # can still reach; its next run rebuilds them from the raw data.
     APIUsageBucket = apps.get_model("app_analytics", "APIUsageBucket")
     APIUsageBucket.objects.using(schema_editor.connection.alias).filter(
         created_at__gte=timezone.now() - timedelta(hours=2)
