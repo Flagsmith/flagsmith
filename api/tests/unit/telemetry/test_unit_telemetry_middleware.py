@@ -7,6 +7,7 @@ from rest_framework.test import APIClient
 from api_keys.user import APIKeyUser
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
+from projects.models import Project
 from telemetry.middleware import CLIUsageLoggerMiddleware
 from telemetry.spans import set_span_attribute
 from users.models import FFAdminUser
@@ -201,6 +202,100 @@ def test_cli_usage_logger_middleware__authenticated_cli_request__logs_usage_even
             "organisation__id": organisation.pk,
             "status": "success",
             "amplitude__user_id": str(staff_user.uuid),
+        }
+    ]
+
+
+@pytest.mark.usefixtures("recording_span")
+def test_cli_usage_logger_middleware__project_list_with_organisation__logs_organisation_id(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    organisation: Organisation,
+    project: Project,
+    log: StructuredLogCapture,
+) -> None:
+    # Given / When
+    response = admin_client.get(
+        f"/api/v1/projects/?organisation={organisation.pk}",
+        HTTP_USER_AGENT="flagsmith-cli/2.0.0 (linux/amd64)",
+    )
+
+    # Then
+    assert response.status_code == 200
+
+    response_data = response.json()
+    assert any(item["id"] == project.id for item in response_data)
+
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "request.made",
+            "cli__version": "2.0.0",
+            "cli__os": "linux",
+            "cli__arch": "amd64",
+            "organisation__id": organisation.pk,
+            "status": "success",
+            "amplitude__user_id": str(admin_user.uuid),
+        }
+    ]
+
+
+@pytest.mark.usefixtures("recording_span")
+def test_cli_usage_logger_middleware__project_list_with_unpermitted_organisation__does_not_log_organisation_id(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    other_organisation = Organisation.objects.create(name="Other Org")
+
+    # When
+    response = staff_client.get(
+        f"/api/v1/projects/?organisation={other_organisation.pk}",
+        HTTP_USER_AGENT="flagsmith-cli/2.0.0 (linux/amd64)",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "request.made",
+            "cli__version": "2.0.0",
+            "cli__os": "linux",
+            "cli__arch": "amd64",
+            "status": "success",
+            "amplitude__user_id": str(staff_user.uuid),
+        }
+    ]
+
+
+@pytest.mark.usefixtures("recording_span")
+def test_cli_usage_logger_middleware__project_list_with_empty_result__does_not_log_organisation_id(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    organisation: Organisation,
+    log: StructuredLogCapture,
+) -> None:
+    # Given / When
+    response = admin_client.get(
+        f"/api/v1/projects/?organisation={organisation.pk}",
+        HTTP_USER_AGENT="flagsmith-cli/2.0.0 (linux/amd64)",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == []
+
+    assert log.events == [
+        {
+            "level": "info",
+            "event": "request.made",
+            "cli__version": "2.0.0",
+            "cli__os": "linux",
+            "cli__arch": "amd64",
+            "status": "success",
+            "amplitude__user_id": str(admin_user.uuid),
         }
     ]
 
