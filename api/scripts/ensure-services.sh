@@ -39,7 +39,7 @@ reachable() {
   (exec 3<>"/dev/tcp/$1/$2") 2>/dev/null
 }
 
-converge() {
+compose_fallback() {
   exec docker compose up --remove-orphans --wait -d
 }
 
@@ -49,7 +49,7 @@ converge() {
 containers=$(
   docker ps --all --filter "label=com.docker.compose.project=${project}" \
     --format '{{.Label "com.docker.compose.service"}} {{.Status}}'
-) || converge
+) || compose_fallback
 
 for service in "${required[@]}"; do
   status=$(grep "^${service} " <<<"${containers}" || true)
@@ -64,9 +64,9 @@ for service in "${required[@]}"; do
       exit 1
     fi
     # shellcheck disable=SC2086 # deliberate split into host and port
-    reachable ${endpoint} || converge
+    reachable ${endpoint} || compose_fallback
     continue
   fi
 
-  [[ ${status} == *"(healthy)"* ]] || converge
+  [[ ${status} == *"(healthy)"* ]] || compose_fallback
 done
