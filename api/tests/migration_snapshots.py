@@ -1,45 +1,17 @@
-"""Snapshot-backed migration states, so tests stop replaying 500+ migrations.
-
-Two things in this suite pay for the migration history over and over:
-
-* Creating a test database runs every migration, and pytest-django does it
-  once per xdist worker -- so a cold ten-worker run pays for it ten times.
-* Every migration test replays the history from zero up to the migration under
-  test, and then, on teardown, migrates all the way forward again.
-
-PostgreSQL can copy a whole database in about a tenth of a second with
-`CREATE DATABASE ... TEMPLATE`, which is several hundred times faster than
-replaying the history. So we cache migration states as template databases and
-clone them.
-
-States are keyed on the length of the migration plan prefix they correspond
-to. Django builds its "clean start" plan by walking the migration graph in a
-deterministic order, so every state a test can ask for is a prefix of that one
-plan, and the states nest: building the state for a prefix of length N clones
-the deepest cached prefix shorter than N and replays only the migrations in
-between. Over a session the cache converges on the cost of a single migration
-run, however many migration tests there are.
-
-Template names embed a digest of the migration files on disk, so adding,
-removing or editing a migration transparently invalidates every cached state.
-That is what makes this safe to leave on by default, unlike `--reuse-db`:
-there is no stale schema to notice and no flag to remember. Templates from
-graphs that no longer exist are dropped when the cache is next used.
-"""
-
-from __future__ import annotations
-
 import contextlib
 import functools
 import hashlib
+import importlib.util
 import pathlib
 import typing
 
 from django.apps import apps
+from django.apps.config import AppConfig
 from django.conf import settings as django_settings
 from django.core.management.color import no_style
 from django.db import DEFAULT_DB_ALIAS, connections
 from django.db.backends.base.creation import BaseDatabaseCreation
+from django.db.migrations.loader import MigrationLoader
 from django.db.migrations.state import ProjectState
 from django_test_migrations import sql
 from django_test_migrations.logic.migrations import normalize
@@ -56,8 +28,7 @@ _DIGEST_LENGTH = 8
 # in `psql -l` and safe to drop wholesale.
 _TEMPLATE_INFIX = "migsnap"
 
-# Key for the state in which the whole history has been applied. Named rather
-# than numbered because it is the state the rest of the suite runs against.
+# Key for the state in which the whole history has been applied.
 _LATEST = "latest"
 
 
@@ -67,27 +38,28 @@ class SnapshotsUnavailable(Exception):
 
 @functools.cache
 def migration_graph_digest() -> str:
-    """Digest the migration files on disk.
-
-    Hashes file contents rather than importing them through `MigrationLoader`:
-    it is an order of magnitude quicker, needs no database, and -- unlike
-    mtimes -- gives the same answer on a fresh clone as on a working copy, so
-    CI and a laptop agree on which templates they can share.
-
-    Each file is hashed under its app label, because that is what identifies a
-    migration to Django: the same file name under a different app is a
-    different node in the graph.
-    """
+    """Digest the migration files, avoiding `MigrationLoader`'s costly module imports."""
     digest = hashlib.sha256()
     paths = sorted(
         (app_config.label, path)
         for app_config in apps.get_app_configs()
-        for path in pathlib.Path(app_config.path).glob("migrations/*.py")
+        for path in _iter_migration_paths(app_config)
     )
     for label, path in paths:
         digest.update(f"{label}/{path.name}".encode())
         digest.update(path.read_bytes())
     return digest.hexdigest()[:_DIGEST_LENGTH]
+
+
+def _iter_migration_paths(app_config: AppConfig) -> typing.Iterable[pathlib.Path]:
+    module_name, _ = MigrationLoader.migrations_module(app_config.label)
+    if module_name is None:
+        return
+    if spec := importlib.util.find_spec(module_name):
+        if search_locations := spec.submodule_search_locations:
+            for location in search_locations:
+                for path in pathlib.Path(location).glob("*.py"):
+                    yield path
 
 
 class _MaintenanceConnection:
@@ -141,13 +113,7 @@ def _advisory_lock(
     *,
     shared: bool,
 ) -> typing.Iterator[None]:
-    """Hold a PostgreSQL advisory lock naming `namespace`.
-
-    Workers share the template databases, so cloning one must not overlap with
-    rebuilding it. Clones take the lock in shared mode and therefore run
-    concurrently with each other, which is by far the common case; builders
-    take it exclusively.
-    """
+    """Hold a PostgreSQL advisory lock naming `namespace`."""
     mode = "_shared" if shared else ""
     maintenance.execute(f"SELECT pg_advisory_lock{mode}(hashtext(%s))", (namespace,))
     try:
@@ -176,7 +142,7 @@ class MigrationSnapshots:
 
     @property
     def _base_name(self) -> str:
-        # Deliberately drops any xdist worker suffix: every worker migrates the
+        # Drop any xdist worker suffix: every worker migrates the
         # same graph, so they should share the templates they build.
         return self._database_name.split("_gw")[0]
 
@@ -271,15 +237,7 @@ class MigrationSnapshots:
 
 
 class ClickHouseSnapshots:
-    """`CREATE DATABASE ... TEMPLATE` for ClickHouse, which has no such thing.
-
-    ClickHouse only owns three of this project's migrations, but Django still
-    replays the whole history against the alias to build the migration state,
-    which is where nearly all of the twenty-odd seconds went. Copying the
-    handful of tables it does own -- schema via `CREATE TABLE ... AS`, plus the
-    `django_migrations` rows that say the history is already applied -- gets
-    the same database in well under a second.
-    """
+    """`CREATE DATABASE ... TEMPLATE` for ClickHouse."""
 
     # The one table whose *rows* matter: it is what stops Django replaying the
     # migration history against the clone.
@@ -427,17 +385,6 @@ def build_snapshots(alias: str = DEFAULT_DB_ALIAS) -> MigrationSnapshots:
 
 
 @contextlib.contextmanager
-def _building(
-    snapshots: MigrationSnapshots | ClickHouseSnapshots,
-) -> typing.Iterator[None]:
-    """Serialise template construction across xdist workers, where possible."""
-    with snapshots.exclusive():
-        if isinstance(snapshots, MigrationSnapshots):
-            snapshots.refresh()
-        yield
-
-
-@contextlib.contextmanager
 def template_backed_test_databases() -> typing.Iterator[None]:
     """Make Django build test databases by cloning a migrated template.
 
@@ -468,7 +415,10 @@ def template_backed_test_databases() -> typing.Iterator[None]:
 
         try:
             if not snapshots.has(_LATEST):
-                with _building(snapshots):
+                # Serialise template construction across xdist workers.
+                with snapshots.exclusive():
+                    if isinstance(snapshots, MigrationSnapshots):
+                        snapshots.refresh()
                     # Another worker may have built the template while we
                     # waited for the lock, in which case cloning it is still
                     # hundreds of times cheaper than migrating.
