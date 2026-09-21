@@ -6,6 +6,18 @@ resolution-markers = [
     "python_full_version < '3.13'",
 ]
 
+[options]
+exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
+exclude-newer-span = "P1W"
+
+[options.exclude-newer-package]
+openfeature-provider-flagsmith = false
+flagsmith-flag-engine = false
+flagsmith-common = false
+flagsmith-private = false
+flagsmith = false
+flagsmith-sql-flag-engine = false
+
 [[package]]
 name = "annotated-types"
 version = "0.8.0"
@@ -1662,7 +1674,7 @@ wheels = [
 
 [[package]]
 name = "google-api-core"
-version = "2.37.0"
+version = "2.36.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "google-auth" },
@@ -1672,9 +1684,9 @@ dependencies = [
     { name = "protobuf" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8d/19/0a08cdd1198b3b74550464b8108f6976e873f0b4b035e1be3c3872345153/google_api_core-2.37.0.tar.gz", hash = "sha256:cf58f220aa797f1ffdda52194c4c7d72efeced09297c2976529f8135f6d85b9a", size = 203563, upload-time = "2026-09-14T18:52:47.064Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bf/d8/88c2f0e6b0dd46a7796cca64fad99c7adba2417916f5393e82b9b7d2548e/google_api_core-2.36.0.tar.gz", hash = "sha256:32779307b52e64c9a9592a3621de6281676ecaeea299fe8524e4637ab7ac2531", size = 196879, upload-time = "2026-09-03T22:30:51.216Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3a/35/6db89f5aeac2f38815105e5dab66f48a0ff035aed6e4a86c81ab0ff483bc/google_api_core-2.37.0-py3-none-any.whl", hash = "sha256:d84042a0034cce9c4304e17d2e5e9966c2fcb1a851b73799291f687a67470c8b", size = 186342, upload-time = "2026-09-14T18:52:24.064Z" },
+    { url = "https://files.pythonhosted.org/packages/44/56/30c91c61b8f70d4c09285a005b94798729aeaf4ec8b90c1c360da8207728/google_api_core-2.36.0-py3-none-any.whl", hash = "sha256:e4d0b179260727ea5c42222426d9199285214dbef7bf48f8b16600c7f9a78944", size = 184118, upload-time = "2026-09-03T22:30:06.662Z" },
 ]
 
 [[package]]
