@@ -2,6 +2,8 @@ import typing
 
 import pytest
 from django.db import DEFAULT_DB_ALIAS, connections
+from django.db.backends.base.creation import BaseDatabaseCreation
+from django.test import override_settings
 
 from tests.migration_snapshots import (
     MaintenanceConnection,
@@ -71,3 +73,31 @@ def test_migration_snapshots__template_from_another_graph__is_dropped(
     finally:
         snapshots.close()
         maintenance.execute(f'DROP DATABASE IF EXISTS "{current}"')
+
+
+def test_migration_graph_digest__app_without_migrations__is_excluded() -> None:
+    # Given
+    migration_graph_digest.cache_clear()
+    baseline = migration_graph_digest()
+
+    # When
+    migration_graph_digest.cache_clear()
+    with override_settings(MIGRATION_MODULES={"segments": None}):
+        without_segments = migration_graph_digest()
+    migration_graph_digest.cache_clear()
+
+    # Then
+    assert without_segments != baseline
+    assert migration_graph_digest() == baseline
+
+
+def test_deserialize_db_from_string__snapshots_in_use__explains_itself() -> None:
+    # Given
+    creation = connections[DEFAULT_DB_ALIAS].creation
+
+    # When
+    with pytest.raises(NotImplementedError) as exc_info:
+        BaseDatabaseCreation.deserialize_db_from_string(creation, "[]")
+
+    # Then
+    assert "serialized_rollback is unsupported" in str(exc_info.value)
