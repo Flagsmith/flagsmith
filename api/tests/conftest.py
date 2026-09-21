@@ -29,7 +29,6 @@ import uuid
 from unittest.mock import MagicMock
 
 import boto3
-import freezegun
 import openfeature.api as openfeature_api
 import opentelemetry.trace  # noqa: F401 (force-init before pyfakefs can intercept)
 import pytest
@@ -137,8 +136,6 @@ from util.mappers import (
 
 trait_key = "key1"
 trait_value = "value1"
-
-freezegun.configure(extend_ignore_list=["influxdb_client"])
 
 
 # ---------------------------------------------------------------------------

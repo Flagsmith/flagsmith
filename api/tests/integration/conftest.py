@@ -2,6 +2,7 @@ import json
 import uuid
 
 import pytest
+import urllib3
 from django.core.cache import BaseCache
 from django.core.cache.backends.locmem import LocMemCache
 from django.test import Client as DjangoClient
@@ -50,21 +51,35 @@ def influxdb(settings: SettingsWrapper) -> InfluxDBClient:
 
     InfluxDBWrapper.get_client.cache_clear()
 
+    # Set the buckets up over plain HTTP rather than through the client's own
+    # API. Every test using this fixture freezes the clock, and the client
+    # deserialises a bucket's `createdAt` by comparing its type to
+    # `datetime.datetime` -- which freezegun has replaced, so the comparison
+    # can fail and it then reads the timestamp as a model.
+    #
     # Matches api.app_analytics.influxdb_wrapper bucket definitions
-    client = InfluxDBWrapper.get_client()
-    bucket_api = client.buckets_api()
-    bucket_names = [
-        "api_usage_downsampled_15m",
-        "api_usage_downsampled_1h",
-    ]
-    for bucket_name in bucket_names:
-        if not bucket_api.find_bucket_by_name(bucket_name):  # type: ignore[no-untyped-call]
-            bucket_api.create_bucket(
-                org="flagsmith",
-                bucket_name=bucket_name,
+    # urllib3 rather than requests, which `responses` intercepts in these
+    # tests -- as it would any HTTP the fixture itself needs to make.
+    http = urllib3.PoolManager()
+    url = f"{settings.INFLUXDB_URL}/api/v2/buckets"
+    headers = {
+        "Authorization": f"Token {settings.INFLUXDB_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    buckets = json.loads(http.request("GET", url, headers=headers).data)["buckets"]
+    organisation_id = buckets[0]["orgID"]
+    existing = {bucket["name"] for bucket in buckets}
+    for bucket_name in ("api_usage_downsampled_15m", "api_usage_downsampled_1h"):
+        if bucket_name not in existing:
+            response = http.request(
+                "POST",
+                url,
+                headers=headers,
+                json={"name": bucket_name, "orgID": organisation_id},
             )
+            assert response.status < 300, response.data
 
-    return client
+    return InfluxDBWrapper.get_client()
 
 
 @pytest.fixture()
