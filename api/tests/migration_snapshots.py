@@ -418,7 +418,6 @@ def template_backed_test_databases() -> typing.Iterator[None]:
         string above fails inside a deserialiser, with nothing to connect the
         error to the reason for it.
         """
-        del data
         raise NotImplementedError(
             "serialized_rollback is unsupported: the test databases are cloned "
             "from templates and never serialised. See tests/migration_snapshots.py."
