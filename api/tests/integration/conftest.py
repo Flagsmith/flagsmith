@@ -48,6 +48,11 @@ def influxdb(settings: SettingsWrapper) -> InfluxDBClient:
     settings.INFLUXDB_ORG = "flagsmith"
     settings.INFLUXDB_TOKEN = "admin-token"
 
+    # `get_client` is cached, and builds the client from the settings above --
+    # so a test that reached it first, when `INFLUXDB_URL` was still empty,
+    # would otherwise leave this worker with a hostless client.
+    InfluxDBWrapper.get_client.cache_clear()
+
     # Matches api.app_analytics.influxdb_wrapper bucket definitions
     client = InfluxDBWrapper.get_client()
     bucket_api = client.buckets_api()

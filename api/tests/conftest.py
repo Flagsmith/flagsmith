@@ -1378,13 +1378,6 @@ def clickhouse_db(
     Postgres-backed `db` fixture -- we can't rely on Django wrapping the test
     in a transaction. We truncate every table on teardown instead to isolate
     tests from one another.
-
-    Django wraps a test in transactions only when *every* database it declares
-    supports them, so declaring ClickHouse would otherwise drop PostgreSQL to
-    `TransactionTestCase` too -- a flush and a `post_migrate` rebuild of every
-    permission, per test. `fake_transaction` makes the backend claim support
-    so PostgreSQL keeps rolling back; ClickHouse still isn't transactional,
-    which is what the truncate below is for.
     """
     if "clickhouse" not in settings.DATABASES:  # pragma: no cover
         pytest.skip("No ClickHouse database configured, skipping")
