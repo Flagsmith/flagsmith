@@ -11,6 +11,7 @@ from pytest_mock import MockerFixture
 from environments.models import Environment
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
+    BillingPeriod,
     Organisation,
     OrganisationAPIUsageNotification,
     OrganisationSubscriptionInformationCache,
@@ -1015,7 +1016,7 @@ def test_organisation_openfeature_evaluation_context__targeting_key_set__uses_it
         ),
     ],
 )
-def test_current_billing_period__within_term__returns_monthly_window(
+def test_get_current_billing_period__within_term__returns_monthly_window(
     organisation: Organisation,
     term_starts_at: str,
     term_ends_at: str,
@@ -1030,19 +1031,19 @@ def test_current_billing_period__within_term__returns_monthly_window(
     )
 
     # When
-    period = cache.current_billing_period()
+    period = cache.get_current_billing_period()
 
     # Then
-    assert period == (
-        datetime.fromisoformat(expected_starts_at),
-        datetime.fromisoformat(expected_ends_at),
+    assert period == BillingPeriod(
+        start=datetime.fromisoformat(expected_starts_at),
+        end=datetime.fromisoformat(expected_ends_at),
     )
 
 
 # February clamps a 31st term start to the 28th. Counting the end from that
 # clamped date rather than the term start would close the window on 28 March.
 @pytest.mark.freeze_time("2026-03-01T00:00:00+00:00")
-def test_current_billing_period__term_starts_on_the_31st__ends_on_the_anniversary(
+def test_get_current_billing_period__term_starts_on_the_31st__ends_on_the_anniversary(
     organisation: Organisation,
 ) -> None:
     # Given
@@ -1057,12 +1058,12 @@ def test_current_billing_period__term_starts_on_the_31st__ends_on_the_anniversar
     )
 
     # When
-    period = cache.current_billing_period()
+    period = cache.get_current_billing_period()
 
     # Then
-    assert period == (
-        datetime.fromisoformat("2026-02-28T00:00:00+00:00"),
-        datetime.fromisoformat("2026-03-31T00:00:00+00:00"),
+    assert period == BillingPeriod(
+        start=datetime.fromisoformat("2026-02-28T00:00:00+00:00"),
+        end=datetime.fromisoformat("2026-03-31T00:00:00+00:00"),
     )
 
 
@@ -1077,14 +1078,14 @@ def test_current_billing_period__term_starts_on_the_31st__ends_on_the_anniversar
         (None, "2026-10-01T00:00:00+00:00"),
         # Term ended, cache not caught up.
         ("2026-07-01T00:00:00+00:00", "2026-08-01T00:00:00+00:00"),
-        # The term's final instant. has_active_billing_periods admits it, but
-        # a window opened here would run past the end of the term.
+        # The term's final instant. A window opened here would run past the
+        # end of the term.
         ("2026-08-10T12:00:00+00:00", "2026-09-10T12:00:00+00:00"),
         # Term not started.
         ("2026-10-01T00:00:00+00:00", "2026-11-01T00:00:00+00:00"),
     ],
 )
-def test_current_billing_period__no_active_term__returns_none(
+def test_get_current_billing_period__no_active_term__returns_none(
     organisation: Organisation,
     term_starts_at: str | None,
     term_ends_at: str | None,
@@ -1101,11 +1102,11 @@ def test_current_billing_period__no_active_term__returns_none(
     )
 
     # When / Then
-    assert cache.current_billing_period() is None
+    assert cache.get_current_billing_period() is None
 
 
 @pytest.mark.freeze_time("2026-09-10T12:00:00+00:00")
-def test_subscription_current_billing_period__with_cache__reads_through(
+def test_subscription_get_current_billing_period__with_cache__reads_through(
     organisation: Organisation,
 ) -> None:
     # Given
@@ -1120,17 +1121,17 @@ def test_subscription_current_billing_period__with_cache__reads_through(
     )
 
     # When / Then
-    assert organisation.subscription.current_billing_period == (
-        datetime.fromisoformat("2026-09-01T00:00:00+00:00"),
-        datetime.fromisoformat("2026-10-01T00:00:00+00:00"),
+    assert organisation.subscription.get_current_billing_period() == BillingPeriod(
+        start=datetime.fromisoformat("2026-09-01T00:00:00+00:00"),
+        end=datetime.fromisoformat("2026-10-01T00:00:00+00:00"),
     )
 
 
-def test_subscription_current_billing_period__no_cache__returns_none(
+def test_subscription_get_current_billing_period__no_cache__returns_none(
     organisation: Organisation,
 ) -> None:
     # Given
     assert not organisation.has_subscription_information_cache()
 
     # When / Then
-    assert organisation.subscription.current_billing_period is None
+    assert organisation.subscription.get_current_billing_period() is None

@@ -46,11 +46,10 @@ class SubscriptionSerializer(serializers.ModelSerializer):  # type: ignore[type-
     def get_current_billing_period(
         self, obj: Subscription
     ) -> dict[str, typing.Any] | None:
-        if (period := obj.current_billing_period) is None:
+        if (period := obj.get_current_billing_period()) is None:
             return None
-        starts_at, ends_at = period
         return CurrentBillingPeriodSerializer(
-            {"ends_at": ends_at, "starts_at": starts_at}
+            {"starts_at": period.start, "ends_at": period.end}
         ).data
 
 
