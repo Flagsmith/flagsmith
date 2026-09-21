@@ -1,12 +1,3 @@
-"""Building an `EvaluationContext` for an identity, and evaluating it.
-
-Core API's contribution to flag evaluation is this module: resolve the rows
-that are current for an environment, hand them to flag-engine, and let it
-decide which override wins and which multivariate variant an identity lands in.
-"""
-
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, NamedTuple
 
 from django.db.models import Prefetch, Q
@@ -21,7 +12,7 @@ from util.mappers.engine import (
     map_environment_to_evaluation_context,
 )
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
     from environments.models import Environment
@@ -37,10 +28,6 @@ __all__ = (
 
 class IdentityEvaluationContext(NamedTuple):
     context: EvaluationContext
-    #: The rows the context was built from, by id. `FlagResult` and
-    #: `SegmentContext.overrides` carry `metadata.feature_state_id`, so callers
-    #: that still need a Django row can reach one without re-deriving which
-    #: override won.
     feature_states_by_id: dict[int, FeatureState]
 
 
@@ -83,17 +70,18 @@ def build_identity_evaluation_context(
     environment: "Environment" = identity.environment
     segments: list["Segment"] = environment.get_segments_from_cache()
 
-    # Identity overrides belong to this identity alone; a transient identity
-    # has none, having never been persisted.
-    identity_query = Q(identity=identity) if identity.id else Q(identity__isnull=True)
-    full_query = Q(identity__isnull=True) | identity_query
+    override_filters = Q(identity__isnull=True)
+    if identity.pk:
+        # The identity is persisted (non-transient),
+        # Look for its identity overrides in addition to segment overrides.
+        override_filters = Q(identity=identity) | override_filters
     if additional_filters:
-        full_query &= additional_filters
+        override_filters &= additional_filters
 
     feature_states = get_environment_flags_list(
         environment=environment,
         feature_name=feature_name,
-        additional_filters=full_query,
+        additional_filters=override_filters,
         additional_select_related_args=["feature_segment__segment"],
         additional_prefetch_related_args=[
             Prefetch(
