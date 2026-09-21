@@ -4,16 +4,16 @@ import pytest
 from django.db import DEFAULT_DB_ALIAS, connections
 
 from tests.migration_snapshots import (
+    MaintenanceConnection,
     MigrationSnapshots,
-    _MaintenanceConnection,
     migration_graph_digest,
 )
 
 
 @pytest.fixture()
-def maintenance(db: None) -> typing.Generator[_MaintenanceConnection, None, None]:
+def maintenance(db: None) -> typing.Generator[MaintenanceConnection, None, None]:
     """A connection that can create and drop databases, as the cache uses."""
-    connection = _MaintenanceConnection(DEFAULT_DB_ALIAS)
+    connection = MaintenanceConnection(DEFAULT_DB_ALIAS)
     yield connection
     connection.close()
 
@@ -38,7 +38,7 @@ def template_name_for_graph(
 
 def test_migration_snapshots__template_from_another_graph__is_dropped(
     db: None,
-    maintenance: _MaintenanceConnection,
+    maintenance: MaintenanceConnection,
     template_name_for_graph: typing.Callable[[str], str],
 ) -> None:
     """Templates only stay useful while their migrations do.

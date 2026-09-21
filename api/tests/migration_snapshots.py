@@ -10,6 +10,7 @@ from django.apps.config import AppConfig
 from django.conf import settings as django_settings
 from django.core.management.color import no_style
 from django.db import DEFAULT_DB_ALIAS, connections
+from django.db.backends.base.base import NO_DB_ALIAS
 from django.db.backends.base.creation import BaseDatabaseCreation
 from django.db.migrations.loader import MigrationLoader
 from django.db.migrations.state import ProjectState
@@ -36,6 +37,35 @@ class SnapshotsUnavailable(Exception):
     """Raised when the database cannot back migration state snapshots."""
 
 
+class MaintenanceConnection:
+    """A connection to the maintenance database, for `CREATE`/`DROP DATABASE`.
+
+    Implemented as a session-long equivalent of Django's `_nodb_cursor`.
+    """
+
+    def __init__(self, alias: str) -> None:
+        base = connections[alias]
+        self._connection = base.__class__(
+            {**base.settings_dict, "NAME": None}, alias=NO_DB_ALIAS
+        )
+
+    def execute(self, statement: str, params: typing.Sequence[typing.Any] = ()) -> None:
+        with self._connection.cursor() as cursor:
+            cursor.execute(statement, params)
+
+    def fetch(
+        self,
+        statement: str,
+        params: typing.Sequence[typing.Any] = (),
+    ) -> list[tuple[typing.Any, ...]]:
+        with self._connection.cursor() as cursor:
+            cursor.execute(statement, params)
+            return list(cursor.fetchall())
+
+    def close(self) -> None:
+        self._connection.close()
+
+
 @functools.cache
 def migration_graph_digest() -> str:
     """Digest the migration files, avoiding `MigrationLoader`'s costly module imports."""
@@ -51,79 +81,6 @@ def migration_graph_digest() -> str:
     return digest.hexdigest()[:_DIGEST_LENGTH]
 
 
-def _iter_migration_paths(app_config: AppConfig) -> typing.Iterable[pathlib.Path]:
-    module_name, _ = MigrationLoader.migrations_module(app_config.label)
-    if module_name is None:
-        return
-    if spec := importlib.util.find_spec(module_name):
-        if search_locations := spec.submodule_search_locations:
-            for location in search_locations:
-                for path in pathlib.Path(location).glob("*.py"):
-                    yield path
-
-
-class _MaintenanceConnection:
-    """A connection to the maintenance database, for `CREATE`/`DROP DATABASE`.
-
-    Neither statement may run inside a transaction block or touch the database
-    the issuing session is connected to, so they need a connection outside
-    Django's pool.
-    """
-
-    def __init__(self, alias: str) -> None:
-        self._alias = alias
-        self._connection: typing.Any = None
-
-    def _connect(self) -> typing.Any:
-        if self._connection is None or self._connection.closed:
-            connection = connections[self._alias]
-            params = connection.get_connection_params()
-            params["dbname"] = "postgres"
-            params.pop("cursor_factory", None)
-            # `Database` is the DB-API module the backend was built against,
-            # which is how Django itself opens connections outside its pool.
-            driver = connection.Database  # type: ignore[attr-defined]
-            self._connection = driver.connect(**params)
-            self._connection.set_session(autocommit=True)
-        return self._connection
-
-    def execute(self, statement: str, params: typing.Sequence[typing.Any] = ()) -> None:
-        with self._connect().cursor() as cursor:
-            cursor.execute(statement, params)
-
-    def fetch(
-        self,
-        statement: str,
-        params: typing.Sequence[typing.Any] = (),
-    ) -> list[tuple[typing.Any, ...]]:
-        with self._connect().cursor() as cursor:
-            cursor.execute(statement, params)
-            return list(cursor.fetchall())
-
-    def close(self) -> None:
-        if self._connection is not None and not self._connection.closed:
-            self._connection.close()
-        self._connection = None
-
-
-@contextlib.contextmanager
-def _advisory_lock(
-    maintenance: _MaintenanceConnection,
-    namespace: str,
-    *,
-    shared: bool,
-) -> typing.Iterator[None]:
-    """Hold a PostgreSQL advisory lock naming `namespace`."""
-    mode = "_shared" if shared else ""
-    maintenance.execute(f"SELECT pg_advisory_lock{mode}(hashtext(%s))", (namespace,))
-    try:
-        yield
-    finally:
-        maintenance.execute(
-            f"SELECT pg_advisory_unlock{mode}(hashtext(%s))", (namespace,)
-        )
-
-
 class MigrationSnapshots:
     """Template databases holding migration states for one database alias."""
 
@@ -134,7 +91,7 @@ class MigrationSnapshots:
                 f"Migration state snapshots need PostgreSQL, got {connection.vendor!r}"
             )
         self._alias = alias
-        self._maintenance = _MaintenanceConnection(alias)
+        self._maintenance = MaintenanceConnection(alias)
         self._database_name = database_name or connection.settings_dict["NAME"]
         self._namespace = self._build_namespace()
         self._cached: set[str] = set()
@@ -142,8 +99,7 @@ class MigrationSnapshots:
 
     @property
     def _base_name(self) -> str:
-        # Drop any xdist worker suffix: every worker migrates the
-        # same graph, so they should share the templates they build.
+        # Drop any xdist worker suffix: every worker migrates the same graph
         return self._database_name.split("_gw")[0]
 
     def _build_namespace(self) -> str:
@@ -155,9 +111,7 @@ class MigrationSnapshots:
     def _discover(self) -> None:
         """Load the usable templates, dropping any left by an older graph.
 
-        Scoped to this database's own templates: aliases can share a server --
-        `default` and `analytics` do, on the dev stack's test server -- and one
-        alias must not mistake another's templates for its own leftovers.
+        Scoped to this database's own templates.
         """
         rows = self._maintenance.fetch(
             "SELECT datname FROM pg_database WHERE datname LIKE %s",
@@ -167,8 +121,7 @@ class MigrationSnapshots:
             if name.startswith(f"{self._namespace}_"):
                 self._cached.add(name)
             else:
-                # Built from a migration graph that no longer exists. Leaving
-                # it would cost disk for every branch a working copy visits.
+                # Built from a migration graph that no longer exists; drop it.
                 self._drop(name)
 
     def _drop(self, name: str) -> None:
@@ -251,7 +204,7 @@ class ClickHouseSnapshots:
         # ClickHouse has no advisory locks, so borrow PostgreSQL's. A mutex
         # does not care which server it lives on, and every run that reaches
         # here has the default database configured anyway.
-        self._maintenance = _MaintenanceConnection(DEFAULT_DB_ALIAS)
+        self._maintenance = MaintenanceConnection(DEFAULT_DB_ALIAS)
 
     def exclusive(self) -> typing.ContextManager[None]:
         """Hold this template's lock for writing. See `MigrationSnapshots`."""
@@ -457,3 +410,32 @@ def template_backed_test_databases() -> typing.Iterator[None]:
     finally:
         BaseDatabaseCreation.create_test_db = original  # type: ignore[method-assign]
         BaseDatabaseCreation.serialize_db_to_string = original_serialize  # type: ignore[method-assign]
+
+
+def _iter_migration_paths(app_config: AppConfig) -> typing.Iterable[pathlib.Path]:
+    module_name, _ = MigrationLoader.migrations_module(app_config.label)
+    if module_name is None:
+        return
+    if spec := importlib.util.find_spec(module_name):
+        if search_locations := spec.submodule_search_locations:
+            for location in search_locations:
+                for path in pathlib.Path(location).glob("*.py"):
+                    yield path
+
+
+@contextlib.contextmanager
+def _advisory_lock(
+    maintenance: MaintenanceConnection,
+    namespace: str,
+    *,
+    shared: bool,
+) -> typing.Iterator[None]:
+    """Hold a PostgreSQL advisory lock naming `namespace`."""
+    mode = "_shared" if shared else ""
+    maintenance.execute(f"SELECT pg_advisory_lock{mode}(hashtext(%s))", (namespace,))
+    try:
+        yield
+    finally:
+        maintenance.execute(
+            f"SELECT pg_advisory_unlock{mode}(hashtext(%s))", (namespace,)
+        )
