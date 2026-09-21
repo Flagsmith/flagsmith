@@ -73,15 +73,19 @@ def migration_graph_digest() -> str:
     it is an order of magnitude quicker, needs no database, and -- unlike
     mtimes -- gives the same answer on a fresh clone as on a working copy, so
     CI and a laptop agree on which templates they can share.
+
+    Each file is hashed under its app label, because that is what identifies a
+    migration to Django: the same file name under a different app is a
+    different node in the graph.
     """
     digest = hashlib.sha256()
     paths = sorted(
-        path
+        (app_config.label, path)
         for app_config in apps.get_app_configs()
         for path in pathlib.Path(app_config.path).glob("migrations/*.py")
     )
-    for path in paths:
-        digest.update(path.name.encode())
+    for label, path in paths:
+        digest.update(f"{label}/{path.name}".encode())
         digest.update(path.read_bytes())
     return digest.hexdigest()[:_DIGEST_LENGTH]
 
