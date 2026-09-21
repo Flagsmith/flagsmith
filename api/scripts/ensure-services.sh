@@ -14,6 +14,8 @@ endpoints=$(
     endpoint_of "${TEST_DATABASE_URL:-${DATABASE_URL:-}}"
     endpoint_of "${TEST_ANALYTICS_DATABASE_URL:-${ANALYTICS_DATABASE_URL:-}}"
     printf '%s %s\n' "${CLICKHOUSE_HOST:-localhost}" "${CLICKHOUSE_PORT:-9000}"
+    # The influxdb fixture reaches this directly, rather than via a setting.
+    printf '%s %s\n' localhost 8086
   } | sort -u
 )
 
@@ -32,7 +34,12 @@ containers=$(
 ) || compose_fallback
 
 while read -r host port; do
-  container=$(grep ":${port}->" <<<"${containers}" || true)
+  # Ports are only published locally, so a remote endpoint that happens to
+  # share one with a local container is not that container.
+  case ${host} in
+  localhost | 127.0.0.1 | ::1) container=$(grep ":${port}->" <<<"${containers}" || true) ;;
+  *) container="" ;;
+  esac
 
   if [[ -z ${container} ]]; then
     reachable "${host}" "${port}" || compose_fallback

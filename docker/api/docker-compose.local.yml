@@ -101,6 +101,11 @@ services:
       DOCKER_INFLUXDB_INIT_ORG: flagsmith
       DOCKER_INFLUXDB_INIT_BUCKET: unused
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: admin-token
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
 
   clickhouse:
     # Match the version Flagsmith runs on ClickHouse Cloud.

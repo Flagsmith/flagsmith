@@ -1383,10 +1383,12 @@ def clickhouse_db(
         pytest.skip("No ClickHouse database configured, skipping")
     connection = connections["clickhouse"]
     connection.fake_transaction = True  # type: ignore[attr-defined]
-    request.applymarker(pytest.mark.django_db(databases=["default", "clickhouse"]))
-    request.getfixturevalue("db")  # Resolve `db` only after injecting the clickhouse db
-    yield
-    connection.fake_transaction = False  # type: ignore[attr-defined]
+    try:
+        request.applymarker(pytest.mark.django_db(databases=["default", "clickhouse"]))
+        request.getfixturevalue("db")
+        yield
+    finally:
+        connection.fake_transaction = False  # type: ignore[attr-defined]
     with connection.cursor() as cursor:
         for table_name in connection.introspection.table_names(cursor):
             cursor.execute(f"TRUNCATE TABLE {connection.ops.quote_name(table_name)}")
