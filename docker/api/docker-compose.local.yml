@@ -45,21 +45,6 @@ services:
       timeout: 3s
       retries: 15
 
-  # The test suite's own database, deliberately kept apart from `db` above.
-  #
-  # Nothing in here outlives a run: the suite clones a fresh database per xdist
-  # worker from a template it builds on demand, and drops them at the end. That
-  # makes durability pure overhead, and it makes a Docker volume -- whose I/O
-  # is virtualised, and slow, on macOS -- the suite's bottleneck. Holding it in
-  # RAM instead roughly halves the suite's wall time and, more importantly,
-  # stops the runtime depending on how busy the host's disk happens to be.
-  #
-  # Losing the lot on restart costs nothing. The template cache is keyed on a
-  # digest of the migrations, so an empty server simply rebuilds it.
-  #
-  # Both test databases live here: `default` and `analytics` are separate
-  # servers in production, and in `db`/`analytics-db` above, but tests only
-  # need them to be separate databases.
   test-db:
     image: postgres:15.5-alpine
     pull_policy: always
@@ -106,9 +91,9 @@ services:
   influxdb:
     image: influxdb:2-alpine
     volumes:
-       - influxdb_data:/var/lib/influxdb2
+      - influxdb_data:/var/lib/influxdb2
     ports:
-       - 8086:8086
+      - 8086:8086
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: user

@@ -45,10 +45,6 @@ docker-up:
 	docker compose up --force-recreate --remove-orphans -d
 	docker compose ps
 
-# `docker-up` recreates every container, which costs several seconds and drops
-# open connections. Targets that only need the services to be healthy use this
-# instead: it is near-free once the stack is up, and falls back to Compose's
-# `--wait`, which blocks on the healthchecks, when anything is not.
 .PHONY: docker-ready
 docker-ready:
 	@bash scripts/ensure-services.sh
@@ -74,18 +70,14 @@ wait-for-db:
 	uv run python manage.py waitfordb
 	uv run python manage.py waitfordb --database analytics
 
-# Every xdist worker pays for a Python start, a Django setup and a test
-# database clone, so fanning out only earns its keep on a large run. A bare
-# `make test` runs the whole suite and gets the fan-out; `make test opts=...`
-# is a focused run and stays in-process. Put `-n auto` in `opts` to override.
+# Disable auto xdist for tests invoked via `make test opts=...`
+# Put `-n auto` in `opts` to override.
 PYTEST_PARALLELISM = $(if $(strip $(opts)),,-n auto)
 
 .PHONY: test
 test: docker-ready
 	uv run pytest $(PYTEST_PARALLELISM) $(opts)
 
-# Coverage roughly doubles the suite's runtime, so it is opt-in rather than
-# part of every `make test`. CI and anyone checking a diff's coverage use this.
 .PHONY: test-coverage
 test-coverage: docker-ready
 	uv run pytest --cov . --cov-report $(or $(format),html) $(PYTEST_PARALLELISM) $(opts)

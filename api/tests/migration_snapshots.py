@@ -399,25 +399,14 @@ def template_backed_test_databases() -> typing.Iterator[None]:
 
         Django serialises every model in every database while setting the
         databases up, so that `TransactionTestCase(serialized_rollback=True)`
-        can restore them afterwards. Nothing in this suite asks for that, so
-        it is pure cost -- and on the ClickHouse alias it is worse than that:
-        it builds a `MigrationLoader`, and `django-clickhouse-backend` caches
-        its migration model on `MigrationRecorder` in a way that breaks if a
-        PostgreSQL connection got there first.
+        can restore them afterwards.
 
-        Django calls this while setting up every database, so it cannot
-        refuse; `deserialize_db_from_string` below is the opt-in half, and
-        that one does.
+        No-op instead, sacrificing the ability to use `serialized_rollback=True`
+        (which we'll never need anyway.)
         """
         return ""
 
     def deserialize_db_from_string(self: BaseDatabaseCreation, data: str) -> None:
-        """Refuse to restore a snapshot that was never taken.
-
-        Reached only by `serialized_rollback=True`. Without this, the empty
-        string above fails inside a deserialiser, with nothing to connect the
-        error to the reason for it.
-        """
         raise NotImplementedError(
             "serialized_rollback is unsupported: the test databases are cloned "
             "from templates and never serialised. See tests/migration_snapshots.py."
