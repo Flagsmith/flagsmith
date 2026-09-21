@@ -82,7 +82,19 @@ def migration_graph_digest() -> str:
 
 
 class MigrationSnapshots:
-    """Template databases holding migration states for one database alias."""
+    """Template databases holding migration states for one database alias.
+
+    Replaying migrations is slow; copying a database is not. So each state we
+    reach is saved as a template, and asked-for states are cloned from one.
+
+    A state is keyed by how many migrations it has applied, which makes the
+    templates nest: to reach state N, clone the deepest template below it and
+    replay only what is missing.
+
+    Template names carry a digest of the migration files, so editing a
+    migration -- or switching branch -- builds new templates instead of
+    handing anyone a stale schema. Templates from old digests are dropped.
+    """
 
     def __init__(self, alias: str, database_name: str | None = None) -> None:
         connection = connections[alias]
@@ -131,9 +143,7 @@ class MigrationSnapshots:
             self._maintenance.execute(f'DROP DATABASE IF EXISTS "{name}"')
 
     def _copy(self, source: str, target: str) -> None:
-        # PostgreSQL refuses to copy or drop a database that has sessions
-        # attached, and a worker's own connections are not always the only
-        # ones: a crashed run can leave backends behind.
+        # PostgreSQL refuses to copy or drop a database that has sessions attached; kill them.
         self._maintenance.execute(
             "SELECT pg_terminate_backend(pid) FROM pg_stat_activity "
             "WHERE datname IN (%s, %s) AND pid <> pg_backend_pid()",
@@ -146,11 +156,7 @@ class MigrationSnapshots:
         return _advisory_lock(self._maintenance, self._namespace, shared=shared)
 
     def exclusive(self) -> typing.ContextManager[None]:
-        """Hold this namespace's lock for writing, to build a template.
-
-        Without it, every xdist worker would migrate from scratch on a cold
-        cache instead of waiting a moment for the first one to finish.
-        """
+        """Hold this namespace's lock for writing."""
         return self._advisory_lock(shared=False)
 
     def refresh(self) -> None:
@@ -190,10 +196,10 @@ class MigrationSnapshots:
 
 
 class ClickHouseSnapshots:
-    """`CREATE DATABASE ... TEMPLATE` for ClickHouse."""
+    """Template databases holding migration states for one database alias.
 
-    # The one table whose *rows* matter: it is what stops Django replaying the
-    # migration history against the clone.
+    Clickhouse-specific implementation relying on `CREATE TABLE ... AS ...`."""
+
     _MIGRATIONS_TABLE = "django_migrations"
 
     def __init__(self, alias: str, database_name: str | None = None) -> None:
@@ -201,9 +207,7 @@ class ClickHouseSnapshots:
         self._database_name = database_name or connections[alias].settings_dict["NAME"]
         base = self._database_name.split("_gw")[0]
         self._template = f"{base}_{_TEMPLATE_INFIX}_{migration_graph_digest()}"
-        # ClickHouse has no advisory locks, so borrow PostgreSQL's. A mutex
-        # does not care which server it lives on, and every run that reaches
-        # here has the default database configured anyway.
+        # ClickHouse has no advisory locks, so borrow PostgreSQL's.
         self._maintenance = MaintenanceConnection(DEFAULT_DB_ALIAS)
 
     def exclusive(self) -> typing.ContextManager[None]:
@@ -244,6 +248,7 @@ class ClickHouseSnapshots:
                     f"CREATE TABLE {self._quote(target)}.{self._quote(table)} "
                     f"AS {self._quote(source)}.{self._quote(table)}"
                 )
+            # Make sure the database is seen as migrated.
             migrations = self._quote(self._MIGRATIONS_TABLE)
             cursor.execute(
                 f"INSERT INTO {self._quote(target)}.{migrations} "
@@ -390,7 +395,7 @@ def template_backed_test_databases() -> typing.Iterator[None]:
             snapshots.close()
 
     def serialize_db_to_string(self: BaseDatabaseCreation) -> str:
-        """Skip the setup-time snapshot Django takes for `serialized_rollback`.
+        """Refuse the setup-time snapshot Django takes for `serialized_rollback`.
 
         Django serialises every model in every database while setting the
         databases up, so that `TransactionTestCase(serialized_rollback=True)`
@@ -399,17 +404,37 @@ def template_backed_test_databases() -> typing.Iterator[None]:
         it builds a `MigrationLoader`, and `django-clickhouse-backend` caches
         its migration model on `MigrationRecorder` in a way that breaks if a
         PostgreSQL connection got there first.
+
+        Django calls this while setting up every database, so it cannot
+        refuse; `deserialize_db_from_string` below is the opt-in half, and
+        that one does.
         """
         return ""
 
+    def deserialize_db_from_string(self: BaseDatabaseCreation, data: str) -> None:
+        """Refuse to restore a snapshot that was never taken.
+
+        Reached only by `serialized_rollback=True`. Without this, the empty
+        string above fails inside a deserialiser, with nothing to connect the
+        error to the reason for it.
+        """
+        del data
+        raise NotImplementedError(
+            "serialized_rollback is unsupported: the test databases are cloned "
+            "from templates and never serialised. See tests/migration_snapshots.py."
+        )
+
     original_serialize = BaseDatabaseCreation.serialize_db_to_string
+    original_deserialize = BaseDatabaseCreation.deserialize_db_from_string
     BaseDatabaseCreation.create_test_db = create_test_db  # type: ignore[method-assign]
     BaseDatabaseCreation.serialize_db_to_string = serialize_db_to_string  # type: ignore[method-assign]
+    BaseDatabaseCreation.deserialize_db_from_string = deserialize_db_from_string  # type: ignore[method-assign]
     try:
         yield
     finally:
         BaseDatabaseCreation.create_test_db = original  # type: ignore[method-assign]
         BaseDatabaseCreation.serialize_db_to_string = original_serialize  # type: ignore[method-assign]
+        BaseDatabaseCreation.deserialize_db_from_string = original_deserialize  # type: ignore[method-assign]
 
 
 def _iter_migration_paths(app_config: AppConfig) -> typing.Iterable[pathlib.Path]:
