@@ -2,7 +2,6 @@ import uuid
 from importlib import import_module
 
 import pytest
-from django.conf import settings as test_settings
 from django.utils import timezone
 from django_test_migrations.migrator import Migrator
 from flag_engine.segments import constants
@@ -11,10 +10,6 @@ from pytest_django.fixtures import SettingsWrapper
 migration_0032 = import_module("segments.migrations.0032_add_segment_rules_data")
 
 
-@pytest.mark.skipif(
-    test_settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
 def test_create_whitelisted_segments_migration__segment_exceeds_limit__adds_to_whitelist(
     migrator: Migrator,
     settings: SettingsWrapper,
@@ -110,10 +105,6 @@ def test_create_whitelisted_segments_migration__segment_exceeds_limit__adds_to_w
     assert getattr(new_segment_2, "whitelisted_segment", None) is None
 
 
-@pytest.mark.skipif(
-    test_settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
 def test_add_versioning_to_segments__forwards__sets_version_of_to_self(
     migrator: Migrator,
 ) -> None:
@@ -164,10 +155,6 @@ def test_add_versioning_to_segments__forwards__sets_version_of_to_self(
     assert new_segment.version_of == new_segment
 
 
-@pytest.mark.skipif(
-    test_settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
 def test_add_versioning_to_segments__reverse__deletes_historical_versions(
     migrator: Migrator,
 ) -> None:
@@ -249,10 +236,6 @@ def test_add_versioning_to_segments__reverse__deletes_historical_versions(
     assert new_segment_v3.deleted_at is None
 
 
-@pytest.mark.skipif(
-    test_settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
 def test_0032_add_segment_rules_data__forwards__backfill_segment_rules_data(
     migrator: Migrator,
     monkeypatch: pytest.MonkeyPatch,
@@ -416,10 +399,6 @@ def test_0032_add_segment_rules_data__forwards__backfill_segment_rules_data(
         ]
 
 
-@pytest.mark.skipif(
-    test_settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
 def test_0032_add_segment_rules_data__backwards__nullify_segment_rules_data(
     migrator: Migrator,
 ) -> None:

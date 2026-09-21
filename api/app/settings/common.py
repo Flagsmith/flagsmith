@@ -1293,8 +1293,6 @@ ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
 # hubspot without a Flagsmith organisation.
 CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES = 30
 
-SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
-
 # prevent django-softdelete from performing whole table deletes!
 SOFTDELETE_CASCADE_ALLOW_DELETE_ALL = False
 

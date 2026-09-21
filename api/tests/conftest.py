@@ -40,7 +40,6 @@ from common.environments.permissions import (
     VIEW_IDENTITIES,
 )
 from common.projects.permissions import CREATE_ENVIRONMENT, DELETE_FEATURE, VIEW_PROJECT
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db import DEFAULT_DB_ALIAS, connections
@@ -1589,13 +1588,7 @@ def migration_snapshots(
     django_db_setup: None,
     django_db_blocker: DjangoDbBlocker,
 ) -> typing.Generator[dict[str, MigrationSnapshots], None, None]:
-    """Cache each database's migration states as template databases.
-
-    Built lazily, on the first migration test a worker runs, from a database
-    that `django_db_setup` has just migrated -- so the `latest` snapshot the
-    `migrator` fixture restores on teardown carries the rows that data
-    migrations create, which the old `migrate`-forward teardown could not.
-    """
+    """Session-wide cache for migration snapshots."""
     snapshots: dict[str, MigrationSnapshots] = {}
     with django_db_blocker.unblock():
         yield snapshots
@@ -1612,10 +1605,9 @@ def migrator_factory(
 ) -> MigratorFactory:
     """Override `django_test_migrations`' fixture of the same name.
 
-    Identical in behaviour -- including keeping the name, so the plugin still
-    recognises these tests and marks them `migration_test` -- except that
-    migration states are cloned from template databases rather than replayed
-    migration by migration.
+    Differences from the original fixture:
+    1. Uses the faster `SnapshotMigrator` to execute the migrations.
+    2. Relies on the `migration_snapshots` cache.
     """
     if not django_db_use_migrations:  # pragma: no cover
         pytest.skip("--no-migrations was specified")
@@ -1633,15 +1625,11 @@ def migrator_factory(
 
 @pytest.fixture()
 def migrator(migrator_factory: MigratorFactory) -> Migrator:
-    if settings.SKIP_MIGRATION_TESTS:  # pragma: no cover
-        pytest.skip("Skip migration tests to speed up tests where necessary")
     migrator: Migrator = migrator_factory()
     return migrator
 
 
 @pytest.fixture()
 def analytics_migrator(migrator_factory: MigratorFactory) -> Migrator:
-    if settings.SKIP_MIGRATION_TESTS:  # pragma: no cover
-        pytest.skip("Skip migration tests to speed up tests where necessary")
     migrator: Migrator = migrator_factory("analytics")
     return migrator

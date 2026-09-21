@@ -1,9 +1,7 @@
-import pytest
 from common.projects.permissions import (
     CREATE_ENVIRONMENT,
     VIEW_PROJECT,
 )
-from django.conf import settings as test_settings
 from django_test_migrations.migrator import Migrator
 
 
@@ -100,10 +98,6 @@ def test_merge_duplicate_permissions__duplicates_exist__merges_correctly(
     assert UserProjectPermission.objects.filter(id=non_duplicate_permission.id).exists()
 
 
-@pytest.mark.skipif(
-    test_settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
 def test_bump_default_project_limits__values_below_new_defaults__raised_to_new_defaults(
     migrator: Migrator,
 ) -> None:
