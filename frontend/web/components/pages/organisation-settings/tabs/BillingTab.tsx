@@ -91,7 +91,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
                   </h4>
                 </div>
                 <div>
-                  <p className='fs-small lh-sm mb-0'>Organisation ID</p>
+                  <p className='fs-small lh-sm mb-0'>Organization ID</p>
                   <h4 className='mb-0'>{organisation.id}</h4>
                 </div>
               </Row>

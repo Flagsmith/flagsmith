@@ -61,7 +61,7 @@ const OrganisationSettingsPage: FC = () => {
   if (isLoading) {
     return (
       <div className='app-container container'>
-        <PageTitle title='Organisation Settings' />
+        <PageTitle title='Organization Settings' />
         <div className='text-center'>
           <Loader />
         </div>
@@ -72,9 +72,9 @@ const OrganisationSettingsPage: FC = () => {
   if (error || !organisation) {
     return (
       <div className='app-container container'>
-        <PageTitle title='Organisation Settings' />
+        <PageTitle title='Organization Settings' />
         <div className='alert alert-danger mt-4 text-center'>
-          Failed to load organisation settings. Please try again.
+          Failed to load organization settings. Please try again.
         </div>
       </div>
     )
@@ -86,7 +86,7 @@ const OrganisationSettingsPage: FC = () => {
   if (!isAdmin) {
     return (
       <div className='app-container container'>
-        <PageTitle title='Organisation Settings' />
+        <PageTitle title='Organization Settings' />
         <div className='py-2'>You do not have permission to view this page</div>
       </div>
     )
@@ -139,7 +139,7 @@ const OrganisationSettingsPage: FC = () => {
 
   return (
     <div className='app-container container'>
-      <PageTitle title='Organisation Settings' />
+      <PageTitle title='Organization Settings' />
       <Tabs urlParam='tab' className='mt-0' uncontrolled hideNavOnSingleTab>
         {tabs.map(({ component, key, label }) => (
           <TabItem

@@ -51,7 +51,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
               AccountStore.getOrganisation().id
             }/integrations`}
           >
-            Organisation Integrations
+            Organization Integrations
           </NavSubLink>
         )}
       {AccountStore.isAdmin() && (
@@ -61,7 +61,7 @@ const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
           data-test='org-settings-link'
           to={`/organisation/${AccountStore.getOrganisation().id}/settings`}
         >
-          Organisation Settings
+          Organization Settings
         </NavSubLink>
       )}
     </OverflowNav>
