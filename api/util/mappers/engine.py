@@ -504,7 +504,7 @@ def map_environment_to_evaluation_context(
 
     All arguments are expected to be resolved already: this function does not
     read from the ORM beyond traversing prefetched relations. See
-    `environments.identities.evaluation` for the query side.
+    `environments.identities.mappers` for the query side.
 
     :param features: environment default feature states, keyed into
         `$.features` by feature name. Required for the engine to produce flags

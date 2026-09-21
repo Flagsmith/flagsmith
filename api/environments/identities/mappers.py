@@ -1,16 +1,12 @@
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING
 
 from django.db.models import Prefetch, Q
-from flag_engine.engine import get_evaluation_result
 
+from environments.identities.types import IdentityEvaluationContext
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.versioning_service import get_environment_flags_list
-from util.mappers.engine import (
-    EvaluationContext,
-    EvaluationResult,
-    map_environment_to_evaluation_context,
-)
+from util.mappers.engine import map_environment_to_evaluation_context
 
 if TYPE_CHECKING:
     from environments.identities.models import Identity
@@ -19,60 +15,23 @@ if TYPE_CHECKING:
     from segments.models import Segment
 
 
-__all__ = (
-    "IdentityEvaluation",
-    "build_identity_evaluation_context",
-    "evaluate_identity",
-)
+__all__ = ("map_identity_to_evaluation_context",)
 
 
-class IdentityEvaluationContext(NamedTuple):
-    context: EvaluationContext
-    feature_states_by_id: dict[int, FeatureState]
-
-
-class IdentityEvaluation(NamedTuple):
-    result: EvaluationResult
-    feature_states_by_id: dict[int, FeatureState]
-
-
-def evaluate_identity(
-    identity: "Identity",
-    *,
-    traits: "list[Trait] | None" = None,
-    feature_name: str | None = None,
-    additional_filters: Q | None = None,
-) -> IdentityEvaluation:
-    """Evaluate every flag in `identity`'s environment for that identity."""
-    context, feature_states_by_id = build_identity_evaluation_context(
-        identity,
-        traits=traits,
-        feature_name=feature_name,
-        additional_filters=additional_filters,
-    )
-    return IdentityEvaluation(get_evaluation_result(context), feature_states_by_id)
-
-
-def build_identity_evaluation_context(
+def map_identity_to_evaluation_context(
     identity: "Identity",
     *,
     traits: "list[Trait] | None" = None,
     feature_name: str | None = None,
     additional_filters: Q | None = None,
 ) -> IdentityEvaluationContext:
-    """Build the context for evaluating `identity`'s flags.
-
-    Every segment with an override in the environment is included, not just
-    those the identity is known to match: which segments match is the engine's
-    verdict to reach, and a segment condition may depend on a flag that is only
-    resolved during evaluation.
-    """
+    """Build the context for evaluating `identity`'s flags."""
     environment: "Environment" = identity.environment
     segments: list["Segment"] = environment.get_segments_from_cache()
 
     override_filters = Q(identity__isnull=True)
     if identity.pk:
-        # The identity is persisted (non-transient),
+        # The identity is persisted (non-transient).
         # Look for its identity overrides in addition to segment overrides.
         override_filters = Q(identity=identity) | override_filters
     if additional_filters:
