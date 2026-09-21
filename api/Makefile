@@ -46,9 +46,9 @@ docker-up:
 	docker compose ps
 
 # `docker-up` recreates every container, which costs several seconds and drops
-# open connections. Targets that only need the services to be reachable use
-# this instead: it is near-free once the stack is up, and Compose's `--wait`
-# blocks on the healthchecks so nothing has to poll for a database afterwards.
+# open connections. Targets that only need the services to be healthy use this
+# instead: it is near-free once the stack is up, and falls back to Compose's
+# `--wait`, which blocks on the healthchecks, when anything is not.
 .PHONY: docker-ready
 docker-ready:
 	@bash scripts/ensure-services.sh
