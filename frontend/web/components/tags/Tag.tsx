@@ -2,12 +2,16 @@ import React, { FC } from 'react'
 import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
+import Chip from 'components/base/Chip'
 import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
 import TagContent from './TagContent'
 import Constants from 'common/constants'
-import { getDarkMode } from 'project/darkMode'
-import Color from 'color'
+import {
+  SYSTEM_TAG_UTILITIES,
+  getTagSwatchUtilities,
+  isSystemTag,
+} from './tagSwatch'
 
 type TagType = {
   className?: string
@@ -18,44 +22,11 @@ type TagType = {
   isDot?: boolean
 }
 
-export const getTagColor = (tag: Partial<TTag>, selected?: boolean) => {
-  if (getDarkMode() && tag.color === '#344562') {
-    return '#9DA4AE'
-  }
+export const getTagColor = (tag: Partial<TTag>) => {
   if (tag.type === 'UNHEALTHY') {
     return Constants.featureHealth.unhealthyColor
   }
-  if (selected) {
-    return tag.color
-  }
   return tag.color
-}
-
-export const TagWrapper = ({
-  children,
-  className,
-  disabled,
-  onClick,
-  tag,
-  tagColor,
-}: any) => {
-  return (
-    <div
-      onClick={() => {
-        if (!disabled) {
-          onClick?.(tag as TTag)
-        }
-      }}
-      style={{
-        backgroundColor: `${tagColor.fade(0.92)}`,
-        border: `1px solid ${tagColor.fade(0.76)}`,
-        color: `${tagColor.darken(0.1)}`,
-      }}
-      className={cx('chip', className)}
-    >
-      {children}
-    </div>
-  )
 }
 
 const Tag: FC<TagType> = ({
@@ -66,15 +37,12 @@ const Tag: FC<TagType> = ({
   selected,
   tag,
 }) => {
-  const shouldLighten = (color: Color) => getDarkMode() && color.isDark()
-  const tagColor = Utils.colour(getTagColor(tag, selected))
   if (isDot) {
     return (
       <div
         className={'tag--dot'}
-        style={{
-          backgroundColor: `${tagColor.darken(0.1)}`,
-        }}
+        // No text on the dot, so the tag's own colour is safe here.
+        style={{ backgroundColor: getTagColor(tag) }}
       />
     )
   }
@@ -84,8 +52,7 @@ const Tag: FC<TagType> = ({
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
-        className={className}
-        color={shouldLighten(tagColor) ? tagColor.lighten(0.5) : tagColor}
+        className={cx(getTagSwatchUtilities(getTagColor(tag)), className)}
         active={selected}
         onClick={() => {
           if (!disabled) {
@@ -106,19 +73,27 @@ const Tag: FC<TagType> = ({
     return null
   }
 
+  const isSystem = isSystemTag(tag)
+
   return (
-    <TagWrapper
-      tagColor={shouldLighten(tagColor) ? tagColor.lighten(0.5) : tagColor}
-      className={className}
-      disabled={disabled}
-      hideNames={hideNames}
-      isDot={isDot}
-      onClick={onClick}
-      selected={selected}
-      tag={tag}
+    <Chip
+      className={cx(
+        // Legacy `.chip` carried margin-right; the primitive does not, so tags
+        // keep it here or they butt against whatever follows.
+        'me-1',
+        isSystem
+          ? SYSTEM_TAG_UTILITIES
+          : getTagSwatchUtilities(getTagColor(tag)),
+        // The fill carries the colour, so a border would double the edge.
+        { 'border-0': !isSystem, 'opacity-50': disabled },
+        className,
+      )}
+      onClick={disabled || !onClick ? undefined : () => onClick(tag as TTag)}
+      size='xs'
+      variant='none'
     >
       <TagContent tag={tag} />
-    </TagWrapper>
+    </Chip>
   )
 }
 

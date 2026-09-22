@@ -579,7 +579,9 @@ export type APIKey = {
   name: string
 }
 
-export type TagType = 'STALE' | 'UNHEALTHY' | 'NONE'
+// Mirrors TagType in api/projects/tags/models.py. GITHUB and GITLAB were
+// missing, though the UI has always branched on them to pick a VCS icon.
+export type TagType = 'NONE' | 'STALE' | 'GITHUB' | 'UNHEALTHY' | 'GITLAB'
 
 export type Tag = {
   id: number

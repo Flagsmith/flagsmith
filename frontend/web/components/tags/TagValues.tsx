@@ -49,7 +49,6 @@ const TagValues: FC<TagValuesType> = ({
           value?.includes(tag.id) && (
             <Tag
               key={tag.id}
-              className='chip--xs'
               hideNames={hideNames}
               onClick={onAdd ?? onClick}
               tag={tag}
