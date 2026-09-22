@@ -18,7 +18,7 @@ from users.models import FFAdminUser
 pytestmark = pytest.mark.usefixtures("versioned_environment")
 
 
-def test_post_feature_dependency__valid_prerequisite__responds_201_with_dependency(
+def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependency(
     admin_client: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -108,7 +108,7 @@ def test_post_feature_dependency__valid_prerequisite__responds_201_with_dependen
     )
 
 
-def test_post_feature_dependency__feature_has_another_prerequisite__responds_201_reusing_segment(
+def test_add_feature_dependency__feature_has_another_prerequisite__responds_201_reusing_segment(
     admin_client: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -219,7 +219,7 @@ def test_post_feature_dependency__feature_has_another_prerequisite__responds_201
     )
 
 
-def test_post_feature_dependency__feature_has_another_override__responds_201_reordering_priorities(
+def test_add_feature_dependency__feature_has_another_override__responds_201_reordering_priorities(
     admin_client: APIClient,
     create_segment_override: CreateSegmentOverrideFixture,
     environment_api_key: str,
@@ -325,7 +325,7 @@ def test_post_feature_dependency__feature_has_another_override__responds_201_reo
     )
 
 
-def test_post_feature_dependency__prerequisite_already_has_prerequisite__responds_400_with_error(
+def test_add_feature_dependency__prerequisite_already_has_prerequisite__responds_400_with_error(
     admin_client: APIClient,
     environment_api_key: str,
     environment_name: str,
@@ -425,7 +425,7 @@ def test_post_feature_dependency__prerequisite_already_has_prerequisite__respond
     )
 
 
-def test_post_feature_dependency__feature_is_already_a_prerequisite__responds_400_with_error(
+def test_add_feature_dependency__feature_is_already_a_prerequisite__responds_400_with_error(
     admin_client: APIClient,
     environment_api_key: str,
     environment_name: str,
@@ -520,7 +520,7 @@ def test_post_feature_dependency__feature_is_already_a_prerequisite__responds_40
     )
 
 
-def test_post_feature_dependency__dependency_already_exists__responds_400_with_error(
+def test_add_feature_dependency__dependency_already_exists__responds_400_with_error(
     admin_client: APIClient,
     environment_api_key: str,
     environment_name: str,
@@ -610,7 +610,7 @@ def test_post_feature_dependency__dependency_already_exists__responds_400_with_e
     )
 
 
-def test_post_feature_dependency__prerequisite_is_self__responds_400_with_error(
+def test_add_feature_dependency__prerequisite_is_self__responds_400_with_error(
     admin_client: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -664,7 +664,7 @@ def test_post_feature_dependency__prerequisite_is_self__responds_400_with_error(
         ),
     ],
 )
-def test_post_feature_dependency__either_feature_does_not_exist__responds_404_with_error(
+def test_add_feature_dependency__either_feature_does_not_exist__responds_404_with_error(
     admin_client: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -694,7 +694,7 @@ def test_post_feature_dependency__either_feature_does_not_exist__responds_404_wi
     assert not log.has("dependencies.created")
 
 
-def test_post_feature_dependency__missing_environment_permission__responds_403_with_error(
+def test_add_feature_dependency__missing_environment_permission__responds_403_with_error(
     environment: int,
     environment_api_key: str,
     log: StructuredLogCapture,
