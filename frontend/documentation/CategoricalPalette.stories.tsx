@@ -2,8 +2,11 @@ import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import './docs.scss'
+import Chip from 'components/base/Chip'
 import DocPage from './components/DocPage'
 import Swatch from './components/Swatch'
+import tokens from 'common/theme/tokens.json'
+import { AA_NORMAL_TEXT, contrastRatio } from 'common/theme/contrast'
 
 // ---------------------------------------------------------------------------
 // Colour data — inlined to avoid importing Constants (which pulls in the
@@ -67,10 +70,10 @@ export const TagColours: StoryObj = {
       title='Tag colours'
       description={
         <>
-          20 decorative colours users pick from when creating tags. Will be
-          defined in <code>_categorical.scss</code> as CSS custom properties (
-          <code>--color-tag-1</code> through <code>--color-tag-20</code>).
-          Currently in <code>constants.ts</code> pending migration. These are
+          The 20 decorative colours users currently pick from when creating a
+          tag, held in <code>constants.ts</code>. Tags derive their fill, border
+          and text from these at render time, which is why most of them fail
+          WCAG AA. #8465 replaces that with the validated scale below. These are
           NOT semantic tokens &mdash; they are categorical identifiers that need
           to be visually distinct from each other.
         </>
@@ -84,6 +87,71 @@ export const TagColours: StoryObj = {
       <p className='cat-note'>
         Default tag colour: <code>{DEFAULT_TAG_COLOUR}</code>
       </p>
+    </DocPage>
+  ),
+}
+
+type TagEntry = { cssVar: string; light: string; dark: string }
+
+const TAG_SURFACES = tokens.tag.surface as Record<string, TagEntry>
+const TAG_TEXTS = tokens.tag.text as Record<string, TagEntry>
+const TAG_HUES = Object.keys(TAG_SURFACES)
+
+export const TagSwatches: StoryObj = {
+  name: 'Tag swatches',
+  parameters: { chromatic: { disableSnapshot: false } },
+  render: () => (
+    <DocPage
+      title='Tag swatches'
+      description={
+        <>
+          The scale a custom tag picks from, replacing the runtime colour maths
+          that made contrast a function of the user&rsquo;s chosen hue. Each hue
+          is a <code>surface</code> and <code>text</code> pair built from the
+          primitive ramps, so a ramp change carries through. Ratios below are
+          for the current theme; every pair clears AA ({AA_NORMAL_TEXT}:1) in
+          both, enforced by <code>tagSwatches.test.ts</code>.
+        </>
+      }
+    >
+      <div className='d-flex flex-wrap gap-3'>
+        {TAG_HUES.map((hue) => (
+          <div
+            className='d-flex flex-column align-items-center gap-1'
+            key={hue}
+          >
+            <Chip className={`border-0 tag-${hue}`} size='xs'>
+              {hue}
+            </Chip>
+            <small className='text-secondary'>
+              {contrastRatio(
+                TAG_SURFACES[hue].light,
+                TAG_TEXTS[hue].light,
+              ).toFixed(2)}
+              :1 light &middot;{' '}
+              {contrastRatio(
+                TAG_SURFACES[hue].dark,
+                TAG_TEXTS[hue].dark,
+              ).toFixed(2)}
+              :1 dark
+            </small>
+          </div>
+        ))}
+      </div>
+      <p className='cat-note'>
+        System tags (Issue, PR, Stale, Unhealthy) are not on this scale. They
+        stay on existing tokens &mdash; <code>bg-surface-default</code>,{' '}
+        <code>border-default</code>, <code>text-default</code> &mdash; plus a
+        coloured icon, so the state is carried by the icon rather than the fill.
+      </p>
+      <div className='d-flex mt-3'>
+        <Chip
+          className='bg-surface-default border-default text-default'
+          size='xs'
+        >
+          System tag
+        </Chip>
+      </div>
     </DocPage>
   ),
 }
