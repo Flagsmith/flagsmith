@@ -240,6 +240,10 @@
                 {
                     "name": "INGESTION_REDIS_URL",
                     "value": "rediss://serverless-redis-cache-7u3xil.serverless.euw2.cache.amazonaws.com:6379"
+                },
+                {
+                    "name": "ACCOUNT_EMAIL_VERIFICATION",
+                    "value": "true"
                 }
             ],
             "secrets": [
