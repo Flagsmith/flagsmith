@@ -1,10 +1,11 @@
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from itertools import chain
 from math import inf
 from operator import attrgetter
-from typing import TYPE_CHECKING, Dict, List, Optional, TypeAlias
+from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional, TypeAlias
 from uuid import UUID
 
+from django.db.models import Prefetch, Q
 from flag_engine.context import types as engine_types
 from flag_engine.result import types as engine_result_types
 from flag_engine.segments.constants import IS_SET
@@ -70,9 +71,13 @@ EvaluationResult: TypeAlias = engine_result_types.EvaluationResult[
 ]
 FlagResult: TypeAlias = engine_result_types.FlagResult[FeatureEngineMetadata]
 
-MultivariateValuesByFeatureStateId: TypeAlias = Mapping[
-    int, "Iterable[MultivariateFeatureStateValue]"
-]
+
+class MappedEvaluationContext(NamedTuple):
+    context: EvaluationContext
+    #: The feature states the context was built from, by id. Transitional — see
+    #: `map_environment_to_evaluation_context`.
+    feature_states_by_id: "dict[int, FeatureState]"
+
 
 #: Context key and name of the synthetic segment carrying identity overrides.
 #: Not a segment id — prefixed so it cannot collide with one.
@@ -82,6 +87,7 @@ IDENTITY_OVERRIDES_SEGMENT_NAME = "identity_overrides"
 __all__ = (
     "EvaluationContext",
     "EvaluationResult",
+    "MappedEvaluationContext",
     "FlagResult",
     "SegmentContext",
     "map_condition_to_segment_condition",
@@ -495,24 +501,23 @@ def map_environment_to_evaluation_context(
     identity: "Identity | None" = None,
     traits: "Iterable[Trait] | None" = None,
     segments: "Iterable[Segment] | None" = None,
-    features: "Iterable[FeatureState] | None" = None,
-    segment_overrides: "Mapping[int, Iterable[FeatureState]] | None" = None,
-    identity_overrides: "Iterable[FeatureState] | None" = None,
-    mv_fs_values_by_feature_state_id: "MultivariateValuesByFeatureStateId | None" = None,
-) -> EvaluationContext:
+    feature_name: str | None = None,
+    additional_filters: "Q | None" = None,
+) -> MappedEvaluationContext:
     """Map Django ORM models to a flag-engine `EvaluationContext`.
 
-    All arguments are expected to be resolved already: this function does not
-    read from the ORM beyond traversing prefetched relations. See
-    `environments.identities.mappers` for the query side.
+    Resolves the feature states that are current for `environment` — defaults,
+    segment overrides, and `identity`'s own overrides — and lays them out as
+    `$.features` plus the overrides carried on each segment. The engine decides
+    which of them wins.
 
-    :param features: environment default feature states, keyed into
-        `$.features` by feature name. Required for the engine to produce flags
-        at all — without it `get_evaluation_result` returns segments only.
-    :param segment_overrides: feature states overriding `features`, by segment id.
-    :param identity_overrides: feature states overriding `features` for
-        `identity`. Expressed as a synthetic segment (see
-        `_map_identity_overrides_to_segment_context`).
+    Returns those feature states alongside the context, keyed by id, so that
+    callers still working in Django rows can map a `FlagResult` back to one via
+    `metadata.feature_state_id`. That is scaffolding for the migration off
+    `FeatureState.get_feature_state_value(identity=...)`; once serialisers read
+    values off the result, only the context is needed.
+
+    :param segments: segments to evaluate.
     """
     context: EvaluationContext = {
         "environment": {
@@ -543,7 +548,20 @@ def map_environment_to_evaluation_context(
             "traits": identity_traits,
         }
 
-    mv_fs_values_by_feature_state_id = mv_fs_values_by_feature_state_id or {}
+    (
+        feature_states,
+        features,
+        identity_overrides,
+        segment_overrides,
+        mv_fs_values_by_feature_state_id,
+    ) = _resolve_feature_states(
+        environment=environment,
+        identity=identity,
+        feature_name=feature_name,
+        additional_filters=additional_filters,
+    )
+
+    # No reading from ORM past this point!
 
     def to_feature_context(
         feature_state: "FeatureState",
@@ -559,7 +577,6 @@ def map_environment_to_evaluation_context(
         )
 
     if segments is not None:
-        segment_overrides = segment_overrides or {}
         context["segments"] = {
             str(segment.pk): map_segment_to_segment_context(
                 segment,
@@ -583,15 +600,81 @@ def map_environment_to_evaluation_context(
             )
         )
 
-    if features is not None:
-        context["features"] = {
-            (feature_context := to_feature_context(feature_state))[
-                "name"
-            ]: feature_context
-            for feature_state in features
-        }
+    context["features"] = {
+        (feature_context := to_feature_context(feature_state))["name"]: feature_context
+        for feature_state in features
+    }
 
-    return context
+    return MappedEvaluationContext(
+        context=context,
+        feature_states_by_id={
+            feature_state.pk: feature_state for feature_state in feature_states
+        },
+    )
+
+
+class _ResolvedFeatureStates(NamedTuple):
+    all: list["FeatureState"]
+    #: Environment defaults, i.e. neither segment- nor identity-scoped.
+    features: list["FeatureState"]
+    identity_overrides: list["FeatureState"]
+    segment_overrides: dict[int, list["FeatureState"]]
+    mv_fs_values_by_feature_state_id: dict[
+        int, "Iterable[MultivariateFeatureStateValue]"
+    ]
+
+
+def _resolve_feature_states(
+    *,
+    environment: "Environment",
+    identity: "Identity | None",
+    feature_name: str | None,
+    additional_filters: "Q | None",
+) -> _ResolvedFeatureStates:
+    """Read the feature states current for `environment`, split by what they override."""
+    # Deferred: `environments.models` imports this module's package.
+    from features.multivariate.models import MultivariateFeatureStateValue
+    from features.versioning.versioning_service import get_environment_flags_list
+
+    override_filters = Q(identity__isnull=True)
+    if identity is not None and identity.pk:
+        # The identity is persisted (non-transient).
+        # Look for its identity overrides in addition to segment overrides.
+        override_filters = Q(identity=identity) | override_filters
+    if additional_filters:
+        override_filters &= additional_filters
+
+    feature_states = get_environment_flags_list(
+        environment=environment,
+        feature_name=feature_name,
+        additional_filters=override_filters,
+        additional_select_related_args=["feature_segment__segment"],
+        additional_prefetch_related_args=[
+            Prefetch(
+                "multivariate_feature_state_values",
+                queryset=MultivariateFeatureStateValue.objects.select_related(
+                    "multivariate_feature_option"
+                ),
+            )
+        ],
+    )
+
+    resolved = _ResolvedFeatureStates(feature_states, [], [], {}, {})
+
+    for feature_state in feature_states:
+        resolved.mv_fs_values_by_feature_state_id[feature_state.pk] = (
+            feature_state.multivariate_feature_state_values.all()
+        )
+        if feature_state.identity_id is not None:
+            resolved.identity_overrides.append(feature_state)
+        elif (feature_segment := feature_state.feature_segment) is not None:
+            resolved.segment_overrides.setdefault(
+                feature_segment.segment_id, []
+            ).append(feature_state)
+        else:
+            resolved.features.append(feature_state)
+
+    return resolved
 
 
 def map_feature_state_to_feature_context(

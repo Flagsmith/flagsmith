@@ -805,14 +805,15 @@ def test_map_environment_to_evaluation_context__no_identity__returns_environment
     environment: Environment,
 ) -> None:
     # Given / When
-    result = engine.map_environment_to_evaluation_context(environment=environment)
+    context, _ = engine.map_environment_to_evaluation_context(environment=environment)
 
     # Then
-    assert result == {
+    assert context == {
         "environment": {
             "key": environment.api_key,
             "name": environment.name,
         },
+        "features": {},
     }
 
 
@@ -821,13 +822,13 @@ def test_map_environment_to_evaluation_context__with_identity__returns_identity_
     identity: Identity,
 ) -> None:
     # Given / When
-    result = engine.map_environment_to_evaluation_context(
+    context, _ = engine.map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
     )
 
     # Then
-    assert result == {
+    assert context == {
         "environment": {
             "key": environment.api_key,
             "name": environment.name,
@@ -839,6 +840,7 @@ def test_map_environment_to_evaluation_context__with_identity__returns_identity_
             ),
             "traits": {},
         },
+        "features": {},
     }
 
 
@@ -848,14 +850,14 @@ def test_map_environment_to_evaluation_context__with_explicit_traits__returns_gi
     trait: Trait,
 ) -> None:
     # Given / When
-    result = engine.map_environment_to_evaluation_context(
+    context, _ = engine.map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
         traits=[trait],
     )
 
     # Then
-    assert result == {
+    assert context == {
         "environment": {
             "key": environment.api_key,
             "name": environment.name,
@@ -867,6 +869,7 @@ def test_map_environment_to_evaluation_context__with_explicit_traits__returns_gi
             ),
             "traits": {trait.trait_key: trait.trait_value},
         },
+        "features": {},
     }
 
 
@@ -876,13 +879,13 @@ def test_map_environment_to_evaluation_context__no_explicit_traits__returns_iden
     trait: Trait,
 ) -> None:
     # Given / When
-    result = engine.map_environment_to_evaluation_context(
+    context, _ = engine.map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
     )
 
     # Then
-    assert result == {
+    assert context == {
         "environment": {
             "key": environment.api_key,
             "name": environment.name,
@@ -894,6 +897,7 @@ def test_map_environment_to_evaluation_context__no_explicit_traits__returns_iden
             ),
             "traits": {trait.trait_key: trait.trait_value},
         },
+        "features": {},
     }
 
 
@@ -902,14 +906,14 @@ def test_map_environment_to_evaluation_context__with_segments__returns_segment_c
     identity_matching_segment: Segment,
 ) -> None:
     # Given / When
-    result = engine.map_environment_to_evaluation_context(
+    context, _ = engine.map_environment_to_evaluation_context(
         environment=environment,
         segments=[identity_matching_segment],
     )
 
     # Then
     segment_key = str(identity_matching_segment.pk)
-    assert result == {
+    assert context == {
         "environment": {
             "key": environment.api_key,
             "name": environment.name,
@@ -919,6 +923,7 @@ def test_map_environment_to_evaluation_context__with_segments__returns_segment_c
                 identity_matching_segment
             ),
         },
+        "features": {},
     }
 
 

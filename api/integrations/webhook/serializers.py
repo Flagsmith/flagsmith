@@ -29,7 +29,7 @@ class SegmentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
 
     def get_member(self, obj: Segment) -> bool:
         identity = self.context["identity"]
-        context = map_environment_to_evaluation_context(
+        context, _ = map_environment_to_evaluation_context(
             identity=identity,
             environment=identity.environment,
             segments=[obj],

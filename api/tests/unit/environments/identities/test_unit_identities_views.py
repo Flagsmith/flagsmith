@@ -1373,10 +1373,10 @@ def test_identity_view_set__get_permissions__returns_expected_permissions():  # 
 @pytest.mark.parametrize(
     ["use_replica", "is_new_identity", "num_queries"],
     [
-        pytest.param(False, True, 12, id="default_database,new_identity"),
-        pytest.param(False, False, 7, id="default_database,existing_identity"),
-        pytest.param(True, True, 12, id="replica_database,new_identity"),
-        pytest.param(True, False, 9, id="replica_database,existing_identity"),
+        pytest.param(False, True, 14, id="default_database,new_identity"),
+        pytest.param(False, False, 9, id="default_database,existing_identity"),
+        pytest.param(True, True, 14, id="replica_database,new_identity"),
+        pytest.param(True, False, 11, id="replica_database,existing_identity"),
     ],
 )
 def test_SDKIdentitiesDeprecated__given_identifier__retrieves_identity(

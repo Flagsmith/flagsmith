@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 from django.db.models import Q
 from flag_engine.engine import get_evaluation_result
 
-from environments.identities.mappers import map_identity_to_evaluation_context
 from environments.identities.types import IdentityEvaluation
+from util.mappers.engine import map_environment_to_evaluation_context
 
 if TYPE_CHECKING:
     from environments.identities.models import Identity
@@ -20,9 +20,12 @@ def evaluate_identity(
     additional_filters: Q | None = None,
 ) -> IdentityEvaluation:
     """Evaluate every flag in `identity`'s environment for that identity."""
-    context, feature_states_by_id = map_identity_to_evaluation_context(
-        identity,
+    environment: "Environment" = identity.environment
+    context, feature_states_by_id = map_environment_to_evaluation_context(
+        environment=environment,
+        identity=identity,
         traits=traits,
+        segments=environment.get_segments_from_cache(),
         feature_name=feature_name,
         additional_filters=additional_filters,
     )

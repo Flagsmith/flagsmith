@@ -1,4 +1,3 @@
-from environments.identities.mappers import map_identity_to_evaluation_context
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
@@ -7,10 +6,11 @@ from segments.models import Segment
 from util.mappers.engine import (
     IDENTITY_OVERRIDES_SEGMENT_KEY,
     IDENTITY_OVERRIDES_SEGMENT_NAME,
+    map_environment_to_evaluation_context,
 )
 
 
-def test_map_identity_to_evaluation_context__environment_default__populates_features(
+def test_map_environment_to_evaluation_context__environment_default__populates_features(
     identity: Identity,
     feature: Feature,
 ) -> None:
@@ -20,7 +20,11 @@ def test_map_identity_to_evaluation_context__environment_default__populates_feat
     )
 
     # When
-    context, feature_states_by_id = map_identity_to_evaluation_context(identity)
+    context, feature_states_by_id = map_environment_to_evaluation_context(
+        environment=identity.environment,
+        identity=identity,
+        segments=identity.environment.get_segments_from_cache(),
+    )
 
     # Then
     assert context["features"] == {
@@ -38,7 +42,7 @@ def test_map_identity_to_evaluation_context__environment_default__populates_feat
     assert feature_states_by_id == {feature_state.pk: feature_state}
 
 
-def test_map_identity_to_evaluation_context__transient_identity__omits_stored_traits(
+def test_map_environment_to_evaluation_context__transient_identity__omits_stored_traits(
     environment: Environment,
 ) -> None:
     # Given
@@ -46,7 +50,10 @@ def test_map_identity_to_evaluation_context__transient_identity__omits_stored_tr
     transient_identity = Identity(identifier="transient", environment=environment)
 
     # When
-    context, _ = map_identity_to_evaluation_context(transient_identity)
+    context, _ = map_environment_to_evaluation_context(
+        environment=environment,
+        identity=transient_identity,
+    )
 
     # Then
     assert context["identity"] == {
@@ -58,7 +65,7 @@ def test_map_identity_to_evaluation_context__transient_identity__omits_stored_tr
     }
 
 
-def test_map_identity_to_evaluation_context__segment_override__carries_segment_id(
+def test_map_environment_to_evaluation_context__segment_override__carries_segment_id(
     identity: Identity,
     feature: Feature,
     identity_matching_segment: Segment,
@@ -78,7 +85,11 @@ def test_map_identity_to_evaluation_context__segment_override__carries_segment_i
     )
 
     # When
-    context, _ = map_identity_to_evaluation_context(identity)
+    context, _ = map_environment_to_evaluation_context(
+        environment=identity.environment,
+        identity=identity,
+        segments=identity.environment.get_segments_from_cache(),
+    )
 
     # Then
     segment_context = context["segments"][str(identity_matching_segment.pk)]
@@ -95,7 +106,7 @@ def test_map_identity_to_evaluation_context__segment_override__carries_segment_i
     }
 
 
-def test_map_identity_to_evaluation_context__identity_override__returns_synthetic_segment(
+def test_map_environment_to_evaluation_context__identity_override__returns_synthetic_segment(
     identity: Identity,
     feature: Feature,
 ) -> None:
@@ -108,7 +119,11 @@ def test_map_identity_to_evaluation_context__identity_override__returns_syntheti
     )
 
     # When
-    context, _ = map_identity_to_evaluation_context(identity)
+    context, _ = map_environment_to_evaluation_context(
+        environment=identity.environment,
+        identity=identity,
+        segments=identity.environment.get_segments_from_cache(),
+    )
 
     # Then
     segment_context = context["segments"][IDENTITY_OVERRIDES_SEGMENT_KEY]
@@ -121,7 +136,7 @@ def test_map_identity_to_evaluation_context__identity_override__returns_syntheti
     assert override_context["metadata"]["identity_id"] == identity.pk
 
 
-def test_map_identity_to_evaluation_context__multivariate_feature__weights_variants_in_id_order(
+def test_map_environment_to_evaluation_context__multivariate_feature__weights_variants_in_id_order(
     identity: Identity,
     multivariate_feature: Feature,
 ) -> None:
@@ -131,7 +146,11 @@ def test_map_identity_to_evaluation_context__multivariate_feature__weights_varia
     )
 
     # When
-    context, _ = map_identity_to_evaluation_context(identity)
+    context, _ = map_environment_to_evaluation_context(
+        environment=identity.environment,
+        identity=identity,
+        segments=identity.environment.get_segments_from_cache(),
+    )
 
     # Then
     # Core API allocates percentages in id order; the engine allocates in

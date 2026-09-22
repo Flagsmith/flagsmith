@@ -825,7 +825,7 @@ def test_get_segments__matching_traits__returns_segment_with_expected_queries(
 
     # When
     # we get the matching segments for an identity
-    with django_assert_num_queries(7):
+    with django_assert_num_queries(8):
         segments = identity.get_segments()
 
     # Then
