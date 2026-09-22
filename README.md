@@ -12,7 +12,7 @@
 
 ## What is Flagsmith?
 
-Flagsmith is an open-source feature management platform that offers remote configuration and experimentation solutions, as well as four different deployment options: Open source, on-premises/self-hosted, cloud, and private cloud.
+Flagsmith is an open-source feature management platform that offers remote configuration and experimentation solutions. Choose from three deployment options: self-hosted (available as our free open-source build or a fully supported Enterprise edition), private cloud, and cloud.
 
 As an open-source solution, Flagsmith provides flexibility and greater control over your choices. Thanks to our partnership with [OpenFeature](https://openfeature.dev/), you are never locked into one vendor.
 
@@ -44,7 +44,7 @@ curl -o docker-compose.yml https://raw.githubusercontent.com/Flagsmith/flagsmith
 docker-compose -f docker-compose.yml up
 ```
 
-The application will bootstrap an admin user, organisation, and project for you. You'll find a link to set your password in your Compose logs:
+The application will bootstrap an admin user, organisation, and project for you (learn more about Flagsmith terminology in our [data model docs](https://docs.flagsmith.com/flagsmith-concepts/data-model)). You'll find a link to set your password in your Compose logs:
 
 ```txt
 Superuser "admin@example.com" created successfully.
@@ -127,7 +127,7 @@ Prefer the vendor-neutral route? You can use Flagsmith through [OpenFeature](htt
 
 Check out the [OpenFeature docs](https://docs.flagsmith.com/integrating-with-flagsmith/openfeature) for setup.
 
-## Open Source Philosophy
+## Open-Source Philosophy
 
 The majority of our platform is open source under the [BSD-3-Clause license](https://github.com/Flagsmith/flagsmith?tab=BSD-3-Clause-1-ov-file#readme). A small number of repositories are under the MIT license.
 
@@ -141,7 +141,7 @@ To learn more, [contact us](https://www.flagsmith.com/contact-us) or see our [ve
 
 ## Contributors
 
-Thank you to the open source community for your contributions and for building this with us!
+Thank you to the open-source community for your contributions and for building this with us!
 
 <a href="https://github.com/flagsmith/flagsmith/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=flagsmith/flagsmith" />
