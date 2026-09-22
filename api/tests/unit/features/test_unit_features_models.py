@@ -28,6 +28,7 @@ from integrations.gitlab.models import GitLabConfiguration
 from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import Segment
+from tests.evaluation_helpers import evaluate_feature_state
 from users.models import FFAdminUser
 
 now = timezone.now()
@@ -612,8 +613,8 @@ def test_feature_state_type__feature_segment_state__returns_feature_segment(
 
 
 @pytest.mark.parametrize("hashed_percentage", (0.0, 30.0, 50.0, 80.0, 99.9999))
-@mock.patch("features.models.get_hashed_percentage_for_object_ids")
-def test_get_multivariate_feature_state_value__with_identity__returns_correct_value(  # type: ignore[no-untyped-def]
+@mock.patch("flag_engine.segments.evaluator.get_hashed_percentage_for_object_ids")
+def test_evaluated_feature_state__multivariate_feature__returns_variant_value(  # type: ignore[no-untyped-def]
     mock_get_hashed_percentage,
     hashed_percentage,
     multivariate_feature,
@@ -630,21 +631,17 @@ def test_get_multivariate_feature_state_value__with_identity__returns_correct_va
     )
 
     # When
-    multivariate_value = feature_state.get_multivariate_feature_state_value(
-        identity_hash_key=identity.get_hash_key()
-    )
+    evaluated = evaluate_feature_state(feature_state, identity.get_hash_key())
 
     # Then
-    # we get a multivariate value
-    assert multivariate_value
-
-    # and that value is not the control (since the fixture includes values that span
+    # we get a multivariate value, not the control (the fixture's options span
     # the entire 100%)
-    assert multivariate_value.value != multivariate_value.initial_value
+    assert evaluated.value
+    assert evaluated.value != feature_state.get_feature_state_value()
 
 
-@mock.patch("features.models.get_hashed_percentage_for_object_ids")
-def test_get_multivariate_feature_state_value__no_mv_hashing_salt__seeds_hash_with_id(  # type: ignore[no-untyped-def]
+@mock.patch("flag_engine.segments.evaluator.get_hashed_percentage_for_object_ids")
+def test_evaluated_feature_state__no_mv_hashing_salt__seeds_hash_with_id(  # type: ignore[no-untyped-def]
     mock_get_hashed_percentage,
     multivariate_feature,
     environment,
@@ -662,18 +659,16 @@ def test_get_multivariate_feature_state_value__no_mv_hashing_salt__seeds_hash_wi
     identity_hash_key = identity.get_hash_key()
 
     # When
-    feature_state.get_multivariate_feature_state_value(
-        identity_hash_key=identity_hash_key
-    )
+    evaluate_feature_state(feature_state, identity_hash_key)
 
     # Then the feature state id seeds the hash
     mock_get_hashed_percentage.assert_called_once_with(
-        [feature_state.id, identity_hash_key]
+        [str(feature_state.id), identity_hash_key]
     )
 
 
-@mock.patch("features.models.get_hashed_percentage_for_object_ids")
-def test_get_multivariate_feature_state_value__mv_hashing_salt_set__seeds_hash_with_salt(  # type: ignore[no-untyped-def]
+@mock.patch("flag_engine.segments.evaluator.get_hashed_percentage_for_object_ids")
+def test_evaluated_feature_state__mv_hashing_salt_set__seeds_hash_with_salt(  # type: ignore[no-untyped-def]
     mock_get_hashed_percentage,
     multivariate_feature,
     environment,
@@ -691,12 +686,10 @@ def test_get_multivariate_feature_state_value__mv_hashing_salt_set__seeds_hash_w
     identity_hash_key = identity.get_hash_key()
 
     # When
-    feature_state.get_multivariate_feature_state_value(
-        identity_hash_key=identity_hash_key
-    )
+    evaluate_feature_state(feature_state, identity_hash_key)
 
     # Then the salt seeds the hash instead of the feature state id
-    mock_get_hashed_percentage.assert_called_once_with([999, identity_hash_key])
+    mock_get_hashed_percentage.assert_called_once_with(["999", identity_hash_key])
 
 
 def test_feature_state_clone__multivariate_feature__keeps_variant_bucketing_stable(
@@ -706,6 +699,11 @@ def test_feature_state_clone__multivariate_feature__keeps_variant_bucketing_stab
 ) -> None:
     # Given the environment-default feature state for a multivariate feature, and
     # the variant each of a range of identities is currently bucketed into
+    # The fixture derives an option's value from its percentage, so two of them
+    # share a value. Key them so a variant identifies which option won.
+    for index, option in enumerate(multivariate_feature.multivariate_options.all()):
+        option.key = f"variant-{index}"
+        option.save()
     feature_state = FeatureState.objects.get(
         environment=environment,
         feature=multivariate_feature,
@@ -714,7 +712,7 @@ def test_feature_state_clone__multivariate_feature__keeps_variant_bucketing_stab
     )
     identity_hash_keys = [f"identity-{i}" for i in range(50)]
     original_assignment = {
-        key: feature_state.get_multivariate_feature_state_value(key).id
+        key: evaluate_feature_state(feature_state, key).variant
         for key in identity_hash_keys
     }
 
@@ -728,7 +726,7 @@ def test_feature_state_clone__multivariate_feature__keeps_variant_bucketing_stab
 
     # and every identity stays in the same variant as before
     cloned_assignment = {
-        key: cloned_feature_state.get_multivariate_feature_state_value(key).id
+        key: evaluate_feature_state(cloned_feature_state, key).variant
         for key in identity_hash_keys
     }
     assert cloned_assignment == original_assignment
@@ -850,61 +848,6 @@ def test_feature_state_create__new_segment_override_under_v2__no_salt_inherited(
 
     # Then a genuinely new override starts a fresh seed
     assert feature_state.mv_hashing_salt is None
-
-
-@mock.patch.object(FeatureState, "get_multivariate_feature_state_value")
-def test_get_feature_state_value__multivariate_feature__returns_mv_value(  # type: ignore[no-untyped-def]
-    mock_get_mv_feature_state_value, environment, multivariate_feature, identity
-):
-    # Given
-    value = "value"
-    mock_mv_feature_state_value = mock.MagicMock(value=value)
-    mock_get_mv_feature_state_value.return_value = mock_mv_feature_state_value
-
-    environment.use_identity_composite_key_for_hashing = False
-    environment.save()
-
-    feature_state = FeatureState.objects.get(
-        environment=environment,
-        feature=multivariate_feature,
-        identity=None,
-        feature_segment=None,
-    )
-
-    # When
-    feature_state_value = feature_state.get_feature_state_value(identity=identity)
-
-    # Then
-    # the correct value is returned
-    assert feature_state_value == value
-    # and the correct call is made to get the multivariate feature state value
-    mock_get_mv_feature_state_value.assert_called_once_with(str(identity.id))
-
-
-@mock.patch.object(FeatureState, "get_multivariate_feature_state_value")
-def test_get_feature_state_value__multivariate_v2_evaluation__uses_composite_key(  # type: ignore[no-untyped-def]
-    mock_get_mv_feature_state_value, environment, multivariate_feature, identity
-):
-    # Given
-    value = "value"
-    mock_mv_feature_state_value = mock.MagicMock(value=value)
-    mock_get_mv_feature_state_value.return_value = mock_mv_feature_state_value
-
-    feature_state = FeatureState.objects.get(
-        environment=environment,
-        feature=multivariate_feature,
-        identity=None,
-        feature_segment=None,
-    )
-
-    # When
-    feature_state_value = feature_state.get_feature_state_value(identity=identity)
-
-    # Then
-    # the correct value is returned
-    assert feature_state_value == value
-    # and the correct call is made to get the multivariate feature state value
-    mock_get_mv_feature_state_value.assert_called_once_with(identity.composite_key)
 
 
 @pytest.mark.parametrize(

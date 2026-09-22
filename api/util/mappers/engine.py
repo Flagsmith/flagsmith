@@ -508,8 +508,7 @@ def map_environment_to_evaluation_context(
 
     Resolves the feature states that are current for `environment` — defaults,
     segment overrides, and `identity`'s own overrides — and lays them out as
-    `$.features` plus the overrides carried on each segment. The engine decides
-    which of them wins.
+    `$.features` plus the overrides carried on each segment.
 
     Returns those feature states alongside the context, keyed by id, so that
     callers still working in Django rows can map a `FlagResult` back to one via

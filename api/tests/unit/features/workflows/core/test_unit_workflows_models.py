@@ -48,6 +48,7 @@ from segments.models import Condition, Segment, SegmentRule
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
+from tests.evaluation_helpers import evaluate_feature_state
 from users.models import FFAdminUser
 
 now = timezone.now()
@@ -1245,6 +1246,11 @@ def test_change_request_commit__v1_multivariate_feature__keeps_variant_bucketing
 ) -> None:
     # Given the current live environment-default feature state of a multivariate
     # feature, and the variant each of a range of identities is bucketed into
+    # The fixture derives an option's value from its percentage, so two of them
+    # share a value. Key them so a variant identifies which option won.
+    for index, option in enumerate(multivariate_feature.multivariate_options.all()):
+        option.key = f"variant-{index}"
+        option.save()
     live_feature_state = FeatureState.objects.get(
         environment=environment,
         feature=multivariate_feature,
@@ -1253,7 +1259,7 @@ def test_change_request_commit__v1_multivariate_feature__keeps_variant_bucketing
     )
     identity_hash_keys = [f"identity-{i}" for i in range(50)]
     original_assignment = {
-        key: live_feature_state.get_multivariate_feature_state_value(key).pk
+        key: evaluate_feature_state(live_feature_state, key).variant
         for key in identity_hash_keys
     }
 
@@ -1286,7 +1292,7 @@ def test_change_request_commit__v1_multivariate_feature__keeps_variant_bucketing
 
     # and every identity stays in the same variant as before the commit
     new_assignment = {
-        key: new_live_feature_state.get_multivariate_feature_state_value(key).pk
+        key: evaluate_feature_state(new_live_feature_state, key).variant
         for key in identity_hash_keys
     }
     assert new_assignment == original_assignment

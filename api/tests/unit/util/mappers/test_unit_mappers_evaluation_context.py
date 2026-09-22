@@ -1,3 +1,5 @@
+import pytest
+
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
@@ -166,3 +168,35 @@ def test_map_environment_to_evaluation_context__multivariate_feature__weights_va
         }
         for index, mv_value in enumerate(mv_values)
     ]
+
+
+@pytest.mark.parametrize(
+    "use_identity_composite_key_for_hashing",
+    [True, False],
+)
+def test_map_environment_to_evaluation_context__hashing_setting__sets_matching_identity_key(
+    identity: Identity,
+    use_identity_composite_key_for_hashing: bool,
+) -> None:
+    """The identity key seeds multivariate allocation, so which one is used matters."""
+    # Given
+    environment = identity.environment
+    environment.use_identity_composite_key_for_hashing = (
+        use_identity_composite_key_for_hashing
+    )
+    environment.save()
+
+    # When
+    context, _ = map_environment_to_evaluation_context(
+        environment=environment,
+        identity=identity,
+    )
+
+    # Then
+    identity_context = context["identity"]
+    assert identity_context
+    assert identity_context["key"] == (
+        identity.composite_key
+        if use_identity_composite_key_for_hashing
+        else str(identity.pk)
+    )

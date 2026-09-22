@@ -119,17 +119,28 @@ def test_evaluate_identity__multivariate_feature__matches_legacy_bucketing(
     hash_key = identity.get_hash_key(
         identity.environment.use_identity_composite_key_for_hashing
     )
-    expected_value = feature_state.get_feature_state_value_by_hash_key(hash_key)
+
+    # The allocation Core API performed before the engine took it over, kept
+    # here as an oracle independent of the code under test.
+    percentage_value = get_hashed_percentage_for_object_ids(
+        [feature_state.mv_hashing_seed, hash_key]
+    )
+    expected_value = feature_state.get_feature_state_value()
+    start_percentage = 0.0
+    for mv_value in sorted(
+        feature_state.multivariate_feature_state_values.all(), key=lambda o: o.id
+    ):
+        limit = mv_value.percentage_allocation + start_percentage
+        if start_percentage <= percentage_value < limit:
+            expected_value = mv_value.multivariate_feature_option.value
+            break
+        start_percentage = limit
 
     # When
     result, _ = evaluate_identity(identity)
 
     # Then
     assert result["flags"][multivariate_feature.name]["value"] == expected_value
-    # And the seed the engine used is the lineage constant, not the row id.
-    assert get_hashed_percentage_for_object_ids(
-        [str(feature_state.mv_hashing_seed), hash_key]
-    ) == get_hashed_percentage_for_object_ids([feature_state.mv_hashing_seed, hash_key])
 
 
 def test_evaluate_identity__multivariate_feature__returns_variant_key(

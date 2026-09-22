@@ -544,32 +544,26 @@ def test_export_edge_identities__identities_with_overrides_and_traits__exports_a
 
     actual_mv_override = all_feature_states[0]
     assert str(actual_mv_override.uuid) == mv_override_fs_uuid
-    assert (
-        actual_mv_override.get_feature_state_value(identity=identity)
-        == mv_option.string_value
-    )
+    assert actual_mv_override.evaluated_value == mv_option.string_value
 
     actual_int_override = all_feature_states[1]
     assert str(actual_int_override.uuid) == int_override_fs_uuid
-    assert actual_int_override.get_feature_state_value(identity=identity) == 123
+    assert actual_int_override.evaluated_value == 123
 
     actual_float_override = all_feature_states[2]
     assert str(actual_float_override.uuid) == float_override_fs_uuid
-    assert actual_float_override.get_feature_state_value(identity=identity) == "123.123"
+    assert actual_float_override.evaluated_value == "123.123"
 
     actual_bool_override = all_feature_states[3]
     assert str(actual_bool_override.uuid) == bool_override_fs_uuid
-    assert actual_bool_override.get_feature_state_value(identity=identity) is False
+    assert actual_bool_override.evaluated_value is False
 
     actual_string_fs = all_feature_states[4]
-    assert actual_string_fs.get_feature_state_value(identity=identity) == "foo"
+    assert actual_string_fs.evaluated_value == "foo"
     assert actual_string_fs.identity is None
 
     override_without_mv_option = all_feature_states[5]
-    assert (
-        override_without_mv_option.get_feature_state_value(identity=identity)
-        == "control"
-    )
+    assert override_without_mv_option.evaluated_value == "control"
     assert override_without_mv_option.identity == identity
 
     override_with_missing_attributes = all_feature_states[6]

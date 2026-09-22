@@ -66,6 +66,7 @@ from features.versioning.dataclasses import MultivariateValueChangeSet
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+from tests.evaluation_helpers import evaluate_feature_state
 from tests.unit.experimentation.conftest import RolloutSpecFactory
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
@@ -2572,6 +2573,11 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
 ) -> None:
     # Given a running experiment whose rollout splits two variants 50/50
     option_a, option_b, _ = multivariate_options
+    # The fixture derives an option's value from its percentage, so two of them
+    # share a value. Key them so a variant identifies which option won.
+    for index, option in enumerate(multivariate_options):
+        option.key = f"variant-{index}"
+        option.save()
     experiment = Experiment.objects.create(
         environment=environment_v2_versioning,
         feature=multivariate_feature,
@@ -2592,7 +2598,7 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     )
     identity_hash_keys = [f"identity-{i}" for i in range(50)]
 
-    def variant_assignment() -> dict[str, int]:
+    def variant_assignment() -> dict[str, str]:
         override = (
             FeatureState.objects.get_live_feature_states(
                 environment=experiment.environment,
@@ -2607,12 +2613,12 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
             )
             .latest("id")
         )
-        assignment: dict[str, int] = {}
+        assignment: dict[str, str] = {}
         for key in identity_hash_keys:
-            option = override.get_multivariate_feature_state_value(key)
-            # The 50/50 split allocates 100%, so every identity lands on an option.
-            assert isinstance(option, MultivariateFeatureOption)
-            assignment[key] = option.id
+            variant = evaluate_feature_state(override, key).variant
+            # The 50/50 split allocates 100%, so every identity lands on a variant.
+            assert variant is not None
+            assignment[key] = variant
         return assignment
 
     # When the rollout is applied, then re-applied unchanged (e.g. tuned while
@@ -3511,7 +3517,7 @@ def _identity_flag_value(
         if feature_state.feature_id == feature.id
     ]
     return (
-        feature_state.get_feature_state_value(identity=identity),
+        feature_state.evaluated_value,
         (
             feature_state.feature_segment.segment_id
             if feature_state.feature_segment

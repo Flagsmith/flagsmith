@@ -36,7 +36,7 @@ total_variance_percentage = (
         (total_variance_percentage + 1, control_value),
     ),
 )
-@mock.patch("features.models.get_hashed_percentage_for_object_ids")
+@mock.patch("flag_engine.segments.evaluator.get_hashed_percentage_for_object_ids")
 def test_get_feature_states_for_identity__mv_percentage_allocation__returns_correct_value(  # type: ignore[no-untyped-def]
     mock_get_hashed_percentage_value,
     hashed_percentage,
@@ -159,7 +159,7 @@ def test_get_feature_states_for_identity__mv_percentage_allocation__returns_corr
         (total_variance_percentage + 1, "control"),
     ),
 )
-@mock.patch("features.models.get_hashed_percentage_for_object_ids")
+@mock.patch("flag_engine.segments.evaluator.get_hashed_percentage_for_object_ids")
 def test_get_feature_states_for_identity__mv_allocation__returns_variant(  # type: ignore[no-untyped-def]
     mock_get_hashed_percentage_value,
     hashed_percentage,

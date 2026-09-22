@@ -66,6 +66,10 @@ class Identity(models.Model):
             2. Segment - flag overridden for a segment this identity belongs to
             3. Environment - default value for the environment
 
+        Each returned feature state carries the engine's verdict on
+        `flag_result`, so that callers read the evaluated value and variant off
+        the row rather than resolving them again.
+
         :return: (list) flags for an identity with the correct values based on
             identity / segment priorities
         """
@@ -78,11 +82,15 @@ class Identity(models.Model):
 
         hide_disabled_flags = self.environment.get_hide_disabled_flags() is True
 
-        return [
-            feature_states_by_id[flag["metadata"]["feature_state_id"]]
-            for flag in result["flags"].values()
-            if not (hide_disabled_flags and not flag["enabled"])
-        ]
+        feature_states = []
+        for flag in result["flags"].values():
+            if hide_disabled_flags and not flag["enabled"]:
+                continue
+            feature_state = feature_states_by_id[flag["metadata"]["feature_state_id"]]
+            feature_state.flag_result = flag
+            feature_states.append(feature_state)
+
+        return feature_states
 
     def get_overridden_feature_states(self) -> dict[int, FeatureState]:
         """
