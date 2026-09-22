@@ -256,7 +256,7 @@
                 },
                 {
                     "name": "WAREHOUSE_CREDENTIALS_SECRET",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:warehouse-credentials-secret-REPLACE_AFTER_PULUMI_UP"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:warehouse-credentials-secret-230b64b-NwRQAb"
                 },
                 {
                     "name": "E2E_TEST_AUTH_TOKEN",
