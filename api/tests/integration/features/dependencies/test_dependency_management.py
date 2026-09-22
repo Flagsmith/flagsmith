@@ -520,6 +520,96 @@ def test_post_feature_dependency__feature_is_already_a_prerequisite__responds_40
     )
 
 
+def test_post_feature_dependency__dependency_already_exists__responds_400_with_error(
+    admin_client: APIClient,
+    environment_api_key: str,
+    environment_name: str,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    segment_id = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    ).json()["segment"]["id"]
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 400
+    segment = Segment.live_objects.get(feature=feature, is_system_segment=True)
+    assert segment.id == segment_id
+    assert response.json() == {
+        "code": "dependency_exists",
+        "message": 'The feature "checkout" already depends on the feature "payments".',
+        "environment": {"key": environment_api_key, "name": environment_name},
+        "path": [
+            DependencyEdge(
+                {
+                    "feature": {"id": feature.id, "name": "checkout"},
+                    "prerequisite": {"id": prerequisite.id, "name": "payments"},
+                    "segment": {
+                        "id": segment.id,
+                        "name": f"checkout-dependencies-{environment_api_key}",
+                        "rules": [
+                            {
+                                "type": "ANY",
+                                "conditions": [
+                                    {
+                                        "property": "$.flags.payments.enabled",
+                                        "operator": "NOT_EQUAL",
+                                        "value": "true",
+                                        "description": None,
+                                    }
+                                ],
+                                "rules": [],
+                            }
+                        ],
+                        "condition_json_path": "$[0].conditions[0]",
+                        "is_system": True,
+                    },
+                }
+            )
+        ],
+    }
+    assert list(
+        SegmentFlagReference.objects.values(
+            "segment", "prerequisite_feature", "condition_json_path"
+        )
+    ) == [
+        {
+            "segment": segment.id,
+            "prerequisite_feature": prerequisite.id,
+            "condition_json_path": "$[0].conditions[0]",
+        }
+    ]
+    assert list(
+        AuditLog.objects.filter(related_object_type="FEATURE").values(
+            "environment__api_key", "related_object_id", "log"
+        )
+    ) == [
+        {
+            "environment__api_key": environment_api_key,
+            "related_object_id": feature.id,
+            "log": "Feature 'payments' added as a dependency for feature 'checkout'.",
+        }
+    ]
+    assert log.has(
+        "dependencies.create_failed",
+        level="info",
+        organisation__id=organisation,
+        project__id=project,
+        environment__key=environment_api_key,
+        feature__name="checkout",
+        prerequisite_feature__name="payments",
+    )
+
+
 def test_post_feature_dependency__prerequisite_is_self__responds_400_with_error(
     admin_client: APIClient,
     environment_api_key: str,

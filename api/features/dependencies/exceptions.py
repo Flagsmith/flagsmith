@@ -76,6 +76,19 @@ class FeatureIsPrerequisiteError(DependencyConflictError):
         )
 
 
+class DependencyExistsError(DependencyConflictError):
+    """Raised where the requested dependency is already in place."""
+
+    default_code = "dependency_exists"
+
+    def get_message(self, path: DependencyPath) -> str:
+        existing_edge = path[0]
+        return (
+            f'The feature "{existing_edge["feature"]["name"]}" already depends'
+            f' on the feature "{existing_edge["prerequisite"]["name"]}".'
+        )
+
+
 class FeatureNotFoundError(NotFound):
     """Raised where a feature ID is not in the environment's project."""
 

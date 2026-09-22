@@ -13,6 +13,7 @@ from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.dependencies.exceptions import (
     CircularDependencyError,
+    DependencyExistsError,
     FeatureIsPrerequisiteError,
     PrerequisiteFeatureNotFoundError,
     PrerequisiteHasPrerequisiteError,
@@ -254,6 +255,15 @@ def create_flag_dependency(
     segment_name = f"{feature.name}-dependencies-{environment.api_key}"
     with transaction.atomic():
         edges = _get_dependency_edges(environment)
+        if existing_edges := [
+            edge
+            for edge in edges[feature.name]
+            if edge["prerequisite"]["id"] == prerequisite_feature.id
+        ]:
+            log.info("dependencies.create_failed")
+            raise DependencyExistsError(
+                environment=referencing_environment, path=existing_edges
+            )
         if prerequisite_edges := edges[prerequisite_feature.name]:
             log.info("dependencies.create_failed")
             raise PrerequisiteHasPrerequisiteError(
