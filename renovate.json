@@ -47,11 +47,25 @@
       "rangeStrategy": "bump"
     },
     {
+      "description": "Enforce a release-age cooldown on npm updates. npm's own min-release-age in .npmrc only applies when a lock file is resolved, and never during npm ci, so Renovate is what actually enforces this for automated updates.",
+      "matchManagers": ["npm"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Exempt internal Flagsmith npm packages from the cooldown, so we can publish and consume them immediately.",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["@flagsmith/**"],
+      "minimumReleaseAge": null
+    },
+    {
       "description": "Re-enable lock file maintenance, which security:only-security-updates disables. Keep last with an empty scope to ensure commit scope is applied correctly.",
       "matchUpdateTypes": ["lockFileMaintenance"],
       "enabled": true,
       "semanticCommitScope": ""
     }
   ],
+  "vulnerabilityAlerts": {
+    "minimumReleaseAge": null
+  },
   "semanticCommitScope": ""
 }
