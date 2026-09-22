@@ -241,27 +241,10 @@ def create_flag_dependency(
     if feature.id == prerequisite_feature.id:
         log.info("dependencies.create_failed")
         raise PrerequisiteIsSelfError()
-    edges = _get_dependency_edges(environment)
     referencing_environment: ReferencingEnvironment = {
         "key": environment.api_key,
         "name": environment.name,
     }
-    if prerequisite_edges := edges[prerequisite_feature.name]:
-        log.info("dependencies.create_failed")
-        raise PrerequisiteHasPrerequisiteError(
-            environment=referencing_environment, path=prerequisite_edges
-        )
-    if dependent_edges := [
-        edge
-        for feature_edges in edges.values()
-        for edge in feature_edges
-        if edge["prerequisite"]["id"] == feature.id
-    ]:
-        log.info("dependencies.create_failed")
-        raise FeatureIsPrerequisiteError(
-            environment=referencing_environment, path=dependent_edges
-        )
-
     condition: SegmentCondition = {
         "property": f"$.flags.{prerequisite_feature.name}.enabled",
         "operator": constants.NOT_EQUAL,
@@ -270,6 +253,22 @@ def create_flag_dependency(
     }
     segment_name = f"{feature.name}-dependencies-{environment.api_key}"
     with transaction.atomic():
+        edges = _get_dependency_edges(environment)
+        if prerequisite_edges := edges[prerequisite_feature.name]:
+            log.info("dependencies.create_failed")
+            raise PrerequisiteHasPrerequisiteError(
+                environment=referencing_environment, path=prerequisite_edges
+            )
+        if dependent_edges := [
+            edge
+            for feature_edges in edges.values()
+            for edge in feature_edges
+            if edge["prerequisite"]["id"] == feature.id
+        ]:
+            log.info("dependencies.create_failed")
+            raise FeatureIsPrerequisiteError(
+                environment=referencing_environment, path=dependent_edges
+            )
         try:
             segment = Segment.objects.get(
                 project_id=environment.project_id,
