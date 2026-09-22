@@ -265,7 +265,9 @@ def add_single_seat(subscription_id: str, organisation_id: int) -> None:
 
 def _get_additional_seat_addon_id(subscription: SubscriptionOps) -> str:
     # By design, Scale-Up-v4 subscriptions reuse the v2 seat addons.
-    addon_id = SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD.get(subscription.billing_period)
+    addon_id = SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD.get(
+        (subscription.billing_period, subscription.billing_period_unit)
+    )
     if addon_id:
         return addon_id
 
@@ -273,7 +275,7 @@ def _get_additional_seat_addon_id(subscription: SubscriptionOps) -> str:
         "Unexpected billing period for subscription ID %s",
         subscription.id,
     )
-    return SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD[1]
+    return SEAT_SCALE_UP_V2_ADDON_BY_BILLING_PERIOD[(1, "month")]
 
 
 def add_100k_api_calls_start_up(
