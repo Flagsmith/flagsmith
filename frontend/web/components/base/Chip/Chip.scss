@@ -13,13 +13,38 @@
     border-color: var(--color-border-action);
   }
 
+  // Status colours carry their meaning in the fill, so an outline only adds
+  // noise. Transparent rather than removed, so a status chip is the same
+  // height as a bordered one beside it.
+  &--success,
+  &--warning,
+  &--danger,
+  &--info,
+  &--muted,
+  &--solid {
+    border-color: transparent;
+  }
+
+  // Status dot. currentColor, so it follows the variant with nothing to wire.
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
   // Sizes (default is the base above).
   &--sm {
     padding: 3px 8px;
     font-size: 0.75rem;
   }
 
+  // 24px is fixed in the tags frame, so it is stated rather than left to derive
+  // from the inherited line-height. The frame's 8px vertical padding is an
+  // artefact of a height override on the auto-layout and is not applied.
   &--xs {
+    height: 24px;
     padding: 1px 6px;
     font-size: 0.6875rem;
   }
