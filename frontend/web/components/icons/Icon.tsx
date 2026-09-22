@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import { colorIconSecondary, colorIconWarning } from 'common/theme/tokens'
 
 export type IconName =
   | 'arrow-left'
@@ -50,7 +51,9 @@ export type IconName =
   | 'pr-closed'
   | 'pr-draft'
   | 'pr-linked'
+  | 'pr-dequeued'
   | 'pr-merged'
+  | 'stale'
   | 'radio'
   | 'refresh'
   | 'request'
@@ -1272,13 +1275,53 @@ const Icon: FC<IconType> = ({
         </svg>
       )
     }
+    case 'pr-dequeued': {
+      return (
+        <svg
+          width={width || '16'}
+          height={height || width || '16'}
+          viewBox='0 0 16 16'
+          fill='none'
+          stroke='#8957e5'
+          strokeWidth='1.5'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <path d='M10.7 3.5a5.3 5.3 0 1 1-5.4 0' />
+          <path d='M8.4 6.2 6.5 8l1.9 1.8' />
+          <circle cx='12.6' cy='3.7' r='1.2' fill='#8957e5' stroke='none' />
+        </svg>
+      )
+    }
+    case 'stale': {
+      return (
+        <svg
+          width={width || '16'}
+          height={height || width || '16'}
+          viewBox='0 0 16 16'
+          fill='none'
+          stroke={fill || colorIconWarning}
+          strokeWidth='1.5'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <path d='M10.6 3.6a5.3 5.3 0 1 0 1.9 2.8' />
+          <path d='M7.7 5v3.2l2.1 1.5' />
+          <path d='M11.2 2.8h2l-2 2.3h2' />
+        </svg>
+      )
+    }
     case 'pr-draft': {
       return (
         <svg
           height={height || '16'}
           version='1.1'
           width={width || '16'}
-          fill={fill || 'currentColor'}
+          // A neutral, unlike its hardcoded brand-coloured siblings, so it
+          // has to lift in dark mode.
+          fill={fill || colorIconSecondary}
           className='ml-1'
           xmlns='http://www.w3.org/2000/svg'
         >
