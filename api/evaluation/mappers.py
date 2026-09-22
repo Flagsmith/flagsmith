@@ -40,10 +40,7 @@ __all__ = (
 )
 
 
-#: Context key and name of the synthetic segment carrying identity overrides.
-#: Not a segment id — prefixed so it cannot collide with one.
-IDENTITY_OVERRIDES_SEGMENT_KEY = "$identity_overrides"
-IDENTITY_OVERRIDES_SEGMENT_NAME = "identity_overrides"
+IDENTITY_OVERRIDES_SEGMENT_KEY = IDENTITY_OVERRIDES_SEGMENT_NAME = "identity_overrides"
 
 
 _rule_type_adapter: TypeAdapter[RuleType] = TypeAdapter(RuleType)
@@ -103,7 +100,7 @@ def map_environment_to_evaluation_context(
         }
 
     (
-        features,
+        feature_states,
         identity_overrides,
         segment_overrides,
         mv_fs_values_by_feature_state_id,
@@ -153,15 +150,14 @@ def map_environment_to_evaluation_context(
 
     context["features"] = {
         (feature_context := to_feature_context(feature_state))["name"]: feature_context
-        for feature_state in features
+        for feature_state in feature_states
     }
 
     return context
 
 
 class _ResolvedFeatureStates(NamedTuple):
-    #: Environment defaults, i.e. neither segment- nor identity-scoped.
-    features: list["FeatureState"]
+    feature_states: list["FeatureState"]
     identity_overrides: list["FeatureState"]
     segment_overrides: dict[int, list["FeatureState"]]
     mv_fs_values_by_feature_state_id: dict[
@@ -217,7 +213,7 @@ def _resolve_feature_states(
                 feature_segment.segment_id, []
             ).append(feature_state)
         else:
-            resolved.features.append(feature_state)
+            resolved.feature_states.append(feature_state)
 
     return resolved
 
@@ -296,13 +292,7 @@ def map_segment_to_segment_context(
 def _map_identity_overrides_to_segment_context(
     overrides: "list[FeatureContext]",
 ) -> SegmentContext:
-    """Express identity overrides as a segment matching only that identity.
-
-    The engine has no identity-override concept, so SDKs model them as a
-    segment keyed on the identifier. Core API does the same, for one identity
-    at a time — the identity being evaluated is the only one whose overrides
-    are ever in the context.
-    """
+    """Express identity overrides as a segment matching the current identity."""
     return {
         "key": IDENTITY_OVERRIDES_SEGMENT_KEY,
         "name": IDENTITY_OVERRIDES_SEGMENT_NAME,
