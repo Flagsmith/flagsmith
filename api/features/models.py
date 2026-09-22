@@ -49,6 +49,7 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
+from evaluation.types import FlagResult
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
 from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
@@ -86,7 +87,6 @@ logger = logging.getLogger(__name__)
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.models import Environment
-    from util.mappers.engine import FlagResult
 
 
 class Feature(  # type: ignore[django-manager-missing]
@@ -530,7 +530,7 @@ class FeatureState(
     #: value and variant travel with the row they were resolved from, rather
     #: than being recomputed per serialiser. `None` where the state was read
     #: outside an evaluation, in which case only its stored value is meaningful.
-    flag_result: "FlagResult | None" = None
+    flag_result: FlagResult | None = None
 
     class Meta:
         ordering = ["id"]

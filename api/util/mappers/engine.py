@@ -2,17 +2,17 @@ from collections.abc import Iterable
 from itertools import chain
 from math import inf
 from operator import attrgetter
-from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional, TypeAlias
+from typing import TYPE_CHECKING, Dict, List, NamedTuple, Optional
 from uuid import UUID
 
 from django.db.models import Prefetch, Q
 from flag_engine.context import types as engine_types
-from flag_engine.result import types as engine_result_types
 from flag_engine.segments.constants import IS_SET
 from flag_engine.segments.types import ConditionOperator, RuleType
 from pydantic import TypeAdapter
 
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
+from evaluation.types import EvaluationContext, FeatureContext, SegmentContext
 from features.types import FeatureEngineMetadata
 from features.versioning.models import EnvironmentFeatureVersion
 from segments.types import SegmentEngineMetadata
@@ -57,21 +57,6 @@ if TYPE_CHECKING:  # pragma: no cover
     from segments.models import Condition, Segment, SegmentRule
 
 
-#: `EvaluationContext` and friends, parameterised with Core API's metadata
-#: types. Prefer these aliases over the bare generics so that reading metadata
-#: off a result stays type-checked.
-EvaluationContext: TypeAlias = engine_types.EvaluationContext[
-    SegmentEngineMetadata, FeatureEngineMetadata
-]
-SegmentContext: TypeAlias = engine_types.SegmentContext[
-    SegmentEngineMetadata, FeatureEngineMetadata
-]
-EvaluationResult: TypeAlias = engine_result_types.EvaluationResult[
-    SegmentEngineMetadata, FeatureEngineMetadata
-]
-FlagResult: TypeAlias = engine_result_types.FlagResult[FeatureEngineMetadata]
-
-
 class MappedEvaluationContext(NamedTuple):
     context: EvaluationContext
     #: The feature states the context was built from, by id. Transitional — see
@@ -85,11 +70,7 @@ IDENTITY_OVERRIDES_SEGMENT_KEY = "$identity_overrides"
 IDENTITY_OVERRIDES_SEGMENT_NAME = "identity_overrides"
 
 __all__ = (
-    "EvaluationContext",
-    "EvaluationResult",
     "MappedEvaluationContext",
-    "FlagResult",
-    "SegmentContext",
     "map_condition_to_segment_condition",
     "map_environment_api_key_to_engine",
     "map_environment_to_engine",
@@ -567,7 +548,7 @@ def map_environment_to_evaluation_context(
         *,
         segment_id: int | None = None,
         priority: float | None = None,
-    ) -> engine_types.FeatureContext[FeatureEngineMetadata]:
+    ) -> FeatureContext:
         return map_feature_state_to_feature_context(
             feature_state,
             mv_fs_values=mv_fs_values_by_feature_state_id.get(feature_state.pk),
@@ -682,7 +663,7 @@ def map_feature_state_to_feature_context(
     mv_fs_values: "Iterable[MultivariateFeatureStateValue] | None" = None,
     segment_id: int | None = None,
     priority: float | None = None,
-) -> engine_types.FeatureContext[FeatureEngineMetadata]:
+) -> FeatureContext:
     """Map a Django ORM FeatureState to a flag-engine FeatureContext TypedDict."""
     feature = feature_state.feature
     metadata = FeatureEngineMetadata(
@@ -694,7 +675,7 @@ def map_feature_state_to_feature_context(
     if feature_state.identity_id is not None:
         metadata["identity_id"] = feature_state.identity_id
 
-    feature_context: engine_types.FeatureContext[FeatureEngineMetadata] = {
+    feature_context: FeatureContext = {
         # The engine seeds multivariate variant allocation on the feature
         # context key, so it has to be the bucketing seed rather than the
         # feature state id, or recreating a feature state would move every
@@ -743,7 +724,7 @@ def _map_mv_fs_values_to_feature_values(
 def map_segment_to_segment_context(
     segment: "Segment",
     *,
-    overrides: "list[engine_types.FeatureContext[FeatureEngineMetadata]] | None" = None,
+    overrides: "list[FeatureContext] | None" = None,
 ) -> SegmentContext:
     """Map a Django ORM Segment to a flag-engine SegmentContext TypedDict."""
     segment_context: SegmentContext = {
@@ -758,7 +739,7 @@ def map_segment_to_segment_context(
 
 
 def _map_identity_overrides_to_segment_context(
-    overrides: "list[engine_types.FeatureContext[FeatureEngineMetadata]]",
+    overrides: "list[FeatureContext]",
 ) -> SegmentContext:
     """Express identity overrides as a segment matching only that identity.
 

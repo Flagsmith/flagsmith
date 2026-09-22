@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, NamedTuple
 
-from util.mappers.engine import EvaluationContext, EvaluationResult
+from evaluation.types import EvaluationContext, EvaluationResult
 
 if TYPE_CHECKING:
     from features.models import FeatureState

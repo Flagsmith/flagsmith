@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 from flag_engine.engine import get_evaluation_result
 
-from util.mappers.engine import EvaluationContext, map_feature_state_to_feature_context
+from evaluation.types import EvaluationContext
+from util.mappers.engine import map_feature_state_to_feature_context
 
 if TYPE_CHECKING:
     from features.models import FeatureState
