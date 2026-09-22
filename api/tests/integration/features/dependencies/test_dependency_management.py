@@ -18,16 +18,26 @@ from users.models import FFAdminUser
 pytestmark = pytest.mark.usefixtures("versioned_environment")
 
 
+@pytest.mark.parametrize(
+    "prerequisite_name, condition_property",
+    [
+        ("payments", '$.flags["payments"].enabled'),
+        ("payments v2", '$.flags["payments v2"].enabled'),
+        ('payments "v2"', '$.flags["payments \\"v2\\""].enabled'),
+    ],
+)
 def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependency(
     admin_client: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
     organisation: int,
     project: int,
+    prerequisite_name: str,
+    condition_property: str,
 ) -> None:
     # Given
     feature = Feature.objects.create(name="checkout", project_id=project)
-    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    prerequisite = Feature.objects.create(name=prerequisite_name, project_id=project)
 
     # When
     response = admin_client.post(
@@ -40,7 +50,7 @@ def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependenc
     assert response.json() == DependencyEdge(
         {
             "feature": {"id": feature.id, "name": "checkout"},
-            "prerequisite": {"id": prerequisite.id, "name": "payments"},
+            "prerequisite": {"id": prerequisite.id, "name": prerequisite_name},
             "segment": {
                 "id": segment.id,
                 "name": f"checkout-dependencies-{environment_api_key}",
@@ -49,7 +59,7 @@ def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependenc
                         "type": "ANY",
                         "conditions": [
                             {
-                                "property": "$.flags.payments.enabled",
+                                "property": condition_property,
                                 "operator": "NOT_EQUAL",
                                 "value": "true",
                                 "description": None,
@@ -94,7 +104,7 @@ def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependenc
         {
             "environment__api_key": environment_api_key,
             "related_object_id": feature.id,
-            "log": "Feature 'payments' added as a dependency for feature 'checkout'.",
+            "log": f"Feature '{prerequisite_name}' added as a dependency for feature 'checkout'.",
         }
     ]
     assert log.has(
@@ -104,7 +114,7 @@ def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependenc
         project__id=project,
         environment__key=environment_api_key,
         feature__name="checkout",
-        prerequisite_feature__name="payments",
+        prerequisite_feature__name=prerequisite_name,
     )
 
 
@@ -144,13 +154,13 @@ def test_add_feature_dependency__feature_has_another_prerequisite__responds_201_
                         "type": "ANY",
                         "conditions": [
                             {
-                                "property": "$.flags.payments.enabled",
+                                "property": '$.flags["payments"].enabled',
                                 "operator": "NOT_EQUAL",
                                 "value": "true",
                                 "description": None,
                             },
                             {
-                                "property": "$.flags.inventory.enabled",
+                                "property": '$.flags["inventory"].enabled',
                                 "operator": "NOT_EQUAL",
                                 "value": "true",
                                 "description": None,
@@ -259,7 +269,7 @@ def test_add_feature_dependency__feature_has_another_override__responds_201_reor
                         "type": "ANY",
                         "conditions": [
                             {
-                                "property": "$.flags.payments.enabled",
+                                "property": '$.flags["payments"].enabled',
                                 "operator": "NOT_EQUAL",
                                 "value": "true",
                                 "description": None,
@@ -371,7 +381,7 @@ def test_add_feature_dependency__prerequisite_already_has_prerequisite__responds
                                 "type": "ANY",
                                 "conditions": [
                                     {
-                                        "property": "$.flags.inventory.enabled",
+                                        "property": '$.flags["inventory"].enabled',
                                         "operator": "NOT_EQUAL",
                                         "value": "true",
                                         "description": None,
@@ -466,7 +476,7 @@ def test_add_feature_dependency__feature_is_already_a_prerequisite__responds_400
                                 "type": "ANY",
                                 "conditions": [
                                     {
-                                        "property": "$.flags.checkout.enabled",
+                                        "property": '$.flags["checkout"].enabled',
                                         "operator": "NOT_EQUAL",
                                         "value": "true",
                                         "description": None,
@@ -561,7 +571,7 @@ def test_add_feature_dependency__dependency_already_exists__responds_400_with_er
                                 "type": "ANY",
                                 "conditions": [
                                     {
-                                        "property": "$.flags.payments.enabled",
+                                        "property": '$.flags["payments"].enabled',
                                         "operator": "NOT_EQUAL",
                                         "value": "true",
                                         "description": None,

@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from collections.abc import Collection
 
@@ -246,7 +247,7 @@ def create_flag_dependency(
         "name": environment.name,
     }
     condition: SegmentCondition = {
-        "property": f"$.flags.{prerequisite_feature.name}.enabled",
+        "property": f"$.flags[{json.dumps(prerequisite_feature.name)}].enabled",
         "operator": constants.NOT_EQUAL,
         "value": "true",
         "description": None,
