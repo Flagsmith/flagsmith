@@ -7,11 +7,16 @@ from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from features.dependencies.types import DependencyPath, ReferencingEnvironment
 
 
-class _DependencyConflictDetail(TypedDict):
-    """The body served where existing dependencies refuse a change."""
+class DependencyErrorDetail(TypedDict):
+    """The body served where a dependency request is refused."""
 
     code: str
     message: str
+
+
+class DependencyConflictDetail(DependencyErrorDetail):
+    """The body served where existing dependencies refuse a change."""
+
     environment: ReferencingEnvironment
     path: DependencyPath
 
@@ -25,7 +30,7 @@ class DependencyConflictError(APIException):
         self, environment: ReferencingEnvironment, path: DependencyPath
     ) -> None:
         super().__init__()
-        detail: _DependencyConflictDetail = {
+        detail: DependencyConflictDetail = {
             "code": self.default_code,
             "message": self.get_message(path),
             "environment": environment,

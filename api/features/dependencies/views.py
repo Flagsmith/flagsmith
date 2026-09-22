@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -7,7 +7,11 @@ from rest_framework.views import APIView
 
 from core.types import AuthenticatedRequest
 from environments.models import Environment
-from features.dependencies.exceptions import FeatureNotFoundError
+from features.dependencies.exceptions import (
+    DependencyConflictDetail,
+    DependencyErrorDetail,
+    FeatureNotFoundError,
+)
 from features.dependencies.permissions import check_manage_permissions
 from features.dependencies.services import create_flag_dependency
 from features.dependencies.types import DependencyEdge
@@ -29,7 +33,15 @@ class FeatureDependencyAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        responses={201: DependencyEdge},
+        responses={
+            201: DependencyEdge,
+            400: PolymorphicProxySerializer(
+                component_name="DependencyRefusedDetail",
+                serializers=[DependencyErrorDetail, DependencyConflictDetail],  # type: ignore[list-item]
+                resource_type_field_name=None,
+            ),
+            403: DependencyErrorDetail,
+        },
         description="Make the feature depend on the prerequisite feature being enabled.",
     )
     def post(
