@@ -1,5 +1,6 @@
 import pytest
 from flag_engine.segments.constants import EQUAL
+from pytest_lazy_fixtures import lf as lazy_fixture
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
@@ -16,27 +17,32 @@ from features.value_types import STRING
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 
-#: `multivariate_feature`'s initial value, served when nothing is allocated.
-CONTROL_VALUE = "control"
 
-#: Variant allocation is seeded on the feature state's hashing salt and the
-#: identity's hash key, which is derived from the environment's API key. Pin
-#: both, so that the expectations below can be plain data.
-#:
-#: They were derived from Core API's allocation as it stood before flag-engine
-#: took it over — an md5 of "{seed},{identity key}", modulo 9999, over 9998 —
-#: rather than computed with the engine's own hashing, which would move in step
-#: with any change and so assert nothing.
-#:
-#: A failure means enrolled identities would land on a different variant than
-#: they do in production. See #7913.
-MV_HASHING_SALT = 1
-HASHING_ENVIRONMENT_API_KEY = "test-environment-key"
+@pytest.fixture()
+def control_value() -> str:
+    """`multivariate_feature`'s initial value, served when nothing is allocated."""
+    return "control"
 
 
 @pytest.fixture()
-def hashing_environment(environment: Environment) -> Environment:
-    environment.api_key = HASHING_ENVIRONMENT_API_KEY
+def mv_hashing_salt() -> int:
+    """A pinned bucketing seed, half of what decides an identity's variant."""
+    return 1
+
+
+@pytest.fixture()
+def hashing_environment_api_key() -> str:
+    """A pinned API key, which an identity's hash key is derived from."""
+    return "test-environment-key"
+
+
+@pytest.fixture()
+def hashing_environment(
+    environment: Environment,
+    hashing_environment_api_key: str,
+) -> Environment:
+    """An environment whose identities bucket predictably."""
+    environment.api_key = hashing_environment_api_key
     environment.use_identity_composite_key_for_hashing = True
     environment.save()
     return environment
@@ -129,8 +135,19 @@ def test_evaluate_identity__segment_overrides__lowest_priority_wins(
 
 def test_evaluate_identity__multivariate_feature__buckets_as_before_the_engine(
     hashing_environment: Environment,
+    mv_hashing_salt: int,
     project: Project,
 ) -> None:
+    """An identity must land on the variant it always has.
+
+    The expectations were derived from Core API's allocation as it stood
+    before flag-engine took it over — an md5 of "{seed},{identity key}",
+    modulo 9999, over 9998 — rather than computed with the engine's own
+    hashing, which would move in step with any change and so assert nothing.
+
+    A failure means enrolled identities would be served a different variant
+    than they are in production. See #7913.
+    """
     # Given
     # ten equal variants, so the variant an identity gets names the decile its
     # hash fell in
@@ -167,7 +184,7 @@ def test_evaluate_identity__multivariate_feature__buckets_as_before_the_engine(
         identity=None,
         feature_segment=None,
     )
-    feature_state.mv_hashing_salt = MV_HASHING_SALT
+    feature_state.mv_hashing_salt = mv_hashing_salt
     feature_state.save()
 
     # When
@@ -205,8 +222,7 @@ def test_evaluate_identity__multivariate_feature__returns_variant_key(
 
     # Then
     flag = result["flags"][multivariate_feature.name]
-    # Either a named variant or the control bucket — never a silent `None`,
-    # which is what an unkeyed variant context would produce.
+    # Either a named variant or the control bucket
     assert flag["variant"] in {"control", "variant-0", "variant-1", "variant-2"}
 
 
@@ -218,13 +234,14 @@ def test_evaluate_identity__multivariate_feature__returns_variant_key(
         pytest.param(
             "identity-4",
             CONTROL_VARIANT_KEY,
-            CONTROL_VALUE,
+            lazy_fixture("control_value"),
             id="unallocated_falls_through",
         ),
     ),
 )
 def test_evaluate_identity__multivariate_feature__allocates_variants_in_order(
     hashing_environment: Environment,
+    mv_hashing_salt: int,
     multivariate_feature: Feature,
     identifier: str,
     expected_variant: str,
@@ -237,7 +254,7 @@ def test_evaluate_identity__multivariate_feature__allocates_variants_in_order(
         identity=None,
         feature_segment=None,
     )
-    feature_state.mv_hashing_salt = MV_HASHING_SALT
+    feature_state.mv_hashing_salt = mv_hashing_salt
     feature_state.save()
 
     # Two variants taking 20% and 30%, leaving half the range to the control.
