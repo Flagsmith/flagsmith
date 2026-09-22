@@ -1,8 +1,7 @@
-from typing import TypedDict
-
 from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from rest_framework import status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
+from typing_extensions import TypedDict
 
 from features.dependencies.types import DependencyPath, ReferencingEnvironment
 
