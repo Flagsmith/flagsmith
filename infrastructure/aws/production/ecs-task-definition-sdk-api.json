@@ -261,7 +261,7 @@
                 },
                 {
                     "name": "WAREHOUSE_CREDENTIALS_SECRET",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:warehouse-credentials-secret-REPLACE_AFTER_PULUMI_UP"
                 },
                 {
                     "name": "E2E_TEST_AUTH_TOKEN",
