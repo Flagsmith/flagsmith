@@ -63,6 +63,7 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from evaluation.services import get_identity_feature_states
 from features.dependencies.services import validate_segment_flag_dependencies
 from features.feature_lifecycle.services import (
     annotate_feature_queryset_with_lifecycle_stage,
@@ -882,7 +883,7 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
     @action(methods=["GET"], detail=False)
     def all(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         identity = get_object_or_404(Identity, pk=self.kwargs["identity_pk"])
-        feature_states = identity.get_all_feature_states()
+        feature_states = get_identity_feature_states(identity)
 
         serializer = IdentityAllFeatureStatesSerializer(
             instance=feature_states,
@@ -1130,7 +1131,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             )
         replace_identity_environment(identity, request.environment)
 
-        feature_states = identity.get_all_feature_states()
+        feature_states = get_identity_feature_states(identity)
 
         if feature_name := request.GET.get("feature"):
             # Filtered after evaluation rather than before: a segment may

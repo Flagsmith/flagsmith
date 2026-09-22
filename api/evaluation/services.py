@@ -10,9 +10,10 @@ if TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
     from environments.models import Environment
+    from features.models import FeatureState
 
 
-__all__ = ("evaluate_identity",)
+__all__ = ("evaluate_identity", "get_identity_feature_states")
 
 
 def evaluate_identity(
@@ -41,3 +42,28 @@ def evaluate_identity(
         feature_states.append(feature_state)
 
     return IdentityEvaluation(result, feature_states)
+
+
+def get_identity_feature_states(
+    identity: "Identity",
+    *,
+    traits: "list[Trait] | None" = None,
+    additional_filters: Q | None = None,
+) -> "list[FeatureState]":
+    """The feature states to serve `identity`, one per feature.
+
+    Each carries the engine's verdict on `flag_result`, so a caller reads the
+    evaluated value and variant off the row rather than resolving them again.
+    """
+    _, feature_states = evaluate_identity(
+        identity,
+        traits=traits,
+        additional_filters=additional_filters,
+    )
+
+    if identity.environment.get_hide_disabled_flags() is True:
+        return [
+            feature_state for feature_state in feature_states if feature_state.enabled
+        ]
+
+    return feature_states

@@ -1,7 +1,6 @@
 from itertools import chain
 
 from django.db import models
-from django.db.models import Q
 from flag_engine.engine import get_evaluation_result
 
 from environments.identities.managers import IdentityManager
@@ -9,7 +8,6 @@ from environments.identities.traits.models import Trait
 from environments.models import Environment
 from environments.sdk.types import SDKTraitData
 from evaluation.mappers import map_environment_to_evaluation_context
-from evaluation.services import evaluate_identity
 from features.models import FeatureState
 from segments.models import Segment
 
@@ -50,42 +48,6 @@ class Identity(models.Model):
             if use_identity_composite_key_for_hashing
             else str(self.id)
         )
-
-    def get_all_feature_states(
-        self,
-        traits: list[Trait] | None = None,
-        additional_filters: Q | None = None,
-    ) -> list[FeatureState]:
-        """
-        Get all feature states for an identity. This method returns a single flag for
-        each feature in the identity's environment's project. The flag returned is the
-        correct flag based on the priorities as follows (highest -> lowest):
-
-            1. Identity - flag override for this specific identity
-            2. Segment - flag overridden for a segment this identity belongs to
-            3. Environment - default value for the environment
-
-        Each returned feature state carries the engine's verdict on
-        `flag_result`, so that callers read the evaluated value and variant off
-        the row rather than resolving them again.
-
-        :return: (list) flags for an identity with the correct values based on
-            identity / segment priorities
-        """
-        _, feature_states = evaluate_identity(
-            self,
-            traits=traits,
-            additional_filters=additional_filters,
-        )
-
-        if self.environment.get_hide_disabled_flags() is True:
-            return [
-                feature_state
-                for feature_state in feature_states
-                if feature_state.enabled
-            ]
-
-        return feature_states
 
     def get_overridden_feature_states(self) -> dict[int, FeatureState]:
         """

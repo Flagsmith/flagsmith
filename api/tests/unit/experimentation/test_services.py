@@ -22,6 +22,7 @@ from core.dataclasses import AuthorData
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
+from evaluation.services import get_identity_feature_states
 from experimentation import services
 from experimentation.constants import MAX_AUDIENCE_SEGMENTS
 from experimentation.dataclasses import (
@@ -3498,7 +3499,7 @@ def _identity_flag_value(
     feature segment it came from (``None`` for the environment default)."""
     (feature_state,) = [
         feature_state
-        for feature_state in identity.get_all_feature_states()
+        for feature_state in get_identity_feature_states(identity)
         if feature_state.feature_id == feature.id
     ]
     return (

@@ -17,6 +17,7 @@ from pytest_mock import MockerFixture
 from core.constants import STRING
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey, Webhook
+from evaluation.services import get_identity_feature_states
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -539,7 +540,7 @@ def test_export_edge_identities__identities_with_overrides_and_traits__exports_a
     assert bool_trait.trait_key == "bool_trait"
     assert bool_trait.trait_value is True
 
-    all_feature_states = identity.get_all_feature_states()
+    all_feature_states = get_identity_feature_states(identity)
     assert len(all_feature_states) == 7
 
     actual_mv_override = all_feature_states[0]
