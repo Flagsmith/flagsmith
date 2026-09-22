@@ -1,14 +1,18 @@
 import pytest
 from flag_engine.segments.constants import EQUAL
-from flag_engine.utils.hashing import get_hashed_percentage_for_object_ids
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from evaluation.services import evaluate_identity
 from features.constants import CONTROL_VARIANT_KEY
+from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
-from features.multivariate.models import MultivariateFeatureStateValue
+from features.multivariate.models import (
+    MultivariateFeatureOption,
+    MultivariateFeatureStateValue,
+)
+from features.value_types import STRING
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from tests.evaluation_helpers import evaluate_feature_state
@@ -102,51 +106,67 @@ def test_evaluate_identity__segment_overrides__lowest_priority_wins(
     assert result["flags"][feature.name]["value"] == "winner"
 
 
-@pytest.mark.parametrize("mv_hashing_salt", [None, 12345])
-def test_evaluate_identity__multivariate_feature__matches_legacy_bucketing(
-    identity: Identity,
-    multivariate_feature: Feature,
-    mv_hashing_salt: int | None,
-) -> None:
-    """The engine must bucket an identity exactly as Core API used to.
+#: How the identity keys below bucket for `MV_HASHING_SALT` under ten equal
+#: variants, so each expectation names the decile its hash falls in.
+#:
+#: Derived from Core API's allocation as it stood before flag-engine took it
+#: over — an md5 of "{seed},{identity key}", modulo 9999, over 9998 — and
+#: frozen here as plain data. Deliberately not computed with the engine's own
+#: hashing, which would move in step with any change and assert nothing.
+#:
+#: A failure here means enrolled identities would land on a different variant
+#: than they do in production. See #7913.
+MV_HASHING_SALT = 1
+VARIANT_BY_IDENTITY_KEY = {
+    "identity-0": "variant-9",
+    "identity-1": "variant-9",
+    "identity-2": "variant-9",
+    "identity-3": "variant-2",
+    "identity-4": "variant-1",
+    "identity-5": "variant-3",
+    "identity-6": "variant-4",
+    "identity-7": "variant-1",
+    "identity-8": "variant-2",
+    "identity-9": "variant-1",
+}
 
-    Core API seeds allocation on `mv_hashing_seed`, a lineage constant that
-    survives a feature state being recreated (#7913). Seeding on anything else
-    — the feature state id, say — would silently move enrolled identities to a
-    different variant.
-    """
+
+def test_evaluate_feature_state__multivariate_feature__buckets_as_before_the_engine(
+    environment: Environment,
+    project: Project,
+) -> None:
     # Given
-    feature_state = FeatureState.objects.get(
-        feature=multivariate_feature, environment=identity.environment
+    # a multivariate feature split into ten equal variants, so that the variant
+    # an identity gets names the decile its hash fell in
+    feature = Feature.objects.create(
+        name="decile_feature",
+        project=project,
+        type=MULTIVARIATE,
+        initial_value="control",
     )
-    feature_state.mv_hashing_salt = mv_hashing_salt
+    for index in range(10):
+        MultivariateFeatureOption.objects.create(
+            feature=feature,
+            default_percentage_allocation=10,
+            type=STRING,
+            string_value=f"variant-{index}-value",
+            key=f"variant-{index}",
+        )
+
+    feature_state = FeatureState.objects.get(
+        environment=environment, feature=feature, identity=None, feature_segment=None
+    )
+    feature_state.mv_hashing_salt = MV_HASHING_SALT
     feature_state.save()
 
-    hash_key = identity.get_hash_key(
-        identity.environment.use_identity_composite_key_for_hashing
-    )
-
-    # The allocation Core API performed before the engine took it over, kept
-    # here as an oracle independent of the code under test.
-    percentage_value = get_hashed_percentage_for_object_ids(
-        [feature_state.mv_hashing_seed, hash_key]
-    )
-    expected_value = feature_state.get_feature_state_value()
-    start_percentage = 0.0
-    for mv_value in sorted(
-        feature_state.multivariate_feature_state_values.all(), key=lambda o: o.id
-    ):
-        limit = mv_value.percentage_allocation + start_percentage
-        if start_percentage <= percentage_value < limit:
-            expected_value = mv_value.multivariate_feature_option.value
-            break
-        start_percentage = limit
-
     # When
-    result, _ = evaluate_identity(identity)
+    variant_by_identity_key = {
+        identity_key: evaluate_feature_state(feature_state, identity_key).variant
+        for identity_key in VARIANT_BY_IDENTITY_KEY
+    }
 
     # Then
-    assert result["flags"][multivariate_feature.name]["value"] == expected_value
+    assert variant_by_identity_key == VARIANT_BY_IDENTITY_KEY
 
 
 def test_evaluate_identity__multivariate_feature__returns_variant_key(
