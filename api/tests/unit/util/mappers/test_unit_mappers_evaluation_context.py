@@ -9,6 +9,7 @@ from util.mappers.engine import (
     IDENTITY_OVERRIDES_SEGMENT_KEY,
     IDENTITY_OVERRIDES_SEGMENT_NAME,
     map_environment_to_evaluation_context,
+    map_feature_state_to_feature_context,
 )
 
 
@@ -199,4 +200,40 @@ def test_map_environment_to_evaluation_context__hashing_setting__sets_matching_i
         identity.composite_key
         if use_identity_composite_key_for_hashing
         else str(identity.pk)
+    )
+
+
+@pytest.mark.parametrize(
+    ["mv_hashing_salt", "expected_key"],
+    [
+        pytest.param(None, "id", id="no_salt"),
+        pytest.param(999, "999", id="salt_set"),
+    ],
+)
+def test_map_feature_state_to_feature_context__multivariate_feature__keys_on_hashing_seed(
+    environment: Environment,
+    multivariate_feature: Feature,
+    mv_hashing_salt: int | None,
+    expected_key: str,
+) -> None:
+    """The context key seeds multivariate allocation.
+
+    It has to be the lineage constant (#7913), so that recreating a feature
+    state does not move enrolled identities to another variant.
+    """
+    # Given
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+    feature_state.mv_hashing_salt = mv_hashing_salt
+
+    # When
+    feature_context = map_feature_state_to_feature_context(feature_state)
+
+    # Then
+    assert feature_context["key"] == (
+        str(feature_state.id) if expected_key == "id" else expected_key
     )

@@ -6,6 +6,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.db.models import Prefetch, Q
 from django.utils import timezone
+from flag_engine.engine import get_evaluation_result
 
 from api_keys.user import APIKeyUser
 from edge_api.identities.tasks import (
@@ -24,6 +25,10 @@ from users.models import FFAdminUser
 from util.engine_models.features.models import FeatureStateModel
 from util.engine_models.identities.models import IdentityFeaturesList, IdentityModel
 from util.mappers import map_engine_identity_to_identity_document
+from util.mappers.engine import (
+    EvaluationContext,
+    map_feature_state_to_feature_context,
+)
 
 
 class EdgeIdentity:
@@ -103,31 +108,58 @@ class EdgeIdentity:
             | Q(feature_segment__isnull=True)
         )
 
-        feature_states: dict[str, FeatureState | FeatureStateModel] = (
-            get_environment_flags_dict(  # type: ignore[assignment]
-                environment=django_environment,
-                additional_filters=additional_filters,
-                additional_select_related_args=[
-                    "feature",
-                    "feature_segment",
-                    "feature_segment__segment",
-                    "feature_state_value",
-                ],
-                additional_prefetch_related_args=[
-                    Prefetch(
-                        "multivariate_feature_state_values",
-                        queryset=MultivariateFeatureStateValue.objects.select_related(
-                            "multivariate_feature_option"
-                        ),
-                    )
-                ],
-                # since we only want to retrieve the highest priority feature state,
-                # we key off the feature name instead of the default
-                # (feature_id, segment_id, identity_id). This will give us only e.g.
-                # the highest priority matching segment override for a given feature.
-                key_function=lambda fs: fs.feature.name,  # type: ignore[arg-type,return-value]
-            )
+        django_feature_states: dict[str, FeatureState] = get_environment_flags_dict(  # type: ignore[assignment]
+            environment=django_environment,
+            additional_filters=additional_filters,
+            additional_select_related_args=[
+                "feature",
+                "feature_segment",
+                "feature_segment__segment",
+                "feature_state_value",
+            ],
+            additional_prefetch_related_args=[
+                Prefetch(
+                    "multivariate_feature_state_values",
+                    queryset=MultivariateFeatureStateValue.objects.select_related(
+                        "multivariate_feature_option"
+                    ),
+                )
+            ],
+            # since we only want to retrieve the highest priority feature state,
+            # we key off the feature name instead of the default
+            # (feature_id, segment_id, identity_id). This will give us only e.g.
+            # the highest priority matching segment override for a given feature.
+            key_function=lambda fs: fs.feature.name,  # type: ignore[arg-type,return-value]
         )
+
+        # The winning row per feature is settled above, but the value an
+        # identity is served for a multivariate feature is the engine's to
+        # decide. Ask it, and carry the answer on each row.
+        context: EvaluationContext = {
+            "environment": {
+                "key": django_environment.api_key,
+                "name": django_environment.name or "",
+            },
+            "identity": {
+                "identifier": self.identifier,
+                "key": self.get_hash_key(
+                    django_environment.use_identity_composite_key_for_hashing
+                ),
+            },
+            "features": {
+                feature_name: map_feature_state_to_feature_context(
+                    feature_state,
+                    mv_fs_values=feature_state.multivariate_feature_state_values.all(),
+                )
+                for feature_name, feature_state in django_feature_states.items()
+            },
+        }
+        for flag in get_evaluation_result(context)["flags"].values():
+            django_feature_states[flag["name"]].flag_result = flag
+
+        feature_states: dict[str, FeatureState | FeatureStateModel] = {
+            **django_feature_states
+        }
 
         # Since the identity overrides are the highest priority, we can now iterate
         # over the dictionary and replace any feature states with those that have

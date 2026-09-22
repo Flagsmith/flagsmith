@@ -1,4 +1,3 @@
-from features.evaluation import evaluate_feature_state as evaluate_flag
 from features.models import FeatureState
 from integrations.webhook.serializers import (
     IntegrationFeatureStateSerializer,
@@ -7,17 +6,19 @@ from integrations.webhook.serializers import (
 
 
 def test_integration_feature_state_serializer__multivariate_feature__returns_correct_weight(  # type: ignore[no-untyped-def]
-    identity, multivariate_feature, mocker
+    identity, multivariate_feature
 ):
     # Given
     mv_option = multivariate_feature.multivariate_options.first()
     feature_state = FeatureState.objects.filter(feature=multivariate_feature).first()
-    # Bucket the identity into the first option, whatever its weight.
-    mocker.patch(
-        "flag_engine.segments.evaluator.get_hashed_percentage_for_object_ids",
-        return_value=0.0,
-    )
-    feature_state.flag_result = evaluate_flag(feature_state, identity.get_hash_key())
+    # The identity was evaluated into the first option.
+    feature_state.flag_result = {
+        "name": multivariate_feature.name,
+        "enabled": feature_state.enabled,
+        "value": mv_option.value,
+        "reason": "DEFAULT",
+        "variant": mv_option.key,
+    }
 
     # When
     serializer = IntegrationFeatureStateSerializer(

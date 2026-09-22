@@ -7,7 +7,9 @@ same question here, for a bare identity key rather than a persisted identity.
 
 from typing import TYPE_CHECKING, Any, NamedTuple
 
-from features.evaluation import evaluate_feature_state as _evaluate_feature_state
+from flag_engine.engine import get_evaluation_result
+
+from util.mappers.engine import EvaluationContext, map_feature_state_to_feature_context
 
 if TYPE_CHECKING:
     from features.models import FeatureState
@@ -26,5 +28,16 @@ def evaluate_feature_state(
     identity_key: str | int,
 ) -> EvaluatedFlag:
     """Evaluate `feature_state` as the engine would, for `identity_key`."""
-    flag_result = _evaluate_feature_state(feature_state, str(identity_key))
+    feature_name = feature_state.feature.name
+    context: EvaluationContext = {
+        "environment": {"key": "", "name": ""},
+        "identity": {"identifier": "", "key": str(identity_key)},
+        "features": {
+            feature_name: map_feature_state_to_feature_context(
+                feature_state,
+                mv_fs_values=feature_state.multivariate_feature_state_values.all(),
+            )
+        },
+    }
+    flag_result = get_evaluation_result(context)["flags"][feature_name]
     return EvaluatedFlag(flag_result["value"], flag_result["variant"])

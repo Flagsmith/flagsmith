@@ -7,7 +7,6 @@ from rest_framework.exceptions import ValidationError
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.serializers import EnvironmentSerializerFull
-from features.evaluation import evaluate_feature_state
 from features.models import FeatureState
 from features.serializers import FeatureStateSerializerFull
 from util.engine_models.features.models import FeatureStateModel
@@ -94,28 +93,21 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):  # type: ignor
         IdentityAllFeatureStatesMVFeatureStateValueSerializer(many=True)
     )
 
-    @property
-    def _identity_hash_key(self) -> str:
-        environment = Environment.get_from_cache(self.context["environment_api_key"])
-        assert environment
-        return self.context["identity"].get_hash_key(  # type: ignore[no-any-return]
-            environment.use_identity_composite_key_for_hashing
-        )
-
     def get_feature_state_value(
         self, instance: typing.Union[FeatureState, FeatureStateModel]
     ) -> typing.Union[str, int, bool]:
         if isinstance(instance, FeatureState):
-            if (flag_result := instance.flag_result) is not None:
-                return flag_result["value"]  # type: ignore[no-any-return]
-            # An edge identity's overrides live in DynamoDB, so these rows were
-            # read straight from the ORM and never evaluated. Only multivariate
-            # allocation is left to resolve.
-            return evaluate_feature_state(  # type: ignore[no-any-return]
-                instance, self._identity_hash_key
-            )["value"]
+            return instance.evaluated_value  # type: ignore[no-any-return]
 
-        return instance.get_value(self._identity_hash_key)  # type: ignore[no-any-return]
+        # An edge identity's own overrides are stored in DynamoDB rather than
+        # the ORM, and are still resolved outside the engine.
+        environment = Environment.get_from_cache(self.context["environment_api_key"])
+        assert environment
+        return instance.get_value(  # type: ignore[no-any-return]
+            self.context["identity"].get_hash_key(
+                environment.use_identity_composite_key_for_hashing
+            )
+        )
 
     def get_overridden_by(self, instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         if getattr(instance, "feature_segment_id", None) is not None:

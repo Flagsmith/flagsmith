@@ -12,7 +12,7 @@ from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
 )
 from features.feature_types import STANDARD
-from features.models import Feature, FeatureState
+from features.models import Feature
 from users.models import FFAdminUser
 from util.engine_models.features.models import FeatureModel, FeatureStateModel
 from util.mappers import map_identity_to_identity_document
@@ -184,19 +184,31 @@ def test_edge_identity_feature_state_serializer__update_override__calls_webhook(
 
 
 def test_all_feature_states_serializer__edge_identity_with_mv_feature__uses_mv_values(  # type: ignore[no-untyped-def]
-    identity, multivariate_feature, environment
+    identity, multivariate_feature, environment, mocker
 ):
     # Given
     identity_document = map_identity_to_identity_document(identity)
     del identity_document["django_id"]  # delete django id to simulate an edge identity
-    identity_model = EdgeIdentity.from_identity_document(identity_document)
+    edge_identity = EdgeIdentity.from_identity_document(identity_document)
 
-    feature_state = FeatureState.objects.get(
-        feature=multivariate_feature, environment=environment
-    )
+    mocker.patch(
+        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper"
+    ).get_segment_ids.return_value = []
+
+    # The feature state has to come from an evaluation, which is what resolves
+    # the identity's multivariate value.
+    feature_states, _ = edge_identity.get_all_feature_states()
+    (feature_state,) = [
+        feature_state
+        for feature_state in feature_states
+        if feature_state.feature.name == multivariate_feature.name
+    ]
 
     serializer = IdentityAllFeatureStatesSerializer(
-        context={"identity": identity_model, "environment_api_key": environment.api_key}
+        context={
+            "identity": edge_identity,
+            "environment_api_key": environment.api_key,
+        }
     )
 
     # When
