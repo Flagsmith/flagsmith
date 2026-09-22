@@ -15,10 +15,31 @@ from features.multivariate.models import (
 from features.value_types import STRING
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
-from tests.evaluation_helpers import evaluate_feature_state
 
 #: `multivariate_feature`'s initial value, served when nothing is allocated.
 CONTROL_VALUE = "control"
+
+#: Variant allocation is seeded on the feature state's hashing salt and the
+#: identity's hash key, which is derived from the environment's API key. Pin
+#: both, so that the expectations below can be plain data.
+#:
+#: They were derived from Core API's allocation as it stood before flag-engine
+#: took it over — an md5 of "{seed},{identity key}", modulo 9999, over 9998 —
+#: rather than computed with the engine's own hashing, which would move in step
+#: with any change and so assert nothing.
+#:
+#: A failure means enrolled identities would land on a different variant than
+#: they do in production. See #7913.
+MV_HASHING_SALT = 1
+HASHING_ENVIRONMENT_API_KEY = "test-environment-key"
+
+
+@pytest.fixture()
+def hashing_environment(environment: Environment) -> Environment:
+    environment.api_key = HASHING_ENVIRONMENT_API_KEY
+    environment.use_identity_composite_key_for_hashing = True
+    environment.save()
+    return environment
 
 
 def test_evaluate_identity__identity_and_segment_override__identity_override_wins(
@@ -106,38 +127,25 @@ def test_evaluate_identity__segment_overrides__lowest_priority_wins(
     assert result["flags"][feature.name]["value"] == "winner"
 
 
-#: How the identity keys below bucket for `MV_HASHING_SALT` under ten equal
-#: variants, so each expectation names the decile its hash falls in.
-#:
-#: Derived from Core API's allocation as it stood before flag-engine took it
-#: over — an md5 of "{seed},{identity key}", modulo 9999, over 9998 — and
-#: frozen here as plain data. Deliberately not computed with the engine's own
-#: hashing, which would move in step with any change and assert nothing.
-#:
-#: A failure here means enrolled identities would land on a different variant
-#: than they do in production. See #7913.
-MV_HASHING_SALT = 1
-VARIANT_BY_IDENTITY_KEY = {
-    "identity-0": "variant-9",
-    "identity-1": "variant-9",
-    "identity-2": "variant-9",
-    "identity-3": "variant-2",
-    "identity-4": "variant-1",
-    "identity-5": "variant-3",
-    "identity-6": "variant-4",
-    "identity-7": "variant-1",
-    "identity-8": "variant-2",
-    "identity-9": "variant-1",
-}
-
-
-def test_evaluate_feature_state__multivariate_feature__buckets_as_before_the_engine(
-    environment: Environment,
+def test_evaluate_identity__multivariate_feature__buckets_as_before_the_engine(
+    hashing_environment: Environment,
     project: Project,
 ) -> None:
     # Given
-    # a multivariate feature split into ten equal variants, so that the variant
-    # an identity gets names the decile its hash fell in
+    # ten equal variants, so the variant an identity gets names the decile its
+    # hash fell in
+    expected_variant_by_identifier = {
+        "identity-0": "variant-3",
+        "identity-1": "variant-0",
+        "identity-2": "variant-2",
+        "identity-3": "variant-5",
+        "identity-4": "variant-8",
+        "identity-5": "variant-5",
+        "identity-6": "variant-1",
+        "identity-7": "variant-2",
+        "identity-8": "variant-2",
+        "identity-9": "variant-1",
+    }
     feature = Feature.objects.create(
         name="decile_feature",
         project=project,
@@ -154,19 +162,26 @@ def test_evaluate_feature_state__multivariate_feature__buckets_as_before_the_eng
         )
 
     feature_state = FeatureState.objects.get(
-        environment=environment, feature=feature, identity=None, feature_segment=None
+        environment=hashing_environment,
+        feature=feature,
+        identity=None,
+        feature_segment=None,
     )
     feature_state.mv_hashing_salt = MV_HASHING_SALT
     feature_state.save()
 
     # When
-    variant_by_identity_key = {
-        identity_key: evaluate_feature_state(feature_state, identity_key).variant
-        for identity_key in VARIANT_BY_IDENTITY_KEY
+    variant_by_identifier = {
+        identifier: evaluate_identity(
+            Identity.objects.create(
+                identifier=identifier, environment=hashing_environment
+            )
+        ).result["flags"][feature.name]["variant"]
+        for identifier in expected_variant_by_identifier
     }
 
     # Then
-    assert variant_by_identity_key == VARIANT_BY_IDENTITY_KEY
+    assert variant_by_identifier == expected_variant_by_identifier
 
 
 def test_evaluate_identity__multivariate_feature__returns_variant_key(
@@ -196,33 +211,33 @@ def test_evaluate_identity__multivariate_feature__returns_variant_key(
 
 
 @pytest.mark.parametrize(
-    ["identity_key", "expected_variant", "expected_value"],
+    ["identifier", "expected_variant", "expected_value"],
     (
-        pytest.param("identity-4", "variant-1", "variant-1-value", id="first_band"),
-        pytest.param("identity-3", "variant-2", "variant-2-value", id="second_band"),
+        pytest.param("identity-1", "variant-1", "variant-1-value", id="first_band"),
+        pytest.param("identity-2", "variant-2", "variant-2-value", id="second_band"),
         pytest.param(
-            "identity-0",
+            "identity-4",
             CONTROL_VARIANT_KEY,
             CONTROL_VALUE,
             id="unallocated_falls_through",
         ),
     ),
 )
-def test_evaluate_feature_state__multivariate_feature__allocates_variants_in_order(
-    environment: Environment,
+def test_evaluate_identity__multivariate_feature__allocates_variants_in_order(
+    hashing_environment: Environment,
     multivariate_feature: Feature,
-    identity_key: str,
+    identifier: str,
     expected_variant: str,
     expected_value: str,
 ) -> None:
     # Given
     feature_state = FeatureState.objects.get(
-        environment=environment,
+        environment=hashing_environment,
         feature=multivariate_feature,
         identity=None,
         feature_segment=None,
     )
-    feature_state.mv_hashing_salt = 1
+    feature_state.mv_hashing_salt = MV_HASHING_SALT
     feature_state.save()
 
     # Two variants taking 20% and 30%, leaving half the range to the control.
@@ -240,9 +255,13 @@ def test_evaluate_feature_state__multivariate_feature__allocates_variants_in_ord
         option.string_value = f"variant-{index + 1}-value"
         option.save()
 
+    identity = Identity.objects.create(
+        identifier=identifier, environment=hashing_environment
+    )
+
     # When
-    evaluated = evaluate_feature_state(feature_state, identity_key)
+    flag = evaluate_identity(identity).result["flags"][multivariate_feature.name]
 
     # Then
-    assert evaluated.variant == expected_variant
-    assert evaluated.value == expected_value
+    assert flag["variant"] == expected_variant
+    assert flag["value"] == expected_value

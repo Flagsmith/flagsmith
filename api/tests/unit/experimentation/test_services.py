@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.db import IntegrityError, connection
-from django.db.models import Q
 from django.test.utils import CaptureQueriesContext
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from prometheus_client import REGISTRY
@@ -66,7 +65,7 @@ from features.versioning.dataclasses import MultivariateValueChangeSet
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
-from tests.evaluation_helpers import evaluate_feature_state
+from tests.types import VariantAssignmentFixture
 from tests.unit.experimentation.conftest import RolloutSpecFactory
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
@@ -2570,6 +2569,7 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     multivariate_feature: Feature,
     multivariate_options: list[MultivariateFeatureOption],
     admin_user: FFAdminUser,
+    variant_assignment: VariantAssignmentFixture,
 ) -> None:
     # Given a running experiment whose rollout splits two variants 50/50
     option_a, option_b, _ = multivariate_options
@@ -2596,43 +2596,28 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
         ],
         author=AuthorData(user=admin_user),
     )
-    identity_hash_keys = [f"identity-{i}" for i in range(50)]
-
-    def variant_assignment() -> dict[str, str]:
-        override = (
-            FeatureState.objects.get_live_feature_states(
-                environment=experiment.environment,
-                additional_filters=Q(
-                    feature_segment__segment=experiment.rollout_segment,
-                    identity__isnull=True,
-                ),
-                feature_id=experiment.feature_id,
-            )
-            .prefetch_related(
-                "multivariate_feature_state_values__multivariate_feature_option"
-            )
-            .latest("id")
+    # and identities, some of which the rollout's percentage split enrols
+    identities = [
+        Identity.objects.create(
+            identifier=f"identity-{i}", environment=environment_v2_versioning
         )
-        assignment: dict[str, str] = {}
-        for key in identity_hash_keys:
-            variant = evaluate_feature_state(override, key).variant
-            # The 50/50 split allocates 100%, so every identity lands on a variant.
-            assert variant is not None
-            assignment[key] = variant
-        return assignment
+        for i in range(50)
+    ]
 
     # When the rollout is applied, then re-applied unchanged (e.g. tuned while
     # the experiment is running)
     services.apply_experiment_rollout(experiment, spec)
     experiment.refresh_from_db()
-    before = variant_assignment()
+    before = variant_assignment(identities, multivariate_feature.name)
 
     services.apply_experiment_rollout(experiment, spec)
-    after = variant_assignment()
+    after = variant_assignment(identities, multivariate_feature.name)
 
     # Then every already-enrolled identity keeps the variant it was first
     # assigned; tuning the rollout must not re-randomise the split.
     assert before == after
+    # and the split is not trivially one-sided, so the above means something
+    assert len(set(before.values())) > 1
 
 
 def _verification_count(result: str) -> float:

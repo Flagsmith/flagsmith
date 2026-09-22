@@ -32,7 +32,7 @@ from features.versioning.versioning_service import (
 )
 from projects.models import Project
 from segments.models import Segment
-from tests.evaluation_helpers import evaluate_feature_state
+from tests.types import VariantAssignmentFixture
 from users.models import FFAdminUser
 
 
@@ -1043,6 +1043,7 @@ def test_update_flag__v2_versioning_multivariate_weight_increase__keeps_enrolled
     multivariate_feature: Feature,
     multivariate_options: list[MultivariateFeatureOption],
     admin_user: FFAdminUser,
+    variant_assignment: VariantAssignmentFixture,
 ) -> None:
     # Given a multivariate feature split 50/50 between two variants, and the
     # variant each of a range of identities is bucketed into
@@ -1053,7 +1054,7 @@ def test_update_flag__v2_versioning_multivariate_weight_increase__keeps_enrolled
     for index, option in enumerate(multivariate_options):
         option.key = f"variant-{index}"
         option.save()
-    feature_state = update_flag(
+    update_flag(
         environment_v2_versioning,
         multivariate_feature,
         FlagChangeSet(
@@ -1068,14 +1069,16 @@ def test_update_flag__v2_versioning_multivariate_weight_increase__keeps_enrolled
             ],
         ),
     )
-    identity_hash_keys = [f"identity-{i}" for i in range(100)]
-    original_assignment = {
-        key: evaluate_feature_state(feature_state, key).variant
-        for key in identity_hash_keys
-    }
+    identities = [
+        Identity.objects.create(
+            identifier=f"identity-{i}", environment=environment_v2_versioning
+        )
+        for i in range(100)
+    ]
+    original_assignment = variant_assignment(identities, multivariate_feature.name)
 
     # When the first variant's allocation is increased to 60/40
-    new_feature_state = update_flag(
+    update_flag(
         environment_v2_versioning,
         multivariate_feature,
         FlagChangeSet(
@@ -1093,13 +1096,10 @@ def test_update_flag__v2_versioning_multivariate_weight_increase__keeps_enrolled
 
     # Then identities already in the grown variant stay in it, and the only
     # movement is from the shrunk variant into the grown one
-    new_assignment = {
-        key: evaluate_feature_state(new_feature_state, key).variant
-        for key in identity_hash_keys
-    }
+    new_assignment = variant_assignment(identities, multivariate_feature.name)
     movers = {
         key
-        for key in identity_hash_keys
+        for key in original_assignment
         if new_assignment[key] != original_assignment[key]
     }
     assert movers
@@ -1107,6 +1107,6 @@ def test_update_flag__v2_versioning_multivariate_weight_increase__keeps_enrolled
     assert all(new_assignment[key] == option_a.key for key in movers)
     assert all(
         new_assignment[key] == original_assignment[key]
-        for key in identity_hash_keys
+        for key in original_assignment
         if key not in movers
     )
