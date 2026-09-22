@@ -2,6 +2,8 @@ import json
 import uuid
 
 import pytest
+import requests
+import responses
 from django.core.cache import BaseCache
 from django.core.cache.backends.locmem import LocMemCache
 from django.test import Client as DjangoClient
@@ -50,21 +52,24 @@ def influxdb(settings: SettingsWrapper) -> InfluxDBClient:
     settings.INFLUXDB_ORG = "flagsmith"
     settings.INFLUXDB_TOKEN = "admin-token"
 
-    # Matches api.app_analytics.influxdb_wrapper bucket definitions
-    client = InfluxDBWrapper.get_client()
-    bucket_api = client.buckets_api()
-    bucket_names = [
-        "api_usage_downsampled_15m",
-        "api_usage_downsampled_1h",
-    ]
-    for bucket_name in bucket_names:
-        if not bucket_api.find_bucket_by_name(bucket_name):  # type: ignore[no-untyped-call]
-            bucket_api.create_bucket(
-                org="flagsmith",
-                bucket_name=bucket_name,
-            )
+    InfluxDBWrapper.get_client.cache_clear()
 
-    return client
+    url = f"{settings.INFLUXDB_URL}/api/v2/buckets"
+    responses.add_passthru(url)
+    headers = {"Authorization": f"Token {settings.INFLUXDB_TOKEN}"}
+    buckets = requests.get(url, headers=headers, timeout=30).json()["buckets"]
+    organisation_id = buckets[0]["orgID"]
+    existing = {bucket["name"] for bucket in buckets}
+    for bucket_name in ("api_usage_downsampled_15m", "api_usage_downsampled_1h"):
+        if bucket_name not in existing:
+            requests.post(
+                url,
+                headers=headers,
+                json={"name": bucket_name, "orgID": organisation_id},
+                timeout=30,
+            ).raise_for_status()
+
+    return InfluxDBWrapper.get_client()
 
 
 @pytest.fixture()

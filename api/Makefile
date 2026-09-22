@@ -45,6 +45,10 @@ docker-up:
 	docker compose up --force-recreate --remove-orphans -d
 	docker compose ps
 
+.PHONY: docker-ready
+docker-ready:
+	@bash scripts/ensure-services.sh
+
 .PHONY: docker-down
 docker-down:
 	docker compose stop
@@ -66,9 +70,17 @@ wait-for-db:
 	uv run python manage.py waitfordb
 	uv run python manage.py waitfordb --database analytics
 
+# Disable auto xdist for tests invoked via `make test opts=...`
+# Put `-n auto` in `opts` to override.
+PYTEST_PARALLELISM = $(if $(strip $(opts)),,-n auto)
+
 .PHONY: test
-test: docker-up wait-for-db
-	uv run pytest $(opts)
+test: docker-ready
+	uv run pytest $(PYTEST_PARALLELISM) $(opts)
+
+.PHONY: test-coverage
+test-coverage: docker-ready
+	uv run pytest --cov . --cov-report $(or $(format),html) $(PYTEST_PARALLELISM) $(opts)
 
 .PHONY: django-make-migrations
 django-make-migrations: docker-up wait-for-db

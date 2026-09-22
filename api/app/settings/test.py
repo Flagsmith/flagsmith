@@ -1,14 +1,27 @@
+import dj_database_url
+
 from app.settings.common import *  # noqa
 from app.settings.common import (
     DATABASES,
     INSTALLED_APPS,
     LDAP_INSTALLED,
     REST_FRAMEWORK,
+    env,
 )
 
-# TODO: remove once permissions are an enum --
+for alias, variable in (
+    ("default", "TEST_DATABASE_URL"),
+    ("analytics", "TEST_ANALYTICS_DATABASE_URL"),
+):
+    if alias in DATABASES and (url := env.str(variable, default="")):
+        DATABASES[alias] = {**DATABASES[alias], **dj_database_url.parse(url)}
+
+PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+# TODO: remove once permissions are an enum
 # https://github.com/Flagsmith/flagsmith/issues/7850
 DATABASES["default"]["ENGINE"] = "core.db_backends.postgresql"
+
 
 if LDAP_INSTALLED:
     INSTALLED_APPS = INSTALLED_APPS + ["flagsmith_ldap"]
