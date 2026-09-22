@@ -20,19 +20,16 @@ from segments.models import Condition, Segment, SegmentRule
 
 @pytest.fixture()
 def control_value() -> str:
-    """`multivariate_feature`'s initial value, served when nothing is allocated."""
     return "control"
 
 
 @pytest.fixture()
 def mv_hashing_salt() -> int:
-    """A pinned bucketing seed, half of what decides an identity's variant."""
     return 1
 
 
 @pytest.fixture()
 def hashing_environment_api_key() -> str:
-    """A pinned API key, which an identity's hash key is derived from."""
     return "test-environment-key"
 
 
@@ -138,16 +135,7 @@ def test_evaluate_identity__multivariate_feature__buckets_as_before_the_engine(
     mv_hashing_salt: int,
     project: Project,
 ) -> None:
-    """An identity must land on the variant it always has.
-
-    The expectations were derived from Core API's allocation as it stood
-    before flag-engine took it over — an md5 of "{seed},{identity key}",
-    modulo 9999, over 9998 — rather than computed with the engine's own
-    hashing, which would move in step with any change and so assert nothing.
-
-    A failure means enrolled identities would be served a different variant
-    than they are in production. See #7913.
-    """
+    """The expectations are derived from Core API's allocation as it stood before flag-engine took over."""
     # Given
     # ten equal variants, so the variant an identity gets names the decile its
     # hash fell in
