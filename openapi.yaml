@@ -4210,6 +4210,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DependencyEdge'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyRefusedDetail'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyErrorDetail'
       security:
         - tokenAuth: []
         - Master API Key: []
@@ -20618,6 +20630,149 @@ components:
       required:
         - feature
         - segment
+    DependencyConflictDetail:
+      description: The body served where existing dependencies refuse a change.
+      type: object
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+        environment:
+          $ref: '#/components/schemas/DependencyConflictDetailReferencingEnvironment'
+        path:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyConflictDetailDependencyEdge'
+          title: Path
+      required:
+        - code
+        - message
+        - environment
+        - path
+      title: DependencyConflictDetail
+    DependencyConflictDetailDependencyEdge:
+      description: One feature's dependency on another.
+      type: object
+      properties:
+        feature:
+          $ref: '#/components/schemas/DependencyConflictDetail_Feature'
+        prerequisite:
+          $ref: '#/components/schemas/DependencyConflictDetail_Feature'
+        segment:
+          $ref: '#/components/schemas/DependencyConflictDetail_ReferencingSegment'
+      required:
+        - feature
+        - prerequisite
+        - segment
+      title: DependencyEdge
+    DependencyConflictDetailReferencingEnvironment:
+      description: The environment whose live overrides make up a dependency graph.
+      type: object
+      properties:
+        key:
+          type: string
+          title: Key
+        name:
+          type: string
+          title: Name
+      required:
+        - key
+        - name
+      title: ReferencingEnvironment
+    DependencyConflictDetailSegmentCondition:
+      type: object
+      properties:
+        property:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Property
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/Operator2a7Enum'
+          title: Operator
+        value:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Value
+        description:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Description
+      required:
+        - property
+        - operator
+        - value
+        - description
+      title: SegmentCondition
+    DependencyConflictDetailSegmentRule:
+      type: object
+      properties:
+        type:
+          allOf:
+            - $ref: '#/components/schemas/TypeC8eEnum'
+          title: Type
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyConflictDetailSegmentCondition'
+          title: Conditions
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyConflictDetailSegmentRule'
+          title: Rules
+      required:
+        - type
+        - conditions
+      title: SegmentRule
+    DependencyConflictDetail_Feature:
+      description: Either a feature or a prerequisite feature in a dependency graph.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+      required:
+        - id
+        - name
+      title: _Feature
+    DependencyConflictDetail_ReferencingSegment:
+      description: The segment whose rules hold the `$.flags` condition making up a dependency.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyConflictDetailSegmentRule'
+          title: Rules
+        condition_json_path:
+          type: string
+          title: Condition Json Path
+        is_system:
+          type: boolean
+          title: Is System
+      required:
+        - id
+        - name
+        - rules
+        - condition_json_path
+        - is_system
+      title: _ReferencingSegment
     DependencyEdge:
       description: One feature's dependency on another.
       type: object
@@ -20724,6 +20879,24 @@ components:
         - condition_json_path
         - is_system
       title: _ReferencingSegment
+    DependencyErrorDetail:
+      description: The body served where a dependency request is refused.
+      type: object
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+      required:
+        - code
+        - message
+      title: DependencyErrorDetail
+    DependencyRefusedDetail:
+      oneOf:
+        - $ref: '#/components/schemas/DependencyErrorDetail'
+        - $ref: '#/components/schemas/DependencyConflictDetail'
     DerivedFrom:
       type: object
       properties:
