@@ -18,6 +18,7 @@ from edge_api.identities.types import IdentityChangeset
 from edge_api.identities.utils import generate_change_dict
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
+from evaluation.mappers import map_feature_state_to_feature_context
 from evaluation.types import EvaluationContext
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
@@ -26,7 +27,6 @@ from users.models import FFAdminUser
 from util.engine_models.features.models import FeatureStateModel
 from util.engine_models.identities.models import IdentityFeaturesList, IdentityModel
 from util.mappers import map_engine_identity_to_identity_document
-from util.mappers.engine import map_feature_state_to_feature_context
 
 
 class EdgeIdentity:

@@ -3,9 +3,9 @@ from flag_engine.segments.constants import EQUAL
 from flag_engine.utils.hashing import get_hashed_percentage_for_object_ids
 
 from environments.identities.models import Identity
-from environments.identities.services import evaluate_identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
+from evaluation.services import evaluate_identity
 from features.constants import CONTROL_VARIANT_KEY
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue

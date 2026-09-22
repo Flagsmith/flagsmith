@@ -1,16 +1,20 @@
 import pytest
 
 from environments.identities.models import Identity
+from environments.identities.traits.models import Trait
 from environments.models import Environment
-from features.models import Feature, FeatureSegment, FeatureState
-from features.multivariate.models import MultivariateFeatureStateValue
-from segments.models import Segment
-from util.mappers.engine import (
+from evaluation.mappers import (
     IDENTITY_OVERRIDES_SEGMENT_KEY,
     IDENTITY_OVERRIDES_SEGMENT_NAME,
+    map_condition_to_segment_condition,
     map_environment_to_evaluation_context,
     map_feature_state_to_feature_context,
+    map_rule_to_segment_rule,
+    map_segment_to_segment_context,
 )
+from features.models import Feature, FeatureSegment, FeatureState
+from features.multivariate.models import MultivariateFeatureStateValue
+from segments.models import Condition, Segment, SegmentRule
 
 
 def test_map_environment_to_evaluation_context__environment_default__populates_features(
@@ -237,3 +241,210 @@ def test_map_feature_state_to_feature_context__multivariate_feature__keys_on_has
     assert feature_context["key"] == (
         str(feature_state.id) if expected_key == "id" else expected_key
     )
+
+
+def test_map_environment_to_evaluation_context__no_identity__returns_environment_only(
+    environment: Environment,
+) -> None:
+    # Given / When
+    context, _ = map_environment_to_evaluation_context(environment=environment)
+
+    # Then
+    assert context == {
+        "environment": {
+            "key": environment.api_key,
+            "name": environment.name,
+        },
+        "features": {},
+    }
+
+
+def test_map_environment_to_evaluation_context__with_identity__returns_identity_context(
+    environment: Environment,
+    identity: Identity,
+) -> None:
+    # Given / When
+    context, _ = map_environment_to_evaluation_context(
+        environment=environment,
+        identity=identity,
+    )
+
+    # Then
+    assert context == {
+        "environment": {
+            "key": environment.api_key,
+            "name": environment.name,
+        },
+        "identity": {
+            "identifier": identity.identifier,
+            "key": identity.get_hash_key(
+                environment.use_identity_composite_key_for_hashing
+            ),
+            "traits": {},
+        },
+        "features": {},
+    }
+
+
+def test_map_environment_to_evaluation_context__with_explicit_traits__returns_given_traits(
+    environment: Environment,
+    identity: Identity,
+    trait: Trait,
+) -> None:
+    # Given / When
+    context, _ = map_environment_to_evaluation_context(
+        environment=environment,
+        identity=identity,
+        traits=[trait],
+    )
+
+    # Then
+    assert context == {
+        "environment": {
+            "key": environment.api_key,
+            "name": environment.name,
+        },
+        "identity": {
+            "identifier": identity.identifier,
+            "key": identity.get_hash_key(
+                environment.use_identity_composite_key_for_hashing
+            ),
+            "traits": {trait.trait_key: trait.trait_value},
+        },
+        "features": {},
+    }
+
+
+def test_map_environment_to_evaluation_context__no_explicit_traits__returns_identity_traits(
+    environment: Environment,
+    identity: Identity,
+    trait: Trait,
+) -> None:
+    # Given / When
+    context, _ = map_environment_to_evaluation_context(
+        environment=environment,
+        identity=identity,
+    )
+
+    # Then
+    assert context == {
+        "environment": {
+            "key": environment.api_key,
+            "name": environment.name,
+        },
+        "identity": {
+            "identifier": identity.identifier,
+            "key": identity.get_hash_key(
+                environment.use_identity_composite_key_for_hashing
+            ),
+            "traits": {trait.trait_key: trait.trait_value},
+        },
+        "features": {},
+    }
+
+
+def test_map_environment_to_evaluation_context__with_segments__returns_segment_contexts(
+    environment: Environment,
+    identity_matching_segment: Segment,
+) -> None:
+    # Given / When
+    context, _ = map_environment_to_evaluation_context(
+        environment=environment,
+        segments=[identity_matching_segment],
+    )
+
+    # Then
+    segment_key = str(identity_matching_segment.pk)
+    assert context == {
+        "environment": {
+            "key": environment.api_key,
+            "name": environment.name,
+        },
+        "segments": {
+            segment_key: map_segment_to_segment_context(identity_matching_segment),
+        },
+        "features": {},
+    }
+
+
+def test_map_segment_to_segment_context__segment_with_rule__returns_expected(
+    identity_matching_segment: Segment,
+) -> None:
+    # Given
+    condition = Condition.objects.get(
+        rule__segment=identity_matching_segment,
+    )
+
+    # When
+    result = map_segment_to_segment_context(identity_matching_segment)
+
+    # Then
+    assert result == {
+        "key": str(identity_matching_segment.pk),
+        "name": identity_matching_segment.name,
+        "rules": [
+            {
+                "type": "ALL",
+                "conditions": [
+                    {
+                        "property": condition.property,
+                        "operator": condition.operator,
+                        "value": condition.value,
+                    },
+                ],
+                "rules": [],
+            },
+        ],
+        "metadata": {"source": "segment", "pk": identity_matching_segment.pk},
+    }
+
+
+def test_map_rule_to_segment_rule__with_nested_rule__returns_expected(
+    segment_rule: SegmentRule,
+    identity_matching_segment: Segment,
+) -> None:
+    # Given
+    matching_rule = SegmentRule.objects.get(segment=identity_matching_segment)
+    matching_rule.rules.add(segment_rule)
+    condition = Condition.objects.get(rule=matching_rule)
+
+    # When
+    result = map_rule_to_segment_rule(matching_rule)
+
+    # Then
+    assert result == {
+        "type": "ALL",
+        "conditions": [
+            {
+                "property": condition.property,
+                "operator": condition.operator,
+                "value": condition.value,
+            },
+        ],
+        "rules": [
+            {
+                "type": "ALL",
+                "conditions": [],
+                "rules": [],
+            },
+        ],
+    }
+
+
+def test_map_condition_to_segment_condition__valid_condition__returns_expected(
+    identity_matching_segment: Segment,
+) -> None:
+    # Given
+    condition = Condition.objects.get(
+        rule__segment=identity_matching_segment,
+    )
+
+    # When
+    result = map_condition_to_segment_condition(condition)
+
+    # Then
+    assert result == {
+        "property": condition.property,
+        "operator": condition.operator,
+        "value": condition.value,
+    }

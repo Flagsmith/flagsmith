@@ -5,13 +5,13 @@ from django.db.models import Q
 from flag_engine.engine import get_evaluation_result
 
 from environments.identities.managers import IdentityManager
-from environments.identities.services import evaluate_identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from environments.sdk.types import SDKTraitData
+from evaluation.mappers import map_environment_to_evaluation_context
+from evaluation.services import evaluate_identity
 from features.models import FeatureState
 from segments.models import Segment
-from util.mappers.engine import map_environment_to_evaluation_context
 
 
 class Identity(models.Model):
