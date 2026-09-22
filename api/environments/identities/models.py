@@ -53,7 +53,6 @@ class Identity(models.Model):
 
     def get_all_feature_states(
         self,
-        feature_name: str | None = None,
         traits: list[Trait] | None = None,
         additional_filters: Q | None = None,
     ) -> list[FeatureState]:
@@ -76,7 +75,6 @@ class Identity(models.Model):
         _, feature_states = evaluate_identity(
             self,
             traits=traits,
-            feature_name=feature_name,
             additional_filters=additional_filters,
         )
 

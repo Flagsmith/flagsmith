@@ -19,7 +19,6 @@ def evaluate_identity(
     identity: "Identity",
     *,
     traits: "list[Trait] | None" = None,
-    feature_name: str | None = None,
     additional_filters: Q | None = None,
 ) -> IdentityEvaluation:
     """Evaluate every flag in `identity`'s environment for that identity."""
@@ -29,7 +28,6 @@ def evaluate_identity(
         identity=identity,
         traits=traits,
         segments=environment.get_segments_from_cache(),
-        feature_name=feature_name,
         additional_filters=additional_filters,
     )
     result = get_evaluation_result(context)

@@ -1130,19 +1130,29 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             )
         replace_identity_environment(identity, request.environment)
 
+        feature_states = identity.get_all_feature_states()
+
         if feature_name := request.GET.get("feature"):
-            feature_states = identity.get_all_feature_states(feature_name=feature_name)
-            if not feature_states:
+            # Filtered after evaluation rather than before: a segment may
+            # depend on a flag other than the one asked for.
+            feature_state = next(
+                (
+                    feature_state
+                    for feature_state in feature_states
+                    if feature_state.feature.name == feature_name
+                ),
+                None,
+            )
+            if feature_state is None:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
             return Response(
-                self.get_serializer(feature_states[0]).data,
+                self.get_serializer(feature_state).data,
                 status=status.HTTP_200_OK,
             )
 
-        feature_states = identity.get_all_feature_states()
         flags = self.get_serializer(feature_states, many=True)
         return Response(flags.data, status=status.HTTP_200_OK)
 
