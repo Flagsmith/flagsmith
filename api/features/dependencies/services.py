@@ -173,21 +173,49 @@ def _get_dependency_edges(
     environment: Environment,
 ) -> dict[FeatureName, list[DependencyEdge]]:
     edges: dict[FeatureName, list[DependencyEdge]] = defaultdict(list)
-    overrides = (
+    for (
+        feature_id,
+        feature_name,
+        prerequisite_feature_id,
+        prerequisite_feature_name,
+        segment_id,
+        segment_name,
+        segment_rules,
+        condition_json_path,
+        is_system_segment,
+    ) in (
         get_all_live_or_scheduled_overrides()
         .filter(environment=environment, segment__flag_references__isnull=False)
-        .distinct()
-        .select_related("feature", "segment")
-        .prefetch_related("segment__flag_references__prerequisite_feature")
-    )
-    for override in overrides:
-        for reference in override.segment.flag_references.all():
-            edges[override.feature.name].append(
-                map_reference_to_dependency_edge(
-                    feature=override.feature,
-                    reference=reference,
-                )
-            )
+        .values_list(
+            "feature__id",
+            "feature__name",
+            "segment__flag_references__prerequisite_feature__id",
+            "segment__flag_references__prerequisite_feature__name",
+            "segment__id",
+            "segment__name",
+            "segment__rules_data",
+            "segment__flag_references__condition_json_path",
+            "segment__is_system_segment",
+        )
+    ):
+        if segment_rules is None:
+            raise ValueError(f"Segment {segment_id} is referenced but has no rules.")
+        edges[feature_name].append(
+            {
+                "feature": {"id": feature_id, "name": feature_name},
+                "prerequisite": {
+                    "id": prerequisite_feature_id,
+                    "name": prerequisite_feature_name,
+                },
+                "segment": {
+                    "id": segment_id,
+                    "name": segment_name,
+                    "rules": segment_rules,
+                    "condition_json_path": condition_json_path,
+                    "is_system": is_system_segment,
+                },
+            }
+        )
     return edges
 
 
