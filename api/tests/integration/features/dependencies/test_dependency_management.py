@@ -43,7 +43,7 @@ def test_post_feature_dependency__valid_prerequisite__responds_201_with_dependen
             "prerequisite": {"id": prerequisite.id, "name": "payments"},
             "segment": {
                 "id": segment.id,
-                "name": "checkout-dependencies",
+                "name": f"checkout-dependencies-{environment_api_key}",
                 "rules": [
                     {
                         "type": "ANY",
@@ -86,13 +86,17 @@ def test_post_feature_dependency__valid_prerequisite__responds_201_with_dependen
             "variants": [],
         }
     ]
-    assert (
-        AuditLog.objects.filter(
-            environment__api_key=environment_api_key,
-            log="Feature 'payments' added as a dependency for feature 'checkout'.",
-        ).count()
-        == 1
-    )
+    assert list(
+        AuditLog.objects.filter(related_object_type="FEATURE").values(
+            "environment__api_key", "related_object_id", "log"
+        )
+    ) == [
+        {
+            "environment__api_key": environment_api_key,
+            "related_object_id": feature.id,
+            "log": "Feature 'payments' added as a dependency for feature 'checkout'.",
+        }
+    ]
     assert log.has(
         "dependencies.created",
         level="info",
@@ -134,7 +138,7 @@ def test_post_feature_dependency__feature_has_another_prerequisite__responds_201
             "prerequisite": {"id": other_prerequisite.id, "name": "inventory"},
             "segment": {
                 "id": segment.id,
-                "name": "checkout-dependencies",
+                "name": f"checkout-dependencies-{environment_api_key}",
                 "rules": [
                     {
                         "type": "ANY",
@@ -188,13 +192,22 @@ def test_post_feature_dependency__feature_has_another_prerequisite__responds_201
             "variants": [],
         }
     ]
-    assert (
-        AuditLog.objects.filter(
-            environment__api_key=environment_api_key,
-            log="Feature 'inventory' added as a dependency for feature 'checkout'.",
-        ).count()
-        == 1
-    )
+    assert list(
+        AuditLog.objects.filter(related_object_type="FEATURE").values(
+            "environment__api_key", "related_object_id", "log"
+        )
+    ) == [
+        {
+            "environment__api_key": environment_api_key,
+            "related_object_id": feature.id,
+            "log": "Feature 'inventory' added as a dependency for feature 'checkout'.",
+        },
+        {
+            "environment__api_key": environment_api_key,
+            "related_object_id": feature.id,
+            "log": "Feature 'payments' added as a dependency for feature 'checkout'.",
+        },
+    ]
     assert log.has(
         "dependencies.created",
         level="info",
@@ -240,7 +253,7 @@ def test_post_feature_dependency__feature_has_another_override__responds_201_reo
             "prerequisite": {"id": prerequisite.id, "name": "payments"},
             "segment": {
                 "id": system_segment.id,
-                "name": "checkout-dependencies",
+                "name": f"checkout-dependencies-{environment_api_key}",
                 "rules": [
                     {
                         "type": "ANY",
@@ -290,13 +303,17 @@ def test_post_feature_dependency__feature_has_another_override__responds_201_reo
             "variants": [],
         },
     ]
-    assert (
-        AuditLog.objects.filter(
-            environment__api_key=environment_api_key,
-            log="Feature 'payments' added as a dependency for feature 'checkout'.",
-        ).count()
-        == 1
-    )
+    assert list(
+        AuditLog.objects.filter(related_object_type="FEATURE").values(
+            "environment__api_key", "related_object_id", "log"
+        )
+    ) == [
+        {
+            "environment__api_key": environment_api_key,
+            "related_object_id": feature.id,
+            "log": "Feature 'payments' added as a dependency for feature 'checkout'.",
+        }
+    ]
     assert log.has(
         "dependencies.created",
         level="info",
@@ -348,7 +365,7 @@ def test_post_feature_dependency__prerequisite_already_has_prerequisite__respond
                     },
                     "segment": {
                         "id": prerequisite_segment.id,
-                        "name": "payments-dependencies",
+                        "name": f"payments-dependencies-{environment_api_key}",
                         "rules": [
                             {
                                 "type": "ANY",
@@ -386,10 +403,17 @@ def test_post_feature_dependency__prerequisite_already_has_prerequisite__respond
         f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
     )
     assert flag_response.json()["segment_overrides"] == []
-    assert not AuditLog.objects.filter(
-        environment__api_key=environment_api_key,
-        log="Feature 'payments' added as a dependency for feature 'checkout'.",
-    ).exists()
+    assert list(
+        AuditLog.objects.filter(related_object_type="FEATURE").values(
+            "environment__api_key", "related_object_id", "log"
+        )
+    ) == [
+        {
+            "environment__api_key": environment_api_key,
+            "related_object_id": prerequisite.id,
+            "log": "Feature 'inventory' added as a dependency for feature 'payments'.",
+        }
+    ]
     assert log.has(
         "dependencies.create_failed",
         level="info",
@@ -436,7 +460,7 @@ def test_post_feature_dependency__feature_is_already_a_prerequisite__responds_40
                     "prerequisite": {"id": feature.id, "name": "checkout"},
                     "segment": {
                         "id": dependent_segment.id,
-                        "name": "storefront-dependencies",
+                        "name": f"storefront-dependencies-{environment_api_key}",
                         "rules": [
                             {
                                 "type": "ANY",
@@ -474,10 +498,17 @@ def test_post_feature_dependency__feature_is_already_a_prerequisite__responds_40
         f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
     )
     assert flag_response.json()["segment_overrides"] == []
-    assert not AuditLog.objects.filter(
-        environment__api_key=environment_api_key,
-        log="Feature 'payments' added as a dependency for feature 'checkout'.",
-    ).exists()
+    assert list(
+        AuditLog.objects.filter(related_object_type="FEATURE").values(
+            "environment__api_key", "related_object_id", "log"
+        )
+    ) == [
+        {
+            "environment__api_key": environment_api_key,
+            "related_object_id": dependent.id,
+            "log": "Feature 'checkout' added as a dependency for feature 'storefront'.",
+        }
+    ]
     assert log.has(
         "dependencies.create_failed",
         level="info",
@@ -516,10 +547,7 @@ def test_post_feature_dependency__prerequisite_is_self__responds_400_with_error(
         f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
     )
     assert flag_response.json()["segment_overrides"] == []
-    assert not AuditLog.objects.filter(
-        environment__api_key=environment_api_key,
-        log="Feature 'checkout' added as a dependency for feature 'checkout'.",
-    ).exists()
+    assert list(AuditLog.objects.filter(related_object_type="FEATURE")) == []
     assert log.has(
         "dependencies.create_failed",
         level="info",
@@ -572,7 +600,7 @@ def test_post_feature_dependency__either_feature_does_not_exist__responds_404_wi
     assert response.json() == {"code": "feature_not_found", "message": message}
     assert not Segment.objects.filter(feature=feature).exists()
     assert not SegmentFlagReference.objects.exists()
-    assert not AuditLog.objects.filter(environment__api_key=environment_api_key).exists()
+    assert list(AuditLog.objects.filter(related_object_type="FEATURE")) == []
     assert not log.has("dependencies.created")
 
 
@@ -605,8 +633,5 @@ def test_post_feature_dependency__missing_environment_permission__responds_403_w
     }
     assert not Segment.objects.filter(feature=feature).exists()
     assert not SegmentFlagReference.objects.exists()
-    assert not AuditLog.objects.filter(
-        environment__api_key=environment_api_key,
-        log="Feature 'payments' added as a dependency for feature 'checkout'.",
-    ).exists()
+    assert list(AuditLog.objects.filter(related_object_type="FEATURE")) == []
     assert not log.has("dependencies.created")

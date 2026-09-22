@@ -10,8 +10,11 @@ from core.dataclasses import AuthorData
 from features.models import FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
+
 if typing.TYPE_CHECKING:
-    from segments.models import Segment
+    from segments.models import Segment, SegmentRule
 
 
 def get_all_live_or_scheduled_overrides() -> "QuerySet[FeatureSegment]":
@@ -195,3 +198,42 @@ def copy_segment_rules_and_conditions(
                 for c in source_conditions
             ]
         )
+
+
+def write_segment_rules(segment: "Segment", rules: list[SegmentRuleType]) -> None:
+    """Rebuild the segment's rule and condition rows from its rules tree.
+
+    Nothing hashes on rule ids, so replacing the rows wholesale is safe.
+
+    This is only needed until `Segment.rules_data` becomes the source of truth.
+    TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+    """
+    from segments.models import SegmentRule
+
+    SegmentRule.objects.filter(segment=segment).delete()
+    for rule in rules:
+        _write_segment_rule(rule, segment=segment)
+
+
+def _write_segment_rule(
+    rule: SegmentRuleType,
+    *,
+    segment: "Segment | None" = None,
+    parent: "SegmentRule | None" = None,
+) -> None:
+    # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+    from segments.models import Condition, SegmentRule
+
+    written = SegmentRule.objects.create(
+        segment=segment, rule=parent, type=rule["type"]
+    )
+    for condition in rule["conditions"]:
+        Condition.objects.create(
+            rule=written,
+            operator=condition["operator"],
+            property=condition["property"],
+            value=condition["value"],
+            description=condition["description"],
+        )
+    for sub_rule in rule.get("rules", []):
+        _write_segment_rule(sub_rule, parent=written)
