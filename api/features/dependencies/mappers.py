@@ -58,8 +58,7 @@ def map_reference_to_dependency_edge(
 ) -> DependencyEdge:
     """Describe the feature's dependency the indexed `$.flags` condition makes up."""
     segment = reference.segment
-    if (rules := segment.rules_data) is None:
-        raise ValueError(f"Segment {segment.id} is referenced but has no rules.")
+    assert (rules := segment.rules_data) is not None
     return {
         "feature": {"id": feature.id, "name": feature.name},
         "prerequisite": {

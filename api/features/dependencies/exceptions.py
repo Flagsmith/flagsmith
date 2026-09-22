@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from rest_framework import status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
@@ -20,7 +22,7 @@ class DependencyConflictDetail(DependencyErrorDetail):
     path: DependencyPath
 
 
-class DependencyConflictError(APIException):
+class DependencyConflictError(APIException, ABC):
     """Raised where existing dependencies refuse a change."""
 
     status_code = status.HTTP_400_BAD_REQUEST
@@ -37,6 +39,7 @@ class DependencyConflictError(APIException):
         }
         self.detail = detail  # type: ignore[assignment]
 
+    @abstractmethod
     def get_message(self, path: DependencyPath) -> str:
         raise NotImplementedError()
 

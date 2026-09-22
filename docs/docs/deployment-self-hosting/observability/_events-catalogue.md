@@ -273,10 +273,10 @@ Attributes:
 
 Logged at `info` from:
  - `api/features/dependencies/services.py:154`
- - `api/features/dependencies/services.py:243`
- - `api/features/dependencies/services.py:263`
- - `api/features/dependencies/services.py:268`
- - `api/features/dependencies/services.py:278`
+ - `api/features/dependencies/services.py:242`
+ - `api/features/dependencies/services.py:262`
+ - `api/features/dependencies/services.py:267`
+ - `api/features/dependencies/services.py:277`
 
 Attributes:
  - `environment.key`

@@ -199,8 +199,7 @@ def _get_dependency_edges(
             "segment__is_system_segment",
         )
     ):
-        if segment_rules is None:
-            raise ValueError(f"Segment {segment_id} is referenced but has no rules.")
+        assert segment_rules is not None
         edges[feature_name].append(
             {
                 "feature": {"id": feature_id, "name": feature_name},
@@ -320,8 +319,7 @@ def create_flag_dependency(
             )
             overrides.get(segment=segment).to(0)
         else:
-            if (rules := segment.rules_data) is None:
-                raise ValueError(f"Segment {segment.id} has no rules.")
+            assert (rules := segment.rules_data) is not None
             rules[0]["conditions"].append(condition)
             segment.save(update_fields=["rules_data"])
             write_segment_rules(segment, rules)
