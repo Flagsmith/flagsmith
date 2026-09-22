@@ -138,6 +138,21 @@ function buildScssLines() {
     rootLines.push('')
   }
 
+  // Feature palettes. Themed like the semantic tokens, but scoped to one
+  // feature, so they sit outside `color` where only cross-cutting roles live.
+  if (json.tag) {
+    rootLines.push('  // Tag')
+    for (const [, entries] of sorted(json.tag)) {
+      for (const [, e] of sorted(entries)) {
+        rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+        if (e.dark && e.dark !== e.light) {
+          darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+        }
+      }
+    }
+    rootLines.push('')
+  }
+
   // Chart colour tokens
   if (json[CHART_CATEGORY]) {
     rootLines.push('  // Chart')
@@ -466,6 +481,21 @@ function generateUtilities() {
       } else {
         lines.push(`.${cls} { ${mapping.property}: var(${e.cssVar}); }`)
       }
+    }
+    lines.push('')
+  }
+
+  // Tag swatches. One class per hue rather than a bg/text pair, because the
+  // two are only accessible together: applying a fill without its label colour
+  // is the contrast bug this scale exists to fix.
+  if (json.tag) {
+    lines.push('// Tag swatches')
+    for (const [hue, surface] of sorted(json.tag.surface)) {
+      const text = json.tag.text[hue]
+      if (!text) continue
+      lines.push(
+        `.tag-${hue} { background-color: var(${surface.cssVar}); color: var(${text.cssVar}); }`,
+      )
     }
     lines.push('')
   }

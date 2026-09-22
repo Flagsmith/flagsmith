@@ -54,6 +54,28 @@
 .icon-success { color: var(--color-icon-success); fill: var(--color-icon-success); }
 .icon-warning { color: var(--color-icon-warning); fill: var(--color-icon-warning); }
 
+// Tag swatches
+.tag-amber { background-color: var(--color-tag-amber-surface); color: var(--color-tag-amber-text); }
+.tag-blue { background-color: var(--color-tag-blue-surface); color: var(--color-tag-blue-text); }
+.tag-burnt-orange { background-color: var(--color-tag-burnt-orange-surface); color: var(--color-tag-burnt-orange-text); }
+.tag-cerise { background-color: var(--color-tag-cerise-surface); color: var(--color-tag-cerise-text); }
+.tag-coral { background-color: var(--color-tag-coral-surface); color: var(--color-tag-coral-text); }
+.tag-cyan { background-color: var(--color-tag-cyan-surface); color: var(--color-tag-cyan-text); }
+.tag-gold { background-color: var(--color-tag-gold-surface); color: var(--color-tag-gold-text); }
+.tag-green { background-color: var(--color-tag-green-surface); color: var(--color-tag-green-text); }
+.tag-indigo { background-color: var(--color-tag-indigo-surface); color: var(--color-tag-indigo-text); }
+.tag-lavender { background-color: var(--color-tag-lavender-surface); color: var(--color-tag-lavender-text); }
+.tag-lime { background-color: var(--color-tag-lime-surface); color: var(--color-tag-lime-text); }
+.tag-maroon { background-color: var(--color-tag-maroon-surface); color: var(--color-tag-maroon-text); }
+.tag-mint { background-color: var(--color-tag-mint-surface); color: var(--color-tag-mint-text); }
+.tag-navy { background-color: var(--color-tag-navy-surface); color: var(--color-tag-navy-text); }
+.tag-orange { background-color: var(--color-tag-orange-surface); color: var(--color-tag-orange-text); }
+.tag-plum { background-color: var(--color-tag-plum-surface); color: var(--color-tag-plum-text); }
+.tag-salmon { background-color: var(--color-tag-salmon-surface); color: var(--color-tag-salmon-text); }
+.tag-silver { background-color: var(--color-tag-silver-surface); color: var(--color-tag-silver-text); }
+.tag-slate { background-color: var(--color-tag-slate-surface); color: var(--color-tag-slate-text); }
+.tag-teal { background-color: var(--color-tag-teal-surface); color: var(--color-tag-teal-text); }
+
 // Radius
 .rounded-2xl { border-radius: var(--radius-2xl); }
 .rounded-full { border-radius: var(--radius-full); }
