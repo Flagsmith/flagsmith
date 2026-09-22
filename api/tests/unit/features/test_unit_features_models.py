@@ -616,14 +616,6 @@ def test_feature_state_clone__multivariate_feature__carries_source_id_as_salt(
     environment: Environment,
     environment_two: Environment,
 ) -> None:
-    """Cloning must not re-randomise which variant an identity is served.
-
-    Allocation is seeded on `mv_hashing_seed`, so a clone carrying the source
-    id as its salt keeps every enrolled identity where it was. That the seed
-    is honoured through a real evaluation is covered in
-    `tests/unit/evaluation`, and across a feature state actually being
-    recreated in the change request and versioning tests.
-    """
     # Given
     feature_state = FeatureState.objects.get(
         environment=environment,
