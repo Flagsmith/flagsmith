@@ -27,6 +27,7 @@ from features.dependencies.mappers import (
 from features.dependencies.models import SegmentFlagReference
 from features.dependencies.types import (
     DependencyEdge,
+    DependencyList,
     DependencyPath,
     FeatureName,
     ReferencingEnvironment,
@@ -218,6 +219,31 @@ def _get_dependency_edges(
             }
         )
     return edges
+
+
+def list_flag_dependencies(
+    *,
+    environment: Environment,
+    feature: Feature,
+) -> DependencyList:
+    """List the features the feature depends on in the environment."""
+    return {"results": _get_dependency_edges(environment)[feature.name]}
+
+
+def list_flag_dependents(
+    *,
+    environment: Environment,
+    feature: Feature,
+) -> DependencyList:
+    """List the features depending on the feature in the environment."""
+    return {
+        "results": [
+            edge
+            for edges in _get_dependency_edges(environment).values()
+            for edge in edges
+            if edge["prerequisite"]["id"] == feature.id
+        ]
+    }
 
 
 def create_flag_dependency(
