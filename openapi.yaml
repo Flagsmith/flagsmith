@@ -4183,6 +4183,38 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+  '/api/v1/environments/{environment_api_key}/features/{feature_id}/dependencies/{prerequisite_feature_id}/':
+    post:
+      operationId: api_v1_environments_features_dependencies_create
+      description: Make the feature depend on the prerequisite feature being enabled.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prerequisite_feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyEdge'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Features
   '/api/v1/environments/{environment_api_key}/features/{feature_pk}/create-segment-override/':
     post:
       operationId: create_segment_override
@@ -20586,6 +20618,112 @@ components:
       required:
         - feature
         - segment
+    DependencyEdge:
+      description: One feature's dependency on another.
+      type: object
+      properties:
+        feature:
+          $ref: '#/components/schemas/DependencyEdge_Feature'
+        prerequisite:
+          $ref: '#/components/schemas/DependencyEdge_Feature'
+        segment:
+          $ref: '#/components/schemas/DependencyEdge_ReferencingSegment'
+      required:
+        - feature
+        - prerequisite
+        - segment
+      title: DependencyEdge
+    DependencyEdgeSegmentCondition:
+      type: object
+      properties:
+        property:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Property
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/Operator2a7Enum'
+          title: Operator
+        value:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Value
+        description:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Description
+      required:
+        - property
+        - operator
+        - value
+        - description
+      title: SegmentCondition
+    DependencyEdgeSegmentRule:
+      type: object
+      properties:
+        type:
+          allOf:
+            - $ref: '#/components/schemas/TypeC8eEnum'
+          title: Type
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyEdgeSegmentCondition'
+          title: Conditions
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyEdgeSegmentRule'
+          title: Rules
+      required:
+        - type
+        - conditions
+      title: SegmentRule
+    DependencyEdge_Feature:
+      description: Either a feature or a prerequisite feature in a dependency graph.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+      required:
+        - id
+        - name
+      title: _Feature
+    DependencyEdge_ReferencingSegment:
+      description: The segment whose rules hold the `$.flags` condition making up a dependency.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyEdgeSegmentRule'
+          title: Rules
+        condition_json_path:
+          type: string
+          title: Condition Json Path
+        is_system:
+          type: boolean
+          title: Is System
+      required:
+        - id
+        - name
+        - rules
+        - condition_json_path
+        - is_system
+      title: _ReferencingSegment
     DerivedFrom:
       type: object
       properties:
@@ -23574,6 +23712,23 @@ components:
         is_new_user:
           type: boolean
           readOnly: true
+    Operator2a7Enum:
+      type: string
+      enum:
+        - EQUAL
+        - GREATER_THAN
+        - LESS_THAN
+        - LESS_THAN_INCLUSIVE
+        - CONTAINS
+        - GREATER_THAN_INCLUSIVE
+        - NOT_CONTAINS
+        - NOT_EQUAL
+        - REGEX
+        - PERCENTAGE_SPLIT
+        - MODULO
+        - IS_SET
+        - IS_NOT_SET
+        - IN
     OrganisationAPIUsageNotification:
       type: object
       properties:
@@ -28597,6 +28752,12 @@ components:
         - int
         - unicode
         - bool
+    TypeC8eEnum:
+      type: string
+      enum:
+        - ALL
+        - ANY
+        - NONE
     TypeD77Enum:
       description: |-
         * `STANDARD` - STANDARD
@@ -29609,7 +29770,7 @@ components:
       properties:
         operator:
           allOf:
-            - $ref: '#/components/schemas/V1EnvironmentDocumentResponseSegmentConditionOperatorEnum'
+            - $ref: '#/components/schemas/Operator2a7Enum'
           title: Operator
         value:
           type: string
@@ -29622,30 +29783,13 @@ components:
         - value
         - property_
       title: SegmentCondition
-    V1EnvironmentDocumentResponseSegmentConditionOperatorEnum:
-      type: string
-      enum:
-        - EQUAL
-        - GREATER_THAN
-        - LESS_THAN
-        - LESS_THAN_INCLUSIVE
-        - CONTAINS
-        - GREATER_THAN_INCLUSIVE
-        - NOT_CONTAINS
-        - NOT_EQUAL
-        - REGEX
-        - PERCENTAGE_SPLIT
-        - MODULO
-        - IS_SET
-        - IS_NOT_SET
-        - IN
     V1EnvironmentDocumentResponseSegmentRule:
       description: Represents a rule within a segment used by Flagsmith engine. Root rules usually contain nested rules.
       type: object
       properties:
         type:
           allOf:
-            - $ref: '#/components/schemas/V1EnvironmentDocumentResponseSegmentRuleTypeEnum'
+            - $ref: '#/components/schemas/TypeC8eEnum'
           title: Type
         rules:
           type: array
@@ -29662,12 +29806,6 @@ components:
         - rules
         - conditions
       title: SegmentRule
-    V1EnvironmentDocumentResponseSegmentRuleTypeEnum:
-      type: string
-      enum:
-        - ALL
-        - ANY
-        - NONE
     V1IdentitiesRequest:
       description: |-
         `/api/v1/identities/` request.
