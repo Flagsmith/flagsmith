@@ -32,4 +32,14 @@ def evaluate_identity(
         feature_name=feature_name,
         additional_filters=additional_filters,
     )
-    return IdentityEvaluation(get_evaluation_result(context), feature_states_by_id)
+    result = get_evaluation_result(context)
+
+    # Hand back the rows the engine ruled on, carrying its verdict, so that
+    # callers neither re-resolve a value nor work out which row won.
+    feature_states = []
+    for flag in result["flags"].values():
+        feature_state = feature_states_by_id[flag["metadata"]["feature_state_id"]]
+        feature_state.flag_result = flag
+        feature_states.append(feature_state)
+
+    return IdentityEvaluation(result, feature_states)

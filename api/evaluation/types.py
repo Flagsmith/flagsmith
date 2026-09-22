@@ -34,7 +34,6 @@ FlagResult: TypeAlias = result_types.FlagResult[FeatureEngineMetadata]
 
 class IdentityEvaluation(NamedTuple):
     result: EvaluationResult
-    #: The feature states evaluated, by id. `FlagResult.metadata` carries a
-    #: `feature_state_id`, so a caller still working in Django rows can reach
-    #: the one a flag came from.
-    feature_states_by_id: "dict[int, FeatureState]"
+    #: The evaluated feature states, each carrying its `flag_result`, for
+    #: callers still working in Django rows.
+    feature_states: "list[FeatureState]"

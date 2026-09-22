@@ -73,22 +73,19 @@ class Identity(models.Model):
         :return: (list) flags for an identity with the correct values based on
             identity / segment priorities
         """
-        result, feature_states_by_id = evaluate_identity(
+        _, feature_states = evaluate_identity(
             self,
             traits=traits,
             feature_name=feature_name,
             additional_filters=additional_filters,
         )
 
-        hide_disabled_flags = self.environment.get_hide_disabled_flags() is True
-
-        feature_states = []
-        for flag in result["flags"].values():
-            if hide_disabled_flags and not flag["enabled"]:
-                continue
-            feature_state = feature_states_by_id[flag["metadata"]["feature_state_id"]]
-            feature_state.flag_result = flag
-            feature_states.append(feature_state)
+        if self.environment.get_hide_disabled_flags() is True:
+            return [
+                feature_state
+                for feature_state in feature_states
+                if feature_state.enabled
+            ]
 
         return feature_states
 
