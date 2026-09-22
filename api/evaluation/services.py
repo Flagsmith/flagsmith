@@ -24,7 +24,7 @@ def evaluate_identity(
 ) -> IdentityEvaluation:
     """Evaluate every flag in `identity`'s environment for that identity."""
     environment: "Environment" = identity.environment
-    context, feature_states_by_id = map_environment_to_evaluation_context(
+    context = map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
         traits=traits,
@@ -38,7 +38,7 @@ def evaluate_identity(
     # callers neither re-resolve a value nor work out which row won.
     feature_states = []
     for flag in result["flags"].values():
-        feature_state = feature_states_by_id[flag["metadata"]["feature_state_id"]]
+        feature_state = flag["metadata"]["feature_state"]
         feature_state.flag_result = flag
         feature_states.append(feature_state)
 

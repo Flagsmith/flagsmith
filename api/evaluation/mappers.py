@@ -32,20 +32,12 @@ if TYPE_CHECKING:
 __all__ = (
     "IDENTITY_OVERRIDES_SEGMENT_KEY",
     "IDENTITY_OVERRIDES_SEGMENT_NAME",
-    "MappedEvaluationContext",
     "map_condition_to_segment_condition",
     "map_environment_to_evaluation_context",
     "map_feature_state_to_feature_context",
     "map_rule_to_segment_rule",
     "map_segment_to_segment_context",
 )
-
-
-class MappedEvaluationContext(NamedTuple):
-    context: EvaluationContext
-    #: The feature states the context was built from, by id. Transitional — see
-    #: `map_environment_to_evaluation_context`.
-    feature_states_by_id: "dict[int, FeatureState]"
 
 
 #: Context key and name of the synthetic segment carrying identity overrides.
@@ -68,18 +60,16 @@ def map_environment_to_evaluation_context(
     segments: "Iterable[Segment] | None" = None,
     feature_name: str | None = None,
     additional_filters: "Q | None" = None,
-) -> MappedEvaluationContext:
+) -> EvaluationContext:
     """Map Django ORM models to a flag-engine `EvaluationContext`.
 
     Resolves the feature states that are current for `environment` — defaults,
     segment overrides, and `identity`'s own overrides — and lays them out as
     `$.features` plus the overrides carried on each segment.
 
-    Returns those feature states alongside the context, keyed by id, so that
-    callers still working in Django rows can map a `FlagResult` back to one via
-    `metadata.feature_state_id`. That is scaffolding for the migration off
-    `FeatureState.get_feature_state_value(identity=...)`; once serialisers read
-    values off the result, only the context is needed.
+    Each feature context carries the row it was built from as metadata, which
+    the engine hands back on the corresponding `FlagResult`, so a caller still
+    working in Django rows never has to work out which override won.
 
     :param segments: segments to evaluate.
     """
@@ -113,7 +103,6 @@ def map_environment_to_evaluation_context(
         }
 
     (
-        feature_states,
         features,
         identity_overrides,
         segment_overrides,
@@ -130,13 +119,11 @@ def map_environment_to_evaluation_context(
     def to_feature_context(
         feature_state: "FeatureState",
         *,
-        segment_id: int | None = None,
         priority: float | None = None,
     ) -> FeatureContext:
         return map_feature_state_to_feature_context(
             feature_state,
             mv_fs_values=mv_fs_values_by_feature_state_id.get(feature_state.pk),
-            segment_id=segment_id,
             priority=priority,
         )
 
@@ -145,7 +132,7 @@ def map_environment_to_evaluation_context(
             str(segment.pk): map_segment_to_segment_context(
                 segment,
                 overrides=[
-                    to_feature_context(feature_state, segment_id=segment.pk)
+                    to_feature_context(feature_state)
                     for feature_state in segment_overrides.get(segment.pk) or ()
                 ],
             )
@@ -169,16 +156,10 @@ def map_environment_to_evaluation_context(
         for feature_state in features
     }
 
-    return MappedEvaluationContext(
-        context=context,
-        feature_states_by_id={
-            feature_state.pk: feature_state for feature_state in feature_states
-        },
-    )
+    return context
 
 
 class _ResolvedFeatureStates(NamedTuple):
-    all: list["FeatureState"]
     #: Environment defaults, i.e. neither segment- nor identity-scoped.
     features: list["FeatureState"]
     identity_overrides: list["FeatureState"]
@@ -223,7 +204,7 @@ def _resolve_feature_states(
         ],
     )
 
-    resolved = _ResolvedFeatureStates(feature_states, [], [], {}, {})
+    resolved = _ResolvedFeatureStates([], [], {}, {})
 
     for feature_state in feature_states:
         resolved.mv_fs_values_by_feature_state_id[feature_state.pk] = (
@@ -245,20 +226,10 @@ def map_feature_state_to_feature_context(
     feature_state: "FeatureState",
     *,
     mv_fs_values: "Iterable[MultivariateFeatureStateValue] | None" = None,
-    segment_id: int | None = None,
     priority: float | None = None,
 ) -> FeatureContext:
     """Map a Django ORM FeatureState to a flag-engine FeatureContext TypedDict."""
     feature = feature_state.feature
-    metadata = FeatureEngineMetadata(
-        feature_id=feature.pk,
-        feature_state_id=feature_state.pk,
-    )
-    if segment_id is not None:
-        metadata["segment_id"] = segment_id
-    if feature_state.identity_id is not None:
-        metadata["identity_id"] = feature_state.identity_id
-
     feature_context: FeatureContext = {
         # The engine seeds multivariate variant allocation on the feature
         # context key, so it has to be the bucketing seed rather than the
@@ -270,7 +241,7 @@ def map_feature_state_to_feature_context(
         # Deliberately unparameterised by identity: picking a multivariate
         # value is the engine's job now.
         "value": feature_state.get_feature_state_value(),
-        "metadata": metadata,
+        "metadata": FeatureEngineMetadata(feature_state=feature_state),
     }
 
     if variants := _map_mv_fs_values_to_feature_values(mv_fs_values or ()):

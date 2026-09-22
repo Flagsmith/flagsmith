@@ -120,7 +120,7 @@ class Identity(models.Model):
             all_segments = self.environment.project.get_segments_from_cache()
 
         segments_by_pk = {segment.pk: segment for segment in all_segments}
-        context, _ = map_environment_to_evaluation_context(
+        context = map_environment_to_evaluation_context(
             identity=self,
             environment=self.environment,
             traits=db_traits,

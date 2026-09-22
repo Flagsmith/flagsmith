@@ -55,7 +55,7 @@ def test_evaluate_identity__identity_and_segment_override__identity_override_win
     # Then
     flag = result["flags"][feature.name]
     assert flag["value"] == "identity"
-    assert flag["metadata"]["feature_state_id"] == identity_override.pk
+    assert flag["metadata"]["feature_state"] == identity_override
 
 
 def test_evaluate_identity__segment_overrides__lowest_priority_wins(

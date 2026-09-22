@@ -27,7 +27,7 @@ def test_map_environment_to_evaluation_context__environment_default__populates_f
     )
 
     # When
-    context, feature_states_by_id = map_environment_to_evaluation_context(
+    context = map_environment_to_evaluation_context(
         environment=identity.environment,
         identity=identity,
         segments=identity.environment.get_segments_from_cache(),
@@ -40,13 +40,9 @@ def test_map_environment_to_evaluation_context__environment_default__populates_f
             "name": feature.name,
             "enabled": feature_state.enabled,
             "value": feature_state.get_feature_state_value(),
-            "metadata": {
-                "feature_id": feature.pk,
-                "feature_state_id": feature_state.pk,
-            },
+            "metadata": {"feature_state": feature_state},
         }
     }
-    assert feature_states_by_id == {feature_state.pk: feature_state}
 
 
 def test_map_environment_to_evaluation_context__transient_identity__omits_stored_traits(
@@ -57,7 +53,7 @@ def test_map_environment_to_evaluation_context__transient_identity__omits_stored
     transient_identity = Identity(identifier="transient", environment=environment)
 
     # When
-    context, _ = map_environment_to_evaluation_context(
+    context = map_environment_to_evaluation_context(
         environment=environment,
         identity=transient_identity,
     )
@@ -92,7 +88,7 @@ def test_map_environment_to_evaluation_context__segment_override__carries_segmen
     )
 
     # When
-    context, _ = map_environment_to_evaluation_context(
+    context = map_environment_to_evaluation_context(
         environment=identity.environment,
         identity=identity,
         segments=identity.environment.get_segments_from_cache(),
@@ -106,11 +102,7 @@ def test_map_environment_to_evaluation_context__segment_override__carries_segmen
     }
     (override_context,) = segment_context["overrides"]
     assert override_context["priority"] == 3
-    assert override_context["metadata"] == {
-        "feature_id": feature.pk,
-        "feature_state_id": override.pk,
-        "segment_id": identity_matching_segment.pk,
-    }
+    assert override_context["metadata"] == {"feature_state": override}
 
 
 def test_map_environment_to_evaluation_context__identity_override__returns_synthetic_segment(
@@ -126,7 +118,7 @@ def test_map_environment_to_evaluation_context__identity_override__returns_synth
     )
 
     # When
-    context, _ = map_environment_to_evaluation_context(
+    context = map_environment_to_evaluation_context(
         environment=identity.environment,
         identity=identity,
         segments=identity.environment.get_segments_from_cache(),
@@ -139,8 +131,7 @@ def test_map_environment_to_evaluation_context__identity_override__returns_synth
     (override_context,) = segment_context["overrides"]
     # No segment override may outrank an identity override.
     assert override_context["priority"] == float("-inf")
-    assert override_context["metadata"]["feature_state_id"] == override.pk
-    assert override_context["metadata"]["identity_id"] == identity.pk
+    assert override_context["metadata"] == {"feature_state": override}
 
 
 def test_map_environment_to_evaluation_context__multivariate_feature__weights_variants_in_id_order(
@@ -153,7 +144,7 @@ def test_map_environment_to_evaluation_context__multivariate_feature__weights_va
     )
 
     # When
-    context, _ = map_environment_to_evaluation_context(
+    context = map_environment_to_evaluation_context(
         environment=identity.environment,
         identity=identity,
         segments=identity.environment.get_segments_from_cache(),
@@ -192,7 +183,7 @@ def test_map_environment_to_evaluation_context__hashing_setting__sets_matching_i
     environment.save()
 
     # When
-    context, _ = map_environment_to_evaluation_context(
+    context = map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
     )
@@ -247,7 +238,7 @@ def test_map_environment_to_evaluation_context__no_identity__returns_environment
     environment: Environment,
 ) -> None:
     # Given / When
-    context, _ = map_environment_to_evaluation_context(environment=environment)
+    context = map_environment_to_evaluation_context(environment=environment)
 
     # Then
     assert context == {
@@ -264,7 +255,7 @@ def test_map_environment_to_evaluation_context__with_identity__returns_identity_
     identity: Identity,
 ) -> None:
     # Given / When
-    context, _ = map_environment_to_evaluation_context(
+    context = map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
     )
@@ -292,7 +283,7 @@ def test_map_environment_to_evaluation_context__with_explicit_traits__returns_gi
     trait: Trait,
 ) -> None:
     # Given / When
-    context, _ = map_environment_to_evaluation_context(
+    context = map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
         traits=[trait],
@@ -321,7 +312,7 @@ def test_map_environment_to_evaluation_context__no_explicit_traits__returns_iden
     trait: Trait,
 ) -> None:
     # Given / When
-    context, _ = map_environment_to_evaluation_context(
+    context = map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
     )
@@ -348,7 +339,7 @@ def test_map_environment_to_evaluation_context__with_segments__returns_segment_c
     identity_matching_segment: Segment,
 ) -> None:
     # Given / When
-    context, _ = map_environment_to_evaluation_context(
+    context = map_environment_to_evaluation_context(
         environment=environment,
         segments=[identity_matching_segment],
     )
