@@ -26,30 +26,6 @@ total_variance_percentage = (
 )
 
 
-def _set_mv_allocations(
-    admin_client: APIClient,
-    environment_api_key: str,
-    feature_state_id: int,
-    allocation_by_mv_option_id: dict[int, float],
-) -> None:
-    """Reallocate a multivariate feature state's variants, through the API."""
-    feature_state_detail_url = reverse(
-        "api-v1:environments:environment-featurestates-detail",
-        args=[environment_api_key, feature_state_id],
-    )
-    feature_state_data = admin_client.get(feature_state_detail_url).json()
-    for mv_value in feature_state_data["multivariate_feature_state_values"]:
-        mv_value["percentage_allocation"] = allocation_by_mv_option_id[
-            mv_value["multivariate_feature_option"]
-        ]
-    update_response = admin_client.put(
-        feature_state_detail_url,
-        data=json.dumps(feature_state_data),
-        content_type="application/json",
-    )
-    assert update_response.status_code == status.HTTP_200_OK
-
-
 # Which variant an identity hashes into is not something an API test can pin
 # down, so each case allocates a single variant the whole range instead.
 @pytest.mark.parametrize(
@@ -77,6 +53,7 @@ def test_get_feature_states_for_identity__mv_allocation__returns_value_and_varia
     environment,
     identity,
     identity_identifier,
+    set_mv_allocations,
 ):
     # Given
     # a standard (non-multivariate) feature
@@ -122,8 +99,7 @@ def test_get_feature_states_for_identity__mv_allocation__returns_value_and_varia
 
     # When
     # the whole range is allocated to one variant, or to neither
-    _set_mv_allocations(
-        admin_client,
+    set_mv_allocations(
         environment_api_key,
         multivariate_feature_state_id,
         {

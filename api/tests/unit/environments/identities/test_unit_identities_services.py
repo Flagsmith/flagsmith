@@ -5,10 +5,16 @@ from flag_engine.utils.hashing import get_hashed_percentage_for_object_ids
 from environments.identities.models import Identity
 from environments.identities.services import evaluate_identity
 from environments.identities.traits.models import Trait
+from environments.models import Environment
+from features.constants import CONTROL_VARIANT_KEY
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+from tests.evaluation_helpers import evaluate_feature_state
+
+#: `multivariate_feature`'s initial value, served when nothing is allocated.
+CONTROL_VALUE = "control"
 
 
 def test_evaluate_identity__identity_and_segment_override__identity_override_wins(
@@ -167,3 +173,56 @@ def test_evaluate_identity__multivariate_feature__returns_variant_key(
     # Either a named variant or the control bucket — never a silent `None`,
     # which is what an unkeyed variant context would produce.
     assert flag["variant"] in {"control", "variant-0", "variant-1", "variant-2"}
+
+
+@pytest.mark.parametrize(
+    ["identity_key", "expected_variant", "expected_value"],
+    (
+        pytest.param("identity-4", "variant-1", "variant-1-value", id="first_band"),
+        pytest.param("identity-3", "variant-2", "variant-2-value", id="second_band"),
+        pytest.param(
+            "identity-0",
+            CONTROL_VARIANT_KEY,
+            CONTROL_VALUE,
+            id="unallocated_falls_through",
+        ),
+    ),
+)
+def test_evaluate_feature_state__multivariate_feature__allocates_variants_in_order(
+    environment: Environment,
+    multivariate_feature: Feature,
+    identity_key: str,
+    expected_variant: str,
+    expected_value: str,
+) -> None:
+    # Given
+    feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+    feature_state.mv_hashing_salt = 1
+    feature_state.save()
+
+    # Two variants taking 20% and 30%, leaving half the range to the control.
+    # The fixture gives two of its options the same value, so name them apart.
+    for index, (mv_value, allocation) in enumerate(
+        zip(
+            feature_state.multivariate_feature_state_values.order_by("id"),
+            (20, 30, 0),
+        )
+    ):
+        mv_value.percentage_allocation = allocation
+        mv_value.save()
+        option = mv_value.multivariate_feature_option
+        option.key = f"variant-{index + 1}"
+        option.string_value = f"variant-{index + 1}-value"
+        option.save()
+
+    # When
+    evaluated = evaluate_feature_state(feature_state, identity_key)
+
+    # Then
+    assert evaluated.variant == expected_variant
+    assert evaluated.value == expected_value

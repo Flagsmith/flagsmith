@@ -46,6 +46,15 @@ class MigratorFactory(Protocol):
     def __call__(self, name: Optional[str] = None) -> Migrator: ...
 
 
+class SetMultivariateAllocationsFixture(Protocol):
+    def __call__(
+        self,
+        environment_api_key: str,
+        feature_state_id: int,
+        allocation_by_mv_option_id: dict[int, float],
+    ) -> None: ...
+
+
 class CreateSegmentOverrideFixture(Protocol):
     def __call__(
         self,

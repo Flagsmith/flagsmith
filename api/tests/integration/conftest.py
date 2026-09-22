@@ -20,13 +20,44 @@ from environments.enums import EnvironmentDocumentCacheMode
 from features.future.types import SegmentOverrideRequest, UpdateFlagRequest
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
-from tests.types import CreateSegmentOverrideFixture
+from tests.types import (
+    CreateSegmentOverrideFixture,
+    SetMultivariateAllocationsFixture,
+)
 from users.models import FFAdminUser
 
 
 @pytest.fixture()
 def mv_option_value():  # type: ignore[no-untyped-def]
     return "test_mv_value"
+
+
+@pytest.fixture()
+def set_mv_allocations(admin_client: APIClient) -> SetMultivariateAllocationsFixture:
+    """Reallocate a multivariate feature state's variants, through the API."""
+
+    def _set_mv_allocations(
+        environment_api_key: str,
+        feature_state_id: int,
+        allocation_by_mv_option_id: dict[int, float],
+    ) -> None:
+        url = reverse(
+            "api-v1:environments:environment-featurestates-detail",
+            args=[environment_api_key, feature_state_id],
+        )
+        feature_state_data = admin_client.get(url).json()
+        for mv_value in feature_state_data["multivariate_feature_state_values"]:
+            mv_value["percentage_allocation"] = allocation_by_mv_option_id[
+                mv_value["multivariate_feature_option"]
+            ]
+        response = admin_client.put(
+            url,
+            data=json.dumps(feature_state_data),
+            content_type="application/json",
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    return _set_mv_allocations
 
 
 @pytest.fixture()
