@@ -6,7 +6,7 @@
   ],
   "gitIgnoredAuthors": ["flagsmith-engineering[bot]@users.noreply.github.com"],
   "constraints": {
-    "npm": ">=11.10.0"
+    "npm": "^11.10.0"
   },
   "lockFileMaintenance": {
     "enabled": true,
