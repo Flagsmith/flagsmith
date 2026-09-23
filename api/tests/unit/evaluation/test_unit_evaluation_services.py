@@ -2,10 +2,14 @@ import pytest
 from flag_engine.segments.constants import EQUAL
 from pytest_lazy_fixtures import lf as lazy_fixture
 
+from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
-from evaluation.services import evaluate_identity
+from evaluation.services import (
+    evaluate_identity,
+    get_edge_identity_feature_states,
+)
 from features.constants import CONTROL_VARIANT_KEY
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
@@ -16,6 +20,9 @@ from features.multivariate.models import (
 from features.value_types import STRING
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+from util.engine_models.features.models import FeatureModel, FeatureStateModel
+from util.engine_models.identities.models import IdentityFeaturesList, IdentityModel
+from util.engine_models.identities.traits.models import TraitModel
 
 
 @pytest.fixture()
@@ -270,3 +277,61 @@ def test_evaluate_identity__multivariate_feature__allocates_variants_in_order(
     # Then
     assert flag["variant"] == expected_variant
     assert flag["value"] == expected_value
+
+
+def test_get_edge_identity_feature_states__segment_and_identity_override__identity_override_wins(
+    environment: Environment,
+    feature: Feature,
+    identity_matching_segment: Segment,
+    trait: Trait,
+) -> None:
+    # Given
+    # a segment override the identity matches
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=identity_matching_segment,
+        environment=environment,
+        priority=0,
+    )
+    segment_override = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        enabled=True,
+    )
+    segment_override.feature_state_value.string_value = "segment"
+    segment_override.feature_state_value.save()
+
+    # and an identity override, stored against the identity in DynamoDB
+    edge_identity = EdgeIdentity(
+        IdentityModel(
+            identifier="identity",
+            environment_api_key=environment.api_key,
+            identity_traits=[
+                TraitModel(trait_key=trait.trait_key, trait_value=trait.trait_value)
+            ],
+            identity_features=IdentityFeaturesList(
+                [
+                    FeatureStateModel(
+                        django_id=1,
+                        feature=FeatureModel(
+                            id=feature.id, name=feature.name, type=feature.type
+                        ),
+                        enabled=True,
+                        feature_state_value="identity",
+                    )
+                ]
+            ),
+        )
+    )
+
+    # When
+    feature_states = get_edge_identity_feature_states(edge_identity)
+
+    # Then
+    (feature_state,) = [
+        feature_state
+        for feature_state in feature_states
+        if feature_state.feature.name == feature.name
+    ]
+    assert feature_state.feature_state_value == "identity"

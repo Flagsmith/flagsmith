@@ -1,11 +1,15 @@
+from math import inf
 from typing import TYPE_CHECKING
 
 from django.db.models import Q
 from flag_engine.engine import get_evaluation_result
 
 from evaluation.mappers import (
+    IDENTITY_OVERRIDES_SEGMENT_KEY,
     map_edge_identity_to_identity_context,
+    map_engine_feature_state_to_feature_context,
     map_environment_to_evaluation_context,
+    map_identity_overrides_to_segment_context,
 )
 from evaluation.types import IdentityEvaluation
 
@@ -98,19 +102,29 @@ def get_edge_identity_feature_states(
         ),
         segments=environment.get_segments_from_cache(),
     )
-    result = get_evaluation_result(context)
+    # The identity's own overrides are read back from DynamoDB rather than the
+    # ORM, so the mapper never saw them. They reach the engine the way every
+    # identity override does, as a segment no other override can outrank.
+    if overrides := [
+        map_engine_feature_state_to_feature_context(feature_state, priority=-inf)
+        for feature_state in edge_identity.feature_overrides
+    ]:
+        context.setdefault("segments", {})[IDENTITY_OVERRIDES_SEGMENT_KEY] = (
+            map_identity_overrides_to_segment_context(overrides)
+        )
 
-    feature_states: dict[str, "FeatureState | FeatureStateModel"] = {}
-    for flag in result["flags"].values():
-        feature_state = flag["metadata"]["feature_state"]
-        feature_state.flag_result = flag
-        feature_states[flag["name"]] = feature_state
+    feature_states: list["FeatureState | FeatureStateModel"] = []
+    for flag in get_evaluation_result(context)["flags"].values():
+        if (feature_state := flag["metadata"].get("feature_state")) is not None:
+            feature_state.flag_result = flag
+            feature_states.append(feature_state)
+        else:
+            # A stored model cannot be assigned the engine's verdict, so an
+            # edge identity's own overrides are still resolved by the
+            # serialiser. See Flagsmith/flagsmith-engine#340.
+            feature_states.append(flag["metadata"]["edge_feature_state"])
 
-    # An identity override outranks anything the engine ruled on.
-    for identity_feature_state in edge_identity.feature_overrides:
-        feature_states[identity_feature_state.feature.name] = identity_feature_state
-
-    return list(feature_states.values())
+    return feature_states
 
 
 def get_edge_identity_segments(edge_identity: "EdgeIdentity") -> "list[Segment]":

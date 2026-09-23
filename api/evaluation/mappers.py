@@ -33,6 +33,10 @@ if TYPE_CHECKING:
     from features.models import FeatureState
     from features.multivariate.models import MultivariateFeatureStateValue
     from segments.models import Condition, Segment, SegmentRule
+    from util.engine_models.features.models import (
+        FeatureStateModel,
+        MultivariateFeatureStateValueModel,
+    )
 
 
 __all__ = (
@@ -41,7 +45,9 @@ __all__ = (
     "map_condition_to_segment_condition",
     "map_environment_to_evaluation_context",
     "map_edge_identity_to_identity_context",
+    "map_engine_feature_state_to_feature_context",
     "map_feature_state_to_feature_context",
+    "map_identity_overrides_to_segment_context",
     "map_identity_to_identity_context",
     "map_rule_to_segment_rule",
     "map_segment_to_segment_context",
@@ -138,7 +144,7 @@ def map_environment_to_evaluation_context(
         # An identity override outranks every segment override, which the
         # engine expresses as a priority no segment can beat.
         context.setdefault("segments", {})[IDENTITY_OVERRIDES_SEGMENT_KEY] = (
-            _map_identity_overrides_to_segment_context(
+            map_identity_overrides_to_segment_context(
                 [
                     to_feature_context(feature_state, priority=-inf)
                     for feature_state in identity_overrides
@@ -337,7 +343,59 @@ def map_segment_to_segment_context(
     return segment_context
 
 
-def _map_identity_overrides_to_segment_context(
+def map_engine_feature_state_to_feature_context(
+    feature_state: "FeatureStateModel",
+    *,
+    priority: float | None = None,
+) -> FeatureContext:
+    """Map a DynamoDB-sourced FeatureStateModel to a FeatureContext TypedDict.
+
+    An edge identity's overrides are stored rather than evaluated, so they
+    carry no bucketing salt: their own id seeds allocation, as it always has.
+    """
+    feature_context: FeatureContext = {
+        "key": str(feature_state.django_id or feature_state.featurestate_uuid),
+        "name": feature_state.feature.name,
+        "enabled": feature_state.enabled,
+        "value": feature_state.feature_state_value,
+        "metadata": FeatureEngineMetadata(edge_feature_state=feature_state),
+    }
+
+    if variants := _map_engine_mv_fs_values_to_feature_values(
+        feature_state.multivariate_feature_state_values
+    ):
+        feature_context["variants"] = variants
+
+    if priority is not None:
+        feature_context["priority"] = priority
+
+    return feature_context
+
+
+def _map_engine_mv_fs_values_to_feature_values(
+    mv_fs_values: "Iterable[MultivariateFeatureStateValueModel]",
+) -> list[engine_types.FeatureValue]:
+    # Ordered by id as the stored models always have been, falling back to the
+    # uuid for values that never reached the ORM.
+    feature_values: list[engine_types.FeatureValue] = []
+    for index, mv_fs_value in enumerate(
+        sorted(
+            mv_fs_values, key=lambda mv_value: mv_value.id or mv_value.mv_fs_value_uuid
+        )
+    ):
+        mv_option = mv_fs_value.multivariate_feature_option
+        feature_value: engine_types.FeatureValue = {
+            "value": mv_option.value,
+            "weight": mv_fs_value.percentage_allocation,
+            "priority": index,
+        }
+        if mv_option.key is not None:
+            feature_value["key"] = mv_option.key
+        feature_values.append(feature_value)
+    return feature_values
+
+
+def map_identity_overrides_to_segment_context(
     overrides: "list[FeatureContext]",
 ) -> SegmentContext:
     """Express identity overrides as a segment matching the current identity."""
