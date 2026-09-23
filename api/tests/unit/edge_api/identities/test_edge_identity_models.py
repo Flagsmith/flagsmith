@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 import shortuuid
 from django.utils import timezone
+from flag_engine.segments.constants import EQUAL
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
@@ -14,29 +15,52 @@ from task_processor.task_run_method import TaskRunMethod
 from api_keys.user import APIKeyUser
 from edge_api.identities.models import EdgeIdentity
 from environments.models import Environment
+from evaluation.services import get_edge_identity_feature_states
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
 from projects.models import Project
-from segments.models import Segment
+from segments.models import Condition, Segment, SegmentRule
 from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
 from util.engine_models.features.models import FeatureModel, FeatureStateModel
+from util.engine_models.identities.models import IdentityModel
+from util.engine_models.identities.traits.models import TraitModel
+
+MATCHING_TRAIT_KEY = "segment-membership"
+MATCHING_TRAIT_VALUE = "yes"
+
+
+def _create_matching_segment(project: Project, name: str) -> Segment:
+    """A segment every identity carrying the matching trait belongs to."""
+    segment: Segment = Segment.objects.create(name=name, project=project)
+    Condition.objects.create(
+        rule=SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE),
+        property=MATCHING_TRAIT_KEY,
+        operator=EQUAL,
+        value=MATCHING_TRAIT_VALUE,
+    )
+    return segment
+
+
+def _matching_identity_model(environment_api_key: str) -> IdentityModel:
+    return IdentityModel(
+        identifier="identity",
+        environment_api_key=environment_api_key,
+        identity_traits=[
+            TraitModel(trait_key=MATCHING_TRAIT_KEY, trait_value=MATCHING_TRAIT_VALUE)
+        ],
+    )
 
 
 def test_get_all_feature_states__multiple_segment_overrides__uses_segment_priorities(  # type: ignore[no-untyped-def]
-    environment, project, segment, feature, mocker
+    environment, project, feature, mocker
 ):
     # Given
-    another_segment = Segment.objects.create(name="another_segment", project=project)
-
-    edge_identity_dynamo_wrapper_mock = mocker.patch(
-        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper",
+    # two segments the identity matches
+    segment, another_segment = (
+        _create_matching_segment(project, name) for name in ("segment", "another")
     )
-    edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = [
-        segment.id,
-        another_segment.id,
-    ]
 
     feature_segment_p1 = FeatureSegment.objects.create(
         segment=segment, feature=feature, environment=environment, priority=1
@@ -52,21 +76,14 @@ def test_get_all_feature_states__multiple_segment_overrides__uses_segment_priori
         feature=feature, environment=environment, feature_segment=feature_segment_p2
     )
 
-    identity_model = mocker.MagicMock(
-        environment_api_key=environment.api_key, identity_features=[]
-    )
-    edge_identity = EdgeIdentity(identity_model)
+    edge_identity = EdgeIdentity(_matching_identity_model(environment.api_key))
 
     # When
-    feature_states, _ = edge_identity.get_all_feature_states()
+    feature_states = get_edge_identity_feature_states(edge_identity)
 
     # Then
     assert len(feature_states) == 1
     assert feature_states[0] == segment_override_p1
-
-    edge_identity_dynamo_wrapper_mock.get_segment_ids.assert_called_once_with(
-        identity_model=identity_model
-    )
 
 
 def test_get_all_feature_states__not_live_change_request__ignores_not_live_states(  # type: ignore[no-untyped-def]
@@ -96,7 +113,7 @@ def test_get_all_feature_states__not_live_change_request__ignores_not_live_state
 
     # When
     with freeze_time(timezone.now() + timedelta(hours=2)):
-        feature_states, _ = edge_identity.get_all_feature_states()
+        feature_states = get_edge_identity_feature_states(edge_identity)
 
     # Then
     assert feature_states == [feature_state]
@@ -519,8 +536,6 @@ def test_get_all_feature_states__post_v2_versioning_migration__returns_latest_ov
     feature_state: FeatureState,
     segment: Segment,
     segment_featurestate: FeatureState,
-    edge_identity_model: EdgeIdentity,
-    mocker: MockerFixture,
     django_assert_num_queries: DjangoAssertNumQueries,
 ) -> None:
     """
@@ -539,16 +554,18 @@ def test_get_all_feature_states__post_v2_versioning_migration__returns_latest_ov
 
     enable_v2_versioning(environment.id)
 
-    edge_identity_dynamo_wrapper_mock = mocker.patch(
-        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper",
+    # and an identity belonging to the overridden segment
+    Condition.objects.create(
+        rule=SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE),
+        property=MATCHING_TRAIT_KEY,
+        operator=EQUAL,
+        value=MATCHING_TRAIT_VALUE,
     )
-    edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = [segment.id]
+    edge_identity = EdgeIdentity(_matching_identity_model(environment.api_key))
 
     # When
-    with django_assert_num_queries(4):
-        feature_states, identity_override_feature_names = (
-            edge_identity_model.get_all_feature_states()
-        )
+    with django_assert_num_queries(8):
+        feature_states = get_edge_identity_feature_states(edge_identity)
 
     # Then
     assert len(feature_states) == 1

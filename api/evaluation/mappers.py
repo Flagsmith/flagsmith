@@ -16,7 +16,12 @@ from flag_engine.segments.constants import IS_SET
 from flag_engine.segments.types import ConditionOperator, RuleType
 from pydantic import TypeAdapter
 
-from evaluation.types import EvaluationContext, FeatureContext, SegmentContext
+from evaluation.types import (
+    EvaluationContext,
+    FeatureContext,
+    IdentityContext,
+    SegmentContext,
+)
 from features.types import FeatureEngineMetadata
 from segments.types import SegmentEngineMetadata
 
@@ -35,6 +40,7 @@ __all__ = (
     "map_condition_to_segment_condition",
     "map_environment_to_evaluation_context",
     "map_feature_state_to_feature_context",
+    "map_identity_to_identity_context",
     "map_rule_to_segment_rule",
     "map_segment_to_segment_context",
 )
@@ -53,6 +59,7 @@ def map_environment_to_evaluation_context(
     *,
     environment: "Environment",
     identity: "Identity | None" = None,
+    identity_context: "IdentityContext | None" = None,
     traits: "Iterable[Trait] | None" = None,
     segments: "Iterable[Segment] | None" = None,
     additional_filters: "Q | None" = None,
@@ -67,6 +74,11 @@ def map_environment_to_evaluation_context(
     the engine hands back on the corresponding `FlagResult`, so a caller still
     working in Django rows never has to work out which override won.
 
+    :param identity: the identity being evaluated, whose overrides are read
+        from the ORM along with the environment's own feature states.
+    :param identity_context: who is being evaluated, for an identity that is
+        not an ORM row and so has no overrides to read from it. An edge
+        identity keeps both its traits and its overrides in DynamoDB.
     :param segments: segments to evaluate.
     """
     context: EvaluationContext = {
@@ -75,28 +87,14 @@ def map_environment_to_evaluation_context(
             "name": environment.name or "",
         },
     }
-    if identity is not None:
-        trait_items: "Iterable[Trait]" = (
-            traits
-            if traits is not None
-            # A transient identity was never persisted, so it has no stored
-            # traits to read, and asking for them would raise.
-            else identity.identity_traits.all()
-            if identity.pk
-            else ()
+    if identity_context is not None:
+        context["identity"] = identity_context
+    elif identity is not None:
+        context["identity"] = map_identity_to_identity_context(
+            identity,
+            environment=environment,
+            traits=traits,
         )
-        identity_traits = {trait.trait_key: trait.trait_value for trait in trait_items}
-        if identity.system_traits:
-            # System-owned traits are not user data: on a key clash, the system
-            # value wins.
-            identity_traits.update(identity.system_traits)
-        context["identity"] = {
-            "identifier": identity.identifier,
-            "key": identity.get_hash_key(
-                environment.use_identity_composite_key_for_hashing
-            ),
-            "traits": identity_traits,
-        }
 
     (
         feature_states,
@@ -212,6 +210,36 @@ def _resolve_feature_states(
             resolved.feature_states.append(feature_state)
 
     return resolved
+
+
+def map_identity_to_identity_context(
+    identity: "Identity",
+    *,
+    environment: "Environment",
+    traits: "Iterable[Trait] | None" = None,
+) -> "IdentityContext":
+    """Map a Django ORM Identity to a flag-engine IdentityContext TypedDict."""
+    trait_items: "Iterable[Trait]" = (
+        traits
+        if traits is not None
+        # A transient identity was never persisted, so it has no stored traits
+        # to read, and asking for them would raise.
+        else identity.identity_traits.all()
+        if identity.pk
+        else ()
+    )
+    identity_traits = {trait.trait_key: trait.trait_value for trait in trait_items}
+    if identity.system_traits:
+        # System-owned traits are not user data: on a key clash, the system
+        # value wins.
+        identity_traits.update(identity.system_traits)
+    return {
+        "identifier": identity.identifier,
+        "key": identity.get_hash_key(
+            environment.use_identity_composite_key_for_hashing
+        ),
+        "traits": identity_traits,
+    }
 
 
 def map_feature_state_to_feature_context(

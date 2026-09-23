@@ -15,6 +15,7 @@ __all__ = (
     "EvaluationResult",
     "FeatureContext",
     "FlagResult",
+    "IdentityContext",
     "IdentityEvaluation",
     "SegmentContext",
 )
@@ -26,6 +27,7 @@ SegmentContext: TypeAlias = context_types.SegmentContext[
     SegmentEngineMetadata, FeatureEngineMetadata
 ]
 FeatureContext: TypeAlias = context_types.FeatureContext[FeatureEngineMetadata]
+IdentityContext: TypeAlias = context_types.IdentityContext
 EvaluationResult: TypeAlias = result_types.EvaluationResult[
     SegmentEngineMetadata, FeatureEngineMetadata
 ]

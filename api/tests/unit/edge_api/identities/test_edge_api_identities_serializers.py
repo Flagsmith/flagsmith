@@ -11,6 +11,7 @@ from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
 )
+from evaluation.services import get_edge_identity_feature_states
 from features.feature_types import STANDARD
 from features.models import Feature
 from users.models import FFAdminUser
@@ -197,7 +198,7 @@ def test_all_feature_states_serializer__edge_identity_with_mv_feature__uses_mv_v
 
     # The feature state has to come from an evaluation, which is what resolves
     # the identity's multivariate value.
-    feature_states, _ = edge_identity.get_all_feature_states()
+    feature_states = get_edge_identity_feature_states(edge_identity)
     (feature_state,) = [
         feature_state
         for feature_state in feature_states

@@ -7,13 +7,19 @@ from evaluation.mappers import map_environment_to_evaluation_context
 from evaluation.types import IdentityEvaluation
 
 if TYPE_CHECKING:
+    from edge_api.identities.models import EdgeIdentity
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
     from environments.models import Environment
     from features.models import FeatureState
+    from util.engine_models.features.models import FeatureStateModel
 
 
-__all__ = ("evaluate_identity", "get_identity_feature_states")
+__all__ = (
+    "evaluate_identity",
+    "get_edge_identity_feature_states",
+    "get_identity_feature_states",
+)
 
 
 def evaluate_identity(
@@ -67,3 +73,44 @@ def get_identity_feature_states(
         ]
 
     return feature_states
+
+
+def get_edge_identity_feature_states(
+    edge_identity: "EdgeIdentity",
+) -> "list[FeatureState | FeatureStateModel]":
+    """The feature states to serve an edge identity, one per feature.
+
+    An edge identity's own overrides live in DynamoDB rather than the ORM, so
+    they are laid over the evaluated environment afterwards, and are the only
+    states in the returned list not carrying a `flag_result`.
+    """
+    environment: "Environment" = edge_identity.environment
+
+    context = map_environment_to_evaluation_context(
+        environment=environment,
+        identity_context={
+            "identifier": edge_identity.identifier,
+            "key": edge_identity.get_hash_key(
+                environment.use_identity_composite_key_for_hashing
+            ),
+            "traits": {
+                trait.trait_key: trait.trait_value
+                for trait in edge_identity.engine_identity_model.identity_traits
+            }
+            | (edge_identity.engine_identity_model.system_traits or {}),
+        },
+        segments=environment.get_segments_from_cache(),
+    )
+    result = get_evaluation_result(context)
+
+    feature_states: dict[str, "FeatureState | FeatureStateModel"] = {}
+    for flag in result["flags"].values():
+        feature_state = flag["metadata"]["feature_state"]
+        feature_state.flag_result = flag
+        feature_states[flag["name"]] = feature_state
+
+    # An identity override outranks anything the engine ruled on.
+    for identity_feature_state in edge_identity.feature_overrides:
+        feature_states[identity_feature_state.feature.name] = identity_feature_state
+
+    return list(feature_states.values())

@@ -112,9 +112,11 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):  # type: ignor
     def get_overridden_by(self, instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         if getattr(instance, "feature_segment_id", None) is not None:
             return "SEGMENT"
-        elif getattr(
-            instance, "identity_id", None
-        ) or instance.feature.name in self.context.get("identity_feature_names", []):
+        elif getattr(instance, "identity_id", None) or isinstance(
+            instance, FeatureStateModel
+        ):
+            # An edge identity's overrides are the only states reaching this
+            # serialiser that are not ORM rows.
             return "IDENTITY"
         return None
 
