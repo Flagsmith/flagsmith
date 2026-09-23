@@ -33,6 +33,15 @@ Flagsmith makes it easy to create and manage feature flags across web, mobile, a
 a section of code with a flag, and then use Flagsmith to toggle that feature on or off for different environments, users
 or user segments.
 
+## Easypanel
+
+If you'd rather not manage the containers yourself, [Easypanel](https://easypanel.io) is a self-hosted deployment platform with a one-click Flagsmith template:
+
+[![Deploy on Easypanel][easypanel-btn]][easypanel-deploy]
+
+[easypanel-btn]: https://easypanel.io/img/deploy-on-easypanel-40.svg
+[easypanel-deploy]: https://easypanel.io/templates/flagsmith
+
 ## Get up and running in less than a minute:
 
 ```bash
