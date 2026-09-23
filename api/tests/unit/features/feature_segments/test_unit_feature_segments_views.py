@@ -179,7 +179,7 @@ def test_list_feature_segments__feature_specific_segment__returns_is_feature_spe
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_segment__valid_data__returns_201(  # type: ignore[no-untyped-def]
+def test_create_feature_segment__returns_405(  # type: ignore[no-untyped-def]
     segment, feature, environment, client
 ):
     # Given
@@ -194,85 +194,29 @@ def test_create_feature_segment__valid_data__returns_201(  # type: ignore[no-unt
     response = client.post(url, data=json.dumps(data), content_type="application/json")
 
     # Then
-    assert response.status_code == status.HTTP_201_CREATED
-    response_json = response.json()
-    assert response_json["id"]
+    assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
-def test_create_feature_segment__without_permission__returns_403(
-    segment: Segment,
-    feature: Feature,
-    environment: Environment,
-    staff_client: APIClient,
-) -> None:
-    # Given
-    data = {
-        "feature": feature.id,
-        "segment": segment.id,
-        "environment": environment.id,
-    }
-    url = reverse("api-v1:features:feature-segment-list")
-
-    # When
-    response = staff_client.post(
-        url, data=json.dumps(data), content_type="application/json"
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_create_feature_segment__staff_with_permission__returns_201(
-    segment: Segment,
-    feature: Feature,
-    environment: Environment,
-    staff_client: FFAdminUser,
-    staff_user: FFAdminUser,
-    with_environment_permissions: WithEnvironmentPermissionsCallable,
-) -> None:
-    # Given
-    data = {
-        "feature": feature.id,
-        "segment": segment.id,
-        "environment": environment.id,
-    }
-    url = reverse("api-v1:features:feature-segment-list")
-    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])  # type: ignore[call-arg]
-
-    # When
-    response = staff_client.post(
-        url, data=json.dumps(data), content_type="application/json"
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_201_CREATED
-
-
-def test_create_feature_segment__staff_wrong_permission__returns_403(  # type: ignore[no-untyped-def]
-    segment: Segment,
-    feature: Feature,
-    environment: Environment,
-    staff_client: FFAdminUser,
-    staff_user: FFAdminUser,
-    with_environment_permissions: WithEnvironmentPermissionsCallable,
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_update_feature_segment__returns_405(  # type: ignore[no-untyped-def]
+    segment, feature, environment, client
 ):
     # Given
-    data = {
-        "feature": feature.id,
-        "segment": segment.id,
-        "environment": environment.id,
-    }
-    url = reverse("api-v1:features:feature-segment-list")
-    # Former permission; no longer authorizes.
-    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature, environment=environment, segment=segment
+    )
+    url = reverse("api-v1:features:feature-segment-detail", args=[feature_segment.id])
 
     # When
-    response = staff_client.post(
-        url, data=json.dumps(data), content_type="application/json"
-    )
+    response_put = client.put(url, data=json.dumps({}), content_type="application/json")
+    response_patch = client.patch(url, data=json.dumps({}), content_type="application/json")
 
     # Then
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response_put.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
+    assert response_patch.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
 @pytest.mark.parametrize(

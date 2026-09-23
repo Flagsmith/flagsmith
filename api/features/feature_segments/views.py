@@ -3,7 +3,7 @@ import logging
 from common.projects.permissions import VIEW_PROJECT
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -11,7 +11,6 @@ from rest_framework.response import Response
 from environments.models import Environment
 from features.feature_segments.serializers import (
     FeatureSegmentChangePrioritiesSerializer,
-    FeatureSegmentCreateSerializer,
     FeatureSegmentListSerializer,
     FeatureSegmentQuerySerializer,
 )
@@ -43,7 +42,10 @@ logger = logging.getLogger(__name__)
     ),
 )
 class FeatureSegmentViewSet(
-    viewsets.ModelViewSet,  # type: ignore[type-arg]
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,  # type: ignore[type-arg]
 ):
     permission_classes = [FeatureSegmentPermissions]
 
@@ -80,9 +82,6 @@ class FeatureSegmentViewSet(
         return queryset
 
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
-        if self.action in ["create", "update", "partial_update"]:
-            return FeatureSegmentCreateSerializer
-
         if self.action == "update_priorities":
             return FeatureSegmentChangePrioritiesSerializer
 
