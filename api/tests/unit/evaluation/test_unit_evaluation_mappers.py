@@ -44,17 +44,32 @@ def test_map_environment_to_evaluation_context__environment_default__populates_f
     }
 
 
-def test_map_environment_to_evaluation_context__transient_identity__omits_stored_traits(
+@pytest.mark.parametrize(
+    ["traits", "expected_traits"],
+    (
+        pytest.param(None, {}, id="no_traits"),
+        pytest.param(
+            [Trait(trait_key="request-trait", string_value="request value")],
+            {"request-trait": "request value"},
+            id="explicit_traits",
+        ),
+    ),
+)
+def test_map_environment_to_evaluation_context__transient_identity__returns_explicit_traits_only(
     environment: Environment,
+    traits: list[Trait] | None,
+    expected_traits: dict[str, str],
 ) -> None:
     # Given
-    # A transient identity is never saved, so it has no traits to read.
+    # A transient identity is never saved, so it has no stored traits, and
+    # reading them from an unsaved instance would raise.
     transient_identity = Identity(identifier="transient", environment=environment)
 
     # When
     context = map_environment_to_evaluation_context(
         environment=environment,
         identity=transient_identity,
+        traits=traits,
     )
 
     # Then
@@ -63,7 +78,7 @@ def test_map_environment_to_evaluation_context__transient_identity__omits_stored
         "key": transient_identity.get_hash_key(
             environment.use_identity_composite_key_for_hashing
         ),
-        "traits": {},
+        "traits": expected_traits,
     }
 
 
