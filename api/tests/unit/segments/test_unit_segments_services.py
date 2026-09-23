@@ -1,8 +1,9 @@
 from datetime import timedelta
-from typing import cast
+from typing import Any, cast
 
 import pytest
 from django.db import connection, reset_queries
+from django.db.models import QuerySet
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 from flag_engine.segments.constants import EQUAL
@@ -552,3 +553,103 @@ def test_get_all_live_or_scheduled_overrides__feature_versioning_v2_scheduled_fe
 
     # Then
     assert overrides == [live_override, scheduled_override]
+
+
+# Enough versions that reading all of them is unmistakable in a query plan,
+# while still seeding in well under a second.
+UNRELATED_VERSION_COUNT = 2_000
+
+
+def _create_unrelated_versions(count: int) -> int:
+    """Fill a second project with published versions. Returns the table's size."""
+    organisation = Organisation.objects.create(name="Unrelated organisation")
+    project = Project.objects.create(
+        name="Unrelated project", organisation=organisation
+    )
+    environment = Environment.objects.create(
+        name="Unrelated environment", project=project, use_v2_feature_versioning=True
+    )
+    features = Feature.objects.bulk_create(
+        [Feature(project=project, name=f"unrelated_{i}") for i in range(count // 10)]
+    )
+    now = timezone.now()
+    EnvironmentFeatureVersion.objects.bulk_create(
+        [
+            EnvironmentFeatureVersion(
+                environment=environment,
+                feature=feature,
+                published_at=now,
+                live_from=now - timedelta(days=version + 1),
+            )
+            for feature in features
+            for version in range(10)
+        ]
+    )
+    with connection.cursor() as cursor:
+        cursor.execute("ANALYZE feature_versioning_environmentfeatureversion")
+    return int(EnvironmentFeatureVersion.objects.count())
+
+
+def _count_version_rows_read(queryset: "QuerySet[FeatureSegment]") -> int:
+    """Total rows the plan reads from the versions table, per EXPLAIN ANALYZE."""
+    sql, params = queryset.query.sql_with_params()
+    with connection.cursor() as cursor:
+        cursor.execute(f"EXPLAIN (ANALYZE, FORMAT JSON) {sql}", params)
+        plan = cursor.fetchone()[0][0]["Plan"]
+
+    def walk(node: dict[str, Any]) -> int:
+        rows = 0
+        if node.get("Relation Name") == "feature_versioning_environmentfeatureversion":
+            rows = int(node["Actual Rows"]) * int(node["Actual Loops"])
+        return rows + sum(walk(child) for child in node.get("Plans", []))
+
+    return walk(plan)
+
+
+def test_get_all_live_or_scheduled_overrides__unrelated_versions_exist__does_not_read_them(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+) -> None:
+    """Evaluating the override check must not read another project's versions.
+
+    The check has to decide whether a feature state's version has been
+    superseded. Comparing against the set of live or scheduled versions at
+    large reads every version row in the installation, which is fast enough on
+    a small database to pass every other test in this module and ruinous on a
+    real one.
+    """
+    # Given
+    # An override on the newest version of a feature, so the check has to look
+    # at whether that version has been superseded rather than short-circuiting.
+    version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+    override = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        environment_feature_version=version,
+    )
+    FeatureState.objects.create(
+        feature_segment=override,
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version,
+    )
+
+    # And a second project holding far more versions than the one queried.
+    unrelated_versions = _create_unrelated_versions(count=UNRELATED_VERSION_COUNT)
+    assert unrelated_versions > UNRELATED_VERSION_COUNT
+
+    # When
+    versions_read = _count_version_rows_read(
+        get_all_live_or_scheduled_overrides().filter(segment=segment)
+    )
+
+    # Then
+    assert list(get_all_live_or_scheduled_overrides()) == [override]
+
+    # Scoped to the override's own version, this reads a single row. Compared
+    # against live or scheduled versions at large, it reads the whole table.
+    assert versions_read < unrelated_versions / 10
