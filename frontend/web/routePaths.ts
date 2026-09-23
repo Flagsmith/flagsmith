@@ -9,7 +9,11 @@ export const ORGANISATION_USAGE = '/organisation/:organisationId/usage'
 // usage page, which explains the block.
 const ALLOWED_WHILE_BLOCKED = [ORGANISATIONS, ORGANISATION_USAGE]
 
+const matches = (pathname: string, path: string): boolean =>
+  !!matchPath(pathname, { exact: true, path, strict: false })
+
 export const isAllowedWhileBlocked = (pathname: string): boolean =>
-  ALLOWED_WHILE_BLOCKED.some((path) =>
-    matchPath(pathname, { exact: true, path, strict: false }),
-  )
+  ALLOWED_WHILE_BLOCKED.some((path) => matches(pathname, path))
+
+export const isOrganisationUsage = (pathname: string): boolean =>
+  matches(pathname, ORGANISATION_USAGE)
