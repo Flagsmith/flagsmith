@@ -1,5 +1,38 @@
 # Changelog
 
+## [2.274.0](https://github.com/Flagsmith/flagsmith/compare/v2.273.0...v2.274.0) (2026-09-23)
+
+
+### Features
+
+* **Flag Dependency:** Index flag references ([#8525](https://github.com/Flagsmith/flagsmith/issues/8525)) ([bd32c3f](https://github.com/Flagsmith/flagsmith/commit/bd32c3fff2b7750943a81b9f503a1223171f25b2))
+
+
+### Bug Fixes
+
+* **chargebee:** Handle different billing period units ([#8568](https://github.com/Flagsmith/flagsmith/issues/8568)) ([0d91368](https://github.com/Flagsmith/flagsmith/commit/0d9136890a2612dca9ad458ccdbd9bb887eadccd))
+* **identities:** restore diverged override labels removed in value editor refactor ([#8550](https://github.com/Flagsmith/flagsmith/issues/8550)) ([d1d6560](https://github.com/Flagsmith/flagsmith/commit/d1d6560debd168be581bf58c49f5397358389b6b))
+* **integrations:** fix Slack integration modal after redirect ([#8542](https://github.com/Flagsmith/flagsmith/issues/8542)) ([1fd274c](https://github.com/Flagsmith/flagsmith/commit/1fd274c9a91c4ac8c3c4a8e93fbbf4b2906a0bb8))
+* Restrict size of hidden values ([#8531](https://github.com/Flagsmith/flagsmith/issues/8531)) ([66dc2e9](https://github.com/Flagsmith/flagsmith/commit/66dc2e9ed00b779e09479e29940efceacb10d95d))
+* **Segments:** Improve and consolidate service for fetching overrides ([#8548](https://github.com/Flagsmith/flagsmith/issues/8548)) ([49d957a](https://github.com/Flagsmith/flagsmith/commit/49d957aa3228d8733b43951c099840577ff78338))
+* **Segments:** Segment Change Requests don't inherit `rules_data` ([#8537](https://github.com/Flagsmith/flagsmith/issues/8537)) ([190c645](https://github.com/Flagsmith/flagsmith/commit/190c645d83d11f627a241cd4e5540d0a26ad73ba))
+
+
+### CI
+
+* pre-commit autoupdate ([#8562](https://github.com/Flagsmith/flagsmith/issues/8562)) ([575561d](https://github.com/Flagsmith/flagsmith/commit/575561d4530184a30a28d1b73191e22ade23d9a3))
+* scope uv-lock pre-commit hooks to their project directories ([#8534](https://github.com/Flagsmith/flagsmith/issues/8534)) ([f345ed5](https://github.com/Flagsmith/flagsmith/commit/f345ed560d5d4dcbc8573f76a370a29948ba8b86))
+
+
+### Docs
+
+* point Node.js SDK versions and migration note to @flagsmith/nodejs ([#8490](https://github.com/Flagsmith/flagsmith/issues/8490)) ([18e260a](https://github.com/Flagsmith/flagsmith/commit/18e260a108d316f192570d20a602ec40c27fac94))
+
+
+### Tests
+
+* Improve API tests performance ([#8378](https://github.com/Flagsmith/flagsmith/issues/8378)) ([47db6dc](https://github.com/Flagsmith/flagsmith/commit/47db6dcafc3c4aac378b3f9332bf94dc46e4ec07))
+
 ## [2.273.0](https://github.com/Flagsmith/flagsmith/compare/v2.272.0...v2.273.0) (2026-09-16)
 
 
