@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 
 __all__ = (
+    "EvaluatedFeatureState",
     "EvaluationContext",
     "EvaluationResult",
     "FeatureContext",
@@ -34,6 +35,18 @@ EvaluationResult: TypeAlias = result_types.EvaluationResult[
 FlagResult: TypeAlias = result_types.FlagResult[FeatureEngineMetadata]
 
 
+class EvaluatedFeatureState(NamedTuple):
+    """A flag as the engine evaluated it, with the feature state it came from.
+
+    Serialise evaluated fields, such as the value and variant, from
+    `evaluation_result`, and stored ones, such as ids and configuration, from
+    `feature_state`.
+    """
+
+    evaluation_result: FlagResult
+    feature_state: "FeatureState"
+
+
 class IdentityEvaluation(NamedTuple):
     result: EvaluationResult
-    feature_states: "list[FeatureState]"
+    feature_states: list[EvaluatedFeatureState]

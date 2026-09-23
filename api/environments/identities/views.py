@@ -294,7 +294,7 @@ class SDKIdentities(SDKAPIView):
             identity,
             additional_filters=self._get_additional_filters(),
         ):
-            if feature_state.feature.name == feature_name:
+            if feature_state.evaluation_result["name"] == feature_name:
                 serializer = SDKIdentityFeatureStateSerializer(
                     feature_state, context=context
                 )

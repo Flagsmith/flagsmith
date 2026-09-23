@@ -1,34 +1,41 @@
-from features.models import FeatureState
+from environments.identities.models import Identity
+from environments.models import Environment
+from evaluation.services import get_identity_feature_states
+from features.models import Feature, FeatureState
+from features.multivariate.models import MultivariateFeatureStateValue
 from integrations.webhook.serializers import (
     IntegrationFeatureStateSerializer,
     SegmentSerializer,
 )
 
 
-def test_integration_feature_state_serializer__multivariate_feature__returns_correct_weight(  # type: ignore[no-untyped-def]
-    identity, multivariate_feature
-):
+def test_integration_feature_state_serializer__multivariate_identity_override__returns_split_weight(
+    environment: Environment,
+    identity: Identity,
+    multivariate_feature: Feature,
+) -> None:
     # Given
-    mv_option = multivariate_feature.multivariate_options.first()
-    feature_state = FeatureState.objects.filter(feature=multivariate_feature).first()
-    # The identity was evaluated into the first option.
-    feature_state.flag_result = {
-        "name": multivariate_feature.name,
-        "enabled": feature_state.enabled,
-        "value": mv_option.value,
-        "reason": "DEFAULT",
-        "variant": mv_option.key,
-    }
+    option = multivariate_feature.multivariate_options.order_by("id").last()
+    assert option
+    identity_override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+    MultivariateFeatureStateValue.objects.create(
+        feature_state=identity_override,
+        multivariate_feature_option=option,
+        percentage_allocation=100,
+    )
+    (evaluated_feature_state,) = get_identity_feature_states(identity)
 
     # When
-    serializer = IntegrationFeatureStateSerializer(
-        feature_state, context={"identity": identity}
-    )
-    data = serializer.data
+    data = IntegrationFeatureStateSerializer(evaluated_feature_state).data
 
     # Then
-    assert data["percentage_allocation"] == mv_option.default_percentage_allocation
-    assert data["feature_state_value"] == mv_option.value
+    assert data["feature_state_value"] == option.value
+    assert data["percentage_allocation"] == 100.0
 
 
 def test_segment_serializer__identity_matching_segment__returns_member_true(  # type: ignore[no-untyped-def]

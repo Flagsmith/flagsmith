@@ -4,17 +4,21 @@ from django.db.models import Q
 from flag_engine.engine import get_evaluation_result
 
 from evaluation.mappers import map_environment_to_evaluation_context
-from evaluation.types import IdentityEvaluation
+from evaluation.types import (
+    EvaluatedFeatureState,
+    EvaluationResult,
+    IdentityEvaluation,
+)
 
 if TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
     from environments.models import Environment
-    from features.models import FeatureState
 
 
 __all__ = (
     "evaluate_identity",
+    "get_environment_feature_states",
     "get_identity_feature_states",
 )
 
@@ -35,16 +39,7 @@ def evaluate_identity(
         additional_filters=additional_filters,
     )
     result = get_evaluation_result(context)
-
-    # Hand back the rows the engine ruled on, carrying its verdict, so that
-    # callers neither re-resolve a value nor work out which row won.
-    feature_states = []
-    for flag in result["flags"].values():
-        feature_state = flag["metadata"]["feature_state"]
-        feature_state.flag_result = flag
-        feature_states.append(feature_state)
-
-    return IdentityEvaluation(result, feature_states)
+    return IdentityEvaluation(result, _map_result_to_evaluated_feature_states(result))
 
 
 def get_identity_feature_states(
@@ -52,21 +47,54 @@ def get_identity_feature_states(
     *,
     traits: "list[Trait] | None" = None,
     additional_filters: Q | None = None,
-) -> "list[FeatureState]":
-    """The feature states to serve `identity`, one per feature.
-
-    Each carries the engine's verdict on `flag_result`, so a caller reads the
-    evaluated value and variant off the row rather than resolving them again.
-    """
-    _, feature_states = evaluate_identity(
+) -> list[EvaluatedFeatureState]:
+    """The flags to serve `identity`, one per feature."""
+    _, evaluated_feature_states = evaluate_identity(
         identity,
         traits=traits,
         additional_filters=additional_filters,
     )
+    return _hide_disabled_flags(identity.environment, evaluated_feature_states)
 
-    if identity.environment.get_hide_disabled_flags() is True:
+
+def get_environment_feature_states(
+    environment: "Environment",
+    *,
+    additional_filters: Q | None = None,
+    from_replica: bool = False,
+) -> list[EvaluatedFeatureState]:
+    """The flags to serve for an environment, one per feature."""
+    context = map_environment_to_evaluation_context(
+        environment=environment,
+        additional_filters=additional_filters,
+        from_replica=from_replica,
+    )
+    result = get_evaluation_result(context)
+    return _hide_disabled_flags(
+        environment, _map_result_to_evaluated_feature_states(result)
+    )
+
+
+def _map_result_to_evaluated_feature_states(
+    result: EvaluationResult,
+) -> list[EvaluatedFeatureState]:
+    return [
+        EvaluatedFeatureState(
+            evaluation_result=flag,
+            feature_state=flag["metadata"]["feature_state"],
+        )
+        for flag in result["flags"].values()
+    ]
+
+
+def _hide_disabled_flags(
+    environment: "Environment",
+    evaluated_feature_states: list[EvaluatedFeatureState],
+) -> list[EvaluatedFeatureState]:
+    if environment.get_hide_disabled_flags() is True:
         return [
-            feature_state for feature_state in feature_states if feature_state.enabled
+            evaluated_feature_state
+            for evaluated_feature_state in evaluated_feature_states
+            if evaluated_feature_state.evaluation_result["enabled"]
         ]
-
-    return feature_states
+    return evaluated_feature_states

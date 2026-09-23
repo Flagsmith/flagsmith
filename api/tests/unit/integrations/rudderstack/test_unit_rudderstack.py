@@ -1,6 +1,7 @@
 from environments.identities.models import Identity
 from environments.models import Environment
-from features.models import Feature, FeatureState
+from evaluation.services import get_identity_feature_states
+from features.models import Feature
 from integrations.rudderstack.models import RudderstackConfiguration
 from integrations.rudderstack.rudderstack import RudderstackWrapper
 
@@ -15,7 +16,7 @@ def test_rudderstack_generate_user_data__valid_identity__returns_expected_data( 
     )
     rudderstack_wrapper = RudderstackWrapper(rudderstack_config)
     identity = Identity.objects.create(identifier="user123", environment=environment)
-    feature_states = FeatureState.objects.filter(feature=feature)
+    feature_states = get_identity_feature_states(identity)
 
     # When
     user_data = rudderstack_wrapper.generate_user_data(

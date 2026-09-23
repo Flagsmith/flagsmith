@@ -3530,13 +3530,14 @@ def _identity_flag_value(
 ) -> tuple[Any, int | None]:
     """The value the identity is served for the feature, and the id of the
     feature segment it came from (``None`` for the environment default)."""
-    (feature_state,) = [
-        feature_state
-        for feature_state in get_identity_feature_states(identity)
-        if feature_state.feature_id == feature.id
+    (evaluated_feature_state,) = [
+        evaluated_feature_state
+        for evaluated_feature_state in get_identity_feature_states(identity)
+        if evaluated_feature_state.feature_state.feature_id == feature.id
     ]
+    feature_state = evaluated_feature_state.feature_state
     return (
-        feature_state.evaluated_value,
+        evaluated_feature_state.evaluation_result["value"],
         (
             feature_state.feature_segment.segment_id
             if feature_state.feature_segment

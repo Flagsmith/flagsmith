@@ -35,7 +35,7 @@ def test_heap_generate_user_data__correct_values__returns_expected_data(
 
     # When
     user_data = heap_wrapper.generate_user_data(
-        identity=identity, feature_states=[feature_state, feature_state_with_value]
+        identity=identity, feature_states=get_identity_feature_states(identity)
     )
 
     # Then

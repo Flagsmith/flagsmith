@@ -5,7 +5,7 @@ import requests
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from features.models import FeatureState
+from evaluation.types import EvaluatedFeatureState
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
 from .constants import DEFAULT_HEAP_API_URL
@@ -27,17 +27,16 @@ class HeapWrapper(AbstractBaseIdentityIntegrationWrapper):  # type: ignore[type-
     def generate_user_data(
         self,
         identity: Identity,
-        feature_states: typing.List[FeatureState],
+        feature_states: typing.List[EvaluatedFeatureState],
         trait_models: typing.List[Trait] = None,  # type: ignore[assignment]
     ) -> dict:  # type: ignore[type-arg]
         feature_properties = {}
 
-        for feature_state in feature_states:
-            value = feature_state.evaluated_value
-            feature_properties[feature_state.feature.name] = (
-                value
-                if (feature_state.enabled and value is not None)
-                else feature_state.enabled
+        for evaluated_feature_state in feature_states:
+            flag = evaluated_feature_state.evaluation_result
+            value = flag["value"]
+            feature_properties[flag["name"]] = (
+                value if (flag["enabled"] and value is not None) else flag["enabled"]
             )
 
         return {
