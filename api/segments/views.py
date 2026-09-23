@@ -57,17 +57,6 @@ if TYPE_CHECKING:
 logger = structlog.get_logger("segments")
 
 
-def _get_edge_identity_segments(identity_uuid: str) -> list[Segment]:
-    """The segments an edge identity belongs to, or none if it is unknown."""
-    with suppress(ObjectDoesNotExist):
-        return get_edge_identity_segments(
-            EdgeIdentity.from_identity_document(
-                EdgeIdentity.dynamo_wrapper.get_item_from_uuid(identity_uuid)
-            )
-        )
-    return []
-
-
 @method_decorator(
     name="list",
     decorator=extend_schema(
@@ -147,10 +136,18 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         identity_pk = query_serializer.validated_data.get("identity")
         if identity_pk:
+            segments: list[Segment] = []
             if identity_pk.isdigit():
                 segments = Identity.objects.get(pk=identity_pk).get_segments()
             else:
-                segments = _get_edge_identity_segments(identity_pk)
+                # An edge identity the environment has never seen belongs to
+                # no segments, rather than being an error.
+                with suppress(ObjectDoesNotExist):
+                    segments = get_edge_identity_segments(
+                        EdgeIdentity.from_identity_document(
+                            EdgeIdentity.dynamo_wrapper.get_item_from_uuid(identity_pk)
+                        )
+                    )
             queryset = queryset.filter(id__in=[segment.id for segment in segments])
 
         search_term = query_serializer.validated_data.get("q")
