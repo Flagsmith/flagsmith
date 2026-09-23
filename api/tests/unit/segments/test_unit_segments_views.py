@@ -3,6 +3,7 @@ import random
 from collections.abc import Callable
 from copy import deepcopy
 from datetime import timedelta
+from unittest.mock import MagicMock
 
 import freezegun
 import pytest
@@ -13,6 +14,7 @@ from common.projects.permissions import (
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.utils import timezone
 from flag_engine.segments.constants import EQUAL
@@ -534,6 +536,29 @@ def test_list_segments__filter_by_edge_identity__returns_only_matching_segments(
     edge_identity_dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
         identity_uuid
     )
+
+
+def test_list_segments__filter_by_unknown_edge_identity__returns_no_segments(
+    project: Project,
+    environment: Environment,
+    identity_matching_segment: Segment,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid.side_effect = (
+        ObjectDoesNotExist
+    )
+    base_url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+
+    # When
+    response = admin_client.get(
+        f"{base_url}?identity=8ce1e2f8-0a0f-4f5c-9f4c-2b4f6f4f4f4f"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 0
 
 
 @pytest.mark.parametrize(

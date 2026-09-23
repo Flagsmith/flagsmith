@@ -1,4 +1,3 @@
-from contextlib import suppress
 from typing import TYPE_CHECKING, Any
 
 import structlog
@@ -140,13 +139,17 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             if identity_pk.isdigit():
                 segments = Identity.objects.get(pk=identity_pk).get_segments()
             else:
-                # An edge identity the environment has never seen belongs to
-                # no segments, rather than being an error.
-                with suppress(ObjectDoesNotExist):
+                try:
+                    identity_document = EdgeIdentity.dynamo_wrapper.get_item_from_uuid(
+                        identity_pk
+                    )
+                except ObjectDoesNotExist:
+                    # An identity the environment has never seen belongs to no
+                    # segments, rather than being an error.
+                    pass
+                else:
                     segments = get_edge_identity_segments(
-                        EdgeIdentity.from_identity_document(
-                            EdgeIdentity.dynamo_wrapper.get_item_from_uuid(identity_pk)
-                        )
+                        EdgeIdentity.from_identity_document(identity_document)
                     )
             queryset = queryset.filter(id__in=[segment.id for segment in segments])
 
