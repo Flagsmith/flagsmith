@@ -584,6 +584,16 @@ Attributes:
  - `project.id`
  - `sdk.label`
 
+### `organisations.billing_term.stale`
+
+Logged at `warning` from:
+ - `api/organisations/models.py:614`
+
+Attributes:
+ - `billing_term.ends_at`
+ - `billing_term.starts_at`
+ - `organisation.id`
+
 ### `platform_hub.no_analytics_database_configured`
 
 Logged at `warning` from:

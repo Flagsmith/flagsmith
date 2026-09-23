@@ -7,6 +7,7 @@ from django.conf import settings
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 
 from environments.models import Environment
 from organisations.chargebee.metadata import ChargebeeObjMetadata
@@ -1103,6 +1104,37 @@ def test_get_current_billing_period__no_active_term__returns_none(
 
     # When / Then
     assert cache.get_current_billing_period() is None
+
+
+@pytest.mark.freeze_time("2026-09-10T12:00:00+00:00")
+def test_get_current_billing_period__term_ended__logs_stale_term(
+    organisation: Organisation,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    cache = OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=datetime.fromisoformat(
+            "2026-07-01T00:00:00+00:00"
+        ),
+        current_billing_term_ends_at=datetime.fromisoformat(
+            "2026-08-01T00:00:00+00:00"
+        ),
+    )
+
+    # When
+    cache.get_current_billing_period()
+
+    # Then
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "billing_term.stale",
+            "organisation__id": organisation.id,
+            "billing_term__starts_at": "2026-07-01T00:00:00+00:00",
+            "billing_term__ends_at": "2026-08-01T00:00:00+00:00",
+        }
+    ]
 
 
 @pytest.mark.freeze_time("2026-09-10T12:00:00+00:00")

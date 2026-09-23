@@ -2,6 +2,7 @@ import re
 from datetime import datetime, timedelta
 from typing import Any, NamedTuple
 
+import structlog
 from common.core.utils import is_enterprise, is_saas
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -56,6 +57,8 @@ from organisations.subscriptions.exceptions import (
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from webhooks.models import AbstractBaseExportableWebhookModel
+
+logger = structlog.get_logger("organisations")
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
@@ -608,6 +611,12 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
 
         now = timezone.now()
         if not starts_at <= now < ends_at:
+            logger.warning(
+                "billing_term.stale",
+                organisation__id=self.organisation_id,
+                billing_term__starts_at=starts_at.isoformat(),
+                billing_term__ends_at=ends_at.isoformat(),
+            )
             return None
 
         elapsed = relativedelta(now, starts_at)
