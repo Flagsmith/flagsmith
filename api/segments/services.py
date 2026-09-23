@@ -22,9 +22,8 @@ def get_all_live_or_scheduled_overrides() -> "QuerySet[FeatureSegment]":
         environment__use_v2_feature_versioning=False,
     ) & (no_change_request | committed_change_request)
 
-    # Scoped to the feature state's own feature and environment: comparing
-    # against live or scheduled versions at large reads every version row in
-    # the installation.
+    # Use OuterRefs to ensure the query is scoped to the feature state's own 
+    # feature and environment
     superseding_versions = EnvironmentFeatureVersion.objects.filter(
         environment_id=models.OuterRef("environment_id"),
         feature_id=models.OuterRef("feature_id"),
