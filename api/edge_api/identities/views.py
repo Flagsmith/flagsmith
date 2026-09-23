@@ -51,6 +51,7 @@ from environments.identities.serializers import (
 )
 from environments.models import Environment
 from environments.permissions.permissions import NestedEnvironmentPermissions
+from evaluation.services import get_edge_identity_feature_states
 from features.models import FeatureState
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
@@ -280,20 +281,10 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[ty
     @extend_schema(responses={200: IdentityAllFeatureStatesSerializer(many=True)})
     @action(detail=False, methods=["GET"])
     def all(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        (
-            feature_states,
-            identity_feature_names,
-        ) = self.identity.get_all_feature_states()
-
         serializer = IdentityAllFeatureStatesSerializer(
-            instance=feature_states,
+            instance=get_edge_identity_feature_states(self.identity),
             many=True,
-            context={
-                "request": request,
-                "identity": self.identity,
-                "environment_api_key": self.identity.environment_api_key,
-                "identity_feature_names": identity_feature_names,
-            },
+            context={"request": request},
         )
 
         return Response(serializer.data)

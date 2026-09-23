@@ -886,19 +886,11 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
     @action(methods=["GET"], detail=False)
     def all(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         identity = get_object_or_404(Identity, pk=self.kwargs["identity_pk"])
-        feature_states = [
-            evaluated_feature_state.feature_state
-            for evaluated_feature_state in get_identity_feature_states(identity)
-        ]
 
         serializer = IdentityAllFeatureStatesSerializer(
-            instance=feature_states,
+            instance=get_identity_feature_states(identity),
             many=True,
-            context={
-                "request": request,
-                "identity": identity,
-                "environment_api_key": identity.environment.api_key,
-            },
+            context={"request": request},
         )
 
         return Response(serializer.data)

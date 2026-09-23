@@ -11,8 +11,9 @@ from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
 )
+from evaluation.services import get_edge_identity_feature_states
 from features.feature_types import STANDARD
-from features.models import Feature, FeatureState
+from features.models import Feature
 from users.models import FFAdminUser
 from util.engine_models.features.models import FeatureModel, FeatureStateModel
 from util.mappers import map_identity_to_identity_document
@@ -184,23 +185,27 @@ def test_edge_identity_feature_state_serializer__update_override__calls_webhook(
 
 
 def test_all_feature_states_serializer__edge_identity_with_mv_feature__uses_mv_values(  # type: ignore[no-untyped-def]
-    identity, multivariate_feature, environment
+    identity, multivariate_feature, environment, mocker
 ):
     # Given
     identity_document = map_identity_to_identity_document(identity)
     del identity_document["django_id"]  # delete django id to simulate an edge identity
-    identity_model = EdgeIdentity.from_identity_document(identity_document)
+    edge_identity = EdgeIdentity.from_identity_document(identity_document)
 
-    feature_state = FeatureState.objects.get(
-        feature=multivariate_feature, environment=environment
-    )
+    mocker.patch(
+        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper"
+    ).get_segment_ids.return_value = []
 
-    serializer = IdentityAllFeatureStatesSerializer(
-        context={"identity": identity_model, "environment_api_key": environment.api_key}
-    )
+    (evaluated_feature_state,) = [
+        evaluated_feature_state
+        for evaluated_feature_state in get_edge_identity_feature_states(edge_identity)
+        if evaluated_feature_state.evaluation_result["name"]
+        == multivariate_feature.name
+    ]
+    serializer = IdentityAllFeatureStatesSerializer()
 
     # When
-    value = serializer.get_feature_state_value(instance=feature_state)
+    value = serializer.get_feature_state_value(instance=evaluated_feature_state)
 
     # Then
     assert value != multivariate_feature.initial_value

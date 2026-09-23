@@ -4,11 +4,13 @@ from flag_engine.segments.constants import EQUAL
 from pytest_django import DjangoAssertNumQueries
 from pytest_lazy_fixtures import lf as lazy_fixture
 
+from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from evaluation.mappers import (
     IDENTITY_OVERRIDES_SEGMENT_NAME,
+    map_edge_identity_to_identity_context,
     map_environment_to_evaluation_context,
     map_feature_state_to_feature_context,
 )
@@ -16,6 +18,8 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+from util.engine_models.identities.models import IdentityModel
+from util.engine_models.identities.traits.models import TraitModel
 
 
 def test_map_environment_to_evaluation_context__full_environment__returns_expected_context(
@@ -474,3 +478,32 @@ def test_map_environment_to_evaluation_context__multivariate_feature__maps_varia
     # Then
     feature_context = context["features"][multivariate_feature.name]
     assert len(feature_context.get("variants", [])) == expected_variant_count
+
+
+def test_map_edge_identity_to_identity_context__system_traits__merged_with_system_winning(
+    environment: Environment,
+) -> None:
+    # Given
+    edge_identity = EdgeIdentity(
+        IdentityModel(
+            identifier="identity",
+            environment_api_key=environment.api_key,
+            identity_traits=[
+                TraitModel(trait_key="owned-by-user", trait_value="user value"),
+                TraitModel(trait_key="clashing", trait_value="user value"),
+            ],
+            system_traits={"clashing": "system value"},
+        )
+    )
+
+    # When
+    identity_context = map_edge_identity_to_identity_context(
+        edge_identity, environment=environment
+    )
+
+    # Then
+    assert identity_context["traits"] == {
+        "owned-by-user": "user value",
+        # System-owned traits are not user data, so they win a key clash.
+        "clashing": "system value",
+    }
