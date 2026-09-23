@@ -555,6 +555,8 @@ export type Organisation = {
   role: string
   persist_trait_data: boolean
   block_access_to_admin: boolean
+  overage_charges_enabled: boolean
+  overage_grace_period_used: boolean
   restrict_project_create_to_admin: boolean
 }
 export type Identity = {

@@ -339,7 +339,14 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         return 1
 
     @hook(AFTER_SAVE, when="plan", has_changed=True)
-    def update_api_limit_access_block(self):  # type: ignore[no-untyped-def]
+    def reset_api_limit_state(self):  # type: ignore[no-untyped-def]
+        # A breached grace period means the wait before flags stop on a free
+        # plan, and the overage month we do not charge for on a paid one. The
+        # row does not say which, so it cannot outlive the plan that wrote it.
+        OrganisationBreachedGracePeriod.objects.filter(
+            organisation=self.organisation
+        ).delete()
+
         if not getattr(self.organisation, "api_limit_access_block", None):
             return
 

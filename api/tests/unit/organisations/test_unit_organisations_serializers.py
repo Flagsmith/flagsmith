@@ -1,11 +1,19 @@
+from datetime import timedelta
+
+from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
-from organisations.models import Organisation
+from organisations.models import (
+    Organisation,
+    OrganisationBreachedGracePeriod,
+    OrganisationSubscriptionInformationCache,
+)
 from organisations.serializers import (
     OrganisationSerializerFull,
     UpdateSubscriptionSerializer,
 )
+from tests.types import EnableFeaturesFixture
 
 
 def test_organisation_serializer_full__create_with_targeting_key__persists_write_only(
@@ -44,6 +52,90 @@ def test_organisation_serializer_full__update_targeting_key__ignored(
     # Then
     organisation.refresh_from_db()
     assert organisation.targeting_key == "a" * 32
+
+
+def test_organisation_serializer_full__monthly_paid_plan__reports_overage_state(
+    organisation: Organisation,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("api_usage_overage_charges")
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=now - timedelta(days=29),
+        current_billing_term_ends_at=now + timedelta(days=1),
+    )
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+
+    # When
+    data = OrganisationSerializerFull(instance=organisation).data
+
+    # Then
+    assert data["overage_charges_enabled"] is True
+    assert data["overage_grace_period_used"] is False
+
+
+def test_organisation_serializer_full__paid_plan_grace_spent__reports_it(
+    organisation: Organisation,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=now - timedelta(days=29),
+        current_billing_term_ends_at=now + timedelta(days=1),
+    )
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    row = OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
+    OrganisationBreachedGracePeriod.objects.filter(pk=row.pk).update(
+        created_at=now - timedelta(days=60)
+    )
+
+    # When
+    data = OrganisationSerializerFull(instance=organisation).data
+
+    # Then
+    assert data["overage_grace_period_used"] is True
+
+
+# A free organisation's row is the wait before flags stop, not an overage month.
+def test_organisation_serializer_full__free_plan_grace_spent__reports_overage_unused(
+    organisation: Organisation,
+) -> None:
+    # Given
+    OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
+
+    # When
+    data = OrganisationSerializerFull(instance=organisation).data
+
+    # Then
+    assert data["overage_grace_period_used"] is False
+
+
+def test_organisation_serializer_full__update_overage_fields__ignored(
+    organisation: Organisation,
+) -> None:
+    # Given
+    serializer = OrganisationSerializerFull(
+        instance=organisation,
+        data={
+            "name": organisation.name,
+            "overage_charges_enabled": True,
+            "overage_grace_period_used": True,
+        },
+    )
+
+    # When
+    serializer.is_valid(raise_exception=True)
+    organisation = serializer.save()
+
+    # Then
+    data = OrganisationSerializerFull(instance=organisation).data
+    assert data["overage_charges_enabled"] is False
+    assert data["overage_grace_period_used"] is False
 
 
 def test_update_subscription_serializer__create__updates_subscription(

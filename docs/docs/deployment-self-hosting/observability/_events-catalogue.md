@@ -587,7 +587,7 @@ Attributes:
 ### `organisations.billing_term.stale`
 
 Logged at `warning` from:
- - `api/organisations/models.py:614`
+ - `api/organisations/models.py:621`
 
 Attributes:
  - `billing_term.ends_at`

@@ -12,9 +12,11 @@ from pytest_structlog import StructuredLogCapture
 from environments.models import Environment
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
+    APILimitAccessBlock,
     BillingPeriod,
     Organisation,
     OrganisationAPIUsageNotification,
+    OrganisationBreachedGracePeriod,
     OrganisationSubscriptionInformationCache,
     Subscription,
 )
@@ -1167,3 +1169,76 @@ def test_subscription_get_current_billing_period__no_cache__returns_none(
 
     # When / Then
     assert organisation.subscription.get_current_billing_period() is None
+
+
+@pytest.mark.parametrize("new_plan", ["scale-up-v2", "startup-v2"])
+def test_subscription_save__upgraded__clears_breached_grace_period(
+    organisation: Organisation,
+    new_plan: str,
+) -> None:
+    # Given
+    OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
+
+    # When
+    organisation.subscription.plan = new_plan
+    organisation.subscription.save()
+
+    # Then
+    assert not OrganisationBreachedGracePeriod.objects.filter(
+        organisation=organisation
+    ).exists()
+
+
+def test_subscription_save__downgraded__clears_breached_grace_period(
+    organisation: Organisation,
+) -> None:
+    # Given
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
+    subscription = Subscription.objects.get(organisation=organisation)
+
+    # When
+    subscription.plan = FREE_PLAN_ID
+    subscription.save()
+
+    # Then
+    assert not OrganisationBreachedGracePeriod.objects.filter(
+        organisation=organisation
+    ).exists()
+
+
+def test_subscription_save__plan_unchanged__keeps_breached_grace_period(
+    organisation: Organisation,
+) -> None:
+    # Given
+    OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
+
+    # When
+    organisation.subscription.max_seats = 42
+    organisation.subscription.save()
+
+    # Then
+    assert OrganisationBreachedGracePeriod.objects.filter(
+        organisation=organisation
+    ).exists()
+
+
+def test_subscription_save__plan_changed__still_unblocks_api_limit_access(
+    organisation: Organisation,
+) -> None:
+    # Given
+    organisation.stop_serving_flags = True
+    organisation.block_access_to_admin = True
+    organisation.save()
+    APILimitAccessBlock.objects.create(organisation=organisation)
+
+    # When
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+
+    # Then
+    organisation.refresh_from_db()
+    assert organisation.stop_serving_flags is False
+    assert organisation.block_access_to_admin is False
+    assert not APILimitAccessBlock.objects.filter(organisation=organisation).exists()

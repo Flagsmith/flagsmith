@@ -23652,6 +23652,12 @@ components:
           description: Enable this to block all the access to admin interface for the organisation
           type: boolean
           readOnly: true
+        overage_charges_enabled:
+          type: boolean
+          readOnly: true
+        overage_grace_period_used:
+          type: boolean
+          readOnly: true
         restrict_project_create_to_admin:
           type: boolean
         force_2fa:
@@ -25649,6 +25655,12 @@ components:
           readOnly: true
         block_access_to_admin:
           description: Enable this to block all the access to admin interface for the organisation
+          type: boolean
+          readOnly: true
+        overage_charges_enabled:
+          type: boolean
+          readOnly: true
+        overage_grace_period_used:
           type: boolean
           readOnly: true
         restrict_project_create_to_admin:
