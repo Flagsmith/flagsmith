@@ -80,7 +80,6 @@ def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
         "clickhouse://user:pass@ch.example.com:9440/flagsmith_exp?secure=True"
     )
     mock_client_cls = mocker.patch("experimentation.services.Client")
-    services._get_clickhouse_client.cache_clear()
 
     # When
     client = services._get_clickhouse_client()
@@ -98,7 +97,6 @@ def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
         client_name=settings.CLICKHOUSE_CONNECTION_CLIENT_NAME,
     )
     assert client is mock_client_cls.return_value
-    services._get_clickhouse_client.cache_clear()
 
 
 def test_get_clickhouse_client__dsn_timeouts__are_preserved(
@@ -110,7 +108,6 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
         "clickhouse://ch.example.com:9000/db?connect_timeout=1&send_receive_timeout=2"
     )
     mock_client_cls = mocker.patch("experimentation.services.Client")
-    services._get_clickhouse_client.cache_clear()
 
     # When
     services._get_clickhouse_client()
@@ -124,10 +121,9 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
         send_receive_timeout=2,
         client_name=settings.CLICKHOUSE_CONNECTION_CLIENT_NAME,
     )
-    services._get_clickhouse_client.cache_clear()
 
 
-def test_get_clickhouse_client__per_timeout__caches_distinct_clients(
+def test_get_clickhouse_client__repeated_calls__builds_fresh_clients(
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ) -> None:
@@ -137,24 +133,14 @@ def test_get_clickhouse_client__per_timeout__caches_distinct_clients(
         "experimentation.services.Client",
         side_effect=lambda *args, **kwargs: mocker.Mock(),
     )
-    services._get_clickhouse_client.cache_clear()
 
     # When
     client = services._get_clickhouse_client()
-    same_client = services._get_clickhouse_client()
-    background_client = services._get_clickhouse_client(
-        send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
-    )
+    other_client = services._get_clickhouse_client()
 
     # Then
-    assert client is same_client
-    assert background_client is not client
+    assert client is not other_client
     assert mock_client_cls.call_count == 2
-    assert (
-        mock_client_cls.call_args_list[1].kwargs["send_receive_timeout"]
-        == services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS
-    )
-    services._get_clickhouse_client.cache_clear()
 
 
 @pytest.mark.parametrize(
@@ -202,6 +188,7 @@ def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
         "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s",
         {"environment_key": "env-key-123", "limit": 501},
     )
+    mock_client.disconnect.assert_called_once_with()
 
     # When — the result is cached, so a second request doesn't hit the warehouse
     second_result = services.get_warehouse_event_names(
@@ -247,6 +234,7 @@ def test_get_warehouse_event_names__flagsmith_warehouse_unavailable__returns_non
     assert any(
         event["event"] == "connection.event_names_failed" for event in log.events
     ) == (execute_side_effect is not None)
+    assert mock_client.disconnect.called == (execute_side_effect is not None)
 
 
 @pytest.mark.parametrize(
@@ -429,6 +417,7 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
     mock_get_client.assert_called_once_with(
         send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
+    mock_client.disconnect.assert_called_once_with()
 
 
 def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
@@ -455,6 +444,47 @@ def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
     assert result == []
     sql, _ = mock_client.execute.call_args.args
     assert "toStartOfHour(first_exposure, 'UTC') AS bucket" in sql
+
+
+@pytest.mark.parametrize(
+    "run_query",
+    [
+        lambda: services.get_exposure_buckets(
+            environment_key="env-key-123",
+            feature_name="my-feature",
+            window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+            window_end=datetime(2026, 6, 2, tzinfo=timezone.utc),
+            granularity="hour",
+        ),
+        lambda: services.get_results_aggregates(
+            environment_key="env-key-123",
+            feature_name="my-feature",
+            window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+            window_end=datetime(2026, 6, 2, tzinfo=timezone.utc),
+            specs=[],
+            granularity="hour",
+        ),
+    ],
+    ids=["exposure_buckets", "results_aggregates"],
+)
+def test_background_query__execute_fails__disconnects_client(
+    mocker: MockerFixture,
+    run_query: Callable[[], object],
+) -> None:
+    # Given
+    mock_client = mocker.Mock()
+    mock_client.execute.side_effect = OSError("Bad file descriptor")
+    mocker.patch(
+        "experimentation.services._get_clickhouse_client",
+        return_value=mock_client,
+    )
+
+    # When
+    with pytest.raises(OSError):
+        run_query()
+
+    # Then
+    mock_client.disconnect.assert_called_once_with()
 
 
 def test_compute_exposures_payload__window_within_72_hours__hourly_buckets(
@@ -662,6 +692,7 @@ def test_get_warehouse_event_stats__rows__returns_counts(
         "FROM events WHERE environment_key = %(environment_key)s",
         {"environment_key": "env-key-123"},
     )
+    mock_client.disconnect.assert_called_once_with()
 
 
 @pytest.mark.django_db
@@ -937,6 +968,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     mock_get_client.assert_called_with(
         send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
+    assert mock_client.disconnect.call_count == 2
 
 
 def test_get_metric_variant_stats__three_variants__maps_all_variants(

@@ -12,7 +12,6 @@ from rest_framework.throttling import ScopedRateThrottle
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
-from experimentation import services
 from experimentation.dataclasses import WarehouseEventNames, WarehouseEventStats
 from experimentation.models import (
     WarehouseConnection,
@@ -34,7 +33,6 @@ def mock_clickhouse_stats(
     events re-patch experimentation.services.get_warehouse_event_stats; tests for the
     unconfigured/erroring paths override the setting / raise."""
     settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://localhost:9000/test"
-    services._get_clickhouse_client.cache_clear()
     mock_client = mocker.Mock()
     mock_client.execute.return_value = [(0, 0)]
     return mocker.patch(
