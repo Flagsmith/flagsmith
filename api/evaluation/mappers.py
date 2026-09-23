@@ -71,6 +71,7 @@ def map_environment_to_evaluation_context(
     traits: "Iterable[Trait] | None" = None,
     segments: "Iterable[Segment] | None" = None,
     additional_filters: "Q | None" = None,
+    from_replica: bool = False,
 ) -> EvaluationContext:
     """Map Django ORM models to a flag-engine `EvaluationContext`.
 
@@ -113,6 +114,7 @@ def map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
         additional_filters=additional_filters,
+        from_replica=from_replica,
     )
 
     # No reading from ORM past this point!
@@ -174,6 +176,7 @@ def _resolve_feature_states(
     environment: "Environment",
     identity: "Identity | None",
     additional_filters: "Q | None",
+    from_replica: bool,
 ) -> _ResolvedFeatureStates:
     """Read the feature states current for `environment`, split by what they override."""
     # Deferred: `environments.models` imports this module's package.
@@ -191,6 +194,7 @@ def _resolve_feature_states(
     feature_states = get_environment_flags_list(
         environment=environment,
         additional_filters=override_filters,
+        from_replica=from_replica,
         additional_select_related_args=["feature_segment__segment"],
         additional_prefetch_related_args=[
             Prefetch(

@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
 __all__ = (
     "evaluate_identity",
+    "get_environment_feature_states",
     "get_edge_identity_feature_states",
     "get_edge_identity_segments",
     "get_identity_feature_states",
@@ -146,3 +147,35 @@ def get_edge_identity_segments(edge_identity: "EdgeIdentity") -> "list[Segment]"
         for segment_result in get_evaluation_result(context)["segments"]
         if (pk := segment_result["metadata"].get("pk")) is not None
     ]
+
+
+def get_environment_feature_states(
+    environment: "Environment",
+    *,
+    additional_filters: Q | None = None,
+    from_replica: bool = False,
+) -> "list[FeatureState]":
+    """The feature states to serve for an environment, one per feature.
+
+    Evaluated without an identity, so a segment whose rules read a trait or
+    split on the identity key cannot match. One reading `$.environment`, or
+    another flag, still can — as it does for an SDK evaluating locally.
+    """
+    context = map_environment_to_evaluation_context(
+        environment=environment,
+        segments=environment.get_segments_from_cache(),
+        additional_filters=additional_filters,
+        from_replica=from_replica,
+    )
+    result = get_evaluation_result(context)
+
+    hide_disabled_flags = environment.get_hide_disabled_flags() is True
+    feature_states = []
+    for flag in result["flags"].values():
+        if hide_disabled_flags and not flag["enabled"]:
+            continue
+        feature_state = flag["metadata"]["feature_state"]
+        feature_state.flag_result = flag
+        feature_states.append(feature_state)
+
+    return feature_states
