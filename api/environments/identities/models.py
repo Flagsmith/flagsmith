@@ -90,8 +90,6 @@ class Identity(models.Model):
         return [
             segments_by_pk[metadata["pk"]]
             for segment_result in result["segments"]
-            # The synthetic identity-override segment carries no metadata, not
-            # being a segment anyone can name.
             if (metadata := segment_result.get("metadata")) is not None
         ]
 
