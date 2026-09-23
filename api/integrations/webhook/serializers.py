@@ -4,12 +4,12 @@ from django.db.models import Q
 from flag_engine.engine import get_evaluation_result
 from rest_framework import serializers
 
+from evaluation.mappers import map_environment_to_evaluation_context
 from features.serializers import FeatureStateSerializerFull
 from integrations.common.serializers import (
     BaseEnvironmentIntegrationModelSerializer,
 )
 from segments.models import Segment
-from util.mappers.engine import map_environment_to_evaluation_context
 
 from .models import WebhookConfiguration
 

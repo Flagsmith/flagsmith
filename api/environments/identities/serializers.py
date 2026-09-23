@@ -96,26 +96,27 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):  # type: ignor
     def get_feature_state_value(
         self, instance: typing.Union[FeatureState, FeatureStateModel]
     ) -> typing.Union[str, int, bool]:
-        identity = self.context["identity"]
-        environment_api_key = self.context["environment_api_key"]
-
-        environment = Environment.get_from_cache(environment_api_key)
-        assert environment
-        hash_key = identity.get_hash_key(
-            environment.use_identity_composite_key_for_hashing
-        )
-
         if isinstance(instance, FeatureState):
-            return instance.get_feature_state_value_by_hash_key(hash_key)  # type: ignore[no-any-return]
+            return instance.evaluated_value  # type: ignore[no-any-return]
 
-        return instance.get_value(hash_key)  # type: ignore[no-any-return]
+        # An edge identity's own overrides are stored in DynamoDB rather than
+        # the ORM, and are still resolved outside the engine.
+        environment = Environment.get_from_cache(self.context["environment_api_key"])
+        assert environment
+        return instance.get_value(  # type: ignore[no-any-return]
+            self.context["identity"].get_hash_key(
+                environment.use_identity_composite_key_for_hashing
+            )
+        )
 
     def get_overridden_by(self, instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         if getattr(instance, "feature_segment_id", None) is not None:
             return "SEGMENT"
-        elif getattr(
-            instance, "identity_id", None
-        ) or instance.feature.name in self.context.get("identity_feature_names", []):
+        elif getattr(instance, "identity_id", None) or isinstance(
+            instance, FeatureStateModel
+        ):
+            # An edge identity's overrides are the only states reaching this
+            # serialiser that are not ORM rows.
             return "IDENTITY"
         return None
 
