@@ -48,7 +48,6 @@ describe('projectUsage', () => {
     expect(projectUsage(100_000, 2_000_000, PERIOD)).toBeDefined()
   })
 
-  // Without a plan limit there is a total but nothing to compare it against.
   it('projects a total with no limit to compare against', () => {
     const projection = projectUsage(600_000, null, PERIOD)
 

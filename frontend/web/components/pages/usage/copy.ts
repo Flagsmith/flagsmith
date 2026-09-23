@@ -113,7 +113,6 @@ export const contributionNote = (
       )}% of that usage.`
     : undefined
 
-// Hedged on purpose: a straight line through usage so far, not a forecast.
 export const projectionNote = (
   projection: Projection,
   periodEndsAt: string,

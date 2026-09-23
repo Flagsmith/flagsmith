@@ -63,8 +63,6 @@ export const CumulativeCrossingTheCeiling: Story = {
   },
 }
 
-// A rolling window's total falls as old days drop out, so it gets daily volume
-// rather than a line that only ever climbs.
 // The dashed run carries on from the last measured day to the period end.
 export const CumulativeWithAProjection: Story = {
   args: {
@@ -86,6 +84,8 @@ export const ProjectionLandingOverTheCeiling: Story = {
   },
 }
 
+// A rolling window's total falls as old days drop out, so it gets daily volume
+// rather than a line that only ever climbs.
 export const DailyVolumeOnARollingWindow: Story = {
   args: {
     data: usage(30, 2000),

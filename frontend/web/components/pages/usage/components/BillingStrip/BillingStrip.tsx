@@ -7,7 +7,6 @@ export type BillingStripProps = {
   period: CurrentBillingPeriod | null | undefined
 }
 
-/** Renders nothing on a rolling window, which has no period to describe. */
 const BillingStrip: FC<BillingStripProps> = ({ period }) => {
   const copy = billingPeriodCopy(period)
 

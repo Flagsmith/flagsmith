@@ -7,10 +7,6 @@ export type BillingPeriodCopy = {
   daysLeft: number
 }
 
-/**
- * The strip's two halves. Undefined outside a billing term, where there is no
- * period to describe.
- */
 export const billingPeriodCopy = (
   period: CurrentBillingPeriod | null | undefined,
 ): BillingPeriodCopy | undefined => {
@@ -26,7 +22,6 @@ export const billingPeriodCopy = (
     return undefined
   }
 
-  // The year is only worth repeating when the period crosses into a new one.
   const startFormat = starts.isSame(ends, 'year') ? 'D MMM' : 'D MMM YYYY'
   // Inclusive: a period ending on the 1st runs through the last day of the
   // month before it.

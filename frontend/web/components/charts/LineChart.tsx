@@ -23,7 +23,6 @@ type LineChartProps = {
   xAxisInterval?: number
   showLegend?: boolean
   seriesLabels?: Record<string, string>
-  /** Series drawn dashed, to mark an estimate rather than a measurement. */
   dashedSeries?: string[]
   verticalGrid?: boolean
   referenceLine?: Threshold

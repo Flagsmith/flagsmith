@@ -118,8 +118,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   const period = subscription?.current_billing_period
   const projection = projectUsage(allowanceTotal, limit, period)
 
-  // One line. Being over the limit outranks where usage is heading, which
-  // outranks the project's share.
+  // One line: over the limit outranks the projection, which outranks the share.
   const meterNote =
     [
       exceeded && overLimitNote(exceeded),
@@ -193,8 +192,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
             isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
             periodLabel={selectedPeriod}
             projectedTotal={
-              // Only against the organisation's own allowance window: a
-              // project's share or another period has nothing to project to.
+              // A project's share or another period has nothing to project to.
               showsContribution(basis, billingPeriod, selectedProjectId)
                 ? undefined
                 : projection?.total

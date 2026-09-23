@@ -19,7 +19,6 @@ type UsageOverTimeProps = {
   limit: PlanLimit
   isBillingPeriod: boolean
   periodLabel: string
-  /** Where usage is heading, and when the period it runs to ends. */
   projectedTotal?: number
   periodEndsAt?: string
 }

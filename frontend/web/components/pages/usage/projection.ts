@@ -11,16 +11,11 @@ export const MIN_ELAPSED_SHARE = 0.2
 export type Projection = {
   /** Calls the period is on track to reach, at the rate so far. */
   total: number
-  /** Share of the plan limit that lands at, or undefined without a limit. */
   percentOfLimit: number | undefined
   overLimit: boolean
 }
 
-/**
- * A straight line through usage so far, not a forecast. Undefined on a rolling
- * window, which has no end to project to, and early in a period, where the
- * average is dominated by a day or two.
- */
+/** A straight line through usage so far, not a forecast. */
 export const projectUsage = (
   total: number,
   limit: PlanLimit,

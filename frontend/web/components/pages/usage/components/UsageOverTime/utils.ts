@@ -48,11 +48,7 @@ export const xAxisIntervalFor = (pointCount: number) =>
 
 export type ProjectedPoint = CumulativePoint & { projected?: number }
 
-/**
- * Extends the cumulative line to the end of the period with a straight run to
- * the projected total. The last measured day carries both values so the two
- * lines meet rather than leaving a gap.
- */
+/** The last measured day carries both values, so the two lines meet. */
 export const withProjection = (
   cumulative: CumulativePoint[],
   projectedTotal: number,
