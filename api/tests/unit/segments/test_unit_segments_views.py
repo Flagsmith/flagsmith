@@ -518,8 +518,8 @@ def test_list_segments__filter_by_edge_identity__returns_only_matching_segments(
     identity_uuid = identity_document["identity_uuid"]
     assert isinstance(identity_uuid, str)
 
-    edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = (
-        expected_segment_ids
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid.return_value = (
+        identity_document
     )
 
     base_url = reverse("api-v1:projects:project-segments-list", args=[project.id])
@@ -531,7 +531,9 @@ def test_list_segments__filter_by_edge_identity__returns_only_matching_segments(
     # Then
     assert response.json().get("count") == len(expected_segment_ids)
     assert response.json()["results"][0]["id"] == expected_segment_ids[0]
-    edge_identity_dynamo_wrapper_mock.get_segment_ids.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
+        identity_uuid
+    )
 
 
 @pytest.mark.parametrize(

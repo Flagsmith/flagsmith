@@ -1,8 +1,10 @@
+from contextlib import suppress
 from typing import TYPE_CHECKING, Any
 
 import structlog
 from common.environments.permissions import VIEW_IDENTITIES
 from common.projects.permissions import VIEW_PROJECT
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
@@ -21,6 +23,7 @@ from core.exceptions import ChangeRequestsEnabledError
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
+from evaluation.services import get_edge_identity_segments
 from features.models import FeatureState
 from features.serializers import (
     AssociatedFeaturesQuerySerializer,
@@ -52,6 +55,17 @@ if TYPE_CHECKING:
     from users.models import FFAdminUser
 
 logger = structlog.get_logger("segments")
+
+
+def _get_edge_identity_segments(identity_uuid: str) -> list[Segment]:
+    """The segments an edge identity belongs to, or none if it is unknown."""
+    with suppress(ObjectDoesNotExist):
+        return get_edge_identity_segments(
+            EdgeIdentity.from_identity_document(
+                EdgeIdentity.dynamo_wrapper.get_item_from_uuid(identity_uuid)
+            )
+        )
+    return []
 
 
 @method_decorator(
@@ -134,11 +148,10 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         identity_pk = query_serializer.validated_data.get("identity")
         if identity_pk:
             if identity_pk.isdigit():
-                identity = Identity.objects.get(pk=identity_pk)
-                segment_ids = [segment.id for segment in identity.get_segments()]
+                segments = Identity.objects.get(pk=identity_pk).get_segments()
             else:
-                segment_ids = EdgeIdentity.dynamo_wrapper.get_segment_ids(identity_pk)
-            queryset = queryset.filter(id__in=segment_ids)
+                segments = _get_edge_identity_segments(identity_pk)
+            queryset = queryset.filter(id__in=[segment.id for segment in segments])
 
         search_term = query_serializer.validated_data.get("q")
         if search_term:

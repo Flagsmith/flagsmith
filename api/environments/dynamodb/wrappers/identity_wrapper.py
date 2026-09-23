@@ -316,25 +316,3 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             query_kwargs.update(ExclusiveStartKey=start_key)
 
         return self.query_items(**query_kwargs)
-
-    def get_segment_ids(
-        self,
-        identity_pk: str = None,  # type: ignore[assignment]
-        identity_model: IdentityModel = None,  # type: ignore[assignment]
-    ) -> list:  # type: ignore[type-arg]
-        from edge_api.identities.models import EdgeIdentity
-        from evaluation.services import get_edge_identity_segments
-
-        if not (identity_pk or identity_model):
-            raise ValueError("Must provide one of identity_pk or identity_model.")
-
-        with suppress(ObjectDoesNotExist):
-            identity = identity_model or IdentityModel.model_validate(
-                self.get_item_from_uuid(identity_pk)
-            )
-            return [
-                segment.id
-                for segment in get_edge_identity_segments(EdgeIdentity(identity))
-            ]
-
-        return []

@@ -1,5 +1,5 @@
 import pytest
-from flag_engine.segments.constants import EQUAL
+from flag_engine.segments.constants import EQUAL, IN, IS_SET
 from pytest_lazy_fixtures import lf as lazy_fixture
 
 from edge_api.identities.models import EdgeIdentity
@@ -9,6 +9,7 @@ from environments.models import Environment
 from evaluation.services import (
     evaluate_identity,
     get_edge_identity_feature_states,
+    get_edge_identity_segments,
 )
 from features.constants import CONTROL_VARIANT_KEY
 from features.feature_types import MULTIVARIATE
@@ -17,12 +18,13 @@ from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
-from features.value_types import STRING
+from features.value_types import INTEGER, STRING
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from util.engine_models.features.models import FeatureModel, FeatureStateModel
 from util.engine_models.identities.models import IdentityFeaturesList, IdentityModel
 from util.engine_models.identities.traits.models import TraitModel
+from util.mappers import map_identity_to_identity_document
 
 
 @pytest.fixture()
@@ -335,3 +337,145 @@ def test_get_edge_identity_feature_states__segment_and_identity_override__identi
         if feature_state.feature.name == feature.name
     ]
     assert feature_state.feature_state_value == "identity"
+
+
+def test_get_edge_identity_segments__matching_segment_exists__returns_matching_only(
+    project: Project,
+    environment: Environment,
+    identity: Identity,
+    identity_matching_segment: Segment,
+) -> None:
+    # Given - two segments (one that matches the identity and one that does not)
+    Segment.objects.create(name="Non matching segment", project=project)
+
+    edge_identity = EdgeIdentity.from_identity_document(
+        map_identity_to_identity_document(identity)
+    )
+
+    # When
+    segments = get_edge_identity_segments(edge_identity)
+
+    # Then
+    assert segments == [identity_matching_segment]
+
+
+def test_get_edge_identity_segments__segment_with_feature_overrides__returns_matching_only(
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    identity_matching_segment: Segment,
+) -> None:
+    # Given - a segment with two feature overrides:
+    # one simple override and one with multivariate values
+    simple_feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=identity_matching_segment,
+        environment=environment,
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=simple_feature_segment,
+        enabled=True,
+    )
+
+    mv_feature = Feature.objects.create(
+        name="mv_feature",
+        project=project,
+        type="MULTIVARIATE",
+    )
+    mv_option = MultivariateFeatureOption.objects.create(
+        feature=mv_feature,
+        default_percentage_allocation=30,
+        type="unicode",
+        string_value="variant_a",
+    )
+    mv_feature_segment = FeatureSegment.objects.create(
+        feature=mv_feature,
+        segment=identity_matching_segment,
+        environment=environment,
+    )
+    mv_feature_state = FeatureState.objects.create(
+        feature=mv_feature,
+        environment=environment,
+        feature_segment=mv_feature_segment,
+        enabled=True,
+    )
+    MultivariateFeatureStateValue.objects.create(
+        feature_state=mv_feature_state,
+        multivariate_feature_option=mv_option,
+        percentage_allocation=30,
+    )
+
+    edge_identity = EdgeIdentity.from_identity_document(
+        map_identity_to_identity_document(identity)
+    )
+
+    # When
+    segments = get_edge_identity_segments(edge_identity)
+
+    # Then
+    assert segments == [identity_matching_segment]
+
+
+def test_get_edge_identity_segments__system_trait_backed_segment__returns_matching_only(
+    project: Project,
+    environment: Environment,
+    identity: Identity,
+) -> None:
+    # Given - two IS_SET segments: one keyed to a system trait the identity
+    # carries, one keyed to a system trait it does not
+    member_segment = Segment.objects.create(name="Cohort members", project=project)
+    rule = SegmentRule.objects.create(segment=member_segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(rule=rule, operator=IS_SET, property="flagsmith_cohort_a")
+    other_segment = Segment.objects.create(name="Other cohort", project=project)
+    other_rule = SegmentRule.objects.create(
+        segment=other_segment, type=SegmentRule.ALL_RULE
+    )
+    Condition.objects.create(
+        rule=other_rule, operator=IS_SET, property="flagsmith_cohort_b"
+    )
+
+    identity_document = map_identity_to_identity_document(identity)
+    identity_document["system_traits"] = {"flagsmith_cohort_a": True}
+    edge_identity = EdgeIdentity.from_identity_document(identity_document)
+
+    # When
+    segments = get_edge_identity_segments(edge_identity)
+
+    # Then
+    assert segments == [member_segment]
+
+
+def test_get_edge_identity_segments__in_operator_with_integer_traits__returns_matching_only(
+    project: Project,
+    environment: Environment,
+) -> None:
+    """
+    Specific test to cover https://github.com/Flagsmith/flagsmith/issues/2602
+    """
+    # Given
+    trait_key = "trait_key"
+
+    segment = Segment.objects.create(name="Test Segment", project=project)
+    parent_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ANY_RULE)
+    Condition.objects.create(
+        property=trait_key, operator=IN, value="1,2,3,4", rule=child_rule
+    )
+
+    identity = Identity.objects.create(environment=environment, identifier="identifier")
+    Trait.objects.create(
+        trait_key=trait_key, integer_value=1, value_type=INTEGER, identity=identity
+    )
+
+    edge_identity = EdgeIdentity.from_identity_document(
+        map_identity_to_identity_document(identity)
+    )
+
+    # When
+    segments = get_edge_identity_segments(edge_identity)
+
+    # Then
+    assert segments == [segment]
