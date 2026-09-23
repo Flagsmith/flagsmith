@@ -20,7 +20,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
-from flag_engine.segments.constants import EQUAL
+from flag_engine.segments.constants import EQUAL, IS_NOT_SET, PERCENTAGE_SPLIT
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
@@ -734,14 +734,13 @@ def test_get_flags__feature_filter_not_matching_any_feature__returns_404(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_get_flags__segment_matching_without_identity__returns_segment_override(
-    api_client: APIClient,
+@pytest.fixture()
+def environment_name_segment_feature(
     environment: Environment,
     project: Project,
     environment_name_segment: Segment,
-) -> None:
-    # Given
-    feature = Feature.objects.create(
+) -> Feature:
+    feature: Feature = Feature.objects.create(
         name="Test feature", project=project, initial_value="environment"
     )
     feature_segment = FeatureSegment.objects.create(
@@ -752,7 +751,15 @@ def test_get_flags__segment_matching_without_identity__returns_segment_override(
     )
     segment_override.feature_state_value.string_value = "segment"
     segment_override.feature_state_value.save()
+    return feature
 
+
+def test_get_flags__segment_matching_without_identity__returns_segment_override(
+    api_client: APIClient,
+    environment: Environment,
+    environment_name_segment_feature: Feature,
+) -> None:
+    # Given
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
@@ -760,8 +767,84 @@ def test_get_flags__segment_matching_without_identity__returns_segment_override(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    (flag,) = [flag for flag in response.json() if flag["feature"]["id"] == feature.id]
+    (flag,) = response.json()
     assert flag["feature_state_value"] == "segment"
+
+
+@pytest.mark.parametrize(
+    "condition_property, condition_operator, condition_value",
+    [
+        ("plan", EQUAL, "premium"),
+        ("plan", IS_NOT_SET, None),
+        ("$.identity.identifier", IS_NOT_SET, None),
+        (None, PERCENTAGE_SPLIT, "100"),
+    ],
+)
+def test_get_flags__segment_reading_identity__returns_environment_default(
+    condition_property: str | None,
+    condition_operator: str,
+    condition_value: str | None,
+    api_client: APIClient,
+    environment: Environment,
+    environment_name_segment: Segment,
+    environment_name_segment_feature: Feature,
+) -> None:
+    # Given
+    rule = SegmentRule.objects.create(
+        segment=environment_name_segment, type=SegmentRule.ANY_RULE
+    )
+    Condition.objects.create(
+        rule=rule,
+        property="$.environment.name",
+        operator=EQUAL,
+        value=environment.name,
+    )
+    Condition.objects.create(
+        rule=rule,
+        property=condition_property,
+        operator=condition_operator,
+        value=condition_value,
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(reverse("api-v1:flags"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    (flag,) = response.json()
+    assert flag["feature_state_value"] == "environment"
+
+
+def test_get_flags__segment_reading_identity_in_nested_rule__returns_environment_default(
+    api_client: APIClient,
+    environment: Environment,
+    environment_name_segment: Segment,
+    environment_name_segment_feature: Feature,
+) -> None:
+    # Given
+    nested_rule = SegmentRule.objects.create(
+        rule=SegmentRule.objects.create(
+            segment=environment_name_segment, type=SegmentRule.ALL_RULE
+        ),
+        type=SegmentRule.ANY_RULE,
+    )
+    Condition.objects.create(
+        rule=nested_rule,
+        property="$.environment.name",
+        operator=EQUAL,
+        value=environment.name,
+    )
+    Condition.objects.create(rule=nested_rule, property="plan", operator=IS_NOT_SET)
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(reverse("api-v1:flags"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    (flag,) = response.json()
+    assert flag["feature_state_value"] == "environment"
 
 
 def test_get_flags__hide_disabled_flags_with_disabled_segment_override__excludes_flag(

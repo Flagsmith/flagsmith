@@ -1,7 +1,9 @@
+from collections.abc import Iterable
 from math import inf
 from typing import TYPE_CHECKING, Any
 
 from django.db.models import Q
+from flag_engine.context import types as engine_types
 from flag_engine.engine import get_evaluation_result
 
 from evaluation.mappers import (
@@ -26,6 +28,8 @@ if TYPE_CHECKING:
     from segments.models import Segment
     from util.engine_models.features.models import FeatureStateModel
 
+
+_IDENTITY_FREE_PROPERTY_PREFIXES = ("$.environment.", "$.flags.")
 
 __all__ = (
     "evaluate_identity",
@@ -79,8 +83,8 @@ def get_environment_feature_states(
 ) -> list[EvaluatedFeatureState]:
     """The flags to serve for an environment, one per feature.
 
-    Evaluated without an identity, so only segments whose rules don't need one
-    can match, e.g. on `$.environment` or `$.flags`, or on a trait being unset.
+    Evaluated without an identity, so segments reading traits or identity
+    context are left out.
     """
     context = map_environment_to_evaluation_context(
         environment=environment,
@@ -88,6 +92,12 @@ def get_environment_feature_states(
         additional_filters=additional_filters,
         from_replica=from_replica,
     )
+    if segments := context.get("segments"):
+        context["segments"] = {
+            key: segment
+            for key, segment in segments.items()
+            if _is_identity_free(segment["rules"])
+        }
     result = get_evaluation_result(context)
     return _hide_disabled_flags(
         environment, _map_result_to_evaluated_feature_states(result)
@@ -176,6 +186,17 @@ def get_edge_identity_segments(edge_identity: "EdgeIdentity") -> "list[Segment]"
         for segment_result in get_evaluation_result(context)["segments"]
         if (pk := segment_result["metadata"].get("pk")) is not None
     ]
+
+
+def _is_identity_free(rules: "Iterable[engine_types.SegmentRule]") -> bool:
+    return all(
+        all(
+            condition["property"].startswith(_IDENTITY_FREE_PROPERTY_PREFIXES)
+            for condition in rule.get("conditions", [])
+        )
+        and _is_identity_free(rule.get("rules", []))
+        for rule in rules
+    )
 
 
 def _map_result_to_evaluated_feature_states(
