@@ -657,8 +657,6 @@ class SDKIdentityFeatureStateSerializer(SDKFeatureStateSerializer):
     def get_variant(self, obj: FeatureState) -> str | None:
         if obj.feature.type != MULTIVARIATE or obj.flag_result is None:
             return None
-        # The engine reports the control bucket as `CONTROL_VARIANT_KEY`, and
-        # an unkeyed variant as None, which is what this returned before.
         return obj.flag_result["variant"]
 
     @cached_property

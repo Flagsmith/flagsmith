@@ -526,11 +526,7 @@ class FeatureState(
     # Multivariate bucketing seed, kept stable across recreation (#7913) — see mv_hashing_seed.
     mv_hashing_salt = models.IntegerField(null=True, blank=True, default=None)
 
-    #: How flag-engine evaluated this feature state, set by
-    #: `evaluation.services.evaluate_identity`. Carried on the instance so that the
-    #: value and variant travel with the row they were resolved from, rather
-    #: than being recomputed per serialiser. `None` where the state was read
-    #: outside an evaluation, in which case only its stored value is meaningful.
+    # Set if this feature state went through the evaluation engine.
     flag_result: FlagResult | None = None
 
     class Meta:
@@ -750,19 +746,13 @@ class FeatureState(
         return feature_state_value and feature_state_value.value
 
     def get_feature_state_value(self) -> typing.Any:
-        """This state's stored value, before any evaluation.
-
-        Multivariate allocation is flag-engine's job: read `flag_result` for
-        the value an identity actually sees.
-        """
-        # Use getattr rather than hasattr, to return None where the feature
-        # state has no related feature state value.
+        """This state's stored value, before any evaluation."""
         feature_state_value = getattr(self, "feature_state_value", None)
         return feature_state_value and feature_state_value.value
 
     @property
     def evaluated_value(self) -> typing.Any:
-        """The value as evaluated for an identity, where one was evaluated."""
+        """The value as evaluated, if it was evaluated, as stored otherwise."""
         if (flag_result := self.flag_result) is not None:
             return flag_result["value"]
         return self.get_feature_state_value()
