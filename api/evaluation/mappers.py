@@ -26,6 +26,7 @@ from features.types import FeatureEngineMetadata
 from segments.types import SegmentEngineMetadata
 
 if TYPE_CHECKING:
+    from edge_api.identities.models import EdgeIdentity
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
     from environments.models import Environment
@@ -39,6 +40,7 @@ __all__ = (
     "IDENTITY_OVERRIDES_SEGMENT_NAME",
     "map_condition_to_segment_condition",
     "map_environment_to_evaluation_context",
+    "map_edge_identity_to_identity_context",
     "map_feature_state_to_feature_context",
     "map_identity_to_identity_context",
     "map_rule_to_segment_rule",
@@ -239,6 +241,28 @@ def map_identity_to_identity_context(
             environment.use_identity_composite_key_for_hashing
         ),
         "traits": identity_traits,
+    }
+
+
+def map_edge_identity_to_identity_context(
+    edge_identity: "EdgeIdentity",
+    *,
+    environment: "Environment",
+) -> "IdentityContext":
+    """Map an edge identity, read back from DynamoDB, to an IdentityContext."""
+    identity_model = edge_identity.engine_identity_model
+    return {
+        "identifier": edge_identity.identifier,
+        "key": edge_identity.get_hash_key(
+            environment.use_identity_composite_key_for_hashing
+        ),
+        "traits": {
+            trait.trait_key: trait.trait_value
+            for trait in identity_model.identity_traits
+        }
+        # System-owned traits are not user data: on a key clash, the system
+        # value wins.
+        | (identity_model.system_traits or {}),
     }
 
 

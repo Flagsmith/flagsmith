@@ -3,7 +3,10 @@ from typing import TYPE_CHECKING
 from django.db.models import Q
 from flag_engine.engine import get_evaluation_result
 
-from evaluation.mappers import map_environment_to_evaluation_context
+from evaluation.mappers import (
+    map_edge_identity_to_identity_context,
+    map_environment_to_evaluation_context,
+)
 from evaluation.types import IdentityEvaluation
 
 if TYPE_CHECKING:
@@ -12,12 +15,14 @@ if TYPE_CHECKING:
     from environments.identities.traits.models import Trait
     from environments.models import Environment
     from features.models import FeatureState
+    from segments.models import Segment
     from util.engine_models.features.models import FeatureStateModel
 
 
 __all__ = (
     "evaluate_identity",
     "get_edge_identity_feature_states",
+    "get_edge_identity_segments",
     "get_identity_feature_states",
 )
 
@@ -88,17 +93,9 @@ def get_edge_identity_feature_states(
 
     context = map_environment_to_evaluation_context(
         environment=environment,
-        identity_context={
-            "identifier": edge_identity.identifier,
-            "key": edge_identity.get_hash_key(
-                environment.use_identity_composite_key_for_hashing
-            ),
-            "traits": {
-                trait.trait_key: trait.trait_value
-                for trait in edge_identity.engine_identity_model.identity_traits
-            }
-            | (edge_identity.engine_identity_model.system_traits or {}),
-        },
+        identity_context=map_edge_identity_to_identity_context(
+            edge_identity, environment=environment
+        ),
         segments=environment.get_segments_from_cache(),
     )
     result = get_evaluation_result(context)
@@ -114,3 +111,24 @@ def get_edge_identity_feature_states(
         feature_states[identity_feature_state.feature.name] = identity_feature_state
 
     return list(feature_states.values())
+
+
+def get_edge_identity_segments(edge_identity: "EdgeIdentity") -> "list[Segment]":
+    """The segments an edge identity belongs to."""
+    environment: "Environment" = edge_identity.environment
+    segments: "list[Segment]" = environment.project.get_segments_from_cache()
+    segments_by_pk = {segment.pk: segment for segment in segments}
+
+    context = map_environment_to_evaluation_context(
+        environment=environment,
+        identity_context=map_edge_identity_to_identity_context(
+            edge_identity, environment=environment
+        ),
+        segments=segments,
+    )
+
+    return [
+        segments_by_pk[pk]
+        for segment_result in get_evaluation_result(context)["segments"]
+        if (pk := segment_result["metadata"].get("pk")) is not None
+    ]

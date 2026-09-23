@@ -1,5 +1,6 @@
 import pytest
 
+from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -7,6 +8,7 @@ from evaluation.mappers import (
     IDENTITY_OVERRIDES_SEGMENT_KEY,
     IDENTITY_OVERRIDES_SEGMENT_NAME,
     map_condition_to_segment_condition,
+    map_edge_identity_to_identity_context,
     map_environment_to_evaluation_context,
     map_feature_state_to_feature_context,
     map_rule_to_segment_rule,
@@ -15,6 +17,8 @@ from evaluation.mappers import (
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from segments.models import Condition, Segment, SegmentRule
+from util.engine_models.identities.models import IdentityModel
+from util.engine_models.identities.traits.models import TraitModel
 
 
 def test_map_environment_to_evaluation_context__environment_default__populates_features(
@@ -438,4 +442,33 @@ def test_map_condition_to_segment_condition__valid_condition__returns_expected(
         "property": condition.property,
         "operator": condition.operator,
         "value": condition.value,
+    }
+
+
+def test_map_edge_identity_to_identity_context__system_traits__merged_with_system_winning(
+    environment: Environment,
+) -> None:
+    # Given
+    edge_identity = EdgeIdentity(
+        IdentityModel(
+            identifier="identity",
+            environment_api_key=environment.api_key,
+            identity_traits=[
+                TraitModel(trait_key="owned-by-user", trait_value="user value"),
+                TraitModel(trait_key="clashing", trait_value="user value"),
+            ],
+            system_traits={"clashing": "system value"},
+        )
+    )
+
+    # When
+    identity_context = map_edge_identity_to_identity_context(
+        edge_identity, environment=environment
+    )
+
+    # Then
+    assert identity_context["traits"] == {
+        "owned-by-user": "user value",
+        # System-owned traits are not user data, so they win a key clash.
+        "clashing": "system value",
     }
