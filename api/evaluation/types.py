@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, NamedTuple, TypeAlias
+from typing import TYPE_CHECKING, Generic, NamedTuple, TypeAlias, TypeVar
 
 from flag_engine.context import types as context_types
 from flag_engine.result import types as result_types
@@ -8,6 +8,7 @@ from segments.types import SegmentEngineMetadata
 
 if TYPE_CHECKING:
     from features.models import FeatureState
+    from util.engine_models.features.models import FeatureStateModel
 
 
 __all__ = (
@@ -35,9 +36,16 @@ EvaluationResult: TypeAlias = result_types.EvaluationResult[
 FlagResult: TypeAlias = result_types.FlagResult[FeatureEngineMetadata]
 
 
-class EvaluatedFeatureState(NamedTuple):
+FeatureStateT = TypeVar(
+    "FeatureStateT",
+    bound="FeatureState | FeatureStateModel",
+    default="FeatureState",
+)
+
+
+class EvaluatedFeatureState(NamedTuple, Generic[FeatureStateT]):
     evaluation_result: FlagResult
-    feature_state: "FeatureState"
+    feature_state: FeatureStateT
 
 
 class IdentityEvaluation(NamedTuple):

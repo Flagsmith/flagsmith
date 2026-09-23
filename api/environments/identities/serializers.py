@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
-from environments.models import Environment
+from evaluation.types import EvaluatedFeatureState
 from features.models import FeatureState
 from util.engine_models.features.models import FeatureStateModel
 
@@ -69,8 +69,8 @@ class IdentityAllFeatureStatesMVFeatureStateValueSerializer(serializers.Serializ
 
 
 class IdentityAllFeatureStatesSerializer(serializers.Serializer):  # type: ignore[type-arg]
-    feature = IdentityAllFeatureStatesFeatureSerializer()
-    enabled = serializers.BooleanField()
+    feature = IdentityAllFeatureStatesFeatureSerializer(source="feature_state.feature")
+    enabled = serializers.BooleanField(source="evaluation_result.enabled")
     feature_state_value = serializers.SerializerMethodField(
         help_text="Can be any of the following types: integer, boolean, string."
     )
@@ -79,40 +79,41 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):  # type: ignor
     )
     segment = serializers.SerializerMethodField()
     multivariate_feature_state_values = (
-        IdentityAllFeatureStatesMVFeatureStateValueSerializer(many=True)
+        IdentityAllFeatureStatesMVFeatureStateValueSerializer(
+            source="feature_state.multivariate_feature_state_values", many=True
+        )
     )
 
     def get_feature_state_value(
-        self, instance: typing.Union[FeatureState, FeatureStateModel]
+        self, instance: "EvaluatedFeatureState[FeatureState | FeatureStateModel]"
     ) -> typing.Union[str, int, bool]:
-        identity = self.context["identity"]
-        environment_api_key = self.context["environment_api_key"]
+        return instance.evaluation_result["value"]  # type: ignore[no-any-return]
 
-        environment = Environment.get_from_cache(environment_api_key)
-        assert environment
-        hash_key = identity.get_hash_key(
-            environment.use_identity_composite_key_for_hashing
-        )
-
-        if isinstance(instance, FeatureState):
-            return instance.get_feature_state_value_by_hash_key(hash_key)  # type: ignore[no-any-return]
-
-        return instance.get_value(hash_key)  # type: ignore[no-any-return]
-
-    def get_overridden_by(self, instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
-        if getattr(instance, "feature_segment_id", None) is not None:
+    def get_overridden_by(
+        self, instance: "EvaluatedFeatureState[FeatureState | FeatureStateModel]"
+    ) -> typing.Optional[str]:
+        feature_state = instance.feature_state
+        if not isinstance(feature_state, FeatureState):
+            # An edge identity's overrides are the only feature states
+            # reaching this serialiser that are not ORM rows.
+            return "IDENTITY"
+        if feature_state.feature_segment_id is not None:
             return "SEGMENT"
-        elif getattr(
-            instance, "identity_id", None
-        ) or instance.feature.name in self.context.get("identity_feature_names", []):
+        if feature_state.identity_id is not None:
             return "IDENTITY"
         return None
 
     @extend_schema_field(IdentityAllFeatureStatesSegmentSerializer)
-    def get_segment(self, instance) -> typing.Optional[typing.Dict[str, typing.Any]]:  # type: ignore[no-untyped-def]
-        if getattr(instance, "feature_segment_id", None) is not None:
+    def get_segment(
+        self, instance: "EvaluatedFeatureState[FeatureState | FeatureStateModel]"
+    ) -> typing.Optional[typing.Dict[str, typing.Any]]:
+        feature_state = instance.feature_state
+        if (
+            isinstance(feature_state, FeatureState)
+            and (feature_segment := feature_state.feature_segment) is not None
+        ):
             return IdentityAllFeatureStatesSegmentSerializer(
-                instance=instance.feature_segment.segment
+                instance=feature_segment.segment
             ).data
         return None
 

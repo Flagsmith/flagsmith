@@ -26,18 +26,25 @@ from features.types import FeatureEngineMetadata
 from segments.types import SegmentEngineMetadata
 
 if TYPE_CHECKING:
+    from edge_api.identities.models import EdgeIdentity
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
     from environments.models import Environment
     from features.models import FeatureState
     from features.multivariate.models import MultivariateFeatureStateValue
     from segments.models import Condition, Segment, SegmentRule
+    from util.engine_models.features.models import (
+        FeatureStateModel,
+        MultivariateFeatureStateValueModel,
+    )
 
 
 __all__ = (
     "IDENTITY_OVERRIDES_SEGMENT_NAME",
     "map_condition_to_segment_condition",
     "map_environment_to_evaluation_context",
+    "map_edge_identity_to_identity_context",
+    "map_engine_feature_state_to_feature_context",
     "map_feature_state_to_feature_context",
     "map_identity_overrides_to_segment_context",
     "map_identity_to_identity_context",
@@ -71,6 +78,7 @@ def map_environment_to_evaluation_context(
     *,
     environment: "Environment",
     identity: "Identity | None" = None,
+    identity_context: "IdentityContext | None" = None,
     traits: "Iterable[Trait] | None" = None,
     segments: "Iterable[Segment] | None" = None,
     additional_filters: "Q | None" = None,
@@ -88,6 +96,9 @@ def map_environment_to_evaluation_context(
 
     :param identity: the identity being evaluated, whose overrides are read
         from the ORM along with the environment's own feature states.
+    :param identity_context: who is being evaluated, for an identity that is
+        not an ORM row and so has no overrides to read from it. An edge
+        identity keeps both its traits and its overrides in DynamoDB.
     :param segments: segments to evaluate.
     """
     context: EvaluationContext = {
@@ -96,7 +107,9 @@ def map_environment_to_evaluation_context(
             "name": environment.name or "",
         },
     }
-    if identity is not None:
+    if identity_context is not None:
+        context["identity"] = identity_context
+    elif identity is not None:
         context["identity"] = map_identity_to_identity_context(
             identity,
             environment=environment,
@@ -114,7 +127,7 @@ def map_environment_to_evaluation_context(
         additional_filters=additional_filters,
         from_replica=from_replica,
         # The engine only splits between variants for an identity.
-        with_variants=identity is not None,
+        with_variants=identity is not None or identity_context is not None,
     )
     if segments is not None:
         segments = list(segments)
@@ -266,6 +279,28 @@ def map_identity_to_identity_context(
     }
 
 
+def map_edge_identity_to_identity_context(
+    edge_identity: "EdgeIdentity",
+    *,
+    environment: "Environment",
+) -> "IdentityContext":
+    """Map an edge identity, read back from DynamoDB, to an IdentityContext."""
+    identity_model = edge_identity.engine_identity_model
+    return {
+        "identifier": edge_identity.identifier,
+        "key": edge_identity.get_hash_key(
+            environment.use_identity_composite_key_for_hashing
+        ),
+        "traits": {
+            trait.trait_key: trait.trait_value
+            for trait in identity_model.identity_traits
+        }
+        # System-owned traits are not user data: on a key clash, the system
+        # value wins.
+        | (identity_model.system_traits or {}),
+    }
+
+
 def map_feature_state_to_feature_context(
     feature_state: "FeatureState",
     *,
@@ -343,6 +378,58 @@ def map_segment_to_segment_context(
     if overrides:
         segment_context["overrides"] = overrides
     return segment_context
+
+
+def map_engine_feature_state_to_feature_context(
+    feature_state: "FeatureStateModel",
+    *,
+    priority: float | None = None,
+) -> FeatureContext:
+    """Map a DynamoDB-sourced FeatureStateModel to a FeatureContext TypedDict.
+
+    An edge identity's overrides are stored rather than evaluated, so they
+    carry no bucketing salt: their own id seeds allocation, as it always has.
+    """
+    feature_context: FeatureContext = {
+        "key": str(feature_state.django_id or feature_state.featurestate_uuid),
+        "name": feature_state.feature.name,
+        "enabled": feature_state.enabled,
+        "value": feature_state.feature_state_value,
+        "metadata": FeatureEngineMetadata(edge_feature_state=feature_state),
+    }
+
+    if variants := _map_engine_mv_fs_values_to_feature_values(
+        feature_state.multivariate_feature_state_values
+    ):
+        feature_context["variants"] = variants
+
+    if priority is not None:
+        feature_context["priority"] = priority
+
+    return feature_context
+
+
+def _map_engine_mv_fs_values_to_feature_values(
+    mv_fs_values: "Iterable[MultivariateFeatureStateValueModel]",
+) -> list[engine_types.FeatureValue]:
+    # Ordered by id as the stored models always have been, falling back to the
+    # uuid for values that never reached the ORM.
+    feature_values: list[engine_types.FeatureValue] = []
+    for index, mv_fs_value in enumerate(
+        sorted(
+            mv_fs_values, key=lambda mv_value: mv_value.id or mv_value.mv_fs_value_uuid
+        )
+    ):
+        mv_option = mv_fs_value.multivariate_feature_option
+        feature_value: engine_types.FeatureValue = {
+            "value": mv_option.value,
+            "weight": mv_fs_value.percentage_allocation,
+            "priority": index,
+        }
+        if mv_option.key is not None:
+            feature_value["key"] = mv_option.key
+        feature_values.append(feature_value)
+    return feature_values
 
 
 def map_identity_overrides_to_segment_context(

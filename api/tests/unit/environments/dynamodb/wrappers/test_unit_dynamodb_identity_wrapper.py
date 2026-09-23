@@ -3,16 +3,12 @@ from decimal import Decimal
 
 import pytest
 from boto3.dynamodb.conditions import Key
-from boto3.dynamodb.types import Binary
 from botocore.exceptions import ClientError
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.segments.constants import IN, IS_SET
 from mypy_boto3_dynamodb.service_resource import Table
-from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework.exceptions import NotFound
 
-from core.constants import INTEGER
 from edge_api.identities.search import (
     IDENTIFIER_ATTRIBUTE,
     EdgeIdentitySearchData,
@@ -27,22 +23,12 @@ from environments.identities.models import Identity
 from environments.identities.traits.constants import (
     TRAIT_STRING_VALUE_MAX_LENGTH,
 )
-from environments.identities.traits.models import Trait
-from features.models import Feature, FeatureSegment, FeatureState
-from features.multivariate.models import (
-    MultivariateFeatureOption,
-    MultivariateFeatureStateValue,
-)
-from segments.models import Condition, Segment, SegmentRule
-from util.engine_models.identities.models import IdentityModel
 from util.mappers import (
-    map_environment_to_compressed_environment_document,
     map_identity_to_identity_document,
 )
 
 if typing.TYPE_CHECKING:
-    from environments.models import Environment
-    from projects.models import Project
+    pass
 
 
 def test_get_item_from_uuid__valid_uuid__calls_query_correctly(mocker):  # type: ignore[no-untyped-def]
@@ -316,128 +302,6 @@ def test_is_enabled__table_name_set__returns_true(settings, mocker):  # type: ig
     mocked_boto3.resource.return_value.Table.assert_called_with(table_name)
 
 
-def test_get_segment_ids__matching_segment_exists__returns_correct_ids(  # type: ignore[no-untyped-def]
-    project, environment, identity, identity_matching_segment, mocker
-):
-    # Given - two segments (one that matches the identity and one that does not)
-    Segment.objects.create(name="Non matching segment", project=project)
-
-    identity_document = map_identity_to_identity_document(identity)
-    identity_uuid = identity_document["identity_uuid"]
-
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-    mocked_get_item_from_uuid = mocker.patch.object(
-        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
-    )
-
-    # When
-    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)  # type: ignore[arg-type]
-
-    # Then
-    assert segment_ids == [identity_matching_segment.id]
-    mocked_get_item_from_uuid.assert_called_with(identity_uuid)
-
-
-def test_get_segment_ids__segment_with_feature_overrides__returns_correct_ids(
-    project: "Project",
-    environment: "Environment",
-    feature: "Feature",
-    identity: "Identity",
-    identity_matching_segment: "Segment",
-    mocker: "MockerFixture",
-) -> None:
-    # Given - a segment with two feature overrides:
-    # one simple override and one with multivariate values
-    simple_feature_segment = FeatureSegment.objects.create(
-        feature=feature,
-        segment=identity_matching_segment,
-        environment=environment,
-    )
-    FeatureState.objects.create(
-        feature=feature,
-        environment=environment,
-        feature_segment=simple_feature_segment,
-        enabled=True,
-    )
-
-    mv_feature = Feature.objects.create(
-        name="mv_feature",
-        project=project,
-        type="MULTIVARIATE",
-    )
-    mv_option = MultivariateFeatureOption.objects.create(
-        feature=mv_feature,
-        default_percentage_allocation=30,
-        type="unicode",
-        string_value="variant_a",
-    )
-    mv_feature_segment = FeatureSegment.objects.create(
-        feature=mv_feature,
-        segment=identity_matching_segment,
-        environment=environment,
-    )
-    mv_feature_state = FeatureState.objects.create(
-        feature=mv_feature,
-        environment=environment,
-        feature_segment=mv_feature_segment,
-        enabled=True,
-    )
-    MultivariateFeatureStateValue.objects.create(
-        feature_state=mv_feature_state,
-        multivariate_feature_option=mv_option,
-        percentage_allocation=30,
-    )
-
-    identity_document = map_identity_to_identity_document(identity)
-    identity_uuid = identity_document["identity_uuid"]
-
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-    mocker.patch.object(
-        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
-    )
-
-    # When
-    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)  # type: ignore[arg-type]
-
-    # Then
-    assert segment_ids == [identity_matching_segment.id]
-
-
-def test_get_segment_ids__system_trait_backed_segment__returns_correct_ids(
-    project: "Project",
-    environment: "Environment",
-    identity: "Identity",
-    mocker: "MockerFixture",
-) -> None:
-    # Given - two IS_SET segments: one keyed to a system trait the identity
-    # carries, one keyed to a system trait it does not
-    member_segment = Segment.objects.create(name="Cohort members", project=project)
-    rule = SegmentRule.objects.create(segment=member_segment, type=SegmentRule.ALL_RULE)
-    Condition.objects.create(rule=rule, operator=IS_SET, property="flagsmith_cohort_a")
-    other_segment = Segment.objects.create(name="Other cohort", project=project)
-    other_rule = SegmentRule.objects.create(
-        segment=other_segment, type=SegmentRule.ALL_RULE
-    )
-    Condition.objects.create(
-        rule=other_rule, operator=IS_SET, property="flagsmith_cohort_b"
-    )
-
-    identity_document = map_identity_to_identity_document(identity)
-    identity_document["system_traits"] = {"flagsmith_cohort_a": True}
-    identity_uuid = identity_document["identity_uuid"]
-
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-    mocker.patch.object(
-        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
-    )
-
-    # When
-    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)  # type: ignore[arg-type]
-
-    # Then
-    assert segment_ids == [member_segment.id]
-
-
 def test_set_system_trait__oversized_string_value__raises() -> None:
     # Given
     wrapper = DynamoIdentityWrapper()
@@ -450,138 +314,6 @@ def test_set_system_trait__oversized_string_value__raises() -> None:
             trait_key="flagsmith_cohort_a",
             trait_value="x" * (TRAIT_STRING_VALUE_MAX_LENGTH + 1),
         )
-
-
-def test_get_segment_ids__in_operator_with_integer_traits__returns_matching_segment(
-    project: "Project", environment: "Environment", mocker: "MockerFixture"
-) -> None:
-    """
-    Specific test to cover https://github.com/Flagsmith/flagsmith/issues/2602
-    """
-    # Given
-    trait_key = "trait_key"
-
-    segment = Segment.objects.create(name="Test Segment", project=project)
-    parent_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
-    child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ANY_RULE)
-    Condition.objects.create(
-        property=trait_key, operator=IN, value="1,2,3,4", rule=child_rule
-    )
-
-    identity = Identity.objects.create(environment=environment, identifier="identifier")
-    Trait.objects.create(
-        trait_key=trait_key, integer_value=1, value_type=INTEGER, identity=identity
-    )
-
-    identity_document = map_identity_to_identity_document(identity)
-    identity_uuid = identity_document["identity_uuid"]
-
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-    mocker.patch.object(
-        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
-    )
-
-    # When
-    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)  # type: ignore[arg-type]
-
-    # Then
-    assert segment_ids == [segment.id]
-
-
-def test_get_segment_ids__identity_does_not_exist__returns_empty_list(  # type: ignore[no-untyped-def]
-    project, environment, identity, mocker
-):
-    # Given
-    identity_document = map_identity_to_identity_document(identity)
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-    mocker.patch.object(
-        dynamo_identity_wrapper, "get_item_from_uuid", side_effect=ObjectDoesNotExist
-    )
-    identity_uuid = identity_document["identity_uuid"]
-
-    # When
-    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)  # type: ignore[arg-type]
-
-    # Then
-    assert segment_ids == []
-
-
-def test_get_segment_ids__no_arguments__raises_value_error():  # type: ignore[no-untyped-def]
-    # Given
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-
-    # When / Then
-    with pytest.raises(ValueError):
-        dynamo_identity_wrapper.get_segment_ids()
-
-
-def test_get_segment_ids__none_argument__raises_value_error():  # type: ignore[no-untyped-def]
-    # Given
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-
-    # When / Then
-    with pytest.raises(ValueError):
-        dynamo_identity_wrapper.get_segment_ids(None)  # type: ignore[arg-type]
-
-
-def test_get_segment_ids__with_identity_model__returns_empty_list(  # type: ignore[no-untyped-def]
-    identity, environment, mocker
-):
-    # Given
-    identity_document = map_identity_to_identity_document(identity)
-    identity_model = IdentityModel.parse_obj(identity_document)
-
-    dynamo_identity_wrapper = DynamoIdentityWrapper()
-    mocker.patch.object(
-        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
-    )
-
-    # When
-    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_model=identity_model)
-
-    # Then
-    assert segment_ids == []
-
-
-def test_get_segment_ids__compressed_environment_in_dynamo__returns_correct_segment_ids(
-    identity: "Identity",
-    identity_matching_segment: "Segment",
-    dynamodb_identity_wrapper: DynamoIdentityWrapper,
-    flagsmith_identities_table: Table,
-    flagsmith_environment_table: Table,
-    settings: "SettingsWrapper",
-) -> None:
-    """Regression test for https://github.com/Flagsmith/flagsmith/issues/6912
-
-    Previously, get_segment_ids read the environment document from DynamoDB
-    and failed with a ValidationError when the document contained compressed
-    (gzipped Binary) `project` and `feature_states` fields.
-    """
-    # Given - identity written to DynamoDB
-    identity_document = map_identity_to_identity_document(identity)
-    flagsmith_identities_table.put_item(Item=identity_document)
-    identity_uuid = str(identity_document["identity_uuid"])
-
-    # And - a compressed environment document in DynamoDB
-    settings.ENVIRONMENTS_TABLE_NAME_DYNAMO = flagsmith_environment_table.name
-    compressed_result = map_environment_to_compressed_environment_document(
-        identity.environment,
-    )
-    flagsmith_environment_table.put_item(Item=compressed_result.document)
-
-    # Verify the document actually has compressed Binary fields
-    stored = flagsmith_environment_table.get_item(
-        Key={"api_key": identity.environment.api_key},
-    )["Item"]
-    assert stored.get("compressed") is True
-    assert isinstance(stored["project"], Binary)
-    assert isinstance(stored["feature_states"], Binary)
-
-    # When
-    segment_ids = dynamodb_identity_wrapper.get_segment_ids(identity_uuid)
-
-    # Then
-    assert segment_ids == [identity_matching_segment.id]
 
 
 def test_identity_wrapper__iter_all_items_paginated__returns_expected(

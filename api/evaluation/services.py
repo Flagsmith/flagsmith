@@ -1,9 +1,16 @@
+from math import inf
 from typing import TYPE_CHECKING
 
 from django.db.models import Q
 from flag_engine.engine import get_evaluation_result
 
-from evaluation.mappers import map_environment_to_evaluation_context
+from evaluation.mappers import (
+    IDENTITY_OVERRIDES_SEGMENT_NAME,
+    map_edge_identity_to_identity_context,
+    map_engine_feature_state_to_feature_context,
+    map_environment_to_evaluation_context,
+    map_identity_overrides_to_segment_context,
+)
 from evaluation.types import (
     EvaluatedFeatureState,
     EvaluationResult,
@@ -11,13 +18,19 @@ from evaluation.types import (
 )
 
 if TYPE_CHECKING:
+    from edge_api.identities.models import EdgeIdentity
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
     from environments.models import Environment
+    from features.models import FeatureState
+    from segments.models import Segment
+    from util.engine_models.features.models import FeatureStateModel
 
 
 __all__ = (
     "evaluate_identity",
+    "get_edge_identity_feature_states",
+    "get_edge_identity_segments",
     "get_environment_feature_states",
     "get_identity_feature_states",
 )
@@ -73,6 +86,64 @@ def get_environment_feature_states(
     return _hide_disabled_flags(
         environment, _map_result_to_evaluated_feature_states(result)
     )
+
+
+def get_edge_identity_feature_states(
+    edge_identity: "EdgeIdentity",
+) -> "list[EvaluatedFeatureState[FeatureState | FeatureStateModel]]":
+    """The flags to serve an edge identity, one per feature."""
+    environment: "Environment" = edge_identity.environment
+
+    context = map_environment_to_evaluation_context(
+        environment=environment,
+        identity_context=map_edge_identity_to_identity_context(
+            edge_identity, environment=environment
+        ),
+        segments=environment.get_segments_from_cache(),
+    )
+    # The identity's own overrides are read back from DynamoDB rather than the
+    # ORM, so the mapper never saw them. They reach the engine the way every
+    # identity override does, as a segment no other override can outrank.
+    if overrides := [
+        map_engine_feature_state_to_feature_context(feature_state, priority=-inf)
+        for feature_state in edge_identity.feature_overrides
+    ]:
+        context.setdefault("segments", {})[IDENTITY_OVERRIDES_SEGMENT_NAME] = (
+            map_identity_overrides_to_segment_context(overrides)
+        )
+
+    return [
+        EvaluatedFeatureState(
+            evaluation_result=flag,
+            feature_state=(
+                feature_state
+                if (feature_state := flag["metadata"].get("feature_state")) is not None
+                else flag["metadata"]["edge_feature_state"]
+            ),
+        )
+        for flag in get_evaluation_result(context)["flags"].values()
+    ]
+
+
+def get_edge_identity_segments(edge_identity: "EdgeIdentity") -> "list[Segment]":
+    """The segments an edge identity belongs to."""
+    environment: "Environment" = edge_identity.environment
+    segments: "list[Segment]" = environment.project.get_segments_from_cache()
+    segments_by_pk = {segment.pk: segment for segment in segments}
+
+    context = map_environment_to_evaluation_context(
+        environment=environment,
+        identity_context=map_edge_identity_to_identity_context(
+            edge_identity, environment=environment
+        ),
+        segments=segments,
+    )
+
+    return [
+        segments_by_pk[pk]
+        for segment_result in get_evaluation_result(context)["segments"]
+        if (pk := segment_result["metadata"].get("pk")) is not None
+    ]
 
 
 def _map_result_to_evaluated_feature_states(

@@ -4,7 +4,6 @@ from contextlib import suppress
 from datetime import timedelta
 
 from django.conf import settings
-from django.db.models import Prefetch, Q
 from django.utils import timezone
 
 from api_keys.user import APIKeyUser
@@ -17,9 +16,6 @@ from edge_api.identities.types import IdentityChangeset
 from edge_api.identities.utils import generate_change_dict
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
-from features.models import FeatureState
-from features.multivariate.models import MultivariateFeatureStateValue
-from features.versioning.versioning_service import get_environment_flags_dict
 from users.models import FFAdminUser
 from util.engine_models.features.models import FeatureStateModel
 from util.engine_models.identities.models import IdentityFeaturesList, IdentityModel
@@ -76,70 +72,6 @@ class EdgeIdentity:
 
     def add_feature_override(self, feature_state: FeatureStateModel) -> None:
         self.engine_identity_model.identity_features.append(feature_state)
-
-    def get_all_feature_states(
-        self,
-    ) -> typing.Tuple[
-        typing.List[typing.Union[FeatureState, FeatureStateModel]], typing.Set[str]
-    ]:
-        """
-        Get all feature states for a flag engine identity model. The list returned by
-        this function contains two distinct types: features.models.FeatureState &
-        flag_engine.features.models.FeatureStateModel.
-
-        :return: tuple of (list of feature states, set of feature names that were overridden
-            for the identity specifically)
-        """
-        segment_ids = self.dynamo_wrapper.get_segment_ids(
-            identity_model=self.engine_identity_model
-        )
-        django_environment = self.environment
-
-        # since identity overrides are included in the document retrieved from dynamo,
-        # we only want to retrieve the environment default and (relevant) segment overrides
-        # from the ORM.
-        additional_filters = Q(identity__isnull=True) & (
-            Q(feature_segment__segment__id__in=segment_ids)
-            | Q(feature_segment__isnull=True)
-        )
-
-        feature_states: dict[str, FeatureState | FeatureStateModel] = (
-            get_environment_flags_dict(  # type: ignore[assignment]
-                environment=django_environment,
-                additional_filters=additional_filters,
-                additional_select_related_args=[
-                    "feature",
-                    "feature_segment",
-                    "feature_segment__segment",
-                    "feature_state_value",
-                ],
-                additional_prefetch_related_args=[
-                    Prefetch(
-                        "multivariate_feature_state_values",
-                        queryset=MultivariateFeatureStateValue.objects.select_related(
-                            "multivariate_feature_option"
-                        ),
-                    )
-                ],
-                # since we only want to retrieve the highest priority feature state,
-                # we key off the feature name instead of the default
-                # (feature_id, segment_id, identity_id). This will give us only e.g.
-                # the highest priority matching segment override for a given feature.
-                key_function=lambda fs: fs.feature.name,  # type: ignore[arg-type,return-value]
-            )
-        )
-
-        # Since the identity overrides are the highest priority, we can now iterate
-        # over the dictionary and replace any feature states with those that have
-        # an identity override, stored against the identity in dynamo.
-        identity_feature_states = self.feature_overrides
-        identity_feature_names = set()
-        for identity_feature_state in identity_feature_states:
-            feature_name = identity_feature_state.feature.name
-            feature_states[feature_name] = identity_feature_state
-            identity_feature_names.add(feature_name)
-
-        return list(feature_states.values()), identity_feature_names
 
     def get_feature_state_by_feature_name_or_id(
         self, feature: typing.Union[str, int]

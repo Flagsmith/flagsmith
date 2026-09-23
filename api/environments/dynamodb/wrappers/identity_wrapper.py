@@ -22,10 +22,6 @@ from environments.dynamodb.wrappers.exceptions import (
 from environments.identities.traits.constants import (
     TRAIT_STRING_VALUE_MAX_LENGTH,
 )
-from util.engine_models.context.mappers import (
-    is_context_in_segment,
-    map_environment_identity_to_context,
-)
 from util.engine_models.identities.models import IdentityModel
 from util.mappers import (
     map_engine_identity_to_identity_document,
@@ -320,35 +316,3 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             query_kwargs.update(ExclusiveStartKey=start_key)
 
         return self.query_items(**query_kwargs)
-
-    def get_segment_ids(
-        self,
-        identity_pk: str = None,  # type: ignore[assignment]
-        identity_model: IdentityModel = None,  # type: ignore[assignment]
-    ) -> list:  # type: ignore[type-arg]
-        from environments.models import Environment
-        from util.mappers.engine import map_segment_to_engine
-
-        if not (identity_pk or identity_model):
-            raise ValueError("Must provide one of identity_pk or identity_model.")
-
-        with suppress(ObjectDoesNotExist):
-            identity = identity_model or IdentityModel.model_validate(
-                self.get_item_from_uuid(identity_pk)
-            )
-            environment = Environment.objects.select_related("project").get(
-                api_key=identity.environment_api_key,
-            )
-            segments = environment.project.get_segments_from_cache()
-            context = map_environment_identity_to_context(
-                environment=environment,
-                identity=identity,
-                override_traits=None,
-            )
-            return [
-                segment.id
-                for segment in segments
-                if is_context_in_segment(context, map_segment_to_engine(segment))
-            ]
-
-        return []
