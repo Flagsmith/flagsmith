@@ -2,7 +2,7 @@
 ### `api_usage.notification.evaluated`
 
 Logged at `info` from:
- - `api/organisations/task_helpers.py:155`
+ - `api/organisations/task_helpers.py:157`
 
 Attributes:
  - `allowed_api_calls`
@@ -16,7 +16,7 @@ Attributes:
 ### `api_usage.notification.missing_billing_starts_at`
 
 Logged at `error` from:
- - `api/organisations/task_helpers.py:120`
+ - `api/organisations/task_helpers.py:122`
 
 Attributes:
  - `organisation.id`
@@ -24,7 +24,7 @@ Attributes:
 ### `api_usage.notification.sent`
 
 Logged at `info` from:
- - `api/organisations/task_helpers.py:178`
+ - `api/organisations/task_helpers.py:180`
 
 Attributes:
  - `matched_threshold`
