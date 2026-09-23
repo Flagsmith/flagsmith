@@ -5,7 +5,6 @@ import { colorSurfaceAction, colorTextSecondary } from 'common/theme/tokens'
 import EmptyState from 'components/EmptyState'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import BarChart from 'components/charts/BarChart'
-import ChartTooltip from 'components/charts/ChartTooltip'
 import LineChart from 'components/charts/LineChart'
 import {
   cumulativeTotals,
@@ -46,19 +45,19 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
 
   const cumulative = useMemo(() => cumulativeTotals(daily), [daily])
 
-  const showsProjection = projectedTotal !== undefined && !!periodEndsAt
+  const hasProjection = projectedTotal !== undefined && !!periodEndsAt
   const line = useMemo(
     () =>
-      showsProjection
+      hasProjection
         ? withProjection(cumulative, projectedTotal, periodEndsAt)
         : cumulative,
-    [cumulative, periodEndsAt, projectedTotal, showsProjection],
+    [cumulative, periodEndsAt, projectedTotal, hasProjection],
   )
 
   const chart = isBillingPeriod ? (
     <LineChart
       data={line}
-      series={showsProjection ? ['cumulative', 'projected'] : ['cumulative']}
+      series={hasProjection ? ['cumulative', 'projected'] : ['cumulative']}
       dashedSeries={['projected']}
       seriesLabels={SERIES_LABELS}
       colorMap={{
@@ -66,11 +65,9 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
         projected: colorTextSecondary,
       }}
       xAxisInterval={xAxisIntervalFor(line.length)}
-      tooltip={
-        // The line is already a running total, and on the day the measured and
-        // projected series meet a sum would count it twice.
-        <ChartTooltip seriesLabels={SERIES_LABELS} hideTotal />
-      }
+      // The line is already a running total, and on the day the measured and
+      // projected series meet a sum would count it twice.
+      hideTooltipTotal
       verticalGrid={false}
       height={320}
       referenceLine={planLimitThreshold(limit)}

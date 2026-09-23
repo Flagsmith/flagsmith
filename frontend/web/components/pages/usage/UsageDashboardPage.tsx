@@ -26,6 +26,7 @@ import {
   isChargedForOverages,
   showsContribution,
   showsPlanCeiling,
+  showsProjection,
   periodLabel,
   periodsFor,
   PeriodSelection,
@@ -192,9 +193,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
             isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
             periodLabel={selectedPeriod}
             projectedTotal={
-              // Only the current period, organisation wide. A past period or a
-              // single project has nothing to project to.
-              billingPeriod === 'current_billing_period' && !selectedProjectId
+              showsProjection(billingPeriod, selectedProjectId)
                 ? projection?.total
                 : undefined
             }

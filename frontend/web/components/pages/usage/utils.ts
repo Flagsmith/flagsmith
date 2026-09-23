@@ -64,6 +64,13 @@ export const showsContribution = (
   projectId: number | undefined,
 ): boolean => !!projectId && period === allowanceWindow(basis)
 
+// The chart projects towards one period end, so it can only draw a projection
+// for the period that end belongs to, over the whole organisation.
+export const showsProjection = (
+  period: BillingPeriod,
+  projectId: number | undefined,
+): boolean => period === 'current_billing_period' && !projectId
+
 export const showsPlanCeiling = (
   period: BillingPeriod,
   projectId: number | undefined,

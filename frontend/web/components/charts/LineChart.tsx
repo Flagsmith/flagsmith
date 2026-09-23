@@ -1,4 +1,4 @@
-import React, { FC, ReactElement } from 'react'
+import React, { FC } from 'react'
 import { AxisDomain } from 'recharts/types/util/types'
 import {
   CartesianGrid,
@@ -24,8 +24,8 @@ type LineChartProps = {
   showLegend?: boolean
   seriesLabels?: Record<string, string>
   dashedSeries?: string[]
-  /** Replaces the default tooltip, for data the default reads wrongly. */
-  tooltip?: ReactElement
+  /** For series whose sum means nothing, such as a cumulative line. */
+  hideTooltipTotal?: boolean
   verticalGrid?: boolean
   referenceLine?: Threshold
 }
@@ -55,11 +55,11 @@ const LineChart: FC<LineChartProps> = ({
   dashedSeries,
   data,
   height = 400,
+  hideTooltipTotal = false,
   referenceLine,
   series,
   seriesLabels,
   showLegend = false,
-  tooltip,
   verticalGrid = true,
   xAxisInterval = 0,
 }) => {
@@ -92,7 +92,12 @@ const LineChart: FC<LineChartProps> = ({
         />
         <Tooltip
           cursor={{ stroke: colorTextSecondary, strokeDasharray: '3 3' }}
-          content={tooltip ?? <ChartTooltip seriesLabels={seriesLabels} />}
+          content={
+            <ChartTooltip
+              seriesLabels={seriesLabels}
+              hideTotal={hideTooltipTotal}
+            />
+          }
         />
         {showLegend && (
           <Legend
@@ -119,6 +124,7 @@ const LineChart: FC<LineChartProps> = ({
             strokeWidth={2}
             strokeDasharray={dashedSeries?.includes(label) ? '6 6' : undefined}
             dot={false}
+            // Recharts' default, pinned: a gap in a series must stay a gap.
             connectNulls={false}
             animationBegin={index * 80}
             animationDuration={600}

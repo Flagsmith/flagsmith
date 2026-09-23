@@ -52,7 +52,10 @@ export const planLimitThreshold = (limit: PlanLimit) =>
 export const xAxisIntervalFor = (pointCount: number) =>
   Math.max(0, Math.ceil(pointCount / 12) - 1)
 
-export type ProjectedPoint = CumulativePoint & { projected?: number }
+export type ProjectedPoint = Omit<CumulativePoint, 'cumulative'> & {
+  cumulative: number | null
+  projected?: number
+}
 
 /** The last measured day carries both values, so the two lines meet. */
 export const withProjection = (
@@ -82,7 +85,7 @@ export const withProjection = (
   const future = Array.from({ length: daysAhead }, (_, index) => {
     const day = from.clone().add(index + 1, 'days')
     return {
-      cumulative: null as unknown as number,
+      cumulative: null,
       date: day.format('YYYY-MM-DD'),
       day: day.format('D MMM'),
       projected: Math.round(last.cumulative + step * (index + 1)),
