@@ -555,13 +555,8 @@ def test_get_all_live_or_scheduled_overrides__feature_versioning_v2_scheduled_fe
     assert overrides == [live_override, scheduled_override]
 
 
-# Enough versions that reading all of them is unmistakable in a query plan,
-# while still seeding in well under a second.
-UNRELATED_VERSION_COUNT = 2_000
-
-
-def _create_unrelated_versions(count: int) -> int:
-    """Fill a second project with published versions. Returns the table's size."""
+def _create_unrelated_versions(count: int) -> None:
+    """Fill a second project with published versions."""
     organisation = Organisation.objects.create(name="Unrelated organisation")
     project = Project.objects.create(
         name="Unrelated project", organisation=organisation
@@ -587,7 +582,6 @@ def _create_unrelated_versions(count: int) -> int:
     )
     with connection.cursor() as cursor:
         cursor.execute("ANALYZE feature_versioning_environmentfeatureversion")
-    return int(EnvironmentFeatureVersion.objects.count())
 
 
 def _count_version_rows_read(queryset: "QuerySet[FeatureSegment]") -> int:
@@ -639,8 +633,7 @@ def test_get_all_live_or_scheduled_overrides__unrelated_versions_exist__does_not
     )
 
     # And a second project holding far more versions than the one queried.
-    unrelated_versions = _create_unrelated_versions(count=UNRELATED_VERSION_COUNT)
-    assert unrelated_versions > UNRELATED_VERSION_COUNT
+    _create_unrelated_versions(count=2_000)
 
     # When
     versions_read = _count_version_rows_read(
@@ -650,6 +643,5 @@ def test_get_all_live_or_scheduled_overrides__unrelated_versions_exist__does_not
     # Then
     assert list(get_all_live_or_scheduled_overrides()) == [override]
 
-    # Scoped to the override's own version, this reads a single row. Compared
-    # against live or scheduled versions at large, it reads the whole table.
-    assert versions_read < unrelated_versions / 10
+    # The version the override points at, and nothing else.
+    assert versions_read == 1
