@@ -676,7 +676,7 @@ Attributes:
 ### `segments.delete_rejected`
 
 Logged at `warning` from:
- - `api/segments/views.py:292`
+ - `api/segments/views.py:289`
 
 Attributes:
  - `organisation.id`
@@ -696,7 +696,7 @@ Attributes:
 ### `segments.update_rejected`
 
 Logged at `warning` from:
- - `api/segments/views.py:268`
+ - `api/segments/views.py:265`
 
 Attributes:
  - `organisation.id`
