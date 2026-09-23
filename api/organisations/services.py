@@ -55,8 +55,9 @@ def is_overage_charging_enabled(organisation: Organisation) -> bool:
     if _plan_family(organisation) not in CHARGEABLE_PLAN_FAMILIES:
         return False
 
-    subscription = organisation.subscription
-    if subscription.cancellation_date is not None:
+    if not organisation.has_paid_subscription():
+        return False
+    if organisation.subscription.cancellation_date is not None:
         return False
     if not organisation.has_subscription_information_cache():
         return False

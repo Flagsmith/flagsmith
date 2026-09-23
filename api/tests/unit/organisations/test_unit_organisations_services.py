@@ -28,6 +28,7 @@ def _monthly_term(
         current_billing_term_ends_at=now + timedelta(days=1),
     )
     organisation.subscription.plan = plan
+    organisation.subscription.subscription_id = "sub-1"
     organisation.subscription.save()
 
 
@@ -90,6 +91,20 @@ def test_has_used_overage_grace__no_subscription_cache__returns_false(
     organisation: Organisation,
 ) -> None:
     # Given
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    _grace_row(organisation, created_at=timezone.now() - timedelta(days=60))
+
+    # When / Then
+    assert has_used_overage_grace(organisation) is False
+
+
+# A cache can exist before Chargebee has written a term to it.
+def test_has_used_overage_grace__no_billing_term__returns_false(
+    organisation: Organisation,
+) -> None:
+    # Given
+    OrganisationSubscriptionInformationCache.objects.create(organisation=organisation)
     organisation.subscription.plan = "scale-up-v2"
     organisation.subscription.save()
     _grace_row(organisation, created_at=timezone.now() - timedelta(days=60))
@@ -178,6 +193,20 @@ def test_is_overage_charging_enabled__annual_term__returns_false(
     assert is_overage_charging_enabled(organisation) is False
 
 
+def test_is_overage_charging_enabled__no_chargebee_subscription__returns_false(
+    organisation: Organisation,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("api_usage_overage_charges")
+    _monthly_term(organisation)
+    organisation.subscription.subscription_id = None
+    organisation.subscription.save()
+
+    # When / Then
+    assert is_overage_charging_enabled(organisation) is False
+
+
 def test_is_overage_charging_enabled__cancelled__returns_false(
     organisation: Organisation,
     enable_features: EnableFeaturesFixture,
@@ -199,6 +228,7 @@ def test_is_overage_charging_enabled__no_subscription_cache__returns_false(
     # Given
     enable_features("api_usage_overage_charges")
     organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.subscription_id = "sub-1"
     organisation.subscription.save()
 
     # When / Then
@@ -213,6 +243,7 @@ def test_is_overage_charging_enabled__no_billing_term__returns_false(
     enable_features("api_usage_overage_charges")
     OrganisationSubscriptionInformationCache.objects.create(organisation=organisation)
     organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.subscription_id = "sub-1"
     organisation.subscription.save()
 
     # When / Then
@@ -232,6 +263,7 @@ def test_is_overage_charging_enabled__term_has_ended__returns_false(
         current_billing_term_ends_at=now - timedelta(days=30),
     )
     organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.subscription_id = "sub-1"
     organisation.subscription.save()
 
     # When / Then

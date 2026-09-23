@@ -67,6 +67,7 @@ def test_organisation_serializer_full__monthly_paid_plan__reports_overage_state(
         current_billing_term_ends_at=now + timedelta(days=1),
     )
     organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.subscription_id = "sub-1"
     organisation.subscription.save()
 
     # When
