@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.275.0](https://github.com/Flagsmith/flagsmith/compare/v2.274.0...v2.275.0) (2026-09-23)
+
+
+### Features
+
+* Add customersuccess@flagsmith.com to cc for API usage notifications ([#7157](https://github.com/Flagsmith/flagsmith/issues/7157)) ([b0a1c9f](https://github.com/Flagsmith/flagsmith/commit/b0a1c9f75d712ca3541c0a2f61b1f1394e5102ed))
+* **usage:** return the current billing period ([#8501](https://github.com/Flagsmith/flagsmith/issues/8501)) ([3e5fa33](https://github.com/Flagsmith/flagsmith/commit/3e5fa33b2370f59357b4f3c549c1b66b5cb9d26b))
+
+
+### Bug Fixes
+
+* **sdk:** title evaluation context flags as FlagResults ([#8581](https://github.com/Flagsmith/flagsmith/issues/8581)) ([515caef](https://github.com/Flagsmith/flagsmith/commit/515caef277ef0409d13f2f61e607ca1394b2fe59))
+* **Segments:** Restore segment list performance on large installations ([#8587](https://github.com/Flagsmith/flagsmith/issues/8587)) ([b10c6b3](https://github.com/Flagsmith/flagsmith/commit/b10c6b3ff48a52fe3af3c22e317ac2980abcfc93))
+* **usage:** drop the app-wide quota banner on the usage dashboard ([#8512](https://github.com/Flagsmith/flagsmith/issues/8512)) ([d04bfb5](https://github.com/Flagsmith/flagsmith/commit/d04bfb521f88820a3064480349fb3d32c56e2e9f))
+
 ## [2.274.0](https://github.com/Flagsmith/flagsmith/compare/v2.273.0...v2.274.0) (2026-09-23)
 
 
