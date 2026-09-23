@@ -717,9 +717,7 @@ def environment_name_segment(environment: Environment, project: Project) -> Segm
     return segment
 
 
-@pytest.mark.parametrize("feature_name", ["", "unknown_feature"])
-def test_get_flags__feature_filter_not_matching_any_feature__returns_404(
-    feature_name: str,
+def test_get_flags__unknown_feature_filter__returns_404(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -728,10 +726,30 @@ def test_get_flags__feature_filter_not_matching_any_feature__returns_404(
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
-    response = api_client.get(f"{reverse('api-v1:flags')}?feature={feature_name}")
+    response = api_client.get(f"{reverse('api-v1:flags')}?feature=unknown_feature")
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_get_flags__empty_feature_filter__returns_all_flags(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_with_value: Feature,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(f"{reverse('api-v1:flags')}?feature=")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert {flag["feature"]["name"] for flag in response.json()} == {
+        feature.name,
+        feature_with_value.name,
+    }
 
 
 @pytest.fixture()
