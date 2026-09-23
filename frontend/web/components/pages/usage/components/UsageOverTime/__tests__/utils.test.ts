@@ -134,7 +134,6 @@ describe('withProjection', () => {
   it('runs a straight line from the last measured day to the projection', () => {
     const points = withProjection(measured, 700, '2026-07-13T00:00:00Z')
 
-    // The last measured day carries both, so the lines meet.
     expect(points[2]).toEqual({
       cumulative: 400,
       date: '2026-07-10',
@@ -144,7 +143,6 @@ describe('withProjection', () => {
     // The end is exclusive, so the line stops on the 12th, not the 13th.
     expect(points.slice(3).map((p) => p.day)).toEqual(['11 Jul', '12 Jul'])
     expect(points.slice(3).map((p) => p.projected)).toEqual([550, 700])
-    // Future days have no measurement, so the solid line stops.
     expect(points.slice(3).every((p) => p.cumulative === null)).toBe(true)
   })
 

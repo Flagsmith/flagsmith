@@ -68,7 +68,6 @@ export const CumulativeCrossingTheCeiling: Story = {
   },
 }
 
-// The dashed run carries on from the last measured day to the period end.
 export const CumulativeWithAProjection: Story = {
   args: {
     data: usage(18, 70000),

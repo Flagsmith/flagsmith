@@ -4,8 +4,7 @@ import { colorBorderDanger } from 'common/theme/tokens'
 import Format from 'common/utils/format'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 
-// date is the raw day from the API, kept so the projection can tell how far
-// behind the last measurement is. day is only for the axis.
+// date is the raw API day, day is the axis label.
 export type DailyPoint = { date: string; day: string; total: number }
 export type CumulativePoint = { date: string; day: string; cumulative: number }
 

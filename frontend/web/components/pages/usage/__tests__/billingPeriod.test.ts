@@ -15,7 +15,6 @@ describe('billingPeriodCopy', () => {
       period('2026-07-01T00:00:00Z', '2026-08-01T00:00:00Z'),
     )
 
-    // The end is exclusive, so the range stops on the last day inside it.
     expect(copy?.range).toBe('1 Jul – 31 Jul 2026')
     expect(copy?.resets).toBe('Resets in 11 days · 1 Aug 2026')
     expect(copy?.daysLeft).toBe(11)
