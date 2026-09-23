@@ -135,10 +135,6 @@ from util.mappers import (
     map_identity_override_to_identity_override_document,
 )
 
-trait_key = "key1"
-trait_value = "value1"
-
-
 # ---------------------------------------------------------------------------
 # Hooks
 # ---------------------------------------------------------------------------
@@ -563,7 +559,17 @@ def identity_featurestate(identity, feature):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def trait(identity):  # type: ignore[no-untyped-def]
+def trait_key() -> str:
+    return "key1"
+
+
+@pytest.fixture()
+def trait_value() -> str:
+    return "value1"
+
+
+@pytest.fixture()
+def trait(identity: Identity, trait_key: str, trait_value: str) -> Trait:
     return Trait.objects.create(
         identity=identity, trait_key=trait_key, string_value=trait_value
     )
