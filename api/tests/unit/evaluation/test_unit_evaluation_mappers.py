@@ -11,6 +11,7 @@ from environments.models import Environment
 from evaluation.mappers import (
     IDENTITY_OVERRIDES_SEGMENT_NAME,
     map_edge_identity_to_identity_context,
+    map_engine_feature_state_to_feature_context,
     map_environment_to_evaluation_context,
     map_feature_state_to_feature_context,
 )
@@ -18,6 +19,13 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+from util.engine_models.features.models import (
+    FeatureModel,
+    FeatureStateModel,
+    MultivariateFeatureOptionModel,
+    MultivariateFeatureStateValueList,
+    MultivariateFeatureStateValueModel,
+)
 from util.engine_models.identities.models import IdentityModel
 from util.engine_models.identities.traits.models import TraitModel
 
@@ -506,4 +514,50 @@ def test_map_edge_identity_to_identity_context__system_traits__merged_with_syste
         "owned-by-user": "user value",
         # System-owned traits are not user data, so they win a key clash.
         "clashing": "system value",
+    }
+
+
+def test_map_engine_feature_state_to_feature_context__multivariate_override__returns_variants() -> (
+    None
+):
+    # Given
+    feature_state = FeatureStateModel(
+        django_id=1,
+        feature=FeatureModel(id=1, name="feature", type="MULTIVARIATE"),
+        enabled=True,
+        feature_state_value="control",
+        multivariate_feature_state_values=MultivariateFeatureStateValueList(
+            [
+                MultivariateFeatureStateValueModel(
+                    id=3,
+                    percentage_allocation=70,
+                    multivariate_feature_option=MultivariateFeatureOptionModel(
+                        id=3, value="unkeyed"
+                    ),
+                ),
+                MultivariateFeatureStateValueModel(
+                    id=2,
+                    percentage_allocation=30,
+                    multivariate_feature_option=MultivariateFeatureOptionModel(
+                        id=2, value="keyed", key="variant-a"
+                    ),
+                ),
+            ]
+        ),
+    )
+
+    # When
+    feature_context = map_engine_feature_state_to_feature_context(feature_state)
+
+    # Then
+    assert feature_context == {
+        "key": "1",
+        "name": "feature",
+        "enabled": True,
+        "value": "control",
+        "variants": [
+            {"key": "variant-a", "value": "keyed", "weight": 30, "priority": 0},
+            {"value": "unkeyed", "weight": 70, "priority": 1},
+        ],
+        "metadata": {"edge_feature_state": feature_state},
     }
