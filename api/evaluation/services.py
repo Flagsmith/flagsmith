@@ -77,9 +77,15 @@ def get_environment_feature_states(
     additional_filters: Q | None = None,
     from_replica: bool = False,
 ) -> list[EvaluatedFeatureState]:
-    """The flags to serve for an environment, one per feature."""
+    """The flags to serve for an environment, one per feature.
+
+    Evaluated without an identity, so a segment whose rules read a trait or
+    split on the identity key cannot match. One reading `$.environment`, or
+    another flag, still can — as it does for an SDK evaluating locally.
+    """
     context = map_environment_to_evaluation_context(
         environment=environment,
+        segments=environment.get_segments_from_cache(),
         additional_filters=additional_filters,
         from_replica=from_replica,
     )

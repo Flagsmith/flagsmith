@@ -20,6 +20,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
+from flag_engine.segments.constants import EQUAL
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
@@ -60,7 +61,7 @@ from permissions.models import PermissionModel
 from projects.code_references.models import ScannedCodeReferences, VCSRepository
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
-from segments.models import Segment
+from segments.models import Condition, Segment, SegmentRule
 from tests.types import (
     WithEnvironmentPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -702,6 +703,107 @@ def test_get_flags__environment_with_overrides__returns_environment_default(
     assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
         environment.updated_at.timestamp()
     )
+
+
+@pytest.fixture()
+def environment_name_segment(environment: Environment, project: Project) -> Segment:
+    segment: Segment = Segment.objects.create(name="This environment", project=project)
+    Condition.objects.create(
+        rule=SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE),
+        property="$.environment.name",
+        operator=EQUAL,
+        value=environment.name,
+    )
+    return segment
+
+
+def test_get_flags__segment_matching_without_identity__returns_segment_override(
+    api_client: APIClient,
+    environment: Environment,
+    project: Project,
+    environment_name_segment: Segment,
+) -> None:
+    # Given
+    feature = Feature.objects.create(
+        name="Test feature", project=project, initial_value="environment"
+    )
+    feature_segment = FeatureSegment.objects.create(
+        segment=environment_name_segment, feature=feature, environment=environment
+    )
+    segment_override = FeatureState.objects.create(
+        feature=feature, feature_segment=feature_segment, environment=environment
+    )
+    segment_override.feature_state_value.string_value = "segment"
+    segment_override.feature_state_value.save()
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(reverse("api-v1:flags"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    (flag,) = [flag for flag in response.json() if flag["feature"]["id"] == feature.id]
+    assert flag["feature_state_value"] == "segment"
+
+
+def test_get_flags__hide_disabled_flags_with_disabled_segment_override__excludes_flag(
+    api_client: APIClient,
+    environment: Environment,
+    project: Project,
+    environment_name_segment: Segment,
+) -> None:
+    # Given
+    environment.hide_disabled_flags = True
+    environment.save()
+    feature = Feature.objects.create(
+        name="Test feature", project=project, default_enabled=True
+    )
+    feature_segment = FeatureSegment.objects.create(
+        segment=environment_name_segment, feature=feature, environment=environment
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        feature_segment=feature_segment,
+        environment=environment,
+        enabled=False,
+    )
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(reverse("api-v1:flags"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
+
+
+@pytest.mark.parametrize("hide_disabled_flags", [False, True])
+def test_get_flags__enabled_server_key_only_feature_with_client_key__excludes_flag(
+    hide_disabled_flags: bool,
+    api_client: APIClient,
+    environment: Environment,
+    project: Project,
+) -> None:
+    # Given
+    environment.hide_disabled_flags = hide_disabled_flags
+    environment.save()
+    Feature.objects.create(
+        name="Test feature",
+        project=project,
+        default_enabled=True,
+        is_server_key_only=True,
+    )
+
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(reverse("api-v1:flags"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
 
 
 @pytest.mark.parametrize("cache_flags_seconds", [0, 30])
