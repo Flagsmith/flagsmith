@@ -267,32 +267,22 @@ def test_map_environment_to_evaluation_context__with_identity__returns_identity_
     }
 
 
-TRAIT_KEY = "trait-key"
-
-
 @pytest.fixture()
-def stored_trait(identity: Identity) -> Trait:
-    return Trait.objects.create(
-        identity=identity, trait_key=TRAIT_KEY, string_value="stored"
-    )
-
-
-@pytest.fixture()
-def explicit_traits(identity: Identity) -> list[Trait]:
-    return [Trait(identity=identity, trait_key=TRAIT_KEY, string_value="explicit")]
+def explicit_traits(identity: Identity, trait_key: str) -> list[Trait]:
+    return [Trait(identity=identity, trait_key=trait_key, string_value="explicit")]
 
 
 @pytest.mark.parametrize(
-    ["traits", "expected_traits"],
+    ["traits", "expected_trait_value"],
     (
         pytest.param(
             lazy_fixture("explicit_traits"),
-            {TRAIT_KEY: "explicit"},
+            "explicit",
             id="explicit_traits_take_precedence",
         ),
         pytest.param(
             None,
-            {TRAIT_KEY: "stored"},
+            lazy_fixture("trait_value"),
             id="no_explicit_traits_reads_stored",
         ),
     ),
@@ -300,9 +290,9 @@ def explicit_traits(identity: Identity) -> list[Trait]:
 def test_map_environment_to_evaluation_context__traits__returns_expected_traits(
     environment: Environment,
     identity: Identity,
-    stored_trait: Trait,
+    trait: Trait,
     traits: list[Trait] | None,
-    expected_traits: dict[str, str],
+    expected_trait_value: str,
 ) -> None:
     # Given / When
     context = map_environment_to_evaluation_context(
@@ -312,20 +302,9 @@ def test_map_environment_to_evaluation_context__traits__returns_expected_traits(
     )
 
     # Then
-    assert context == {
-        "environment": {
-            "key": environment.api_key,
-            "name": environment.name,
-        },
-        "identity": {
-            "identifier": identity.identifier,
-            "key": identity.get_hash_key(
-                environment.use_identity_composite_key_for_hashing
-            ),
-            "traits": expected_traits,
-        },
-        "features": {},
-    }
+    identity_context = context["identity"]
+    assert identity_context
+    assert identity_context["traits"] == {trait.trait_key: expected_trait_value}
 
 
 def test_map_environment_to_evaluation_context__with_segments__returns_segment_contexts(
