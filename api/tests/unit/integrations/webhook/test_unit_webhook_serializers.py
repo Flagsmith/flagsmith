@@ -1,3 +1,6 @@
+import pytest
+from pytest_lazy_fixtures import lf as lazy_fixture
+
 from environments.identities.models import Identity
 from environments.models import Environment
 from evaluation.services import get_identity_feature_states
@@ -7,6 +10,7 @@ from integrations.webhook.serializers import (
     IntegrationFeatureStateSerializer,
     SegmentSerializer,
 )
+from segments.models import Segment
 
 
 def test_integration_feature_state_serializer__multivariate_identity_override__returns_split_weight(
@@ -50,3 +54,26 @@ def test_segment_serializer__identity_matching_segment__returns_member_true(  # 
     # Then
     assert data["member"] is True
     assert data["id"] == identity_matching_segment.id
+
+
+@pytest.mark.parametrize(
+    "segment, expected_member",
+    [
+        (lazy_fixture("identity_matching_segment"), True),
+        (lazy_fixture("another_segment"), False),
+    ],
+)
+def test_segment_serializer__identity_with_override__returns_segment_membership(
+    identity: Identity,
+    identity_featurestate: FeatureState,
+    segment: Segment,
+    expected_member: bool,
+) -> None:
+    # Given
+    serializer = SegmentSerializer(segment, context={"identity": identity})
+
+    # When
+    data = serializer.data
+
+    # Then
+    assert data["member"] is expected_member

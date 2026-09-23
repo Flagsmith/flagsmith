@@ -1,9 +1,8 @@
+from functools import cached_property
 from typing import Any
 
-from flag_engine.engine import get_evaluation_result
 from rest_framework import serializers
 
-from evaluation.mappers import map_environment_to_evaluation_context
 from evaluation.results import get_split_weight
 from evaluation.types import EvaluatedFeatureState
 from features.serializers import FeatureStateSerializerFull
@@ -28,15 +27,12 @@ class SegmentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
         model = Segment
         fields = ("id", "name", "member")
 
+    @cached_property
+    def _member_segment_ids(self) -> set[int]:
+        return {segment.pk for segment in self.context["identity"].get_segments()}
+
     def get_member(self, obj: Segment) -> bool:
-        identity = self.context["identity"]
-        context = map_environment_to_evaluation_context(
-            identity=identity,
-            environment=identity.environment,
-            segments=[obj],
-        )
-        result = get_evaluation_result(context)
-        return bool(result["segments"])
+        return obj.pk in self._member_segment_ids
 
 
 class IntegrationFeatureStateSerializer(FeatureStateSerializerFull):

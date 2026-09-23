@@ -2651,7 +2651,7 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     # assigned; tuning the rollout must not re-randomise the split.
     assert before == after
     # and the split is not trivially one-sided, so the above means something
-    assert len(set(before.values())) > 1
+    assert {option_a.key, option_b.key} <= set(before.values())
 
 
 def _verification_count(result: str) -> float:
