@@ -1046,8 +1046,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         if identifier:
             return self._get_flags_response_with_identifier(request, identifier)
 
-        if "feature" in request.GET:
-            feature_name = request.GET["feature"]
+        if feature_name := request.GET.get("feature"):
             # Filtered after evaluating, not before, because of dependent flags
             feature_state = next(
                 (
