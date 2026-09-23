@@ -47,14 +47,21 @@
       "rangeStrategy": "bump"
     },
     {
-      "description": "Enforce a release-age cooldown on npm updates. npm's own min-release-age in .npmrc only applies when a lock file is resolved, and never during npm ci, so Renovate is what actually enforces this for automated updates.",
-      "matchManagers": ["npm"],
+      "description": "Hold back automated dependency updates until a release has been public for a week. For npm this is the only enforcement we have: npm's own min-release-age needs npm >= 11.10, which no Node 22 release bundles, and it never applies to npm ci. For Python it complements exclude-newer in pyproject.toml, which is what covers transitive dependencies and lock file maintenance.",
+      "matchManagers": ["npm", "pep621"],
       "minimumReleaseAge": "7 days"
     },
     {
-      "description": "Exempt internal Flagsmith npm packages from the cooldown, so we can publish and consume them immediately.",
-      "matchManagers": ["npm"],
-      "matchPackageNames": ["@flagsmith/**"],
+      "description": "Exempt internal Flagsmith packages from the cooldown, so we can publish one and consume it immediately. Python packages are listed individually because they share no common prefix; keep in sync with exclude-newer-package in api/pyproject.toml.",
+      "matchPackageNames": [
+        "@flagsmith/**",
+        "flagsmith",
+        "flagsmith-common",
+        "flagsmith-private",
+        "flagsmith-flag-engine",
+        "flagsmith-sql-flag-engine",
+        "openfeature-provider-flagsmith"
+      ],
       "minimumReleaseAge": null
     },
     {
