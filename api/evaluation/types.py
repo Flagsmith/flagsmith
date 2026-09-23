@@ -1,7 +1,8 @@
-from typing import TYPE_CHECKING, Generic, NamedTuple, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Generic, NamedTuple, TypeAlias
 
 from flag_engine.context import types as context_types
 from flag_engine.result import types as result_types
+from typing_extensions import TypeVar
 
 from features.types import FeatureEngineMetadata
 from segments.types import SegmentEngineMetadata
