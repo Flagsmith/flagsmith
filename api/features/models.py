@@ -50,7 +50,6 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
-from evaluation.types import FlagResult
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
 from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
@@ -526,9 +525,6 @@ class FeatureState(
     # Multivariate bucketing seed, kept stable across recreation (#7913) — see mv_hashing_seed.
     mv_hashing_salt = models.IntegerField(null=True, blank=True, default=None)
 
-    # Set if this feature state went through the evaluation engine.
-    flag_result: FlagResult | None = None
-
     class Meta:
         ordering = ["id"]
 
@@ -749,13 +745,6 @@ class FeatureState(
         """This state's stored value, before any evaluation."""
         feature_state_value = getattr(self, "feature_state_value", None)
         return feature_state_value and feature_state_value.value
-
-    @property
-    def evaluated_value(self) -> typing.Any:
-        """The value as evaluated, if it was evaluated, as stored otherwise."""
-        if (flag_result := self.flag_result) is not None:
-            return flag_result["value"]
-        return self.get_feature_state_value()
 
     def get_feature_state_value_defaults(self) -> dict[str, typing.Any]:
         if (

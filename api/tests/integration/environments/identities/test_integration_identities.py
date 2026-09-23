@@ -131,6 +131,54 @@ def test_get_feature_states_for_identity__mv_allocation__returns_value_and_varia
     assert flags_by_feature_id[standard_feature_id]["variant"] is None
 
 
+@pytest.mark.parametrize(
+    ["mv_option_keys", "expected_value", "expected_variant"],
+    (
+        pytest.param([], control_value, "control", id="no_variants"),
+        pytest.param([None], variant_1_value, None, id="keyless_variant"),
+    ),
+)
+def test_get_feature_states_for_identity__mv_without_keyed_variant__returns_value_and_variant(
+    mv_option_keys: list[str | None],
+    expected_value: str,
+    expected_variant: str | None,
+    sdk_client: APIClient,
+    admin_client: APIClient,
+    project: int,
+    environment: int,
+    identity: int,
+    identity_identifier: str,
+) -> None:
+    # Given
+    multivariate_feature_id = create_feature_with_api(
+        client=admin_client,
+        project_id=project,
+        feature_name="multivariate_feature",
+        initial_value=control_value,
+        feature_type=MULTIVARIATE,
+    )
+    for key in mv_option_keys:
+        create_mv_option_with_api(
+            admin_client,
+            project,
+            multivariate_feature_id,
+            100,
+            variant_1_value,
+            key=key,
+        )
+
+    # When
+    response = sdk_client.get(
+        f"{reverse('api-v1:sdk-identities')}?identifier={identity_identifier}"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    (flag,) = response.json()["flags"]
+    assert flag["feature_state_value"] == expected_value
+    assert flag["variant"] == expected_variant
+
+
 def test_get_flags__multivariate_feature__response_excludes_variant(  # type: ignore[no-untyped-def]
     sdk_client,
     admin_client,

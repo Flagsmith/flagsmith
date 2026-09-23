@@ -82,7 +82,7 @@ def test_mixpanel_identify_user__valid_identity__posts_to_api(
     # Given
     caplog.set_level(DEBUG)
     config = MixpanelConfiguration(api_key="123key")
-    feature_states = [*feature.feature_states.all()]
+    feature_states = get_identity_feature_states(identity)
 
     mixpanel = MixpanelWrapper(config)
     expected_user_data = mixpanel.generate_user_data(
@@ -124,7 +124,7 @@ def test_mixpanel_generate_user_data__identity_with_features__returns_expected_f
 ) -> None:
     # Given
     config = MixpanelConfiguration(api_key="123key")
-    feature_states = [*feature.feature_states.all()]
+    feature_states = get_identity_feature_states(identity)
 
     mixpanel = MixpanelWrapper(config)
 
@@ -138,7 +138,8 @@ def test_mixpanel_generate_user_data__identity_with_features__returns_expected_f
     # Then
     feature_properties = {}
 
-    for feature_state in feature_states:
+    for evaluated_feature_state in feature_states:
+        feature_state = evaluated_feature_state.feature_state
         value = feature_state.get_feature_state_value()
         feature_properties[feature_state.feature.name] = (
             value if (feature_state.enabled and value) else feature_state.enabled

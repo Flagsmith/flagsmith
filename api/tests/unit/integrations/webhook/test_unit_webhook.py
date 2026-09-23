@@ -1,7 +1,8 @@
 from core.constants import STRING
 from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import TraitSerializerBasic
-from features.models import Feature, FeatureState
+from evaluation.services import get_identity_feature_states
+from features.models import Feature
 from integrations.webhook.serializers import (
     IntegrationFeatureStateSerializer,
     SegmentSerializer,
@@ -20,9 +21,9 @@ def test_webhook_generate_user_data__with_identity_and_features__returns_correct
         value_type=STRING,
         string_value="trait_value",
     )
-    feature = Feature.objects.create(name="Test Feature", project=project)
+    Feature.objects.create(name="Test Feature", project=project)
 
-    feature_states = FeatureState.objects.filter(feature=feature)
+    feature_states = get_identity_feature_states(identity)
     expected_flags = IntegrationFeatureStateSerializer(
         feature_states, many=True, context={"identity": identity}
     ).data
