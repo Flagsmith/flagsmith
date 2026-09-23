@@ -73,6 +73,7 @@ def map_environment_to_evaluation_context(
     identity: "Identity | None" = None,
     traits: "Iterable[Trait] | None" = None,
     segments: "Iterable[Segment] | None" = None,
+    additional_filters: "Q | None" = None,
 ) -> EvaluationContext:
     """Map Django ORM models to a flag-engine `EvaluationContext`.
 
@@ -109,6 +110,7 @@ def map_environment_to_evaluation_context(
     ) = _resolve_feature_states(
         environment=environment,
         identity=identity,
+        additional_filters=additional_filters,
     )
     if segments is not None:
         segments = list(segments)
@@ -172,6 +174,7 @@ def _resolve_feature_states(
     *,
     environment: "Environment",
     identity: "Identity | None",
+    additional_filters: "Q | None",
 ) -> _ResolvedFeatureStates:
     """Read the feature states current for `environment`, split by what they override."""
     # Deferred: `environments.models` imports this module's package.
@@ -183,6 +186,8 @@ def _resolve_feature_states(
         # The identity is persisted (non-transient).
         # Look for its identity overrides in addition to segment overrides.
         override_filters = Q(identity=identity) | override_filters
+    if additional_filters:
+        override_filters &= additional_filters
 
     feature_states = get_environment_flags_list(
         environment=environment,

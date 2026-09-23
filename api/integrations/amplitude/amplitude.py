@@ -38,7 +38,7 @@ class AmplitudeWrapper(AbstractBaseIdentityIntegrationWrapper[AmplitudeUserData]
         feature_properties = {}
 
         for feature_state in feature_states:
-            value = feature_state.get_feature_state_value(identity=identity)
+            value = feature_state.evaluated_value
             feature_properties[feature_state.feature.name] = (
                 value
                 if (feature_state.enabled and value is not None)
