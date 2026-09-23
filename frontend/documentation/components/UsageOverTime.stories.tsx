@@ -20,7 +20,12 @@ const usage = (days: number, perDay: number): Res['organisationUsage'] => {
   const events = Array.from({ length: days }).map((_, index) => {
     const weight = DAY_WEIGHTS[index % DAY_WEIGHTS.length]
     return {
-      day: `2026-08-${`${index + 1}`.padStart(2, '0')}`,
+      // Relative to today, so the measured days run up to the projection
+      // rather than sitting a month behind it.
+      day: moment
+        .utc()
+        .subtract(days - 1 - index, 'days')
+        .format('YYYY-MM-DD'),
       environment_document: Math.round(perDay * weight * 0.04),
       flags: Math.round(perDay * weight * 0.63),
       identities: Math.round(perDay * weight * 0.24),

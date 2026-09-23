@@ -49,8 +49,6 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
     [cumulative, periodEndsAt, projectedTotal, showsProjection],
   )
 
-  const xAxisInterval = xAxisIntervalFor(daily.length)
-
   const chart = isBillingPeriod ? (
     <LineChart
       data={line}
@@ -64,9 +62,10 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
         cumulative: colorSurfaceAction,
         projected: colorTextSecondary,
       }}
-      xAxisInterval={xAxisInterval}
+      xAxisInterval={xAxisIntervalFor(line.length)}
       verticalGrid={false}
       height={320}
+      hideTooltipTotal={showsProjection}
       referenceLine={planLimitThreshold(limit)}
     />
   ) : (
@@ -75,7 +74,7 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
       series={['total']}
       seriesLabels={{ total: 'API calls' }}
       colorMap={{ total: colorSurfaceAction }}
-      xAxisInterval={xAxisInterval}
+      xAxisInterval={xAxisIntervalFor(daily.length)}
       verticalGrid={false}
       barSize={14}
     />

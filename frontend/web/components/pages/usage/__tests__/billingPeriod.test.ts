@@ -34,6 +34,8 @@ describe('billingPeriodCopy', () => {
       period('2026-06-21T00:00:00Z', '2026-07-21T06:00:00Z'),
     )
 
+    // The end is exclusive, but 21 July is still inside the period.
+    expect(copy?.range).toBe('21 Jun – 21 Jul 2026')
     expect(copy?.resets).toBe('Resets today · 21 Jul 2026')
     expect(copy?.daysLeft).toBe(0)
   })
@@ -57,5 +59,17 @@ describe('billingPeriodCopy', () => {
     )
 
     expect(copy?.daysLeft).toBe(0)
+    expect(copy?.resets).toBe('Ended 1 Jun 2026')
+  })
+
+  // Calendar days, not 24 hour blocks: less than a day can still be tomorrow.
+  it('counts a reset at midnight tonight as a day away', () => {
+    jest.setSystemTime(new Date('2026-07-21T18:00:00Z'))
+
+    const copy = billingPeriodCopy(
+      period('2026-06-22T00:00:00Z', '2026-07-22T00:00:00Z'),
+    )
+
+    expect(copy?.resets).toBe('Resets in 1 day · 22 Jul 2026')
   })
 })

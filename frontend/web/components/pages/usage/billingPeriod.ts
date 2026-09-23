@@ -22,19 +22,29 @@ export const billingPeriodCopy = (
     return undefined
   }
 
+  const now = moment.utc()
   const startFormat = starts.isSame(ends, 'year') ? 'D MMM' : 'D MMM YYYY'
-  // Inclusive: a period ending on the 1st runs through the last day of the
-  // month before it.
-  const lastDay = ends.clone().subtract(1, 'day')
-  const daysLeft = Math.max(ends.diff(moment.utc(), 'days'), 0)
+  // The end is exclusive, so the last instant inside it can fall on the same
+  // day when a term does not start at midnight.
+  const lastDay = ends.clone().subtract(1, 'millisecond')
+  // Calendar days, not whole 24 hour blocks: a reset at midnight tonight is
+  // still today, and one at midnight tomorrow is a day away.
+  const daysLeft = Math.max(
+    ends.clone().startOf('day').diff(now.clone().startOf('day'), 'days'),
+    0,
+  )
+
+  const reset = ends.format('D MMM YYYY')
+  const countdown =
+    daysLeft === 0
+      ? 'today'
+      : `in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`
 
   return {
     daysLeft,
     range: `${starts.format(startFormat)} – ${lastDay.format('D MMM YYYY')}`,
-    resets: `Resets ${
-      daysLeft === 0
-        ? 'today'
-        : `in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`
-    } · ${ends.format('D MMM YYYY')}`,
+    resets: ends.isAfter(now)
+      ? `Resets ${countdown} · ${reset}`
+      : `Ended ${reset}`,
   }
 }

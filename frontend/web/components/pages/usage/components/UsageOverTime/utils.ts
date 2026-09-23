@@ -4,8 +4,10 @@ import { colorBorderDanger } from 'common/theme/tokens'
 import Format from 'common/utils/format'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 
-export type DailyPoint = { day: string; total: number }
-export type CumulativePoint = { day: string; cumulative: number }
+// date is the raw day from the API, kept so the projection can tell how far
+// behind the last measurement is. day is only for the axis.
+export type DailyPoint = { date: string; day: string; total: number }
+export type CumulativePoint = { date: string; day: string; cumulative: number }
 
 export const dailyTotals = (
   data: Res['organisationUsage'] | undefined,
@@ -23,14 +25,18 @@ export const dailyTotals = (
 
   return [...byDay.entries()]
     .sort(([a], [b]) => (a < b ? -1 : 1))
-    .map(([day, total]) => ({ day: moment(day).format('D MMM'), total }))
+    .map(([date, total]) => ({
+      date,
+      day: moment(date).format('D MMM'),
+      total,
+    }))
 }
 
 export const cumulativeTotals = (daily: DailyPoint[]): CumulativePoint[] => {
   let running = 0
   return daily.map((point) => {
     running += point.total
-    return { cumulative: running, day: point.day }
+    return { cumulative: running, date: point.date, day: point.day }
   })
 }
 
@@ -55,24 +61,33 @@ export const withProjection = (
   periodEndsAt: string,
 ): ProjectedPoint[] => {
   const last = cumulative[cumulative.length - 1]
-  const end = moment.utc(periodEndsAt).startOf('day')
-  const daysAhead = end.diff(moment.utc().startOf('day'), 'days')
+  if (!last) {
+    return cumulative
+  }
 
-  if (!last || daysAhead <= 0) {
+  const from = moment.utc(last.date).startOf('day')
+  // periodEndsAt is exclusive, so the last day drawn is the one before it,
+  // matching the range the billing strip shows.
+  const end = moment.utc(periodEndsAt).subtract(1, 'millisecond').startOf('day')
+  // Counted from the last measurement, not from today: usage data lags, and
+  // anchoring on today would leave a gap and stretch the daily increment.
+  const daysAhead = end.diff(from, 'days')
+
+  if (!from.isValid() || daysAhead <= 0) {
     return cumulative
   }
 
   const step = (projectedTotal - last.cumulative) / daysAhead
 
-  const future = Array.from({ length: daysAhead }, (_, index) => ({
-    cumulative: null as unknown as number,
-    day: moment
-      .utc()
-      .startOf('day')
-      .add(index + 1, 'days')
-      .format('D MMM'),
-    projected: Math.round(last.cumulative + step * (index + 1)),
-  }))
+  const future = Array.from({ length: daysAhead }, (_, index) => {
+    const day = from.clone().add(index + 1, 'days')
+    return {
+      cumulative: null as unknown as number,
+      date: day.format('YYYY-MM-DD'),
+      day: day.format('D MMM'),
+      projected: Math.round(last.cumulative + step * (index + 1)),
+    }
+  })
 
   return [
     ...cumulative.slice(0, -1),

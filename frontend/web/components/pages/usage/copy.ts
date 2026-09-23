@@ -118,9 +118,10 @@ export const projectionNote = (
   periodEndsAt: string,
 ): string => {
   const landing = `On track to use ~${Format.shortenNumber(projection.total)}`
-  const share = projection.percentOfLimit
-    ? ` (${projection.percentOfLimit}% of your limit)`
-    : ''
+  const share =
+    projection.percentOfLimit === undefined
+      ? ''
+      : ` (${projection.percentOfLimit}% of your limit)`
   const by = ` by ${moment.utc(periodEndsAt).format('D MMM')}.`
 
   return projection.overLimit

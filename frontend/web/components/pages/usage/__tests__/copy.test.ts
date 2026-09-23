@@ -1,6 +1,7 @@
 import {
   overLimitBannerCopy,
   overLimitNote,
+  projectionNote,
   restrictedBannerCopy,
 } from 'components/pages/usage/copy'
 import { OverLimit, overLimitOf } from 'components/pages/usage/overLimit'
@@ -104,5 +105,44 @@ describe('usage copy', () => {
     expect(overLimitNote(exceeding(50001, 50000, days([50001])))).toBe(
       '1 call over your 50K limit.',
     )
+  })
+})
+
+describe('projectionNote', () => {
+  it('names the landing total, its share and the period end', () => {
+    expect(
+      projectionNote(
+        { overLimit: false, percentOfLimit: 94, total: 1900000 },
+        '2026-08-17T00:00:00Z',
+      ),
+    ).toBe('On track to use ~1.9M (94% of your limit) by 17 Aug.')
+  })
+
+  it('says so when the line lands over the limit', () => {
+    expect(
+      projectionNote(
+        { overLimit: true, percentOfLimit: 135, total: 2700000 },
+        '2026-10-08T00:00:00Z',
+      ),
+    ).toContain('That lands over your limit.')
+  })
+
+  // Rounding can put a real share at zero, which is not the same as no limit.
+  it('keeps a share of zero', () => {
+    expect(
+      projectionNote(
+        { overLimit: false, percentOfLimit: 0, total: 100 },
+        '2026-08-17T00:00:00Z',
+      ),
+    ).toBe('On track to use ~100 (0% of your limit) by 17 Aug.')
+  })
+
+  it('omits the share when there is no limit', () => {
+    expect(
+      projectionNote(
+        { overLimit: false, percentOfLimit: undefined, total: 100 },
+        '2026-08-17T00:00:00Z',
+      ),
+    ).toBe('On track to use ~100 by 17 Aug.')
   })
 })

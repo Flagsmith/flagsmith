@@ -192,10 +192,11 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
             isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
             periodLabel={selectedPeriod}
             projectedTotal={
-              // A project's share or another period has nothing to project to.
-              showsContribution(basis, billingPeriod, selectedProjectId)
-                ? undefined
-                : projection?.total
+              // Only the current period, organisation wide. A past period or a
+              // single project has nothing to project to.
+              billingPeriod === 'current_billing_period' && !selectedProjectId
+                ? projection?.total
+                : undefined
             }
             periodEndsAt={period?.ends_at}
           />

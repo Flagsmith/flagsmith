@@ -24,6 +24,7 @@ type LineChartProps = {
   showLegend?: boolean
   seriesLabels?: Record<string, string>
   dashedSeries?: string[]
+  hideTooltipTotal?: boolean
   verticalGrid?: boolean
   referenceLine?: Threshold
 }
@@ -53,6 +54,7 @@ const LineChart: FC<LineChartProps> = ({
   dashedSeries,
   data,
   height = 400,
+  hideTooltipTotal = false,
   referenceLine,
   series,
   seriesLabels,
@@ -89,7 +91,12 @@ const LineChart: FC<LineChartProps> = ({
         />
         <Tooltip
           cursor={{ stroke: colorTextSecondary, strokeDasharray: '3 3' }}
-          content={<ChartTooltip seriesLabels={seriesLabels} />}
+          content={
+            <ChartTooltip
+              seriesLabels={seriesLabels}
+              hideTotal={hideTooltipTotal}
+            />
+          }
         />
         {showLegend && (
           <Legend
