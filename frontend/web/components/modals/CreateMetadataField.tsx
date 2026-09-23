@@ -129,6 +129,8 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   >([])
   const [metadataUpdatedSelectList, setMetadataFieldUpdatedSelectList] =
     useState<metadataFieldUpdatedSelectListType[]>([])
+  const [saveError, setSaveError] = useState<unknown>(null)
+  const [orphanedAfterCreate, setOrphanedAfterCreate] = useState(false)
 
   const generateDataQuery = (
     contentType: number,
@@ -162,6 +164,9 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   }
 
   const save = async () => {
+    let orphanedField = false
+    setSaveError(null)
+    setOrphanedAfterCreate(false)
     try {
       if (isEdit) {
         await updateMetadataField({
@@ -226,6 +231,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           },
         }).unwrap()
         if (res?.id) {
+          orphanedField = true
           await Promise.all(
             metadataFieldSelectList.map(async (m) => {
               const query = generateDataQuery(
@@ -238,6 +244,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
               await createMetadataModelField(query).unwrap()
             }),
           )
+          orphanedField = false
         }
       }
       getStore().dispatch(
@@ -246,7 +253,8 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
       onComplete?.()
       closeModal()
     } catch (e) {
-      toast('Failed to save custom field', 'danger')
+      setSaveError(e)
+      setOrphanedAfterCreate(orphanedField)
     }
   }
 
@@ -353,7 +361,13 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
         }}
         metadataModelFieldList={metadataModelFieldList!}
       />
-      {errorCreating && <ErrorMessage error={errorCreating} />}
+      {orphanedAfterCreate ? (
+        <ErrorMessage error='The custom field was created but could not be bound to the selected entities. Ask an organisation administrator to finish the setup or remove the orphaned field.' />
+      ) : (
+        (saveError || errorCreating) && (
+          <ErrorMessage error={saveError || errorCreating} />
+        )
+      )}
       <Button
         disabled={!name || !typeValue || !metadataFieldSelectList}
         onClick={save}

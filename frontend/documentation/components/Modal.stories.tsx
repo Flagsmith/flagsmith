@@ -5,7 +5,7 @@ import ModalDefault from 'components/modals/base/ModalDefault'
 
 const meta: Meta = {
   parameters: {
-    chromatic: { delay: 300 },
+    chromatic: { delay: 300, disableSnapshot: false },
     docs: {
       description: {
         component:

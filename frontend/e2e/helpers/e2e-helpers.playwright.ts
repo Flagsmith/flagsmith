@@ -1,8 +1,11 @@
-import { Page, expect } from '@playwright/test';
-import { LONG_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith } from './utils.playwright';
+import { Locator, Page, expect } from '@playwright/test';
+
+// A CSS/data-test string, or a Locator built from role and accessible name.
+type SelectorOrLocator = string | Locator;
+import { LONG_TIMEOUT, SHORT_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith } from './utils.playwright';
 
 // Re-export for backwards compatibility
-export { LONG_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith };
+export { LONG_TIMEOUT, SHORT_TIMEOUT, byId, log, logUsingLastSection, getFlagsmith };
 
 
 export type MultiVariate = { value: string; weight: number };
@@ -18,13 +21,36 @@ export type Rule = {
 export class E2EHelpers {
   constructor(private page: Page) {}
 
+  // The value editors are selected by role and accessible name rather than a
+  // data-test. The label reads "Control Value" once the feature has variations,
+  // hence the alternation; the weight chip is a labelAfter sibling, so it stays
+  // out of the accessible name.
+  featureValueField(): Locator {
+    return this.page
+      .locator('#create-feature-modal')
+      .getByRole('textbox', { name: /^(Value|Control Value)$/ });
+  }
+
+  variationValueField(index: number): Locator {
+    return this.page.getByRole('textbox', { name: 'Variation Value' }).nth(index);
+  }
+
+  // The override's own label is "Value", or "Segment Control Value" once the
+  // feature has variations. Anchored, because getByRole matches the name as a
+  // substring and the row also holds read-only "Variation Value" editors.
+  segmentOverrideValueField(index: number): Locator {
+    return this.page
+      .locator(byId(`segment-override-${index}`))
+      .getByRole('textbox', { name: /^(Value|Segment Control Value)$/ });
+  }
+
   async isElementExists(selector: string): Promise<boolean> {
     return await this.page.locator(byId(selector)).count() > 0;
   }
 
-  async setText(selector: string, text: string) {
+  async setText(selector: SelectorOrLocator, text: string) {
     logUsingLastSection(`Set text ${selector} : ${text}`);
-    const element = this.page.locator(selector).first();
+    const element = typeof selector === 'string' ? this.page.locator(selector).first() : selector;
     await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await element.clear();
     if (text) {
@@ -32,12 +58,33 @@ export class E2EHelpers {
     }
   }
 
-  async waitForElementVisible(selector: string, timeout: number = LONG_TIMEOUT) {
+  async waitForElementVisible(selector: SelectorOrLocator, timeout: number = LONG_TIMEOUT) {
     logUsingLastSection(`Waiting element visible ${selector}`);
-    await this.page.locator(selector).first().waitFor({
+    const element = typeof selector === 'string' ? this.page.locator(selector).first() : selector;
+    await element.waitFor({
       state: 'visible',
       timeout
     });
+  }
+
+  // Asserts a navbar link is reachable. A link can either be shown inline, or
+  // collapsed into the OverflowNav "more" menu when the navbar runs out of
+  // horizontal space (e.g. when a feature flag adds an extra item). Try inline
+  // first; if it isn't visible, open the overflow menu and retry. Only fails if
+  // the link is reachable via neither.
+  async waitForNavElementVisible(selector: string) {
+    logUsingLastSection(`Waiting nav element visible (inline or overflow) ${selector}`);
+    const element = this.page.locator(selector).first();
+    try {
+      await element.waitFor({ state: 'visible', timeout: SHORT_TIMEOUT });
+      return;
+    } catch {
+      const overflowButton = this.page.locator(byId('overflow-nav-button')).first();
+      if (await overflowButton.isVisible()) {
+        await overflowButton.click();
+      }
+      await element.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    }
   }
 
   async waitForElementNotClickable(selector: string) {
@@ -249,7 +296,7 @@ export class E2EHelpers {
     await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await featureRow.dispatchEvent('click');
     await this.waitForElementVisible('#create-feature-modal');
-    await this.waitForElementVisible(byId('featureValue'));
+    await this.waitForElementVisible(this.featureValueField());
   }
 
   // Create a feature
@@ -276,7 +323,7 @@ export class E2EHelpers {
     await this.gotoFeatures();
     await this.click('#show-create-feature-btn');
     await this.setText(byId('featureID'), name);
-    await this.setText(byId('featureValue'), `${value}`);
+    await this.setText(this.featureValueField(), `${value}`);
     await this.setText(byId('featureDesc'), description);
     if (!defaultOff) {
       await this.click(byId('toggle-feature-button'));
@@ -285,7 +332,7 @@ export class E2EHelpers {
       const v = mvs[i];
       await this.click(byId('add-variation'));
       await this.page.waitForTimeout(200);
-      await this.setText(byId(`featureVariationValue${i}`), v.value);
+      await this.setText(this.variationValueField(i), v.value);
       await this.setText(byId(`featureVariationWeight${v.value}`), `${v.weight}`);
       await this.page.waitForTimeout(100);
     }
@@ -517,8 +564,22 @@ export class E2EHelpers {
     topLevelRuleType: 'ALL' | 'ANY' = 'ALL',
   ) {
     await this.click(byId('show-create-segment-btn'));
-    await this.setText(byId('segmentID'), name);
     const flagsmith = await getFlagsmith();
+    const segmentSources = flagsmith.getValue(
+      'create_segment_with_external_sources',
+      {
+        fallback: null,
+        json: true,
+      },
+    );
+    if (
+      flagsmith.hasFeature('create_segment_with_external_sources') &&
+      Array.isArray(segmentSources) &&
+      segmentSources.some((source) => source?.visible !== false)
+    ) {
+      await this.click(byId('create-segment-manually'));
+    }
+    await this.setText(byId('segmentID'), name);
     if (flagsmith.hasFeature('segment_any_rule_type')) {
       await this.click(byId(`top-level-rule-type-${topLevelRuleType}`));
     }
@@ -554,7 +615,7 @@ export class E2EHelpers {
       await this.click(byId('segment_overrides'));
     }
     await this.click(dropdownSelector);
-    await this.waitForElementVisible(byId(`segment-override-value-${index}`));
+    await this.waitForElementVisible(this.segmentOverrideValueField(index));
   }
 
   // Add segment override for boolean flags
@@ -577,7 +638,7 @@ export class E2EHelpers {
   // Add segment override for remote configs
   async addSegmentOverrideConfig(index: number, value: string | number | boolean, selectionIndex: number = 0) {
     await this.openSegmentOverride(index, selectionIndex);
-    await this.setText(byId(`segment-override-value-${index}`), `${value}`);
+    await this.setText(this.segmentOverrideValueField(index), `${value}`);
     await this.click(byId(`segment-override-toggle-${index}`));
   }
 
@@ -597,7 +658,7 @@ export class E2EHelpers {
     await featureRow.dispatchEvent('click');
     await this.waitForElementVisible(byId('update-feature-btn'));
     if (value !== '') {
-      await this.setText(byId('featureValue'), `${value}`);
+      await this.setText(this.featureValueField(), `${value}`);
     }
     if (mvs.length > 0) {
       await this.page.waitForTimeout(500);
@@ -622,6 +683,32 @@ export class E2EHelpers {
     await this.waitForToastsToClear();
     await this.click(byId('update-feature-btn'));
     await this.waitForToast();
+    await this.closeModal();
+    await this.waitForElementNotExist('#create-feature-modal');
+  }
+
+  // Edit a variant's label (the multivariate option key) and verify it persists
+  async editVariantLabel(featureName: string, index: number, label: string) {
+    await this.gotoFeatures();
+    const featureRow = this.page.locator('[data-test^="feature-item-"]').filter({
+      has: this.page.locator(`span:text-is("${featureName}")`)
+    }).first();
+    await featureRow.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
+    await featureRow.dispatchEvent('click');
+    await this.waitForElementVisible(byId('update-feature-btn'));
+    await this.click(byId(`featureVariationKeyEdit${index}`));
+    await this.setText(byId(`featureVariationKeyInput${index}`), label);
+    await this.click(byId(`featureVariationKeySave${index}`));
+    await expect(this.page.locator(byId(`featureVariationKey${index}`))).toHaveText(label);
+    await this.waitForToastsToClear();
+    await this.click(byId('update-feature-btn'));
+    await this.waitForToast();
+    await this.closeModal();
+    await this.waitForElementNotExist('#create-feature-modal');
+    // Reopen the feature and verify the label was saved
+    await featureRow.dispatchEvent('click');
+    await this.waitForElementVisible(byId('update-feature-btn'));
+    await expect(this.page.locator(byId(`featureVariationKey${index}`))).toHaveText(label);
     await this.closeModal();
     await this.waitForElementNotExist('#create-feature-modal');
   }
@@ -872,11 +959,20 @@ export class E2EHelpers {
     if (entityName) {
       await this.click(byId(`permissions-${entityName.toLowerCase()}`));
     }
+    // Wait for the permission save (POST/PUT) to commit before closing, so a later read can't race the grant.
+    const savePromise = this.page.waitForResponse(
+      (res) =>
+        res.url().includes('/user-permissions/') &&
+        ['POST', 'PUT'].includes(res.request().method()) &&
+        res.ok(),
+      { timeout: LONG_TIMEOUT },
+    );
     if (permission === 'ADMIN') {
       await this.click(byId(`admin-switch-${level}`));
     } else {
       await this.click(byId(`permission-switch-${permission}`));
     }
+    await savePromise;
     await this.closeModal();
   }
 
@@ -1034,7 +1130,7 @@ export class E2EHelpers {
     log(`Create change request: ${title}`);
 
     // Click the update/create change request button
-    // When 4-eyes is enabled, this button says "Create Change Request"
+    // When four-eyes is enabled, this button says "Create Change Request"
     await this.click('#update-feature-btn');
     await this.page.waitForTimeout(1000);
 

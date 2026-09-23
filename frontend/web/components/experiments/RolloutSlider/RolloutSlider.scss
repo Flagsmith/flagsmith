@@ -1,0 +1,123 @@
+.rollout-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 4px 32px;
+
+  &__field {
+    position: relative;
+    align-self: flex-start;
+
+    .input-container {
+      width: 64px;
+      margin: 0;
+    }
+  }
+
+  &__field-input {
+    -moz-appearance: textfield;
+    appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+
+  &__field .input-container.input-underline input.rollout-slider__field-input {
+    padding-right: 22px;
+  }
+
+  &__field-suffix {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    color: var(--color-text-secondary);
+    pointer-events: none;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  &__track {
+    position: relative;
+    width: 70%;
+  }
+
+  &__input {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--color-text-action);
+      border: 2px solid var(--color-surface-default);
+      box-shadow: var(--shadow-sm);
+    }
+
+    &::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--color-surface-default);
+      border-radius: 50%;
+      background: var(--color-text-action);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+
+  &__ticks {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+  }
+
+  &__tick {
+    position: absolute;
+    transform: translateX(-50%);
+    width: 25%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 0 6px;
+    appearance: none;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+
+    &:hover .rollout-slider__tick-mark {
+      background: var(--color-text-action);
+    }
+
+    &:hover .rollout-slider__tick-label {
+      color: var(--color-text-default);
+    }
+  }
+
+  &__tick-mark {
+    width: 2px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--color-border-default);
+  }
+
+  &__tick-label {
+    font-size: var(--font-caption-size);
+    color: var(--color-text-secondary);
+  }
+}

@@ -7,6 +7,7 @@ from typing import TypeAlias
 from django.utils import timezone
 
 from environments.identities.models import Identity
+from environments.identities.services import replace_identity_environment
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from environments.sdk.types import SDKTraitData
@@ -49,6 +50,7 @@ def get_identified_transient_identity_and_traits(
         environment=environment,
         identifier=identifier,
     ).first():
+        replace_identity_environment(identity, environment)
         return identity, identity.update_traits(sdk_trait_data)
     return (
         identity := _get_transient_identity(
@@ -72,6 +74,7 @@ def get_persisted_identity_and_traits(
         environment=environment,
         identifier=identifier,
     )
+    replace_identity_environment(identity, environment)
     persist_trait_data = environment.project.organisation.persist_trait_data
     if created:
         return identity, identity.generate_traits(

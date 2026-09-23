@@ -4,8 +4,9 @@ from decimal import Decimal
 import pytest
 from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.types import Binary
+from botocore.exceptions import ClientError
 from django.core.exceptions import ObjectDoesNotExist
-from flag_engine.segments.constants import IN
+from flag_engine.segments.constants import IN, IS_SET
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -18,8 +19,14 @@ from edge_api.identities.search import (
     EdgeIdentitySearchType,
 )
 from environments.dynamodb import DynamoIdentityWrapper
-from environments.dynamodb.wrappers.exceptions import CapacityBudgetExceeded
+from environments.dynamodb.wrappers.exceptions import (
+    CapacityBudgetExceeded,
+    SystemTraitWriteRaceError,
+)
 from environments.identities.models import Identity
+from environments.identities.traits.constants import (
+    TRAIT_STRING_VALUE_MAX_LENGTH,
+)
 from environments.identities.traits.models import Trait
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import (
@@ -396,6 +403,55 @@ def test_get_segment_ids__segment_with_feature_overrides__returns_correct_ids(
     assert segment_ids == [identity_matching_segment.id]
 
 
+def test_get_segment_ids__system_trait_backed_segment__returns_correct_ids(
+    project: "Project",
+    environment: "Environment",
+    identity: "Identity",
+    mocker: "MockerFixture",
+) -> None:
+    # Given - two IS_SET segments: one keyed to a system trait the identity
+    # carries, one keyed to a system trait it does not
+    member_segment = Segment.objects.create(name="Cohort members", project=project)
+    rule = SegmentRule.objects.create(segment=member_segment, type=SegmentRule.ALL_RULE)
+    Condition.objects.create(rule=rule, operator=IS_SET, property="flagsmith_cohort_a")
+    other_segment = Segment.objects.create(name="Other cohort", project=project)
+    other_rule = SegmentRule.objects.create(
+        segment=other_segment, type=SegmentRule.ALL_RULE
+    )
+    Condition.objects.create(
+        rule=other_rule, operator=IS_SET, property="flagsmith_cohort_b"
+    )
+
+    identity_document = map_identity_to_identity_document(identity)
+    identity_document["system_traits"] = {"flagsmith_cohort_a": True}
+    identity_uuid = identity_document["identity_uuid"]
+
+    dynamo_identity_wrapper = DynamoIdentityWrapper()
+    mocker.patch.object(
+        dynamo_identity_wrapper, "get_item_from_uuid", return_value=identity_document
+    )
+
+    # When
+    segment_ids = dynamo_identity_wrapper.get_segment_ids(identity_uuid)  # type: ignore[arg-type]
+
+    # Then
+    assert segment_ids == [member_segment.id]
+
+
+def test_set_system_trait__oversized_string_value__raises() -> None:
+    # Given
+    wrapper = DynamoIdentityWrapper()
+
+    # When / Then
+    with pytest.raises(ValueError):
+        wrapper.set_system_trait(
+            environment_api_key="key",
+            identifier="user",
+            trait_key="flagsmith_cohort_a",
+            trait_value="x" * (TRAIT_STRING_VALUE_MAX_LENGTH + 1),
+        )
+
+
 def test_get_segment_ids__in_operator_with_integer_traits__returns_matching_segment(
     project: "Project", environment: "Environment", mocker: "MockerFixture"
 ) -> None:
@@ -693,3 +749,388 @@ def test_delete_all_identities__multiple_identities__deletes_only_matching_envir
     # Then
     assert flagsmith_identities_table.scan()["Count"] == 1
     assert flagsmith_identities_table.scan()["Items"][0] == identity_three
+
+
+def test_set_system_trait__document_with_system_traits__sets_only_given_key(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "identity_traits": [{"trait_key": "plan", "trait_value": "pro"}],
+            "system_traits": {"other": True},
+        }
+    )
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+    )
+
+    # Then
+    document = dynamodb_identity_wrapper.get_item("api-key_user-1")
+    assert document is not None
+    assert document["system_traits"] == {"other": True, "cohort_x": True}
+    assert document["identity_traits"] == [{"trait_key": "plan", "trait_value": "pro"}]
+
+
+def test_set_system_trait__document_without_system_traits__creates_system_traits(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+        }
+    )
+    read_spy = mocker.spy(dynamodb_identity_wrapper.table, "get_item")
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+    )
+
+    # Then
+    assert read_spy.call_count == 1
+    document = dynamodb_identity_wrapper.get_item("api-key_user-1")
+    assert document is not None
+    assert document["system_traits"] == {"cohort_x": True}
+
+
+def test_set_system_trait__null_system_traits__replaces_with_map(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given - a document written with `system_traits: null` by another service
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "identity_traits": [{"trait_key": "plan", "trait_value": "pro"}],
+            "system_traits": None,
+        }
+    )
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+    )
+
+    # Then
+    document = dynamodb_identity_wrapper.get_item("api-key_user-1")
+    assert document is not None
+    assert document["system_traits"] == {"cohort_x": True}
+    assert document["identity_traits"] == [{"trait_key": "plan", "trait_value": "pro"}]
+
+
+def test_set_system_trait__missing_document__creates_document(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    composite_key = "api-key_user-1"
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+    )
+
+    # Then
+    document = dynamodb_identity_wrapper.get_item(composite_key)
+    assert document is not None
+    assert document["identifier"] == "user-1"
+    assert document["system_traits"] == {"cohort_x": True}
+
+
+def test_set_system_trait__system_traits_created_concurrently__merges_into_existing(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    # The table holds a document whose system_traits appeared after the
+    # wrapper's first read (simulated by a stale first response without them).
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "system_traits": {"other": True},
+        }
+    )
+    real_get_item = dynamodb_identity_wrapper.table.get_item  # type: ignore[union-attr]
+    stale_responses: typing.Iterator[dict[str, typing.Any]] = iter(
+        [
+            {
+                "Item": {
+                    "composite_key": "api-key_user-1",
+                    "identifier": "user-1",
+                    "environment_api_key": "api-key",
+                }
+            }
+        ]
+    )
+    mocker.patch.object(
+        dynamodb_identity_wrapper.table,
+        "get_item",
+        side_effect=lambda **kwargs: next(stale_responses, real_get_item(**kwargs)),
+    )
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+    )
+
+    # Then
+    document = real_get_item(Key={"composite_key": "api-key_user-1"})["Item"]
+    assert document["system_traits"] == {"other": True, "cohort_x": True}
+
+
+def test_set_system_trait__custom_trait_value__written_to_document(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "system_traits": {"cohort_x": True},
+        }
+    )
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key",
+        identifier="user-1",
+        trait_key="score",
+        trait_value=0.5,
+    )
+
+    # Then
+    document = dynamodb_identity_wrapper.get_item("api-key_user-1")
+    assert document is not None
+    assert document["system_traits"] == {"cohort_x": True, "score": Decimal("0.5")}
+
+
+def test_set_system_trait__value_changed__overwrites(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "system_traits": {"tier": "silver"},
+        }
+    )
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key",
+        identifier="user-1",
+        trait_key="tier",
+        trait_value="gold",
+    )
+
+    # Then
+    document = dynamodb_identity_wrapper.get_item("api-key_user-1")
+    assert document is not None
+    assert document["system_traits"] == {"tier": "gold"}
+
+
+def test_set_system_trait__already_set__skips_write(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "system_traits": {"cohort_x": True},
+        }
+    )
+    update_mock = mocker.patch.object(dynamodb_identity_wrapper.table, "update_item")
+    put_mock = mocker.patch.object(dynamodb_identity_wrapper.table, "put_item")
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+    )
+
+    # Then
+    update_mock.assert_not_called()
+    put_mock.assert_not_called()
+
+
+def test_set_system_trait__stale_missing_document_read__retries_and_merges(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "system_traits": {"other": True},
+        }
+    )
+    real_get_item = dynamodb_identity_wrapper.table.get_item  # type: ignore[union-attr]
+    stale_responses: typing.Iterator[dict[str, typing.Any]] = iter([{}])
+    mocker.patch.object(
+        dynamodb_identity_wrapper.table,
+        "get_item",
+        side_effect=lambda **kwargs: next(stale_responses, real_get_item(**kwargs)),
+    )
+
+    # When
+    dynamodb_identity_wrapper.set_system_trait(
+        environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+    )
+
+    # Then
+    document = real_get_item(Key={"composite_key": "api-key_user-1"})["Item"]
+    assert document["system_traits"] == {"other": True, "cohort_x": True}
+
+
+def test_set_system_trait__conditional_writes_keep_losing__raises(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+        }
+    )
+    real_get_item = dynamodb_identity_wrapper.table.get_item  # type: ignore[union-attr]
+    mocker.patch.object(dynamodb_identity_wrapper.table, "get_item", return_value={})
+
+    # When
+    with pytest.raises(SystemTraitWriteRaceError):
+        dynamodb_identity_wrapper.set_system_trait(
+            environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+        )
+
+    # Then
+    document = real_get_item(Key={"composite_key": "api-key_user-1"})["Item"]
+    assert "system_traits" not in document
+
+
+def test_set_system_trait__unexpected_client_error__reraises(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch.object(
+        dynamodb_identity_wrapper.table,
+        "put_item",
+        side_effect=ClientError({"Error": {"Code": "ValidationException"}}, "PutItem"),
+    )
+
+    # When
+    with pytest.raises(ClientError) as exc_info:
+        dynamodb_identity_wrapper.set_system_trait(
+            environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+        )
+
+    # Then
+    assert exc_info.value.response["Error"]["Code"] == "ValidationException"
+
+
+def test_unset_system_trait__member__removes_only_given_key(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "identity_traits": [{"trait_key": "plan", "trait_value": "pro"}],
+            "system_traits": {"cohort_x": True, "other": True},
+        }
+    )
+
+    # When
+    dynamodb_identity_wrapper.unset_system_trait(
+        environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+    )
+
+    # Then
+    document = dynamodb_identity_wrapper.get_item("api-key_user-1")
+    assert document is not None
+    assert document["system_traits"] == {"other": True}
+    assert document["identity_traits"] == [{"trait_key": "plan", "trait_value": "pro"}]
+
+
+def test_unset_system_trait__missing_document__no_ghost_document(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    composite_key = "api-key_never-seen"
+
+    # When
+    dynamodb_identity_wrapper.unset_system_trait(
+        environment_api_key="api-key", identifier="never-seen", trait_key="cohort_x"
+    )
+
+    # Then
+    assert dynamodb_identity_wrapper.get_item(composite_key) is None
+
+
+def test_unset_system_trait__unexpected_client_error__reraises(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch.object(
+        dynamodb_identity_wrapper.table,
+        "update_item",
+        side_effect=ClientError(
+            {"Error": {"Code": "ValidationException"}}, "UpdateItem"
+        ),
+    )
+
+    # When
+    with pytest.raises(ClientError) as exc_info:
+        dynamodb_identity_wrapper.unset_system_trait(
+            environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+        )
+
+    # Then
+    assert exc_info.value.response["Error"]["Code"] == "ValidationException"
+
+
+def test_unset_system_trait__trait_absent__no_error(
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+) -> None:
+    # Given
+    dynamodb_identity_wrapper.put_item(
+        {
+            "composite_key": "api-key_user-1",
+            "identifier": "user-1",
+            "environment_api_key": "api-key",
+            "system_traits": {"other": True},
+        }
+    )
+
+    # When
+    dynamodb_identity_wrapper.unset_system_trait(
+        environment_api_key="api-key", identifier="user-1", trait_key="cohort_x"
+    )
+
+    # Then
+    document = dynamodb_identity_wrapper.get_item("api-key_user-1")
+    assert document is not None
+    assert document["system_traits"] == {"other": True}

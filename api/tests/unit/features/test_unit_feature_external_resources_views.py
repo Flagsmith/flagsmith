@@ -934,3 +934,31 @@ def test_create_feature_external_resource__duplicate_feature_and_url__returns_40
         response.json()["non_field_errors"][0]
         == "The fields feature, url must make a unique set."
     )
+
+
+def test_list_feature_external_resources__feature_in_other_project__returns_404(
+    admin_client: APIClient,
+    project: Project,
+    organisation_two_project_one: Project,
+) -> None:
+    # Given
+    feature = Feature.objects.create(
+        name="feature", project=organisation_two_project_one
+    )
+    FeatureExternalResource.objects.create(
+        url="https://gitlab.com/owner/repo/-/issues/1",
+        type="GITLAB_ISSUE",
+        feature=feature,
+        metadata='{"status": "open"}',
+    )
+
+    url = (
+        f"/api/v1/projects/{project.id}"
+        f"/features/{feature.id}/feature-external-resources/"
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND

@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Annotated, Any, Iterable, cast
 
 from django.http import HttpRequest
@@ -8,6 +8,7 @@ from pydantic import BeforeValidator, Field, create_model
 from app_analytics.constants import (
     LABELS,
     SDK_INFLUX_IDS_BY_USER_AGENT,
+    SDK_USER_AGENT_HEADERS,
     SDK_USER_AGENT_KNOWN_VERSIONS,
     SDK_USER_AGENTS_BY_INFLUX_ID,
     TRACK_HEADERS,
@@ -17,6 +18,7 @@ from app_analytics.models import FeatureEvaluationRaw, Resource
 from app_analytics.types import (
     AnnotatedAPIUsageBucket,
     AnnotatedAPIUsageKey,
+    DailyUsageData,
     FeatureEvaluationCacheKey,
     InputLabels,
     KnownSDK,
@@ -36,10 +38,19 @@ def map_user_agent_to_sdk_user_agent(value: str) -> str | None:
     return None
 
 
+def map_request_to_sdk_label(request: HttpRequest) -> KnownSDK | None:
+    for header in SDK_USER_AGENT_HEADERS:
+        if (value := request.headers.get(header)) and (
+            sdk_user_agent := map_user_agent_to_sdk_user_agent(value)
+        ):
+            return cast(KnownSDK, sdk_user_agent.partition("/")[0])
+    return None
+
+
 _request_header_labels_model_fields: dict[str, Any] = {
     str(label): (
         Annotated[str | None, BeforeValidator(map_user_agent_to_sdk_user_agent)]
-        if label in ("user_agent", "sdk_user_agent")
+        if header in SDK_USER_AGENT_HEADERS
         else str | None,
         Field(default=None, alias=header),
     )
@@ -132,15 +143,47 @@ def map_flux_tables_to_usage_data(
                     day=date,
                     labels=labels,
                 )
-            if (resource := Resource.get_from_name(values["resource"])) and (
-                resource_attr := resource.column_name
+            if (
+                (value := values["_value"]) is not None
+                and (resource := Resource.get_from_name(values["resource"]))
+                and (resource_attr := resource.column_name)
             ):
                 setattr(
                     data_by_key[key],
                     resource_attr,
-                    values["_value"],
+                    value,
                 )
     return list(data_by_key.values())
+
+
+USAGE_DATA_RESOURCE_ATTRIBUTES: tuple[str, ...] = tuple(
+    column_name for resource in Resource if (column_name := resource.column_name)
+)
+
+
+def map_usage_data_to_daily_totals(
+    usage_data: Iterable[UsageData],
+) -> DailyUsageData:
+    """
+    Collapse usage data into a single total per day for each resource.
+
+    Usage data holds a row per day *and* labels combination, so a day with
+    traffic from more than one client application appears more than once. Any
+    caller wanting whole-organisation totals has to sum across those rows.
+    """
+    totals_by_date: defaultdict[str, Counter[str]] = defaultdict(Counter)
+    for data in usage_data:
+        for resource_attr in USAGE_DATA_RESOURCE_ATTRIBUTES:
+            totals_by_date[str(data.day)][resource_attr] += getattr(data, resource_attr)
+
+    dates = sorted(totals_by_date)
+    return DailyUsageData(
+        dates=dates,
+        daily_totals_by_resource={
+            resource_attr: [totals_by_date[date][resource_attr] for date in dates]
+            for resource_attr in USAGE_DATA_RESOURCE_ATTRIBUTES
+        },
+    )
 
 
 def map_flux_tables_to_feature_evaluation_data(
@@ -149,7 +192,7 @@ def map_flux_tables_to_feature_evaluation_data(
     return [
         FeatureEvaluationData(
             day=(values := record.values)["_time"].date(),
-            count=values["_value"],
+            count=values["_value"] or 0,
             labels=map_influx_record_values_to_labels(values),
         )
         for flux_table in flux_tables

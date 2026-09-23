@@ -1,6 +1,6 @@
 import pytest
 
-from util.util import iter_chunked_concat, iter_paired_chunks
+from util.util import batched, iter_chunked_concat, iter_paired_chunks
 
 
 def test_iter_paired_chunks__both_empty__returns_empty_list() -> None:
@@ -121,3 +121,24 @@ def test_iter_chunked_concat__various_inputs__returns_expected_chunks(
 
     # Then
     assert list(result) == expected_result
+
+
+def test_batched__empty_iterable__yields_nothing() -> None:
+    # Given an empty iterable
+    # When batched
+    # Then no batches are yielded
+    assert list(batched([], 3)) == []
+
+
+def test_batched__exact_multiple__yields_full_batches() -> None:
+    # Given an iterable whose length is a multiple of the batch size
+    # When batched
+    # Then every batch is full
+    assert list(batched(range(6), 2)) == [[0, 1], [2, 3], [4, 5]]
+
+
+def test_batched__remainder__yields_smaller_final_batch() -> None:
+    # Given an iterable whose length isn't a multiple of the batch size
+    # When batched
+    # Then the final batch carries the remainder
+    assert list(batched([1, 2, 3, 4, 5], 2)) == [[1, 2], [3, 4], [5]]

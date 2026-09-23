@@ -32,6 +32,7 @@ from webhooks.webhooks import WebhookEventType
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
+    from features.multivariate.models import MultivariateFeatureStateValue
 
 
 logger = logging.getLogger(__name__)
@@ -135,6 +136,16 @@ def _create_initial_feature_versions(environment: "Environment"):  # type: ignor
         )
 
 
+def _get_multivariate_values(
+    feature_state: FeatureState,
+) -> list["MultivariateFeatureStateValue"]:
+    return list(
+        feature_state.multivariate_feature_state_values.select_related(
+            "multivariate_feature_option"
+        ).all()
+    )
+
+
 def _trigger_feature_state_webhooks_for_version(
     environment_feature_version: EnvironmentFeatureVersion,
 ) -> None:
@@ -182,6 +193,7 @@ def _trigger_feature_state_webhooks_for_version(
             identity_id=feature_state.identity_id,
             identity_identifier=getattr(feature_state.identity, "identifier", None),
             feature_segment=feature_state.feature_segment,
+            multivariate_feature_state_values=_get_multivariate_values(feature_state),
         )
 
         # Build webhook data
@@ -210,6 +222,7 @@ def _trigger_feature_state_webhooks_for_version(
                 identity_id=previous_fs.identity_id,
                 identity_identifier=getattr(previous_fs.identity, "identifier", None),
                 feature_segment=previous_fs.feature_segment,
+                multivariate_feature_state_values=_get_multivariate_values(previous_fs),
             )
             data["previous_state"] = previous_state
 

@@ -1,28 +1,27 @@
 import Constants from 'common/constants'
 
-export default (
-  envId,
-  { FEATURE_NAME, FEATURE_NAME_ALT },
-  customFeature,
-) => `using Flagsmith;
+// FlagsmithClient takes a FlagsmithConfiguration, not an environment key, and
+// top-level statements reject `static` on a declaration (error CS0106).
+export default (envId, { FEATURE_NAME, FEATURE_NAME_ALT }) => `using Flagsmith;
 
-static FlagsmithClient _flagsmithClient;
-
-_flagsmithClient = new("${envId}"${
+var flagsmithClient = new FlagsmithClient(new FlagsmithConfiguration
+{
+    EnvironmentKey = "${envId}",${
   Constants.isCustomFlagsmithUrl()
-    ? `, apiUrl: "${Constants.getFlagsmithSDKUrl()}"`
+    ? `\n    ApiUri = new Uri("${Constants.getFlagsmithSDKUrl()}"),`
     : ''
+}
 });
 
-var flags = await _flagsmithClient.GetEnvironmentFlags();  # This method triggers a network request
+// The method below triggers a network request
+var flags = await flagsmithClient.GetEnvironmentFlags();
 
-// Check for a feature
-var isEnabled = await flags.IsFeatureEnabled("${
-  customFeature || FEATURE_NAME
-}");
-
-// Or, use the value of a feature
+// Check whether the feature is enabled, or read its value
+var isEnabled = await flags.IsFeatureEnabled("${FEATURE_NAME}");
 var featureValue = await flags.GetFeatureValue("${
-  customFeature || FEATURE_NAME_ALT
+  FEATURE_NAME_ALT || FEATURE_NAME
 }");
+
+Console.WriteLine($"${FEATURE_NAME} enabled: {isEnabled}");
+Console.WriteLine($"${FEATURE_NAME_ALT || FEATURE_NAME} value: {featureValue}");
 `

@@ -1,14 +1,17 @@
 import logging
 
 from common.projects.permissions import VIEW_PROJECT
+from django.db import transaction
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
 
 from environments.models import Environment
+from features.dependencies.services import validate_segment_flag_dependencies
 from features.feature_segments.serializers import (
     FeatureSegmentChangePrioritiesSerializer,
     FeatureSegmentCreateSerializer,
@@ -27,7 +30,20 @@ logger = logging.getLogger(__name__)
 
 @method_decorator(
     name="list",
-    decorator=extend_schema(parameters=[FeatureSegmentQuerySerializer]),
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[FeatureSegmentQuerySerializer],
+        operation_id="list_feature_segments",
+        description="Lists segment overrides for a feature in an environment.",
+    ),
+)
+@method_decorator(
+    name="destroy",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="delete_feature_segment",
+        description="Deletes a segment override. Applies to environments without v2 feature versioning (use_v2_feature_versioning: false).",
+    ),
 )
 class FeatureSegmentViewSet(
     viewsets.ModelViewSet,  # type: ignore[type-arg]
@@ -65,6 +81,11 @@ class FeatureSegmentViewSet(
             return queryset.select_related("segment").filter(**filter_serializer.data)
 
         return queryset
+
+    @transaction.atomic
+    def perform_create(self, serializer: BaseSerializer[FeatureSegment]) -> None:
+        feature_segment = serializer.save()
+        validate_segment_flag_dependencies(feature_segment.segment)
 
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action in ["create", "update", "partial_update"]:

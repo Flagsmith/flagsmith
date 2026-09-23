@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Set, Union
+from typing import TYPE_CHECKING, Set, Union
 
 from django.conf import settings
 from django.db.models import Q, QuerySet
@@ -6,6 +6,7 @@ from django.db.models import Q, QuerySet
 from environments.models import Environment
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
+from telemetry.spans import set_span_attribute
 
 from .rbac_wrapper import (  # type: ignore[attr-defined]
     get_permitted_environments_for_master_api_key_using_roles,
@@ -20,11 +21,30 @@ if TYPE_CHECKING:
     from users.models import FFAdminUser
 
 
+def get_active_membership_filter(user: "FFAdminUser", prefix: str = "") -> Q:
+    """
+    Build a filter matching objects related to an organisation that `user` is an
+    active member of.
+
+    Deactivated memberships (`UserOrganisation.is_active=False`) are excluded, so
+    this must be used in place of traversing the `Organisation.users` M2M.
+
+    `prefix` is the query path to the organisation, e.g. `"project__organisation__"`.
+    """
+    return Q(
+        **{
+            f"{prefix}userorganisation__user": user,
+            f"{prefix}userorganisation__is_active": True,
+        }
+    )
+
+
 def is_user_organisation_admin(
     user: "FFAdminUser", organisation: Union[Organisation, int]
 ) -> bool:
     user_organisation = user.get_user_organisation(organisation)
-    if user_organisation is not None:
+    if user_organisation is not None and user_organisation.is_active:
+        set_span_attribute("organisation.id", user_organisation.organisation_id)
         return user_organisation.role == OrganisationRole.ADMIN.name
     return False
 
@@ -62,7 +82,7 @@ def is_master_api_key_environment_admin(
 def get_permitted_projects_for_user(
     user: "FFAdminUser",
     permission_key: str,
-    tag_ids: List[int] = None,  # type: ignore[assignment]
+    tag_ids: list[int] | None = None,
 ) -> QuerySet[Project]:
     """
     Get all projects that the user has the given permissions for.
@@ -91,6 +111,7 @@ def get_permitted_projects_for_user(
     admin_organisations_filter = Q(
         organisation__userorganisation__user=user,
         organisation__userorganisation__role=OrganisationRole.ADMIN.name,
+        organisation__userorganisation__is_active=True,
     )
     project_ids_from_admin_organisations = Project.objects.filter(
         admin_organisations_filter
@@ -102,7 +123,7 @@ def get_permitted_projects_for_user(
     queryset = Project.objects.filter(id__in=project_ids)
 
     # Final check to ensure that the user is a member of the organisation
-    queryset = queryset.filter(organisation__users=user)
+    queryset = queryset.filter(get_active_membership_filter(user, "organisation__"))
 
     return queryset
 
@@ -110,7 +131,7 @@ def get_permitted_projects_for_user(
 def get_permitted_projects_for_master_api_key(
     master_api_key: "MasterAPIKey",
     permission_key: str,
-    tag_ids: List[int] = None,  # type: ignore[assignment]
+    tag_ids: list[int] | None = None,
 ) -> QuerySet[Project]:
     if master_api_key.is_admin:
         return Project.objects.filter(organisation_id=master_api_key.organisation_id)
@@ -124,7 +145,7 @@ def get_permitted_environments_for_user(
     user: "FFAdminUser",
     project: Project,
     permission_key: str,
-    tag_ids: List[int] = None,  # type: ignore[assignment]
+    tag_ids: list[int] | None = None,
     prefetch_metadata: bool = False,
 ) -> QuerySet[Environment]:
     """
@@ -164,7 +185,9 @@ def get_permitted_environments_for_user(
         queryset = queryset.prefetch_related("metadata")
 
     # Final check to ensure the user is a member of the organisation
-    queryset = queryset.filter(project__organisation__users=user)
+    queryset = queryset.filter(
+        get_active_membership_filter(user, "project__organisation__")
+    )
 
     # Description is defered due to Oracle support where a
     # query can't have a where clause if description is in
@@ -178,7 +201,7 @@ def get_permitted_environments_for_master_api_key(
     master_api_key: "MasterAPIKey",
     project: Project,
     permission_key: str,
-    tag_ids: List[int] = None,  # type: ignore[assignment]
+    tag_ids: list[int] | None = None,
     prefetch_metadata: bool = False,
 ) -> QuerySet[Environment]:
     if is_master_api_key_project_admin(master_api_key, project):
@@ -197,26 +220,49 @@ def get_permitted_environments_for_master_api_key(
 def user_has_organisation_permission(
     user: "FFAdminUser", organisation: Organisation, permission_key: str
 ) -> bool:
+    """
+    Check if user has the given permission on an organisation.
+
+    Runs separate queries with early returns:
+    1. Organisation admin - admins hold every organisation permission.
+    2. Organisation membership - check to prevent orphaned permission
+       records from granting access.
+    3. Direct user permission - checks UserOrganisationPermission.
+    4. Group permission - checks via user's group memberships.
+    5. Role permission - RBAC check, only if enabled.
+    """
     if is_user_organisation_admin(user, organisation):
         return True
 
+    # Check: verify user belongs to the organisation
+    if not Organisation.objects.filter(
+        get_active_membership_filter(user) & Q(id=organisation.id)
+    ).exists():
+        return False
+
     # NOTE: since we store organisation admin slightly differently
-    # compared to project and environment `get_base_permission_filter`
-    # with allow_admin=True will not work for organisation
-    base_filter = get_base_permission_filter(
-        user,
-        Organisation,  # type: ignore[arg-type]
-        permission_key,
-        allow_admin=False,
-    )
-    filter_ = base_filter & Q(id=organisation.id)
+    # compared to project and environment, allow_admin=True will not
+    # work for organisation
 
-    queryset = Organisation.objects.filter(filter_)
+    # Check direct permission
+    user_filter = get_user_permission_filter(user, permission_key, allow_admin=False)
+    if Organisation.objects.filter(user_filter & Q(id=organisation.id)).exists():
+        return True
 
-    # Final check to verify that user belongs to organisation
-    queryset = queryset.filter(users=user)
+    # Check group permission
+    group_filter = get_group_permission_filter(user, permission_key, allow_admin=False)
+    if Organisation.objects.filter(group_filter & Q(id=organisation.id)).exists():
+        return True
 
-    return queryset.exists()  # type: ignore[no-any-return]
+    # Check role permission (only if RBAC installed)
+    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
+        role_filter = get_role_permission_filter(
+            user, Organisation, permission_key, allow_admin=False
+        )
+        if Organisation.objects.filter(role_filter & Q(id=organisation.id)).exists():
+            return True
+
+    return False
 
 
 def master_api_key_has_organisation_permission(
@@ -251,11 +297,14 @@ def _is_user_object_admin(
 
     # Check: verify user belongs to the organisation that owns this object
     if model_class is Project:
-        if not Project.objects.filter(id=object_id, organisation__users=user).exists():
+        if not Project.objects.filter(
+            get_active_membership_filter(user, "organisation__") & Q(id=object_id)
+        ).exists():
             return False
     elif model_class is Environment:
         if not Environment.objects.filter(
-            id=object_id, project__organisation__users=user
+            get_active_membership_filter(user, "project__organisation__")
+            & Q(id=object_id)
         ).exists():
             return False
     else:  # pragma: no cover

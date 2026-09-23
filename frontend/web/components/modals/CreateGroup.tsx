@@ -223,7 +223,6 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                   }}
                   isValid={name && name.length}
                   type='text'
-                  name='Name*'
                   placeholder='E.g. Developers'
                   className='mb-5'
                 />
@@ -244,7 +243,6 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                   }}
                   isValid={name && name.length}
                   type='text'
-                  name='Name*'
                   placeholder='Add an optional external reference ID'
                   className='mb-5'
                 />

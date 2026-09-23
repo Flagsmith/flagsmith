@@ -1,0 +1,11 @@
+.connect-cohort-provider {
+  &__step-number {
+    width: 24px;
+    height: 24px;
+  }
+
+  &__auth-label {
+    width: 120px;
+    flex-shrink: 0;
+  }
+}

@@ -5,6 +5,13 @@
   border-radius: 8px;
 }
 
+.btn--accordion-header {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  width: 100%;
+}
+
 .metric-label {
   font-size: 14px;
   font-weight: 500;

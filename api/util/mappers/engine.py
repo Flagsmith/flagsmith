@@ -139,6 +139,7 @@ def map_feature_state_to_engine(
     feature_state: "FeatureState",
     *,
     mv_fs_values: Optional[Iterable["MultivariateFeatureStateValue"]] = None,
+    metadata: Optional[dict[str, object]] = None,
 ) -> FeatureStateModel:
     feature = feature_state.feature
     feature_segment: Optional["FeatureSegment"] = feature_state.feature_segment
@@ -151,8 +152,13 @@ def map_feature_state_to_engine(
         feature_segment_model = None
 
     return FeatureStateModel(
+        metadata=metadata,
         enabled=feature_state.enabled,
-        django_id=feature_state.pk,
+        # The engine and SDKs seed multivariate variant allocation on django_id,
+        # so feeding it the bucketing seed keeps variant assignment stable when
+        # a feature state is recreated, without changing the engine model or
+        # environment document schema. See issue #7913.
+        django_id=feature_state.mv_hashing_seed,
         feature_state_value=feature_state.get_feature_state_value(),
         featurestate_uuid=feature_state.uuid,
         feature_segment=feature_segment_model,
@@ -185,7 +191,9 @@ def map_feature_to_engine(feature: "Feature") -> FeatureModel:
 def map_mv_option_to_engine(
     mv_option: "MultivariateFeatureOption",
 ) -> MultivariateFeatureOptionModel:
-    return MultivariateFeatureOptionModel(value=mv_option.value, id=mv_option.id)
+    return MultivariateFeatureOptionModel(
+        value=mv_option.value, id=mv_option.id, key=mv_option.key
+    )
 
 
 def map_environment_to_engine(
@@ -202,10 +210,16 @@ def map_environment_to_engine(
     :param Environment environment: the environment to map
     :rtype EnvironmentModel
     """
+    from experimentation.feature_state_metadata import (  # avoid circular import
+        get_feature_state_metadata_builder,
+    )
+
     project: "Project" = environment.project
     organisation: "Organisation" = project.organisation
 
     # Read relationships - grab all the data needed from the ORM here.
+
+    get_feature_state_metadata = get_feature_state_metadata_builder(environment)
 
     project_segments = [
         ps for ps in project.segments.all() if ps.id == ps.version_of_id
@@ -289,6 +303,7 @@ def map_environment_to_engine(
                     mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
                         feature_state.pk,
                     ),
+                    metadata=get_feature_state_metadata(feature_state),
                 )
                 for feature_state in project_segment_feature_states_by_segment_id.pop(
                     segment.pk
@@ -316,6 +331,7 @@ def map_environment_to_engine(
             mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
                 feature_state.pk,
             ),
+            metadata=get_feature_state_metadata(feature_state),
         )
         for feature_state in environment_feature_states
     ]
@@ -352,6 +368,7 @@ def map_environment_to_engine(
         hide_sensitive_data=environment.hide_sensitive_data,
         hide_disabled_flags=environment.hide_disabled_flags,
         use_identity_overrides_in_local_eval=environment.use_identity_overrides_in_local_eval,
+        onboarding_pending=environment.first_evaluated_at is None,
         #
         # Relationships:
         project=project_model,
@@ -457,12 +474,17 @@ def map_environment_to_evaluation_context(
         trait_items: "Iterable[Trait]" = (
             traits if traits is not None else identity.identity_traits.all()
         )
+        identity_traits = {trait.trait_key: trait.trait_value for trait in trait_items}
+        if identity.system_traits:
+            # System-owned traits are not user data: on a key clash, the system
+            # value wins.
+            identity_traits.update(identity.system_traits)
         context["identity"] = {
             "identifier": identity.identifier,
             "key": identity.get_hash_key(
                 environment.use_identity_composite_key_for_hashing
             ),
-            "traits": {trait.trait_key: trait.trait_value for trait in trait_items},
+            "traits": identity_traits,
         }
     if segments is not None:
         context["segments"] = {

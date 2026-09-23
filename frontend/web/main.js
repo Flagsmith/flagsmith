@@ -12,6 +12,7 @@ import Utils from 'common/utils/utils'
 import Project from 'common/project'
 import AccountStore from 'common/stores/account-store'
 import data from 'common/data/base/_data'
+import { isPendingAuthorisation } from 'common/utils/pendingAuthorisation'
 import {
   openModal,
   openModal2,
@@ -89,9 +90,14 @@ setTimeout(() => {
 
   // redirect before login
   if (!isPublicURL() && !AccountStore.getUser()) {
-    API.setRedirect(
-      document.location.pathname + (document.location.search || ''),
-    )
+    // A consent request already waiting outranks the page being loaded. A
+    // reload part-way through onboarding - which its own Try again performs -
+    // would otherwise overwrite it and leave the client waiting for ever.
+    if (!isPendingAuthorisation(API.getRedirect())) {
+      API.setRedirect(
+        document.location.pathname + (document.location.search || ''),
+      )
+    }
     browserHistory.push(
       `/?redirect=${encodeURIComponent(
         document.location.pathname + (document.location.search || ''),

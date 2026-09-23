@@ -1,18 +1,37 @@
-import React, { FC, useEffect, useState } from 'react'
-import InputGroup from 'components/base/forms/InputGroup'
+import React, { FC, useEffect, useRef, useState } from 'react'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import ValueEditor from 'components/ValueEditor'
+import ControlWeightChip from 'components/mv/ControlWeightChip'
 import Constants from 'common/constants'
 import { VariationOptions } from 'components/mv/VariationOptions'
 import { AddVariationButton } from 'components/mv/AddVariationButton'
 import ErrorMessage from 'components/ErrorMessage'
+import InfoMessage from 'components/InfoMessage'
 import WarningMessage from 'components/WarningMessage'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/icons/Icon'
 import Switch from 'components/Switch'
 import JSONReference from 'components/JSONReference'
+import Button from 'components/base/forms/Button'
+import CompareSegmentOverride from 'components/diff/CompareSegmentOverride'
 import { FlagValueFooter } from 'components/modals/FlagValueFooter'
 import Utils from 'common/utils/utils'
-import { FeatureState, ProjectFlag } from 'common/types/responses'
+import {
+  FeatureState,
+  MultivariateOption,
+  ProjectFlag,
+} from 'common/types/responses'
+import {
+  getDefaultVariantKey,
+  getDivergedVariantOverride,
+  hasUnmatchedIdentityOverride,
+  LatchedOverrideValue,
+  resolveUnmatchedOverride,
+  VARIATION_VALUE_FIELDS,
+  VARIATION_WEIGHT_FIELD,
+} from 'common/utils/multivariate'
+import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
+import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { useHasPermission } from 'common/providers/Permission'
 import { ProjectPermission } from 'common/types/permissions.types'
 
@@ -32,7 +51,10 @@ type FeatureValueTabProps = {
   projectId: number | string
   identity?: string
   noPermissions: boolean
+  freeze?: FeatureExperimentFreeze
   featureState: FeatureState
+  // As saved. featureState is the editor's copy, which moves with every click.
+  storedFeatureState?: FeatureState
   projectFlag: ProjectFlag
   environmentFlag?: FeatureState
   environmentId?: string
@@ -42,9 +64,24 @@ type FeatureValueTabProps = {
   isSaving?: boolean
   existingChangeRequest?: boolean
   onSaveFeatureValue?: (schedule?: boolean) => void
+  hasVariationChanges?: boolean
+  onSaveVariationValues?: () => void
+  // The persisted variants, used to tag edited ones as not saved.
+  originalMultivariateOptions?: MultivariateOption[]
   onEnvironmentFlagChange: (changes: Partial<FeatureState>) => void
   onProjectFlagChange: (changes: Partial<ProjectFlag>) => void
   onRemoveMultivariateOption?: (id: number) => void
+}
+
+// No tooltip when using variations (no single value to describe).
+const getValueTooltip = (hasVariations: boolean, isEdit: boolean): string => {
+  if (hasVariations) {
+    return Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION
+  }
+  const seedsAllEnvironments = isEdit
+    ? ''
+    : '<br/>Setting this when creating a feature will set the value for all environments. You can edit this individually for each environment once the feature is created.'
+  return `${Constants.strings.REMOTE_CONFIG_DESCRIPTION}${seedsAllEnvironments}`
 }
 
 const FeatureValueTab: FC<FeatureValueTabProps> = ({
@@ -54,6 +91,8 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   error,
   existingChangeRequest,
   featureState,
+  freeze,
+  hasVariationChanges,
   identity,
   is4Eyes,
   isSaving,
@@ -63,10 +102,14 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   onProjectFlagChange,
   onRemoveMultivariateOption,
   onSaveFeatureValue,
+  onSaveVariationValues,
+  originalMultivariateOptions,
   projectFlag,
   projectId,
+  storedFeatureState,
 }) => {
   const isEdit = !!projectFlag?.id
+  const isDisabled = !!noPermissions || !!freeze?.isFrozen
 
   const { permission: createFeature } = useHasPermission({
     id: projectId,
@@ -88,14 +131,27 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     controlPercentage < 0
 
   const addVariation = () => {
+    // Default the label to the first free Variant_n so new variants are
+    // saved with a key even if the user never edits it. Variants with no
+    // key display (and persist) their fallback, so avoid those names too.
+    const existingNames = multivariate_options.map(
+      (option, index) => option.key || Utils.getDefaultVariantKey(index),
+    )
+    let nextIndex = multivariate_options.length
+    while (existingNames.includes(Utils.getDefaultVariantKey(nextIndex))) {
+      nextIndex += 1
+    }
     const newVariation = {
       ...Utils.valueToFeatureState(''),
       default_percentage_allocation: 0,
+      key: Utils.getDefaultVariantKey(nextIndex),
     }
     onProjectFlagChange({
       multivariate_options: [...multivariate_options, newVariation],
     })
   }
+
+  const [compareOpen, setCompareOpen] = useState(false)
 
   const [isNegativeNumber, setIsNegativeNumber] = useState(
     isNegativeNumberString(featureState?.feature_state_value),
@@ -155,13 +211,71 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
   const enabledString = isEdit ? 'Enabled' : 'Enabled by default'
 
-  const getValueString = () => {
-    if (multivariate_options && multivariate_options.length) {
-      return `Control Value - ${controlPercentage}%`
+  const hasVariations = !!multivariate_options && !!multivariate_options.length
+
+  // The Value tab compares the environment default against other environments
+  // (and this environment's segment overrides). Multivariate features and
+  // identity overrides are excluded.
+  const canCompareValue =
+    isEdit && !!environmentId && !identity && !hasVariations
+
+  // Unlike a change request, the unsaved marker counts a weight edit too.
+  const variantFields: (keyof MultivariateOption)[] = [
+    ...VARIATION_VALUE_FIELDS,
+    VARIATION_WEIGHT_FIELD,
+  ]
+  const unsavedVariations = multivariate_options.map((option) => {
+    if (!originalMultivariateOptions) {
+      return false
     }
-    return 'Value'
-  }
-  const valueString = getValueString()
+    // A just-saved variant may not have its id reflected in local state
+    // yet, so id-less options are matched against id-less baseline entries.
+    const savedMvs = originalMultivariateOptions.filter((o) =>
+      option.id ? o.id === option.id : !o.id,
+    )
+    return !savedMvs.some((savedMv) =>
+      variantFields.every(
+        (field) => (option[field] ?? null) === (savedMv[field] ?? null),
+      ),
+    )
+  })
+
+  const variationApiErrors = multivariate_options.map((_, i) => {
+    const variationError = error?.multivariate_options?.[i]
+    if (!variationError) {
+      return null
+    }
+    if (typeof variationError === 'string') {
+      return variationError
+    }
+    const firstField = Object.values(variationError)[0]
+    return (
+      (Array.isArray(firstField) ? firstField[0] : firstField) ||
+      'Failed to save this variation.'
+    )
+  })
+  const valueTitle = hasVariations ? 'Control Value' : 'Value'
+
+  const variationsInfo = hasVariations && (
+    // A div, not a p: InfoMessage renders a block, which closes a p early and
+    // drops the margin onto the empty paragraph left behind.
+    <div className='mb-4'>
+      <InfoMessage collapseId={'variation-value'}>
+        Changing a Variation Value will affect <strong>all environments</strong>
+        , their weights are specific to this environment. Existing users will
+        see the new variation value if it is changed. These values will only
+        apply when you identify via the SDK.{' '}
+        <a
+          target='_blank'
+          href='https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags'
+          rel='noreferrer'
+        >
+          Check the Docs for more details
+        </a>
+        .
+      </InfoMessage>
+    </div>
+  )
 
   const showValue = !(
     !!identity &&
@@ -169,8 +283,91 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     !!multivariate_options.length
   )
 
+  // Left undefined while unloaded rather than coerced to null, which is itself
+  // a valid value — see hasUnmatchedIdentityOverride.
+  const controlValue =
+    projectFlag.environment_feature_state?.feature_state_value
+
+  // An override that predates the flag becoming multivariate holds a value the
+  // control/variation radios cannot express, so surface it rather than letting
+  // the control row imply the identity is on the environment default.
+  const unmatchedOverrideSelected =
+    !!identity &&
+    hasVariations &&
+    hasUnmatchedIdentityOverride({
+      controlValue,
+      overrideValue: featureState.feature_state_value,
+      variationOverrides: identityVariations,
+    })
+
+  // Held in a ref rather than read once on mount, as the feature state loads
+  // async — there is no single render at which the override is known to be
+  // there. See resolveUnmatchedOverride for why presence outlives selection.
+  const latchedOverrideValue = useRef<LatchedOverrideValue>(undefined)
+  const unmatchedOverride = resolveUnmatchedOverride({
+    isSelected: unmatchedOverrideSelected,
+    latchedValue: latchedOverrideValue.current,
+    overrideValue: featureState.feature_state_value,
+  })
+  latchedOverrideValue.current = unmatchedOverride?.value
+
+  // Only edge returns the value the identity is served. Core returns the
+  // control value, which would report every override as diverged.
+  const isEdgeIdentity = !!storedFeatureState?.identity_uuid
+
+  // From the saved state, not the editor's: picking a variation moves the
+  // selection without moving the value.
+  const divergedVariantOverride =
+    identity && hasVariations && isEdgeIdentity
+      ? getDivergedVariantOverride({
+          overrideValue: storedFeatureState?.feature_state_value,
+          variants: multivariate_options.map((option, index) => ({
+            id: option.id,
+            key: option.key || getDefaultVariantKey(index),
+            value: Utils.featureStateToValue(option),
+          })),
+          variationOverrides:
+            storedFeatureState?.multivariate_feature_state_values,
+        })
+      : undefined
+
+  if (compareOpen && canCompareValue && environmentId) {
+    return (
+      <div className={`${identity ? 'mx-3' : ''}`}>
+        <div className='mb-3'>
+          <Button
+            theme='text'
+            size='small'
+            onClick={() => setCompareOpen(false)}
+          >
+            <Icon name='arrow-left' width={16} />
+            Back to value
+          </Button>
+        </div>
+        <CompareSegmentOverride
+          projectId={projectId}
+          environmentId={environmentId}
+          featureId={projectFlag.id}
+          source={{
+            enabled: default_enabled,
+            label: 'Environment Default',
+            value: initial_value,
+          }}
+          sourceDescriptor={{ kind: 'environment' }}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className={`${identity ? 'mx-3' : ''}`}>
+      {freeze?.isFrozen && freeze.experiment && environmentId && (
+        <ExperimentFreezeNotice
+          experiment={freeze.experiment}
+          projectId={projectId}
+          environmentId={environmentId}
+        />
+      )}
       <FormGroup className='mb-4'>
         <Tooltip
           title={
@@ -178,7 +375,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               <Switch
                 data-test='toggle-feature-button'
                 defaultChecked={default_enabled}
-                disabled={noPermissions}
+                disabled={isDisabled}
                 checked={default_enabled}
                 onChange={(enabled) => onEnvironmentFlagChange({ enabled })}
                 className='ml-0'
@@ -198,34 +395,42 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
       {showValue && (
         <FormGroup className='mb-4'>
-          <InputGroup
-            component={
-              <ValueEditor
-                data-test='featureValue'
-                name='featureValue'
-                className='full-width'
-                value={`${
-                  typeof initial_value === 'undefined' || initial_value === null
-                    ? ''
-                    : initial_value
-                }`}
-                onChange={(e: any) => {
-                  const feature_state_value = Utils.getTypedValue(
-                    Utils.safeParseEventValue(e),
-                  )
-                  onEnvironmentFlagChange({ feature_state_value })
-                }}
-                disabled={noPermissions}
-                placeholder="e.g. 'big' "
-              />
-            }
-            tooltip={`${Constants.strings.REMOTE_CONFIG_DESCRIPTION}${
-              !isEdit
-                ? '<br/>Setting this when creating a feature will set the value for all environments. You can edit this individually for each environment once the feature is created.'
-                : ''
-            }`}
-            title={`${valueString}`}
-          />
+          <div className='form-group'>
+            <ValueEditor
+              label={valueTitle}
+              labelAfter={
+                hasVariations && (
+                  <ControlWeightChip percentage={controlPercentage} />
+                )
+              }
+              labelTooltip={getValueTooltip(hasVariations, isEdit)}
+              className={`full-width${hasVariations ? ' code-medium' : ''}`}
+              value={`${
+                typeof initial_value === 'undefined' || initial_value === null
+                  ? ''
+                  : initial_value
+              }`}
+              onChange={(newValue: string) => {
+                onEnvironmentFlagChange({
+                  feature_state_value: Utils.getTypedValue(newValue),
+                })
+              }}
+              disabled={isDisabled}
+            />
+          </div>
+          {canCompareValue && (
+            <div className='text-end mt-2'>
+              <Button
+                theme='text'
+                size='small'
+                data-test='compare-feature-value'
+                onClick={() => setCompareOpen(true)}
+              >
+                <Icon name='difference' width={16} />
+                Compare across environments
+              </Button>
+            </div>
+          )}
         </FormGroup>
       )}
 
@@ -255,14 +460,22 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
       {!!identity && (
         <div>
           <FormGroup className='mb-4'>
+            {variationsInfo}
+            {unmatchedOverrideSelected && (
+              <WarningMessage warningMessage="This identity override contains a value that is not one of this flag's variations. We recommend changing it." />
+            )}
+            {!!divergedVariantOverride && (
+              <WarningMessage
+                warningMessage={`This identity is served a stale copy of variation '${divergedVariantOverride.key}', taken when the override was saved. Press Update Feature to refresh it.`}
+              />
+            )}
             <VariationOptions
               canCreateFeature={false}
               disabled
               select
-              controlValue={
-                projectFlag.environment_feature_state?.feature_state_value ??
-                null
-              }
+              divergedOverride={divergedVariantOverride}
+              unmatchedOverride={unmatchedOverride}
+              controlValue={controlValue ?? null}
               controlPercentage={controlPercentage}
               variationOverrides={identityVariations as any}
               setValue={(value) =>
@@ -284,11 +497,35 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 
       {!identity && (
         <div>
+          {variationsInfo}
+          {hasVariations && (
+            <Row className='justify-content-between align-items-center mb-2'>
+              <FieldLabel
+                className='mb-0'
+                tooltip={
+                  Utils.getFlagsmithHasFeature('experimental_flags')
+                    ? 'To use this flag in an experiment, all the variants must have a label.'
+                    : undefined
+                }
+              >
+                Variants
+              </FieldLabel>
+              {Utils.renderWithPermission(
+                createFeature,
+                Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
+                <AddVariationButton
+                  multivariateOptions={multivariate_options}
+                  disabled={!createFeature || isDisabled}
+                  onClick={addVariation}
+                />,
+              )}
+            </Row>
+          )}
           <FormGroup className='mb-0'>
             {(!!environmentVariations || !isEdit) && (
               <VariationOptions
                 canCreateFeature={createFeature}
-                disabled={!!identity || noPermissions}
+                disabled={!!identity || isDisabled}
                 controlValue={featureState.feature_state_value}
                 controlPercentage={controlPercentage}
                 variationOverrides={environmentVariations as any}
@@ -300,6 +537,8 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                     multivariate_feature_state_values: variations as any,
                   })
                 }
+                apiErrors={variationApiErrors}
+                unsavedVariations={unsavedVariations}
                 updateVariation={handleUpdateVariation}
                 weightTitle={
                   isEdit ? 'Environment Weight %' : 'Default Weight %'
@@ -309,50 +548,59 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               />
             )}
           </FormGroup>
-          {Utils.renderWithPermission(
-            createFeature,
-            Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
-            <AddVariationButton
-              multivariateOptions={multivariate_options}
-              disabled={!createFeature || noPermissions}
-              onClick={addVariation}
-            />,
+          {!hasVariations && (
+            <div className='text-end'>
+              {Utils.renderWithPermission(
+                createFeature,
+                Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
+                <AddVariationButton
+                  multivariateOptions={multivariate_options}
+                  disabled={!createFeature || isDisabled}
+                  onClick={addVariation}
+                />,
+              )}
+            </div>
           )}
         </div>
       )}
 
-      {environmentId && onSaveFeatureValue && (
-        <>
-          <JSONReference
-            className='mb-3'
-            showNamesButton
-            title={'Feature'}
-            json={projectFlag}
-          />
-          <JSONReference
-            className='mb-3'
-            title={'Feature state'}
-            json={environmentFlag}
-          />
-          <FlagValueFooter
-            is4Eyes={!!is4Eyes}
-            isVersioned={!!isVersioned}
-            projectId={
-              typeof projectId === 'string'
-                ? parseInt(projectId, 10)
-                : projectId
-            }
-            projectFlag={projectFlag}
-            environmentId={environmentId}
-            environmentName={environmentName || ''}
-            isSaving={!!isSaving}
-            featureName={projectFlag.name}
-            isInvalid={!!invalid}
-            existingChangeRequest={!!existingChangeRequest}
-            onSaveFeatureValue={onSaveFeatureValue}
-          />
-        </>
-      )}
+      {environmentId &&
+        onSaveFeatureValue &&
+        !freeze?.isFrozen &&
+        !freeze?.isLoading && (
+          <>
+            <JSONReference
+              className='mb-3'
+              showNamesButton
+              title={'Feature'}
+              json={projectFlag}
+            />
+            <JSONReference
+              className='mb-3'
+              title={'Feature state'}
+              json={environmentFlag}
+            />
+            <FlagValueFooter
+              is4Eyes={!!is4Eyes}
+              isVersioned={!!isVersioned}
+              projectId={
+                typeof projectId === 'string'
+                  ? parseInt(projectId, 10)
+                  : projectId
+              }
+              projectFlag={projectFlag}
+              environmentId={environmentId}
+              environmentName={environmentName || ''}
+              isSaving={!!isSaving}
+              featureName={projectFlag.name}
+              isInvalid={!!invalid}
+              existingChangeRequest={!!existingChangeRequest}
+              hasVariationChanges={hasVariationChanges}
+              onSaveFeatureValue={onSaveFeatureValue}
+              onSaveVariationValues={onSaveVariationValues}
+            />
+          </>
+        )}
     </div>
   )
 }

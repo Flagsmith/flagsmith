@@ -2,8 +2,9 @@ import Constants from 'common/constants'
 export default (envId, { TRAIT_NAME }, userId) => `use Flagsmith\\Flagsmith;
 
 $flagsmith = new Flagsmith('${envId}'${
-  Constants.isCustomFlagsmithUrl() &&
-  `,\n  '${Constants.getFlagsmithSDKUrl()}'\n`
+  Constants.isCustomFlagsmithUrl()
+    ? `,\n  '${Constants.getFlagsmithSDKUrl()}'\n`
+    : ''
 });
 
 $traits = (object) [ '${TRAIT_NAME}' => 42 ];

@@ -56,6 +56,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "block_access_to_admin",
             "restrict_project_create_to_admin",
             "force_2fa",
+            "targeting_key",
         )
         read_only_fields = (
             "id",
@@ -65,6 +66,19 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "persist_trait_data",
             "block_access_to_admin",
         )
+        extra_kwargs = {
+            "targeting_key": {"write_only": True},
+        }
+
+    def update(
+        self,
+        instance: Organisation,
+        validated_data: dict[str, typing.Any],
+    ) -> Organisation:
+        # The targeting key pins the organisation's experiment bucketing;
+        # accepting it on update would make experiment arms mutable.
+        validated_data.pop("targeting_key", None)
+        return super().update(instance, validated_data)  # type: ignore[no-any-return]
 
     @extend_schema_field({"type": "string", "nullable": True})
     def get_role(self, instance):  # type: ignore[no-untyped-def]
@@ -84,7 +98,8 @@ class UserOrganisationSerializer(serializers.ModelSerializer):  # type: ignore[t
 
     class Meta:
         model = UserOrganisation
-        fields = ("role", "organisation")
+        fields = ("role", "organisation", "is_active")
+        read_only_fields = ("is_active",)
 
 
 class InviteSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]

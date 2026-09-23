@@ -2,7 +2,7 @@ import React from 'react'
 import { Route, Switch } from 'react-router-dom'
 
 import App from './components/App' // App Wrapper
-import HomePage from './components/pages/HomePage'
+import HomePage from './components/pages/home-page'
 import Maintenance from './components/Maintenance'
 import CreateOrganisationPage from './components/pages/CreateOrganisationPage'
 import CreateEnvironmentPage from './components/pages/CreateEnvironmentPage'
@@ -17,7 +17,7 @@ import AccountSettingsPage from './components/pages/AccountSettingsPage'
 import NotFoundErrorPage from './components/pages/NotFoundErrorPage'
 import ProjectSettingsPage from './components/pages/project-settings'
 import PasswordResetPage from './components/pages/PasswordResetPage'
-import EnvironmentSettingsPage from './components/pages/EnvironmentSettingsPage'
+import EnvironmentSettingsPage from './components/pages/environment-settings'
 import InvitePage from './components/pages/InvitePage'
 import NotFoundPage from './components/pages/NotFoundPage'
 import ChangeRequestsPage from './components/pages/ChangeRequestsPage'
@@ -40,13 +40,15 @@ import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPag
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
 import ProjectChangeRequestsPage from './components/pages/ProjectChangeRequestsPage'
 import ProjectChangeRequestPage from './components/pages/ProjectChangeRequestDetailPage'
-import GettingStartedPage from './components/pages/GettingStartedPage'
+import GettingStartedGate from './components/pages/onboarding/GettingStartedGate'
 
 import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
 import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
 import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 import SegmentPage from './components/pages/SegmentPage'
 import ExperimentsPage from './components/pages/ExperimentsPage'
+import ExperimentDetailPage from './components/pages/ExperimentDetailPage'
+import MetricsPage from './components/pages/MetricsPage'
 import ReleaseManagerPage from './components/pages/ReleaseManagerPage'
 import FlagEnvironmentsPage from './components/pages/FlagEnvironmentsPage'
 import ExecutiveViewPage from './components/pages/ExecutiveViewPage'
@@ -54,6 +56,7 @@ import DevViewPage from './components/pages/DevViewPage'
 import AdminDashboardPage from './components/pages/admin-dashboard/AdminDashboardPage'
 import CleanupPage from './components/pages/feature-lifecycle'
 import OAuthAuthorizePage from './components/pages/OAuthAuthorizePage'
+import { ORGANISATION_USAGE, ORGANISATIONS } from './routePaths'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 export const routes = {
@@ -77,6 +80,8 @@ export const routes = {
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
   'executive-view': '/organisation/:organisationId/executive-view',
+  'experiment-detail':
+    '/project/:projectId/environment/:environmentId/experiments/:experimentId',
   'experiments': '/project/:projectId/environment/:environmentId/experiments',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
   'feature-history-detail':
@@ -102,6 +107,7 @@ export const routes = {
   'lifecycle': '/project/:projectId/lifecycle/:section?',
   'login': '/login',
   'maintenance': '/maintenance',
+  'metrics': '/project/:projectId/environment/:environmentId/metrics',
   'not-found': '/404',
   'oauth': '/oauth/:type',
   'oauth-authorize': '/oauth/authorize',
@@ -110,8 +116,8 @@ export const routes = {
   'organisation-projects': '/organisation/:organisationId/projects',
   'organisation-settings': '/organisation/:organisationId/settings',
   'organisation-settings-redirect': '/organisation-settings',
-  'organisation-usage': '/organisation/:organisationId/usage',
-  'organisations': '/organisations',
+  'organisation-usage': ORGANISATION_USAGE,
+  'organisations': ORGANISATIONS,
   'password-reset': '/password-reset/confirm/:uid/:token/',
   'permissions': '/project/:projectId/permissions',
   'project-redirect': '/project/:projectId',
@@ -168,6 +174,16 @@ export default (
           path={routes.experiments}
           exact
           component={ExperimentsPage}
+        />
+        <ParameterizedRoute
+          path={routes['experiment-detail']}
+          exact
+          component={ExperimentDetailPage}
+        />
+        <ParameterizedRoute
+          path={routes.metrics}
+          exact
+          component={MetricsPage}
         />
         <ParameterizedRoute
           path={routes.lifecycle}
@@ -268,7 +284,7 @@ export default (
         <ParameterizedRoute
           path={routes.gettingStarted}
           exact
-          component={GettingStartedPage}
+          component={GettingStartedGate}
         />
         <ParameterizedRoute
           path={routes['project-settings-in-environment']}

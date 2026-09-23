@@ -18,12 +18,14 @@ import typing
 import openfeature.api as openfeature_api
 from django.conf import settings
 from flagsmith import Flagsmith
+from flagsmith.analytics import EventProcessorConfig
 from flagsmith.offline_handlers import LocalFileHandler
 from openfeature.client import OpenFeatureClient
+from openfeature_flagsmith.hooks import FlagsmithExposureHook
 from openfeature_flagsmith.provider import FlagsmithProvider
 
+from integrations.flagsmith.constants import ENVIRONMENT_JSON_PATH
 from integrations.flagsmith.exceptions import FlagsmithIntegrationError
-from integrations.flagsmith.flagsmith_service import ENVIRONMENT_JSON_PATH
 
 DEFAULT_OPENFEATURE_DOMAIN = "flagsmith-api"
 
@@ -47,6 +49,7 @@ def initialise_provider(
     flagsmith_client = Flagsmith(**kwargs)
     provider = FlagsmithProvider(client=flagsmith_client)
     openfeature_api.set_provider(provider, domain=domain)
+    openfeature_api.add_hooks([FlagsmithExposureHook(provider)])
 
 
 def get_provider_kwargs() -> dict[str, typing.Any]:
@@ -61,11 +64,17 @@ def get_provider_kwargs() -> dict[str, typing.Any]:
         settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY
         and settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL
     ):
-        return {
+        kwargs = {
             "environment_key": settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY,
             "api_url": settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL,
             **common_kwargs,
         }
+        if events_api_url := settings.FLAGSMITH_ON_FLAGSMITH_SERVER_EVENTS_API_URL:
+            kwargs["enable_events"] = True
+            kwargs["event_processor_config"] = EventProcessorConfig(
+                events_api_url=events_api_url,
+            )
+        return kwargs
 
     raise FlagsmithIntegrationError(
         "Must either use offline mode, or provide "

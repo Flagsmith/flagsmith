@@ -34,7 +34,7 @@ const TableFilterItem: FC<TableFilterItemType> = ({
         </div>
         <div>
           <Icon
-            className={classNames('text-body', { 'opacity-0': !isActive })}
+            className={classNames('text-default', { 'opacity-0': !isActive })}
             name={'checkmark'}
           />
         </div>

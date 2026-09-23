@@ -10,7 +10,7 @@ import type { Scale } from './components/ScaleRow'
 import primitivesSource from '!!raw-loader!../web/styles/_primitives.scss'
 
 const meta: Meta = {
-  parameters: { chromatic: { disableSnapshot: true }, layout: 'padded' },
+  parameters: { layout: 'padded' },
   title: 'Design System/Palette',
 }
 export default meta

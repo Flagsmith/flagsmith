@@ -1,5 +1,4 @@
 import logging
-import secrets
 import string
 import typing
 import uuid
@@ -12,6 +11,7 @@ from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_SAVE,
     LifecycleModel,
@@ -110,10 +110,10 @@ class UserManager(BaseUserManager):  # type: ignore[type-arg]
 
     def make_random_password(
         self,
-        length: int = 10,
+        length: int = 14,
         allowed_chars: str = string.ascii_letters + string.digits,
     ) -> str:
-        return "".join(secrets.choice(allowed_chars) for _ in range(length))
+        return get_random_string(length, allowed_chars)
 
 
 class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-missing,misc]
@@ -254,11 +254,42 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     def is_organisation_admin(self, organisation: typing.Union["Organisation", int]):  # type: ignore[no-untyped-def]
         return is_user_organisation_admin(self, organisation)
 
-    def get_admin_organisations(self):  # type: ignore[no-untyped-def]
-        return Organisation.objects.filter(
+    def get_admin_organisations(self) -> QuerySet[Organisation]:
+        # NOTE: the lookups must stay in a single `filter()` call so that they
+        # apply to the same `UserOrganisation` row.
+        return Organisation.objects.filter(  # type: ignore[no-any-return]
             userorganisation__user=self,
             userorganisation__role=OrganisationRole.ADMIN.name,
+            userorganisation__is_active=True,
         )
+
+    def get_active_organisations(self) -> QuerySet[Organisation]:
+        return Organisation.objects.filter(  # type: ignore[no-any-return]
+            userorganisation__user=self,
+            userorganisation__is_active=True,
+        )
+
+    def set_organisation_membership_active(
+        self, organisation: Organisation, is_active: bool
+    ) -> None:
+        """
+        Activate or deactivate this user's membership of `organisation`.
+
+        Deactivated members keep their roles, permissions and group memberships,
+        but lose access to the organisation and free up their seat.
+
+        Reactivation deliberately does not enforce the plan's seat limit: this is
+        driven by an external identity provider over SCIM, where failing the call
+        would leave the provider and Flagsmith out of sync.
+        """
+        user_organisation = UserOrganisation.objects.get(
+            user=self, organisation=organisation
+        )
+        if user_organisation.is_active == is_active:
+            return
+
+        user_organisation.is_active = is_active
+        user_organisation.save()
 
     def add_organisation(
         self, organisation: Organisation, role: OrganisationRole = OrganisationRole.USER
@@ -313,7 +344,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     def get_permitted_projects(
         self,
         permission_key: str,
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
     ) -> QuerySet[Project]:
         return get_permitted_projects_for_user(self, permission_key, tag_ids)
 
@@ -321,7 +352,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self,
         permission: str,
         project: Project,
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
     ) -> bool:
         if self.is_project_admin(project):
             return True
@@ -331,7 +362,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self,
         permission: str,
         environment: "Environment",
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
     ) -> bool:
         return environment in self.get_permitted_environments(
             permission, environment.project, tag_ids=tag_ids
@@ -344,11 +375,15 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self,
         permission_key: str,
         project: Project,
-        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
+        tag_ids: list[int] | None = None,
         prefetch_metadata: bool = False,
     ) -> QuerySet["Environment"]:
         return get_permitted_environments_for_user(
-            self, project, permission_key, tag_ids, prefetch_metadata=prefetch_metadata
+            self,
+            project,
+            permission_key,
+            tag_ids,
+            prefetch_metadata=prefetch_metadata,
         )
 
     @staticmethod
@@ -370,7 +405,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
 
     def belongs_to(self, organisation_id: int) -> bool:
         return self.userorganisation_set.filter(
-            organisation_id=organisation_id
+            organisation_id=organisation_id, is_active=True
         ).exists()
 
     def is_environment_admin(

@@ -97,6 +97,22 @@ def test_environment_clone__default__does_not_modify_original_instance(
     assert clone.api_key != original_api_key
 
 
+def test_environment_clone__evaluated_source__resets_first_evaluation_fields(
+    environment: Environment,
+) -> None:
+    # Given
+    environment.first_evaluated_at = timezone.now()
+    environment.first_evaluated_sdk_label = "flagsmith-python-sdk"
+    environment.save()
+
+    # When
+    clone = environment.clone(name="Cloned env")
+
+    # Then
+    assert clone.first_evaluated_at is None
+    assert clone.first_evaluated_sdk_label is None
+
+
 def test_environment_clone__with_feature__creates_feature_states(  # type: ignore[no-untyped-def]
     environment: Environment, feature: Feature
 ):
@@ -676,7 +692,7 @@ def test_get_environment_document__valid_api_key__returns_document(  # type: ign
     # Given
 
     # When
-    with django_assert_num_queries(3):
+    with django_assert_num_queries(4):
         environment_document = Environment.get_environment_document(environment.api_key)
 
     # Then
@@ -718,7 +734,7 @@ def test_get_environment_document__document_not_in_cache__fetches_and_caches(  #
     mocked_environment_document_cache.get.return_value = None
 
     # When
-    with django_assert_num_queries(3):
+    with django_assert_num_queries(4):
         environment_document = Environment.get_environment_document(environment.api_key)
 
     # Then

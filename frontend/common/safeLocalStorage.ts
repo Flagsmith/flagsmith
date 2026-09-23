@@ -16,3 +16,12 @@ export function storageSet(key: string, value: string): void {
     console.error(err)
   }
 }
+
+export function storageRemove(key: string): void {
+  try {
+    localStorage.removeItem(key)
+  } catch (err) {
+    //Storage / privacy errors
+    console.error(err)
+  }
+}

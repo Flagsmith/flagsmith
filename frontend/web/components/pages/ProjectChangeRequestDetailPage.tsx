@@ -45,6 +45,11 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
     level: 'project',
     permission: ProjectPermission.MANAGE_SEGMENTS,
   })
+  const manageChangeRequestsPermission = useHasPermission({
+    id: projectId,
+    level: 'project',
+    permission: ProjectPermission.MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS,
+  })
   const { data: project } = useGetProjectQuery({ id: projectId })
   const [actionChangeRequest, { isLoading: isActioning }] =
     useActionProjectChangeRequestMutation({})
@@ -168,7 +173,7 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
         </div>
       ),
       onYes: () => {
-        if(!changeRequest) return
+        if (!changeRequest) return
         actionChangeRequest({
           actionType: 'commit',
           id: `${changeRequest.id}`,
@@ -218,13 +223,14 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
       <Breadcrumb
         items={[
           {
-            title: 'Change requests',
+            title: 'Segment Change Requests',
             url: `/project/${projectId}/change-requests`,
           },
         ]}
         currentPage={changeRequest.title}
       />
       <ChangeRequestPageInner
+        canManageChangeRequests={manageChangeRequestsPermission?.permission}
         isScheduled={false}
         publishChangeRequest={publishChangeRequest}
         approvePermission={approvePermission?.permission}

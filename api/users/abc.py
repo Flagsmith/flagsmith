@@ -18,6 +18,13 @@ class UserABC(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_active_organisations(self) -> QuerySet[Organisation]:
+        """
+        Return the organisations this actor is able to access.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def is_project_admin(self, project: "Project") -> bool:
         raise NotImplementedError()
 

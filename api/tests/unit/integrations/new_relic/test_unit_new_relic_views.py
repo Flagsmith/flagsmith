@@ -173,3 +173,27 @@ def test_new_relic_config__project_with_deleted_config__creates_new_configuratio
     assert response_json["api_key"] == api_key
     assert response_json["base_url"] == base_url
     assert response_json["app_id"] == app_id
+
+
+def test_new_relic_config__private_ip_base_url__returns_bad_request(
+    admin_client: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    data = {
+        "base_url": "http://127.0.0.1/",
+        "api_key": "key-123",
+        "app_id": "app-123",
+    }
+    url = reverse("api-v1:projects:integrations-new-relic-list", args=[project.id])
+
+    # When
+    response = admin_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert not NewRelicConfiguration.objects.filter(project=project).exists()

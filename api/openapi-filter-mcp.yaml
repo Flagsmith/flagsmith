@@ -1,0 +1,11 @@
+# Keeps only operations tagged `mcp` and drops the component definitions they no
+# longer reference.
+inverseTags:
+  - mcp
+unusedComponents:
+  - schemas
+  - parameters
+  - examples
+  - headers
+  - requestBodies
+  - responses

@@ -5,6 +5,7 @@ import ErrorMessage from 'components/ErrorMessage'
 
 const meta: Meta = {
   parameters: {
+    chromatic: { disableSnapshot: false },
     docs: {
       description: {
         component:

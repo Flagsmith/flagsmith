@@ -25,7 +25,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
       <input id={idRef.current} type='checkbox' checked={checked} />
       <label
         onClick={handleChange}
-        className='mb-0 user-select-none d-inline'
+        className='mb-0 user-select-none d-inline cursor-pointer'
         htmlFor={idRef.current}
       >
         <span className='checkbox mr-2'>

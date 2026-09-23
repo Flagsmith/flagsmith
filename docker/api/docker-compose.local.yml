@@ -3,8 +3,10 @@
 name: flagsmith
 
 volumes:
+  influxdb_data:
   pg_11_data:
   pg_11_data_analytics:
+  clickhouse_data:
 
 services:
   db:
@@ -19,6 +21,11 @@ services:
     environment:
       POSTGRES_DB: flagsmith
       POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d flagsmith"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
 
   analytics-db:
     image: postgres:15.5-alpine
@@ -32,3 +39,97 @@ services:
     environment:
       POSTGRES_DB: analytics
       POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d analytics"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  test-db:
+    image: postgres:15.5-alpine
+    pull_policy: always
+    restart: unless-stopped
+    command:
+      - "-c"
+      - "max_locks_per_transaction=256"
+      # Nothing here is worth surviving a crash.
+      - "-c"
+      - "fsync=off"
+      - "-c"
+      - "synchronous_commit=off"
+      - "-c"
+      - "full_page_writes=off"
+      # Cloning a database writes it through the WAL, so keep checkpoints out
+      # of the way of a run that clones one per worker and per migration test.
+      - "-c"
+      - "wal_level=minimal"
+      - "-c"
+      - "max_wal_senders=0"
+      - "-c"
+      - "max_wal_size=4GB"
+      - "-c"
+      - "checkpoint_timeout=30min"
+      # Comfortably fits every worker's database and the templates.
+      - "-c"
+      - "shared_buffers=1GB"
+      # One connection per worker, plus a maintenance connection each.
+      - "-c"
+      - "max_connections=200"
+    tmpfs:
+      - /var/lib/postgresql/data:size=3g
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_DB: flagsmith
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d flagsmith"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  influxdb:
+    image: influxdb:2-alpine
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    ports:
+      - 8086:8086
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: user
+      DOCKER_INFLUXDB_INIT_PASSWORD: password
+      DOCKER_INFLUXDB_INIT_ORG: flagsmith
+      DOCKER_INFLUXDB_INIT_BUCKET: unused
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: admin-token
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  clickhouse:
+    # Match the version Flagsmith runs on ClickHouse Cloud.
+    image: clickhouse/clickhouse-server:25.12
+    pull_policy: always
+    restart: unless-stopped
+    # ClickHouse opens a file descriptor per column/part, so it needs a far
+    # higher open-files limit than the OS default (~1024); 262144 is the value
+    # ClickHouse's docs and official image recommend.
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    ports:
+      - 8123:8123
+      - 9000:9000
+    environment:
+      CLICKHOUSE_USER: flagsmith
+      CLICKHOUSE_PASSWORD: password
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10

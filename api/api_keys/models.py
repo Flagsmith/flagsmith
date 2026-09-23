@@ -28,6 +28,10 @@ class MasterAPIKey(AbstractAPIKey, LifecycleModelMixin, SoftDeleteObject):  # ty
     objects = MasterAPIKeyManager()  # type: ignore[misc]
     is_admin = models.BooleanField(default=True)
 
+    created_by = models.ForeignKey(
+        "users.FFAdminUser", on_delete=models.SET_NULL, null=True, blank=True
+    )
+
     @hook(BEFORE_UPDATE, when="is_admin", was=False, is_now=True)
     def delete_role_api_keys(  # type: ignore[no-untyped-def]
         self,

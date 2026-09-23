@@ -1,0 +1,35 @@
+// Layout, position, spacing and border are handled by Bootstrap utilities in
+// the markup. This file only holds what has no utility: the font inheritance
+// the sizer needs to measure accurately, the ghost field resets, and motion.
+.ghost-input {
+  // Hidden mirror of the text, used purely to measure the natural content
+  // width. Must match the field's font so the measurement is accurate.
+  &__sizer {
+    visibility: hidden;
+    white-space: pre;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+  }
+
+  // Transparent, border-less field that inherits the surrounding type, so it
+  // reads as inline text until focused.
+  &__field {
+    outline: none;
+    box-shadow: none;
+    color: inherit;
+    cursor: text;
+    font-family: inherit;
+    font-size: inherit;
+    // Ease only the empty↔filled colour swap. Width is set per-keystroke and
+    // intentionally NOT transitioned: animating it under an end-of-text caret
+    // makes the content scroll left then right as the box catches up.
+    transition: color var(--duration-fast) var(--easing-standard);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+}

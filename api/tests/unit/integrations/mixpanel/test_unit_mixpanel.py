@@ -1,7 +1,10 @@
 from logging import DEBUG
 from typing import TYPE_CHECKING
 
-from integrations.mixpanel.mixpanel import MIXPANEL_API_URL, MixpanelWrapper
+import pytest
+
+from integrations.mixpanel.constants import DEFAULT_MIXPANEL_API_URL
+from integrations.mixpanel.mixpanel import MixpanelWrapper
 from integrations.mixpanel.models import MixpanelConfiguration
 
 if TYPE_CHECKING:
@@ -9,6 +12,7 @@ if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
     from environments.identities.models import Identity
+    from environments.models import Environment
     from features.models import Feature
     from projects.models import Project
 
@@ -21,9 +25,51 @@ def test_mixpanel_wrapper__valid_config__initializes_correctly() -> None:
     mixpanel = MixpanelWrapper(config)
 
     # Then
-    expected_url = f"{MIXPANEL_API_URL}/engage#profile-set"
+    expected_url = f"{DEFAULT_MIXPANEL_API_URL}/engage#profile-set"
     assert mixpanel.url == expected_url
     assert mixpanel.api_key == config.api_key
+
+
+def test_mixpanel_wrapper__eu_base_url__uses_eu_url() -> None:
+    # Given
+    config = MixpanelConfiguration(
+        api_key="123key",
+        base_url="https://api-eu.mixpanel.com",
+    )
+
+    # When
+    mixpanel = MixpanelWrapper(config)
+
+    # Then
+    assert mixpanel.url == "https://api-eu.mixpanel.com/engage#profile-set"
+
+
+def test_mixpanel_wrapper__in_base_url__uses_in_url() -> None:
+    # Given
+    config = MixpanelConfiguration(
+        api_key="123key",
+        base_url="https://api-in.mixpanel.com",
+    )
+
+    # When
+    mixpanel = MixpanelWrapper(config)
+
+    # Then
+    assert mixpanel.url == "https://api-in.mixpanel.com/engage#profile-set"
+
+
+def test_mixpanel_wrapper__base_url_with_trailing_slash__strips_slash() -> None:
+    # Given
+    config = MixpanelConfiguration(
+        api_key="123key",
+        base_url="https://api-eu.mixpanel.com/",
+    )
+
+    # When
+    mixpanel = MixpanelWrapper(config)
+
+    # Then
+    assert mixpanel.url == "https://api-eu.mixpanel.com/engage#profile-set"
 
 
 def test_mixpanel_identify_user__valid_identity__posts_to_api(
@@ -107,3 +153,49 @@ def test_mixpanel_generate_user_data__identity_with_features__returns_expected_f
     ]
 
     assert user_data == expected_user_data
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "base_url, expected_url",
+    [
+        (None, "https://api.mixpanel.com/engage#profile-set"),
+        ("", "https://api.mixpanel.com/engage#profile-set"),
+        (
+            "https://api-eu.mixpanel.com",
+            "https://api-eu.mixpanel.com/engage#profile-set",
+        ),
+        (
+            "https://api-eu.mixpanel.com/",
+            "https://api-eu.mixpanel.com/engage#profile-set",
+        ),
+        (
+            "https://api-in.mixpanel.com",
+            "https://api-in.mixpanel.com/engage#profile-set",
+        ),
+    ],
+)
+def test_identify_integrations__mixpanel_configured__posts_to_expected_url(
+    mocker: "MockerFixture",
+    environment: "Environment",
+    identity: "Identity",
+    base_url: str | None,
+    expected_url: str,
+) -> None:
+    # Given
+    from integrations.integration import identify_integrations
+
+    api_key = "abc-123"
+    MixpanelConfiguration.objects.create(
+        environment=environment,
+        api_key=api_key,
+        base_url=base_url,
+    )
+    mocked_post = mocker.patch("integrations.mixpanel.mixpanel.requests.post")
+
+    # When
+    identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
+
+    # Then
+    assert mocked_post.call_args.args[0] == expected_url
+    assert mocked_post.call_args.kwargs["json"][0]["$token"] == api_key

@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 from typing import Any
 
@@ -63,7 +64,7 @@ class OrganisationRole(models.TextChoices):
     USER = ("USER", "User")
 
 
-class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[misc]
+class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[django-manager-missing,misc]
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)
@@ -88,6 +89,12 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         default=False, help_text="Record feature analytics in InfluxDB"
     )
     force_2fa = models.BooleanField(default=False)
+    targeting_key = models.CharField(
+        max_length=64,
+        null=True,
+        blank=True,
+        help_text="Flagsmith-on-Flagsmith targeting key. Immutable; org.<id> is used when unset.",
+    )
 
     class Meta:
         ordering = ["id"]
@@ -101,7 +108,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
     @property
     def num_seats(self) -> int:
-        return self.users.count()
+        return self.userorganisation_set.filter(is_active=True).count()
 
     def has_paid_subscription(self) -> bool:
         # Includes subscriptions that are canceled.
@@ -113,8 +120,15 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             self.subscription_information_cache
         )
 
+    def has_enterprise_licence(self) -> bool:
+        return is_enterprise() and hasattr(self, "licence")
+
     @property
     def is_paid(self):  # type: ignore[no-untyped-def]
+        # A self-hosted licence is the entitlement in its own right; it has no
+        # billing provider, so there is no subscription_id to check.
+        if self.has_enterprise_licence():
+            return True
         return (
             self.has_paid_subscription() and self.subscription.cancellation_date is None
         )
@@ -125,7 +139,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     @property
     def openfeature_evaluation_context(self) -> EvaluationContext:
         return EvaluationContext(
-            targeting_key=f"org.{self.id}",
+            targeting_key=self.targeting_key or f"org.{self.id}",
             attributes={
                 "organisation.id": self.id,
                 "organisation.name": self.name,
@@ -133,14 +147,9 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             },
         )
 
-    def over_plan_seats_limit(self, additional_seats: int = 0):  # type: ignore[no-untyped-def]
-        if self.has_paid_subscription():
-            susbcription_metadata = self.subscription.get_subscription_metadata()
-            return self.num_seats + additional_seats > susbcription_metadata.seats
-
-        return self.num_seats + additional_seats > getattr(
-            self.subscription, "max_seats", MAX_SEATS_IN_FREE_PLAN
-        )
+    def over_plan_seats_limit(self, additional_seats: int = 0) -> bool:
+        subscription_metadata = self.subscription.get_subscription_metadata()
+        return self.num_seats + additional_seats > subscription_metadata.seats
 
     def reset_alert_status(self):  # type: ignore[no-untyped-def]
         self.alerted_over_plan_limit = False
@@ -186,21 +195,30 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         ).values_list("id", flat=True):
             rebuild_environment_document.delay(args=(environment_id,))
 
-    def cancel_users(self):  # type: ignore[no-untyped-def]
+    def cancel_users(self) -> None:
+        """
+        Reduce the organisation to the single seat the free plan allows.
+
+        The retained member must hold an active membership, otherwise the
+        organisation would be left with nobody able to access it.
+        """
+        active_memberships = UserOrganisation.objects.filter(
+            organisation=self,
+            is_active=True,
+        )
         remaining_seat_holder = (
-            UserOrganisation.objects.filter(
-                organisation=self,
-                role=OrganisationRole.ADMIN,
-            )
+            active_memberships.filter(role=OrganisationRole.ADMIN)
             .order_by("date_joined")
             .first()
+            or active_memberships.order_by("date_joined").first()
         )
+        if remaining_seat_holder is None:
+            # No seat is in use, so there is nothing to cancel down to.
+            return
 
         UserOrganisation.objects.filter(
             organisation=self,
-        ).exclude(
-            id=remaining_seat_holder.id  # type: ignore[union-attr]
-        ).delete()
+        ).exclude(id=remaining_seat_holder.id).delete()
 
 
 class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
@@ -208,6 +226,13 @@ class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     date_joined = models.DateTimeField(auto_now_add=True)
     role = models.CharField(max_length=50, choices=OrganisationRole.choices)
+    is_active = models.BooleanField(
+        default=True,
+        help_text=(
+            "Inactive members can still log in, but cannot access the "
+            "organisation, and do not count towards its seat limit."
+        ),
+    )
 
     class Meta:
         unique_together = (
@@ -294,6 +319,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     def is_enterprise(self) -> bool:
         return self.subscription_plan_family == SubscriptionPlanFamily.ENTERPRISE
 
+    def get_scaleup_plan_version(self) -> int:
+        if match := re.match(r"scale-up-v(\d+)", self.plan or "", re.IGNORECASE):
+            return int(match.group(1))
+        return 1
+
     @hook(AFTER_SAVE, when="plan", has_changed=True)
     def update_api_limit_access_block(self):  # type: ignore[no-untyped-def]
         if not getattr(self.organisation, "api_limit_access_block", None):
@@ -354,7 +384,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
         if cancellation_date <= timezone.now():
             # Since the date is immediate, wipe data right away.
-            self.organisation.cancel_users()  # type: ignore[no-untyped-call]
+            self.organisation.cancel_users()
             self.save_as_free_subscription()  # type: ignore[no-untyped-call]
             return
 
@@ -419,24 +449,16 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         else:
             cb_metadata = get_subscription_metadata_from_id(self.subscription_id)  # type: ignore[assignment,arg-type]
 
-        if self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP and (
-            settings.VERSIONING_RELEASE_DATE is None
-            or (
-                self.subscription_date is not None
-                and self.subscription_date < settings.VERSIONING_RELEASE_DATE
-            )
-        ):
-            # Logic to grandfather old scale up plan customers to give them
-            # full access to audit log and feature history.
+        # Pre-v4 Scale-Up customers keep unlimited audit log. Feature
+        # history always honours the cache value.
+        is_scale_up = self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+        if is_scale_up and self.get_scaleup_plan_version() < 4:
             cb_metadata.audit_log_visibility_days = None
-            cb_metadata.feature_history_visibility_days = None
 
         return cb_metadata
 
     def _get_subscription_metadata_for_self_hosted(self) -> BaseSubscriptionMetadata:
-        if is_enterprise() and hasattr(
-            self.organisation, "licence"
-        ):  # pragma: no cover
+        if self.organisation.has_enterprise_licence():
             licence_information = self.organisation.licence.get_licence_information()
             return BaseSubscriptionMetadata(
                 seats=licence_information.num_seats,

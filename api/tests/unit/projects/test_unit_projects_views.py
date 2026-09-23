@@ -11,7 +11,7 @@ from common.projects.permissions import (
 from django.urls import reverse
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -693,6 +693,20 @@ def test_list_projects__uuid_filter__returns_matching_project(  # type: ignore[n
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 1
     assert response.json()[0]["uuid"] == str(project.uuid)
+
+
+def test_list_projects__non_numeric_organisation__returns_400(  # type: ignore[no-untyped-def]
+    admin_client,
+):
+    # Given
+    base_url = reverse("api-v1:projects:project-list")
+    url = f"{base_url}?organisation=A60ZG9cp5WC53RRZHDkIlUiWuAL57Jhi"
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.parametrize(

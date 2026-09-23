@@ -1,6 +1,7 @@
 from django.core import validators
 from django.db import models
 
+from core.fields import NoSSRFURLField
 from integrations.common.models import EnvironmentIntegrationModel
 
 
@@ -17,7 +18,7 @@ class SentryChangeTrackingConfiguration(EnvironmentIntegrationModel):
         related_name="sentry_change_tracking_configuration",
     )
 
-    webhook_url = models.URLField(
+    webhook_url = NoSSRFURLField(
         max_length=200,
     )
 

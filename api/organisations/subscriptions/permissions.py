@@ -35,6 +35,7 @@ def require_minimum_plan(minimum: SubscriptionPlanFamily) -> type[BasePermission
 
     class _MinimumPlanPermission(BasePermission):
         message = f"This resource requires a {minimum.value} plan or above."
+        minimum_plan_family = minimum.value
 
         def has_permission(self, request: Request, view: APIView) -> bool:
             if not is_saas():

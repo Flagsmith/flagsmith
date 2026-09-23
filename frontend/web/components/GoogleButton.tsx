@@ -1,9 +1,11 @@
 import React, { FC } from 'react'
 import { TokenResponse, useGoogleLogin } from '@react-oauth/google'
 import Button from './base/forms/Button'
+import { Icon } from './icons'
 
 type GoogleButtonProps = {
   className?: string
+  ready: boolean
   onSuccess?: (
     tokenResponse: Omit<
       TokenResponse,
@@ -11,7 +13,11 @@ type GoogleButtonProps = {
     >,
   ) => void
 }
-const GoogleButton: FC<GoogleButtonProps> = ({ className, onSuccess }) => {
+const GoogleButton: FC<GoogleButtonProps> = ({
+  className,
+  onSuccess,
+  ready,
+}) => {
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
       onSuccess?.(tokenResponse)
@@ -22,10 +28,11 @@ const GoogleButton: FC<GoogleButtonProps> = ({ className, onSuccess }) => {
     <Button
       className={className}
       theme='secondary'
-      iconLeft='google'
       key='google'
-      onClick={() => login()}
+      disabled={!ready}
+      onClick={() => ready && login()}
     >
+      <Icon name='google' />
       Google
     </Button>
   )

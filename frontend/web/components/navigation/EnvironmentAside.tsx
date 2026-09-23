@@ -72,7 +72,7 @@ const CustomOption = ({ hasWarning, ...rest }: CustomOptionProps) => {
           )}
           <div className='flex ml-auto'>
             {rest.isSelected && (
-              <IonIcon icon={checkmarkCircle} className='text-primary' />
+              <IonIcon icon={checkmarkCircle} className='icon-action' />
             )}
           </div>
         </div>

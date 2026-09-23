@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from datetime import timedelta
 
 import freezegun
@@ -20,9 +21,10 @@ from audit.constants import (
 )
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from cohorts.models import Cohort
 from core.helpers import get_current_site_url
 from environments.models import Environment
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import (
     EnvironmentFeatureVersion,
     VersionChangeSet,
@@ -31,6 +33,7 @@ from features.versioning.tasks import enable_v2_versioning, publish_version_chan
 from features.versioning.versioning_service import get_environment_flags_list
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
+    CannotModifyManagedSegmentError,
     ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
@@ -42,6 +45,9 @@ from features.workflows.core.models import (
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
 from users.models import FFAdminUser
 
 now = timezone.now()
@@ -858,7 +864,46 @@ def test_change_request_live_from__with_change_set__sets_live_from_to_commit_tim
     assert change_request.live_from == now
 
 
-def test_change_request_commit__with_draft_segment__publishes_segment_rules(
+def test_change_request_commit__with_draft_segment__publishes_draft(
+    segment: Segment,
+    segment_rules: list[SegmentRuleType],
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    draft_rules = deepcopy(segment_rules)
+    draft_rules[0]["conditions"][0]["value"] = "blue"
+    draft_segment = Segment.objects.create(
+        name="new-name",
+        description="new-description",
+        change_request=change_request,
+        project=segment.project,
+        version_of=segment,
+        rules_data=draft_rules,
+    )
+
+    # When
+    change_request.commit(admin_user)
+
+    # Then
+    segment.refresh_from_db()
+    assert segment.version == 2
+    assert segment.name == "new-name"
+    assert segment.description == "new-description"
+    assert segment.rules_data == draft_rules
+    revision = segment.versioned_segments.exclude(
+        id__in=[segment.id, draft_segment.id]
+    ).get()
+    assert revision.version == 1
+    assert revision.rules_data == segment_rules
+    assert log.has(
+        "segment-revision-created", segment_id=segment.id, revision_id=revision.id
+    )
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+def test_change_request_commit__with_draft_segment__publishes_segment_rules_x_replaced_above(
     segment: Segment,
     change_request: ChangeRequest,
     admin_user: FFAdminUser,
@@ -944,6 +989,30 @@ def test_change_request_commit__with_draft_segment__publishes_segment_rules(
     ) == [
         {"property": "property3a", "operator": EQUAL, "value": "value3a"},
     ]
+
+
+def test_change_request_commit__draft_targets_cohort_managed_segment__raises(
+    segment: Segment,
+    environment: Environment,
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    Cohort.objects.create(environment=environment, segment=segment)
+    Segment.objects.create(
+        name="new-name",
+        change_request=change_request,
+        project=segment.project,
+        version_of=segment,
+    )
+
+    # When / Then
+    with pytest.raises(CannotModifyManagedSegmentError):
+        change_request.commit(admin_user)
+    segment.refresh_from_db()
+    assert segment.name != "new-name"
+    change_request.refresh_from_db()
+    assert change_request.committed_at is None
 
 
 def test_change_request_commit__multiple_scheduled_with_ignore_conflicts__applies_in_order(
@@ -1167,3 +1236,93 @@ def test_project_delete__v2_versioning_with_change_requests__does_not_trigger_au
     assert project.deleted_at is not None
     mock_went_live_task.delay.assert_not_called()
     mock_updated_task.delay.assert_not_called()
+
+
+def test_change_request_commit__v1_multivariate_feature__keeps_variant_bucketing_stable(
+    environment: Environment,
+    multivariate_feature: Feature,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given the current live environment-default feature state of a multivariate
+    # feature, and the variant each of a range of identities is bucketed into
+    live_feature_state = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+    identity_hash_keys = [f"identity-{i}" for i in range(50)]
+    original_assignment = {
+        key: live_feature_state.get_multivariate_feature_state_value(key).pk
+        for key in identity_hash_keys
+    }
+
+    # and a change request carrying a draft feature state for the same feature,
+    # as created by the API when a change request is raised under v1 versioning
+    change_request = ChangeRequest.objects.create(
+        title="Test CR", environment=environment, user=admin_user
+    )
+    draft_feature_state = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        change_request=change_request,
+        version=None,
+    )
+
+    # When the change request is committed
+    change_request.commit(committed_by=admin_user)
+
+    # Then the draft feature state is now the live one, carrying the superseded
+    # feature state's id as its bucketing salt
+    new_live_feature_state = next(
+        fs
+        for fs in get_environment_flags_list(
+            environment, feature_name=multivariate_feature.name
+        )
+        if fs.feature_segment_id is None and fs.identity_id is None
+    )
+    assert new_live_feature_state.id == draft_feature_state.id
+    assert new_live_feature_state.mv_hashing_salt == live_feature_state.id
+
+    # and every identity stays in the same variant as before the commit
+    new_assignment = {
+        key: new_live_feature_state.get_multivariate_feature_state_value(key).pk
+        for key in identity_hash_keys
+    }
+    assert new_assignment == original_assignment
+
+
+def test_change_request_commit__v1_segment_override_draft__inherits_mv_hashing_salt(
+    environment: Environment,
+    multivariate_feature: Feature,
+    segment: Segment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given a live segment override for a multivariate feature
+    feature_segment = FeatureSegment.objects.create(
+        feature=multivariate_feature, segment=segment, environment=environment
+    )
+    live_override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment=feature_segment,
+    )
+
+    # and a change request carrying a draft feature state recreating the override
+    change_request = ChangeRequest.objects.create(
+        title="Test CR", environment=environment, user=admin_user
+    )
+    draft_feature_state = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        change_request=change_request,
+        version=None,
+    )
+
+    # When the change request is committed
+    change_request.commit(committed_by=admin_user)
+
+    # Then the draft carries the superseded override's id as its bucketing salt
+    draft_feature_state.refresh_from_db()
+    assert draft_feature_state.mv_hashing_salt == live_override.id

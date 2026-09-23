@@ -119,6 +119,14 @@ export const AllTokens: StoryObj = {
           </tr>
           <tr>
             <td>
+              <code>--color-surface-action-tint</code>
+            </td>
+            <td>
+              <code>oklch(from var(--purple-600) l c h / 0.12)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
               <code>--color-surface-danger</code>
             </td>
             <td>
@@ -181,7 +189,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-tertiary</code>
             </td>
             <td>
-              <code>var(--slate-300)</code>
+              <code>var(--slate-500)</code>
             </td>
           </tr>
           <tr>
@@ -205,7 +213,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-danger</code>
             </td>
             <td>
-              <code>var(--red-500)</code>
+              <code>var(--red-700)</code>
             </td>
           </tr>
           <tr>
@@ -213,7 +221,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-success</code>
             </td>
             <td>
-              <code>var(--green-500)</code>
+              <code>var(--green-600)</code>
             </td>
           </tr>
           <tr>
@@ -221,7 +229,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-warning</code>
             </td>
             <td>
-              <code>var(--orange-500)</code>
+              <code>var(--orange-800)</code>
             </td>
           </tr>
           <tr>
@@ -230,6 +238,89 @@ export const AllTokens: StoryObj = {
             </td>
             <td>
               <code>var(--blue-500)</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Colour: code</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--color-code-text</code>
+            </td>
+            <td>
+              <code>var(--slate-700)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-comment</code>
+            </td>
+            <td>
+              <code>var(--slate-300)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-keyword</code>
+            </td>
+            <td>
+              <code>var(--purple-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-name</code>
+            </td>
+            <td>
+              <code>var(--red-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-literal</code>
+            </td>
+            <td>
+              <code>var(--blue-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-string</code>
+            </td>
+            <td>
+              <code>var(--green-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-variable</code>
+            </td>
+            <td>
+              <code>var(--orange-700)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-title</code>
+            </td>
+            <td>
+              <code>var(--blue-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--color-code-builtin</code>
+            </td>
+            <td>
+              <code>var(--gold-700)</code>
             </td>
           </tr>
         </tbody>
@@ -725,6 +816,56 @@ export const AllTokens: StoryObj = {
               Elements leaving the viewport. Accelerates out of view. Closing
               modals, dismissing toasts.
             </td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Font-weight</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--font-weight-regular</code>
+            </td>
+            <td>
+              <code>400</code>
+            </td>
+            <td>Body copy, default text.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-weight-medium</code>
+            </td>
+            <td>
+              <code>500</code>
+            </td>
+            <td>Subtle emphasis. Labels, secondary headings, table headers.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-weight-semibold</code>
+            </td>
+            <td>
+              <code>600</code>
+            </td>
+            <td>
+              Strong emphasis. Card titles, selected states, section headings.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-weight-bold</code>
+            </td>
+            <td>
+              <code>700</code>
+            </td>
+            <td>Maximum emphasis. Page titles, key figures.</td>
           </tr>
         </tbody>
       </table>

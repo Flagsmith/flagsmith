@@ -1,10 +1,13 @@
-import React from 'react'
+import React, { FC } from 'react'
 import ValueEditor from 'components/ValueEditor'
-import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
 import { VariationValueInput } from './VariationValueInput'
 import Utils from 'common/utils/utils'
 import { FlagsmithValue, MultivariateOption } from 'common/types/responses'
+import {
+  DivergedVariantOverride,
+  UnmatchedOverride,
+} from 'common/utils/multivariate'
 
 type VariationOverride = {
   id?: number
@@ -14,16 +17,23 @@ type VariationOverride = {
 }
 
 interface VariationOptionsProps {
+  apiErrors?: (string | null)[]
   canCreateFeature: boolean
   controlPercentage: number
   controlValue: FlagsmithValue
   disabled: boolean
+  divergedOverride?: DivergedVariantOverride
   multivariateOptions: MultivariateOption[]
   readOnly?: boolean
   removeVariation: (i: number) => void
   select?: boolean
+  // An override value that is neither the control value nor one of the
+  // variations. Shown read-only, so the identity does not read as being on the
+  // control value. Stays listed once deselected — it is only gone on save.
+  unmatchedOverride?: UnmatchedOverride
   setValue: (value: FlagsmithValue) => void
   setVariations: (variations: VariationOverride[]) => void
+  unsavedVariations?: boolean[]
   updateVariation: (
     index: number,
     value: MultivariateOption,
@@ -33,17 +43,21 @@ interface VariationOptionsProps {
   weightTitle: string
 }
 
-export const VariationOptions: React.FC<VariationOptionsProps> = ({
+export const VariationOptions: FC<VariationOptionsProps> = ({
+  apiErrors,
   canCreateFeature,
   controlPercentage,
   controlValue,
   disabled,
+  divergedOverride,
   multivariateOptions,
   readOnly,
   removeVariation,
   select,
   setValue,
   setVariations,
+  unmatchedOverride,
+  unsavedVariations,
   updateVariation,
   variationOverrides,
   weightTitle,
@@ -53,42 +67,69 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
     return null
   }
   const controlSelected =
-    !variationOverrides ||
-    !variationOverrides.find((v) => v.percentage_allocation === 100)
+    !unmatchedOverride?.selected &&
+    (!variationOverrides ||
+      !variationOverrides.find((v) => v.percentage_allocation === 100))
   return (
     <>
       {invalid && (
         <ErrorMessage
-          className='mt-2'
+          errorMessageClass='mt-2'
+          errorStyles={{ display: 'block' }}
           error='Your variation percentage splits total to over 100%'
         />
       )}
-      {!readOnly && (
-        <p className='mb-4'>
-          <InfoMessage collapseId={'variation-value'}>
-            Changing a Variation Value will affect{' '}
-            <strong>all environments</strong>, their weights are specific to
-            this environment. Existing users will see the new variation value if
-            it is changed. These values will only apply when you identify via
-            the SDK.
-            <a
-              target='_blank'
-              href='https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags'
-              rel='noreferrer'
-            >
-              Check the Docs for more details
-            </a>
-            .
-          </InfoMessage>
-        </p>
+      {/* No radio, unlike the row below: selecting it would save the stale
+          value as a literal override. */}
+      {select && !!divergedOverride && (
+        <div className='border border-warning bg-surface-warning rounded p-3 mb-2'>
+          <div className='mb-2'>
+            <span className='h6 mb-0 font-weight-semibold text-warning'>
+              Currently served
+            </span>
+          </div>
+          <div className='border border-warning rounded p-3'>
+            <ValueEditor
+              label={divergedOverride.key}
+              disabled
+              value={Utils.getTypedValue(divergedOverride.servedValue)}
+            />
+          </div>
+        </div>
       )}
-
+      {select && !!unmatchedOverride && (
+        <div className='panel panel--flat panel-without-heading mb-2'>
+          <div className='panel-content'>
+            <Row>
+              <Flex>
+                <ValueEditor
+                  label='Current override'
+                  disabled
+                  value={Utils.getTypedValue(unmatchedOverride.value)}
+                />
+              </Flex>
+              <div
+                data-test='select-unmatched-override'
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                  setVariations([])
+                  setValue?.(unmatchedOverride.value)
+                }}
+                className={`btn-radio ml-2 ${
+                  unmatchedOverride.selected ? 'btn-radio-on' : ''
+                }`}
+              />
+            </Row>
+          </div>
+        </div>
+      )}
       {select && (
         <div className='panel panel--flat panel-without-heading mb-2'>
           <div className='panel-content'>
             <Row>
               <Flex>
                 <ValueEditor
+                  label='Control value'
                   disabled
                   value={Utils.getTypedValue(controlValue)}
                 />
@@ -129,11 +170,12 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           )
         }
         return select ? (
-          <div className='panel panel--flat panel-without-heading mb-2'>
+          <div key={i} className='panel panel--flat panel-without-heading mb-2'>
             <div className='panel-content'>
               <Row>
                 <Flex>
                   <ValueEditor
+                    label={theValue.key || Utils.getDefaultVariantKey(i)}
                     disabled={true}
                     value={Utils.getTypedValue(
                       Utils.featureStateToValue(theValue),
@@ -165,9 +207,19 @@ export const VariationOptions: React.FC<VariationOptionsProps> = ({
           <VariationValueInput
             key={i}
             index={i}
+            apiError={apiErrors?.[i]}
             canCreateFeature={canCreateFeature}
             readOnly={readOnly ?? false}
+            unsaved={unsavedVariations?.[i]}
             value={theValue}
+            // Effective keys: unset labels persist as their Variant_n
+            // fallback, so they count for uniqueness too.
+            siblingKeys={multivariateOptions
+              .map(
+                (option, index) =>
+                  option.key || Utils.getDefaultVariantKey(index),
+              )
+              .filter((_, index) => index !== i)}
             onChange={(e) => {
               updateVariation(i, e, variationOverrides)
             }}

@@ -1,4 +1,4 @@
-import freeEmailDomains from 'free-email-domains'
+import freeEmailDomains from 'free-email-domains/domains.json'
 
 export default function (value: string | null | undefined) {
   if (!value) return false

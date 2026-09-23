@@ -48,9 +48,11 @@ const RepoCodeReferencesSection: React.FC<RepoCodeReferencesSectionProps> = ({
           onClick={() => {
             if (!isOpen) {
               flagsmith.trackEvent('code_references_expand_repo', {
-                feature_id: featureId,
-                refs_count: repositoryScan?.code_references?.length,
-                vcs_provider: repositoryScan?.vcs_provider,
+                metadata: {
+                  feature_id: featureId,
+                  refs_count: repositoryScan?.code_references?.length,
+                  vcs_provider: repositoryScan?.vcs_provider,
+                },
               })
             }
             setIsOpen(!isOpen)

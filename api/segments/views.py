@@ -1,17 +1,23 @@
-import logging
 from typing import TYPE_CHECKING, Any
 
+import structlog
+from common.environments.permissions import VIEW_IDENTITIES
 from common.projects.permissions import VIEW_PROJECT
+from django.db import models
+from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
+from cohorts.models import Cohort
 from core.dataclasses import AuthorData
+from core.exceptions import ChangeRequestsEnabledError
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -22,20 +28,30 @@ from features.serializers import (
 )
 from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project
+from segment_membership.metrics import (
+    flagsmith_segment_membership_read_duration_seconds,
+)
+from segment_membership.services import (
+    enqueue_membership_refresh,
+    get_segment_members_page,
+    is_membership_enabled,
+)
 
 from .models import Segment
 from .permissions import SegmentPermissions
 from .serializers import (
     CloneSegmentSerializer,
     SegmentListQuerySerializer,
+    SegmentMembersQuerySerializer,
+    SegmentMembersResponseSerializer,
     SegmentSerializer,
 )
-from .services import delete_segment
+from .services import delete_segment, get_all_live_or_scheduled_overrides
 
 if TYPE_CHECKING:
     from users.models import FFAdminUser
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("segments")
 
 
 @method_decorator(
@@ -43,48 +59,32 @@ logger = logging.getLogger(__name__)
     decorator=extend_schema(
         tags=["mcp"],
         parameters=[SegmentListQuerySerializer],
-        extensions={
-            "x-gram": {
-                "name": "list_project_segments",
-                "description": "Retrieves all user segments defined for audience targeting within the project.",
-            },
-        },
+        operation_id="list_project_segments",
+        description="Retrieves all user segments defined for audience targeting within the project.",
     ),
 )
 @method_decorator(
     name="create",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "create_project_segment",
-                "description": "Creates a new user segment for audience targeting within the project.",
-            },
-        },
+        operation_id="create_project_segment",
+        description="Creates a new user segment for audience targeting within the project.",
     ),
 )
 @method_decorator(
     name="retrieve",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "get_project_segment",
-                "description": "Retrieves detailed information about a specific user segment.",
-            },
-        },
+        operation_id="get_project_segment",
+        description="Retrieves detailed information about a specific user segment.",
     ),
 )
 @method_decorator(
     name="update",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "update_project_segment",
-                "description": "Updates an existing user segment's properties and rules.",
-            },
-        },
+        operation_id="update_project_segment",
+        description="Updates an existing user segment's properties and rules.",
     ),
 )
 class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
@@ -102,12 +102,24 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             return Segment.objects.none()
 
         project = self.get_project()
-        queryset = Segment.live_objects.filter(project=project, is_system_segment=False)
+        queryset = Segment.live_objects.filter(
+            project=project, is_system_segment=False
+        ).annotate(
+            has_overrides=models.Exists(
+                get_all_live_or_scheduled_overrides().filter(
+                    segment_id=models.OuterRef("pk")
+                )
+            )
+        )
 
         if self.action == "list":
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
             #  we shouldn't return all of the rules and conditions in the list view.
             queryset = queryset.prefetch_related(
+                Prefetch(
+                    "cohorts", queryset=Cohort.objects.select_related("environment")
+                ),
+                "membership_counts",
                 "rules",
                 "rules__conditions",
                 "rules__rules",
@@ -174,8 +186,108 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[SegmentMembersQuerySerializer],
+        responses={200: SegmentMembersResponseSerializer},
+    )
+    @action(detail=True, methods=["GET"], url_path="members")
+    def members(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user: "FFAdminUser" = request.user  # type: ignore[assignment]
+        project = self.get_project()
+        # Fetch by pk directly rather than via get_object()/get_queryset(): the
+        # latter applies the list endpoint's `q` (segment-name search), which
+        # would filter this segment out when `q` is used here to search members.
+        segment = get_object_or_404(
+            Segment.live_objects.filter(project=project, is_system_segment=False),
+            pk=self.kwargs["pk"],
+        )
+        self.check_object_permissions(request, segment)
+        if not is_membership_enabled(project.organisation):
+            raise NotFound()
+
+        query_serializer = SegmentMembersQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+        environment = get_object_or_404(
+            Environment.objects.filter(project=project),
+            pk=query_serializer.validated_data["environment"],
+        )
+        if not user.has_environment_permission(VIEW_IDENTITIES, environment):
+            raise PermissionDenied()
+
+        limit = query_serializer.validated_data["limit"]
+        cursor = query_serializer.validated_data.get("cursor")
+        q = query_serializer.validated_data.get("q")
+        with flagsmith_segment_membership_read_duration_seconds.time():
+            # Fetch one extra row to detect whether a further page exists, so the
+            # last page doesn't advertise a phantom (empty) next page.
+            members = get_segment_members_page(
+                segment, environment, cursor=cursor, limit=limit + 1, q=q
+            )
+
+        has_more = len(members) > limit
+        members = members[:limit]
+        next_cursor = members[-1]["identifier"] if has_more else None
+        return Response({"results": members, "next_cursor": next_cursor})
+
+    def check_object_permissions(self, request: Request, obj: Segment) -> None:
+        super().check_object_permissions(request, obj)
+        if (
+            self.action in ("update", "partial_update", "destroy", "clone")
+            and obj.cohorts.exists()
+        ):
+            raise PermissionDenied(
+                "This segment is managed by a cohort and cannot be edited "
+                "or cloned directly."
+            )
+        if self.action in ("update", "partial_update"):
+            self._check_change_requests_disabled(obj)
+
+    def _check_change_requests_disabled(self, segment: Segment) -> None:
+        """Refuse to edit a segment that can only be changed by a change request."""
+        if not segment.project.is_workflow_enabled:
+            return
+        if segment.change_request_id is not None:
+            # A draft held by a change request; editing it *is* the workflow.
+            return
+        api_error = ChangeRequestsEnabledError(
+            "Cannot update segments in a project with change requests enabled."
+        )
+        logger.warning(
+            "update_rejected",
+            organisation__id=segment.project.organisation_id,
+            project__id=segment.project_id,
+            segment__id=segment.id,
+            reason=api_error.default_code,
+        )
+        raise api_error
+
+    def _check_segment_is_deletable(self, segment: Segment) -> None:
+        """
+        Refuse to delete an overridden segment where change requests are enabled.
+
+        Deleting a segment deletes the overrides pointing at it, which changes
+        what the SDKs serve without anyone reviewing the change.
+        """
+        if not segment.project.is_workflow_enabled:
+            return
+        if not get_all_live_or_scheduled_overrides().filter(segment=segment).exists():
+            return
+        api_error = ChangeRequestsEnabledError(
+            "Cannot delete a segment with feature overrides in a project with "
+            "change requests enabled. Remove the overrides first."
+        )
+        logger.warning(
+            "delete_rejected",
+            organisation__id=segment.project.organisation_id,
+            project__id=segment.project_id,
+            segment__id=segment.id,
+            reason=api_error.default_code,
+        )
+        raise api_error
+
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         segment = self.get_object()
+        self._check_segment_is_deletable(segment)
         author = AuthorData.from_request(request)
         delete_segment(segment, author=author)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -195,6 +307,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = CloneSegmentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         clone = source_segment.clone(name=serializer.validated_data["name"])
+        enqueue_membership_refresh(clone.project)
         return Response(SegmentSerializer(clone).data, status=status.HTTP_201_CREATED)
 
 

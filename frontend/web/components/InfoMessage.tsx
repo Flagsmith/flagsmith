@@ -60,11 +60,7 @@ const InfoMessage: FC<InfoMessageType> = ({
     <div className={'alert alert-info flex-1'}>
       <div className={'flex-fill flex-column gap-2'}>
         <div className='d-flex'>
-          <div
-            className='user-select-none flex-fill align-items-center d-flex gap-2'
-            onClick={handleToggleCollapse}
-            style={{ cursor: 'pointer' }}
-          >
+          <div className='flex-fill align-items-center d-flex gap-2'>
             <div className='flex-fill'>
               <div className='d-flex gap-2 align-items-center'>
                 <Icon
@@ -85,7 +81,11 @@ const InfoMessage: FC<InfoMessageType> = ({
               </>
             )}
             {collapseId && (
-              <span className='ml-auto lh-1'>
+              <span
+                className='ml-auto lh-1 user-select-none'
+                onClick={handleToggleCollapse}
+                style={{ cursor: 'pointer' }}
+              >
                 <Icon name={isCollapsed ? 'chevron-right' : 'chevron-down'} />
               </span>
             )}

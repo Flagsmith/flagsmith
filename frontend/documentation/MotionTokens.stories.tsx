@@ -6,7 +6,7 @@ import DocPage from './components/DocPage'
 import { duration, easing } from 'common/theme/tokens'
 
 const meta: Meta = {
-  parameters: { chromatic: { disableSnapshot: true }, layout: 'padded' },
+  parameters: { layout: 'padded' },
   title: 'Design System/Motion',
 }
 export default meta

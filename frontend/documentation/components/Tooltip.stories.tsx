@@ -6,6 +6,7 @@ import Tooltip from 'components/Tooltip'
 
 const meta: Meta = {
   parameters: {
+    chromatic: { disableSnapshot: false },
     docs: {
       description: {
         component:

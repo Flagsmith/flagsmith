@@ -1,16 +1,17 @@
-import { UseQuery } from '@reduxjs/toolkit/dist/query/react/buildHooks'
+// RTK 2 stopped exporting the bare `UseQuery` hook type; `TypedUseQuery` is the
+// public equivalent, taking the result and arg types rather than a definition.
+import { TypedUseQuery } from '@reduxjs/toolkit/query/react'
 import { useCallback, useEffect, useState } from 'react'
 import { PagedRequest } from './types/requests'
 import { PagedResponse } from './types/responses'
-import { QueryDefinition } from '@reduxjs/toolkit/query'
+import { SubscriptionOptions } from '@reduxjs/toolkit/query'
 import useDebounce from './useDebounce'
-import { SubscriptionOptions } from '@reduxjs/toolkit/src/query/core/apiState'
 
 const useInfiniteScroll = <
   REQ extends PagedRequest<{}>,
   RES extends PagedResponse<{}>,
 >(
-  useGetDataListQuery: UseQuery<QueryDefinition<REQ, any, any, RES>>,
+  useGetDataListQuery: TypedUseQuery<RES, REQ, any>,
   queryParameters: REQ,
   throttle = 500,
   queryOptions?: SubscriptionOptions & {

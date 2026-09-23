@@ -9,7 +9,7 @@ from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock.plugin import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -98,6 +98,7 @@ def test_delete_invite_link__valid_invite__returns_204(
     settings: SettingsWrapper,
     organisation: Organisation,
     admin_client: APIClient,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     settings.ENABLE_CHARGEBEE = True
@@ -107,9 +108,10 @@ def test_delete_invite_link__valid_invite__returns_204(
         args=[organisation.pk, invite.pk],
     )
 
-    # update subscription to add another seat
-    organisation.subscription.max_seats = 3
-    organisation.subscription.save()
+    mocker.patch(
+        "organisations.models.Organisation.over_plan_seats_limit",
+        return_value=False,
+    )
 
     # When
     response = admin_client.delete(url)

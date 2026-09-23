@@ -34,3 +34,33 @@ jobs:
 
       - name: Run unit tests
         run: npm run test:unit -- --passWithNoTests
+
+  lint:
+    name: Lint changed files
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # needed to diff against the PR base
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Lints only the lines this PR changed (eslint-plugin-diff), so the
+      # pre-existing backlog doesn't fail PRs. Fork-safe: pure eslint + git.
+      - name: Lint changed lines
+        env:
+          ESLINT_PLUGIN_DIFF_COMMIT: ${{ github.event.pull_request.base.sha }}
+        run: npm run lint

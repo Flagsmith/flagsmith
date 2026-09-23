@@ -1,7 +1,7 @@
 import React, { FC, forwardRef, useCallback, useEffect, useState } from 'react'
 import { find } from 'lodash'
-import { close as closeIcon } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
+import Icon from './icons/Icon'
+import FieldLabel from './base/forms/FieldLabel'
 import _data from 'common/data/base/_data'
 import {
   AvailablePermission,
@@ -25,7 +25,6 @@ import UserGroupList from './UserGroupList'
 import { PermissionLevel, Req, PermissionRoleType } from 'common/types/requests'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Icon from './icons/Icon'
 import {
   useCreateRolePermissionsMutation,
   useGetRoleEnvironmentPermissionsQuery,
@@ -56,7 +55,6 @@ import {
 
 import MyRoleSelect from './MyRoleSelect'
 import Panel from './base/grid/Panel'
-import InputGroup from './base/forms/InputGroup'
 import classNames from 'classnames'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import { useHasPermission } from 'common/providers/Permission'
@@ -66,6 +64,13 @@ import Utils from 'common/utils/utils'
 import RemoveViewPermissionModal from './RemoveViewPermissionModal'
 import { useHistory } from 'react-router-dom'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+import Permissions from './inspect-permissions/Permissions'
+import UserAction from './UserAction'
+import {
+  decorateUsersForSort,
+  userTableSorting,
+} from './users-permissions/sortUsers'
+import { isOrgAdmin } from './users-permissions/isOrgAdmin'
 
 import Project from 'common/project'
 
@@ -819,7 +824,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               <div className='mb-2'>
                 <Row className={role ? 'py-2' : ''}>
                   <Flex>
-                    <div className='font-weight-medium text-dark mb-1'>
+                    <div className='font-weight-medium text-default mb-1'>
                       Administrator
                     </div>
                   </Flex>
@@ -892,7 +897,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               )}
             />
 
-            <p className='text-right mt-5 text-dark'>
+            <p className='text-right mt-5 text-default'>
               This will edit the permissions for{' '}
               <strong>{getEditText()}</strong>.
             </p>
@@ -928,47 +933,36 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           </div>
           {roles && level === 'organisation' && (
             <FormGroup className='px-4'>
-              <InputGroup
-                component={
-                  <div>
-                    <Row>
-                      <strong style={{ width: 70 }}>Roles: </strong>
-                      {rolesAdded?.map((r) => (
-                        <Row
-                          key={r.id}
-                          onClick={() => removeOwner(r.id)}
-                          className='chip'
-                          style={{ marginBottom: 4, marginTop: 4 }}
-                        >
-                          <span className='font-weight-bold'>{r.name}</span>
-                          <span className='chip-icon ion'>
-                            <IonIcon
-                              icon={closeIcon}
-                              style={{ fontSize: '13px' }}
-                            />
-                          </span>
-                        </Row>
-                      ))}
-                      <Button
-                        theme='text'
-                        onClick={() => setShowRoles(true)}
-                        style={{ width: 70 }}
+              <div className='form-group full-width'>
+                <FieldLabel tooltip='Assigns what role the user/group will have'>
+                  Assign roles
+                </FieldLabel>
+                <div>
+                  <Row>
+                    <strong style={{ width: 70 }}>Roles: </strong>
+                    {rolesAdded?.map((r) => (
+                      <Row
+                        key={r.id}
+                        onClick={() => removeOwner(r.id)}
+                        className='chip'
+                        style={{ marginBottom: 4, marginTop: 4 }}
                       >
-                        Add Role
-                      </Button>
-                    </Row>
-                  </div>
-                }
-                type='text'
-                title='Assign roles'
-                tooltip='Assigns what role the user/group will have'
-                inputProps={{
-                  className: 'full-width',
-                  style: { minHeight: 80 },
-                }}
-                className='full-width'
-                placeholder='Add an optional description...'
-              />
+                        <span className='font-weight-bold'>{r.name}</span>
+                        <span className='chip-icon'>
+                          <Icon name='close' width={18} />
+                        </span>
+                      </Row>
+                    ))}
+                    <Button
+                      theme='text'
+                      onClick={() => setShowRoles(true)}
+                      style={{ width: 70 }}
+                    >
+                      Add Role
+                    </Button>
+                  </Row>
+                </div>
+              </div>
             </FormGroup>
           )}
           {level !== 'environment' && level !== 'project' && (
@@ -1013,6 +1007,21 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   } = props
 
   const [tab, setTab] = useState()
+  const hasRbac = !!Utils.getPlansPermission('RBAC')
+  const inspectUserPermissions = (user: User) => {
+    openModal(
+      getUserDisplayName(user),
+      <div className='p-4'>
+        <Permissions
+          level={level}
+          levelId={id}
+          userId={user.id}
+          projectId={level === 'environment' ? Number(parentId) : Number(id)}
+        />
+      </div>,
+      'p-0 side-modal',
+    )
+  }
   const editUserPermissions = (user: User) => {
     openModal(
       `Edit ${Format.camelCase(level)} Permissions`,
@@ -1086,125 +1095,142 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       >
         <TabItem tabLabel='Users'>
           <OrganisationProvider>
-            {({ isLoading, users }) => (
-              <div className='mt-4'>
-                {isLoading && !users?.length && (
-                  <div className='centered-container'>
-                    <Loader />
-                  </div>
-                )}
-                {!!users?.length && (
-                  <div>
-                    <FormGroup className='panel no-pad pl-2 pr-2 panel--nested'>
-                      <div className={tabClassName}>
-                        <PanelSearch
-                          id='org-members-list'
-                          title='Users'
-                          className='panel--transparent'
-                          items={users}
-                          itemHeight={64}
-                          header={
-                            <Row className='table-header'>
-                              <Flex className='table-column px-3'>User</Flex>
-                              <Flex className='table-column'>Role</Flex>
-                              <div
-                                style={{ width: '80px' }}
-                                className='table-column text-center'
-                              >
-                                Action
-                              </div>
-                            </Row>
-                          }
-                          renderRow={(user) => {
-                            const { email, first_name, id, last_name, role } =
-                              user
-                            const onClick = () => {
-                              if (role !== 'ADMIN') {
-                                editUserPermissions(user)
-                              }
-                            }
-                            const matchingPermissions = permissions?.find(
-                              (v) => v.user.id === id,
-                            )
-
-                            return (
-                              <Row
-                                onClick={onClick}
-                                space
-                                className={`list-item${
-                                  role === 'ADMIN' ? '' : ' clickable'
-                                }`}
-                                key={id}
-                              >
-                                <Flex className='table-column px-3'>
-                                  <div className='mb-1 font-weight-medium'>
-                                    {`${first_name} ${last_name}`}{' '}
-                                    {String(id) ===
-                                      String(AccountStore.getUserId()) &&
-                                      '(You)'}
-                                  </div>
-                                  <div className='list-item-subtitle'>
-                                    {email}
-                                  </div>
-                                </Flex>
-                                {role === 'ADMIN' ? (
-                                  <Flex className='table-column fs-small lh-sm'>
-                                    <Tooltip
-                                      title={'Organisation Administrator'}
-                                    >
-                                      {
-                                        'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'
-                                      }
-                                    </Tooltip>
-                                  </Flex>
-                                ) : (
-                                  <Flex
-                                    onClick={onClick}
-                                    className='table-column fs-small lh-sm'
-                                  >
-                                    {matchingPermissions &&
-                                    matchingPermissions.admin
-                                      ? `${Format.camelCase(
-                                          level,
-                                        )} Administrator`
-                                      : 'Regular User'}
-                                  </Flex>
-                                )}
+            {({ isLoading, users }) => {
+              const permissionsByUserId = new Map(
+                permissions?.map((p) => [p.user.id, p]),
+              )
+              const sortableUsers = decorateUsersForSort(users, (user) => {
+                if (isOrgAdmin(user)) return 'Organisation Administrator'
+                if (permissionsByUserId.get(user.id)?.admin) {
+                  return `${Format.camelCase(level)} Administrator`
+                }
+                return 'Regular User'
+              })
+              return (
+                <div className='mt-4'>
+                  {isLoading && !users?.length && (
+                    <div className='centered-container'>
+                      <Loader />
+                    </div>
+                  )}
+                  {!!users?.length && (
+                    <div>
+                      <FormGroup className='panel no-pad pl-2 pr-2 panel--nested'>
+                        <div className={tabClassName}>
+                          <PanelSearch
+                            id='org-members-list'
+                            title='Users'
+                            className='panel--transparent'
+                            items={sortableUsers}
+                            itemHeight={64}
+                            sorting={userTableSorting}
+                            header={
+                              <Row className='table-header'>
+                                <Flex className='table-column px-3'>User</Flex>
+                                <Flex className='table-column'>Role</Flex>
                                 <div
                                   style={{ width: '80px' }}
-                                  className='text-center'
+                                  className='table-column text-center'
                                 >
-                                  {role !== 'ADMIN' && (
-                                    <Icon
-                                      name='setting'
-                                      width={20}
-                                      fill='#656D7B'
-                                    />
-                                  )}
+                                  Action
                                 </div>
                               </Row>
-                            )
-                          }}
-                          renderNoResults={
-                            <div>You have no users in this organisation.</div>
-                          }
-                          filterRow={(item: User, search: string) => {
-                            const strToSearch = `${item.first_name} ${item.last_name} ${item.email}`
-                            return (
-                              strToSearch
-                                .toLowerCase()
-                                .indexOf(search.toLowerCase()) !== -1
-                            )
-                          }}
-                        />
-                      </div>
+                            }
+                            renderRow={(user) => {
+                              const { email, first_name, id, last_name } = user
+                              const orgAdmin = isOrgAdmin(user)
+                              const onClick = () => {
+                                if (!orgAdmin) {
+                                  editUserPermissions(user)
+                                }
+                              }
+                              const matchingPermissions =
+                                permissionsByUserId.get(id)
 
-                      <div id='select-portal' />
-                    </FormGroup>
-                  </div>
-                )}
-              </div>
-            )}
+                              return (
+                                <Row
+                                  onClick={onClick}
+                                  space
+                                  className={`list-item${
+                                    orgAdmin ? '' : ' clickable'
+                                  }`}
+                                  key={id}
+                                >
+                                  <Flex className='table-column px-3'>
+                                    <div className='mb-1 font-weight-medium'>
+                                      {`${first_name} ${last_name}`}{' '}
+                                      {String(id) ===
+                                        String(AccountStore.getUserId()) &&
+                                        '(You)'}
+                                    </div>
+                                    <div className='list-item-subtitle'>
+                                      {email}
+                                    </div>
+                                  </Flex>
+                                  {orgAdmin ? (
+                                    <Flex className='table-column fs-small lh-sm'>
+                                      <Tooltip
+                                        title={'Organisation Administrator'}
+                                      >
+                                        {
+                                          'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'
+                                        }
+                                      </Tooltip>
+                                    </Flex>
+                                  ) : (
+                                    <Flex
+                                      onClick={onClick}
+                                      className='table-column fs-small lh-sm'
+                                    >
+                                      {matchingPermissions &&
+                                      matchingPermissions.admin
+                                        ? `${Format.camelCase(
+                                            level,
+                                          )} Administrator`
+                                        : 'Regular User'}
+                                    </Flex>
+                                  )}
+                                  <div
+                                    style={{ width: '80px' }}
+                                    className='table-column d-flex justify-content-end'
+                                  >
+                                    {!orgAdmin && (
+                                      <UserAction
+                                        canEdit
+                                        canRemove={false}
+                                        canInspectPermissions={hasRbac}
+                                        onEdit={() => editUserPermissions(user)}
+                                        onRemove={() => {}}
+                                        onInspectPermissions={() =>
+                                          inspectUserPermissions(user)
+                                        }
+                                      />
+                                    )}
+                                  </div>
+                                </Row>
+                              )
+                            }}
+                            renderNoResults={
+                              <div>You have no users in this organisation.</div>
+                            }
+                            filterRow={(item: User, search: string) => {
+                              const strToSearch = `${item.first_name} ${item.last_name} ${item.email}`
+                              return (
+                                strToSearch
+                                  .toLowerCase()
+                                  .indexOf(search.toLowerCase()) !== -1
+                              )
+                            }}
+                          />
+                        </div>
+
+                        <div id='select-portal' />
+                      </FormGroup>
+                    </div>
+                  )}
+                </div>
+              )
+            }}
           </OrganisationProvider>
         </TabItem>
         <TabItem tabLabel='Groups'>

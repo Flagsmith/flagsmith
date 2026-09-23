@@ -3,14 +3,20 @@ import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 
 export const featureSegmentService = service
-  .enhanceEndpoints({ addTagTypes: ['FeatureSegment'] })
+  .enhanceEndpoints({
+    addTagTypes: ['FeatureSegment', 'FeatureState', 'ProjectFlag'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       deleteFeatureSegment: builder.mutation<
         Res['featureSegment'],
         Req['deleteFeatureSegment']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'FeatureSegment' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'FeatureSegment' },
+          { id: 'LIST', type: 'FeatureState' },
+          { type: 'ProjectFlag' },
+        ],
         query: (query: Req['deleteFeatureSegment']) => ({
           body: query,
           method: 'DELETE',

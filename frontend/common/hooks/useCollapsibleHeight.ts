@@ -33,7 +33,7 @@ export default function useCollapsibleHeight(open: boolean) {
 
   const style = {
     height: height !== undefined ? `${height}px` : 'auto',
-    overflow: 'hidden' as const,
+    overflow: (height === undefined ? 'visible' : 'hidden') as const,
     transition: 'height 0.3s ease',
   }
 

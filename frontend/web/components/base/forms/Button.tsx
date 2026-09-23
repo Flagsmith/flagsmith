@@ -1,23 +1,16 @@
 import React from 'react'
 import cn from 'classnames'
 import { ButtonHTMLAttributes, HTMLAttributeAnchorTarget } from 'react'
-import Icon, { IconName } from 'components/icons/Icon'
-
-const iconColours = {
-  primary: '#6837fc',
-  white: '#ffffff',
-} as const
-
-export type IconColour = keyof typeof iconColours
+import Loader from 'components/Loader'
 
 export const themeClassNames = {
-  danger: 'btn btn-danger',
+  danger: 'btn-danger',
   icon: 'btn-icon',
   outline: 'btn--outline',
   primary: 'btn-primary',
   project: 'btn-project',
-  secondary: 'btn btn-secondary',
-  success: 'btn btn-success',
+  secondary: 'btn-secondary',
+  success: 'btn-success',
   tertiary: 'btn-tertiary',
   text: 'btn-link',
 }
@@ -31,15 +24,11 @@ export const sizeClassNames = {
 }
 
 export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
-  iconRight?: IconName
-  iconRightColour?: IconColour
-  iconLeftColour?: IconColour
-  iconLeft?: IconName
   href?: string
   target?: HTMLAttributeAnchorTarget
   theme?: keyof typeof themeClassNames
   size?: keyof typeof sizeClassNames
-  iconSize?: number
+  isLoading?: boolean
 }
 
 export const Button = React.forwardRef<
@@ -50,12 +39,9 @@ export const Button = React.forwardRef<
     {
       children,
       className,
+      disabled,
       href,
-      iconLeft,
-      iconLeftColour,
-      iconRight,
-      iconRightColour,
-      iconSize = 24,
+      isLoading = false,
       onMouseUp,
       size = 'default',
       target,
@@ -65,64 +51,35 @@ export const Button = React.forwardRef<
     },
     ref,
   ) => {
+    const classes = cn(
+      'btn',
+      className,
+      themeClassNames[theme],
+      sizeClassNames[size],
+      isLoading && 'd-inline-flex align-items-center gap-2',
+    )
     return href ? (
       <a
         onClick={rest.onClick as React.MouseEventHandler}
-        className={cn(className, themeClassNames[theme], sizeClassNames[size])}
+        className={classes}
         target={target}
         href={href}
         rel='noreferrer'
         ref={ref as React.RefObject<HTMLAnchorElement>}
       >
-        <div className='d-flex h-100 align-items-center justify-content-center gap-2'>
-          {!!iconLeft && (
-            <Icon
-              fill={iconLeftColour ? iconColours[iconLeftColour] : undefined}
-              name={iconLeft}
-              width={iconSize}
-            />
-          )}
-          {children}
-        </div>
-        {!!iconRight && (
-          <Icon
-            fill={iconRightColour ? iconColours[iconRightColour] : undefined}
-            className='ml-2'
-            name={iconRight}
-            width={iconSize}
-          />
-        )}
+        {children}
       </a>
     ) : (
       <button
         {...rest}
+        disabled={disabled || isLoading}
         type={type}
         onMouseUp={onMouseUp}
-        className={cn(
-          { btn: true },
-          className,
-          themeClassNames[theme],
-          sizeClassNames[size],
-        )}
+        className={classes}
         ref={ref as React.RefObject<HTMLButtonElement>}
       >
-        {!!iconLeft && (
-          <Icon
-            fill={iconLeftColour ? iconColours[iconLeftColour] : undefined}
-            className='mr-2'
-            name={iconLeft}
-            width={iconSize}
-          />
-        )}
+        {isLoading && <Loader width='15px' height='15px' />}
         {children}
-        {!!iconRight && (
-          <Icon
-            fill={iconRightColour ? iconColours[iconRightColour] : undefined}
-            className='ml-2'
-            name={iconRight}
-            width={iconSize}
-          />
-        )}
       </button>
     )
   },

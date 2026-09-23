@@ -1,9 +1,17 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react'
+import React, {
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import cloneDeep from 'lodash/cloneDeep'
 import moment from 'moment'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { useHasGithubIntegration } from 'common/hooks/useHasGithubIntegration'
 import { useHasGitLabIntegration } from 'common/hooks/useHasGitLabIntegration'
+import { useFeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import FeatureListStore from 'common/stores/feature-list-store'
 import IdentityProvider from 'common/providers/IdentityProvider'
 import FeatureListProvider from 'common/providers/FeatureListProvider'
@@ -19,6 +27,11 @@ import ExternalResourcesTable from 'components/ExternalResourcesTable'
 import GitHubLinkSection from 'components/GitHubLinkSection'
 import GitLabLinkSection from 'components/GitLabLinkSection'
 import type { ExternalResource } from 'common/types/responses'
+import {
+  diffVariations,
+  hasApprovableChanges,
+  hasUnmatchedIdentityOverride,
+} from 'common/utils/multivariate'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
@@ -57,7 +70,6 @@ type CreateFeatureModalProps = {
   noPermissions?: boolean
   disableCreate?: boolean
   highlightSegmentId?: number
-  defaultExperiment?: boolean
   history?: History
   multivariate_options?: MultivariateFeatureStateValue[]
 } & Partial<InjectedSegmentOverrideProps>
@@ -69,10 +81,24 @@ type InjectedSegmentOverrideProps = {
   removeMultivariateOption: (id: number) => void
 }
 
+// Replaces each option's default weight with its environment allocation.
+const mergeEnvironmentWeights = (options: any[], variations: any[]): any[] =>
+  options.map((v: any) => {
+    const matchingVariation = variations.find(
+      (e: any) => e.multivariate_feature_option === v.id,
+    )
+    return {
+      ...v,
+      default_percentage_allocation:
+        (matchingVariation && matchingVariation.percentage_allocation) ||
+        v.default_percentage_allocation ||
+        0,
+    }
+  })
+
 const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const {
     changeRequest: existingChangeRequest,
-    defaultExperiment,
     disableCreate,
     environmentId,
     environmentVariations,
@@ -86,6 +112,11 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     updateSegments,
   } = props
   const flagId = props.environmentFlag?.id
+
+  const freeze = useFeatureExperimentFreeze(
+    props.projectFlag?.id,
+    environmentId,
+  )
 
   const [projectFlag, setProjectFlag] = useState<any>(() =>
     props.projectFlag
@@ -223,6 +254,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   useEffect(() => {
     if (props.projectFlag) {
       setProjectFlag(cloneDeep(props.projectFlag))
+      setSavedMultivariateOptions(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.projectFlag?.id])
@@ -232,22 +264,45 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     if (!identity && environmentVariations?.length) {
       setProjectFlag((prev: any) => ({
         ...prev,
-        multivariate_options: prev.multivariate_options?.map((v: any) => {
-          const matchingVariation = (
-            props.multivariate_options || environmentVariations
-          ).find((e: any) => e.multivariate_feature_option === v.id)
-          return {
-            ...v,
-            default_percentage_allocation:
-              (matchingVariation && matchingVariation.percentage_allocation) ||
-              v.default_percentage_allocation ||
-              0,
-          }
-        }),
+        multivariate_options:
+          prev.multivariate_options &&
+          mergeEnvironmentWeights(
+            prev.multivariate_options,
+            props.multivariate_options || environmentVariations,
+          ),
       }))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [environmentVariations])
+
+  // The persisted variants with the same environment weights merged in,
+  // so the modal's edited copy only differs after a user change. Refreshed
+  // from the edited copy after each successful value save.
+  const [savedMultivariateOptions, setSavedMultivariateOptions] = useState<
+    any[] | null
+  >(null)
+  const mvBaselineRefreshRef = useRef(false)
+  const originalMultivariateOptions = useMemo(() => {
+    if (savedMultivariateOptions) {
+      return savedMultivariateOptions
+    }
+    const options = props.projectFlag?.multivariate_options
+    if (!options) {
+      return undefined
+    }
+    if (identity || !environmentVariations?.length) {
+      return options
+    }
+    return mergeEnvironmentWeights(
+      options,
+      props.multivariate_options || environmentVariations,
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    props.projectFlag?.multivariate_options,
+    environmentVariations,
+    savedMultivariateOptions,
+  ])
 
   const cleanInputValue = (value: any) => {
     if (value && typeof value === 'string') {
@@ -280,6 +335,17 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     const hasMultivariate =
       props.environmentFlag?.multivariate_feature_state_values?.length
 
+    // A multivariate override is stored as the control value plus a variation
+    // at 100%, so its value is normally re-synced to the control on save. An
+    // override predating the flag becoming multivariate holds a value that
+    // this model cannot express, and re-syncing would destroy it.
+    const keepsOwnValue = hasUnmatchedIdentityOverride({
+      controlValue:
+        projectFlag.environment_feature_state?.feature_state_value ?? null,
+      overrideValue: environmentFlag.feature_state_value ?? null,
+      variationOverrides: environmentFlag.multivariate_feature_state_values,
+    })
+
     if (identity) {
       !isSaving &&
         projectFlag.name &&
@@ -289,9 +355,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           identity,
           identityFlag: Object.assign({}, props.identityFlag || {}, {
             enabled: environmentFlag.enabled,
-            feature_state_value: hasMultivariate
-              ? props.environmentFlag?.feature_state_value
-              : cleanInputValue(environmentFlag.feature_state_value),
+            feature_state_value:
+              hasMultivariate && !keepsOwnValue
+                ? props.environmentFlag?.feature_state_value
+                : cleanInputValue(environmentFlag.feature_state_value),
             multivariate_options:
               environmentFlag.multivariate_feature_state_values,
           }),
@@ -407,9 +474,22 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
 
   return (
     <Provider
+      onError={() => {
+        if (mvBaselineRefreshRef.current) {
+          // The value save failed — keep the unsaved indicators accurate.
+          mvBaselineRefreshRef.current = false
+          setValueChanged(true)
+        }
+      }}
       onSave={() => {
         if (identity) {
           close()
+        }
+        if (mvBaselineRefreshRef.current) {
+          mvBaselineRefreshRef.current = false
+          setSavedMultivariateOptions(
+            cloneDeep(projectFlag.multivariate_options || []),
+          )
         }
         AppActions.refreshFeatures(projectId, environmentId)
 
@@ -431,13 +511,94 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           editFeatureSegments,
           editFeatureSettings,
           editFeatureValue,
+          saveVariationValues,
         }: any,
       ) => {
+        // Not props.projectFlag: that carries the project default weights, so
+        // comparing against it reports a weight edit that is not one.
+        const variationChanges = diffVariations({
+          edited: projectFlag.multivariate_options,
+          stored: originalMultivariateOptions,
+        })
+        const hasVariationChanges =
+          variationChanges.values || variationChanges.added
+
+        const onSaveVariationValues = () =>
+          openConfirm({
+            body: 'Variation values belong to the feature, so this applies to every environment straight away and is not part of a change request.',
+            noText: 'Cancel',
+            onYes: () => {
+              saveVariationValues(
+                projectId,
+                projectFlag,
+                props.projectFlag,
+                (savedProjectFlag: any) => {
+                  // Only the response carries ids for variations created
+                  // here, but it zeroes every weight, so keep the edited ones.
+                  const persisted = savedProjectFlag?.multivariate_options
+                  if (!persisted?.length) {
+                    return
+                  }
+                  const merged = persisted.map((option: any, i: number) => ({
+                    ...option,
+                    default_percentage_allocation:
+                      projectFlag.multivariate_options?.[i]
+                        ?.default_percentage_allocation ??
+                      option.default_percentage_allocation,
+                  }))
+                  setProjectFlag((prev: any) => ({
+                    ...prev,
+                    multivariate_options: merged,
+                  }))
+                  // Weights are not part of this save, so the baseline keeps
+                  // the ones it had and an edited weight stays dirty. A new
+                  // variation has none, and the server starts it at 0.
+                  setSavedMultivariateOptions(
+                    cloneDeep(
+                      merged.map((option: any) => ({
+                        ...option,
+                        default_percentage_allocation:
+                          originalMultivariateOptions?.find(
+                            (stored: any) => stored.id === option.id,
+                          )?.default_percentage_allocation ?? 0,
+                      })),
+                    ),
+                  )
+                },
+              )
+            },
+            title: 'Save variation values',
+            yesText: 'Save for all environments',
+          })
+
         const saveFeatureValue = saveFeatureWithValidation(
           (schedule?: boolean) => {
             if ((is4Eyes || schedule) && !identity) {
+              const approvable = hasApprovableChanges({
+                editedEnabled: environmentFlag.enabled,
+                editedValue: environmentFlag.feature_state_value,
+                segmentOverridesChanged: segmentsChanged,
+                storedEnabled: props.environmentFlag?.enabled,
+                storedValue: props.environmentFlag?.feature_state_value,
+                weightsChanged: variationChanges.weights,
+              })
+
+              if (!approvable) {
+                const what = schedule
+                  ? 'a scheduled change'
+                  : 'a change request'
+                toast(
+                  hasVariationChanges
+                    ? `Variation changes are saved separately, and nothing else has changed, so there is nothing to put in ${what}.`
+                    : `Nothing has changed, so there is nothing to put in ${what}.`,
+                  'warning',
+                )
+                return
+              }
+
               setSegmentsChanged(false)
-              setValueChanged(false)
+              // Variation edits stay unsaved if the user cancels the request.
+              setValueChanged(hasVariationChanges)
               const segmentFeatureStates = (segmentOverrides || [])
                 .filter((override: any) => !override.toRemove)
                 .map((override: any) => ({
@@ -538,6 +699,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
               )
             } else {
               setValueChanged(false)
+              mvBaselineRefreshRef.current = true
               save(editFeatureValue, isSaving)
             }
           },
@@ -575,7 +737,15 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                 <Tabs
                   urlParam='tab'
                   history={props.history}
-                  onChange={() => setTabKey((k) => k + 1)}
+                  onChange={() => {
+                    setTabKey((k) => k + 1)
+                    // A save error belongs to the tab it occurred on — the
+                    // other tabs cannot render its shape meaningfully.
+                    if (FeatureListStore.error) {
+                      FeatureListStore.error = null
+                      FeatureListStore.trigger('change')
+                    }
+                  }}
                   overflowX
                 >
                   <TabItem
@@ -587,6 +757,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       error={error}
                       projectId={projectId}
                       noPermissions={!!noPermissions}
+                      freeze={freeze}
                       featureState={environmentFlag}
                       projectFlag={projectFlag}
                       environmentFlag={props.environmentFlag}
@@ -596,6 +767,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       isVersioned={isVersioned}
                       isSaving={isSaving}
                       existingChangeRequest={!!existingChangeRequest}
+                      hasVariationChanges={hasVariationChanges}
+                      onSaveVariationValues={onSaveVariationValues}
+                      originalMultivariateOptions={originalMultivariateOptions}
                       onSaveFeatureValue={saveFeatureValue}
                       onEnvironmentFlagChange={(changes: any) => {
                         setEnvironmentFlag((prev: any) => ({
@@ -623,10 +797,12 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         <SegmentOverridesTab
                           projectId={projectId}
                           environmentId={environmentId}
+                          freeze={freeze}
                           projectFlag={projectFlag}
                           segmentOverrides={segmentOverrides}
                           updateSegments={updateSegments}
                           controlValue={environmentFlag.feature_state_value}
+                          controlEnabled={environmentFlag.enabled}
                           onSegmentsChange={() => setSegmentsChanged(true)}
                           saveFeatureSegments={saveFeatureSegments}
                           isSaving={isSaving}
@@ -733,6 +909,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       <FeatureSettings
                         identity={identity}
                         projectId={projectId}
+                        environmentId={environmentId}
+                        freeze={freeze}
                         projectFlag={projectFlag}
                         isSaving={isSaving}
                         invalid={invalid}
@@ -780,9 +958,11 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   projectId={projectId}
                   error={error}
                   featureState={props.environmentFlag || environmentFlag}
+                  storedFeatureState={
+                    props.identityFlag || props.environmentFlag
+                  }
                   projectFlag={projectFlag}
                   identity={identity}
-                  defaultExperiment={defaultExperiment}
                   overrideFeatureState={
                     props.identityFlag ? environmentFlag : null
                   }

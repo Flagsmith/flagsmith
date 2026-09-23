@@ -11,11 +11,13 @@ interface SegmentOverrideActionProps {
   onEdit: () => void
   hideViewSegment?: void
   onCopyValue: () => void
+  onCompare: () => void
   canEdit: boolean
   canCopyValue: boolean
+  canCompare: boolean
 }
 
-type ActionType = 'edit' | 'remove' | 'copy'
+type ActionType = 'edit' | 'remove' | 'copy' | 'compare'
 
 function calculateListPosition(
   btnEl: HTMLElement,
@@ -27,10 +29,12 @@ function calculateListPosition(
 }
 
 const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
+  canCompare,
   canCopyValue,
   canEdit,
   canRemove,
   hideViewSegment,
+  onCompare,
   onCopyValue,
   onEdit,
   onRemove,
@@ -55,10 +59,12 @@ const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
         onRemove()
       } else if (action === 'copy') {
         onCopyValue()
+      } else if (action === 'compare') {
+        onCompare()
       }
       close()
     },
-    [close, onRemove, onCopyValue, onEdit],
+    [close, onRemove, onCopyValue, onEdit, onCompare],
   )
 
   useOutsideClick(listRef, handleOutsideClick)
@@ -70,7 +76,7 @@ const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
     listRef.current.style.left = `${listPosition.left}px`
   }, [isOpen])
 
-  if (!canEdit && !!canRemove) {
+  if (!canEdit && !!canRemove && !canCompare) {
     return (
       <Button onClick={onRemove} size='small' className='btn-with-icon'>
         <span>Remove Override</span>
@@ -78,7 +84,7 @@ const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
     )
   }
 
-  if (!!canEdit && !canRemove && !hideViewSegment) {
+  if (!!canEdit && !canRemove && !hideViewSegment && !canCompare) {
     return (
       <Button onClick={() => handleActionClick('edit')} size='small'>
         View Segment
@@ -86,7 +92,7 @@ const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
     )
   }
 
-  if (!canEdit && !canRemove) {
+  if (!canEdit && !canRemove && !canCompare) {
     return null
   }
 
@@ -131,6 +137,18 @@ const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
             >
               <Icon name='copy' width={18} fill='#9DA4AE' />
               <span>Set value from environment</span>
+            </div>
+          )}
+          {!!canCompare && (
+            <div
+              className='feature-action__item'
+              onClick={(e) => {
+                e.stopPropagation()
+                handleActionClick('compare')
+              }}
+            >
+              <Icon name='difference' width={18} />
+              <span>Compare</span>
             </div>
           )}
 

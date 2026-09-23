@@ -9,7 +9,7 @@ from task_processor.decorators import (
     register_task_handler,
 )
 
-from app_analytics.influxdb_wrapper import influxdb_client
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.models import Environment
 from projects.models import Project
 from sse import sse_service
@@ -52,7 +52,7 @@ if settings.AWS_SSE_LOGS_BUCKET_NAME:
             agg_request_count[log.api_key] = agg_request_count.get(log.api_key, 0) + 1
             agg_last_event_generated_at[log.api_key] = log.generated_at
 
-        with influxdb_client.write_api(
+        with InfluxDBWrapper.get_client().write_api(
             write_options=WriteOptions(batch_size=100, flush_interval=1000)
         ) as write_api:
             environments = Environment.objects.filter(

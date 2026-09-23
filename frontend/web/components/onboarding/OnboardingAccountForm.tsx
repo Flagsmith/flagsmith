@@ -100,7 +100,6 @@ const OnboardingAccountForm: FC<OnboardingAccountFormProps> = ({
             onChange={(e: FormEvent) => setFieldValue('password', e)}
             className='mb-0 full-width'
             type='password'
-            name='password'
             id='password'
           />
           <PasswordRequirements

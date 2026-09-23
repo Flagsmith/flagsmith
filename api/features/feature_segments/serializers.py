@@ -60,11 +60,6 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
 
         priority: int | None = self.validated_data.get("priority", None)
 
-        if kwargs["environment"].use_v2_feature_versioning:  # pragma: no cover
-            assert kwargs["environment_feature_version"] is not None, (
-                "Must provide environment_feature_version for environment using v2 versioning"
-            )
-
         if priority is not None:
             collision_qs = FeatureSegment.objects.filter(
                 environment=kwargs["environment"],

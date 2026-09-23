@@ -17,10 +17,9 @@ class FeatureImportPermissions(IsAuthenticated):
         environment = Environment.objects.select_related(
             "project__organisation",
         ).get(id=view.kwargs["environment_id"])
-        organisation = environment.project.organisation
 
-        # Since feature imports can be destructive, use org admin.
-        return request.user.is_organisation_admin(organisation)  # type: ignore[union-attr,no-any-return]
+        # Since feature imports can be destructive, use project admin.
+        return request.user.is_project_admin(environment.project)  # type: ignore[union-attr]
 
 
 class CreateFeatureExportPermissions(IsAuthenticated):
@@ -29,7 +28,7 @@ class CreateFeatureExportPermissions(IsAuthenticated):
             return False
 
         environment = Environment.objects.get(id=request.data["environment_id"])
-        return request.user.is_environment_admin(environment)  # type: ignore[union-attr,no-any-return]
+        return request.user.is_environment_admin(environment)  # type: ignore[union-attr]
 
 
 class DownloadFeatureExportPermissions(IsAuthenticated):
@@ -39,7 +38,7 @@ class DownloadFeatureExportPermissions(IsAuthenticated):
 
         feature_export = FeatureExport.objects.get(id=view.kwargs["feature_export_id"])
 
-        return request.user.is_environment_admin(feature_export.environment)  # type: ignore[union-attr,no-any-return]
+        return request.user.is_environment_admin(feature_export.environment)  # type: ignore[union-attr]
 
 
 class FeatureExportListPermissions(IsAuthenticated):
@@ -50,7 +49,7 @@ class FeatureExportListPermissions(IsAuthenticated):
         project = Project.objects.get(id=view.kwargs["project_pk"])
         # The user will only see environment feature exports
         # that the user is an environment admin.
-        return request.user.has_project_permission(VIEW_PROJECT, project)  # type: ignore[union-attr,no-any-return]
+        return request.user.has_project_permission(VIEW_PROJECT, project)  # type: ignore[union-attr]
 
 
 class FeatureImportListPermissions(IsAuthenticated):
@@ -61,4 +60,4 @@ class FeatureImportListPermissions(IsAuthenticated):
         project = Project.objects.get(id=view.kwargs["project_pk"])
         # The user will only see environment feature imports
         # that the user is an environment admin.
-        return request.user.has_project_permission(VIEW_PROJECT, project)  # type: ignore[union-attr,no-any-return]
+        return request.user.has_project_permission(VIEW_PROJECT, project)  # type: ignore[union-attr]

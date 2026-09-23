@@ -85,6 +85,15 @@ class Highlight extends React.Component {
     if (nextState.expandable !== this.state.expandable) return true
     if (nextState.expanded !== this.state.expanded) return true
     if (nextProps['data-test'] !== this.props['data-test']) return true
+    // Without these a value editor that turns read-only keeps its old
+    // contentEditable and never gains aria-readonly, because the text and
+    // className are unchanged.
+    if (nextProps.disabled !== this.props.disabled) return true
+    if (nextProps.role !== this.props.role) return true
+    if (nextProps['aria-readonly'] !== this.props['aria-readonly']) return true
+    if (nextProps['aria-labelledby'] !== this.props['aria-labelledby'])
+      return true
+    if (!nextProps.onChange !== !this.props.onChange) return true
     return this.state.value.__html !== `${nextProps.children}`
   }
 
@@ -103,12 +112,20 @@ class Highlight extends React.Component {
     this.props.onBlur?.()
   }
 
+  // The value to render before escaping: the live edit while focused, the
+  // current value when there's content, otherwise a disabled/empty placeholder.
+  getRawHtml = () => {
+    if (this.state.focus) return this.state.value
+    if (this.props.children) return { ...this.state.value }
+    return this.props.disabled ? defaultDisabledValue : defaultValue
+  }
+
   render() {
     const {
       children,
       className,
-      disabled,
       element: Element,
+      embedded,
       innerHTML,
     } = this.props
     const props = { className, ref: this.setEl }
@@ -125,23 +142,8 @@ class Highlight extends React.Component {
       return <Element {...props}>{children}</Element>
     }
 
-    const html = this.props.preventEscape
-      ? this.state.focus
-        ? this.state.value
-        : this.props.children
-        ? { ...this.state.value }
-        : disabled
-        ? defaultDisabledValue
-        : defaultValue
-      : escapeHtml(
-          this.state.focus
-            ? this.state.value
-            : this.props.children
-            ? { ...this.state.value }
-            : disabled
-            ? defaultDisabledValue
-            : defaultValue,
-        )
+    const raw = this.getRawHtml()
+    const html = escapeHtml(raw)
     return (
       <div className={this.state.expandable ? 'expandable' : ''}>
         <pre
@@ -163,11 +165,18 @@ class Highlight extends React.Component {
           <code
             style={this.props.style}
             data-test={this.props['data-test']}
+            aria-labelledby={this.props['aria-labelledby']}
+            // Set by the caller: a value field wants role=textbox so its label
+            // names it, while the code blocks that also use Highlight are not
+            // form controls and pass nothing.
+            role={this.props.role}
+            aria-readonly={this.props['aria-readonly']}
+            aria-multiline={this.props.role === 'textbox' ? true : undefined}
             contentEditable={!!this.props.onChange}
             onBlur={this.onBlur}
             onFocus={this.onFocus}
             onInput={this._handleInput}
-            className={`${className} ${
+            className={`${className}${embedded ? ' hljs--embedded' : ''} ${
               !this.state.value || !this.state.value.__html ? 'empty' : ''
             }`}
             dangerouslySetInnerHTML={html}
@@ -182,7 +191,7 @@ class Highlight extends React.Component {
             >
               {this.state.expanded ? 'Hide' : 'Show More'}
               <span
-                className={`icon ml-2 ion text-primary ${
+                className={`icon ml-2 ion icon-action ${
                   this.state.expanded
                     ? 'ion-ios-arrow-up'
                     : 'ion-ios-arrow-down'

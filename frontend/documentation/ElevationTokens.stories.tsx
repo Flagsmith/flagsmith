@@ -6,7 +6,7 @@ import DocPage from './components/DocPage'
 import { shadow } from 'common/theme/tokens'
 
 const meta: Meta = {
-  parameters: { chromatic: { disableSnapshot: true }, layout: 'padded' },
+  parameters: { layout: 'padded' },
   title: 'Design System/Elevation',
 }
 export default meta

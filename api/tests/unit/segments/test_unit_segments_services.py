@@ -1,7 +1,10 @@
+from datetime import timedelta
 from typing import cast
 
+import pytest
 from django.db import connection, reset_queries
 from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
 from flag_engine.segments.constants import EQUAL
 
 from api_keys.models import MasterAPIKey
@@ -11,10 +14,12 @@ from audit.related_object_type import RelatedObjectType
 from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
+from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
-from segments.services import delete_segment
+from segments.services import delete_segment, get_all_live_or_scheduled_overrides
 from users.models import FFAdminUser
 
 
@@ -44,6 +49,7 @@ def _create_segment_with_nested_rules(
     return segment
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__called_with_valid_segment__soft_deletes_segment(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -59,6 +65,7 @@ def test_delete_segment__called_with_valid_segment__soft_deletes_segment(
     assert segment.deleted_at is not None
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__segment_with_nested_rules__soft_deletes_all_rules(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -88,6 +95,7 @@ def test_delete_segment__segment_with_nested_rules__soft_deletes_all_rules(
         assert rule.deleted_at is not None
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__segment_with_nested_conditions__soft_deletes_all_conditions(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -109,6 +117,7 @@ def test_delete_segment__segment_with_nested_conditions__soft_deletes_all_condit
         assert condition.deleted_at is not None
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__called_with_author__creates_audit_log(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -134,6 +143,7 @@ def test_delete_segment__called_with_author__creates_audit_log(
     assert audit_log.related_object_uuid == segment_uuid
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__segment_with_revision__deletes_all_versions(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -152,6 +162,7 @@ def test_delete_segment__segment_with_revision__deletes_all_versions(
     assert revision.deleted_at is not None
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__varying_segment_sizes__query_count_is_constant(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -176,10 +187,11 @@ def test_delete_segment__varying_segment_sizes__query_count_is_constant(
     large_query_count = len(ctx_large.captured_queries)
 
     # Then
-    # 11 for the delete, 15 for the audit log task (runs synchronously in tests)
-    assert small_query_count == large_query_count == 26
+    # 13 for the delete, 15 for the audit log task (runs synchronously in tests)
+    assert small_query_count == large_query_count == 28
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__segment_without_rules__soft_deletes_segment(
     project: Project, admin_user: FFAdminUser
 ) -> None:
@@ -195,6 +207,7 @@ def test_delete_segment__segment_without_rules__soft_deletes_segment(
     assert segment.deleted_at is not None
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__called_with_master_api_key__records_api_key_in_audit_log(
     project: Project, organisation: Organisation
 ) -> None:
@@ -221,6 +234,7 @@ def test_delete_segment__called_with_master_api_key__records_api_key_in_audit_lo
     assert audit_log.author is None
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__segment_with_feature_segment__deletes_feature_segments(
     project: Project,
     environment: Environment,
@@ -242,6 +256,7 @@ def test_delete_segment__segment_with_feature_segment__deletes_feature_segments(
     assert not FeatureSegment.objects.filter(id=feature_segment_id).exists()
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_delete_segment__segment_with_feature_state__cascades_to_feature_states(
     project: Project,
     environment: Environment,
@@ -268,6 +283,7 @@ def test_delete_segment__segment_with_feature_state__cascades_to_feature_states(
     assert not FeatureState.objects.filter(id=feature_state_id).exists()
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_copy_rules_and_conditions_from__source_with_nested_rules__copies_rules(
     project: Project,
 ) -> None:
@@ -294,6 +310,7 @@ def test_copy_rules_and_conditions_from__source_with_nested_rules__copies_rules(
     assert target_condition_count == source_condition_count
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_copy_rules_and_conditions_from__target_has_existing_rules__replaces_existing_rules(
     project: Project,
 ) -> None:
@@ -324,6 +341,7 @@ def test_copy_rules_and_conditions_from__target_has_existing_rules__replaces_exi
     assert target_rule_count == source_rule_count
 
 
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 def test_copy_rules_and_conditions_from__varying_segment_sizes__query_count_is_constant(
     project: Project,
 ) -> None:
@@ -350,3 +368,187 @@ def test_copy_rules_and_conditions_from__varying_segment_sizes__query_count_is_c
 
     # Then - query count should be the same (O(depth) not O(n))
     assert small_query_count == large_query_count == 10
+
+
+def test_get_all_live_or_scheduled_overrides__feature_versioning_v1_uncommitted_change_request__returns_no_overrides(
+    feature_segment: FeatureSegment,
+    feature: Feature,
+    environment: Environment,
+    change_request: ChangeRequest,
+) -> None:
+    # Given
+    FeatureState.objects.create(
+        feature_segment=feature_segment,
+        feature=feature,
+        environment=environment,
+        change_request=change_request,
+        version=None,
+    )
+
+    # When
+    overrides = list(get_all_live_or_scheduled_overrides())
+
+    # Then
+    assert overrides == []
+
+
+@pytest.mark.usefixtures("segment_featurestate")
+def test_get_all_live_or_scheduled_overrides__feature_versioning_v1_committed_change_request__returns_distinct_overrides(
+    feature_segment: FeatureSegment,
+    feature: Feature,
+    environment: Environment,
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    FeatureState.objects.create(
+        feature_segment=feature_segment,
+        feature=feature,
+        environment=environment,
+        change_request=change_request,
+        version=None,
+    )
+    change_request.commit(admin_user)
+
+    # When
+    overrides = list(get_all_live_or_scheduled_overrides())
+
+    # Then
+    assert overrides == [feature_segment]
+
+
+@pytest.mark.usefixtures("segment_featurestate")
+def test_get_all_live_or_scheduled_overrides__feature_versioning_v1_scheduled_feature_change__returns_distinct_overrides(
+    feature_segment: FeatureSegment,
+    feature: Feature,
+    environment: Environment,
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    FeatureState.objects.create(
+        feature_segment=feature_segment,
+        feature=feature,
+        environment=environment,
+        change_request=change_request,
+        live_from=timezone.now() + timedelta(days=1),
+        version=None,
+    )
+    change_request.commit(admin_user)
+
+    # When
+    overrides = list(get_all_live_or_scheduled_overrides())
+
+    # Then
+    assert overrides == [feature_segment]
+
+
+def test_get_all_live_or_scheduled_overrides__feature_versioning_v2_uncommitted_change_request__returns_no_overrides(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+    change_request: ChangeRequest,
+) -> None:
+    # Given
+    version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+        change_request=change_request,
+    )
+    FeatureState.objects.create(
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=version,
+        ),
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version,
+    )
+
+    # When
+    overrides = list(get_all_live_or_scheduled_overrides())
+
+    # Then
+    assert overrides == []
+
+
+def test_get_all_live_or_scheduled_overrides__feature_versioning_v2_committed_change_request__returns_distinct_overrides(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    live_version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+    live_version.live_from = timezone.now() - timedelta(days=1)
+    live_version.save()
+    FeatureState.objects.create(
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=live_version,
+        ),
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=live_version,
+    )
+    version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+        change_request=change_request,
+    )
+    committed_override = FeatureSegment.objects.get(environment_feature_version=version)
+    change_request.commit(admin_user)
+
+    # When
+    overrides = list(get_all_live_or_scheduled_overrides())
+
+    # Then
+    assert overrides == [committed_override]
+
+
+def test_get_all_live_or_scheduled_overrides__feature_versioning_v2_scheduled_feature_change__returns_distinct_overrides(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    live_version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+    live_override = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        environment_feature_version=live_version,
+    )
+    FeatureState.objects.create(
+        feature_segment=live_override,
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=live_version,
+    )
+    scheduled_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+        change_request=change_request,
+        live_from=timezone.now() + timedelta(days=1),
+    )
+    scheduled_override = FeatureSegment.objects.get(
+        environment_feature_version=scheduled_version
+    )
+    change_request.commit(admin_user)
+
+    # When
+    overrides = list(get_all_live_or_scheduled_overrides().order_by("id"))
+
+    # Then
+    assert overrides == [live_override, scheduled_override]

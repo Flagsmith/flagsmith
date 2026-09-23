@@ -921,6 +921,24 @@ def test_update_traits__unchanged_value__makes_single_query(  # type: ignore[no-
     assert True  # verified by django_assert_num_queries context manager above
 
 
+def test_update_traits__unchanged_sdk_trait_value_data__makes_single_query(
+    identity: Identity,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    trait: Trait,
+) -> None:
+    # Given
+    trait_data_items = [
+        generate_trait_data_item(
+            trait_key=trait.trait_key,
+            trait_value={"type": trait.value_type, "value": trait.trait_value},
+        ),
+    ]
+
+    # When / Then
+    with django_assert_num_queries(1):
+        identity.update_traits(trait_data_items)
+
+
 @pytest.mark.parametrize(
     "environment_value, project_value, disabled_flag_returned",
     (

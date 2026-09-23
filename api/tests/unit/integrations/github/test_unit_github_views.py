@@ -7,7 +7,7 @@ import pytest
 import requests
 import responses
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.response import Response
@@ -259,6 +259,29 @@ def test_get_github_repository__github_pk_not_a_number__returns_400(  # type: ig
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {"github_pk": ["Must be an integer"]}
+
+
+def test_get_github_repository__configuration_in_other_organisation__returns_403(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+    organisation_two: Organisation,
+) -> None:
+    # Given
+    configuration = GithubConfiguration.objects.create(
+        organisation=organisation_two,
+        installation_id=7654321,
+    )
+
+    url = (
+        f"/api/v1/organisations/{organisation.id}"
+        f"/integrations/github/{configuration.id}/repositories/"
+    )
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 @responses.activate
@@ -634,9 +657,10 @@ def test_fetch_repositories__valid_installation__returns_repositories(
         json={
             "repositories": [
                 {
-                    "full_name": "owner/repo-name",
+                    "full_name": "acme-inc/my-repo",
                     "id": 1,
-                    "name": "repo-name",
+                    "name": "my-repo",
+                    "owner": {"login": "acme-inc"},
                 },
             ],
             "total_count": 1,
@@ -654,8 +678,14 @@ def test_fetch_repositories__valid_installation__returns_repositories(
     # Then
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
-    assert "results" in response_json
-    assert len(response_json["results"]) == 1
+    assert response_json["results"] == [
+        {
+            "full_name": "acme-inc/my-repo",
+            "id": 1,
+            "name": "my-repo",
+            "owner": {"login": "acme-inc"},
+        }
+    ]
 
 
 @pytest.mark.parametrize(

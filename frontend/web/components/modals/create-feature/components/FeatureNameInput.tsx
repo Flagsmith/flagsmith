@@ -5,6 +5,7 @@ import Icon from 'components/icons/Icon'
 import InfoMessage from 'components/InfoMessage'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
+import { sanitizeFeatureName } from 'common/utils/sanitizeFeatureName'
 import FormGroup from 'components/base/grid/FormGroup'
 import Row from 'components/base/grid/Row'
 
@@ -30,7 +31,6 @@ const FeatureNameInput: FC<FeatureNameInputProps> = ({
   return (
     <FormGroup className='mb-4 mt-2'>
       <InputGroup
-        autoFocus={autoFocus}
         data-test='featureID'
         inputProps={{
           className: 'full-width',
@@ -40,8 +40,9 @@ const FeatureNameInput: FC<FeatureNameInputProps> = ({
         }}
         value={value}
         onChange={(e: InputEvent) => {
-          const newName = Utils.safeParseEventValue(e).replace(/ /g, '_')
-          onChange(caseSensitive ? newName.toLowerCase() : newName)
+          onChange(
+            sanitizeFeatureName(Utils.safeParseEventValue(e), caseSensitive),
+          )
         }}
         isValid={!!value && regexValid}
         type='text'

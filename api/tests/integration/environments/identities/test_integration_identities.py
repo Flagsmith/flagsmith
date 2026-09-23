@@ -5,7 +5,7 @@ from unittest import mock
 
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -73,14 +73,14 @@ def test_get_feature_states_for_identity__mv_percentage_allocation__returns_corr
     create_mv_option_with_api(
         admin_client,
         project,
-        multivariate_feature_id,  # type: ignore[arg-type]
+        multivariate_feature_id,
         variant_1_percentage_allocation,
         variant_1_value,
     )
     variant_2_mvfo_id = create_mv_option_with_api(
         admin_client,
         project,
-        multivariate_feature_id,  # type: ignore[arg-type]
+        multivariate_feature_id,
         variant_2_percentage_allocation,
         variant_2_value,
     )
@@ -151,6 +151,112 @@ def test_get_feature_states_for_identity__mv_percentage_allocation__returns_corr
     assert values_dict[multivariate_feature_id] == variant_2_value
 
 
+@pytest.mark.parametrize(
+    "hashed_percentage, expected_variant",
+    (
+        (variant_1_percentage_allocation - 1, "variant-1"),
+        (total_variance_percentage - 1, "variant-2"),
+        (total_variance_percentage + 1, "control"),
+    ),
+)
+@mock.patch("features.models.get_hashed_percentage_for_object_ids")
+def test_get_feature_states_for_identity__mv_allocation__returns_variant(  # type: ignore[no-untyped-def]
+    mock_get_hashed_percentage_value,
+    hashed_percentage,
+    expected_variant,
+    sdk_client,
+    admin_client,
+    project,
+    environment_api_key,
+    environment,
+    identity,
+    identity_identifier,
+):
+    # Given
+    # a standard (non-multivariate) feature
+    standard_feature_id = create_feature_with_api(
+        client=admin_client,
+        project_id=project,
+        feature_name="standard_feature",
+        initial_value="control",
+    )
+
+    # and a multivariate feature with two keyed variants spanning part of the range,
+    # so the remainder falls through to the control
+    multivariate_feature_id = create_feature_with_api(
+        client=admin_client,
+        project_id=project,
+        feature_name="multivariate_feature",
+        initial_value=control_value,
+        feature_type=MULTIVARIATE,
+    )
+    create_mv_option_with_api(
+        admin_client,
+        project,
+        multivariate_feature_id,
+        variant_1_percentage_allocation,
+        variant_1_value,
+        key="variant-1",
+    )
+    create_mv_option_with_api(
+        admin_client,
+        project,
+        multivariate_feature_id,
+        variant_2_percentage_allocation,
+        variant_2_value,
+        key="variant-2",
+    )
+
+    # When
+    # the identity hashes into a known allocation band
+    mock_get_hashed_percentage_value.return_value = hashed_percentage
+    base_url = reverse("api-v1:sdk-identities")
+    url = f"{base_url}?identifier={identity_identifier}"
+    response = sdk_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    variant_by_feature = {
+        flag["feature"]["id"]: flag["variant"] for flag in response.json()["flags"]
+    }
+    # the multivariate flag reports the variant key (or "control" on fall-through)
+    assert variant_by_feature[multivariate_feature_id] == expected_variant
+    # and the standard flag has no variant
+    assert variant_by_feature[standard_feature_id] is None
+
+
+def test_get_flags__multivariate_feature__response_excludes_variant(  # type: ignore[no-untyped-def]
+    sdk_client,
+    admin_client,
+    project,
+    environment,
+):
+    # Given - a multivariate feature with a keyed variant
+    multivariate_feature_id = create_feature_with_api(
+        client=admin_client,
+        project_id=project,
+        feature_name="multivariate_feature",
+        initial_value=control_value,
+        feature_type=MULTIVARIATE,
+    )
+    create_mv_option_with_api(
+        admin_client,
+        project,
+        multivariate_feature_id,
+        100,
+        variant_1_value,
+        key="variant-1",
+    )
+
+    # When - the environment flags are fetched (no identity / remote evaluation)
+    response = sdk_client.get(reverse("api-v1:flags"))
+
+    # Then - variant and metadata are scoped to the identities endpoint only
+    assert response.status_code == status.HTTP_200_OK
+    assert all("variant" not in flag for flag in response.json())
+    assert all("metadata" not in flag for flag in response.json())
+
+
 def test_get_feature_states_for_identity__multiple_mv_features__single_mv_query(  # type: ignore[no-untyped-def]
     sdk_client,
     admin_client,
@@ -174,14 +280,14 @@ def test_get_feature_states_for_identity__multiple_mv_features__single_mv_query(
         create_mv_option_with_api(
             admin_client,
             project,
-            feature_id,  # type: ignore[arg-type]
+            feature_id,
             variant_1_percentage_allocation,
             variant_1_value,
         )
         create_mv_option_with_api(
             admin_client,
             project,
-            feature_id,  # type: ignore[arg-type]
+            feature_id,
             variant_2_percentage_allocation,
             variant_2_value,
         )
@@ -189,7 +295,7 @@ def test_get_feature_states_for_identity__multiple_mv_features__single_mv_query(
     base_url = reverse("api-v1:sdk-identities")
     url = f"{base_url}?identifier={identity_identifier}"
 
-    with django_assert_num_queries(6) as captured:
+    with django_assert_num_queries(7) as captured:
         first_identity_response = sdk_client.get(url)
     expected_queries = [
         query
@@ -209,19 +315,19 @@ def test_get_feature_states_for_identity__multiple_mv_features__single_mv_query(
     create_mv_option_with_api(
         admin_client,
         project,
-        feature_id,  # type: ignore[arg-type]
+        feature_id,
         variant_1_percentage_allocation,
         variant_1_value,
     )
     create_mv_option_with_api(
         admin_client,
         project,
-        feature_id,  # type: ignore[arg-type]
+        feature_id,
         variant_2_percentage_allocation,
         variant_2_value,
     )
 
-    with django_assert_num_queries(5) as captured:
+    with django_assert_num_queries(6) as captured:
         second_identity_response = sdk_client.get(url)
     expected_queries = [
         query

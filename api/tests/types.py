@@ -1,11 +1,14 @@
-import typing
-from typing import Callable, Literal, Protocol
+from typing import Callable, Literal, Optional, Protocol
 
 from django_test_migrations.migrator import Migrator
 
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.permissions.models import UserOrganisationPermission
 from projects.models import UserProjectPermission
+from segments.types import SegmentRule
+
+_SegmentRulesModifier = Callable[[list[SegmentRule]], None]
+InvalidSegmentRulesCase = tuple[_SegmentRulesModifier, dict[str, object]]
 
 # TODO: these type aliases aren't strictly correct according to mypy
 #  See here for more details: https://github.com/Flagsmith/flagsmith/issues/5140
@@ -39,5 +42,16 @@ class EnableFeaturesFixture(Protocol):
     def __call__(self, *feature_names: str) -> None: ...
 
 
-class MigratorFactory(typing.Protocol):
-    def __call__(self, name: typing.Optional[str] = None) -> Migrator: ...
+class MigratorFactory(Protocol):
+    def __call__(self, name: Optional[str] = None) -> Migrator: ...
+
+
+class CreateSegmentOverrideFixture(Protocol):
+    def __call__(
+        self,
+        environment_api_key: str,
+        feature_id: int,
+        segment_id: int,
+        enabled: bool = True,
+        priority: int | None = None,
+    ) -> None: ...

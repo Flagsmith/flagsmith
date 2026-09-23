@@ -20,7 +20,7 @@ Organisations allow you and other team members to manage projects and their feat
 
 ### Projects
 
-Projects contain one or more environments that share a single set of features. Organisations can have any number of projects. Paid/paying organisations can have unlimited number of projects.
+Projects contain one or more environments that share a single set of features. Organisations can have any number of projects. Paid/paying organisations can have an unlimited number of projects.
 
 ### Environments
 
@@ -28,7 +28,7 @@ Environments are a way to separate the configuration of your features. For examp
 
 ### Features
 
-Features are shared across all environments within a project, but their values/states can be modified per environment. Features can be toggled on/off or assigned values (e.g., string, integer, boolean, or multivariate values).
+Features are shared across all environments within a project, but their values/states can be modified per environment. Features can be toggled on and off or assigned values (e.g., string, integer, boolean, or multivariate values).
 
 ### Identities
 
@@ -42,7 +42,7 @@ You can store any number of traits against an identity. Traits are key-value pai
 
 - The number of times the user has logged in.
 - Whether they have accepted the application terms and conditions.
-- Their theme preference (eg. dark mode).
+- Their theme preference (e.g. dark mode).
 - Whether they have performed certain actions within your application.
 
 For more information, see [Traits](/flagsmith-concepts/identities#identity-traits).

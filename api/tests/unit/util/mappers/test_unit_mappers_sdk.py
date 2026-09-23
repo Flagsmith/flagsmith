@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from environments.identities.models import Identity
+from util.mappers.engine import map_identity_to_engine
 from util.mappers.sdk import map_environment_to_sdk_document
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -176,3 +177,26 @@ def test_map_environment_to_sdk_document__identity_overrides_disabled__returns_e
         "use_identity_composite_key_for_hashing": True,
         "use_identity_overrides_in_local_eval": False,
     }
+
+
+def test_map_environment_to_sdk_document__system_traits_set__excluded_from_document(
+    mocker: "MockerFixture",
+    environment: "Environment",
+    identity: Identity,
+    identity_featurestate: "FeatureState",
+) -> None:
+    # Given
+    engine_identity = map_identity_to_engine(identity, with_traits=False)
+    engine_identity.system_traits = {"flagsmith_cohort_2b6d1f5f": True}
+    mocker.patch(
+        "util.mappers.sdk.map_identity_to_engine",
+        return_value=engine_identity,
+    )
+
+    # When
+    result = map_environment_to_sdk_document(environment)
+
+    # Then
+    assert result["identity_overrides"] == [
+        engine_identity.model_dump(exclude={"system_traits"})
+    ]

@@ -76,7 +76,7 @@ const GettingStartedItem: FC<GettingStartedItemType> = (data) => {
                   ) : (
                     <Icon
                       name={data.icon || 'file-text'}
-                      className='text-body'
+                      className='text-default'
                     />
                   )}
                 </div>

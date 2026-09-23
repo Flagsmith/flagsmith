@@ -101,7 +101,7 @@ class InviteLinkViewSet(
             raise SubscriptionDoesNotSupportSeatUpgrade()
 
         return InviteLink.objects.filter(
-            organisation__in=user.organisations.all()  # type: ignore[union-attr]
+            organisation__in=user.get_active_organisations()  # type: ignore[union-attr]
         ).filter(organisation__pk=organisation_pk)
 
     def perform_create(self, serializer):  # type: ignore[no-untyped-def]
@@ -111,21 +111,13 @@ class InviteLinkViewSet(
 @extend_schema_view(
     list=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "list_organization_invites",
-                "description": "Retrieves all pending invitations for the organization.",
-            },
-        },
+        operation_id="list_organization_invites",
+        description="Retrieves all pending invitations for the organisation.",
     ),
     create=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "create_organization_invite",
-                "description": "Send an invitation to join the organization with specified role and permissions.",
-            },
-        },
+        operation_id="create_organization_invite",
+        description="Send an invitation to join the organisation with specified role and permissions.",
     ),
 )
 class InviteViewSet(
@@ -152,9 +144,9 @@ class InviteViewSet(
         organisation_pk = self.kwargs.get("organisation_pk")
         user = self.request.user
 
-        return Invite.objects.filter(organisation__in=user.organisations.all()).filter(  # type: ignore[misc,union-attr]  # noqa: E501
-            organisation__id=organisation_pk
-        )
+        return Invite.objects.filter(  # type: ignore[misc]
+            organisation__in=user.get_active_organisations()  # type: ignore[union-attr]
+        ).filter(organisation__id=organisation_pk)
 
     def get_serializer_context(self) -> dict[str, Any]:
         context = super().get_serializer_context()

@@ -1,0 +1,34 @@
+.inline-input {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: baseline;
+  gap: 4px;
+  padding: 1px 8px;
+  // Round the top only; the bottom stays square so it sits flush with the
+  // action underline (rounded bottom corners fight the border).
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+  border-bottom: 1px solid var(--color-border-action);
+  // Resting fill so it reads as editable, not only on hover.
+  background-color: var(--color-surface-subtle);
+  cursor: text;
+  transition: background-color var(--duration-fast) var(--easing-standard);
+
+  &:hover,
+  &:focus-within {
+    background-color: var(--color-surface-muted);
+  }
+
+  // Flag name: a filled pill rather than an underline (it's referenced in code).
+  &--accent {
+    padding: 1px 8px;
+    border-bottom: none;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-action-subtle);
+    color: var(--color-text-action);
+
+    &:hover,
+    &:focus-within {
+      background-color: var(--color-surface-action-muted);
+    }
+  }
+}

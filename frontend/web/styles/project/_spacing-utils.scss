@@ -12,6 +12,7 @@
 
 // Custom utilities not in Bootstrap's scale
 .row-gap-4 { row-gap: $spacer; }
+.row-gap-3 { row-gap: $spacer * 0.75; }
 .row-gap-2 { row-gap: $spacer * 0.5; }
 .px-12 { padding-left: 6rem; padding-right: 6rem; }
 

@@ -1,0 +1,23 @@
+.onboarding-header {
+  display: flex;
+  flex-direction: column;
+
+  &__crumb {
+    font-size: 0.75rem;
+    letter-spacing: 0.3px;
+  }
+
+  &__title {
+    font-size: 1.625rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--color-text-default);
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    line-height: 2;
+    // Breathing room between the title and the pre-created-resources sentence.
+    margin-top: 12px;
+  }
+}

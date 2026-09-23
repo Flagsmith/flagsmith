@@ -9,6 +9,35 @@ on:
       - .github/**
 
 jobs:
+  notify-production-deploy-started:
+    name: Notify Production Deploy Started
+    # No needs, so this lands within seconds of the push. Knowing a deploy is
+    # in flight is only useful while it still is.
+    runs-on: ubuntu-latest
+    permissions:
+      # Enough to resolve the local action below.
+      contents: read
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          # Nothing runs git after this, so the token need not persist.
+          persist-credentials: false
+
+      - name: Notify Slack
+        # A Slack outage must not hold up a deploy.
+        continue-on-error: true
+        uses: ./.github/actions/notify-slack-deploy
+        with:
+          webhook_url: ${{ secrets.SLACK_FRONTEND_DEPLOY_WEBHOOK }}
+          service: Frontend
+          app_url: https://app.flagsmith.com
+          state: in_progress
+          commit_sha: ${{ github.sha }}
+          actor: ${{ github.actor }}
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
   run-unit-tests:
     runs-on: ubuntu-latest
     name: Run Unit Tests
@@ -78,6 +107,70 @@ jobs:
       gh_environment: production
       npm_build_environment: prod
     secrets: inherit
+
+  notify-production-deploy:
+    name: Notify Production Deploy
+    needs: [run-unit-tests, run-tests, deploy-production]
+    # Reports whatever happened, so a failed or superseded run is announced too.
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    permissions:
+      # Enough to resolve the local action below.
+      contents: read
+      # Reading this run's start time for the timings in the message.
+      actions: read
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          # Nothing runs git after this, so the token need not persist.
+          persist-credentials: false
+
+      - name: Resolve what to report
+        id: outcome
+        env:
+          UNIT_TESTS: ${{ needs.run-unit-tests.result }}
+          E2E_TESTS: ${{ needs.run-tests.result }}
+          DEPLOY: ${{ needs.deploy-production.result }}
+          GH_TOKEN: ${{ github.token }}
+          RUN_API_PATH: repos/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -eu
+
+          # Only the production job decides this. deploy-demo and deploy-demo2
+          # run alongside it, so the run's own conclusion cannot be used: one
+          # failed demo would report production as failed.
+          # A supersede reads as cancelled rather than failed, since run-tests
+          # cancels itself in progress when the next commit lands on main.
+          if [ "$DEPLOY" = success ]; then
+            conclusion=success
+          elif [ "$UNIT_TESTS" = cancelled ] || [ "$E2E_TESTS" = cancelled ] || [ "$DEPLOY" = cancelled ]; then
+            conclusion=cancelled
+          else
+            conclusion=failure
+          fi
+          echo "conclusion=$conclusion" >> "$GITHUB_OUTPUT"
+
+          # Best effort: without it the message loses two fields and stays true.
+          started_at="$(gh api "$RUN_API_PATH" --jq '.run_started_at' 2>/dev/null || true)"
+          echo "started_at=$started_at" >> "$GITHUB_OUTPUT"
+          echo "ended_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Notify Slack
+        # The run is over by this point, so a Slack outage must not fail it.
+        continue-on-error: true
+        uses: ./.github/actions/notify-slack-deploy
+        with:
+          webhook_url: ${{ secrets.SLACK_FRONTEND_DEPLOY_WEBHOOK }}
+          service: Frontend
+          app_url: https://app.flagsmith.com
+          state: ${{ steps.outcome.outputs.conclusion }}
+          commit_sha: ${{ github.sha }}
+          actor: ${{ github.actor }}
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          started_at: ${{ steps.outcome.outputs.started_at }}
+          ended_at: ${{ steps.outcome.outputs.ended_at }}
 
   deploy-demo:
     name: Deploy to Vercel Demo

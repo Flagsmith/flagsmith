@@ -33,7 +33,7 @@ const ProjectChangeRequestsLink: FC<ProjectChangeRequestsLinkType> = ({
       id={`segments-link`}
       to={`/project/${projectId}/change-requests`}
     >
-      Change Requests{' '}
+      Segment Change Requests{' '}
       {changeRequests ? (
         <span className='ms-1 unread d-inline'>{changeRequests}</span>
       ) : null}

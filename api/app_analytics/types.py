@@ -1,4 +1,5 @@
 from datetime import date
+from enum import StrEnum
 from typing import TYPE_CHECKING, Literal, NamedTuple, TypeAlias, TypedDict
 
 if TYPE_CHECKING:
@@ -25,6 +26,11 @@ PeriodType = Literal[
     "previous_billing_period",
     "90_day_period",
 ]
+
+
+class DownsampleSize(StrEnum):
+    FIFTEEN_MINUTES = "15m"
+    ONE_HOUR = "1h"
 
 
 class APIUsageCacheKey(NamedTuple):
@@ -74,3 +80,8 @@ InputLabel = Label | Literal["sdk_user_agent"]
 
 Labels: TypeAlias = dict[Label, str]
 InputLabels: TypeAlias = dict[InputLabel, str]
+
+
+class DailyUsageData(NamedTuple):
+    dates: list[str]
+    daily_totals_by_resource: dict[str, list[int]]

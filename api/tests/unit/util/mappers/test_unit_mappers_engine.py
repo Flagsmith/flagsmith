@@ -9,7 +9,8 @@ from pytest_mock import MockerFixture
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
-from features.models import FeatureSegment, FeatureState
+from experimentation.models import Experiment, ExperimentStatus
+from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from integrations.common.models import IntegrationsModel
@@ -240,6 +241,20 @@ def test_map_feature_state_to_engine__standard_feature__returns_expected_model(
     assert result == expected_result
 
 
+def test_map_feature_state_to_engine__mv_hashing_salt_set__uses_salt_as_django_id(
+    feature_state: FeatureState,
+) -> None:
+    # Given a feature state carrying a bucketing salt that differs from its id
+    feature_state.mv_hashing_salt = feature_state.id + 1000
+
+    # When
+    result = engine.map_feature_state_to_engine(feature_state, mv_fs_values=[])
+
+    # Then the salt is used as the engine document's django_id so that variant
+    # bucketing stays stable across feature state recreation
+    assert result.django_id == feature_state.mv_hashing_salt
+
+
 def test_map_feature_state_to_engine__feature_segment__return_expected(
     segment_multivariate_feature_state: FeatureState,
     multivariate_feature: "Feature",
@@ -282,6 +297,69 @@ def test_map_feature_state_to_engine__feature_segment__return_expected(
 
     # Then
     assert result == expected_result
+
+
+def test_map_mv_option_to_engine__option_with_key__includes_key(
+    multivariate_feature: "Feature",
+) -> None:
+    # Given
+    mv_option = multivariate_feature.multivariate_options.first()
+    assert mv_option is not None
+    mv_option.key = "control"
+    mv_option.save()
+
+    # When
+    result = engine.map_mv_option_to_engine(mv_option)
+
+    # Then
+    assert result.key == "control"
+    assert result == MultivariateFeatureOptionModel(
+        value=mv_option.value,
+        id=mv_option.id,
+        key="control",
+    )
+
+
+def test_map_feature_state_to_engine__mv_option_with_key__key_in_serialised_document(
+    segment_multivariate_feature_state: FeatureState,
+    multivariate_feature: "Feature",
+) -> None:
+    # Given
+    mv_option = multivariate_feature.multivariate_options.first()
+    assert mv_option is not None
+    mv_option.key = "control"
+    mv_option.save()
+    mv_fs_value = (
+        segment_multivariate_feature_state.multivariate_feature_state_values.get()
+    )
+
+    # When
+    result = engine.map_feature_state_to_engine(
+        segment_multivariate_feature_state,
+        mv_fs_values=[mv_fs_value],
+    )
+    document = result.model_dump()
+
+    # Then
+    assert (
+        document["multivariate_feature_state_values"][0]["multivariate_feature_option"][
+            "key"
+        ]
+        == "control"
+    )
+
+
+def test_multivariate_feature_option_model__document_without_key__defaults_to_none() -> (
+    None
+):
+    # Given - a document produced before `key` existed on the model
+    document = {"value": "control", "id": 1}
+
+    # When
+    model = MultivariateFeatureOptionModel.model_validate(document)
+
+    # Then
+    assert model.key is None
 
 
 def test_map_environment_to_engine__multiple_segments_and_versions__returns_expected_model(
@@ -390,6 +468,7 @@ def test_map_environment_to_engine__multiple_segments_and_versions__returns_expe
         use_identity_overrides_in_local_eval=environment.use_identity_overrides_in_local_eval,
         hide_sensitive_data=environment.hide_sensitive_data,
         hide_disabled_flags=environment.hide_disabled_flags,
+        onboarding_pending=True,
         amplitude_config=None,
         dynatrace_config=None,
         heap_config=None,
@@ -647,7 +726,10 @@ def test_map_environment_to_engine__after_v2_versioning_migration__returns_lates
     assert len(result.feature_states) == 1
     mapped_environment_feature_state = result.feature_states[0]
 
-    assert mapped_environment_feature_state.django_id == v2_environment_feature_state.id
+    assert (
+        mapped_environment_feature_state.featurestate_uuid
+        == v2_environment_feature_state.uuid
+    )
     assert mapped_environment_feature_state.enabled is True
     assert (
         mapped_environment_feature_state.feature_state_value
@@ -658,7 +740,7 @@ def test_map_environment_to_engine__after_v2_versioning_migration__returns_lates
     assert len(result.project.segments[0].feature_states) == 1
 
     mapped_segment_override = result.project.segments[0].feature_states[0]
-    assert mapped_segment_override.django_id == v2_segment_override.id
+    assert mapped_segment_override.featurestate_uuid == v2_segment_override.uuid
     assert mapped_segment_override.enabled is True
     assert mapped_segment_override.feature_state_value == v2_segment_override_value
 
@@ -714,8 +796,8 @@ def test_map_environment_to_engine__v2_versioning_segment_override_removed__retu
     # Then
     assert len(environment_model.project.segments[0].feature_states) == 1
     assert (
-        environment_model.project.segments[0].feature_states[0].django_id
-        == v3_segment_override.id
+        environment_model.project.segments[0].feature_states[0].featurestate_uuid
+        == v3_segment_override.uuid
     )
 
 
@@ -921,3 +1003,116 @@ def test_map_condition_to_segment_condition__valid_condition__returns_expected(
         "operator": condition.operator,
         "value": condition.value,
     }
+
+
+def test_map_environment_to_engine__running_experiment__stamps_every_state_of_feature(
+    environment: Environment,
+    feature: "Feature",
+    segment: Segment,
+    running_experiment: Experiment,
+) -> None:
+    # Given - a second segment override on the feature, outside the experiment
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment,
+        ),
+    )
+    expected_experiment = {
+        "id": running_experiment.id,
+        "name": "New checkout CTA",
+    }
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    (default_state,) = [
+        fs for fs in result.feature_states if fs.feature.id == feature.id
+    ]
+    assert default_state.metadata == {
+        "experiment": {**expected_experiment, "in_experiment": False},
+    }
+    assert {
+        segment.name: fs.metadata
+        for segment in result.project.segments
+        for fs in segment.feature_states
+    } == {
+        "Experiment rollout": {
+            "experiment": {**expected_experiment, "in_experiment": True},
+        },
+        "segment": {
+            "experiment": {**expected_experiment, "in_experiment": False},
+        },
+    }
+
+
+def test_map_environment_to_engine__running_experiment__other_features_unstamped(
+    environment: Environment,
+    running_experiment: Experiment,
+) -> None:
+    # Given
+    other_feature = Feature.objects.create(
+        name="unexperimented_feature",
+        project=environment.project,
+    )
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    (other_state,) = [
+        fs for fs in result.feature_states if fs.feature.id == other_feature.id
+    ]
+    assert other_state.metadata is None
+    assert "metadata" not in other_state.dict()
+
+
+@pytest.mark.parametrize(
+    "status",
+    (
+        ExperimentStatus.CREATED,
+        ExperimentStatus.PAUSED,
+        ExperimentStatus.COMPLETED,
+    ),
+)
+def test_map_environment_to_engine__experiment_not_running__no_metadata(
+    environment: Environment,
+    running_experiment: Experiment,
+    status: str,
+) -> None:
+    # Given
+    Experiment.objects.filter(pk=running_experiment.pk).update(status=status)
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    assert all(fs.metadata is None for fs in result.feature_states)
+    assert all(
+        fs.metadata is None
+        for segment in result.project.segments
+        for fs in segment.feature_states
+    )
+
+
+def test_map_environment_to_engine__experiment_without_rollout_segment__no_enrolment(
+    environment: Environment,
+    feature: "Feature",
+    running_experiment: Experiment,
+) -> None:
+    # Given
+    Experiment.objects.filter(pk=running_experiment.pk).update(rollout_segment=None)
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    assert not any(
+        fs.metadata["experiment"]["in_experiment"]  # type: ignore[index]
+        for segment in result.project.segments
+        for fs in segment.feature_states
+    )

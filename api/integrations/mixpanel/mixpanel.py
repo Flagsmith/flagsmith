@@ -8,6 +8,7 @@ from environments.identities.traits.models import Trait
 from features.models import FeatureState
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
+from .constants import DEFAULT_MIXPANEL_API_URL
 from .models import MixpanelConfiguration
 
 MixpanelUserData: typing.TypeAlias = list[dict[str, typing.Any]]
@@ -15,13 +16,12 @@ MixpanelUserData: typing.TypeAlias = list[dict[str, typing.Any]]
 
 logger = logging.getLogger(__name__)
 
-MIXPANEL_API_URL = "https://api.mixpanel.com"
-
 
 class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper[MixpanelUserData]):
     def __init__(self, config: MixpanelConfiguration):
         self.api_key = config.api_key
-        self.url = f"{MIXPANEL_API_URL}/engage#profile-set"
+        base_url = (config.base_url or DEFAULT_MIXPANEL_API_URL).rstrip("/")
+        self.url = f"{base_url}/engage#profile-set"
 
         # Pass the integration ID as per https://developer.mixpanel.com/docs/partner-integration-id
         self.headers = {

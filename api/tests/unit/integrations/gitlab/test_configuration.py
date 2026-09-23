@@ -315,3 +315,22 @@ def test_delete_configuration__non_admin__returns_403(
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_create_configuration__private_ip_instance_url__returns_400(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given / When
+    response = admin_client_new.post(
+        f"/api/v1/projects/{project.id}/integrations/gitlab/",
+        data={
+            "gitlab_instance_url": "http://127.0.0.1/",
+            "access_token": "glpat-xxxxxxxxxxxxxxxxxxxx",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert not GitLabConfiguration.objects.filter(project=project).exists()

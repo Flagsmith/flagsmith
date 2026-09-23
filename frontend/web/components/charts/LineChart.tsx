@@ -1,9 +1,11 @@
 import React, { FC } from 'react'
+import { AxisDomain } from 'recharts/types/util/types'
 import {
   CartesianGrid,
   Legend,
   Line,
   LineChart as RawLineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -17,27 +19,39 @@ type LineChartProps = {
   data: ChartDataPoint[]
   series: string[]
   colorMap: Record<string, string>
+  height?: number
   xAxisInterval?: number
-  /**
-   * Render recharts' built-in `<Legend />` below the chart. Default `false` —
-   * most consumers already expose a coloured filter UI (tags / MultiSelect)
-   * that serves the same purpose, so a second legend is redundant and can
-   * display raw dataKeys (e.g. numeric env IDs) that are meaningless to users.
-   */
   showLegend?: boolean
-  /**
-   * Optional dataKey → display name map, threaded through to the tooltip (and
-   * the legend when enabled). Use this when dataKeys are opaque identifiers
-   * (e.g. numeric env ids) that need a human-readable label on display.
-   */
   seriesLabels?: Record<string, string>
-  /** Render vertical grid lines (one per x tick). Default `true`. */
   verticalGrid?: boolean
+  referenceLine?: Threshold
 }
+
+type Threshold = { value: number; label?: string; colour: string }
+
+const axisDomainFor = (referenceLine?: Threshold): AxisDomain | undefined =>
+  referenceLine
+    ? [
+        0,
+        (max: number) => Math.round(Math.max(max, referenceLine.value) * 1.08),
+      ]
+    : undefined
+
+const thresholdLabelFor = (referenceLine?: Threshold) =>
+  referenceLine?.label
+    ? {
+        fill: referenceLine.colour,
+        fontSize: 11,
+        position: 'insideTopRight' as const,
+        value: referenceLine.label,
+      }
+    : undefined
 
 const LineChart: FC<LineChartProps> = ({
   colorMap,
   data,
+  height = 400,
+  referenceLine,
   series,
   seriesLabels,
   showLegend = false,
@@ -45,7 +59,7 @@ const LineChart: FC<LineChartProps> = ({
   xAxisInterval = 0,
 }) => {
   return (
-    <ResponsiveContainer height={400} width='100%'>
+    <ResponsiveContainer height={height} width='100%'>
       <RawLineChart data={data}>
         <CartesianGrid
           strokeDasharray='3 5'
@@ -66,6 +80,7 @@ const LineChart: FC<LineChartProps> = ({
         <YAxis
           tick={{ fill: colorTextSecondary, fontSize: 11 }}
           axisLine={{ stroke: colorTextSecondary }}
+          domain={axisDomainFor(referenceLine)}
           tickFormatter={(value) =>
             value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value
           }
@@ -80,6 +95,14 @@ const LineChart: FC<LineChartProps> = ({
             formatter={(value) =>
               seriesLabels?.[String(value)] ?? String(value)
             }
+          />
+        )}
+        {referenceLine && (
+          <ReferenceLine
+            y={referenceLine.value}
+            stroke={referenceLine.colour}
+            strokeWidth={2}
+            label={thresholdLabelFor(referenceLine)}
           />
         )}
         {series.map((label, index) => (

@@ -1,0 +1,29 @@
+.event-name-select {
+  position: relative;
+
+  .react-select__menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 3;
+  }
+
+  .react-select .react-select__menu-list {
+    overflow-y: auto;
+    scrollbar-width: auto;
+
+    &::-webkit-scrollbar {
+      display: block;
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--color-border-strong);
+      border-radius: 4px;
+    }
+  }
+}

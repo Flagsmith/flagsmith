@@ -2,7 +2,6 @@ import Constants from 'common/constants'
 export default (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, LIB_NAME_JAVA },
-  customFeature,
 ) => `${LIB_NAME_JAVA} ${LIB_NAME} = ${LIB_NAME_JAVA}
     .newBuilder()
     .setApiKey("${envId}")${
@@ -14,13 +13,12 @@ export default (
 }
     .build();
 
-Flags flags = flagsmith.getEnvironmentFlags();
+// The method below triggers a network request
+Flags flags = ${LIB_NAME}.getEnvironmentFlags();
 
-// Check for a feature
-boolean isEnabled = flags.isFeatureEnabled("${customFeature || FEATURE_NAME}");
-
-// Or, use the value of a feature
+// Check whether the feature is enabled, or read its value
+boolean isEnabled = flags.isFeatureEnabled("${FEATURE_NAME}");
 Object featureValue = flags.getFeatureValue("${
-  customFeature || FEATURE_NAME_ALT
+  FEATURE_NAME_ALT || FEATURE_NAME
 }");
 `

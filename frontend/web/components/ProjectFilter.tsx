@@ -6,9 +6,13 @@ type ProjectFilterType = {
   value?: string
   onChange: (id: string, name: string) => void
   showAll?: boolean
+  inputId?: string
+  'aria-label'?: string
 }
 
 const ProjectFilter: FC<ProjectFilterType> = ({
+  'aria-label': ariaLabel,
+  inputId,
   onChange,
   organisationId,
   showAll,
@@ -44,6 +48,8 @@ const ProjectFilter: FC<ProjectFilterType> = ({
       onChange={(value: { value: string; label: string }) =>
         onChange(value.value || '', value.label || '')
       }
+      inputId={inputId}
+      aria-label={ariaLabel}
       data-test='project-select'
     />
   )

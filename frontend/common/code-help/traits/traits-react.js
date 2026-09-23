@@ -10,7 +10,7 @@ import { FlagsmithProvider } from '${NPM_CLIENT}/react';
 
 export default function App() {
   return (
-    &lt;FlagsmithProvider
+    <FlagsmithProvider
       options={{
         environmentID: '${envId}',${
   Constants.isCustomFlagsmithUrl()
@@ -20,9 +20,9 @@ export default function App() {
         identity: '${userId || USER_ID}',
         traits: {${TRAIT_NAME}: 21},
       }}
-      flagsmith={flagsmith}&gt;
+      flagsmith={flagsmith}>
       {...Your app}
-    &lt;/FlagsmithProvider>
+    </FlagsmithProvider>
   );
 }
 
@@ -46,6 +46,6 @@ export default function HomePage() {
   };
 
   return (
-    &lt;>{...}&lt;/>
+    <>{...}</>
   );
 }`

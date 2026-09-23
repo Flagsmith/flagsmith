@@ -1,25 +1,25 @@
+from unittest.mock import Mock
+
 import pytest
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from app_analytics.migrate_to_pg import migrate_feature_evaluations
 from app_analytics.models import FeatureEvaluationBucket
 
 
 @pytest.mark.use_analytics_db
 def test_migrate_feature_evaluations__influx_records_exist__creates_pg_buckets(
+    mock_influxdb_client: Mock,
     mocker: MockerFixture,
 ) -> None:
     # Given
     feature_name = "test_feature_one"
     environment_id = "1"
-
-    # mock the read bucket name
-    read_bucket = "test_bucket"
-    mocker.patch("app_analytics.migrate_to_pg.read_bucket", read_bucket)
-
-    # Next, mock the influx client and create some records
-    mock_influxdb_client = mocker.patch("app_analytics.migrate_to_pg.influxdb_client")
+    mocker.patch.object(
+        InfluxDBWrapper, "get_downsampled_bucket", return_value="test_bucket"
+    )
     mock_query_api = mock_influxdb_client.query_api.return_value
     mock_tables = []
     for i in range(3):
@@ -54,23 +54,23 @@ def test_migrate_feature_evaluations__influx_records_exist__creates_pg_buckets(
         [
             mocker.call.query(
                 (
-                    f'from (bucket: "{read_bucket}") '
-                    f"|> range(start: -1d, stop: -0d) "
-                    f'|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+                    'from (bucket: "test_bucket") '
+                    "|> range(start: -1d, stop: -0d) "
+                    '|> filter(fn: (r) => r._measurement == "feature_evaluation")'
                 )
             ),
             mocker.call.query(
                 (
-                    f'from (bucket: "{read_bucket}") '
-                    f"|> range(start: -2d, stop: -1d) "
-                    f'|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+                    'from (bucket: "test_bucket") '
+                    "|> range(start: -2d, stop: -1d) "
+                    '|> filter(fn: (r) => r._measurement == "feature_evaluation")'
                 )
             ),
             mocker.call.query(
                 (
-                    f'from (bucket: "{read_bucket}") '
-                    f"|> range(start: -3d, stop: -2d) "
-                    f'|> filter(fn: (r) => r._measurement == "feature_evaluation")'
+                    'from (bucket: "test_bucket") '
+                    "|> range(start: -3d, stop: -2d) "
+                    '|> filter(fn: (r) => r._measurement == "feature_evaluation")'
                 )
             ),
         ]

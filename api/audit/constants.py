@@ -81,3 +81,5 @@ PHASED_ROLLOUT_STATE_CREATED_MESSAGE = (
     "Phased rollout created for feature: %s by release pipeline: %s (stage: %s)"
 )
 PHASED_ROLLOUT_STATE_UPDATED_MESSAGE = "Phased rollout split changed from '%s%%' to '%s%%' for feature '%s' by release pipeline '%s' (stage: '%s')"
+
+EXPERIMENT_ROLLOUT_APPLIED_MESSAGE = "Experiment '%s' rollout set to %s%% of %s"

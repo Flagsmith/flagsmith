@@ -7,6 +7,7 @@ import Icon from 'components/icons/Icon'
 import Headway from 'components/Headway'
 import { Project } from 'common/types/responses'
 import AccountDropdown from 'components/navigation/AccountDropdown'
+import ThemeToggle from 'components/ThemeToggle'
 
 type TopNavType = {
   activeProject: Project | undefined
@@ -25,6 +26,11 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
           <div className='me-3'>
             <GithubStar />
           </div>
+          {Utils.getFlagsmithHasFeature('dark_mode_nav_toggle') && (
+            <div className='me-3'>
+              <ThemeToggle />
+            </div>
+          )}
           <NavLink
             activeClassName='active'
             to={'/getting-started'}

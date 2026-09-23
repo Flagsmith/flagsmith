@@ -10,7 +10,6 @@ from features.models import Feature
 from integrations.github.models import GithubConfiguration
 from integrations.gitlab.models import GitLabConfiguration, GitLabWebhook
 from projects.models import Project
-from projects.tags.models import TagType
 
 
 def test_create_external_resource__gitlab_issue__returns_201(
@@ -210,7 +209,7 @@ def test_create_external_resource__gitlab_issue__registers_webhook_and_tags_feat
 
     # Feature tagged `Issue Open`
     assert list(Feature.objects.get(id=feature).tags.values_list("label", "type")) == [
-        ("Issue Open", TagType.GITLAB.value)
+        ("Issue Open", "GITLAB")
     ]
 
     assert log.events == [
@@ -292,7 +291,7 @@ def test_create_external_resource__gitlab_mr__registers_webhook_and_tags_feature
         gitlab_path_with_namespace="testorg/testrepo",
     ).exists()
     assert list(Feature.objects.get(id=feature).tags.values_list("label", "type")) == [
-        ("MR Open", TagType.GITLAB.value)
+        ("MR Open", "GITLAB")
     ]
     assert log.events == [
         {
@@ -370,7 +369,7 @@ def test_create_external_resource__second_link_same_gitlab_project__reuses_webho
 
     # Feature tagged with `MR Open`
     assert list(Feature.objects.get(id=feature).tags.values_list("label", "type")) == [
-        ("MR Open", TagType.GITLAB.value)
+        ("MR Open", "GITLAB")
     ]
 
     assert log.events == [

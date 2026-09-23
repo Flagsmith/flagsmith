@@ -19,9 +19,29 @@ class _UserSchema(Schema):
 class _FeatureStateSchema(Schema):
     enabled = fields.Bool()
     value = fields.Method(serialize="get_feature_state_value")
+    multivariate_feature_state_values = fields.Method(
+        serialize="get_multivariate_feature_state_values"
+    )
 
     def get_feature_state_value(self, obj: FeatureState) -> Any:
         return obj.get_feature_state_value()
+
+    def get_multivariate_feature_state_values(
+        self, obj: FeatureState
+    ) -> list[dict[str, Any]]:
+        return [
+            {
+                "id": mv.id,
+                "multivariate_feature_option": {
+                    "id": mv.multivariate_feature_option_id,
+                    "value": mv.multivariate_feature_option.value,
+                },
+                "percentage_allocation": mv.percentage_allocation,
+            }
+            for mv in obj.multivariate_feature_state_values.select_related(
+                "multivariate_feature_option"
+            ).all()
+        ]
 
 
 class EnvironmentFeatureVersionWebhookDataSerializer(Schema):

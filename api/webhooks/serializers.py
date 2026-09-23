@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from webhooks.fields import NoSSRFURLField
+
 
 class WebhookSerializer(serializers.Serializer[None]):
     event_type = serializers.ChoiceField(choices=["FLAG_UPDATED", "AUDIT_LOG_CREATED"])
@@ -7,7 +9,7 @@ class WebhookSerializer(serializers.Serializer[None]):
 
 
 class WebhookURLSerializer(serializers.Serializer[None]):
-    url = serializers.URLField()
+    url = NoSSRFURLField()
 
 
 class ScopeSerializer(serializers.Serializer[None]):
@@ -15,7 +17,7 @@ class ScopeSerializer(serializers.Serializer[None]):
 
 
 class TestWebhookSerializer(serializers.Serializer[None]):
-    webhook_url = serializers.URLField(required=True)
+    webhook_url = NoSSRFURLField(required=True)
     scope = ScopeSerializer(required=True)
     secret = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 

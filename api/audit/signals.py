@@ -227,27 +227,23 @@ def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ign
     if feature_state.is_scheduled:
         return  # This is handled by audit.tasks.create_feature_state_went_live_audit_log
 
-    feature_state_change_went_live.send(feature_state, audit_log=instance)
+    feature_state_change_went_live.send(feature_state)
 
 
 @receiver(feature_state_change_went_live)
-def send_audit_log_event_to_sentry(
-    sender: FeatureState, audit_log: AuditLog, **kwargs: Any
-) -> None:
-    try:
-        sentry_configuration = SentryChangeTrackingConfiguration.objects.get(
-            environment=audit_log.environment,
-            deleted_at__isnull=True,
-        )
-    except SentryChangeTrackingConfiguration.DoesNotExist:
+def send_audit_log_event_to_sentry(sender: FeatureState, **kwargs: Any) -> None:
+    config = SentryChangeTrackingConfiguration.objects.filter(
+        environment=sender.environment,
+        deleted_at__isnull=True,
+    ).first()
+    if not config:
         return
-
-    sentry_change_tracking = SentryChangeTracking(
-        webhook_url=sentry_configuration.webhook_url,
-        secret=sentry_configuration.secret,
+    sentry = SentryChangeTracking(
+        webhook_url=config.webhook_url,
+        secret=config.secret,
     )
-
-    _track_event_async(audit_log, sentry_change_tracking)  # type: ignore[no-untyped-call]
+    if event_data := sentry.generate_event_data(sender):
+        sentry.track_event_async(event=event_data)
 
 
 @receiver(feature_state_change_went_live)

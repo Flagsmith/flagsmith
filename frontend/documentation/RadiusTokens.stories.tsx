@@ -6,7 +6,7 @@ import DocPage from './components/DocPage'
 import { radius } from 'common/theme/tokens'
 
 const meta: Meta = {
-  parameters: { chromatic: { disableSnapshot: true }, layout: 'padded' },
+  parameters: { layout: 'padded' },
   title: 'Design System/Border Radius',
 }
 export default meta

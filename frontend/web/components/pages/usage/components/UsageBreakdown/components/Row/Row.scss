@@ -1,0 +1,30 @@
+.usage-breakdown-row {
+  padding: 12px 0;
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  &__label {
+    flex: 0 1 280px;
+    min-width: 0;
+  }
+
+  &__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__track {
+    flex: 1;
+  }
+
+  &__value {
+    width: 70px;
+  }
+
+  &__share {
+    width: 44px;
+  }
+}

@@ -31,7 +31,8 @@ Please contact us if you want to override the current system limits.
 ### Self Hosted
 
 You can modify the system limits on a per-Project basis. These limits are defined in the database against the Project.
-The easiest way to modify them is with the [Django admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin) interface.
+The easiest way to modify them is with the
+[Django admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin) interface.
 
 ## Traffic Limits
 
@@ -73,10 +74,10 @@ to our [Pricing Page](https://www.flagsmith.com/pricing) for overage pricing.
 We will bill you for all overage above your plan in the current calendar month. You will be charged for the overage at
 the end of your billing period.
 
-### Admin API Rate Limit
+### Management API Rate Limit
 
-Requests made to [Admin API endpoints](/integrating-with-flagsmith/flagsmith-api-overview/admin-api) (i.e., non-SDK endpoints) are subject
-to a default rate limit of 500 requests per minute.
+Requests made to [Management API endpoints](/integrating-with-flagsmith/flagsmith-api-overview/management-api) (i.e.,
+non-SDK endpoints) are subject to a default rate limit of 500 requests per minute.
 
 If you are self-hosting, you have the flexibility to modify this limit by adjusting the value of the environment
 variable `USER_THROTTLE_RATE`.

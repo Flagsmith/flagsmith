@@ -12,7 +12,16 @@ import {
 import { useHasPermission } from 'common/providers/Permission'
 import API from 'project/api'
 import Button from 'components/base/forms/Button'
+import Chip from 'components/base/Chip'
 import CreateSegmentModal from 'components/modals/CreateSegment'
+import CreateSegmentFromCsv from 'components/modals/CreateSegmentFromCsv'
+import CreateSegmentSourcesModal, {
+  getSegmentSources,
+} from 'components/modals/CreateSegmentSourcesModal'
+import ConnectCohortProviderModal, {
+  COHORT_PROVIDERS,
+  CohortProviderKey,
+} from 'components/modals/ConnectCohortProviderModal'
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 
@@ -85,7 +94,7 @@ const SegmentsPage: FC = () => {
     )
   }, [showFeatureSpecific, history])
 
-  const newSegment = () => {
+  const openCreateSegmentDrawer = () => {
     openModal(
       'New Segment',
       <CreateSegmentModal
@@ -97,6 +106,49 @@ const SegmentsPage: FC = () => {
       />,
       'side-modal create-new-segment-modal',
     )
+  }
+
+  const openCreateSegmentFromCsvDrawer = () => {
+    openModal(
+      <div className='d-flex align-items-center gap-2'>
+        New Segment
+        <Chip size='xs' variant='accent'>
+          CSV
+        </Chip>
+      </div>,
+      <CreateSegmentFromCsv projectId={projectId} />,
+      'side-modal create-new-segment-modal',
+    )
+  }
+
+  const openConnectCohortProviderDrawer = (provider: CohortProviderKey) => {
+    openModal(
+      `Connect ${COHORT_PROVIDERS[provider].label}`,
+      <ConnectCohortProviderModal projectId={projectId} provider={provider} />,
+      'p-0 modal--wide',
+    )
+  }
+
+  const newSegment = () => {
+    const sources = getSegmentSources()
+    if (
+      Utils.getFlagsmithHasFeature('create_segment_with_external_sources') &&
+      sources.length
+    ) {
+      openModal(
+        'Create Segment',
+        <CreateSegmentSourcesModal
+          sources={sources}
+          onManual={openCreateSegmentDrawer}
+          onCsv={openCreateSegmentFromCsvDrawer}
+          onMixpanel={() => openConnectCohortProviderDrawer('mixpanel')}
+          onAmplitude={() => openConnectCohortProviderDrawer('amplitude')}
+        />,
+        'p-0 modal--wide',
+      )
+    } else {
+      openCreateSegmentDrawer()
+    }
   }
 
   const { permission: manageSegmentsPermission } = useHasPermission({

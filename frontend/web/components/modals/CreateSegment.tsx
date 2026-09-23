@@ -26,11 +26,13 @@ import {
   useGetSegmentsQuery,
   useUpdateSegmentMutation,
 } from 'common/services/useSegment'
+import { useUpdateCohortMutation } from 'common/services/useCohort'
 import Utils from 'common/utils/utils'
 import AssociatedSegmentOverrides from 'components/segments/AssociatedSegmentOverrides'
+import CohortSegmentDetail from 'components/segments/CohortSegmentDetail'
+import { SegmentMembershipTotalBadge } from 'components/segments/SegmentMembershipBadge'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
-import InputGroup from 'components/base/forms/InputGroup'
 import Rule from 'components/segments/Rule/Rule'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Tabs from 'components/navigation/TabMenu/Tabs'
@@ -74,6 +76,7 @@ type CreateSegmentType = {
   onComplete?: (segment: Segment) => void
   readOnly?: boolean
   segment?: Segment
+  membersEnabled: boolean
 }
 type CreateSegmentError = {
   status: number
@@ -102,6 +105,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   identities,
   identitiesLoading,
   identity,
+  membersEnabled,
   onCancel,
   onComplete,
   page,
@@ -140,6 +144,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
     projectId,
   })
   const [segment, setSegment] = useState(_segment || defaultSegment)
+  // A cohort owns its segment's rules, and the API rejects updating one.
+  const isCohortManaged = !!_segment?.cohort
+  // CSV cohorts swap the rules form for the synchronisation detail view.
+  const isCsvCohort = _segment?.cohort?.source_type === 'csv'
+  const isReadOnly = readOnly || isCohortManaged
+  const readOnlyMessage = isCohortManaged
+    ? 'This segment is managed by a cohort. Its rules follow the cohort membership and cannot be edited.'
+    : undefined
   const [description, setDescription] = useState(segment.description)
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
@@ -183,6 +195,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
     },
   ] = useUpdateSegmentMutation()
   const [createChangeRequest] = useCreateProjectChangeRequestMutation({})
+  const [updateCohort, { isLoading: isSavingCohortMetadata }] =
+    useUpdateCohortMutation()
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
   const [tab, setTab] = useState(UserTabs.RULES)
@@ -251,6 +265,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const save = async (e: FormEvent) => {
     try {
       Utils.preventDefault(e)
+      if (isReadOnly) return
       setValueChanged(false)
       setMetadataValueChanged(false)
       const segmentData: Omit<Segment, 'id' | 'uuid'> = {
@@ -289,8 +304,29 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const [valueChanged, setValueChanged] = useState(false)
   const [metadataValueChanged, setMetadataValueChanged] = useState(false)
+
+  // A managed segment rejects direct updates; its metadata is saved through
+  // the cohort instead.
+  const saveCohortMetadata = async () => {
+    if (!_segment?.cohort) {
+      return
+    }
+    try {
+      await updateCohort({
+        cohortId: _segment.cohort.id,
+        environmentApiKey: _segment.cohort.environment_api_key,
+        metadata,
+        projectId: Number(projectId),
+        segmentId: _segment.id,
+      }).unwrap()
+      setMetadataValueChanged(false)
+      toast('Updated segment')
+    } catch (error: any) {
+      toast(error?.data?.metadata?.[0] || 'Error updating segment', 'danger')
+    }
+  }
   const onClosing = useCallback(() => {
-    return new Promise((resolve) => {
+    return new Promise<boolean>((resolve) => {
       if (valueChanged) {
         openConfirm({
           body: 'Closing this will discard your unsaved changes.',
@@ -305,6 +341,19 @@ const CreateSegment: FC<CreateSegmentType> = ({
       }
     })
   }, [valueChanged])
+  // The condensed/inline drawer (e.g. creating a feature-specific segment) is
+  // closed via the `onCancel` prop, which bypasses the modal's intercept-close
+  // handler above. Guard it so unsaved changes prompt the same confirmation (#5368).
+  const handleCancel = useCallback(() => {
+    if (!onCancel) {
+      return
+    }
+    onClosing().then((shouldClose) => {
+      if (shouldClose) {
+        onCancel()
+      }
+    })
+  }, [onCancel, onClosing])
   const onCreateChangeRequest = async (changeRequestData: {
     approvals: []
     description: string
@@ -446,7 +495,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   />
                   <Rule
                     showDescription={showDescriptions}
-                    readOnly={readOnly}
+                    readOnly={isReadOnly}
                     data-test={`rule-${displayIndex}`}
                     rule={rule}
                     index={i}
@@ -474,7 +523,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </InfoMessage>
         )}
         <Row className='justify-content-end'>
-          {!readOnly && (
+          {!isReadOnly && (
             <div
               onClick={() =>
                 addRule(topLevelRuleType === 'ANY' ? 'ALL' : 'ANY')
@@ -488,7 +537,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </Button>
             </div>
           )}
-          {topLevelRuleType !== 'ANY' && (
+          {!isReadOnly && topLevelRuleType !== 'ANY' && (
             <div onClick={() => addRule('NONE')} className='text-center'>
               <Button
                 theme='outline'
@@ -507,24 +556,30 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const MetadataTab = (
     <FormGroup className='mt-5 setting'>
-      <InputGroup
-        component={
-          <AddMetadataToEntity
-            organisationId={AccountStore.getOrganisation().id}
-            projectId={projectId}
-            entityId={segment.id}
-            entityContentType={segmentContentType?.id}
-            entity={segmentContentType?.model}
-            onChange={(m) => {
-              setMetadata(m as Metadata[])
-              // Need to fix this to be more robust and handle post save
-              if (isEdit) {
-                setMetadataValueChanged(true)
-              }
-            }}
-          />
-        }
+      <AddMetadataToEntity
+        organisationId={AccountStore.getOrganisation().id}
+        projectId={projectId}
+        entityId={segment.id}
+        entityContentType={segmentContentType?.id}
+        entity={segmentContentType?.model}
+        onChange={(m) => {
+          setMetadata(m as Metadata[])
+          // Need to fix this to be more robust and handle post save
+          if (isEdit) {
+            setMetadataValueChanged(true)
+          }
+        }}
       />
+      {isCsvCohort && metadataValueChanged && !readOnly && (
+        <div className='text-right'>
+          <Button
+            disabled={isSavingCohortMetadata}
+            onClick={saveCohortMetadata}
+          >
+            {isSavingCohortMetadata ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      )}
     </FormGroup>
   )
 
@@ -546,32 +601,43 @@ const CreateSegment: FC<CreateSegmentType> = ({
         >
           <TabItem tabLabel='General' isDirty={valueChanged}>
             <div className='my-4'>
-              <CreateSegmentRulesTabForm
-                is4Eyes={is4Eyes}
-                onCreateChangeRequest={onCreateChangeRequest}
-                save={save}
-                condensed={condensed}
-                segmentsLimitAlert={segmentsLimitAlert}
-                name={name}
-                setName={setName}
-                setValueChanged={setValueChanged}
-                description={description}
-                setDescription={setDescription}
-                identity={identity}
-                readOnly={readOnly}
-                showDescriptions={showDescriptions}
-                setShowDescriptions={setShowDescriptions}
-                allWarnings={allWarnings}
-                rulesEl={rulesEl}
-                isEdit={isEdit}
-                segment={segment}
-                isSaving={isSaving}
-                isValid={isValid}
-                isLimitReached={isLimitReached}
-                onCancel={onCancel}
-                topLevelRuleType={topLevelRuleType}
-                setTopLevelRuleType={setTopLevelRuleType}
-              />
+              {isCsvCohort && _segment ? (
+                <CohortSegmentDetail
+                  hideHeader
+                  projectId={projectId}
+                  segment={_segment}
+                  readOnly={readOnly}
+                  onDirtyChange={setValueChanged}
+                />
+              ) : (
+                <CreateSegmentRulesTabForm
+                  is4Eyes={is4Eyes}
+                  onCreateChangeRequest={onCreateChangeRequest}
+                  save={save}
+                  condensed={condensed}
+                  segmentsLimitAlert={segmentsLimitAlert}
+                  name={name}
+                  setName={setName}
+                  setValueChanged={setValueChanged}
+                  description={description}
+                  setDescription={setDescription}
+                  identity={identity}
+                  readOnly={isReadOnly}
+                  readOnlyMessage={readOnlyMessage}
+                  showDescriptions={showDescriptions}
+                  setShowDescriptions={setShowDescriptions}
+                  allWarnings={allWarnings}
+                  rulesEl={rulesEl}
+                  isEdit={isEdit}
+                  segment={segment}
+                  isSaving={isSaving}
+                  isValid={isValid}
+                  isLimitReached={isLimitReached}
+                  onCancel={handleCancel}
+                  topLevelRuleType={topLevelRuleType}
+                  setTopLevelRuleType={setTopLevelRuleType}
+                />
+              )}
             </div>
           </TabItem>
           <TabItem tabLabel={segment.feature ? 'Feature' : 'Features'}>
@@ -582,10 +648,21 @@ const CreateSegment: FC<CreateSegmentType> = ({
               />
             </div>
           </TabItem>
-          <TabItem tabLabel='Identities'>
+          <TabItem
+            tabLabelString='Identities'
+            tabLabel={
+              <>
+                Identities
+                <SegmentMembershipTotalBadge
+                  memberships={segment.membership_counts}
+                />
+              </>
+            }
+          >
             <div className='my-4'>
               <CreateSegmentUsersTabContent
                 projectId={projectId}
+                segmentId={segment.id}
                 environmentId={environmentId}
                 setEnvironmentId={setEnvironmentId}
                 identitiesLoading={identitiesLoading}
@@ -595,6 +672,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 name={name}
                 searchInput={searchInput}
                 setSearchInput={setSearchInput}
+                memberships={segment.membership_counts}
+                membersEnabled={membersEnabled}
               />
             </div>
           </TabItem>
@@ -611,11 +690,69 @@ const CreateSegment: FC<CreateSegmentType> = ({
             tabLabelString='Basic configuration'
             tabLabel={'Basic configuration'}
           >
-            <div className={className || 'my-3 mx-4'}>
+            {/* Horizontal padding comes from the surrounding tab-item. */}
+            <div className={className || 'my-3'}>
+              {isCsvCohort && _segment ? (
+                <CohortSegmentDetail
+                  projectId={projectId}
+                  segment={_segment}
+                  readOnly={readOnly}
+                  onDirtyChange={setValueChanged}
+                />
+              ) : (
+                <CreateSegmentRulesTabForm
+                  save={save}
+                  is4Eyes={is4Eyes}
+                  onCreateChangeRequest={onCreateChangeRequest}
+                  condensed={condensed}
+                  segmentsLimitAlert={segmentsLimitAlert}
+                  name={name}
+                  setName={setName}
+                  setValueChanged={setValueChanged}
+                  description={description}
+                  setDescription={setDescription}
+                  identity={identity}
+                  readOnly={isReadOnly}
+                  readOnlyMessage={readOnlyMessage}
+                  showDescriptions={showDescriptions}
+                  setShowDescriptions={setShowDescriptions}
+                  allWarnings={allWarnings}
+                  rulesEl={rulesEl}
+                  isEdit={isEdit}
+                  segment={segment}
+                  isSaving={isSaving}
+                  isValid={isValid}
+                  isLimitReached={isLimitReached}
+                  onCancel={handleCancel}
+                  topLevelRuleType={topLevelRuleType}
+                  setTopLevelRuleType={setTopLevelRuleType}
+                />
+              )}
+            </div>
+          </TabItem>
+          <TabItem
+            tabLabelString='Custom Fields'
+            tabLabel={
+              <Row className='justify-content-center'>Custom Fields</Row>
+            }
+          >
+            <div className={className || 'my-3'}>{MetadataTab}</div>
+          </TabItem>
+        </Tabs>
+      )}
+      {!(isEdit && !condensed) &&
+        !(metadataEnable && segmentContentType?.id) && (
+          <div className={className || 'my-3 mx-4'}>
+            {isCsvCohort && _segment ? (
+              <CohortSegmentDetail
+                projectId={projectId}
+                segment={_segment}
+                readOnly={readOnly}
+                onDirtyChange={setValueChanged}
+              />
+            ) : (
               <CreateSegmentRulesTabForm
                 save={save}
-                is4Eyes={is4Eyes}
-                onCreateChangeRequest={onCreateChangeRequest}
                 condensed={condensed}
                 segmentsLimitAlert={segmentsLimitAlert}
                 name={name}
@@ -624,7 +761,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 description={description}
                 setDescription={setDescription}
                 identity={identity}
-                readOnly={readOnly}
+                readOnly={isReadOnly}
+                readOnlyMessage={readOnlyMessage}
                 showDescriptions={showDescriptions}
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
@@ -634,49 +772,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 isSaving={isSaving}
                 isValid={isValid}
                 isLimitReached={isLimitReached}
-                onCancel={onCancel}
+                onCancel={handleCancel}
                 topLevelRuleType={topLevelRuleType}
                 setTopLevelRuleType={setTopLevelRuleType}
               />
-            </div>
-          </TabItem>
-          <TabItem
-            tabLabelString='Custom Fields'
-            tabLabel={
-              <Row className='justify-content-center'>Custom Fields</Row>
-            }
-          >
-            <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
-          </TabItem>
-        </Tabs>
-      )}
-      {!(isEdit && !condensed) &&
-        !(metadataEnable && segmentContentType?.id) && (
-          <div className={className || 'my-3 mx-4'}>
-            <CreateSegmentRulesTabForm
-              save={save}
-              condensed={condensed}
-              segmentsLimitAlert={segmentsLimitAlert}
-              name={name}
-              setName={setName}
-              setValueChanged={setValueChanged}
-              description={description}
-              setDescription={setDescription}
-              identity={identity}
-              readOnly={readOnly}
-              showDescriptions={showDescriptions}
-              setShowDescriptions={setShowDescriptions}
-              allWarnings={allWarnings}
-              rulesEl={rulesEl}
-              isEdit={isEdit}
-              segment={segment}
-              isSaving={isSaving}
-              isValid={isValid}
-              isLimitReached={isLimitReached}
-              onCancel={onCancel}
-              topLevelRuleType={topLevelRuleType}
-              setTopLevelRuleType={setTopLevelRuleType}
-            />
+            )}
           </div>
         )}
     </>
@@ -722,11 +822,23 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
   useEffect(() => {
     if (segmentData) {
       props.onSegmentRetrieved?.(segmentData)
+      if (segmentData.cohort?.environment_api_key) {
+        setEnvironmentId(segmentData.cohort.environment_api_key)
+      }
     }
     //eslint-disable-next-line
   }, [segmentData])
 
   const isEdge = Utils.getIsEdge()
+
+  // Availability is derived strictly from the backend: membership counts are
+  // only present for membership-enabled orgs (see `is_membership_enabled`), so
+  // their presence gates the UI without a separate frontend flag. When enabled
+  // and the project uses edge, the Identities tab uses the dedicated segment
+  // members endpoint, so the legacy identities list (and its request) is not
+  // needed.
+  const membersEnabled =
+    (segmentData?.membership_counts?.length ?? 0) > 0 && isEdge
 
   const { data: identities, isLoading: identitiesLoading } =
     useGetIdentitiesQuery(
@@ -740,15 +852,19 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
         q: search,
       },
       {
-        skip: !environmentId,
+        skip: !environmentId || membersEnabled,
       },
     )
 
-  return isLoading ? (
-    <div className='text-center'>
-      <Loader />
-    </div>
-  ) : (
+  if (isLoading) {
+    return (
+      <div className='text-center'>
+        <Loader />
+      </div>
+    )
+  }
+
+  return (
     <CreateSegment
       {...props}
       segment={segmentData || undefined}
@@ -760,6 +876,7 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
       page={page}
       environmentId={environmentId}
       setEnvironmentId={setEnvironmentId}
+      membersEnabled={membersEnabled}
     />
   )
 }

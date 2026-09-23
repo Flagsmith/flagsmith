@@ -52,7 +52,7 @@ class UserEnvironmentPermissionsViewSet(viewsets.ModelViewSet):  # type: ignore[
 
 class UserPermissionGroupEnvironmentPermissionsViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     pagination_class = None
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):

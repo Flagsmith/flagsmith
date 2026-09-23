@@ -36,6 +36,8 @@ interface CreateSegmentRulesTabFormProps {
   setDescription: (description: string) => void
   identity?: boolean
   readOnly?: boolean
+  // Explains why editing is unavailable; defaults to the permission hint.
+  readOnlyMessage?: string
   showDescriptions: boolean
   setShowDescriptions: (show: boolean) => void
   allWarnings: string[]
@@ -64,6 +66,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
   onCancel,
   onCreateChangeRequest,
   readOnly,
+  readOnlyMessage,
   rulesEl,
   save,
   segment,
@@ -139,7 +142,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
             id='segmentID'
             maxLength={SEGMENT_ID_MAXLENGTH}
             value={name}
-            onChange={(e: InputEvent) => {
+            onChange={(e) => {
               setValueChanged(true)
               setName(
                 Format.enumeration
@@ -147,7 +150,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
                   .toLowerCase(),
               )
             }}
-            isValid={name && name.length}
+            isValid={!!(name && name.length)}
             type='text'
             placeholder='E.g. power_users'
           />
@@ -162,7 +165,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
             name: 'featureDesc',
             readOnly: !!identity || readOnly,
           }}
-          onChange={(e: InputEvent) => {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setValueChanged(true)
             setDescription(Utils.safeParseEventValue(e))
           }}
@@ -184,7 +187,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
           />
           <span
             style={{ fontWeight: 'normal', marginLeft: '12px' }}
-            className='mb-0 fs-small text-dark'
+            className='mb-0 fs-small text-default'
           >
             Show condition descriptions
           </span>
@@ -202,27 +205,35 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
         {!readOnly &&
         setTopLevelRuleType &&
         Utils.getFlagsmithHasFeature('segment_any_rule_type') ? (
-          <Row className='mb-3 align-items-center gap-2'>
-            <label className='control-label mb-0'>Include users when</label>
-            <InlinePillToggle
-              data-test='top-level-rule-type'
-              size='medium'
-              options={[
-                { label: 'ALL', value: 'ALL' },
-                { label: 'ANY', value: 'ANY' },
-              ]}
-              value={topLevelRuleType}
-              onChange={setTopLevelRuleType}
-            />
-            <label className='control-label mb-0'>
-              of the following rules apply:
-            </label>
-          </Row>
+          <>
+            <Row className='mb-2 align-items-center gap-2'>
+              <label className='control-label mb-0'>Include users when</label>
+              <InlinePillToggle
+                data-test='top-level-rule-type'
+                size='medium'
+                options={[
+                  { label: 'ALL', value: 'ALL' },
+                  { label: 'ANY', value: 'ANY' },
+                ]}
+                value={topLevelRuleType}
+                onChange={setTopLevelRuleType}
+              />
+              <label className='control-label mb-0'>
+                of the following rules apply
+              </label>
+            </Row>
+            {topLevelRuleType === 'ANY' &&
+              Utils.getFlagsmithValue('segment_any_rule_type') && (
+                <div className='fs-small fst-italic text-muted mb-3'>
+                  {Utils.getFlagsmithValue('segment_any_rule_type')}
+                </div>
+              )}
+          </>
         ) : (
           <Flex className='mb-3'>
             <label className='cols-sm-2 control-label mb-1'>
               Include users when {topLevelRuleType === 'ANY' ? 'any' : 'all'} of
-              the following rules apply:
+              the following rules apply
             </label>
           </Flex>
         )}
@@ -249,7 +260,8 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
             }
             place='left'
           >
-            {Constants.projectPermissions(ProjectPermission.ADMIN)}
+            {readOnlyMessage ||
+              Constants.projectPermissions(ProjectPermission.ADMIN)}
           </Tooltip>
         </div>
       ) : (

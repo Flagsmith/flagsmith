@@ -177,3 +177,27 @@ def test_datadog_project_view__no_permissions__return_expected(
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert not DataDogConfiguration.objects.filter(project=project).exists()
+
+
+def test_datadog_config__private_ip_base_url__returns_bad_request(
+    admin_client: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    data = {
+        "base_url": "http://169.254.169.254/",
+        "api_key": "abc-123",
+        "use_custom_source": True,
+    }
+    url = reverse("api-v1:projects:integrations-datadog-list", args=[project.id])
+
+    # When
+    response = admin_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert not DataDogConfiguration.objects.filter(project=project).exists()

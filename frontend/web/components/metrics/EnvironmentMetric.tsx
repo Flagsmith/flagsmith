@@ -1,6 +1,7 @@
 import React, { FC } from 'react'
 import { Link } from 'react-router-dom'
-import LabelWithTooltip from 'components/base/LabelWithTooltip'
+import Icon from 'components/icons/Icon'
+import Tooltip from 'components/Tooltip'
 interface EnvironmentMetricProps {
   label: string
   value: string | number
@@ -14,6 +15,20 @@ const EnvironmentMetric: FC<EnvironmentMetricProps> = ({
   tooltip,
   value,
 }) => {
+  const labelContent = (
+    <>
+      {label}
+      {tooltip && (
+        <Tooltip
+          title={<Icon name='info-outlined' width={12} height={12} />}
+          place='top'
+          titleClassName='cursor-pointer ml-1'
+        >
+          {tooltip}
+        </Tooltip>
+      )}
+    </>
+  )
   return (
     <div
       style={{
@@ -28,12 +43,10 @@ const EnvironmentMetric: FC<EnvironmentMetricProps> = ({
       <div className='d-flex items-center gap-1'>
         {link ? (
           <Link to={link} className='metric-label'>
-            <LabelWithTooltip label={label} tooltip={tooltip} />
+            {labelContent}
           </Link>
         ) : (
-          <p className='metric-label'>
-            <LabelWithTooltip label={label} tooltip={tooltip} />
-          </p>
+          <p className='metric-label'>{labelContent}</p>
         )}
       </div>
       <p className='metric-value'>{value}</p>

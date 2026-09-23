@@ -14,7 +14,7 @@ from organisations.models import (
 )
 from platform_hub import services
 from projects.models import Project
-from projects.tags.models import Tag, TagType
+from projects.tags.models import Tag
 from users.models import FFAdminUser
 
 
@@ -474,7 +474,7 @@ def test_get_stale_flags_per_project__stale_tagged_feature__counts_correctly(
     stale_tag = Tag.objects.create(
         label="Stale",
         project=platform_hub_project,
-        type=TagType.STALE,
+        type="STALE",
         is_system_tag=True,
     )
     feature.tags.add(stale_tag)

@@ -8,16 +8,11 @@ declare global {
 import flagsmith from '@flagsmith/flagsmith'
 import AccountStore from './stores/account-store'
 import getUserDisplayName from './utils/getUserDisplayName'
-import Utils, { planNames } from './utils/utils'
+import Utils from './utils/utils'
 import { AccountModel } from './types/responses'
 import Project from './project'
 
 const defaultPylonID = '028babb7-d93f-4e32-be6a-59db190a084f'
-
-function isFreePlan(): boolean {
-  const plan = AccountStore.getActiveOrgPlan()
-  return Utils.getPlanName(plan) === planNames.free
-}
 
 async function loadPylon(pylonAppId: string) {
   if (window.Pylon) {
@@ -69,7 +64,7 @@ export function hidePylon() {
 }
 
 export function identifyChatUser() {
-  if (flagsmith.hasFeature('pylon_chat') && !isFreePlan()) {
+  if (flagsmith.hasFeature('pylon_chat') && !Utils.isOrgOnFreePlan()) {
     setupPylon()
     if (typeof window.Pylon !== 'undefined') {
       window.Pylon('showChatBubble')
@@ -82,7 +77,7 @@ export function identifyChatUser() {
 export function openChat() {
   if (
     flagsmith.hasFeature('pylon_chat') &&
-    !isFreePlan() &&
+    !Utils.isOrgOnFreePlan() &&
     typeof window.Pylon !== 'undefined'
   ) {
     window.Pylon('show')
@@ -95,7 +90,7 @@ export default async function loadChat(forceDefaultAPIKey?: boolean) {
     const isWidget = document.location.href.includes('/widget')
     if (isWidget) return
 
-    if (flagsmith.hasFeature('pylon_chat') && !isFreePlan()) {
+    if (flagsmith.hasFeature('pylon_chat') && !Utils.isOrgOnFreePlan()) {
       const pylonId = forceDefaultAPIKey ? defaultPylonID : Project.pylonAppId
       if (pylonId) {
         await loadPylon(pylonId)

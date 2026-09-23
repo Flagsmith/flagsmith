@@ -1,30 +1,51 @@
 import typing
 import uuid
+from datetime import datetime
 
 from django.db import models, transaction
+from django.db.models import QuerySet
 from django.utils import timezone
 
 from core.dataclasses import AuthorData
+from features.models import FeatureSegment, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 
 if typing.TYPE_CHECKING:
     from segments.models import Segment
+
+
+def get_all_live_or_scheduled_overrides() -> "QuerySet[FeatureSegment]":
+    """Get the feature overrides that are live now or scheduled to go live."""
+    no_change_request = models.Q(change_request__isnull=True)
+    committed_change_request = models.Q(change_request__committed_at__isnull=False)
+    with_feature_versioning_v1 = models.Q(
+        environment__use_v2_feature_versioning=False,
+    ) & (no_change_request | committed_change_request)
+
+    with_feature_versioning_v2 = models.Q(
+        environment__use_v2_feature_versioning=True,
+        environment_feature_version__in=(
+            EnvironmentFeatureVersion.objects.get_live_or_scheduled()
+        ),
+    )
+
+    live_or_scheduled_feature_states = FeatureState.objects.filter(
+        with_feature_versioning_v1 | with_feature_versioning_v2,
+        feature_segment_id=models.OuterRef("pk"),
+    )
+    return FeatureSegment.objects.filter(  # type: ignore[no-any-return]
+        models.Exists(live_or_scheduled_feature_states)
+    )
 
 
 def delete_segment(
     segment: "Segment",
     author: AuthorData,
 ) -> None:
-    """
-    Delete a segment using optimized bulk operations.
-
-    Uses bulk UPDATE/DELETE operations instead of individual soft-deletes,
-    reducing the number of database queries from O(n) to O(1) where n is
-    the number of rules and conditions.
-
-    Note: This is a temporary solution until we redesign the segment data model.
-    """
+    """Delete a segment and all of its components"""
+    from features.dependencies.services import delete_segment_flag_references
     from features.models import FeatureSegment
-    from segments.models import Condition, Segment, SegmentRule
+    from segments.models import Segment
     from segments.tasks import create_segment_deleted_audit_log
 
     now = timezone.now()
@@ -39,6 +60,36 @@ def delete_segment(
             models.Q(id=segment.id) | models.Q(version_of_id=segment.id)
         ).values_list("id", flat=True)
     )
+
+    with transaction.atomic():
+        delete_segment_flag_references(segment)
+        FeatureSegment.objects.filter(segment_id__in=segment_ids).delete()
+        _delete_legacy_rules_and_conditions(segment_ids, now)
+        Segment.objects.filter(id__in=segment_ids).update(deleted_at=now)
+
+    create_segment_deleted_audit_log.delay(
+        args=(
+            project_id,
+            segment_name,
+            segment_id,
+            segment_uuid,
+            author.user.id if author.user else None,
+            author.api_key.id if author.api_key else None,
+            now.isoformat(),
+        )
+    )
+
+
+def _delete_legacy_rules_and_conditions(
+    segment_ids: list[int],
+    now: datetime,
+) -> None:
+    """Delete a segment's rules and conditions (rows) using bulk operations
+
+    This is only needed until `Segment.rules_data` becomes the source of truth.
+    TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+    """
+    from segments.models import Condition, SegmentRule
 
     top_level_rule_ids = list(
         SegmentRule.objects.filter(segment_id__in=segment_ids).values_list(
@@ -60,23 +111,8 @@ def delete_segment(
 
     all_rule_ids_list = list(all_rule_ids)
 
-    with transaction.atomic():
-        FeatureSegment.objects.filter(segment_id__in=segment_ids).delete()
-        Condition.objects.filter(rule_id__in=all_rule_ids_list).update(deleted_at=now)
-        SegmentRule.objects.filter(id__in=all_rule_ids_list).update(deleted_at=now)
-        Segment.objects.filter(id__in=segment_ids).update(deleted_at=now)
-
-    create_segment_deleted_audit_log.delay(
-        args=(
-            project_id,
-            segment_name,
-            segment_id,
-            segment_uuid,
-            author.user.id if author.user else None,
-            author.api_key.id if author.api_key else None,
-            now.isoformat(),
-        )
-    )
+    Condition.objects.filter(rule_id__in=all_rule_ids_list).update(deleted_at=now)
+    SegmentRule.objects.filter(id__in=all_rule_ids_list).update(deleted_at=now)
 
 
 def copy_segment_rules_and_conditions(
@@ -88,6 +124,7 @@ def copy_segment_rules_and_conditions(
 
     If target has existing rules, they are hard-deleted first.
 
+    TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
     """
     from segments.models import Condition, SegmentRule
 

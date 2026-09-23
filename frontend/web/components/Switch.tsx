@@ -3,6 +3,7 @@ import RCSwitch, { Props as RCSwitchProps } from 'rc-switch'
 import Icon from './icons/Icon'
 
 export type SwitchProps = RCSwitchProps & {
+  id?: string
   checked?: boolean
   darkMode?: boolean
   offMarkup?: React.ReactNode

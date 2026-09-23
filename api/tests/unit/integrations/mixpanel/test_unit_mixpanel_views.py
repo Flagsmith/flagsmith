@@ -29,6 +29,8 @@ def test_create_mixpanel_config__post_valid_data__returns_created(  # type: igno
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert MixpanelConfiguration.objects.filter(environment=environment).count() == 1
+    config = MixpanelConfiguration.objects.get(environment=environment)
+    assert config.base_url is None
 
 
 def test_create_mixpanel_config__duplicate_config__returns_bad_request(
@@ -104,8 +106,35 @@ def test_list_mixpanel_config__config_exists__returns_config_list(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    expected_response = {"api_key": config.api_key, "id": config.id}
+    expected_response = {
+        "api_key": config.api_key,
+        "id": config.id,
+        "base_url": None,
+    }
     assert response.data == [expected_response]
+
+
+def test_create_mixpanel_config__with_eu_base_url__returns_created(
+    admin_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given
+    data = {"api_key": "abc-123", "base_url": "https://api-eu.mixpanel.com"}
+    url = reverse(
+        "api-v1:environments:integrations-mixpanel-list",
+        args=[environment.api_key],
+    )
+    # When
+    response = admin_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    config = MixpanelConfiguration.objects.get(environment=environment)
+    assert config.base_url == "https://api-eu.mixpanel.com"
 
 
 def test_delete_mixpanel_config__config_exists__removes_config(

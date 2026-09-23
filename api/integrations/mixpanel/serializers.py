@@ -7,4 +7,4 @@ from integrations.mixpanel.models import MixpanelConfiguration
 class MixpanelConfigurationSerializer(BaseEnvironmentIntegrationModelSerializer):
     class Meta:
         model = MixpanelConfiguration
-        fields = ("id", "api_key")
+        fields = ("id", "api_key", "base_url")

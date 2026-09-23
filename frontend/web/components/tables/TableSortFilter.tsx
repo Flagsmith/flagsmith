@@ -59,7 +59,7 @@ const TableSortFilter: FC<TableFilterType> = ({
                 <div>{sortOption.label}</div>
                 <div>
                   <Icon
-                    className={classNames('text-body', {
+                    className={classNames('text-default', {
                       'opacity-0': !isActive,
                     })}
                     name={

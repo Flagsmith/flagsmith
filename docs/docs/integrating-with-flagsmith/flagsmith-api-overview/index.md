@@ -16,12 +16,12 @@ This is the API that your client and server-side SDKs interact with to get flag 
 
 [Learn more about the Flags API](/integrating-with-flagsmith/flagsmith-api-overview/flags-api).
 
-### 2. The Admin API (Private Admin API)
+### 2. The Management API (Private API)
 
-This is the API you use to programmatically manage your Flagsmith projects. Anything you can do in the Flagsmith dashboard, you can also do via the Admin API.
+This is the API you use to programmatically manage your Flagsmith projects. Anything you can do in the Flagsmith dashboard, you can also do via the Management API.
 
 - **Purpose:** Creating, updating, and deleting projects, environments, flags, segments, and users.
 - **Authentication:** Uses a secret **Organisation API Token**.
 - **Security:** Requires a secret key that should never be exposed in client-side code.
 
-[Learn more about the Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api). 
+[Learn more about the Management API](/integrating-with-flagsmith/flagsmith-api-overview/management-api). 

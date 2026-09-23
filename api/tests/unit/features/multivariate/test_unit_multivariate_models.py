@@ -1,13 +1,17 @@
 from unittest.mock import MagicMock
 
+import pytest
+from django.db import IntegrityError, transaction
+
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE, STANDARD
-from features.models import FeatureSegment, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
+from projects.models import Project
 from segments.models import Segment
 
 
@@ -224,6 +228,66 @@ def test_mv_feature_state_value_get_skip_create_audit_log__segment_deleted__retu
     ).first()
 
     assert mvfsv_history_instance.instance.get_skip_create_audit_log() is True
+
+
+def test_mv_feature_option_key__not_provided__defaults_to_none(
+    feature: Feature,
+) -> None:
+    # Given / When
+    mvfo = MultivariateFeatureOption.objects.create(feature=feature, string_value="foo")
+
+    # Then
+    assert mvfo.key is None
+
+
+def test_mv_feature_option_key__duplicate_non_null_key_for_same_feature__raises_integrity_error(
+    feature: Feature,
+) -> None:
+    # Given
+    MultivariateFeatureOption.objects.create(
+        feature=feature, string_value="foo", key="control"
+    )
+
+    # When / Then
+    with pytest.raises(IntegrityError), transaction.atomic():
+        MultivariateFeatureOption.objects.create(
+            feature=feature, string_value="bar", key="control"
+        )
+
+
+def test_mv_feature_option_key__multiple_null_keys_for_same_feature__allowed(
+    feature: Feature,
+) -> None:
+    # Given / When
+    MultivariateFeatureOption.objects.create(feature=feature, string_value="foo")
+    MultivariateFeatureOption.objects.create(feature=feature, string_value="bar")
+
+    # Then
+    assert (
+        MultivariateFeatureOption.objects.filter(
+            feature=feature, key__isnull=True
+        ).count()
+        == 2
+    )
+
+
+def test_mv_feature_option_key__same_key_for_different_features__allowed(
+    feature: Feature,
+    project: Project,
+) -> None:
+    # Given
+    other_feature = Feature.objects.create(name="other_feature", project=project)
+
+    # When
+    MultivariateFeatureOption.objects.create(
+        feature=feature, string_value="foo", key="control"
+    )
+    MultivariateFeatureOption.objects.create(
+        feature=other_feature, string_value="bar", key="control"
+    )
+
+    # Then
+    assert MultivariateFeatureOption.objects.filter(key="control").count() == 2
 
 
 def test_mv_feature_state_value_get_skip_create_audit_log__feature_deleted__returns_true(

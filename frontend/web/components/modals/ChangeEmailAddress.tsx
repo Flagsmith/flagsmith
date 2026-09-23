@@ -71,7 +71,6 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
               }}
               isValid={email && email.length}
               type='email'
-              name='email'
               id='email'
               placeholder='E.g. email123@email.com'
             />
@@ -87,8 +86,6 @@ const ChangeEmailAddress: FC<ChangeEmailAddressType> = ({ onComplete }) => {
                 setPassword(Utils.safeParseEventValue(event))
               }}
               type='password'
-              autocomplete='current-password'
-              name='password'
             />
             {isError && (
               <ErrorMessage

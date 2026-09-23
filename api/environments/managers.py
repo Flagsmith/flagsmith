@@ -31,6 +31,14 @@ class EnvironmentManager(SoftDeleteManager):  # type: ignore[misc]
                 "project__segments__rules__conditions",
                 "project__segments__rules__rules__conditions",
                 "project__segments__rules__rules__rules",
+                # Experiment rollout segments copy audience rules up to two
+                # levels deeper than user-authored segments; the trailing empty
+                # levels terminate the engine mapper's recursion without lazy
+                # queries.
+                "project__segments__rules__rules__rules__conditions",
+                "project__segments__rules__rules__rules__rules",
+                "project__segments__rules__rules__rules__rules__conditions",
+                "project__segments__rules__rules__rules__rules__rules",
                 Prefetch(
                     "project__segments__feature_segments",
                     queryset=FeatureSegment.objects.select_related("segment"),

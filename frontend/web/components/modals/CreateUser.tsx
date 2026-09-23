@@ -28,7 +28,7 @@ const CreateUser: FC<CreateUserType> = ({ environmentId }) => {
   return (
     <div>
       <div className='modal-body px-4'>
-        <div className='fw-bold text-dark mt-4 mb-3'>
+        <div className='fw-bold text-default mt-4 mb-3'>
           Enter a comma or space separate list of user IDs.
         </div>
         <label>User IDs</label>

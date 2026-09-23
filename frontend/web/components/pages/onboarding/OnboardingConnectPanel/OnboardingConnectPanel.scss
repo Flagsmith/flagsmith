@@ -1,0 +1,67 @@
+.onboarding-connect {
+  padding: 24px;
+
+  &__step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    background-color: var(--color-icon-action);
+    color: #ffffff;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  &__prompt-text {
+    color: var(--color-text-default);
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    background: transparent;
+    white-space: pre-wrap;
+  }
+
+  &__steps {
+    padding-left: 18px;
+
+    li {
+      margin-bottom: 4px;
+    }
+  }
+
+  // The card owns the surface + rounding; the code block opts into the shared
+  // embedded modifier (Highlight's `embedded` prop) for its transparent variant.
+  &__codecard {
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  &__codecard-head {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  &__pm {
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--color-border-default);
+  }
+
+  &__pm-opt {
+    background: transparent;
+    border: 0;
+    padding: 3px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+
+    &--active {
+      background-color: var(--color-icon-action);
+      color: #ffffff;
+    }
+  }
+}

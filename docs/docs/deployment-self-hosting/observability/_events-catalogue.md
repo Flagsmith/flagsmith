@@ -34,7 +34,8 @@ Attributes:
 
 Logged at `warning` from:
  - `api/app_analytics/analytics_db_service.py:74`
- - `api/app_analytics/analytics_db_service.py:210`
+ - `api/app_analytics/analytics_db_service.py:187`
+ - `api/app_analytics/analytics_db_service.py:278`
 
 Attributes:
  - `details`
@@ -63,21 +64,172 @@ Attributes:
 ### `code_references.scan.created`
 
 Logged at `info` from:
- - `api/projects/code_references/views.py:41`
+ - `api/projects/code_references/views.py:61`
 
 Attributes:
  - `code_references.count`
  - `feature.count`
  - `organisation.id`
 
+### `cohorts.cohort.created`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:154`
+
+Attributes:
+ - `cohort.id`
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `segment.id`
+
+### `cohorts.cohort.deleted`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:491`
+
+Attributes:
+ - `cohort.id`
+ - `environment.id`
+
+### `cohorts.cohort.deletion_requested`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:475`
+
+Attributes:
+ - `cohort.id`
+ - `environment.id`
+
+### `cohorts.csv.synced`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:423`
+
+Attributes:
+ - `adds.count`
+ - `cohort.id`
+ - `cohort.version`
+ - `environment.id`
+ - `removes.count`
+ - `unchanged.count`
+
+### `cohorts.membership.adds_received`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:274`
+
+Attributes:
+ - `cohort.id`
+ - `deltas.count`
+ - `environment.id`
+
+### `cohorts.membership.applied`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:105`
+
+Attributes:
+ - `adds.count`
+ - `cohort.id`
+ - `environment.id`
+ - `removes.count`
+
+### `cohorts.membership.apply.skipped`
+
+Logged at `info` from:
+ - `api/cohorts/tasks.py:22`
+
+Attributes:
+ - `cohort.id`
+ - `reason`
+
+### `cohorts.membership.apply.throttled`
+
+Logged at `warning` from:
+ - `api/cohorts/tasks.py:32`
+
+Attributes:
+ - `cohort.id`
+
+### `cohorts.membership.removals_received`
+
+Logged at `info` from:
+ - `api/cohorts/services.py:299`
+
+Attributes:
+ - `cohort.id`
+ - `deltas.count`
+ - `environment.id`
+ - `members.matched`
+
+### `cohorts.sync_webhook.rejected`
+
+Logged at `warning` from:
+ - `api/cohorts/sync_views.py:226`
+
+Attributes:
+ - `action`
+ - `environment.id`
+ - `error.code`
+ - `error.message`
+ - `source`
+
+### `core.encrypted_field.decrypt_failed`
+
+Logged at `warning` from:
+ - `api/core/fields.py:62`
+
+Attributes:
+ - `exc_info`
+
 ### `dynamodb.environment_document_compressed`
 
 Logged at `info` from:
- - `api/environments/dynamodb/wrappers/environment_wrapper.py:92`
+ - `api/environments/dynamodb/wrappers/environment_wrapper.py:93`
 
 Attributes:
  - `environment_api_key`
  - `environment_id`
+
+### `experimentation.exposures.compute_failed`
+
+Logged at `error` from:
+ - `api/experimentation/tasks.py:124`
+
+Attributes:
+ - `environment.id`
+ - `exc_info`
+ - `experiment.id`
+ - `feature.id`
+ - `organisation.id`
+
+### `experimentation.results.compute_failed`
+
+Logged at `error` from:
+ - `api/experimentation/tasks.py:162`
+
+Attributes:
+ - `environment.id`
+ - `exc_info`
+ - `experiment.id`
+ - `organisation.id`
+
+### `experimentation.rollout.applied`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:1270`
+
+Attributes:
+ - `audience.match`
+ - `audience.segment_ids`
+ - `audience.segments_count`
+ - `author.api_key_id`
+ - `author.id`
+ - `environment.id`
+ - `experiment.id`
+ - `feature.id`
+ - `rollout.percentage`
 
 ### `feature_health.feature_health_event_dismissal_not_supported`
 
@@ -107,6 +259,79 @@ Logged at `warning` from:
 
 Attributes:
  - `path`
+
+### `feature_lifecycle.summarised`
+
+Logged at `info` from:
+ - `api/features/feature_lifecycle/views.py:52`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
+### `features.dependencies.create_failed`
+
+Logged at `info` from:
+ - `api/features/dependencies/services.py:131`
+
+Attributes:
+ - `environment.key`
+ - `feature.name`
+ - `organisation.id`
+ - `prerequisite_feature.name`
+ - `project.id`
+
+### `features.dependencies.created`
+
+Logged at `info` from:
+ - `api/features/dependencies/services.py:103`
+
+Attributes:
+ - `environment.key`
+ - `feature.name`
+ - `organisation.id`
+ - `prerequisite_feature.name`
+ - `project.id`
+
+### `features.dependencies.deleted`
+
+Logged at `info` from:
+ - `api/features/dependencies/services.py:75`
+ - `api/features/dependencies/services.py:101`
+
+Attributes:
+ - `environment.key`
+ - `feature.name`
+ - `organisation.id`
+ - `prerequisite_feature.name`
+ - `project.id`
+
+### `features.flag.update_rejected`
+
+Logged at `warning` from:
+ - `api/features/future/views.py:49`
+
+Attributes:
+ - `environment.id`
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `reason`
+
+### `features.flag.updated`
+
+Logged at `info` from:
+ - `api/features/future/services.py:365`
+ - `api/features/future/services.py:414`
+
+Attributes:
+ - `environment.id`
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `segment_overrides.created.segment.ids`
+ - `segment_overrides.deleted.segment.ids`
+ - `segment_overrides.updated.segment.ids`
 
 ### `gitlab.api_call.failed`
 
@@ -162,19 +387,6 @@ Attributes:
  - `gitlab_instance_url`
  - `organisation.id`
  - `project.id`
-
-### `gitlab.feature.tagged`
-
-Logged at `info` from:
- - `api/integrations/gitlab/services/tagging.py:89`
-
-Attributes:
- - `action`
- - `feature.id`
- - `object_kind`
- - `organisation.id`
- - `project.id`
- - `tag.label`
 
 ### `gitlab.label.created`
 
@@ -271,6 +483,17 @@ Attributes:
  - `organisation.id`
  - `project.id`
 
+### `gitlab.webhook.processed`
+
+Logged at `info` from:
+ - `api/integrations/gitlab/views/webhook.py:35`
+
+Attributes:
+ - `action`
+ - `object_kind`
+ - `organisation.id`
+ - `project.id`
+
 ### `gitlab.webhook.registered`
 
 Logged at `info` from:
@@ -318,6 +541,49 @@ Attributes:
  - `project_id`
  - `retry_at`
 
+### `mcp.tool.called`
+
+Logged at `info` from:
+ - `api/telemetry/middleware.py:38`
+ - `api/telemetry/middleware.py:40`
+
+Attributes:
+ - `organisation.id`
+
+### `oauth2_metadata.registration.rejected`
+
+Logged at `error` from:
+ - `api/oauth2_metadata/views.py:171`
+
+Attributes:
+ - `client.name`
+ - `error`
+ - `error_description`
+ - `redirect_uris`
+ - `user_agent`
+
+### `onboarding.environment.already_evaluated`
+
+Logged at `info` from:
+ - `api/environments/onboarding/services.py:26`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `sdk.label`
+
+### `onboarding.environment.first_evaluated`
+
+Logged at `info` from:
+ - `api/environments/onboarding/services.py:45`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `sdk.label`
+
 ### `platform_hub.no_analytics_database_configured`
 
 Logged at `warning` from:
@@ -327,19 +593,121 @@ Logged at `warning` from:
 
 Attributes:
 
+### `segment_membership.compute.segment.skipped`
+
+Logged at `error` from:
+ - `api/segment_membership/services.py:149`
+
+Attributes:
+ - `project.id`
+ - `reason`
+ - `segment.id`
+
+### `segment_membership.members.segment.skipped`
+
+Logged at `error` from:
+ - `api/segment_membership/services.py:215`
+
+Attributes:
+ - `reason`
+ - `segment.id`
+
+### `segment_membership.refresh.project.completed`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:272`
+
+Attributes:
+ - `membership_counts.count`
+ - `project.id`
+ - `stale_counts.count`
+
+### `segment_membership.refresh.project.failed`
+
+Logged at `exception` from:
+ - `api/segment_membership/tasks.py:245`
+
+Attributes:
+ - `project.id`
+
+### `segment_membership.refresh.project.skipped`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:212`
+ - `api/segment_membership/tasks.py:224`
+
+Attributes:
+ - `project.id`
+ - `reason`
+ - `stale_counts.count`
+
+### `segment_membership.seed.environment.completed`
+
+Logged at `info` from:
+ - `api/segment_membership/tasks.py:127`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+ - `rows.count`
+
+### `segment_membership.seed.environment.failed`
+
+Logged at `exception` from:
+ - `api/segment_membership/tasks.py:120`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+ - `project.id`
+
+### `segment_membership.seed.skipped`
+
+Logged at `warning` from:
+ - `api/segment_membership/tasks.py:70`
+ - `api/segment_membership/tasks.py:75`
+ - `api/segment_membership/tasks.py:80`
+
+Attributes:
+ - `organisation.id`
+ - `reason`
+
+### `segments.delete_rejected`
+
+Logged at `warning` from:
+ - `api/segments/views.py:279`
+
+Attributes:
+ - `organisation.id`
+ - `project.id`
+ - `reason`
+ - `segment.id`
+
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:142`
+ - `api/segments/serializers.py:237`
 
 Attributes:
  - `revision_id`
  - `segment_id`
 
+### `segments.update_rejected`
+
+Logged at `warning` from:
+ - `api/segments/views.py:255`
+
+Attributes:
+ - `organisation.id`
+ - `project.id`
+ - `reason`
+ - `segment.id`
+
 ### `sentry_change_tracking.integration_error`
 
 Logged at `warning` from:
- - `api/integrations/sentry/change_tracking.py:112`
+ - `api/integrations/sentry/change_tracking.py:109`
 
 Attributes:
  - `feature_name`
@@ -350,7 +718,7 @@ Attributes:
 ### `sentry_change_tracking.request_failure`
 
 Logged at `warning` from:
- - `api/integrations/sentry/change_tracking.py:102`
+ - `api/integrations/sentry/change_tracking.py:99`
 
 Attributes:
  - `error`
@@ -360,7 +728,7 @@ Attributes:
 ### `sentry_change_tracking.sending`
 
 Logged at `debug` from:
- - `api/integrations/sentry/change_tracking.py:87`
+ - `api/integrations/sentry/change_tracking.py:84`
 
 Attributes:
  - `feature_name`
@@ -372,16 +740,179 @@ Attributes:
 ### `sentry_change_tracking.success`
 
 Logged at `info` from:
- - `api/integrations/sentry/change_tracking.py:109`
+ - `api/integrations/sentry/change_tracking.py:106`
 
 Attributes:
  - `feature_name`
  - `sentry_action`
 
+### `trust_relationships.created`
+
+Logged at `info` from:
+ - `api/trust_relationships/services.py:63`
+
+Attributes:
+ - `organisation.id`
+ - `trust_relationship.id`
+ - `trust_relationship.issuer`
+
+### `trust_relationships.deleted`
+
+Logged at `info` from:
+ - `api/trust_relationships/services.py:109`
+
+Attributes:
+ - `organisation.id`
+ - `trust_relationship.id`
+
+### `trust_relationships.token.exchanged`
+
+Logged at `info` from:
+ - `api/trust_relationships/services.py:234`
+
+Attributes:
+ - `organisation.id`
+ - `token.sub`
+ - `trust_relationship.id`
+
+### `trust_relationships.token.rejected`
+
+Logged at `info` from:
+ - `api/trust_relationships/services.py:172`
+ - `api/trust_relationships/services.py:176`
+ - `api/trust_relationships/services.py:186`
+ - `api/trust_relationships/services.py:203`
+ - `api/trust_relationships/services.py:208`
+ - `api/trust_relationships/services.py:224`
+ - `api/trust_relationships/services.py:229`
+
+Attributes:
+ - `reason`
+ - `token.issuer`
+
+### `trust_relationships.updated`
+
+Logged at `info` from:
+ - `api/trust_relationships/services.py:94`
+
+Attributes:
+ - `organisation.id`
+ - `trust_relationship.id`
+ - `trust_relationship.issuer`
+
+### `usage_reporting.run.skipped`
+
+Logged at `debug` from:
+ - `api/organisations/usage_reporting/services.py:60`
+ - `api/organisations/usage_reporting/services.py:63`
+
+Attributes:
+ - `reason`
+
+### `usage_reporting.snapshot.errored`
+
+Logged at `exception` from:
+ - `api/organisations/usage_reporting/services.py:75`
+
+Attributes:
+
+### `usage_reporting.snapshot.push_failed`
+
+Logged at `warning` from:
+ - `api/organisations/usage_reporting/services.py:55`
+
+Attributes:
+ - `status_code`
+
+### `usage_reporting.snapshot.pushed`
+
+Logged at `info` from:
+ - `api/organisations/usage_reporting/services.py:53`
+
+Attributes:
+ - `status_code`
+
+### `warehouse.connection.connected`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:1445`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
+### `warehouse.connection.event_names_failed`
+
+Logged at `warning` from:
+ - `api/experimentation/services.py:268`
+ - `api/experimentation/services.py:1545`
+
+Attributes:
+ - `environment.id`
+ - `environment.key`
+ - `exc_info`
+
+### `warehouse.connection.event_stats_failed`
+
+Logged at `warning` from:
+ - `api/experimentation/services.py:1508`
+
+Attributes:
+ - `environment.id`
+ - `exc_info`
+
+### `warehouse.connection.test_event_sent`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:1385`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
+### `warehouse.connection.verification_failed`
+
+Logged at `warning` from:
+ - `api/experimentation/services.py:1420`
+
+Attributes:
+ - `environment.id`
+ - `exc_info`
+ - `organisation.id`
+
+### `warehouse.connection.verification_succeeded`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:1430`
+
+Attributes:
+ - `environment.id`
+ - `organisation.id`
+
+### `warehouse.srm.overallocated`
+
+Logged at `error` from:
+ - `api/experimentation/services.py:624`
+
+Attributes:
+ - `environment.id`
+ - `experiment.id`
+ - `feature.id`
+
+### `warehouse.srm.unkeyed_variant`
+
+Logged at `error` from:
+ - `api/experimentation/services.py:610`
+
+Attributes:
+ - `environment.id`
+ - `experiment.id`
+ - `feature.id`
+
 ### `workflows.change_request.committed`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:39`
+ - `api/core/workflows_services.py:45`
 
 Attributes:
  - `environment.id`
@@ -391,7 +922,7 @@ Attributes:
 ### `workflows.missing_live_segment`
 
 Logged at `warning` from:
- - `api/core/workflows_services.py:114`
+ - `api/core/workflows_services.py:130`
 
 Attributes:
  - `draft_segment`
@@ -399,7 +930,7 @@ Attributes:
 ### `workflows.segment_revision_created`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:119`
+ - `api/core/workflows_services.py:135`
 
 Attributes:
  - `revision_id`

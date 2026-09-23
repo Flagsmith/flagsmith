@@ -22,12 +22,12 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     title: 'Two-Factor Authentication',
   },
   '4_EYES': {
-    description: 'Add a 4-eyes approval mechanism to your feature changes.',
+    description: 'Add a four-eyes approval mechanism to your feature changes.',
     docs: 'https://docs.flagsmith.com/advanced-use/change-requests',
     title: 'Feature Change Requests',
   },
   '4_EYES_PROJECT': {
-    description: 'Add a 4-eyes approval mechanism to your segment changes.',
+    description: 'Add a four-eyes approval mechanism to your segment changes.',
     docs: 'https://docs.flagsmith.com/advanced-use/change-requests',
     title: 'Segment Change Requests',
   },
@@ -93,6 +93,12 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     docs: 'https://docs.flagsmith.com/advanced-use/scheduled-flags',
     title: 'Scheduled Flags',
   },
+  'SCIM': {
+    description:
+      'Provision and de-provision users and groups automatically from your identity provider.',
+    docs: 'https://docs.flagsmith.com/administration-and-security/access-control/scim/',
+    title: 'SCIM user provisioning',
+  },
   'STALE_FLAGS': {
     description:
       'Add automatic stale flag detection, prompting your team to clean up old flags.',
@@ -102,6 +108,11 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     description: 'Access all of your feature versions.',
     title: 'Version History',
   },
+  'WAREHOUSE': {
+    description:
+      'Connect a data warehouse to collect experimentation and analytics data from your environments.',
+    title: 'Warehouse Connections',
+  },
 }
 
 const PlanBasedBanner: FC<PlanBasedBannerType> = ({ children, ...props }) => {
@@ -110,7 +121,8 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({ children, ...props }) => {
     API.trackEvent(Constants.events.VIEW_LOCKED_FEATURE(feature))
   const hasPlan = !force && Utils.getPlansPermission(feature)
   const planUrl = Constants.getUpgradeUrl(feature)
-  const docs = `${featureDescriptions[feature]?.docs}?utm_source=plan_based_access`
+  const rawDocs = featureDescriptions[feature]?.docs
+  const docs = rawDocs ? `${rawDocs}?utm_source=plan_based_access` : null
 
   const ctas = (
     <div className='d-flex gap-2 align-items-center text-nowrap'>

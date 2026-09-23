@@ -46,7 +46,7 @@ const ChangeRequestsSetting: FC<ChangeRequestsSettingType> = ({
               name='env-name'
               disabled={isLoading}
               min={0}
-              onChange={(e: InputEvent) => {
+              onChange={(e) => {
                 if (!Utils.safeParseEventValue(e)) return
                 onChange(parseInt(Utils.safeParseEventValue(e)))
               }}

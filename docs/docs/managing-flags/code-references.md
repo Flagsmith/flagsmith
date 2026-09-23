@@ -8,7 +8,7 @@ Integrate with Code References to track feature flag usage in your codebase, and
 
 - Identify the impact of each feature across multiple repositories
 - Navigate through the business logic in the code from a feature's perspective
-- Coordinate cleanup work around stale feature flags easier
+- Coordinate cleanup work around [stale feature flags](/managing-flags/stale-flags) easier
 
 ![Code References badges displayed in the Features list, each containing a count of references of that feature](./code-references/feature-list.png)
 
@@ -53,7 +53,7 @@ jobs:
 This workflow needs the following added to [_Settings > Secrets and variables > Actions_](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) in GitHub:
 
 - `FLAGSMITH_PROJECT_ID` (variable): obtain from the Flagsmith dashboard URL, e.g. `/project/<id>/...`
-- `FLAGSMITH_CODE_REFERENCES_API_KEY` (secret): obtain from _Organisation Settings > API Keys_ in Flagsmith
+- `FLAGSMITH_CODE_REFERENCES_API_KEY` (secret): obtain from _Organisation Settings > API Access_ in Flagsmith
 
 ### Advanced configuration
 
@@ -109,7 +109,7 @@ jobs:
 This workflow needs the following added to [_Settings > Secrets and variables > Actions_](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) in GitHub:
 
 - `FLAGSMITH_PROJECT_ID` (variable): obtain from the Flagsmith dashboard URL, e.g. `/project/<id>/...`
-- `FLAGSMITH_CODE_REFERENCES_API_KEY` (secret): obtain from _Organisation Settings > API Keys_ in Flagsmith
+- `FLAGSMITH_CODE_REFERENCES_API_KEY` (secret): obtain from _Organisation Settings > API Access_ in Flagsmith
 
 ---
 
@@ -133,5 +133,5 @@ Feature details will expand on the _Usage_ tab, and list locations of each code 
 
 ## Related
 
-- [Admin API Authentication](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication): Generate API keys for Code References
+- [Management API Authentication](/integrating-with-flagsmith/flagsmith-api-overview/management-api/authentication): Generate API keys for Code References
 - [Flag Lifecycle](/best-practices/flag-lifecycle): Learn when to remove short-lived flags from your code

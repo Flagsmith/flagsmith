@@ -52,6 +52,7 @@ const SegmentAction: FC<SegmentActionProps> = ({
               icon={<Icon name='copy' width={18} fill='#9DA4AE' />}
               label='Clone Segment'
               handleActionClick={() => {
+                setIsOpen(false)
                 onClone()
               }}
               entity='segment'
@@ -64,6 +65,7 @@ const SegmentAction: FC<SegmentActionProps> = ({
             icon={<Icon name='trash-2' width={18} fill='#9DA4AE' />}
             label='Remove Segment'
             handleActionClick={() => {
+              setIsOpen(false)
               onRemove()
             }}
             entity='segment'

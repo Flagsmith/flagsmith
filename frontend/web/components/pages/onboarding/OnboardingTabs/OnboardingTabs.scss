@@ -1,0 +1,26 @@
+// One-off onboarding tablist - see OnboardingTabs.tsx for why it isn't the
+// shared navigation Tabs. Layout (flex / gap / ms-auto) is Bootstrap utilities;
+// this file owns the tab row's underline and the tab treatment.
+.onboarding-tabs {
+  border-bottom: 1px solid var(--color-border-default);
+  margin-bottom: 20px;
+
+  &__tab {
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    padding: 0 0 12px;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--easing-standard),
+      border-color var(--duration-fast) var(--easing-standard);
+
+    &--active {
+      color: var(--color-text-action);
+      border-bottom-color: var(--color-icon-action);
+    }
+  }
+}

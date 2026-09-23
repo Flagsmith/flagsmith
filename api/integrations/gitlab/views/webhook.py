@@ -9,7 +9,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from integrations.gitlab.models import GitLabWebhook
-from integrations.gitlab.services import apply_tag_for_event
+from integrations.gitlab.services import apply_tag_for_event, update_resource_metadata
 from integrations.gitlab.types import GitLabWebhookPayload
 
 logger = structlog.get_logger("gitlab")
@@ -29,8 +29,14 @@ def gitlab_webhook(request: Request, webhook_uuid: str) -> Response:
     if not hmac.compare_digest(token, webhook.secret):
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-    apply_tag_for_event(
-        webhook=webhook,
-        payload=cast(GitLabWebhookPayload, request.data),
+    payload = cast(GitLabWebhookPayload, request.data)
+    apply_tag_for_event(webhook=webhook, payload=payload)
+    update_resource_metadata(webhook=webhook, payload=payload)
+    logger.info(
+        "webhook.processed",
+        organisation__id=webhook.gitlab_configuration.project.organisation_id,
+        project__id=webhook.gitlab_configuration.project_id,
+        object_kind=payload.get("object_kind"),
+        action=(payload.get("object_attributes") or {}).get("action"),
     )
     return Response(status=status.HTTP_200_OK)

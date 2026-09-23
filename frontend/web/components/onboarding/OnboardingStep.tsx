@@ -57,7 +57,7 @@ const Step: FC<StepProps> = ({
     >
       <div
         className={classNames(numberClassName, {
-          'bg-white bg-body text-primary fw-semibold': !isComplete && isActive,
+          'bg-white bg-body text-action fw-semibold': !isComplete && isActive,
           'bg-white bg-light200': !isComplete && !isActive,
         })}
         style={{
@@ -74,7 +74,7 @@ const Step: FC<StepProps> = ({
         )}
       </div>
       <div className='d-flex align-items-center gap-1'>
-        <h5 className={`mb-0 ${isComplete ? 'text-success' : 'text-primary'}`}>
+        <h5 className={`mb-0 ${isComplete ? 'text-success' : 'text-action'}`}>
           {isComplete ? completedTitle : title}
         </h5>
       </div>

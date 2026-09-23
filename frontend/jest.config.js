@@ -13,20 +13,23 @@ module.exports = {
     '^common/(.*)$': '<rootDir>/common/$1',
     '^components/(.*)$': '<rootDir>/web/components/$1',
     '^project/(.*)$': '<rootDir>/web/project/$1',
+    // webpack resolves this one too; without it jest cannot follow the app.
+    '^web/(.*)$': '<rootDir>/web/$1',
   },
   preset: 'ts-jest',
   roots: ['<rootDir>'],
   testEnvironment: 'node',
   testMatch: ['**/__tests__/**/*.test.ts', '**/*.test.ts'],
   transform: {
-    '^.+\\.(ts|tsx)$': [
+    // Code-help snippet templates are ESM .js, so they need transforming too.
+    // node_modules stays untransformed, hence the ignore pattern below.
+    '^.+\\.(js|jsx|ts|tsx)$': [
       'ts-jest',
       {
         tsconfig: 'tsconfig.jest.json',
       },
     ],
   },
-  // Skip transforming JS files - they're ES5 compatible and don't need Babel
-  transformIgnorePatterns: [],
+  transformIgnorePatterns: ['/node_modules/'],
   verbose: true,
 }

@@ -78,6 +78,7 @@ def test_google_oauth_login__invite_exists_and_registration_disabled__returns_20
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+    assert response.json()["is_new_user"] is True
 
 
 @mock.patch("custom_auth.oauth.serializers.GithubUser")
@@ -107,6 +108,7 @@ def test_github_oauth_login__invite_exists_and_registration_disabled__returns_20
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+    assert response.json()["is_new_user"] is True
 
 
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
@@ -133,6 +135,7 @@ def test_google_oauth_login__existing_user_and_registration_disabled__returns_20
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert "key" in response.json()
+    assert response.json()["is_new_user"] is False
 
 
 @mock.patch("custom_auth.oauth.serializers.GithubUser")
@@ -161,6 +164,7 @@ def test_github_oauth_login__existing_user_and_registration_disabled__returns_20
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert "key" in response.json()
+    assert response.json()["is_new_user"] is False
 
 
 def test_google_oauth_login__case_insensitive_email__updates_existing_user(

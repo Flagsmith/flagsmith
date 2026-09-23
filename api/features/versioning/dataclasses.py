@@ -29,6 +29,13 @@ class FlagChangeSet:
 
     segment_id: int | None = None
     segment_priority: int | None = None
+    multivariate_values: list[MultivariateValueChangeSet] | None = None
+
+
+@dataclass
+class MultivariateValueChangeSet:
+    multivariate_feature_option_id: int
+    percentage_allocation: float
 
 
 @dataclass
@@ -38,6 +45,7 @@ class SegmentOverrideChangeSet:
     feature_state_value: str
     type_: FeatureValueType
     priority: int | None = None
+    multivariate_values: list[MultivariateValueChangeSet] | None = None
 
 
 @dataclass

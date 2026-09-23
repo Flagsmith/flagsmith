@@ -53,7 +53,7 @@ _environment_v2_meta_compressed_adapter: TypeAdapter[EnvironmentV2MetaCompressed
     TypeAdapter(EnvironmentV2MetaCompressed)
 )
 
-_NULLABLE_IDENTITY_KEY_ATTRIBUTES = {"dashboard_alias"}
+_NULLABLE_IDENTITY_KEY_ATTRIBUTES = {"dashboard_alias", "system_traits"}
 
 
 def map_environment_to_environment_document(

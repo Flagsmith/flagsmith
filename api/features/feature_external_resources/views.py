@@ -1,5 +1,6 @@
 import re
 
+from common.projects.permissions import VIEW_PROJECT
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
@@ -27,12 +28,8 @@ from .serializers import FeatureExternalResourceSerializer
     name="list",
     decorator=extend_schema(
         tags=["mcp"],
-        extensions={
-            "x-gram": {
-                "name": "get_feature_external_resources",
-                "description": "Retrieves external resources linked to the feature flag.",
-            },
-        },
+        operation_id="get_feature_external_resources",
+        description="Retrieves external resources linked to the feature flag.",
     ),
 )
 class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
@@ -45,9 +42,14 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[typ
 
         if "pk" in self.kwargs:
             return FeatureExternalResource.objects.filter(id=self.kwargs["pk"])
-        else:
-            features_pk = self.kwargs["feature_pk"]
-            return FeatureExternalResource.objects.filter(feature=features_pk)
+
+        feature = get_object_or_404(
+            Feature.objects.filter(
+                project__in=self.request.user.get_permitted_projects(VIEW_PROJECT)  # type: ignore[union-attr]
+            ),
+            pk=self.kwargs["feature_pk"],
+        )
+        return feature.external_resources.all()
 
     def list(self, request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         queryset = self.get_queryset()  # type: ignore[no-untyped-call]

@@ -43,7 +43,6 @@ const RegexTester: FC<RegexTesterType> = ({
       <InputGroup
         title='Regular Expression'
         value={regex}
-        autoValidate
         inputProps={{
           className: 'full-width',
           onClick: forceSelectionRange,
@@ -65,7 +64,6 @@ const RegexTester: FC<RegexTesterType> = ({
         id='regex'
         title='Test Input'
         value={exampleText}
-        autoValidate
         inputProps={{
           autoValidate: true,
           className: 'full-width',

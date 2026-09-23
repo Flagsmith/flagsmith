@@ -13,6 +13,7 @@ type LiveSectionProps = {
   hasFilters: boolean
   onFilterChange: (updates: Partial<FilterState>) => void
   onClearFilters: () => void
+  onFeatureClick?: (flag: ProjectFlag) => void
 }
 
 const LiveSection: FC<LiveSectionProps> = ({
@@ -22,6 +23,7 @@ const LiveSection: FC<LiveSectionProps> = ({
   hasFilters,
   isLoading,
   onClearFilters,
+  onFeatureClick,
   onFilterChange,
   projectId,
 }) => {
@@ -40,6 +42,7 @@ const LiveSection: FC<LiveSectionProps> = ({
       hasFilters={hasFilters}
       onFilterChange={onFilterChange}
       onClearFilters={onClearFilters}
+      onFeatureClick={onFeatureClick}
       emptyLabel='No live flags with code references found.'
       nextPage={nextPage}
       prevPage={prevPage}

@@ -4,7 +4,6 @@ import Project from 'common/project'
 import {
   ContentType,
   FeatureState,
-  FeatureStateValue,
   FlagsmithValue,
   MultivariateFeatureStateValue,
   MultivariateOption,
@@ -13,6 +12,7 @@ import {
   ProjectFlag,
   SegmentCondition,
   Tag,
+  TraitValue,
   UserPermissions,
 } from 'common/types/responses'
 import flagsmith from '@flagsmith/flagsmith'
@@ -21,6 +21,8 @@ import find from 'lodash/find'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
+import { getDefaultVariantKey } from './multivariate'
+import { featureStateToValue } from './featureStateToValue'
 import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
@@ -50,15 +52,17 @@ export type PaidFeature =
   | 'METADATA'
   | 'REALTIME'
   | 'SAML'
+  | 'SCIM'
   | 'SCHEDULE_FLAGS'
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
   | 'RELEASE_PIPELINES'
+  | 'WAREHOUSE'
 
 export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
 
 // Define a type for plan categories
-type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
+type Plan = 'free' | 'start-up' | 'scale-up' | 'enterprise' | null
 
 export const planNames = {
   enterprise: 'Enterprise',
@@ -67,6 +71,7 @@ export const planNames = {
   startup: 'Startup',
 }
 import BaseUtils from './base/_utils'
+import { copyToClipboard } from './copyToClipboard'
 const Utils = Object.assign({}, BaseUtils, {
   appendImage: (src: string) => {
     const img = document.createElement('img')
@@ -90,11 +95,12 @@ const Utils = Object.assign({}, BaseUtils, {
       } else if (typeof v.default_percentage_allocation === 'number') {
         total += v.default_percentage_allocation
       } else {
-        total += (v as any).percentage_allocation
+        // A cleared weight input leaves the allocation null — treat as 0.
+        total += (v as any).percentage_allocation || 0
       }
       return null
     })
-    return 100 - total
+    return parseFloat((100 - total).toFixed(2))
   },
   calculateRemainingLimitsPercentage(
     total: number | undefined,
@@ -143,19 +149,8 @@ const Utils = Object.assign({}, BaseUtils, {
     return res
   },
 
-  copyToClipboard: async (
-    value: string,
-    successMessage?: string,
-    errorMessage?: string,
-  ) => {
-    try {
-      await navigator.clipboard.writeText(value)
-      toast(successMessage ?? 'Copied to clipboard')
-    } catch (error) {
-      toast(errorMessage ?? 'Failed to copy to clipboard')
-      throw error
-    }
-  },
+  copyToClipboard,
+
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
       type === 'segment overrides' ? 'environment' : 'project'
@@ -175,30 +170,7 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return null
   },
-  escapeHtml(html: string) {
-    const text = document.createTextNode(html)
-    const p = document.createElement('p')
-    p.appendChild(text)
-    return p.innerHTML
-  },
-  featureStateToValue(featureState: FeatureStateValue) {
-    if (!featureState) {
-      return null
-    }
-
-    //@ts-ignore value_type is the type key on core traits
-    switch (featureState.value_type || featureState.type) {
-      case 'bool':
-        return featureState.boolean_value
-      case 'float':
-        return featureState.float_value
-      case 'int':
-        return featureState.integer_value
-      default:
-        return featureState.string_value
-    }
-  },
-
+  featureStateToValue,
   findOperator(
     operator: SegmentCondition['operator'],
     value: string,
@@ -215,14 +187,29 @@ const Utils = Object.assign({}, BaseUtils, {
 
     return conditions.find((v) => v.value === operator)
   },
+
   /** Checks whether the specified flag exists, which is different from the flag being enabled or not. This is used to
    *  only add behaviour to Flagsmith-on-Flagsmith flags that have been explicitly created by customers.
    */
   flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
-  getContentType(contentTypes: ContentType[] | undefined, model: string, type: string) {
+
+  getContentType(
+    contentTypes: ContentType[] | undefined,
+    model: string,
+    type: string,
+  ) {
     return contentTypes?.find((c: ContentType) => c[model] === type) || null
+  },
+  getContrastColour(backgroundColor: string | null | undefined): string {
+    if (!backgroundColor) return 'white'
+
+    try {
+      return Color(backgroundColor).luminosity() > 0.179 ? 'black' : 'white'
+    } catch {
+      return 'white'
+    }
   },
   getCreateProjectPermission(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
@@ -238,6 +225,7 @@ const Utils = Object.assign({}, BaseUtils, {
       OrganisationPermission.CREATE_PROJECT
     ]
   },
+  getDefaultVariantKey,
   getExistingWaitForTime: (
     waitFor: string | undefined,
   ):
@@ -362,6 +350,9 @@ const Utils = Object.assign({}, BaseUtils, {
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
   },
+  getFlagsmithVariant(key: string) {
+    return flagsmith.getAllFlags()[key]?.variant
+  },
 
   getIdentitiesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
@@ -396,7 +387,6 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return EnvironmentPermissionDescriptions.UPDATE_FEATURE_STATE
   },
-
   getNextPlan: () => {
     const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
     if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
@@ -417,6 +407,7 @@ const Utils = Object.assign({}, BaseUtils, {
       }
     }
   },
+
   getOrganisationHomePage(id?: string) {
     const orgId = id || AccountStore.getOrganisation()?.id
     if (!orgId) {
@@ -424,11 +415,11 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return `/organisation/${orgId}/projects`
   },
-
   getOrganisationIdFromUrl(match: any) {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
   },
+
   getOverridePermission: (
     level: 'identity' | 'segment',
   ): {
@@ -450,6 +441,7 @@ const Utils = Object.assign({}, BaseUtils, {
         }
     }
   },
+
   getPlanName: (_plan: string) => {
     const plan = (_plan || '')?.toLowerCase()
     if (plan.includes('free')) {
@@ -472,18 +464,22 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return planNames.free
   },
+
   getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
-    if (!plan || planName === planNames.free) {
-      return false
-    }
+    if (!plan) return false
+
+    const requiredPlan = Utils.getRequiredPlan(feature)
+    if (requiredPlan === 'free') return true
+
+    if (planName === planNames.free) return false
+
     const isScaleupOrGreater = planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
     if (feature === 'AUTO_SEATS') {
       return isScaleupOrGreater && !isEnterprise
     }
 
-    const requiredPlan = Utils.getRequiredPlan(feature)
     if (requiredPlan === 'enterprise') {
       return isEnterprise
     } else if (requiredPlan === 'scale-up') {
@@ -491,6 +487,7 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return true
   },
+
   getPlansPermission: (feature: PaidFeature) => {
     const isOrgPermission = feature !== '2FA'
     let plans
@@ -510,6 +507,7 @@ const Utils = Object.assign({}, BaseUtils, {
     )
     return !!found
   },
+
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
@@ -526,11 +524,34 @@ const Utils = Object.assign({}, BaseUtils, {
         plan = 'scale-up'
         break
       }
+      case 'SCIM':
       case 'STALE_FLAGS':
       case 'REALTIME':
       case 'METADATA':
       case 'RELEASE_PIPELINES': {
         plan = 'enterprise'
+        break
+      }
+      case 'WAREHOUSE': {
+        const remoteValue = Utils.getFlagsmithJSONValue(
+          'experimentation_warehouse_connection',
+          [],
+        )
+        let remotePlans: string[] = []
+        if (Array.isArray(remoteValue)) {
+          remotePlans = remoteValue
+        } else if (Array.isArray(remoteValue?.allowed_plans)) {
+          remotePlans = remoteValue.allowed_plans
+        }
+        const allowedPlans = [...remotePlans, 'enterprise']
+        const planHierarchy: Plan[] = [
+          'free',
+          'start-up',
+          'scale-up',
+          'enterprise',
+        ]
+        plan =
+          planHierarchy.find((p) => allowedPlans.includes(p)) || 'enterprise'
         break
       }
 
@@ -647,6 +668,13 @@ const Utils = Object.assign({}, BaseUtils, {
       (permission) => permission.permission_key === key,
     )
   },
+  hasIntegration(key: string) {
+    const data = Utils.getIntegrationData() as
+      | Record<string, unknown>
+      | null
+      | undefined
+    return !!data && !!data[key]
+  },
   //todo: Remove when migrating to RTK
   isEnterpriseImage: () =>
     selectBuildVersion(getStore().getState())?.backend.is_enterprise,
@@ -660,6 +688,8 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return false
   },
+  isOrgOnFreePlan: (): boolean =>
+    Utils.getPlanName(AccountStore.getActiveOrgPlan()) === planNames.free,
   isSaas: () => selectBuildVersion(getStore().getState())?.backend?.is_saas,
 
   isValidNumber(value: any) {
@@ -775,7 +805,10 @@ const Utils = Object.assign({}, BaseUtils, {
     }
 
     if (operatorObj?.value?.toLowerCase?.().includes('semver')) {
-      return !!semver.valid(`${rule.value.split(':')[0]}`)
+      if (!rule.value) {
+        return false
+      }
+      return !!semver.valid(`${rule.value}`.split(':')[0])
     }
 
     switch (rule.operator) {
@@ -795,7 +828,10 @@ const Utils = Object.assign({}, BaseUtils, {
         }
       }
       case 'MODULO': {
-        const valueSplit = rule.value.split('|')
+        if (!rule.value) {
+          return false
+        }
+        const valueSplit = `${rule.value}`.split('|')
         if (valueSplit.length === 2) {
           const [divisor, remainder] = [
             parseFloat(valueSplit[0]),
@@ -846,7 +882,7 @@ const Utils = Object.assign({}, BaseUtils, {
       type: 'unicode',
     }
   },
-  valueToTrait(value: FlagsmithValue) {
+  valueToTrait(value: FlagsmithValue): TraitValue {
     const val = Utils.getTypedValue(value)
 
     if (typeof val === 'boolean') {

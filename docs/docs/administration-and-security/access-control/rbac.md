@@ -6,7 +6,7 @@ sidebar_position: 1
 
 :::info
 
-Role-based access control requires an [Enterprise subscription](https://www.flagsmith.com/pricing).
+Role-based access control requires an [Enterprise or Scale-Up subscription](https://www.flagsmith.com/pricing).
 
 :::
 
@@ -17,7 +17,7 @@ For example, RBAC allows you to achieve the following scenarios:
 
 - Only allow certain users to modify your production environments.
 - Grant a default set of permissions to all users that join your Flagsmith organisation.
-- Lock down an [Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api) key to a specific set of permissions.
+- Lock down a [Management API](/integrating-with-flagsmith/flagsmith-api-overview/management-api) key to a specific set of permissions.
 - Provide Flagsmith permissions based on your enterprise identity provider's groups when using
   [SAML single sign-on](/administration-and-security/access-control/saml).
 
@@ -28,7 +28,7 @@ left and open the **Users and Permissions** tab.
 
 ### How permissions are assigned
 
-Permissions are granted to **[roles](#roles)**, and roles are assigned to users, [groups](#groups), or [Admin API keys](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication). A user's effective permissions are the **union of all permissions** from every role assigned to them — both directly and through group membership.
+Permissions are granted to **[roles](#roles)**, and roles are assigned to users, [groups](#groups), or [Management API keys](/integrating-with-flagsmith/flagsmith-api-overview/management-api/authentication). A user's effective permissions are the **union of all permissions** from every role assigned to them — both directly and through group membership.
 
 ![How permissions are assigned](/img/rbac-permissions-diagram.svg)
 
@@ -69,7 +69,7 @@ This granular approach allows you to give users administrative control exactly w
 
 #### Custom roles
 
-**Custom roles** can be assigned to users, groups or [Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api) keys. Any
+**Custom roles** can be assigned to users, groups or [Management API](/integrating-with-flagsmith/flagsmith-api-overview/management-api) keys. Any
 number of custom roles can be created and assigned.
 
 Creating, modifying or assigning roles requires organisation administrator permissions.
@@ -172,6 +172,10 @@ Permissions can be assigned at four levels: user group, organisation, project, a
 | Delete feature     | Allows deleting features from all environments.                                                                                              | Yes           |
 | Manage segments    | Grants write access to segments in this project.                                                                                             |               |
 | View audit log     | Allows viewing all audit log entries for this project.                                                                                       |               |
+| Manage tags        | Allows managing tags in this project.                                                                                                        |               |
+| Create project level change requests | Allows creating project-level (segment) change requests. |               |
+| Approve project level change requests | Allows approving project-level (segment) change requests. |               |
+| Manage project level change requests | Allows managing and publishing project-level (segment) change requests. |               |
 
 ### Environment
 
@@ -295,7 +299,7 @@ assign it to the group instead.
 
 Assigning roles to groups has several benefits over assigning permissions directly to a group:
 
-- Roles can be assigned to Admin API keys, but Admin API keys cannot belong to groups.
+- Roles can be assigned to Management API keys, but Management API keys cannot belong to groups.
 - If you need multiple groups or users with similar permissions, the common permissions can be defined in a role and
   assigned to multiple groups or users instead of being duplicated.
 - Having roles as the single place where permissions are defined makes auditing permissions easier.

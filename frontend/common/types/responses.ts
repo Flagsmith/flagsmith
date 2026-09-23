@@ -160,6 +160,32 @@ export type SegmentRule = {
   conditions: SegmentCondition[]
   version_of: number | undefined
 }
+export type SegmentMembership = {
+  environment: number
+  count: number
+  last_synced_at: string
+}
+export type SegmentMember = {
+  identifier: string
+  identity_key: string
+  traits: Record<string, FlagsmithValue> | null
+}
+export type SegmentMembersResponse = PagedResponse<SegmentMember> & {
+  // Pass as `cursor` to fetch the next page; null when there are no more rows.
+  next_cursor: string | null
+}
+export type CohortSourceType = 'csv' | 'amplitude' | 'mixpanel'
+
+export type SegmentCohort = {
+  id: number
+  environment: number
+  environment_api_key: string
+  environment_name: string
+  source_type: CohortSourceType
+  version: number
+  deletion_requested_at: string | null
+}
+
 export type Segment = {
   id: number
   rules: SegmentRule[]
@@ -169,6 +195,8 @@ export type Segment = {
   project: string | number
   feature?: number
   metadata: Metadata[] | []
+  membership_counts?: SegmentMembership[]
+  cohort?: SegmentCohort | null
 }
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
@@ -356,6 +384,7 @@ export type IntegrationData = {
   organisation?: string
   project?: string
   isOauth?: boolean
+  customUI?: boolean
 }
 
 export type ActiveIntegration = {
@@ -398,6 +427,8 @@ export type User = {
   last_login: string
   uuid: string
   onboarding: Onboarding
+  // Set client-side at login, not returned by the API.
+  isGettingStarted?: boolean
   // TODO: Use enum
   role: string
 }
@@ -484,6 +515,8 @@ export type AuditLogDetail = AuditLogItem & {
     new: FlagsmithValue
   }[]
 }
+export type PaymentMethod = 'CHARGEBEE' | 'XERO' | 'AWS_MARKETPLACE'
+
 export type Subscription = {
   id: number
   uuid: string
@@ -494,10 +527,17 @@ export type Subscription = {
   max_api_calls: number
   cancellation_date: string | null
   customer_id: string
-  payment_method: string
+  payment_method: PaymentMethod | null
   notes: string | null
+  has_active_billing_periods: boolean
 }
 
+export type OnboardingVariant = 'control' | 'single_page'
+// What consenting to an OAuth scope grants, as the API describes it.
+export type OAuthScopeDescription = {
+  label: string
+  grants: string[]
+}
 export type Organisation = {
   id: number
   name: string
@@ -554,9 +594,19 @@ export type MultivariateFeatureStateValue = {
 export type FeatureStateValue = {
   boolean_value: boolean | null
   float_value?: number | null
-  integer_value?: boolean | null
+  integer_value?: number | null
   string_value: string
   type: 'int' | 'unicode' | 'bool' | 'float'
+}
+
+// The trait shape from the core API, which keys its type as `value_type`
+// where feature states use `type`.
+export type TraitValue = {
+  boolean_value: boolean | null
+  float_value?: number | null
+  integer_value: number | null
+  string_value: string | null
+  value_type: 'int' | 'unicode' | 'bool' | 'float'
 }
 
 export type MultivariateOption = {
@@ -567,9 +617,191 @@ export type MultivariateOption = {
   string_value: string
   boolean_value?: boolean
   default_percentage_allocation: number
+  // A stable, human-readable identifier for the variant (the backend `key`).
+  // Surfaced in the UI as the variation "Label". Slug-constrained and nullable.
+  key?: string | null
 }
 
 export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
+
+export type ExperimentStatus = 'created' | 'running' | 'paused' | 'completed'
+
+export type ExperimentStatusCounts = Record<ExperimentStatus, number>
+
+export type MetricAggregation = 'count' | 'sum' | 'mean' | 'occurrence'
+
+export type MetricDirection = 'up' | 'down' | 'informational'
+
+export type MetricDefinition = {
+  version: number
+  event: string
+}
+
+export type MetricExperiment = {
+  id: number
+  name: string
+  status: ExperimentStatus
+}
+
+export type Metric = {
+  id: number
+  name: string
+  description: string
+  aggregation: MetricAggregation
+  direction: MetricDirection
+  definition: MetricDefinition
+  experiments: MetricExperiment[]
+  created_at: string
+  updated_at: string
+}
+
+export type ExperimentFeature = {
+  id: number
+  name: string
+  type: FeatureType
+  initial_value: string | null
+  multivariate_options: MultivariateOption[]
+}
+
+export type Experiment = {
+  id: number
+  name: string
+  hypothesis: string
+  feature: ExperimentFeature
+  status: ExperimentStatus
+  metrics: ExperimentMetric[]
+  created_at: string
+  updated_at: string
+  started_at: string | null
+  ended_at: string | null
+  experiment_rollout?: ExperimentRollout
+}
+
+export type ExperimentAudienceMatch = 'any' | 'all'
+
+// Provenance only: the rules are a frozen copy on the rollout segment, so a
+// source segment can be deleted while the experiment keeps evaluating it.
+export type ExperimentAudienceSegment = {
+  id: number
+  name: string
+  is_cohort: boolean
+  cohort_source_type: CohortSourceType | null
+  deleted: boolean
+}
+
+export type ExperimentAudience = {
+  match: ExperimentAudienceMatch
+  segments: ExperimentAudienceSegment[]
+}
+
+export type ExperimentRollout = {
+  enabled: boolean
+  rollout_percentage: number
+  feature_state_value: {
+    type: 'integer' | 'string' | 'boolean'
+    value: string
+  }
+  multivariate_feature_state_values: {
+    multivariate_feature_option: number
+    percentage_allocation: number
+  }[]
+  audience?: ExperimentAudience
+}
+
+export type ExpectedDirection =
+  | 'increase'
+  | 'decrease'
+  | 'not_increase'
+  | 'not_decrease'
+
+// Join object returned on the experiment-detail `metrics` array
+// (api/experimentation ExperimentMetricSerializer).
+export type ExperimentMetric = {
+  id: number
+  metric: number
+  metric_name: string
+  aggregation: MetricAggregation
+  // Absent from API responses until the backend exposes it; treat as 'up'.
+  direction?: MetricDirection
+  expected_direction: ExpectedDirection
+  created_at: string
+}
+
+// --- Exposures (live) — mirrors api/experimentation dataclasses ---
+export type ExposureGranularity = 'hour' | 'day'
+
+export type ExposuresTimeseriesPoint = {
+  bucket: string
+  new_identities: Record<string, number>
+}
+
+export type ExposuresTimeseries = {
+  granularity: ExposureGranularity
+  points: ExposuresTimeseriesPoint[]
+}
+
+export type ExposuresSummary = {
+  excluded_identities: number
+  timeseries: ExposuresTimeseries
+}
+
+export type ConversionsTimeseriesPoint = {
+  bucket: string
+  converted_identities: Record<string, number>
+}
+
+export type ConversionsTimeseries = {
+  granularity: ExposureGranularity
+  points: ConversionsTimeseriesPoint[]
+}
+
+export type ExperimentExposures = {
+  as_of: string | null
+  last_error_at: string | null
+  refresh_requested_at: string | null
+  payload: ExposuresSummary | null
+}
+
+export type ExperimentBayesianResults = {
+  as_of: string | null
+  last_error_at: string | null
+  refresh_requested_at: string | null
+  payload: BayesianResultsSummary | null
+  is_final: boolean
+}
+
+// --- Bayesian results (defined now, consumed when the endpoint ships) ---
+export type VariantStats = {
+  n: number
+  sum: number
+  sum_squares: number
+}
+
+export type Inference = {
+  lift: number
+  ci_low: number
+  ci_high: number
+  chance_to_win: number
+}
+
+export type BayesianMetricResult = {
+  metric_id: number
+  variants: Record<string, VariantStats>
+  inference: Record<string, Inference | null>
+  // Occurrence metrics only; null for value metrics. Absent from payloads
+  // stored before the backend shipped it (finalised experiments never gain it).
+  conversions_timeseries?: ConversionsTimeseries | null
+}
+
+export type BayesianResultsSummary = {
+  srm_p_value: number | null
+  metrics: BayesianMetricResult[]
+  // Denominator for the conversion-rate charts, same warehouse run as the
+  // metrics. Exposures bucket by first exposure and conversions by first
+  // conversion, so only running totals may be divided — a per-bucket division
+  // can exceed 100%. Absent from payloads stored before the backend shipped it.
+  exposures_timeseries?: ExposuresTimeseries
+}
 
 export enum TagStrategy {
   INTERSECTION = 'INTERSECTION',
@@ -624,6 +856,8 @@ export type FeatureState = {
   feature_state_value: FlagsmithValue
   id: number
   identity?: number
+  // Edge only. Core returns the numeric `identity` above instead.
+  identity_uuid?: string
   live_from?: string
   multivariate_feature_state_values: MultivariateFeatureStateValue[]
   updated_at: string
@@ -665,7 +899,18 @@ export type ProjectFlag = {
     last_successful_repository_scanned_at: string
     last_feature_found_at: string
   }[]
+  lifecycle_stage?: LifecycleStage | null
 }
+
+export type LifecycleStage =
+  | 'new'
+  | 'live'
+  | 'permanent'
+  | 'stale'
+  | 'needs_monitoring'
+  | 'to_remove'
+
+export type LifecycleStatusCounts = Record<LifecycleStage, number>
 
 export type FeatureListProviderData = {
   projectFlags: ProjectFlag[] | null
@@ -813,6 +1058,47 @@ export type Metadata = {
   field_value: string
 }
 
+export type CohortMembershipCounts = {
+  applied: number
+  pending_add: number
+  pending_remove: number
+}
+
+export type Cohort = {
+  id: number
+  uuid: string
+  name: string
+  description: string | null
+  segment: number
+  source_type: CohortSourceType
+  version: number
+  created_at: string
+  last_synced_at: string | null
+  membership_counts: CohortMembershipCounts
+}
+
+export type CohortSyncKey = {
+  prefix: string
+  name: string
+  created: string
+  key: string | null
+}
+
+// The plaintext key only exists in the create response.
+export type CohortSyncKeyCreated = CohortSyncKey & { key: string }
+
+export type CohortCsvSyncResult = {
+  version: number
+  added: number
+  removed: number
+  unchanged: number
+  ignored: {
+    empty: number
+    duplicates: number
+    too_long: number
+  }
+}
+
 export type MetadataFieldModelField = {
   id: number
   content_type: number
@@ -862,6 +1148,16 @@ export type SAMLAttributeMapping = {
   saml_configuration: number
   django_attribute_name: AttributeName
   idp_attribute_name: string
+}
+
+export type ScimConfiguration = {
+  created_at: string
+  token_rotated_at: string
+  base_url: string
+}
+
+export type ScimConfigurationWithToken = ScimConfiguration & {
+  token: string
 }
 
 export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
@@ -943,11 +1239,6 @@ export type IdentityTrait = {
   id: number | string
   trait_key: string
   trait_value: FlagsmithValue
-}
-
-enum PipelineStatus {
-  DRAFT = 'DRAFT',
-  ACTIVE = 'ACTIVE',
 }
 
 export interface ReleasePipeline {
@@ -1064,32 +1355,84 @@ export interface UsageEventsList extends AggregateUsageDataItem {
   }
 }
 
-export type ExperimentVariantResult = {
-  variant: string
-  evaluations: number
-  conversions: number
-  conversion_rate: number
+export type WarehouseConnectionStatus =
+  | 'created'
+  | 'pending_connection'
+  | 'connected'
+  | 'errored'
+
+export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
+
+export type SnowflakeConfig = {
+  account_identifier: string
+  warehouse: string
+  database: string
+  schema: string
+  role: string
+  user: string
 }
 
-export type ExperimentStatistics = {
-  p_value: number
-  significant: boolean
-  chance_to_win: Record<string, number>
-  lift: string
-  winner: string | null
-  recommendation: string
-  sample_size_warning: string | null
+export type ClickHouseConfig = {
+  host: string
+  port: number
+  database: string
+  username: string
+  secure: boolean
 }
 
-export type ExperimentResults = {
-  feature: string
-  variants: ExperimentVariantResult[]
-  statistics: ExperimentStatistics
+export type WarehouseConfigResponse =
+  | SnowflakeConfig
+  | ClickHouseConfig
+  | Record<string, never>
+
+export type WarehouseConnectionTestResult = {
+  status: WarehouseConnectionStatus
+  status_detail: string | null
+}
+
+export type WarehouseConnectionEvents = {
+  events: string[]
+  is_truncated: boolean
+}
+
+export type WarehouseConnection = {
+  id: number
+  warehouse_type: WarehouseType
+  status: WarehouseConnectionStatus
+  status_detail: string | null
+  name: string
+  config: WarehouseConfigResponse
+  created_at: string
+  total_events_received: number | null
+  unique_events_count: number | null
+}
+
+export type TrustRelationshipClaimRule = {
+  claim: string
+  values: string[]
+}
+
+export type TrustRelationship = {
+  id: number
+  name: string
+  issuer: string
+  audience: string
+  claim_rules: TrustRelationshipClaimRule[]
+  is_admin: boolean
+  master_api_key_id: string
+  master_api_key_prefix: string
+  created_at: string
+  created_by: number | null
 }
 
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
+  cohort: Cohort
+  cohortSyncKeys: CohortSyncKey[]
+  cohortSyncKeyCreated: CohortSyncKeyCreated
+  cohortCsvSync: CohortCsvSyncResult
+  segmentMembers: SegmentMembersResponse
   auditLogs: PagedResponse<AuditLogItem>
   organisationLicence: {}
   organisation: Organisation
@@ -1160,6 +1503,7 @@ export type Res = {
   rolePermission: PagedResponse<RolePermission>
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
+  lifecycleStatusCounts: LifecycleStatusCounts
   identityFeatureStatesAll: IdentityFeatureState[]
   createRolesPermissionUsers: RolePermissionUser
   rolesPermissionUsers: PagedResponse<RolePermissionUser>
@@ -1175,11 +1519,14 @@ export type Res = {
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   roleMasterApiKey: { id: number; master_api_key: string; role: number }
+  trustRelationship: TrustRelationship
+  trustRelationships: PagedResponse<TrustRelationship>
   masterAPIKeyWithMasterAPIKeyRoles: {
     id: string
     prefix: string
     roles: RolePermissionUser[]
   }
+  rolesMasterAPIKeyWithMasterAPIKeyRoles: PagedResponse<Role>
   userWithRoles: PagedResponse<Role>
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
@@ -1215,6 +1562,8 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  scimConfiguration: ScimConfiguration
+  scimConfigurationWithToken: ScimConfigurationWithToken
   identitySegments: PagedResponse<Segment>
   organisationWebhooks: PagedResponse<Webhook>
   projectChangeRequests: PagedResponse<ChangeRequestSummary>
@@ -1232,6 +1581,12 @@ export type Res = {
       entity: 'features' | 'identities' | 'segments' | 'workflows'
       rank: number
     }[]
+  }
+  environmentOnboardingStatus: {
+    // Null until the environment's first SDK evaluation is reported by Edge.
+    first_evaluated_at: string | null
+    // A Core `KnownSDK` label (e.g. 'flagsmith-js-sdk') or 'unknown'.
+    first_evaluated_sdk_label: string | null
   }
   profile: User
   onboarding: {}
@@ -1272,7 +1627,6 @@ export type Res = {
     }
   }
   featureState: FeatureState
-  experimentResults: ExperimentResults
   adminDashboardMetrics: {
     summary: {
       total_organisations: number
@@ -1297,7 +1651,7 @@ export type Res = {
   }
   validateOAuthAuthorize: {
     application: { name: string; client_id: string }
-    scopes: Record<string, string>
+    scopes: Record<string, OAuthScopeDescription>
     redirect_uri: string
     is_verified: boolean
   }
@@ -1309,5 +1663,25 @@ export type Res = {
   gitlabProjects: PagedResponse<GitLabProject>
   gitlabIssues: PagedResponse<GitLabIssue>
   gitlabMergeRequests: PagedResponse<GitLabMergeRequest>
+  warehouseConnections: WarehouseConnection[]
+  warehouseConnectionEvents: WarehouseConnectionEvents
+  warehouseConnectionTestResult: WarehouseConnectionTestResult
+  experiments: PagedResponse<Experiment> & {
+    currentPage: number
+    pageSize: number
+    status_counts?: ExperimentStatusCounts
+  }
+  experiment: Experiment
+  experimentExposures: ExperimentExposures
+  experimentBayesianResults: ExperimentBayesianResults
+  metric: Metric
+  metrics: PagedResponse<Metric>
+  multivariateOption: MultivariateOption
+  saveMultivariateOptions: {
+    multivariate_options: MultivariateOption[]
+    // Per-option API errors keyed by the input option's index; null when all
+    // requests succeeded.
+    errors: Record<number, any> | null
+  }
   // END OF TYPES
 }

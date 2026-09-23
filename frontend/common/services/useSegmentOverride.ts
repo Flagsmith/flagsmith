@@ -5,14 +5,19 @@ import { projectFlagService } from './useProjectFlag'
 import { getStore } from 'common/store'
 
 export const segmentOverrideService = service
-  .enhanceEndpoints({ addTagTypes: ['SegmentOverride'] })
+  .enhanceEndpoints({
+    addTagTypes: ['SegmentOverride', 'FeatureState', 'CreateSegmentOverride'],
+  })
   .injectEndpoints({
     endpoints: (builder) => ({
       createSegmentOverride: builder.mutation<
         Res['createSegmentOverride'],
         Req['createSegmentOverride']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'CreateSegmentOverride' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'CreateSegmentOverride' },
+          { id: 'LIST', type: 'FeatureState' },
+        ],
         query: (query: Req['createSegmentOverride']) => ({
           body: query,
           method: 'POST',

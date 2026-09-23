@@ -526,6 +526,7 @@ def test_add_single_seat__existing_addon__increments_quantity(  # type: ignore[n
         plan_id=plan_id,
         addons=[mocker.MagicMock(id=addon_id, quantity=addon_quantity)],
         billing_period=1,
+        billing_period_unit="month",
     )
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client", autospec=True
@@ -566,18 +567,22 @@ def test_add_single_seat__existing_addon__increments_quantity(  # type: ignore[n
 
 
 @pytest.mark.parametrize(
-    "billing_period,expected_add_on_id",
+    "billing_period,billing_period_unit,expected_add_on_id",
     (
-        (1, "additional-team-members-scale-up-v2-monthly"),
-        (6, "additional-team-members-scale-up-v2-semiannual"),
-        (12, "additional-team-members-scale-up-v2-annual"),
+        (1, "month", "additional-team-members-scale-up-v2-monthly"),
+        (6, "month", "additional-team-members-scale-up-v2-semiannual"),
+        (12, "month", "additional-team-members-scale-up-v2-annual"),
+        (1, "year", "additional-team-members-scale-up-v2-annual"),
         # unexpected or missing billing period should default to monthly
-        (None, "additional-team-members-scale-up-v2-monthly"),
-        (7, "additional-team-members-scale-up-v2-monthly"),
+        (None, "month", "additional-team-members-scale-up-v2-monthly"),
+        (7, "month", "additional-team-members-scale-up-v2-monthly"),
     ),
 )
 def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(
-    mocker: MockerFixture, billing_period: int, expected_add_on_id: str
+    mocker: MockerFixture,
+    billing_period: int,
+    billing_period_unit: str,
+    expected_add_on_id: str,
 ) -> None:
     # Given
     subscription_id = "subscription-id"
@@ -588,6 +593,7 @@ def test_add_single_seat__no_existing_addon__creates_addon_with_quantity_one(
         plan_id="plan_id",
         addons=[],
         billing_period=billing_period,
+        billing_period_unit=billing_period_unit,
     )
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.chargebee.chargebee_client", autospec=True
@@ -641,6 +647,7 @@ def test_add_single_seat__api_error__raises_upgrade_seats_error(  # type: ignore
         plan_id="plan-id",
         addons=[],
         billing_period=1,
+        billing_period_unit="month",
     )
 
     # tie that subscription object to the mocked chargebee object

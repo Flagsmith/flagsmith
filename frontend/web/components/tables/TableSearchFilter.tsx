@@ -17,7 +17,7 @@ const TableSearchFilter: FC<TableFilterType> = ({ onChange, value }) => {
 
   return (
     <Input
-      onChange={(e: InputEvent) => {
+      onChange={(e) => {
         const v = Utils.safeParseEventValue(e)
         setLocalValue(v)
         debouncedOnChange(v)

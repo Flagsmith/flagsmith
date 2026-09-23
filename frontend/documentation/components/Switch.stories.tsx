@@ -20,7 +20,7 @@ const meta: Meta<SwitchProps> = {
     disabled: false,
   },
   component: Switch,
-  parameters: { layout: 'centered' },
+  parameters: { chromatic: { disableSnapshot: false }, layout: 'centered' },
   title: 'Components/Forms/Switch',
 }
 

@@ -9,6 +9,31 @@ Labels:
  - `ci_commit_sha`
  - `version`
 
+### `flagsmith_cohorts_csv_sync_identifiers`
+
+Histogram.
+
+Number of unique identifiers extracted per accepted cohort CSV synchronisation.
+
+Labels:
+
+### `flagsmith_cohorts_csv_syncs`
+
+Counter.
+
+Total number of accepted cohort CSV synchronisations, i.e. uploads that yielded at least one valid identifier and enqueued a membership sync.
+
+Labels:
+
+### `flagsmith_cohorts_membership_deltas_applied`
+
+Counter.
+
+Total number of cohort membership ledger rows transitioned to their applied state after the corresponding identity document write. The `operation` label is either `add` or `remove`.
+
+Labels:
+ - `operation`
+
 ### `flagsmith_dynamo_environment_document_compression_ratio`
 
 Histogram.
@@ -33,6 +58,15 @@ Labels:
 Counter.
 
 Results of cache retrieval for environment document. `result` label is either `hit` or `miss`.
+
+Labels:
+ - `result`
+
+### `flagsmith_experimentation_warehouse_connection_verifications`
+
+Counter.
+
+Outcomes of connection verification attempts against customers&#x27; own data warehouses. `result` label is either `success` or `failure`.
 
 Labels:
  - `result`
@@ -69,6 +103,56 @@ Labels:
  - `route`
  - `method`
  - `response_status`
+
+### `flagsmith_oauth2_dcr_registrations`
+
+Counter.
+
+Total OAuth2 dynamic client registration requests, labelled by the requested token endpoint auth method and whether the registration was accepted or rejected.
+
+Labels:
+ - `token_endpoint_auth_method`
+ - `outcome`
+
+### `flagsmith_segment_membership_backfill_duration_seconds`
+
+Histogram.
+
+Duration of a segment-membership backfill for one environment.
+
+Labels:
+
+### `flagsmith_segment_membership_backfill_identities`
+
+Counter.
+
+Total identities mirrored from Dynamo to ClickHouse by the segment-membership backfill task across all environments.
+
+Labels:
+
+### `flagsmith_segment_membership_read_duration_seconds`
+
+Histogram.
+
+Duration of one segment membership page read.
+
+Labels:
+
+### `flagsmith_segment_membership_refresh_duration_seconds`
+
+Histogram.
+
+Duration of a single segment-membership count-refresh run for one project.
+
+Labels:
+
+### `flagsmith_segment_membership_refresh_failures`
+
+Counter.
+
+Total segment-membership refresh runs that failed for any reason.
+
+Labels:
 
 ### `flagsmith_task_processor_enqueued_tasks`
 

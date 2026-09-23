@@ -1,4 +1,5 @@
 import { FC, ReactNode, useEffect, useMemo, useState } from 'react'
+import Icon from 'components/icons/Icon'
 import OrganisationStore from 'common/stores/organisation-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import FeatureListStore from 'common/stores/feature-list-store'
@@ -25,15 +26,12 @@ import Utils from 'common/utils/utils'
 import moment from 'moment'
 import ProjectStore from 'common/stores/project-store'
 import { useHasPermission } from 'common/providers/Permission'
-import { IonIcon } from '@ionic/react'
-import { close } from 'ionicons/icons'
 import Constants from 'common/constants'
 import Button from 'components/base/forms/Button'
 import NewVersionWarning from 'components/NewVersionWarning'
 import Breadcrumb from 'components/Breadcrumb'
 import PageTitle from 'components/PageTitle'
 import InfoMessage from 'components/InfoMessage'
-import InputGroup from 'components/base/forms/InputGroup'
 import SettingsButton from 'components/SettingsButton'
 import UserSelect from 'components/UserSelect'
 import MyGroupsSelect from 'components/MyGroupsSelect'
@@ -88,6 +86,11 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     level: 'environment',
     permission: EnvironmentPermission.UPDATE_FEATURE_STATE,
     tags: projectFlag?.tags,
+  })
+  const isEnvironmentAdmin = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: EnvironmentPermission.ADMIN,
   })
 
   useEffect(() => {
@@ -328,7 +331,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       <Breadcrumb
         items={[
           {
-            title: isScheduled ? 'Scheduling' : 'Change requests',
+            title: isScheduled ? 'Scheduling' : 'Feature Change Requests',
             url: `/project/${projectId}/environment/${environmentId}/${
               isScheduled ? 'scheduled-changes' : 'change-requests'
             }`,
@@ -338,6 +341,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       />
       <ChangeRequestPageInner
         hidePublish={!projectFlag}
+        canManageChangeRequests={isEnvironmentAdmin?.permission}
         publishChangeRequest={publishChangeRequest}
         approvePermission={approvePermission?.permission}
         approveChangeRequest={approveChangeRequest}
@@ -420,6 +424,7 @@ type ChangeRequestPageInnerType = {
   approvePermission: boolean | undefined
   publishPermission: boolean | undefined
   isScheduled: boolean
+  canManageChangeRequests?: boolean
   hidePublish?: boolean
   scheduledDate?: moment.Moment | null
   changeRequest: ProjectChangeRequest | ChangeRequest | undefined
@@ -434,6 +439,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
   addOwner,
   approveChangeRequest,
   approvePermission,
+  canManageChangeRequests,
   changeRequest,
   deleteChangeRequest,
   editChangeRequest,
@@ -539,13 +545,13 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
     changeRequest &&
     changeRequest.user &&
     orgUsers.find((v) => v.id === changeRequest.user)
-  const isYours = AccountStore.getUserId() === changeRequest.user
+
   return (
     <div>
       <PageTitle
         cta={
           (!changeRequest.committed_at || isScheduled) &&
-          isYours && (
+          (isYourChangeRequest || !!canManageChangeRequests) && (
             <Row>
               <Button theme='secondary' onClick={deleteChangeRequest}>
                 Delete
@@ -564,7 +570,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
         by {user ? `${user.first_name} ${user.last_name}` : 'Unknown user'}
       </PageTitle>
       <p className='mt-2'>{changeRequest.description}</p>
-      {hasApprovals && isYours && !changeRequest.committed_at && (
+      {hasApprovals && isYourChangeRequest && !changeRequest.committed_at && (
         <div className='col-md-6 mb-4'>
           <InfoMessage>
             This change request has been approved and can no longer be edited.
@@ -588,101 +594,94 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
           </InfoMessage>
         </div>
       )}
-      <InputGroup
-        className='col-md-6'
-        component={
-          <>
-            {!Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
-              <div className='mb-4'>
-                {hasApprovals ? (
-                  <div className='font-weight-medium mb-2'>Assigned users</div>
-                ) : (
-                  <SettingsButton onClick={() => setShowUsers(true)}>
-                    Assigned users
-                  </SettingsButton>
-                )}
-                <Row className='mt-2'>
-                  {ownerUsers.length !== 0 &&
-                    ownerUsers.map((u) => (
-                      <Row
-                        key={u.id}
-                        onClick={
-                          hasApprovals ? undefined : () => removeOwner(u.id)
-                        }
-                        className='chip'
-                        style={{
-                          marginBottom: 4,
-                          marginTop: 4,
-                        }}
-                      >
-                        <span className='font-weight-bold'>
-                          {u.first_name} {u.last_name}
-                        </span>
-                        {!hasApprovals && (
-                          <span className='chip-icon ion'>
-                            <IonIcon icon={close} />
-                          </span>
-                        )}
-                      </Row>
-                    ))}
-                </Row>
-                {!hasApprovals && (
-                  <UserSelect
-                    users={orgUsers}
-                    value={ownerUsers && ownerUsers.map((v) => v.id)}
-                    onAdd={addOwner}
-                    onRemove={removeOwner}
-                    isOpen={showUsers}
-                    onToggle={() => setShowUsers(!showUsers)}
-                  />
-                )}
-              </div>
+      <div className='col-md-6 form-group'>
+        {!Utils.getFlagsmithHasFeature('disable_users_as_reviewers') && (
+          <div className='mb-4'>
+            {hasApprovals ? (
+              <div className='font-weight-medium mb-2'>Assigned users</div>
+            ) : (
+              <SettingsButton onClick={() => setShowUsers(true)}>
+                Assigned users
+              </SettingsButton>
             )}
-            <div className='mb-4'>
-              {hasApprovals ? (
-                <div className='font-weight-medium mb-2'>Assigned groups</div>
-              ) : (
-                <SettingsButton onClick={() => setShowGroups(true)}>
-                  Assigned groups
-                </SettingsButton>
-              )}
-              <Row className='mt-2'>
-                {!!ownerGroups?.length &&
-                  ownerGroups.map((g) => (
-                    <Row
-                      key={g.id}
-                      onClick={
-                        hasApprovals ? undefined : () => removeOwner(g.id, false)
-                      }
-                      className='chip'
-                      style={{
-                        marginBottom: 4,
-                        marginTop: 4,
-                      }}
-                    >
-                      <span className='font-weight-bold'>{g.name}</span>
-                      {!hasApprovals && (
-                        <span className='chip-icon ion'>
-                          <IonIcon icon={close} />
-                        </span>
-                      )}
-                    </Row>
-                  ))}
-              </Row>
-              {!hasApprovals && (
-                <MyGroupsSelect
-                  orgId={AccountStore.getOrganisation().id}
-                  value={ownerGroups && ownerGroups.map((v) => v.id)}
-                  onAdd={addOwner}
-                  onRemove={removeOwner}
-                  isOpen={showGroups}
-                  onToggle={() => setShowGroups(!showGroups)}
-                />
-              )}
-            </div>
-          </>
-        }
-      />
+            <Row className='mt-2'>
+              {ownerUsers.length !== 0 &&
+                ownerUsers.map((u) => (
+                  <Row
+                    key={u.id}
+                    onClick={hasApprovals ? undefined : () => removeOwner(u.id)}
+                    className='chip'
+                    style={{
+                      marginBottom: 4,
+                      marginTop: 4,
+                    }}
+                  >
+                    <span className='font-weight-bold'>
+                      {u.first_name} {u.last_name}
+                    </span>
+                    {!hasApprovals && (
+                      <span className='chip-icon'>
+                        <Icon name='close' width={18} />
+                      </span>
+                    )}
+                  </Row>
+                ))}
+            </Row>
+            {!hasApprovals && (
+              <UserSelect
+                users={orgUsers}
+                value={ownerUsers && ownerUsers.map((v) => v.id)}
+                onAdd={addOwner}
+                onRemove={removeOwner}
+                isOpen={showUsers}
+                onToggle={() => setShowUsers(!showUsers)}
+              />
+            )}
+          </div>
+        )}
+        <div className='mb-4'>
+          {hasApprovals ? (
+            <div className='font-weight-medium mb-2'>Assigned groups</div>
+          ) : (
+            <SettingsButton onClick={() => setShowGroups(true)}>
+              Assigned groups
+            </SettingsButton>
+          )}
+          <Row className='mt-2'>
+            {!!ownerGroups?.length &&
+              ownerGroups.map((g) => (
+                <Row
+                  key={g.id}
+                  onClick={
+                    hasApprovals ? undefined : () => removeOwner(g.id, false)
+                  }
+                  className='chip'
+                  style={{
+                    marginBottom: 4,
+                    marginTop: 4,
+                  }}
+                >
+                  <span className='font-weight-bold'>{g.name}</span>
+                  {!hasApprovals && (
+                    <span className='chip-icon'>
+                      <Icon name='close' width={18} />
+                    </span>
+                  )}
+                </Row>
+              ))}
+          </Row>
+          {!hasApprovals && (
+            <MyGroupsSelect
+              orgId={AccountStore.getOrganisation().id}
+              value={ownerGroups && ownerGroups.map((v) => v.id)}
+              onAdd={addOwner}
+              onRemove={removeOwner}
+              isOpen={showGroups}
+              onToggle={() => setShowGroups(!showGroups)}
+            />
+          )}
+        </div>
+      </div>
 
       {DiffView}
       <JSONReference

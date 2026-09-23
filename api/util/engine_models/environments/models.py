@@ -39,6 +39,7 @@ class EnvironmentModel(BaseModel):
     hide_disabled_flags: typing.Optional[bool] = None
     use_identity_composite_key_for_hashing: bool = False
     use_identity_overrides_in_local_eval: bool = False
+    onboarding_pending: typing.Optional[bool] = None
 
     amplitude_config: typing.Optional[IntegrationModel] = None
     dynatrace_config: typing.Optional[IntegrationModel] = None

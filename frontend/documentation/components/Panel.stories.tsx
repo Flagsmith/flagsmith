@@ -5,6 +5,7 @@ import Panel from 'components/base/grid/Panel'
 
 const meta: Meta = {
   parameters: {
+    chromatic: { disableSnapshot: false },
     docs: {
       description: {
         component:

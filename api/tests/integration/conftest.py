@@ -2,19 +2,26 @@ import json
 import uuid
 
 import pytest
+import requests
+import responses
 from django.core.cache import BaseCache
 from django.core.cache.backends.locmem import LocMemCache
 from django.test import Client as DjangoClient
 from django.urls import reverse
+from influxdb_client import InfluxDBClient
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from app.utils import create_hash
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.enums import EnvironmentDocumentCacheMode
+from features.future.types import SegmentOverrideRequest, UpdateFlagRequest
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
+from tests.types import CreateSegmentOverrideFixture
+from users.models import FFAdminUser
 
 
 @pytest.fixture()
@@ -36,6 +43,33 @@ def api_client():  # type: ignore[no-untyped-def]
 def admin_client(api_client, admin_user):  # type: ignore[no-untyped-def]
     api_client.force_authenticate(user=admin_user)
     return api_client
+
+
+@pytest.fixture()
+def influxdb(settings: SettingsWrapper) -> InfluxDBClient:
+    settings.INFLUXDB_BUCKET = "api_usage"
+    settings.INFLUXDB_URL = "http://localhost:8086"
+    settings.INFLUXDB_ORG = "flagsmith"
+    settings.INFLUXDB_TOKEN = "admin-token"
+
+    InfluxDBWrapper.get_client.cache_clear()
+
+    url = f"{settings.INFLUXDB_URL}/api/v2/buckets"
+    responses.add_passthru(url)
+    headers = {"Authorization": f"Token {settings.INFLUXDB_TOKEN}"}
+    buckets = requests.get(url, headers=headers, timeout=30).json()["buckets"]
+    organisation_id = buckets[0]["orgID"]
+    existing = {bucket["name"] for bucket in buckets}
+    for bucket_name in ("api_usage_downsampled_15m", "api_usage_downsampled_1h"):
+        if bucket_name not in existing:
+            requests.post(
+                url,
+                headers=headers,
+                json={"name": bucket_name, "orgID": organisation_id},
+                timeout=30,
+            ).raise_for_status()
+
+    return InfluxDBWrapper.get_client()
 
 
 @pytest.fixture()
@@ -74,8 +108,13 @@ def dynamo_enabled_project(  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def environment_api_key():  # type: ignore[no-untyped-def]
+def environment_api_key() -> str:
     return create_hash()
+
+
+@pytest.fixture()
+def environment_api_key_str(environment_api_key: str) -> str:
+    return environment_api_key
 
 
 @pytest.fixture()
@@ -102,6 +141,14 @@ def environment(
 
     response = admin_client.post(url, data=environment_data)
     return response.json()["id"]  # type: ignore[no-any-return]
+
+
+@pytest.fixture()
+def environment_v2_versioning(environment: int) -> int:
+    from features.versioning.tasks import enable_v2_versioning
+
+    enable_v2_versioning(environment_id=environment)
+    return environment
 
 
 @pytest.fixture()
@@ -179,36 +226,42 @@ def server_side_sdk_client(
 
 
 @pytest.fixture()
-def default_feature_value():  # type: ignore[no-untyped-def]
+def default_feature_value() -> str:
     return "default_value"
 
 
 @pytest.fixture()
-def feature_name():  # type: ignore[no-untyped-def]
+def feature_name() -> str:
     return "feature_1"
 
 
 @pytest.fixture()
-def feature_2_name():  # type: ignore[no-untyped-def]
+def feature_2_name() -> str:
     return "feature_2"
 
 
 @pytest.fixture()
-def mv_feature_name():  # type: ignore[no-untyped-def]
+def mv_feature_name() -> str:
     return "mv_feature"
 
 
 @pytest.fixture()
-def feature(admin_client, project, default_feature_value, feature_name):  # type: ignore[no-untyped-def]
-    data = {
-        "name": feature_name,
-        "initial_value": default_feature_value,
-        "project": project,
-    }
-    url = reverse("api-v1:projects:project-features-list", args=[project])
-
-    response = admin_client.post(url, data=data)
-    return response.json()["id"]
+def feature(
+    admin_client: APIClient,
+    project: int,
+    default_feature_value: str,
+    feature_name: str,
+) -> int:
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/features/",
+        data={
+            "name": feature_name,
+            "initial_value": default_feature_value,
+            "project": project,
+        },
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    return int(response.json()["id"])
 
 
 @pytest.fixture()
@@ -340,6 +393,32 @@ def feature_segment(admin_client, segment, feature, environment):  # type: ignor
 
 
 @pytest.fixture()
+def create_segment_override(admin_client: APIClient) -> CreateSegmentOverrideFixture:
+    """Return a callable putting a segment override live, whichever versioning is in use."""
+
+    def _create_segment_override(
+        environment_api_key: str,
+        feature_id: int,
+        segment_id: int,
+        enabled: bool = True,
+        priority: int | None = None,
+    ) -> None:
+        segment_override = SegmentOverrideRequest(
+            {"segment": {"id": segment_id}, "enabled": enabled}
+        )
+        if priority is not None:
+            segment_override["priority"] = priority
+        response = admin_client.patch(
+            f"/api/__future__/environments/{environment_api_key}/features/{feature_id}/",
+            UpdateFlagRequest({"segment_overrides": [segment_override]}),
+            format="json",
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    return _create_segment_override
+
+
+@pytest.fixture()
 def segment_featurestate(
     admin_client: APIClient,
     segment: int,
@@ -415,7 +494,11 @@ def identity_document(  # type: ignore[no-untyped-def]
         "multivariate_feature_state_values": [
             {
                 "percentage_allocation": 50,
-                "multivariate_feature_option": {"value": "50_percent", "id": 1},
+                "multivariate_feature_option": {
+                    "value": "50_percent",
+                    "id": 1,
+                    "key": None,
+                },
                 "mv_fs_value_uuid": "9438d56d-e06e-4f6b-bca5-f66755f063c0",
                 "id": 1,
             },
@@ -425,6 +508,7 @@ def identity_document(  # type: ignore[no-untyped-def]
                 "multivariate_feature_option": {
                     "value": "other_50_percent",
                     "id": None,
+                    "key": None,
                 },
                 "id": 2,
             },
@@ -498,11 +582,15 @@ def admin_master_api_key_client(admin_master_api_key: dict) -> APIClient:  # typ
 
 
 @pytest.fixture()
-def non_admin_client(organisation, django_user_model, api_client):  # type: ignore[no-untyped-def]
+def non_admin_client(
+    django_user_model: type[FFAdminUser],
+    organisation: int,
+) -> APIClient:
     user = django_user_model.objects.create(username="non_admin_user")
     user.add_organisation(Organisation.objects.get(id=organisation))
-    api_client.force_authenticate(user=user)
-    return api_client
+    client = APIClient()
+    client.force_authenticate(user=user)
+    return client
 
 
 @pytest.fixture()

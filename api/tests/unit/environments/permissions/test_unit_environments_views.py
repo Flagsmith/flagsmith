@@ -14,7 +14,7 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationRole
 from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser, UserPermissionGroup
 
@@ -271,5 +271,75 @@ def test_delete_user_group_permission__existing_permission__removes_permission(
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
     assert not UserPermissionGroupEnvironmentPermission.objects.filter(
+        id=user_group_environment_permission.id
+    ).exists()
+
+
+def test_list_user_group_permission__different_organisation__returns_403(
+    environment: Environment,
+    organisation: Organisation,
+    organisation_two: Organisation,
+) -> None:
+    # Given
+    other_org_user = FFAdminUser.objects.create(email="other-org-user@example.com")
+    other_org_user.add_organisation(organisation_two, role=OrganisationRole.ADMIN)
+    other_org_client = APIClient()
+    other_org_client.force_authenticate(other_org_user)
+
+    user_permission_group = UserPermissionGroup.objects.create(
+        name="Test group",
+        organisation=organisation,
+    )
+    user_group_environment_permission = (
+        UserPermissionGroupEnvironmentPermission.objects.create(
+            group=user_permission_group,
+            environment=environment,
+        )
+    )
+    read_permission = EnvironmentPermissionModel.objects.get(key=VIEW_ENVIRONMENT)
+    user_group_environment_permission.permissions.set([read_permission])
+
+    url = f"/api/v1/environments/{environment.api_key}/user-group-permissions/"
+
+    # When
+    response = other_org_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_delete_user_group_permission__different_organisation__returns_403(
+    environment: Environment,
+    organisation: Organisation,
+    organisation_two: Organisation,
+) -> None:
+    # Given
+    other_org_user = FFAdminUser.objects.create(email="other-org-user@example.com")
+    other_org_user.add_organisation(organisation_two, role=OrganisationRole.ADMIN)
+    other_org_client = APIClient()
+    other_org_client.force_authenticate(other_org_user)
+
+    user_permission_group = UserPermissionGroup.objects.create(
+        name="Test group",
+        organisation=organisation,
+    )
+    user_group_environment_permission = (
+        UserPermissionGroupEnvironmentPermission.objects.create(
+            group=user_permission_group,
+            environment=environment,
+        )
+    )
+
+    url = (
+        f"/api/v1/environments/{environment.api_key}"
+        f"/user-group-permissions/{user_group_environment_permission.id}/"
+    )
+
+    # When
+    response = other_org_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert UserPermissionGroupEnvironmentPermission.objects.filter(
         id=user_group_environment_permission.id
     ).exists()

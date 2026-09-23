@@ -102,7 +102,7 @@ const CreateWebhook: FC<CreateWebhookProps> = ({
             <label>
               Secret (Optional) -{' '}
               <a
-                className='text-info'
+                className='text-action'
                 target='_blank'
                 href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks'
                 rel='noreferrer'
@@ -128,7 +128,7 @@ const CreateWebhook: FC<CreateWebhookProps> = ({
           )}
           <div className={isEdit ? 'footer' : ''}>
             <div className='mb-3'>
-              <p className='text-dark fw-bold'>
+              <p className='text-default fw-bold'>
                 This will {isEdit ? 'update' : 'create'} a webhook for the
                 environment <strong>{environment?.name}</strong>
               </p>
@@ -163,7 +163,7 @@ const CreateWebhook: FC<CreateWebhookProps> = ({
         <FormGroup className='ml-1'>
           <div>
             <Row className='mb-3' space>
-              <div className='font-weight-medium text-dark'>
+              <div className='font-weight-medium text-default'>
                 Example Payload
               </div>
               <ViewDocs href='https://docs.flagsmith.com/system-administration/webhooks#environment-web-hooks' />

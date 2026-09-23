@@ -23,7 +23,7 @@ export default function HomePage() {
 
 export default function App({ Component, pageProps, flagsmithState } {
   return (
-    &lt;FlagsmithProvider
+    <FlagsmithProvider
       serverState={flagsmithState}
       options={{
         environmentID: "${envId}",${
@@ -32,9 +32,9 @@ export default function App({ Component, pageProps, flagsmithState } {
     : ''
 }
       }}
-      flagsmith={flagsmith}&gt;
-        &lt;Component {...pageProps} />
-    &lt;/FlagsmithProvider>
+      flagsmith={flagsmith}>
+        <Component {...pageProps} />
+    </FlagsmithProvider>
   );
 }
 

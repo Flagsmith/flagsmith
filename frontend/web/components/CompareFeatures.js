@@ -9,6 +9,7 @@ import Permission from 'common/providers/Permission'
 import { withRouter } from 'react-router-dom'
 import { getStore } from 'common/store'
 import { removeProjectFlag } from 'common/services/useProjectFlag'
+import { hasMultivariateChange } from 'common/utils/compareMultivariate'
 
 const featureNameWidth = 300
 
@@ -118,7 +119,8 @@ class CompareFeatures extends Component {
                   const flagB = compare[this.state.flagId]
                   const fadeEnabled = flagA.enabled === flagB.enabled
                   const fadeValue =
-                    flagB.feature_state_value === flagA.feature_state_value
+                    flagB.feature_state_value === flagA.feature_state_value &&
+                    !hasMultivariateChange(flagA, flagB)
                   const changeRequestsEnabled = Utils.changeRequestsEnabled(
                     data.minimum_change_request_approvals,
                   )

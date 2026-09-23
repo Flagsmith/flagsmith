@@ -57,7 +57,7 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
           <div className='mb-2'>
             Providing flag defaults is recommended for{' '}
             <a
-              className='text-primary'
+              className='text-action'
               target='_blank'
               href='https://docs.flagsmith.com/guides-and-examples/defensive-coding'
               rel='noreferrer'

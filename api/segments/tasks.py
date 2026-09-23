@@ -11,7 +11,12 @@ from segments.models import Segment
 
 @register_task_handler()
 def delete_segment(segment_id: int) -> None:
-    Segment.objects.get(pk=segment_id).delete()
+    try:
+        Segment.objects.get(pk=segment_id).delete()
+    except Segment.DoesNotExist:
+        # Already deleted, e.g. by a cascading delete of its parent segment
+        # or feature, or a previous run of this task.
+        return
 
 
 @register_task_handler()

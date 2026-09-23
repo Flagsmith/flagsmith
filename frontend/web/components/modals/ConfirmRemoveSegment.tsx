@@ -6,6 +6,7 @@ import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import ModalHR from './ModalHR'
 import { deleteSegment } from 'common/services/useSegment'
+import { deleteCohort } from 'common/services/useCohort'
 import { getStore } from 'common/store'
 
 type ConfirmRemoveSegmentType = {
@@ -19,7 +20,15 @@ export const handleRemoveSegment = (
 ) => {
   const removeSegmentCallback = async () => {
     try {
-      const res = await deleteSegment(getStore(), { id: segment.id, projectId })
+      // Cohort-managed segments must be deleted via their cohort; the segment
+      // endpoint rejects them.
+      const res = segment.cohort
+        ? await deleteCohort(getStore(), {
+            cohortId: segment.cohort.id,
+            environmentApiKey: segment.cohort.environment_api_key,
+            projectId: Number(projectId),
+          })
+        : await deleteSegment(getStore(), { id: segment.id, projectId })
       if (res.error) throw new Error(res.error)
       toast(
         <div>

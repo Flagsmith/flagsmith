@@ -15,9 +15,12 @@ import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsa
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import UsageChartFilters from 'components/organisation-settings/usage/components/UsageChartFilters'
 import UsageChartTotals from 'components/organisation-settings/usage/components/UsageChartTotals'
+import UsageDashboardPage from './usage'
 
 const OrganisationUsagePage: FC = () => {
   const isSdkViewEnabled = Utils.getFlagsmithHasFeature('sdk_usage_charts')
+  const isUsageDashboardEnabled =
+    Utils.getFlagsmithHasFeature('usage_dashboard')
 
   const { organisationId } = useRouteContext()
   const location = useLocation()
@@ -60,12 +63,12 @@ const OrganisationUsagePage: FC = () => {
       organisationId: organisationId || 0,
       projectId: project,
     },
-    { skip: !organisationId },
+    { skip: !organisationId || isUsageDashboardEnabled },
   )
 
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery(
     { id: organisationId || 0 },
-    { skip: !organisationId },
+    { skip: !organisationId || isUsageDashboardEnabled },
   )
 
   // Aggregate usage events by date, summing metrics across all client types
@@ -123,6 +126,10 @@ const OrganisationUsagePage: FC = () => {
     } else {
       setSelection(selection.concat([key]))
     }
+  }
+
+  if (isUsageDashboardEnabled) {
+    return <UsageDashboardPage organisationId={organisationId} />
   }
 
   return (

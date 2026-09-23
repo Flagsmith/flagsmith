@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import ProjectFilter from 'components/ProjectFilter'
 import EnvironmentFilter from 'components/EnvironmentFilter'
-import { billingPeriods, freePeriods, Req } from 'common/types/requests'
+import { periodOptions, rollingPeriodOptions, Req } from 'common/types/requests'
 
 interface UsageChartFiltersProps {
   organisationId: number
@@ -32,8 +32,8 @@ const UsageChartFilters: FC<UsageChartFiltersProps> = ({
         <label>Period</label>
         <Select
           onChange={(v: any) => setBillingPeriod(v.value)}
-          value={billingPeriods.find((v) => v.value === billingPeriod)}
-          options={isOnFreePlanPeriods ? freePeriods : billingPeriods}
+          value={periodOptions.find((v) => v.value === billingPeriod)}
+          options={isOnFreePlanPeriods ? rollingPeriodOptions : periodOptions}
         />
       </div>
       <div className='col-md-4 mb-5'>

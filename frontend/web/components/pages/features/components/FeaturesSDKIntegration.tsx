@@ -2,16 +2,22 @@ import React, { FC } from 'react'
 import TryIt from 'components/TryIt'
 import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 import Constants from 'common/constants'
+import Utils from 'common/utils/utils'
+import CalloutBar from 'components/CalloutBar'
+import { openIntegrationModal } from 'components/integrations/openIntegrationModal'
 
 type FeaturesSDKIntegrationProps = {
   projectId: number
   environmentId: string
+  totalFeatures?: number
 }
 
 export const FeaturesSDKIntegration: FC<FeaturesSDKIntegrationProps> = ({
   environmentId,
   projectId,
+  totalFeatures,
 }) => {
+  const hasMcp = Utils.hasIntegration('mcp')
   return (
     <>
       <FormGroup className='mt-5'>
@@ -28,11 +34,23 @@ export const FeaturesSDKIntegration: FC<FeaturesSDKIntegrationProps> = ({
           projectId={projectId}
           environmentId={environmentId}
         />
+        {hasMcp && (
+          <CalloutBar
+            theme='dark'
+            icon={<>{'<>'}</>}
+            prefix='Integration:'
+            label='Manage flags with AI using our MCP'
+            onClick={() =>
+              openIntegrationModal('mcp', { projectId: String(projectId) })
+            }
+          />
+        )}
       </FormGroup>
       <FormGroup className='pb-4'>
         <TryIt
           title='Test what values are being returned from the API on this environment'
           environmentId={environmentId}
+          totalFeatures={totalFeatures}
         />
       </FormGroup>
     </>

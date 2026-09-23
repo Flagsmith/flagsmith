@@ -8,7 +8,7 @@ import pytest
 from django.urls import reverse
 from mypy_boto3_dynamodb.service_resource import Table
 from mypy_boto3_dynamodb.type_defs import TableAttributeValueTypeDef
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.exceptions import NotFound
@@ -661,6 +661,7 @@ def test_edge_identities_update_mv_featurestate__new_allocation__updates_documen
             "multivariate_feature_option": {
                 "id": mv_option_50_percent,
                 "value": mv_option_value,
+                "key": None,
             },
             "mv_fs_value_uuid": mock.ANY,
         }

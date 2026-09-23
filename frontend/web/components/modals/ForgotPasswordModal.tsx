@@ -50,7 +50,7 @@ const ForgotPasswordModal: FC<ForgotPasswordModalType> = ({
           onChange={(e: InputEvent) => setEmail(Utils.safeParseEventValue(e))}
         />
 
-        <ErrorMessage>{error}</ErrorMessage>
+        <ErrorMessage error={error} />
       </div>
       <ModalHR />
       <div className='modal-footer'>

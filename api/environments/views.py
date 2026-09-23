@@ -80,12 +80,8 @@ logger = logging.getLogger(__name__)
                 type=int,
             )
         ],
-        extensions={
-            "x-gram": {
-                "name": "list_environments",
-                "description": "Lists all environments the user has access to",
-            },
-        },
+        operation_id="list_environments",
+        description="Lists all environments the user has access to",
     ),
 )
 class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
@@ -353,6 +349,8 @@ class WebhookViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    """Manage webhooks for an environment."""
+
     serializer_class = WebhookSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
@@ -367,6 +365,8 @@ class EnvironmentAPIKeyViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
 ):
+    """Manage server-side SDK keys for an environment."""
+
     serializer_class = EnvironmentAPIKeySerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, EnvironmentAdminPermission]

@@ -21,6 +21,8 @@ class Identity(models.Model):
     environment = models.ForeignKey(
         Environment, related_name="identities", on_delete=models.CASCADE
     )
+    # System-owned (e.g. cohort membership); unreachable by SDK and admin trait writes.
+    system_traits = models.JSONField(default=dict)
 
     objects = IdentityManager()
 
@@ -98,7 +100,6 @@ class Identity(models.Model):
             environment=self.environment,
             feature_name=feature_name,
             additional_filters=full_query,
-            additional_select_related_args=["feature_segment__segment", "identity"],
             additional_prefetch_related_args=[
                 Prefetch(
                     "multivariate_feature_state_values",
@@ -255,11 +256,17 @@ class Identity(models.Model):
 
             if trait_key in current_traits:
                 current_trait = current_traits[trait_key]
-                # Don't update the trait if the value hasn't changed
-                if current_trait.trait_value == trait_value:
+                trait_value_data = Trait.generate_trait_value_data(trait_value)
+                # Don't update the trait if the value hasn't changed. Note that the
+                # incoming value may be raw or in `SDKTraitValueData` form, so compare
+                # the stored fields rather than the values directly.
+                if all(
+                    getattr(current_trait, attr) == value
+                    for attr, value in trait_value_data.items()
+                ):
                     continue
 
-                for attr, value in Trait.generate_trait_value_data(trait_value).items():
+                for attr, value in trait_value_data.items():
                     setattr(current_trait, attr, value)
                 updated_traits.append(current_trait)
                 continue

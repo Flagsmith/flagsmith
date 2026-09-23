@@ -109,6 +109,12 @@ By default, users logging in via SAML will have no permissions to view or modify
 
 Flagsmith can add or remove a user from groups based on your identity provider's SAML response when logging in.
 
+:::info
+
+Flagsmith will not create the groups for you — they need to be pre-created.
+
+:::
+
 When a user logs in, Flagsmith will make them a member of all the groups listed in the `groups` claim from your identity provider's SAML assertion. Each value of the `groups` claim should correspond to the "External ID" of a Flagsmith group:
 
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/saml-group-sync-external-id.png"/></div>

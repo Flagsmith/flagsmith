@@ -1,12 +1,12 @@
 from typing import Any
 from urllib.parse import urlencode, urlparse, urlunparse
 
+import structlog
 from django.http import HttpRequest, JsonResponse, QueryDict
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 from oauth2_provider.exceptions import OAuthToolkitError
 from oauth2_provider.models import get_application_model
-from oauth2_provider.scopes import get_scopes_backend
 from oauth2_provider.views.mixins import OAuthLibMixin
 from rest_framework import status
 from rest_framework import status as drf_status
@@ -17,8 +17,19 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from oauth2_metadata.dataclasses import OAuthConfig
-from oauth2_metadata.serializers import DCRRequestSerializer, OAuthConsentSerializer
+from oauth2_metadata.mappers import (
+    map_drf_error_to_rfc7591_error_body,
+    map_scopes_to_descriptions,
+)
+from oauth2_metadata.metrics import flagsmith_oauth2_dcr_registrations_total
+from oauth2_metadata.serializers import (
+    TOKEN_ENDPOINT_AUTH_METHODS,
+    DCRRequestSerializer,
+    OAuthConsentSerializer,
+)
 from oauth2_metadata.services import create_oauth2_application
+
+logger = structlog.get_logger("oauth2_metadata")
 
 
 @csrf_exempt
@@ -75,15 +86,13 @@ class OAuthAuthorizeView(OAuthLibMixin, APIView):  # type: ignore[misc]
         application = Application.objects.get(
             client_id=credentials["client_id"],
         )
-        all_scopes = get_scopes_backend().get_all_scopes()
-        scopes_dict: dict[str, str] = {s: all_scopes.get(s, s) for s in scopes}
         return Response(
             {
                 "application": {
                     "name": application.name,
                     "client_id": application.client_id,
                 },
-                "scopes": scopes_dict,
+                "scopes": map_scopes_to_descriptions(scopes),
                 "redirect_uri": credentials.get("redirect_uri", ""),
                 # skip_authorization is safe to reuse here: this custom view
                 # always shows the consent screen regardless of this flag.
@@ -151,53 +160,62 @@ class DynamicClientRegistrationView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "dcr_register"
 
-    # Map DRF serializer field names to RFC 7591 error codes.
-    _rfc7591_error_codes: dict[str, str] = {
-        "redirect_uris": "invalid_redirect_uri",
-        "client_name": "invalid_client_metadata",
-        "grant_types": "invalid_client_metadata",
-        "response_types": "invalid_client_metadata",
-        "token_endpoint_auth_method": "invalid_client_metadata",
-    }
-
     def post(self, request: Request) -> Response:
         serializer = DCRRequestSerializer(data=request.data)
         if not serializer.is_valid():
-            return self._rfc7591_error_response(serializer.errors)
+            error_body = map_drf_error_to_rfc7591_error_body(serializer.errors)
+            payload = request.data if isinstance(request.data, dict) else {}
+            self._count_registration(
+                payload.get("token_endpoint_auth_method"), outcome="rejected"
+            )
+            logger.error(
+                "registration.rejected",
+                error=error_body["error"],
+                error_description=error_body["error_description"],
+                client__name=payload.get("client_name"),
+                redirect_uris=payload.get("redirect_uris"),
+                user_agent=request.headers.get("User-Agent", ""),
+            )
+            return Response(
+                error_body,
+                status=drf_status.HTTP_400_BAD_REQUEST,
+            )
 
         data = serializer.validated_data
 
-        application = create_oauth2_application(
+        registered = create_oauth2_application(
             client_name=data["client_name"],
             redirect_uris=data["redirect_uris"],
+            token_endpoint_auth_method=data["token_endpoint_auth_method"],
+        )
+        self._count_registration(
+            data["token_endpoint_auth_method"], outcome="registered"
         )
 
-        return Response(
-            {
-                "client_id": application.client_id,
-                "client_name": application.name,
-                "redirect_uris": data["redirect_uris"],
-                "grant_types": data["grant_types"],
-                "response_types": data["response_types"],
-                "token_endpoint_auth_method": data["token_endpoint_auth_method"],
-                "client_id_issued_at": int(application.created.timestamp()),
-            },
-            status=drf_status.HTTP_201_CREATED,
-        )
+        application = registered.application
+        response_body: dict[str, Any] = {
+            "client_id": application.client_id,
+            "client_name": application.name,
+            "redirect_uris": data["redirect_uris"],
+            "grant_types": data["grant_types"],
+            "response_types": data["response_types"],
+            "token_endpoint_auth_method": data["token_endpoint_auth_method"],
+            "client_id_issued_at": int(application.created.timestamp()),
+        }
+        if registered.client_secret:
+            response_body["client_secret"] = registered.client_secret
+            # 0 means the secret never expires, per RFC 7591 §3.2.1.
+            response_body["client_secret_expires_at"] = 0
 
-    def _rfc7591_error_response(self, errors: dict[str, list[str]]) -> Response:
-        """Format validation errors per RFC 7591 section 3.2.2."""
-        first_field = next(iter(errors))
-        error_code = self._rfc7591_error_codes.get(
-            first_field, "invalid_client_metadata"
-        )
-        messages = errors[first_field]
-        description = messages[0] if isinstance(messages[0], str) else str(messages[0])
+        return Response(response_body, status=drf_status.HTTP_201_CREATED)
 
-        return Response(
-            {
-                "error": error_code,
-                "error_description": description,
-            },
-            status=drf_status.HTTP_400_BAD_REQUEST,
-        )
+    def _count_registration(self, auth_method: Any, outcome: str) -> None:
+        # Requested method is client input; collapse unknown values to keep
+        # metric cardinality bounded.
+        if auth_method is None:
+            auth_method = "none"
+        if auth_method not in TOKEN_ENDPOINT_AUTH_METHODS:
+            auth_method = "other"
+        flagsmith_oauth2_dcr_registrations_total.labels(
+            token_endpoint_auth_method=auth_method, outcome=outcome
+        ).inc()

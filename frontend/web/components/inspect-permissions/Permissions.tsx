@@ -18,7 +18,7 @@ const Permissions = ({
   userId,
 }: {
   level: PermissionLevel
-  levelId: number
+  levelId: number | string
   userId?: number
   projectId?: number
   className?: string
@@ -70,7 +70,7 @@ const Permissions = ({
         <div className='my-2'>
           <Row>
             <Flex>
-              <div className='font-weight-medium text-dark mb-1'>
+              <div className='font-weight-medium text-default mb-1'>
                 Administrator
               </div>
               {isDerivedAdmin && (

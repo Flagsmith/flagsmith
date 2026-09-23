@@ -13,6 +13,7 @@ type NewSectionProps = {
   hasFilters: boolean
   onFilterChange: (updates: Partial<FilterState>) => void
   onClearFilters: () => void
+  onFeatureClick?: (flag: ProjectFlag) => void
 }
 
 const NewSection: FC<NewSectionProps> = ({
@@ -22,6 +23,7 @@ const NewSection: FC<NewSectionProps> = ({
   hasFilters,
   isLoading,
   onClearFilters,
+  onFeatureClick,
   onFilterChange,
   projectId,
 }) => {
@@ -40,6 +42,7 @@ const NewSection: FC<NewSectionProps> = ({
       hasFilters={hasFilters}
       onFilterChange={onFilterChange}
       onClearFilters={onClearFilters}
+      onFeatureClick={onFeatureClick}
       emptyLabel='No new flags without code references found.'
       nextPage={nextPage}
       prevPage={prevPage}

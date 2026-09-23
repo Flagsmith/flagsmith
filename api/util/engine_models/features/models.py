@@ -19,6 +19,7 @@ class FeatureModel(BaseModel):
 class MultivariateFeatureOptionModel(BaseModel):
     value: typing.Any
     id: typing.Optional[int] = None
+    key: typing.Optional[str] = None
 
 
 class MultivariateFeatureStateValueModel(BaseModel):
@@ -74,6 +75,10 @@ class FeatureStateModel(BaseModel, validate_assignment=True):
     feature_state_value: typing.Any = None
     multivariate_feature_state_values: MultivariateFeatureStateValueList = Field(
         default_factory=MultivariateFeatureStateValueList
+    )
+    metadata: typing.Optional[typing.Dict[str, typing.Any]] = Field(
+        default=None,
+        exclude_if=lambda value: not value,
     )
 
     def set_value(self, value: typing.Any) -> None:
