@@ -1,18 +1,15 @@
 from itertools import chain
 
 from django.db import models
-from django.db.models import Prefetch, Q
 from flag_engine.engine import get_evaluation_result
 
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from environments.sdk.types import SDKTraitData
+from evaluation.mappers import map_environment_to_evaluation_context
 from features.models import FeatureState
-from features.multivariate.models import MultivariateFeatureStateValue
-from features.versioning.versioning_service import get_environment_flags_list
 from segments.models import Segment
-from util.mappers.engine import map_environment_to_evaluation_context
 
 
 class Identity(models.Model):
@@ -51,81 +48,6 @@ class Identity(models.Model):
         if self.id is not None:
             return str(self.id)
         return self.identifier
-
-    def get_all_feature_states(
-        self,
-        feature_name: str | None = None,
-        traits: list[Trait] | None = None,
-        additional_filters: Q | None = None,
-    ) -> list[FeatureState]:
-        """
-        Get all feature states for an identity. This method returns a single flag for
-        each feature in the identity's environment's project. The flag returned is the
-        correct flag based on the priorities as follows (highest -> lowest):
-
-            1. Identity - flag override for this specific identity
-            2. Segment - flag overridden for a segment this identity belongs to
-            3. Environment - default value for the environment
-
-        :return: (list) flags for an identity with the correct values based on
-            identity / segment priorities
-        """
-        segments = self.get_segments(traits=traits, overrides_only=True)
-
-        # define sub queries
-        belongs_to_environment_query = Q(environment=self.environment)
-        if self.id:
-            overridden_for_identity_query = Q(identity=self)
-        else:
-            # skip identity overrides for transient identities
-            overridden_for_identity_query = Q()
-
-        overridden_for_segment_query = Q(
-            feature_segment__segment__in=segments,
-            feature_segment__environment=self.environment,
-        )
-        environment_default_query = Q(identity=None, feature_segment=None)
-
-        # define the full query
-        full_query = belongs_to_environment_query & (
-            overridden_for_identity_query
-            | overridden_for_segment_query
-            | environment_default_query
-        )
-
-        if additional_filters:
-            full_query &= additional_filters
-
-        all_flags = get_environment_flags_list(
-            environment=self.environment,
-            feature_name=feature_name,
-            additional_filters=full_query,
-            additional_prefetch_related_args=[
-                Prefetch(
-                    "multivariate_feature_state_values",
-                    queryset=MultivariateFeatureStateValue.objects.select_related(
-                        "multivariate_feature_option"
-                    ),
-                )
-            ],
-        )
-
-        # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
-        # for the given identity as the value.
-        identity_flags = {}
-        for flag in all_flags:
-            if flag.feature_id not in identity_flags:
-                identity_flags[flag.feature_id] = flag
-            else:
-                current_flag = identity_flags[flag.feature_id]
-                if flag > current_flag:
-                    identity_flags[flag.feature_id] = flag
-
-        if self.environment.get_hide_disabled_flags() is True:
-            # filter out any flags that are disabled
-            return [value for value in identity_flags.values() if value.enabled]
-
-        return list(identity_flags.values())
 
     def get_overridden_feature_states(self) -> dict[int, FeatureState]:
         """
@@ -166,8 +88,11 @@ class Identity(models.Model):
         )
         result = get_evaluation_result(context)
         return [
-            segments_by_pk[segment_result["metadata"]["pk"]]
+            segments_by_pk[metadata["pk"]]
             for segment_result in result["segments"]
+            # The synthetic identity-override segment carries no metadata, not
+            # being a segment anyone can name.
+            if (metadata := segment_result.get("metadata")) is not None
         ]
 
     def get_all_user_traits(self):  # type: ignore[no-untyped-def]

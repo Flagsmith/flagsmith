@@ -34,6 +34,7 @@ from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,
     IdentitySerializerWithTraitsAndSegments,
 )
+from evaluation.services import get_identity_feature_states
 from features.serializers import SDKIdentityFeatureStateSerializer
 from integrations.integration import identify_integrations
 from util.views import SDKAPIView
@@ -134,7 +135,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
             "IdentityTraitFlagsSegments", ("flags", "traits", "segments")
         )
         identity_flags_traits_segments = IdentityFlagsWithTraitsAndSegments(
-            flags=identity.get_all_feature_states(),
+            flags=get_identity_feature_states(identity),
             traits=traits_data,
             segments=identity.get_segments(),
         )
@@ -289,7 +290,8 @@ class SDKIdentities(SDKAPIView):
     ) -> Response:
         context = self.get_serializer_context()  # type: ignore[no-untyped-call]
 
-        for feature_state in identity.get_all_feature_states(
+        for feature_state in get_identity_feature_states(
+            identity,
             additional_filters=self._get_additional_filters(),
         ):
             if feature_state.feature.name == feature_name:
@@ -317,7 +319,8 @@ class SDKIdentities(SDKAPIView):
         :param identity: Identity model to return feature states for
         :return: Response containing lists of both serialized flags and traits
         """
-        all_feature_states = identity.get_all_feature_states(
+        all_feature_states = get_identity_feature_states(
+            identity,
             additional_filters=self._get_additional_filters(),
         )
         serializer_class = self.get_serializer_class()

@@ -50,7 +50,7 @@ from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
 
-from .constants import CONTROL_VARIANT_KEY, INTERSECTION, UNION
+from .constants import INTERSECTION, UNION
 from .feature_lifecycle.types import LifecycleStage
 from .feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
@@ -61,7 +61,6 @@ from .feature_segments.serializers import (
 )
 from .feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE
 from .models import Feature, FeatureState
-from .multivariate.models import MultivariateFeatureOption
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
 
@@ -81,7 +80,7 @@ class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[
 
     @extend_schema_field({"type": ["string", "integer", "boolean"], "nullable": True})
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
-        return obj.get_feature_state_value(identity=self.context.get("identity"))
+        return obj.evaluated_value
 
 
 class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -589,7 +588,7 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):  # type: ignore[t
         }
     )
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
-        return obj.get_feature_state_value(identity=self.context.get("identity"))
+        return obj.evaluated_value
 
 
 class FeatureOwnerInputSerializer(UserIdsSerializer):
@@ -656,17 +655,11 @@ class SDKIdentityFeatureStateSerializer(SDKFeatureStateSerializer):
 
     @extend_schema_field({"type": "string", "nullable": True})
     def get_variant(self, obj: FeatureState) -> str | None:
-        if obj.feature.type != MULTIVARIATE:
+        if obj.feature.type != MULTIVARIATE or obj.flag_result is None:
             return None
-        identity = self.context["identity"]
-        value_object = obj.get_multivariate_feature_state_value(
-            identity.get_hash_key(
-                identity.environment.use_identity_composite_key_for_hashing
-            )
-        )
-        if isinstance(value_object, MultivariateFeatureOption):
-            return value_object.key
-        return CONTROL_VARIANT_KEY
+        # The engine reports the control bucket as `CONTROL_VARIANT_KEY`, and
+        # an unkeyed variant as None, which is what this returned before.
+        return obj.flag_result["variant"]
 
     @cached_property
     def _build_metadata(self) -> Callable[[FeatureState], dict[str, Any] | None]:
@@ -710,7 +703,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         }
     )
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
-        return obj.get_feature_state_value(identity=self.context.get("identity"))
+        return obj.evaluated_value
 
     def save(self, **kwargs):  # type: ignore[no-untyped-def]
         try:

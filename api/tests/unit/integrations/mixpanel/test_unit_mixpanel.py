@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from evaluation.services import get_identity_feature_states
 from integrations.mixpanel.constants import DEFAULT_MIXPANEL_API_URL
 from integrations.mixpanel.mixpanel import MixpanelWrapper
 from integrations.mixpanel.models import MixpanelConfiguration
@@ -194,7 +195,7 @@ def test_identify_integrations__mixpanel_configured__posts_to_expected_url(
     mocked_post = mocker.patch("integrations.mixpanel.mixpanel.requests.post")
 
     # When
-    identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
+    identify_integrations(identity, get_identity_feature_states(identity))  # type: ignore[no-untyped-call]
 
     # Then
     assert mocked_post.call_args.args[0] == expected_url

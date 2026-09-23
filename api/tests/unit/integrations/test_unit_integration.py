@@ -1,3 +1,4 @@
+from evaluation.services import get_identity_feature_states
 from integrations.amplitude.models import AmplitudeConfiguration
 from integrations.common.models import EnvironmentIntegrationModel
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
@@ -15,7 +16,7 @@ def test_identify_integrations__amplitude_configured__calls_amplitude(  # type: 
     AmplitudeConfiguration.objects.create(api_key="abc-123", environment=environment)
 
     # When
-    identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
+    identify_integrations(identity, get_identity_feature_states(identity))  # type: ignore[no-untyped-call]
 
     # Then
     mock_amplitude_wrapper.assert_called()
@@ -30,7 +31,7 @@ def test_identify_integrations__segment_configured__calls_segment(  # type: igno
     )
     SegmentConfiguration.objects.create(api_key="abc-123", environment=environment)
     # When
-    identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
+    identify_integrations(identity, get_identity_feature_states(identity))  # type: ignore[no-untyped-call]
 
     # Then
     mock_segment_wrapper.assert_called()
@@ -66,7 +67,7 @@ def test_identify_integrations__multiple_integrations__calls_all(  # type: ignor
     )
 
     # When
-    identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
+    identify_integrations(identity, get_identity_feature_states(identity))  # type: ignore[no-untyped-call]
 
     # Then
     # Integration a was successfully called
@@ -79,7 +80,7 @@ def test_identify_integrations__multiple_integrations__calls_all(  # type: ignor
 
     integration_a_mocked_generate_user_data.assert_called_with(
         identity=identity,
-        feature_states=identity.get_all_feature_states(),
+        feature_states=get_identity_feature_states(identity),
         trait_models=None,
     )
     integration_wrapper_a.return_value.identify_user_async.assert_called_with(
@@ -95,7 +96,7 @@ def test_identify_integrations__multiple_integrations__calls_all(  # type: ignor
 
     integration_b_mocked_generate_user_data.assert_called_with(
         identity=identity,
-        feature_states=identity.get_all_feature_states(),
+        feature_states=get_identity_feature_states(identity),
         trait_models=None,
     )
     integration_wrapper_b.return_value.identify_user_async.assert_called_with(
@@ -115,7 +116,7 @@ def test_identify_integrations__deleted_integration__does_not_call(  # type: ign
     sc.delete()
 
     # When
-    identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
+    identify_integrations(identity, get_identity_feature_states(identity))  # type: ignore[no-untyped-call]
 
     # Then
     mock_segment_wrapper.assert_not_called()
