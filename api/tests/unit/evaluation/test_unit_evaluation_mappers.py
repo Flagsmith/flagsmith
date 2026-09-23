@@ -16,31 +16,181 @@ from features.multivariate.models import MultivariateFeatureStateValue
 from segments.models import Condition, Segment, SegmentRule
 
 
-def test_map_environment_to_evaluation_context__environment_default__populates_features(
+def test_map_environment_to_evaluation_context__full_environment__returns_expected_context(
+    environment: Environment,
     identity: Identity,
+    trait: Trait,
     feature: Feature,
+    multivariate_feature: Feature,
+    identity_matching_segment: Segment,
 ) -> None:
     # Given
-    feature_state = FeatureState.objects.get(
-        feature=feature, environment=identity.environment
+    # a feature overridden by both a segment and the identity
+    feature_default = FeatureState.objects.get(feature=feature, environment=environment)
+    segment_override = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=identity_matching_segment,
+            environment=environment,
+            priority=3,
+        ),
+        enabled=True,
+    )
+    identity_override = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        identity=identity,
+        enabled=True,
+    )
+    for override, value in (
+        (segment_override, "segment override"),
+        (identity_override, "identity override"),
+    ):
+        override.feature_state_value.string_value = value
+        override.feature_state_value.save()
+
+    # a multivariate feature left at its environment default
+    multivariate_default = FeatureState.objects.get(
+        feature=multivariate_feature, environment=environment
+    )
+
+    # a segment with a nested rule
+    rule = SegmentRule.objects.get(segment=identity_matching_segment)
+    nested_rule = SegmentRule.objects.create(rule=rule, type=SegmentRule.ANY_RULE)
+    Condition.objects.create(
+        rule=nested_rule,
+        property="nested",
+        operator=EQUAL,
+        value="value",
     )
 
     # When
     context = map_environment_to_evaluation_context(
-        environment=identity.environment,
+        environment=environment,
         identity=identity,
-        segments=identity.environment.get_segments_from_cache(),
+        segments=environment.get_segments_from_cache(),
     )
 
     # Then
-    assert context["features"] == {
-        feature.name: {
-            "key": str(feature_state.pk),
-            "name": feature.name,
-            "enabled": feature_state.enabled,
-            "value": feature_state.get_feature_state_value(),
-            "metadata": {"feature_state": feature_state},
-        }
+    assert context == {
+        "environment": {
+            "key": environment.api_key,
+            "name": "Test Environment",
+        },
+        "identity": {
+            "identifier": "test_identity",
+            "key": identity.get_hash_key(
+                environment.use_identity_composite_key_for_hashing
+            ),
+            "traits": {"key1": "value1"},
+        },
+        "segments": {
+            str(identity_matching_segment.pk): {
+                "key": str(identity_matching_segment.pk),
+                "name": "Matching segment",
+                "rules": [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "key1",
+                                "operator": "EQUAL",
+                                "value": "value1",
+                            },
+                        ],
+                        "rules": [
+                            {
+                                "type": "ANY",
+                                "conditions": [
+                                    {
+                                        "property": "nested",
+                                        "operator": "EQUAL",
+                                        "value": "value",
+                                    },
+                                ],
+                                "rules": [],
+                            },
+                        ],
+                    },
+                ],
+                "overrides": [
+                    {
+                        "key": str(segment_override.pk),
+                        "name": "Test Feature1",
+                        "enabled": True,
+                        "value": "segment override",
+                        "priority": 3,
+                        "metadata": {"feature_state": segment_override},
+                    },
+                ],
+                "metadata": {"pk": identity_matching_segment.pk},
+            },
+            IDENTITY_OVERRIDES_SEGMENT_KEY: {
+                "key": IDENTITY_OVERRIDES_SEGMENT_KEY,
+                "name": IDENTITY_OVERRIDES_SEGMENT_NAME,
+                "rules": [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "$.identity.key",
+                                "operator": "IS_SET",
+                                "value": "",
+                            },
+                        ],
+                    },
+                ],
+                "overrides": [
+                    {
+                        "key": str(identity_override.pk),
+                        "name": "Test Feature1",
+                        "enabled": True,
+                        "value": "identity override",
+                        # No segment override may outrank an identity override.
+                        "priority": float("-inf"),
+                        "metadata": {"feature_state": identity_override},
+                    },
+                ],
+                # No metadata: not a segment a caller can name.
+            },
+        },
+        "features": {
+            "Test Feature1": {
+                "key": str(feature_default.pk),
+                "name": "Test Feature1",
+                "enabled": False,
+                "value": None,
+                "metadata": {"feature_state": feature_default},
+            },
+            "feature": {
+                "key": str(multivariate_default.pk),
+                "name": "feature",
+                "enabled": False,
+                "value": "control",
+                # Core API allocates percentages in id order; the engine
+                # allocates in `priority` order, so priority follows id.
+                "variants": [
+                    {
+                        "value": "multivariate option for 30% of users.",
+                        "weight": 30,
+                        "priority": 0,
+                    },
+                    {
+                        "value": "multivariate option for 30% of users.",
+                        "weight": 30,
+                        "priority": 1,
+                    },
+                    {
+                        "value": "multivariate option for 40% of users.",
+                        "weight": 40,
+                        "priority": 2,
+                    },
+                ],
+                "metadata": {"feature_state": multivariate_default},
+            },
+        },
     }
 
 
@@ -80,101 +230,6 @@ def test_map_environment_to_evaluation_context__transient_identity__returns_expl
         ),
         "traits": expected_traits,
     }
-
-
-def test_map_environment_to_evaluation_context__segment_override__carries_segment_id(
-    identity: Identity,
-    feature: Feature,
-    identity_matching_segment: Segment,
-) -> None:
-    # Given
-    feature_segment = FeatureSegment.objects.create(
-        feature=feature,
-        segment=identity_matching_segment,
-        environment=identity.environment,
-        priority=3,
-    )
-    override = FeatureState.objects.create(
-        feature=feature,
-        environment=identity.environment,
-        feature_segment=feature_segment,
-        enabled=True,
-    )
-
-    # When
-    context = map_environment_to_evaluation_context(
-        environment=identity.environment,
-        identity=identity,
-        segments=identity.environment.get_segments_from_cache(),
-    )
-
-    # Then
-    segment_context = context["segments"][str(identity_matching_segment.pk)]
-    assert segment_context["metadata"] == {"pk": identity_matching_segment.pk}
-    (override_context,) = segment_context["overrides"]
-    assert override_context["priority"] == 3
-    assert override_context["metadata"] == {"feature_state": override}
-
-
-def test_map_environment_to_evaluation_context__identity_override__returns_synthetic_segment(
-    identity: Identity,
-    feature: Feature,
-) -> None:
-    # Given
-    override = FeatureState.objects.create(
-        identity=identity,
-        feature=feature,
-        environment=identity.environment,
-        enabled=True,
-    )
-
-    # When
-    context = map_environment_to_evaluation_context(
-        environment=identity.environment,
-        identity=identity,
-        segments=identity.environment.get_segments_from_cache(),
-    )
-
-    # Then
-    segment_context = context["segments"][IDENTITY_OVERRIDES_SEGMENT_KEY]
-    assert segment_context["name"] == IDENTITY_OVERRIDES_SEGMENT_NAME
-    assert "metadata" not in segment_context
-    (override_context,) = segment_context["overrides"]
-    # No segment override may outrank an identity override.
-    assert override_context["priority"] == float("-inf")
-    assert override_context["metadata"] == {"feature_state": override}
-
-
-def test_map_environment_to_evaluation_context__multivariate_feature__weights_variants_in_id_order(
-    identity: Identity,
-    multivariate_feature: Feature,
-) -> None:
-    # Given
-    feature_state = FeatureState.objects.get(
-        feature=multivariate_feature, environment=identity.environment
-    )
-
-    # When
-    context = map_environment_to_evaluation_context(
-        environment=identity.environment,
-        identity=identity,
-        segments=identity.environment.get_segments_from_cache(),
-    )
-
-    # Then
-    # Core API allocates percentages in id order; the engine allocates in
-    # `priority` order, so the two only agree if priority follows id.
-    mv_values = MultivariateFeatureStateValue.objects.filter(
-        feature_state=feature_state
-    ).order_by("id")
-    assert context["features"][multivariate_feature.name]["variants"] == [
-        {
-            "value": mv_value.multivariate_feature_option.value,
-            "weight": mv_value.percentage_allocation,
-            "priority": index,
-        }
-        for index, mv_value in enumerate(mv_values)
-    ]
 
 
 @pytest.mark.parametrize(
@@ -255,33 +310,6 @@ def test_map_environment_to_evaluation_context__no_identity__returns_environment
     }
 
 
-def test_map_environment_to_evaluation_context__with_identity__returns_identity_context(
-    environment: Environment,
-    identity: Identity,
-) -> None:
-    # Given / When
-    context = map_environment_to_evaluation_context(
-        environment=environment,
-        identity=identity,
-    )
-
-    # Then
-    assert context == {
-        "environment": {
-            "key": environment.api_key,
-            "name": environment.name,
-        },
-        "identity": {
-            "identifier": identity.identifier,
-            "key": identity.get_hash_key(
-                environment.use_identity_composite_key_for_hashing
-            ),
-            "traits": {},
-        },
-        "features": {},
-    }
-
-
 @pytest.fixture()
 def explicit_traits(identity: Identity, trait_key: str) -> list[Trait]:
     return [Trait(identity=identity, trait_key=trait_key, string_value="explicit")]
@@ -320,69 +348,6 @@ def test_map_environment_to_evaluation_context__traits__returns_expected_traits(
     identity_context = context["identity"]
     assert identity_context
     assert identity_context["traits"] == {trait.trait_key: expected_trait_value}
-
-
-def test_map_environment_to_evaluation_context__with_segments__returns_segment_contexts(
-    environment: Environment,
-    identity_matching_segment: Segment,
-) -> None:
-    # Given
-    rule = SegmentRule.objects.get(segment=identity_matching_segment)
-    condition = Condition.objects.get(rule=rule)
-    nested_rule = SegmentRule.objects.create(rule=rule, type=SegmentRule.ANY_RULE)
-    nested_condition = Condition.objects.create(
-        rule=nested_rule,
-        property="nested",
-        operator=EQUAL,
-        value="value",
-    )
-
-    # When
-    context = map_environment_to_evaluation_context(
-        environment=environment,
-        segments=[identity_matching_segment],
-    )
-
-    # Then
-    assert context == {
-        "environment": {
-            "key": environment.api_key,
-            "name": environment.name,
-        },
-        "segments": {
-            str(identity_matching_segment.pk): {
-                "key": str(identity_matching_segment.pk),
-                "name": identity_matching_segment.name,
-                "rules": [
-                    {
-                        "type": "ALL",
-                        "conditions": [
-                            {
-                                "property": condition.property,
-                                "operator": condition.operator,
-                                "value": condition.value,
-                            },
-                        ],
-                        "rules": [
-                            {
-                                "type": "ANY",
-                                "conditions": [
-                                    {
-                                        "property": nested_condition.property,
-                                        "operator": nested_condition.operator,
-                                        "value": nested_condition.value,
-                                    },
-                                ],
-                                "rules": [],
-                            },
-                        ],
-                    },
-                ],
-                "metadata": {"pk": identity_matching_segment.pk},
-            },
-        },
-        "features": {},
-    }
 
 
 def test_map_environment_to_evaluation_context__system_traits__merged_with_system_winning(
