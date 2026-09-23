@@ -1,4 +1,4 @@
-import React, { FC } from 'react'
+import React, { FC, ReactElement } from 'react'
 import { AxisDomain } from 'recharts/types/util/types'
 import {
   CartesianGrid,
@@ -24,7 +24,8 @@ type LineChartProps = {
   showLegend?: boolean
   seriesLabels?: Record<string, string>
   dashedSeries?: string[]
-  hideTooltipTotal?: boolean
+  /** Replaces the default tooltip, for data the default reads wrongly. */
+  tooltip?: ReactElement
   verticalGrid?: boolean
   referenceLine?: Threshold
 }
@@ -54,11 +55,11 @@ const LineChart: FC<LineChartProps> = ({
   dashedSeries,
   data,
   height = 400,
-  hideTooltipTotal = false,
   referenceLine,
   series,
   seriesLabels,
   showLegend = false,
+  tooltip,
   verticalGrid = true,
   xAxisInterval = 0,
 }) => {
@@ -91,12 +92,7 @@ const LineChart: FC<LineChartProps> = ({
         />
         <Tooltip
           cursor={{ stroke: colorTextSecondary, strokeDasharray: '3 3' }}
-          content={
-            <ChartTooltip
-              seriesLabels={seriesLabels}
-              hideTotal={hideTooltipTotal}
-            />
-          }
+          content={tooltip ?? <ChartTooltip seriesLabels={seriesLabels} />}
         />
         {showLegend && (
           <Legend

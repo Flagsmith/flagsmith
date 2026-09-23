@@ -5,6 +5,7 @@ import { colorSurfaceAction, colorTextSecondary } from 'common/theme/tokens'
 import EmptyState from 'components/EmptyState'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import BarChart from 'components/charts/BarChart'
+import ChartTooltip from 'components/charts/ChartTooltip'
 import LineChart from 'components/charts/LineChart'
 import {
   cumulativeTotals,
@@ -21,6 +22,11 @@ type UsageOverTimeProps = {
   periodLabel: string
   projectedTotal?: number
   periodEndsAt?: string
+}
+
+const SERIES_LABELS = {
+  cumulative: 'API calls used',
+  projected: 'Projected',
 }
 
 const headingFor = (isBillingPeriod: boolean, limit: PlanLimit) => {
@@ -54,18 +60,19 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
       data={line}
       series={showsProjection ? ['cumulative', 'projected'] : ['cumulative']}
       dashedSeries={['projected']}
-      seriesLabels={{
-        cumulative: 'API calls used',
-        projected: 'Projected',
-      }}
+      seriesLabels={SERIES_LABELS}
       colorMap={{
         cumulative: colorSurfaceAction,
         projected: colorTextSecondary,
       }}
       xAxisInterval={xAxisIntervalFor(line.length)}
+      tooltip={
+        // The line is already a running total, and on the day the measured and
+        // projected series meet a sum would count it twice.
+        <ChartTooltip seriesLabels={SERIES_LABELS} hideTotal />
+      }
       verticalGrid={false}
       height={320}
-      hideTooltipTotal={showsProjection}
       referenceLine={planLimitThreshold(limit)}
     />
   ) : (
