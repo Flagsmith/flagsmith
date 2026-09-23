@@ -19,7 +19,7 @@ from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
-from segments.services import delete_segment, get_all_live_or_scheduled_overrides
+from segments.services import delete_segment, get_live_overrides
 from users.models import FFAdminUser
 
 
@@ -370,7 +370,7 @@ def test_copy_rules_and_conditions_from__varying_segment_sizes__query_count_is_c
     assert small_query_count == large_query_count == 10
 
 
-def test_get_all_live_or_scheduled_overrides__feature_versioning_v1_uncommitted_change_request__returns_no_overrides(
+def test_get_live_overrides__feature_versioning_v1_uncommitted_change_request__returns_no_overrides(
     feature_segment: FeatureSegment,
     feature: Feature,
     environment: Environment,
@@ -386,14 +386,14 @@ def test_get_all_live_or_scheduled_overrides__feature_versioning_v1_uncommitted_
     )
 
     # When
-    overrides = list(get_all_live_or_scheduled_overrides())
+    overrides = list(get_live_overrides(include_scheduled=True))
 
     # Then
     assert overrides == []
 
 
 @pytest.mark.usefixtures("segment_featurestate")
-def test_get_all_live_or_scheduled_overrides__feature_versioning_v1_committed_change_request__returns_distinct_overrides(
+def test_get_live_overrides__feature_versioning_v1_committed_change_request__returns_distinct_overrides(
     feature_segment: FeatureSegment,
     feature: Feature,
     environment: Environment,
@@ -411,14 +411,14 @@ def test_get_all_live_or_scheduled_overrides__feature_versioning_v1_committed_ch
     change_request.commit(admin_user)
 
     # When
-    overrides = list(get_all_live_or_scheduled_overrides())
+    overrides = list(get_live_overrides(include_scheduled=True))
 
     # Then
     assert overrides == [feature_segment]
 
 
 @pytest.mark.usefixtures("segment_featurestate")
-def test_get_all_live_or_scheduled_overrides__feature_versioning_v1_scheduled_feature_change__returns_distinct_overrides(
+def test_get_live_overrides__feature_versioning_v1_scheduled_feature_change_including_scheduled__returns_scheduled_overrides(
     feature_segment: FeatureSegment,
     feature: Feature,
     environment: Environment,
@@ -437,13 +437,59 @@ def test_get_all_live_or_scheduled_overrides__feature_versioning_v1_scheduled_fe
     change_request.commit(admin_user)
 
     # When
-    overrides = list(get_all_live_or_scheduled_overrides())
+    overrides = list(get_live_overrides(include_scheduled=True))
 
     # Then
     assert overrides == [feature_segment]
 
 
-def test_get_all_live_or_scheduled_overrides__feature_versioning_v2_uncommitted_change_request__returns_no_overrides(
+def test_get_live_overrides__feature_versioning_v1_scheduled_feature_change__returns_no_overrides(
+    feature_segment: FeatureSegment,
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    # Given
+    FeatureState.objects.create(
+        feature_segment=feature_segment,
+        feature=feature,
+        environment=environment,
+        live_from=timezone.now() + timedelta(days=1),
+    )
+
+    # When
+    overrides = list(get_live_overrides())
+
+    # Then
+    assert overrides == []
+
+
+@pytest.mark.usefixtures("segment_featurestate")
+def test_get_live_overrides__feature_versioning_v1_live_override_with_scheduled_feature_change__returns_live_overrides(
+    feature_segment: FeatureSegment,
+    feature: Feature,
+    environment: Environment,
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    FeatureState.objects.create(
+        feature_segment=feature_segment,
+        feature=feature,
+        environment=environment,
+        change_request=change_request,
+        live_from=timezone.now() + timedelta(days=1),
+        version=None,
+    )
+    change_request.commit(admin_user)
+
+    # When
+    overrides = list(get_live_overrides())
+
+    # Then
+    assert overrides == [feature_segment]
+
+
+def test_get_live_overrides__feature_versioning_v2_uncommitted_change_request__returns_no_overrides(
     environment_v2_versioning: Environment,
     feature: Feature,
     segment: Segment,
@@ -468,13 +514,13 @@ def test_get_all_live_or_scheduled_overrides__feature_versioning_v2_uncommitted_
     )
 
     # When
-    overrides = list(get_all_live_or_scheduled_overrides())
+    overrides = list(get_live_overrides(include_scheduled=True))
 
     # Then
     assert overrides == []
 
 
-def test_get_all_live_or_scheduled_overrides__feature_versioning_v2_committed_change_request__returns_distinct_overrides(
+def test_get_live_overrides__feature_versioning_v2_committed_change_request__returns_distinct_overrides(
     environment_v2_versioning: Environment,
     feature: Feature,
     segment: Segment,
@@ -507,13 +553,13 @@ def test_get_all_live_or_scheduled_overrides__feature_versioning_v2_committed_ch
     change_request.commit(admin_user)
 
     # When
-    overrides = list(get_all_live_or_scheduled_overrides())
+    overrides = list(get_live_overrides(include_scheduled=True))
 
     # Then
     assert overrides == [committed_override]
 
 
-def test_get_all_live_or_scheduled_overrides__feature_versioning_v2_scheduled_feature_change__returns_distinct_overrides(
+def test_get_live_overrides__feature_versioning_v2_scheduled_feature_change_including_scheduled__returns_live_and_scheduled_overrides(
     environment_v2_versioning: Environment,
     feature: Feature,
     segment: Segment,
@@ -548,7 +594,45 @@ def test_get_all_live_or_scheduled_overrides__feature_versioning_v2_scheduled_fe
     change_request.commit(admin_user)
 
     # When
-    overrides = list(get_all_live_or_scheduled_overrides().order_by("id"))
+    overrides = list(get_live_overrides(include_scheduled=True).order_by("id"))
 
     # Then
     assert overrides == [live_override, scheduled_override]
+
+
+def test_get_live_overrides__feature_versioning_v2_scheduled_feature_change__returns_live_overrides(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    live_version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+    live_override = FeatureSegment.objects.create(
+        feature=feature,
+        segment=segment,
+        environment=environment_v2_versioning,
+        environment_feature_version=live_version,
+    )
+    FeatureState.objects.create(
+        feature_segment=live_override,
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=live_version,
+    )
+    EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning,
+        feature=feature,
+        change_request=change_request,
+        live_from=timezone.now() + timedelta(days=1),
+    )
+    change_request.commit(admin_user)
+
+    # When
+    overrides = list(get_live_overrides())
+
+    # Then
+    assert overrides == [live_override]

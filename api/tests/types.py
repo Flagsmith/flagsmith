@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Callable, Literal, Optional, Protocol
 
 from django_test_migrations.migrator import Migrator
@@ -64,4 +65,6 @@ class CreateChangeRequestSegmentOverrideFixture(Protocol):
         environment: Environment,
         feature_id: int,
         segment_id: int,
+        committed: bool = False,
+        live_from: datetime | None = None,
     ) -> None: ...

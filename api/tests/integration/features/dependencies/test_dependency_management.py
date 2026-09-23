@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 import pytest
 from common.environments.permissions import UPDATE_FEATURE_STATE
+from django.utils import timezone
 from pytest_structlog import StructuredLogCapture
 from rest_framework.test import APIClient
 
@@ -827,7 +830,7 @@ def test_list_feature_dependencies__feature_has_no_prerequisites__responds_200_w
     assert response.json() == {"results": []}
 
 
-def test_list_feature_dependencies__unpublished_prerequisite__responds_200_without_it(
+def test_list_feature_dependencies__uncommitted_prerequisite__responds_200_without_it(
     admin_client: APIClient,
     create_change_request_segment_override: CreateChangeRequestSegmentOverrideFixture,
     environment_api_key: str,
@@ -864,6 +867,59 @@ def test_list_feature_dependencies__unpublished_prerequisite__responds_200_witho
     ).json()["id"]
     create_change_request_segment_override(
         versioned_environment, checkout.id, user_segment_id
+    )
+
+    # When
+    response = admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{checkout.id}/dependencies/",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {"results": [dependency_via_system_segment]}
+
+
+def test_list_feature_dependencies__committed_but_scheduled_prerequisite__responds_200_without_it(
+    admin_client: APIClient,
+    create_change_request_segment_override: CreateChangeRequestSegmentOverrideFixture,
+    environment_api_key: str,
+    project: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    checkout = Feature.objects.create(name="checkout", project_id=project)
+    payments = Feature.objects.create(name="payments", project_id=project)
+    Feature.objects.create(name="inventory", project_id=project)
+    dependency_via_system_segment = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{checkout.id}/dependencies/{payments.id}/",
+    ).json()
+    user_segment_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "stocked",
+            "rules": [
+                {
+                    "type": "ALL",
+                    "conditions": [
+                        {
+                            "property": "$.flags.inventory.enabled",
+                            "operator": "EQUAL",
+                            "value": "true",
+                            "description": None,
+                        }
+                    ],
+                    "rules": [],
+                }
+            ],
+        },
+        format="json",
+    ).json()["id"]
+    create_change_request_segment_override(
+        versioned_environment,
+        checkout.id,
+        user_segment_id,
+        committed=True,
+        live_from=timezone.now() + timedelta(days=1),
     )
 
     # When
@@ -994,7 +1050,7 @@ def test_list_feature_dependents__feature_is_not_prerequisite__responds_200_with
     assert response.json() == {"results": []}
 
 
-def test_list_feature_dependents__unpublished_dependent__responds_200_without_it(
+def test_list_feature_dependents__uncommitted_dependent__responds_200_without_it(
     admin_client: APIClient,
     create_change_request_segment_override: CreateChangeRequestSegmentOverrideFixture,
     environment_api_key: str,
@@ -1031,6 +1087,59 @@ def test_list_feature_dependents__unpublished_dependent__responds_200_without_it
     ).json()["id"]
     create_change_request_segment_override(
         versioned_environment, storefront.id, user_segment_id
+    )
+
+    # When
+    response = admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{payments.id}/dependents/",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {"results": [dependency_via_system_segment]}
+
+
+def test_list_feature_dependents__committed_but_scheduled_dependent__responds_200_without_it(
+    admin_client: APIClient,
+    create_change_request_segment_override: CreateChangeRequestSegmentOverrideFixture,
+    environment_api_key: str,
+    project: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    payments = Feature.objects.create(name="payments", project_id=project)
+    checkout = Feature.objects.create(name="checkout", project_id=project)
+    storefront = Feature.objects.create(name="storefront", project_id=project)
+    dependency_via_system_segment = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{checkout.id}/dependencies/{payments.id}/",
+    ).json()
+    user_segment_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "paying",
+            "rules": [
+                {
+                    "type": "ALL",
+                    "conditions": [
+                        {
+                            "property": "$.flags.payments.enabled",
+                            "operator": "EQUAL",
+                            "value": "true",
+                            "description": None,
+                        }
+                    ],
+                    "rules": [],
+                }
+            ],
+        },
+        format="json",
+    ).json()["id"]
+    create_change_request_segment_override(
+        versioned_environment,
+        storefront.id,
+        user_segment_id,
+        committed=True,
+        live_from=timezone.now() + timedelta(days=1),
     )
 
     # When

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 from rest_framework.test import APIClient
 
@@ -45,12 +47,14 @@ def versioned_environment(
 def create_change_request_segment_override(
     admin_user: FFAdminUser,
 ) -> CreateChangeRequestSegmentOverrideFixture:
-    """Return a callable holding a segment override in an uncommitted change request, whichever versioning is in use."""
+    """Return a callable putting a segment override through a change request, whichever versioning is in use."""
 
     def _create_change_request_segment_override(
         environment: Environment,
         feature_id: int,
         segment_id: int,
+        committed: bool = False,
+        live_from: datetime | None = None,
     ) -> None:
         change_request = ChangeRequest.objects.create(
             environment=environment, title="Pending", user=admin_user
@@ -60,6 +64,7 @@ def create_change_request_segment_override(
                 environment=environment,
                 feature_id=feature_id,
                 change_request=change_request,
+                live_from=live_from,
             )
             if environment.use_v2_feature_versioning
             else None
@@ -76,7 +81,10 @@ def create_change_request_segment_override(
             feature_segment=feature_segment,
             environment_feature_version=version,
             change_request=None if version else change_request,
+            live_from=live_from,
             enabled=True,
         )
+        if committed:
+            change_request.commit(committed_by=admin_user)
 
     return _create_change_request_segment_override

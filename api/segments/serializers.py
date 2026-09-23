@@ -20,7 +20,7 @@ from segment_membership.constants import MAX_SEGMENT_MEMBERS_PAGE_SIZE
 from segment_membership.models import SegmentMembershipCount
 from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
-from segments.services import get_all_live_or_scheduled_overrides
+from segments.services import get_live_overrides
 from segments.types import (
     LegacySegmentRule,
 )
@@ -195,7 +195,9 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         # is serialized outside that queryset.
         if (has_overrides := getattr(segment, "has_overrides", None)) is not None:
             return bool(has_overrides)
-        return get_all_live_or_scheduled_overrides().filter(segment=segment).exists()
+        return (
+            get_live_overrides(include_scheduled=True).filter(segment=segment).exists()
+        )
 
     def to_internal_value(self, data: dict[str, Any]) -> Any:
         self._validate_rules_depth(data.get("rules", []))
