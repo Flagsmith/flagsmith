@@ -212,7 +212,9 @@ def test_update_feature_segment__returns_405(  # type: ignore[no-untyped-def]
 
     # When
     response_put = client.put(url, data=json.dumps({}), content_type="application/json")
-    response_patch = client.patch(url, data=json.dumps({}), content_type="application/json")
+    response_patch = client.patch(
+        url, data=json.dumps({}), content_type="application/json"
+    )
 
     # Then
     assert response_put.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
