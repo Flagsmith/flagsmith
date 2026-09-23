@@ -93,6 +93,29 @@ def test_influx_db_wrapper_query__http_error__logs_expected(
     capture_exception_mock.assert_called_once_with(expected_exception)
 
 
+def test_influx_db_wrapper_query__influxdb_error__logs_expected(
+    mock_influxdb_client: MagicMock,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    expected_exception = InfluxDBError(message="InfluxDB error occurred")
+    mock_query_api = mock_influxdb_client.query_api.return_value
+    mock_query_api.query.side_effect = expected_exception
+    capture_exception_mock = mocker.patch(
+        "app_analytics.influxdb_wrapper.capture_exception",
+        autospec=True,
+    )
+
+    influxdb = InfluxDBWrapper("name")  # type: ignore[no-untyped-call]
+
+    # When
+    result = influxdb.influx_query_manager()
+
+    # Then
+    assert result == []
+    capture_exception_mock.assert_called_once_with(expected_exception)
+
+
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_get_events_for_organisation__default_params__calls_query_api_with_expected_query(
     mock_influxdb_client: MagicMock,
