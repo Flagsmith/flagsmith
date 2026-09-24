@@ -48,6 +48,7 @@ const CHART_CATEGORY = 'chart'
 const PRIMARY_CATEGORY = 'primary'
 const NEUTRAL_CATEGORY = 'neutral'
 const STATE_CATEGORY = 'state'
+const ALWAYS_CATEGORY = 'always'
 
 // Build reverse lookups for primitives
 const hexToPrimitive = new Map()
@@ -176,6 +177,15 @@ function buildScssLines() {
       if (e.dark && e.dark !== e.light) {
         darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
       }
+    }
+    rootLines.push('')
+  }
+
+  // Always-* : pinned across themes, so no dark override
+  if (json[ALWAYS_CATEGORY]) {
+    rootLines.push('  // Always')
+    for (const [, e] of sorted(json[ALWAYS_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
     }
     rootLines.push('')
   }
