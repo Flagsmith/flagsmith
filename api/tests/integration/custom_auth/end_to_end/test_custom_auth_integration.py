@@ -836,3 +836,82 @@ def test_register_and_activate__hubspot_enabled__creates_contact_on_activation_o
     user = FFAdminUser.objects.get(email=email)
     assert user.is_active is True
     mock_create_contact_on_activation.delay.assert_called_once_with(args=(user.id,))
+
+
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
+        {"SEND_ACTIVATION_EMAIL": True, "SEND_CONFIRMATION_EMAIL": False},
+        settings.DJOSER,
+    )
+)
+def test_register__e2e_request__activates_inline_without_email(
+    db: None,
+    api_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    # The middleware is only installed when the token is configured, which is
+    # not the case for the test settings.
+    settings.E2E_TEST_AUTH_TOKEN = "e2e-token"
+    settings.MIDDLEWARE = [
+        *settings.MIDDLEWARE,
+        "e2etests.middleware.E2ETestMiddleware",
+    ]
+    email = f"e2e_signup_user@{settings.E2E_TEST_EMAIL_DOMAIN}"
+    register_data = {
+        "email": email,
+        "password": FFAdminUser.objects.make_random_password(),
+        "first_name": "e2e",
+        "last_name": "signup",
+    }
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:custom_auth:ffadminuser-list"),
+        data=register_data,
+        HTTP_X_E2E_TEST_AUTH_TOKEN="e2e-token",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["is_active"] is True
+    assert response.json()["key"]
+    assert not mail.outbox
+
+
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
+        {"SEND_ACTIVATION_EMAIL": True, "SEND_CONFIRMATION_EMAIL": False},
+        settings.DJOSER,
+    )
+)
+def test_register__e2e_domain_without_token__still_requires_activation(
+    db: None,
+    api_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    # The test email domain alone must not bypass verification
+    settings.E2E_TEST_AUTH_TOKEN = "e2e-token"
+    settings.MIDDLEWARE = [
+        *settings.MIDDLEWARE,
+        "e2etests.middleware.E2ETestMiddleware",
+    ]
+    email = f"impostor@{settings.E2E_TEST_EMAIL_DOMAIN}"
+    register_data = {
+        "email": email,
+        "password": FFAdminUser.objects.make_random_password(),
+        "first_name": "not",
+        "last_name": "e2e",
+    }
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:custom_auth:ffadminuser-list"), data=register_data
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["is_active"] is False
+    assert response.json()["key"] is None
+    assert len(mail.outbox) == 1

@@ -7,6 +7,7 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 
+from e2etests.helpers import is_e2e_request
 from organisations.invites.models import Invite, InviteLink
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
@@ -106,6 +107,13 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
 
         attrs["email"] = email.lower()
         return attrs
+
+    def perform_create(self, validated_data: dict[str, Any]) -> FFAdminUser:
+        user: FFAdminUser = super().perform_create(validated_data)
+        if not user.is_active and is_e2e_request(self.context.get("request")):
+            user.is_active = True
+            user.save(update_fields=["is_active"])
+        return user
 
     def save(self) -> FFAdminUser:
         instance = super().save()

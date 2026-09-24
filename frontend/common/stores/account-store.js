@@ -280,13 +280,19 @@ const controller = {
     store.pendingEmailVerification = null
     store.saving()
     return data
-      .post(`${Project.api}auth/users/`, {
-        ...user,
-        hubspotutk: API.getCookie('hubspotutk'),
-        invite_hash: API.getInvite() || undefined,
-        referrer: API.getReferrer() || '',
-        sign_up_type: API.getInviteType(),
-      })
+      .post(
+        `${Project.api}auth/users/`,
+        {
+          ...user,
+          hubspotutk: API.getCookie('hubspotutk'),
+          invite_hash: API.getInvite() || undefined,
+          referrer: API.getReferrer() || '',
+          sign_up_type: API.getInviteType(),
+        },
+        // Lets the API activate E2E signups inline - there is no mailbox to
+        // collect a verification link from.
+        E2E ? { 'X-E2E-Test-Auth-Token': Project.e2eToken } : {},
+      )
       .then(async (res) => {
         const trackSignup = () => {
           API.trackEvent(Constants.events.REGISTER)
