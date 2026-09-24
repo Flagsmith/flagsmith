@@ -37,6 +37,7 @@ from experimentation.dataclasses import (
     MetricSpec,
     ResultsAggregates,
     RolloutSpec,
+    WarehouseDeliveryStatus,
     WarehouseEventNames,
     WarehouseEventStats,
 )
@@ -258,7 +259,7 @@ def test_get_warehouse_event_names__clickhouse_connection__queries_customer_inst
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     if isinstance(query_result, Exception):
         get_client.return_value.query.side_effect = query_result
@@ -311,7 +312,7 @@ def test_get_warehouse_event_names__connection_details_changed__cache_keyed_by_c
 ) -> None:
     # Given — a cached result for the connection's current details
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     get_client.return_value.query.return_value = mocker.Mock(
         result_rows=[("old_event",)]
@@ -2678,7 +2679,7 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     success_count_before = _verification_count("success")
     clickhouse_connection.status_detail = "stale detail"
@@ -2741,7 +2742,7 @@ def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     if isinstance(query_results, list):
         get_client.return_value.query.side_effect = [
@@ -2772,7 +2773,7 @@ def test_verify_clickhouse_connection__internal_host__sets_errored_without_conne
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     clickhouse_connection.config = {
         **(clickhouse_connection.config or {}),
@@ -2814,7 +2815,7 @@ def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
     )
     if isinstance(query_result, Exception):
         get_client.return_value.query.side_effect = query_result
@@ -3849,3 +3850,92 @@ def test_apply_experiment_rollout__resubmitted__records_history_only_on_change( 
     )
     assert _audit_log_count() == 2
     assert _rule_ids() == rule_ids
+
+
+def test_annotate_warehouse_delivery_statuses__verified_connection_failing_delivery__shows_errored(
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given a connection that passed verification when it was saved, whose
+    # warehouse has since started refusing our login
+    clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
+    mock_get = mocker.patch(
+        "experimentation.services.warehouse_delivery_sync_service.get_warehouse_delivery_statuses",
+        return_value={
+            clickhouse_connection.id: WarehouseDeliveryStatus(
+                connection_id=clickhouse_connection.id,
+                status="errored",
+                detail="Authentication failed.",
+            )
+        },
+    )
+
+    # When
+    services.annotate_warehouse_delivery_statuses([clickhouse_connection])
+
+    # Then the dashboard shows the failure and its reason, without a save
+    mock_get.assert_called_once_with([clickhouse_connection.id])
+    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+    assert clickhouse_connection.status_detail == "Authentication failed."
+    stored = WarehouseConnection.objects.get(id=clickhouse_connection.id)
+    assert stored.status == WarehouseConnectionStatus.CREATED
+
+
+@pytest.mark.parametrize(
+    "outcome",
+    [
+        pytest.param(None, id="never-delivered"),
+        pytest.param(
+            WarehouseDeliveryStatus(connection_id=0, status="connected", detail=None),
+            id="delivering",
+        ),
+    ],
+)
+def test_annotate_warehouse_delivery_statuses__verified_connection_delivering__unchanged(
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+    outcome: WarehouseDeliveryStatus | None,
+) -> None:
+    # Given a verified connection the delivery service has no complaint about
+    clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
+    mocker.patch(
+        "experimentation.services.warehouse_delivery_sync_service.get_warehouse_delivery_statuses",
+        return_value={clickhouse_connection.id: outcome} if outcome else {},
+    )
+
+    # When
+    services.annotate_warehouse_delivery_statuses([clickhouse_connection])
+
+    # Then
+    assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
+    assert clickhouse_connection.status_detail is None
+
+
+def test_annotate_warehouse_delivery_statuses__unverified_or_flagsmith__redis_not_consulted(
+    clickhouse_connection: WarehouseConnection,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given a ClickHouse connection that failed verification, and a Flagsmith
+    # connection, which the delivery service never handles
+    clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
+    clickhouse_connection.status_detail = "Could not connect to the host."
+    flagsmith_connection = WarehouseConnection(
+        environment=environment,
+        warehouse_type=WarehouseType.FLAGSMITH,
+        name="Flagsmith",
+        status=WarehouseConnectionStatus.CONNECTED,
+    )
+    mock_get = mocker.patch(
+        "experimentation.services.warehouse_delivery_sync_service.get_warehouse_delivery_statuses",
+    )
+
+    # When
+    services.annotate_warehouse_delivery_statuses(
+        [clickhouse_connection, flagsmith_connection]
+    )
+
+    # Then the verification result stands, and Redis is not even asked
+    mock_get.assert_not_called()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+    assert clickhouse_connection.status_detail == "Could not connect to the host."

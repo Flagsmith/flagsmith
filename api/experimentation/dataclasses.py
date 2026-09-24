@@ -125,3 +125,10 @@ class ResultsSummary:
     # totals divide: a bucket's own conversions over its own new identities
     # compares different people and can exceed 100%.
     exposures_timeseries: ExposuresTimeseries
+
+
+@dataclass(frozen=True)
+class WarehouseDeliveryStatus:
+    connection_id: int
+    status: str
+    detail: str | None

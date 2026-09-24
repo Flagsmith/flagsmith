@@ -8,35 +8,13 @@ from redis.exceptions import RedisError
 from experimentation import ingestion_sync_service
 
 
-def test_get_client__configured_url__builds_redis_cluster_with_socket_options(
-    mocker: MockerFixture,
-    settings: object,
-) -> None:
-    # Given
-    settings.INGESTION_REDIS_URL = "redis://ingestion:6379"  # type: ignore[attr-defined]
-    mock_from_url = mocker.patch(
-        "experimentation.ingestion_sync_service.RedisCluster.from_url",
-    )
-
-    # When
-    client = ingestion_sync_service._get_client()
-
-    # Then
-    mock_from_url.assert_called_once_with(
-        "redis://ingestion:6379",
-        socket_timeout=ingestion_sync_service.SOCKET_TIMEOUT,
-        socket_keepalive=True,
-    )
-    assert client is mock_from_url.return_value
-
-
 def test_set_ingestion_key__no_expiry__writes_environment_key_without_ttl(
     mocker: MockerFixture,
 ) -> None:
     # Given
     mock_client = mocker.Mock()
     mocker.patch(
-        "experimentation.ingestion_sync_service._get_client",
+        "experimentation.ingestion_sync_service.get_client",
         return_value=mock_client,
     )
 
@@ -60,7 +38,7 @@ def test_set_ingestion_key__expiry__writes_environment_key_with_ttl(
     # Given
     mock_client = mocker.Mock()
     mocker.patch(
-        "experimentation.ingestion_sync_service._get_client",
+        "experimentation.ingestion_sync_service.get_client",
         return_value=mock_client,
     )
     expires_at = datetime(2026, 9, 1, tzinfo=dt_timezone.utc)
@@ -86,7 +64,7 @@ def test_delete_ingestion_key__valid_key__deletes_from_redis(
     # Given
     mock_client = mocker.Mock()
     mocker.patch(
-        "experimentation.ingestion_sync_service._get_client",
+        "experimentation.ingestion_sync_service.get_client",
         return_value=mock_client,
     )
 
@@ -105,7 +83,7 @@ def test_set_ingestion_destination__valid_topic__writes_topic(
     # Given
     mock_client = mocker.Mock()
     mocker.patch(
-        "experimentation.ingestion_sync_service._get_client",
+        "experimentation.ingestion_sync_service.get_client",
         return_value=mock_client,
     )
 
@@ -128,7 +106,7 @@ def test_delete_ingestion_destination__valid_key__deletes_from_redis(
     # Given
     mock_client = mocker.Mock()
     mocker.patch(
-        "experimentation.ingestion_sync_service._get_client",
+        "experimentation.ingestion_sync_service.get_client",
         return_value=mock_client,
     )
 
@@ -148,7 +126,7 @@ def test_set_ingestion_key__redis_error__propagates(
     mock_client = mocker.Mock()
     mock_client.set.side_effect = RedisError("boom")
     mocker.patch(
-        "experimentation.ingestion_sync_service._get_client",
+        "experimentation.ingestion_sync_service.get_client",
         return_value=mock_client,
     )
 
@@ -167,7 +145,7 @@ def test_delete_ingestion_key__redis_error__propagates(
     mock_client = mocker.Mock()
     mock_client.delete.side_effect = RedisError("boom")
     mocker.patch(
-        "experimentation.ingestion_sync_service._get_client",
+        "experimentation.ingestion_sync_service.get_client",
         return_value=mock_client,
     )
 
