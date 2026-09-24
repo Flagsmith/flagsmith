@@ -145,7 +145,7 @@ export const colorBorderDisabled =
 export const colorBorderInfo = 'var(--color-border-info, #0aaddf)'
 export const colorBorderStrong =
   'var(--color-border-strong, rgba(101, 109, 123, 0.24))'
-export const colorBorderSuccess = 'var(--color-border-success, #27ab95)'
+export const colorBorderSuccess = 'var(--color-border-success, #47aa7f)'
 export const colorBorderWarning = 'var(--color-border-warning, #ff9f43)'
 
 // Code
@@ -154,7 +154,7 @@ export const colorCodeComment = 'var(--color-code-comment, #9da4ae)'
 export const colorCodeKeyword = 'var(--color-code-keyword, #6837fc)'
 export const colorCodeLiteral = 'var(--color-code-literal, #0b8bb2)'
 export const colorCodeName = 'var(--color-code-name, #ef4d56)'
-export const colorCodeString = 'var(--color-code-string, #27ab95)'
+export const colorCodeString = 'var(--color-code-string, #47aa7f)'
 export const colorCodeText = 'var(--color-code-text, #2d3443)'
 export const colorCodeTitle = 'var(--color-code-title, #0aaddf)'
 export const colorCodeVariable = 'var(--color-code-variable, #d06907)'
@@ -166,7 +166,7 @@ export const colorIconDefault = 'var(--color-icon-default, #1a2634)'
 export const colorIconDisabled = 'var(--color-icon-disabled, #9da4ae)'
 export const colorIconInfo = 'var(--color-icon-info, #0aaddf)'
 export const colorIconSecondary = 'var(--color-icon-secondary, #656d7b)'
-export const colorIconSuccess = 'var(--color-icon-success, #27ab95)'
+export const colorIconSuccess = 'var(--color-icon-success, #47aa7f)'
 export const colorIconWarning = 'var(--color-icon-warning, #ff9f43)'
 
 // Surface
@@ -194,7 +194,7 @@ export const colorSurfaceInfo =
 export const colorSurfaceMuted = 'var(--color-surface-muted, #f3f4f5)'
 export const colorSurfaceSubtle = 'var(--color-surface-subtle, #fafafb)'
 export const colorSurfaceSuccess =
-  'var(--color-surface-success, rgba(39, 171, 149, 0.08))'
+  'var(--color-surface-success, rgba(71, 170, 127, 0.08))'
 export const colorSurfaceWarning =
   'var(--color-surface-warning, rgba(255, 159, 67, 0.08))'
 
@@ -205,19 +205,19 @@ export const colorTextDefault = 'var(--color-text-default, #1a2634)'
 export const colorTextDisabled = 'var(--color-text-disabled, #9da4ae)'
 export const colorTextInfo = 'var(--color-text-info, #0aaddf)'
 export const colorTextSecondary = 'var(--color-text-secondary, #656d7b)'
-export const colorTextSuccess = 'var(--color-text-success, #13787b)'
+export const colorTextSuccess = 'var(--color-text-success, #35795a)'
 export const colorTextTertiary = 'var(--color-text-tertiary, #656d7b)'
 export const colorTextWarning = 'var(--color-text-warning, #9f5208)'
 
 // Chart
 export const colorChart1 = 'var(--color-chart-1, #0aaddf)'
 export const colorChart2 = 'var(--color-chart-2, #ef4d56)'
-export const colorChart3 = 'var(--color-chart-3, #27ab95)'
+export const colorChart3 = 'var(--color-chart-3, #47aa7f)'
 export const colorChart4 = 'var(--color-chart-4, #ff9f43)'
 export const colorChart5 = 'var(--color-chart-5, #7a4dfc)'
 export const colorChart6 = 'var(--color-chart-6, #0b8bb2)'
 export const colorChart7 = 'var(--color-chart-7, #e61b26)'
-export const colorChart8 = 'var(--color-chart-8, #13787b)'
+export const colorChart8 = 'var(--color-chart-8, #35795a)'
 export const colorChart9 = 'var(--color-chart-9, #fa810c)'
 export const colorChart10 = 'var(--color-chart-10, #6837fc)'
 
