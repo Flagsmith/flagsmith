@@ -83,12 +83,14 @@ export const VariationOptions: FC<VariationOptionsProps> = ({
           value as a literal override. */}
       {select && !!divergedOverride && (
         <div className='border border-warning bg-surface-warning rounded p-3 mb-2'>
-          <ValueRowLabel>
-            <span className='text-warning'>Currently served</span>
-          </ValueRowLabel>
+          <div className='mb-2'>
+            <span className='h6 mb-0 font-weight-semibold text-warning'>
+              Currently served
+            </span>
+          </div>
           <div className='border border-warning rounded p-3'>
-            <ValueRowLabel>{divergedOverride.key}</ValueRowLabel>
             <ValueEditor
+              label={divergedOverride.key}
               disabled
               value={Utils.getTypedValue(divergedOverride.servedValue)}
             />

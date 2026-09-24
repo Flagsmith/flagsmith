@@ -10,13 +10,17 @@ from rest_framework.exceptions import ValidationError
 
 from cohorts.models import Cohort
 from edge_api.utils import is_edge_enabled
+from features.dependencies.services import (
+    index_segment_flag_references,
+    validate_segment_flag_dependencies,
+)
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
 from segment_membership.constants import MAX_SEGMENT_MEMBERS_PAGE_SIZE
 from segment_membership.models import SegmentMembershipCount
 from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
-from segments.services import get_overrides_in_effect
+from segments.services import get_all_live_or_scheduled_overrides
 from segments.types import (
     LegacySegmentRule,
 )
@@ -191,7 +195,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         # is serialized outside that queryset.
         if (has_overrides := getattr(segment, "has_overrides", None)) is not None:
             return bool(has_overrides)
-        return get_overrides_in_effect().filter(segment=segment).exists()
+        return get_all_live_or_scheduled_overrides().filter(segment=segment).exists()
 
     def to_internal_value(self, data: dict[str, Any]) -> Any:
         self._validate_rules_depth(data.get("rules", []))
@@ -217,7 +221,9 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     def create(self, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
         metadata_data = validated_data.pop("metadata", [])
         self._set_rules_data(validated_data)
-        segment = super().create(validated_data)  # type: ignore[no-untyped-call]
+        with transaction.atomic():
+            segment = super().create(validated_data)  # type: ignore[no-untyped-call]
+            index_segment_flag_references(segment)
         self._update_metadata(segment, metadata_data)
         enqueue_membership_refresh(segment.project)
         return segment
@@ -234,6 +240,8 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                     revision_id=segment_revision.id,
                 )
             segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
+            index_segment_flag_references(segment)
+            validate_segment_flag_dependencies(segment)
         self._update_metadata(segment, metadata)
         enqueue_membership_refresh(segment.project)
         return segment

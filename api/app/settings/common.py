@@ -115,6 +115,7 @@ INSTALLED_APPS = [
     "environments.identities",
     "environments.identities.traits",
     "features",
+    "features.dependencies",
     "features.feature_external_resources",
     "features.feature_health",
     "features.import_export",
@@ -1295,8 +1296,6 @@ ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
 # hubspot without a Flagsmith organisation.
 CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES = 30
 
-SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
-
 # prevent django-softdelete from performing whole table deletes!
 SOFTDELETE_CASCADE_ALLOW_DELETE_ALL = False
 
@@ -1464,6 +1463,11 @@ WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 
 
 ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)
+API_USAGE_ALERT_CC_RECIPIENT_LIST = env.list(
+    "API_USAGE_ALERT_CC_RECIPIENT_LIST",
+    subcast=str,
+    default=[],
+)
 
 # See DomainAuthMethods in flagsmith-auth-controller repository with auth_controller.models module
 GLOBAL_DOMAIN_AUTH_METHODS = env.dict(
@@ -1571,7 +1575,7 @@ DATABASE_ROUTERS.append("app.routers.ReplicaRouter")
 
 if CLICKHOUSE_ENABLED:
     _clickhouse_db: dict[str, Any] = {
-        "ENGINE": "core.db_backends.clickhouse",
+        "ENGINE": "clickhouse_backend.backend",
         "HOST": CLICKHOUSE_HOST,
         "PORT": CLICKHOUSE_PORT,
         "USER": CLICKHOUSE_USER,

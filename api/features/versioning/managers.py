@@ -1,8 +1,7 @@
 import typing
-from datetime import datetime
 from pathlib import Path
 
-from django.db.models import OuterRef
+from django.db.models import Exists, OuterRef
 from django.db.models.query import QuerySet, RawQuerySet
 from django.utils import timezone
 from softdelete.models import SoftDeleteManager  # type: ignore[import-untyped]
@@ -16,21 +15,17 @@ with open(Path(__file__).parent.resolve() / "sql/get_latest_versions.sql") as f:
 
 
 class EnvironmentFeatureVersionManager(SoftDeleteManager):  # type: ignore[misc]
-    def get_versions_live_since(
-        self,
-        feature_id: int | OuterRef,
-        environment_id: int | OuterRef,
-        live_from: datetime | OuterRef,
-    ) -> QuerySet["EnvironmentFeatureVersion"]:
-        """
-        Get the published versions of a flag that went live between the provided `live_from` and now.
-        """
-        return self.filter(  # type: ignore[no-any-return]
-            feature_id=feature_id,
-            environment_id=environment_id,
+    def get_live_or_scheduled(self) -> QuerySet["EnvironmentFeatureVersion"]:
+        """Get the published versions that are live now or scheduled to go live."""
+        superseding_versions = self.filter(
+            feature_id=OuterRef("feature_id"),
+            environment_id=OuterRef("environment_id"),
             published_at__isnull=False,
+            live_from__gt=OuterRef("live_from"),
             live_from__lte=timezone.now(),
-            live_from__gt=live_from,
+        )
+        return self.filter(published_at__isnull=False).exclude(  # type: ignore[no-any-return]
+            Exists(superseding_versions)
         )
 
     def get_latest_versions_by_environment_id(self, environment_id: int) -> RawQuerySet:  # type: ignore[type-arg]

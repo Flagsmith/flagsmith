@@ -201,6 +201,10 @@
                 {
                     "name": "INGESTION_REDIS_URL",
                     "value": "rediss://serverless-redis-cache-c4q8sw.serverless.euw2.cache.amazonaws.com:6379"
+                },
+                {
+                    "name": "API_USAGE_ALERT_CC_RECIPIENT_LIST",
+                    "value": "customersuccess@flagsmith.com"
                 }
             ],
             "secrets": [
@@ -218,7 +222,7 @@
                 },
                 {
                     "name": "WAREHOUSE_CREDENTIALS_SECRET",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:warehouse-credentials-secret-230b64b-NwRQAb"
                 },
                 {
                     "name": "E2E_TEST_AUTH_TOKEN",

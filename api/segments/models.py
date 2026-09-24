@@ -109,7 +109,7 @@ class Segment(
     )
 
     rules_data: models.JSONField[
-        list[SegmentRuleType], list[SegmentRuleType] | None
+        list[SegmentRuleType] | None, list[SegmentRuleType] | None
     ] = models.JSONField(null=True)
 
     version = models.IntegerField(default=1, null=True)

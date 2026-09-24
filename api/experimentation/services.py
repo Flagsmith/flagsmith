@@ -4,7 +4,6 @@ import hashlib
 import json
 import typing
 from dataclasses import replace
-from functools import lru_cache
 
 import structlog
 from clickhouse_driver import Client
@@ -194,7 +193,6 @@ def ensure_flagsmith_warehouse_connection(
         return None
 
 
-@lru_cache(maxsize=2)
 def _get_clickhouse_client(
     send_receive_timeout: int = CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
 ) -> Client:
@@ -202,7 +200,7 @@ def _get_clickhouse_client(
 
     The database is taken from the DSN path, so queries can reference the
     `events` table unqualified. Connect and query timeouts are bounded unless the
-    DSN overrides them. One client is cached per requested timeout.
+    DSN overrides them.
     """
     host, kwargs = parse_url(settings.EXPERIMENTATION_CLICKHOUSE_URL)
     kwargs.setdefault("connect_timeout", CLICKHOUSE_CONNECT_TIMEOUT_SECONDS)
@@ -262,8 +260,9 @@ def _get_flagsmith_clickhouse_event_names(
     cached = cache.get(cache_key)
     if isinstance(cached, WarehouseEventNames):
         return cached
+    client = _get_clickhouse_client()
     try:
-        rows = _get_clickhouse_client().execute(
+        rows = client.execute(
             _CLICKHOUSE_EVENT_NAMES_QUERY,
             _event_names_query_params(environment_key),
         )
@@ -274,6 +273,8 @@ def _get_flagsmith_clickhouse_event_names(
             exc_info=True,
         )
         return None
+    finally:
+        client.disconnect()
     event_names = _build_event_names(rows)
     cache.set(cache_key, event_names, EVENT_NAMES_CACHE_SECONDS)
     return event_names
@@ -297,10 +298,14 @@ def _build_event_stats(
 
 def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
     """Return event counts recorded for `environment_key` in the warehouse."""
-    rows = _get_clickhouse_client().execute(
-        _EVENT_STATS_QUERY,
-        {"environment_key": environment_key},
-    )
+    client = _get_clickhouse_client()
+    try:
+        rows = client.execute(
+            _EVENT_STATS_QUERY,
+            {"environment_key": environment_key},
+        )
+    finally:
+        client.disconnect()
     return _build_event_stats(rows)
 
 
@@ -423,19 +428,23 @@ def get_exposure_buckets(
     window_end: datetime,
     granularity: ExposureGranularity,
 ) -> list[ExposureBucket]:
-    rows = _get_clickhouse_client(
+    client = _get_clickhouse_client(
         send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
-    ).execute(
-        EXPOSURE_BUCKETS_QUERY.format(
-            bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
-        ),
-        exposure_window_params(
-            environment_key=environment_key,
-            feature_name=feature_name,
-            window_start=window_start,
-            window_end=window_end,
-        ),
     )
+    try:
+        rows = client.execute(
+            EXPOSURE_BUCKETS_QUERY.format(
+                bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
+            ),
+            exposure_window_params(
+                environment_key=environment_key,
+                feature_name=feature_name,
+                window_start=window_start,
+                window_end=window_end,
+            ),
+        )
+    finally:
+        client.disconnect()
     return [
         ExposureBucket(
             variant=variant,
@@ -472,25 +481,27 @@ def get_results_aggregates(
     client = _get_clickhouse_client(
         send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
-
-    rows, columns = client.execute(
-        builder.build_query(), params, with_column_types=True
-    )
-    exposure_counts, metric_stats = builder.decode_rows(
-        rows, [name for name, _type in columns]
-    )
-
-    conversion_buckets: dict[int, list[ConversionBucket]] = {}
-    conversions_query = builder.build_conversions_query(
-        bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
-    )
-    if conversions_query is not None:
+    try:
         rows, columns = client.execute(
-            conversions_query, params, with_column_types=True
+            builder.build_query(), params, with_column_types=True
         )
-        conversion_buckets = builder.decode_conversion_rows(
+        exposure_counts, metric_stats = builder.decode_rows(
             rows, [name for name, _type in columns]
         )
+
+        conversion_buckets: dict[int, list[ConversionBucket]] = {}
+        conversions_query = builder.build_conversions_query(
+            bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
+        )
+        if conversions_query is not None:
+            rows, columns = client.execute(
+                conversions_query, params, with_column_types=True
+            )
+            conversion_buckets = builder.decode_conversion_rows(
+                rows, [name for name, _type in columns]
+            )
+    finally:
+        client.disconnect()
 
     return ResultsAggregates(
         specs=list(specs),

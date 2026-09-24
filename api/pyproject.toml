@@ -216,7 +216,6 @@ omit = [
 pythonpath = ['.']
 addopts = [
   '--ds=app.settings.test',
-  '-vvvv',
   '-p',
   'no:warnings',
   '--dist=worksteal',

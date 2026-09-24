@@ -1,5 +1,53 @@
 # Changelog
 
+## [2.275.0](https://github.com/Flagsmith/flagsmith/compare/v2.274.0...v2.275.0) (2026-09-23)
+
+
+### Features
+
+* Add customersuccess@flagsmith.com to cc for API usage notifications ([#7157](https://github.com/Flagsmith/flagsmith/issues/7157)) ([b0a1c9f](https://github.com/Flagsmith/flagsmith/commit/b0a1c9f75d712ca3541c0a2f61b1f1394e5102ed))
+* **usage:** return the current billing period ([#8501](https://github.com/Flagsmith/flagsmith/issues/8501)) ([3e5fa33](https://github.com/Flagsmith/flagsmith/commit/3e5fa33b2370f59357b4f3c549c1b66b5cb9d26b))
+
+
+### Bug Fixes
+
+* **sdk:** title evaluation context flags as FlagResults ([#8581](https://github.com/Flagsmith/flagsmith/issues/8581)) ([515caef](https://github.com/Flagsmith/flagsmith/commit/515caef277ef0409d13f2f61e607ca1394b2fe59))
+* **Segments:** Restore segment list performance on large installations ([#8587](https://github.com/Flagsmith/flagsmith/issues/8587)) ([b10c6b3](https://github.com/Flagsmith/flagsmith/commit/b10c6b3ff48a52fe3af3c22e317ac2980abcfc93))
+* **usage:** drop the app-wide quota banner on the usage dashboard ([#8512](https://github.com/Flagsmith/flagsmith/issues/8512)) ([d04bfb5](https://github.com/Flagsmith/flagsmith/commit/d04bfb521f88820a3064480349fb3d32c56e2e9f))
+
+## [2.274.0](https://github.com/Flagsmith/flagsmith/compare/v2.273.0...v2.274.0) (2026-09-23)
+
+
+### Features
+
+* **Flag Dependency:** Index flag references ([#8525](https://github.com/Flagsmith/flagsmith/issues/8525)) ([bd32c3f](https://github.com/Flagsmith/flagsmith/commit/bd32c3fff2b7750943a81b9f503a1223171f25b2))
+
+
+### Bug Fixes
+
+* **chargebee:** Handle different billing period units ([#8568](https://github.com/Flagsmith/flagsmith/issues/8568)) ([0d91368](https://github.com/Flagsmith/flagsmith/commit/0d9136890a2612dca9ad458ccdbd9bb887eadccd))
+* **identities:** restore diverged override labels removed in value editor refactor ([#8550](https://github.com/Flagsmith/flagsmith/issues/8550)) ([d1d6560](https://github.com/Flagsmith/flagsmith/commit/d1d6560debd168be581bf58c49f5397358389b6b))
+* **integrations:** fix Slack integration modal after redirect ([#8542](https://github.com/Flagsmith/flagsmith/issues/8542)) ([1fd274c](https://github.com/Flagsmith/flagsmith/commit/1fd274c9a91c4ac8c3c4a8e93fbbf4b2906a0bb8))
+* Restrict size of hidden values ([#8531](https://github.com/Flagsmith/flagsmith/issues/8531)) ([66dc2e9](https://github.com/Flagsmith/flagsmith/commit/66dc2e9ed00b779e09479e29940efceacb10d95d))
+* **Segments:** Improve and consolidate service for fetching overrides ([#8548](https://github.com/Flagsmith/flagsmith/issues/8548)) ([49d957a](https://github.com/Flagsmith/flagsmith/commit/49d957aa3228d8733b43951c099840577ff78338))
+* **Segments:** Segment Change Requests don't inherit `rules_data` ([#8537](https://github.com/Flagsmith/flagsmith/issues/8537)) ([190c645](https://github.com/Flagsmith/flagsmith/commit/190c645d83d11f627a241cd4e5540d0a26ad73ba))
+
+
+### CI
+
+* pre-commit autoupdate ([#8562](https://github.com/Flagsmith/flagsmith/issues/8562)) ([575561d](https://github.com/Flagsmith/flagsmith/commit/575561d4530184a30a28d1b73191e22ade23d9a3))
+* scope uv-lock pre-commit hooks to their project directories ([#8534](https://github.com/Flagsmith/flagsmith/issues/8534)) ([f345ed5](https://github.com/Flagsmith/flagsmith/commit/f345ed560d5d4dcbc8573f76a370a29948ba8b86))
+
+
+### Docs
+
+* point Node.js SDK versions and migration note to @flagsmith/nodejs ([#8490](https://github.com/Flagsmith/flagsmith/issues/8490)) ([18e260a](https://github.com/Flagsmith/flagsmith/commit/18e260a108d316f192570d20a602ec40c27fac94))
+
+
+### Tests
+
+* Improve API tests performance ([#8378](https://github.com/Flagsmith/flagsmith/issues/8378)) ([47db6dc](https://github.com/Flagsmith/flagsmith/commit/47db6dcafc3c4aac378b3f9332bf94dc46e4ec07))
+
 ## [2.273.0](https://github.com/Flagsmith/flagsmith/compare/v2.272.0...v2.273.0) (2026-09-16)
 
 

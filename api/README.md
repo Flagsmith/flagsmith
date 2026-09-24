@@ -11,9 +11,13 @@ To install dev dependencies, run `make install opts='--extra dev'`. Only Flagsmi
 
 To run linters, run `make lint`.
 
-To run tests, run `make test`.
+To run tests, run `make test`. This runs tests in parallel across your cores via xdist.
 
-To run a subset of tests or an individual test, run `make test opts='<pytest args>'`. If the number of test is too low for xdist, consider adding `-n0` to pytest args.
+To run a subset of tests or an individual test, run `make test opts='<pytest args>'`. This disables xdist by default; add `-n auto` to pytest args to override.
+
+To measure coverage, run `make test-coverage`.
+
+Tests run against `test-db`, a separate PostgreSQL service that keeps its data in RAM. In general, you should not need `--reuse-db`, but it is supported.
 
 To prepare a dev database, run `make docker-up django-migrate`.
 

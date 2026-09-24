@@ -431,7 +431,7 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
       return String(value ?? '')
     }
     if (field.hidden && typeof value === 'string') {
-      return value.replace(/./g, '*')
+      return '**********'
     }
     return value ?? ''
   }

@@ -141,5 +141,6 @@ class ChangeRequestCommitService:
             live_segment.name = draft_segment.name
             live_segment.description = draft_segment.description
             live_segment.feature = draft_segment.feature
+            live_segment.rules_data = draft_segment.rules_data
             live_segment.save()
             live_segment.copy_rules_and_conditions_from(draft_segment)

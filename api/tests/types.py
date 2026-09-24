@@ -44,3 +44,14 @@ class EnableFeaturesFixture(Protocol):
 
 class MigratorFactory(Protocol):
     def __call__(self, name: Optional[str] = None) -> Migrator: ...
+
+
+class CreateSegmentOverrideFixture(Protocol):
+    def __call__(
+        self,
+        environment_api_key: str,
+        feature_id: int,
+        segment_id: int,
+        enabled: bool = True,
+        priority: int | None = None,
+    ) -> None: ...
