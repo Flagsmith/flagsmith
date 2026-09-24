@@ -4183,6 +4183,39 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+  '/api/v1/environments/{environment_api_key}/features/{feature_id}/dependencies/':
+    get:
+      operationId: api_v1_environments_features_dependencies_retrieve
+      description: List the features the feature depends on in the environment.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyList'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyErrorDetail'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Features
   '/api/v1/environments/{environment_api_key}/features/{feature_id}/dependencies/{prerequisite_feature_id}/':
     post:
       operationId: api_v1_environments_features_dependencies_create
@@ -4217,6 +4250,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/DependencyRefusedDetail'
         '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyErrorDetail'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Features
+  '/api/v1/environments/{environment_api_key}/features/{feature_id}/dependents/':
+    get:
+      operationId: api_v1_environments_features_dependents_retrieve
+      description: List the features depending on the feature in the environment.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyList'
+        '404':
           description: ''
           content:
             application/json:
@@ -20904,6 +20970,124 @@ components:
         - code
         - message
       title: DependencyErrorDetail
+    DependencyList:
+      description: The live dependencies a feature takes part in within an environment.
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyListDependencyEdge'
+          title: Results
+      required:
+        - results
+      title: DependencyList
+    DependencyListDependencyEdge:
+      description: One feature's dependency on another.
+      type: object
+      properties:
+        feature:
+          $ref: '#/components/schemas/DependencyList_Feature'
+        prerequisite:
+          $ref: '#/components/schemas/DependencyList_Feature'
+        segment:
+          $ref: '#/components/schemas/DependencyList_ReferencingSegment'
+      required:
+        - feature
+        - prerequisite
+        - segment
+      title: DependencyEdge
+    DependencyListSegmentCondition:
+      type: object
+      properties:
+        property:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Property
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/Operator2a7Enum'
+          title: Operator
+        value:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Value
+        description:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Description
+      required:
+        - property
+        - operator
+        - value
+        - description
+      title: SegmentCondition
+    DependencyListSegmentRule:
+      type: object
+      properties:
+        type:
+          allOf:
+            - $ref: '#/components/schemas/TypeC8eEnum'
+          title: Type
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyListSegmentCondition'
+          title: Conditions
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyListSegmentRule'
+          title: Rules
+      required:
+        - type
+        - conditions
+      title: SegmentRule
+    DependencyList_Feature:
+      description: Either a feature or a prerequisite feature in a dependency graph.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+      required:
+        - id
+        - name
+      title: _Feature
+    DependencyList_ReferencingSegment:
+      description: The segment whose rules hold the `$.flags` condition making up a dependency.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyListSegmentRule'
+          title: Rules
+        condition_json_path:
+          type: string
+          title: Condition Json Path
+        is_system:
+          type: boolean
+          title: Is System
+      required:
+        - id
+        - name
+        - rules
+        - condition_json_path
+        - is_system
+      title: _ReferencingSegment
     DependencyRefusedDetail:
       oneOf:
         - $ref: '#/components/schemas/DependencyErrorDetail'

@@ -38,3 +38,9 @@ class DependencyEdge(TypedDict):
 
 
 DependencyPath = list[DependencyEdge]
+
+
+class DependencyList(TypedDict):
+    """The live dependencies a feature takes part in within an environment."""
+
+    results: list[DependencyEdge]

@@ -4,6 +4,7 @@ from collections.abc import Collection
 
 import structlog
 from django.db import transaction
+from django.db.models import QuerySet
 from flag_engine.segments import constants
 from ordered_model.models import OrderedModelQuerySet  # type: ignore[import-untyped]
 
@@ -27,16 +28,14 @@ from features.dependencies.mappers import (
 from features.dependencies.models import SegmentFlagReference
 from features.dependencies.types import (
     DependencyEdge,
+    DependencyList,
     DependencyPath,
     FeatureName,
     ReferencingEnvironment,
 )
 from features.models import Feature, FeatureSegment
 from segments.models import Segment
-from segments.services import (
-    get_all_live_or_scheduled_overrides,
-    write_segment_rules,
-)
+from segments.services import get_live_overrides, write_segment_rules
 from segments.types import SegmentCondition, SegmentRule
 from users.models import FFAdminUser
 
@@ -132,13 +131,15 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
         return
     edges_by_environment_id: dict[int, dict[FeatureName, list[DependencyEdge]]] = {}
     for override in (
-        get_all_live_or_scheduled_overrides()
+        get_live_overrides(include_scheduled=True)
         .filter(segment=segment)
         .select_related("environment", "feature")
     ):
         if override.environment_id not in edges_by_environment_id:
             edges_by_environment_id[override.environment_id] = _get_dependency_edges(
-                override.environment
+                get_live_overrides(include_scheduled=True).filter(
+                    environment=override.environment
+                )
             )
         edges = edges_by_environment_id[override.environment_id]
         pending: list[DependencyPath] = [
@@ -172,7 +173,7 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
 
 
 def _get_dependency_edges(
-    environment: Environment,
+    overrides: "QuerySet[FeatureSegment]",
 ) -> dict[FeatureName, list[DependencyEdge]]:
     edges: dict[FeatureName, list[DependencyEdge]] = defaultdict(list)
     for (
@@ -185,20 +186,16 @@ def _get_dependency_edges(
         segment_rules,
         condition_json_path,
         is_system_segment,
-    ) in (
-        get_all_live_or_scheduled_overrides()
-        .filter(environment=environment, segment__flag_references__isnull=False)
-        .values_list(
-            "feature__id",
-            "feature__name",
-            "segment__flag_references__prerequisite_feature__id",
-            "segment__flag_references__prerequisite_feature__name",
-            "segment__id",
-            "segment__name",
-            "segment__rules_data",
-            "segment__flag_references__condition_json_path",
-            "segment__is_system_segment",
-        )
+    ) in overrides.filter(segment__flag_references__isnull=False).values_list(
+        "feature__id",
+        "feature__name",
+        "segment__flag_references__prerequisite_feature__id",
+        "segment__flag_references__prerequisite_feature__name",
+        "segment__id",
+        "segment__name",
+        "segment__rules_data",
+        "segment__flag_references__condition_json_path",
+        "segment__is_system_segment",
     ):
         assert segment_rules is not None
         edges[feature_name].append(
@@ -218,6 +215,33 @@ def _get_dependency_edges(
             }
         )
     return edges
+
+
+def list_flag_dependencies(
+    *,
+    environment: Environment,
+    feature: Feature,
+) -> DependencyList:
+    """List the features the feature depends on in the environment."""
+    edges = _get_dependency_edges(get_live_overrides().filter(environment=environment))
+    return {"results": edges[feature.name]}
+
+
+def list_flag_dependents(
+    *,
+    environment: Environment,
+    feature: Feature,
+) -> DependencyList:
+    """List the features depending on the feature in the environment."""
+    edges = _get_dependency_edges(get_live_overrides().filter(environment=environment))
+    return {
+        "results": [
+            edge
+            for feature_edges in edges.values()
+            for edge in feature_edges
+            if edge["prerequisite"]["id"] == feature.id
+        ]
+    }
 
 
 def create_flag_dependency(
@@ -254,7 +278,9 @@ def create_flag_dependency(
     }
     segment_name = f"{feature.name}-dependencies-{environment.api_key}"
     with transaction.atomic():
-        edges = _get_dependency_edges(environment)
+        edges = _get_dependency_edges(
+            get_live_overrides(include_scheduled=True).filter(environment=environment)
+        )
         if existing_edges := [
             edge
             for edge in edges[feature.name]
@@ -298,11 +324,9 @@ def create_flag_dependency(
             )
             write_segment_rules(segment, rules)
             index_segment_flag_references(segment)
-            overrides: OrderedModelQuerySet = (
-                get_all_live_or_scheduled_overrides().filter(
-                    environment=environment, feature=feature
-                )
-            )
+            overrides: OrderedModelQuerySet = get_live_overrides(
+                include_scheduled=True
+            ).filter(environment=environment, feature=feature)
             update_flag(
                 environment=environment,
                 feature=feature,

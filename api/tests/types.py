@@ -1,7 +1,9 @@
+from datetime import datetime
 from typing import Callable, Literal, Optional, Protocol
 
 from django_test_migrations.migrator import Migrator
 
+from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.permissions.models import UserOrganisationPermission
 from projects.models import UserProjectPermission
@@ -54,4 +56,15 @@ class CreateSegmentOverrideFixture(Protocol):
         segment_id: int,
         enabled: bool = True,
         priority: int | None = None,
+    ) -> None: ...
+
+
+class CreateChangeRequestSegmentOverrideFixture(Protocol):
+    def __call__(
+        self,
+        environment: Environment,
+        feature_id: int,
+        segment_id: int,
+        committed: bool = False,
+        live_from: datetime | None = None,
     ) -> None: ...

@@ -96,6 +96,20 @@ class DependencyExistsError(DependencyConflictError):
         )
 
 
+class EnvironmentNotFoundError(NotFound):
+    """Raised where an environment key does not exist."""
+
+    default_code = "environment_not_found"
+
+    def __init__(self, environment_api_key: str) -> None:
+        super().__init__(
+            {
+                "code": self.default_code,
+                "message": f"Environment key '{environment_api_key}' does not exist.",
+            }
+        )
+
+
 class FeatureNotFoundError(NotFound):
     """Raised where a feature ID is not in the environment's project."""
 
