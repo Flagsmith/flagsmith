@@ -10,7 +10,7 @@ from math import inf
 from operator import attrgetter
 from typing import TYPE_CHECKING, NamedTuple
 
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, prefetch_related_objects
 from flag_engine.context import types as engine_types
 from flag_engine.segments.constants import IS_SET
 from flag_engine.segments.types import ConditionOperator, RuleType
@@ -35,7 +35,6 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "IDENTITY_OVERRIDES_SEGMENT_KEY",
     "IDENTITY_OVERRIDES_SEGMENT_NAME",
     "map_condition_to_segment_condition",
     "map_environment_to_evaluation_context",
@@ -47,7 +46,19 @@ __all__ = (
 )
 
 
-IDENTITY_OVERRIDES_SEGMENT_KEY = IDENTITY_OVERRIDES_SEGMENT_NAME = "identity_overrides"
+IDENTITY_OVERRIDES_SEGMENT_NAME = "identity_overrides"
+
+_SEGMENT_RULES_LOOKUPS = (
+    "rules",
+    "rules__conditions",
+    "rules__rules",
+    "rules__rules__conditions",
+    "rules__rules__rules",
+    "rules__rules__rules__conditions",
+    "rules__rules__rules__rules",
+    "rules__rules__rules__rules__conditions",
+    "rules__rules__rules__rules__rules",
+)
 
 
 _rule_type_adapter: TypeAdapter[RuleType] = TypeAdapter(RuleType)
@@ -99,6 +110,9 @@ def map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
     )
+    if segments is not None:
+        segments = list(segments)
+        prefetch_related_objects(segments, *_SEGMENT_RULES_LOOKUPS)
 
     # No reading from ORM past this point!
 
@@ -128,7 +142,7 @@ def map_environment_to_evaluation_context(
     if identity_overrides:
         # An identity override outranks every segment override, which the
         # engine expresses as a priority no segment can beat.
-        context.setdefault("segments", {})[IDENTITY_OVERRIDES_SEGMENT_KEY] = (
+        context.setdefault("segments", {})[IDENTITY_OVERRIDES_SEGMENT_NAME] = (
             map_identity_overrides_to_segment_context(
                 [
                     to_feature_context(feature_state, priority=-inf)
@@ -202,6 +216,11 @@ def _resolve_feature_states(
     return resolved
 
 
+def _get_stored_traits(identity: "Identity") -> "Iterable[Trait]":
+    prefetch_related_objects([identity], "identity_traits")
+    return identity.identity_traits.all()
+
+
 def map_identity_to_identity_context(
     identity: "Identity",
     *,
@@ -214,7 +233,7 @@ def map_identity_to_identity_context(
         if traits is not None
         # A transient identity was never persisted, so it has no stored traits
         # to read, and asking for them would raise.
-        else identity.identity_traits.all()
+        else _get_stored_traits(identity)
         if identity.pk
         else ()
     )
@@ -316,7 +335,7 @@ def map_identity_overrides_to_segment_context(
 ) -> SegmentContext:
     """Express identity overrides as a segment matching the current identity."""
     return {
-        "key": IDENTITY_OVERRIDES_SEGMENT_KEY,
+        "key": IDENTITY_OVERRIDES_SEGMENT_NAME,
         "name": IDENTITY_OVERRIDES_SEGMENT_NAME,
         "rules": [
             {

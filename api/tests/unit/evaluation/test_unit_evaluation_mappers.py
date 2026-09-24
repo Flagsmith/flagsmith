@@ -1,18 +1,19 @@
 import pytest
 from flag_engine.segments.constants import EQUAL
+from pytest_django import DjangoAssertNumQueries
 from pytest_lazy_fixtures import lf as lazy_fixture
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
 from evaluation.mappers import (
-    IDENTITY_OVERRIDES_SEGMENT_KEY,
     IDENTITY_OVERRIDES_SEGMENT_NAME,
     map_environment_to_evaluation_context,
     map_feature_state_to_feature_context,
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 
 
@@ -127,8 +128,8 @@ def test_map_environment_to_evaluation_context__full_environment__returns_expect
                 ],
                 "metadata": {"pk": identity_matching_segment.pk},
             },
-            IDENTITY_OVERRIDES_SEGMENT_KEY: {
-                "key": IDENTITY_OVERRIDES_SEGMENT_KEY,
+            IDENTITY_OVERRIDES_SEGMENT_NAME: {
+                "key": IDENTITY_OVERRIDES_SEGMENT_NAME,
                 "name": IDENTITY_OVERRIDES_SEGMENT_NAME,
                 "rules": [
                     {
@@ -401,3 +402,34 @@ def test_map_feature_state_to_feature_context__keyed_options__returns_variant_ke
     assert [variant["key"] for variant in feature_context["variants"]] == [
         f"variant-{index}" for index in range(len(mv_fs_values))
     ]
+
+
+@pytest.mark.parametrize("segment_count", [1, 3])
+def test_map_environment_to_evaluation_context__inputs_not_prefetched__queries_do_not_scale(
+    segment_count: int,
+    environment: Environment,
+    project: Project,
+    identity: Identity,
+    trait: Trait,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    for i in range(segment_count):
+        segment = Segment.objects.create(name=f"segment_{i}", project=project)
+        rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+        Condition.objects.create(
+            rule=SegmentRule.objects.create(rule=rule, type=SegmentRule.ANY_RULE),
+            property=trait.trait_key,
+            operator=EQUAL,
+            value=trait.trait_value,
+        )
+    segments = Segment.objects.filter(project=project)
+    identity = Identity.objects.get(pk=identity.pk)
+
+    # When / Then
+    with django_assert_num_queries(9):
+        map_environment_to_evaluation_context(
+            environment=environment,
+            identity=identity,
+            segments=segments,
+        )
