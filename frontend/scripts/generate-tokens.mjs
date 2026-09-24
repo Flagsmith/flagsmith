@@ -46,6 +46,7 @@ const CHART_CATEGORY = 'chart'
 // no utilities: a .bg-primary-500 in a component would bypass the semantic
 // layer and stop following whatever that role is later defined as.
 const PRIMARY_CATEGORY = 'primary'
+const NEUTRAL_CATEGORY = 'neutral'
 
 // Build reverse lookups for primitives
 const hexToPrimitive = new Map()
@@ -146,6 +147,18 @@ function buildScssLines() {
   if (json[PRIMARY_CATEGORY]) {
     rootLines.push('  // Primary')
     for (const [, e] of sorted(json[PRIMARY_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  // Neutrals ramp
+  if (json[NEUTRAL_CATEGORY]) {
+    rootLines.push('  // Neutral')
+    for (const [, e] of sorted(json[NEUTRAL_CATEGORY])) {
       rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
       if (e.dark && e.dark !== e.light) {
         darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
