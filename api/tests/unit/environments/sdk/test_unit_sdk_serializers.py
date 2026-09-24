@@ -1,5 +1,4 @@
 import pytest
-from django.db.models import Q
 from pytest_mock import MockerFixture
 
 from core.request_origin import RequestOrigin
@@ -57,13 +56,15 @@ def test_identify_with_traits_serializer__create_or_existing_identity__runs_iden
     assert identity.identifier == identifier
 
 
-def test_identify_with_traits_serializer__additional_filters_in_context__filters_expected(
+def test_identify_with_traits_serializer__hide_server_key_only_in_context__excludes_server_key_only_flags(
     mocker: MockerFixture,
     environment: Environment,
     feature: Feature,
     identity: Identity,
 ) -> None:
     # Given
+    feature.is_server_key_only = True
+    feature.save()
     data = {
         "identifier": identity.identifier,
         "traits": [],
@@ -75,16 +76,16 @@ def test_identify_with_traits_serializer__additional_filters_in_context__filters
         context={
             "environment": environment,
             "request": request_mock,
-            "feature_states_additional_filters": ~Q(feature_id=feature.id),
+            "hide_server_key_only": True,
         },
     )
 
     # When
     assert serializer.is_valid()
-    serializer.save()  # type: ignore[no-untyped-call]
+    identity_flags_and_traits = serializer.save()  # type: ignore[no-untyped-call]
 
     # Then
-    assert "flags" not in serializer.data
+    assert identity_flags_and_traits["flags"] == []
 
 
 def test_identify_with_traits_serializer__transient__identity_and_traits_not_persisted(

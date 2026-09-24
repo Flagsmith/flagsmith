@@ -1053,7 +1053,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
                     feature_state
                     for feature_state in get_environment_feature_states(
                         request.environment,
-                        additional_filters=self._additional_filters,
+                        hide_server_key_only=self._hide_server_key_only,
                         from_replica=True,
                     )
                     if feature_state.evaluation_result["name"] == feature_name
@@ -1074,7 +1074,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             data = self.get_serializer(
                 get_environment_feature_states(
                     request.environment,
-                    additional_filters=self._additional_filters,
+                    hide_server_key_only=self._hide_server_key_only,
                     from_replica=True,
                 ),
                 many=True,
@@ -1087,13 +1087,8 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         )
 
     @property
-    def _additional_filters(self) -> Q | None:
-        # Disabled flags are hidden after evaluating, so that a disabled
-        # override is not passed over in favour of an enabled default.
-        if self.request.originated_from is RequestOrigin.CLIENT:
-            return Q(feature__is_server_key_only=False)
-
-        return None
+    def _hide_server_key_only(self) -> bool:
+        return self.request.originated_from is RequestOrigin.CLIENT
 
     def _get_flags_from_cache(
         self,
@@ -1107,7 +1102,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             data = self.get_serializer(
                 get_environment_feature_states(
                     environment,
-                    additional_filters=self._additional_filters,
+                    hide_server_key_only=self._hide_server_key_only,
                     from_replica=True,
                 ),
                 many=True,
