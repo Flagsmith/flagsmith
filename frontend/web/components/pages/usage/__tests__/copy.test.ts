@@ -115,7 +115,7 @@ describe('projectionNote', () => {
         { overLimit: false, percentOfLimit: 94, total: 1900000 },
         '2026-08-17T00:00:00Z',
       ),
-    ).toBe('On track to use ~1.9M (94% of your limit) by 17 Aug.')
+    ).toBe('Estimated to reach ~1.9M (94% of your limit) by 17 Aug.')
   })
 
   it('says so when the line lands over the limit', () => {
@@ -134,7 +134,7 @@ describe('projectionNote', () => {
         { overLimit: false, percentOfLimit: 0, total: 100 },
         '2026-08-17T00:00:00Z',
       ),
-    ).toBe('On track to use ~100 (0% of your limit) by 17 Aug.')
+    ).toBe('Estimated to reach ~100 (0% of your limit) by 17 Aug.')
   })
 
   it('omits the share when there is no limit', () => {
@@ -143,6 +143,6 @@ describe('projectionNote', () => {
         { overLimit: false, percentOfLimit: undefined, total: 100 },
         '2026-08-17T00:00:00Z',
       ),
-    ).toBe('On track to use ~100 by 17 Aug.')
+    ).toBe('Estimated to reach ~100 by 17 Aug.')
   })
 })

@@ -117,7 +117,9 @@ export const projectionNote = (
   projection: Projection,
   periodEndsAt: string,
 ): string => {
-  const landing = `On track to use ~${Format.shortenNumber(projection.total)}`
+  const landing = `Estimated to reach ~${Format.shortenNumber(
+    projection.total,
+  )}`
   const share =
     projection.percentOfLimit === undefined
       ? ''
