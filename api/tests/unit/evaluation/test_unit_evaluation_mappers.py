@@ -453,3 +453,24 @@ def test_map_environment_to_evaluation_context__additional_filters__narrows_feat
 
     # Then
     assert set(context["features"]) == {other_feature.name}
+
+
+@pytest.mark.parametrize(
+    "evaluated_identity, expected_variant_count",
+    [(lazy_fixture("identity"), 3), (None, 0)],
+)
+def test_map_environment_to_evaluation_context__multivariate_feature__maps_variants_for_identity_only(
+    evaluated_identity: Identity | None,
+    expected_variant_count: int,
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given / When
+    context = map_environment_to_evaluation_context(
+        environment=environment,
+        identity=evaluated_identity,
+    )
+
+    # Then
+    feature_context = context["features"][multivariate_feature.name]
+    assert len(feature_context.get("variants", [])) == expected_variant_count
