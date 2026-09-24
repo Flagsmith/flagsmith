@@ -925,11 +925,11 @@ def test_get_flags__multivariate_feature__expected_num_queries(
 ) -> None:
     # Given
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-    api_client.get(reverse("api-v1:flags"))
+    api_client.get("/api/v1/flags/")
 
     # When / Then
     with django_assert_num_queries(1):
-        response = api_client.get(reverse("api-v1:flags"))
+        response = api_client.get("/api/v1/flags/")
     assert response.status_code == status.HTTP_200_OK
 
 
