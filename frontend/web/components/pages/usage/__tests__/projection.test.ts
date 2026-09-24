@@ -69,48 +69,11 @@ describe('projectUsage', () => {
     expect(projectUsage(900_000, 2_000_000, PERIOD)).toBeDefined()
   })
 
-  describe('when the usage data lags the clock', () => {
-    // Measured through 10 July is ten days of a thirty day period, so the
-    // rate is a third of what the clock's fifteen days would have given.
-    it('divides by the days the total covers, not the days elapsed', () => {
-      expect(projectUsage(600_000, null, PERIOD, '2026-07-10')?.total).toBe(
-        1_800_000,
-      )
-    })
-
-    it('counts the last measured day as complete', () => {
-      // Measured through 15 July is exactly half the period, matching the
-      // clock at midnight on the 16th.
-      expect(projectUsage(600_000, null, PERIOD, '2026-07-15')?.total).toBe(
-        1_200_000,
-      )
-    })
-
-    it('falls back to the clock without a measured day', () => {
-      expect(projectUsage(600_000, null, PERIOD)?.total).toBe(1_200_000)
-    })
-
-    it('ignores a measured day outside the period', () => {
-      expect(projectUsage(600_000, null, PERIOD, '2026-06-20')?.total).toBe(
-        1_200_000,
-      )
-    })
-
-    it('ignores an unparseable measured day', () => {
-      expect(projectUsage(600_000, null, PERIOD, '2026-13-45')?.total).toBe(
-        1_200_000,
-      )
-    })
-
-    // Two days of data cannot carry a projection, however far the clock has
-    // run past them.
-    it('withholds a projection while the data covers too little', () => {
-      jest.setSystemTime(new Date('2026-07-20T00:00:00Z'))
-
-      expect(
-        projectUsage(100_000, 2_000_000, PERIOD, '2026-07-02'),
-      ).toBeUndefined()
-    })
+  // The response carries no row for a quiet day, so the last row is the last
+  // day with traffic. Elapsed has to come from the clock instead.
+  it('divides by time elapsed, not by days that had traffic', () => {
+    // Half the period gone, whenever the calls actually arrived.
+    expect(projectUsage(600_000, null, PERIOD)?.total).toBe(1_200_000)
   })
 })
 

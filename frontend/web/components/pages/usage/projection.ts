@@ -17,18 +17,11 @@ export type Projection = {
   overLimit: boolean
 }
 
-/**
- * A straight line through usage so far, not a forecast.
- *
- * `lastMeasuredOn` is the last day the usage data covers. Usage arrives a day
- * at a time, so measuring elapsed time against the clock would divide the
- * total by days it does not include yet and read the rate low.
- */
+/** A straight line through usage so far, not a forecast. */
 export const projectUsage = (
   total: number,
   limit: PlanLimit,
   period: CurrentBillingPeriod | null | undefined,
-  lastMeasuredOn?: string,
 ): Projection | undefined => {
   if (!period) {
     return undefined
@@ -47,16 +40,11 @@ export const projectUsage = (
     return undefined
   }
 
-  const measured = lastMeasuredOn ? moment.utc(lastMeasuredOn) : undefined
-  // The total covers whole days, so elapsed runs to the end of the last of
-  // them rather than to this instant.
-  const measuredThrough =
-    measured?.isValid() && measured.isSameOrAfter(starts)
-      ? measured.clone().startOf('day').add(1, 'day')
-      : now
-
+  // Elapsed comes from the clock, not from the last day with usage on it.
+  // The response carries no row for a quiet day, so the last row is the last
+  // day with traffic, and dividing by that would inflate a rate that stopped.
   const periodMs = ends.diff(starts)
-  const elapsedMs = Math.min(measuredThrough.diff(starts), periodMs)
+  const elapsedMs = Math.min(now.diff(starts), periodMs)
   if (periodMs <= 0 || elapsedMs <= 0) {
     return undefined
   }
