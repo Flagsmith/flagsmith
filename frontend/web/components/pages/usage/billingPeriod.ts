@@ -30,8 +30,10 @@ export const billingPeriodCopy = (
   }
 
   const now = moment.utc()
-  const startFormat = starts.isSame(ends, 'year') ? 'D MMM' : 'D MMM YYYY'
   const lastDay = lastDayOf(period.ends_at)
+  // Against the last day, not the end: a period closing on 1 January sits
+  // inside one year and should name it once.
+  const startFormat = starts.isSame(lastDay, 'year') ? 'D MMM' : 'D MMM YYYY'
   // Calendar days, not whole 24 hour blocks: a reset at midnight tonight is
   // still today, and one at midnight tomorrow is a day away.
   const daysLeft = Math.max(

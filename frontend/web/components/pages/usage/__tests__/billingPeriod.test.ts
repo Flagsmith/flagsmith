@@ -28,6 +28,16 @@ describe('billingPeriodCopy', () => {
     expect(copy?.range).toBe('15 Dec 2026 – 14 Jan 2027')
   })
 
+  // The period ends on 1 January but its last day is 31 December, so the
+  // range sits inside one year and should name it once.
+  it('names the year once when only the reset falls in the next one', () => {
+    const copy = billingPeriodCopy(
+      period('2026-12-01T00:00:00Z', '2027-01-01T00:00:00Z'),
+    )
+
+    expect(copy?.range).toBe('1 Dec – 31 Dec 2026')
+  })
+
   it('says today on the last day rather than in 0 days', () => {
     const copy = billingPeriodCopy(
       period('2026-06-21T00:00:00Z', '2026-07-21T06:00:00Z'),
