@@ -8,6 +8,7 @@ import pytest
 from django.conf import settings
 from django.core import mail
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import (  # type: ignore[attr-defined]
@@ -782,3 +783,56 @@ def test_register__marketing_consent_given__defaults_to_true(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["marketing_consent_given"] is True
+
+
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
+        {"SEND_ACTIVATION_EMAIL": True, "SEND_CONFIRMATION_EMAIL": False},
+        settings.DJOSER,
+    )
+)
+def test_register_and_activate__hubspot_enabled__creates_contact_on_activation_only(
+    db: None,
+    api_client: APIClient,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    mock_create_contact_on_signup = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
+    )
+    mock_create_contact_on_activation = mocker.patch(
+        "custom_auth.signals.create_hubspot_contact_for_user"
+    )
+    email = f"test-{uuid.uuid4()}@example.com"
+    register_data = {
+        "email": email,
+        "password": FFAdminUser.objects.make_random_password(),
+        "first_name": "test",
+        "last_name": "register",
+    }
+
+    # When
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    api_client.post(register_url, data=register_data)
+
+    # Then
+    # The signup is unverified, so nothing reaches HubSpot yet
+    mock_create_contact_on_signup.delay.assert_not_called()
+    mock_create_contact_on_activation.delay.assert_not_called()
+
+    # When the user activates their account
+    url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]  # type: ignore[arg-type]
+    uid, token = url.split("/")[-2:]
+    activate_url = reverse("api-v1:custom_auth:ffadminuser-activation")
+    api_client.post(
+        activate_url,
+        data={"uid": uid, "token": token},
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
+
+    # Then the contact is created
+    user = FFAdminUser.objects.get(email=email)
+    assert user.is_active is True
+    mock_create_contact_on_activation.delay.assert_called_once_with(args=(user.id,))
