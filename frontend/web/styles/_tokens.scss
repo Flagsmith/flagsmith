@@ -56,7 +56,7 @@
   --purple-400: #9168fd;
   --purple-500: #7a4dfc;
   --purple-600: #6837fc;
-  --purple-700: #4e25db;
+  --purple-700: #4f28d8;
   --purple-800: #3919b7;
   --purple-900: #1a0a78;
   --purple-950: #1e163e;
@@ -147,6 +147,15 @@
   --color-icon-success: var(--green-500);
   --color-icon-warning: var(--gold-600);
 
+  // Primary
+  --primary-50: var(--purple-50);
+  --primary-100: var(--purple-100);
+  --primary-300: var(--purple-200);
+  --primary-400: var(--purple-400);
+  --primary-500: var(--purple-600);
+  --primary-600: var(--purple-700);
+  --primary-900: var(--purple-900);
+
   // Chart
   --color-chart-1: var(--blue-500);
   --color-chart-2: var(--red-500);
@@ -236,6 +245,12 @@
   --color-icon-default: var(--slate-0);
   --color-icon-disabled: oklch(from var(--slate-0) l c h / 0.32);
   --color-icon-secondary: var(--slate-300);
+  --primary-50: var(--purple-900);
+  --primary-100: var(--purple-700);
+  --primary-300: var(--purple-600);
+  --primary-500: var(--purple-200);
+  --primary-600: var(--purple-100);
+  --primary-900: var(--purple-50);
   --color-chart-1: var(--blue-400);
   --color-chart-2: var(--red-400);
   --color-chart-3: var(--green-400);

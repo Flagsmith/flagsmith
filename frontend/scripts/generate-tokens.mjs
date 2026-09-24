@@ -42,6 +42,10 @@ const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 const DESCRIBED = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 // Chart colours are like colour tokens (light/dark) but not under "color"
 const CHART_CATEGORY = 'chart'
+// The Primary ramp: light/dark like colour tokens. Custom properties only,
+// no utilities: a .bg-primary-500 in a component would bypass the semantic
+// layer and stop following whatever that role is later defined as.
+const PRIMARY_CATEGORY = 'primary'
 
 // Build reverse lookups for primitives
 const hexToPrimitive = new Map()
@@ -130,6 +134,18 @@ function buildScssLines() {
   for (const [category, entries] of Object.entries(json.color)) {
     rootLines.push(`  // ${cap(category)}`)
     for (const [, e] of sorted(entries)) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  // Primary ramp
+  if (json[PRIMARY_CATEGORY]) {
+    rootLines.push('  // Primary')
+    for (const [, e] of sorted(json[PRIMARY_CATEGORY])) {
       rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
       if (e.dark && e.dark !== e.light) {
         darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)

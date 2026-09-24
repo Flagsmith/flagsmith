@@ -174,7 +174,7 @@ export const colorSurfaceAction = 'var(--color-surface-action, #6837fc)'
 export const colorSurfaceActionActive =
   'var(--color-surface-action-active, #3919b7)'
 export const colorSurfaceActionHover =
-  'var(--color-surface-action-hover, #4e25db)'
+  'var(--color-surface-action-hover, #4f28d8)'
 export const colorSurfaceActionMuted =
   'var(--color-surface-action-muted, rgba(104, 55, 252, 0.16))'
 export const colorSurfaceActionSubtle =
