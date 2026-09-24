@@ -299,17 +299,18 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         raise api_error
 
     def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        # Mirrors `UpdateModelMixin.update`, except that we warm the prefetch
-        # cache before rendering the response. The nested writes end with a
-        # `refresh_from_db()`, which drops whatever `get_queryset` prefetched,
-        # so without this the response walks the rule tree a query at a time.
         partial = kwargs.pop("partial", False)
         segment = self.get_object()
         serializer = self.get_serializer(segment, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         segment = cast(Segment, serializer.instance)
+
+        # Additional step here from UpdateModelMixin.update to warm the prefetch cache.
+        # Without this, the response queries the database for every record in the segment
+        # tree. TODO: remove with https://github.com/Flagsmith/flagsmith/issues/7814
         prefetch_related_objects([segment], *get_segment_serializer_prefetches())
+
         return Response(serializer.data)
 
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
@@ -335,8 +336,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.is_valid(raise_exception=True)
         clone = source_segment.clone(name=serializer.validated_data["name"])
         enqueue_membership_refresh(clone.project)
-        # The clone's rules were just written row by row, so nothing is cached
-        # on it; warm the cache rather than let the response walk the tree.
+        # The clone's rules were just written row by row, so nothing is cached on it.
         prefetch_related_objects([clone], *get_segment_serializer_prefetches())
         return Response(SegmentSerializer(clone).data, status=status.HTTP_201_CREATED)
 
