@@ -4,7 +4,7 @@ from typing import cast
 
 import structlog
 from django.conf import settings
-from redis.exceptions import RedisError
+from redis.exceptions import RedisClusterException, RedisError
 
 from experimentation.dataclasses import WarehouseDeliveryStatus
 from experimentation.ingestion_redis import get_client
@@ -47,21 +47,14 @@ def publish_warehouse_connection(
     get_client().set(redis_key, json.dumps(document))
 
 
-def remove_warehouse_connection(
-    client_api_key: str,
-    *,
-    connection_ids: Iterable[int],
-) -> None:
-    """Stops the warehouse-delivery service delivering for the environment and
-    forgets the outcomes it left for these connections, so a connection that
-    is deleted or switched back to Flagsmith's warehouse never shows a stale
-    failure."""
-    redis_key = f"{WAREHOUSE_CONNECTION_KEY_PREFIX}{client_api_key}"
-    client = get_client()
-    client.delete(redis_key)
+def remove_warehouse_connection(client_api_key: str) -> None:
+    get_client().delete(f"{WAREHOUSE_CONNECTION_KEY_PREFIX}{client_api_key}")
+
+
+def delete_warehouse_delivery_statuses(connection_ids: Iterable[int]) -> None:
     fields = [str(connection_id) for connection_id in connection_ids]
     if fields:
-        client.hdel(WAREHOUSE_DELIVERY_STATUS_KEY, *fields)
+        get_client().hdel(WAREHOUSE_DELIVERY_STATUS_KEY, *fields)
 
 
 def get_warehouse_delivery_statuses(
@@ -82,7 +75,7 @@ def get_warehouse_delivery_statuses(
             list[bytes | None],
             get_client().hmget(WAREHOUSE_DELIVERY_STATUS_KEY, fields),
         )
-    except RedisError:
+    except (RedisError, RedisClusterException):
         logger.warning("delivery_status.unavailable", exc_info=True)
         return {}
     statuses: dict[int, WarehouseDeliveryStatus] = {}

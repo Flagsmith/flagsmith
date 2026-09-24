@@ -187,7 +187,7 @@ Attributes:
 ### `experimentation.delivery_status.unavailable`
 
 Logged at `warning` from:
- - `api/experimentation/warehouse_delivery_sync_service.py:86`
+ - `api/experimentation/warehouse_delivery_sync_service.py:79`
 
 Attributes:
  - `exc_info`
@@ -195,7 +195,7 @@ Attributes:
 ### `experimentation.delivery_status.unreadable`
 
 Logged at `warning` from:
- - `api/experimentation/warehouse_delivery_sync_service.py:101`
+ - `api/experimentation/warehouse_delivery_sync_service.py:94`
 
 Attributes:
  - `connection.id`
@@ -212,7 +212,7 @@ Attributes:
 ### `experimentation.exposures.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:145`
+ - `api/experimentation/tasks.py:151`
 
 Attributes:
  - `environment.id`
@@ -224,7 +224,7 @@ Attributes:
 ### `experimentation.results.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:183`
+ - `api/experimentation/tasks.py:189`
 
 Attributes:
  - `environment.id`

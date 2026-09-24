@@ -54,8 +54,9 @@ def sync_environment_ingestion(environment_id: int) -> None:
             .filter(environment_id=environment.id)
             .values_list("id", flat=True)
         )
-        warehouse_delivery_sync_service.remove_warehouse_connection(
-            environment.api_key, connection_ids=list(connection_ids)
+        warehouse_delivery_sync_service.remove_warehouse_connection(environment.api_key)
+        warehouse_delivery_sync_service.delete_warehouse_delivery_statuses(
+            list(connection_ids)
         )
         return
 
@@ -65,8 +66,9 @@ def sync_environment_ingestion(environment_id: int) -> None:
     # events for an environment with no destination to Flagsmith's own topic.
     if connection.warehouse_type == WarehouseType.FLAGSMITH:
         ingestion_sync_service.delete_ingestion_destination(environment.api_key)
-        warehouse_delivery_sync_service.remove_warehouse_connection(
-            environment.api_key, connection_ids=[connection.id]
+        warehouse_delivery_sync_service.remove_warehouse_connection(environment.api_key)
+        warehouse_delivery_sync_service.delete_warehouse_delivery_statuses(
+            [connection.id]
         )
     else:
         warehouse_delivery_sync_service.publish_warehouse_connection(
@@ -75,6 +77,10 @@ def sync_environment_ingestion(environment_id: int) -> None:
             warehouse_type=connection.warehouse_type,
             config=connection.config or {},
             credentials=connection.credentials,
+        )
+        # Its last outcome was about the details just replaced.
+        warehouse_delivery_sync_service.delete_warehouse_delivery_statuses(
+            [connection.id]
         )
         ingestion_sync_service.set_ingestion_destination(
             environment.api_key,

@@ -5,7 +5,7 @@ import pytest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
-from redis.exceptions import RedisError
+from redis.exceptions import RedisClusterException, RedisError
 
 from experimentation import warehouse_delivery_sync_service
 from experimentation.dataclasses import WarehouseDeliveryStatus
@@ -74,36 +74,41 @@ def test_publish_warehouse_connection__no_credentials__writes_null(
     assert json.loads(raw)["credentials"] is None
 
 
-def test_remove_warehouse_connection__connection_ids__deletes_document_and_outcomes(
+def test_remove_warehouse_connection__client_api_key__deletes_document(
     redis_client: Mock,
 ) -> None:
     # Given
 
     # When
-    warehouse_delivery_sync_service.remove_warehouse_connection(
-        "client-env-key", connection_ids=[42, 43]
-    )
+    warehouse_delivery_sync_service.remove_warehouse_connection("client-env-key")
 
-    # Then the delivery service stops finding the environment, and any failure
-    # it recorded for these connections can no longer be shown
+    # Then the delivery service stops finding the environment
     redis_client.delete.assert_called_once_with(
         "experimentation:environment_warehouses:client-env-key",
     )
+
+
+def test_delete_warehouse_delivery_statuses__connection_ids__deletes_their_outcomes(
+    redis_client: Mock,
+) -> None:
+    # Given
+
+    # When
+    warehouse_delivery_sync_service.delete_warehouse_delivery_statuses([42, 43])
+
+    # Then any outcome recorded for these connections can no longer be shown
     redis_client.hdel.assert_called_once_with(STATUS_KEY, "42", "43")
 
 
-def test_remove_warehouse_connection__no_connection_ids__deletes_document_only(
+def test_delete_warehouse_delivery_statuses__no_connection_ids__does_not_call_redis(
     redis_client: Mock,
 ) -> None:
     # Given an environment that never had a connection to forget outcomes for
 
     # When
-    warehouse_delivery_sync_service.remove_warehouse_connection(
-        "client-env-key", connection_ids=[]
-    )
+    warehouse_delivery_sync_service.delete_warehouse_delivery_statuses([])
 
     # Then
-    redis_client.delete.assert_called_once()
     redis_client.hdel.assert_not_called()
 
 
@@ -154,6 +159,26 @@ def test_get_warehouse_delivery_statuses__redis_unavailable__returns_nothing_and
 ) -> None:
     # Given the ingestion Redis does not answer
     redis_client.hmget.side_effect = RedisError("timeout")
+
+    # When
+    statuses = warehouse_delivery_sync_service.get_warehouse_delivery_statuses([42])
+
+    # Then the caller falls back to the stored status rather than failing
+    assert statuses == {}
+    assert log.has("delivery_status.unavailable", level="warning")
+
+
+def test_get_warehouse_delivery_statuses__cluster_unreachable_on_connect__returns_nothing_and_logs(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    # Given a cluster client that finds no reachable node as it is created
+    settings.INGESTION_REDIS_URL = "rediss://ingestion:6379"
+    mocker.patch(
+        "experimentation.warehouse_delivery_sync_service.get_client",
+        side_effect=RedisClusterException("Redis Cluster cannot be connected."),
+    )
 
     # When
     statuses = warehouse_delivery_sync_service.get_warehouse_delivery_statuses([42])

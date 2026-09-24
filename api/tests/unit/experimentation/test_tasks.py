@@ -73,8 +73,9 @@ def test_sync_environment_ingestion__flagsmith_connection__whitelists_valid_keys
     # whitelisted
     assert mock_service.mock_calls == [
         mocker.call.ingestion.delete_ingestion_destination(environment.api_key),
-        mocker.call.delivery.remove_warehouse_connection(
-            environment.api_key, connection_ids=[warehouse_connection.id]
+        mocker.call.delivery.remove_warehouse_connection(environment.api_key),
+        mocker.call.delivery.delete_warehouse_delivery_statuses(
+            [warehouse_connection.id]
         ),
         mocker.call.ingestion.set_ingestion_key(
             environment.api_key,
@@ -106,8 +107,9 @@ def test_sync_environment_ingestion__external_connection__publishes_then_routes_
     # When
     sync_environment_ingestion(environment_id=environment.id)
 
-    # Then the connection is in Redis before events are routed to the topic, and
-    # the key is whitelisted last, so no event arrives anywhere unplaced
+    # Then the connection is in Redis before events are routed to the topic, its
+    # outcome from before these details is forgotten, and the key is
+    # whitelisted last, so no event arrives anywhere unplaced
     assert mock_service.mock_calls == [
         mocker.call.delivery.publish_warehouse_connection(
             environment.api_key,
@@ -115,6 +117,9 @@ def test_sync_environment_ingestion__external_connection__publishes_then_routes_
             warehouse_type="clickhouse",
             config=clickhouse_connection.config,
             credentials={"password": "hunter2"},
+        ),
+        mocker.call.delivery.delete_warehouse_delivery_statuses(
+            [clickhouse_connection.id]
         ),
         mocker.call.ingestion.set_ingestion_destination(
             environment.api_key,
@@ -160,8 +165,9 @@ def test_sync_environment_ingestion__connection_deleted__removes_keys_and_destin
         mocker.call.ingestion.delete_ingestion_key(active_key.key),
         mocker.call.ingestion.delete_ingestion_key(inactive_key.key),
         mocker.call.ingestion.delete_ingestion_destination(environment.api_key),
-        mocker.call.delivery.remove_warehouse_connection(
-            environment.api_key, connection_ids=[clickhouse_connection.id]
+        mocker.call.delivery.remove_warehouse_connection(environment.api_key),
+        mocker.call.delivery.delete_warehouse_delivery_statuses(
+            [clickhouse_connection.id]
         ),
     ]
 
@@ -190,8 +196,9 @@ def test_sync_environment_ingestion__environment_deleted__removes_keys_and_desti
     assert mock_service.mock_calls == [
         mocker.call.ingestion.delete_ingestion_key(environment.api_key),
         mocker.call.ingestion.delete_ingestion_destination(environment.api_key),
-        mocker.call.delivery.remove_warehouse_connection(
-            environment.api_key, connection_ids=[clickhouse_connection.id]
+        mocker.call.delivery.remove_warehouse_connection(environment.api_key),
+        mocker.call.delivery.delete_warehouse_delivery_statuses(
+            [clickhouse_connection.id]
         ),
     ]
 
