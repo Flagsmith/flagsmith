@@ -1004,3 +1004,32 @@ def test_get_start_date_and_stop_date__term_over_a_year_old__counts_the_years(
 
     # Then
     assert date_start == datetime.fromisoformat(expected_start)
+
+
+# February is too short for a 31st, so deriving the previous period's end from
+# its own start would close the window on 28 January rather than 28 February.
+@pytest.mark.freeze_time("2026-03-01T00:00:00+00:00")
+def test_get_start_date_and_stop_date__previous_period_in_february__ends_on_the_28th(
+    db: None,
+    organisation: Organisation,
+) -> None:
+    # Given
+    sub_cache = OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=datetime.fromisoformat(
+            "2026-01-31T00:00:00+00:00"
+        ),
+        current_billing_term_ends_at=datetime.fromisoformat(
+            "2027-01-31T00:00:00+00:00"
+        ),
+    )
+
+    # When
+    date_start, date_stop = _get_start_date_and_stop_date_for_subscribed_organisation(
+        sub_cache=sub_cache,
+        period=PREVIOUS_BILLING_PERIOD,
+    )
+
+    # Then
+    assert date_start == datetime.fromisoformat("2026-01-31T00:00:00+00:00")
+    assert date_stop == datetime.fromisoformat("2026-02-28T00:00:00+00:00")
