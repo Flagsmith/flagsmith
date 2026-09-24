@@ -916,6 +916,23 @@ def test_sdk_feature_states_get__missing_feature_filter__returns_404(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
+def test_get_flags__multivariate_feature__expected_num_queries(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    multivariate_feature: Feature,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    api_client.get(reverse("api-v1:flags"))
+
+    # When / Then
+    with django_assert_num_queries(1):
+        response = api_client.get(reverse("api-v1:flags"))
+    assert response.status_code == status.HTTP_200_OK
+
+
 @pytest.mark.parametrize(
     "environment_value, project_value, disabled_flag_returned",
     (

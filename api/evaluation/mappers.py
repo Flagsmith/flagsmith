@@ -113,6 +113,8 @@ def map_environment_to_evaluation_context(
         identity=identity,
         additional_filters=additional_filters,
         from_replica=from_replica,
+        # The engine only splits between variants for an identity.
+        with_variants=identity is not None,
     )
     if segments is not None:
         segments = list(segments)
@@ -178,6 +180,7 @@ def _resolve_feature_states(
     identity: "Identity | None",
     additional_filters: "Q | None",
     from_replica: bool,
+    with_variants: bool,
 ) -> _ResolvedFeatureStates:
     """Read the feature states current for `environment`, split by what they override."""
     # Deferred: `environments.models` imports this module's package.
@@ -204,15 +207,18 @@ def _resolve_feature_states(
                     "multivariate_feature_option"
                 ),
             )
-        ],
+        ]
+        if with_variants
+        else [],
     )
 
     resolved = _ResolvedFeatureStates([], [], {}, {})
 
     for feature_state in feature_states:
-        resolved.mv_fs_values_by_feature_state_id[feature_state.pk] = (
-            feature_state.multivariate_feature_state_values.all()
-        )
+        if with_variants:
+            resolved.mv_fs_values_by_feature_state_id[feature_state.pk] = (
+                feature_state.multivariate_feature_state_values.all()
+            )
         if feature_state.identity_id is not None:
             resolved.identity_overrides.append(feature_state)
         elif (feature_segment := feature_state.feature_segment) is not None:
