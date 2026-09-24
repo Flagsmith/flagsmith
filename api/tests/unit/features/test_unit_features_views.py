@@ -865,6 +865,49 @@ def test_get_flags__segment_reading_identity_in_nested_rule__returns_environment
     assert flag["feature_state_value"] == "environment"
 
 
+def test_get_flags__segment_reading_server_key_only_flag_with_client_key__returns_segment_override(
+    api_client: APIClient,
+    environment: Environment,
+    project: Project,
+) -> None:
+    # Given
+    server_key_only_feature = Feature.objects.create(
+        name="server_key_only_feature",
+        project=project,
+        default_enabled=True,
+        is_server_key_only=True,
+    )
+    segment = Segment.objects.create(name="Server-key-only enabled", project=project)
+    Condition.objects.create(
+        rule=SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE),
+        property=f"$.flags.{server_key_only_feature.name}.enabled",
+        operator=EQUAL,
+        value="true",
+    )
+    feature = Feature.objects.create(
+        name="Test feature", project=project, initial_value="environment"
+    )
+    segment_override = FeatureState.objects.create(
+        feature=feature,
+        feature_segment=FeatureSegment.objects.create(
+            segment=segment, feature=feature, environment=environment
+        ),
+        environment=environment,
+    )
+    segment_override.feature_state_value.string_value = "segment"
+    segment_override.feature_state_value.save()
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(reverse("api-v1:flags"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    (flag,) = response.json()
+    assert flag["feature"]["name"] == feature.name
+    assert flag["feature_state_value"] == "segment"
+
+
 def test_get_flags__hide_disabled_flags_with_disabled_segment_override__excludes_flag(
     api_client: APIClient,
     environment: Environment,
