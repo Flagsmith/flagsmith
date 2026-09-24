@@ -456,6 +456,21 @@ def segment_rule(segment):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
+def child_segment_rule(segment_rule: SegmentRule) -> SegmentRule:
+    return SegmentRule.objects.create(rule=segment_rule, type=SegmentRule.ALL_RULE)
+
+
+@pytest.fixture()
+def segment_condition(child_segment_rule: SegmentRule) -> Condition:
+    return Condition.objects.create(
+        rule=child_segment_rule,
+        operator=EQUAL,
+        value="red",
+        description="Offered by Morpheus.",
+    )
+
+
+@pytest.fixture()
 def feature_specific_segment(feature: Feature) -> Segment:
     return Segment.objects.create(  # type: ignore[no-any-return]
         feature=feature, name="feature specific segment", project=feature.project

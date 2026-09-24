@@ -1,3 +1,4 @@
+import copy
 import json
 import random
 from collections.abc import Callable
@@ -535,12 +536,23 @@ def test_list_segments__filter_by_edge_identity__returns_only_matching_segments(
 
 
 @pytest.mark.parametrize(
-    "client",
-    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+    "client, expected_num_queries",
+    [
+        (lazy_fixture("admin_master_api_key_client"), 8),
+        (lazy_fixture("admin_client"), 10),
+    ],
 )
-def test_associated_features__segment_with_feature_override__returns_associated_features(  # type: ignore[no-untyped-def]
-    project, environment, feature, segment, segment_featurestate, client
-):
+def test_associated_features__segment_with_feature_override__returns_associated_features(
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+    segment_condition: Condition,
+    segment_featurestate: FeatureState,
+    client: APIClient,
+    expected_num_queries: int,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
     # Given
     # Firstly, let's create extra environment and feature to make sure we
     # have some features that are not associated with the segment
@@ -551,8 +563,10 @@ def test_associated_features__segment_with_feature_override__returns_associated_
         "api-v1:projects:project-segments-associated-features",
         args=[project.id, segment.id],
     )
+
     # When
-    response = client.get(url)
+    with django_assert_num_queries(expected_num_queries):
+        response = client.get(url)
 
     # Then
     assert response.json().get("count") == 1
@@ -681,8 +695,8 @@ def test_get_segment_by_uuid__existing_segment__returns_segment_data(  # type: i
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), 14),
-        (lazy_fixture("admin_client"), 16),
+        (lazy_fixture("admin_master_api_key_client"), 13),
+        (lazy_fixture("admin_client"), 15),
     ],
 )
 def test_list_segments__without_rbac__expected_num_queries(
@@ -713,6 +727,167 @@ def test_list_segments__without_rbac__expected_num_queries(
     assert response_json["count"] == num_segments
 
 
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
+@pytest.mark.parametrize(
+    "client, expected_num_queries",
+    [
+        (lazy_fixture("admin_master_api_key_client"), 13),
+        (lazy_fixture("admin_client"), 15),
+    ],
+)
+def test_retrieve_segment__without_rbac__expected_num_queries(
+    django_assert_num_queries: DjangoAssertNumQueries,
+    project: Project,
+    client: APIClient,
+    required_a_segment_metadata_field: MetadataModelField,
+    expected_num_queries: int,
+) -> None:
+    # Given
+    # A segment with metadata and multiple rules and conditions to expose any N+1 issues.
+    segment = Segment.objects.create(project=project, name="test segment")
+    Metadata.objects.create(
+        object_id=segment.id,
+        content_type=ContentType.objects.get_for_model(segment),
+        model_field=required_a_segment_metadata_field,
+        field_value=42,
+    )
+    all_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    for _ in range(3):
+        any_rule = SegmentRule.objects.create(rule=all_rule, type=SegmentRule.ANY_RULE)
+        Condition.objects.create(
+            property="foo", value="bar", rule=any_rule, operator=EQUAL
+        )
+
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project.id, segment.id],
+    )
+
+    # When
+    with django_assert_num_queries(expected_num_queries):
+        response = client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
+# TODO: Most of these queries maintain the legacy SegmentRule and Condition
+#  rows, which `Segment.rules_data` already holds as JSON. `clone` copies that
+#  tree a level at a time; expect this count to fall once the tree is gone.
+#  https://github.com/Flagsmith/flagsmith/issues/7814
+@pytest.mark.parametrize(
+    "client, expected_num_queries",
+    [
+        (lazy_fixture("admin_master_api_key_client"), 49),
+        (lazy_fixture("admin_client"), 51),
+    ],
+)
+def test_clone_segment__without_rbac__expected_num_queries(
+    django_assert_num_queries: DjangoAssertNumQueries,
+    project: Project,
+    client: APIClient,
+    required_a_segment_metadata_field: MetadataModelField,
+    expected_num_queries: int,
+) -> None:
+    # Given
+    # A segment with metadata and multiple rules and conditions to expose any N+1 issues.
+    segment = Segment.objects.create(project=project, name="test segment")
+    Metadata.objects.create(
+        object_id=segment.id,
+        content_type=ContentType.objects.get_for_model(segment),
+        model_field=required_a_segment_metadata_field,
+        field_value=42,
+    )
+    all_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    for _ in range(3):
+        any_rule = SegmentRule.objects.create(rule=all_rule, type=SegmentRule.ANY_RULE)
+        Condition.objects.create(
+            property="foo", value="bar", rule=any_rule, operator=EQUAL
+        )
+
+    url = reverse(
+        "api-v1:projects:project-segments-clone",
+        args=[project.id, segment.id],
+    )
+
+    # When
+    with django_assert_num_queries(expected_num_queries):
+        response = client.post(
+            url,
+            data=json.dumps({"name": "Cloned Segment"}),
+            content_type="application/json",
+        )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED, response.data
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
+# TODO: Most of these queries maintain the legacy SegmentRule and Condition
+#  rows, which `Segment.rules_data` already holds as JSON. Updating writes that
+#  tree back a row at a time, and the revision clone copies it again, so the
+#  count grows with the number of rules; expect it to fall sharply, and to stop
+#  scaling, once the tree is gone.
+#  https://github.com/Flagsmith/flagsmith/issues/7814
+@pytest.mark.parametrize(
+    "client, expected_num_queries",
+    [
+        (lazy_fixture("admin_master_api_key_client"), 129),
+        (lazy_fixture("admin_client"), 131),
+    ],
+)
+def test_update_segment__without_rbac__expected_num_queries(
+    django_assert_num_queries: DjangoAssertNumQueries,
+    project: Project,
+    client: APIClient,
+    required_a_segment_metadata_field: MetadataModelField,
+    expected_num_queries: int,
+) -> None:
+    # Given
+    # A segment with metadata and multiple rules and conditions to expose any N+1 issues.
+    segment = Segment.objects.create(project=project, name="test segment")
+    Metadata.objects.create(
+        object_id=segment.id,
+        content_type=ContentType.objects.get_for_model(segment),
+        model_field=required_a_segment_metadata_field,
+        field_value=42,
+    )
+    all_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    for _ in range(3):
+        any_rule = SegmentRule.objects.create(rule=all_rule, type=SegmentRule.ANY_RULE)
+        Condition.objects.create(
+            property="foo", value="bar", rule=any_rule, operator=EQUAL
+        )
+
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project.id, segment.id],
+    )
+
+    data = client.get(url).json()
+    update_data = copy.copy(data)
+    update_data["name"] += " updated"
+
+    # When
+    with django_assert_num_queries(expected_num_queries):
+        response = client.put(
+            url, data=json.dumps(update_data), content_type="application/json"
+        )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK, response.data
+
+
 def test_list_segments__system_segment_exists__excludes_system_segment(
     project: Project,
     admin_client: APIClient,
@@ -738,8 +913,8 @@ def test_list_segments__system_segment_exists__excludes_system_segment(
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), 14),
-        (lazy_fixture("admin_client"), 17),
+        (lazy_fixture("admin_master_api_key_client"), 13),
+        (lazy_fixture("admin_client"), 16),
     ],
 )
 def test_list_segments__with_rbac__expected_num_queries(
