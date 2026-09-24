@@ -1,4 +1,11 @@
-import React, { ChangeEvent, FC, FormEvent, useEffect, useState } from 'react'
+import React, {
+  ChangeEvent,
+  FC,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 import { Link, useHistory, useParams } from 'react-router-dom'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
@@ -57,7 +64,7 @@ const EmailActivationPage: FC = () => {
     API.trackPage(Constants.pages.EMAIL_ACTIVATION, '/activate')
   }, [])
 
-  useEffect(() => {
+  const activate = useCallback(() => {
     activateAccount({ token, uid })
       .unwrap()
       .then(() => {
@@ -69,6 +76,10 @@ const EmailActivationPage: FC = () => {
         // Rendered as one of the failure states below.
       })
   }, [uid, token, history, activateAccount])
+
+  useEffect(() => {
+    activate()
+  }, [activate])
 
   const onResend = (e: FormEvent) => {
     e.preventDefault()
@@ -99,10 +110,7 @@ const EmailActivationPage: FC = () => {
             still valid.
           </p>
           <div className='d-flex gap-2 align-items-center'>
-            <Button
-              id='retry-activation-btn'
-              onClick={() => activateAccount({ token, uid })}
-            >
+            <Button id='retry-activation-btn' onClick={activate}>
               Try again
             </Button>
             {backToSignIn}
