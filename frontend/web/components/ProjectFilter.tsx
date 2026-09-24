@@ -24,12 +24,15 @@ const ProjectFilter: FC<ProjectFilterType> = ({
   )
 
   useEffect(() => {
-    if (data && data.length === 1) {
+    // Only where a project has to be picked. Where All Projects is on offer
+    // it is the default, and selecting the only project would hide the
+    // organisation's own figures behind a filter nobody set.
+    if (!showAll && data && data.length === 1) {
       const project = data[0]
       onChange(`${project.id}`, project.name)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data])
+  }, [data, showAll])
 
   const foundValue = useMemo(
     () => data?.find((project) => `${project.id}` === value),
