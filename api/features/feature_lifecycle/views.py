@@ -1,6 +1,7 @@
+from collections import Counter
+
 import structlog
 from common.environments.permissions import VIEW_ENVIRONMENT
-from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
@@ -44,10 +45,10 @@ class FeatureLifecycleCountsAPIView(APIView):
             environment,
         )
 
-        counts = features.values("lifecycle_stage").annotate(count=Count("pk"))  # type: ignore[misc]
-        summary: dict[LifecycleStage, int] = {stage: 0 for stage in LifecycleStage}
-        for stage_count in counts:
-            summary[stage_count["lifecycle_stage"]] = stage_count["count"]
+        counts = Counter(features.values_list("lifecycle_stage", flat=True))  # type: ignore[misc]
+        summary: dict[LifecycleStage, int] = {
+            stage: counts.get(stage, 0) for stage in LifecycleStage
+        }
 
         logger.info(
             "summarised",
