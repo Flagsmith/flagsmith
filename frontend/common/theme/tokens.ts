@@ -146,7 +146,7 @@ export const colorBorderInfo = 'var(--color-border-info, #0fa5fc)'
 export const colorBorderStrong =
   'var(--color-border-strong, rgba(101, 109, 123, 0.24))'
 export const colorBorderSuccess = 'var(--color-border-success, #47aa7f)'
-export const colorBorderWarning = 'var(--color-border-warning, #ff9f43)'
+export const colorBorderWarning = 'var(--color-border-warning, #ffbc05)'
 
 // Code
 export const colorCodeBuiltin = 'var(--color-code-builtin, #e8a705)'
@@ -167,7 +167,7 @@ export const colorIconDisabled = 'var(--color-icon-disabled, #9da4ae)'
 export const colorIconInfo = 'var(--color-icon-info, #0fa5fc)'
 export const colorIconSecondary = 'var(--color-icon-secondary, #656d7b)'
 export const colorIconSuccess = 'var(--color-icon-success, #47aa7f)'
-export const colorIconWarning = 'var(--color-icon-warning, #ff9f43)'
+export const colorIconWarning = 'var(--color-icon-warning, #ffbc05)'
 
 // Surface
 export const colorSurfaceAction = 'var(--color-surface-action, #6837fc)'
@@ -192,7 +192,7 @@ export const colorSurfaceInfo = 'var(--color-surface-info, #dff3ff)'
 export const colorSurfaceMuted = 'var(--color-surface-muted, #f3f4f5)'
 export const colorSurfaceSubtle = 'var(--color-surface-subtle, #fafafb)'
 export const colorSurfaceSuccess = 'var(--color-surface-success, #f0fff2)'
-export const colorSurfaceWarning = 'var(--color-surface-warning, #ffe9d4)'
+export const colorSurfaceWarning = 'var(--color-surface-warning, #fff7cd)'
 
 // Text
 export const colorTextAction = 'var(--color-text-action, #6837fc)'
@@ -203,7 +203,7 @@ export const colorTextInfo = 'var(--color-text-info, #0767b9)'
 export const colorTextSecondary = 'var(--color-text-secondary, #656d7b)'
 export const colorTextSuccess = 'var(--color-text-success, #35795a)'
 export const colorTextTertiary = 'var(--color-text-tertiary, #656d7b)'
-export const colorTextWarning = 'var(--color-text-warning, #9f5208)'
+export const colorTextWarning = 'var(--color-text-warning, #744800)'
 
 // Chart
 export const colorChart1 = 'var(--color-chart-1, #0fa5fc)'

@@ -103,7 +103,7 @@
   --color-surface-muted: var(--slate-100);
   --color-surface-subtle: var(--slate-50);
   --color-surface-success: var(--green-50);
-  --color-surface-warning: var(--orange-100);
+  --color-surface-warning: var(--gold-100);
 
   // Text
   --color-text-action: var(--purple-600);
@@ -114,7 +114,7 @@
   --color-text-secondary: var(--slate-500);
   --color-text-success: var(--green-600);
   --color-text-tertiary: var(--slate-500);
-  --color-text-warning: var(--orange-800);
+  --color-text-warning: var(--gold-950);
 
   // Code
   --color-code-builtin: var(--gold-700);
@@ -135,7 +135,7 @@
   --color-border-info: var(--blue-500);
   --color-border-strong: oklch(from var(--slate-500) l c h / 0.24);
   --color-border-success: var(--green-500);
-  --color-border-warning: var(--orange-500);
+  --color-border-warning: var(--gold-600);
 
   // Icon
   --color-icon-action: var(--purple-600);
@@ -145,7 +145,7 @@
   --color-icon-info: var(--blue-500);
   --color-icon-secondary: var(--slate-500);
   --color-icon-success: var(--green-500);
-  --color-icon-warning: var(--orange-500);
+  --color-icon-warning: var(--gold-600);
 
   // Chart
   --color-chart-1: var(--blue-500);
@@ -209,7 +209,7 @@
   --color-surface-muted: var(--slate-850);
   --color-surface-subtle: var(--slate-900);
   --color-surface-success: var(--green-900);
-  --color-surface-warning: var(--orange-900);
+  --color-surface-warning: var(--gold-950);
   --color-text-action: var(--purple-400);
   --color-text-danger: var(--red-300);
   --color-text-default: var(--slate-0);
@@ -218,7 +218,7 @@
   --color-text-secondary: var(--slate-300);
   --color-text-success: var(--green-400);
   --color-text-tertiary: oklch(from var(--slate-0) l c h / 0.48);
-  --color-text-warning: var(--orange-500);
+  --color-text-warning: var(--gold-600);
   --color-code-builtin: var(--gold-400);
   --color-code-comment: var(--slate-500);
   --color-code-keyword: var(--purple-400);

@@ -146,7 +146,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-warning</code>
             </td>
             <td>
-              <code>var(--orange-100)</code>
+              <code>var(--gold-100)</code>
             </td>
           </tr>
           <tr>
@@ -229,7 +229,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-warning</code>
             </td>
             <td>
-              <code>var(--orange-800)</code>
+              <code>var(--gold-950)</code>
             </td>
           </tr>
           <tr>
@@ -387,7 +387,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-warning</code>
             </td>
             <td>
-              <code>var(--orange-500)</code>
+              <code>var(--gold-600)</code>
             </td>
           </tr>
           <tr>
@@ -462,7 +462,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-warning</code>
             </td>
             <td>
-              <code>var(--orange-500)</code>
+              <code>var(--gold-600)</code>
             </td>
           </tr>
           <tr>
