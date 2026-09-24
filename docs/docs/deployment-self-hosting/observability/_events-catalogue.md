@@ -218,7 +218,7 @@ Attributes:
 ### `experimentation.rollout.applied`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1270`
+ - `api/experimentation/services.py:1281`
 
 Attributes:
  - `audience.match`
@@ -845,7 +845,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1445`
+ - `api/experimentation/services.py:1456`
 
 Attributes:
  - `environment.id`
@@ -854,8 +854,8 @@ Attributes:
 ### `warehouse.connection.event_names_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:268`
- - `api/experimentation/services.py:1545`
+ - `api/experimentation/services.py:267`
+ - `api/experimentation/services.py:1556`
 
 Attributes:
  - `environment.id`
@@ -865,7 +865,7 @@ Attributes:
 ### `warehouse.connection.event_stats_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1508`
+ - `api/experimentation/services.py:1519`
 
 Attributes:
  - `environment.id`
@@ -874,7 +874,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1385`
+ - `api/experimentation/services.py:1396`
 
 Attributes:
  - `environment.id`
@@ -883,7 +883,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1420`
+ - `api/experimentation/services.py:1431`
 
 Attributes:
  - `environment.id`
@@ -893,7 +893,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1430`
+ - `api/experimentation/services.py:1441`
 
 Attributes:
  - `environment.id`
@@ -902,7 +902,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:624`
+ - `api/experimentation/services.py:635`
 
 Attributes:
  - `environment.id`
@@ -912,7 +912,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:610`
+ - `api/experimentation/services.py:621`
 
 Attributes:
  - `environment.id`
