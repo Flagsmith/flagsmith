@@ -201,6 +201,10 @@
                 {
                     "name": "INGESTION_REDIS_URL",
                     "value": "rediss://serverless-redis-cache-c4q8sw.serverless.euw2.cache.amazonaws.com:6379"
+                },
+                {
+                    "name": "API_USAGE_ALERT_CC_RECIPIENT_LIST",
+                    "value": "customersuccess@flagsmith.com"
                 }
             ],
             "secrets": [

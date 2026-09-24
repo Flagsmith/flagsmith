@@ -1,8 +1,10 @@
 import re
-from datetime import timedelta
-from typing import Any
+from datetime import datetime, timedelta
+from typing import Any, NamedTuple
 
+import structlog
 from common.core.utils import is_enterprise, is_saas
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.cache import caches
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -56,7 +58,14 @@ from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from webhooks.models import AbstractBaseExportableWebhookModel
 
+logger = structlog.get_logger("organisations")
+
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
+
+
+class BillingPeriod(NamedTuple):
+    start: datetime
+    end: datetime
 
 
 class OrganisationRole(models.TextChoices):
@@ -306,6 +315,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             self.organisation.has_subscription_information_cache()
             and self.organisation.subscription_information_cache.has_active_billing_periods()
         )
+
+    def get_current_billing_period(self) -> BillingPeriod | None:
+        if not self.organisation.has_subscription_information_cache():
+            return None
+        return self.organisation.subscription_information_cache.get_current_billing_period()
 
     @property
     def is_free_plan(self) -> bool:
@@ -587,19 +601,32 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         }
 
     def has_active_billing_periods(self) -> bool:
-        """
-        Returns True if current date is within the billing term.
-        If either start or end date is None, returns False.
-        """
-        starts_at, ends_at = (
-            self.current_billing_term_starts_at,
-            self.current_billing_term_ends_at,
-        )
+        return self.get_current_billing_period() is not None
 
+    def get_current_billing_period(self) -> BillingPeriod | None:
+        starts_at = self.current_billing_term_starts_at
+        ends_at = self.current_billing_term_ends_at
         if starts_at is None or ends_at is None:
-            return False
+            return None
 
-        return starts_at <= timezone.now() <= ends_at
+        now = timezone.now()
+        if not starts_at <= now < ends_at:
+            logger.warning(
+                "billing_term.stale",
+                organisation__id=self.organisation_id,
+                billing_term__starts_at=starts_at.isoformat(),
+                billing_term__ends_at=ends_at.isoformat(),
+            )
+            return None
+
+        elapsed = relativedelta(now, starts_at)
+        months = elapsed.years * 12 + elapsed.months
+        # Both ends count from the term start; counting the end from the start
+        # of the window loses the original day when a month is too short for it.
+        return BillingPeriod(
+            start=starts_at + relativedelta(months=months),
+            end=starts_at + relativedelta(months=months + 1),
+        )
 
 
 class OrganisationAPIUsageNotification(models.Model):

@@ -25,12 +25,19 @@ def get_all_live_or_scheduled_overrides() -> "QuerySet[FeatureSegment]":
         environment__use_v2_feature_versioning=False,
     ) & (no_change_request | committed_change_request)
 
+    superseding_versions = EnvironmentFeatureVersion.objects.filter(
+        environment_id=models.OuterRef("environment_id"),
+        feature_id=models.OuterRef("feature_id"),
+        published_at__isnull=False,
+        live_from__gt=models.OuterRef("environment_feature_version__live_from"),
+        live_from__lte=timezone.now(),
+    )
+    # Filtering on not superseded is the same as filtering on the latest
+    # live EFV but uses the index on feature, environment.
     with_feature_versioning_v2 = models.Q(
         environment__use_v2_feature_versioning=True,
-        environment_feature_version__in=(
-            EnvironmentFeatureVersion.objects.get_live_or_scheduled()
-        ),
-    )
+        environment_feature_version__published_at__isnull=False,
+    ) & ~models.Exists(superseding_versions)
 
     live_or_scheduled_feature_states = FeatureState.objects.filter(
         with_feature_versioning_v1 | with_feature_versioning_v2,

@@ -70,14 +70,16 @@ def test_warehouse_connection__after_delete__enqueues_ingestion_sync_task(
     "field, value, expected_enqueued",
     [
         pytest.param("warehouse_type", WarehouseType.CLICKHOUSE, True, id="type"),
+        pytest.param("config", {"host": "ch.acme-corp.example"}, True, id="config"),
+        pytest.param("credentials", {"password": "rotated"}, True, id="credentials"),
         pytest.param("name", "renamed", False, id="name"),
     ],
 )
-def test_warehouse_connection__after_update__enqueues_ingestion_sync_task_on_type_change(
+def test_warehouse_connection__after_update__enqueues_ingestion_sync_task_on_detail_change(
     warehouse_connection: WarehouseConnection,
     mocker: MockerFixture,
     field: str,
-    value: str,
+    value: object,
     expected_enqueued: bool,
 ) -> None:
     # Given
@@ -89,7 +91,8 @@ def test_warehouse_connection__after_update__enqueues_ingestion_sync_task_on_typ
     setattr(warehouse_connection, field, value)
     warehouse_connection.save()
 
-    # Then switching warehouse type re-routes the environment; other edits don't
+    # Then anything the delivery service reads from Redis republishes the
+    # connection; a rename does not
     if expected_enqueued:
         mock_task.delay.assert_called_once_with(
             kwargs={"environment_id": warehouse_connection.environment_id},

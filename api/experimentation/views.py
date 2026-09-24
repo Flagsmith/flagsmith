@@ -61,6 +61,7 @@ from experimentation.serializers import (
 )
 from experimentation.services import (
     EVENT_NAMES_SUPPORTED_WAREHOUSE_TYPES,
+    annotate_warehouse_delivery_statuses,
     annotate_warehouse_event_stats,
     apply_experiment_rollout,
     create_experiment_audit_log,
@@ -150,12 +151,14 @@ class WarehouseConnectionViewSet(
         if not exclude_event_stats:
             for connection in connections:
                 annotate_warehouse_event_stats(connection, environment_api_key)
+        annotate_warehouse_delivery_statuses(connections)
         serializer = self.get_serializer(connections, many=True)
         return Response(serializer.data)
 
     def retrieve(self, request: Request, *args: object, **kwargs: object) -> Response:
         connection = self.get_object()
         annotate_warehouse_event_stats(connection, self.kwargs["environment_api_key"])
+        annotate_warehouse_delivery_statuses([connection])
         serializer = self.get_serializer(connection)
         return Response(serializer.data)
 

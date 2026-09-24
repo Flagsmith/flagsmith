@@ -47,6 +47,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "8.0.2",
         "8.1.0",
         "8.1.1",
+        "8.1.2",
     ],
     "flagsmith-js-sdk": [
         "unknown",
@@ -58,6 +59,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "12.1.2",
         "12.2.0",
         "12.3.0",
+        "12.4.0",
     ],
     "flagsmith-kotlin-android-sdk": [
         "unknown",
@@ -105,6 +107,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "6.2.1",
         "6.2.2",
         "6.2.3",
+        "6.3.0",
     ],
     "flagsmith-ruby-sdk": [
         "unknown",
