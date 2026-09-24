@@ -56,11 +56,17 @@ describe('projectUsage', () => {
     expect(projection?.overLimit).toBe(false)
   })
 
-  it('does not inflate past the end of the period', () => {
+  // Nothing is being estimated any more, and the billing strip says ended.
+  it('says nothing once the period is over', () => {
     jest.setSystemTime(new Date('2026-08-10T00:00:00Z'))
 
-    // Elapsed is capped at the period, so the projection is the total itself.
-    expect(projectUsage(900_000, 2_000_000, PERIOD)?.total).toBe(900_000)
+    expect(projectUsage(900_000, 2_000_000, PERIOD)).toBeUndefined()
+  })
+
+  it('still projects on the final day of the period', () => {
+    jest.setSystemTime(new Date('2026-07-30T12:00:00Z'))
+
+    expect(projectUsage(900_000, 2_000_000, PERIOD)).toBeDefined()
   })
 
   describe('when the usage data lags the clock', () => {

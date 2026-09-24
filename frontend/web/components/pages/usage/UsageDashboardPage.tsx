@@ -121,7 +121,9 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     const days = dailyTotals(usage.allowance)
     return days[days.length - 1]?.date
   }, [usage.allowance])
-  const projection = projectUsage(allowanceTotal, limit, period, lastMeasuredOn)
+  const projection = showsProjection(billingPeriod, selectedProjectId)
+    ? projectUsage(allowanceTotal, limit, period, lastMeasuredOn)
+    : undefined
 
   // One line: over the limit outranks the projection, which outranks the share.
   const meterNote =
@@ -196,11 +198,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
             }
             isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
             periodLabel={selectedPeriod}
-            projectedTotal={
-              showsProjection(billingPeriod, selectedProjectId)
-                ? projection?.total
-                : undefined
-            }
+            projectedTotal={projection?.total}
             periodEndsAt={period?.ends_at}
           />
 

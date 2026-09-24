@@ -41,6 +41,12 @@ export const projectUsage = (
     return undefined
   }
 
+  // Once the period is over the figure is the total, not an estimate, and
+  // the billing strip already says it ended.
+  if (!now.isBefore(ends)) {
+    return undefined
+  }
+
   const measured = lastMeasuredOn ? moment.utc(lastMeasuredOn) : undefined
   // The total covers whole days, so elapsed runs to the end of the last of
   // them rather than to this instant.
