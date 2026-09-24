@@ -15,6 +15,8 @@ class AuthorData:
 
     @classmethod
     def from_request(cls, request: "Request") -> "AuthorData":
+        from rest_framework.exceptions import ValidationError
+
         from users.models import FFAdminUser
 
         if type(request.user) is FFAdminUser:
@@ -22,4 +24,4 @@ class AuthorData:
         elif hasattr(request.user, "key"):
             return cls(api_key=request.user.key)
         else:
-            raise ValueError("Request user must be FFAdminUser or have an API key")
+            raise ValidationError("Request user must be FFAdminUser or have an API key")
