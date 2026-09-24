@@ -149,7 +149,7 @@ export const colorBorderSuccess = 'var(--color-border-success, #47aa7f)'
 export const colorBorderWarning = 'var(--color-border-warning, #ff9f43)'
 
 // Code
-export const colorCodeBuiltin = 'var(--color-code-builtin, #d4b050)'
+export const colorCodeBuiltin = 'var(--color-code-builtin, #e8a705)'
 export const colorCodeComment = 'var(--color-code-comment, #9da4ae)'
 export const colorCodeKeyword = 'var(--color-code-keyword, #6837fc)'
 export const colorCodeLiteral = 'var(--color-code-literal, #0b8bb2)'
