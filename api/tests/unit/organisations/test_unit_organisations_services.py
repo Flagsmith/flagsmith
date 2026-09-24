@@ -51,7 +51,7 @@ def _grace_row(organisation: Organisation, created_at: datetime) -> None:
         ("enterprise", False),
     ],
 )
-def test_has_used_overage_grace__row_from_an_earlier_term__reads_it_per_plan(
+def test_has_used_overage_grace__breached_row__reads_it_per_plan(
     organisation: Organisation,
     plan: str,
     expected: bool,
@@ -64,8 +64,9 @@ def test_has_used_overage_grace__row_from_an_earlier_term__reads_it_per_plan(
     assert has_used_overage_grace(organisation) is expected
 
 
-# The forgiven month is happening now, so this term is still covered.
-def test_has_used_overage_grace__row_from_this_term__returns_false(
+# The overage task charges on its next run once the row exists, so the grace
+# is spent from the moment it is written rather than at the end of the term.
+def test_has_used_overage_grace__row_from_this_term__returns_true(
     organisation: Organisation,
 ) -> None:
     # Given
@@ -73,7 +74,7 @@ def test_has_used_overage_grace__row_from_this_term__returns_false(
     _grace_row(organisation, created_at=timezone.now() - timedelta(hours=1))
 
     # When / Then
-    assert has_used_overage_grace(organisation) is False
+    assert has_used_overage_grace(organisation) is True
 
 
 def test_has_used_overage_grace__no_breached_row__returns_false(
@@ -81,33 +82,6 @@ def test_has_used_overage_grace__no_breached_row__returns_false(
 ) -> None:
     # Given
     _monthly_term(organisation)
-
-    # When / Then
-    assert has_used_overage_grace(organisation) is False
-
-
-# Without a term we cannot say which one the row belongs to.
-def test_has_used_overage_grace__no_subscription_cache__returns_false(
-    organisation: Organisation,
-) -> None:
-    # Given
-    organisation.subscription.plan = "scale-up-v2"
-    organisation.subscription.save()
-    _grace_row(organisation, created_at=timezone.now() - timedelta(days=60))
-
-    # When / Then
-    assert has_used_overage_grace(organisation) is False
-
-
-# A cache can exist before Chargebee has written a term to it.
-def test_has_used_overage_grace__no_billing_term__returns_false(
-    organisation: Organisation,
-) -> None:
-    # Given
-    OrganisationSubscriptionInformationCache.objects.create(organisation=organisation)
-    organisation.subscription.plan = "scale-up-v2"
-    organisation.subscription.save()
-    _grace_row(organisation, created_at=timezone.now() - timedelta(days=60))
 
     # When / Then
     assert has_used_overage_grace(organisation) is False

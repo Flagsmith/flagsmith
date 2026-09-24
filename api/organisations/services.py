@@ -21,9 +21,9 @@ def _plan_family(organisation: Organisation) -> SubscriptionPlanFamily | None:
 
 def has_used_overage_grace(organisation: Organisation) -> bool:
     """
-    Whether the overage month we do not charge for was spent in an earlier
-    billing term, which is what makes this term's overage chargeable. A row
-    written during this term is the forgiven month happening now.
+    Whether the one overage month we do not charge for has been spent. It is
+    spent the moment the row is written, which is how the overage task reads
+    it too.
 
     A breached grace period row says this on a paid plan and says the wait
     before flags stop on a free one, so the plan decides how to read it. The
@@ -31,20 +31,11 @@ def has_used_overage_grace(organisation: Organisation) -> bool:
     """
     if _plan_family(organisation) not in CHARGEABLE_PLAN_FAMILIES:
         return False
-    if not organisation.has_subscription_information_cache():
-        return False
-
-    term_starts_at = (
-        organisation.subscription_information_cache.current_billing_term_starts_at
-    )
-    if term_starts_at is None:
-        return False
 
     # Queried rather than read off the instance: the plan change hook deletes
     # the row without clearing Django's cached reverse relation.
     return OrganisationBreachedGracePeriod.objects.filter(
         organisation=organisation,
-        created_at__lt=term_starts_at,
     ).exists()
 
 
