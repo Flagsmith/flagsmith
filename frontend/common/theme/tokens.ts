@@ -137,7 +137,7 @@ export const fontWeight: Record<string, TokenEntry> = {
 
 // Border
 export const colorBorderAction = 'var(--color-border-action, #6837fc)'
-export const colorBorderDanger = 'var(--color-border-danger, #ef4d56)'
+export const colorBorderDanger = 'var(--color-border-danger, #e61b26)'
 export const colorBorderDefault =
   'var(--color-border-default, rgba(101, 109, 123, 0.16))'
 export const colorBorderDisabled =
@@ -161,7 +161,7 @@ export const colorCodeVariable = 'var(--color-code-variable, #d06907)'
 
 // Icon
 export const colorIconAction = 'var(--color-icon-action, #6837fc)'
-export const colorIconDanger = 'var(--color-icon-danger, #ef4d56)'
+export const colorIconDanger = 'var(--color-icon-danger, #e61b26)'
 export const colorIconDefault = 'var(--color-icon-default, #1a2634)'
 export const colorIconDisabled = 'var(--color-icon-disabled, #9da4ae)'
 export const colorIconInfo = 'var(--color-icon-info, #0fa5fc)'
@@ -196,12 +196,12 @@ export const colorSurfaceWarning = 'var(--color-surface-warning, #fff7cd)'
 
 // Text
 export const colorTextAction = 'var(--color-text-action, #6837fc)'
-export const colorTextDanger = 'var(--color-text-danger, #bb1720)'
+export const colorTextDanger = 'var(--color-text-danger, #7a0e18)'
 export const colorTextDefault = 'var(--color-text-default, #1a2634)'
 export const colorTextDisabled = 'var(--color-text-disabled, #9da4ae)'
-export const colorTextInfo = 'var(--color-text-info, #0767b9)'
+export const colorTextInfo = 'var(--color-text-info, #023078)'
 export const colorTextSecondary = 'var(--color-text-secondary, #656d7b)'
-export const colorTextSuccess = 'var(--color-text-success, #35795a)'
+export const colorTextSuccess = 'var(--color-text-success, #1b392b)'
 export const colorTextTertiary = 'var(--color-text-tertiary, #656d7b)'
 export const colorTextWarning = 'var(--color-text-warning, #744800)'
 

@@ -107,12 +107,12 @@
 
   // Text
   --color-text-action: var(--purple-600);
-  --color-text-danger: var(--red-700);
+  --color-text-danger: var(--red-900);
   --color-text-default: var(--slate-600);
   --color-text-disabled: var(--slate-300);
-  --color-text-info: var(--blue-700);
+  --color-text-info: var(--blue-900);
   --color-text-secondary: var(--slate-500);
-  --color-text-success: var(--green-600);
+  --color-text-success: var(--green-900);
   --color-text-tertiary: var(--slate-500);
   --color-text-warning: var(--gold-950);
 
@@ -129,7 +129,7 @@
 
   // Border
   --color-border-action: var(--purple-600);
-  --color-border-danger: var(--red-500);
+  --color-border-danger: var(--red-600);
   --color-border-default: oklch(from var(--slate-500) l c h / 0.16);
   --color-border-disabled: oklch(from var(--slate-500) l c h / 0.08);
   --color-border-info: var(--blue-500);
@@ -139,7 +139,7 @@
 
   // Icon
   --color-icon-action: var(--purple-600);
-  --color-icon-danger: var(--red-500);
+  --color-icon-danger: var(--red-600);
   --color-icon-default: var(--slate-600);
   --color-icon-disabled: var(--slate-300);
   --color-icon-info: var(--blue-500);
