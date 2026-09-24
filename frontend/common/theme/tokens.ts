@@ -183,7 +183,7 @@ export const colorSurfaceActionTint =
   'var(--color-surface-action-tint, rgba(104, 55, 252, 0.12))'
 export const colorSurfaceActive =
   'var(--color-surface-active, rgba(0, 0, 0, 0.16))'
-export const colorSurfaceDanger = 'var(--color-surface-danger, #fce5e4)'
+export const colorSurfaceDanger = 'var(--color-surface-danger, #ffeddb)'
 export const colorSurfaceDefault = 'var(--color-surface-default, #ffffff)'
 export const colorSurfaceEmphasis = 'var(--color-surface-emphasis, #e1e2eb)'
 export const colorSurfaceHover =
