@@ -47,6 +47,7 @@ const CHART_CATEGORY = 'chart'
 // layer and stop following whatever that role is later defined as.
 const PRIMARY_CATEGORY = 'primary'
 const NEUTRAL_CATEGORY = 'neutral'
+const STATE_CATEGORY = 'state'
 
 // Build reverse lookups for primitives
 const hexToPrimitive = new Map()
@@ -159,6 +160,18 @@ function buildScssLines() {
   if (json[NEUTRAL_CATEGORY]) {
     rootLines.push('  // Neutral')
     for (const [, e] of sorted(json[NEUTRAL_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  // State ramps, from his Supporting collection
+  if (json[STATE_CATEGORY]) {
+    rootLines.push('  // State')
+    for (const [, e] of sorted(json[STATE_CATEGORY])) {
       rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
       if (e.dark && e.dark !== e.light) {
         darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)

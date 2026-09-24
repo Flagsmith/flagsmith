@@ -166,6 +166,20 @@
   --neutral-600: var(--slate-600);
   --neutral-900: var(--slate-950);
 
+  // State
+  --danger-100: var(--red-100);
+  --danger-500: var(--red-600);
+  --danger-900: var(--red-900);
+  --info-100: var(--blue-100);
+  --info-500: var(--blue-500);
+  --info-900: var(--blue-900);
+  --success-100: var(--green-50);
+  --success-500: var(--green-400);
+  --success-900: var(--green-900);
+  --warning-100: var(--gold-100);
+  --warning-500: var(--gold-600);
+  --warning-900: var(--gold-950);
+
   // Chart
   --color-chart-1: var(--blue-500);
   --color-chart-2: var(--red-500);
@@ -269,6 +283,14 @@
   --neutral-500: var(--slate-100);
   --neutral-600: var(--slate-50);
   --neutral-900: var(--slate-0);
+  --danger-100: var(--red-900);
+  --danger-900: var(--red-100);
+  --info-100: var(--blue-900);
+  --info-900: var(--blue-100);
+  --success-100: var(--green-900);
+  --success-900: var(--green-50);
+  --warning-100: var(--gold-950);
+  --warning-900: var(--gold-100);
   --color-chart-1: var(--blue-400);
   --color-chart-2: var(--red-400);
   --color-chart-3: var(--green-400);
