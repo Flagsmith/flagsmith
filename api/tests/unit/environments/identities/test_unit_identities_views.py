@@ -1373,9 +1373,9 @@ def test_identity_view_set__get_permissions__returns_expected_permissions():  # 
 @pytest.mark.parametrize(
     ["use_replica", "is_new_identity", "num_queries"],
     [
-        pytest.param(False, True, 14, id="default_database,new_identity"),
+        pytest.param(False, True, 13, id="default_database,new_identity"),
         pytest.param(False, False, 9, id="default_database,existing_identity"),
-        pytest.param(True, True, 14, id="replica_database,new_identity"),
+        pytest.param(True, True, 13, id="replica_database,new_identity"),
         pytest.param(True, False, 11, id="replica_database,existing_identity"),
     ],
 )
@@ -1412,9 +1412,9 @@ def test_SDKIdentitiesDeprecated__given_identifier__retrieves_identity(
 @pytest.mark.parametrize(
     ["use_replica", "is_new_identity", "is_transient", "num_queries"],
     [
-        pytest.param(False, True, False, 11, id="default_db,new_identity"),
+        pytest.param(False, True, False, 10, id="default_db,new_identity"),
         pytest.param(False, False, False, 7, id="default_db,old_identity"),
-        pytest.param(True, True, False, 11, id="replica_db,new_identity"),
+        pytest.param(True, True, False, 10, id="replica_db,new_identity"),
         pytest.param(True, False, False, 9, id="replica_db,old_identity"),
         pytest.param(False, True, True, 5, id="default_db,new_identity,transient"),
         pytest.param(False, False, True, 5, id="default_db,old_identity,transient"),
