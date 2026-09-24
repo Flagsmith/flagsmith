@@ -20541,7 +20541,9 @@ components:
           format: uuid
           readOnly: true
         key:
-          type: string
+          type:
+            - string
+            - 'null'
           readOnly: true
         superuser:
           type: boolean
