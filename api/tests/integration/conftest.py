@@ -41,10 +41,7 @@ def set_mv_allocations(admin_client: APIClient) -> SetMultivariateAllocationsFix
         feature_state_id: int,
         allocation_by_mv_option_id: dict[int, float],
     ) -> None:
-        url = reverse(
-            "api-v1:environments:environment-featurestates-detail",
-            args=[environment_api_key, feature_state_id],
-        )
+        url = f"/api/v1/environments/{environment_api_key}/featurestates/{feature_state_id}/"
         feature_state_data = admin_client.get(url).json()
         for mv_value in feature_state_data["multivariate_feature_state_values"]:
             mv_value["percentage_allocation"] = allocation_by_mv_option_id[

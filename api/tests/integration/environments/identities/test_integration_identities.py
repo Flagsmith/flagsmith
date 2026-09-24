@@ -90,7 +90,7 @@ def test_get_feature_states_for_identity__mv_allocation__returns_value_and_varia
         key="variant-2",
     )
 
-    base_identity_flags_url = reverse("api-v1:sdk-identities")
+    base_identity_flags_url = "/api/v1/identities/"
     identity_flags_url = f"{base_identity_flags_url}?identifier={identity_identifier}"
     flags = sdk_client.get(identity_flags_url).json()["flags"]
     multivariate_feature_state_id = next(
@@ -168,9 +168,7 @@ def test_get_feature_states_for_identity__mv_without_keyed_variant__returns_valu
         )
 
     # When
-    response = sdk_client.get(
-        f"{reverse('api-v1:sdk-identities')}?identifier={identity_identifier}"
-    )
+    response = sdk_client.get(f"/api/v1/identities/?identifier={identity_identifier}")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
