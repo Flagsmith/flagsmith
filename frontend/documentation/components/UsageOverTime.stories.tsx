@@ -1,3 +1,4 @@
+import moment from 'moment'
 import type { Meta, StoryObj } from 'storybook'
 import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
 import { Res } from 'common/types/responses'
@@ -19,7 +20,12 @@ const usage = (days: number, perDay: number): Res['organisationUsage'] => {
   const events = Array.from({ length: days }).map((_, index) => {
     const weight = DAY_WEIGHTS[index % DAY_WEIGHTS.length]
     return {
-      day: `2026-08-${`${index + 1}`.padStart(2, '0')}`,
+      // Relative to today, so the measured days run up to the projection
+      // rather than sitting a month behind it.
+      day: moment
+        .utc()
+        .subtract(days - 1 - index, 'days')
+        .format('YYYY-MM-DD'),
       environment_document: Math.round(perDay * weight * 0.04),
       flags: Math.round(perDay * weight * 0.63),
       identities: Math.round(perDay * weight * 0.24),
@@ -59,6 +65,26 @@ export const CumulativeCrossingTheCeiling: Story = {
     data: usage(24, 110000),
     isBillingPeriod: true,
     limit: 2000000,
+  },
+}
+
+export const CumulativeWithAProjection: Story = {
+  args: {
+    data: usage(18, 70000),
+    isBillingPeriod: true,
+    limit: 2000000,
+    periodEndsAt: moment.utc().add(12, 'days').toISOString(),
+    projectedTotal: 1800000,
+  },
+}
+
+export const ProjectionLandingOverTheCeiling: Story = {
+  args: {
+    data: usage(18, 70000),
+    isBillingPeriod: true,
+    limit: 1000000,
+    periodEndsAt: moment.utc().add(12, 'days').toISOString(),
+    projectedTotal: 1800000,
   },
 }
 

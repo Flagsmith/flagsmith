@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react'
 import Format from 'common/utils/format'
 import { Res } from 'common/types/responses'
-import { colorSurfaceAction } from 'common/theme/tokens'
+import { colorSurfaceAction, colorTextSecondary } from 'common/theme/tokens'
 import EmptyState from 'components/EmptyState'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import BarChart from 'components/charts/BarChart'
@@ -10,6 +10,7 @@ import {
   cumulativeTotals,
   dailyTotals,
   planLimitThreshold,
+  withProjection,
   xAxisIntervalFor,
 } from './utils'
 
@@ -18,6 +19,13 @@ type UsageOverTimeProps = {
   limit: PlanLimit
   isBillingPeriod: boolean
   periodLabel: string
+  projectedTotal?: number
+  periodEndsAt?: string
+}
+
+const SERIES_LABELS = {
+  cumulative: 'API calls used',
+  projected: 'Projected',
 }
 
 const headingFor = (isBillingPeriod: boolean, limit: PlanLimit) => {
@@ -29,21 +37,37 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
   data,
   isBillingPeriod,
   limit,
+  periodEndsAt,
   periodLabel,
+  projectedTotal,
 }) => {
   const daily = useMemo(() => dailyTotals(data), [data])
 
   const cumulative = useMemo(() => cumulativeTotals(daily), [daily])
 
-  const xAxisInterval = xAxisIntervalFor(daily.length)
+  const hasProjection = projectedTotal !== undefined && !!periodEndsAt
+  const line = useMemo(
+    () =>
+      hasProjection
+        ? withProjection(cumulative, projectedTotal, periodEndsAt)
+        : cumulative,
+    [cumulative, periodEndsAt, projectedTotal, hasProjection],
+  )
 
   const chart = isBillingPeriod ? (
     <LineChart
-      data={cumulative}
-      series={['cumulative']}
-      seriesLabels={{ cumulative: 'API calls used' }}
-      colorMap={{ cumulative: colorSurfaceAction }}
-      xAxisInterval={xAxisInterval}
+      data={line}
+      series={hasProjection ? ['cumulative', 'projected'] : ['cumulative']}
+      dashedSeries={['projected']}
+      seriesLabels={SERIES_LABELS}
+      colorMap={{
+        cumulative: colorSurfaceAction,
+        projected: colorTextSecondary,
+      }}
+      xAxisInterval={xAxisIntervalFor(line.length)}
+      // The line is already a running total, and on the day the measured and
+      // projected series meet a sum would count it twice.
+      hideTooltipTotal
       verticalGrid={false}
       height={320}
       referenceLine={planLimitThreshold(limit)}
@@ -54,7 +78,7 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
       series={['total']}
       seriesLabels={{ total: 'API calls' }}
       colorMap={{ total: colorSurfaceAction }}
-      xAxisInterval={xAxisInterval}
+      xAxisInterval={xAxisIntervalFor(daily.length)}
       verticalGrid={false}
       barSize={14}
     />

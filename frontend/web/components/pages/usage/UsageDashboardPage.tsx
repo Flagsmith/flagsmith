@@ -11,8 +11,10 @@ import UsageFilters from './components/UsageFilters'
 import UsageMeter from './components/UsageMeter'
 import UsageOverTime from './components/UsageOverTime'
 import UsagePageLayout from './components/UsagePageLayout'
+import { dailyTotals } from './components/UsageOverTime/utils'
 import { useUsageData } from './useUsageData'
 import { contributionNote, overLimitNote, planSectionCopy } from './copy'
+import { projectionNote, projectUsage } from './projection'
 import { overLimitOf } from './overLimit'
 import {
   isBilledOnAPeriod,
@@ -20,6 +22,7 @@ import {
   isChargedForOverages,
   showsContribution,
   showsPlanCeiling,
+  showsProjection,
   periodLabel,
   periodsFor,
   PeriodSelection,
@@ -112,9 +115,21 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   // A plan on a rolling window has no period to describe, and a stale cache
   // can still be carrying the dates of one it has left.
   const period = planIsBilled ? subscription?.current_billing_period : undefined
+  // The same last day the chart's projection steps away from, so the note and
+  // the line cannot disagree about how much of the period has been measured.
+  const lastMeasuredOn = useMemo(() => {
+    const days = dailyTotals(usage.allowance)
+    return days[days.length - 1]?.date
+  }, [usage.allowance])
+  const projection = projectUsage(allowanceTotal, limit, period, lastMeasuredOn)
 
-  // One line, so being over the limit outranks the project's share.
-  const meterNote = exceeded ? overLimitNote(exceeded) : contribution
+  // One line: over the limit outranks the projection, which outranks the share.
+  const meterNote =
+    [
+      exceeded && overLimitNote(exceeded),
+      projection && period && projectionNote(projection, period.ends_at),
+      contribution,
+    ].find(Boolean) || undefined
 
   if (!organisationId) {
     return null
@@ -181,6 +196,12 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
             }
             isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
             periodLabel={selectedPeriod}
+            projectedTotal={
+              showsProjection(billingPeriod, selectedProjectId)
+                ? projection?.total
+                : undefined
+            }
+            periodEndsAt={period?.ends_at}
           />
 
           <UsageBreakdown

@@ -23,6 +23,9 @@ type LineChartProps = {
   xAxisInterval?: number
   showLegend?: boolean
   seriesLabels?: Record<string, string>
+  dashedSeries?: string[]
+  /** For series whose sum means nothing, such as a cumulative line. */
+  hideTooltipTotal?: boolean
   verticalGrid?: boolean
   referenceLine?: Threshold
 }
@@ -49,8 +52,10 @@ const thresholdLabelFor = (referenceLine?: Threshold) =>
 
 const LineChart: FC<LineChartProps> = ({
   colorMap,
+  dashedSeries,
   data,
   height = 400,
+  hideTooltipTotal = false,
   referenceLine,
   series,
   seriesLabels,
@@ -87,7 +92,12 @@ const LineChart: FC<LineChartProps> = ({
         />
         <Tooltip
           cursor={{ stroke: colorTextSecondary, strokeDasharray: '3 3' }}
-          content={<ChartTooltip seriesLabels={seriesLabels} />}
+          content={
+            <ChartTooltip
+              seriesLabels={seriesLabels}
+              hideTotal={hideTooltipTotal}
+            />
+          }
         />
         {showLegend && (
           <Legend
@@ -112,7 +122,10 @@ const LineChart: FC<LineChartProps> = ({
             dataKey={label}
             stroke={colorMap[label]}
             strokeWidth={2}
+            strokeDasharray={dashedSeries?.includes(label) ? '6 6' : undefined}
             dot={false}
+            // Recharts' default, pinned: a gap in a series must stay a gap.
+            connectNulls={false}
             animationBegin={index * 80}
             animationDuration={600}
             animationEasing='ease-out'
