@@ -726,7 +726,7 @@ def test_get_flags__unknown_feature_filter__returns_404(
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
-    response = api_client.get(f"{reverse('api-v1:flags')}?feature=unknown_feature")
+    response = api_client.get("/api/v1/flags/?feature=unknown_feature")
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -742,7 +742,7 @@ def test_get_flags__empty_feature_filter__returns_all_flags(
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
-    response = api_client.get(f"{reverse('api-v1:flags')}?feature=")
+    response = api_client.get("/api/v1/flags/?feature=")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -781,7 +781,7 @@ def test_get_flags__segment_matching_without_identity__returns_segment_override(
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
-    response = api_client.get(reverse("api-v1:flags"))
+    response = api_client.get("/api/v1/flags/")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -826,7 +826,7 @@ def test_get_flags__segment_reading_identity__returns_environment_default(
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
-    response = api_client.get(reverse("api-v1:flags"))
+    response = api_client.get("/api/v1/flags/")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -857,7 +857,7 @@ def test_get_flags__segment_reading_identity_in_nested_rule__returns_environment
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
-    response = api_client.get(reverse("api-v1:flags"))
+    response = api_client.get("/api/v1/flags/")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -899,7 +899,7 @@ def test_get_flags__segment_reading_server_key_only_flag_with_client_key__return
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
-    response = api_client.get(reverse("api-v1:flags"))
+    response = api_client.get("/api/v1/flags/")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -933,7 +933,7 @@ def test_get_flags__hide_disabled_flags_with_disabled_segment_override__excludes
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
-    response = api_client.get(reverse("api-v1:flags"))
+    response = api_client.get("/api/v1/flags/")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -960,7 +960,7 @@ def test_get_flags__enabled_server_key_only_feature_with_client_key__excludes_fl
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
-    response = api_client.get(reverse("api-v1:flags"))
+    response = api_client.get("/api/v1/flags/")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
