@@ -1472,7 +1472,7 @@ requires-dist = [
     { name = "flagsmith", specifier = ">=6.2.0,<7.0.0" },
     { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.15.0,<4" },
     { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
-    { name = "flagsmith-flag-engine", specifier = ">=11.0.0,<12.0.0" },
+    { name = "flagsmith-flag-engine", specifier = ">=11.1.0,<12.0.0" },
     { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.14.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "flagsmith-sql-flag-engine", specifier = ">=0.2.0,<0.3.0" },
     { name = "google-api-python-client", specifier = ">=1.12.5,<1.13.0" },
@@ -1596,16 +1596,16 @@ test-tools = [
 
 [[package]]
 name = "flagsmith-flag-engine"
-version = "11.0.0"
+version = "11.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jsonpath-rfc9535" },
     { name = "semver" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1c/3f/4f5ecb3f13ebed87d4aacc86000917a98b1005f27a0df6281b7e30667148/flagsmith_flag_engine-11.0.0.tar.gz", hash = "sha256:0e00703b092c5b03f12bb4d24850ba0f6f13a7d32fb7a0e720ae80c86c6f2a56", size = 11131, upload-time = "2026-08-28T18:08:52.64Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3a/03/3293198f5c98fba746cd70b8a2d1296468f425cd90d267136e67116858c4/flagsmith_flag_engine-11.1.0.tar.gz", hash = "sha256:b627a59f5def981aead5f9694161dbf0464ab042464105707076cbef129a9f01", size = 12980, upload-time = "2026-09-24T17:38:47.689Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/21/1d/46e29be20fe490d345e14f0456a764b85a9c14d2062ef7f09755d048e5a4/flagsmith_flag_engine-11.0.0-py3-none-any.whl", hash = "sha256:f44551326064ae59f9280a39b7392912aa28bfeb8467f84fe95b97dfe4c537b2", size = 14267, upload-time = "2026-08-28T18:08:51.597Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/2f/cda7e160403e7e1ec7798a081a1fcc633220a4272cec74dcbfa7eeadd0b0/flagsmith_flag_engine-11.1.0-py3-none-any.whl", hash = "sha256:a3e68a06b6792559faf897f1cead817716760b33c39283505b37d8cbe3f181c0", size = 16086, upload-time = "2026-09-24T17:38:45.981Z" },
 ]
 
 [[package]]
