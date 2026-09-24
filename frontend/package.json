@@ -37,8 +37,8 @@
     "generate:tokens": "node scripts/generate-tokens.mjs"
   },
   "engines": {
-    "node": "22.x",
-    "npm": ">=10 <12"
+    "node": "24.x",
+    "npm": ">=11.10 <12"
   },
   "overrides": {
     "react": "$react",
