@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.276.0](https://github.com/Flagsmith/flagsmith/compare/v2.275.0...v2.276.0) (2026-09-24)
+
+
+### Features
+
+* **experimentation:** publish warehouse connections to Redis and apply delivery status ([#8551](https://github.com/Flagsmith/flagsmith/issues/8551)) ([10f8266](https://github.com/Flagsmith/flagsmith/commit/10f82664f5d1f93b2e3b055a00f869a82e0d5010))
+
+
+### Bug Fixes
+
+* stop sharing ClickHouse clients across threads ([#8589](https://github.com/Flagsmith/flagsmith/issues/8589)) ([79e6859](https://github.com/Flagsmith/flagsmith/commit/79e68595543adb939a9a41a5d6b2a2144c752fc4))
+
 ## [2.275.0](https://github.com/Flagsmith/flagsmith/compare/v2.274.0...v2.275.0) (2026-09-23)
 
 
