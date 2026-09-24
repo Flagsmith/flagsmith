@@ -182,12 +182,12 @@ export const colorSurfaceActionSubtle =
 export const colorSurfaceActionTint =
   'var(--color-surface-action-tint, rgba(104, 55, 252, 0.12))'
 export const colorSurfaceActive =
-  'var(--color-surface-active, rgba(0, 0, 0, 0.16))'
+  'var(--color-surface-active, rgba(8, 12, 23, 0.16))'
 export const colorSurfaceDanger = 'var(--color-surface-danger, #ffeddb)'
 export const colorSurfaceDefault = 'var(--color-surface-default, #ffffff)'
 export const colorSurfaceEmphasis = 'var(--color-surface-emphasis, #e1e2eb)'
 export const colorSurfaceHover =
-  'var(--color-surface-hover, rgba(0, 0, 0, 0.08))'
+  'var(--color-surface-hover, rgba(8, 12, 23, 0.08))'
 export const colorSurfaceInfo = 'var(--color-surface-info, #dff3ff)'
 export const colorSurfaceMuted = 'var(--color-surface-muted, #f3f4f5)'
 export const colorSurfaceSubtle = 'var(--color-surface-subtle, #fafafb)'
