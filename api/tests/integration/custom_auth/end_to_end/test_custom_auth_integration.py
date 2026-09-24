@@ -202,10 +202,10 @@ def test_register_and_login__activation_flow_enabled__succeeds_after_activation(
         register_url, data=register_data, status_code=status.HTTP_201_CREATED
     )
 
-    # Then success and account inactive
-    assert "key" in result.data
+    # Then success and account inactive, with no token handed out
     assert "is_active" in result.data
     assert not result.data["is_active"]
+    assert result.data["key"] is None
 
     new_user = FFAdminUser.objects.latest("id")
     assert new_user.email == register_data["email"]

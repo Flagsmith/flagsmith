@@ -43,6 +43,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "mfa_code": "5/min",
     "invite": "10/min",
     "signup": "100/min",
+    "resend_activation": "100/min",
     "user": "100000/day",
     "master_api_key": "100000/day",
     "influx_query": "50/min",

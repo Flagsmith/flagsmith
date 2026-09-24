@@ -114,7 +114,10 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         return instance  # type: ignore[no-any-return]
 
     @staticmethod
-    def get_key(instance) -> str:  # type: ignore[no-untyped-def]
+    def get_key(instance: FFAdminUser) -> str | None:
+        # An inactive user's token authenticates nothing, so don't mint one.
+        if not instance.is_active:
+            return None
         token, _ = Token.objects.get_or_create(user=instance)
         return token.key  # type: ignore[no-any-return]
 
