@@ -3980,6 +3980,176 @@
           "feature_state_value"
         ]
       },
+      "DependencyConflictDetailSegmentCondition": {
+        "type": "object",
+        "properties": {
+          "property": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Property"
+          },
+          "operator": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Operator2a7Enum"
+              }
+            ],
+            "title": "Operator"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "required": [
+          "property",
+          "operator",
+          "value",
+          "description"
+        ],
+        "title": "SegmentCondition"
+      },
+      "DependencyConflictDetailSegmentRule": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TypeC8eEnum"
+              }
+            ],
+            "title": "Type"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DependencyConflictDetailSegmentCondition"
+            },
+            "title": "Conditions"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DependencyConflictDetailSegmentRule"
+            },
+            "title": "Rules"
+          }
+        },
+        "required": [
+          "type",
+          "conditions"
+        ],
+        "title": "SegmentRule"
+      },
+      "DependencyEdgeSegmentCondition": {
+        "type": "object",
+        "properties": {
+          "property": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Property"
+          },
+          "operator": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Operator2a7Enum"
+              }
+            ],
+            "title": "Operator"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "required": [
+          "property",
+          "operator",
+          "value",
+          "description"
+        ],
+        "title": "SegmentCondition"
+      },
+      "DependencyEdgeSegmentRule": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TypeC8eEnum"
+              }
+            ],
+            "title": "Type"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DependencyEdgeSegmentCondition"
+            },
+            "title": "Conditions"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DependencyEdgeSegmentRule"
+            },
+            "title": "Rules"
+          }
+        },
+        "required": [
+          "type",
+          "conditions"
+        ],
+        "title": "SegmentRule"
+      },
       "DirectionEnum": {
         "description": "* `up` - Higher is better\n* `down` - Lower is better\n* `informational` - Informational only",
         "type": "string",
@@ -5770,6 +5940,25 @@
       "NullEnum": {
         "type": "null"
       },
+      "Operator2a7Enum": {
+        "type": "string",
+        "enum": [
+          "EQUAL",
+          "GREATER_THAN",
+          "LESS_THAN",
+          "LESS_THAN_INCLUSIVE",
+          "CONTAINS",
+          "GREATER_THAN_INCLUSIVE",
+          "NOT_CONTAINS",
+          "NOT_EQUAL",
+          "REGEX",
+          "PERCENTAGE_SPLIT",
+          "MODULO",
+          "IS_SET",
+          "IS_NOT_SET",
+          "IN"
+        ]
+      },
       "OrganisationSerializerFull": {
         "type": "object",
         "properties": {
@@ -7248,6 +7437,14 @@
           "bool"
         ]
       },
+      "TypeC8eEnum": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "NONE"
+        ]
+      },
       "TypeD77Enum": {
         "description": "* `STANDARD` - STANDARD\n* `MULTIVARIATE` - MULTIVARIATE",
         "type": "string",
@@ -7470,7 +7667,7 @@
           "operator": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/V1EnvironmentDocumentResponseSegmentConditionOperatorEnum"
+                "$ref": "#/components/schemas/Operator2a7Enum"
               }
             ],
             "title": "Operator"
@@ -7491,25 +7688,6 @@
         ],
         "title": "SegmentCondition"
       },
-      "V1EnvironmentDocumentResponseSegmentConditionOperatorEnum": {
-        "type": "string",
-        "enum": [
-          "EQUAL",
-          "GREATER_THAN",
-          "LESS_THAN",
-          "LESS_THAN_INCLUSIVE",
-          "CONTAINS",
-          "GREATER_THAN_INCLUSIVE",
-          "NOT_CONTAINS",
-          "NOT_EQUAL",
-          "REGEX",
-          "PERCENTAGE_SPLIT",
-          "MODULO",
-          "IS_SET",
-          "IS_NOT_SET",
-          "IN"
-        ]
-      },
       "V1EnvironmentDocumentResponseSegmentRule": {
         "description": "Represents a rule within a segment used by Flagsmith engine. Root rules usually contain nested rules.",
         "type": "object",
@@ -7517,7 +7695,7 @@
           "type": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/V1EnvironmentDocumentResponseSegmentRuleTypeEnum"
+                "$ref": "#/components/schemas/TypeC8eEnum"
               }
             ],
             "title": "Type"
@@ -7543,14 +7721,6 @@
           "conditions"
         ],
         "title": "SegmentRule"
-      },
-      "V1EnvironmentDocumentResponseSegmentRuleTypeEnum": {
-        "type": "string",
-        "enum": [
-          "ALL",
-          "ANY",
-          "NONE"
-        ]
       },
       "VcsProviderEnum": {
         "description": "* `github` - GitHub",
