@@ -72,7 +72,7 @@ const EmailActivationPage: FC = () => {
 
   const onResend = (e: FormEvent) => {
     e.preventDefault()
-    resendActivationEmail({ email })
+    resendActivationEmail({ email: email.toLowerCase() })
   }
 
   const backToSignIn = (

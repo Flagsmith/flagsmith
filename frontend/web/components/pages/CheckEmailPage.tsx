@@ -18,7 +18,11 @@ const CheckEmailPage: FC = () => {
   const location = useLocation<LocationState>()
 
   // Router state survives a reload of this page; the store does not.
-  const email = location.state?.email || AccountStore.pendingEmailVerification
+  const email = (
+    location.state?.email ||
+    AccountStore.pendingEmailVerification ||
+    ''
+  ).toLowerCase()
 
   const [resendActivationEmail, { isError, isLoading, isSuccess }] =
     useResendActivationEmailMutation()
