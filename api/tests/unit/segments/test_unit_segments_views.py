@@ -426,6 +426,39 @@ def test_update_segment__valid_data__creates_audit_log(
     ).exists()
 
 
+def test_update_segment__valid_data__does_not_audit_log_revision_as_new_segment(
+    admin_client: APIClient,
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project.id, segment.id],
+    )
+    data = {
+        "name": "New segment name",
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+    }
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    # The revision taken before the update is an implementation detail, so it
+    # must not surface as a segment somebody created.
+    assert list(
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.SEGMENT.name
+        ).values_list("log", flat=True)
+    ) == ["Segment updated: New segment name"]
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
