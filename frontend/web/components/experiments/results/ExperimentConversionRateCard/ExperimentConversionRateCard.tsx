@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react'
 import moment from 'moment'
-import { LineChart } from 'components/charts'
+import { LineChart, seriesFromMaps } from 'components/charts'
 import ContentCard from 'components/base/grid/ContentCard'
 import { BayesianResultsSummary, Experiment } from 'common/types/responses'
 import { getPrimaryMetric } from 'components/experiments/constants'
@@ -64,11 +64,13 @@ const ExperimentConversionRateCard: FC<ExperimentConversionRateCardProps> = ({
       {hasConversions ? (
         <>
           <LineChart
-            colorMap={chart.colorMap}
             data={chart.points}
             height={260}
-            series={chart.series}
-            seriesLabels={chart.seriesLabels}
+            series={seriesFromMaps(
+              chart.series,
+              chart.colorMap,
+              chart.seriesLabels,
+            )}
             showLegend
           />
           <span className='text-muted fs-caption'>

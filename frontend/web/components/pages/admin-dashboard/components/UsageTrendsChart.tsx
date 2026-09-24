@@ -33,19 +33,19 @@ const UsageTrendsChart: FC<UsageTrendsChartProps> = ({ days = 30, trends }) => {
     [trends],
   )
 
-  const colorMap = useMemo(() => buildChartColorMap([...SERIES]), [])
+  const series = useMemo(() => {
+    const colourOf = buildChartColorMap([...SERIES])
+    return SERIES.map((key) => ({
+      colour: colourOf[key],
+      key,
+      label: SERIES_LABELS[key],
+    }))
+  }, [])
 
   return (
     <Card className='shadow p-4'>
       <h5 className='mb-4 mt-2'>API Usage Trends (Last {days} Days)</h5>
-      <LineChart
-        data={data}
-        series={[...SERIES]}
-        colorMap={colorMap}
-        seriesLabels={SERIES_LABELS}
-        xAxisInterval={2}
-        showLegend
-      />
+      <LineChart data={data} series={series} xAxisInterval={2} showLegend />
     </Card>
   )
 }
