@@ -549,7 +549,7 @@ def test_list_segments__filter_by_unknown_edge_identity__returns_no_segments(
     edge_identity_dynamo_wrapper_mock.get_item_from_uuid.side_effect = (
         ObjectDoesNotExist
     )
-    base_url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    base_url = f"/api/v1/projects/{project.id}/segments/"
 
     # When
     response = admin_client.get(
