@@ -130,7 +130,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-danger</code>
             </td>
             <td>
-              <code>oklch(from var(--red-500) l c h / 0.08)</code>
+              <code>var(--red-100)</code>
             </td>
           </tr>
           <tr>
@@ -138,7 +138,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-success</code>
             </td>
             <td>
-              <code>oklch(from var(--green-500) l c h / 0.08)</code>
+              <code>var(--green-50)</code>
             </td>
           </tr>
           <tr>
@@ -146,7 +146,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-warning</code>
             </td>
             <td>
-              <code>oklch(from var(--orange-500) l c h / 0.08)</code>
+              <code>var(--orange-100)</code>
             </td>
           </tr>
           <tr>
@@ -154,7 +154,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-info</code>
             </td>
             <td>
-              <code>oklch(from var(--blue-500) l c h / 0.08)</code>
+              <code>var(--blue-100)</code>
             </td>
           </tr>
         </tbody>
@@ -237,7 +237,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-info</code>
             </td>
             <td>
-              <code>var(--blue-500)</code>
+              <code>var(--blue-700)</code>
             </td>
           </tr>
         </tbody>

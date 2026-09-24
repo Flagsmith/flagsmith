@@ -183,27 +183,23 @@ export const colorSurfaceActionTint =
   'var(--color-surface-action-tint, rgba(104, 55, 252, 0.12))'
 export const colorSurfaceActive =
   'var(--color-surface-active, rgba(0, 0, 0, 0.16))'
-export const colorSurfaceDanger =
-  'var(--color-surface-danger, rgba(239, 77, 86, 0.08))'
+export const colorSurfaceDanger = 'var(--color-surface-danger, #fce5e4)'
 export const colorSurfaceDefault = 'var(--color-surface-default, #ffffff)'
 export const colorSurfaceEmphasis = 'var(--color-surface-emphasis, #e1e2eb)'
 export const colorSurfaceHover =
   'var(--color-surface-hover, rgba(0, 0, 0, 0.08))'
-export const colorSurfaceInfo =
-  'var(--color-surface-info, rgba(15, 165, 252, 0.08))'
+export const colorSurfaceInfo = 'var(--color-surface-info, #dff3ff)'
 export const colorSurfaceMuted = 'var(--color-surface-muted, #f3f4f5)'
 export const colorSurfaceSubtle = 'var(--color-surface-subtle, #fafafb)'
-export const colorSurfaceSuccess =
-  'var(--color-surface-success, rgba(71, 170, 127, 0.08))'
-export const colorSurfaceWarning =
-  'var(--color-surface-warning, rgba(255, 159, 67, 0.08))'
+export const colorSurfaceSuccess = 'var(--color-surface-success, #f0fff2)'
+export const colorSurfaceWarning = 'var(--color-surface-warning, #ffe9d4)'
 
 // Text
 export const colorTextAction = 'var(--color-text-action, #6837fc)'
 export const colorTextDanger = 'var(--color-text-danger, #bb1720)'
 export const colorTextDefault = 'var(--color-text-default, #1a2634)'
 export const colorTextDisabled = 'var(--color-text-disabled, #9da4ae)'
-export const colorTextInfo = 'var(--color-text-info, #0fa5fc)'
+export const colorTextInfo = 'var(--color-text-info, #0767b9)'
 export const colorTextSecondary = 'var(--color-text-secondary, #656d7b)'
 export const colorTextSuccess = 'var(--color-text-success, #35795a)'
 export const colorTextTertiary = 'var(--color-text-tertiary, #656d7b)'
