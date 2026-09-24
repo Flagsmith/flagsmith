@@ -456,7 +456,7 @@ def segment_rule(segment):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def child_segment_rule(segment_rule: SegmentRule) -> Condition:
+def child_segment_rule(segment_rule: SegmentRule) -> SegmentRule:
     return SegmentRule.objects.create(rule=segment_rule, type=SegmentRule.ALL_RULE)
 
 
