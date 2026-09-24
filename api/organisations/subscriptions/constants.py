@@ -74,3 +74,10 @@ class SubscriptionPlanFamily(Enum):
                 return cls.ENTERPRISE
             case _:
                 return cls.FREE
+
+
+# Only these are billed for going over the API limit.
+CHARGEABLE_PLAN_FAMILIES = (
+    SubscriptionPlanFamily.START_UP,
+    SubscriptionPlanFamily.SCALE_UP,
+)

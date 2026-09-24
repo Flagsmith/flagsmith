@@ -125,8 +125,9 @@ def test_has_used_overage_grace__no_subscription__returns_false(
     assert has_used_overage_grace(organisation) is False
 
 
-# The plan change hook deletes the row without clearing the cached relation.
-def test_has_used_overage_grace__read_before_plan_change__rereads_the_row(
+# The plan change hook deletes the row through a queryset, which leaves the
+# cached reverse relation on an organisation already in memory.
+def test_has_used_overage_grace__row_deleted_after_a_read__rereads_it(
     organisation: Organisation,
 ) -> None:
     # Given
@@ -135,8 +136,9 @@ def test_has_used_overage_grace__read_before_plan_change__rereads_the_row(
     assert has_used_overage_grace(organisation) is True
 
     # When
-    organisation.subscription.plan = "startup-v2"
-    organisation.subscription.save()
+    OrganisationBreachedGracePeriod.objects.filter(
+        organisation=organisation,
+    ).delete()
 
     # Then
     assert has_used_overage_grace(organisation) is False

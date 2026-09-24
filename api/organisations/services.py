@@ -2,17 +2,15 @@ from datetime import timedelta
 
 from integrations.flagsmith.client import get_openfeature_client
 from organisations.models import Organisation, OrganisationBreachedGracePeriod
-from organisations.subscriptions.constants import SubscriptionPlanFamily
+from organisations.subscriptions.constants import (
+    CHARGEABLE_PLAN_FAMILIES,
+    SubscriptionPlanFamily,
+)
 
 # charge_for_api_call_count_overages only bills terms roughly a month long, so
 # an annual subscription is never charged for an overage.
 MONTHLY_TERM_MIN = timedelta(days=25)
 MONTHLY_TERM_MAX = timedelta(days=35)
-
-CHARGEABLE_PLAN_FAMILIES = (
-    SubscriptionPlanFamily.START_UP,
-    SubscriptionPlanFamily.SCALE_UP,
-)
 
 
 def _plan_family(organisation: Organisation) -> SubscriptionPlanFamily | None:

@@ -1171,6 +1171,29 @@ def test_subscription_get_current_billing_period__no_cache__returns_none(
     assert organisation.subscription.get_current_billing_period() is None
 
 
+# Both plans are billed for overages, so the row still means the forgiven
+# month and the organisation does not get a second one.
+@pytest.mark.parametrize("new_plan", ["scale-up-v3", "startup-v2"])
+def test_subscription_save__paid_to_paid__keeps_breached_grace_period(
+    organisation: Organisation,
+    new_plan: str,
+) -> None:
+    # Given
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
+    subscription = Subscription.objects.get(organisation=organisation)
+
+    # When
+    subscription.plan = new_plan
+    subscription.save()
+
+    # Then
+    assert OrganisationBreachedGracePeriod.objects.filter(
+        organisation=organisation
+    ).exists()
+
+
 @pytest.mark.parametrize("new_plan", ["scale-up-v2", "startup-v2"])
 def test_subscription_save__upgraded__clears_breached_grace_period(
     organisation: Organisation,

@@ -14,6 +14,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     AFTER_SAVE,
     BEFORE_DELETE,
+    BEFORE_UPDATE,
     LifecycleModelMixin,
     hook,
 )
@@ -39,6 +40,7 @@ from organisations.chargebee.chargebee import (
 )
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.subscriptions.constants import (
+    CHARGEABLE_PLAN_FAMILIES,
     CHARGEBEE,
     FREE_PLAN_ID,
     FREE_PLAN_SUBSCRIPTION_METADATA,
@@ -261,6 +263,19 @@ class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
             )
 
 
+def _grace_meaning(plan_family: SubscriptionPlanFamily) -> str | None:
+    """
+    Which reader a breached grace period row belongs to. Free plans read it as
+    the wait before flags stop, plans billed for overages as the forgiven
+    month, and everyone else not at all.
+    """
+    if plan_family in CHARGEABLE_PLAN_FAMILIES:
+        return "overage"
+    if plan_family is SubscriptionPlanFamily.FREE:
+        return "restriction"
+    return None
+
+
 class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[misc]
     # Even though it is not enforced at the database level,
     # every organisation has a subscription.
@@ -338,14 +353,32 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             return int(match.group(1))
         return 1
 
+    @hook(BEFORE_UPDATE, when="plan", has_changed=True)
+    def capture_plan_family(self):  # type: ignore[no-untyped-def]
+        # initial_value goes stale once an instance has been saved before, so
+        # the plan being left is read from the database rather than memory.
+        previous_plan = (
+            Subscription.objects.filter(pk=self.pk)
+            .values_list("plan", flat=True)
+            .first()
+        )
+        self._previous_plan_family = SubscriptionPlanFamily.get_by_plan_id(
+            previous_plan or ""
+        )
+
     @hook(AFTER_SAVE, when="plan", has_changed=True)
     def reset_api_limit_state(self):  # type: ignore[no-untyped-def]
         # A breached grace period means the wait before flags stop on a free
-        # plan, and the overage month we do not charge for on a paid one. The
-        # row does not say which, so it cannot outlive the plan that wrote it.
-        OrganisationBreachedGracePeriod.objects.filter(
-            organisation=self.organisation
-        ).delete()
+        # plan, and the overage month we do not charge for on a paid one. It
+        # survives a move within a family, where it still means what it did,
+        # and not a move between them, where nothing says which it was.
+        previous_family = getattr(self, "_previous_plan_family", None)
+        if previous_family and _grace_meaning(previous_family) != _grace_meaning(
+            self.subscription_plan_family
+        ):
+            OrganisationBreachedGracePeriod.objects.filter(
+                organisation=self.organisation
+            ).delete()
 
         if not getattr(self.organisation, "api_limit_access_block", None):
             return
