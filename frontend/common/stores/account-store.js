@@ -397,6 +397,7 @@ const controller = {
       })
       user.organisations = sortedOrganisations
       store.model = user
+      store.pendingEmailVerification = null
       if (user && user.organisations) {
         store.organisation = user.organisations[0]
         const cookiedID = API.getCookie('organisation')
