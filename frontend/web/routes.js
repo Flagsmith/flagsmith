@@ -17,6 +17,8 @@ import AccountSettingsPage from './components/pages/AccountSettingsPage'
 import NotFoundErrorPage from './components/pages/NotFoundErrorPage'
 import ProjectSettingsPage from './components/pages/project-settings'
 import PasswordResetPage from './components/pages/PasswordResetPage'
+import CheckEmailPage from './components/pages/CheckEmailPage'
+import EmailActivationPage from './components/pages/EmailActivationPage'
 import EnvironmentSettingsPage from './components/pages/environment-settings'
 import InvitePage from './components/pages/InvitePage'
 import NotFoundPage from './components/pages/NotFoundPage'
@@ -62,6 +64,7 @@ import { getStore } from 'common/store'
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
+  'activate': '/activate/:uid/:token',
   'admin-dashboard': '/admin/dashboard',
   'audit-log': '/project/:projectId/audit-log',
   'audit-log-item': '/project/:projectId/audit-log/:id',
@@ -72,6 +75,7 @@ export const routes = {
   'change-requests':
     '/project/:projectId/environment/:environmentId/change-requests',
   'change-requests-project': '/project/:projectId/change-requests',
+  'check-email': '/check-email',
   'compare': '/project/:projectId/compare',
   'create-environment': '/project/:projectId/environment/create',
   'create-organisation': '/create',
@@ -165,6 +169,8 @@ export default (
           exact
           component={PasswordResetPage}
         />
+        <Route path={routes['check-email']} exact component={CheckEmailPage} />
+        <Route path={routes.activate} exact component={EmailActivationPage} />
         <ParameterizedRoute
           path={routes.features}
           exact

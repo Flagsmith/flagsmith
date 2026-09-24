@@ -38,6 +38,7 @@ import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import { useUTMs } from 'common/useUTMs'
 import useSignupExperiment from 'common/useSignupExperiment'
 
+type LoginLocationState = { isGettingStarted?: boolean } | undefined
 type EmailFieldError = string | string[]
 type EmailError = { email?: EmailFieldError } | undefined
 
@@ -103,6 +104,9 @@ const HomePage: React.FC = () => {
   // component, so '' would match a login error that arrived before any signup.
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
   const [emailAlreadyRegistered, setEmailAlreadyRegistered] = useState(false)
+  // Set by EmailActivationPage on the redirect it makes here.
+  const isGettingStarted = !!(location.state as LoginLocationState)
+    ?.isGettingStarted
 
   const [samlError, setLocalError] = useState(false)
   const [samlLoading, setSamlLoading] = useState(false)
@@ -366,7 +370,14 @@ const HomePage: React.FC = () => {
     }
   }
   return (
-    <AccountProvider>
+    <AccountProvider
+      onSave={() => {
+        const pendingEmail = AccountStore.pendingEmailVerification
+        if (pendingEmail) {
+          history.push('/check-email', { email: pendingEmail })
+        }
+      }}
+    >
       {(
         {
           error,
@@ -457,7 +468,7 @@ const HomePage: React.FC = () => {
                                 onSubmit={(e) => {
                                   e.preventDefault()
                                   setEmailAlreadyRegistered(false)
-                                  login({ email, password })
+                                  login({ email, isGettingStarted, password })
                                 }}
                               >
                                 {emailAlreadyRegistered && (

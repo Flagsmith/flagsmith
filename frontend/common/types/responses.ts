@@ -1466,6 +1466,8 @@ export type Res = {
   healthProviders: HealthProvider[]
   account: Account
   userEmail: {}
+  activateAccount: null
+  resendActivationEmail: null
   groupAdmin: { id: string }
   groups: PagedResponse<UserGroup>
   group: UserGroup
