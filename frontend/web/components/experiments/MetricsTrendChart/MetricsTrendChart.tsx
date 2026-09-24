@@ -1,6 +1,6 @@
 import { FC, useState } from 'react'
 import LineChart from 'components/charts/LineChart'
-import { ChartDataPoint } from 'components/charts/types'
+import { ChartDataPoint, ChartSeries } from 'components/charts/types'
 import { colorChart5, colorTextSuccess } from 'common/theme/tokens'
 import './MetricsTrendChart.scss'
 
@@ -19,15 +19,10 @@ type MetricsTrendChartProps = {
   trends: MetricTrend[]
 }
 
-const SERIES = ['control', 'variant']
-const COLOR_MAP: Record<string, string> = {
-  control: colorTextSuccess,
-  variant: colorChart5,
-}
-const SERIES_LABELS: Record<string, string> = {
-  control: 'Control',
-  variant: 'Variant B',
-}
+const SERIES: ChartSeries[] = [
+  { colour: colorTextSuccess, key: 'control', label: 'Control' },
+  { colour: colorChart5, key: 'variant', label: 'Variant B' },
+]
 
 const MetricsTrendChart: FC<MetricsTrendChartProps> = ({ trends }) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -60,8 +55,6 @@ const MetricsTrendChart: FC<MetricsTrendChartProps> = ({ trends }) => {
       <LineChart
         data={chartData}
         series={SERIES}
-        colorMap={COLOR_MAP}
-        seriesLabels={SERIES_LABELS}
         showLegend
         xAxisInterval={1}
       />
