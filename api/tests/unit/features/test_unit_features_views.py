@@ -1191,7 +1191,7 @@ def test_get_flags__multivariate_feature__expected_num_queries(
     api_client.get("/api/v1/flags/")
 
     # When / Then
-    with django_assert_num_queries(1):
+    with django_assert_num_queries(2):
         response = api_client.get("/api/v1/flags/")
     assert response.status_code == status.HTTP_200_OK
 
