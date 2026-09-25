@@ -48,6 +48,7 @@ export const gitlabService = service
           url: `projects/${query.project_id}/gitlab/projects/?${Utils.toParam({
             page: query.page ?? 1,
             page_size: query.page_size ?? 100,
+            search_text: query.q || undefined,
           })}`,
         }),
       }),
