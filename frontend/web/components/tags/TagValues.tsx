@@ -16,13 +16,11 @@ type TagValuesType = {
   projectId: string
   children?: ReactNode
   inline?: boolean
-  hideNames?: boolean
   hideTags?: number[]
 }
 
 const TagValues: FC<TagValuesType> = ({
   children,
-  hideNames = true,
   hideTags = [],
   inline,
   onAdd,
@@ -47,12 +45,7 @@ const TagValues: FC<TagValuesType> = ({
       {tags?.map(
         (tag) =>
           value?.includes(tag.id) && (
-            <Tag
-              key={tag.id}
-              hideNames={hideNames}
-              onClick={onAdd ?? onClick}
-              tag={tag}
-            />
+            <Tag key={tag.id} onClick={onAdd ?? onClick} tag={tag} />
           ),
       )}
       {!!onAdd &&

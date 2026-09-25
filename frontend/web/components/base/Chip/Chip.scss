@@ -3,7 +3,10 @@
 // the remove-button reset. Distinct class (`ds-chip`) until the legacy `.chip`
 // (_chip.scss) migrates here under #6606.
 .ds-chip {
-  padding: 4px 10px;
+  // 32px with an 8px gap, from the chip frame in Figma. Height is stated so a
+  // chip holding only an icon matches one holding text.
+  height: 32px;
+  padding: 0 10px;
   font-size: 0.8125rem;
   white-space: nowrap;
   border: 1px solid var(--color-border-default);
@@ -36,7 +39,10 @@
 
   // Sizes (default is the base above).
   &--sm {
-    padding: 3px 8px;
+    // Stated now the base has a fixed height, or this would inherit 32px.
+    // Matches what the padding produced before.
+    height: 24px;
+    padding: 0 8px;
     font-size: 0.75rem;
   }
 
@@ -72,5 +78,35 @@
     background: transparent;
     color: inherit;
     cursor: pointer;
+  }
+}
+
+// The leading checkbox for `selected`. A chip with no children is a bare
+// swatch, where only the tick renders and this box is skipped.
+.ds-chip__check {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xs);
+
+  // Checked: the box fills with the chip's ink and the tick takes the chip's
+  // own fill, which reads more strongly than a bare tick. Falls back to the
+  // page surface for chips that publish no fill of their own.
+  &--selected {
+    // currentColor here is the chip's inherited ink. The override sits on the
+    // svg, not this element: setting `color` here would change what
+    // currentColor resolves to and the box would vanish.
+    background-color: currentColor;
+    border-color: transparent;
+
+    svg {
+      color: var(--ds-chip-check-ink, var(--color-surface-default));
+    }
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
   }
 }

@@ -1,7 +1,7 @@
 import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
-import VCSProviderTag from 'components/tags/VCSProviderTag'
+import VCSProviderTag from 'components/VCSProviderTag'
 import { VCSProvider } from 'common/types/responses'
 
 const meta: Meta<typeof VCSProviderTag> = {
