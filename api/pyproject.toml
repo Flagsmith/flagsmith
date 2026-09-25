@@ -156,6 +156,8 @@ flagsmith-private = { index = "flagsmith-pypi-production" }
 
 [tool.uv]
 required-version = ">=0.11.18"  # Ensure this matches the version in .pre-commit-config.yaml
+exclude-newer = "1 week"
+exclude-newer-package = { flagsmith-private = false, flagsmith-common = false, flagsmith = false, flagsmith-flag-engine = false, flagsmith-sql-flag-engine = false, openfeature-provider-flagsmith = false }
 
 [tool.ruff]
 line-length = 88
