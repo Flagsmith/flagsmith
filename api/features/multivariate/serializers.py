@@ -13,6 +13,16 @@ from features.multivariate.models import (
 )
 
 
+def validate_identity_override_allocations(
+    percentage_allocations: typing.Iterable[float],
+) -> None:
+    """Allow an identity override to pin at most one variant, at 100%."""
+    if list(percentage_allocations) not in ([], [100]):
+        raise serializers.ValidationError(
+            "An identity override can only pin a single variant, at 100%."
+        )
+
+
 class NestedMultivariateFeatureOptionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = MultivariateFeatureOption

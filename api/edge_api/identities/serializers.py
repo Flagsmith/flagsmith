@@ -13,6 +13,7 @@ from environments.models import Environment
 from evaluation.services import get_edge_identity_override_value
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
+from features.multivariate.serializers import validate_identity_override_allocations
 from features.serializers import (  # type: ignore[attr-defined]
     FeatureStateValueSerializer,
 )
@@ -175,6 +176,14 @@ class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):  # type: i
     )
     enabled = serializers.BooleanField(required=False, default=False)
     featurestate_uuid = serializers.CharField(required=False, read_only=True)
+
+    def validate_multivariate_feature_state_values(
+        self, values: list[EngineMultivariateFeatureStateValueModel]
+    ) -> list[EngineMultivariateFeatureStateValueModel]:
+        validate_identity_override_allocations(
+            value.percentage_allocation for value in values
+        )
+        return values
 
     def save(self, **kwargs):  # type: ignore[no-untyped-def]
         view = self.context["view"]

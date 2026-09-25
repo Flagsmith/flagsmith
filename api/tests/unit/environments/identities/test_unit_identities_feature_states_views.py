@@ -269,3 +269,90 @@ def test_clone_identity_feature_states__source_has_overrides__clones_correctly(
         environment=environment,
         identity=target_identity,
     ).exists()
+
+
+@pytest.mark.parametrize(
+    "percentage_allocations, expected_status_code",
+    [
+        pytest.param([], status.HTTP_201_CREATED, id="no_variants"),
+        pytest.param([100], status.HTTP_201_CREATED, id="pinned_variant"),
+        pytest.param([30, 40], status.HTTP_400_BAD_REQUEST, id="split"),
+        pytest.param([50], status.HTTP_400_BAD_REQUEST, id="partial_variant"),
+    ],
+)
+def test_create_identity_feature_state__multivariate_allocations__validates_single_variant(
+    percentage_allocations: list[float],
+    expected_status_code: int,
+    admin_client: APIClient,
+    environment: Environment,
+    identity: Identity,
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    options = multivariate_feature.multivariate_options.order_by("id")
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment.api_key}/identities/{identity.id}/featurestates/",
+        data={
+            "feature": multivariate_feature.id,
+            "enabled": True,
+            "multivariate_feature_state_values": [
+                {
+                    "multivariate_feature_option": option.id,
+                    "percentage_allocation": percentage_allocation,
+                }
+                for option, percentage_allocation in zip(
+                    options, percentage_allocations
+                )
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == expected_status_code
+
+
+@pytest.mark.parametrize(
+    "percentage_allocations, expected_status_code",
+    [
+        pytest.param([100], status.HTTP_200_OK, id="pinned_variant"),
+        pytest.param([30, 40], status.HTTP_400_BAD_REQUEST, id="split"),
+    ],
+)
+def test_update_identity_feature_state__multivariate_allocations__validates_single_variant(
+    percentage_allocations: list[float],
+    expected_status_code: int,
+    admin_client: APIClient,
+    environment: Environment,
+    identity: Identity,
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    options = multivariate_feature.multivariate_options.order_by("id")
+    identity_override = FeatureState.objects.create(
+        feature=multivariate_feature, environment=environment, identity=identity
+    )
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/environments/{environment.api_key}/identities/{identity.id}/featurestates/{identity_override.id}/",
+        data={
+            "feature": multivariate_feature.id,
+            "enabled": True,
+            "multivariate_feature_state_values": [
+                {
+                    "multivariate_feature_option": option.id,
+                    "percentage_allocation": percentage_allocation,
+                }
+                for option, percentage_allocation in zip(
+                    options, percentage_allocations
+                )
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == expected_status_code

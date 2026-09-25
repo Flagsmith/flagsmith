@@ -1292,3 +1292,52 @@ def test_edge_identity_clone_flag_states_from__source_with_overrides__clones_to_
         == mv_variant_1.value
     )
     assert response[3]["overridden_by"] == "IDENTITY"
+
+
+@pytest.mark.parametrize(
+    "percentage_allocations, expected_status_code",
+    [
+        pytest.param([], status.HTTP_201_CREATED, id="no_variants"),
+        pytest.param([100], status.HTTP_201_CREATED, id="pinned_variant"),
+        pytest.param([30, 40], status.HTTP_400_BAD_REQUEST, id="split"),
+        pytest.param([50], status.HTTP_400_BAD_REQUEST, id="partial_variant"),
+    ],
+)
+def test_edge_identities_create_mv_featurestate__multivariate_allocations__validates_single_variant(
+    percentage_allocations: list[float],
+    expected_status_code: int,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    identity_document_without_fs: dict[str, typing.Any],
+    edge_identity_dynamo_wrapper_mock: mock.MagicMock,
+    feature: int,
+    mv_option_50_percent: int,
+    webhook_mock: mock.MagicMock,
+) -> None:
+    # Given
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
+        identity_document_without_fs
+    )
+    identity_uuid = identity_document_without_fs["identity_uuid"]
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/edge-identities/{identity_uuid}/edge-featurestates/",
+        data={
+            "feature": feature,
+            "enabled": True,
+            "multivariate_feature_state_values": [
+                {
+                    "multivariate_feature_option": mv_option_50_percent,
+                    "percentage_allocation": percentage_allocation,
+                }
+                for percentage_allocation in percentage_allocations
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == expected_status_code
