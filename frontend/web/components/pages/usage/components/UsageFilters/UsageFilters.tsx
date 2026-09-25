@@ -34,6 +34,7 @@ const UsageFilters: FC<UsageFiltersProps> = ({
     <div className='usage-filters__field'>
       <ProjectFilter
         aria-label='Project'
+        autoSelectSingleProject={false}
         inputId='usage-project'
         showAll
         organisationId={organisationId}
