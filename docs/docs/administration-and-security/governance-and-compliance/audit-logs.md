@@ -23,7 +23,7 @@ You can stream your Audit Logs into your own infrastructure using Audit Log Webh
 2. Add the webhook URL in your Flagsmith organisation settings.
 3. Optionally provide a Secret which will be [hashed and included in the HTTP header](#webhook-signature) to verify that the webhook has come from Flagsmith.
 
-All audit log events will be sent to your webhook URL as they occur.
+Audit log events are sent to your webhook URL as they occur, except for [`EDGE_IDENTITY`](#edge_identity) records.
 
 ### Audit Log Webhook Payload
 
@@ -31,27 +31,41 @@ Flagsmith will send a `POST` request to your webhook URL with the following payl
 
 ```json
 {
- "created_date": "2020-02-23T17:30:57.006318Z",
- "log": "New Flag / Remote Config created: my_feature",
- "author": {
-  "id": 3,
-  "email": "user@domain.com",
-  "first_name": "Kyle",
-  "last_name": "Johnson"
+ "data": {
+  "id": 1234,
+  "created_date": "2020-02-23T17:30:57.006318Z",
+  "log": "New Flag / Remote Config created: my_feature",
+  "author": {
+   "id": 3,
+   "email": "user@domain.com",
+   "first_name": "Kyle",
+   "last_name": "Johnson"
+  },
+  "environment": null,
+  "project": {
+   "id": 6,
+   "name": "Project name",
+   "organisation": 1
+  },
+  "related_object_id": 6,
+  "related_object_uuid": null,
+  "related_object_type": "FEATURE",
+  "is_system_event": false
  },
- "environment": null,
- "project": {
-  "id": 6,
-  "name": "Project name",
-  "organisation": 1
- },
- "related_object_id": 6,
- "related_object_uuid": null,
- "related_object_type": "FEATURE"
+ "event_type": "AUDIT_LOG_CREATED"
 }
 ```
 
-`related_object_type` is one of: `FEATURE`, `FEATURE_STATE`, `SEGMENT`, `ENVIRONMENT`, `CHANGE_REQUEST`, `EDGE_IDENTITY`, `IMPORT_REQUEST`, `EF_VERSION`, `FEATURE_HEALTH`, `RELEASE_PIPELINE`, `WAREHOUSE_CONNECTION`, `EXPERIMENT`, `METRIC`.
+`data` has the same shape as an audit log record returned by the Management API. The `author`, `environment` and
+`project` objects are shortened in the example above.
+
+`environment` is `null` for records that are not tied to a single environment, such as creating a flag. `author` is
+`null` when no Flagsmith user made the change, for example when it was made with an Organisation API key or when a
+scheduled change goes live. `is_system_event` is `true` for the records Flagsmith creates when it applies a change
+request (see [`FEATURE_STATE`](#feature_state)).
+
+`related_object_type` identifies the kind of resource the record is about. See [Related Object Types](#related-object-types)
+for the possible values.
 
 `related_object_id` is the integer primary key of the related object; `related_object_uuid` is its UUID. Which field is populated depends on the audit type. `EF_VERSION` and `EDGE_IDENTITY` entries populate only `related_object_uuid`. `SEGMENT` deletion entries populate both. Other entries populate `related_object_id`. When parsing, check both fields.
 
@@ -104,13 +118,13 @@ values are:
 
 ## Audit Log Event Types
 
-Each record carries a `related_object_type` and a `log` string. The tables below enumerate every event Flagsmith
-emits, grouped by `related_object_type`. Placeholders in angle brackets (e.g. `<name>`, `<identifier>`, `<datetime>`)
-are substituted with the affected resource's values at the time of the event.
+Each record carries a `related_object_type` and a `log` string. The tables below list the events Flagsmith records,
+grouped by `related_object_type`. Placeholders in angle brackets (e.g. `<name>`, `<identifier>`, `<datetime>`) are
+substituted with the affected resource's values at the time of the event.
 
 The Deployment column indicates where each event is emitted:
 
-- **All**: emitted by every deployment (SaaS, self-hosted, private cloud).
+- **All**: emitted by every deployment (SaaS, self-hosted, private cloud) where the feature is available.
 - **Self-Hosted**: emitted only by self-hosted and private cloud deployments.
 - **SaaS**: emitted only by SaaS (`app.flagsmith.com`).
 
@@ -124,33 +138,48 @@ The Deployment column indicates where each event is emitted:
 | Multivariate option added | `Multivariate option added to feature '<name>'.` | All |
 | Multivariate option removed | `Multivariate option removed from feature '<name>'.` | All |
 | Segment overrides re-ordered | `Segment overrides re-ordered for feature '<name>'.` | All |
+| Segment override deleted | `Flag state / Remote config value deleted for feature '<name>' and segment '<segment>'` | All |
 
 ### `FEATURE_STATE`
 
 | Event | `log` template | Deployment |
 | --- | --- | --- |
+| Flag created (one record per environment) | `New Flag / Remote Config created: <name>` | All |
 | Flag state updated | `Flag state updated for feature: <name>` | All |
 | Remote config value updated | `Remote config value updated for feature: <name>` | All |
+| Multivariate value changed | `Multivariate value changed for feature '<name>'.` | All |
+| Flag deleted (one record per environment) | `Flag / Remote Config Deleted: <name>` | All |
 | Update scheduled | `Flag state / Remote Config value update scheduled for <datetime> for feature: <name>` | All |
 | Scheduled for update by change request | `Flag state for feature '<name>' scheduled for update by Change Request '<title>' at <datetime>.` | All |
 | Updated by change request | `Flag state / Remote config updated for feature: <name> by Change Request: <title>` | All |
 | Scheduled change went live | `Scheduled change to Flag state / Remote config value went live for feature: <name> by Change Request: <title>` | All |
+| Updated by release pipeline | `Flag state / Remote config updated for feature: <name> by Release pipeline: <pipeline> (stage: <stage>)` | All |
 | Identity override scheduled | `Identity override scheduled for <datetime> for feature '<name>' and identity '<identifier>'` | Self-Hosted |
 | Identity override created or updated | `Flag state / Remote config value updated for feature '<name>' and identity '<identifier>'` | Self-Hosted |
 | Identity override value updated | `Remote config value updated for identity override on feature '<name>' and identity '<identifier>'.` | Self-Hosted |
+| Identity override multivariate value changed | `Multivariate value changed for feature '<name>' and identity '<identifier>'.` | Self-Hosted |
 | Identity override deleted | `Flag state / Remote config value deleted for feature '<name>' and identity '<identifier>'` | Self-Hosted |
 | Segment override scheduled | `Segment override scheduled for <datetime> for feature '<name>' and segment '<segment>'` | All |
 | Segment override created or updated | `Flag state / Remote config value updated for feature '<name>' and segment '<segment>'` | All |
 | Segment override value updated | `Remote config updated for segment override on feature '<name>' and segment '<segment>'.` | All |
-| Segment override deleted | `Flag state / Remote config value deleted for feature '<name>' and segment '<segment>'` | All |
+| Segment override multivariate value changed | `Multivariate value changed for feature '<name>' and segment '<segment>'.` | All |
+
+The "Updated by change request" and "Scheduled change went live" records are system events: they have no `author` and
+`is_system_event` is `true`.
+
+Multivariate value records set `related_object_id` to the feature's ID rather than the feature state's ID.
 
 ### `SEGMENT`
 
 | Event | `log` template | Deployment |
 | --- | --- | --- |
 | Segment created | `New Segment created: <name>` | All |
+| Segment created by cohort sync | `New Segment created: <name> (via <source> cohort sync)` | All |
 | Segment updated | `Segment updated: <name>` | All |
 | Segment deleted | `Segment deleted: <name>` | All |
+
+`<source>` is `Amplitude` or `Mixpanel`. See [Cohort Synchronisation](/third-party-integrations/cohort-synchronisation)
+for an overview of the feature.
 
 ### `ENVIRONMENT`
 
@@ -170,9 +199,12 @@ The Deployment column indicates where each event is emitted:
 
 ### `EF_VERSION`
 
-Emitted on environments with [Feature Versioning v2](/managing-flags/feature-versioning) enabled. Per-feature-state
-changes are recorded as a single per-version entry rather than one entry per changed feature state.
-Identity-override changes still emit individual records with `related_object_type: FEATURE_STATE`.
+Emitted on environments with [Feature Versioning v2](/managing-flags/feature-versioning) enabled. On these environments,
+changes to environment defaults and segment overrides, including deleting and re-ordering segment overrides, are
+recorded as a single record per published version rather than as individual `FEATURE` and `FEATURE_STATE` records.
+Flag changes applied by a release pipeline stage are the exception: they also create an "Updated by release pipeline"
+`FEATURE_STATE` record. Identity overrides are not versioned, so identity override changes are still recorded as
+described under [`FEATURE_STATE`](#feature_state) (self-hosted) or [`EDGE_IDENTITY`](#edge_identity) (SaaS).
 
 | Event | `log` template | Deployment |
 | --- | --- | --- |
@@ -180,7 +212,10 @@ Identity-override changes still emit individual records with `related_object_typ
 
 ### `EDGE_IDENTITY`
 
-Edge identity overrides emit one audit log record per affected feature, with `change_type` determining which template is used.
+Flagsmith creates one record for each feature override that changes. A single request that changes overrides for
+several features creates one record per feature.
+
+These records are shown in the Audit Log in the Flagsmith application, but are not sent to Audit Log Webhooks.
 
 | Event | `log` template | Deployment |
 | --- | --- | --- |
@@ -190,7 +225,7 @@ Edge identity overrides emit one audit log record per affected feature, with `ch
 
 ### `IMPORT_REQUEST`
 
-Emitted when a customer triggers an import from a third-party provider (currently LaunchDarkly).
+Emitted when a user imports a project from LaunchDarkly.
 
 | Event | `log` template | Deployment |
 | --- | --- | --- |
@@ -208,21 +243,24 @@ configure providers.
 | --- | --- | --- |
 | Health provider added | `Health provider <name> set up for project <project>.` | All |
 | Health provider removed | `Health provider <name> removed from project <project>.` | All |
-| Status changed (project-wide) | `Health status changed to <status> for feature <name>.` | All |
-| Status changed (environment-scoped) | `Health status changed to <status> for feature <name> in environment <env>.` | All |
+| Unhealthy status dismissed (project-wide) | `Health status changed to HEALTHY for feature <name>.` | All |
+| Unhealthy status dismissed (environment-scoped) | `Health status changed to HEALTHY for feature <name> in environment <env>.` | All |
 
-Status-change records may include additional context in the `log` field. When the event came from a third-party
-provider, the provider name is appended; when the provider supplied a reason, that reason is appended too. The full
-`log` then has the shape:
+Health status changes reported by a provider are not recorded in the Audit Log. A status change record is only created
+when a user dismisses an unhealthy status, which sets it back to `HEALTHY`. The provider name and the dismissal reason
+are appended to the `log`, so the full `log` has the shape:
 
-```
-Health status changed to <status> for feature <name> in environment <env>.
+```text
+Health status changed to HEALTHY for feature <name> in environment <env>.
 
 Provided by <provider>
 
 Reason:
 <reason>
 ```
+
+`<reason>` is a JSON-encoded string, for example
+`{"text_blocks": [{"text": "Manually dismissed by user@domain.com"}], "url_blocks": []}`.
 
 ### `RELEASE_PIPELINE`
 
@@ -231,9 +269,18 @@ See [Release Pipelines](/managing-flags/release-pipeline) for an overview of the
 | Event | `log` template | Deployment |
 | --- | --- | --- |
 | Release pipeline created | `Release Pipeline: <name> created` | All |
+| Release pipeline updated | `Release Pipeline: <name> updated` | All |
+| Release pipeline cloned | `Release Pipeline: <name> cloned` | All |
+| Release pipeline published | `Release Pipeline: <name> published` | All |
+| Release pipeline converted to draft | `Release Pipeline: <name> Converted to Draft` | All |
 | Release pipeline deleted | `Release Pipeline: <name> deleted` | All |
+| Feature added to pipeline | `Feature: <feature> added to Release Pipeline: <name>` | All |
+| Feature removed from pipeline | `Feature: <feature> removed from Release Pipeline: <name>` | All |
+| Phased rollout created | `Phased rollout created for feature: <feature> by release pipeline: <name> (stage: <stage>)` | All |
+| Phased rollout split changed | `Phased rollout split changed from '<old>%' to '<new>%' for feature '<feature>' by release pipeline '<name>' (stage: '<stage>')` | All |
 
-Updating a release pipeline does not emit an audit log record.
+For a cloned pipeline, `<name>` is the name of the pipeline that was cloned. Flag changes made by a pipeline stage are
+recorded as `FEATURE_STATE` records (see "Updated by release pipeline" under [`FEATURE_STATE`](#feature_state)).
 
 ### `WAREHOUSE_CONNECTION`
 
@@ -245,15 +292,21 @@ Updating a release pipeline does not emit an audit log record.
 
 ### `EXPERIMENT`
 
+See [Experimentation](/experimentation/) for an overview of the feature.
+
 | Event | `log` template | Deployment |
 | --- | --- | --- |
 | Experiment created | `Experiment '<name>' created for environment <env>` | All |
 | Experiment updated | `Experiment '<name>' updated for environment <env>` | All |
 | Experiment deleted | `Experiment '<name>' deleted for environment <env>` | All |
 | Experiment status changed | `Experiment '<name>' <status> for environment <env>` | All |
+| Experiment rollout applied | `Experiment '<name>' rollout set to <percentage>% of <audience>` | All |
 
 Status changes reuse the same template with the new status substituted for the action, so `<status>` is one of
 `running`, `paused`, or `completed`. Update events are only recorded when at least one field actually changed.
+
+`<audience>` is `all identities`, or `segments [<segment IDs>] (any)` or `segments [<segment IDs>] (all)` when the
+rollout is limited to segments.
 
 ### `METRIC`
 
