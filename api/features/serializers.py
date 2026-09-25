@@ -63,7 +63,10 @@ from .feature_segments.serializers import (
 )
 from .feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE
 from .models import Feature, FeatureState
-from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
+from .multivariate.serializers import (
+    NestedMultivariateFeatureOptionSerializer,
+    validate_identity_override_allocations,
+)
 
 
 class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -779,6 +782,10 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         if sum([v.get("percentage_allocation", 0) for v in mv_values]) > 100:
             raise serializers.ValidationError(
                 "Multivariate percentage values exceed 100%."
+            )
+        if identity or getattr(self.instance, "identity_id", None):
+            validate_identity_override_allocations(
+                v.get("percentage_allocation", 0) for v in mv_values
             )
 
         return attrs
