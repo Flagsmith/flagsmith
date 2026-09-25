@@ -130,7 +130,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-danger</code>
             </td>
             <td>
-              <code>oklch(from var(--red-500) l c h / 0.08)</code>
+              <code>var(--red-100)</code>
             </td>
           </tr>
           <tr>
@@ -138,7 +138,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-success</code>
             </td>
             <td>
-              <code>oklch(from var(--green-500) l c h / 0.08)</code>
+              <code>var(--green-50)</code>
             </td>
           </tr>
           <tr>
@@ -146,7 +146,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-warning</code>
             </td>
             <td>
-              <code>oklch(from var(--orange-500) l c h / 0.08)</code>
+              <code>var(--gold-100)</code>
             </td>
           </tr>
           <tr>
@@ -154,7 +154,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-info</code>
             </td>
             <td>
-              <code>oklch(from var(--blue-500) l c h / 0.08)</code>
+              <code>var(--blue-100)</code>
             </td>
           </tr>
         </tbody>
@@ -213,7 +213,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-danger</code>
             </td>
             <td>
-              <code>var(--red-700)</code>
+              <code>var(--red-900)</code>
             </td>
           </tr>
           <tr>
@@ -221,7 +221,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-success</code>
             </td>
             <td>
-              <code>var(--green-600)</code>
+              <code>var(--green-900)</code>
             </td>
           </tr>
           <tr>
@@ -229,7 +229,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-warning</code>
             </td>
             <td>
-              <code>var(--orange-800)</code>
+              <code>var(--gold-950)</code>
             </td>
           </tr>
           <tr>
@@ -237,7 +237,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-info</code>
             </td>
             <td>
-              <code>var(--blue-500)</code>
+              <code>var(--blue-900)</code>
             </td>
           </tr>
         </tbody>
@@ -371,7 +371,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-danger</code>
             </td>
             <td>
-              <code>var(--red-500)</code>
+              <code>var(--red-600)</code>
             </td>
           </tr>
           <tr>
@@ -387,7 +387,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-warning</code>
             </td>
             <td>
-              <code>var(--orange-500)</code>
+              <code>var(--gold-600)</code>
             </td>
           </tr>
           <tr>
@@ -446,7 +446,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-danger</code>
             </td>
             <td>
-              <code>var(--red-500)</code>
+              <code>var(--red-600)</code>
             </td>
           </tr>
           <tr>
@@ -462,7 +462,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-warning</code>
             </td>
             <td>
-              <code>var(--orange-500)</code>
+              <code>var(--gold-600)</code>
             </td>
           </tr>
           <tr>
@@ -490,7 +490,7 @@ export const AllTokens: StoryObj = {
               <code>--color-chart-1</code>
             </td>
             <td>
-              <code>#0aaddf</code>
+              <code>#0fa5fc</code>
             </td>
             <td>First series in charts. Blue.</td>
           </tr>
@@ -508,7 +508,7 @@ export const AllTokens: StoryObj = {
               <code>--color-chart-3</code>
             </td>
             <td>
-              <code>#27ab95</code>
+              <code>#47aa7f</code>
             </td>
             <td>Third series. Green.</td>
           </tr>
@@ -535,7 +535,7 @@ export const AllTokens: StoryObj = {
               <code>--color-chart-6</code>
             </td>
             <td>
-              <code>#0b8bb2</code>
+              <code>#0b82d7</code>
             </td>
             <td>Sixth series. Blue dark.</td>
           </tr>
@@ -553,7 +553,7 @@ export const AllTokens: StoryObj = {
               <code>--color-chart-8</code>
             </td>
             <td>
-              <code>#13787b</code>
+              <code>#35795a</code>
             </td>
             <td>Eighth series. Green dark.</td>
           </tr>

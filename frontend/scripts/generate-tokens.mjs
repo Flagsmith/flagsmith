@@ -42,6 +42,13 @@ const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 const DESCRIBED = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 // Chart colours are like colour tokens (light/dark) but not under "color"
 const CHART_CATEGORY = 'chart'
+// The Primary ramp: light/dark like colour tokens. Custom properties only,
+// no utilities: a .bg-primary-500 in a component would bypass the semantic
+// layer and stop following whatever that role is later defined as.
+const PRIMARY_CATEGORY = 'primary'
+const NEUTRAL_CATEGORY = 'neutral'
+const STATE_CATEGORY = 'state'
+const ALWAYS_CATEGORY = 'always'
 
 // Build reverse lookups for primitives
 const hexToPrimitive = new Map()
@@ -134,6 +141,51 @@ function buildScssLines() {
       if (e.dark && e.dark !== e.light) {
         darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
       }
+    }
+    rootLines.push('')
+  }
+
+  // Primary ramp
+  if (json[PRIMARY_CATEGORY]) {
+    rootLines.push('  // Primary')
+    for (const [, e] of sorted(json[PRIMARY_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  // Neutrals ramp
+  if (json[NEUTRAL_CATEGORY]) {
+    rootLines.push('  // Neutral')
+    for (const [, e] of sorted(json[NEUTRAL_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  // State ramps, from his Supporting collection
+  if (json[STATE_CATEGORY]) {
+    rootLines.push('  // State')
+    for (const [, e] of sorted(json[STATE_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  // Always-* : pinned across themes, so no dark override
+  if (json[ALWAYS_CATEGORY]) {
+    rootLines.push('  // Always')
+    for (const [, e] of sorted(json[ALWAYS_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
     }
     rootLines.push('')
   }
