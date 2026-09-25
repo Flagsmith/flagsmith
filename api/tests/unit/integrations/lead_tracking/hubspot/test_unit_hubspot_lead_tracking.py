@@ -472,3 +472,30 @@ def test_register_hubspot_tracker_and_track_user__no_explicit_user__falls_back_t
     mock_create_hubspot_contact_for_user.delay.assert_called_once_with(
         args=(staff_user.id,)
     )
+
+
+def test_register_hubspot_tracker_and_track_user__inactive_user__does_not_create_contact(
+    mocker: MockerFixture, staff_user: FFAdminUser, settings: SettingsWrapper
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    # A signup still awaiting email activation
+    staff_user.is_active = False
+
+    mock_register_hubspot_tracker = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.register_hubspot_tracker"
+    )
+    mock_create_hubspot_contact_for_user = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
+    )
+
+    factory = APIRequestFactory()
+    request = factory.get("/")
+
+    # When
+    register_hubspot_tracker_and_track_user(request, staff_user)
+
+    # Then
+    # The cookie is still captured, so attribution survives until activation
+    mock_register_hubspot_tracker.assert_called_once_with(request, staff_user)
+    mock_create_hubspot_contact_for_user.delay.assert_not_called()

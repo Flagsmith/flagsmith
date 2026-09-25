@@ -8,6 +8,7 @@ import pytest
 from django.conf import settings
 from django.core import mail
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import (  # type: ignore[attr-defined]
@@ -16,6 +17,10 @@ from rest_framework.test import (  # type: ignore[attr-defined]
 )
 from rest_framework_simplejwt.tokens import SlidingToken
 
+from custom_auth.constants import (
+    EMAIL_NOT_VERIFIED_ERROR,
+    EMAIL_NOT_VERIFIED_ERROR_KEY,
+)
 from organisations.invites.models import Invite
 from organisations.models import Organisation
 from users.models import FFAdminUser, SignUpType
@@ -202,10 +207,10 @@ def test_register_and_login__activation_flow_enabled__succeeds_after_activation(
         register_url, data=register_data, status_code=status.HTTP_201_CREATED
     )
 
-    # Then success and account inactive
-    assert "key" in result.data
+    # Then success and account inactive, with no token handed out
     assert "is_active" in result.data
     assert not result.data["is_active"]
+    assert result.data["key"] is None
 
     new_user = FFAdminUser.objects.latest("id")
     assert new_user.email == register_data["email"]
@@ -782,3 +787,232 @@ def test_register__marketing_consent_given__defaults_to_true(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["marketing_consent_given"] is True
+
+
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
+        {"SEND_ACTIVATION_EMAIL": True, "SEND_CONFIRMATION_EMAIL": False},
+        settings.DJOSER,
+    )
+)
+def test_register_and_activate__hubspot_enabled__creates_contact_on_activation_only(
+    db: None,
+    api_client: APIClient,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    mock_create_contact_on_signup = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
+    )
+    mock_create_contact_on_activation = mocker.patch(
+        "custom_auth.signals.create_hubspot_contact_for_user"
+    )
+    email = f"test-{uuid.uuid4()}@example.com"
+    register_data = {
+        "email": email,
+        "password": FFAdminUser.objects.make_random_password(),
+        "first_name": "test",
+        "last_name": "register",
+    }
+
+    # When
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    api_client.post(register_url, data=register_data)
+
+    # Then
+    # The signup is unverified, so nothing reaches HubSpot yet
+    mock_create_contact_on_signup.delay.assert_not_called()
+    mock_create_contact_on_activation.delay.assert_not_called()
+
+    # When the user activates their account
+    url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]  # type: ignore[arg-type]
+    uid, token = url.split("/")[-2:]
+    activate_url = reverse("api-v1:custom_auth:ffadminuser-activation")
+    api_client.post(
+        activate_url,
+        data={"uid": uid, "token": token},
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
+
+    # Then the contact is created
+    user = FFAdminUser.objects.get(email=email)
+    assert user.is_active is True
+    mock_create_contact_on_activation.delay.assert_called_once_with(args=(user.id,))
+
+
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
+        {"SEND_ACTIVATION_EMAIL": True, "SEND_CONFIRMATION_EMAIL": False},
+        settings.DJOSER,
+    )
+)
+def test_register__e2e_request__activates_inline_without_email(
+    db: None,
+    api_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    # The middleware is only installed when the token is configured, which is
+    # not the case for the test settings.
+    settings.E2E_TEST_AUTH_TOKEN = "e2e-token"
+    settings.MIDDLEWARE = [
+        *settings.MIDDLEWARE,
+        "e2etests.middleware.E2ETestMiddleware",
+    ]
+    email = f"e2e_signup_user@{settings.E2E_TEST_EMAIL_DOMAIN}"
+    register_data = {
+        "email": email,
+        "password": FFAdminUser.objects.make_random_password(),
+        "first_name": "e2e",
+        "last_name": "signup",
+    }
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:custom_auth:ffadminuser-list"),
+        data=register_data,
+        HTTP_X_E2E_TEST_AUTH_TOKEN="e2e-token",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["is_active"] is True
+    assert response.json()["key"]
+    assert not mail.outbox
+
+
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
+        {"SEND_ACTIVATION_EMAIL": True, "SEND_CONFIRMATION_EMAIL": False},
+        settings.DJOSER,
+    )
+)
+def test_register__e2e_domain_without_token__still_requires_activation(
+    db: None,
+    api_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    # The test email domain alone must not bypass verification
+    settings.E2E_TEST_AUTH_TOKEN = "e2e-token"
+    settings.MIDDLEWARE = [
+        *settings.MIDDLEWARE,
+        "e2etests.middleware.E2ETestMiddleware",
+    ]
+    email = f"impostor@{settings.E2E_TEST_EMAIL_DOMAIN}"
+    register_data = {
+        "email": email,
+        "password": FFAdminUser.objects.make_random_password(),
+        "first_name": "not",
+        "last_name": "e2e",
+    }
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:custom_auth:ffadminuser-list"), data=register_data
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["is_active"] is False
+    assert response.json()["key"] is None
+    assert len(mail.outbox) == 1
+
+
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
+        {"SEND_ACTIVATION_EMAIL": True},
+        settings.DJOSER,
+    )
+)
+def test_login__unactivated_user_correct_password__returns_activation_error(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    password = FFAdminUser.objects.make_random_password()
+    email = f"test-{uuid.uuid4()}@example.com"
+    register_response = api_client.post(
+        reverse("api-v1:custom_auth:ffadminuser-list"),
+        data={
+            "email": email,
+            "password": password,
+            "first_name": "test",
+            "last_name": "user",
+        },
+        content_type="application/json",
+    )
+    assert register_response.status_code == status.HTTP_201_CREATED
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:custom_auth:custom-mfa-authtoken-login"),
+        data={"email": email, "password": password},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {EMAIL_NOT_VERIFIED_ERROR_KEY: [EMAIL_NOT_VERIFIED_ERROR]}
+
+
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
+        {"SEND_ACTIVATION_EMAIL": True},
+        settings.DJOSER,
+    )
+)
+def test_login__unactivated_user_wrong_password__returns_generic_error(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    password = FFAdminUser.objects.make_random_password()
+    email = f"test-{uuid.uuid4()}@example.com"
+    register_response = api_client.post(
+        reverse("api-v1:custom_auth:ffadminuser-list"),
+        data={
+            "email": email,
+            "password": password,
+            "first_name": "test",
+            "last_name": "user",
+        },
+        content_type="application/json",
+    )
+    assert register_response.status_code == status.HTTP_201_CREATED
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:custom_auth:custom-mfa-authtoken-login"),
+        data={"email": email, "password": "not-the-right-password"},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert EMAIL_NOT_VERIFIED_ERROR_KEY not in response.json()
+    assert "non_field_errors" in response.json()
+
+
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
+        {"SEND_ACTIVATION_EMAIL": True},
+        settings.DJOSER,
+    )
+)
+def test_login__unknown_email__returns_generic_error(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given / When
+    response = api_client.post(
+        reverse("api-v1:custom_auth:custom-mfa-authtoken-login"),
+        data={
+            "email": f"nobody-{uuid.uuid4()}@example.com",
+            "password": "some-password",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert EMAIL_NOT_VERIFIED_ERROR_KEY not in response.json()

@@ -349,6 +349,8 @@ export type Req = {
     delete_orphan_organisations: boolean
   }
   updateUserEmail: { current_password: string; new_email: string }
+  activateAccount: { uid: string; token: string }
+  resendActivationEmail: { email: string }
   createGroupAdmin: {
     group: number
     user: number

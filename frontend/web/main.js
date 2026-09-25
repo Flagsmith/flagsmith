@@ -67,6 +67,8 @@ function isPublicURL() {
   const publicPaths = [
     '/',
     '/404',
+    '/activate',
+    '/check-email',
     '/home',
     '/password-reset',
     '/maintenance',

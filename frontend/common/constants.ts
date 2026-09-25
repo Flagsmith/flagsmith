@@ -629,10 +629,12 @@ const Constants = {
   pages: {
     'ACCOUNT': 'Account Page',
     'AUDIT_LOG': 'Audit Log Page',
+    'CHECK_EMAIL': 'Check Email Page',
     'COMING_SOON': 'Coming Soon Page',
     'CREATE_ENVIRONMENT': 'Create Environment Page',
     'CREATE_ORGANISATION': 'Create Organisation Page',
     'DOCUMENTATION': 'Documentation Page',
+    'EMAIL_ACTIVATION': 'Email Activation Page',
     'ENVIRONMENT_SETTINGS': 'Environment Settings Page',
     'FEATURES': 'Features Page',
     'HOME': 'Home Page',

@@ -75,7 +75,7 @@
                 },
                 {
                     "name": "ENABLE_EMAIL_ACTIVATION",
-                    "value": "False"
+                    "value": "True"
                 },
                 {
                     "name": "ENABLE_TELEMETRY",

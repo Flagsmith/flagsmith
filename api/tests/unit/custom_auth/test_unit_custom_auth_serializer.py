@@ -6,6 +6,7 @@ from django.test import RequestFactory
 from djoser.serializers import TokenCreateSerializer  # type: ignore[import-untyped]
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 
 from custom_auth.constants import (
@@ -214,3 +215,41 @@ def test_djoser_token_create_serializer__user_model_username_field__call_expecte
 
     # Then
     mocked_authenticate.assert_called_with(**expected_authenticate_kwargs)
+
+
+def test_custom_user_create_serializer__active_user__returns_key(
+    db: None, rf: RequestFactory
+) -> None:
+    # Given
+    request = rf.post("/api/v1/auth/users/")
+    serializer = CustomUserCreateSerializer(
+        data=user_dict, context={"request": request}
+    )
+    serializer.is_valid(raise_exception=True)
+
+    # When
+    user = serializer.save()
+
+    # Then
+    assert user.is_active is True
+    assert serializer.data["key"] == Token.objects.get(user=user).key
+
+
+def test_custom_user_create_serializer__inactive_user__returns_no_key(
+    db: None, rf: RequestFactory, settings: SettingsWrapper
+) -> None:
+    # Given
+    settings.DJOSER = {**settings.DJOSER, "SEND_ACTIVATION_EMAIL": True}
+    request = rf.post("/api/v1/auth/users/")
+    serializer = CustomUserCreateSerializer(
+        data=user_dict, context={"request": request}
+    )
+    serializer.is_valid(raise_exception=True)
+
+    # When
+    user = serializer.save()
+
+    # Then
+    assert user.is_active is False
+    assert serializer.data["key"] is None
+    assert not Token.objects.filter(user=user).exists()
