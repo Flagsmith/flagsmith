@@ -13,6 +13,10 @@ export default meta
 
 type Story = StoryObj<typeof UsageOverTime>
 
+// Fixed, so the chart looks the same on every run and a visual diff means a
+// real change rather than the date moving.
+const TODAY = moment.utc('2026-09-15T00:00:00Z')
+
 // Weekends lighter, so the shape reads like real traffic rather than a ramp.
 const DAY_WEIGHTS = [1.08, 1.12, 1.05, 1.1, 0.98, 0.62, 0.58]
 
@@ -20,10 +24,9 @@ const usage = (days: number, perDay: number): Res['organisationUsage'] => {
   const events = Array.from({ length: days }).map((_, index) => {
     const weight = DAY_WEIGHTS[index % DAY_WEIGHTS.length]
     return {
-      // Relative to today, so the measured days run up to the projection
-      // rather than sitting a month behind it.
-      day: moment
-        .utc()
+      // Counted back from TODAY, so the measured days run up to the
+      // projection rather than sitting a month behind it.
+      day: TODAY.clone()
         .subtract(days - 1 - index, 'days')
         .format('YYYY-MM-DD'),
       environment_document: Math.round(perDay * weight * 0.04),
@@ -73,7 +76,7 @@ export const CumulativeWithAProjection: Story = {
     data: usage(18, 70000),
     isBillingPeriod: true,
     limit: 2000000,
-    periodEndsAt: moment.utc().add(12, 'days').toISOString(),
+    periodEndsAt: TODAY.clone().add(12, 'days').toISOString(),
     projectedTotal: 1800000,
   },
 }
@@ -83,7 +86,7 @@ export const ProjectionLandingOverTheCeiling: Story = {
     data: usage(18, 70000),
     isBillingPeriod: true,
     limit: 1000000,
-    periodEndsAt: moment.utc().add(12, 'days').toISOString(),
+    periodEndsAt: TODAY.clone().add(12, 'days').toISOString(),
     projectedTotal: 1800000,
   },
 }

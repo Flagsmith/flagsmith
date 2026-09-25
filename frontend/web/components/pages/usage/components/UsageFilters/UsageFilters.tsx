@@ -34,6 +34,9 @@ const UsageFilters: FC<UsageFiltersProps> = ({
     <div className='usage-filters__field'>
       <ProjectFilter
         aria-label='Project'
+        // All Projects is the organisation's own usage, which is what the
+        // meter and the projection describe.
+        autoSelectSingleProject={false}
         inputId='usage-project'
         showAll
         organisationId={organisationId}

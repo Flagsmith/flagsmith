@@ -6,12 +6,19 @@ type ProjectFilterType = {
   value?: string
   onChange: (id: string, name: string) => void
   showAll?: boolean
+  /**
+   * Select the organisation's only project when it has just one. On by
+   * default, since most callers need a project chosen before they can do
+   * anything. Off where All Projects is a meaningful answer in itself.
+   */
+  autoSelectSingleProject?: boolean
   inputId?: string
   'aria-label'?: string
 }
 
 const ProjectFilter: FC<ProjectFilterType> = ({
   'aria-label': ariaLabel,
+  autoSelectSingleProject = true,
   inputId,
   onChange,
   organisationId,
@@ -24,15 +31,12 @@ const ProjectFilter: FC<ProjectFilterType> = ({
   )
 
   useEffect(() => {
-    // Only where a project has to be picked. Where All Projects is on offer
-    // it is the default, and selecting the only project would hide the
-    // organisation's own figures behind a filter nobody set.
-    if (!showAll && data && data.length === 1) {
+    if (autoSelectSingleProject && data && data.length === 1) {
       const project = data[0]
       onChange(`${project.id}`, project.name)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, showAll])
+  }, [data, autoSelectSingleProject])
 
   const foundValue = useMemo(
     () => data?.find((project) => `${project.id}` === value),
