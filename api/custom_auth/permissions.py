@@ -3,6 +3,8 @@ from django.views import View
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 
+from organisations.invites.services import is_valid_registration_invite
+
 
 class CurrentUser(IsAuthenticated):
     """
@@ -18,7 +20,18 @@ class CurrentUser(IsAuthenticated):
 
 class IsSignupAllowed(AllowAny):
     def has_permission(self, request: Request, view: View) -> bool:
-        return not settings.PREVENT_SIGNUP
+        if not settings.PREVENT_SIGNUP:
+            return True
+
+        # Signups are otherwise prevented, but a valid invite should still
+        # let someone through: `PREVENT_SIGNUP` is meant to stop self-serve
+        # signup, not registration via an invite link or invited email.
+        email = request.data.get("email")
+        return is_valid_registration_invite(
+            sign_up_type=request.data.get("sign_up_type"),
+            email=email if isinstance(email, str) else "",
+            invite_hash=request.data.get("invite_hash"),
+        )
 
 
 class IsPasswordLoginAllowed(AllowAny):
