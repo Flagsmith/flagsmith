@@ -4,6 +4,7 @@ import Utils, { planNames } from 'common/utils/utils'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import OverLimitBanner from './components/OverLimitBanner'
+import BillingStrip from './components/BillingStrip'
 import SectionHeading from './components/SectionHeading'
 import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
 import UsageFilters from './components/UsageFilters'
@@ -108,6 +109,10 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         )
       : undefined
 
+  // A plan on a rolling window has no period to describe, and a stale cache
+  // can still be carrying the dates of one it has left.
+  const period = planIsBilled ? subscription?.current_billing_period : undefined
+
   // One line, so being over the limit outranks the project's share.
   const meterNote = exceeded ? overLimitNote(exceeded) : contribution
 
@@ -137,6 +142,8 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       }}
     >
       <SectionHeading {...planSectionCopy(basis, limit)} />
+
+      <BillingStrip period={period} />
 
       <UsageMeter total={allowanceTotal} limit={limit} note={meterNote} />
 
