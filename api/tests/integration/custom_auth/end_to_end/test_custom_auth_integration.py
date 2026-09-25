@@ -921,8 +921,8 @@ def test_register__e2e_domain_without_token__still_requires_activation(
     assert len(mail.outbox) == 1
 
 
-@override_settings(
-    DJOSER=ChainMap(
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
         {"SEND_ACTIVATION_EMAIL": True},
         settings.DJOSER,
     )
@@ -957,8 +957,8 @@ def test_login__unactivated_user_correct_password__returns_activation_error(
     assert response.json() == {EMAIL_NOT_VERIFIED_ERROR_KEY: [EMAIL_NOT_VERIFIED_ERROR]}
 
 
-@override_settings(
-    DJOSER=ChainMap(
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
         {"SEND_ACTIVATION_EMAIL": True},
         settings.DJOSER,
     )
@@ -994,8 +994,8 @@ def test_login__unactivated_user_wrong_password__returns_generic_error(
     assert "non_field_errors" in response.json()
 
 
-@override_settings(
-    DJOSER=ChainMap(
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
         {"SEND_ACTIVATION_EMAIL": True},
         settings.DJOSER,
     )
