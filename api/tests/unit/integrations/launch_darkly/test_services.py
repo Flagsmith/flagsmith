@@ -198,13 +198,16 @@ def test_process_import_request__success__expected_status(  # type: ignore[no-un
     assert deprecated_feature.is_archived is True
 
     # Standard feature states have expected values.
+    # flag1 is "on" in Test but its fallthrough serves the "false" variation, and
+    # "off" in Production but its off variation serves "true" -- `enabled` should
+    # follow the served variation, not the raw LD `on` toggle.
     boolean_standard_feature = Feature.objects.get(project=project, name="flag1")
     boolean_standard_feature_states_by_env_name = {
         fs.environment.name: fs
         for fs in FeatureState.objects.filter(feature=boolean_standard_feature)
     }
-    boolean_standard_feature_states_by_env_name["Test"].enabled is True
-    boolean_standard_feature_states_by_env_name["Production"].enabled is False
+    assert boolean_standard_feature_states_by_env_name["Test"].enabled is False
+    assert boolean_standard_feature_states_by_env_name["Production"].enabled is True
 
     string_standard_feature = Feature.objects.get(project=project, name="flag2_value")
     string_standard_feature_states_by_env_name = {

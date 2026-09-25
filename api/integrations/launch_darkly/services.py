@@ -760,13 +760,33 @@ def _create_boolean_feature_states_with_segments_identities(
     environments_by_ld_environment_key: dict[str, Environment],
     segments_by_ld_key: dict[str, Segment],
 ) -> None:
+    variations_by_idx = {
+        str(idx): variation for idx, variation in enumerate(ld_flag["variations"])
+    }
+
     for ld_environment_key, environment in environments_by_ld_environment_key.items():
         ld_flag_config = ld_flag["environments"][ld_environment_key]
+
+        # LD separates "is the flag on" from "what does it serve" (the fallthrough
+        # variation when on, or the off variation when off). Flagsmith's `enabled`
+        # is the served value, so resolve it the same way the string factory does,
+        # instead of taking the `on` toggle at face value.
+        is_flag_on = ld_flag_config["on"]
+        variation_config_key = "isFallthrough" if is_flag_on else "isOff"
+        enabled = is_flag_on
+
+        if ld_flag_config_summary := ld_flag_config.get("_summary"):
+            enabled_variations = ld_flag_config_summary.get("variations") or {}
+            for idx, variation_config in enabled_variations.items():
+                if variation_config.get(variation_config_key):
+                    enabled = bool(variations_by_idx[idx]["value"])
+                    break
+
         feature_state, _ = FeatureState.objects.update_or_create(
             feature=feature,
             feature_segment=None,
             environment=environment,
-            defaults={"enabled": ld_flag_config["on"]},
+            defaults={"enabled": enabled},
         )
 
         FeatureStateValue.objects.update_or_create(
