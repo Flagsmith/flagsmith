@@ -9,6 +9,7 @@ from environments.models import Environment
 from evaluation.services import (
     evaluate_identity,
     get_edge_identity_feature_states,
+    get_edge_identity_override_value,
     get_edge_identity_segments,
 )
 from features.constants import CONTROL_VARIANT_KEY
@@ -21,7 +22,13 @@ from features.multivariate.models import (
 from features.value_types import INTEGER, STRING
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
-from util.engine_models.features.models import FeatureModel, FeatureStateModel
+from util.engine_models.features.models import (
+    FeatureModel,
+    FeatureStateModel,
+    MultivariateFeatureOptionModel,
+    MultivariateFeatureStateValueList,
+    MultivariateFeatureStateValueModel,
+)
 from util.engine_models.identities.models import IdentityFeaturesList, IdentityModel
 from util.engine_models.identities.traits.models import TraitModel
 from util.mappers import map_identity_to_identity_document
@@ -480,3 +487,64 @@ def test_get_edge_identity_segments__in_operator_with_integer_traits__returns_ma
 
     # Then
     assert segments == [segment]
+
+
+@pytest.mark.parametrize(
+    "allocations",
+    [
+        pytest.param([], id="no_variants"),
+        pytest.param([100], id="pinned_variant"),
+        pytest.param([30, 40], id="split"),
+    ],
+)
+def test_get_edge_identity_override_value__override__returns_served_value(
+    allocations: list[float],
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    options = multivariate_feature.multivariate_options.order_by("id")
+    override = FeatureStateModel(
+        feature=FeatureModel(
+            id=multivariate_feature.id,
+            name=multivariate_feature.name,
+            type=multivariate_feature.type,
+        ),
+        enabled=True,
+        feature_state_value="control",
+        multivariate_feature_state_values=MultivariateFeatureStateValueList(
+            [
+                MultivariateFeatureStateValueModel(
+                    id=id_,
+                    percentage_allocation=allocation,
+                    multivariate_feature_option=MultivariateFeatureOptionModel(
+                        id=option.id, value=option.value
+                    ),
+                )
+                for id_, (option, allocation) in enumerate(
+                    zip(options, allocations), start=1
+                )
+            ]
+        ),
+    )
+    edge_identity = EdgeIdentity(
+        IdentityModel(
+            identifier="identity",
+            environment_api_key=environment.api_key,
+            identity_features=IdentityFeaturesList([override]),
+        )
+    )
+    (served,) = [
+        evaluated_feature_state
+        for evaluated_feature_state in get_edge_identity_feature_states(edge_identity)
+        if evaluated_feature_state.evaluation_result["name"]
+        == multivariate_feature.name
+    ]
+
+    # When
+    value = get_edge_identity_override_value(
+        edge_identity, override, environment=environment
+    )
+
+    # Then
+    assert value == served.evaluation_result["value"]

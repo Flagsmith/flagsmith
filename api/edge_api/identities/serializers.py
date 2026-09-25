@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 
 from environments.dynamodb.types import IdentityOverrideV2
 from environments.models import Environment
+from evaluation.services import get_edge_identity_override_value
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import (  # type: ignore[attr-defined]
@@ -127,11 +128,7 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):  # type: ignore[typ
     def to_representation(self, obj):  # type: ignore[no-untyped-def]
         identity: EdgeIdentity = self.parent.context["identity"]
         environment: Environment = self.parent.context["environment"]
-        identity_id = identity.get_hash_key(
-            environment.use_identity_composite_key_for_hashing
-        )
-
-        return obj.get_value(identity_id=identity_id)
+        return get_edge_identity_override_value(identity, obj, environment=environment)
 
     def get_attribute(self, instance):  # type: ignore[no-untyped-def]
         # We pass the object instance onto `to_representation`,
@@ -211,9 +208,17 @@ class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):  # type: i
 
         identity.save(user=request.user)
 
-        new_value = self.instance.get_value(identity.id)
+        environment = Environment.get_from_cache(identity.environment_api_key)
+        assert environment
+        new_value = get_edge_identity_override_value(
+            identity, self.instance, environment=environment
+        )
         previous_value = (
-            previous_state.get_value(identity.id) if previous_state else None
+            get_edge_identity_override_value(
+                identity, previous_state, environment=environment
+            )
+            if previous_state
+            else None
         )
 
         # TODO:
