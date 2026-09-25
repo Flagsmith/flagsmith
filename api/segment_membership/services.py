@@ -17,14 +17,13 @@ from flagsmith_sql_flag_engine.dialects import ClickHouseDialect
 from task_processor.models import Task
 
 from environments.models import Environment
+from evaluation.mappers import map_segment_to_segment_context
 from integrations.flagsmith.client import get_openfeature_client
 from organisations.models import Organisation
 from projects.models import Project
 from segment_membership.models import SegmentMembershipCount
 from segment_membership.types import ClickHouseReadIdentityRow, SegmentMember
 from segments.models import Segment
-from util.engine_models.context.mappers import map_segment_to_segment_context
-from util.mappers.engine import map_segment_to_engine
 
 logger = structlog.get_logger("segment_membership")
 
@@ -142,7 +141,7 @@ def compute_segment_counts_for_project(
             binder=binder,
         )
         predicate = translate_segment(
-            map_segment_to_segment_context(map_segment_to_engine(seg)),
+            map_segment_to_segment_context(seg),  # type: ignore[arg-type]
             translate_ctx,
         )
         if predicate is None:
@@ -208,7 +207,7 @@ def get_segment_members_page(
         binder=binder,
     )
     predicate = translate_segment(
-        map_segment_to_segment_context(map_segment_to_engine(segment)),
+        map_segment_to_segment_context(segment),  # type: ignore[arg-type]
         translate_ctx,
     )
     if predicate is None:
