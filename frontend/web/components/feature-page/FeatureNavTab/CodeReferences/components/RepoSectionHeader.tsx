@@ -1,5 +1,5 @@
 import Icon from 'components/icons/Icon'
-import VCSProviderTag from 'components/tags/VCSProviderTag'
+import VCSProviderTag from 'components/VCSProviderTag'
 import { getDarkMode } from 'project/darkMode'
 import React from 'react'
 import { VCSProvider } from 'common/types/responses'
