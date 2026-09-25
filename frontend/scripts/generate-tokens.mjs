@@ -138,6 +138,21 @@ function buildScssLines() {
     rootLines.push('')
   }
 
+  // Feature palettes. Themed like the semantic tokens, but scoped to one
+  // feature, so they sit outside `color` where only cross-cutting roles live.
+  if (json.tag) {
+    rootLines.push('  // Tag')
+    for (const [, entries] of sorted(json.tag)) {
+      for (const [, e] of sorted(entries)) {
+        rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+        if (e.dark && e.dark !== e.light) {
+          darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+        }
+      }
+    }
+    rootLines.push('')
+  }
+
   // Chart colour tokens
   if (json[CHART_CATEGORY]) {
     rootLines.push('  // Chart')
@@ -348,9 +363,31 @@ function generateTs() {
     ...describedBlocks,
     '',
     ...flatLines,
+    '',
+    ...buildContentColours(),
   ]
 
   return output.join('\n')
+}
+
+/**
+ * The Content palette as a map, for anything that needs to iterate it —
+ * the tag colour picker, most obviously. Keyed by the design system's own
+ * name so a swatch in Figma and a key here read the same.
+ */
+function buildContentColours() {
+  const entries = Object.entries(json.primitives ?? {}).filter(([n]) =>
+    n.startsWith('content-'),
+  )
+  if (!entries.length) return []
+  return [
+    '/** Tag and read-only content colours. Fixed: they do not follow the theme. */',
+    'export const contentColours = {',
+    ...entries.map(([n, hex]) => `  '${n.replace('content-', '')}': '${hex}',`),
+    '} as const',
+    '',
+    'export type ContentColour = keyof typeof contentColours',
+  ]
 }
 
 function generateMcpStory() {
@@ -466,6 +503,38 @@ function generateUtilities() {
       } else {
         lines.push(`.${cls} { ${mapping.property}: var(${e.cssVar}); }`)
       }
+    }
+    lines.push('')
+  }
+
+  // Tag swatches. One class per hue rather than a bg/text pair, because the
+  // two are only accessible together: applying a fill without its label colour
+  // is the contrast bug this scale exists to fix.
+  if (json.tag) {
+    lines.push('// Tag swatches')
+    for (const [hue, surface] of sorted(json.tag.surface)) {
+      const text = json.tag.text[hue]
+      if (!text) continue
+      lines.push(
+        `.tag-${hue} { background-color: var(${surface.cssVar}); color: var(${text.cssVar}); }`,
+      )
+    }
+    lines.push('')
+  }
+
+  // Tag utilities. The Content colours are fixed rather than theme-aware: a
+  // tag chip carries its own surface, so it does not follow the page. One dark
+  // ink works on all of them, 9.64:1 at worst.
+  const contentColours = Object.keys(json.primitives ?? {}).filter((n) =>
+    n.startsWith('content-'),
+  )
+  if (contentColours.length) {
+    lines.push('// Tags')
+    for (const name of contentColours.sort()) {
+      const swatch = name.replace('content-', '')
+      lines.push(
+        `.tag-${swatch} { background-color: var(--${name}); color: var(--slate-600); }`,
+      )
     }
     lines.push('')
   }

@@ -2,6 +2,7 @@ import React, { FC, useState } from 'react'
 import InlineModal from 'components/InlineModal'
 import Constants from 'common/constants'
 import Tag from './Tag'
+import TagColourPicker from './TagColourPicker'
 
 type ColourSelectType = {
   value: string
@@ -22,22 +23,14 @@ const ColourSelect: FC<ColourSelectType> = ({ onChange, value: _value }) => {
         onClose={() => setIsOpen(false)}
         className='inline-modal--sm'
       >
-        <div>
-          <Row className='mb-2 gap-4'>
-            {Constants.tagColors.map((color) => (
-              <div key={color} className='tag--select'>
-                <Tag
-                  onClick={(tag) => {
-                    onChange(tag.color)
-                    setIsOpen(false)
-                  }}
-                  selected={value === color}
-                  tag={{ color }}
-                />
-              </div>
-            ))}
-          </Row>
-        </div>
+        <TagColourPicker
+          className='mb-2'
+          onChange={(colour) => {
+            onChange(colour)
+            setIsOpen(false)
+          }}
+          value={value}
+        />
       </InlineModal>
     </>
   )

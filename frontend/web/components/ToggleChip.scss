@@ -1,0 +1,20 @@
+// The leading checkbox. Its styles used to come from `.chip .icon-check` in
+// _chip.scss, which no longer applies now ToggleChip composes the chip
+// primitive, so they live with the component that owns them.
+.toggle-chip__check {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xs);
+
+  // Checked: the tick supplies the colour, so the box gets out of its way.
+  &--active {
+    border-color: transparent;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
