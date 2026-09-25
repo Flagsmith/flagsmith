@@ -11,33 +11,9 @@ import { AA_NORMAL_TEXT, contrastRatio } from 'common/theme/contrast'
 // ---------------------------------------------------------------------------
 // Colour data — inlined to avoid importing Constants (which pulls in the
 // full app dependency tree and breaks Storybook's ESM context).
-// Source of truth: common/constants.ts
+// Source of truth: common/constants.ts. The tag scale is not copied here; it
+// comes from tokens.json below, so it cannot drift.
 // ---------------------------------------------------------------------------
-
-const TAG_COLOURS = [
-  { hex: '#3d4db6', name: 'Indigo' },
-  { hex: '#ea5a45', name: 'Coral' },
-  { hex: '#c6b215', name: 'Gold' },
-  { hex: '#60bd4e', name: 'Green' },
-  { hex: '#fe5505', name: 'Orange' },
-  { hex: '#1492f4', name: 'Blue' },
-  { hex: '#14c0f4', name: 'Cyan' },
-  { hex: '#c277e0', name: 'Lavender' },
-  { hex: '#039587', name: 'Teal' },
-  { hex: '#344562', name: 'Navy' },
-  { hex: '#ffa500', name: 'Amber' },
-  { hex: '#3cb371', name: 'Mint' },
-  { hex: '#d3d3d3', name: 'Silver' },
-  { hex: '#5D6D7E', name: 'Slate' },
-  { hex: '#641E16', name: 'Maroon' },
-  { hex: '#5B2C6F', name: 'Plum' },
-  { hex: '#D35400', name: 'Burnt Orange' },
-  { hex: '#F08080', name: 'Salmon' },
-  { hex: '#AAC200', name: 'Lime' },
-  { hex: '#DE3163', name: 'Cerise' },
-]
-
-const DEFAULT_TAG_COLOUR = '#dedede'
 
 const PROJECT_COLOURS = [
   '#906AF6',
@@ -63,39 +39,14 @@ export default meta
 // Stories
 // ---------------------------------------------------------------------------
 
-export const TagColours: StoryObj = {
-  name: 'Tag colours',
-  render: () => (
-    <DocPage
-      title='Tag colours'
-      description={
-        <>
-          The 20 decorative colours users currently pick from when creating a
-          tag, held in <code>constants.ts</code>. Tags derive their fill, border
-          and text from these at render time, which is why most of them fail
-          WCAG AA. #8465 replaces that with the validated scale below. These are
-          NOT semantic tokens &mdash; they are categorical identifiers that need
-          to be visually distinct from each other.
-        </>
-      }
-    >
-      <div className='cat-grid'>
-        {TAG_COLOURS.map(({ hex, name }) => (
-          <Swatch key={hex} colour={hex} label={`${name}\n${hex}`} />
-        ))}
-      </div>
-      <p className='cat-note'>
-        Default tag colour: <code>{DEFAULT_TAG_COLOUR}</code>
-      </p>
-    </DocPage>
-  ),
-}
+const PRIMITIVES = tokens.primitives as Record<string, string>
 
-type TagEntry = { cssVar: string; light: string; dark: string }
-
-const TAG_SURFACES = tokens.tag.surface as Record<string, TagEntry>
-const TAG_TEXTS = tokens.tag.text as Record<string, TagEntry>
-const TAG_HUES = Object.keys(TAG_SURFACES)
+// The Content palette, fixed rather than theme-aware: a tag chip carries its
+// own surface, so it does not follow the page. One ink serves all of them.
+const TAG_FILLS = Object.entries(PRIMITIVES)
+  .filter(([name]) => name.startsWith('content-'))
+  .map(([name, hex]) => [name.replace('content-', ''), hex] as const)
+const TAG_INK = PRIMITIVES['slate-600']
 
 export const TagSwatches: StoryObj = {
   name: 'Tag swatches',
@@ -106,34 +57,25 @@ export const TagSwatches: StoryObj = {
       description={
         <>
           The scale a custom tag picks from, replacing the runtime colour maths
-          that made contrast a function of the user&rsquo;s chosen hue. Each hue
-          is a <code>surface</code> and <code>text</code> pair built from the
-          primitive ramps, so a ramp change carries through. Ratios below are
-          for the current theme; every pair clears AA ({AA_NORMAL_TEXT}:1) in
-          both, enforced by <code>tagSwatches.test.ts</code>.
+          that made contrast a function of the user&rsquo;s chosen hue. These
+          are the design system&rsquo;s Content colours, fixed in both themes
+          because a chip carries its own surface. Every one clears AA (
+          {AA_NORMAL_TEXT}:1) against the shared ink, enforced by{' '}
+          <code>tagSwatches.test.ts</code>.
         </>
       }
     >
       <div className='d-flex flex-wrap gap-3'>
-        {TAG_HUES.map((hue) => (
+        {TAG_FILLS.map(([name, hex]) => (
           <div
             className='d-flex flex-column align-items-center gap-1'
-            key={hue}
+            key={name}
           >
-            <Chip className={`border-0 tag-${hue}`} size='xs'>
-              {hue}
+            <Chip className={`border-0 tag-${name}`} size='xs'>
+              {name}
             </Chip>
             <small className='text-secondary'>
-              {contrastRatio(
-                TAG_SURFACES[hue].light,
-                TAG_TEXTS[hue].light,
-              ).toFixed(2)}
-              :1 light &middot;{' '}
-              {contrastRatio(
-                TAG_SURFACES[hue].dark,
-                TAG_TEXTS[hue].dark,
-              ).toFixed(2)}
-              :1 dark
+              {contrastRatio(hex, TAG_INK).toFixed(2)}:1
             </small>
           </div>
         ))}
