@@ -1,6 +1,6 @@
 import { FC, useCallback, useMemo } from 'react'
 import moment from 'moment'
-import { LineChart } from 'components/charts'
+import { LineChart, seriesFromMaps } from 'components/charts'
 import ContentCard from 'components/base/grid/ContentCard'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
@@ -101,11 +101,13 @@ const ExperimentExposuresPanel: FC<ExperimentExposuresPanelProps> = ({
       {chart && hasData && (
         <>
           <LineChart
-            colorMap={chart.colorMap}
             data={chart.points}
             height={260}
-            series={chart.series}
-            seriesLabels={buildLegendLabels(totals)}
+            series={seriesFromMaps(
+              chart.series,
+              chart.colorMap,
+              buildLegendLabels(totals),
+            )}
             showLegend
           />
           <div className='fs-caption'>
