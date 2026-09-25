@@ -16,6 +16,7 @@ from edge_api.identities.types import IdentityChangeset
 from edge_api.identities.utils import generate_change_dict
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.models import Environment
+from evaluation.services import get_edge_identity_override_value
 from users.models import FFAdminUser
 from util.engine_models.features.models import FeatureStateModel
 from util.engine_models.identities.models import IdentityFeaturesList, IdentityModel
@@ -193,23 +194,30 @@ class EdgeIdentity:
         current_feature_overrides = {
             fs.featurestate_uuid: fs for fs in self.feature_overrides
         }
+        environment = Environment.get_from_cache(self.environment_api_key)
+        assert environment
 
         for uuid_, previous_fs in previous_feature_overrides.items():
             current_matching_fs = current_feature_overrides.get(uuid_)
             if current_matching_fs is None:
                 feature_changes[previous_fs.feature.name] = generate_change_dict(
                     change_type="-",
-                    identity_id=self.id,
+                    edge_identity=self,
+                    environment=environment,
                     old=previous_fs,
                 )
-            elif (
-                current_matching_fs.enabled != previous_fs.enabled
-                or current_matching_fs.get_value(self.id)
-                != previous_fs.get_value(self.id)
+            elif current_matching_fs.enabled != previous_fs.enabled or (
+                get_edge_identity_override_value(
+                    self, current_matching_fs, environment=environment
+                )
+                != get_edge_identity_override_value(
+                    self, previous_fs, environment=environment
+                )
             ):
                 feature_changes[previous_fs.feature.name] = generate_change_dict(
                     change_type="~",
-                    identity_id=self.id,
+                    edge_identity=self,
+                    environment=environment,
                     new=current_matching_fs,
                     old=previous_fs,
                 )
@@ -218,7 +226,8 @@ class EdgeIdentity:
             if uuid_ not in previous_feature_overrides:
                 feature_changes[previous_fs.feature.name] = generate_change_dict(
                     change_type="+",
-                    identity_id=self.id,
+                    edge_identity=self,
+                    environment=environment,
                     new=previous_fs,
                 )
 

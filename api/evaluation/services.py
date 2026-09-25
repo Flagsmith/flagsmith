@@ -1,5 +1,5 @@
 from math import inf
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.db.models import Q
 from flag_engine.engine import get_evaluation_result
@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 __all__ = (
     "evaluate_identity",
     "get_edge_identity_feature_states",
+    "get_edge_identity_override_value",
     "get_edge_identity_segments",
     "get_environment_feature_states",
     "get_identity_feature_states",
@@ -123,6 +124,32 @@ def get_edge_identity_feature_states(
         )
         for flag in get_evaluation_result(context)["flags"].values()
     ]
+
+
+def get_edge_identity_override_value(
+    edge_identity: "EdgeIdentity",
+    feature_state: "FeatureStateModel",
+    *,
+    environment: "Environment",
+) -> Any:
+    """The value `edge_identity` is served by its own override `feature_state`."""
+    # TODO: Read the stored value instead, once identity overrides can only hold
+    # a single variant, as per https://github.com/Flagsmith/flagsmith/issues/8597
+    feature_context = map_engine_feature_state_to_feature_context(feature_state)
+    flag_name = feature_context["name"]
+    result = get_evaluation_result(
+        {
+            "environment": {
+                "key": environment.api_key,
+                "name": environment.name or "",
+            },
+            "identity": map_edge_identity_to_identity_context(
+                edge_identity, environment=environment
+            ),
+            "features": {flag_name: feature_context},
+        }
+    )
+    return result["flags"][flag_name]["value"]
 
 
 def get_edge_identity_segments(edge_identity: "EdgeIdentity") -> "list[Segment]":
