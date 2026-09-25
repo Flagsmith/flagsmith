@@ -13,8 +13,7 @@ export default meta
 
 type Story = StoryObj<typeof UsageOverTime>
 
-// Fixed, so the chart looks the same on every run and a visual diff means a
-// real change rather than the date moving.
+// Relative dates would redraw the chart on every visual regression run.
 const TODAY = moment.utc('2026-09-15T00:00:00Z')
 
 // Weekends lighter, so the shape reads like real traffic rather than a ramp.
@@ -24,8 +23,6 @@ const usage = (days: number, perDay: number): Res['organisationUsage'] => {
   const events = Array.from({ length: days }).map((_, index) => {
     const weight = DAY_WEIGHTS[index % DAY_WEIGHTS.length]
     return {
-      // Counted back from TODAY, so the measured days run up to the
-      // projection rather than sitting a month behind it.
       day: TODAY.clone()
         .subtract(days - 1 - index, 'days')
         .format('YYYY-MM-DD'),

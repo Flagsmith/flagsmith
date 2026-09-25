@@ -6,11 +6,7 @@ type ProjectFilterType = {
   value?: string
   onChange: (id: string, name: string) => void
   showAll?: boolean
-  /**
-   * Select the organisation's only project when it has just one. On by
-   * default, since most callers need a project chosen before they can do
-   * anything. Off where All Projects is a meaningful answer in itself.
-   */
+  /** Selects the organisation's only project, when it has one. On by default. */
   autoSelectSingleProject?: boolean
   inputId?: string
   'aria-label'?: string
