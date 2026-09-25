@@ -1067,6 +1067,19 @@ def test_get_hash_key__composite_key_hashing_disabled__returns_identity_id(  # t
     assert result == str(identity.id)
 
 
+def test_get_hash_key__unsaved_identity_composite_key_hashing_disabled__returns_identifier(
+    environment: Environment,
+) -> None:
+    # Given
+    identity = Identity(identifier="transient", environment=environment)
+
+    # When
+    result = identity.get_hash_key(use_identity_composite_key_for_hashing=False)
+
+    # Then
+    assert result == "transient"
+
+
 def test_identity_get_all_feature_states__returns_identity_override__when_v2_feature_versioning_enabled(  # type: ignore[no-untyped-def]  # noqa: E501
     identity: Identity, environment_v2_versioning: "Environment", feature: Feature
 ):
