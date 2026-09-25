@@ -14,7 +14,7 @@ const meta: Meta<typeof Chip> = {
     docs: {
       description: {
         component:
-          'Canonical token-based chip primitive: a small labelled pill token. Layout via Bootstrap utilities, colour/radius via token utilities, padding/sizes/border/truncation in SCSS. Leading/trailing icons go in as children. `variant` covers neutral, accent, the five status colours and `solid`; `ChipDot` adds the leading dot in `currentColor`. Radius is a fixed 6px from the tags frame, so there is no shape prop. Selection lives in ToggleChip. The legacy `.chip` (old SCSS vars + manual dark-mode block, ~35×) migrates onto this under #6606.',
+          'Canonical token-based chip primitive: a small labelled pill token. Layout via Bootstrap utilities, colour/radius via token utilities, padding/sizes/border/truncation in SCSS. Leading/trailing icons go in as children. `variant` covers neutral, accent, the five status colours and `solid`; `ChipDot` adds the leading dot in `currentColor`. Radius is a fixed 6px from the tags frame, so there is no shape prop. `selected` renders a leading checkbox with a tick; a chip with no children shows the tick alone, for bare swatches like the tag colour picker. The legacy `.chip` (old SCSS vars + manual dark-mode block, ~35×) migrates onto this under #6606.',
       },
     },
     layout: 'centered',
@@ -82,6 +82,18 @@ export const AsCustomTag: Story = {
           Custom
         </Chip>
       ))}
+    </div>
+  ),
+}
+
+export const Selected: Story = {
+  name: 'Selected',
+  render: () => (
+    <div className='d-flex flex-wrap gap-2 align-items-center'>
+      <Chip selected>Selected</Chip>
+      <Chip selected={false}>Not selected</Chip>
+      <Chip className='tag-light-green border-0' selected />
+      <Chip className='tag-light-green border-0' selected={false} />
     </div>
   ),
 }

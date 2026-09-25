@@ -86,7 +86,7 @@ const getTooltip = (tag: TTag | undefined) => {
     // classes as the real chip, so there is one set of colour rules.
     const utilities = isSystemTag(tag)
       ? SYSTEM_TAG_UTILITIES
-      : `${getTagSwatchUtilities(tag.color)} border-0`
+      : getTagSwatchUtilities(tag.color)
     return `<div>
         <span
           class="ds-chip ds-chip--xs d-inline-flex align-items-center rounded-md me-1 ${utilities}${

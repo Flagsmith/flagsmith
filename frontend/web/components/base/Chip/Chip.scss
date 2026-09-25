@@ -74,3 +74,33 @@
     cursor: pointer;
   }
 }
+
+// The leading checkbox for `selected`. A chip with no children is a bare
+// swatch, where only the tick renders and this box is skipped.
+.ds-chip__check {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xs);
+
+  // Checked: the box fills with the chip's ink and the tick takes the chip's
+  // own fill, which reads more strongly than a bare tick. Falls back to the
+  // page surface for chips that publish no fill of their own.
+  &--selected {
+    // currentColor here is the chip's inherited ink. The override sits on the
+    // svg, not this element: setting `color` here would change what
+    // currentColor resolves to and the box would vanish.
+    background-color: currentColor;
+    border-color: transparent;
+
+    svg {
+      color: var(--ds-chip-check-ink, var(--color-surface-default));
+    }
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}

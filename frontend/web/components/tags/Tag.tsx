@@ -3,7 +3,6 @@ import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
 import Chip from 'components/base/Chip'
-import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
 import TagContent from './TagContent'
 import Constants from 'common/constants'
@@ -47,25 +46,8 @@ const Tag: FC<TagType> = ({
     )
   }
 
-  const disabled = Utils.tagDisabled(tag)
-
-  if (!hideNames && !!onClick) {
-    return (
-      <ToggleChip
-        className={cx(getTagSwatchUtilities(getTagColor(tag)), className)}
-        active={selected}
-        onClick={() => {
-          if (!disabled) {
-            onClick?.(tag as TTag)
-          }
-        }}
-      >
-        {!!tag.label && <TagContent tag={tag} />}
-      </ToggleChip>
-    )
-  }
-
-  // Hide unhealthy tags if feature is disabled
+  // Hide unhealthy tags if feature is disabled. This used to sit below the
+  // toggle branch, so a clickable tag skipped it.
   if (
     !Utils.getFlagsmithHasFeature('feature_health') &&
     tag.type === 'UNHEALTHY'
@@ -73,7 +55,12 @@ const Tag: FC<TagType> = ({
     return null
   }
 
+  const disabled = Utils.tagDisabled(tag)
   const isSystem = isSystemTag(tag)
+  // Selection is only offered where a tag is clickable and shows its name;
+  // elsewhere the tick has nothing to sit beside. TagContent returns null
+  // without a label, so the two cases render the same content either way.
+  const selectable = !hideNames && !!onClick
 
   return (
     <Chip
@@ -84,11 +71,15 @@ const Tag: FC<TagType> = ({
         isSystem
           ? SYSTEM_TAG_UTILITIES
           : getTagSwatchUtilities(getTagColor(tag)),
-        // The fill carries the colour, so a border would double the edge.
-        { 'border-0': !isSystem, 'opacity-50': disabled },
+        // Every tag keeps its border. The Content fills are faint by design,
+        // 1.14 to 1.59 against the light page, so the edge is what makes a tag
+        // read as a tag. Prod does the same: a faded fill with a stronger
+        // border, and his own banners pair a 100 fill with a 500 border.
+        { 'opacity-50': disabled },
         className,
       )}
       onClick={disabled || !onClick ? undefined : () => onClick(tag as TTag)}
+      selected={selectable ? !!selected : undefined}
       size='xs'
       variant='none'
     >

@@ -19,10 +19,16 @@ export type ChipVariant =
   | 'none'
 
 export type ChipProps = {
-  children: ReactNode
+  // Optional: a chip with `selected` and no children is a bare swatch, where
+  // the tick alone marks the choice. See the tag colour picker.
+  children?: ReactNode
   variant?: ChipVariant
   size?: ChipSize
   truncate?: boolean
+  // Renders a leading checkbox with a tick. A chip with no children is a bare
+  // swatch (the tag colour picker), where the box would be noise and the tick
+  // alone marks the choice.
+  selected?: boolean
   onRemove?: () => void
   onClick?: () => void
   className?: string
@@ -76,6 +82,7 @@ const Chip = ({
   onRemove,
   ref,
   role,
+  selected,
   size = 'default',
   tabIndex,
   truncate = false,
@@ -101,7 +108,7 @@ const Chip = ({
       onClick={onClick}
       role={role ?? (onClick ? 'button' : undefined)}
       tabIndex={interactive ? tabIndex ?? 0 : undefined}
-      aria-checked={ariaChecked}
+      aria-checked={ariaChecked ?? selected}
       aria-expanded={ariaExpanded}
       onKeyDown={
         onKeyDown ??
@@ -117,6 +124,19 @@ const Chip = ({
           : undefined)
       }
     >
+      {selected !== undefined && (
+        <span
+          className={classNames(
+            'd-inline-flex align-items-center justify-content-center',
+            {
+              'ds-chip__check': !!children,
+              'ds-chip__check--selected': selected && !!children,
+            },
+          )}
+        >
+          {selected && <Icon name='checkmark' width={14} />}
+        </span>
+      )}
       {truncate ? <span className='ds-chip__label'>{children}</span> : children}
       {onRemove && (
         <button
