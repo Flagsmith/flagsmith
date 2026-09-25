@@ -1,7 +1,11 @@
+import requests
+from django.contrib.contenttypes.models import ContentType
+
 from core.constants import STRING
 from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import TraitSerializerBasic
 from features.models import Feature, FeatureState
+from integrations.common.models import IntegrationHealthRecord
 from integrations.webhook.serializers import (
     IntegrationFeatureStateSerializer,
     SegmentSerializer,
@@ -76,3 +80,78 @@ def test_webhook_generate_user_data__trait_models_provided__uses_trait_models_ar
 
     # Then
     assert expected_data == user_data
+
+
+def test_webhook_identify_user__records_health_status(  # type: ignore[no-untyped-def]
+    mocker,
+    integration_webhook_config,
+):
+    # Given
+    webhook_wrapper = WebhookWrapper(integration_webhook_config)
+
+    response = mocker.MagicMock(spec=requests.Response, status_code=200)
+    response.__bool__.return_value = True
+
+    mocker.patch(
+        "integrations.webhook.webhook.call_integration_webhook",
+        return_value=response,
+    )
+
+    # When
+    webhook_wrapper._identify_user({"identity": "identity-1"})
+
+    # Then
+    health_record = IntegrationHealthRecord.objects.get(
+        object_id=integration_webhook_config.id,
+        content_type=ContentType.objects.get_for_model(integration_webhook_config),
+    )
+    assert health_record.status_code == 200
+
+
+def test_webhook_identify_user__unhealthy_status__records_health(  # type: ignore[no-untyped-def]
+    mocker,
+    integration_webhook_config,
+):
+    # Given
+    webhook_wrapper = WebhookWrapper(integration_webhook_config)
+
+    response = mocker.MagicMock(spec=requests.Response, status_code=500)
+    response.__bool__.return_value = True
+
+    mocker.patch(
+        "integrations.webhook.webhook.call_integration_webhook",
+        return_value=response,
+    )
+
+    # When
+    webhook_wrapper._identify_user({"identity": "identity-1"})
+
+    # Then
+    health_record = IntegrationHealthRecord.objects.get(
+        object_id=integration_webhook_config.id,
+        content_type=ContentType.objects.get_for_model(integration_webhook_config),
+    )
+    assert health_record.status_code == 500
+
+
+def test_webhook_identify_user__record_health_raises__does_not_propagate(  # type: ignore[no-untyped-def]
+    mocker,
+    integration_webhook_config,
+):
+    # Given
+    webhook_wrapper = WebhookWrapper(integration_webhook_config)
+
+    response = mocker.MagicMock(spec=requests.Response, status_code=200)
+    response.__bool__.return_value = True
+
+    mocker.patch(
+        "integrations.webhook.webhook.call_integration_webhook",
+        return_value=response,
+    )
+    mocker.patch(
+        "integrations.webhook.webhook.record_integration_health",
+        side_effect=Exception("boom"),
+    )
+
+    # When
+    webhook_wrapper._identify_user({"identity": "identity-1"})  # does not raise
