@@ -1,13 +1,13 @@
 import typing
 
 from drf_spectacular.utils import extend_schema_field
+from flagsmith_schemas.dynamodb import FeatureState as EdgeFeatureState
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
 from evaluation.types import EvaluatedFeatureState
 from features.models import FeatureState
-from util.engine_models.features.models import FeatureStateModel
 
 
 class IdentifierOnlyIdentitySerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -60,6 +60,8 @@ class IdentityAllFeatureStatesMVFeatureOptionSerializer(serializers.Serializer):
     )
 
     def get_value(self, instance) -> typing.Union[str, int, bool]:  # type: ignore[no-untyped-def]
+        if isinstance(instance, typing.Mapping):
+            return instance["value"]  # type: ignore[no-any-return]
         return instance.value  # type: ignore[no-any-return]
 
 
@@ -85,12 +87,12 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):  # type: ignor
     )
 
     def get_feature_state_value(
-        self, instance: "EvaluatedFeatureState[FeatureState | FeatureStateModel]"
+        self, instance: "EvaluatedFeatureState[FeatureState | EdgeFeatureState]"
     ) -> typing.Union[str, int, bool]:
         return instance.evaluation_result["value"]  # type: ignore[no-any-return]
 
     def get_overridden_by(
-        self, instance: "EvaluatedFeatureState[FeatureState | FeatureStateModel]"
+        self, instance: "EvaluatedFeatureState[FeatureState | EdgeFeatureState]"
     ) -> typing.Optional[str]:
         feature_state = instance.feature_state
         if not isinstance(feature_state, FeatureState):
@@ -105,7 +107,7 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):  # type: ignor
 
     @extend_schema_field(IdentityAllFeatureStatesSegmentSerializer)
     def get_segment(
-        self, instance: "EvaluatedFeatureState[FeatureState | FeatureStateModel]"
+        self, instance: "EvaluatedFeatureState[FeatureState | EdgeFeatureState]"
     ) -> typing.Optional[typing.Dict[str, typing.Any]]:
         feature_state = instance.feature_state
         if (

@@ -3,8 +3,9 @@ from typing import TYPE_CHECKING
 from typing_extensions import NotRequired, TypedDict
 
 if TYPE_CHECKING:
+    from flagsmith_schemas.dynamodb import FeatureState as EdgeFeatureState
+
     from features.models import FeatureState
-    from util.engine_models.features.models import FeatureStateModel
 
 
 class FeatureEngineMetadata(TypedDict):
@@ -23,4 +24,4 @@ class FeatureEngineMetadata(TypedDict):
     feature_state: NotRequired["FeatureState"]
     #: An edge identity's own overrides are stored in DynamoDB rather than the
     #: ORM, so they reach evaluation as the model they were read back as.
-    edge_feature_state: NotRequired["FeatureStateModel"]
+    edge_feature_state: NotRequired["EdgeFeatureState"]

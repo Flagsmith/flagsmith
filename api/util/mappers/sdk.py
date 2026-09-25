@@ -39,9 +39,13 @@ def map_environment_to_sdk_document(environment: "Environment") -> SDKDocument:
                 identities_with_overrides[identity_id] = feature_state.identity
         engine_environment["identity_overrides"] = [
             # System-owned identity data must never reach local-eval SDKs.
-            map_identity_to_engine(identity, with_traits=False).model_dump(
-                exclude={"system_traits"}
-            )
+            {
+                field_name: value
+                for field_name, value in map_identity_to_engine(
+                    identity, with_traits=False
+                ).items()
+                if field_name != "system_traits"
+            }
             for identity in identities_with_overrides.values()
         ]
 

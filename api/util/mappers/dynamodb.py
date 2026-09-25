@@ -1,14 +1,18 @@
-from datetime import datetime
+from collections.abc import Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
+from django.utils import timezone
 from flagsmith_schemas.dynamodb import (
     Environment,
     EnvironmentAPIKey,
     EnvironmentCompressed,
+    EnvironmentV2IdentityOverride,
     EnvironmentV2MetaCompressed,
+    FeatureState,
+    Identity,
 )
-from pydantic import BaseModel, TypeAdapter
+from pydantic import TypeAdapter
 
 from edge_api.identities.types import IdentityChangeset
 from environments.dynamodb.constants import (
@@ -23,23 +27,23 @@ from environments.dynamodb.utils import (
     get_environments_v2_identity_override_document_key,
 )
 from util.dataclasses import CompressedEnvironmentDocument
-from util.engine_models.features.models import FeatureStateModel
 from util.mappers.engine import (
     map_environment_api_key_to_engine,
     map_environment_to_engine,
     map_identity_to_engine,
 )
-from util.mappers.types import Document, DocumentValue
+from util.mappers.types import Document
 
 if TYPE_CHECKING:
-    from environments.identities.models import Identity
+    from environments.identities.models import Identity as IdentityModel
     from environments.models import Environment as EnvironmentModel
     from environments.models import EnvironmentAPIKey as EnvironmentAPIKeyModel
-    from util.engine_models.identities.models import IdentityModel
 
 
 __all__ = (
     "map_engine_identity_to_identity_document",
+    "map_identity_document_to_engine_identity",
+    "map_identity_override_document_to_identity_override",
     "map_environment_api_key_to_environment_api_key_document",
     "map_environment_to_compressed_environment_document",
     "map_environment_to_compressed_environment_v2_document",
@@ -49,9 +53,15 @@ __all__ = (
 )
 
 
+T = TypeVar("T")
+
 _environment_adapter: TypeAdapter[Environment] = TypeAdapter(Environment)
 _environment_api_key_adapter: TypeAdapter[EnvironmentAPIKey] = TypeAdapter(
     EnvironmentAPIKey
+)
+_identity_adapter: TypeAdapter[Identity] = TypeAdapter(Identity)
+_identity_override_adapter: TypeAdapter[EnvironmentV2IdentityOverride] = TypeAdapter(
+    EnvironmentV2IdentityOverride
 )
 _environment_compressed_adapter: TypeAdapter[EnvironmentCompressed] = TypeAdapter(
     EnvironmentCompressed,
@@ -114,42 +124,58 @@ def map_environment_api_key_to_environment_api_key_document(
     )
 
 
+def map_identity_document_to_engine_identity(
+    identity_document: Mapping[str, Any],
+) -> Identity:
+    return _validate_document(_identity_adapter, identity_document)
+
+
 def map_engine_identity_to_identity_document(
-    engine_identity: "IdentityModel",
+    engine_identity: Mapping[str, Any],
 ) -> Document:
-    response = {
-        field_name: _map_value_to_document_value(value)
-        for field_name, value in engine_identity
-        if (value is not None or field_name not in _NULLABLE_IDENTITY_KEY_ATTRIBUTES)
+    identity_document = cast(
+        Document, _validate_document(_identity_adapter, engine_identity)
+    )
+    return {
+        field_name: value
+        for field_name, value in identity_document.items()
+        if value is not None or field_name not in _NULLABLE_IDENTITY_KEY_ATTRIBUTES
     }
-    response["composite_key"] = engine_identity.composite_key
-    return response
 
 
 def map_identity_to_identity_document(
-    identity: "Identity",
+    identity: "IdentityModel",
 ) -> Document:
     return map_engine_identity_to_identity_document(map_identity_to_engine(identity))
 
 
+def map_identity_override_document_to_identity_override(
+    identity_override_document: Mapping[str, Any],
+) -> IdentityOverrideV2:
+    return _validate_document(_identity_override_adapter, identity_override_document)
+
+
 def map_engine_feature_state_to_identity_override(
     *,
-    feature_state: "FeatureStateModel",
+    feature_state: Mapping[str, Any] | FeatureState,
     identity_uuid: str,
     identifier: str,
     environment_api_key: str,
     environment_id: int,
 ) -> IdentityOverrideV2:
-    return IdentityOverrideV2(
-        document_key=get_environments_v2_identity_override_document_key(
-            feature_id=feature_state.feature.id,
-            identity_uuid=identity_uuid,
-        ),
-        environment_id=str(environment_id),
-        environment_api_key=environment_api_key,
-        feature_state=feature_state,
-        identifier=identifier,
-        identity_uuid=identity_uuid,
+    return map_identity_override_document_to_identity_override(
+        {
+            "environment_id": str(environment_id),
+            "document_key": get_environments_v2_identity_override_document_key(
+                feature_id=int(feature_state["feature"]["id"]),
+                identity_uuid=identity_uuid,
+            ),
+            "environment_api_key": environment_api_key,
+            "identifier": identifier,
+            "identity_uuid": identity_uuid,
+            "feature_state": feature_state,
+            "created_date": timezone.now(),
+        }
     )
 
 
@@ -167,10 +193,9 @@ def map_identity_changeset_to_identity_override_changeset(
     for _, change_details in identity_changeset["feature_overrides"].items():
         match change_details["change_type"]:
             case "-":
-                feature_state = FeatureStateModel.parse_obj(change_details["old"])
                 to_delete.append(
                     map_engine_feature_state_to_identity_override(
-                        feature_state=feature_state,
+                        feature_state=change_details["old"],
                         identity_uuid=identity_uuid,
                         identifier=identifier,
                         environment_api_key=environment_api_key,
@@ -178,10 +203,9 @@ def map_identity_changeset_to_identity_override_changeset(
                     )
                 )
             case _:
-                feature_state = FeatureStateModel.parse_obj(change_details["new"])
                 to_put.append(
                     map_engine_feature_state_to_identity_override(
-                        feature_state=feature_state,
+                        feature_state=change_details["new"],
                         identity_uuid=identity_uuid,
                         identifier=identifier,
                         environment_api_key=environment_api_key,
@@ -195,10 +219,23 @@ def map_identity_changeset_to_identity_override_changeset(
 def map_identity_override_to_identity_override_document(
     identity_override: IdentityOverrideV2,
 ) -> Document:
-    return {
-        field_name: _map_value_to_document_value(value)
-        for field_name, value in identity_override
-    }
+    return cast(Document, identity_override)
+
+
+def _validate_document(adapter: TypeAdapter[T], document: Mapping[str, Any]) -> T:
+    # The schema doesn't round-trip stored numbers, e.g. it validates an integer
+    # `Decimal` feature value as a string, so they're validated as native numbers.
+    return adapter.validate_python(_map_decimals_to_numbers(document))
+
+
+def _map_decimals_to_numbers(value: Any) -> Any:
+    if isinstance(value, Decimal):
+        return float(value) if value.as_tuple().exponent else int(value)
+    if isinstance(value, Mapping):
+        return {key: _map_decimals_to_numbers(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_map_decimals_to_numbers(item) for item in value]
+    return value
 
 
 def _get_compressed_environment_document(
@@ -214,55 +251,3 @@ def _get_compressed_environment_document(
         compressed_size_bytes=compressed_size_bytes,
         compression_ratio=compressed_size_bytes / uncompressed_size_bytes,
     )
-
-
-T = TypeVar("T")
-
-
-def _noop_encoder(value: T) -> T:
-    return value
-
-
-def _base_model_encoder(value: BaseModel) -> DocumentValue:
-    return _map_value_to_document_value(value.dict())
-
-
-def _dict_encoder(value: Dict[str, Any]) -> Dict[str, DocumentValue]:
-    return {f_name: _map_value_to_document_value(val) for f_name, val in value.items()}
-
-
-def _list_encoder(value: List[Any]) -> List[DocumentValue]:
-    return [_map_value_to_document_value(item) for item in value]
-
-
-def _decimal_encoder(value: Union[int, float]) -> Decimal:
-    return Decimal(str(value))
-
-
-def _isoformat_encoder(value: datetime) -> str:
-    return value.isoformat()
-
-
-DOCUMENT_VALUE_ENCODERS_BY_TYPE: dict[type, Callable[[Any], DocumentValue]] = {
-    BaseModel: _base_model_encoder,
-    dict: _dict_encoder,
-    list: _list_encoder,
-    type(None): _noop_encoder,
-    str: _noop_encoder,
-    bool: _noop_encoder,
-    int: _decimal_encoder,
-    float: _decimal_encoder,
-    datetime: _isoformat_encoder,
-    Decimal: _noop_encoder,
-}
-
-
-def _map_value_to_document_value(value: Any) -> DocumentValue:
-    for base in value.__class__.__mro__[:-1]:
-        try:
-            encoder = DOCUMENT_VALUE_ENCODERS_BY_TYPE[base]
-        except KeyError:
-            continue
-        return encoder(value)
-    else:
-        return str(value)

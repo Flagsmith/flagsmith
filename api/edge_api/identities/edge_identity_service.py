@@ -5,6 +5,7 @@ from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.dynamodb.types import (
     IdentityOverrideV2,
 )
+from util.mappers import map_identity_override_document_to_identity_override
 
 ddb_environment_v2_wrapper = DynamoEnvironmentV2Wrapper()
 
@@ -20,7 +21,7 @@ def get_edge_identity_overrides(
         )
     )
     return [
-        IdentityOverrideV2.model_validate(
+        map_identity_override_document_to_identity_override(
             {**item, "environment_id": str(item["environment_id"])}
         )
         for item in override_items
@@ -49,4 +50,4 @@ def get_overridden_feature_ids_for_edge_identity(identity_uuid: str) -> set[int]
     except ObjectDoesNotExist:
         return set()
     identity = EdgeIdentity.from_identity_document(identity_document)
-    return {fs.feature.id for fs in identity.feature_overrides}
+    return {int(fs["feature"]["id"]) for fs in identity.feature_overrides}

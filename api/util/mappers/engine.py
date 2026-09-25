@@ -1,11 +1,13 @@
+import uuid
 from collections.abc import Iterable
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from uuid import UUID
 
+from django.utils import timezone
+
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from features.versioning.models import EnvironmentFeatureVersion
-from util.engine_models.identities.models import IdentityModel
 
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import (  # type: ignore[attr-defined]
@@ -29,6 +31,7 @@ __all__ = (
     "map_environment_api_key_to_engine",
     "map_environment_to_engine",
     "map_feature_to_engine",
+    "map_identifier_to_engine",
     "map_identity_to_engine",
     "map_mv_option_to_engine",
     "map_segment_to_engine",
@@ -365,7 +368,7 @@ def map_identity_to_engine(
     *,
     with_overrides: bool = True,
     with_traits: bool = True,
-) -> IdentityModel:
+) -> dict[str, Any]:
     environment_api_key = identity.environment.api_key
 
     # Read relationships - grab all the data needed from the ORM here.
@@ -397,19 +400,35 @@ def map_identity_to_engine(
     ]
     identity_trait_models = map_traits_to_engine(identity_traits)
 
-    return IdentityModel.model_validate(
-        {
-            # Attributes:
-            "identifier": identity.identifier,
-            "environment_api_key": environment_api_key,
-            "created_date": identity.created_date,
-            "django_id": identity.pk,
-            #
-            # Relationships:
-            "identity_features": identity_feature_state_models,
-            "identity_traits": identity_trait_models,
-        }
+    return map_identifier_to_engine(
+        identity.identifier,
+        environment_api_key,
+        created_date=identity.created_date,
+        identity_features=identity_feature_state_models,
+        identity_traits=identity_trait_models,
+        django_id=identity.pk,
     )
+
+
+def map_identifier_to_engine(
+    identifier: str,
+    environment_api_key: str,
+    **fields: Any,
+) -> dict[str, Any]:
+    """An identity's document fields, defaulted as for a new identity."""
+    return {
+        "identifier": identifier,
+        "environment_api_key": environment_api_key,
+        "created_date": timezone.now(),
+        "identity_features": [],
+        "identity_traits": [],
+        "system_traits": None,
+        "identity_uuid": uuid.uuid4(),
+        "django_id": None,
+        "dashboard_alias": None,
+        "composite_key": f"{environment_api_key}_{identifier}",
+        **fields,
+    }
 
 
 def _get_prioritised_feature_states(

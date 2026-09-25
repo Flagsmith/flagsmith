@@ -14,7 +14,6 @@ from environments.dynamodb.types import (
 )
 from environments.models import Environment
 from projects.models import EdgeV2MigrationStatus
-from util.engine_models.identities.models import IdentityModel
 from util.mappers import map_engine_feature_state_to_identity_override
 
 logger = logging.getLogger(__name__)
@@ -94,12 +93,11 @@ def _iter_paginated_overrides(
             projection_expression="environment_api_key, identifier, identity_features, identity_uuid",
             overrides_only=True,
         ):
-            identity = IdentityModel.model_validate(item)
-            for feature_state in identity.identity_features:
+            for feature_state in item.get("identity_features", []):
                 yield map_engine_feature_state_to_identity_override(
                     feature_state=feature_state,
-                    identity_uuid=str(identity.identity_uuid),
-                    identifier=identity.identifier,
+                    identity_uuid=item["identity_uuid"],
+                    identifier=item["identifier"],
                     environment_api_key=environment_api_key,
                     environment_id=str(environment.id),  # type: ignore[arg-type]
                 )

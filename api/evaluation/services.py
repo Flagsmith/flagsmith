@@ -19,13 +19,14 @@ from evaluation.types import (
 )
 
 if TYPE_CHECKING:
+    from flagsmith_schemas.dynamodb import FeatureState as EdgeFeatureState
+
     from edge_api.identities.models import EdgeIdentity
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
     from environments.models import Environment
     from features.models import FeatureState
     from segments.models import Segment
-    from util.engine_models.features.models import FeatureStateModel
 
 
 _IDENTITY_FREE_PROPERTY_PREFIXES = (
@@ -109,7 +110,7 @@ def get_environment_feature_states(
 
 def get_edge_identity_feature_states(
     edge_identity: "EdgeIdentity",
-) -> "list[EvaluatedFeatureState[FeatureState | FeatureStateModel]]":
+) -> "list[EvaluatedFeatureState[FeatureState | EdgeFeatureState]]":
     """The flags to serve an edge identity, one per feature."""
     environment: "Environment" = edge_identity.environment
 
@@ -146,7 +147,7 @@ def get_edge_identity_feature_states(
 
 def get_edge_identity_override_value(
     edge_identity: "EdgeIdentity",
-    feature_state: "FeatureStateModel",
+    feature_state: "EdgeFeatureState",
     *,
     environment: "Environment",
 ) -> Any:

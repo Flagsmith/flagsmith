@@ -180,8 +180,12 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
                 for identity_override_to_delete in to_delete:
                     writer.delete_item(
                         Key={
-                            ENVIRONMENTS_V2_PARTITION_KEY: identity_override_to_delete.environment_id,
-                            ENVIRONMENTS_V2_SORT_KEY: identity_override_to_delete.document_key,
+                            ENVIRONMENTS_V2_PARTITION_KEY: identity_override_to_delete[
+                                "environment_id"
+                            ],
+                            ENVIRONMENTS_V2_SORT_KEY: identity_override_to_delete[
+                                "document_key"
+                            ],
                         },
                     )
                 for identity_override_to_put in to_put:

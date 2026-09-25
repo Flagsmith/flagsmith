@@ -9,6 +9,9 @@ from common.environments.permissions import (
 )
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
+from flag_engine.context.mappers import map_any_value_to_context_value
+from flagsmith_schemas.api import TraitInput
+from pydantic import TypeAdapter
 from pyngo import drf_error_details
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -49,14 +52,13 @@ from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
 )
+from environments.identities.traits.constants import TRAIT_STRING_VALUE_MAX_LENGTH
 from environments.models import Environment
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from evaluation.services import get_edge_identity_feature_states
 from features.models import FeatureState
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
-from util.engine_models.identities.models import IdentityFeaturesList, IdentityModel
-from util.engine_models.identities.traits.models import TraitModel
 
 from . import edge_identity_service
 from .exceptions import TraitPersistenceError
@@ -66,6 +68,8 @@ from .permissions import (
     GetEdgeIdentityOverridesPermission,
 )
 from .search import EdgeIdentitySearchData
+
+_trait_input_adapter: TypeAdapter[TraitInput] = TypeAdapter(TraitInput)
 
 
 class EdgeIdentityViewSet(
@@ -162,8 +166,11 @@ class EdgeIdentityViewSet(
     def get_traits(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         edge_identity = self.get_object()
         data = [
-            trait.dict()
-            for trait in edge_identity.engine_identity_model.identity_traits
+            {
+                "trait_key": trait["trait_key"],
+                "trait_value": map_any_value_to_context_value(trait["trait_value"]),
+            }
+            for trait in edge_identity.document["identity_traits"]
         ]
         return Response(data=data, status=status.HTTP_200_OK)
 
@@ -180,17 +187,28 @@ class EdgeIdentityViewSet(
         if not isinstance(request.data, dict):
             raise ValidationError({"detail": "Request data must be a JSON object."})
         try:
-            trait = TraitModel(**request.data)
+            trait_input = _trait_input_adapter.validate_python(request.data)
         except pydantic.ValidationError as validation_error:
             raise ValidationError(
                 drf_error_details(validation_error)
             ) from validation_error
-        _, traits_updated = edge_identity.engine_identity_model.update_traits([trait])
-        if traits_updated:
+        trait_value = trait_input["trait_value"]
+        if trait_value is not None:
+            trait_value = map_any_value_to_context_value(trait_value)
+        if (
+            isinstance(trait_value, str)
+            and len(trait_value) > TRAIT_STRING_VALUE_MAX_LENGTH
+        ):
+            raise ValidationError(
+                {
+                    "trait_value": f"Must be at most {TRAIT_STRING_VALUE_MAX_LENGTH} characters."
+                }
+            )
+        trait = {"trait_key": trait_input["trait_key"], "trait_value": trait_value}
+        if edge_identity.update_traits([trait]):
             edge_identity.save()
 
-        data = trait.dict()
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(trait, status=status.HTTP_200_OK)
 
 
 class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
@@ -263,13 +281,13 @@ class EdgeIdentityFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[ty
         )
         q_params_serializer.is_valid(raise_exception=True)
 
-        identity_features: IdentityFeaturesList = self.identity.feature_overrides
+        identity_features = self.identity.feature_overrides
 
         feature = q_params_serializer.data.get("feature")
         if feature:
-            identity_features = filter(  # type: ignore[assignment]
-                lambda fs: fs.feature.id == feature, identity_features
-            )
+            identity_features = [
+                fs for fs in identity_features if fs["feature"]["id"] == feature
+            ]
 
         serializer = self.get_serializer(identity_features, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -336,11 +354,7 @@ class EdgeIdentityWithIdentifierFeatureStateView(APIView):
         if identity_document:
             self.identity = EdgeIdentity.from_identity_document(identity_document)
         else:
-            self.identity = EdgeIdentity(
-                engine_identity_model=IdentityModel(
-                    identifier=identifier, environment_api_key=environment_api_key
-                )
-            )
+            self.identity = EdgeIdentity.create(identifier, environment_api_key)
 
     @extend_schema(
         request=EdgeIdentityWithIdentifierFeatureStateRequestBody,

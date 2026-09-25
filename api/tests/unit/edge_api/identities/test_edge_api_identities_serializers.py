@@ -5,7 +5,7 @@ from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock import MockerFixture
 
 from api_keys.user import APIKeyUser
-from edge_api.identities.models import EdgeIdentity
+from edge_api.identities.models import EdgeIdentity, new_feature_override
 from edge_api.identities.serializers import EdgeIdentityFeatureStateSerializer
 from environments.identities.models import Identity
 from environments.identities.serializers import (
@@ -15,7 +15,6 @@ from evaluation.services import get_edge_identity_feature_states
 from features.feature_types import STANDARD
 from features.models import Feature
 from users.models import FFAdminUser
-from util.engine_models.features.models import FeatureModel, FeatureStateModel
 from util.mappers import map_identity_to_identity_document
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
@@ -139,11 +138,11 @@ def test_edge_identity_feature_state_serializer__update_override__calls_webhook(
     new_enabled_state = True
     new_value = "bar"
 
-    instance = FeatureStateModel(
-        feature=FeatureModel(id=feature.id, name=feature.name, type=STANDARD),
+    instance = new_feature_override(
+        feature={"id": feature.id, "name": feature.name, "type": STANDARD},
         enabled=previous_enabled_state,
+        feature_state_value=previous_value,
     )
-    instance.set_value(previous_value)
 
     serializer = EdgeIdentityFeatureStateSerializer(
         instance=instance,

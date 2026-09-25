@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from django.db.models import Prefetch, Q, prefetch_related_objects
 from flag_engine.context import types as engine_types
+from flag_engine.context.mappers import map_any_value_to_context_value
 from flag_engine.segments.constants import IS_SET
 from flag_engine.segments.types import ConditionOperator, RuleType
 from pydantic import TypeAdapter
@@ -26,6 +27,11 @@ from features.types import FeatureEngineMetadata
 from segments.types import SegmentEngineMetadata
 
 if TYPE_CHECKING:
+    from flagsmith_schemas.dynamodb import FeatureState as EdgeFeatureState
+    from flagsmith_schemas.dynamodb import (
+        MultivariateFeatureStateValue as EdgeMultivariateFeatureStateValue,
+    )
+
     from edge_api.identities.models import EdgeIdentity
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
@@ -33,10 +39,6 @@ if TYPE_CHECKING:
     from features.models import FeatureState
     from features.multivariate.models import MultivariateFeatureStateValue
     from segments.models import Condition, Segment, SegmentRule
-    from util.engine_models.features.models import (
-        FeatureStateModel,
-        MultivariateFeatureStateValueModel,
-    )
 
 
 __all__ = (
@@ -280,19 +282,24 @@ def map_edge_identity_to_identity_context(
     environment: "Environment",
 ) -> "IdentityContext":
     """Map an edge identity, read back from DynamoDB, to an IdentityContext."""
-    identity_model = edge_identity.engine_identity_model
+    document = edge_identity.document
     return {
         "identifier": edge_identity.identifier,
         "key": edge_identity.get_hash_key(
             environment.use_identity_composite_key_for_hashing
         ),
         "traits": {
-            trait.trait_key: trait.trait_value
-            for trait in identity_model.identity_traits
-        }
-        # System-owned traits are not user data: on a key clash, the system
-        # value wins.
-        | (identity_model.system_traits or {}),
+            trait_key: map_any_value_to_context_value(trait_value)
+            for trait_key, trait_value in (
+                {
+                    trait["trait_key"]: trait["trait_value"]
+                    for trait in document["identity_traits"]
+                }
+                # System-owned traits are not user data: on a key clash, the
+                # system value wins.
+                | (document.get("system_traits") or {})
+            ).items()
+        },
     }
 
 
@@ -376,25 +383,27 @@ def map_segment_to_segment_context(
 
 
 def map_engine_feature_state_to_feature_context(
-    feature_state: "FeatureStateModel",
+    feature_state: "EdgeFeatureState",
     *,
     priority: float | None = None,
 ) -> FeatureContext:
-    """Map a DynamoDB-sourced FeatureStateModel to a FeatureContext TypedDict.
+    """Map a DynamoDB-sourced feature state to a FeatureContext TypedDict.
 
     An edge identity's overrides are stored rather than evaluated, so they
     carry no bucketing salt: their own id seeds allocation, as it always has.
     """
     feature_context: FeatureContext = {
-        "key": str(feature_state.django_id or feature_state.featurestate_uuid),
-        "name": feature_state.feature.name,
-        "enabled": feature_state.enabled,
-        "value": feature_state.feature_state_value,
+        "key": str(
+            feature_state.get("django_id") or feature_state.get("featurestate_uuid")
+        ),
+        "name": feature_state["feature"]["name"],
+        "enabled": feature_state["enabled"],
+        "value": feature_state["feature_state_value"],
         "metadata": FeatureEngineMetadata(edge_feature_state=feature_state),
     }
 
     if variants := _map_engine_mv_fs_values_to_feature_values(
-        feature_state.multivariate_feature_state_values
+        feature_state.get("multivariate_feature_state_values", [])
     ):
         feature_context["variants"] = variants
 
@@ -405,24 +414,25 @@ def map_engine_feature_state_to_feature_context(
 
 
 def _map_engine_mv_fs_values_to_feature_values(
-    mv_fs_values: "Iterable[MultivariateFeatureStateValueModel]",
+    mv_fs_values: "Iterable[EdgeMultivariateFeatureStateValue]",
 ) -> list[engine_types.FeatureValue]:
     # Ordered by id as the stored models always have been, falling back to the
     # uuid for values that never reached the ORM.
     feature_values: list[engine_types.FeatureValue] = []
     for index, mv_fs_value in enumerate(
         sorted(
-            mv_fs_values, key=lambda mv_value: mv_value.id or mv_value.mv_fs_value_uuid
+            mv_fs_values,
+            key=lambda mv_value: mv_value.get("id") or mv_value["mv_fs_value_uuid"],
         )
     ):
-        mv_option = mv_fs_value.multivariate_feature_option
+        mv_option = mv_fs_value["multivariate_feature_option"]
         feature_value: engine_types.FeatureValue = {
-            "value": mv_option.value,
-            "weight": mv_fs_value.percentage_allocation,
+            "value": mv_option["value"],
+            "weight": float(mv_fs_value["percentage_allocation"]),
             "priority": index,
         }
-        if mv_option.key is not None:
-            feature_value["key"] = mv_option.key
+        if (key := mv_option.get("key")) is not None:
+            feature_value["key"] = key
         feature_values.append(feature_value)
     return feature_values
 

@@ -2,7 +2,7 @@ import pytest
 from flag_engine.segments.constants import EQUAL, IN, IS_SET
 from pytest_lazy_fixtures import lf as lazy_fixture
 
-from edge_api.identities.models import EdgeIdentity
+from edge_api.identities.models import EdgeIdentity, new_feature_override
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -22,15 +22,6 @@ from features.multivariate.models import (
 from features.value_types import INTEGER, STRING
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
-from util.engine_models.features.models import (
-    FeatureModel,
-    FeatureStateModel,
-    MultivariateFeatureOptionModel,
-    MultivariateFeatureStateValueList,
-    MultivariateFeatureStateValueModel,
-)
-from util.engine_models.identities.models import IdentityFeaturesList, IdentityModel
-from util.engine_models.identities.traits.models import TraitModel
 from util.mappers import map_identity_to_identity_document
 
 
@@ -312,26 +303,20 @@ def test_get_edge_identity_feature_states__segment_and_identity_override__identi
     segment_override.feature_state_value.save()
 
     # and an identity override, stored against the identity in DynamoDB
-    edge_identity = EdgeIdentity(
-        IdentityModel(
-            identifier="identity",
-            environment_api_key=environment.api_key,
-            identity_traits=[
-                TraitModel(trait_key=trait.trait_key, trait_value=trait.trait_value)
-            ],
-            identity_features=IdentityFeaturesList(
-                [
-                    FeatureStateModel(
-                        django_id=1,
-                        feature=FeatureModel(
-                            id=feature.id, name=feature.name, type=feature.type
-                        ),
-                        enabled=True,
-                        feature_state_value="identity",
-                    )
-                ]
-            ),
-        )
+    edge_identity = EdgeIdentity.create(
+        "identity",
+        environment.api_key,
+        identity_traits=[
+            {"trait_key": trait.trait_key, "trait_value": trait.trait_value}
+        ],
+        identity_features=[
+            new_feature_override(
+                django_id=1,
+                feature={"id": feature.id, "name": feature.name, "type": feature.type},
+                enabled=True,
+                feature_state_value="identity",
+            )
+        ],
     )
 
     # When
@@ -504,35 +489,27 @@ def test_get_edge_identity_override_value__override__returns_served_value(
 ) -> None:
     # Given
     options = multivariate_feature.multivariate_options.order_by("id")
-    override = FeatureStateModel(
-        feature=FeatureModel(
-            id=multivariate_feature.id,
-            name=multivariate_feature.name,
-            type=multivariate_feature.type,
-        ),
+    override = new_feature_override(
+        feature={
+            "id": multivariate_feature.id,
+            "name": multivariate_feature.name,
+            "type": multivariate_feature.type,
+        },
         enabled=True,
         feature_state_value="control",
-        multivariate_feature_state_values=MultivariateFeatureStateValueList(
-            [
-                MultivariateFeatureStateValueModel(
-                    id=id_,
-                    percentage_allocation=allocation,
-                    multivariate_feature_option=MultivariateFeatureOptionModel(
-                        id=option.id, value=option.value
-                    ),
-                )
-                for id_, (option, allocation) in enumerate(
-                    zip(options, allocations), start=1
-                )
-            ]
-        ),
+        multivariate_feature_state_values=[
+            {
+                "id": id_,
+                "percentage_allocation": allocation,
+                "multivariate_feature_option": {"id": option.id, "value": option.value},
+            }
+            for id_, (option, allocation) in enumerate(
+                zip(options, allocations), start=1
+            )
+        ],
     )
-    edge_identity = EdgeIdentity(
-        IdentityModel(
-            identifier="identity",
-            environment_api_key=environment.api_key,
-            identity_features=IdentityFeaturesList([override]),
-        )
+    edge_identity = EdgeIdentity.create(
+        "identity", environment.api_key, identity_features=[override]
     )
     (served,) = [
         evaluated_feature_state

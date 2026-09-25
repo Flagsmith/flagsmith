@@ -6,7 +6,7 @@ from typing import Any
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-from util.engine_models.identities.models import IdentityModel
+from edge_api.identities.models import EdgeIdentity
 
 
 class CustomPagination(PageNumberPagination):
@@ -27,7 +27,7 @@ class EdgeIdentityPagination(CustomPagination):
             )
 
         return [
-            IdentityModel.model_validate(identity_document)
+            EdgeIdentity.from_identity_document(identity_document)
             for identity_document in dynamo_queryset["Items"]
         ]
 

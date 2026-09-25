@@ -187,7 +187,7 @@ def test_map_environment_to_sdk_document__system_traits_set__excluded_from_docum
 ) -> None:
     # Given
     engine_identity = map_identity_to_engine(identity, with_traits=False)
-    engine_identity.system_traits = {"flagsmith_cohort_2b6d1f5f": True}
+    engine_identity["system_traits"] = {"flagsmith_cohort_2b6d1f5f": True}
     mocker.patch(
         "util.mappers.sdk.map_identity_to_engine",
         return_value=engine_identity,
@@ -198,5 +198,5 @@ def test_map_environment_to_sdk_document__system_traits_set__excluded_from_docum
 
     # Then
     assert result["identity_overrides"] == [
-        engine_identity.model_dump(exclude={"system_traits"})
+        {key: value for key, value in engine_identity.items() if key != "system_traits"}
     ]

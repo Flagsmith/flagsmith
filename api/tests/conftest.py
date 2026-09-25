@@ -66,10 +66,6 @@ from environments.dynamodb import (
     DynamoEnvironmentWrapper,
     DynamoIdentityWrapper,
 )
-from environments.dynamodb.types import IdentityOverrideV2
-from environments.dynamodb.utils import (
-    get_environments_v2_identity_override_document_key,
-)
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
@@ -131,6 +127,7 @@ from tests.types import (
 )
 from users.models import FFAdminUser, UserPermissionGroup
 from util.mappers import (
+    map_engine_feature_state_to_identity_override,
     map_environment_to_environment_document,
     map_environment_to_environment_v2_document,
     map_feature_state_to_engine,
@@ -1623,14 +1620,7 @@ def identity_override_document(
     identity_uuid = str(uuid.uuid4())
     identifier = "identity-with-dynamo-override"
 
-    identity_override = IdentityOverrideV2(
-        environment_id=str(environment.id),
-        environment_api_key=environment.api_key,
-        document_key=get_environments_v2_identity_override_document_key(
-            feature_id=feature.id, identity_uuid=identity_uuid
-        ),
-        identifier=identifier,
-        identity_uuid=identity_uuid,
+    identity_override = map_engine_feature_state_to_identity_override(
         feature_state=map_feature_state_to_engine(
             FeatureState(
                 feature=feature,
@@ -1638,6 +1628,10 @@ def identity_override_document(
                 environment=environment,
             ),
         ),
+        identity_uuid=identity_uuid,
+        identifier=identifier,
+        environment_api_key=environment.api_key,
+        environment_id=environment.id,
     )
 
     identity_override_document = map_identity_override_to_identity_override_document(

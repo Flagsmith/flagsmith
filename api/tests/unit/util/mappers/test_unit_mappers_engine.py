@@ -20,16 +20,6 @@ from integrations.segment.models import SegmentConfiguration
 from integrations.webhook.models import WebhookConfiguration
 from segments.models import Segment, SegmentRule
 from users.models import FFAdminUser
-from util.engine_models.features.models import (
-    FeatureModel,
-    FeatureStateModel,
-    MultivariateFeatureOptionModel,
-)
-from util.engine_models.identities.models import (
-    IdentityFeaturesList,
-    IdentityModel,
-)
-from util.engine_models.identities.traits.models import TraitModel
 from util.mappers import engine
 
 if TYPE_CHECKING:
@@ -314,19 +304,6 @@ def test_map_feature_state_to_engine__mv_option_with_key__key_in_serialised_docu
     )
 
 
-def test_multivariate_feature_option_model__document_without_key__defaults_to_none() -> (
-    None
-):
-    # Given - a document produced before `key` existed on the model
-    document = {"value": "control", "id": 1}
-
-    # When
-    model = MultivariateFeatureOptionModel.model_validate(document)
-
-    # Then
-    assert model.key is None
-
-
 def test_map_environment_to_engine__multiple_segments_and_versions__returns_expected_model(
     environment: Environment,
     feature: "Feature",
@@ -564,37 +541,34 @@ def test_map_identity_to_engine__identity_with_traits_and_overrides__returns_exp
 ) -> None:
     # Given
     environment_api_key = environment.api_key
-    expected_result = IdentityModel.construct(
-        identifier=identity.identifier,
-        environment_api_key=environment_api_key,
-        created_date=identity.created_date,
-        identity_features=IdentityFeaturesList(
-            [
-                FeatureStateModel(
-                    feature=FeatureModel(
-                        id=feature.pk,
-                        name=feature.name,
-                        type=feature.type,
-                    ),
-                    enabled=identity_featurestate.enabled,
-                    django_id=identity_featurestate.pk,
-                    feature_segment=identity_featurestate.feature_segment,
-                    featurestate_uuid=identity_featurestate.uuid,
-                    feature_state_value=identity_featurestate.get_feature_state_value(),
-                    multivariate_feature_state_values=[],  # type: ignore[arg-type]
-                )
-            ]
-        ),
-        identity_traits=[
-            TraitModel(
-                trait_key=trait.trait_key,
-                trait_value=trait.trait_value,
-            )
+    expected_result = {
+        "identifier": identity.identifier,
+        "environment_api_key": environment_api_key,
+        "created_date": identity.created_date,
+        "identity_features": [
+            {
+                "feature": {
+                    "id": feature.pk,
+                    "name": feature.name,
+                    "type": feature.type,
+                },
+                "enabled": identity_featurestate.enabled,
+                "django_id": identity_featurestate.pk,
+                "feature_segment": None,
+                "featurestate_uuid": identity_featurestate.uuid,
+                "feature_state_value": identity_featurestate.get_feature_state_value(),
+                "multivariate_feature_state_values": [],
+            }
         ],
-        identity_uuid=mocker.ANY,
-        django_id=identity.pk,
-        composite_key=identity.composite_key,
-    )
+        "identity_traits": [
+            {"trait_key": trait.trait_key, "trait_value": trait.trait_value}
+        ],
+        "system_traits": None,
+        "identity_uuid": mocker.ANY,
+        "django_id": identity.pk,
+        "dashboard_alias": None,
+        "composite_key": identity.composite_key,
+    }
 
     # When
     result = engine.map_identity_to_engine(identity)

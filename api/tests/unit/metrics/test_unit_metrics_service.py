@@ -97,9 +97,7 @@ def test_environment_metrics_service__dynamo_enabled_or_not__uses_correct_identi
         lambda: MagicMock(count=identity_count_mock),
     )
 
-    mock_override = MagicMock()
-    mock_override.feature_state.feature.id = feature.id
-    mock_overrides = [mock_override] * 99
+    mock_overrides = [{"feature_state": {"feature": {"id": feature.id}}}] * 99
 
     dynamo_mock = MagicMock(return_value=mock_overrides)
     monkeypatch.setattr(
