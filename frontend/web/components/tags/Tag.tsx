@@ -80,7 +80,6 @@ const Tag: FC<TagType> = ({
       )}
       onClick={disabled || !onClick ? undefined : () => onClick(tag as TTag)}
       selected={selectable ? !!selected : undefined}
-      size='xs'
       variant='none'
     >
       <TagContent tag={tag} />

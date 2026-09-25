@@ -3,7 +3,10 @@
 // the remove-button reset. Distinct class (`ds-chip`) until the legacy `.chip`
 // (_chip.scss) migrates here under #6606.
 .ds-chip {
-  padding: 4px 10px;
+  // 32px with an 8px gap, from the chip frame in Figma. Height is stated so a
+  // chip holding only an icon matches one holding text.
+  height: 32px;
+  padding: 0 10px;
   font-size: 0.8125rem;
   white-space: nowrap;
   border: 1px solid var(--color-border-default);
@@ -36,7 +39,10 @@
 
   // Sizes (default is the base above).
   &--sm {
-    padding: 3px 8px;
+    // Stated now the base has a fixed height, or this would inherit 32px.
+    // Matches what the padding produced before.
+    height: 24px;
+    padding: 0 8px;
     font-size: 0.75rem;
   }
 

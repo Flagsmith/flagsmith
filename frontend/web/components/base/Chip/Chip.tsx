@@ -95,7 +95,7 @@ const Chip = ({
       className={classNames(
         // rounded-md is 6px, fixed by the tags frame in Figma. Not a prop:
         // every chip is the same shape.
-        'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-md',
+        'ds-chip d-inline-flex align-items-center align-middle gap-2 rounded-md',
         VARIANT_UTILITIES[variant],
         `ds-chip--${variant}`,
         {
