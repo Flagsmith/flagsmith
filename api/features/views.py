@@ -1046,28 +1046,35 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         if identifier:
             return self._get_flags_response_with_identifier(request, identifier)
 
-        if "feature" in request.GET:
-            feature_states = get_environment_feature_states(
-                request.environment,
-                additional_filters=self._additional_filters
-                & Q(feature__name=request.GET["feature"]),
-                from_replica=True,
+        if feature_name := request.GET.get("feature"):
+            # Filtered after evaluating, not before, because of dependent flags
+            feature_state = next(
+                (
+                    feature_state
+                    for feature_state in get_environment_feature_states(
+                        request.environment,
+                        hide_server_key_only=self._hide_server_key_only,
+                        from_replica=True,
+                    )
+                    if feature_state.evaluation_result["name"] == feature_name
+                ),
+                None,
             )
-            if not feature_states:
+            if feature_state is None:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            return Response(self.get_serializer(feature_states[0]).data)
+            return Response(self.get_serializer(feature_state).data)
 
         if settings.CACHE_FLAGS_SECONDS > 0:
-            data = self._get_flags_from_cache(request.environment, from_replica=True)
+            data = self._get_flags_from_cache(request.environment)
         else:
             data = self.get_serializer(
                 get_environment_feature_states(
                     request.environment,
-                    additional_filters=self._additional_filters,
+                    hide_server_key_only=self._hide_server_key_only,
                     from_replica=True,
                 ),
                 many=True,
@@ -1080,21 +1087,12 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         )
 
     @property
-    def _additional_filters(self) -> Q:
-        filters = Q(feature_segment=None, identity=None)
-
-        if self.request.environment.get_hide_disabled_flags() is True:
-            return filters & Q(enabled=True)
-
-        if self.request.originated_from is RequestOrigin.CLIENT:
-            return filters & Q(feature__is_server_key_only=False)
-
-        return filters
+    def _hide_server_key_only(self) -> bool:
+        return self.request.originated_from is RequestOrigin.CLIENT
 
     def _get_flags_from_cache(
         self,
         environment: Environment,
-        from_replica: bool = False,
     ) -> list[typing.Any]:
         data: list[typing.Any]
         # Include request origin in cache key to isolate client vs server requests
@@ -1104,8 +1102,8 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             data = self.get_serializer(
                 get_environment_feature_states(
                     environment,
-                    additional_filters=self._additional_filters,
-                    from_replica=from_replica,
+                    hide_server_key_only=self._hide_server_key_only,
+                    from_replica=True,
                 ),
                 many=True,
             ).data

@@ -13,7 +13,9 @@ from features.feature_types import MULTIVARIATE
 from tests.integration.helpers import (
     create_feature_with_api,
     create_mv_option_with_api,
+    get_env_feature_states_list_with_api,
 )
+from tests.types import CreateSegmentOverrideFixture
 
 variant_1_value = "variant-1-value"
 variant_2_value = "variant-2-value"
@@ -654,3 +656,79 @@ def test_get_feature_states_for_identity__transient_identifier_empty_segment__re
     # flag is not being overridden by the segment
     assert flag_data["enabled"] is False
     assert flag_data["feature_state_value"] == default_feature_value
+
+
+@pytest.mark.parametrize("payments_enabled", [False, True])
+def test_identify_user__prerequisite__serves_dependent_accordingly(
+    payments_enabled: bool,
+    admin_client: APIClient,
+    sdk_client: APIClient,
+    project: int,
+    environment: int,
+    environment_api_key: str,
+    identity_identifier: str,
+    create_segment_override: CreateSegmentOverrideFixture,
+) -> None:
+    # Given
+    payments_id = create_feature_with_api(
+        client=admin_client,
+        project_id=project,
+        feature_name="payments",
+        initial_value="",
+    )
+    (payments_state,) = get_env_feature_states_list_with_api(
+        admin_client, {"environment": environment, "feature": payments_id}
+    )["results"]
+    payments_response = admin_client.patch(
+        f"/api/v1/environments/{environment_api_key}/featurestates/{payments_state['id']}/",
+        data={"enabled": payments_enabled},
+        format="json",
+    )
+    assert payments_response.status_code == status.HTTP_200_OK
+    checkout_id = create_feature_with_api(
+        client=admin_client,
+        project_id=project,
+        feature_name="checkout",
+        initial_value="new checkout",
+    )
+    segment_response = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "checkout prerequisites",
+            "project": project,
+            "rules": [
+                {
+                    "type": "ALL",
+                    "rules": [],
+                    "conditions": [
+                        {
+                            "property": '$.flags["payments"].enabled',
+                            "operator": "NOT_EQUAL",
+                            "value": "true",
+                        }
+                    ],
+                }
+            ],
+        },
+        format="json",
+    )
+    assert segment_response.status_code == status.HTTP_201_CREATED
+    create_segment_override(
+        environment_api_key,
+        checkout_id,
+        segment_response.json()["id"],
+        enabled=False,
+    )
+
+    # When
+    response = sdk_client.post(
+        "/api/v1/identities/",
+        data={"identifier": identity_identifier, "traits": []},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert {
+        flag["feature"]["name"]: flag["enabled"] for flag in response.json()["flags"]
+    } == {"payments": payments_enabled, "checkout": payments_enabled}

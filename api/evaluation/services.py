@@ -1,7 +1,8 @@
+from collections.abc import Iterable
 from math import inf
 from typing import TYPE_CHECKING, Any
 
-from django.db.models import Q
+from flag_engine.context import types as engine_types
 from flag_engine.engine import get_evaluation_result
 
 from evaluation.mappers import (
@@ -27,6 +28,13 @@ if TYPE_CHECKING:
     from util.engine_models.features.models import FeatureStateModel
 
 
+_IDENTITY_FREE_PROPERTY_PREFIXES = (
+    "$.environment.",
+    "$.environment[",
+    "$.flags.",
+    "$.flags[",
+)
+
 __all__ = (
     "evaluate_identity",
     "get_edge_identity_feature_states",
@@ -41,7 +49,6 @@ def evaluate_identity(
     identity: "Identity",
     *,
     traits: "list[Trait] | None" = None,
-    additional_filters: Q | None = None,
 ) -> IdentityEvaluation:
     """Evaluate every flag in `identity`'s environment for that identity."""
     environment: "Environment" = identity.environment
@@ -50,7 +57,6 @@ def evaluate_identity(
         identity=identity,
         traits=traits,
         segments=environment.get_segments_from_cache(),
-        additional_filters=additional_filters,
     )
     result = get_evaluation_result(context)
     return IdentityEvaluation(result, _map_result_to_evaluated_feature_states(result))
@@ -60,32 +66,44 @@ def get_identity_feature_states(
     identity: "Identity",
     *,
     traits: "list[Trait] | None" = None,
-    additional_filters: Q | None = None,
+    hide_server_key_only: bool = False,
 ) -> list[EvaluatedFeatureState]:
     """The flags to serve `identity`, one per feature."""
-    _, evaluated_feature_states = evaluate_identity(
-        identity,
-        traits=traits,
-        additional_filters=additional_filters,
+    _, evaluated_feature_states = evaluate_identity(identity, traits=traits)
+    return _hide_flags(
+        identity.environment,
+        evaluated_feature_states,
+        hide_server_key_only=hide_server_key_only,
     )
-    return _hide_disabled_flags(identity.environment, evaluated_feature_states)
 
 
 def get_environment_feature_states(
     environment: "Environment",
     *,
-    additional_filters: Q | None = None,
+    hide_server_key_only: bool = False,
     from_replica: bool = False,
 ) -> list[EvaluatedFeatureState]:
-    """The flags to serve for an environment, one per feature."""
+    """The flags to serve for an environment, one per feature.
+
+    Evaluated without an identity, so segments reading traits or identity
+    context are left out.
+    """
     context = map_environment_to_evaluation_context(
         environment=environment,
-        additional_filters=additional_filters,
+        segments=environment.get_segments_from_cache(),
         from_replica=from_replica,
     )
+    if segments := context.get("segments"):
+        context["segments"] = {
+            key: segment
+            for key, segment in segments.items()
+            if _is_identity_free(segment["rules"])
+        }
     result = get_evaluation_result(context)
-    return _hide_disabled_flags(
-        environment, _map_result_to_evaluated_feature_states(result)
+    return _hide_flags(
+        environment,
+        _map_result_to_evaluated_feature_states(result),
+        hide_server_key_only=hide_server_key_only,
     )
 
 
@@ -173,6 +191,17 @@ def get_edge_identity_segments(edge_identity: "EdgeIdentity") -> "list[Segment]"
     ]
 
 
+def _is_identity_free(rules: "Iterable[engine_types.SegmentRule]") -> bool:
+    return all(
+        all(
+            condition["property"].startswith(_IDENTITY_FREE_PROPERTY_PREFIXES)
+            for condition in rule.get("conditions", [])
+        )
+        and _is_identity_free(rule.get("rules", []))
+        for rule in rules
+    )
+
+
 def _map_result_to_evaluated_feature_states(
     result: EvaluationResult,
 ) -> list[EvaluatedFeatureState]:
@@ -185,14 +214,21 @@ def _map_result_to_evaluated_feature_states(
     ]
 
 
-def _hide_disabled_flags(
+def _hide_flags(
     environment: "Environment",
     evaluated_feature_states: list[EvaluatedFeatureState],
+    *,
+    hide_server_key_only: bool,
 ) -> list[EvaluatedFeatureState]:
-    if environment.get_hide_disabled_flags() is True:
-        return [
-            evaluated_feature_state
-            for evaluated_feature_state in evaluated_feature_states
-            if evaluated_feature_state.evaluation_result["enabled"]
-        ]
-    return evaluated_feature_states
+    hide_disabled = environment.get_hide_disabled_flags() is True
+    return [
+        evaluated_feature_state
+        for evaluated_feature_state in evaluated_feature_states
+        if not (
+            hide_disabled and not evaluated_feature_state.evaluation_result["enabled"]
+        )
+        and not (
+            hide_server_key_only
+            and evaluated_feature_state.feature_state.feature.is_server_key_only
+        )
+    ]
