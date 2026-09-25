@@ -14,7 +14,6 @@ import {
 
 type TagType = {
   className?: string
-  hideNames?: boolean
   onClick?: (tag: TTag) => void
   selected?: boolean
   tag: Partial<TTag>
@@ -28,14 +27,7 @@ export const getTagColor = (tag: Partial<TTag>) => {
   return tag.color
 }
 
-const Tag: FC<TagType> = ({
-  className,
-  hideNames,
-  isDot,
-  onClick,
-  selected,
-  tag,
-}) => {
+const Tag: FC<TagType> = ({ className, isDot, onClick, selected, tag }) => {
   if (isDot) {
     return (
       <div
@@ -57,10 +49,6 @@ const Tag: FC<TagType> = ({
 
   const disabled = Utils.tagDisabled(tag)
   const isSystem = isSystemTag(tag)
-  // Selection is only offered where a tag is clickable and shows its name;
-  // elsewhere the tick has nothing to sit beside. TagContent returns null
-  // without a label, so the two cases render the same content either way.
-  const selectable = !hideNames && !!onClick
 
   return (
     <Chip
@@ -79,7 +67,7 @@ const Tag: FC<TagType> = ({
         className,
       )}
       onClick={disabled || !onClick ? undefined : () => onClick(tag as TTag)}
-      selected={selectable ? !!selected : undefined}
+      selected={selected}
       variant='none'
     >
       <TagContent tag={tag} />
