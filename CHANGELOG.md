@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.277.0](https://github.com/Flagsmith/flagsmith/compare/v2.276.0...v2.277.0) (2026-09-25)
+
+
+### Features
+
+* **usage:** show the billing period dates on the dashboard ([#8598](https://github.com/Flagsmith/flagsmith/issues/8598)) ([78e3fd0](https://github.com/Flagsmith/flagsmith/commit/78e3fd06ce43637b02bc55a0e465dc77b16ccedd))
+
+
+### Bug Fixes
+
+* **API:** _validate_owner_removal counts non-existent group IDs as removals ([#8137](https://github.com/Flagsmith/flagsmith/issues/8137)) ([30a33d7](https://github.com/Flagsmith/flagsmith/commit/30a33d7d4aa298e850f34624df76d764a223fc64))
+
+
+### Refactoring
+
+* Minor changes to DB interactions to make compatible with Oracle for EE ([#7930](https://github.com/Flagsmith/flagsmith/issues/7930)) ([7619f4c](https://github.com/Flagsmith/flagsmith/commit/7619f4c30ed2989d6beb8e3628beb5d0e255acc6))
+
 ## [2.276.0](https://github.com/Flagsmith/flagsmith/compare/v2.275.0...v2.276.0) (2026-09-24)
 
 
