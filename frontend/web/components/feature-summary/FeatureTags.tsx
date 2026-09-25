@@ -9,7 +9,7 @@ import StaleFlagWarning from './StaleFlagWarning'
 import Tag from 'components/tags/Tag'
 import Utils from 'common/utils/utils'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
-import VCSProviderTag from 'components/tags/VCSProviderTag'
+import VCSProviderTag from 'components/VCSProviderTag'
 
 type FeatureTagsType = {
   editFeature: (tab?: string) => void

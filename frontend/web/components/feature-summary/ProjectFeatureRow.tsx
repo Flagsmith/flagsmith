@@ -4,7 +4,7 @@ import { ProjectFlag, VCSProvider } from 'common/types/responses'
 import FeatureName from './FeatureName'
 import FeatureDescription from './FeatureDescription'
 import TagValues from 'components/tags/TagValues'
-import VCSProviderTag from 'components/tags/VCSProviderTag'
+import VCSProviderTag from 'components/VCSProviderTag'
 
 interface ProjectFeatureRowProps {
   projectFlag: ProjectFlag
