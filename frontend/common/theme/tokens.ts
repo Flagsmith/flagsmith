@@ -272,3 +272,20 @@ export const fontWeightBold = 'var(--font-weight-bold, 700)'
 export const fontWeightMedium = 'var(--font-weight-medium, 500)'
 export const fontWeightRegular = 'var(--font-weight-regular, 400)'
 export const fontWeightSemibold = 'var(--font-weight-semibold, 600)'
+
+/** Tag and read-only content colours. Fixed: they do not follow the theme. */
+export const contentColours = {
+  'blue': '#c7e6ff',
+  'light-blue': '#c9f1fe',
+  'light-brown': '#dfc8c6',
+  'light-green': '#d6f1d4',
+  'light-grey': '#eff0f3',
+  'light-mint': '#c7e7e2',
+  'light-peach': '#fcd6c7',
+  'light-pink': '#ffceda',
+  'light-purple': '#dacdde',
+  'light-red': '#ffe0df',
+  'light-yellow': '#f3edca',
+} as const
+
+export type ContentColour = keyof typeof contentColours
