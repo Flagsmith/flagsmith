@@ -28,7 +28,12 @@ if TYPE_CHECKING:
     from util.engine_models.features.models import FeatureStateModel
 
 
-_IDENTITY_FREE_PROPERTY_PREFIXES = ("$.environment.", "$.flags.")
+_IDENTITY_FREE_PROPERTY_PREFIXES = (
+    "$.environment.",
+    "$.environment[",
+    "$.flags.",
+    "$.flags[",
+)
 
 __all__ = (
     "evaluate_identity",
