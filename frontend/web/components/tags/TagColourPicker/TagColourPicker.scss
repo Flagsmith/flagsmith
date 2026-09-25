@@ -1,0 +1,27 @@
+.tag-colour-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  // Each swatch is a Tag with no label, so without a size it collapses to the
+  // chip's minimum width and reads as a sliver rather than a colour.
+  .ds-chip {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+
+    // Tag adds `me-1` for tags sitting in a row of their own. The grid has its
+    // own gap, and Bootstrap emits spacing utilities with !important.
+    margin-right: 0 !important;
+  }
+
+  // The tick marking the current choice. ToggleChip sizes it for a chip with
+  // a label beside it, which is far too small on a bare swatch this size, and
+  // CSS wins over the svg's width attribute.
+  .ds-chip svg {
+    margin: 0;
+    width: 20px;
+    height: 20px;
+  }
+}
