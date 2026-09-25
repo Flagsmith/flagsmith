@@ -3,6 +3,8 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, TypeVar, Union, cast
 
 from flagsmith_schemas.dynamodb import (
+    Environment,
+    EnvironmentAPIKey,
     EnvironmentCompressed,
     EnvironmentV2MetaCompressed,
 )
@@ -31,7 +33,8 @@ from util.mappers.types import Document, DocumentValue
 
 if TYPE_CHECKING:
     from environments.identities.models import Identity
-    from environments.models import Environment, EnvironmentAPIKey
+    from environments.models import Environment as EnvironmentModel
+    from environments.models import EnvironmentAPIKey as EnvironmentAPIKeyModel
     from util.engine_models.identities.models import IdentityModel
 
 
@@ -46,6 +49,10 @@ __all__ = (
 )
 
 
+_environment_adapter: TypeAdapter[Environment] = TypeAdapter(Environment)
+_environment_api_key_adapter: TypeAdapter[EnvironmentAPIKey] = TypeAdapter(
+    EnvironmentAPIKey
+)
 _environment_compressed_adapter: TypeAdapter[EnvironmentCompressed] = TypeAdapter(
     EnvironmentCompressed,
 )
@@ -57,19 +64,16 @@ _NULLABLE_IDENTITY_KEY_ATTRIBUTES = {"dashboard_alias", "system_traits"}
 
 
 def map_environment_to_environment_document(
-    environment: "Environment",
+    environment: "EnvironmentModel",
 ) -> Document:
-    return {
-        field_name: _map_value_to_document_value(value)
-        for field_name, value in map_environment_to_engine(
-            environment,
-            with_integrations=True,
-        )
-    }
+    return cast(
+        Document,
+        _environment_adapter.validate_python(map_environment_to_engine(environment)),
+    )
 
 
 def map_environment_to_compressed_environment_document(
-    environment: "Environment",
+    environment: "EnvironmentModel",
 ) -> CompressedEnvironmentDocument:
     return _get_compressed_environment_document(
         document=map_environment_to_environment_document(environment),
@@ -78,7 +82,7 @@ def map_environment_to_compressed_environment_document(
 
 
 def map_environment_to_environment_v2_document(
-    environment: "Environment",
+    environment: "EnvironmentModel",
 ) -> Document:
     environment_document = map_environment_to_environment_document(environment)
     environment_api_key = environment_document.pop("api_key")
@@ -91,7 +95,7 @@ def map_environment_to_environment_v2_document(
 
 
 def map_environment_to_compressed_environment_v2_document(
-    environment: "Environment",
+    environment: "EnvironmentModel",
 ) -> CompressedEnvironmentDocument:
     return _get_compressed_environment_document(
         document=map_environment_to_environment_v2_document(environment),
@@ -100,12 +104,14 @@ def map_environment_to_compressed_environment_v2_document(
 
 
 def map_environment_api_key_to_environment_api_key_document(
-    environment_api_key: "EnvironmentAPIKey",
+    environment_api_key: "EnvironmentAPIKeyModel",
 ) -> Document:
-    return {
-        field_name: _map_value_to_document_value(value)
-        for field_name, value in map_environment_api_key_to_engine(environment_api_key)
-    }
+    return cast(
+        Document,
+        _environment_api_key_adapter.validate_python(
+            map_environment_api_key_to_engine(environment_api_key)
+        ),
+    )
 
 
 def map_engine_identity_to_identity_document(

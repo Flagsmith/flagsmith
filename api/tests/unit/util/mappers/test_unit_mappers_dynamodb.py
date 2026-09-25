@@ -9,6 +9,7 @@ from django.utils import timezone
 from environments.dynamodb.constants import (
     ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
 )
+from util.engine_models.features.models import FeatureStateModel
 from util.engine_models.identities.models import IdentityModel
 from util.mappers import dynamodb
 from util.mappers.engine import map_feature_state_to_engine
@@ -56,7 +57,6 @@ def test_map_environment_to_environment_document__valid_environment__returns_exp
                 "multivariate_feature_state_values": [],
             }
         ],
-        "identity_overrides": [],
         "heap_config": None,
         "hide_disabled_flags": None,
         "hide_sensitive_data": False,
@@ -228,7 +228,6 @@ def test_map_environment_to_environment_v2_document__valid_environment__returns_
         "allow_client_traits": True,
         "amplitude_config": None,
         "dynatrace_config": None,
-        "identity_overrides": [],
         "feature_states": [
             {
                 "django_id": Decimal(feature_state.pk),
@@ -282,8 +281,12 @@ def test_map_identity_override_to_identity_override_document__decimal_feature_st
     # Given
     expected_feature_state_value = Decimal("1.111")
 
-    engine_feature_state = map_feature_state_to_engine(identity_featurestate)
-    engine_feature_state.feature_state_value = expected_feature_state_value
+    engine_feature_state = FeatureStateModel.model_validate(
+        {
+            **map_feature_state_to_engine(identity_featurestate),
+            "feature_state_value": expected_feature_state_value,
+        }
+    )
     identity_override = dynamodb.map_engine_feature_state_to_identity_override(
         feature_state=engine_feature_state,
         identity_uuid=str(uuid.uuid4()),

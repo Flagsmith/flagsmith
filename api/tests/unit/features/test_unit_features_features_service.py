@@ -13,6 +13,7 @@ from features.features_service import (
 from features.models import Feature, FeatureSegment, FeatureState
 from projects.models import EdgeV2MigrationStatus
 from users.models import FFAdminUser
+from util.engine_models.features.models import FeatureStateModel
 from util.mappers.engine import (
     map_feature_state_to_engine,
     map_identity_to_engine,
@@ -247,10 +248,14 @@ def test_get_edge_overrides_data__multiple_overrides__returns_correct_counts(
     # replicate identity to Edge
     edge_identity = EdgeIdentity(map_identity_to_engine(identity, with_overrides=False))
     edge_identity.add_feature_override(
-        map_feature_state_to_engine(identity_featurestate),
+        FeatureStateModel.model_validate(
+            map_feature_state_to_engine(identity_featurestate)
+        ),
     )
     edge_identity.add_feature_override(
-        map_feature_state_to_engine(distinct_identity_featurestate),
+        FeatureStateModel.model_validate(
+            map_feature_state_to_engine(distinct_identity_featurestate)
+        ),
     )
     edge_identity.save(admin_user)
 
@@ -303,10 +308,14 @@ def test_get_edge_overrides_data__deleted_feature__skips_deleted(  # type: ignor
     edge_identity = EdgeIdentity(map_identity_to_engine(identity, with_overrides=False))
     # Create identity override for two different features
     edge_identity.add_feature_override(
-        map_feature_state_to_engine(identity_featurestate),
+        FeatureStateModel.model_validate(
+            map_feature_state_to_engine(identity_featurestate)
+        ),
     )
     edge_identity.add_feature_override(
-        map_feature_state_to_engine(distinct_identity_featurestate),
+        FeatureStateModel.model_validate(
+            map_feature_state_to_engine(distinct_identity_featurestate)
+        ),
     )
     edge_identity.save(admin_user)
 

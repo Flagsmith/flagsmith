@@ -20,31 +20,16 @@ from integrations.segment.models import SegmentConfiguration
 from integrations.webhook.models import WebhookConfiguration
 from segments.models import Segment, SegmentRule
 from users.models import FFAdminUser
-from util.engine_models.environments.integrations.models import IntegrationModel
-from util.engine_models.environments.models import (
-    EnvironmentAPIKeyModel,
-    EnvironmentModel,
-    WebhookModel,
-)
 from util.engine_models.features.models import (
     FeatureModel,
-    FeatureSegmentModel,
     FeatureStateModel,
     MultivariateFeatureOptionModel,
-    MultivariateFeatureStateValueModel,
 )
 from util.engine_models.identities.models import (
     IdentityFeaturesList,
     IdentityModel,
 )
 from util.engine_models.identities.traits.models import TraitModel
-from util.engine_models.organisations.models import OrganisationModel
-from util.engine_models.projects.models import ProjectModel
-from util.engine_models.segments.models import (
-    SegmentConditionModel,
-    SegmentModel,
-    SegmentRuleModel,
-)
 from util.mappers import engine
 
 if TYPE_CHECKING:
@@ -113,23 +98,11 @@ def test_map_segment_rule_to_engine__nested_rule__returns_expected_model(
     result = engine.map_segment_rule_to_engine(matching_rule)
 
     # Then
-    assert result == SegmentRuleModel(
-        type="ALL",
-        rules=[
-            SegmentRuleModel(
-                type="ALL",
-                rules=[],
-                conditions=[],
-            )
-        ],
-        conditions=[
-            SegmentConditionModel(
-                operator="EQUAL",
-                value="value1",
-                property_="key1",
-            )
-        ],
-    )
+    assert result == {
+        "type": "ALL",
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "conditions": [{"operator": "EQUAL", "value": "value1", "property_": "key1"}],
+    }
 
 
 def test_map_integration_to_engine__valid_integration__returns_expected_model() -> None:
@@ -142,7 +115,11 @@ def test_map_integration_to_engine__valid_integration__returns_expected_model() 
     api_key = "test"
 
     integration = TestIntegration(base_url=base_url, api_key=api_key)
-    expected_result = IntegrationModel(base_url=base_url, api_key=api_key)
+    expected_result = {
+        "base_url": base_url,
+        "api_key": api_key,
+        "entity_selector": None,
+    }
 
     # When
     result = engine.map_integration_to_engine(integration)
@@ -170,11 +147,11 @@ def test_map_integration_to_engine__dynatrace__return_expected() -> None:
         api_key=api_key,
         entity_selector=entity_selector,
     )
-    expected_result = IntegrationModel(
-        base_url=base_url,
-        api_key=api_key,
-        entity_selector=entity_selector,
-    )
+    expected_result = {
+        "base_url": base_url,
+        "api_key": api_key,
+        "entity_selector": entity_selector,
+    }
 
     # When
     result = engine.map_integration_to_engine(integration)
@@ -192,10 +169,7 @@ def test_map_webhook_config_to_engine__valid_config__returns_expected_model() ->
         url=url,
         secret=secret,
     )
-    expected_result = WebhookModel(
-        url=url,
-        secret=secret,
-    )
+    expected_result = {"url": url, "secret": secret}
 
     # When
     result = engine.map_webhook_config_to_engine(webhook_config)
@@ -217,19 +191,15 @@ def test_map_feature_state_to_engine__standard_feature__returns_expected_model(
     feature_state: FeatureState,
 ) -> None:
     # Given
-    expected_result = FeatureStateModel(
-        feature=FeatureModel(
-            id=feature.id,
-            name="Test Feature1",
-            type="STANDARD",
-        ),
-        enabled=False,
-        django_id=feature_state.id,
-        feature_segment=None,
-        featurestate_uuid=feature_state.uuid,
-        feature_state_value=None,
-        multivariate_feature_state_values=[],  # type: ignore[arg-type]
-    )
+    expected_result = {
+        "feature": {"id": feature.id, "name": "Test Feature1", "type": "STANDARD"},
+        "enabled": False,
+        "django_id": feature_state.id,
+        "feature_segment": None,
+        "featurestate_uuid": feature_state.uuid,
+        "feature_state_value": None,
+        "multivariate_feature_state_values": [],
+    }
 
     # When
     result = engine.map_feature_state_to_engine(
@@ -252,7 +222,7 @@ def test_map_feature_state_to_engine__mv_hashing_salt_set__uses_salt_as_django_i
 
     # Then the salt is used as the engine document's django_id so that variant
     # bucketing stays stable across feature state recreation
-    assert result.django_id == feature_state.mv_hashing_salt
+    assert result["django_id"] == feature_state.mv_hashing_salt
 
 
 def test_map_feature_state_to_engine__feature_segment__return_expected(
@@ -263,31 +233,32 @@ def test_map_feature_state_to_engine__feature_segment__return_expected(
     mv_fs_value = (
         segment_multivariate_feature_state.multivariate_feature_state_values.get()
     )
-    expected_result = FeatureStateModel(
-        feature=FeatureModel(
-            id=multivariate_feature.id,
-            name="feature",
-            type="MULTIVARIATE",
-        ),
-        enabled=False,
-        django_id=segment_multivariate_feature_state.id,
-        feature_segment=FeatureSegmentModel(
-            priority=segment_multivariate_feature_state.feature_segment.priority,  # type: ignore[union-attr]
-        ),
-        featurestate_uuid=segment_multivariate_feature_state.uuid,
-        feature_state_value="control",
-        multivariate_feature_state_values=[  # type: ignore[arg-type]
-            MultivariateFeatureStateValueModel(
-                multivariate_feature_option=MultivariateFeatureOptionModel(
-                    value=mv_fs_value.multivariate_feature_option.value,
-                    id=mv_fs_value.multivariate_feature_option.id,
-                ),
-                percentage_allocation=mv_fs_value.percentage_allocation,
-                id=mv_fs_value.id,
-                mv_fs_value_uuid=mv_fs_value.uuid,
-            ),
+    expected_result = {
+        "feature": {
+            "id": multivariate_feature.id,
+            "name": "feature",
+            "type": "MULTIVARIATE",
+        },
+        "enabled": False,
+        "django_id": segment_multivariate_feature_state.id,
+        "feature_segment": {
+            "priority": segment_multivariate_feature_state.feature_segment.priority,  # type: ignore[union-attr]
+        },
+        "featurestate_uuid": segment_multivariate_feature_state.uuid,
+        "feature_state_value": "control",
+        "multivariate_feature_state_values": [
+            {
+                "multivariate_feature_option": {
+                    "value": mv_fs_value.multivariate_feature_option.value,
+                    "id": mv_fs_value.multivariate_feature_option.id,
+                    "key": None,
+                },
+                "percentage_allocation": mv_fs_value.percentage_allocation,
+                "id": mv_fs_value.id,
+                "mv_fs_value_uuid": mv_fs_value.uuid,
+            },
         ],
-    )
+    }
 
     # When
     result = engine.map_feature_state_to_engine(
@@ -312,12 +283,7 @@ def test_map_mv_option_to_engine__option_with_key__includes_key(
     result = engine.map_mv_option_to_engine(mv_option)
 
     # Then
-    assert result.key == "control"
-    assert result == MultivariateFeatureOptionModel(
-        value=mv_option.value,
-        id=mv_option.id,
-        key="control",
-    )
+    assert result == {"value": mv_option.value, "id": mv_option.id, "key": "control"}
 
 
 def test_map_feature_state_to_engine__mv_option_with_key__key_in_serialised_document(
@@ -338,11 +304,10 @@ def test_map_feature_state_to_engine__mv_option_with_key__key_in_serialised_docu
         segment_multivariate_feature_state,
         mv_fs_values=[mv_fs_value],
     )
-    document = result.model_dump()
 
     # Then
     assert (
-        document["multivariate_feature_state_values"][0]["multivariate_feature_option"][
+        result["multivariate_feature_state_values"][0]["multivariate_feature_option"][
             "key"
         ]
         == "control"
@@ -411,88 +376,92 @@ def test_map_environment_to_engine__multiple_segments_and_versions__returns_expe
     )
     deleted_segment_configuration.delete()
 
-    expected_feature_model = FeatureModel(
-        id=feature.id, name="Test Feature1", type="STANDARD"
-    )
-    expected_segment_feature_state_model = FeatureStateModel(
-        feature=expected_feature_model,
-        enabled=False,
-        django_id=versioned_segment_feature_state.id,
-        feature_segment=FeatureSegmentModel(
-            priority=feature_segment.priority,
-        ),
-        featurestate_uuid=versioned_segment_feature_state.uuid,
-        feature_state_value=None,
-        multivariate_feature_state_values=[],  # type: ignore[arg-type]
-    )
-    expected_feature_state_model = FeatureStateModel(
-        feature=expected_feature_model,
-        enabled=False,
-        django_id=feature_state.id,
-        featurestate_uuid=feature_state.uuid,
-        feature_state_value=None,
-        multivariate_feature_state_values=[],  # type: ignore[arg-type]
-    )
-    expected_project_model = ProjectModel(
-        id=environment.project.id,
-        name="Test Project",
-        organisation=OrganisationModel(
-            id=environment.project.organisation.id,
-            name="Test Org",
-            feature_analytics=False,
-            stop_serving_flags=False,
-            persist_trait_data=True,
-        ),
-        hide_disabled_flags=False,
-        segments=[
-            SegmentModel(
-                id=segment.id,
-                name=segment.name,
-                rules=[],
-                feature_states=[expected_segment_feature_state_model],
-            ),
+    expected_feature_model = {
+        "id": feature.id,
+        "name": "Test Feature1",
+        "type": "STANDARD",
+    }
+    expected_segment_feature_state_model = {
+        "feature": expected_feature_model,
+        "enabled": False,
+        "django_id": versioned_segment_feature_state.id,
+        "feature_segment": {"priority": feature_segment.priority},
+        "featurestate_uuid": versioned_segment_feature_state.uuid,
+        "feature_state_value": None,
+        "multivariate_feature_state_values": [],
+    }
+    expected_feature_state_model = {
+        "feature": expected_feature_model,
+        "enabled": False,
+        "django_id": feature_state.id,
+        "feature_segment": None,
+        "featurestate_uuid": feature_state.uuid,
+        "feature_state_value": None,
+        "multivariate_feature_state_values": [],
+    }
+    expected_project_model = {
+        "id": environment.project.id,
+        "name": "Test Project",
+        "organisation": {
+            "id": environment.project.organisation.id,
+            "name": "Test Org",
+            "feature_analytics": False,
+            "stop_serving_flags": False,
+            "persist_trait_data": True,
+        },
+        "hide_disabled_flags": False,
+        "segments": [
+            {
+                "id": segment.id,
+                "name": segment.name,
+                "rules": [],
+                "feature_states": [expected_segment_feature_state_model],
+            },
         ],
-        enable_realtime_updates=False,
-        server_key_only_feature_ids=[],
-    )
+        "enable_realtime_updates": False,
+        "server_key_only_feature_ids": [],
+    }
 
-    expected_result = EnvironmentModel(
-        id=environment.id,
-        api_key=environment.api_key,
-        project=expected_project_model,
-        feature_states=[expected_feature_state_model],
-        name=environment.name,
-        allow_client_traits=environment.allow_client_traits,
-        updated_at=environment.updated_at,
-        use_identity_composite_key_for_hashing=environment.use_identity_composite_key_for_hashing,
-        use_identity_overrides_in_local_eval=environment.use_identity_overrides_in_local_eval,
-        hide_sensitive_data=environment.hide_sensitive_data,
-        hide_disabled_flags=environment.hide_disabled_flags,
-        onboarding_pending=True,
-        amplitude_config=None,
-        dynatrace_config=None,
-        heap_config=None,
-        mixpanel_config={  # type: ignore[arg-type]
+    expected_result = {
+        "id": environment.id,
+        "api_key": environment.api_key,
+        "project": expected_project_model,
+        "feature_states": [expected_feature_state_model],
+        "identity_overrides": [],
+        "name": environment.name,
+        "allow_client_traits": environment.allow_client_traits,
+        "updated_at": environment.updated_at,
+        "use_identity_composite_key_for_hashing": environment.use_identity_composite_key_for_hashing,
+        "use_identity_overrides_in_local_eval": environment.use_identity_overrides_in_local_eval,
+        "hide_sensitive_data": environment.hide_sensitive_data,
+        "hide_disabled_flags": environment.hide_disabled_flags,
+        "onboarding_pending": True,
+        "amplitude_config": None,
+        "dynatrace_config": None,
+        "heap_config": None,
+        "mixpanel_config": {
             "base_url": mixpanel_configuration.base_url,
             "api_key": mixpanel_configuration.api_key,
+            "entity_selector": None,
         },
-        rudderstack_config=None,
-        segment_config=None,  # note: segment configuration should not appear as it was deleted
-        webhook_config={  # type: ignore[arg-type]
+        "rudderstack_config": None,
+        "segment_config": None,  # note: segment configuration should not appear as it was deleted
+        "webhook_config": {
             "url": webhook_configuration.url,
             "secret": webhook_configuration.secret,
         },
-    )
+    }
 
     # When
     result = engine.map_environment_to_engine(environment)
     segment_feature_state_uuids = [
-        fs.featurestate_uuid for fs in result.project.segments[0].feature_states
+        fs["featurestate_uuid"]
+        for fs in result["project"]["segments"][0]["feature_states"]
     ]
 
     # Then
-    assert len(result.feature_states) == 1
-    assert result.feature_states[0].django_id == feature_state.id
+    assert len(result["feature_states"]) == 1
+    assert result["feature_states"][0]["django_id"] == feature_state.id
 
     assert result == expected_result
 
@@ -517,7 +486,7 @@ def test_map_environment_to_engine__feature_specific_segment_not_in_env__exclude
     result = engine.map_environment_to_engine(environment)
 
     # Then
-    segment_ids = [s.id for s in result.project.segments]
+    segment_ids = [s["id"] for s in result["project"]["segments"]]
     assert feature_specific_segment.id not in segment_ids
 
 
@@ -542,7 +511,7 @@ def test_map_environment_to_engine__feature_specific_segment_in_env__includes_se
     result = engine.map_environment_to_engine(environment)
 
     # Then
-    segment_ids = [s.id for s in result.project.segments]
+    segment_ids = [s["id"] for s in result["project"]["segments"]]
     assert feature_specific_segment.id in segment_ids
 
 
@@ -559,7 +528,7 @@ def test_map_environment_to_engine__project_wide_segment_not_in_env__includes_se
     result = engine.map_environment_to_engine(environment)
 
     # Then
-    segment_ids = [s.id for s in result.project.segments]
+    segment_ids = [s["id"] for s in result["project"]["segments"]]
     assert segment.id in segment_ids
 
 
@@ -574,15 +543,15 @@ def test_map_environment_api_key_to_engine__valid_key__returns_expected_model(
     result = engine.map_environment_api_key_to_engine(environment_api_key)
 
     # Then
-    assert result == EnvironmentAPIKeyModel(
-        id=environment_api_key.pk,
-        key=environment_api_key.key,
-        created_at=environment_api_key.created_at,
-        name=environment_api_key.name,
-        client_api_key=client_api_key,
-        expires_at=environment_api_key.expires_at,
-        active=environment_api_key.active,
-    )
+    assert result == {
+        "id": environment_api_key.pk,
+        "key": environment_api_key.key,
+        "created_at": environment_api_key.created_at,
+        "name": environment_api_key.name,
+        "client_api_key": client_api_key,
+        "expires_at": environment_api_key.expires_at,
+        "active": environment_api_key.active,
+    }
 
 
 def test_map_identity_to_engine__identity_with_traits_and_overrides__returns_expected_model(
@@ -675,8 +644,8 @@ def test_map_environment_to_engine__different_versions__returns_latest_live_from
     result = engine.map_environment_to_engine(environment)
 
     # Then
-    assert len(result.feature_states) == 1
-    assert result.feature_states[0].django_id == v15_feature_state.id
+    assert len(result["feature_states"]) == 1
+    assert result["feature_states"][0]["django_id"] == v15_feature_state.id
 
 
 def test_map_environment_to_engine__after_v2_versioning_migration__returns_latest_versions(
@@ -723,26 +692,26 @@ def test_map_environment_to_engine__after_v2_versioning_migration__returns_lates
     # Then
     assert result
 
-    assert len(result.feature_states) == 1
-    mapped_environment_feature_state = result.feature_states[0]
+    assert len(result["feature_states"]) == 1
+    mapped_environment_feature_state = result["feature_states"][0]
 
     assert (
-        mapped_environment_feature_state.featurestate_uuid
+        mapped_environment_feature_state["featurestate_uuid"]
         == v2_environment_feature_state.uuid
     )
-    assert mapped_environment_feature_state.enabled is True
+    assert mapped_environment_feature_state["enabled"] is True
     assert (
-        mapped_environment_feature_state.feature_state_value
+        mapped_environment_feature_state["feature_state_value"]
         == v2_environment_feature_state_value
     )
 
-    assert len(result.project.segments) == 1
-    assert len(result.project.segments[0].feature_states) == 1
+    assert len(result["project"]["segments"]) == 1
+    assert len(result["project"]["segments"][0]["feature_states"]) == 1
 
-    mapped_segment_override = result.project.segments[0].feature_states[0]
-    assert mapped_segment_override.featurestate_uuid == v2_segment_override.uuid
-    assert mapped_segment_override.enabled is True
-    assert mapped_segment_override.feature_state_value == v2_segment_override_value
+    mapped_segment_override = result["project"]["segments"][0]["feature_states"][0]
+    assert mapped_segment_override["featurestate_uuid"] == v2_segment_override.uuid
+    assert mapped_segment_override["enabled"] is True
+    assert mapped_segment_override["feature_state_value"] == v2_segment_override_value
 
 
 def test_map_environment_to_engine__v2_versioning_segment_override_removed__returns_remaining_override(
@@ -794,11 +763,11 @@ def test_map_environment_to_engine__v2_versioning_segment_override_removed__retu
     environment_model = engine.map_environment_to_engine(environment_v2_versioning)
 
     # Then
-    assert len(environment_model.project.segments[0].feature_states) == 1
-    assert (
-        environment_model.project.segments[0].feature_states[0].featurestate_uuid
-        == v3_segment_override.uuid
-    )
+    segment_feature_states = environment_model["project"]["segments"][0][
+        "feature_states"
+    ]
+    assert len(segment_feature_states) == 1
+    assert segment_feature_states[0]["featurestate_uuid"] == v3_segment_override.uuid
 
 
 def test_map_environment_to_engine__running_experiment__stamps_every_state_of_feature(
@@ -827,15 +796,15 @@ def test_map_environment_to_engine__running_experiment__stamps_every_state_of_fe
 
     # Then
     (default_state,) = [
-        fs for fs in result.feature_states if fs.feature.id == feature.id
+        fs for fs in result["feature_states"] if fs["feature"]["id"] == feature.id
     ]
-    assert default_state.metadata == {
+    assert default_state["metadata"] == {
         "experiment": {**expected_experiment, "in_experiment": False},
     }
     assert {
-        segment.name: fs.metadata
-        for segment in result.project.segments
-        for fs in segment.feature_states
+        segment["name"]: fs["metadata"]
+        for segment in result["project"]["segments"]
+        for fs in segment["feature_states"]
     } == {
         "Experiment rollout": {
             "experiment": {**expected_experiment, "in_experiment": True},
@@ -861,10 +830,9 @@ def test_map_environment_to_engine__running_experiment__other_features_unstamped
 
     # Then
     (other_state,) = [
-        fs for fs in result.feature_states if fs.feature.id == other_feature.id
+        fs for fs in result["feature_states"] if fs["feature"]["id"] == other_feature.id
     ]
-    assert other_state.metadata is None
-    assert "metadata" not in other_state.dict()
+    assert "metadata" not in other_state
 
 
 @pytest.mark.parametrize(
@@ -887,11 +855,11 @@ def test_map_environment_to_engine__experiment_not_running__no_metadata(
     result = engine.map_environment_to_engine(environment)
 
     # Then
-    assert all(fs.metadata is None for fs in result.feature_states)
+    assert all("metadata" not in fs for fs in result["feature_states"])
     assert all(
-        fs.metadata is None
-        for segment in result.project.segments
-        for fs in segment.feature_states
+        "metadata" not in fs
+        for segment in result["project"]["segments"]
+        for fs in segment["feature_states"]
     )
 
 
@@ -908,7 +876,7 @@ def test_map_environment_to_engine__experiment_without_rollout_segment__no_enrol
 
     # Then
     assert not any(
-        fs.metadata["experiment"]["in_experiment"]  # type: ignore[index]
-        for segment in result.project.segments
-        for fs in segment.feature_states
+        fs["metadata"]["experiment"]["in_experiment"]
+        for segment in result["project"]["segments"]
+        for fs in segment["feature_states"]
     )
