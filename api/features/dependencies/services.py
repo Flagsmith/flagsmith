@@ -3,6 +3,7 @@ from collections import defaultdict
 from collections.abc import Collection
 
 import structlog
+from django.db import transaction
 
 from environments.models import Environment
 from features.dependencies.exceptions import (
@@ -13,12 +14,18 @@ from features.dependencies.mappers import map_rules_to_prerequisite_feature_name
 from features.dependencies.models import SegmentFlagReference
 from features.dependencies.types import DependencyEdge, DependencyPath, FeatureName
 from features.models import Feature, FeatureSegment
+from projects.models import Project
 from segments.services import get_all_live_or_scheduled_overrides
 
 if typing.TYPE_CHECKING:
     from segments.models import Segment
 
 logger = structlog.get_logger("features")
+
+# First key of `pg_advisory_xact_lock(namespace, project_id)`, keeping flag
+# dependency locks apart from any other advisory lock user. The value is
+# arbitrary ("FLDP" in ASCII) but must not change between releases.
+FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE = 0x464C4450
 
 
 def index_segment_flag_references(segment: "Segment") -> None:
@@ -104,7 +111,12 @@ def report_flag_dependencies(
 
 
 def validate_segment_flag_dependencies(segment: "Segment") -> None:
-    """Raise if any feature the segment overrides ends up depending on itself."""
+    """Raise if any feature the segment overrides ends up depending on itself.
+
+    Must run inside the transaction writing the dependency change, so the
+    project lock taken here is held until that change commits.
+    """
+    _lock_project_flag_dependencies(segment.project_id)
     existing_references = SegmentFlagReference.objects.filter(segment=segment)
     if not existing_references.exists():
         return
@@ -145,6 +157,32 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
                 )
             visited.add(prerequisite_feature_name)
             pending += [[*path, edge] for edge in edges[prerequisite_feature_name]]
+
+
+def _lock_project_flag_dependencies(project_id: int) -> None:
+    """Serialise flag dependency validation within a project until commit.
+
+    Without it, concurrent transactions adding `A -> B` and `B -> A` would
+    each validate without seeing the other's uncommitted edge, and both
+    commit a cycle. Blocking here instead makes the latter read the former's
+    committed edge, as each READ COMMITTED statement takes a fresh snapshot.
+    The lock is taken even when the segment has no flag references, as a
+    concurrent transaction may be adding references to it.
+    """
+    connection = transaction.get_connection()
+    if not connection.in_atomic_block:
+        raise RuntimeError("Flag dependencies must be validated inside a transaction.")
+    if connection.vendor != "postgresql":
+        # Oracle and MySQL (Enterprise Edition) lack advisory locks, so lock
+        # the project row instead. PostgreSQL avoids this as it would also
+        # block inserts of rows referencing the project.
+        list(Project.objects.select_for_update().filter(pk=project_id).values("pk"))
+        return
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT pg_advisory_xact_lock(%s, %s)",
+            [FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE, project_id],
+        )
 
 
 def _get_dependency_edges(
