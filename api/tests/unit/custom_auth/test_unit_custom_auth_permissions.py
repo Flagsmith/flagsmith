@@ -1,5 +1,7 @@
+from datetime import timedelta
 from unittest import mock
 
+from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 
 from custom_auth.permissions import IsSignupAllowed
@@ -60,6 +62,53 @@ def test_is_signup_allowed__prevent_signup_enabled_valid_invite_link__returns_tr
 
     # Then
     assert result is True
+
+
+def test_is_signup_allowed__prevent_signup_enabled_expired_invite_link__returns_false(
+    db: None,
+    settings: SettingsWrapper,
+    organisation: Organisation,
+) -> None:
+    # Given
+    settings.PREVENT_SIGNUP = True
+    invite_link = InviteLink.objects.create(
+        organisation=organisation,
+        expires_at=timezone.now() - timedelta(days=1),
+    )
+    permission = IsSignupAllowed()
+    mock_request = mock.MagicMock(
+        data={
+            "email": "test@example.com",
+            "sign_up_type": SignUpType.INVITE_LINK.value,
+            "invite_hash": invite_link.hash,
+        }
+    )
+
+    # When
+    result = permission.has_permission(mock_request, mock.MagicMock())
+
+    # Then
+    assert result is False
+
+
+def test_is_signup_allowed__prevent_signup_enabled_non_string_email__returns_false(
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.PREVENT_SIGNUP = True
+    permission = IsSignupAllowed()
+    mock_request = mock.MagicMock(
+        data={
+            "email": ["test@example.com"],
+            "sign_up_type": SignUpType.INVITE_EMAIL.value,
+        }
+    )
+
+    # When
+    result = permission.has_permission(mock_request, mock.MagicMock())
+
+    # Then
+    assert result is False
 
 
 def test_is_signup_allowed__prevent_signup_enabled_invalid_invite_hash__returns_false(

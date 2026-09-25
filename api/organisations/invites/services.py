@@ -8,7 +8,8 @@ def is_valid_registration_invite(
 ) -> bool:
     match sign_up_type:
         case SignUpType.INVITE_LINK.value:
-            return InviteLink.objects.filter(hash=invite_hash).exists()
+            invite_link = InviteLink.objects.filter(hash=invite_hash).first()
+            return invite_link is not None and not invite_link.is_expired
         case SignUpType.INVITE_EMAIL.value:
             return Invite.objects.filter(email__iexact=email.lower()).exists()
         case _:
