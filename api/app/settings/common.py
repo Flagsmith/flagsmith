@@ -935,6 +935,7 @@ DJOSER = {
     "SEND_CONFIRMATION_EMAIL": False,
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
+        "token_create": "custom_auth.serializers.CustomTokenCreateSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",
         "user_delete": "custom_auth.serializers.CustomUserDelete",
         "current_user": "users.serializers.CustomCurrentUserSerializer",

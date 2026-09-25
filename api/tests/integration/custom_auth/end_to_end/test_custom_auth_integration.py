@@ -17,6 +17,10 @@ from rest_framework.test import (  # type: ignore[attr-defined]
 )
 from rest_framework_simplejwt.tokens import SlidingToken
 
+from custom_auth.constants import (
+    EMAIL_NOT_VERIFIED_ERROR,
+    EMAIL_NOT_VERIFIED_ERROR_KEY,
+)
 from organisations.invites.models import Invite
 from organisations.models import Organisation
 from users.models import FFAdminUser, SignUpType
@@ -915,3 +919,100 @@ def test_register__e2e_domain_without_token__still_requires_activation(
     assert response.json()["is_active"] is False
     assert response.json()["key"] is None
     assert len(mail.outbox) == 1
+
+
+@override_settings(
+    DJOSER=ChainMap(
+        {"SEND_ACTIVATION_EMAIL": True},
+        settings.DJOSER,
+    )
+)
+def test_login__unactivated_user_correct_password__returns_activation_error(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    password = FFAdminUser.objects.make_random_password()
+    email = f"test-{uuid.uuid4()}@example.com"
+    register_response = api_client.post(
+        reverse("api-v1:custom_auth:ffadminuser-list"),
+        data={
+            "email": email,
+            "password": password,
+            "first_name": "test",
+            "last_name": "user",
+        },
+        content_type="application/json",
+    )
+    assert register_response.status_code == status.HTTP_201_CREATED
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:custom_auth:custom-mfa-authtoken-login"),
+        data={"email": email, "password": password},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {EMAIL_NOT_VERIFIED_ERROR_KEY: [EMAIL_NOT_VERIFIED_ERROR]}
+
+
+@override_settings(
+    DJOSER=ChainMap(
+        {"SEND_ACTIVATION_EMAIL": True},
+        settings.DJOSER,
+    )
+)
+def test_login__unactivated_user_wrong_password__returns_generic_error(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    password = FFAdminUser.objects.make_random_password()
+    email = f"test-{uuid.uuid4()}@example.com"
+    register_response = api_client.post(
+        reverse("api-v1:custom_auth:ffadminuser-list"),
+        data={
+            "email": email,
+            "password": password,
+            "first_name": "test",
+            "last_name": "user",
+        },
+        content_type="application/json",
+    )
+    assert register_response.status_code == status.HTTP_201_CREATED
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:custom_auth:custom-mfa-authtoken-login"),
+        data={"email": email, "password": "not-the-right-password"},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert EMAIL_NOT_VERIFIED_ERROR_KEY not in response.json()
+    assert "non_field_errors" in response.json()
+
+
+@override_settings(
+    DJOSER=ChainMap(
+        {"SEND_ACTIVATION_EMAIL": True},
+        settings.DJOSER,
+    )
+)
+def test_login__unknown_email__returns_generic_error(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given / When
+    response = api_client.post(
+        reverse("api-v1:custom_auth:custom-mfa-authtoken-login"),
+        data={
+            "email": f"nobody-{uuid.uuid4()}@example.com",
+            "password": "some-password",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert EMAIL_NOT_VERIFIED_ERROR_KEY not in response.json()

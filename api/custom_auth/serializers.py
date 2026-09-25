@@ -2,10 +2,14 @@ from typing import Any
 
 from common.core.utils import is_saas
 from django.conf import settings
-from djoser.serializers import UserCreateSerializer  # type: ignore[import-untyped]
+from djoser.conf import settings as djoser_settings  # type: ignore[import-untyped]
+from djoser.serializers import (  # type: ignore[import-untyped]
+    TokenCreateSerializer,
+    UserCreateSerializer,
+)
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from e2etests.helpers import is_e2e_request
 from organisations.invites.models import Invite, InviteLink
@@ -14,6 +18,8 @@ from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.models import FFAdminUser, SignUpType
 
 from .constants import (
+    EMAIL_NOT_VERIFIED_ERROR,
+    EMAIL_NOT_VERIFIED_ERROR_KEY,
     FIELD_BLANK_ERROR,
     INVALID_PASSWORD_ERROR,
     USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
@@ -24,6 +30,35 @@ class CustomTokenSerializer(serializers.ModelSerializer):  # type: ignore[type-a
     class Meta:
         model = Token
         fields = ("key",)
+
+
+class CustomTokenCreateSerializer(TokenCreateSerializer):  # type: ignore[misc]
+    """
+    Tells a user with correct credentials that their account is not yet
+    activated, instead of the generic invalid credentials error.
+
+    The password is verified first, so an address cannot be probed for its
+    activation state by anyone who does not already know the password.
+    """
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        try:
+            return super().validate(attrs)  # type: ignore[no-any-return]
+        except ValidationError:
+            self._raise_if_awaiting_activation(attrs)
+            raise
+
+    def _raise_if_awaiting_activation(self, attrs: dict[str, Any]) -> None:
+        email = attrs.get(djoser_settings.LOGIN_FIELD) or ""
+        user = FFAdminUser.objects.filter(email__iexact=email).first()
+        if (
+            user
+            and not user.is_active
+            and user.check_password(attrs.get("password") or "")
+        ):
+            raise ValidationError(
+                {EMAIL_NOT_VERIFIED_ERROR_KEY: [EMAIL_NOT_VERIFIED_ERROR]}
+            )
 
 
 class InviteLinkValidationMixin:

@@ -201,6 +201,7 @@ const controller = {
       })
       .catch((e) => API.ajaxHandler(store, e)),
   login: ({ email, isGettingStarted, password }) => {
+    store.lastLoginEmail = email
     store.loading()
     data
       .post(`${Project.api}auth/login/`, {
@@ -404,6 +405,7 @@ const controller = {
       user.organisations = sortedOrganisations
       store.model = user
       store.pendingEmailVerification = null
+      store.lastLoginEmail = null
       if (user && user.organisations) {
         store.organisation = user.organisations[0]
         const cookiedID = API.getCookie('organisation')
@@ -582,6 +584,7 @@ const store = Object.assign({}, BaseStore, {
   isSuper() {
     return store.model && store.model.is_superuser
   },
+  lastLoginEmail: null,
   pendingEmailVerification: null,
   setToken(token) {
     data.token = token

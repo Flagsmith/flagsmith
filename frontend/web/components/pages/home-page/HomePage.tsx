@@ -71,6 +71,11 @@ const isEmailTaken = (
   )
 }
 
+const EMAIL_NOT_VERIFIED_ERROR_KEY = 'email_not_verified'
+
+const requiresEmailVerification = (error?: Record<string, unknown> | null) =>
+  !!error?.[EMAIL_NOT_VERIFIED_ERROR_KEY]
+
 // The banner is only for errors with no field to attach to.
 const SIGNUP_FIELDS = ['email', 'first_name', 'last_name', 'password']
 const hasFieldError = (error?: Record<string, unknown>) =>
@@ -240,6 +245,15 @@ const HomePage: React.FC = () => {
     : ''
   // Pushed rather than replaced, so Back returns to the signup form with what
   // was typed still in it.
+  useEffect(() => {
+    if (requiresEmailVerification(AccountStore.error)) {
+      // Sticky until a successful load, so clear it or returning here would
+      // redirect straight back out.
+      AccountStore.error = null
+      history.replace('/check-email', { email: AccountStore.lastLoginEmail })
+    }
+  }, [history])
+
   const goToLoginAsRegistered = useCallback(() => {
     setEmailAlreadyRegistered(true)
     history.push(`/login${redirect}`)
@@ -389,7 +403,7 @@ const HomePage: React.FC = () => {
           register,
         }: {
           register: (data: RegisterRequest, isInvite: boolean) => void
-          login: (data: LoginRequest) => void
+          login: (data: LoginRequest & { isGettingStarted?: boolean }) => void
         },
       ) => (
         <div
@@ -561,6 +575,9 @@ const HomePage: React.FC = () => {
                                   </div>
                                 </fieldset>
                                 {!emailAlreadyRegistered &&
+                                  !requiresEmailVerification(
+                                    AccountStore.error,
+                                  ) &&
                                   (AccountStore.error || samlError) && (
                                     <div
                                       id='error-alert'
