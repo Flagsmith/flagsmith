@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from evaluation.services import get_identity_feature_states
 from integrations.mixpanel.constants import DEFAULT_MIXPANEL_API_URL
 from integrations.mixpanel.mixpanel import MixpanelWrapper
 from integrations.mixpanel.models import MixpanelConfiguration
@@ -81,7 +82,7 @@ def test_mixpanel_identify_user__valid_identity__posts_to_api(
     # Given
     caplog.set_level(DEBUG)
     config = MixpanelConfiguration(api_key="123key")
-    feature_states = [*feature.feature_states.all()]
+    feature_states = get_identity_feature_states(identity)
 
     mixpanel = MixpanelWrapper(config)
     expected_user_data = mixpanel.generate_user_data(
@@ -123,7 +124,7 @@ def test_mixpanel_generate_user_data__identity_with_features__returns_expected_f
 ) -> None:
     # Given
     config = MixpanelConfiguration(api_key="123key")
-    feature_states = [*feature.feature_states.all()]
+    feature_states = get_identity_feature_states(identity)
 
     mixpanel = MixpanelWrapper(config)
 
@@ -137,7 +138,8 @@ def test_mixpanel_generate_user_data__identity_with_features__returns_expected_f
     # Then
     feature_properties = {}
 
-    for feature_state in feature_states:
+    for evaluated_feature_state in feature_states:
+        feature_state = evaluated_feature_state.feature_state
         value = feature_state.get_feature_state_value()
         feature_properties[feature_state.feature.name] = (
             value if (feature_state.enabled and value) else feature_state.enabled
@@ -194,7 +196,7 @@ def test_identify_integrations__mixpanel_configured__posts_to_expected_url(
     mocked_post = mocker.patch("integrations.mixpanel.mixpanel.requests.post")
 
     # When
-    identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
+    identify_integrations(identity, get_identity_feature_states(identity))  # type: ignore[no-untyped-call]
 
     # Then
     assert mocked_post.call_args.args[0] == expected_url

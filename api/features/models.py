@@ -741,15 +741,10 @@ class FeatureState(
         # hasattr as we want to return None if no feature state value exists.
         return feature_state_value and feature_state_value.value
 
-    def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:  # type: ignore[assignment]
-        identity_hash_key = (
-            identity.get_hash_key(
-                identity.environment.use_identity_composite_key_for_hashing
-            )
-            if identity
-            else None
-        )
-        return self.get_feature_state_value_by_hash_key(identity_hash_key)  # type: ignore[arg-type]
+    def get_feature_state_value(self) -> typing.Any:
+        """This state's stored value, before any evaluation."""
+        feature_state_value = getattr(self, "feature_state_value", None)
+        return feature_state_value and feature_state_value.value
 
     def get_feature_state_value_defaults(self) -> dict[str, typing.Any]:
         if (

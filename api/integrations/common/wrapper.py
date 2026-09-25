@@ -6,7 +6,7 @@ from util.util import postpone
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
-    from features.models import FeatureState
+    from evaluation.types import EvaluatedFeatureState
 
 
 T = typing.TypeVar("T")
@@ -40,7 +40,7 @@ class AbstractBaseIdentityIntegrationWrapper(ABC, typing.Generic[T]):
     def generate_user_data(
         self,
         identity: "Identity",
-        feature_states: typing.List["FeatureState"],
+        feature_states: typing.List["EvaluatedFeatureState"],
         trait_models: typing.List["Trait"],
     ) -> T:
         raise NotImplementedError()

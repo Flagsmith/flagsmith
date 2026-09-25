@@ -11,7 +11,7 @@ from .serializers import IntegrationFeatureStateSerializer, SegmentSerializer
 if typing.TYPE_CHECKING:
     from environments.identities.models import Identity
     from environments.identities.traits.models import Trait
-    from features.models import FeatureState
+    from evaluation.types import EvaluatedFeatureState
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class WebhookWrapper(AbstractBaseIdentityIntegrationWrapper):  # type: ignore[ty
     def generate_user_data(
         self,
         identity: "Identity",
-        feature_states: typing.List["FeatureState"],
+        feature_states: typing.List["EvaluatedFeatureState"],
         trait_models: typing.List["Trait"] = None,  # type: ignore[assignment]
     ) -> dict:  # type: ignore[type-arg]
         serialized_flags = IntegrationFeatureStateSerializer(

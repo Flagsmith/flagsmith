@@ -23,6 +23,7 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from cohorts.models import Cohort
 from core.helpers import get_current_site_url
+from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import (
@@ -48,6 +49,7 @@ from segments.models import Condition, Segment, SegmentRule
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
+from tests.types import VariantAssignmentFixture
 from users.models import FFAdminUser
 
 now = timezone.now()
@@ -1242,20 +1244,26 @@ def test_change_request_commit__v1_multivariate_feature__keeps_variant_bucketing
     environment: Environment,
     multivariate_feature: Feature,
     admin_user: FFAdminUser,
+    variant_assignment: VariantAssignmentFixture,
 ) -> None:
     # Given the current live environment-default feature state of a multivariate
     # feature, and the variant each of a range of identities is bucketed into
+    # The fixture derives an option's value from its percentage, so two of them
+    # share a value. Key them so a variant identifies which option won.
+    for index, option in enumerate(multivariate_feature.multivariate_options.all()):
+        option.key = f"variant-{index}"
+        option.save()
     live_feature_state = FeatureState.objects.get(
         environment=environment,
         feature=multivariate_feature,
         identity=None,
         feature_segment=None,
     )
-    identity_hash_keys = [f"identity-{i}" for i in range(50)]
-    original_assignment = {
-        key: live_feature_state.get_multivariate_feature_state_value(key).pk
-        for key in identity_hash_keys
-    }
+    identities = [
+        Identity.objects.create(identifier=f"identity-{i}", environment=environment)
+        for i in range(50)
+    ]
+    original_assignment = variant_assignment(identities, multivariate_feature.name)
 
     # and a change request carrying a draft feature state for the same feature,
     # as created by the API when a change request is raised under v1 versioning
@@ -1285,11 +1293,9 @@ def test_change_request_commit__v1_multivariate_feature__keeps_variant_bucketing
     assert new_live_feature_state.mv_hashing_salt == live_feature_state.id
 
     # and every identity stays in the same variant as before the commit
-    new_assignment = {
-        key: new_live_feature_state.get_multivariate_feature_state_value(key).pk
-        for key in identity_hash_keys
-    }
-    assert new_assignment == original_assignment
+    assert variant_assignment(identities, multivariate_feature.name) == (
+        original_assignment
+    )
 
 
 def test_change_request_commit__v1_segment_override_draft__inherits_mv_hashing_salt(

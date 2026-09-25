@@ -5,7 +5,7 @@ import requests
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
-from features.models import FeatureState
+from evaluation.types import EvaluatedFeatureState
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
 from .constants import DEFAULT_MIXPANEL_API_URL
@@ -39,15 +39,16 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper[MixpanelUserData]):
     def generate_user_data(
         self,
         identity: Identity,
-        feature_states: typing.List[FeatureState],
+        feature_states: typing.List[EvaluatedFeatureState],
         trait_models: typing.List[Trait],
     ) -> MixpanelUserData:
         feature_properties = {}
 
-        for feature_state in feature_states:
-            value = feature_state.get_feature_state_value(identity=identity)
-            feature_properties[feature_state.feature.name] = (
-                value if (feature_state.enabled and value) else feature_state.enabled
+        for evaluated_feature_state in feature_states:
+            flag = evaluated_feature_state.evaluation_result
+            value = flag["value"]
+            feature_properties[flag["name"]] = (
+                value if (flag["enabled"] and value) else flag["enabled"]
             )
 
         return [

@@ -63,6 +63,10 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from evaluation.services import (
+    get_environment_feature_states,
+    get_identity_feature_states,
+)
 from features.dependencies.services import validate_segment_flag_dependencies
 from features.feature_lifecycle.services import (
     annotate_feature_queryset_with_lifecycle_stage,
@@ -882,7 +886,10 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
     @action(methods=["GET"], detail=False)
     def all(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         identity = get_object_or_404(Identity, pk=self.kwargs["identity_pk"])
-        feature_states = identity.get_all_feature_states()
+        feature_states = [
+            evaluated_feature_state.feature_state
+            for evaluated_feature_state in get_identity_feature_states(identity)
+        ]
 
         serializer = IdentityAllFeatureStatesSerializer(
             instance=feature_states,
@@ -1048,10 +1055,10 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             return self._get_flags_response_with_identifier(request, identifier)
 
         if "feature" in request.GET:
-            feature_states = get_environment_flags_list(
-                environment=request.environment,
-                feature_name=request.GET["feature"],
-                additional_filters=self._additional_filters,
+            feature_states = get_environment_feature_states(
+                request.environment,
+                additional_filters=self._additional_filters
+                & Q(feature__name=request.GET["feature"]),
                 from_replica=True,
             )
             if not feature_states:
@@ -1066,8 +1073,8 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             data = self._get_flags_from_cache(request.environment, from_replica=True)
         else:
             data = self.get_serializer(
-                get_environment_flags_list(
-                    environment=request.environment,
+                get_environment_feature_states(
+                    request.environment,
                     additional_filters=self._additional_filters,
                     from_replica=True,
                 ),
@@ -1103,8 +1110,8 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         data = flags_cache.get(cache_key)
         if not data:
             data = self.get_serializer(
-                get_environment_flags_list(
-                    environment=environment,
+                get_environment_feature_states(
+                    environment,
                     additional_filters=self._additional_filters,
                     from_replica=from_replica,
                 ),
@@ -1130,19 +1137,29 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             )
         replace_identity_environment(identity, request.environment)
 
+        feature_states = get_identity_feature_states(identity)
+
         if feature_name := request.GET.get("feature"):
-            feature_states = identity.get_all_feature_states(feature_name=feature_name)
-            if not feature_states:
+            # Filtered after evaluation rather than before: a segment may
+            # depend on a flag other than the one asked for.
+            feature_state = next(
+                (
+                    feature_state
+                    for feature_state in feature_states
+                    if feature_state.evaluation_result["name"] == feature_name
+                ),
+                None,
+            )
+            if feature_state is None:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
             return Response(
-                self.get_serializer(feature_states[0]).data,
+                self.get_serializer(feature_state).data,
                 status=status.HTTP_200_OK,
             )
 
-        feature_states = identity.get_all_feature_states()
         flags = self.get_serializer(feature_states, many=True)
         return Response(flags.data, status=status.HTTP_200_OK)
 

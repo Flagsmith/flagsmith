@@ -2,6 +2,7 @@ from typing import Callable, Literal, Optional, Protocol
 
 from django_test_migrations.migrator import Migrator
 
+from environments.identities.models import Identity
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.permissions.models import UserOrganisationPermission
 from projects.models import UserProjectPermission
@@ -44,6 +45,23 @@ class EnableFeaturesFixture(Protocol):
 
 class MigratorFactory(Protocol):
     def __call__(self, name: Optional[str] = None) -> Migrator: ...
+
+
+class VariantAssignmentFixture(Protocol):
+    def __call__(
+        self,
+        identities: "list[Identity]",
+        feature_name: str,
+    ) -> dict[str, str | None]: ...
+
+
+class SetMultivariateAllocationsFixture(Protocol):
+    def __call__(
+        self,
+        environment_api_key: str,
+        feature_state_id: int,
+        allocation_by_mv_option_id: dict[int, float],
+    ) -> None: ...
 
 
 class CreateSegmentOverrideFixture(Protocol):
