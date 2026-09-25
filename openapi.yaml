@@ -546,20 +546,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TokenCreate'
+              $ref: '#/components/schemas/CustomTokenCreate'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/TokenCreate'
+              $ref: '#/components/schemas/CustomTokenCreate'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/TokenCreate'
+              $ref: '#/components/schemas/CustomTokenCreate'
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenCreate'
+                $ref: '#/components/schemas/CustomTokenCreate'
       tags:
         - Authentication
   /api/v1/auth/login/code/:
@@ -570,20 +570,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TokenCreate'
+              $ref: '#/components/schemas/CustomTokenCreate'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/TokenCreate'
+              $ref: '#/components/schemas/CustomTokenCreate'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/TokenCreate'
+              $ref: '#/components/schemas/CustomTokenCreate'
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenCreate'
+                $ref: '#/components/schemas/CustomTokenCreate'
       tags:
         - Authentication
   /api/v1/auth/logout/:
@@ -20503,6 +20503,19 @@ components:
             $ref: '#/components/schemas/MultivariateFeatureStateValue'
       required:
         - feature_state_value
+    CustomTokenCreate:
+      description: |-
+        Tells a user with correct credentials that their account is not yet
+        activated, instead of the generic invalid credentials error.
+
+        The password is verified first, so an address cannot be probed for its
+        activation state by anyone who does not already know the password.
+      type: object
+      properties:
+        password:
+          type: string
+        email:
+          type: string
     CustomUserCreate:
       type: object
       properties:
@@ -28449,13 +28462,6 @@ components:
           default: 200
       required:
         - detail
-    TokenCreate:
-      type: object
-      properties:
-        password:
-          type: string
-        email:
-          type: string
     TokenExchangeRequest:
       type: object
       properties:
