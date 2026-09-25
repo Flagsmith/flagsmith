@@ -363,9 +363,31 @@ function generateTs() {
     ...describedBlocks,
     '',
     ...flatLines,
+    '',
+    ...buildContentColours(),
   ]
 
   return output.join('\n')
+}
+
+/**
+ * The Content palette as a map, for anything that needs to iterate it —
+ * the tag colour picker, most obviously. Keyed by the design system's own
+ * name so a swatch in Figma and a key here read the same.
+ */
+function buildContentColours() {
+  const entries = Object.entries(json.primitives ?? {}).filter(([n]) =>
+    n.startsWith('content-'),
+  )
+  if (!entries.length) return []
+  return [
+    '/** Tag and read-only content colours. Fixed: they do not follow the theme. */',
+    'export const contentColours = {',
+    ...entries.map(([n, hex]) => `  '${n.replace('content-', '')}': '${hex}',`),
+    '} as const',
+    '',
+    'export type ContentColour = keyof typeof contentColours',
+  ]
 }
 
 function generateMcpStory() {
@@ -495,6 +517,23 @@ function generateUtilities() {
       if (!text) continue
       lines.push(
         `.tag-${hue} { background-color: var(${surface.cssVar}); color: var(${text.cssVar}); }`,
+      )
+    }
+    lines.push('')
+  }
+
+  // Tag utilities. The Content colours are fixed rather than theme-aware: a
+  // tag chip carries its own surface, so it does not follow the page. One dark
+  // ink works on all of them, 9.64:1 at worst.
+  const contentColours = Object.keys(json.primitives ?? {}).filter((n) =>
+    n.startsWith('content-'),
+  )
+  if (contentColours.length) {
+    lines.push('// Tags')
+    for (const name of contentColours.sort()) {
+      const swatch = name.replace('content-', '')
+      lines.push(
+        `.tag-${swatch} { background-color: var(--${name}); color: var(--slate-600); }`,
       )
     }
     lines.push('')
