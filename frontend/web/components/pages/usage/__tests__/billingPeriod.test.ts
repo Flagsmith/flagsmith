@@ -17,7 +17,6 @@ describe('billingPeriodCopy', () => {
 
     expect(copy?.range).toBe('1 Jul – 31 Jul 2026')
     expect(copy?.resets).toBe('Resets in 11 days · 1 Aug 2026')
-    expect(copy?.daysLeft).toBe(11)
   })
 
   it('repeats the year when the period crosses one', () => {
@@ -46,7 +45,6 @@ describe('billingPeriodCopy', () => {
     // The end is exclusive, but 21 July is still inside the period.
     expect(copy?.range).toBe('21 Jun – 21 Jul 2026')
     expect(copy?.resets).toBe('Resets today · 21 Jul 2026')
-    expect(copy?.daysLeft).toBe(0)
   })
 
   it('singularises the last full day', () => {
@@ -67,7 +65,6 @@ describe('billingPeriodCopy', () => {
       period('2026-05-01T00:00:00Z', '2026-06-01T00:00:00Z'),
     )
 
-    expect(copy?.daysLeft).toBe(0)
     expect(copy?.resets).toBe('Ended 1 Jun 2026')
   })
 

@@ -4,7 +4,6 @@ import { CurrentBillingPeriod } from 'common/types/responses'
 export type BillingPeriodCopy = {
   range: string
   resets: string
-  daysLeft: number
 }
 
 /**
@@ -48,7 +47,6 @@ export const billingPeriodCopy = (
       : `in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`
 
   return {
-    daysLeft,
     range: `${starts.format(startFormat)} – ${lastDay.format('D MMM YYYY')}`,
     resets: ends.isAfter(now)
       ? `Resets ${countdown} · ${reset}`

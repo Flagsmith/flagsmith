@@ -109,7 +109,9 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         )
       : undefined
 
-  const period = subscription?.current_billing_period
+  // A plan on a rolling window has no period to describe, and a stale cache
+  // can still be carrying the dates of one it has left.
+  const period = planIsBilled ? subscription?.current_billing_period : undefined
 
   // One line, so being over the limit outranks the project's share.
   const meterNote = exceeded ? overLimitNote(exceeded) : contribution
