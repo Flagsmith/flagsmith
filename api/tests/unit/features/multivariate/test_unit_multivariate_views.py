@@ -1,3 +1,4 @@
+import json
 import uuid
 
 import pytest
@@ -105,3 +106,28 @@ def test_list_mv_options__feature_in_other_project__returns_404(
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_partial_update_multivariate_option__changing_key__returns_400(
+    admin_client: APIClient,
+    project: Project,
+    multivariate_feature: Feature,
+) -> None:
+    # Given
+    mv_option = multivariate_feature.multivariate_options.first()
+
+    assert mv_option is not None
+
+    url = f"/api/v1/projects/{project.id}/features/{multivariate_feature.id}/mv-options/{mv_option.id}/"
+
+    new_key = "hero"
+    data = {"key": new_key}
+
+    # When
+    response = admin_client.patch(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"key": ["Cannot change key for existing options."]}
