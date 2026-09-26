@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 import pytest
 from django.db import connections
+from django.utils import timezone
 from django_test_migrations.migrator import Migrator
 
 pytestmark = pytest.mark.use_analytics_db
@@ -202,3 +205,41 @@ def test_0008_labels_jsonb__hstore_columns__converts_to_jsonb(
         .labels
         == expected_labels
     )
+
+
+def test_0009_apiusagebucket_host__recent_bucket__deleted_and_old_kept(
+    analytics_migrator: Migrator,
+) -> None:
+    # Given buckets from before the host column existed, one old and one
+    # recent enough for the rollup to recompute
+    old_state = analytics_migrator.apply_initial_migration(
+        ("app_analytics", "0008_labels_jsonb"),
+    )
+    APIUsageBucket = old_state.apps.get_model("app_analytics", "APIUsageBucket")
+    now = timezone.now()
+    old_bucket = APIUsageBucket.objects.using("analytics").create(
+        environment_id=1,
+        bucket_size=15,
+        created_at=now - timedelta(hours=3),
+        total_count=10,
+        resource=1,
+    )
+    APIUsageBucket.objects.using("analytics").create(
+        environment_id=1,
+        bucket_size=15,
+        created_at=now - timedelta(minutes=30),
+        total_count=10,
+        resource=1,
+    )
+
+    # When
+    new_state = analytics_migrator.apply_tested_migration(
+        ("app_analytics", "0009_apiusagebucket_host"),
+    )
+
+    # Then only the old bucket remains, with an empty host
+    NewAPIUsageBucket = new_state.apps.get_model("app_analytics", "APIUsageBucket")
+    remaining = list(
+        NewAPIUsageBucket.objects.using("analytics").values_list("id", "host")
+    )
+    assert remaining == [(old_bucket.id, "")]
