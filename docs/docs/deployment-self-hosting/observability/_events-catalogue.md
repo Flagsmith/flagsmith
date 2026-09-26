@@ -623,7 +623,7 @@ Attributes:
 ### `segment_membership.compute.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:149`
+ - `api/segment_membership/services.py:148`
 
 Attributes:
  - `project.id`
@@ -633,7 +633,7 @@ Attributes:
 ### `segment_membership.members.segment.skipped`
 
 Logged at `error` from:
- - `api/segment_membership/services.py:215`
+ - `api/segment_membership/services.py:214`
 
 Attributes:
  - `reason`
