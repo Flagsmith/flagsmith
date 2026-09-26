@@ -9,6 +9,8 @@ from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
+    BEFORE_CREATE,
+    BEFORE_UPDATE,
     LifecycleModelMixin,
     hook,
 )
@@ -167,6 +169,18 @@ class Segment(
         """
         self.version_of = self
         self.save_without_historical_record()
+
+    @hook(BEFORE_CREATE, when="change_request", is_not=None)
+    @hook(BEFORE_UPDATE, when="change_request", is_not=None)
+    def validate_not_cohort_managed(self) -> None:
+        if self.version_of_id and self.version_of.cohorts.exists():
+            from features.workflows.core.exceptions import (
+                CannotModifyManagedSegmentError,
+            )
+
+            raise CannotModifyManagedSegmentError(
+                "Segments managed by a cohort cannot be changed via a change request."
+            )
 
     @transaction.atomic
     def clone(self, is_revision: bool = False, **extra_attrs: typing.Any) -> "Segment":
