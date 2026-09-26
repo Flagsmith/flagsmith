@@ -48,6 +48,7 @@ from projects.serializers import (
     ProjectRetrieveSerializer,
     ProjectUpdateSerializer,
 )
+from telemetry.spans import set_span_attribute
 from users.models import FFAdminUser
 
 
@@ -80,6 +81,17 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return serializers.get(self.action, ProjectListSerializer)
 
     pagination_class = None
+
+    def list(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        response = super().list(request, *args, **kwargs)
+
+        if response.data and (
+            organisation_id := request.query_params.get("organisation")
+        ):
+            # get_queryset validates the ID and restricts results to permitted projects.
+            set_span_attribute("organisation.id", int(organisation_id))
+
+        return response
 
     def get_serializer_context(self):  # type: ignore[no-untyped-def]
         return super().get_serializer_context()
