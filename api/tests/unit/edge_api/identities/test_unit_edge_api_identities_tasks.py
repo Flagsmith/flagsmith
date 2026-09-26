@@ -15,12 +15,12 @@ from edge_api.identities.tasks import (
 )
 from environments.dynamodb.types import (
     IdentityOverridesV2Changeset,
-    IdentityOverrideV2,
 )
 from environments.identities.models import Identity
 from environments.models import Environment, Webhook
 from features.models import Feature
 from users.models import FFAdminUser
+from util.mappers import map_identity_override_document_to_identity_override
 from webhooks.webhooks import WebhookEventType
 
 
@@ -451,13 +451,14 @@ def test_update_flagsmith_environments_v2_identity_overrides__changes_provided__
     }
     expected_identity_overrides_changeset = IdentityOverridesV2Changeset(
         to_delete=[
-            IdentityOverrideV2.parse_obj(
+            map_identity_override_document_to_identity_override(
                 {
                     "document_key": f"identity_override:3:{identity_uuid}",
                     "environment_id": str(environment.id),
                     "environment_api_key": environment.api_key,
                     "identifier": identifier,
                     "identity_uuid": identity_uuid,
+                    "created_date": timezone.now(),
                     "feature_state": {
                         "enabled": True,
                         "feature_state_value": "deleted",
@@ -472,13 +473,14 @@ def test_update_flagsmith_environments_v2_identity_overrides__changes_provided__
             )
         ],
         to_put=[
-            IdentityOverrideV2.parse_obj(
+            map_identity_override_document_to_identity_override(
                 {
                     "document_key": f"identity_override:1:{identity_uuid}",
                     "environment_id": str(environment.id),
                     "environment_api_key": environment.api_key,
                     "identifier": identifier,
                     "identity_uuid": identity_uuid,
+                    "created_date": timezone.now(),
                     "feature_state": {
                         "enabled": True,
                         "feature_state_value": "updated",
@@ -491,13 +493,14 @@ def test_update_flagsmith_environments_v2_identity_overrides__changes_provided__
                     },
                 }
             ),
-            IdentityOverrideV2.parse_obj(
+            map_identity_override_document_to_identity_override(
                 {
                     "document_key": f"identity_override:2:{identity_uuid}",
                     "environment_id": str(environment.id),
                     "environment_api_key": environment.api_key,
                     "identifier": identifier,
                     "identity_uuid": identity_uuid,
+                    "created_date": timezone.now(),
                     "feature_state": {
                         "enabled": True,
                         "feature_state_value": "new",

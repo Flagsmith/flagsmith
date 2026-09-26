@@ -3,7 +3,7 @@ from flag_engine.segments.constants import EQUAL
 from pytest_django import DjangoAssertNumQueries
 from pytest_lazy_fixtures import lf as lazy_fixture
 
-from edge_api.identities.models import EdgeIdentity
+from edge_api.identities.models import EdgeIdentity, new_feature_override
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -18,15 +18,6 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
-from util.engine_models.features.models import (
-    FeatureModel,
-    FeatureStateModel,
-    MultivariateFeatureOptionModel,
-    MultivariateFeatureStateValueList,
-    MultivariateFeatureStateValueModel,
-)
-from util.engine_models.identities.models import IdentityModel
-from util.engine_models.identities.traits.models import TraitModel
 
 
 def test_map_environment_to_evaluation_context__full_environment__returns_expected_context(
@@ -472,16 +463,14 @@ def test_map_edge_identity_to_identity_context__system_traits__merged_with_syste
     environment: Environment,
 ) -> None:
     # Given
-    edge_identity = EdgeIdentity(
-        IdentityModel(
-            identifier="identity",
-            environment_api_key=environment.api_key,
-            identity_traits=[
-                TraitModel(trait_key="owned-by-user", trait_value="user value"),
-                TraitModel(trait_key="clashing", trait_value="user value"),
-            ],
-            system_traits={"clashing": "system value"},
-        )
+    edge_identity = EdgeIdentity.create(
+        "identity",
+        environment.api_key,
+        identity_traits=[
+            {"trait_key": "owned-by-user", "trait_value": "user value"},
+            {"trait_key": "clashing", "trait_value": "user value"},
+        ],
+        system_traits={"clashing": "system value"},
     )
 
     # When
@@ -501,29 +490,27 @@ def test_map_engine_feature_state_to_feature_context__multivariate_override__ret
     None
 ):
     # Given
-    feature_state = FeatureStateModel(
+    feature_state = new_feature_override(
         django_id=1,
-        feature=FeatureModel(id=1, name="feature", type="MULTIVARIATE"),
+        feature={"id": 1, "name": "feature", "type": "MULTIVARIATE"},
         enabled=True,
         feature_state_value="control",
-        multivariate_feature_state_values=MultivariateFeatureStateValueList(
-            [
-                MultivariateFeatureStateValueModel(
-                    id=3,
-                    percentage_allocation=70,
-                    multivariate_feature_option=MultivariateFeatureOptionModel(
-                        id=3, value="unkeyed"
-                    ),
-                ),
-                MultivariateFeatureStateValueModel(
-                    id=2,
-                    percentage_allocation=30,
-                    multivariate_feature_option=MultivariateFeatureOptionModel(
-                        id=2, value="keyed", key="variant-a"
-                    ),
-                ),
-            ]
-        ),
+        multivariate_feature_state_values=[
+            {
+                "id": 3,
+                "percentage_allocation": 70,
+                "multivariate_feature_option": {"id": 3, "value": "unkeyed"},
+            },
+            {
+                "id": 2,
+                "percentage_allocation": 30,
+                "multivariate_feature_option": {
+                    "id": 2,
+                    "value": "keyed",
+                    "key": "variant-a",
+                },
+            },
+        ],
     )
 
     # When

@@ -5,10 +5,7 @@ from datetime import datetime
 
 import boto3
 from django.conf import settings
-from django.utils import timezone
-from pydantic import BaseModel, Field
-
-from util.engine_models.features.models import FeatureStateModel
+from flagsmith_schemas.dynamodb import EnvironmentV2IdentityOverride
 
 if typing.TYPE_CHECKING:
     from projects.models import EdgeV2MigrationStatus
@@ -83,14 +80,7 @@ class DynamoProjectMetadata:
             project_metadata_table.delete_item(Key={"id": self.id})
 
 
-class IdentityOverrideV2(BaseModel):
-    environment_id: str
-    document_key: str
-    environment_api_key: str
-    identifier: str
-    identity_uuid: str
-    feature_state: FeatureStateModel
-    created_date: datetime = Field(default_factory=timezone.now)
+IdentityOverrideV2: typing.TypeAlias = EnvironmentV2IdentityOverride
 
 
 @dataclass

@@ -1,9 +1,10 @@
 import typing
 
 from evaluation.services import get_edge_identity_override_value
-from util.engine_models.features.models import FeatureStateModel
 
 if typing.TYPE_CHECKING:
+    from flagsmith_schemas.dynamodb import FeatureState
+
     from edge_api.identities.models import EdgeIdentity
     from edge_api.identities.types import ChangeType, FeatureStateChangeDetails
     from environments.models import Environment
@@ -14,8 +15,8 @@ def generate_change_dict(
     *,
     edge_identity: "EdgeIdentity",
     environment: "Environment",
-    new: FeatureStateModel | None = None,
-    old: FeatureStateModel | None = None,
+    new: "FeatureState | None" = None,
+    old: "FeatureState | None" = None,
 ) -> "FeatureStateChangeDetails":
     if not (new or old):
         raise ValueError("Must provide one of 'new' or 'old'")
@@ -41,10 +42,10 @@ def _get_overridden_feature_state_dict(
     *,
     edge_identity: "EdgeIdentity",
     environment: "Environment",
-    feature_state: FeatureStateModel,
+    feature_state: "FeatureState",
 ) -> dict[str, typing.Any]:
     return {
-        **feature_state.dict(),
+        **feature_state,
         "feature_state_value": get_edge_identity_override_value(
             edge_identity, feature_state, environment=environment
         ),

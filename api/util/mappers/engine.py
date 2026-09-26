@@ -1,32 +1,13 @@
+import uuid
 from collections.abc import Iterable
 from itertools import chain
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from uuid import UUID
+
+from django.utils import timezone
 
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from features.versioning.models import EnvironmentFeatureVersion
-from util.engine_models.environments.integrations.models import IntegrationModel
-from util.engine_models.environments.models import (
-    EnvironmentAPIKeyModel,
-    EnvironmentModel,
-    WebhookModel,
-)
-from util.engine_models.features.models import (
-    FeatureModel,
-    FeatureSegmentModel,
-    FeatureStateModel,
-    MultivariateFeatureOptionModel,
-    MultivariateFeatureStateValueModel,
-)
-from util.engine_models.identities.models import IdentityModel
-from util.engine_models.identities.traits.models import TraitModel
-from util.engine_models.organisations.models import OrganisationModel
-from util.engine_models.projects.models import ProjectModel
-from util.engine_models.segments.models import (
-    SegmentConditionModel,
-    SegmentModel,
-    SegmentRuleModel,
-)
 
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import (  # type: ignore[attr-defined]
@@ -50,6 +31,7 @@ __all__ = (
     "map_environment_api_key_to_engine",
     "map_environment_to_engine",
     "map_feature_to_engine",
+    "map_identifier_to_engine",
     "map_identity_to_engine",
     "map_mv_option_to_engine",
     "map_segment_to_engine",
@@ -57,73 +39,71 @@ __all__ = (
 )
 
 
-def map_traits_to_engine(traits: Iterable["Trait"]) -> list[TraitModel]:
+def map_traits_to_engine(traits: Iterable["Trait"]) -> list[dict[str, Any]]:
     return [
-        TraitModel(trait_key=trait.trait_key, trait_value=trait.trait_value)
+        {"trait_key": trait.trait_key, "trait_value": trait.trait_value}
         for trait in traits
     ]
 
 
 def map_segment_to_engine(
     segment: "Segment",
-) -> SegmentModel:
+) -> dict[str, Any]:
     segment_rules = segment.rules.all()
 
     # No reading from ORM past this point!
 
-    return SegmentModel(
-        id=segment.pk,
-        name=segment.name,
-        rules=[
+    return {
+        "id": segment.pk,
+        "name": segment.name,
+        "rules": [
             map_segment_rule_to_engine(segment_rule) for segment_rule in segment_rules
         ],
-    )
+        "feature_states": [],
+    }
 
 
 def map_segment_rule_to_engine(
     segment_rule: "SegmentRule",
-) -> SegmentRuleModel:
+) -> dict[str, Any]:
     segment_sub_rules = segment_rule.rules.all()
     conditions = segment_rule.conditions.all()
 
-    return SegmentRuleModel(
-        type=segment_rule.type,  # type: ignore[arg-type]
-        rules=[
+    return {
+        "type": segment_rule.type,
+        "rules": [
             map_segment_rule_to_engine(segment_sub_rule)
             for segment_sub_rule in segment_sub_rules
         ],
-        conditions=[
-            SegmentConditionModel(
-                operator=condition.operator,  # type: ignore[arg-type]
-                value=condition.value,
-                property_=condition.property,
-            )
+        "conditions": [
+            {
+                "operator": condition.operator,
+                "value": condition.value,
+                "property_": condition.property,
+            }
             for condition in conditions
         ],
-    )
+    }
 
 
 def map_integration_to_engine(
     integration: Optional["EnvironmentIntegrationModel"],
-) -> Optional[IntegrationModel]:
+) -> Optional[dict[str, Any]]:
     if not integration:
         return None
-    return IntegrationModel(
-        api_key=integration.api_key,
-        base_url=integration.base_url,
-        entity_selector=getattr(integration, "entity_selector", None),
-    )
+    return {
+        "api_key": integration.api_key,
+        "base_url": integration.base_url,
+        "entity_selector": getattr(integration, "entity_selector", None),
+    }
 
 
 def map_webhook_config_to_engine(
     webhook_config: Optional["WebhookConfiguration"],
-) -> Optional[WebhookModel]:
+) -> Optional[dict[str, Any]]:
     if not webhook_config:
         return None
-    return WebhookModel(
-        url=webhook_config.url,
-        secret=webhook_config.secret,
-    )
+    return {"url": webhook_config.url, "secret": webhook_config.secret}
 
 
 def map_feature_state_to_engine(
@@ -131,67 +111,60 @@ def map_feature_state_to_engine(
     *,
     mv_fs_values: Optional[Iterable["MultivariateFeatureStateValue"]] = None,
     metadata: Optional[dict[str, object]] = None,
-) -> FeatureStateModel:
+) -> dict[str, Any]:
     feature = feature_state.feature
     feature_segment: Optional["FeatureSegment"] = feature_state.feature_segment
 
-    if feature_segment:
-        feature_segment_model = FeatureSegmentModel(
-            priority=feature_segment.priority,
-        )
-    else:
-        feature_segment_model = None
-
-    return FeatureStateModel(
-        metadata=metadata,
-        enabled=feature_state.enabled,
+    return {
+        "feature": map_feature_to_engine(feature),
+        "enabled": feature_state.enabled,
         # The engine and SDKs seed multivariate variant allocation on django_id,
         # so feeding it the bucketing seed keeps variant assignment stable when
-        # a feature state is recreated, without changing the engine model or
-        # environment document schema. See issue #7913.
-        django_id=feature_state.mv_hashing_seed,
-        feature_state_value=feature_state.get_feature_state_value(),
-        featurestate_uuid=feature_state.uuid,
-        feature_segment=feature_segment_model,
-        feature=map_feature_to_engine(feature),
-        multivariate_feature_state_values=[  # type: ignore[arg-type]
+        # a feature state is recreated, without changing the environment
+        # document schema. See issue #7913.
+        "django_id": feature_state.mv_hashing_seed,
+        "feature_segment": (
+            {"priority": feature_segment.priority} if feature_segment else None
+        ),
+        "featurestate_uuid": feature_state.uuid,
+        "feature_state_value": feature_state.get_feature_state_value(),
+        "multivariate_feature_state_values": [
             map_mv_fs_value_to_engine(mv_fs_value) for mv_fs_value in mv_fs_values or []
         ],
-    )
+        **({"metadata": metadata} if metadata else {}),
+    }
 
 
 def map_mv_fs_value_to_engine(
     mv_fs_value: "MultivariateFeatureStateValue",
-) -> MultivariateFeatureStateValueModel:
+) -> dict[str, Any]:
     mv_feature_option: "MultivariateFeatureOption" = (
         mv_fs_value.multivariate_feature_option
     )
 
-    return MultivariateFeatureStateValueModel(
-        percentage_allocation=mv_fs_value.percentage_allocation,
-        id=mv_fs_value.id,
-        mv_fs_value_uuid=mv_fs_value.uuid,
-        multivariate_feature_option=map_mv_option_to_engine(mv_feature_option),
-    )
+    return {
+        "multivariate_feature_option": map_mv_option_to_engine(mv_feature_option),
+        "percentage_allocation": mv_fs_value.percentage_allocation,
+        "id": mv_fs_value.id,
+        "mv_fs_value_uuid": mv_fs_value.uuid,
+    }
 
 
-def map_feature_to_engine(feature: "Feature") -> FeatureModel:
-    return FeatureModel(id=feature.pk, name=feature.name, type=feature.type)
+def map_feature_to_engine(feature: "Feature") -> dict[str, Any]:
+    return {"id": feature.pk, "name": feature.name, "type": feature.type}
 
 
 def map_mv_option_to_engine(
     mv_option: "MultivariateFeatureOption",
-) -> MultivariateFeatureOptionModel:
-    return MultivariateFeatureOptionModel(
-        value=mv_option.value, id=mv_option.id, key=mv_option.key
-    )
+) -> dict[str, Any]:
+    return {"value": mv_option.value, "id": mv_option.id, "key": mv_option.key}
 
 
 def map_environment_to_engine(
     environment: "Environment",
     *,
     with_integrations: bool = True,
-) -> EnvironmentModel:
+) -> dict[str, Any]:
     """
     Maps Core API's `environments.models.Environment` model instance to the
     flag_engine environment document.
@@ -199,7 +172,6 @@ def map_environment_to_engine(
     feature versions.
 
     :param Environment environment: the environment to map
-    :rtype EnvironmentModel
     """
     from experimentation.feature_state_metadata import (  # avoid circular import
         get_feature_state_metadata_builder,
@@ -273,22 +245,22 @@ def map_environment_to_engine(
     # No reading from ORM past this point!
 
     # Prepare relationships.
-    organisation_model = OrganisationModel(
-        id=organisation.pk,
-        name=organisation.name,
-        feature_analytics=organisation.feature_analytics,
-        stop_serving_flags=organisation.stop_serving_flags,
-        persist_trait_data=organisation.persist_trait_data,
-    )
+    organisation_model = {
+        "id": organisation.pk,
+        "name": organisation.name,
+        "feature_analytics": organisation.feature_analytics,
+        "stop_serving_flags": organisation.stop_serving_flags,
+        "persist_trait_data": organisation.persist_trait_data,
+    }
     project_segment_models = [
-        SegmentModel(
-            id=segment.pk,
-            name=segment.name,
-            rules=[
+        {
+            "id": segment.pk,
+            "name": segment.name,
+            "rules": [
                 map_segment_rule_to_engine(segment_rule)
                 for segment_rule in project_segment_rules_by_segment_id.pop(segment.pk)
             ],
-            feature_states=[
+            "feature_states": [
                 map_feature_state_to_engine(
                     feature_state,
                     mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
@@ -300,22 +272,22 @@ def map_environment_to_engine(
                     segment.pk
                 )
             ],
-        )
+        }
         for segment in project_segments
     ]
-    project_model = ProjectModel(
-        id=project.pk,
-        name=project.name,
-        hide_disabled_flags=project.hide_disabled_flags,
-        enable_realtime_updates=project.enable_realtime_updates,
-        server_key_only_feature_ids=[
+    project_model = {
+        "id": project.pk,
+        "name": project.name,
+        "organisation": organisation_model,
+        "hide_disabled_flags": project.hide_disabled_flags,
+        "segments": project_segment_models,
+        "enable_realtime_updates": project.enable_realtime_updates,
+        "server_key_only_feature_ids": [
             feature.pk
             for feature_state in environment_feature_states
             if (feature := feature_state.feature).is_server_key_only
         ],
-        organisation=organisation_model,
-        segments=project_segment_models,
-    )
+    }
     feature_state_models = [
         map_feature_state_to_engine(
             feature_state,
@@ -347,48 +319,48 @@ def map_environment_to_engine(
         integration_configs.pop("webhook_config", None),
     )
 
-    return EnvironmentModel(
+    return {
         #
         # Attributes:
-        id=environment.pk,
-        api_key=environment.api_key,
-        name=environment.name,
-        allow_client_traits=environment.allow_client_traits,
-        updated_at=environment.updated_at,
-        use_identity_composite_key_for_hashing=environment.use_identity_composite_key_for_hashing,
-        hide_sensitive_data=environment.hide_sensitive_data,
-        hide_disabled_flags=environment.hide_disabled_flags,
-        use_identity_overrides_in_local_eval=environment.use_identity_overrides_in_local_eval,
-        onboarding_pending=environment.first_evaluated_at is None,
+        "id": environment.pk,
+        "api_key": environment.api_key,
+        "name": environment.name,
+        "allow_client_traits": environment.allow_client_traits,
+        "updated_at": environment.updated_at,
+        "hide_sensitive_data": environment.hide_sensitive_data,
+        "hide_disabled_flags": environment.hide_disabled_flags,
+        "use_identity_composite_key_for_hashing": environment.use_identity_composite_key_for_hashing,
+        "use_identity_overrides_in_local_eval": environment.use_identity_overrides_in_local_eval,
+        "onboarding_pending": environment.first_evaluated_at is None,
         #
         # Relationships:
-        project=project_model,
-        feature_states=feature_state_models,
+        "project": project_model,
+        "feature_states": feature_state_models,
+        "identity_overrides": [],
         #
         # Integrations:
-        amplitude_config=amplitude_config_model,
-        heap_config=heap_config_model,
-        mixpanel_config=mixpanel_config_model,
-        rudderstack_config=rudderstack_config_model,
-        segment_config=segment_config_model,
-        webhook_config=webhook_config_model,
-    )
+        "amplitude_config": amplitude_config_model,
+        "dynatrace_config": None,
+        "heap_config": heap_config_model,
+        "mixpanel_config": mixpanel_config_model,
+        "rudderstack_config": rudderstack_config_model,
+        "segment_config": segment_config_model,
+        "webhook_config": webhook_config_model,
+    }
 
 
 def map_environment_api_key_to_engine(
     environment_api_key: "EnvironmentAPIKey",
-) -> EnvironmentAPIKeyModel:
-    client_api_key = environment_api_key.environment.api_key
-
-    return EnvironmentAPIKeyModel(
-        id=environment_api_key.pk,
-        key=environment_api_key.key,
-        created_at=environment_api_key.created_at,
-        name=environment_api_key.name,
-        client_api_key=client_api_key,
-        expires_at=environment_api_key.expires_at,
-        active=environment_api_key.active,
-    )
+) -> dict[str, Any]:
+    return {
+        "id": environment_api_key.pk,
+        "key": environment_api_key.key,
+        "created_at": environment_api_key.created_at,
+        "name": environment_api_key.name,
+        "client_api_key": environment_api_key.environment.api_key,
+        "expires_at": environment_api_key.expires_at,
+        "active": environment_api_key.active,
+    }
 
 
 def map_identity_to_engine(
@@ -396,7 +368,7 @@ def map_identity_to_engine(
     *,
     with_overrides: bool = True,
     with_traits: bool = True,
-) -> IdentityModel:
+) -> dict[str, Any]:
     environment_api_key = identity.environment.api_key
 
     # Read relationships - grab all the data needed from the ORM here.
@@ -428,17 +400,35 @@ def map_identity_to_engine(
     ]
     identity_trait_models = map_traits_to_engine(identity_traits)
 
-    return IdentityModel(
-        # Attributes:
-        identifier=identity.identifier,
-        environment_api_key=environment_api_key,
+    return map_identifier_to_engine(
+        identity.identifier,
+        environment_api_key,
         created_date=identity.created_date,
-        django_id=identity.pk,
-        #
-        # Relationships:
-        identity_features=identity_feature_state_models,  # type: ignore[arg-type]
+        identity_features=identity_feature_state_models,
         identity_traits=identity_trait_models,
+        django_id=identity.pk,
     )
+
+
+def map_identifier_to_engine(
+    identifier: str,
+    environment_api_key: str,
+    **fields: Any,
+) -> dict[str, Any]:
+    """An identity's document fields, defaulted as for a new identity."""
+    return {
+        "identifier": identifier,
+        "environment_api_key": environment_api_key,
+        "created_date": timezone.now(),
+        "identity_features": [],
+        "identity_traits": [],
+        "system_traits": None,
+        "identity_uuid": uuid.uuid4(),
+        "django_id": None,
+        "dashboard_alias": None,
+        "composite_key": f"{environment_api_key}_{identifier}",
+        **fields,
+    }
 
 
 def _get_prioritised_feature_states(

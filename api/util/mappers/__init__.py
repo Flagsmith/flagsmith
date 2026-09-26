@@ -7,12 +7,15 @@ from util.mappers.dynamodb import (
     map_environment_to_environment_document,
     map_environment_to_environment_v2_document,
     map_identity_changeset_to_identity_override_changeset,
+    map_identity_document_to_engine_identity,
+    map_identity_override_document_to_identity_override,
     map_identity_override_to_identity_override_document,
     map_identity_to_identity_document,
 )
 from util.mappers.engine import (
     map_feature_state_to_engine,
     map_feature_to_engine,
+    map_identifier_to_engine,
     map_identity_to_engine,
     map_mv_option_to_engine,
 )
@@ -29,7 +32,10 @@ __all__ = (
     "map_environment_to_sdk_document",
     "map_feature_state_to_engine",
     "map_feature_to_engine",
+    "map_identifier_to_engine",
     "map_identity_changeset_to_identity_override_changeset",
+    "map_identity_document_to_engine_identity",
+    "map_identity_override_document_to_identity_override",
     "map_identity_override_to_identity_override_document",
     "map_identity_to_engine",
     "map_identity_to_identity_document",

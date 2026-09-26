@@ -1,13 +1,28 @@
 import copy
 import typing
+import uuid
 
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
+from flagsmith_schemas.dynamodb import (
+    Feature as EdgeFeature,
+)
+from flagsmith_schemas.dynamodb import (
+    FeatureState as EdgeFeatureState,
+)
+from flagsmith_schemas.dynamodb import (
+    MultivariateFeatureOption as EdgeMultivariateFeatureOption,
+)
+from flagsmith_schemas.dynamodb import (
+    MultivariateFeatureStateValue as EdgeMultivariateFeatureStateValue,
+)
+from pydantic import TypeAdapter
 from pydantic import ValidationError as PydanticValidationError
 from pyngo import drf_error_details
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from edge_api.identities.exceptions import DuplicateFeatureState
 from environments.dynamodb.types import IdentityOverrideV2
 from environments.models import Environment
 from evaluation.services import get_edge_identity_override_value
@@ -17,26 +32,15 @@ from features.multivariate.serializers import validate_identity_override_allocat
 from features.serializers import (  # type: ignore[attr-defined]
     FeatureStateValueSerializer,
 )
-from util.engine_models.features.models import FeatureModel as EngineFeatureModel
-from util.engine_models.features.models import (
-    FeatureStateModel as EngineFeatureStateModel,
-)
-from util.engine_models.features.models import (
-    MultivariateFeatureOptionModel as EngineMultivariateFeatureOptionModel,
-)
-from util.engine_models.features.models import (
-    MultivariateFeatureStateValueModel as EngineMultivariateFeatureStateValueModel,
-)
-from util.engine_models.identities.models import IdentityModel as EngineIdentity
-from util.engine_models.utils.exceptions import DuplicateFeatureState
 from util.mappers import (
     map_engine_identity_to_identity_document,
     map_feature_to_engine,
+    map_identifier_to_engine,
     map_mv_option_to_engine,
 )
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
-from .models import EdgeIdentity
+from .models import EdgeIdentity, new_feature_override
 from .search import (
     DASHBOARD_ALIAS_ATTRIBUTE,
     DASHBOARD_ALIAS_SEARCH_PREFIX,
@@ -45,6 +49,8 @@ from .search import (
     EdgeIdentitySearchType,
 )
 from .tasks import call_environment_webhook_for_feature_state_change
+
+_feature_state_adapter: TypeAdapter[EdgeFeatureState] = TypeAdapter(EdgeFeatureState)
 
 
 class LowerCaseCharField(serializers.CharField):
@@ -67,12 +73,12 @@ class EdgeIdentitySerializer(serializers.Serializer):  # type: ignore[type-arg]
         identifier = self.validated_data.get("identifier")
         dashboard_alias = self.validated_data.get("dashboard_alias")
         environment_api_key = self.context["view"].kwargs["environment_api_key"]
-        self.instance = EngineIdentity(
-            identifier=identifier,
-            environment_api_key=environment_api_key,
+        self.instance = map_identifier_to_engine(
+            identifier,
+            environment_api_key,
             dashboard_alias=dashboard_alias,
         )
-        if EdgeIdentity.dynamo_wrapper.get_item(self.instance.composite_key):
+        if EdgeIdentity.dynamo_wrapper.get_item(self.instance["composite_key"]):
             raise ValidationError(
                 f"Identity with identifier: {identifier} already exists"
             )
@@ -102,12 +108,13 @@ class EdgeMultivariateFeatureOptionField(serializers.IntegerField):
     def to_internal_value(  # type: ignore[override]
         self,
         data: typing.Any,
-    ) -> EngineMultivariateFeatureOptionModel:
+    ) -> EdgeMultivariateFeatureOption:
         data = super().to_internal_value(data)
-        return map_mv_option_to_engine(MultivariateFeatureOption.objects.get(id=data))
+        return map_mv_option_to_engine(MultivariateFeatureOption.objects.get(id=data))  # type: ignore[return-value]
 
-    def to_representation(self, obj):  # type: ignore[no-untyped-def]
-        return obj.id
+    def to_representation(self, obj: EdgeMultivariateFeatureOption) -> int | None:  # type: ignore[override]
+        option_id = obj.get("id")
+        return None if option_id is None else int(option_id)
 
 
 class EdgeMultivariateFeatureStateValueSerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -116,7 +123,7 @@ class EdgeMultivariateFeatureStateValueSerializer(serializers.Serializer):  # ty
 
     def to_internal_value(self, data):  # type: ignore[no-untyped-def]
         data = super().to_internal_value(data)
-        return EngineMultivariateFeatureStateValueModel(**data)
+        return {"id": None, "mv_fs_value_uuid": str(uuid.uuid4()), **data}
 
 
 @extend_schema_field(
@@ -147,18 +154,18 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):  # type: ignore[typ
         return FeatureStateValue(**feature_state_value_dict).value
 
 
-class EdgeFeatureField(serializers.Field[EngineFeatureModel, str | int, int, int]):
-    def to_representation(self, obj: EngineFeatureModel) -> int:
-        return obj.id
+class EdgeFeatureField(serializers.Field[EdgeFeature, str | int, int, int]):
+    def to_representation(self, obj: EdgeFeature) -> int:
+        return int(obj["id"])
 
-    def to_internal_value(self, data: str | int) -> EngineFeatureModel:
+    def to_internal_value(self, data: str | int) -> EdgeFeature:
         if isinstance(data, int):
-            return map_feature_to_engine(Feature.objects.get(id=data))
+            return map_feature_to_engine(Feature.objects.get(id=data))  # type: ignore[return-value]
 
         environment = Environment.objects.get(
             api_key=self.context["view"].kwargs["environment_api_key"]
         )
-        return map_feature_to_engine(
+        return map_feature_to_engine(  # type: ignore[return-value]
             Feature.objects.get(
                 name=data,
                 project=environment.project,
@@ -178,10 +185,10 @@ class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):  # type: i
     featurestate_uuid = serializers.CharField(required=False, read_only=True)
 
     def validate_multivariate_feature_state_values(
-        self, values: list[EngineMultivariateFeatureStateValueModel]
-    ) -> list[EngineMultivariateFeatureStateValueModel]:
+        self, values: list[EdgeMultivariateFeatureStateValue]
+    ) -> list[EdgeMultivariateFeatureStateValue]:
         validate_identity_override_allocations(
-            value.percentage_allocation for value in values
+            float(value["percentage_allocation"]) for value in values
         )
         return values
 
@@ -195,10 +202,7 @@ class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):  # type: i
         previous_state = copy.deepcopy(self.instance)
 
         if not self.instance:
-            try:
-                self.instance = EngineFeatureStateModel.parse_obj(self.validated_data)
-            except PydanticValidationError as exc:
-                raise ValidationError(drf_error_details(exc))
+            self.instance = new_feature_override(**self.validated_data)
             try:
                 identity.add_feature_override(self.instance)
             except DuplicateFeatureState as e:
@@ -206,14 +210,18 @@ class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):  # type: i
                     "Feature state already exists."
                 ) from e
 
-        self.instance.set_value(feature_state_value)
-        self.instance.enabled = self.validated_data.get(
-            "enabled", self.instance.enabled
+        self.instance["feature_state_value"] = feature_state_value
+        self.instance["enabled"] = self.validated_data.get(
+            "enabled", self.instance["enabled"]
         )
-        self.instance.multivariate_feature_state_values = self.validated_data.get(
+        self.instance["multivariate_feature_state_values"] = self.validated_data.get(
             "multivariate_feature_state_values",
-            self.instance.multivariate_feature_state_values,
+            self.instance.get("multivariate_feature_state_values", []),
         )
+        try:
+            _feature_state_adapter.validate_python(self.instance)
+        except PydanticValidationError as exc:
+            raise ValidationError(drf_error_details(exc))
 
         identity.save(user=request.user)
 
@@ -234,14 +242,16 @@ class BaseEdgeIdentityFeatureStateSerializer(serializers.Serializer):  # type: i
         #  - move this logic to the EdgeIdentity model
         call_environment_webhook_for_feature_state_change.delay(
             kwargs={
-                "feature_id": self.instance.feature.id,
+                "feature_id": int(self.instance["feature"]["id"]),
                 "environment_api_key": identity.environment_api_key,
                 "identity_id": identity.id,
                 "identity_identifier": identity.identifier,
                 "changed_by": str(request.user),
-                "new_enabled_state": self.instance.enabled,
+                "new_enabled_state": self.instance["enabled"],
                 "new_value": new_value,
-                "previous_enabled_state": getattr(previous_state, "enabled", None),
+                "previous_enabled_state": (
+                    previous_state["enabled"] if previous_state else None
+                ),
                 "previous_value": previous_value,
                 "timestamp": timezone.now().strftime(WEBHOOK_DATETIME_FORMAT),
             },
@@ -335,12 +345,10 @@ class GetEdgeIdentityOverridesResultSerializer(serializers.Serializer):  # type:
         # and make it available to the field class. to_representation seems like the
         # best place for this since we only care about serialization here (not
         # deserialization).
-        self.context["identity"] = EdgeIdentity.from_identity_document(
-            {
-                "identifier": instance.identifier,
-                "identity_uuid": instance.identity_uuid,
-                "environment_api_key": self.context["environment"].api_key,
-            }
+        self.context["identity"] = EdgeIdentity.create(
+            instance["identifier"],
+            self.context["environment"].api_key,
+            identity_uuid=instance["identity_uuid"],
         )
         return super().to_representation(instance)
 

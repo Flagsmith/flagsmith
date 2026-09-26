@@ -46,9 +46,9 @@ def test_migrate_environments_to_v2__environment_with_overrides__writes_expected
         expected_identity_override_document = (
             map_identity_override_to_identity_override_document(
                 map_engine_feature_state_to_identity_override(
-                    feature_state=engine_identity.identity_features[0],
-                    identity_uuid=str(engine_identity.identity_uuid),
-                    identifier=engine_identity.identifier,
+                    feature_state=engine_identity["identity_features"][0],
+                    identity_uuid=str(engine_identity["identity_uuid"]),
+                    identifier=engine_identity["identifier"],
                     environment_api_key=environment.api_key,
                     environment_id=environment.id,
                 ),

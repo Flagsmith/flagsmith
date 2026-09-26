@@ -9,9 +9,8 @@ from django.utils import timezone
 from environments.dynamodb.constants import (
     ENVIRONMENTS_V2_ENVIRONMENT_META_DOCUMENT_KEY,
 )
-from util.engine_models.identities.models import IdentityModel
 from util.mappers import dynamodb
-from util.mappers.engine import map_feature_state_to_engine
+from util.mappers.engine import map_feature_state_to_engine, map_identifier_to_engine
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -56,7 +55,6 @@ def test_map_environment_to_environment_document__valid_environment__returns_exp
                 "multivariate_feature_state_values": [],
             }
         ],
-        "identity_overrides": [],
         "heap_config": None,
         "hide_disabled_flags": None,
         "hide_sensitive_data": False,
@@ -160,10 +158,8 @@ def test_map_engine_identity_to_identity_document__system_traits_set__included_i
     None
 ):
     # Given
-    engine_identity = IdentityModel(
-        identifier="test_identity",
-        environment_api_key="api-key",
-        system_traits={"flagsmith_cohort_2b6d1f5f": True},
+    engine_identity = map_identifier_to_engine(
+        "test_identity", "api-key", system_traits={"flagsmith_cohort_2b6d1f5f": True}
     )
 
     # When
@@ -177,10 +173,7 @@ def test_map_engine_identity_to_identity_document__no_system_traits__key_absent(
     None
 ):
     # Given
-    engine_identity = IdentityModel(
-        identifier="test_identity",
-        environment_api_key="api-key",
-    )
+    engine_identity = map_identifier_to_engine("test_identity", "api-key")
 
     # When
     result = dynamodb.map_engine_identity_to_identity_document(engine_identity)
@@ -194,18 +187,18 @@ def test_identity_document__system_traits_set__round_trip_preserves_system_trait
 ):
     # Given
     document = dynamodb.map_engine_identity_to_identity_document(
-        IdentityModel(
-            identifier="test_identity",
-            environment_api_key="api-key",
+        map_identifier_to_engine(
+            "test_identity",
+            "api-key",
             system_traits={"flagsmith_cohort_2b6d1f5f": True},
         )
     )
 
     # When
-    parsed = IdentityModel.model_validate(document)
+    parsed = dynamodb.map_identity_document_to_engine_identity(document)
 
     # Then
-    assert parsed.system_traits == {"flagsmith_cohort_2b6d1f5f": True}
+    assert parsed["system_traits"] == {"flagsmith_cohort_2b6d1f5f": True}
 
 
 def test_map_environment_to_environment_v2_document__valid_environment__returns_expected_document(
@@ -228,7 +221,6 @@ def test_map_environment_to_environment_v2_document__valid_environment__returns_
         "allow_client_traits": True,
         "amplitude_config": None,
         "dynatrace_config": None,
-        "identity_overrides": [],
         "feature_states": [
             {
                 "django_id": Decimal(feature_state.pk),
@@ -275,15 +267,17 @@ def test_map_environment_to_environment_v2_document__valid_environment__returns_
     }
 
 
-def test_map_identity_override_to_identity_override_document__decimal_feature_state_value__return_expected(
+def test_map_identity_override_to_identity_override_document__decimal_feature_state_value__returns_string_value(
     identity: "Identity",
     identity_featurestate: "FeatureState",
 ) -> None:
     # Given
-    expected_feature_state_value = Decimal("1.111")
+    feature_state_value = Decimal("1.111")
 
-    engine_feature_state = map_feature_state_to_engine(identity_featurestate)
-    engine_feature_state.feature_state_value = expected_feature_state_value
+    engine_feature_state = {
+        **map_feature_state_to_engine(identity_featurestate),
+        "feature_state_value": feature_state_value,
+    }
     identity_override = dynamodb.map_engine_feature_state_to_identity_override(
         feature_state=engine_feature_state,
         identity_uuid=str(uuid.uuid4()),
@@ -300,9 +294,7 @@ def test_map_identity_override_to_identity_override_document__decimal_feature_st
     # Then
     feature_state = result["feature_state"]
     assert isinstance(feature_state, dict)
-    feature_state_value = feature_state["feature_state_value"]
-    assert isinstance(feature_state_value, Decimal)
-    assert feature_state_value == expected_feature_state_value
+    assert feature_state["feature_state_value"] == "1.111"
 
 
 def test_map_environment_to_compressed_environment_document__valid_environment__returns_compressed_fields(

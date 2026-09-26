@@ -1470,8 +1470,8 @@ requires-dist = [
     { name = "drf-writable-nested", specifier = ">=0.6.2,<0.7.0" },
     { name = "environs", specifier = ">=14.1.1,<15.0.0" },
     { name = "flagsmith", specifier = ">=6.2.0,<7.0.0" },
-    { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], specifier = ">=3.15.0,<4" },
-    { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'" },
+    { name = "flagsmith-common", extras = ["common-core", "flagsmith-schemas", "task-processor"], git = "https://github.com/Flagsmith/flagsmith-common?branch=fix%2Fschemas-stored-decimal-round-trip" },
+    { name = "flagsmith-common", extras = ["test-tools"], marker = "extra == 'dev'", git = "https://github.com/Flagsmith/flagsmith-common?branch=fix%2Fschemas-stored-decimal-round-trip" },
     { name = "flagsmith-flag-engine", specifier = ">=11.1.0,<12.0.0" },
     { name = "flagsmith-private", marker = "extra == 'private'", specifier = ">=0.14.0,<1", index = "https://flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com/pypi/flagsmith-pypi-production/simple/" },
     { name = "flagsmith-sql-flag-engine", specifier = ">=0.2.0,<0.3.0" },
@@ -1543,11 +1543,7 @@ provides-extras = ["private", "dev"]
 [[package]]
 name = "flagsmith-common"
 version = "3.15.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/59/a4/c8605bb5fbf853a8d06838241d89d0b70ea93b5c5b68c234f51c660b74b0/flagsmith_common-3.15.0.tar.gz", hash = "sha256:970290aa8b5aa0399c6e9f64b843de95e5a458fcbe0623425a6d15305c7e3559", size = 62639, upload-time = "2026-09-15T11:15:51.097Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/97/57/08475196dc972e2d980b267d0bea25353c402983a8ea13f9fdfed6745f38/flagsmith_common-3.15.0-py3-none-any.whl", hash = "sha256:bd7b54970fb0ebe563fe007ef25cbc45bd1a4c586648d8c2bf6df27e82469565", size = 100743, upload-time = "2026-09-15T11:15:49.505Z" },
-]
+source = { git = "https://github.com/Flagsmith/flagsmith-common?branch=fix%2Fschemas-stored-decimal-round-trip#8aa120be0c70e70e260dc9fddd6dd9df267d76dc" }
 
 [package.optional-dependencies]
 common-core = [

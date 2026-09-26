@@ -15,12 +15,10 @@ SDKDocumentValue: TypeAlias = (
 )
 SDKDocument: TypeAlias = dict[str, SDKDocumentValue]
 
-SDK_DOCUMENT_EXCLUDE: dict[str, bool | dict[str, set[str]]] = {
-    **dict.fromkeys(IDENTITY_INTEGRATIONS_RELATION_NAMES, True),
-    "dynatrace_config": True,
-    "onboarding_pending": True,
-    # System-owned identity data must never reach local-eval SDKs.
-    "identity_overrides": {"__all__": {"system_traits"}},
+SDK_DOCUMENT_EXCLUDE = {
+    *IDENTITY_INTEGRATIONS_RELATION_NAMES,
+    "dynatrace_config",
+    "onboarding_pending",
 }
 
 
@@ -39,9 +37,20 @@ def map_environment_to_sdk_document(environment: "Environment") -> SDKDocument:
                 identity_id not in identities_with_overrides
             ):
                 identities_with_overrides[identity_id] = feature_state.identity
-        engine_environment.identity_overrides = [
-            map_identity_to_engine(identity, with_traits=False)
+        engine_environment["identity_overrides"] = [
+            # System-owned identity data must never reach local-eval SDKs.
+            {
+                field_name: value
+                for field_name, value in map_identity_to_engine(
+                    identity, with_traits=False
+                ).items()
+                if field_name != "system_traits"
+            }
             for identity in identities_with_overrides.values()
         ]
 
-    return engine_environment.model_dump(exclude=SDK_DOCUMENT_EXCLUDE)
+    return {
+        key: value
+        for key, value in engine_environment.items()
+        if key not in SDK_DOCUMENT_EXCLUDE
+    }

@@ -3,7 +3,7 @@ from unittest.mock import ANY
 
 import pytest
 
-from edge_api.identities.models import EdgeIdentity
+from edge_api.identities.models import EdgeIdentity, new_feature_override
 from environments.identities.models import Identity
 from features.features_service import (
     get_core_overrides_data,
@@ -245,12 +245,16 @@ def test_get_edge_overrides_data__multiple_overrides__returns_correct_counts(
 ) -> None:
     # Given
     # replicate identity to Edge
-    edge_identity = EdgeIdentity(map_identity_to_engine(identity, with_overrides=False))
-    edge_identity.add_feature_override(
-        map_feature_state_to_engine(identity_featurestate),
+    edge_identity = EdgeIdentity.from_identity_document(
+        map_identity_to_engine(identity, with_overrides=False)
     )
     edge_identity.add_feature_override(
-        map_feature_state_to_engine(distinct_identity_featurestate),
+        new_feature_override(**map_feature_state_to_engine(identity_featurestate)),
+    )
+    edge_identity.add_feature_override(
+        new_feature_override(
+            **map_feature_state_to_engine(distinct_identity_featurestate)
+        ),
     )
     edge_identity.save(admin_user)
 
@@ -300,13 +304,17 @@ def test_get_edge_overrides_data__deleted_feature__skips_deleted(  # type: ignor
 ):
     # Given
     # replicate identity to Edge
-    edge_identity = EdgeIdentity(map_identity_to_engine(identity, with_overrides=False))
+    edge_identity = EdgeIdentity.from_identity_document(
+        map_identity_to_engine(identity, with_overrides=False)
+    )
     # Create identity override for two different features
     edge_identity.add_feature_override(
-        map_feature_state_to_engine(identity_featurestate),
+        new_feature_override(**map_feature_state_to_engine(identity_featurestate)),
     )
     edge_identity.add_feature_override(
-        map_feature_state_to_engine(distinct_identity_featurestate),
+        new_feature_override(
+            **map_feature_state_to_engine(distinct_identity_featurestate)
+        ),
     )
     edge_identity.save(admin_user)
 

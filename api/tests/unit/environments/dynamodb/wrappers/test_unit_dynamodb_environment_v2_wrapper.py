@@ -12,7 +12,6 @@ from pytest_structlog import StructuredLogCapture
 from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.dynamodb.types import (
     IdentityOverridesV2Changeset,
-    IdentityOverrideV2,
 )
 from environments.dynamodb.utils import (
     get_environments_v2_identity_override_document_key,
@@ -21,8 +20,10 @@ from environments.models import Environment
 from features.models import Feature, FeatureState
 from tests.types import EnableFeaturesFixture
 from util.mappers import (
+    map_engine_feature_state_to_identity_override,
     map_environment_to_environment_v2_document,
     map_feature_state_to_engine,
+    map_identity_override_document_to_identity_override,
     map_identity_override_to_identity_override_document,
 )
 
@@ -96,17 +97,12 @@ def test_environment_v2_wrapper__update_identity_overrides__put_expected(
 
     identity_uuid = str(uuid.uuid4())
     identifier = "identity1"
-    override_document = IdentityOverrideV2.parse_obj(
-        {
-            "environment_id": str(environment.id),
-            "document_key": get_environments_v2_identity_override_document_key(
-                feature_id=feature.id, identity_uuid=identity_uuid
-            ),
-            "environment_api_key": environment.api_key,
-            "feature_state": map_feature_state_to_engine(feature_state),
-            "identifier": identifier,
-            "identity_uuid": identity_uuid,
-        }
+    override_document = map_engine_feature_state_to_identity_override(
+        feature_state=map_feature_state_to_engine(feature_state),
+        identity_uuid=identity_uuid,
+        identifier=identifier,
+        environment_api_key=environment.api_key,
+        environment_id=environment.id,
     )
 
     # When
@@ -138,17 +134,12 @@ def test_environment_v2_wrapper__update_identity_overrides_put_frozen_time__stor
     wrapper = DynamoEnvironmentV2Wrapper()
 
     identity_uuid = str(uuid.uuid4())
-    override_document = IdentityOverrideV2.parse_obj(
-        {
-            "environment_id": str(environment.id),
-            "document_key": get_environments_v2_identity_override_document_key(
-                feature_id=feature.id, identity_uuid=identity_uuid
-            ),
-            "environment_api_key": environment.api_key,
-            "feature_state": map_feature_state_to_engine(feature_state),
-            "identifier": "identity1",
-            "identity_uuid": identity_uuid,
-        }
+    override_document = map_engine_feature_state_to_identity_override(
+        feature_state=map_feature_state_to_engine(feature_state),
+        identity_uuid=identity_uuid,
+        identifier="identity1",
+        environment_api_key=environment.api_key,
+        environment_id=environment.id,
     )
 
     # When
@@ -182,23 +173,20 @@ def test_environment_v2_wrapper__update_identity_overrides__delete_expected(
     identity_uuid = str(uuid.uuid4())
     identifier = "identity1"
     override_document_data = map_identity_override_to_identity_override_document(
-        IdentityOverrideV2.parse_obj(
-            {
-                "environment_id": str(environment.id),
-                "document_key": get_environments_v2_identity_override_document_key(
-                    feature_id=feature.id, identity_uuid=identity_uuid
-                ),
-                "environment_api_key": environment.api_key,
-                "feature_state": map_feature_state_to_engine(feature_state),
-                "identifier": identifier,
-                "identity_uuid": identity_uuid,
-            }
+        map_engine_feature_state_to_identity_override(
+            feature_state=map_feature_state_to_engine(feature_state),
+            identity_uuid=identity_uuid,
+            identifier=identifier,
+            environment_api_key=environment.api_key,
+            environment_id=environment.id,
         )
     )
 
     flagsmith_environments_v2_table.put_item(Item=override_document_data)
 
-    override_document = IdentityOverrideV2.parse_obj(override_document_data)
+    override_document = map_identity_override_document_to_identity_override(
+        override_document_data
+    )
 
     # When
     wrapper.update_identity_overrides(

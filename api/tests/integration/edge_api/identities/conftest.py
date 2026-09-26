@@ -8,7 +8,6 @@ from environments.dynamodb.wrappers.environment_wrapper import (
     DynamoEnvironmentV2Wrapper,
 )
 from users.models import FFAdminUser
-from util.engine_models.identities.models import IdentityModel
 
 
 @pytest.fixture()
@@ -27,9 +26,9 @@ def identity_overrides_v2(
     admin_user: FFAdminUser,
 ) -> list[str]:
     edge_identity = EdgeIdentity.from_identity_document(identity_document_without_fs)
-    for feature_override in IdentityModel.model_validate(
+    for feature_override in EdgeIdentity.from_identity_document(
         identity_document
-    ).identity_features:
+    ).feature_overrides:
         edge_identity.add_feature_override(feature_override)
     edge_identity.save(admin_user)
     return [

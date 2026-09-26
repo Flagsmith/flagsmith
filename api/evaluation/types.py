@@ -8,8 +8,9 @@ from features.types import FeatureEngineMetadata
 from segments.types import SegmentEngineMetadata
 
 if TYPE_CHECKING:
+    from flagsmith_schemas.dynamodb import FeatureState as EdgeFeatureState
+
     from features.models import FeatureState
-    from util.engine_models.features.models import FeatureStateModel
 
 
 __all__ = (
@@ -39,7 +40,7 @@ FlagResult: TypeAlias = result_types.FlagResult[FeatureEngineMetadata]
 
 FeatureStateT = TypeVar(
     "FeatureStateT",
-    bound="FeatureState | FeatureStateModel",
+    bound="FeatureState | EdgeFeatureState",
     default="FeatureState",
 )
 

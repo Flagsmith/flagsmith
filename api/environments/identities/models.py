@@ -107,11 +107,11 @@ class Identity(models.Model):
     ) -> list[Trait]:
         """
         Given a list of trait data items, validated by TraitSerializerFull, generate
-        a list of TraitModel objects for the given identity.
+        a list of Trait objects for the given identity.
 
         :param trait_data_items: list of dictionaries validated by TraitSerializerFull
         :param persist: determines whether the traits should be persisted to db
-        :return: list of TraitModels
+        :return: list of Traits
         """
         trait_models = []
         trait_models_to_persist = []

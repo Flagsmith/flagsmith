@@ -22,9 +22,9 @@ from environments.dynamodb.wrappers.exceptions import (
 from environments.identities.traits.constants import (
     TRAIT_STRING_VALUE_MAX_LENGTH,
 )
-from util.engine_models.identities.models import IdentityModel
 from util.mappers import (
     map_engine_identity_to_identity_document,
+    map_identifier_to_engine,
     map_identity_to_identity_document,
 )
 
@@ -113,9 +113,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                 "System trait value must be at most "
                 f"{TRAIT_STRING_VALUE_MAX_LENGTH} characters."
             )
-        composite_key = IdentityModel.generate_composite_key(
-            environment_api_key, identifier
-        )
+        composite_key = f"{environment_api_key}_{identifier}"
         # DynamoDB rejects floats and returns all numbers as Decimal.
         document_value: bool | int | Decimal | str = (
             Decimal(str(trait_value)) if isinstance(trait_value, float) else trait_value
@@ -135,9 +133,9 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
                 if document is None:
                     self.table.put_item(  # type: ignore[union-attr]
                         Item=map_engine_identity_to_identity_document(
-                            IdentityModel(
-                                identifier=identifier,
-                                environment_api_key=environment_api_key,
+                            map_identifier_to_engine(
+                                identifier,
+                                environment_api_key,
                                 system_traits={trait_key: trait_value},
                             )
                         ),
@@ -187,9 +185,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         trait_key: str,
     ) -> None:
         """Idempotently remove a system trait from an identity document."""
-        composite_key = IdentityModel.generate_composite_key(
-            environment_api_key, identifier
-        )
+        composite_key = f"{environment_api_key}_{identifier}"
         try:
             self.table.update_item(  # type: ignore[union-attr]
                 Key={"composite_key": composite_key},

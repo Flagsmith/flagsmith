@@ -4,12 +4,12 @@ import uuid
 from decimal import Decimal
 
 from django.utils import timezone
+from flag_engine.context.mappers import map_any_value_to_context_value
 
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.traits.models import Trait
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
-from util.engine_models.identities.traits.types import map_any_value_to_trait_value
 
 EXPORT_EDGE_IDENTITY_PAGINATION_LIMIT = 20000
 
@@ -122,7 +122,7 @@ def get_mv_feature_option_uuid_cache(environment_api_key: str) -> dict[int, str]
 
 
 def export_edge_trait(trait: dict, identifier: str, environment_api_key: str) -> dict:  # type: ignore[type-arg]
-    trait_value = map_any_value_to_trait_value(trait["trait_value"])
+    trait_value = map_any_value_to_context_value(trait["trait_value"])
     trait_value_data = Trait.generate_trait_value_data(trait_value)
     return {
         "model": "traits.trait",

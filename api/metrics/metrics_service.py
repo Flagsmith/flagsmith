@@ -100,7 +100,7 @@ class EnvironmentMetricsService:
 
         count = 0
         for override in all_overrides:
-            if override.feature_state.feature.id in environment_feature_ids:
+            if override["feature_state"]["feature"]["id"] in environment_feature_ids:
                 count += 1
 
         return count

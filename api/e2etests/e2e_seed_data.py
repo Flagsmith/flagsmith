@@ -24,7 +24,6 @@ from organisations.permissions.permissions import (
 from organisations.subscriptions.constants import ENTERPRISE
 from projects.models import Project, UserProjectPermission
 from users.models import FFAdminUser, UserPermissionGroup
-from util.engine_models.identities.models import IdentityModel as EngineIdentity
 
 # Password used by all the test users
 PASSWORD = "Str0ngp4ssw0rd!"
@@ -208,10 +207,9 @@ def seed_data() -> None:
 
     for identity_info in identities_test_data:
         if settings.IDENTITIES_TABLE_NAME_DYNAMO:
-            engine_identity = EngineIdentity(  # pragma: no cover
-                identifier=identity_info["identifier"],
-                environment_api_key=identity_info["environment"].api_key,
-            )
-            EdgeIdentity(engine_identity).save()  # pragma: no cover
+            EdgeIdentity.create(  # pragma: no cover
+                identity_info["identifier"],
+                identity_info["environment"].api_key,
+            ).save()
         else:
             Identity.objects.create(**identity_info)

@@ -13,7 +13,7 @@ from pytest_mock import MockerFixture
 from task_processor.task_run_method import TaskRunMethod
 
 from api_keys.user import APIKeyUser
-from edge_api.identities.models import EdgeIdentity
+from edge_api.identities.models import EdgeIdentity, new_feature_override
 from environments.models import Environment
 from evaluation.services import get_edge_identity_feature_states
 from features.models import Feature, FeatureSegment, FeatureState
@@ -23,9 +23,6 @@ from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
-from util.engine_models.features.models import FeatureModel, FeatureStateModel
-from util.engine_models.identities.models import IdentityModel
-from util.engine_models.identities.traits.models import TraitModel
 
 MATCHING_TRAIT_KEY = "segment-membership"
 MATCHING_TRAIT_VALUE = "yes"
@@ -43,12 +40,12 @@ def _create_matching_segment(project: Project, name: str) -> Segment:
     return segment
 
 
-def _matching_identity_model(environment_api_key: str) -> IdentityModel:
-    return IdentityModel(
-        identifier="identity",
-        environment_api_key=environment_api_key,
+def _matching_edge_identity(environment_api_key: str) -> EdgeIdentity:
+    return EdgeIdentity.create(
+        "identity",
+        environment_api_key,
         identity_traits=[
-            TraitModel(trait_key=MATCHING_TRAIT_KEY, trait_value=MATCHING_TRAIT_VALUE)
+            {"trait_key": MATCHING_TRAIT_KEY, "trait_value": MATCHING_TRAIT_VALUE}
         ],
     )
 
@@ -76,7 +73,7 @@ def test_get_all_feature_states__multiple_segment_overrides__uses_segment_priori
         feature=feature, environment=environment, feature_segment=feature_segment_p2
     )
 
-    edge_identity = EdgeIdentity(_matching_identity_model(environment.api_key))
+    edge_identity = _matching_edge_identity(environment.api_key)
 
     # When
     feature_states = get_edge_identity_feature_states(edge_identity)
@@ -106,10 +103,7 @@ def test_get_all_feature_states__not_live_change_request__ignores_not_live_state
         change_request=change_request,
     )
 
-    identity_model = mocker.MagicMock(
-        environment_api_key=environment.api_key, identity_features=[]
-    )
-    edge_identity = EdgeIdentity(identity_model)
+    edge_identity = EdgeIdentity.create("identity", environment.api_key)
 
     # When
     with freeze_time(timezone.now() + timedelta(hours=2)):
@@ -151,8 +145,8 @@ def test_edge_identity_id__parametrised_ids__returns_expected_id(  # type: ignor
     django_id, identity_uuid, expected_id, mocker
 ):
     # Given / When
-    edge_identity = EdgeIdentity(
-        mocker.MagicMock(django_id=django_id, identity_uuid=identity_uuid)
+    edge_identity = EdgeIdentity.create(
+        "identity", "api-key", django_id=django_id, identity_uuid=identity_uuid
     )
 
     # Then
@@ -163,18 +157,18 @@ def test_get_feature_state_by_feature_name_or_id__existing_override__returns_fea
     edge_identity_model,
 ):
     # Given
-    feature_state_model = FeatureStateModel(
-        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+    feature_state_model = new_feature_override(
+        feature={"id": 1, "name": "test_feature", "type": "STANDARD"},
         enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
 
     # When
     found_by_name = edge_identity_model.get_feature_state_by_feature_name_or_id(
-        feature_state_model.feature.name
+        feature_state_model["feature"]["name"]
     )
     found_by_id = edge_identity_model.get_feature_state_by_feature_name_or_id(
-        feature_state_model.feature.id
+        feature_state_model["feature"]["id"]
     )
 
     # Then
@@ -188,8 +182,8 @@ def test_get_feature_state_by_featurestate_uuid__existing_override__returns_feat
     edge_identity_model,
 ):
     # Given
-    feature_state_model = FeatureStateModel(
-        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+    feature_state_model = new_feature_override(
+        feature={"id": 1, "name": "test_feature", "type": "STANDARD"},
         enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
@@ -197,7 +191,7 @@ def test_get_feature_state_by_featurestate_uuid__existing_override__returns_feat
     # When
     found_by_feature_state_uuid = (
         edge_identity_model.get_feature_state_by_featurestate_uuid(
-            str(feature_state_model.featurestate_uuid)
+            str(feature_state_model["featurestate_uuid"])
         )
     )
 
@@ -210,8 +204,8 @@ def test_remove_feature_override__existing_override__removes_feature_state(  # t
     edge_identity_model,
 ):
     # Given
-    feature_state_model = FeatureStateModel(
-        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+    feature_state_model = new_feature_override(
+        feature={"id": 1, "name": "test_feature", "type": "STANDARD"},
         enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
@@ -222,7 +216,7 @@ def test_remove_feature_override__existing_override__removes_feature_state(  # t
     # Then
     assert (
         edge_identity_model.get_feature_state_by_feature_name_or_id(
-            feature_state_model.feature.id
+            feature_state_model["feature"]["id"]
         )
         is None
     )
@@ -232,8 +226,8 @@ def test_remove_feature_override__no_matching_override__no_error(  # type: ignor
     edge_identity_model,
 ):
     # Given
-    feature_state_model = FeatureStateModel(
-        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+    feature_state_model = new_feature_override(
+        feature={"id": 1, "name": "test_feature", "type": "STANDARD"},
         enabled=True,
     )
 
@@ -243,7 +237,7 @@ def test_remove_feature_override__no_matching_override__no_error(  # type: ignor
     # Then
     assert (
         edge_identity_model.get_feature_state_by_feature_name_or_id(
-            feature_state_model.feature.id
+            feature_state_model["feature"]["id"]
         )
         is None
     )
@@ -257,8 +251,8 @@ def test_synchronise_features__empty_feature_list__removes_overrides(  # type: i
         "edge_api.identities.models.sync_identity_document_features"
     )
 
-    feature_state_model = FeatureStateModel(
-        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+    feature_state_model = new_feature_override(
+        feature={"id": 1, "name": "test_feature", "type": "STANDARD"},
         enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
@@ -269,7 +263,7 @@ def test_synchronise_features__empty_feature_list__removes_overrides(  # type: i
     # Then
     assert (
         edge_identity_model.get_feature_state_by_feature_name_or_id(
-            feature_state_model.feature.id
+            feature_state_model["feature"]["id"]
         )
         is None
     )
@@ -319,8 +313,8 @@ def test_edge_identity_save_called__feature_override_added__expected_tasks_calle
         "edge_api.identities.models.update_flagsmith_environments_v2_identity_overrides"
     )
 
-    feature_state_model = FeatureStateModel(
-        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+    feature_state_model = new_feature_override(
+        feature={"id": 1, "name": "test_feature", "type": "STANDARD"},
         enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
@@ -330,7 +324,7 @@ def test_edge_identity_save_called__feature_override_added__expected_tasks_calle
             "test_feature": {
                 "change_type": "+",
                 "new": {
-                    **feature_state_model.dict(),
+                    **feature_state_model,
                     "enabled": True,
                     "feature_state_value": None,
                 },
@@ -388,8 +382,8 @@ def test_edge_identity_save_called__feature_override_removed__expected_tasks_cal
         "edge_api.identities.models.update_flagsmith_environments_v2_identity_overrides"
     )
 
-    feature_state_model = FeatureStateModel(
-        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+    feature_state_model = new_feature_override(
+        feature={"id": 1, "name": "test_feature", "type": "STANDARD"},
         enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
@@ -399,7 +393,7 @@ def test_edge_identity_save_called__feature_override_removed__expected_tasks_cal
             "test_feature": {
                 "change_type": "-",
                 "old": {
-                    **feature_state_model.dict(),
+                    **feature_state_model,
                     "enabled": True,
                     "feature_state_value": None,
                 },
@@ -466,11 +460,11 @@ def test_save__feature_override_updated__generates_audit_records(
         "edge_api.identities.models.update_flagsmith_environments_v2_identity_overrides"
     )
 
-    feature_state_model = FeatureStateModel(
-        feature=FeatureModel(id=1, name="test_feature", type="STANDARD"),
+    feature_state_model = new_feature_override(
+        feature={"id": 1, "name": "test_feature", "type": "STANDARD"},
         enabled=initial_enabled,
     )
-    feature_state_model.set_value(initial_value)
+    feature_state_model["feature_state_value"] = initial_value
     edge_identity_model.add_feature_override(feature_state_model)
 
     user = mocker.MagicMock()
@@ -480,12 +474,12 @@ def test_save__feature_override_updated__generates_audit_records(
             "test_feature": {
                 "change_type": "~",
                 "old": {
-                    **feature_state_model.dict(),
+                    **feature_state_model,
                     "enabled": initial_enabled,
                     "feature_state_value": initial_value,
                 },
                 "new": {
-                    **feature_state_model.dict(),
+                    **feature_state_model,
                     "enabled": new_enabled,
                     "feature_state_value": new_value,
                 },
@@ -500,10 +494,11 @@ def test_save__feature_override_updated__generates_audit_records(
     mocked_update_flagsmith_environments_v2_identity_overrides.reset_mock()
 
     feature_override = edge_identity_model.get_feature_state_by_featurestate_uuid(
-        str(feature_state_model.featurestate_uuid)
+        str(feature_state_model["featurestate_uuid"])
     )
-    feature_override.enabled = new_enabled  # type: ignore[union-attr]
-    feature_override.set_value(new_value)  # type: ignore[union-attr]
+    assert feature_override
+    feature_override["enabled"] = new_enabled
+    feature_override["feature_state_value"] = new_value
 
     # When
     edge_identity_model.save(user=admin_user)
@@ -561,7 +556,7 @@ def test_get_all_feature_states__post_v2_versioning_migration__returns_latest_ov
         operator=EQUAL,
         value=MATCHING_TRAIT_VALUE,
     )
-    edge_identity = EdgeIdentity(_matching_identity_model(environment.api_key))
+    edge_identity = _matching_edge_identity(environment.api_key)
 
     # When
     with django_assert_num_queries(8):
