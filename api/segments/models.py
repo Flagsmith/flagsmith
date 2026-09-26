@@ -170,10 +170,10 @@ class Segment(
         self.version_of = self
         self.save_without_historical_record()
 
-    @hook(BEFORE_CREATE, when="change_request", is_not=None)
-    @hook(BEFORE_UPDATE, when="change_request", is_not=None)
+    @hook(BEFORE_CREATE, when="change_request", is_not=None)  # type: ignore[misc]
+    @hook(BEFORE_UPDATE, when="change_request", is_not=None)  # type: ignore[misc]
     def validate_not_cohort_managed(self) -> None:
-        if self.version_of_id and self.version_of.cohorts.exists():
+        if self.version_of and self.version_of.cohorts.exists():
             from features.workflows.core.exceptions import (
                 CannotModifyManagedSegmentError,
             )

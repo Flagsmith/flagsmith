@@ -79,7 +79,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
         if value == CONTROL_VARIANT_KEY:
             raise serializers.ValidationError(RESERVED_VARIANT_KEY_MESSAGE)
 
-        if self.instance and self.instance.key != value:
+        if self.instance and getattr(self.instance, "key", None) != value:
             raise serializers.ValidationError("Cannot change key for existing options.")
 
         return value
