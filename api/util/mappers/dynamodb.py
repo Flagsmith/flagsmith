@@ -1,6 +1,5 @@
 from collections.abc import Mapping
-from decimal import Decimal
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from django.utils import timezone
 from flagsmith_schemas.dynamodb import (
@@ -52,8 +51,6 @@ __all__ = (
     "map_identity_to_identity_document",
 )
 
-
-T = TypeVar("T")
 
 _environment_adapter: TypeAdapter[Environment] = TypeAdapter(Environment)
 _environment_api_key_adapter: TypeAdapter[EnvironmentAPIKey] = TypeAdapter(
@@ -127,14 +124,14 @@ def map_environment_api_key_to_environment_api_key_document(
 def map_identity_document_to_engine_identity(
     identity_document: Mapping[str, Any],
 ) -> Identity:
-    return _validate_document(_identity_adapter, identity_document)
+    return _identity_adapter.validate_python(identity_document)
 
 
 def map_engine_identity_to_identity_document(
     engine_identity: Mapping[str, Any],
 ) -> Document:
     identity_document = cast(
-        Document, _validate_document(_identity_adapter, engine_identity)
+        Document, _identity_adapter.validate_python(engine_identity)
     )
     return {
         field_name: value
@@ -152,7 +149,7 @@ def map_identity_to_identity_document(
 def map_identity_override_document_to_identity_override(
     identity_override_document: Mapping[str, Any],
 ) -> IdentityOverrideV2:
-    return _validate_document(_identity_override_adapter, identity_override_document)
+    return _identity_override_adapter.validate_python(identity_override_document)
 
 
 def map_engine_feature_state_to_identity_override(
@@ -220,22 +217,6 @@ def map_identity_override_to_identity_override_document(
     identity_override: IdentityOverrideV2,
 ) -> Document:
     return cast(Document, identity_override)
-
-
-def _validate_document(adapter: TypeAdapter[T], document: Mapping[str, Any]) -> T:
-    # The schema doesn't round-trip stored numbers, e.g. it validates an integer
-    # `Decimal` feature value as a string, so they're validated as native numbers.
-    return adapter.validate_python(_map_decimals_to_numbers(document))
-
-
-def _map_decimals_to_numbers(value: Any) -> Any:
-    if isinstance(value, Decimal):
-        return float(value) if value.as_tuple().exponent else int(value)
-    if isinstance(value, Mapping):
-        return {key: _map_decimals_to_numbers(item) for key, item in value.items()}
-    if isinstance(value, list):
-        return [_map_decimals_to_numbers(item) for item in value]
-    return value
 
 
 def _get_compressed_environment_document(

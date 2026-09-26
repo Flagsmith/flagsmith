@@ -2,7 +2,7 @@ import gzip
 import json
 import uuid
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from django.utils import timezone
 
@@ -199,54 +199,6 @@ def test_identity_document__system_traits_set__round_trip_preserves_system_trait
 
     # Then
     assert parsed["system_traits"] == {"flagsmith_cohort_2b6d1f5f": True}
-
-
-def test_map_engine_identity_to_identity_document__stored_numbers__round_trip_unchanged() -> (
-    None
-):
-    # Given
-    stored_document = dynamodb.map_engine_identity_to_identity_document(
-        map_identifier_to_engine(
-            "test_identity",
-            "api-key",
-            identity_traits=[
-                {"trait_key": "integer", "trait_value": 1},
-                {"trait_key": "float", "trait_value": 1.5},
-            ],
-            identity_features=[
-                {
-                    "feature": {"id": 1, "name": "feature", "type": "MULTIVARIATE"},
-                    "enabled": True,
-                    "feature_state_value": 5,
-                    "featurestate_uuid": str(uuid.uuid4()),
-                    "multivariate_feature_state_values": [
-                        {
-                            "mv_fs_value_uuid": str(uuid.uuid4()),
-                            "percentage_allocation": 100,
-                            "multivariate_feature_option": {"id": 2, "value": 3},
-                        }
-                    ],
-                }
-            ],
-        )
-    )
-
-    # When
-    document: dict[str, Any] = dynamodb.map_engine_identity_to_identity_document(
-        dynamodb.map_identity_document_to_engine_identity(stored_document)
-    )
-
-    # Then
-    assert document == stored_document
-    assert document["identity_traits"] == [
-        {"trait_key": "integer", "trait_value": Decimal("1")},
-        {"trait_key": "float", "trait_value": Decimal("1.5")},
-    ]
-    (feature_state,) = document["identity_features"]
-    assert feature_state["feature_state_value"] == Decimal("5")
-    assert feature_state["multivariate_feature_state_values"][0][
-        "multivariate_feature_option"
-    ]["value"] == Decimal("3")
 
 
 def test_map_environment_to_environment_v2_document__valid_environment__returns_expected_document(

@@ -153,6 +153,7 @@ explicit = true
 
 [tool.uv.sources]
 flagsmith-private = { index = "flagsmith-pypi-production" }
+flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", branch = "fix/schemas-stored-decimal-round-trip" }
 
 [tool.uv]
 required-version = ">=0.11.18"  # Ensure this matches the version in .pre-commit-config.yaml
