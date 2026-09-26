@@ -24,6 +24,7 @@ class ChangeRequestCommitService:
     def __init__(self, change_request: "ChangeRequest") -> None:
         self.change_request = change_request
 
+    @transaction.atomic
     def commit(self, committed_by: "FFAdminUser") -> None:
         if not self.change_request.is_approved():
             raise ChangeRequestNotApprovedError(
@@ -129,6 +130,12 @@ class ChangeRequestCommitService:
             if not live_segment:  # pragma: no cover
                 logger.warning("missing-live-segment", draft_segment=draft_segment.uuid)
                 continue
+
+            # Prevent overwriting system segments
+            if getattr(live_segment, "is_system_segment", False):
+                raise ValueError(
+                    "System segments cannot be overwritten via change request drafts."
+                )
 
             # Make a revision of the live segment
             revision = live_segment.clone(is_revision=True)
