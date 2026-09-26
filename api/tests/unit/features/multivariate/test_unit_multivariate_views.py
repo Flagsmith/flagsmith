@@ -108,7 +108,7 @@ def test_list_mv_options__feature_in_other_project__returns_404(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_partial_update_multivariate_option__valid_data__returns_200_and_updates(
+def test_partial_update_multivariate_option__changing_key__returns_400(
     admin_client: APIClient,
     project: Project,
     multivariate_feature: Feature,
@@ -123,16 +123,11 @@ def test_partial_update_multivariate_option__valid_data__returns_200_and_updates
     new_key = "hero"
     data = {"key": new_key}
 
-    initial_allocation = mv_option.default_percentage_allocation
-
     # When
     response = admin_client.patch(
         url, data=json.dumps(data), content_type="application/json"
     )
 
     # Then
-    assert response.status_code == status.HTTP_200_OK
-
-    mv_option.refresh_from_db()
-    assert mv_option.key == new_key
-    assert mv_option.default_percentage_allocation == initial_allocation
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"key": ["Cannot change key for existing options."]}

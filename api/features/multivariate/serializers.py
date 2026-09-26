@@ -78,6 +78,10 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
     def validate_key(self, value: str | None) -> str | None:
         if value == CONTROL_VARIANT_KEY:
             raise serializers.ValidationError(RESERVED_VARIANT_KEY_MESSAGE)
+
+        if self.instance and self.instance.key != value:
+            raise serializers.ValidationError("Cannot change key for existing options.")
+
         return value
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
