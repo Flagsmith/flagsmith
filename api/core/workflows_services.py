@@ -9,7 +9,6 @@ from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
 from features.workflows.core.exceptions import (
-    CannotModifyManagedSegmentError,
     ChangeRequestNotApprovedError,
 )
 
