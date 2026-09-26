@@ -948,7 +948,7 @@ def test_change_request_commit__with_draft_segment__publishes_segment_rules(
     ]
 
 
-def test_change_request_commit__draft_targets_cohort_managed_segment__raises(
+def test_change_request_draft_segment_creation__cohort_managed_segment__raises(
     segment: Segment,
     environment: Environment,
     change_request: ChangeRequest,
@@ -956,16 +956,16 @@ def test_change_request_commit__draft_targets_cohort_managed_segment__raises(
 ) -> None:
     # Given
     Cohort.objects.create(environment=environment, segment=segment)
-    Segment.objects.create(
-        name="new-name",
-        change_request=change_request,
-        project=segment.project,
-        version_of=segment,
-    )
 
     # When / Then
     with pytest.raises(CannotModifyManagedSegmentError):
-        change_request.commit(admin_user)
+        Segment.objects.create(
+            name="new-name",
+            change_request=change_request,
+            project=segment.project,
+            version_of=segment,
+        )
+
     segment.refresh_from_db()
     assert segment.name != "new-name"
     change_request.refresh_from_db()
