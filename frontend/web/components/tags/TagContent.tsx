@@ -11,8 +11,8 @@ import {
   isSystemTag,
 } from './tagSwatch'
 type TagContent = {
-  tag: Partial<TTag>
   disabled?: boolean
+  tag: Partial<TTag>
 }
 // Numeric-entity everything that is not alphanumeric or beyond Latin-1.
 // Stated as the characters it keeps rather than the four ranges it escaped:
@@ -54,7 +54,7 @@ const renderIcon = (
   }
 }
 
-const getTooltip = (tag: TTag | undefined, disabled?: boolean) => {
+const getTooltip = (tag: TTag | undefined, disabled: boolean) => {
   if (!tag) {
     return null
   }
@@ -100,7 +100,7 @@ const getTooltip = (tag: TTag | undefined, disabled?: boolean) => {
   return tooltip
 }
 
-const TagContent: FC<TagContent> = ({ disabled, tag }) => {
+const TagContent: FC<TagContent> = ({ disabled = false, tag }) => {
   const tagLabel = Format.truncateText(tag.label, 12)
 
   if (!tagLabel) {

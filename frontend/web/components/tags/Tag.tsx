@@ -3,8 +3,6 @@ import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
 import Chip from 'components/base/Chip'
-import ToggleChip from 'components/ToggleChip'
-import Utils from 'common/utils/utils'
 import TagContent from './TagContent'
 import Constants from 'common/constants'
 import {
@@ -15,9 +13,13 @@ import {
 
 type TagType = {
   className?: string
+  // Whether the tag is unavailable to this organisation. The rule is a plan
+  // entitlement, so it belongs to whoever knows about plans: see
+  // Utils.tagDisabled. Reading it in here made a chip depend on AccountStore.
   disabled?: boolean
-  hideNames?: boolean
-  onClick?: (tag: TTag) => void
+  // Partial, because `tag` is: the filter renders an "Untagged" pseudo-tag
+  // with no id, and the create row previews a tag that does not exist yet.
+  onClick?: (tag: Partial<TTag>) => void
   selected?: boolean
   tag: Partial<TTag>
   isDot?: boolean
@@ -32,8 +34,7 @@ export const getTagColor = (tag: Partial<TTag>) => {
 
 const Tag: FC<TagType> = ({
   className,
-  disabled,
-  hideNames,
+  disabled = false,
   isDot,
   onClick,
   selected,
@@ -47,30 +48,6 @@ const Tag: FC<TagType> = ({
         style={{ backgroundColor: getTagColor(tag) }}
       />
     )
-  }
-
-  if (!hideNames && !!onClick) {
-    return (
-      <ToggleChip
-        className={cx(getTagSwatchUtilities(getTagColor(tag)), className)}
-        active={selected}
-        onClick={() => {
-          if (!disabled) {
-            onClick?.(tag as TTag)
-          }
-        }}
-      >
-        {!!tag.label && <TagContent disabled={disabled} tag={tag} />}
-      </ToggleChip>
-    )
-  }
-
-  // Hide unhealthy tags if feature is disabled
-  if (
-    !Utils.getFlagsmithHasFeature('feature_health') &&
-    tag.type === 'UNHEALTHY'
-  ) {
-    return null
   }
 
   const isSystem = isSystemTag(tag)
@@ -87,8 +64,9 @@ const Tag: FC<TagType> = ({
         { 'opacity-50': disabled },
         className,
       )}
-      onClick={disabled || !onClick ? undefined : () => onClick(tag as TTag)}
-      size='xs'
+      onClick={disabled || !onClick ? undefined : () => onClick(tag)}
+      selected={selected}
+      size='sm'
       variant='none'
     >
       <TagContent disabled={disabled} tag={tag} />
