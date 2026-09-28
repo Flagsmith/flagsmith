@@ -6,6 +6,7 @@ import structlog
 from django.db import transaction
 from flag_engine.segments import constants
 from ordered_model.models import OrderedModelQuerySet  # type: ignore[import-untyped]
+from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
 
 from api_keys.user import APIKeyUser
 from audit.constants import FEATURE_DEPENDENCY_CREATED_MESSAGE
@@ -43,10 +44,7 @@ from users.models import FFAdminUser
 
 logger = structlog.get_logger("features")
 
-# First key of `pg_advisory_xact_lock(namespace, project_id)`, keeping flag
-# dependency locks apart from any other advisory lock user. The value is
-# arbitrary ("FLDP" in ASCII) but must not change between releases.
-FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE = 0x464C4450
+FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE = int.from_bytes(b"FLDP")
 
 
 def index_segment_flag_references(segment: "Segment") -> None:
@@ -137,7 +135,7 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
     Must run inside the transaction writing the dependency change, so the
     project lock taken here is held until that change commits.
     """
-    lock_project_flag_dependencies(segment.project_id)
+    _lock_project_flag_dependencies(segment.project_id)
     existing_references = SegmentFlagReference.objects.filter(segment=segment)
     if not existing_references.exists():
         return
@@ -182,17 +180,7 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
             pending += [[*path, edge] for edge in edges[prerequisite_feature_name]]
 
 
-def lock_project_flag_dependencies(project_id: int) -> None:
-    """Serialise changes to the project's flag dependencies until commit.
-
-    Without it, concurrent transactions adding `A -> B` and `B -> A` would
-    each validate without seeing the other's uncommitted edge, and both
-    commit a cycle. Blocking here instead makes the latter read the former's
-    committed edge, as each READ COMMITTED statement takes a fresh snapshot.
-
-    Call it inside the transaction writing the change, before reading any
-    dependencies. Taking it again in the same transaction doesn't block.
-    """
+def _lock_project_flag_dependencies(project_id: int) -> None:
     connection = transaction.get_connection()
     if not connection.in_atomic_block:
         raise RuntimeError("Flag dependencies must be locked inside a transaction.")
@@ -202,6 +190,10 @@ def lock_project_flag_dependencies(project_id: int) -> None:
         # block inserts of rows referencing the project.
         list(Project.objects.select_for_update().filter(pk=project_id).values("pk"))
         return
+    if connection.isolation_level != ISOLATION_LEVEL_READ_COMMITTED:
+        raise RuntimeError(
+            "Flag dependencies require the READ COMMITTED isolation level."
+        )
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT pg_advisory_xact_lock(%s, %s)",
@@ -292,6 +284,7 @@ def create_flag_dependency(
     }
     segment_name = f"{feature.name}-dependencies-{environment.api_key}"
     with transaction.atomic():
+        _lock_project_flag_dependencies(environment.project_id)
         edges = _get_dependency_edges(environment)
         if existing_edges := [
             edge
@@ -317,25 +310,22 @@ def create_flag_dependency(
             raise FeatureIsPrerequisiteError(
                 environment=referencing_environment, path=dependent_edges
             )
-        try:
-            segment = Segment.objects.get(
-                project_id=environment.project_id,
-                name=segment_name,
-                is_system_segment=True,
-            )
-        except Segment.DoesNotExist:
-            rules: list[SegmentRule] = [
-                {"type": constants.ANY_RULE, "conditions": [condition], "rules": []}
-            ]
-            segment = Segment.objects.create(
-                name=segment_name,
-                project_id=environment.project_id,
-                feature=feature,
-                is_system_segment=True,
-                rules_data=rules,
-            )
-            write_segment_rules(segment, rules)
-            index_segment_flag_references(segment)
+        rules: list[SegmentRule] = [
+            {"type": constants.ANY_RULE, "conditions": [condition], "rules": []}
+        ]
+        segment, created = Segment.objects.get_or_create(
+            project_id=environment.project_id,
+            name=segment_name,
+            is_system_segment=True,
+            defaults={"feature": feature, "rules_data": rules},
+        )
+        if not created:
+            assert (rules := segment.rules_data) is not None
+            rules[0]["conditions"].append(condition)
+            segment.save(update_fields=["rules_data"])
+        write_segment_rules(segment, rules)
+        index_segment_flag_references(segment)
+        if created:
             overrides: OrderedModelQuerySet = (
                 get_all_live_or_scheduled_overrides().filter(
                     environment=environment, feature=feature
@@ -357,12 +347,6 @@ def create_flag_dependency(
                 author=author,
             )
             overrides.get(segment=segment).to(0)
-        else:
-            assert (rules := segment.rules_data) is not None
-            rules[0]["conditions"].append(condition)
-            segment.save(update_fields=["rules_data"])
-            write_segment_rules(segment, rules)
-            index_segment_flag_references(segment)
         _create_dependency_audit_log(
             environment=environment,
             feature=feature,
