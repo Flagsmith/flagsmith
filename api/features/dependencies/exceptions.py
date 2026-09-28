@@ -3,19 +3,12 @@ from abc import ABC, abstractmethod
 from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from rest_framework import status
 from rest_framework.exceptions import APIException, PermissionDenied
-from typing_extensions import TypedDict
 
+from core.types import APIErrorDetail
 from features.dependencies.types import DependencyPath, ReferencingEnvironment
 
 
-class DependencyErrorDetail(TypedDict):
-    """The body served where a dependency request is refused."""
-
-    code: str
-    message: str
-
-
-class DependencyConflictDetail(DependencyErrorDetail):
+class DependencyConflictDetail(APIErrorDetail):
     """The body served where existing dependencies refuse a change."""
 
     environment: ReferencingEnvironment

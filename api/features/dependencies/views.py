@@ -4,12 +4,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.types import AuthenticatedRequest
+from core.types import APIErrorDetail, AuthenticatedRequest
 from environments.services import get_environment
-from features.dependencies.exceptions import (
-    DependencyConflictDetail,
-    DependencyErrorDetail,
-)
+from features.dependencies.exceptions import DependencyConflictDetail
 from features.dependencies.permissions import check_manage_permissions
 from features.dependencies.services import (
     create_flag_dependency,
@@ -31,10 +28,10 @@ class FeatureDependencyAPIView(APIView):
             201: DependencyEdge,
             400: PolymorphicProxySerializer(
                 component_name="DependencyRefusedDetail",
-                serializers=[DependencyErrorDetail, DependencyConflictDetail],  # type: ignore[list-item]
+                serializers=[APIErrorDetail, DependencyConflictDetail],  # type: ignore[list-item]
                 resource_type_field_name=None,
             ),
-            403: DependencyErrorDetail,
+            403: APIErrorDetail,
         },
         description="Make the feature depend on the prerequisite feature being enabled.",
     )
@@ -66,7 +63,7 @@ class FeatureDependenciesAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        responses={200: DependencyList, 404: DependencyErrorDetail},
+        responses={200: DependencyList, 404: APIErrorDetail},
         description="List the features the feature depends on in the environment.",
     )
     def get(
@@ -89,7 +86,7 @@ class FeatureDependentsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        responses={200: DependencyList, 404: DependencyErrorDetail},
+        responses={200: DependencyList, 404: APIErrorDetail},
         description="List the features depending on the feature in the environment.",
     )
     def get(
