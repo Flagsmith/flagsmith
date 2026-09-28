@@ -888,6 +888,26 @@ def test_process_import_request__valid_rules__imports_correctly(
     assert segment.rules_data == expected_rules_data
 
 
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__starts_with_clause__imports_start_anchored_regex(
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+) -> None:
+    # Given / When
+    process_import_request(import_request)
+
+    # Then
+    assert set(
+        Condition.objects.filter(
+            rule__rule__segment__name="imported-a132f4aa-ad51-43c6-8d03-f18d6a5b205d",
+            rule__rule__segment__project=project,
+        ).values_list("property", "operator", "value")
+    ) == {
+        ("foo", segment_constants.REGEX, "^abc"),
+        ("foo", segment_constants.REGEX, "^dogac"),
+    }
+
+
 # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
 @pytest.mark.django_db(transaction=True)
 def test_process_import_request__valid_rules__imports_correctly_x_replaced_above(  # type: ignore[no-untyped-def]
