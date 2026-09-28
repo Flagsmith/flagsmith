@@ -349,6 +349,7 @@ TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS = env.int(
     "TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS", default=3600
 )
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
+RESEND_ACTIVATION_THROTTLE_RATE = env("RESEND_ACTIVATION_THROTTLE_RATE", "5/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", default=None)
 MASTER_API_KEY_THROTTLE_RATE = env("MASTER_API_KEY_THROTTLE_RATE", default=None)
 DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", subcast=str, default=[])
@@ -370,6 +371,7 @@ REST_FRAMEWORK = {
         "dcr_register": DCR_THROTTLE_RATE,
         "oidc_token_exchange": OIDC_TOKEN_EXCHANGE_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
+        "resend_activation": RESEND_ACTIVATION_THROTTLE_RATE,
         "master_api_key": MASTER_API_KEY_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
@@ -555,11 +557,6 @@ PROJECT_NAME = env("PROJECT_NAME", default="Default Project")
 
 
 AUTH_USER_MODEL = "users.FFAdminUser"
-
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_VERIFICATION = "none"  # TODO: configure email verification
 
 # Set up Email
 SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
@@ -938,6 +935,7 @@ DJOSER = {
     "SEND_CONFIRMATION_EMAIL": False,
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
+        "token_create": "custom_auth.serializers.CustomTokenCreateSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",
         "user_delete": "custom_auth.serializers.CustomUserDelete",
         "current_user": "users.serializers.CustomCurrentUserSerializer",

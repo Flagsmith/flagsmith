@@ -26,7 +26,9 @@ const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
           endpoint !== 'createConfirmEmail' &&
           endpoint !== 'createResetPassword' &&
           endpoint !== 'createResendConfirmationEmail' &&
-          endpoint !== 'createForgotPassword'
+          endpoint !== 'createForgotPassword' &&
+          endpoint !== 'activateAccount' &&
+          endpoint !== 'resendActivationEmail'
         ) {
           try {
             const token = _data.token
