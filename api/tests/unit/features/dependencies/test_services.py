@@ -1,5 +1,6 @@
 import threading
 import time
+from collections.abc import Callable
 from unittest import mock
 
 import pytest
@@ -18,6 +19,26 @@ from features.dependencies.services import (
 from features.models import Feature, FeatureSegment, FeatureState
 from projects.models import Project
 from segments.models import Segment
+
+
+@pytest.fixture
+def wait_for_advisory_lock_waiter() -> Callable[[], None]:
+    """Hold the transaction open until another one waits on the project lock."""
+
+    def wait(timeout: float = 5) -> None:
+        deadline = time.monotonic() + timeout
+        with connection.cursor() as cursor:
+            while time.monotonic() < deadline:
+                cursor.execute(
+                    "SELECT EXISTS (SELECT 1 FROM pg_locks"
+                    " WHERE locktype = 'advisory' AND classid = %s AND NOT granted)",
+                    [FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE],
+                )
+                if cursor.fetchone()[0]:
+                    return
+                time.sleep(0.01)
+
+    return wait
 
 
 @pytest.mark.parametrize("environment_count", [1, 2, 3])
@@ -74,17 +95,6 @@ def test_validate_segment_flag_dependencies__no_references__skips(
         validate_segment_flag_dependencies(segment)
 
 
-def _create_override(
-    *, feature: Feature, segment: Segment, environment: Environment
-) -> None:
-    feature_segment = FeatureSegment.objects.create(
-        feature=feature, segment=segment, environment=environment
-    )
-    FeatureState.objects.create(
-        feature=feature, environment=environment, feature_segment=feature_segment
-    )
-
-
 def test_validate_segment_flag_dependencies__segment_with_references__locks_project_before_reading(
     environment: Environment,
     feature: Feature,
@@ -92,7 +102,12 @@ def test_validate_segment_flag_dependencies__segment_with_references__locks_proj
     segment: Segment,
 ) -> None:
     # Given
-    _create_override(feature=feature, segment=segment, environment=environment)
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature, segment=segment, environment=environment
+    )
+    FeatureState.objects.create(
+        feature=feature, environment=environment, feature_segment=feature_segment
+    )
     SegmentFlagReference.objects.create(
         segment=segment,
         prerequisite_feature=Feature.objects.create(name="corn", project=project),
@@ -189,6 +204,7 @@ def test_lock_project_flag_dependencies__already_held_by_transaction__does_not_b
 def test_validate_segment_flag_dependencies__concurrent_opposite_edges__rejects_the_later(
     environment: Environment,
     project: Project,
+    wait_for_advisory_lock_waiter: Callable[[], None],
 ) -> None:
     # Given
     chicken = Feature.objects.create(name="chicken", project=project)
@@ -211,13 +227,18 @@ def test_validate_segment_flag_dependencies__concurrent_opposite_edges__rejects_
     def add_edge(feature: Feature, segment: Segment) -> None:
         try:
             with transaction.atomic():
-                _create_override(
+                feature_segment = FeatureSegment.objects.create(
                     feature=feature, segment=segment, environment=environment
+                )
+                FeatureState.objects.create(
+                    feature=feature,
+                    environment=environment,
+                    feature_segment=feature_segment,
                 )
                 validate_segment_flag_dependencies(segment)
                 if feature == chicken:
                     first_validated.set()
-                    _wait_for_advisory_lock_waiter()
+                    wait_for_advisory_lock_waiter()
         except Exception as error:
             errors.append(error)
         finally:
@@ -236,18 +257,3 @@ def test_validate_segment_flag_dependencies__concurrent_opposite_edges__rejects_
     # Then
     assert [type(error) for error in errors] == [CircularDependencyError]
     assert not FeatureSegment.objects.filter(feature=egg).exists()
-
-
-def _wait_for_advisory_lock_waiter(timeout: float = 5) -> None:
-    """Hold the transaction open until another one waits on the project lock."""
-    deadline = time.monotonic() + timeout
-    with connection.cursor() as cursor:
-        while time.monotonic() < deadline:
-            cursor.execute(
-                "SELECT EXISTS (SELECT 1 FROM pg_locks"
-                " WHERE locktype = 'advisory' AND classid = %s AND NOT granted)",
-                [FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE],
-            )
-            if cursor.fetchone()[0]:
-                return
-            time.sleep(0.01)
