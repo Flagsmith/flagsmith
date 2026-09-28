@@ -289,7 +289,7 @@ Attributes:
 ### `features.dependencies.create_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:145`
+ - `api/features/dependencies/services.py:143`
 
 Attributes:
  - `environment.key`
