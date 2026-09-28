@@ -1,9 +1,20 @@
+import threading
+import time
+from unittest import mock
+
 import pytest
+from django.db import connection, connections, transaction
+from django.test.utils import CaptureQueriesContext
 from pytest_django import DjangoAssertNumQueries
 
 from environments.models import Environment
+from features.dependencies.exceptions import CircularDependencyError
 from features.dependencies.models import SegmentFlagReference
-from features.dependencies.services import validate_segment_flag_dependencies
+from features.dependencies.services import (
+    FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE,
+    lock_project_flag_dependencies,
+    validate_segment_flag_dependencies,
+)
 from features.models import Feature, FeatureSegment, FeatureState
 from projects.models import Project
 from segments.models import Segment
@@ -40,7 +51,7 @@ def test_validate_segment_flag_dependencies__overrides_across_environments__quer
     )
 
     # When / Then
-    with django_assert_num_queries(2 + environment_count):
+    with django_assert_num_queries(3 + environment_count):
         validate_segment_flag_dependencies(segment)
 
 
@@ -59,5 +70,191 @@ def test_validate_segment_flag_dependencies__no_references__skips(
     )
 
     # When / Then
-    with django_assert_num_queries(1):
+    with django_assert_num_queries(2):
         validate_segment_flag_dependencies(segment)
+
+
+def test_validate_segment_flag_dependencies__segment_with_references__locks_project_before_reading(
+    environment: Environment,
+    feature: Feature,
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature, segment=segment, environment=environment
+    )
+    FeatureState.objects.create(
+        feature=feature, environment=environment, feature_segment=feature_segment
+    )
+    SegmentFlagReference.objects.create(
+        segment=segment,
+        prerequisite_feature=Feature.objects.create(name="corn", project=project),
+        condition_json_path="$[0].conditions[0]",
+    )
+
+    # When
+    with CaptureQueriesContext(connection) as captured:
+        validate_segment_flag_dependencies(segment)
+
+    # Then
+    assert captured.captured_queries[0]["sql"] == (
+        "SELECT pg_advisory_xact_lock("
+        f"{FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE}, {project.id})"
+    )
+
+
+def test_validate_segment_flag_dependencies__no_references__still_locks_project(
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    assert not SegmentFlagReference.objects.filter(segment=segment).exists()
+
+    # When
+    with CaptureQueriesContext(connection) as captured:
+        validate_segment_flag_dependencies(segment)
+
+    # Then
+    assert captured.captured_queries[0]["sql"] == (
+        "SELECT pg_advisory_xact_lock("
+        f"{FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE}, {project.id})"
+    )
+
+
+def test_validate_segment_flag_dependencies__non_postgresql_database__locks_project_row(
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    oracle_connection = mock.Mock(in_atomic_block=True, vendor="oracle")
+
+    # When
+    with (
+        mock.patch.object(
+            transaction, "get_connection", return_value=oracle_connection
+        ),
+        CaptureQueriesContext(connection) as captured,
+    ):
+        validate_segment_flag_dependencies(segment)
+
+    # Then
+    lock_sql = captured.captured_queries[0]["sql"]
+    assert 'FROM "projects_project"' in lock_sql
+    assert f'"projects_project"."id" = {project.id}' in lock_sql
+    assert lock_sql.endswith("FOR UPDATE")
+
+
+@pytest.mark.django_db(transaction=True)
+def test_validate_segment_flag_dependencies__outside_transaction__raises(
+    segment: Segment,
+) -> None:
+    # Given
+    assert not connection.in_atomic_block
+
+    # When / Then
+    with pytest.raises(RuntimeError, match="inside a transaction"):
+        validate_segment_flag_dependencies(segment)
+
+
+def test_lock_project_flag_dependencies__already_held_by_transaction__does_not_block(
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    with connection.cursor() as cursor:
+        cursor.execute("SET LOCAL lock_timeout = '1s'")
+    lock_project_flag_dependencies(project.id)
+
+    # When
+    validate_segment_flag_dependencies(segment)
+
+    # Then
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT granted FROM pg_locks WHERE locktype = 'advisory'"
+            " AND classid = %s AND objid = %s AND pid = pg_backend_pid()",
+            [FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE, project.id],
+        )
+        assert cursor.fetchall() == [(True,)]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_validate_segment_flag_dependencies__concurrent_opposite_edges__rejects_the_later(
+    environment: Environment,
+    project: Project,
+) -> None:
+    # Given
+    chicken = Feature.objects.create(name="chicken", project=project)
+    egg = Feature.objects.create(name="egg", project=project)
+    needs_egg = Segment.objects.create(name="needs_egg", project=project)
+    needs_chicken = Segment.objects.create(name="needs_chicken", project=project)
+    SegmentFlagReference.objects.create(
+        segment=needs_egg,
+        prerequisite_feature=egg,
+        condition_json_path="$[0].conditions[0]",
+    )
+    SegmentFlagReference.objects.create(
+        segment=needs_chicken,
+        prerequisite_feature=chicken,
+        condition_json_path="$[0].conditions[0]",
+    )
+    first_validated = threading.Event()
+    release_first = threading.Event()
+    errors: list[Exception] = []
+
+    def add_edge(feature: Feature, segment: Segment) -> None:
+        try:
+            with transaction.atomic():
+                feature_segment = FeatureSegment.objects.create(
+                    feature=feature, segment=segment, environment=environment
+                )
+                FeatureState.objects.create(
+                    feature=feature,
+                    environment=environment,
+                    feature_segment=feature_segment,
+                )
+                validate_segment_flag_dependencies(segment)
+                if feature == chicken:
+                    first_validated.set()
+                    release_first.wait(timeout=10)
+        except Exception as error:
+            errors.append(error)
+        finally:
+            connections.close_all()
+
+    first = threading.Thread(target=add_edge, args=(chicken, needs_egg))
+    second = threading.Thread(target=add_edge, args=(egg, needs_chicken))
+
+    # When
+    first.start()
+    assert first_validated.wait(timeout=5)
+    second.start()
+    try:
+        _assert_project_lock_contended(project.id)
+    finally:
+        release_first.set()
+    first.join(timeout=10)
+    second.join(timeout=10)
+
+    # Then
+    assert [type(error) for error in errors] == [CircularDependencyError]
+    assert not FeatureSegment.objects.filter(feature=egg).exists()
+
+
+def _assert_project_lock_contended(project_id: int, timeout: float = 5) -> None:
+    """Assert that a transaction waits on the project's flag dependencies lock."""
+    deadline = time.monotonic() + timeout
+    contended = False
+    with connection.cursor() as cursor:
+        while not contended and time.monotonic() < deadline:
+            cursor.execute(
+                "SELECT EXISTS (SELECT 1 FROM pg_locks"
+                " WHERE locktype = 'advisory' AND classid = %s AND objid = %s"
+                " AND NOT granted)",
+                [FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE, project_id],
+            )
+            contended = cursor.fetchone()[0]
+            if not contended:
+                time.sleep(0.01)
+    assert contended, "No transaction waited on the project lock"
