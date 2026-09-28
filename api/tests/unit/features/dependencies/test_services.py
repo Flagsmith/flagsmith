@@ -22,7 +22,7 @@ from segments.models import Segment
 
 
 @pytest.fixture
-def wait_for_advisory_lock_waiter() -> Callable[[], None]:
+def advisory_lock_waiter() -> Callable[[], None]:
     """Hold the transaction open until another one waits on the project lock."""
 
     def wait(timeout: float = 5) -> None:
@@ -204,7 +204,7 @@ def test_lock_project_flag_dependencies__already_held_by_transaction__does_not_b
 def test_validate_segment_flag_dependencies__concurrent_opposite_edges__rejects_the_later(
     environment: Environment,
     project: Project,
-    wait_for_advisory_lock_waiter: Callable[[], None],
+    advisory_lock_waiter: Callable[[], None],
 ) -> None:
     # Given
     chicken = Feature.objects.create(name="chicken", project=project)
@@ -238,7 +238,7 @@ def test_validate_segment_flag_dependencies__concurrent_opposite_edges__rejects_
                 validate_segment_flag_dependencies(segment)
                 if feature == chicken:
                     first_validated.set()
-                    wait_for_advisory_lock_waiter()
+                    advisory_lock_waiter()
         except Exception as error:
             errors.append(error)
         finally:
