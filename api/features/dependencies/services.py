@@ -116,7 +116,9 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
     Must run inside the transaction writing the dependency change, so the
     project lock taken here is held until that change commits.
     """
-    _lock_project_flag_dependencies(segment.project_id)
+    # Locked even when the segment has no flag references, as a concurrent
+    # transaction may be adding references to it.
+    lock_project_flag_dependencies(segment.project_id)
     existing_references = SegmentFlagReference.objects.filter(segment=segment)
     if not existing_references.exists():
         return
@@ -159,19 +161,20 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
             pending += [[*path, edge] for edge in edges[prerequisite_feature_name]]
 
 
-def _lock_project_flag_dependencies(project_id: int) -> None:
-    """Serialise flag dependency validation within a project until commit.
+def lock_project_flag_dependencies(project_id: int) -> None:
+    """Serialise changes to the project's flag dependencies until commit.
 
     Without it, concurrent transactions adding `A -> B` and `B -> A` would
     each validate without seeing the other's uncommitted edge, and both
     commit a cycle. Blocking here instead makes the latter read the former's
     committed edge, as each READ COMMITTED statement takes a fresh snapshot.
-    The lock is taken even when the segment has no flag references, as a
-    concurrent transaction may be adding references to it.
+
+    Call it inside the transaction writing the change, before reading any
+    dependencies. Taking it again in the same transaction doesn't block.
     """
     connection = transaction.get_connection()
     if not connection.in_atomic_block:
-        raise RuntimeError("Flag dependencies must be validated inside a transaction.")
+        raise RuntimeError("Flag dependencies must be locked inside a transaction.")
     if connection.vendor != "postgresql":
         # Oracle and MySQL (Enterprise Edition) lack advisory locks, so lock
         # the project row instead. PostgreSQL avoids this as it would also

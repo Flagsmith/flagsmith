@@ -12,6 +12,7 @@ from features.dependencies.exceptions import CircularDependencyError
 from features.dependencies.models import SegmentFlagReference
 from features.dependencies.services import (
     FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE,
+    lock_project_flag_dependencies,
     validate_segment_flag_dependencies,
 )
 from features.models import Feature, FeatureSegment, FeatureState
@@ -160,6 +161,28 @@ def test_validate_segment_flag_dependencies__outside_transaction__raises(
     # When / Then
     with pytest.raises(RuntimeError, match="inside a transaction"):
         validate_segment_flag_dependencies(segment)
+
+
+def test_lock_project_flag_dependencies__already_held_by_transaction__does_not_block(
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    with connection.cursor() as cursor:
+        cursor.execute("SET LOCAL lock_timeout = '1s'")
+    lock_project_flag_dependencies(project.id)
+
+    # When
+    validate_segment_flag_dependencies(segment)
+
+    # Then
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT granted FROM pg_locks WHERE locktype = 'advisory'"
+            " AND classid = %s AND objid = %s AND pid = pg_backend_pid()",
+            [FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE, project.id],
+        )
+        assert cursor.fetchall() == [(True,)]
 
 
 @pytest.mark.django_db(transaction=True)
