@@ -116,8 +116,6 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
     Must run inside the transaction writing the dependency change, so the
     project lock taken here is held until that change commits.
     """
-    # Locked even when the segment has no flag references, as a concurrent
-    # transaction may be adding references to it.
     lock_project_flag_dependencies(segment.project_id)
     existing_references = SegmentFlagReference.objects.filter(segment=segment)
     if not existing_references.exists():
