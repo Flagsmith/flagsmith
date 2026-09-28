@@ -1240,4 +1240,7 @@ def test_either_list__missing_environment_permission__responds_404_with_error(
 
     # Then
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not found."}
+    assert response.json() == {
+        "code": "environment_not_found",
+        "message": f"Environment key '{environment_api_key}' does not exist.",
+    }

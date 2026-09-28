@@ -7,8 +7,9 @@ from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
 
+from environments.exceptions import EnvironmentNotFoundError
 from environments.models import Environment
 from users.abc import UserABC
 
@@ -29,7 +30,7 @@ def check_read_permissions(user: UserABC, environment: Environment) -> None:
         user.has_environment_permission(permission, environment)
         for permission in READ_PERMISSIONS
     ):
-        raise NotFound()
+        raise EnvironmentNotFoundError(environment.api_key)
 
 
 def check_update_permissions(
@@ -45,7 +46,7 @@ def check_update_permissions(
         if not user.has_environment_permission(permission, environment)
     }
     if len(denied) == len(PROPERTY_PERMISSIONS):
-        raise NotFound()
+        raise EnvironmentNotFoundError(environment.api_key)
     if any(property_name in properties for property_name in denied):
         raise PermissionDenied()
 
