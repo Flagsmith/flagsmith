@@ -23,11 +23,11 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		border: 1px solid $hr-border-color;
+		border: 1px solid var(--color-border-default);
 		text-align: center;
 		padding: 0;
 		background: transparent;
-		color: $text-icon-grey;
+		color: var(--color-icon-secondary);
 		&:hover {
 			color: $primary;
 		}

@@ -4,6 +4,7 @@ import Utils, { planNames } from 'common/utils/utils'
 import { useGetOrganisationQuery } from 'common/services/useOrganisation'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import OverLimitBanner from './components/OverLimitBanner'
+import BillingStrip from './components/BillingStrip'
 import SectionHeading from './components/SectionHeading'
 import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
 import UsageFilters from './components/UsageFilters'
@@ -12,6 +13,7 @@ import UsageOverTime from './components/UsageOverTime'
 import UsagePageLayout from './components/UsagePageLayout'
 import { useUsageData } from './useUsageData'
 import { contributionNote, overLimitNote, planSectionCopy } from './copy'
+import { projectionNote, projectUsage } from './projection'
 import { overLimitOf } from './overLimit'
 import {
   isBilledOnAPeriod,
@@ -19,6 +21,7 @@ import {
   isChargedForOverages,
   showsContribution,
   showsPlanCeiling,
+  showsProjection,
   periodLabel,
   periodsFor,
   PeriodSelection,
@@ -108,8 +111,20 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         )
       : undefined
 
-  // One line, so being over the limit outranks the project's share.
-  const meterNote = exceeded ? overLimitNote(exceeded) : contribution
+  // A plan on a rolling window has no period to describe, and a stale cache
+  // can still be carrying the dates of one it has left.
+  const period = planIsBilled ? subscription?.current_billing_period : undefined
+  const projection = showsProjection(billingPeriod, selectedProjectId)
+    ? projectUsage(allowanceTotal, limit, period)
+    : undefined
+
+  // One line: over the limit outranks the projection, which outranks the share.
+  const meterNote =
+    [
+      exceeded && overLimitNote(exceeded),
+      projection && period && projectionNote(projection, period.ends_at),
+      contribution,
+    ].find(Boolean) || undefined
 
   if (!organisationId) {
     return null
@@ -137,6 +152,8 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       }}
     >
       <SectionHeading {...planSectionCopy(basis, limit)} />
+
+      <BillingStrip period={period} />
 
       <UsageMeter total={allowanceTotal} limit={limit} note={meterNote} />
 
@@ -174,6 +191,8 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
             }
             isBillingPeriod={isBillingPeriodSelected(billingPeriod)}
             periodLabel={selectedPeriod}
+            projectedTotal={projection?.total}
+            periodEndsAt={period?.ends_at}
           />
 
           <UsageBreakdown
