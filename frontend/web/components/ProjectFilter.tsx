@@ -6,12 +6,15 @@ type ProjectFilterType = {
   value?: string
   onChange: (id: string, name: string) => void
   showAll?: boolean
+  /** Selects the organisation's only project, when it has one. On by default. */
+  autoSelectSingleProject?: boolean
   inputId?: string
   'aria-label'?: string
 }
 
 const ProjectFilter: FC<ProjectFilterType> = ({
   'aria-label': ariaLabel,
+  autoSelectSingleProject = true,
   inputId,
   onChange,
   organisationId,
@@ -24,12 +27,12 @@ const ProjectFilter: FC<ProjectFilterType> = ({
   )
 
   useEffect(() => {
-    if (data && data.length === 1) {
+    if (autoSelectSingleProject && data && data.length === 1) {
       const project = data[0]
       onChange(`${project.id}`, project.name)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data])
+  }, [data, autoSelectSingleProject])
 
   const foundValue = useMemo(
     () => data?.find((project) => `${project.id}` === value),
