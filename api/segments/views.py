@@ -1,10 +1,10 @@
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import structlog
 from common.environments.permissions import VIEW_IDENTITIES
 from common.projects.permissions import VIEW_PROJECT
 from django.db import models
-from django.db.models import Prefetch
+from django.db.models import Prefetch, prefetch_related_objects
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
@@ -52,6 +52,25 @@ if TYPE_CHECKING:
     from users.models import FFAdminUser
 
 logger = structlog.get_logger("segments")
+
+
+def get_segment_serializer_prefetches() -> tuple["Prefetch[Any] | str", ...]:
+    """The related objects `SegmentSerializer` walks to build a segment.
+
+    The rule tree stops two levels deep because that is as far as the
+    serializers nest: `SegmentRuleSerializer` renders child rules with
+    `_NestedSegmentRuleSerializer`, which has conditions but no rules of
+    its own.
+    """
+    return (
+        Prefetch("cohorts", queryset=Cohort.objects.select_related("environment")),
+        "membership_counts",
+        "rules",
+        "rules__conditions",
+        "rules__rules",
+        "rules__rules__conditions",
+        "metadata",
+    )
 
 
 @method_decorator(
@@ -112,21 +131,15 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             )
         )
 
-        if self.action == "list":
+        if self.action in ("list", "retrieve"):
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
             #  we shouldn't return all of the rules and conditions in the list view.
-            queryset = queryset.prefetch_related(
-                Prefetch(
-                    "cohorts", queryset=Cohort.objects.select_related("environment")
-                ),
-                "membership_counts",
-                "rules",
-                "rules__conditions",
-                "rules__rules",
-                "rules__rules__conditions",
-                "rules__rules__rules",
-                "metadata",
-            )
+            queryset = queryset.prefetch_related(*get_segment_serializer_prefetches())
+
+        if self.detail:
+            # Every detail route reaches for the project, and most of them for
+            # its organisation too, via object permissions and validation.
+            queryset = queryset.select_related("project__organisation")
 
         query_serializer = SegmentListQuerySerializer(data=self.request.query_params)
         query_serializer.is_valid(raise_exception=True)
@@ -285,6 +298,21 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         )
         raise api_error
 
+    def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        partial = kwargs.pop("partial", False)
+        segment = self.get_object()
+        serializer = self.get_serializer(segment, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        segment = cast(Segment, serializer.instance)
+
+        # Additional step here from UpdateModelMixin.update to warm the prefetch cache.
+        # Without this, the response queries the database for every record in the segment
+        # tree. TODO: remove with https://github.com/Flagsmith/flagsmith/issues/7814
+        prefetch_related_objects([segment], *get_segment_serializer_prefetches())
+
+        return Response(serializer.data)
+
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         segment = self.get_object()
         self._check_segment_is_deletable(segment)
@@ -308,6 +336,8 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.is_valid(raise_exception=True)
         clone = source_segment.clone(name=serializer.validated_data["name"])
         enqueue_membership_refresh(clone.project)
+        # The clone's rules were just written row by row, so nothing is cached on it.
+        prefetch_related_objects([clone], *get_segment_serializer_prefetches())
         return Response(SegmentSerializer(clone).data, status=status.HTTP_201_CREATED)
 
 
