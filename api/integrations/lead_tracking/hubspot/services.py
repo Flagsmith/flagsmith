@@ -22,10 +22,10 @@ def register_hubspot_tracker_and_track_user(
     request: Request,
     user: FFAdminUser | None = None,
 ) -> None:
-    user_id = user.id if user else request.user.id
     register_hubspot_tracker(request, user)
-    if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-        create_hubspot_contact_for_user.delay(args=(user_id,))
+    track_user = user or request.user
+    if settings.ENABLE_HUBSPOT_LEAD_TRACKING and track_user.is_active:
+        create_hubspot_contact_for_user.delay(args=(track_user.id,))
 
 
 def register_hubspot_tracker(

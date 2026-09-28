@@ -114,19 +114,26 @@ def delete_token(request):  # type: ignore[no-untyped-def]
 class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
     throttle_scope = "signup"
 
+    throttle_scopes_by_action = {
+        "create": "signup",
+        "resend_activation": "resend_activation",
+    }
+
     def perform_authentication(self, request: Request) -> None:
         if self.action == "create":
             return
         return super().perform_authentication(request)  # type: ignore[no-any-return]
 
-    def get_throttles(self):  # type: ignore[no-untyped-def]
+    def get_throttles(self) -> list[ScopedRateThrottle]:
         """
-        Used for throttling create(signup) action
+        Used for throttling the create (signup) and resend_activation actions
         """
-        throttles = []
-        if self.action == "create":
-            throttles = [ScopedRateThrottle()]
-        return throttles
+        scope = self.throttle_scopes_by_action.get(self.action)
+        if scope is None:
+            return []
+        # Safe to set per action: a view instance serves a single request.
+        self.throttle_scope = scope
+        return [ScopedRateThrottle()]
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         response = super().create(request, *args, **kwargs)
