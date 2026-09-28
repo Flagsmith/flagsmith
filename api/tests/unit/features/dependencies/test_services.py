@@ -200,6 +200,7 @@ def test_validate_segment_flag_dependencies__concurrent_opposite_edges__rejects_
         condition_json_path="$[0].conditions[0]",
     )
     first_validated = threading.Event()
+    release_first = threading.Event()
     errors: list[Exception] = []
 
     def add_edge(feature: Feature, segment: Segment) -> None:
@@ -216,7 +217,7 @@ def test_validate_segment_flag_dependencies__concurrent_opposite_edges__rejects_
                 validate_segment_flag_dependencies(segment)
                 if feature == chicken:
                     first_validated.set()
-                    _wait_for_advisory_lock_waiter()
+                    release_first.wait(timeout=10)
         except Exception as error:
             errors.append(error)
         finally:
@@ -229,6 +230,10 @@ def test_validate_segment_flag_dependencies__concurrent_opposite_edges__rejects_
     first.start()
     assert first_validated.wait(timeout=5)
     second.start()
+    try:
+        _assert_project_lock_contended(project.id)
+    finally:
+        release_first.set()
     first.join(timeout=10)
     second.join(timeout=10)
 
@@ -237,16 +242,19 @@ def test_validate_segment_flag_dependencies__concurrent_opposite_edges__rejects_
     assert not FeatureSegment.objects.filter(feature=egg).exists()
 
 
-def _wait_for_advisory_lock_waiter(timeout: float = 5) -> None:
-    """Hold the transaction open until another one waits on the project lock."""
+def _assert_project_lock_contended(project_id: int, timeout: float = 5) -> None:
+    """Assert that a transaction waits on the project's flag dependencies lock."""
     deadline = time.monotonic() + timeout
+    contended = False
     with connection.cursor() as cursor:
-        while time.monotonic() < deadline:
+        while not contended and time.monotonic() < deadline:
             cursor.execute(
                 "SELECT EXISTS (SELECT 1 FROM pg_locks"
-                " WHERE locktype = 'advisory' AND classid = %s AND NOT granted)",
-                [FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE],
+                " WHERE locktype = 'advisory' AND classid = %s AND objid = %s"
+                " AND NOT granted)",
+                [FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE, project_id],
             )
-            if cursor.fetchone()[0]:
-                return
-            time.sleep(0.01)
+            contended = cursor.fetchone()[0]
+            if not contended:
+                time.sleep(0.01)
+    assert contended, "No transaction waited on the project lock"
