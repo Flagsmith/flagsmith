@@ -198,7 +198,7 @@ def _convert_ld_values(values: list[str], ld_operator: str) -> list[str]:
                 )
             ]
         case "endsWith":
-            return [".*" + re.escape(value) for value in values]
+            return [".*" + re.escape(value) + "$" for value in values]
         case "startsWith":
             return [re.escape(value) + ".*" for value in values]
         case "semVerEqual" | "semVerLessThan" | "semVerGreaterThan":

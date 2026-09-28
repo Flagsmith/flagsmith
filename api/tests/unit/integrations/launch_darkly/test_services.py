@@ -350,7 +350,7 @@ def test_process_import_request__valid_segments__creates_segment_per_environment
                                 {
                                     "property": "email",
                                     "operator": segment_constants.REGEX,
-                                    "value": ".*@gmail\\.com",
+                                    "value": ".*@gmail\\.com$",
                                     "description": None,
                                 }
                             ],
@@ -478,6 +478,39 @@ def test_process_import_request__valid_segments__imports_correctly(
     assert segment.rules_data == expected_rules_data
 
 
+@pytest.mark.parametrize(
+    "email, expected_in_segment",
+    [
+        ("user@gmail.com", True),
+        ("user@gmail.com.example.org", False),
+        ("user@example.org", False),
+    ],
+)
+@pytest.mark.django_db(transaction=True)
+def test_process_import_request__ends_with_clause__matches_suffix_only(
+    project: Project,
+    import_request: LaunchDarklyImportRequest,
+    email: str,
+    expected_in_segment: bool,
+) -> None:
+    # Given
+    process_import_request(import_request)
+    environment = Environment.objects.get(project=project, name="Test")
+    identity = Identity.objects.create(identifier="user", environment=environment)
+    Trait.objects.create(
+        identity=identity,
+        trait_key="email",
+        value_type="unicode",
+        string_value=email,
+    )
+
+    # When
+    segment_names = {segment.name for segment in identity.get_segments()}
+
+    # Then
+    assert ("Dynamic List (Override for test)" in segment_names) is expected_in_segment
+
+
 @pytest.mark.django_db(transaction=True)
 def test_process_import_request__valid_segments__creates_identities_with_key_traits(
     project: Project,
@@ -556,7 +589,7 @@ def test_process_import_request__valid_segments__imports_correctly_x_replaced_ab
             "property", "operator", "value"
         )
     ) == {
-        ("email", segment_constants.REGEX, ".*@gmail\\.com"),
+        ("email", segment_constants.REGEX, ".*@gmail\\.com$"),
     }
 
     # Tests for "Dynamic List 2 (Override for production)"
@@ -788,7 +821,7 @@ def test_process_import_request__valid_rules__creates_feature_specific_segments(
                                 {
                                     "property": "p1",
                                     "operator": segment_constants.REGEX,
-                                    "value": ".*bar",
+                                    "value": ".*bar$",
                                     "description": None,
                                 }
                             ],
@@ -919,7 +952,7 @@ def test_process_import_request__valid_rules__imports_correctly_x_replaced_above
     assert set(
         reverted_and_any_subrule_conditions.values_list("property", "operator", "value")
     ) == {
-        ("p1", segment_constants.REGEX, ".*bar"),
+        ("p1", segment_constants.REGEX, ".*bar$"),
     }
 
     reverted_and_none_subrule_conditions = Condition.objects.filter(
