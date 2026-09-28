@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from 'storybook'
 
 import Chip, { ChipDot } from 'components/base/Chip'
 import Icon, { IconName } from 'components/icons/Icon'
-import Constants from 'common/constants'
+import { contentColours } from 'common/theme/tokens'
 import { getTagSwatchUtilities } from 'components/tags/tagSwatch'
 
 const meta: Meta<typeof Chip> = {
@@ -14,7 +14,7 @@ const meta: Meta<typeof Chip> = {
     docs: {
       description: {
         component:
-          'Canonical token-based chip primitive: a small labelled pill token. Layout via Bootstrap utilities, colour/radius via token utilities, padding/sizes/border/truncation in SCSS. Leading/trailing icons go in as children. `variant` covers neutral, accent, the five status colours and `solid`; `ChipDot` adds the leading dot in `currentColor`. Radius is a fixed 6px from the tags frame, so there is no shape prop. Selection lives in ToggleChip. The legacy `.chip` (old SCSS vars + manual dark-mode block, ~35×) migrates onto this under #6606.',
+          'Canonical token-based chip primitive: a small labelled pill token. Layout via Bootstrap utilities, colour/radius via token utilities, padding/sizes/border/truncation in SCSS. Leading/trailing icons go in as children. `variant` covers neutral, accent, the five status colours and `solid`; `ChipDot` adds the leading dot in `currentColor`. Radius is a fixed 6px from the tags frame, so there is no shape prop. `selected` renders a leading checkbox with a tick; for choosing between purely visual things, `SelectableGroup` rings the option instead. The legacy `.chip` (old SCSS vars + manual dark-mode block, ~35×) migrates onto this under #6606.',
       },
     },
     layout: 'centered',
@@ -73,7 +73,7 @@ export const AsCustomTag: Story = {
   parameters: { chromatic: { disableSnapshot: false } },
   render: () => (
     <div className='d-flex flex-wrap gap-2'>
-      {Constants.tagColors.map((colour: string) => (
+      {Object.values(contentColours).map((colour) => (
         <Chip
           className={`border-0 ${getTagSwatchUtilities(colour)}`}
           key={colour}
@@ -82,6 +82,28 @@ export const AsCustomTag: Story = {
           Custom
         </Chip>
       ))}
+    </div>
+  ),
+}
+
+/**
+ * `selected` rings the chip and fades the ones that are not chosen. For a cloud
+ * of filter chips the chip is the whole control, and anything drawn inside it
+ * competes with the colour the user picked. See TagFilter.
+ */
+export const SelectedAsARing: Story = {
+  name: 'Selected',
+  render: () => (
+    <div className='d-flex flex-wrap gap-2 align-items-center'>
+      <Chip className='tag-light-green' selected>
+        onboarding
+      </Chip>
+      <Chip className='tag-light-mint' selected={false}>
+        analytics
+      </Chip>
+      <Chip className='tag-blue' selected={false}>
+        billing
+      </Chip>
     </div>
   ),
 }

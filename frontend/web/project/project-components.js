@@ -2,7 +2,6 @@ import { PureComponent } from 'react'
 import Select, { components } from 'react-select'
 import Button from 'components/base/forms/Button'
 import Paging from 'components/Paging'
-import ToggleChip from 'components/ToggleChip'
 import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
 import PanelSearch from 'components/PanelSearch'
@@ -87,8 +86,6 @@ window.Loader = class extends PureComponent {
 }
 
 window.Tooltip = Tooltip
-
-global.ToggleChip = ToggleChip
 
 // Custom Option component to show the tick mark next to selected option in the dropdown
 const Option = (props) => {
