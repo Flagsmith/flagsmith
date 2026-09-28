@@ -2,7 +2,10 @@ import React, { FC, useEffect, useMemo, useState } from 'react'
 import { filter as loFilter } from 'lodash'
 import { useHasPermission } from 'common/providers/Permission'
 import Utils from 'common/utils/utils'
+import { contentColours } from 'common/theme/tokens'
 import InlineModal from 'components/InlineModal'
+import TagRow from './TagRow'
+import DropdownMenu from 'components/base/DropdownMenu'
 import Constants from 'common/constants'
 import TagValues from './TagValues'
 import {
@@ -15,7 +18,6 @@ import Tag from './Tag'
 import CreateEditTag from './CreateEditTag'
 import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/icons/Icon'
 import TagUsage from 'components/TagUsage'
 import { ProjectPermission } from 'common/types/permissions.types'
 
@@ -36,21 +38,17 @@ const AddEditTags: FC<AddEditTagsType> = ({
     projectId,
   })
 
-  const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
-
   const unhealthyTagId = useMemo(() => {
     return data?.find((tag) => tag?.type === 'UNHEALTHY')?.id
   }, [data])
 
-  const projectTags = useMemo(() => {
-    if (!isFeatureHealthEnabled) {
-      return data
-    }
-
-    return data?.filter(
-      (projectTag) => !['UNHEALTHY'].includes(projectTag.type),
-    )
-  }, [data, isFeatureHealthEnabled])
+  // The unhealthy tag is applied by the system, never picked, so it stays out
+  // of the list whatever the feature flag says. This used to keep it when the
+  // flag was off and rely on Tag returning null to hide it again.
+  const projectTags = useMemo(
+    () => data?.filter((projectTag) => projectTag.type !== 'UNHEALTHY'),
+    [data],
+  )
 
   const [filter, setFilter] = useState('')
   const [isOpen, setIsOpen] = useState(false)
@@ -93,7 +91,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
         <div>
           Are you sure you wish to delete the tag{' '}
           <div className='d-inline-block'>
-            <Tag disabled={Utils.tagDisabled(tag)} tag={tag} />
+            <Tag tag={tag} />
           </div>
           ? This action cannot be undone.
           <TagUsage projectId={projectId} tag={tag.id} />
@@ -133,8 +131,8 @@ const AddEditTags: FC<AddEditTagsType> = ({
   }, [filter, projectTags])
   const noTags = projectTags && !projectTags.length
 
-  const color =
-    Constants.tagColors[projectTags?.length || 0] || Constants.tagColors[0]
+  const palette = Object.values(contentColours)
+  const color = palette[(projectTags?.length || 0) % palette.length]
   const submit = () => {
     createTag({
       projectId,
@@ -150,7 +148,6 @@ const AddEditTags: FC<AddEditTagsType> = ({
     <div>
       <Row className='inline-tags mt-2'>
         <TagValues
-          hideNames={false}
           hideTags={unhealthyTagId ? [unhealthyTagId] : undefined}
           projectId={projectId}
           onAdd={readOnly ? undefined : toggle}
@@ -181,6 +178,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
           showBack={tab !== 'SELECT'}
           onClose={toggle}
           className='inline-modal--sm pb-0'
+          containerClassName='px-0 py-2'
           bottom={
             !readOnly && (
               <div className='text-right'>
@@ -212,43 +210,38 @@ const AddEditTags: FC<AddEditTagsType> = ({
                 <Loader />
               </div>
             )}
-            <div className='tag-list d-flex flex-column gap-3'>
+            <div className='tag-list d-flex flex-column'>
               {filteredTags &&
                 filteredTags.map((tag) => (
-                  <div key={tag.id}>
-                    <Row>
-                      <Flex className='align-items-start'>
-                        <Tag
-                          disabled={Utils.tagDisabled(tag)}
-                          onClick={selectTag}
-                          selected={value?.includes(tag.id)}
-                          tag={tag}
+                  <TagRow
+                    checked={value?.includes(tag.id)}
+                    disabled={Utils.tagDisabled(tag)}
+                    key={tag.id}
+                    onToggle={selectTag}
+                    tag={tag}
+                    trailing={
+                      !readOnly &&
+                      !!createEditTagPermission &&
+                      !tag.is_system_tag && (
+                        <DropdownMenu
+                          items={[
+                            {
+                              icon: 'setting',
+                              label: 'Edit',
+                              onClick: () => editTag(tag),
+                            },
+                            {
+                              className: 'text-danger',
+                              icon: 'trash-2',
+                              label: 'Delete',
+                              onClick: () => confirmDeleteTag(tag),
+                            },
+                          ]}
+                          trigger='link'
                         />
-                      </Flex>
-                      {!readOnly &&
-                        !!createEditTagPermission &&
-                        !tag.is_system_tag && (
-                          <>
-                            <div
-                              onClick={() => editTag(tag)}
-                              className={
-                                !readOnly
-                                  ? 'clickable'
-                                  : 'opacity-0 pointer-events-none'
-                              }
-                            >
-                              <Icon width={18} name='setting' fill='#9DA4AE' />
-                            </div>
-                            <div
-                              onClick={() => confirmDeleteTag(tag)}
-                              className='ml-3 clickable'
-                            >
-                              <Icon width={18} name='trash-2' fill='#ef4d56' />
-                            </div>
-                          </>
-                        )}
-                    </Row>
-                  </div>
+                      )
+                    }
+                  />
                 ))}
               {!!filter && !exactTag ? (
                 <div
