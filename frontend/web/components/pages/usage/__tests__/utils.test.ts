@@ -6,6 +6,7 @@ import {
   allowanceWindowLabel,
   showsContribution,
   showsPlanCeiling,
+  showsProjection,
   usageBasisOf,
   periodsFor,
   resolvePeriod,
@@ -168,6 +169,26 @@ describe('UsageDashboard utils', () => {
       expect(
         showsContribution(billed, 'current_billing_period', undefined),
       ).toBe(false)
+    })
+  })
+
+  describe('showsProjection', () => {
+    it('projects the organisation over the period the end belongs to', () => {
+      expect(showsProjection('current_billing_period', undefined)).toBe(true)
+    })
+
+    // The measurements are last period's; the end date is this period's.
+    it('refuses a past period', () => {
+      expect(showsProjection('previous_billing_period', undefined)).toBe(false)
+    })
+
+    it('refuses the rolling windows, which have no end to project to', () => {
+      expect(showsProjection(undefined, undefined)).toBe(false)
+      expect(showsProjection('90_day_period', undefined)).toBe(false)
+    })
+
+    it('refuses a single project, whose share has nothing to project to', () => {
+      expect(showsProjection('current_billing_period', 12)).toBe(false)
     })
   })
 

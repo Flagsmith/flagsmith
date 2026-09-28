@@ -43,7 +43,7 @@ export const WithANote: Story = {
     limit: 2000000,
     note: (
       <p className='mt-3 mb-0 text-muted fs-small'>
-        On track to use ~1.9M calls by the end of the period.
+        Estimated to reach ~1.9M calls by the end of the period.
       </p>
     ),
     total: 1240000,

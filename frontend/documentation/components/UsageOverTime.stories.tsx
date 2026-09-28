@@ -1,3 +1,4 @@
+import moment from 'moment'
 import type { Meta, StoryObj } from 'storybook'
 import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
 import { Res } from 'common/types/responses'
@@ -12,6 +13,9 @@ export default meta
 
 type Story = StoryObj<typeof UsageOverTime>
 
+// Relative dates would redraw the chart on every visual regression run.
+const TODAY = moment.utc('2026-09-15T00:00:00Z')
+
 // Weekends lighter, so the shape reads like real traffic rather than a ramp.
 const DAY_WEIGHTS = [1.08, 1.12, 1.05, 1.1, 0.98, 0.62, 0.58]
 
@@ -19,7 +23,9 @@ const usage = (days: number, perDay: number): Res['organisationUsage'] => {
   const events = Array.from({ length: days }).map((_, index) => {
     const weight = DAY_WEIGHTS[index % DAY_WEIGHTS.length]
     return {
-      day: `2026-08-${`${index + 1}`.padStart(2, '0')}`,
+      day: TODAY.clone()
+        .subtract(days - 1 - index, 'days')
+        .format('YYYY-MM-DD'),
       environment_document: Math.round(perDay * weight * 0.04),
       flags: Math.round(perDay * weight * 0.63),
       identities: Math.round(perDay * weight * 0.24),
@@ -59,6 +65,26 @@ export const CumulativeCrossingTheCeiling: Story = {
     data: usage(24, 110000),
     isBillingPeriod: true,
     limit: 2000000,
+  },
+}
+
+export const CumulativeWithAProjection: Story = {
+  args: {
+    data: usage(18, 70000),
+    isBillingPeriod: true,
+    limit: 2000000,
+    periodEndsAt: TODAY.clone().add(12, 'days').toISOString(),
+    projectedTotal: 1800000,
+  },
+}
+
+export const ProjectionLandingOverTheCeiling: Story = {
+  args: {
+    data: usage(18, 70000),
+    isBillingPeriod: true,
+    limit: 1000000,
+    periodEndsAt: TODAY.clone().add(12, 'days').toISOString(),
+    projectedTotal: 1800000,
   },
 }
 

@@ -1,4 +1,4 @@
 export type ChartDataPoint = {
   day: string
-  [key: string]: string | number
+  [key: string]: string | number | null
 }
