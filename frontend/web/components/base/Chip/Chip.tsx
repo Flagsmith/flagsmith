@@ -5,7 +5,12 @@ import { colorIconSecondary } from 'common/theme/tokens'
 import './Chip.scss'
 
 export type ChipSize = 'default' | 'sm' | 'xs'
-export type ChipVariant = 'neutral' | 'accent'
+export type ChipVariant =
+  | 'neutral'
+  | 'accent'
+  // The caller supplies the colour through className. Used by tags, whose
+  // colour is a user's decorative choice rather than a semantic role.
+  | 'none'
 
 export type ChipProps = {
   children: ReactNode
@@ -31,6 +36,9 @@ export type ChipProps = {
 const VARIANT_UTILITIES: Record<ChipVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
   neutral: 'bg-surface-subtle text-default',
+  // No utilities: a caller-supplied colour class would otherwise have to beat
+  // these on source order alone, which a reordered stylesheet would break.
+  none: '',
 }
 
 // Token-based chip primitive. Uses `ds-chip` rather than the legacy `.chip`
