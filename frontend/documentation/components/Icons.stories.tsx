@@ -59,6 +59,7 @@ const CATEGORIES: IconCategory[] = [
       'info',
       'info-outlined',
       'lock',
+      'lock-outline',
       'shield',
       'stale',
       'warning',

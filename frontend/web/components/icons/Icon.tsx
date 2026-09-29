@@ -64,6 +64,7 @@ export type IconName =
   | 'shield'
   | 'link'
   | 'lock'
+  | 'lock-outline'
   | 'sun'
   | 'timer'
   | 'trash-2'
@@ -173,6 +174,38 @@ const Icon: FC<IconType> = ({
           <path
             d='M368 192h-16v-80a96 96 0 10-192 0v80h-16a64.07 64.07 0 00-64 64v176a64.07 64.07 0 0064 64h224a64.07 64.07 0 0064-64V256a64.07 64.07 0 00-64-64zm-48 0H192v-80a64 64 0 11128 0z'
             fill={fill || 'currentColor'}
+          />
+        </svg>
+      )
+    }
+    case 'lock-outline': {
+      return (
+        <svg
+          xmlns='http://www.w3.org/2000/svg'
+          width={width || '24'}
+          height={height || width || '24'}
+          viewBox='0 0 512 512'
+          fill='none'
+          {...rest}
+        >
+          <rect
+            x='80'
+            y='192'
+            width='352'
+            height='272'
+            rx='48'
+            ry='48'
+            stroke={fill || 'currentColor'}
+            strokeWidth='32'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M144 192v-40a112 112 0 01224 0v40'
+            stroke={fill || 'currentColor'}
+            strokeWidth='32'
+            strokeLinecap='round'
+            strokeLinejoin='round'
           />
         </svg>
       )
