@@ -1,69 +1,66 @@
 import React, { FC } from 'react'
 import { Tag as TTag } from 'common/types/responses'
 import Format from 'common/utils/format'
-import { IonIcon } from '@ionic/react'
-import { alarmOutline, lockClosed, warning } from 'ionicons/icons'
 import Tooltip from 'components/Tooltip'
-import { getTagColor } from './Tag'
 import OrganisationStore from 'common/stores/organisation-store'
-import Utils from 'common/utils/utils'
 import classNames from 'classnames'
-import Icon from 'components/icons/Icon'
-import Color from 'color'
+import Icon, { IconName } from 'components/icons/Icon'
+import {
+  SYSTEM_TAG_UTILITIES,
+  getTagSwatchUtilities,
+  isSystemTag,
+} from './tagSwatch'
 type TagContent = {
   tag: Partial<TTag>
+  disabled?: boolean
 }
+// Numeric-entity everything that is not alphanumeric or beyond Latin-1.
+// Stated as the characters it keeps rather than the four ranges it escaped:
+// the same set, without control characters in the literal.
 function escapeHTML(unsafe: string) {
   return unsafe.replace(
-    /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u00FF]/g,
+    /[^0-9A-Za-z\u0100-\uFFFF]/g,
     (c) => `&#${`000${c.charCodeAt(0)}`.slice(-4)};`,
   )
 }
 
+const VCS_ICON_BY_LABEL: Record<string, IconName> = {
+  'Issue Closed': 'issue-closed',
+  'Issue Open': 'issue-linked',
+  'PR Closed': 'pr-closed',
+  'PR Dequeued': 'pr-dequeued',
+  'PR Draft': 'pr-draft',
+  'PR Merged': 'pr-merged',
+  'PR Open': 'pr-linked',
+}
+
 const renderIcon = (
   tagType: string,
-  tagColor: string,
   tagLabel: string,
   isPermanent: boolean,
 ) => {
-  const darkened = tagColor.darken(0.1).string()
   switch (tagType) {
     case 'STALE':
-      return <IonIcon className='ms-1' icon={alarmOutline} color={darkened} />
+      return <Icon name='stale' />
     case 'UNHEALTHY':
-      return <IonIcon className='ms-1' icon={warning} color={darkened} />
+      return <Icon name='warning' width={16} />
     case 'GITHUB':
-      switch (tagLabel) {
-        case 'PR Open':
-          return <Icon name='pr-linked' />
-        case 'PR Merged':
-          return <Icon name='pr-merged' />
-        case 'PR Closed':
-          return <Icon name='pr-closed' />
-        case 'PR Draft':
-          return <Icon name='pr-draft' />
-        case 'Issue Open':
-          return <Icon name='issue-linked' />
-        case 'Issue Closed':
-          return <Icon name='issue-closed' />
-        default:
-          return
-      }
+    case 'GITLAB': {
+      const icon = VCS_ICON_BY_LABEL[tagLabel]
+      return icon ? <Icon name={icon} /> : null
+    }
     default:
-      return isPermanent ? (
-        <IonIcon className='ms-1' icon={lockClosed} color={darkened} />
-      ) : null
+      return isPermanent ? <Icon name='lock' width={16} /> : null
   }
 }
 
-const getTooltip = (tag: TTag | undefined) => {
+const getTooltip = (tag: TTag | undefined, disabled?: boolean) => {
   if (!tag) {
     return null
   }
   const stale_flags_limit_days = OrganisationStore.getProject(
     tag.project,
   )?.stale_flags_limit_days
-  const disabled = Utils.tagDisabled(tag)
   const truncated = Format.truncateText(tag.label, 12)
   const isTruncated = truncated !== tag.label ? tag.label : null
   let tooltip = null
@@ -83,17 +80,17 @@ const getTooltip = (tag: TTag | undefined) => {
     tooltip =
       'Features marked with this tag are not monitored for staleness and have deletion protection.'
   }
-  const tagColor = Utils.colour(getTagColor(tag, false))
-
   if (isTruncated) {
+    // Goes through dangerouslySetInnerHTML, so it cannot be a component. Same
+    // classes as the real chip, so there is one set of colour rules.
+    const utilities = isSystemTag(tag)
+      ? SYSTEM_TAG_UTILITIES
+      : getTagSwatchUtilities(tag.color)
     return `<div>
         <span
-          style='background-color: ${tagColor.fade(0.92)};
-          border: 1px solid ${tagColor.fade(0.76)};
-          color: ${tagColor.darken(0.1)};'
-          class="chip d-inline-block chip--xs me-1${
-            disabled ? ' disabled' : ''
-          }"
+          class="ds-chip ds-chip--xs d-inline-flex align-items-center rounded-md me-1 ${utilities}${
+      disabled ? ' opacity-50' : ''
+    }"
         >
           ${`${escapeHTML(tag.label)}`}
         </span>
@@ -103,29 +100,27 @@ const getTooltip = (tag: TTag | undefined) => {
   return tooltip
 }
 
-const TagContent: FC<TagContent> = ({ tag }) => {
+const TagContent: FC<TagContent> = ({ disabled, tag }) => {
   const tagLabel = Format.truncateText(tag.label, 12)
 
   if (!tagLabel) {
     return null
   }
 
-  const disabled = Utils.tagDisabled(tag)
-
   return (
     <Tooltip
       title={
         <span
-          className={classNames('mr-1 flex-row align-items-center', {
+          className={classNames('mr-1 gap-1 flex-row align-items-center', {
             'opacity-50': disabled,
           })}
         >
           {tagLabel}
-          {renderIcon(tag.type!, Utils.colour(tag.color), tag.label!)}
+          {renderIcon(tag.type!, tag.label!, !!tag.is_permanent)}
         </span>
       }
     >
-      {getTooltip(tag)}
+      {getTooltip(tag, disabled)}
     </Tooltip>
   )
 }

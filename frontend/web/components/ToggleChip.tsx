@@ -1,10 +1,10 @@
 import React, { FC, ReactNode } from 'react'
 import cx from 'classnames'
 import Icon from './icons/Icon'
-import Utils from 'common/utils/utils'
+import Chip from './base/Chip'
+import './ToggleChip.scss'
 
 type ToggleChipProps = {
-  color?: string
   active?: boolean
   onClick?: () => void
   className?: string
@@ -15,37 +15,26 @@ const ToggleChip: FC<ToggleChipProps> = ({
   active,
   children,
   className,
-  color,
   onClick,
-}) => {
-  const colour = Utils.colour(color)
-  return (
-    <Row
-      style={
-        color
-          ? {
-              backgroundColor: children ? colour.fade(0.92) : colour.fade(0.76),
-              border: `1px solid ${colour.fade(0.76)}`,
-              color: colour.darken(0.1),
-            }
-          : undefined
-      }
-      onClick={onClick}
-      className={cx('chip no-wrap mr-1 mt-0 clickable', className)}
+}) => (
+  <Chip
+    className={cx('no-wrap mr-1 mt-0', className)}
+    onClick={onClick}
+    size='xs'
+    variant='none'
+  >
+    {/* Without a label this is a bare swatch, e.g. the tag colour picker, where
+        the box would be noise: the tick alone marks the selection. */}
+    <span
+      className={cx('d-inline-flex align-items-center justify-content-center', {
+        'toggle-chip__check': !!children,
+        'toggle-chip__check--active': active && !!children,
+      })}
     >
-      <span
-        style={{
-          backgroundColor: active ? 'white' : 'transparent',
-          border:
-            active || !children ? 'none' : `1px solid ${colour.fade(0.76)}`,
-        }}
-        className={cx('icon-check', children ? 'mr-2' : null)}
-      >
-        {active && <Icon name='checkmark-square' fill={color} />}
-      </span>
-      {children}
-    </Row>
-  )
-}
+      {active && <Icon name='checkmark' width={14} />}
+    </span>
+    {children}
+  </Chip>
+)
 
 export default ToggleChip
