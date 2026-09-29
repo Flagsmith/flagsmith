@@ -44,6 +44,15 @@ export const getTagSwatch = (color?: string | null): TagSwatch | null => {
   return BY_SWATCH_VALUE[key] ?? SWATCH_BY_COLOR[key] ?? null
 }
 
+/** "light-green" reads as "Light green": a swatch has no other name. */
+export const swatchLabel = (swatch: TagSwatch): string => {
+  const words = swatch.replace(/-/g, ' ')
+  return words[0].toUpperCase() + words.slice(1)
+}
+
+/** The generator emits one of these per Content hue. */
+export const swatchUtilities = (swatch: TagSwatch): string => `tag-${swatch}`
+
 // A colour we have never issued, from the API or an import. Neutral rather than
 // a guess: the label still reads, and the tag is not claiming a category it was
 // not given.
@@ -51,7 +60,7 @@ const NEUTRAL_UTILITIES = 'bg-surface-subtle text-default'
 
 export const getTagSwatchUtilities = (color?: string | null): string => {
   const swatch = getTagSwatch(color)
-  return swatch ? `tag-${swatch}` : NEUTRAL_UTILITIES
+  return swatch ? swatchUtilities(swatch) : NEUTRAL_UTILITIES
 }
 
 export const isSystemTag = (tag: Partial<TTag>): boolean =>

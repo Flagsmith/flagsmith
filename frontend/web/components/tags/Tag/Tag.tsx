@@ -11,6 +11,7 @@ import {
   getTagSwatch,
   getTagSwatchUtilities,
   isSystemTag,
+  swatchLabel,
 } from 'components/tags/tagSwatch'
 
 type TagType = {
@@ -27,12 +28,11 @@ type TagType = {
   isDot?: boolean
 }
 
-/** "light-green" reads as "Light green": a swatch has no other name. */
+// Falls back to the raw value: a colour we never issued has no name but is
+// still better than nothing in a screen reader.
 const swatchName = (colour?: string | null) => {
   const swatch = getTagSwatch(colour)
-  if (!swatch) return colour ?? undefined
-  const words = swatch.replace(/-/g, ' ')
-  return words[0].toUpperCase() + words.slice(1)
+  return swatch ? swatchLabel(swatch) : colour ?? undefined
 }
 
 export const getTagColor = (tag: Partial<TTag>) => {
