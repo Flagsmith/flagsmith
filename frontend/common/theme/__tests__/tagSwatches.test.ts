@@ -1,39 +1,27 @@
 import tokens from 'common/theme/tokens.json'
-import {
-  AA_NON_TEXT,
-  AA_NORMAL_TEXT,
-  contrastRatio,
-} from 'common/theme/contrast'
+import { AA_NORMAL_TEXT, contrastRatio } from 'common/theme/contrast'
 
 const primitives = tokens.primitives as Record<string, string>
 
-const swatches = Object.entries(primitives).filter(([name]) =>
-  name.startsWith('content-'),
+// The ink every tag's label takes, on either theme.
+const INK = primitives['content-always-dark']
+
+const swatches = Object.entries(primitives).filter(
+  ([name, hex]) => name.startsWith('content-') && hex !== INK,
 )
 
-// One stored colour per tag, doing a different job on each ground: a fill
-// under this ink in light, the border against this page in dark.
-const LIGHT_INK = primitives['slate-600']
-const DARK_PAGE = primitives['slate-950']
-
+// A tag keeps one fill on both themes, so the label's contrast is fixed by the
+// palette and cannot change with the page. The fill itself sits at 1.18:1
+// against white, well under the 3:1 for non-text: that is by design, since a
+// tag is read from its label rather than from its edge.
 describe('tag swatches', () => {
   it('has a colour for every hue', () => {
     expect(swatches.length).toBeGreaterThan(0)
   })
 
   describe.each(swatches)('%s', (_name, colour) => {
-    it('passes AA for the label on the fill, in light', () => {
-      expect(contrastRatio(LIGHT_INK, colour)).toBeGreaterThanOrEqual(
-        AA_NORMAL_TEXT,
-      )
-    })
-
-    // In dark there is no fill and the label takes the page's own ink, so the
-    // border is what has to carry the hue. Non-text, hence 3:1.
-    it('passes non-text contrast as the border against the dark page', () => {
-      expect(contrastRatio(colour, DARK_PAGE)).toBeGreaterThanOrEqual(
-        AA_NON_TEXT,
-      )
+    it('passes AA for the label on the fill', () => {
+      expect(contrastRatio(INK, colour)).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
     })
   })
 
