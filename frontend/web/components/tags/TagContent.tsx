@@ -5,11 +5,8 @@ import Tooltip from 'components/Tooltip'
 import OrganisationStore from 'common/stores/organisation-store'
 import classNames from 'classnames'
 import Icon, { IconName } from 'components/icons/Icon'
-import {
-  SYSTEM_TAG_UTILITIES,
-  getTagSwatchUtilities,
-  isSystemTag,
-} from './tagSwatch'
+import { getTagSwatchUtilities } from './tagSwatch'
+import { SYSTEM_TAG_UTILITIES, isSystemTag } from './systemTag'
 type TagContent = {
   disabled?: boolean
   tag: Partial<TTag>

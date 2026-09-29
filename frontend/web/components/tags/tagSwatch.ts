@@ -1,4 +1,3 @@
-import { Tag as TTag } from 'common/types/responses'
 import { contentColourNames, contentColours } from 'common/theme/tokens'
 import type { ContentColour } from 'common/theme/tokens'
 
@@ -7,7 +6,7 @@ export type TagSwatch = ContentColour
 
 // Existing tags to the palette that replaced them (#8465): Constants.tagColors
 // plus the archived and untagged pseudo-tags. Anything else gets the neutral.
-const SWATCH_BY_COLOR: Record<string, TagSwatch> = {
+const LEGACY_BY_COLOR: Record<string, TagSwatch> = {
   '#039587': 'light-mint',
   '#1492f4': 'blue',
   '#14c0f4': 'light-blue',
@@ -32,15 +31,15 @@ const SWATCH_BY_COLOR: Record<string, TagSwatch> = {
   '#ffa500': 'light-peach',
 }
 
-const BY_SWATCH_VALUE: Record<string, TagSwatch> = Object.fromEntries(
+const PALETTE_BY_COLOR: Record<string, TagSwatch> = Object.fromEntries(
   contentColourNames.map((name) => [contentColours[name], name]),
 )
 
 export const getTagSwatch = (color?: string | null): TagSwatch | null => {
   if (!color) return null
   const key = color.toLowerCase()
-  // The picker stores the swatch itself, so a current tag needs no lookup.
-  return BY_SWATCH_VALUE[key] ?? SWATCH_BY_COLOR[key] ?? null
+  // The picker stores the palette's own value, so the legacy map is a fallback.
+  return PALETTE_BY_COLOR[key] ?? LEGACY_BY_COLOR[key] ?? null
 }
 
 /** "light-green" reads as "Light green": a swatch has no other name. */
@@ -52,18 +51,10 @@ export const swatchLabel = (swatch: TagSwatch): string => {
 /** The generator emits one of these per Content hue. */
 export const swatchUtilities = (swatch: TagSwatch): string => `tag-${swatch}`
 
-// A colour we have never issued, from the API or an import. Neutral rather than
-// a guess: the label still reads, and the tag is not claiming a category it was
-// not given.
+// A colour we never issued, so no swatch is a better answer than a guess.
 const NEUTRAL_UTILITIES = 'bg-surface-subtle text-default'
 
 export const getTagSwatchUtilities = (color?: string | null): string => {
   const swatch = getTagSwatch(color)
   return swatch ? swatchUtilities(swatch) : NEUTRAL_UTILITIES
 }
-
-export const isSystemTag = (tag: Partial<TTag>): boolean =>
-  !!tag.type && tag.type !== 'NONE'
-
-export const SYSTEM_TAG_UTILITIES =
-  'bg-surface-default border-default text-default'

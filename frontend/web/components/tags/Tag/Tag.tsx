@@ -7,12 +7,11 @@ import Chip from 'components/base/Chip'
 import TagContent from 'components/tags/TagContent'
 import Constants from 'common/constants'
 import {
-  SYSTEM_TAG_UTILITIES,
   getTagSwatch,
   getTagSwatchUtilities,
-  isSystemTag,
   swatchLabel,
 } from 'components/tags/tagSwatch'
+import { SYSTEM_TAG_UTILITIES, isSystemTag } from 'components/tags/systemTag'
 
 type TagType = {
   className?: string
