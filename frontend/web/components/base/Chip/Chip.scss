@@ -64,8 +64,3 @@
     0 0 0 1px var(--color-surface-default),
     0 0 0 3px var(--color-text-default);
 }
-
-// Faded, so the ring stays the only thing that means selected.
-.ds-chip--unselected {
-  opacity: 0.55;
-}

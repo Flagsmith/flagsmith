@@ -14,7 +14,7 @@ const meta: Meta<typeof Chip> = {
     docs: {
       description: {
         component:
-          'Canonical token-based chip primitive: a small labelled pill token. Layout via Bootstrap utilities, colour/radius via token utilities, padding/sizes/border/truncation in SCSS. Leading/trailing icons go in as children. `none` leaves the colour to the caller, for a decorative colour a user picked rather than a semantic role. `selected` renders a leading checkbox with a tick. The legacy `.chip` (old SCSS vars + manual dark-mode block, ~35×) migrates onto this under #6606.',
+          'Canonical token-based chip primitive: a small labelled pill token. Layout via Bootstrap utilities, colour/radius via token utilities, padding/sizes/border/truncation in SCSS. Leading/trailing icons go in as children. `none` leaves the colour to the caller, for a decorative colour a user picked rather than a semantic role. `selected` rings the chip. The legacy `.chip` (old SCSS vars + manual dark-mode block, ~35×) migrates onto this under #6606.',
       },
     },
     layout: 'centered',
@@ -83,9 +83,9 @@ export const AsCustomTag: Story = {
 }
 
 /**
- * `selected` rings the chip and fades the ones that are not chosen. For a cloud
- * of filter chips the chip is the whole control, and anything drawn inside it
- * competes with the colour the user picked. See TagFilter.
+ * `selected` rings the chip. For a cloud of filter chips the chip is the whole
+ * control, and anything drawn inside it competes with the colour the user
+ * picked. See TagFilter.
  */
 export const SelectedAsARing: Story = {
   name: 'Selected',

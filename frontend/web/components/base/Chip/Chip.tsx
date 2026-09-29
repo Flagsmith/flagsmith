@@ -17,7 +17,7 @@ export type ChipProps = {
   variant?: ChipVariant
   size?: ChipSize
   truncate?: boolean
-  /** Rings the chip when chosen, fades it when not. Lists mark rows instead: see TagRow. */
+  /** Rings the chip when chosen. Lists mark rows instead: see TagRow. */
   selected?: boolean
   onRemove?: () => void
   onClick?: () => void
@@ -76,7 +76,6 @@ const Chip = ({
           'ds-chip--ring': selected,
           'ds-chip--truncate': truncate,
           [`ds-chip--${size}`]: size !== 'default',
-          'ds-chip--unselected': selected === false,
         },
         className,
       )}
