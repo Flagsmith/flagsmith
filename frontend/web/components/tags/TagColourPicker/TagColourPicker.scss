@@ -1,9 +1,11 @@
 .tag-colour-picker {
   // Each swatch is an empty Chip, so without a size it collapses to its
-  // padding and reads as a sliver rather than a colour.
+  // padding and reads as a sliver rather than a colour. The chip's own 6px is
+  // cut for a 24px pill and leaves a 44px square looking square.
   .ds-chip {
     width: 44px;
     height: 44px;
     padding: 0;
+    border-radius: var(--radius-lg);
   }
 }
