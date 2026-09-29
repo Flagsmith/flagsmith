@@ -289,11 +289,11 @@ Attributes:
 ### `features.dependencies.create_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:165`
- - `api/features/dependencies/services.py:297`
+ - `api/features/dependencies/services.py:164`
+ - `api/features/dependencies/services.py:292`
+ - `api/features/dependencies/services.py:315`
  - `api/features/dependencies/services.py:320`
- - `api/features/dependencies/services.py:325`
- - `api/features/dependencies/services.py:335`
+ - `api/features/dependencies/services.py:330`
 
 Attributes:
  - `environment.key`
@@ -305,7 +305,7 @@ Attributes:
 ### `features.dependencies.created`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:128`
+ - `api/features/dependencies/services.py:127`
 
 Attributes:
  - `environment.key`
@@ -317,8 +317,8 @@ Attributes:
 ### `features.dependencies.deleted`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:100`
- - `api/features/dependencies/services.py:126`
+ - `api/features/dependencies/services.py:99`
+ - `api/features/dependencies/services.py:125`
 
 Attributes:
  - `environment.key`

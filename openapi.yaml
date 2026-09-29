@@ -4210,7 +4210,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DependencyErrorDetail'
+                $ref: '#/components/schemas/APIErrorDetail'
       security:
         - tokenAuth: []
         - Master API Key: []
@@ -4254,7 +4254,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DependencyErrorDetail'
+                $ref: '#/components/schemas/APIErrorDetail'
       security:
         - tokenAuth: []
         - Master API Key: []
@@ -4287,7 +4287,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DependencyErrorDetail'
+                $ref: '#/components/schemas/APIErrorDetail'
       security:
         - tokenAuth: []
         - Master API Key: []
@@ -19212,6 +19212,20 @@ paths:
         - processor
 components:
   schemas:
+    APIErrorDetail:
+      description: The body served where the API refuses a request.
+      type: object
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+      required:
+        - code
+        - message
+      title: APIErrorDetail
     ActionEnum:
       description: |-
         * `members` - members
@@ -20971,20 +20985,6 @@ components:
         - condition_json_path
         - is_system
       title: _ReferencingSegment
-    DependencyErrorDetail:
-      description: The body served where a dependency request is refused.
-      type: object
-      properties:
-        code:
-          type: string
-          title: Code
-        message:
-          type: string
-          title: Message
-      required:
-        - code
-        - message
-      title: DependencyErrorDetail
     DependencyList:
       description: The live dependencies a feature takes part in within an environment.
       type: object
@@ -21105,7 +21105,7 @@ components:
       title: _ReferencingSegment
     DependencyRefusedDetail:
       oneOf:
-        - $ref: '#/components/schemas/DependencyErrorDetail'
+        - $ref: '#/components/schemas/APIErrorDetail'
         - $ref: '#/components/schemas/DependencyConflictDetail'
     DerivedFrom:
       type: object
