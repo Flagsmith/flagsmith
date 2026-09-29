@@ -2,9 +2,8 @@
 .toggle-chip__check {
   width: 14px;
   height: 14px;
-  flex-shrink: 0;
+  // The border utility sets only a colour, so the width and style stay here.
   border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-xs);
 
   // Checked: the tick supplies the colour, so the box gets out of its way.
   &--active {

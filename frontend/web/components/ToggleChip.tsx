@@ -34,7 +34,7 @@ const ToggleChip: FC<ToggleChipProps> = ({
         the box would be noise: the tick alone marks the selection. */}
     <span
       className={cx('d-inline-flex align-items-center justify-content-center', {
-        'toggle-chip__check': !!children,
+        'toggle-chip__check flex-shrink-0 rounded-xs': !!children,
         'toggle-chip__check--active': active && !!children,
       })}
     >
