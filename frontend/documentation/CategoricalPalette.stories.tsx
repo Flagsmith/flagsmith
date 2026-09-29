@@ -43,10 +43,11 @@ const PRIMITIVES = tokens.primitives as Record<string, string>
 
 // The Content palette, fixed rather than theme-aware: a tag chip carries its
 // own surface, so it does not follow the page. One ink serves all of them.
+const TAG_INK_NAME = 'content-always-dark'
+const TAG_INK = PRIMITIVES[TAG_INK_NAME]
 const TAG_FILLS = Object.entries(PRIMITIVES)
-  .filter(([name]) => name.startsWith('content-'))
+  .filter(([name]) => name.startsWith('content-') && name !== TAG_INK_NAME)
   .map(([name, hex]) => [name.replace('content-', ''), hex] as const)
-const TAG_INK = PRIMITIVES['slate-600']
 
 export const TagSwatches: StoryObj = {
   name: 'Tag swatches',

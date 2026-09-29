@@ -49,16 +49,21 @@ const Tag: FC<TagType> = ({
     )
   }
 
+  // A system tag carries its state in the icon, so it keeps the plain surface
+  // whether it is being drawn or picked.
+  const isSystem = isSystemTag(tag)
+  const colourUtilities = isSystem
+    ? SYSTEM_TAG_UTILITIES
+    : getTagSwatchUtilities(getTagColor(tag))
+
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
-        className={cx(getTagSwatchUtilities(getTagColor(tag)), className)}
+        className={cx(colourUtilities, className)}
         active={selected}
-        onClick={() => {
-          if (!disabled) {
-            onClick?.(tag as TTag)
-          }
-        }}
+        // No handler when disabled, so it is not a focusable button that does
+        // nothing. The same rule as the drawn branch below.
+        onClick={disabled ? undefined : () => onClick(tag as TTag)}
       >
         {!!tag.label && <TagContent disabled={disabled} tag={tag} />}
       </ToggleChip>
@@ -73,17 +78,13 @@ const Tag: FC<TagType> = ({
     return null
   }
 
-  const isSystem = isSystemTag(tag)
-
   return (
     <Chip
       className={cx(
         // Legacy `.chip` carried margin-right; the primitive does not, so tags
         // keep it here or they butt against whatever follows.
         'me-1',
-        isSystem
-          ? SYSTEM_TAG_UTILITIES
-          : getTagSwatchUtilities(getTagColor(tag)),
+        colourUtilities,
         { 'opacity-50': disabled },
         className,
       )}

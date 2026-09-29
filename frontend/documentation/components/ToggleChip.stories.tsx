@@ -40,10 +40,10 @@ export const AllStates: Story = {
     <div className='d-flex gap-2'>
       <ToggleChip active>Active</ToggleChip>
       <ToggleChip>Inactive</ToggleChip>
-      <ToggleChip active className='tag-green border-0'>
+      <ToggleChip active className='tag-light-green border-0'>
         Swatch, active
       </ToggleChip>
-      <ToggleChip className='tag-green border-0'>Swatch</ToggleChip>
+      <ToggleChip className='tag-light-green border-0'>Swatch</ToggleChip>
     </div>
   ),
 }

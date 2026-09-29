@@ -43,19 +43,30 @@ export const EveryColour: Story = {
   ),
 }
 
+// The VCS icon is keyed on the tag's label, which the integration sets, so the
+// examples use labels it actually produces rather than the type name.
+const SYSTEM_EXAMPLES: Partial<TTag>[] = [
+  { label: 'Stale', type: 'STALE' },
+  { label: 'Unhealthy', type: 'UNHEALTHY' },
+  { label: 'PR Open', type: 'GITHUB' },
+  { label: 'PR Merged', type: 'GITHUB' },
+  { label: 'Issue Open', type: 'GITLAB' },
+  { label: 'Issue Closed', type: 'GITLAB' },
+]
+
 export const SystemTags: Story = {
   name: 'System tags',
   render: () => (
     <div className='d-flex flex-wrap gap-1'>
-      {(['STALE', 'GITHUB', 'GITLAB', 'UNHEALTHY'] as const).map((type) => (
-        <Tag key={type} tag={tag({ label: type, type })} />
+      {SYSTEM_EXAMPLES.map((over) => (
+        <Tag key={over.label} tag={tag(over)} />
       ))}
     </div>
   ),
 }
 
-// A colour the picker never offered: the API takes any hex, so a tag created
-// outside the UI falls through to the neutral rather than an unvalidated fill.
+// A colour the picker never offered. The API takes any hex, so it is matched to
+// the nearest Content hue rather than rendered as stored.
 export const UnknownColour: Story = {
   args: { tag: tag({ color: '#123456', label: 'Set via API' }) },
   name: 'Colour outside the scale',

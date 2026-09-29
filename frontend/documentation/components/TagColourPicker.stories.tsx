@@ -22,12 +22,14 @@ export default meta
 
 type Story = StoryObj<typeof TagColourPicker>
 
+const noop = () => undefined
+
 export const Default: Story = {
-  args: { value: Constants.tagColors[0] },
+  args: { onChange: noop, value: Constants.tagColors[0] },
 }
 
 export const NothingSelected: Story = {
-  args: { value: undefined },
+  args: { onChange: noop, value: undefined },
   name: 'Nothing selected',
 }
 
