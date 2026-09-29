@@ -17,13 +17,13 @@ export type ChipProps = {
   variant?: ChipVariant
   size?: ChipSize
   truncate?: boolean
+  /** Rings the chip when chosen, fades it when not. Lists mark rows instead: see TagRow. */
+  selected?: boolean
   onRemove?: () => void
   onClick?: () => void
   className?: string
-  // Opt into membership of a keyboard group (e.g. a radiogroup): supply the
-  // role, roving tabIndex, checked state, key handler and ref. These override
-  // the button semantics onClick applies by default, so the group owner can
-  // drive arrow-key navigation. See SdkPicker.
+  // Membership of a caller-driven keyboard group, overriding the default
+  // button semantics. See SdkPicker.
   role?: 'button' | 'radio'
   tabIndex?: number
   'aria-checked'?: boolean
@@ -36,16 +36,10 @@ export type ChipProps = {
 const VARIANT_UTILITIES: Record<ChipVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
   neutral: 'bg-surface-subtle text-default',
-  // No utilities: a caller-supplied colour class would otherwise have to beat
-  // these on source order alone, which a reordered stylesheet would break.
   none: '',
 }
 
-// Token-based chip primitive. Uses `ds-chip` rather than the legacy `.chip`
-// (old SCSS vars + a manual `.dark {}` block, ~35 usages) so the two coexist
-// until those migrate under #6606. Clickable on its own (role=button), or a
-// member of a caller-driven keyboard group via the role/tabIndex/onKeyDown/ref
-// props. Count badges are out of scope.
+// `ds-chip` rather than the legacy `.chip`, which ~35 components still use.
 const Chip = ({
   'aria-checked': ariaChecked,
   'aria-expanded': ariaExpanded,
@@ -56,6 +50,7 @@ const Chip = ({
   onRemove,
   ref,
   role,
+  selected,
   size = 'default',
   tabIndex,
   truncate = false,
@@ -66,20 +61,23 @@ const Chip = ({
     <span
       ref={ref}
       className={classNames(
-        'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
+        // 6px radius is fixed by the design system's tags frame.
+        'ds-chip d-inline-flex align-items-center align-middle gap-2 rounded-md',
         VARIANT_UTILITIES[variant],
         {
           'ds-chip--accent': variant === 'accent',
           'ds-chip--clickable': interactive,
-          [`ds-chip--${size}`]: size !== 'default',
+          'ds-chip--ring': selected,
           'ds-chip--truncate': truncate,
+          [`ds-chip--${size}`]: size !== 'default',
+          'ds-chip--unselected': selected === false,
         },
         className,
       )}
       onClick={onClick}
       role={role ?? (onClick ? 'button' : undefined)}
       tabIndex={interactive ? tabIndex ?? 0 : undefined}
-      aria-checked={ariaChecked}
+      aria-checked={ariaChecked ?? selected}
       aria-expanded={ariaExpanded}
       onKeyDown={
         onKeyDown ??
