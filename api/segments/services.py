@@ -17,13 +17,17 @@ if typing.TYPE_CHECKING:
     from segments.models import Segment, SegmentRule
 
 
-def get_all_live_or_scheduled_overrides() -> "QuerySet[FeatureSegment]":
-    """Get the feature overrides that are live now or scheduled to go live."""
+def get_live_overrides(
+    *, include_scheduled: bool = False
+) -> "QuerySet[FeatureSegment]":
+    """Get the feature overrides that are live now, or also scheduled to go live."""
     no_change_request = models.Q(change_request__isnull=True)
     committed_change_request = models.Q(change_request__committed_at__isnull=False)
     with_feature_versioning_v1 = models.Q(
         environment__use_v2_feature_versioning=False,
     ) & (no_change_request | committed_change_request)
+    if not include_scheduled:
+        with_feature_versioning_v1 &= models.Q(live_from__lte=timezone.now())
 
     superseding_versions = EnvironmentFeatureVersion.objects.filter(
         environment_id=models.OuterRef("environment_id"),
@@ -34,10 +38,17 @@ def get_all_live_or_scheduled_overrides() -> "QuerySet[FeatureSegment]":
     )
     # Filtering on not superseded is the same as filtering on the latest
     # live EFV but uses the index on feature, environment.
-    with_feature_versioning_v2 = models.Q(
+    published_v2_versions = models.Q(
         environment__use_v2_feature_versioning=True,
         environment_feature_version__published_at__isnull=False,
-    ) & ~models.Exists(superseding_versions)
+    )
+    if not include_scheduled:
+        published_v2_versions &= models.Q(
+            environment_feature_version__live_from__lte=timezone.now(),
+        )
+    with_feature_versioning_v2 = published_v2_versions & ~models.Exists(
+        superseding_versions
+    )
 
     live_or_scheduled_feature_states = FeatureState.objects.filter(
         with_feature_versioning_v1 | with_feature_versioning_v2,

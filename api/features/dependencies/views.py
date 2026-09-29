@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -6,24 +5,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.types import APIErrorDetail, AuthenticatedRequest
-from environments.models import Environment
-from features.dependencies.exceptions import (
-    DependencyConflictDetail,
-    FeatureNotFoundError,
-)
+from environments.services import get_environment
+from features.dependencies.exceptions import DependencyConflictDetail
 from features.dependencies.permissions import check_manage_permissions
-from features.dependencies.services import create_flag_dependency
-from features.dependencies.types import DependencyEdge
-from features.models import Feature
-
-
-def _get_feature(environment: Environment, feature_id: int) -> Feature:
-    try:
-        return Feature.objects.get(  # type: ignore[no-any-return]
-            id=feature_id, project_id=environment.project_id
-        )
-    except Feature.DoesNotExist:
-        raise FeatureNotFoundError(feature_id) from None
+from features.dependencies.services import (
+    create_flag_dependency,
+    list_flag_dependencies,
+    list_flag_dependents,
+)
+from features.dependencies.types import DependencyEdge, DependencyList
+from features.future.permissions import check_read_permissions
+from features.services import get_feature
 
 
 class FeatureDependencyAPIView(APIView):
@@ -50,10 +42,10 @@ class FeatureDependencyAPIView(APIView):
         feature_id: int,
         prerequisite_feature_id: int,
     ) -> Response:
-        environment = get_object_or_404(Environment, api_key=environment_api_key)
+        environment = get_environment(environment_api_key)
         check_manage_permissions(request.user, environment)
-        feature = _get_feature(environment, feature_id)
-        prerequisite_feature = _get_feature(environment, prerequisite_feature_id)
+        feature = get_feature(environment, feature_id)
+        prerequisite_feature = get_feature(environment, prerequisite_feature_id)
         return Response(
             create_flag_dependency(
                 environment=environment,
@@ -63,3 +55,47 @@ class FeatureDependencyAPIView(APIView):
             ),
             status=status.HTTP_201_CREATED,
         )
+
+
+class FeatureDependenciesAPIView(APIView):
+    """List the features a feature depends on in an environment."""
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        responses={200: DependencyList, 404: APIErrorDetail},
+        description="List the features the feature depends on in the environment.",
+    )
+    def get(
+        self,
+        request: AuthenticatedRequest,
+        environment_api_key: str,
+        feature_id: int,
+    ) -> Response:
+        environment = get_environment(environment_api_key)
+        check_read_permissions(request.user, environment)
+        feature = get_feature(environment, feature_id)
+        return Response(
+            list_flag_dependencies(environment=environment, feature=feature)
+        )
+
+
+class FeatureDependentsAPIView(APIView):
+    """List the features depending on a feature in an environment."""
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        responses={200: DependencyList, 404: APIErrorDetail},
+        description="List the features depending on the feature in the environment.",
+    )
+    def get(
+        self,
+        request: AuthenticatedRequest,
+        environment_api_key: str,
+        feature_id: int,
+    ) -> Response:
+        environment = get_environment(environment_api_key)
+        check_read_permissions(request.user, environment)
+        feature = get_feature(environment, feature_id)
+        return Response(list_flag_dependents(environment=environment, feature=feature))

@@ -4,7 +4,7 @@ from collections.abc import Mapping
 
 import structlog
 from drf_spectacular.utils import extend_schema
-from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 from core.exceptions import ChangeRequestsEnabledError
 from core.types import AuthenticatedRequest
 from environments.models import Environment
+from environments.services import get_environment
 from features.future.permissions import (
     check_read_permissions,
     check_segment_overrides_permissions,
@@ -21,24 +22,9 @@ from features.future.serializers import UpdateFlagSerializer
 from features.future.services import delete_segment_override, get_flag, update_flag
 from features.future.types import UpdateFlagRequest, UpdateFlagResponse
 from features.models import Feature
+from features.services import get_feature
 
 logger = structlog.get_logger("features")
-
-
-def _get_environment(environment_key: str) -> Environment:
-    try:
-        return Environment.objects.get(api_key=environment_key)  # type: ignore[no-any-return]
-    except Environment.DoesNotExist:
-        raise NotFound() from None
-
-
-def _get_feature(environment: Environment, feature_id: int) -> Feature:
-    try:
-        return Feature.objects.get(  # type: ignore[no-any-return]
-            id=feature_id, project_id=environment.project_id
-        )
-    except Feature.DoesNotExist:
-        raise NotFound() from None
 
 
 def _check_change_requests_disabled(environment: Environment, feature: Feature) -> None:
@@ -70,9 +56,9 @@ class FlagAPIView(APIView):
     def get(
         self, request: AuthenticatedRequest, environment_key: str, feature_id: int
     ) -> Response:
-        environment = _get_environment(environment_key)
+        environment = get_environment(environment_key)
         check_read_permissions(request.user, environment)
-        feature = _get_feature(environment, feature_id)
+        feature = get_feature(environment, feature_id)
 
         return Response(get_flag(environment=environment, feature=feature))
 
@@ -109,9 +95,9 @@ class FlagAPIView(APIView):
         if not isinstance(request.data, Mapping):
             raise ValidationError("Expected an object.")
 
-        environment = _get_environment(environment_key)
+        environment = get_environment(environment_key)
         check_update_permissions(request.user, environment, request.data)
-        feature = _get_feature(environment, feature_id)
+        feature = get_feature(environment, feature_id)
         _check_change_requests_disabled(environment, feature)
 
         serializer = UpdateFlagSerializer(
@@ -152,9 +138,9 @@ class SegmentOverrideAPIView(APIView):
         feature_id: int,
         segment_id: int,
     ) -> Response:
-        environment = _get_environment(environment_key)
+        environment = get_environment(environment_key)
         check_segment_overrides_permissions(request.user, environment)
-        feature = _get_feature(environment, feature_id)
+        feature = get_feature(environment, feature_id)
         _check_change_requests_disabled(environment, feature)
 
         return Response(

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from rest_framework import status
-from rest_framework.exceptions import APIException, NotFound, PermissionDenied
+from rest_framework.exceptions import APIException, PermissionDenied
 
 from core.types import APIErrorDetail
 from features.dependencies.types import DependencyPath, ReferencingEnvironment
@@ -86,20 +86,6 @@ class DependencyExistsError(DependencyConflictError):
         return (
             f'The feature "{existing_edge["feature"]["name"]}" already depends'
             f' on the feature "{existing_edge["prerequisite"]["name"]}".'
-        )
-
-
-class FeatureNotFoundError(NotFound):
-    """Raised where a feature ID is not in the environment's project."""
-
-    default_code = "feature_not_found"
-
-    def __init__(self, feature_id: int) -> None:
-        super().__init__(
-            {
-                "code": self.default_code,
-                "message": f"Feature ID '{feature_id}' does not exist in the project.",
-            }
         )
 
 

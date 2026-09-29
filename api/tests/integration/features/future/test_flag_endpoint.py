@@ -258,7 +258,10 @@ def test_get_flag__user_not_authorised__responds_404(
 
     # Then
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not found."}
+    assert response.json() == {
+        "code": "environment_not_found",
+        "message": f"Environment key '{environment_api_key}' does not exist.",
+    }
     assert log.events == []
 
 
@@ -1560,7 +1563,10 @@ def test_update_flag__unknown_feature__responds_404(
 
     # Then
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not found."}
+    assert response.json() == {
+        "code": "feature_not_found",
+        "message": f"Feature ID '{unknown_feature}' does not exist in the project.",
+    }
     assert log.events == []
 
 
@@ -1578,7 +1584,10 @@ def test_update_flag__unknown_environment__responds_404(
 
     # Then
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not found."}
+    assert response.json() == {
+        "code": "environment_not_found",
+        "message": "Environment key 'unknown-api-key' does not exist.",
+    }
     assert log.events == []
 
 
@@ -1598,7 +1607,10 @@ def test_update_flag__user_without_environment_permissions__responds_404(
 
     # Then
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not found."}
+    assert response.json() == {
+        "code": "environment_not_found",
+        "message": f"Environment key '{environment_api_key}' does not exist.",
+    }
     environment_default = FeatureState.objects.get_live_feature_states(
         environment=versioned_environment,
         feature_id=feature,
@@ -2178,7 +2190,10 @@ def test_delete_segment_override__unknown_feature__responds_404(
 
     # Then
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not found."}
+    assert response.json() == {
+        "code": "feature_not_found",
+        "message": f"Feature ID '{unknown_feature}' does not exist in the project.",
+    }
     assert log.events == []
 
 
@@ -2197,7 +2212,10 @@ def test_delete_segment_override__unknown_environment__responds_404(
 
     # Then
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not found."}
+    assert response.json() == {
+        "code": "environment_not_found",
+        "message": "Environment key 'unknown-api-key' does not exist.",
+    }
     assert log.events == []
 
 
@@ -2262,7 +2280,10 @@ def test_delete_segment_override__user_without_environment_permissions__responds
 
     # Then
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not found."}
+    assert response.json() == {
+        "code": "environment_not_found",
+        "message": f"Environment key '{environment_api_key}' does not exist.",
+    }
     assert (
         FeatureState.objects.get_live_feature_states(
             environment=versioned_environment,

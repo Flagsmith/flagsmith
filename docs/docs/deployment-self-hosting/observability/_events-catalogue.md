@@ -289,11 +289,11 @@ Attributes:
 ### `features.dependencies.create_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:163`
- - `api/features/dependencies/services.py:268`
- - `api/features/dependencies/services.py:289`
- - `api/features/dependencies/services.py:294`
- - `api/features/dependencies/services.py:304`
+ - `api/features/dependencies/services.py:164`
+ - `api/features/dependencies/services.py:292`
+ - `api/features/dependencies/services.py:315`
+ - `api/features/dependencies/services.py:320`
+ - `api/features/dependencies/services.py:330`
 
 Attributes:
  - `environment.key`
@@ -305,7 +305,7 @@ Attributes:
 ### `features.dependencies.created`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:128`
+ - `api/features/dependencies/services.py:127`
 
 Attributes:
  - `environment.key`
@@ -317,8 +317,8 @@ Attributes:
 ### `features.dependencies.deleted`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:100`
- - `api/features/dependencies/services.py:126`
+ - `api/features/dependencies/services.py:99`
+ - `api/features/dependencies/services.py:125`
 
 Attributes:
  - `environment.key`
@@ -330,7 +330,7 @@ Attributes:
 ### `features.flag.update_rejected`
 
 Logged at `warning` from:
- - `api/features/future/views.py:49`
+ - `api/features/future/views.py:35`
 
 Attributes:
  - `environment.id`
@@ -707,7 +707,7 @@ Attributes:
 ### `segments.delete_rejected`
 
 Logged at `warning` from:
- - `api/segments/views.py:279`
+ - `api/segments/views.py:283`
 
 Attributes:
  - `organisation.id`
@@ -718,7 +718,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:237`
+ - `api/segments/serializers.py:239`
 
 Attributes:
  - `revision_id`
