@@ -25,7 +25,6 @@ from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
-from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
 from task_processor.task_run_method import TaskRunMethod
 
 from app.utils import get_numbered_env_vars_with_prefix
@@ -206,10 +205,6 @@ if "DATABASE_URL" in os.environ:
             conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         ),
     }
-    if DATABASES["default"]["ENGINE"] == "django.db.backends.postgresql":
-        DATABASES["default"].setdefault("OPTIONS", {}).setdefault(
-            "isolation_level", ISOLATION_LEVEL_READ_COMMITTED
-        )
     FLAGSMITH_MIGRATE_DATABASES.append("default")
     FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("default")
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
@@ -283,7 +278,6 @@ elif "DJANGO_DB_NAME" in os.environ:
             "PORT": os.environ["DJANGO_DB_PORT"],
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
             "CONN_HEALTH_CHECKS": DJANGO_DB_CONN_HEALTH_CHECKS,
-            "OPTIONS": {"isolation_level": ISOLATION_LEVEL_READ_COMMITTED},
         },
     }
     FLAGSMITH_MIGRATE_DATABASES.append("default")
