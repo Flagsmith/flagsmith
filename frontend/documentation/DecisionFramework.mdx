@@ -9,16 +9,15 @@ import { Meta } from '@storybook/addon-docs/blocks'
 
 Use this decision framework when you need to add a colour to the codebase. It ensures colours end up in the right layer.
 
-### Is it for tags or projects?
+### Is it decorative: a tag, a project, a chart series?
 
-→ Add to `constants.ts`, where the existing ones live.
+→ Add to `tokens.json` as its own group, alongside `chart`, not under `color`.
 → Does NOT need a primitive scale.
-→ These are decorative identifiers a user picks, not UI roles.
+→ These are identifiers that need to be distinct from each other, not UI roles.
 
-### Is it for data visualisation?
-
-→ Add to the `chart` group in `tokens.json`, not under `color`.
-→ Themed, so it needs a light and a dark value, but scoped to one feature.
+Tag and project colours are still hardcoded in `constants.ts`. That is debt, not
+the pattern: colour belongs to the colour system, and `constants.ts` should hold
+none of it. Do not add to it.
 
 ### Does it fit an existing colour family?
 
@@ -54,9 +53,14 @@ Use this decision framework when you need to add a colour to the codebase. It en
 
 ## What is NOT a semantic token
 
-- **Tag colours** — decorative values users pick from when creating a tag, currently in `constants.ts`. They do not map to a primitive family, and forcing them into scales would cost the visual distinction they exist for.
-- **Project colours** — 6 values in `constants.ts`, assigned by index for project avatar badges. Decorative, not semantic.
+- **Tag colours** — values a user picks when creating a tag. They do not map to a primitive family, and forcing them into scales would cost the visual distinction they exist for.
+- **Project colours** — assigned by index for project avatar badges.
 - **Chart/data viz palettes** — the `chart` group in `tokens.json`. Themed, but scoped to one feature rather than a cross-cutting UI role.
+
+Tags and projects are decorative rather than semantic, but they are still colour,
+so they belong in `tokens.json` beside `chart`. Both are in `constants.ts` today,
+along with `colours.primary` and `colours.white`, which simply restate
+`--primary-500` and `--always-white`.
 - **Third-party brand colours** — GitHub, Google, etc. Use their official values directly.
 
 ---

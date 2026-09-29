@@ -67,10 +67,11 @@ export const TagColours: StoryObj = {
       title='Tag colours'
       description={
         <>
-          20 decorative colours users pick from when creating tags, defined in{' '}
-          <code>constants.ts</code>. These are NOT semantic tokens &mdash; they
-          are categorical identifiers that need to be visually distinct from
-          each other.
+          20 decorative colours users pick from when creating tags, in{' '}
+          <code>constants.ts</code> today and moving into{' '}
+          <code>tokens.json</code> beside the chart palette. These are NOT
+          semantic tokens &mdash; they are categorical identifiers that need to
+          be visually distinct from each other.
         </>
       }
     >
@@ -93,8 +94,9 @@ export const ProjectColours: StoryObj = {
       title='Project colours'
       description={
         <>
-          6 colours assigned by index for project avatar badges, defined in{' '}
-          <code>constants.ts</code>. Decorative &mdash; not tied to any UI role
+          6 colours assigned by index for project avatar badges, in{' '}
+          <code>constants.ts</code> today and moving into{' '}
+          <code>tokens.json</code>. Decorative &mdash; not tied to any UI role
           or theme.
         </>
       }
