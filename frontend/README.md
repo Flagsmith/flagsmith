@@ -19,8 +19,8 @@ Please go to the following page and choose a password: http://localhost:8000/pas
 ### Local development
 
 The project assumes the following tools installed:
-- [Node.js](https://nodejs.org/) version 22.x
-- [npm](https://www.npmjs.com/) version 10.x
+- [Node.js](https://nodejs.org/) version 24.x
+- [npm](https://www.npmjs.com/) version 11.x (11.10 or later, as bundled with Node 24)
 
 To install dependencies, run `npm install`.
 
