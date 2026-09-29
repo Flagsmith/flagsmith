@@ -15,6 +15,7 @@ import {
 
 type TagType = {
   className?: string
+  disabled?: boolean
   hideNames?: boolean
   onClick?: (tag: TTag) => void
   selected?: boolean
@@ -31,6 +32,7 @@ export const getTagColor = (tag: Partial<TTag>) => {
 
 const Tag: FC<TagType> = ({
   className,
+  disabled,
   hideNames,
   isDot,
   onClick,
@@ -47,8 +49,6 @@ const Tag: FC<TagType> = ({
     )
   }
 
-  const disabled = Utils.tagDisabled(tag)
-
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
@@ -60,7 +60,7 @@ const Tag: FC<TagType> = ({
           }
         }}
       >
-        {!!tag.label && <TagContent tag={tag} />}
+        {!!tag.label && <TagContent disabled={disabled} tag={tag} />}
       </ToggleChip>
     )
   }
@@ -84,15 +84,14 @@ const Tag: FC<TagType> = ({
         isSystem
           ? SYSTEM_TAG_UTILITIES
           : getTagSwatchUtilities(getTagColor(tag)),
-        // The fill carries the colour, so a border would double the edge.
-        { 'border-0': !isSystem, 'opacity-50': disabled },
+        { 'opacity-50': disabled },
         className,
       )}
       onClick={disabled || !onClick ? undefined : () => onClick(tag as TTag)}
       size='xs'
       variant='none'
     >
-      <TagContent tag={tag} />
+      <TagContent disabled={disabled} tag={tag} />
     </Chip>
   )
 }
