@@ -237,7 +237,6 @@ const AddEditTags: FC<AddEditTagsType> = ({
                               onClick: () => confirmDeleteTag(tag),
                             },
                           ]}
-                          trigger='link'
                         />
                       )
                     }
