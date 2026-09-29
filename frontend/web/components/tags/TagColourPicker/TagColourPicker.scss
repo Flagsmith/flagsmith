@@ -1,10 +1,8 @@
-.tag-colour-picker__swatch {
-  border-radius: var(--radius-lg);
-}
-
 // Two rings: the inner is the page surface, so the outer reads against any
-// fill. Same treatment as a selected chip.
+// fill. Same treatment as a selected chip. The radius is here because a
+// box-shadow follows the button's own corners, not the swatch's.
 .tag-colour-picker__swatch--selected {
+  border-radius: var(--radius-lg);
   box-shadow:
     0 0 0 1px var(--color-surface-default),
     0 0 0 3px var(--color-text-default);
