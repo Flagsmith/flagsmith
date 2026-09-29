@@ -45,9 +45,10 @@ export const EveryColour: Story = {
 
 // The VCS icon is keyed on the tag's label, which the integration sets, so the
 // examples use labels it actually produces rather than the type name.
+// No Unhealthy example: Tag returns null for it unless the feature_health flag
+// is on, and Storybook's Utils stub answers false to every flag.
 const SYSTEM_EXAMPLES: Partial<TTag>[] = [
   { label: 'Stale', type: 'STALE' },
-  { label: 'Unhealthy', type: 'UNHEALTHY' },
   { label: 'PR Open', type: 'GITHUB' },
   { label: 'PR Merged', type: 'GITHUB' },
   { label: 'Issue Open', type: 'GITLAB' },
