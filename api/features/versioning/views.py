@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import structlog
 from common.environments.permissions import (
     VIEW_ENVIRONMENT,
 )
@@ -24,6 +25,7 @@ from rest_framework.serializers import Serializer
 from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
+from core.exceptions import ChangeRequestsEnabledError
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.serializers import (
@@ -45,6 +47,24 @@ from features.versioning.serializers import (
     EnvironmentFeatureVersionSerializer,
 )
 from users.models import FFAdminUser
+
+logger = structlog.get_logger("features")
+
+
+def _check_change_requests_disabled(environment: Environment, feature: Feature) -> None:
+    """Refuse to publish a version that can only go live through a change request."""
+    if not environment.is_workflow_enabled:
+        return
+    api_error = ChangeRequestsEnabledError()
+    logger.warning(
+        "version.publish_rejected",
+        organisation__id=environment.project.organisation_id,
+        project__id=environment.project_id,
+        environment__id=environment.id,
+        feature__id=feature.id,
+        reason=api_error.default_code,
+    )
+    raise api_error
 
 
 @method_decorator(
@@ -137,6 +157,8 @@ class EnvironmentFeatureVersionViewSet(
         return queryset
 
     def perform_create(self, serializer: Serializer) -> None:  # type: ignore[override,type-arg]
+        if serializer.validated_data.get("publish_immediately"):
+            _check_change_requests_disabled(self.environment, self.feature)  # type: ignore[arg-type]
         created_by = None
         if isinstance(self.request.user, FFAdminUser):
             created_by = self.request.user
@@ -158,6 +180,7 @@ class EnvironmentFeatureVersionViewSet(
     @action(detail=True, methods=["POST"])
     def publish(self, request: Request, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         ef_version = self.get_object()
+        _check_change_requests_disabled(self.environment, self.feature)  # type: ignore[arg-type]
         serializer = self.get_serializer(data=request.data, instance=ef_version)
         serializer.is_valid(raise_exception=True)
         serializer.save(published_by=request.user)

@@ -14,6 +14,7 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -377,6 +378,56 @@ def test_publish_feature_version__master_api_key__publishes_with_api_key_attribu
     assert (
         environment_feature_version.live_from == now if live_from is None else live_from
     )
+
+
+def test_publish_feature_version__change_requests_enabled__responds_409(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    environment_v2_versioning.minimum_change_request_approvals = 1
+    environment_v2_versioning.save()
+
+    environment_feature_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-publish",
+        args=[
+            environment_v2_versioning.id,
+            feature.id,
+            environment_feature_version.uuid,
+        ],
+    )
+
+    # When
+    response = admin_client_new.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_409_CONFLICT
+    assert response.json() == {
+        "detail": "Cannot make this change where change requests are enabled.",
+        "code": "change_requests_enabled",
+    }
+
+    environment_feature_version.refresh_from_db()
+    assert environment_feature_version.published is False
+    assert environment_feature_version.is_live is False
+
+    assert log.events == [
+        {
+            "event": "version.publish_rejected",
+            "level": "warning",
+            "organisation__id": environment_v2_versioning.project.organisation_id,
+            "project__id": environment_v2_versioning.project_id,
+            "environment__id": environment_v2_versioning.id,
+            "feature__id": feature.id,
+            "reason": "change_requests_enabled",
+        },
+    ]
 
 
 def test_list_feature_version_feature_states__initial_version__returns_one_state(
@@ -883,6 +934,113 @@ def test_create_version__changes_in_single_request__applies_all_changes(
 
     assert new_version.published is True
     assert new_version.is_live is True
+
+
+def test_create_version__publish_immediately_with_change_requests_enabled__responds_409(
+    feature: Feature,
+    segment: Segment,
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    environment_v2_versioning.minimum_change_request_approvals = 1
+    environment_v2_versioning.save()
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_update": [
+            {
+                "feature_segment": None,
+                "enabled": True,
+                "feature_state_value": {"type": "unicode", "string_value": "updated!"},
+            }
+        ],
+        "feature_states_to_create": [
+            {
+                "feature_segment": {"segment": segment.id},
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "segment-override",
+                },
+            },
+        ],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_409_CONFLICT
+    assert response.json() == {
+        "detail": "Cannot make this change where change requests are enabled.",
+        "code": "change_requests_enabled",
+    }
+
+    # only the initial version exists, and it serves the original state
+    version = EnvironmentFeatureVersion.objects.get(
+        environment=environment_v2_versioning, feature=feature
+    )
+    assert version.feature_states.count() == 1
+    environment_default = version.feature_states.get()
+    assert environment_default.enabled is False
+
+    assert log.events == [
+        {
+            "event": "version.publish_rejected",
+            "level": "warning",
+            "organisation__id": environment_v2_versioning.project.organisation_id,
+            "project__id": environment_v2_versioning.project_id,
+            "environment__id": environment_v2_versioning.id,
+            "feature__id": feature.id,
+            "reason": "change_requests_enabled",
+        },
+    ]
+
+
+def test_create_version__unpublished_with_change_requests_enabled__creates_draft(
+    feature: Feature,
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+) -> None:
+    # Given
+    environment_v2_versioning.minimum_change_request_approvals = 1
+    environment_v2_versioning.save()
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    data = {
+        "feature_states_to_update": [
+            {
+                "feature_segment": None,
+                "enabled": True,
+                "feature_state_value": {"type": "unicode", "string_value": "updated!"},
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    new_version = EnvironmentFeatureVersion.objects.get(uuid=response.json()["uuid"])
+    assert new_version.published is False
+    assert new_version.is_live is False
 
 
 def test_create_version__update_and_create_segment_overrides__applies_both(
