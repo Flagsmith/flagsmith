@@ -128,12 +128,7 @@ const TableTagFilter: FC<TableFilterType> = ({
               isActive={showArchived}
               title={
                 <Row className='overflow-hidden'>
-                  <Tag
-                    isDot
-                    selected={showArchived}
-                    className='px-2 py-2 mr-1'
-                    tag={Constants.archivedTag}
-                  />
+                  <Tag isDot tag={Constants.archivedTag} />
                   <div className='ml-2 text-overflow'>archived</div>
                 </Row>
               }
@@ -149,12 +144,7 @@ const TableTagFilter: FC<TableFilterType> = ({
               isActive={value?.includes('')}
               title={
                 <Row className='overflow-hidden'>
-                  <Tag
-                    isDot
-                    selected={value?.includes('')}
-                    className='px-2 py-2 mr-1'
-                    tag={Constants.untaggedTag}
-                  />
+                  <Tag isDot tag={Constants.untaggedTag} />
                   <div className='ml-2 text-overflow'>untagged</div>
                 </Row>
               }
@@ -178,13 +168,7 @@ const TableTagFilter: FC<TableFilterType> = ({
                 isActive={value?.includes(tag.id)}
                 title={
                   <Row>
-                    <Tag
-                      key={tag.id}
-                      isDot
-                      selected={value?.includes(tag.id)}
-                      className='px-2 py-2 mr-1'
-                      tag={tag}
-                    />
+                    <Tag key={tag.id} isDot tag={tag} />
                     <div
                       style={{ width: 150 }}
                       className='ml-2 text-nowrap text-overflow'
