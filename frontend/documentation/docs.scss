@@ -72,7 +72,9 @@
 
 .swatch-card__colour {
   align-items: flex-end;
-  border: 1px solid rgba(128, 128, 128, 0.2);
+  // The token, not a fixed grey: a white swatch has no other edge, and the
+  // alpha has to flip with the page to stay visible on both.
+  border: 1px solid var(--color-border-strong, rgba(101, 109, 123, 0.24));
   border-radius: var(--radius-lg, 8px);
   display: flex;
   font-size: 11px;
@@ -127,7 +129,7 @@
 }
 
 .token-swatch__preview {
-  border: 1px solid rgba(128, 128, 128, 0.2);
+  border: 1px solid var(--color-border-strong, rgba(101, 109, 123, 0.24));
   border-radius: var(--radius-lg, 8px);
   height: 40px;
   width: 40px;
