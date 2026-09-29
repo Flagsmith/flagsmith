@@ -21,8 +21,6 @@ const TagColourPicker: FC<TagColourPickerProps> = ({
   <div
     className={`tag-colour-picker d-flex flex-wrap gap-3 ${className ?? ''}`}
   >
-    {/* The palette itself, so a picked colour is stored as it renders.
-        Creating a tag from the search box already assigns from here. */}
     {contentColourNames.map((swatch) => {
       const colour = contentColours[swatch]
       return (
