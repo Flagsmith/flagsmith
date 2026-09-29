@@ -5,7 +5,7 @@ import { SYSTEM_TAG_UTILITIES, isSystemTag } from './systemTag'
 // Numeric-entity everything that is not alphanumeric or beyond Latin-1.
 const escapeHTML = (unsafe: string) =>
   unsafe.replace(
-    /[^0-9A-Za-zĀ-￿]/g,
+    /[^0-9A-Za-z\u0100-\uFFFF]/g,
     (c) => `&#${`000${c.charCodeAt(0)}`.slice(-4)};`,
   )
 
