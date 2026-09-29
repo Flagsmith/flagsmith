@@ -23,9 +23,19 @@ type UsageOverTimeProps = {
   periodEndsAt?: string
 }
 
-const SERIES_LABELS = {
-  cumulative: 'API calls used',
-  projected: 'Projected',
+// A running total, so neither line can be added to the other.
+const CUMULATIVE = {
+  colour: colorSurfaceAction,
+  key: 'cumulative',
+  label: 'API calls used',
+  summable: false,
+}
+const PROJECTED = {
+  colour: colorTextSecondary,
+  dashed: true,
+  key: 'projected',
+  label: 'Projected',
+  summable: false,
 }
 
 const headingFor = (isBillingPeriod: boolean, limit: PlanLimit) => {
@@ -57,17 +67,8 @@ const UsageOverTime: FC<UsageOverTimeProps> = ({
   const chart = isBillingPeriod ? (
     <LineChart
       data={line}
-      series={hasProjection ? ['cumulative', 'projected'] : ['cumulative']}
-      dashedSeries={['projected']}
-      seriesLabels={SERIES_LABELS}
-      colorMap={{
-        cumulative: colorSurfaceAction,
-        projected: colorTextSecondary,
-      }}
+      series={hasProjection ? [CUMULATIVE, PROJECTED] : [CUMULATIVE]}
       xAxisInterval={xAxisIntervalFor(line.length)}
-      // The line is already a running total, and on the day the measured and
-      // projected series meet a sum would count it twice.
-      hideTooltipTotal
       verticalGrid={false}
       height={320}
       referenceLine={planLimitThreshold(limit)}
