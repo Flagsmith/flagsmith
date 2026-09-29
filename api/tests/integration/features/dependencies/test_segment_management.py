@@ -325,30 +325,64 @@ def test_update_segment_add_override__circular_flag_dependency__responds_400(
     # Given
     chicken = Feature.objects.create(name="chicken", project_id=project)
     egg = Feature.objects.create(name="egg", project_id=project)
-    segment1 = Segment.objects.create(name="segment1", project_id=project)
-    segment2 = Segment.objects.create(name="segment2", project_id=project)
-    SegmentFlagReference.objects.create(
-        segment=segment1,
-        prerequisite_feature=egg,
-        condition_json_path="$[0].conditions[1]",
-    )
+    segment1_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "segment1",
+            "rules": (
+                needs_egg := [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "$.flags.egg.enabled",
+                                "operator": "EQUAL",
+                                "value": "true",
+                                "description": None,
+                            }
+                        ],
+                        "rules": [],
+                    }
+                ]
+            ),
+        },
+        format="json",
+    ).json()["id"]
     create_segment_override(
         environment_api_key=environment_api_key,
         feature_id=chicken.id,
-        segment_id=segment1.id,
+        segment_id=segment1_id,
     )
-    SegmentFlagReference.objects.create(
-        segment=segment2,
-        prerequisite_feature=chicken,
-        condition_json_path="$[1].conditions[2]",
-    )
+    segment2_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "segment2",
+            "rules": (
+                needs_chicken := [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "$.flags.chicken.enabled",
+                                "operator": "EQUAL",
+                                "value": "true",
+                                "description": None,
+                            }
+                        ],
+                        "rules": [],
+                    }
+                ]
+            ),
+        },
+        format="json",
+    ).json()["id"]
 
     # When
     response = admin_client.post(
         f"/api/v1/environments/{environment_api_key}/features/{egg.id}/create-segment-override/",
         data={
             "feature_state_value": {},
-            "feature_segment": {"segment": segment2.id},
+            "feature_segment": {"segment": segment2_id},
             "enabled": True,
         },
         format="json",
@@ -358,29 +392,36 @@ def test_update_segment_add_override__circular_flag_dependency__responds_400(
     assert response.status_code == 400
     assert response.json() == {
         "code": "circular_dependency",
+        "message": 'The feature "egg" would depend on itself.',
         "environment": {"key": environment_api_key, "name": environment_name},
         "path": [
             {
-                "feature": "egg",
-                "needs": "chicken",
+                "feature": {"id": egg.id, "name": "egg"},
+                "prerequisite": {"id": chicken.id, "name": "chicken"},
                 "segment": {
-                    "id": segment2.id,
-                    "name": segment2.name,
-                    "condition_json_path": "$[1].conditions[2]",
+                    "id": segment2_id,
+                    "name": "segment2",
+                    "rules": needs_chicken,
+                    "condition_json_path": "$[0].conditions[0]",
+                    "is_system": False,
                 },
             },
             {
-                "feature": "chicken",
-                "needs": "egg",
+                "feature": {"id": chicken.id, "name": "chicken"},
+                "prerequisite": {"id": egg.id, "name": "egg"},
                 "segment": {
-                    "id": segment1.id,
-                    "name": segment1.name,
-                    "condition_json_path": "$[0].conditions[1]",
+                    "id": segment1_id,
+                    "name": "segment1",
+                    "rules": needs_egg,
+                    "condition_json_path": "$[0].conditions[0]",
+                    "is_system": False,
                 },
             },
         ],
     }
-    assert not FeatureSegment.objects.filter(segment=segment2, feature=egg).exists()
+    assert not FeatureSegment.objects.filter(
+        segment_id=segment2_id, feature=egg
+    ).exists()
     assert log.has(
         "dependencies.create_failed",
         level="info",
@@ -402,19 +443,32 @@ def test_update_flag_add_override__flag_dependency__reports_dependency_created(
 ) -> None:
     # Given
     chicken = Feature.objects.create(name="chicken", project_id=project)
-    egg = Feature.objects.create(name="egg", project_id=project)
-    segment = Segment.objects.create(name="segment", project_id=project)
-    SegmentFlagReference.objects.create(
-        segment=segment,
-        prerequisite_feature=egg,
-        condition_json_path="$[0].conditions[0]",
-    )
+    Feature.objects.create(name="egg", project_id=project)
+    segment_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "segment",
+            "rules": [
+                {
+                    "type": "ALL",
+                    "conditions": [
+                        {
+                            "property": "$.flags.egg.enabled",
+                            "operator": "EQUAL",
+                            "value": "true",
+                        }
+                    ],
+                }
+            ],
+        },
+        format="json",
+    ).json()["id"]
 
     # When
     response = admin_client.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{chicken.id}/",
         UpdateFlagRequest(
-            {"segment_overrides": [{"segment": {"id": segment.id}, "enabled": True}]}
+            {"segment_overrides": [{"segment": {"id": segment_id}, "enabled": True}]}
         ),
         format="json",
     )
@@ -443,23 +497,36 @@ def test_delete_override__flag_dependency__reports_dependency_deleted(
 ) -> None:
     # Given
     chicken = Feature.objects.create(name="chicken", project_id=project)
-    egg = Feature.objects.create(name="egg", project_id=project)
-    segment = Segment.objects.create(name="segment", project_id=project)
-    SegmentFlagReference.objects.create(
-        segment=segment,
-        prerequisite_feature=egg,
-        condition_json_path="$[0].conditions[0]",
-    )
+    Feature.objects.create(name="egg", project_id=project)
+    segment_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "segment",
+            "rules": [
+                {
+                    "type": "ALL",
+                    "conditions": [
+                        {
+                            "property": "$.flags.egg.enabled",
+                            "operator": "EQUAL",
+                            "value": "true",
+                        }
+                    ],
+                }
+            ],
+        },
+        format="json",
+    ).json()["id"]
     create_segment_override(
         environment_api_key=environment_api_key,
         feature_id=chicken.id,
-        segment_id=segment.id,
+        segment_id=segment_id,
     )
 
     # When
     response = admin_client.delete(
         f"/api/__future__/environments/{environment_api_key}"
-        f"/features/{chicken.id}/segment-overrides/{segment.id}/",
+        f"/features/{chicken.id}/segment-overrides/{segment_id}/",
     )
 
     # Then
@@ -488,29 +555,63 @@ def test_update_flag_add_override__circular_flag_dependency__responds_400(
     # Given
     chicken = Feature.objects.create(name="chicken", project_id=project)
     egg = Feature.objects.create(name="egg", project_id=project)
-    segment1 = Segment.objects.create(name="segment1", project_id=project)
-    segment2 = Segment.objects.create(name="segment2", project_id=project)
-    SegmentFlagReference.objects.create(
-        segment=segment1,
-        prerequisite_feature=egg,
-        condition_json_path="$[0].conditions[1]",
-    )
+    segment1_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "segment1",
+            "rules": (
+                needs_egg := [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "$.flags.egg.enabled",
+                                "operator": "EQUAL",
+                                "value": "true",
+                                "description": None,
+                            }
+                        ],
+                        "rules": [],
+                    }
+                ]
+            ),
+        },
+        format="json",
+    ).json()["id"]
     create_segment_override(
         environment_api_key=environment_api_key,
         feature_id=chicken.id,
-        segment_id=segment1.id,
+        segment_id=segment1_id,
     )
-    SegmentFlagReference.objects.create(
-        segment=segment2,
-        prerequisite_feature=chicken,
-        condition_json_path="$[1].conditions[2]",
-    )
+    segment2_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "segment2",
+            "rules": (
+                needs_chicken := [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "$.flags.chicken.enabled",
+                                "operator": "EQUAL",
+                                "value": "true",
+                                "description": None,
+                            }
+                        ],
+                        "rules": [],
+                    }
+                ]
+            ),
+        },
+        format="json",
+    ).json()["id"]
 
     # When
     response = admin_client.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{egg.id}/",
         UpdateFlagRequest(
-            {"segment_overrides": [{"segment": {"id": segment2.id}, "enabled": True}]}
+            {"segment_overrides": [{"segment": {"id": segment2_id}, "enabled": True}]}
         ),
         format="json",
     )
@@ -519,29 +620,36 @@ def test_update_flag_add_override__circular_flag_dependency__responds_400(
     assert response.status_code == 400
     assert response.json() == {
         "code": "circular_dependency",
+        "message": 'The feature "egg" would depend on itself.',
         "environment": {"key": environment_api_key, "name": environment_name},
         "path": [
             {
-                "feature": "egg",
-                "needs": "chicken",
+                "feature": {"id": egg.id, "name": "egg"},
+                "prerequisite": {"id": chicken.id, "name": "chicken"},
                 "segment": {
-                    "id": segment2.id,
-                    "name": segment2.name,
-                    "condition_json_path": "$[1].conditions[2]",
+                    "id": segment2_id,
+                    "name": "segment2",
+                    "rules": needs_chicken,
+                    "condition_json_path": "$[0].conditions[0]",
+                    "is_system": False,
                 },
             },
             {
-                "feature": "chicken",
-                "needs": "egg",
+                "feature": {"id": chicken.id, "name": "chicken"},
+                "prerequisite": {"id": egg.id, "name": "egg"},
                 "segment": {
-                    "id": segment1.id,
-                    "name": segment1.name,
-                    "condition_json_path": "$[0].conditions[1]",
+                    "id": segment1_id,
+                    "name": "segment1",
+                    "rules": needs_egg,
+                    "condition_json_path": "$[0].conditions[0]",
+                    "is_system": False,
                 },
             },
         ],
     }
-    assert not FeatureSegment.objects.filter(segment=segment2, feature=egg).exists()
+    assert not FeatureSegment.objects.filter(
+        segment_id=segment2_id, feature=egg
+    ).exists()
     assert log.has(
         "dependencies.create_failed",
         level="info",
@@ -566,42 +674,67 @@ def test_update_segment_update_rules__circular_flag_dependency__responds_400(
     # Given
     chicken = Feature.objects.create(name="chicken", project_id=project)
     egg = Feature.objects.create(name="egg", project_id=project)
-    segment1 = Segment.objects.create(name="segment1", project_id=project)
-    segment2 = Segment.objects.create(name="segment2", project_id=project)
+    segment1_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "segment1",
+            "rules": (
+                needs_egg := [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "$.flags.egg.enabled",
+                                "operator": "EQUAL",
+                                "value": "true",
+                                "description": None,
+                            }
+                        ],
+                        "rules": [],
+                    }
+                ]
+            ),
+        },
+        format="json",
+    ).json()["id"]
+    segment2_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={"name": "segment2", "rules": [{"type": "ALL", "conditions": []}]},
+        format="json",
+    ).json()["id"]
     create_segment_override(
         environment_api_key=environment_api_key,
         feature_id=chicken.id,
-        segment_id=segment1.id,
+        segment_id=segment1_id,
     )
     create_segment_override(
         environment_api_key=environment_api_key,
         feature_id=egg.id,
-        segment_id=segment2.id,
-    )
-    SegmentFlagReference.objects.create(
-        segment=segment1,
-        prerequisite_feature=egg,
-        condition_json_path="$[0].conditions[1]",
+        segment_id=segment2_id,
     )
 
     # When
     response = admin_client.put(
-        f"/api/v1/projects/{project}/segments/{segment2.id}/",
+        f"/api/v1/projects/{project}/segments/{segment2_id}/",
         data={
             "name": "segment2",
             "project": project,
-            "rules": [
-                {
-                    "type": "ALL",
-                    "conditions": [
-                        {
-                            "property": "$.flags.chicken.enabled",
-                            "operator": "EQUAL",
-                            "value": True,
-                        },
-                    ],
-                }
-            ],
+            "rules": (
+                needs_chicken := [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "$.flags.chicken.enabled",
+                                "operator": "EQUAL",
+                                "value": "true",
+                                "description": None,
+                            }
+                        ],
+                        "rules": [],
+                    }
+                ]
+            ),
         },
         format="json",
     )
@@ -610,29 +743,34 @@ def test_update_segment_update_rules__circular_flag_dependency__responds_400(
     assert response.status_code == 400
     assert response.json() == {
         "code": "circular_dependency",
+        "message": 'The feature "egg" would depend on itself.',
         "environment": {"key": environment_api_key, "name": environment_name},
         "path": [
             {
-                "feature": "egg",
-                "needs": "chicken",
+                "feature": {"id": egg.id, "name": "egg"},
+                "prerequisite": {"id": chicken.id, "name": "chicken"},
                 "segment": {
-                    "id": segment2.id,
-                    "name": segment2.name,
+                    "id": segment2_id,
+                    "name": "segment2",
+                    "rules": needs_chicken,
                     "condition_json_path": "$[0].conditions[0]",
+                    "is_system": False,
                 },
             },
             {
-                "feature": "chicken",
-                "needs": "egg",
+                "feature": {"id": chicken.id, "name": "chicken"},
+                "prerequisite": {"id": egg.id, "name": "egg"},
                 "segment": {
-                    "id": segment1.id,
-                    "name": segment1.name,
-                    "condition_json_path": "$[0].conditions[1]",
+                    "id": segment1_id,
+                    "name": "segment1",
+                    "rules": needs_egg,
+                    "condition_json_path": "$[0].conditions[0]",
+                    "is_system": False,
                 },
             },
         ],
     }
-    assert not SegmentFlagReference.objects.filter(segment=segment2).exists()
+    assert not SegmentFlagReference.objects.filter(segment_id=segment2_id).exists()
     assert log.has(
         "dependencies.create_failed",
         level="info",
@@ -657,47 +795,72 @@ def test_update_segment_update_rules__cycle_in_another_environment__responds_400
     # Given
     chicken = Feature.objects.create(name="chicken", project_id=project)
     egg = Feature.objects.create(name="egg", project_id=project)
-    segment1 = Segment.objects.create(name="segment1", project_id=project)
-    segment2 = Segment.objects.create(name="segment2", project_id=project)
-    SegmentFlagReference.objects.create(
-        segment=segment1,
-        prerequisite_feature=egg,
-        condition_json_path="$[0].conditions[0]",
-    )
+    segment1_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "segment1",
+            "rules": (
+                needs_egg := [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "$.flags.egg.enabled",
+                                "operator": "EQUAL",
+                                "value": "true",
+                                "description": None,
+                            }
+                        ],
+                        "rules": [],
+                    }
+                ]
+            ),
+        },
+        format="json",
+    ).json()["id"]
+    segment2_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={"name": "segment2", "rules": [{"type": "ALL", "conditions": []}]},
+        format="json",
+    ).json()["id"]
     create_segment_override(
         environment_api_key=environment_api_key,
         feature_id=egg.id,
-        segment_id=segment2.id,
+        segment_id=segment2_id,
     )
     create_segment_override(
         environment_api_key=other_environment.api_key,
         feature_id=egg.id,
-        segment_id=segment2.id,
+        segment_id=segment2_id,
     )
     create_segment_override(
         environment_api_key=other_environment.api_key,
         feature_id=chicken.id,
-        segment_id=segment1.id,
+        segment_id=segment1_id,
     )
 
     # When
     response = admin_client.put(
-        f"/api/v1/projects/{project}/segments/{segment2.id}/",
+        f"/api/v1/projects/{project}/segments/{segment2_id}/",
         data={
             "name": "segment2",
             "project": project,
-            "rules": [
-                {
-                    "type": "ALL",
-                    "conditions": [
-                        {
-                            "property": "$.flags.chicken.enabled",
-                            "operator": "EQUAL",
-                            "value": True,
-                        },
-                    ],
-                }
-            ],
+            "rules": (
+                needs_chicken := [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "$.flags.chicken.enabled",
+                                "operator": "EQUAL",
+                                "value": "true",
+                                "description": None,
+                            }
+                        ],
+                        "rules": [],
+                    }
+                ]
+            ),
         },
         format="json",
     )
@@ -706,32 +869,37 @@ def test_update_segment_update_rules__cycle_in_another_environment__responds_400
     assert response.status_code == 400
     assert response.json() == {
         "code": "circular_dependency",
+        "message": 'The feature "egg" would depend on itself.',
         "environment": {
             "key": other_environment.api_key,
             "name": other_environment.name,
         },
         "path": [
             {
-                "feature": "egg",
-                "needs": "chicken",
+                "feature": {"id": egg.id, "name": "egg"},
+                "prerequisite": {"id": chicken.id, "name": "chicken"},
                 "segment": {
-                    "id": segment2.id,
-                    "name": segment2.name,
+                    "id": segment2_id,
+                    "name": "segment2",
+                    "rules": needs_chicken,
                     "condition_json_path": "$[0].conditions[0]",
+                    "is_system": False,
                 },
             },
             {
-                "feature": "chicken",
-                "needs": "egg",
+                "feature": {"id": chicken.id, "name": "chicken"},
+                "prerequisite": {"id": egg.id, "name": "egg"},
                 "segment": {
-                    "id": segment1.id,
-                    "name": segment1.name,
+                    "id": segment1_id,
+                    "name": "segment1",
+                    "rules": needs_egg,
                     "condition_json_path": "$[0].conditions[0]",
+                    "is_system": False,
                 },
             },
         ],
     }
-    assert not SegmentFlagReference.objects.filter(segment=segment2).exists()
+    assert not SegmentFlagReference.objects.filter(segment_id=segment2_id).exists()
     assert log.has(
         "dependencies.create_failed",
         level="info",
@@ -757,53 +925,95 @@ def test_update_segment_update_rules__longer_dependency_cycle_path__responds_400
     chicken = Feature.objects.create(name="chicken", project_id=project)
     egg = Feature.objects.create(name="egg", project_id=project)
     rooster = Feature.objects.create(name="rooster", project_id=project)
-    segment1 = Segment.objects.create(name="segment1", project_id=project)
-    segment2 = Segment.objects.create(name="segment2", project_id=project)
-    segment3 = Segment.objects.create(name="segment3", project_id=project)
-    SegmentFlagReference.objects.create(
-        segment=segment1,
-        prerequisite_feature=egg,
-        condition_json_path="$[0].conditions[0]",
-    )
+    segment1_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "segment1",
+            "rules": (
+                needs_egg := [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "$.flags.egg.enabled",
+                                "operator": "EQUAL",
+                                "value": "true",
+                                "description": None,
+                            }
+                        ],
+                        "rules": [],
+                    }
+                ]
+            ),
+        },
+        format="json",
+    ).json()["id"]
+    segment2_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "segment2",
+            "rules": (
+                needs_rooster := [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "$.flags.rooster.enabled",
+                                "operator": "EQUAL",
+                                "value": "true",
+                                "description": None,
+                            }
+                        ],
+                        "rules": [],
+                    }
+                ]
+            ),
+        },
+        format="json",
+    ).json()["id"]
+    segment3_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={"name": "segment3", "rules": [{"type": "ALL", "conditions": []}]},
+        format="json",
+    ).json()["id"]
     create_segment_override(
         environment_api_key=environment_api_key,
         feature_id=chicken.id,
-        segment_id=segment1.id,
-    )
-    SegmentFlagReference.objects.create(
-        segment=segment2,
-        prerequisite_feature=rooster,
-        condition_json_path="$[0].conditions[0]",
+        segment_id=segment1_id,
     )
     create_segment_override(
         environment_api_key=environment_api_key,
         feature_id=egg.id,
-        segment_id=segment2.id,
+        segment_id=segment2_id,
     )
     create_segment_override(
         environment_api_key=environment_api_key,
         feature_id=rooster.id,
-        segment_id=segment3.id,
+        segment_id=segment3_id,
     )
 
     # When
     response = admin_client.put(
-        f"/api/v1/projects/{project}/segments/{segment3.id}/",
+        f"/api/v1/projects/{project}/segments/{segment3_id}/",
         data={
             "name": "segment3",
             "project": project,
-            "rules": [
-                {
-                    "type": "ALL",
-                    "conditions": [
-                        {
-                            "property": "$.flags.chicken.enabled",
-                            "operator": "EQUAL",
-                            "value": True,
-                        },
-                    ],
-                }
-            ],
+            "rules": (
+                needs_chicken := [
+                    {
+                        "type": "ALL",
+                        "conditions": [
+                            {
+                                "property": "$.flags.chicken.enabled",
+                                "operator": "EQUAL",
+                                "value": "true",
+                                "description": None,
+                            }
+                        ],
+                        "rules": [],
+                    }
+                ]
+            ),
         },
         format="json",
     )
@@ -812,38 +1022,45 @@ def test_update_segment_update_rules__longer_dependency_cycle_path__responds_400
     assert response.status_code == 400
     assert response.json() == {
         "code": "circular_dependency",
+        "message": 'The feature "rooster" would depend on itself.',
         "environment": {"key": environment_api_key, "name": environment_name},
         "path": [
             {
-                "feature": "rooster",
-                "needs": "chicken",
+                "feature": {"id": rooster.id, "name": "rooster"},
+                "prerequisite": {"id": chicken.id, "name": "chicken"},
                 "segment": {
-                    "id": segment3.id,
-                    "name": segment3.name,
+                    "id": segment3_id,
+                    "name": "segment3",
+                    "rules": needs_chicken,
                     "condition_json_path": "$[0].conditions[0]",
+                    "is_system": False,
                 },
             },
             {
-                "feature": "chicken",
-                "needs": "egg",
+                "feature": {"id": chicken.id, "name": "chicken"},
+                "prerequisite": {"id": egg.id, "name": "egg"},
                 "segment": {
-                    "id": segment1.id,
-                    "name": segment1.name,
+                    "id": segment1_id,
+                    "name": "segment1",
+                    "rules": needs_egg,
                     "condition_json_path": "$[0].conditions[0]",
+                    "is_system": False,
                 },
             },
             {
-                "feature": "egg",
-                "needs": "rooster",
+                "feature": {"id": egg.id, "name": "egg"},
+                "prerequisite": {"id": rooster.id, "name": "rooster"},
                 "segment": {
-                    "id": segment2.id,
-                    "name": segment2.name,
+                    "id": segment2_id,
+                    "name": "segment2",
+                    "rules": needs_rooster,
                     "condition_json_path": "$[0].conditions[0]",
+                    "is_system": False,
                 },
             },
         ],
     }
-    assert not SegmentFlagReference.objects.filter(segment=segment3).exists()
+    assert not SegmentFlagReference.objects.filter(segment_id=segment3_id).exists()
     assert log.has(
         "dependencies.create_failed",
         level="info",
@@ -867,29 +1084,46 @@ def test_update_segment_update_rules__shared_prerequisite__responds_200(
     # Given
     chicken = Feature.objects.create(name="chicken", project_id=project)
     egg = Feature.objects.create(name="egg", project_id=project)
-    other_segment = Segment.objects.create(name="other_segment", project_id=project)
-    segment = Segment.objects.create(name="segment", project_id=project)
-    SegmentFlagReference.objects.create(
-        segment=other_segment,
-        prerequisite_feature=egg,
-        condition_json_path="$[0].conditions[0]",
-    )
+    other_segment_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={
+            "name": "other_segment",
+            "rules": [
+                {
+                    "type": "ALL",
+                    "conditions": [
+                        {
+                            "property": "$.flags.egg.enabled",
+                            "operator": "EQUAL",
+                            "value": "true",
+                        }
+                    ],
+                }
+            ],
+        },
+        format="json",
+    ).json()["id"]
+    segment_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={"name": "segment", "rules": [{"type": "ALL", "conditions": []}]},
+        format="json",
+    ).json()["id"]
     create_segment_override(
         environment_api_key=environment_api_key,
         feature_id=chicken.id,
-        segment_id=other_segment.id,
+        segment_id=other_segment_id,
         priority=0,
     )
     create_segment_override(
         environment_api_key=environment_api_key,
         feature_id=chicken.id,
-        segment_id=segment.id,
+        segment_id=segment_id,
         priority=1,
     )
 
     # When
     response = admin_client.put(
-        f"/api/v1/projects/{project}/segments/{segment.id}/",
+        f"/api/v1/projects/{project}/segments/{segment_id}/",
         data={
             "name": "segment",
             "project": project,
@@ -912,7 +1146,7 @@ def test_update_segment_update_rules__shared_prerequisite__responds_200(
     # Then
     assert response.status_code == 200
     assert list(
-        SegmentFlagReference.objects.filter(segment=segment).values(
+        SegmentFlagReference.objects.filter(segment_id=segment_id).values(
             "prerequisite_feature", "condition_json_path"
         )
     ) == [

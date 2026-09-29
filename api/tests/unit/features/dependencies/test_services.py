@@ -12,12 +12,12 @@ from features.dependencies.exceptions import CircularDependencyError
 from features.dependencies.models import SegmentFlagReference
 from features.dependencies.services import (
     FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE,
-    lock_project_flag_dependencies,
     validate_segment_flag_dependencies,
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from projects.models import Project
 from segments.models import Segment
+from segments.types import SegmentCondition, SegmentRule
 
 
 @pytest.mark.parametrize("environment_count", [1, 2, 3])
@@ -157,14 +157,14 @@ def test_validate_segment_flag_dependencies__outside_transaction__raises(
         validate_segment_flag_dependencies(segment)
 
 
-def test_lock_project_flag_dependencies__already_held_by_transaction__does_not_block(
+def test_validate_segment_flag_dependencies__called_twice_in_transaction__does_not_block(
     project: Project,
     segment: Segment,
 ) -> None:
     # Given
     with connection.cursor() as cursor:
         cursor.execute("SET LOCAL lock_timeout = '1s'")
-    lock_project_flag_dependencies(project.id)
+    validate_segment_flag_dependencies(segment)
 
     # When
     validate_segment_flag_dependencies(segment)
@@ -187,8 +187,42 @@ def test_validate_segment_flag_dependencies__concurrent_opposite_edges__rejects_
     # Given
     chicken = Feature.objects.create(name="chicken", project=project)
     egg = Feature.objects.create(name="egg", project=project)
-    needs_egg = Segment.objects.create(name="needs_egg", project=project)
-    needs_chicken = Segment.objects.create(name="needs_chicken", project=project)
+    needs_egg = Segment.objects.create(
+        name="needs_egg",
+        project=project,
+        rules_data=[
+            SegmentRule(
+                type="ANY",
+                conditions=[
+                    SegmentCondition(
+                        property='$.flags["egg"].enabled',
+                        operator="NOT_EQUAL",
+                        value="true",
+                        description=None,
+                    )
+                ],
+                rules=[],
+            )
+        ],
+    )
+    needs_chicken = Segment.objects.create(
+        name="needs_chicken",
+        project=project,
+        rules_data=[
+            SegmentRule(
+                type="ANY",
+                conditions=[
+                    SegmentCondition(
+                        property='$.flags["chicken"].enabled',
+                        operator="NOT_EQUAL",
+                        value="true",
+                        description=None,
+                    )
+                ],
+                rules=[],
+            )
+        ],
+    )
     SegmentFlagReference.objects.create(
         segment=needs_egg,
         prerequisite_feature=egg,

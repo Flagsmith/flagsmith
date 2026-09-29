@@ -89,6 +89,7 @@ from features.versioning.versioning_service import (
 )
 from integrations.flagsmith.client import get_openfeature_client
 from segments.models import Condition, Segment, SegmentRule
+from segments.services import write_segment_rules
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
@@ -897,37 +898,6 @@ def _rollout_segment_rules(
     ]
 
 
-def _write_segment_rule(
-    rule: SegmentRuleType,
-    *,
-    segment: Segment | None = None,
-    parent: SegmentRule | None = None,
-) -> None:
-    # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
-    written = SegmentRule.objects.create(
-        segment=segment, rule=parent, type=rule["type"]
-    )
-    for condition in rule["conditions"]:
-        Condition.objects.create(
-            rule=written,
-            operator=condition["operator"],
-            property=condition["property"],
-            value=condition["value"],
-            description=condition["description"],
-        )
-    for sub_rule in rule.get("rules", []):
-        _write_segment_rule(sub_rule, parent=written)
-
-
-def _write_segment_rules(segment: Segment, rules: list[SegmentRuleType]) -> None:
-    """Rebuild the segment's legacy rule rows from the compiled tree. Nothing
-    hashes on rule ids, so replacing them wholesale is safe."""
-    # TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
-    SegmentRule.objects.filter(segment=segment).delete()
-    for rule in rules:
-        _write_segment_rule(rule, segment=segment)
-
-
 def _audience_segment_ids(experiment: Experiment) -> list[int]:
     # Through the join table, so soft-deleted segments still count.
     return sorted(
@@ -1113,7 +1083,7 @@ def _create_rollout_segment(
         is_system_segment=True,
         rules_data=rules,
     )
-    _write_segment_rules(segment, rules)
+    write_segment_rules(segment, rules)
     return segment
 
 
@@ -1129,7 +1099,7 @@ def _sync_rollout_segment(
             return segment
         segment.rules_data = rules
         segment.save(update_fields=["rules_data"])
-        _write_segment_rules(segment, rules)
+        write_segment_rules(segment, rules)
         return segment
     segment = _create_rollout_segment(experiment, rules)
     experiment.rollout_segment = segment
