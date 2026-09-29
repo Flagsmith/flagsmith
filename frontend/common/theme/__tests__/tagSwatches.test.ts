@@ -3,32 +3,34 @@ import { AA_NORMAL_TEXT, contrastRatio } from 'common/theme/contrast'
 
 const primitives = tokens.primitives as Record<string, string>
 
-// The ink every tag's label takes, on either theme.
 const INK = primitives['content-always-dark']
 
 const swatches = Object.entries(primitives).filter(
   ([name, hex]) => name.startsWith('content-') && hex !== INK,
 )
 
-// A tag keeps one fill on both themes, so the label's contrast is fixed by the
-// palette and cannot change with the page. The fill itself sits at 1.18:1
-// against white, well under the 3:1 for non-text: that is by design, since a
-// tag is read from its label rather than from its edge.
+const ratio = (hex: string) => contrastRatio(INK, hex)
+
 describe('tag swatches', () => {
-  it('has a colour for every hue', () => {
+  // Or everything below runs against nothing and still passes.
+  it('finds swatches', () => {
     expect(swatches.length).toBeGreaterThan(0)
   })
 
-  describe.each(swatches)('%s', (_name, colour) => {
-    it('passes AA for the label on the fill', () => {
-      expect(contrastRatio(INK, colour)).toBeGreaterThanOrEqual(AA_NORMAL_TEXT)
-    })
+  // One fill on both themes, so the palette settles the label's contrast. The
+  // fill is 1.18:1 against white, under the 3:1 for non-text, by design: a tag
+  // is read from its label, not its edge.
+  it('clears AA for the label on every fill', () => {
+    const failing = swatches
+      .filter(([, hex]) => ratio(hex) < AA_NORMAL_TEXT)
+      .map(([name, hex]) => `${name} ${ratio(hex).toFixed(2)}:1`)
+    expect(failing).toEqual([])
   })
 
-  // Tags are told apart by colour alone, so two rendering alike is the same
-  // defect as failing contrast: #8465 found 20 options resolving to 7 colours.
+  // #8465 found 20 options resolving to 7 colours. Two tags that look alike is
+  // the same defect as failing contrast.
   it('gives every hue a distinct colour', () => {
-    const values = swatches.map(([, hex]) => hex.toLowerCase())
-    expect(new Set(values).size).toBe(values.length)
+    const seen = new Set(swatches.map(([, hex]) => hex.toLowerCase()))
+    expect(seen.size).toBe(swatches.length)
   })
 })
