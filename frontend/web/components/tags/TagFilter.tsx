@@ -51,7 +51,7 @@ const TagFilter: FC<TagFilterType> = ({
       <div className='ml-1'>
         <Row>
           <Flex>
-            <Row className='tag-filter-list'>
+            <Row className='gap-2'>
               {!!onChangeStrategy && (
                 <div style={{ width: 140 }}>
                   <Select

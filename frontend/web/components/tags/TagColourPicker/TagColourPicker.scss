@@ -12,9 +12,8 @@
     margin-right: 0 !important;
   }
 
-  // The tick marking the current choice. ToggleChip sizes it for a chip with
-  // a label beside it, which is far too small on a bare swatch this size, and
-  // CSS wins over the svg's width attribute.
+  // The tick marking the current choice. Chip sizes it for a label beside it,
+  // far too small on a bare swatch, and CSS beats the svg's width attribute.
   .ds-chip svg {
     margin: 0;
     width: 20px;

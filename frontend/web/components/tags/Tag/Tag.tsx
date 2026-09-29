@@ -1,16 +1,17 @@
 import React, { FC } from 'react'
 import cx from 'classnames'
+import './Tag.scss'
 
 import { Tag as TTag } from 'common/types/responses'
 import Chip from 'components/base/Chip'
-import TagContent from './TagContent'
+import TagContent from 'components/tags/TagContent'
 import Constants from 'common/constants'
 import {
   SYSTEM_TAG_UTILITIES,
   getTagSwatch,
   getTagSwatchUtilities,
   isSystemTag,
-} from './tagSwatch'
+} from 'components/tags/tagSwatch'
 
 type TagType = {
   className?: string

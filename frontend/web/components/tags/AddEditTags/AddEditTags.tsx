@@ -1,21 +1,22 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
 import { filter as loFilter } from 'lodash'
+import './AddEditTags.scss'
 import { useHasPermission } from 'common/providers/Permission'
 import Utils from 'common/utils/utils'
 import { contentColours } from 'common/theme/tokens'
 import InlineModal from 'components/InlineModal'
-import TagRow from './TagRow'
+import TagRow from 'components/tags/TagRow'
 import DropdownMenu from 'components/base/DropdownMenu'
 import Constants from 'common/constants'
-import TagValues from './TagValues'
+import TagValues from 'components/tags/TagValues'
 import {
   useCreateTagMutation,
   useDeleteTagMutation,
   useGetTagsQuery,
 } from 'common/services/useTag'
 import { Tag as TTag } from 'common/types/responses'
-import Tag from './Tag'
-import CreateEditTag from './CreateEditTag'
+import Tag from 'components/tags/Tag'
+import CreateEditTag from 'components/tags/CreateEditTag'
 import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
 import TagUsage from 'components/TagUsage'

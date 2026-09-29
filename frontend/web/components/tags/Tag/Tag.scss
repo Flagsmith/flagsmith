@@ -1,0 +1,7 @@
+// A colour with no label, used where a tag has to be identified in a space too
+// small for its name.
+.tag--dot {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+}

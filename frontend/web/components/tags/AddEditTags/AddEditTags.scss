@@ -1,0 +1,16 @@
+.tag-list {
+  max-height: 230px;
+  overflow-y: auto;
+  user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+}
+
+// Narrower than the chip's own truncation: this previews a tag being named, so
+// the field beside it stays readable.
+.truncated-tag {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

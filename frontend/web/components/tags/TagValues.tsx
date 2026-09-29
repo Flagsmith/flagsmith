@@ -52,7 +52,7 @@ const TagValues: FC<TagValuesType> = ({
   })
 
   return (
-    <Wrapper className='tag-values align-content-center'>
+    <Wrapper className='row-gap-2 align-content-center'>
       {children}
       {tags?.map(
         (tag) =>

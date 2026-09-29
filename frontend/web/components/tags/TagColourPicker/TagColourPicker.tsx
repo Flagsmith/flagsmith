@@ -1,5 +1,5 @@
 import React, { FC } from 'react'
-import Constants from 'common/constants'
+import { contentColours } from 'common/theme/tokens'
 import Tag from 'components/tags/Tag'
 import './TagColourPicker.scss'
 
@@ -8,6 +8,10 @@ type TagColourPickerProps = {
   onChange: (colour: string) => void
   className?: string
 }
+
+// The palette itself, so a picked colour is stored as it renders. Creating a
+// tag from the search box already assigns from here.
+const PALETTE = Object.values(contentColours)
 
 /** The swatch grid shared by the create/edit tag form and the inline picker. */
 const TagColourPicker: FC<TagColourPickerProps> = ({
@@ -18,7 +22,7 @@ const TagColourPicker: FC<TagColourPickerProps> = ({
   <div
     className={`tag-colour-picker d-flex flex-wrap gap-3 ${className ?? ''}`}
   >
-    {Constants.tagColors.map((colour: string) => (
+    {PALETTE.map((colour) => (
       <Tag
         key={colour}
         onClick={() => onChange(colour)}
