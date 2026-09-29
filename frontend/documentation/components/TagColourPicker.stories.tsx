@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import TagColourPicker from 'components/tags/TagColourPicker'
-import Constants from 'common/constants'
+import { contentColours } from 'common/theme/tokens'
 
 const meta: Meta<typeof TagColourPicker> = {
   component: TagColourPicker,
@@ -25,7 +25,7 @@ type Story = StoryObj<typeof TagColourPicker>
 const noop = () => undefined
 
 export const Default: Story = {
-  args: { onChange: noop, value: Constants.tagColors[0] },
+  args: { onChange: noop, value: contentColours.blue },
 }
 
 export const NothingSelected: Story = {
@@ -35,7 +35,7 @@ export const NothingSelected: Story = {
 
 /** Hooks cannot live in a story's render, so selection state gets a component. */
 const PickerWithState: React.FC = () => {
-  const [colour, setColour] = useState<string>(Constants.tagColors[4])
+  const [colour, setColour] = useState<string>(contentColours['light-green'])
   return (
     <div className='d-flex flex-column gap-3'>
       <TagColourPicker onChange={setColour} value={colour} />

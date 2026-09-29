@@ -250,7 +250,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
                 >
                   <div className='me-2'>Create</div>
                   <Tag
-                    className='truncated-tag'
+                    className='truncated-tag text-truncate'
                     tag={{
                       color,
                       label: filter,

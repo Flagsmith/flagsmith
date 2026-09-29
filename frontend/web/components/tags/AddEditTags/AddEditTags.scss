@@ -8,9 +8,7 @@
 }
 
 // Narrower than the chip's own truncation: this previews a tag being named, so
-// the field beside it stays readable.
+// the field beside it stays readable. The ellipsis is Bootstrap's.
 .truncated-tag {
   max-width: 100px;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
