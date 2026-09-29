@@ -1,12 +1,15 @@
 import React, { FC, ReactNode } from 'react'
 import { filter } from 'lodash'
-import { Tag as TTag, TagStrategy } from 'common/types/responses'
-
-type TagId = number | string
-const UNTAGGED_ID = ''
+import { TagStrategy } from 'common/types/responses'
 import { useGetTagsQuery } from 'common/services/useTag'
+import Constants from 'common/constants'
 import Tag from './Tag'
 import Button from 'components/base/forms/Button'
+
+type TagId = number | string
+
+// Not a tag: it stands for the absence of one, so it has no row behind it.
+const UNTAGGED_ID = ''
 
 type TagFilterType = {
   value?: TagId[]
@@ -45,9 +48,6 @@ const TagFilter: FC<TagFilterType> = ({
       onChange(value.concat([id]))
     }
   }
-
-  // Not a tag: it stands for the absence of one, so it has no row behind it.
-  const unTagged: Partial<TTag> = { color: '#656D7B', label: 'Untagged' }
   return (
     <Row className='tag-filter mt-2'>
       <div className='ml-1'>
@@ -90,8 +90,7 @@ const TagFilter: FC<TagFilterType> = ({
                   key={UNTAGGED_ID}
                   selected={isSelected(UNTAGGED_ID)}
                   onClick={() => onSelect(UNTAGGED_ID)}
-                  className='px-2 py-2'
-                  tag={unTagged}
+                  tag={Constants.untaggedTag}
                 />
               )}
               {children}
@@ -101,7 +100,6 @@ const TagFilter: FC<TagFilterType> = ({
                   key={tag.id}
                   selected={isSelected(tag.id)}
                   onClick={() => onSelect(tag.id)}
-                  className='px-2 py-2 mr-1'
                   tag={tag}
                 />
               ))}
@@ -114,11 +112,9 @@ const TagFilter: FC<TagFilterType> = ({
                 if ((_value?.length || 0) >= (projectTags?.length || 0)) {
                   onChange([])
                 } else {
+                  const untagged: TagId[] = showUntagged ? [UNTAGGED_ID] : []
                   onChange(
-                    (showUntagged ? [''] : []).concat(
-                      // @ts-ignore mixed array type
-                      (projectTags || [])?.map((v) => v.id),
-                    ),
+                    untagged.concat((projectTags ?? []).map((v) => v.id)),
                   )
                 }
                 onClearAll && onClearAll()
