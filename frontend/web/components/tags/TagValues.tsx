@@ -16,13 +16,11 @@ type TagValuesType = {
   projectId: string
   children?: ReactNode
   inline?: boolean
-  hideNames?: boolean
   hideTags?: number[]
 }
 
 const TagValues: FC<TagValuesType> = ({
   children,
-  hideNames = true,
   hideTags = [],
   inline,
   onAdd,
@@ -33,7 +31,19 @@ const TagValues: FC<TagValuesType> = ({
   const { data } = useGetTagsQuery({ projectId })
   const Wrapper = inline ? Fragment : Row
 
-  const tags = data?.filter((tag) => !hideTags?.includes(tag.id))
+  // Feature health is a paid feature, and its tag is applied by the system
+  // rather than chosen, so with the feature off the tag should not appear at
+  // all. Filtered here rather than inside Tag, which has no business knowing
+  // about feature flags: this is the display path for ProjectFeatureRow,
+  // FeatureOverrideRow, FeatureTags, ReleaseManagerPage and
+  // FlagEnvironmentsPage.
+  const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
+
+  const tags = data?.filter(
+    (tag) =>
+      !hideTags?.includes(tag.id) &&
+      (isFeatureHealthEnabled || tag.type !== 'UNHEALTHY'),
+  )
 
   const { permission: createEditTagPermission } = useHasPermission({
     id: projectId,
@@ -48,10 +58,11 @@ const TagValues: FC<TagValuesType> = ({
         (tag) =>
           value?.includes(tag.id) && (
             <Tag
-              key={tag.id}
               disabled={Utils.tagDisabled(tag)}
-              hideNames={hideNames}
-              onClick={onAdd ?? onClick}
+              key={tag.id}
+              // Closes over the real tag from the query rather than taking the
+              // Partial the chip hands back, so callers still get a whole one.
+              onClick={() => (onAdd ?? onClick)?.(tag)}
               tag={tag}
             />
           ),

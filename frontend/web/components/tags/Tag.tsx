@@ -3,8 +3,6 @@ import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
 import Chip from 'components/base/Chip'
-import ToggleChip from 'components/ToggleChip'
-import Utils from 'common/utils/utils'
 import TagContent from './TagContent'
 import Constants from 'common/constants'
 import {
@@ -16,9 +14,13 @@ import {
 
 type TagType = {
   className?: string
+  // Whether the tag is unavailable to this organisation. The rule is a plan
+  // entitlement, so it belongs to whoever knows about plans: see
+  // Utils.tagDisabled. Reading it in here made a chip depend on AccountStore.
   disabled?: boolean
-  hideNames?: boolean
-  onClick?: (tag: TTag) => void
+  // Partial, because `tag` is: the filter renders an "Untagged" pseudo-tag
+  // with no id, and the create row previews a tag that does not exist yet.
+  onClick?: (tag: Partial<TTag>) => void
   selected?: boolean
   tag: Partial<TTag>
   isDot?: boolean
@@ -41,8 +43,7 @@ export const getTagColor = (tag: Partial<TTag>) => {
 
 const Tag: FC<TagType> = ({
   className,
-  disabled,
-  hideNames,
+  disabled = false,
   isDot,
   onClick,
   selected,
@@ -58,38 +59,17 @@ const Tag: FC<TagType> = ({
     )
   }
 
-  // A system tag carries its state in the icon, so it keeps the plain surface
-  // whether it is being drawn or picked.
+  // A system tag carries its state in the icon, so it keeps the plain surface.
   const isSystem = isSystemTag(tag)
   const colourUtilities = isSystem
     ? SYSTEM_TAG_UTILITIES
     : getTagSwatchUtilities(getTagColor(tag))
 
-  if (!hideNames && !!onClick) {
-    return (
-      <ToggleChip
-        label={tag.label || swatchName(getTagColor(tag))}
-        className={cx(colourUtilities, className)}
-        active={selected}
-        // No handler when disabled, so it is not a focusable button that does
-        // nothing. The same rule as the drawn branch below.
-        onClick={disabled ? undefined : () => onClick(tag as TTag)}
-      >
-        {!!tag.label && <TagContent disabled={disabled} tag={tag} />}
-      </ToggleChip>
-    )
-  }
-
-  // Hide unhealthy tags if feature is disabled
-  if (
-    !Utils.getFlagsmithHasFeature('feature_health') &&
-    tag.type === 'UNHEALTHY'
-  ) {
-    return null
-  }
-
   return (
     <Chip
+      // A tag with no text is a bare swatch, as in the colour picker, so it is
+      // named by its colour or it reaches a screen reader as an unnamed button.
+      aria-label={tag.label ? undefined : swatchName(getTagColor(tag))}
       className={cx(
         // Legacy `.chip` carried margin-right; the primitive does not, so tags
         // keep it here or they butt against whatever follows.
@@ -98,8 +78,9 @@ const Tag: FC<TagType> = ({
         { 'opacity-50': disabled },
         className,
       )}
-      onClick={disabled || !onClick ? undefined : () => onClick(tag as TTag)}
-      size='xs'
+      onClick={disabled || !onClick ? undefined : () => onClick(tag)}
+      selected={selected}
+      size='sm'
       variant='none'
     >
       <TagContent disabled={disabled} tag={tag} />

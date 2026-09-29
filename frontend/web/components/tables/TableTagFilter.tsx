@@ -189,7 +189,7 @@ const TableTagFilter: FC<TableFilterType> = ({
                       style={{ width: 150 }}
                       className='ml-2 text-nowrap text-overflow'
                     >
-                      <TagContent tag={tag} />
+                      <TagContent disabled={Utils.tagDisabled(tag)} tag={tag} />
                     </div>
                   </Row>
                 }
