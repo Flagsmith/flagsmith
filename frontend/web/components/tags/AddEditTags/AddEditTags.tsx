@@ -20,7 +20,6 @@ import BareButton from 'components/base/forms/BareButton'
 import Icon from 'components/icons/Icon'
 import CreateEditTag from 'components/tags/CreateEditTag'
 import Input from 'components/base/forms/Input'
-import Button from 'components/base/forms/Button'
 import TagUsage from 'components/TagUsage'
 import { ProjectPermission } from 'common/types/permissions.types'
 
@@ -179,35 +178,9 @@ const AddEditTags: FC<AddEditTagsType> = ({
             />
           }
           isOpen={isOpen}
-          onBack={() => setTab('SELECT')}
-          showBack={tab !== 'SELECT'}
           onClose={toggle}
           className='inline-modal--sm pb-0'
           containerClassName='px-0 py-2'
-          bottom={
-            !readOnly && (
-              <div className='text-right'>
-                {Utils.renderWithPermission(
-                  createEditTagPermission,
-                  Constants.projectPermissions(ProjectPermission.MANAGE_TAGS),
-                  <div className='text-center'>
-                    <Button
-                      size='small'
-                      className=''
-                      disabled={!createEditTagPermission}
-                      onClick={() => {
-                        setTab('CREATE')
-                        setFilter('')
-                      }}
-                      type='button'
-                    >
-                      Add New Tag
-                    </Button>
-                  </div>,
-                )}
-              </div>
-            )
-          }
         >
           <div>
             {tagsLoading && !projectTags && (
@@ -247,23 +220,41 @@ const AddEditTags: FC<AddEditTagsType> = ({
                     }
                   />
                 ))}
-              {canCreate && (
-                <BareButton
-                  className='tag-create d-flex align-items-center gap-2'
-                  onClick={submit}
-                >
-                  <Icon name='plus' width={16} />
-                  <span className='text-truncate'>{`Create "${filter}"`}</span>
-                  {/* Enter does the same thing, so the row says so. */}
-                  <kbd className='tag-create__enter ms-auto'>&#9166;</kbd>
-                </BareButton>
-              )}
               {noTags && (
                 <div className='text-center text-default mt-4'>
                   You have no tags yet
                 </div>
               )}
             </div>
+            {/* The only way to make a tag, and outside the scrolling list so
+                it stays in reach. Named, it creates one; unnamed, it opens
+                the full form. */}
+            {!readOnly &&
+              Utils.renderWithPermission(
+                createEditTagPermission,
+                Constants.projectPermissions(ProjectPermission.MANAGE_TAGS),
+                <BareButton
+                  className='tag-create d-flex align-items-center gap-2'
+                  disabled={!createEditTagPermission}
+                  onClick={
+                    canCreate
+                      ? submit
+                      : () => {
+                          setTab('CREATE')
+                          setFilter('')
+                        }
+                  }
+                >
+                  <Icon name='plus' width={16} />
+                  <span className='text-truncate'>
+                    {canCreate ? `Create "${filter}"` : 'New tag'}
+                  </span>
+                  {/* Enter does the same thing, so the row says so. */}
+                  {canCreate && (
+                    <kbd className='tag-create__enter ms-auto'>&#9166;</kbd>
+                  )}
+                </BareButton>,
+              )}
           </div>
         </InlineModal>
       )}
