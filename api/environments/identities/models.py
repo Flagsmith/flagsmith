@@ -46,11 +46,11 @@ class Identity(models.Model):
         return f"{self.environment.api_key}_{self.identifier}"
 
     def get_hash_key(self, use_identity_composite_key_for_hashing: bool = False) -> str:
-        return (
-            self.composite_key
-            if use_identity_composite_key_for_hashing
-            else str(self.id)
-        )
+        if use_identity_composite_key_for_hashing:
+            return self.composite_key  # type: ignore[no-any-return]
+        if self.id is not None:
+            return str(self.id)
+        return self.identifier
 
     def get_all_feature_states(
         self,
