@@ -142,7 +142,9 @@ def test_mixpanel_generate_user_data__identity_with_features__returns_expected_f
         feature_state = evaluated_feature_state.feature_state
         value = feature_state.get_feature_state_value()
         feature_properties[feature_state.feature.name] = (
-            value if (feature_state.enabled and value) else feature_state.enabled
+            value
+            if (feature_state.enabled and value is not None)
+            else feature_state.enabled
         )
 
     expected_user_data = [

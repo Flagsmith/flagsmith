@@ -6,6 +6,7 @@ import requests
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from evaluation.types import EvaluatedFeatureState
+from integrations.common.mappers import map_feature_states_to_feature_properties
 from integrations.common.wrapper import AbstractBaseIdentityIntegrationWrapper
 
 from .constants import DEFAULT_MIXPANEL_API_URL
@@ -42,14 +43,7 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper[MixpanelUserData]):
         feature_states: typing.List[EvaluatedFeatureState],
         trait_models: typing.List[Trait],
     ) -> MixpanelUserData:
-        feature_properties = {}
-
-        for evaluated_feature_state in feature_states:
-            flag = evaluated_feature_state.evaluation_result
-            value = flag["value"]
-            feature_properties[flag["name"]] = (
-                value if (flag["enabled"] and value) else flag["enabled"]
-            )
+        feature_properties = map_feature_states_to_feature_properties(feature_states)
 
         return [
             {
