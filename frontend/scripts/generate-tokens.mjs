@@ -138,29 +138,6 @@ function buildScssLines() {
     rootLines.push('')
   }
 
-  // Tag palette. One value per hue, doing a different job on each ground: a
-  // fill under dark text in light, the border with no fill in dark. The design
-  // system's tints are pale, which is what makes both work, and is also why
-  // they cannot be a border in light or a fill in dark.
-  // The label sits on the tag's own fill, not on the page, so it is the same
-  // ink on either theme.
-  const TAG_INK = 'content-always-dark'
-
-  const tagHues = Object.keys(json.primitives ?? {})
-    .filter((n) => n.startsWith('content-') && n !== TAG_INK)
-    .map((n) => n.replace('content-', ''))
-  if (tagHues.length) {
-    rootLines.push('  // Tag')
-    for (const hue of tagHues.sort()) {
-      // No dark counterpart: a tag is the same on either page. The tints are
-      // pale enough to separate from the dark page and to carry this ink.
-      rootLines.push(`  --tag-${hue}-surface: var(--content-${hue});`)
-      rootLines.push(`  --tag-${hue}-ink: var(--${TAG_INK});`)
-      rootLines.push(`  --tag-${hue}-border: var(--content-${hue});`)
-    }
-    rootLines.push('')
-  }
-
   // Feature palettes. Themed like the semantic tokens, but scoped to one
   // feature, so they sit outside `color` where only cross-cutting roles live.
   if (json.tag) {
@@ -535,14 +512,15 @@ function generateUtilities() {
   // Tag utilities. One class per hue: surface, ink and border are only
   // accessible together, and applying a fill without its label colour is the
   // bug this scale exists to fix.
+  const TAG_INK = 'content-always-dark'
   const utilHues = Object.keys(json.primitives ?? {})
-    .filter((n) => n.startsWith('content-'))
+    .filter((n) => n.startsWith('content-') && n !== TAG_INK)
     .map((n) => n.replace('content-', ''))
   if (utilHues.length) {
     lines.push('// Tags')
     for (const hue of utilHues.sort()) {
       lines.push(
-        `.tag-${hue} { --tag-hue: var(--content-${hue}); background-color: var(--tag-${hue}-surface); color: var(--tag-${hue}-ink); --ds-chip-border: var(--tag-${hue}-border); }`,
+        `.tag-${hue} { background-color: var(--content-${hue}); color: var(--${TAG_INK}); --ds-chip-border: var(--content-${hue}); }`,
       )
     }
     lines.push('')
