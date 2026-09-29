@@ -1,6 +1,7 @@
 import React, { FC, ReactNode } from 'react'
 import classNames from 'classnames'
 import { Tag as TTag } from 'common/types/responses'
+import BareButton from 'components/base/forms/BareButton'
 import Tag from 'components/tags/Tag'
 import Icon from 'components/icons/Icon'
 import './TagRow.scss'
@@ -13,6 +14,22 @@ type TagRowProps = {
   tag: TTag
   /** Whatever the list wants on the right: a menu, a usage count. */
   trailing?: ReactNode
+}
+
+// Arrow keys walk the list: a list of rows is one thing to move through, not
+// one tab stop per row.
+const moveFocus = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+  const row = e.currentTarget.parentElement
+  const sibling =
+    e.key === 'ArrowDown'
+      ? row?.nextElementSibling
+      : row?.previousElementSibling
+  const target = sibling?.querySelector('.tag-row__select')
+  if (target instanceof HTMLElement) {
+    e.preventDefault()
+    target.focus()
+  }
 }
 
 /**
@@ -28,50 +45,34 @@ const TagRow: FC<TagRowProps> = ({
   trailing,
 }) => {
   const selectable = checked !== undefined && !!onToggle && !disabled
-  const toggle = () => selectable && onToggle(tag)
 
   return (
     <div
-      className={classNames('tag-row d-flex align-items-center gap-2', {
+      className={classNames('tag-row d-flex align-items-center', {
         'tag-row--disabled': disabled,
-        'tag-row--selectable': selectable,
       })}
-      onClick={toggle}
-      onKeyDown={(e) => {
-        // Arrow keys walk the list; a list of rows is one thing to move
-        // through, not one tab stop per row.
-        const step =
-          e.key === 'ArrowDown'
-            ? 'nextElementSibling'
-            : 'previousElementSibling'
-        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-          const next = e.currentTarget[step]
-          if (next instanceof HTMLElement) {
-            e.preventDefault()
-            next.focus()
-          }
-          return
-        }
-        if (!selectable) return
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          toggle()
-        }
-      }}
-      role={selectable ? 'checkbox' : undefined}
-      aria-checked={selectable ? checked : undefined}
-      tabIndex={selectable ? 0 : undefined}
     >
-      <Tag className='me-0' disabled={disabled} tag={tag} />
-      <span className='tag-row__spacer' />
-      {checked !== undefined && (
-        <Icon
-          className={classNames('tag-row__mark text-default', {
-            'opacity-0': !checked,
-          })}
-          name='checkmark'
-        />
-      )}
+      {/* Only the selecting part is the control. `trailing` is a sibling, so
+          its menu button is not inside this one. */}
+      <BareButton
+        className='tag-row__select d-flex align-items-center gap-2'
+        disabled={!selectable}
+        onClick={() => onToggle?.(tag)}
+        onKeyDown={moveFocus}
+        role={selectable ? 'checkbox' : undefined}
+        aria-checked={selectable ? checked : undefined}
+      >
+        <Tag className='me-0' disabled={disabled} tag={tag} />
+        <span className='tag-row__spacer' />
+        {checked !== undefined && (
+          <Icon
+            className={classNames('tag-row__mark text-default', {
+              'opacity-0': !checked,
+            })}
+            name='checkmark'
+          />
+        )}
+      </BareButton>
       {trailing && <div className='tag-row__actions'>{trailing}</div>}
     </div>
   )

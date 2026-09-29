@@ -1,23 +1,30 @@
 .tag-row {
-
   padding: 6px 14px;
-
-  &--selectable {
-    cursor: pointer;
-
-    &:hover {
-      background-color: var(--color-surface-hover);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--color-border-action);
-      outline-offset: -2px;
-    }
-  }
 
   &--disabled {
     cursor: not-allowed;
   }
+}
+
+// The control: everything but the trailing actions, so the row still reads as
+// one strip while the menu stays outside the button.
+.tag-row__select {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+
+  &:not(:disabled) {
+    cursor: pointer;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-border-action);
+    outline-offset: -2px;
+  }
+}
+
+.tag-row:has(.tag-row__select:not(:disabled):hover) {
+  background-color: var(--color-surface-hover);
 }
 
 // Grow in from the right edge. Opacity and width, never display:none, so the
