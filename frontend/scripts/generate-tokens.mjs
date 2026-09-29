@@ -142,18 +142,21 @@ function buildScssLines() {
   // fill under dark text in light, the border with no fill in dark. The design
   // system's tints are pale, which is what makes both work, and is also why
   // they cannot be a border in light or a fill in dark.
+  // The label sits on the tag's own fill, not on the page, so it is the same
+  // ink on either theme.
+  const TAG_INK = 'content-always-dark'
+
   const tagHues = Object.keys(json.primitives ?? {})
-    .filter((n) => n.startsWith('content-'))
+    .filter((n) => n.startsWith('content-') && n !== TAG_INK)
     .map((n) => n.replace('content-', ''))
   if (tagHues.length) {
     rootLines.push('  // Tag')
     for (const hue of tagHues.sort()) {
+      // No dark counterpart: a tag is the same on either page. The tints are
+      // pale enough to separate from the dark page and to carry this ink.
       rootLines.push(`  --tag-${hue}-surface: var(--content-${hue});`)
-      rootLines.push(`  --tag-${hue}-ink: var(--slate-600);`)
-      rootLines.push(`  --tag-${hue}-border: transparent;`)
-      darkLines.push(`  --tag-${hue}-surface: transparent;`)
-      darkLines.push(`  --tag-${hue}-ink: var(--color-text-default);`)
-      darkLines.push(`  --tag-${hue}-border: var(--content-${hue});`)
+      rootLines.push(`  --tag-${hue}-ink: var(--${TAG_INK});`)
+      rootLines.push(`  --tag-${hue}-border: var(--content-${hue});`)
     }
     rootLines.push('')
   }
