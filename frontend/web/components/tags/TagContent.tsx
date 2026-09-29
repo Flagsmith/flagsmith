@@ -111,7 +111,7 @@ const TagContent: FC<TagContent> = ({ disabled = false, tag }) => {
     <Tooltip
       title={
         <span
-          className={classNames('mr-1 flex-row align-items-center', {
+          className={classNames('mr-1 gap-1 flex-row align-items-center', {
             'opacity-50': disabled,
           })}
         >
