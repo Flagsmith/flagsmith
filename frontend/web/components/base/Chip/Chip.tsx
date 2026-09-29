@@ -38,18 +38,11 @@ export type ChipProps = {
 // bg + text come from token utilities; the variant border lives in Chip.scss.
 const VARIANT_UTILITIES: Record<ChipVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
-
   danger: 'bg-surface-danger text-danger',
-
   info: 'bg-surface-info text-info',
-
   muted: 'bg-surface-muted text-secondary',
-
   neutral: 'bg-surface-subtle text-default',
-  // The one filled variant. `text-white` rather than a token because there is
-  // no inverse-text token yet; white on --color-surface-action is 5.93:1, so AA
-  // but not AAA. Note the app has a second, darker solid (`bg-primary900`, used
-  // by BetaFlag and PlanBasedAccess) that this deliberately does not cover.
+  // text-white, not a token: there is no inverse-text token yet. 5.93:1, AA.
   solid: 'bg-surface-action text-white',
   success: 'bg-surface-success text-success',
   warning: 'bg-surface-warning text-warning',
@@ -80,8 +73,7 @@ const Chip = ({
     <span
       ref={ref}
       className={classNames(
-        // rounded-md is 6px, fixed by the tags frame in Figma. Not a prop:
-        // every chip is the same shape.
+        // 6px, fixed by the tags frame. Not a prop: every chip is one shape.
         'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-md',
         VARIANT_UTILITIES[variant],
         `ds-chip--${variant}`,
