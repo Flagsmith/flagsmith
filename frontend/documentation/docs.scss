@@ -61,6 +61,15 @@
   min-width: 0;
 }
 
+// Scales of three would otherwise stretch as wide as scales of fourteen.
+.scale-row__swatches--compact {
+  flex-wrap: wrap;
+
+  .swatch-card {
+    flex: 0 1 148px;
+  }
+}
+
 .swatch-card__colour {
   align-items: flex-end;
   border: 1px solid rgba(128, 128, 128, 0.2);
@@ -294,4 +303,12 @@
   code {
     font-size: var(--font-caption-size, 12px);
   }
+}
+
+
+.scale-row__description {
+  color: var(--color-text-secondary, #656d7b);
+  font-size: var(--font-body-sm-size, 13px);
+  margin-bottom: 12px;
+  max-width: 70ch;
 }

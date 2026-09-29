@@ -1,7 +1,16 @@
 import React from 'react'
 
-type Swatch = { step: string; hex: string; variable: string }
-type Scale = { name: string; swatches: Swatch[] }
+// `dark` only where a swatch is themed: primitives hold one value, the design
+// system's ramps hold two and often invert between them.
+type Swatch = { step: string; hex: string; variable: string; dark?: string }
+// `compact` caps the swatch width instead of stretching to fill. A scale of
+// three would otherwise take the same room as one of fourteen.
+type Scale = {
+  name: string
+  description?: string
+  compact?: boolean
+  swatches: Swatch[]
+}
 
 const SwatchCard: React.FC<{ swatch: Swatch }> = ({ swatch }) => {
   const r = parseInt(swatch.hex.slice(1, 3), 16)
@@ -18,7 +27,10 @@ const SwatchCard: React.FC<{ swatch: Swatch }> = ({ swatch }) => {
       >
         {swatch.step}
       </div>
-      <code className='swatch-card__hex'>{swatch.hex}</code>
+      <code className='swatch-card__hex'>
+        {swatch.hex}
+        {swatch.dark && swatch.dark !== swatch.hex && <> · {swatch.dark}</>}
+      </code>
     </div>
   )
 }
@@ -26,7 +38,14 @@ const SwatchCard: React.FC<{ swatch: Swatch }> = ({ swatch }) => {
 const ScaleRow: React.FC<{ scale: Scale }> = ({ scale }) => (
   <div className='scale-row'>
     <h3 className='scale-row__title'>{scale.name}</h3>
-    <div className='scale-row__swatches'>
+    {scale.description && (
+      <p className='scale-row__description'>{scale.description}</p>
+    )}
+    <div
+      className={`scale-row__swatches${
+        scale.compact ? ' scale-row__swatches--compact' : ''
+      }`}
+    >
       {scale.swatches.map((s) => (
         <SwatchCard key={s.variable} swatch={s} />
       ))}
