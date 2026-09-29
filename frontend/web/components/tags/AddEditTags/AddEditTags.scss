@@ -7,14 +7,10 @@
   -webkit-user-select: none;
 }
 
-// Creates the tag the search box names. Same padding as a tag row, so it reads
-// as the list's last row, and a rule above it because it sits outside the
-// scroll and would otherwise look like a row that failed to scroll.
+// The list's last row, but outside the scroll. Padding matches .tag-row.
 .tag-create {
   padding: 6px 14px;
   border-top: 1px solid var(--color-border-default);
-  width: 100%;
-  color: var(--color-text-default);
   cursor: pointer;
 
   &:hover {
@@ -30,8 +26,5 @@
 .tag-create__enter {
   padding: 0 6px;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-surface-subtle);
-  color: var(--color-text-secondary);
   font-size: 0.75rem;
 }

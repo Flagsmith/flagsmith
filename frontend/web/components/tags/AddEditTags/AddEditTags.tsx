@@ -234,7 +234,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
                 createEditTagPermission,
                 Constants.projectPermissions(ProjectPermission.MANAGE_TAGS),
                 <BareButton
-                  className='tag-create d-flex align-items-center gap-2'
+                  className='tag-create d-flex align-items-center gap-2 w-100 text-default'
                   disabled={!createEditTagPermission}
                   onClick={
                     canCreate
@@ -251,7 +251,9 @@ const AddEditTags: FC<AddEditTagsType> = ({
                   </span>
                   {/* Enter does the same thing, so the row says so. */}
                   {canCreate && (
-                    <kbd className='tag-create__enter ms-auto'>&#9166;</kbd>
+                    <kbd className='tag-create__enter ms-auto rounded-sm bg-surface-subtle text-secondary'>
+                      &#9166;
+                    </kbd>
                   )}
                 </BareButton>,
               )}
