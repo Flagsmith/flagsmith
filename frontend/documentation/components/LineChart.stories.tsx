@@ -2,6 +2,7 @@ import React, { useMemo } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 import LineChart from 'components/charts/LineChart'
 import { buildChartColorMap } from 'components/charts/buildChartColorMap'
+import { seriesFromMaps } from 'components/charts/types'
 import { generateChartFakeData } from './_chartFakeData'
 
 // ============================================================================
@@ -46,7 +47,10 @@ export const UsageTrends: Story = {
         [],
       )
       const data = useMemo(() => generateFakeData(30, labels), [labels])
-      const colorMap = useMemo(() => buildChartColorMap(labels), [labels])
+      const series = useMemo(
+        () => seriesFromMaps(labels, buildChartColorMap(labels)),
+        [labels],
+      )
 
       return (
         <div className='mx-auto' style={{ maxWidth: 900 }}>
@@ -54,13 +58,7 @@ export const UsageTrends: Story = {
             Mirrors the API Usage Trends dashboard — three independent metrics
             plotted over 30 days.
           </p>
-          <LineChart
-            data={data}
-            series={labels}
-            colorMap={colorMap}
-            xAxisInterval={2}
-            showLegend
-          />
+          <LineChart data={data} series={series} xAxisInterval={2} showLegend />
         </div>
       )
     },
@@ -72,7 +70,10 @@ export const SingleLine: Story = {
     () => {
       const labels = useMemo(() => ['API Calls'], [])
       const data = useMemo(() => generateFakeData(30, labels), [labels])
-      const colorMap = useMemo(() => buildChartColorMap(labels), [labels])
+      const series = useMemo(
+        () => seriesFromMaps(labels, buildChartColorMap(labels)),
+        [labels],
+      )
 
       return (
         <div className='mx-auto' style={{ maxWidth: 900 }}>
@@ -80,12 +81,7 @@ export const SingleLine: Story = {
             One metric over time — legend hidden since the series is obvious
             from the chart title.
           </p>
-          <LineChart
-            data={data}
-            series={labels}
-            colorMap={colorMap}
-            xAxisInterval={2}
-          />
+          <LineChart data={data} series={series} xAxisInterval={2} />
         </div>
       )
     },
@@ -108,20 +104,17 @@ export const ManyLines: Story = {
         [],
       )
       const data = useMemo(() => generateFakeData(30, labels), [labels])
-      const colorMap = useMemo(() => buildChartColorMap(labels), [labels])
+      const series = useMemo(
+        () => seriesFromMaps(labels, buildChartColorMap(labels)),
+        [labels],
+      )
 
       return (
         <div className='mx-auto' style={{ maxWidth: 900 }}>
           <p className='text-secondary fs-small mb-3'>
             Seven lines — stress-test of the colour palette.
           </p>
-          <LineChart
-            data={data}
-            series={labels}
-            colorMap={colorMap}
-            xAxisInterval={2}
-            showLegend
-          />
+          <LineChart data={data} series={series} xAxisInterval={2} showLegend />
         </div>
       )
     },

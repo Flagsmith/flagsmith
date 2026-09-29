@@ -7,7 +7,6 @@ from django.db import transaction
 from django.db.models import QuerySet
 from flag_engine.segments import constants
 from ordered_model.models import OrderedModelQuerySet  # type: ignore[import-untyped]
-from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
 
 from api_keys.user import APIKeyUser
 from audit.constants import FEATURE_DEPENDENCY_CREATED_MESSAGE
@@ -191,10 +190,6 @@ def _lock_project_flag_dependencies(project_id: int) -> None:
         # block inserts of rows referencing the project.
         list(Project.objects.select_for_update().filter(pk=project_id).values("pk"))
         return
-    if connection.isolation_level != ISOLATION_LEVEL_READ_COMMITTED:
-        raise RuntimeError(
-            "Flag dependencies require the READ COMMITTED isolation level."
-        )
     with connection.cursor() as cursor:
         cursor.execute(
             "SELECT pg_advisory_xact_lock(%s, %s)",

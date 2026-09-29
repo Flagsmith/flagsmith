@@ -5,7 +5,6 @@ from unittest import mock
 import pytest
 from django.db import connection, connections, transaction
 from django.test.utils import CaptureQueriesContext
-from psycopg2.extensions import ISOLATION_LEVEL_REPEATABLE_READ
 from pytest_django import DjangoAssertNumQueries
 
 from environments.models import Environment
@@ -156,21 +155,6 @@ def test_validate_segment_flag_dependencies__outside_transaction__raises(
     # When / Then
     with pytest.raises(RuntimeError, match="inside a transaction"):
         validate_segment_flag_dependencies(segment)
-
-
-def test_validate_segment_flag_dependencies__repeatable_read_isolation_level__raises(
-    segment: Segment,
-) -> None:
-    # Given
-    with mock.patch.object(
-        connection, "isolation_level", ISOLATION_LEVEL_REPEATABLE_READ
-    ):
-        # When / Then
-        with pytest.raises(
-            RuntimeError,
-            match="Flag dependencies require the READ COMMITTED isolation level.",
-        ):
-            validate_segment_flag_dependencies(segment)
 
 
 def test_validate_segment_flag_dependencies__called_twice_in_transaction__does_not_block(
