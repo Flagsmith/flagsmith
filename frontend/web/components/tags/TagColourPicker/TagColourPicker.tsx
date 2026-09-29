@@ -19,7 +19,7 @@ const TagColourPicker: FC<TagColourPickerProps> = ({
     {Constants.tagColors.map((colour: string) => (
       <Tag
         key={colour}
-        onClick={(tag) => onChange(tag.color)}
+        onClick={() => onChange(colour)}
         selected={value === colour}
         tag={{ color: colour }}
       />
