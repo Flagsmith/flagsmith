@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.db import IntegrityError, connection
-from django.db.models import Q
 from django.test.utils import CaptureQueriesContext
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from prometheus_client import REGISTRY
@@ -23,6 +22,7 @@ from core.dataclasses import AuthorData
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
+from evaluation.services import get_identity_feature_states
 from experimentation import services
 from experimentation.constants import MAX_AUDIENCE_SEGMENTS
 from experimentation.dataclasses import (
@@ -67,6 +67,7 @@ from features.versioning.dataclasses import MultivariateValueChangeSet
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+from tests.types import VariantAssignmentFixture
 from tests.unit.experimentation.conftest import RolloutSpecFactory
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
@@ -2602,9 +2603,15 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     multivariate_feature: Feature,
     multivariate_options: list[MultivariateFeatureOption],
     admin_user: FFAdminUser,
+    variant_assignment: VariantAssignmentFixture,
 ) -> None:
     # Given a running experiment whose rollout splits two variants 50/50
     option_a, option_b, _ = multivariate_options
+    # The fixture derives an option's value from its percentage, so two of them
+    # share a value. Key them so a variant identifies which option won.
+    for index, option in enumerate(multivariate_options):
+        option.key = f"variant-{index}"
+        option.save()
     experiment = Experiment.objects.create(
         environment=environment_v2_versioning,
         feature=multivariate_feature,
@@ -2623,43 +2630,28 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
         ],
         author=AuthorData(user=admin_user),
     )
-    identity_hash_keys = [f"identity-{i}" for i in range(50)]
-
-    def variant_assignment() -> dict[str, int]:
-        override = (
-            FeatureState.objects.get_live_feature_states(
-                environment=experiment.environment,
-                additional_filters=Q(
-                    feature_segment__segment=experiment.rollout_segment,
-                    identity__isnull=True,
-                ),
-                feature_id=experiment.feature_id,
-            )
-            .prefetch_related(
-                "multivariate_feature_state_values__multivariate_feature_option"
-            )
-            .latest("id")
+    # and identities, some of which the rollout's percentage split enrols
+    identities = [
+        Identity.objects.create(
+            identifier=f"identity-{i}", environment=environment_v2_versioning
         )
-        assignment: dict[str, int] = {}
-        for key in identity_hash_keys:
-            option = override.get_multivariate_feature_state_value(key)
-            # The 50/50 split allocates 100%, so every identity lands on an option.
-            assert isinstance(option, MultivariateFeatureOption)
-            assignment[key] = option.id
-        return assignment
+        for i in range(50)
+    ]
 
     # When the rollout is applied, then re-applied unchanged (e.g. tuned while
     # the experiment is running)
     services.apply_experiment_rollout(experiment, spec)
     experiment.refresh_from_db()
-    before = variant_assignment()
+    before = variant_assignment(identities, multivariate_feature.name)
 
     services.apply_experiment_rollout(experiment, spec)
-    after = variant_assignment()
+    after = variant_assignment(identities, multivariate_feature.name)
 
     # Then every already-enrolled identity keeps the variant it was first
     # assigned; tuning the rollout must not re-randomise the split.
     assert before == after
+    # and the split is not trivially one-sided, so the above means something
+    assert {option_a.key, option_b.key} <= set(before.values())
 
 
 def _verification_count(result: str) -> float:
@@ -3538,13 +3530,14 @@ def _identity_flag_value(
 ) -> tuple[Any, int | None]:
     """The value the identity is served for the feature, and the id of the
     feature segment it came from (``None`` for the environment default)."""
-    (feature_state,) = [
-        feature_state
-        for feature_state in identity.get_all_feature_states()
-        if feature_state.feature_id == feature.id
+    (evaluated_feature_state,) = [
+        evaluated_feature_state
+        for evaluated_feature_state in get_identity_feature_states(identity)
+        if evaluated_feature_state.feature_state.feature_id == feature.id
     ]
+    feature_state = evaluated_feature_state.feature_state
     return (
-        feature_state.get_feature_state_value(identity=identity),
+        evaluated_feature_state.evaluation_result["value"],
         (
             feature_state.feature_segment.segment_id
             if feature_state.feature_segment

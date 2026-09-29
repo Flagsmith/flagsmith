@@ -4,6 +4,7 @@ import pytest
 
 from environments.identities.models import Identity
 from environments.models import Environment
+from evaluation.services import get_identity_feature_states
 from features.models import FeatureState
 from integrations.heap.heap import HeapWrapper
 from integrations.heap.models import HeapConfiguration
@@ -34,7 +35,7 @@ def test_heap_generate_user_data__correct_values__returns_expected_data(
 
     # When
     user_data = heap_wrapper.generate_user_data(
-        identity=identity, feature_states=[feature_state, feature_state_with_value]
+        identity=identity, feature_states=get_identity_feature_states(identity)
     )
 
     # Then
@@ -91,7 +92,7 @@ def test_identify_integrations__heap_configured__posts_to_expected_url(
     mocked_post = mocker.patch("integrations.heap.heap.requests.post")
 
     # When
-    identify_integrations(identity, identity.get_all_feature_states())  # type: ignore[no-untyped-call]
+    identify_integrations(identity, get_identity_feature_states(identity))  # type: ignore[no-untyped-call]
 
     # Then
     assert mocked_post.call_args.args[0] == expected_url

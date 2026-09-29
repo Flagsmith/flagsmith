@@ -1,4 +1,5 @@
 import pytest
+from django.db.models import Q
 from flag_engine.segments.constants import EQUAL
 from pytest_django import DjangoAssertNumQueries
 from pytest_lazy_fixtures import lf as lazy_fixture
@@ -433,3 +434,43 @@ def test_map_environment_to_evaluation_context__inputs_not_prefetched__queries_d
             identity=identity,
             segments=segments,
         )
+
+
+def test_map_environment_to_evaluation_context__additional_filters__narrows_features(
+    identity: Identity,
+    feature: Feature,
+    project: Project,
+) -> None:
+    # Given
+    other_feature = Feature.objects.create(name="other_feature", project=project)
+
+    # When
+    context = map_environment_to_evaluation_context(
+        environment=identity.environment,
+        identity=identity,
+        additional_filters=Q(feature__name=other_feature.name),
+    )
+
+    # Then
+    assert set(context["features"]) == {other_feature.name}
+
+
+@pytest.mark.parametrize(
+    "evaluated_identity, expected_variant_count",
+    [(lazy_fixture("identity"), 3), (None, 0)],
+)
+def test_map_environment_to_evaluation_context__multivariate_feature__maps_variants_for_identity_only(
+    evaluated_identity: Identity | None,
+    expected_variant_count: int,
+    environment: Environment,
+    multivariate_feature: Feature,
+) -> None:
+    # Given / When
+    context = map_environment_to_evaluation_context(
+        environment=environment,
+        identity=evaluated_identity,
+    )
+
+    # Then
+    feature_context = context["features"][multivariate_feature.name]
+    assert len(feature_context.get("variants", [])) == expected_variant_count

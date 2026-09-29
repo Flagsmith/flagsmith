@@ -13,6 +13,7 @@ from core.constants import FLOAT
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
+from evaluation.services import get_identity_feature_states
 from features.models import (
     Feature,
     FeatureSegment,
@@ -106,15 +107,15 @@ def test_get_all_feature_states__multiple_identities_and_environments__returns_c
     )
 
     # When
-    flags = identity_1.get_all_feature_states()
+    flags = get_identity_feature_states(identity_1)
 
     # Then
     # For identity_1 all items in a different environment should not appear. Identity
     # specific flags should be returned as well as non-identity specific ones that have not
     # already been returned via the identity specific result.
     assert len(flags) == 2
-    assert fs_environment_anticipated in flags
-    assert fs_identity_anticipated in flags
+    assert fs_environment_anticipated in [flag.feature_state for flag in flags]
+    assert fs_identity_anticipated in [flag.feature_state for flag in flags]
 
 
 def test_trait_create__string_value__assigns_relevant_attributes(
@@ -249,17 +250,17 @@ def test_get_all_feature_states__matching_segment__returns_overridden_values(
     )
 
     # When
-    feature_states = identity.get_all_feature_states()
+    feature_states = get_identity_feature_states(identity)
 
     # Then
     feature_flag_state = next(
-        filter(lambda fs: fs.feature == feature_flag, feature_states)
+        filter(lambda fs: fs.feature_state.feature == feature_flag, feature_states)
     )
     remote_config_feature_state = next(
-        filter(lambda fs: fs.feature == remote_config, feature_states)
+        filter(lambda fs: fs.feature_state.feature == remote_config, feature_states)
     )
-    assert feature_flag_state.enabled is True
-    assert remote_config_feature_state.get_feature_state_value() == overridden_value
+    assert feature_flag_state.evaluation_result["enabled"] is True
+    assert remote_config_feature_state.evaluation_result["value"] == overridden_value
 
 
 def test_get_all_feature_states__identity_not_matching_segment__returns_default_values(
@@ -311,17 +312,17 @@ def test_get_all_feature_states__identity_not_matching_segment__returns_default_
     )
 
     # When
-    feature_states = identity.get_all_feature_states()
+    feature_states = get_identity_feature_states(identity)
 
     # Then
     feature_flag_state = next(
-        filter(lambda fs: fs.feature == feature_flag, feature_states)
+        filter(lambda fs: fs.feature_state.feature == feature_flag, feature_states)
     )
     remote_config_feature_state = next(
-        filter(lambda fs: fs.feature == remote_config, feature_states)
+        filter(lambda fs: fs.feature_state.feature == remote_config, feature_states)
     )
-    assert not feature_flag_state.enabled
-    assert remote_config_feature_state.get_feature_state_value() == initial_value
+    assert not feature_flag_state.evaluation_result["enabled"]
+    assert remote_config_feature_state.evaluation_result["value"] == initial_value
 
 
 def test_get_all_feature_states__matching_segment_with_integer_value__returns_overridden_integer(
@@ -367,11 +368,13 @@ def test_get_all_feature_states__matching_segment_with_integer_value__returns_ov
     )
 
     # When
-    feature_states = identity.get_all_feature_states()
+    feature_states = get_identity_feature_states(identity)
 
     # Then
-    feature_state = next(filter(lambda fs: fs.feature == remote_config, feature_states))
-    assert feature_state.get_feature_state_value() == overridden_value
+    feature_state = next(
+        filter(lambda fs: fs.feature_state.feature == remote_config, feature_states)
+    )
+    assert feature_state.evaluation_result["value"] == overridden_value
 
 
 def test_get_all_feature_states__matching_segment_with_boolean_value__returns_overridden_boolean(
@@ -417,11 +420,13 @@ def test_get_all_feature_states__matching_segment_with_boolean_value__returns_ov
     )
 
     # When
-    feature_states = identity.get_all_feature_states()
+    feature_states = get_identity_feature_states(identity)
 
     # Then
-    feature_state = next(filter(lambda fs: fs.feature == remote_config, feature_states))
-    assert not feature_state.get_feature_state_value()
+    feature_state = next(
+        filter(lambda fs: fs.feature_state.feature == remote_config, feature_states)
+    )
+    assert not feature_state.evaluation_result["value"]
 
 
 def test_get_all_feature_states__multiple_matching_segments__returns_highest_priority_value(
@@ -498,14 +503,14 @@ def test_get_all_feature_states__multiple_matching_segments__returns_highest_pri
     )
 
     # When - we get all feature states for an identity
-    feature_states = identity.get_all_feature_states()
+    feature_states = get_identity_feature_states(identity)
 
     # Then - only the flag associated with the highest priority feature segment is returned
     assert len(feature_states) == 1
     remote_config_feature_state = next(
-        filter(lambda fs: fs.feature == remote_config, feature_states)
+        filter(lambda fs: fs.feature_state.feature == remote_config, feature_states)
     )
-    assert remote_config_feature_state.get_feature_state_value() == overridden_value_1
+    assert remote_config_feature_state.evaluation_result["value"] == overridden_value_1
 
 
 def test_get_all_feature_states__segment_override_updated__returns_new_value(
@@ -556,13 +561,13 @@ def test_get_all_feature_states__segment_override_updated__returns_new_value(
     overridden_value_2 = "overridden value 2"
     segment_feature_state.feature_state_value.string_value = overridden_value_2
     segment_feature_state.feature_state_value.save()
-    feature_states = identity.get_all_feature_states()
+    feature_states = get_identity_feature_states(identity)
 
     # Then - the feature state value is correctly set to the newly updated feature segment value
     assert len(feature_states) == 1
 
     overridden_feature_state = feature_states[0]
-    assert overridden_feature_state.get_feature_state_value() == overridden_value_2
+    assert overridden_feature_state.evaluation_result["value"] == overridden_value_2
 
 
 def test_get_all_feature_states__traits_passed_manually__returns_segment_overridden_value(
@@ -617,11 +622,11 @@ def test_get_all_feature_states__traits_passed_manually__returns_segment_overrid
     )
 
     # When - we get all feature states for an identity
-    feature_states = identity.get_all_feature_states(traits=[trait])
+    feature_states = get_identity_feature_states(identity, traits=[trait])
 
     # Then - the flag is returned with the correct state
     assert len(feature_states) == 1
-    assert feature_states[0].enabled == enabled_for_segment
+    assert feature_states[0].evaluation_result["enabled"] == enabled_for_segment
 
 
 def test_generate_traits__persist_true__saves_non_transient_traits(
@@ -825,7 +830,7 @@ def test_get_segments__matching_traits__returns_segment_with_expected_queries(
 
     # When
     # we get the matching segments for an identity
-    with django_assert_num_queries(7):
+    with django_assert_num_queries(8):
         segments = identity.get_segments()
 
     # Then
@@ -896,11 +901,11 @@ def test_get_all_feature_states__null_version_exists__excludes_null_version(
     identity = Identity.objects.create(environment=environment, identifier="identity")
 
     # When
-    identity_feature_states = identity.get_all_feature_states()
+    identity_feature_states = get_identity_feature_states(identity)
 
     # Then
     assert len(identity_feature_states) == 1
-    assert identity_feature_states[0].id == version_1_feature_state.id
+    assert identity_feature_states[0].feature_state.id == version_1_feature_state.id
 
 
 def test_update_traits__unchanged_value__makes_single_query(  # type: ignore[no-untyped-def]
@@ -992,7 +997,7 @@ def test_get_all_feature_states__hide_disabled_flags__returns_expected_flags(  #
     )
     # When
     # we get flags for the identity
-    identity_flags = identity.get_all_feature_states()
+    identity_flags = get_identity_feature_states(identity)
 
     # Then
     assert bool(identity_flags) == disabled_flag_returned
@@ -1038,13 +1043,13 @@ def test_get_all_feature_states__multiple_versions__returns_latest_committed_ver
     not_live_feature_state.feature_state_value.save()
 
     # When
-    identity_feature_states = identity.get_all_feature_states()
+    identity_feature_states = get_identity_feature_states(identity)
 
     # Then
     identity_feature_state = next(
-        filter(lambda fs: fs.feature == feature, identity_feature_states)
+        filter(lambda fs: fs.feature_state.feature == feature, identity_feature_states)
     )
-    assert identity_feature_state.get_feature_state_value() == "v2"
+    assert identity_feature_state.evaluation_result["value"] == "v2"
 
 
 def test_get_hash_key__composite_key_hashing_enabled__returns_composite_key(  # type: ignore[no-untyped-def]
@@ -1089,8 +1094,8 @@ def test_identity_get_all_feature_states__returns_identity_override__when_v2_fea
     )
 
     # When
-    all_feature_states = identity.get_all_feature_states()
+    all_feature_states = get_identity_feature_states(identity)
 
     # Then
     assert len(all_feature_states) == 1
-    assert all_feature_states[0] == identity_override
+    assert all_feature_states[0].feature_state == identity_override

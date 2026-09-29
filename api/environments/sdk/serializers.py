@@ -17,6 +17,7 @@ from environments.sdk.services import (
     get_transient_identity_and_traits,
 )
 from environments.sdk.types import SDKTraitData
+from evaluation.services import get_identity_feature_states
 from features.serializers import (
     FeatureStateSerializerFull,
     SDKIdentityFeatureStateSerializer,
@@ -177,7 +178,8 @@ class IdentifyWithTraitsSerializer(
                 sdk_trait_data=sdk_trait_data,
             )
 
-        all_feature_states = identity.get_all_feature_states(
+        all_feature_states = get_identity_feature_states(
+            identity,
             traits=traits,
             additional_filters=self.context.get("feature_states_additional_filters"),
         )

@@ -4,6 +4,7 @@ import pytest
 
 from environments.identities.models import Identity
 from environments.models import Environment
+from evaluation.services import get_identity_feature_states
 from features.models import FeatureState
 from integrations.amplitude.amplitude import AmplitudeWrapper
 from integrations.amplitude.constants import DEFAULT_AMPLITUDE_API_URL
@@ -56,7 +57,7 @@ def test_amplitude_generate_user_data__feature_states_with_values__returns_expec
     # When
     user_data = amplitude_wrapper.generate_user_data(
         identity=identity,
-        feature_states=[feature_state, feature_state_with_value],
+        feature_states=get_identity_feature_states(identity),
         trait_models=[],
     )
 

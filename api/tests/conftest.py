@@ -77,6 +77,7 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
+from evaluation.services import evaluate_identity
 from experimentation.models import Experiment, ExperimentStatus
 from features.feature_external_resources.models import FeatureExternalResource
 from features.feature_types import MULTIVARIATE
@@ -123,6 +124,7 @@ from tests.types import (
     AdminClientAuthType,
     EnableFeaturesFixture,
     MigratorFactory,
+    VariantAssignmentFixture,
     WithEnvironmentPermissionsCallable,
     WithOrganisationPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -544,6 +546,29 @@ def environment_v2_versioning(environment: Environment) -> Environment:
     enable_v2_versioning(environment.id)
     environment.refresh_from_db()
     return environment
+
+
+@pytest.fixture()
+def variant_assignment() -> VariantAssignmentFixture:
+    """Which variant each identity is currently bucketed into.
+
+    Goes through the same entry point the SDK endpoints do, so that a test
+    asserting an identity keeps its variant is asserting it of production
+    behaviour rather than of a probe written alongside it.
+    """
+
+    def _variant_assignment(
+        identities: list[Identity],
+        feature_name: str,
+    ) -> dict[str, str | None]:
+        return {
+            identity.identifier: evaluate_identity(identity).result["flags"][
+                feature_name
+            ]["variant"]
+            for identity in identities
+        }
+
+    return _variant_assignment
 
 
 @pytest.fixture()

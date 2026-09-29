@@ -26,143 +26,25 @@ total_variance_percentage = (
 )
 
 
-# mock the returned percentage for the identity to simulate them falling into each of
-# the percentage allocation brackets for the feature variants
+# Which variant an identity hashes into is not something an API test can pin
+# down, so each case allocates a single variant the whole range instead.
 @pytest.mark.parametrize(
-    "hashed_percentage, expected_mv_value",
+    [
+        "variant_1_allocation",
+        "variant_2_allocation",
+        "expected_value",
+        "expected_variant",
+    ],
     (
-        (variant_1_percentage_allocation - 1, variant_1_value),
-        (total_variance_percentage - 1, variant_2_value),
-        (total_variance_percentage + 1, control_value),
+        pytest.param(100, 0, variant_1_value, "variant-1", id="all_variant_1"),
+        pytest.param(0, 100, variant_2_value, "variant-2", id="all_variant_2"),
+        pytest.param(0, 0, control_value, "control", id="unallocated_falls_through"),
     ),
 )
-@mock.patch("features.models.get_hashed_percentage_for_object_ids")
-def test_get_feature_states_for_identity__mv_percentage_allocation__returns_correct_value(  # type: ignore[no-untyped-def]
-    mock_get_hashed_percentage_value,
-    hashed_percentage,
-    expected_mv_value,
-    sdk_client,
-    admin_client,
-    project,
-    environment_api_key,
-    environment,
-    identity,
-    identity_identifier,
-):
-    # Given / When
-    # Then
-    # Firstly, let's create some features to use
-    # one standard feature
-    standard_feature_initial_value = "control"
-    standard_feature_id = create_feature_with_api(
-        client=admin_client,
-        project_id=project,
-        feature_name="standard_feature",
-        initial_value=standard_feature_initial_value,
-    )
-
-    # and one multivariate feature
-    multivariate_feature_id = create_feature_with_api(
-        client=admin_client,
-        project_id=project,
-        feature_name="multivariate_feature",
-        initial_value=control_value,
-        feature_type=MULTIVARIATE,
-    )
-    # With two mv options
-    create_mv_option_with_api(
-        admin_client,
-        project,
-        multivariate_feature_id,
-        variant_1_percentage_allocation,
-        variant_1_value,
-    )
-    variant_2_mvfo_id = create_mv_option_with_api(
-        admin_client,
-        project,
-        multivariate_feature_id,
-        variant_2_percentage_allocation,
-        variant_2_value,
-    )
-
-    # Now, when we mock the hashed percentage that the user gets
-    # to avoid the randomness factor
-    mock_get_hashed_percentage_value.return_value = hashed_percentage
-
-    # and request the flags for the identity
-    base_identity_flags_url = reverse("api-v1:sdk-identities")
-    identity_flags_url = f"{base_identity_flags_url}?identifier={identity_identifier}"
-    identity_response_1 = sdk_client.get(identity_flags_url)
-
-    # Then, we get a result for both of the features we created
-    assert identity_response_1.status_code == status.HTTP_200_OK
-    identity_response_json = identity_response_1.json()
-    assert len(identity_response_json["flags"]) == 2
-
-    # and the correct values are returned for the features
-    values_dict = {
-        flag["feature"]["id"]: flag["feature_state_value"]
-        for flag in identity_response_json["flags"]
-    }
-    assert values_dict[standard_feature_id] == standard_feature_initial_value
-    assert values_dict[multivariate_feature_id] == expected_mv_value
-
-    # Now, let's change the percentage allocations on the mv options
-    # first, we need to get the feature state id for the feature in the given
-    # environment
-    feature_state_id = next(
-        filter(
-            lambda flag: flag["feature"]["id"] == multivariate_feature_id,
-            identity_response_json["flags"],
-        )
-    )["id"]
-
-    # now let's get the existing data for the feature state so we can alter it and
-    # then PUT it back
-    feature_state_detail_url = reverse(
-        "api-v1:environments:environment-featurestates-detail",
-        args=[environment_api_key, feature_state_id],
-    )
-    retrieve_feature_state_response = admin_client.get(feature_state_detail_url)
-    feature_state_data = retrieve_feature_state_response.json()
-
-    # now let's amend the data so that all identities should receive variant 2
-    for mv_value in feature_state_data["multivariate_feature_state_values"]:
-        if mv_value["multivariate_feature_option"] == variant_2_mvfo_id:
-            mv_value["percentage_allocation"] = 100
-        else:
-            mv_value["percentage_allocation"] = 0
-
-    # and PUT the data back
-    update_feature_state_response = admin_client.put(
-        feature_state_detail_url,
-        data=json.dumps(feature_state_data),
-        content_type="application/json",
-    )
-    assert update_feature_state_response.status_code == status.HTTP_200_OK
-
-    # Then when we get the flags for an identity, the multivariate feature returns the
-    # value of the 2nd variate
-    identity_response_2 = sdk_client.get(identity_flags_url)
-    values_dict = {
-        flag["feature"]["id"]: flag["feature_state_value"]
-        for flag in identity_response_2.json()["flags"]
-    }
-    assert values_dict[multivariate_feature_id] == variant_2_value
-
-
-@pytest.mark.parametrize(
-    "hashed_percentage, expected_variant",
-    (
-        (variant_1_percentage_allocation - 1, "variant-1"),
-        (total_variance_percentage - 1, "variant-2"),
-        (total_variance_percentage + 1, "control"),
-    ),
-)
-@mock.patch("features.models.get_hashed_percentage_for_object_ids")
-def test_get_feature_states_for_identity__mv_allocation__returns_variant(  # type: ignore[no-untyped-def]
-    mock_get_hashed_percentage_value,
-    hashed_percentage,
+def test_get_feature_states_for_identity__mv_allocation__returns_value_and_variant(  # type: ignore[no-untyped-def]
+    variant_1_allocation,
+    variant_2_allocation,
+    expected_value,
     expected_variant,
     sdk_client,
     admin_client,
@@ -171,18 +53,19 @@ def test_get_feature_states_for_identity__mv_allocation__returns_variant(  # typ
     environment,
     identity,
     identity_identifier,
+    set_mv_allocations,
 ):
     # Given
     # a standard (non-multivariate) feature
+    standard_feature_initial_value = "control"
     standard_feature_id = create_feature_with_api(
         client=admin_client,
         project_id=project,
         feature_name="standard_feature",
-        initial_value="control",
+        initial_value=standard_feature_initial_value,
     )
 
-    # and a multivariate feature with two keyed variants spanning part of the range,
-    # so the remainder falls through to the control
+    # and a multivariate feature with two keyed variants
     multivariate_feature_id = create_feature_with_api(
         client=admin_client,
         project_id=project,
@@ -190,7 +73,7 @@ def test_get_feature_states_for_identity__mv_allocation__returns_variant(  # typ
         initial_value=control_value,
         feature_type=MULTIVARIATE,
     )
-    create_mv_option_with_api(
+    variant_1_mvfo_id = create_mv_option_with_api(
         admin_client,
         project,
         multivariate_feature_id,
@@ -198,7 +81,7 @@ def test_get_feature_states_for_identity__mv_allocation__returns_variant(  # typ
         variant_1_value,
         key="variant-1",
     )
-    create_mv_option_with_api(
+    variant_2_mvfo_id = create_mv_option_with_api(
         admin_client,
         project,
         multivariate_feature_id,
@@ -207,22 +90,91 @@ def test_get_feature_states_for_identity__mv_allocation__returns_variant(  # typ
         key="variant-2",
     )
 
+    base_identity_flags_url = "/api/v1/identities/"
+    identity_flags_url = f"{base_identity_flags_url}?identifier={identity_identifier}"
+    flags = sdk_client.get(identity_flags_url).json()["flags"]
+    multivariate_feature_state_id = next(
+        flag["id"] for flag in flags if flag["feature"]["id"] == multivariate_feature_id
+    )
+
     # When
-    # the identity hashes into a known allocation band
-    mock_get_hashed_percentage_value.return_value = hashed_percentage
-    base_url = reverse("api-v1:sdk-identities")
-    url = f"{base_url}?identifier={identity_identifier}"
-    response = sdk_client.get(url)
+    # the whole range is allocated to one variant, or to neither
+    set_mv_allocations(
+        environment_api_key,
+        multivariate_feature_state_id,
+        {
+            variant_1_mvfo_id: variant_1_allocation,
+            variant_2_mvfo_id: variant_2_allocation,
+        },
+    )
+    response = sdk_client.get(identity_flags_url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    variant_by_feature = {
-        flag["feature"]["id"]: flag["variant"] for flag in response.json()["flags"]
-    }
-    # the multivariate flag reports the variant key (or "control" on fall-through)
-    assert variant_by_feature[multivariate_feature_id] == expected_variant
-    # and the standard flag has no variant
-    assert variant_by_feature[standard_feature_id] is None
+    flags = response.json()["flags"]
+    assert len(flags) == 2
+    flags_by_feature_id = {flag["feature"]["id"]: flag for flag in flags}
+
+    # the multivariate flag serves the allocated variant, reporting its key,
+    # falling through to the control value when nothing is allocated
+    assert (
+        flags_by_feature_id[multivariate_feature_id]["feature_state_value"]
+        == expected_value
+    )
+    assert flags_by_feature_id[multivariate_feature_id]["variant"] == expected_variant
+
+    # and the standard flag is unaffected, and has no variant
+    assert (
+        flags_by_feature_id[standard_feature_id]["feature_state_value"]
+        == standard_feature_initial_value
+    )
+    assert flags_by_feature_id[standard_feature_id]["variant"] is None
+
+
+@pytest.mark.parametrize(
+    ["mv_option_keys", "expected_value", "expected_variant"],
+    (
+        pytest.param([], control_value, "control", id="no_variants"),
+        pytest.param([None], variant_1_value, None, id="keyless_variant"),
+    ),
+)
+def test_get_feature_states_for_identity__mv_without_keyed_variant__returns_value_and_variant(
+    mv_option_keys: list[str | None],
+    expected_value: str,
+    expected_variant: str | None,
+    sdk_client: APIClient,
+    admin_client: APIClient,
+    project: int,
+    environment: int,
+    identity: int,
+    identity_identifier: str,
+) -> None:
+    # Given
+    multivariate_feature_id = create_feature_with_api(
+        client=admin_client,
+        project_id=project,
+        feature_name="multivariate_feature",
+        initial_value=control_value,
+        feature_type=MULTIVARIATE,
+    )
+    for key in mv_option_keys:
+        create_mv_option_with_api(
+            admin_client,
+            project,
+            multivariate_feature_id,
+            100,
+            variant_1_value,
+            key=key,
+        )
+
+    # When
+    response = sdk_client.get(f"/api/v1/identities/?identifier={identity_identifier}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    (flag,) = response.json()["flags"]
+    assert flag["feature_state_value"] == expected_value
+    assert flag["variant"] == expected_variant
 
 
 def test_get_flags__multivariate_feature__response_excludes_variant(  # type: ignore[no-untyped-def]

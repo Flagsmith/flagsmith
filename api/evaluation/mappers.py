@@ -73,6 +73,8 @@ def map_environment_to_evaluation_context(
     identity: "Identity | None" = None,
     traits: "Iterable[Trait] | None" = None,
     segments: "Iterable[Segment] | None" = None,
+    additional_filters: "Q | None" = None,
+    from_replica: bool = False,
 ) -> EvaluationContext:
     """Map Django ORM models to a flag-engine `EvaluationContext`.
 
@@ -109,6 +111,10 @@ def map_environment_to_evaluation_context(
     ) = _resolve_feature_states(
         environment=environment,
         identity=identity,
+        additional_filters=additional_filters,
+        from_replica=from_replica,
+        # The engine only splits between variants for an identity.
+        with_variants=identity is not None,
     )
     if segments is not None:
         segments = list(segments)
@@ -172,6 +178,9 @@ def _resolve_feature_states(
     *,
     environment: "Environment",
     identity: "Identity | None",
+    additional_filters: "Q | None",
+    from_replica: bool,
+    with_variants: bool,
 ) -> _ResolvedFeatureStates:
     """Read the feature states current for `environment`, split by what they override."""
     # Deferred: `environments.models` imports this module's package.
@@ -183,10 +192,13 @@ def _resolve_feature_states(
         # The identity is persisted (non-transient).
         # Look for its identity overrides in addition to segment overrides.
         override_filters = Q(identity=identity) | override_filters
+    if additional_filters:
+        override_filters &= additional_filters
 
     feature_states = get_environment_flags_list(
         environment=environment,
         additional_filters=override_filters,
+        from_replica=from_replica,
         additional_select_related_args=["feature_segment__segment"],
         additional_prefetch_related_args=[
             Prefetch(
@@ -195,15 +207,18 @@ def _resolve_feature_states(
                     "multivariate_feature_option"
                 ),
             )
-        ],
+        ]
+        if with_variants
+        else [],
     )
 
     resolved = _ResolvedFeatureStates([], [], {}, {})
 
     for feature_state in feature_states:
-        resolved.mv_fs_values_by_feature_state_id[feature_state.pk] = (
-            feature_state.multivariate_feature_state_values.all()
-        )
+        if with_variants:
+            resolved.mv_fs_values_by_feature_state_id[feature_state.pk] = (
+                feature_state.multivariate_feature_state_values.all()
+            )
         if feature_state.identity_id is not None:
             resolved.identity_overrides.append(feature_state)
         elif (feature_segment := feature_state.feature_segment) is not None:
