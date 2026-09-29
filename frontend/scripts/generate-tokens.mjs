@@ -138,6 +138,26 @@ function buildScssLines() {
     rootLines.push('')
   }
 
+  // Tag palette. One value per hue, doing a different job on each ground: a
+  // fill under dark text in light, the border with no fill in dark. The design
+  // system's tints are pale, which is what makes both work, and is also why
+  // they cannot be a border in light or a fill in dark.
+  const tagHues = Object.keys(json.primitives ?? {})
+    .filter((n) => n.startsWith('content-'))
+    .map((n) => n.replace('content-', ''))
+  if (tagHues.length) {
+    rootLines.push('  // Tag')
+    for (const hue of tagHues.sort()) {
+      rootLines.push(`  --tag-${hue}-surface: var(--content-${hue});`)
+      rootLines.push(`  --tag-${hue}-ink: var(--slate-600);`)
+      rootLines.push(`  --tag-${hue}-border: transparent;`)
+      darkLines.push(`  --tag-${hue}-surface: transparent;`)
+      darkLines.push(`  --tag-${hue}-ink: var(--color-text-default);`)
+      darkLines.push(`  --tag-${hue}-border: var(--content-${hue});`)
+    }
+    rootLines.push('')
+  }
+
   // Feature palettes. Themed like the semantic tokens, but scoped to one
   // feature, so they sit outside `color` where only cross-cutting roles live.
   if (json.tag) {
@@ -376,12 +396,14 @@ function generateTs() {
  * name so a swatch in Figma and a key here read the same.
  */
 function buildContentColours() {
-  const entries = Object.entries(json.primitives ?? {}).filter(([n]) =>
-    n.startsWith('content-'),
+  // The base tints only: the -dark and -border siblings are the dark theme's
+  // half of the same hue, not colours a tag can be set to.
+  const entries = Object.entries(json.primitives ?? {}).filter(
+    ([n]) => n.startsWith('content-') && !/-(dark|border)$/.test(n),
   )
   if (!entries.length) return []
   return [
-    '/** Tag and read-only content colours. Fixed: they do not follow the theme. */',
+    '/** One colour per tag hue. The same value in both themes: it is only ever a border. */',
     'export const contentColours = {',
     ...entries.map(([n, hex]) => `  '${n.replace('content-', '')}': '${hex}',`),
     '} as const',
@@ -507,33 +529,17 @@ function generateUtilities() {
     lines.push('')
   }
 
-  // Tag swatches. One class per hue rather than a bg/text pair, because the
-  // two are only accessible together: applying a fill without its label colour
-  // is the contrast bug this scale exists to fix.
-  if (json.tag) {
-    lines.push('// Tag swatches')
-    for (const [hue, surface] of sorted(json.tag.surface)) {
-      const text = json.tag.text[hue]
-      if (!text) continue
-      lines.push(
-        `.tag-${hue} { background-color: var(${surface.cssVar}); color: var(${text.cssVar}); }`,
-      )
-    }
-    lines.push('')
-  }
-
-  // Tag utilities. The Content colours are fixed rather than theme-aware: a
-  // tag chip carries its own surface, so it does not follow the page. One dark
-  // ink works on all of them, 9.64:1 at worst.
-  const contentColours = Object.keys(json.primitives ?? {}).filter((n) =>
-    n.startsWith('content-'),
-  )
-  if (contentColours.length) {
+  // Tag utilities. One class per hue: surface, ink and border are only
+  // accessible together, and applying a fill without its label colour is the
+  // bug this scale exists to fix.
+  const utilHues = Object.keys(json.primitives ?? {})
+    .filter((n) => n.startsWith('content-'))
+    .map((n) => n.replace('content-', ''))
+  if (utilHues.length) {
     lines.push('// Tags')
-    for (const name of contentColours.sort()) {
-      const swatch = name.replace('content-', '')
+    for (const hue of utilHues.sort()) {
       lines.push(
-        `.tag-${swatch} { background-color: var(--${name}); color: var(--slate-600); }`,
+        `.tag-${hue} { --tag-hue: var(--content-${hue}); background-color: var(--tag-${hue}-surface); color: var(--tag-${hue}-ink); --ds-chip-border: var(--tag-${hue}-border); }`,
       )
     }
     lines.push('')
