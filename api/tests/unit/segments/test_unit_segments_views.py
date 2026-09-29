@@ -3,6 +3,7 @@ import random
 from collections.abc import Callable
 from copy import deepcopy
 from datetime import timedelta
+from unittest.mock import MagicMock
 
 import freezegun
 import pytest
@@ -13,6 +14,7 @@ from common.projects.permissions import (
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.utils import timezone
 from flag_engine.segments.constants import EQUAL
@@ -518,8 +520,8 @@ def test_list_segments__filter_by_edge_identity__returns_only_matching_segments(
     identity_uuid = identity_document["identity_uuid"]
     assert isinstance(identity_uuid, str)
 
-    edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = (
-        expected_segment_ids
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid.return_value = (
+        identity_document
     )
 
     base_url = reverse("api-v1:projects:project-segments-list", args=[project.id])
@@ -531,7 +533,32 @@ def test_list_segments__filter_by_edge_identity__returns_only_matching_segments(
     # Then
     assert response.json().get("count") == len(expected_segment_ids)
     assert response.json()["results"][0]["id"] == expected_segment_ids[0]
-    edge_identity_dynamo_wrapper_mock.get_segment_ids.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
+        identity_uuid
+    )
+
+
+def test_list_segments__filter_by_unknown_edge_identity__returns_no_segments(
+    project: Project,
+    environment: Environment,
+    identity_matching_segment: Segment,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid.side_effect = (
+        ObjectDoesNotExist
+    )
+    base_url = f"/api/v1/projects/{project.id}/segments/"
+
+    # When
+    response = admin_client.get(
+        f"{base_url}?identity=8ce1e2f8-0a0f-4f5c-9f4c-2b4f6f4f4f4f"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 0
 
 
 @pytest.mark.parametrize(

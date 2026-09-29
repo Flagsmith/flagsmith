@@ -955,6 +955,8 @@ def test_put_identity_override__identity_not_found__creates_identity_with_overri
     assert feature_state_data["feature_state_value"] == expected_feature_state_value
 
 
+@pytest.mark.parametrize("segment_condition_property", ["trait_key_1"])
+@pytest.mark.parametrize("segment_condition_value", ["trait_value_1"])
 @pytest.mark.parametrize(
     "segment_override_type, segment_override_value",
     (
@@ -979,20 +981,8 @@ def test_get_all_feature_states__with_overrides__returns_correct_override_source
     segment_override_value,
 ):
     # Given
-    # Mock the get_segment_ids method so that it returns no segments for the first
-    # request (to get the environment default), then so that it returns one segment
-    # for the segment and identity override requests.
-    segment_ids_responses = [[], [segment], [segment]]
-
-    def get_segment_ids_side_effect(*args, **kwargs):  # type: ignore[no-untyped-def]
-        nonlocal segment_ids_responses
-        return segment_ids_responses.pop(0)
-
     edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
         identity_document_without_fs
-    )
-    edge_identity_dynamo_wrapper_mock.get_segment_ids.side_effect = (
-        get_segment_ids_side_effect
     )
 
     get_all_identity_feature_states_url = reverse(
