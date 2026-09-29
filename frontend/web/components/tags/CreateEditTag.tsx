@@ -12,7 +12,7 @@ import {
 
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
-import Tag from './Tag'
+import TagColourPicker from './TagColourPicker'
 import InlineModal from 'components/InlineModal'
 import ErrorMessage from 'components/ErrorMessage'
 import Switch from 'components/Switch'
@@ -191,17 +191,10 @@ const CreateEditTag: FC<CreateEditTagType> = ({
 
         <div className='form-group select-colour'>
           <FieldLabel>Select a color</FieldLabel>
-          <Row className={'gap-3'}>
-            {Constants.tagColors.map((color) => (
-              <div key={color} className='tag--select'>
-                <Tag
-                  onClick={(e: TTag) => update('color', e.color)}
-                  selected={tag?.color === color}
-                  tag={{ color }}
-                />
-              </div>
-            ))}
-          </Row>
+          <TagColourPicker
+            onChange={(colour) => update('color', colour)}
+            value={tag?.color}
+          />
         </div>
         {existingTag && (
           <ErrorMessage error={'A tag already exists with this name'} />
