@@ -122,6 +122,7 @@ def test_list_dynatrace_config__config_exists__returns_config_list(
             "base_url": config.base_url,
             "entity_selector": "",
             "id": config.id,
+            "latest_health": None,
         }
     ]
 

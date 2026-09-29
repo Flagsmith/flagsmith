@@ -1,4 +1,5 @@
 import typing
+from unittest import mock
 
 import pytest
 
@@ -8,6 +9,7 @@ from features.models import FeatureState
 from integrations.amplitude.amplitude import AmplitudeWrapper
 from integrations.amplitude.constants import DEFAULT_AMPLITUDE_API_URL
 from integrations.amplitude.models import AmplitudeConfiguration
+from integrations.common.models import IntegrationHealthRecord
 
 
 def test_amplitude_wrapper__default_config__sets_correct_url() -> None:
@@ -72,3 +74,67 @@ def test_amplitude_generate_user_data__feature_states_with_values__returns_expec
     }
 
     assert expected_user_data == user_data
+
+
+@pytest.mark.django_db
+@mock.patch("integrations.amplitude.amplitude.requests.post")
+def test_amplitude_wrapper__identify_user__records_healthy_status(
+    post_mock: mock.Mock,
+    environment: Environment,
+) -> None:
+    # Given
+    post_mock.return_value.status_code = 200
+    config = AmplitudeConfiguration.objects.create(
+        environment=environment, api_key="123key"
+    )
+    amplitude_wrapper = AmplitudeWrapper(config)
+
+    # When
+    amplitude_wrapper._identify_user({"user_id": "identity-1", "user_properties": {}})
+
+    # Then
+    health_record = IntegrationHealthRecord.objects.get(object_id=config.id)
+    assert health_record.status_code == 200
+
+
+@pytest.mark.django_db
+@mock.patch("integrations.amplitude.amplitude.requests.post")
+def test_amplitude_wrapper__identify_user__records_unhealthy_status(
+    post_mock: mock.Mock,
+    environment: Environment,
+) -> None:
+    # Given
+    post_mock.return_value.status_code = 500
+    config = AmplitudeConfiguration.objects.create(
+        environment=environment, api_key="123key"
+    )
+    amplitude_wrapper = AmplitudeWrapper(config)
+
+    # When
+    amplitude_wrapper._identify_user({"user_id": "identity-1", "user_properties": {}})
+
+    # Then
+    health_record = IntegrationHealthRecord.objects.get(object_id=config.id)
+    assert health_record.status_code == 500
+
+
+@pytest.mark.django_db
+@mock.patch("integrations.amplitude.amplitude.record_integration_health")
+@mock.patch("integrations.amplitude.amplitude.requests.post")
+def test_amplitude_wrapper__identify_user__record_health_raises__does_not_propagate(
+    post_mock: mock.Mock,
+    record_integration_health_mock: mock.Mock,
+    environment: Environment,
+) -> None:
+    # Given
+    post_mock.return_value.status_code = 200
+    record_integration_health_mock.side_effect = Exception("boom")
+    config = AmplitudeConfiguration.objects.create(
+        environment=environment, api_key="123key"
+    )
+    amplitude_wrapper = AmplitudeWrapper(config)
+
+    # When
+    amplitude_wrapper._identify_user(
+        {"user_id": "identity-1", "user_properties": {}}
+    )  # does not raise

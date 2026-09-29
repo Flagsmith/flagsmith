@@ -19,4 +19,4 @@ class SegmentConfigurationSerializer(BaseEnvironmentIntegrationModelSerializer):
 
     class Meta:
         model = SegmentConfiguration
-        fields = ("id", "api_key", "base_url")
+        fields = ("id", "api_key", "base_url", "latest_health")

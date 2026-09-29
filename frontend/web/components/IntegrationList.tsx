@@ -24,6 +24,12 @@ import each from 'lodash/each'
 import { useGetProjectQuery } from 'common/services/useProject'
 import API from 'project/api'
 import Constants from 'common/constants'
+import ColorSwatch from './ColorSwatch'
+import {
+  colorIconDisabled,
+  colorTextDanger,
+  colorTextSuccess,
+} from 'common/theme/tokens'
 
 type IntegrationAction = {
   label: string
@@ -325,41 +331,60 @@ const Integration: FC<IntegrationProps> = (props) => {
       )}
 
       {activeIntegrations &&
-        activeIntegrations.map((integration) => (
-          <div
-            key={integration.id}
-            className='list-integrations clickable p-3 mt-3'
-            onClick={() => edit(integration)}
-          >
-            <Row space>
-              <Flex>
-                <CreateEditIntegration
-                  readOnly
-                  organisationId={props.organisationId}
-                  projectId={props.projectId}
-                  data={integration}
-                  integration={props.integration}
-                />
-              </Flex>
-              <div onClick={(e) => e.stopPropagation()}>
-                <DropdownMenu
-                  items={[
-                    {
-                      dataTest: 'edit-integration',
-                      label: 'Edit',
-                      onClick: () => edit(integration),
-                    },
-                    {
-                      dataTest: 'delete-integration',
-                      label: 'Delete',
-                      onClick: () => remove(integration),
-                    },
-                  ]}
-                />
-              </div>
-            </Row>
-          </div>
-        ))}
+        activeIntegrations.map((integration) => {
+          let healthStatusText = 'No health data'
+          let healthColor = colorIconDisabled
+          if (integration.latest_health) {
+            healthStatusText = integration.latest_health.is_healthy
+              ? 'Healthy'
+              : 'Unhealthy'
+            healthColor = integration.latest_health.is_healthy
+              ? colorTextSuccess
+              : colorTextDanger
+          }
+
+          return (
+            <div
+              key={integration.id}
+              className='list-integrations clickable p-3 mt-3'
+              onClick={() => edit(integration)}
+            >
+              <Row space>
+                <Flex>
+                  <CreateEditIntegration
+                    readOnly
+                    organisationId={props.organisationId}
+                    projectId={props.projectId}
+                    data={integration}
+                    integration={props.integration}
+                  />
+                </Flex>
+                <div className='d-flex align-items-center gap-2 mt-1 mr-3'>
+                  <ColorSwatch color={healthColor} shape='circle' size='lg' />
+                  <span className='fs-small text-muted'>
+                    {healthStatusText}
+                  </span>
+                </div>
+                <div onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu
+                    items={[
+                      {
+                        dataTest: 'edit-integration',
+                        label: 'Edit',
+                        onClick: () => edit(integration),
+                      },
+                      {
+                        dataTest: 'delete-integration',
+                        label: 'Delete',
+                        onClick: () => remove(integration),
+                      },
+                    ]}
+                  />
+                </div>
+              </Row>
+            </div>
+          )
+        })}
     </div>
   )
 }

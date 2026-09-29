@@ -7,7 +7,9 @@ from audit.models import AuditLog
 from audit.services import get_audited_instance_from_audit_log_record
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.common.services import record_integration_health
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
+from integrations.dynatrace.models import DynatraceConfiguration
 from segments.models import Segment
 
 logger = logging.getLogger(__name__)
@@ -20,17 +22,23 @@ DEFAULT_DEPLOYMENT_NAME = "Deployment"
 
 
 class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
-    def __init__(self, base_url: str, api_key: str, entity_selector: str):
-        self.base_url = base_url
-        self.api_key = api_key
-        self.entity_selector = entity_selector
+    def __init__(self, config: DynatraceConfiguration):
+        self.config = config
+        self.base_url = (config.base_url or "").rstrip("/") + "/"
+        self.api_key = config.api_key
+        self.entity_selector = config.entity_selector
         self.url = f"{self.base_url}{EVENTS_API_URI}?api-token={self.api_key}"
 
     def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]
         event["entitySelector"] = self.entity_selector
         response = requests.post(
-            self.url, headers=self._headers(), data=json.dumps(event)
+            self.url, headers=self._headers(), data=json.dumps(event), timeout=10
         )
+
+        try:
+            record_integration_health(self.config, response.status_code)
+        except Exception:
+            logger.warning("Failed to record Dynatrace integration health")
         logger.debug(
             "Sent event to Dynatrace. Response code was %s" % response.status_code
         )

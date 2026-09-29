@@ -5,9 +5,14 @@ from typing import Any
 import requests
 
 from audit.models import AuditLog
+from integrations.common.services import record_integration_health
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 from integrations.grafana.mappers import (
     map_audit_log_record_to_grafana_annotation,
+)
+from integrations.grafana.models import (
+    GrafanaOrganisationConfiguration,
+    GrafanaProjectConfiguration,
 )
 
 logger = logging.getLogger(__name__)
@@ -16,10 +21,14 @@ ROUTE_API_ANNOTATIONS = "/api/annotations"
 
 
 class GrafanaWrapper(AbstractBaseEventIntegrationWrapper):
-    def __init__(self, base_url: str, api_key: str) -> None:
-        base_url = base_url[:-1] if base_url.endswith("/") else base_url
+    def __init__(
+        self,
+        config: GrafanaProjectConfiguration | GrafanaOrganisationConfiguration,
+    ) -> None:
+        self.config = config
+        base_url = (config.base_url or "").rstrip("/")
         self.url = f"{base_url}{ROUTE_API_ANNOTATIONS}"
-        self.api_key = api_key
+        self.api_key = config.api_key
 
     @staticmethod
     def generate_event_data(audit_log_record: AuditLog) -> dict[str, Any]:
@@ -38,6 +47,10 @@ class GrafanaWrapper(AbstractBaseEventIntegrationWrapper):
             data=json.dumps(event),
         )
 
+        try:
+            record_integration_health(self.config, response.status_code)
+        except Exception:
+            logger.warning("Failed to record Grafana integration health")
         logger.debug(
             "Sent event to Grafana. Response code was %s" % response.status_code
         )

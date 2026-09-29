@@ -5,11 +5,14 @@ from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
 from environments.models import Environment
+from integrations.common.models import IntegrationHealthRecord
 from integrations.datadog.datadog import (
     EVENTS_API_URI,
     FLAGSMITH_SOURCE_TYPE_NAME,
     DataDogWrapper,
 )
+from integrations.datadog.models import DataDogConfiguration
+from projects.models import Project
 
 
 @pytest.mark.parametrize(
@@ -27,7 +30,11 @@ def test_datadog_init__valid_base_url__sets_correct_events_url(  # type: ignore[
 
     # When initialized
     data_dog = DataDogWrapper(
-        base_url=base_url, api_key=api_key, use_custom_source=True
+        DataDogConfiguration(
+            api_key=api_key,
+            base_url=base_url,
+            use_custom_source=True,
+        )
     )
 
     # Then
@@ -46,6 +53,7 @@ def test_datadog_init__valid_base_url__sets_correct_events_url(  # type: ignore[
         ),
     ),
 )
+@pytest.mark.django_db
 def test_datadog_track_event__given_event_data__posts_expected_data(
     mocker: MockerFixture,
     event_data: dict,  # type: ignore[type-arg]
@@ -56,12 +64,19 @@ def test_datadog_track_event__given_event_data__posts_expected_data(
     base_url = "https://test.com"
     api_key = "key"
     mock_session = mocker.MagicMock()
+    mock_session.post.return_value.status_code = 200
+    record_integration_health_mock = mocker.patch(
+        "integrations.datadog.datadog.record_integration_health",
+        autospec=True,
+    )
 
     datadog = DataDogWrapper(
-        base_url=base_url,
-        api_key=api_key,
+        DataDogConfiguration(
+            api_key=api_key,
+            base_url=base_url,
+            use_custom_source=use_custom_source,
+        ),
         session=mock_session,
-        use_custom_source=use_custom_source,
     )
 
     # When
@@ -71,6 +86,7 @@ def test_datadog_track_event__given_event_data__posts_expected_data(
     mock_session.post.assert_called_once_with(
         f"{datadog.events_url}?api_key={api_key}", data=json.dumps(expected_data)
     )
+    record_integration_health_mock.assert_called_once_with(datadog.config, 200)
 
 
 def test_generate_event_data__valid_audit_log__returns_correct_event(  # type: ignore[no-untyped-def]
@@ -85,7 +101,9 @@ def test_generate_event_data__valid_audit_log__returns_correct_event(  # type: i
 
     audit_log_record = AuditLog(log=log, author=author, environment=environment)
 
-    data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
+    data_dog = DataDogWrapper(
+        DataDogConfiguration(api_key="123key", base_url="http://test.com")
+    )
 
     # When
     event_data = data_dog.generate_event_data(audit_log_record=audit_log_record)
@@ -106,7 +124,9 @@ def test_generate_event_data__missing_author__returns_system_user(feature):  # t
 
     audit_log_record = AuditLog(log=log, environment=environment)
 
-    data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
+    data_dog = DataDogWrapper(
+        DataDogConfiguration(api_key="123key", base_url="http://test.com")
+    )
 
     # When
     event_data = data_dog.generate_event_data(audit_log_record=audit_log_record)
@@ -129,7 +149,9 @@ def test_generate_event_data__missing_environment__returns_unknown_env(  # type:
 
     audit_log_record = AuditLog(log=log, author=author)
 
-    data_dog = DataDogWrapper(base_url="http://test.com", api_key="123key")
+    data_dog = DataDogWrapper(
+        DataDogConfiguration(api_key="123key", base_url="http://test.com")
+    )
 
     # When
     event_data = data_dog.generate_event_data(audit_log_record=audit_log_record)
@@ -139,3 +161,49 @@ def test_generate_event_data__missing_environment__returns_unknown_env(  # type:
     assert event_data["text"] == expected_event_text
     assert len(event_data["tags"]) == 1
     assert event_data["tags"][0] == "env:unknown"
+
+
+@pytest.mark.django_db
+def test_datadog_track_event__records_health_status(
+    mocker: MockerFixture,
+    project: Project,
+) -> None:
+    # Given
+    config = DataDogConfiguration.objects.create(
+        project=project,
+        api_key="123key",
+        base_url="https://test.com",
+    )
+    mock_session = mocker.MagicMock()
+    mock_session.post.return_value.status_code = 200
+    datadog = DataDogWrapper(config, session=mock_session)
+
+    # When
+    datadog._track_event({"foo": "bar"})
+
+    # Then
+    health_record = IntegrationHealthRecord.objects.get(object_id=config.id)
+    assert health_record.status_code == 200
+
+
+@pytest.mark.django_db
+def test_datadog_track_event__record_health_raises__does_not_propagate(
+    mocker: MockerFixture,
+    project: Project,
+) -> None:
+    # Given
+    config = DataDogConfiguration.objects.create(
+        project=project,
+        api_key="123key",
+        base_url="https://test.com",
+    )
+    mock_session = mocker.MagicMock()
+    mock_session.post.return_value.status_code = 200
+    datadog = DataDogWrapper(config, session=mock_session)
+    mocker.patch(
+        "integrations.datadog.datadog.record_integration_health",
+        side_effect=Exception("boom"),
+    )
+
+    # When
+    datadog._track_event({"foo": "bar"})  # does not raise

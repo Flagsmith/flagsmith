@@ -12,6 +12,7 @@ from audit.signals import (
     call_webhooks,
     send_audit_log_event_to_dynatrace,
     send_audit_log_event_to_grafana,
+    send_audit_log_event_to_new_relic,
     send_feature_flag_went_live_signal,
     trigger_feature_state_change_webhooks,
 )
@@ -25,6 +26,7 @@ from integrations.grafana.models import (
     GrafanaOrganisationConfiguration,
     GrafanaProjectConfiguration,
 )
+from integrations.new_relic.models import NewRelicConfiguration
 from organisations.models import Organisation, OrganisationWebhook
 from projects.models import Project
 from projects.tags.models import Tag
@@ -126,10 +128,7 @@ def test_send_audit_log_event_to_grafana__project_grafana_config__calls_expected
     send_audit_log_event_to_grafana(AuditLog, audit_log_record)
 
     # Then
-    grafana_wrapper_mock.assert_called_once_with(
-        base_url=grafana_config.base_url,
-        api_key=grafana_config.api_key,
-    )
+    grafana_wrapper_mock.assert_called_once_with(grafana_config)
     grafana_wrapper_instance_mock.generate_event_data.assert_called_once_with(
         audit_log_record
     )
@@ -160,10 +159,7 @@ def test_send_audit_log_event_to_grafana__organisation_grafana_config__calls_exp
     send_audit_log_event_to_grafana(AuditLog, audit_log_record)
 
     # Then
-    grafana_wrapper_mock.assert_called_once_with(
-        base_url=grafana_config.base_url,
-        api_key=grafana_config.api_key,
-    )
+    grafana_wrapper_mock.assert_called_once_with(grafana_config)
     grafana_wrapper_instance_mock.generate_event_data.assert_called_once_with(
         audit_log_record
     )
@@ -277,16 +273,43 @@ def test_send_audit_log_event_to_dynatrace__environment_dynatrace_config__calls_
     send_audit_log_event_to_dynatrace(AuditLog, audit_log_record)
 
     # Then
-    dynatrace_wrapper_mock.assert_called_once_with(
-        base_url=dynatrace_config.base_url,
-        api_key=dynatrace_config.api_key,
-        entity_selector=dynatrace_config.entity_selector,
-    )
+    dynatrace_wrapper_mock.assert_called_once_with(dynatrace_config)
     dynatrace_wrapper_instance_mock.generate_event_data.assert_called_once_with(
         audit_log_record
     )
     dynatrace_wrapper_instance_mock.track_event_async.assert_called_once_with(
         event=dynatrace_wrapper_instance_mock.generate_event_data.return_value
+    )
+
+
+def test_send_audit_log_event_to_new_relic__project_new_relic_config__calls_expected(
+    mocker: MockerFixture,
+    project: Project,
+) -> None:
+    # Given
+    audit_log_record = AuditLog.objects.create(
+        project=project,
+        related_object_type=RelatedObjectType.FEATURE.name,
+    )
+    new_relic_wrapper_mock = mocker.patch(
+        "audit.signals.NewRelicWrapper", autospec=True
+    )
+    new_relic_wrapper_instance_mock = new_relic_wrapper_mock.return_value
+
+    new_relic_config = NewRelicConfiguration.objects.create(
+        project=project, api_key="123key", app_id="123id", base_url="http://test.com"
+    )
+
+    # When
+    send_audit_log_event_to_new_relic(AuditLog, audit_log_record)
+
+    # Then
+    new_relic_wrapper_mock.assert_called_once_with(new_relic_config)
+    new_relic_wrapper_instance_mock.generate_event_data.assert_called_once_with(
+        audit_log_record
+    )
+    new_relic_wrapper_instance_mock.track_event_async.assert_called_once_with(
+        event=new_relic_wrapper_instance_mock.generate_event_data.return_value
     )
 
 
@@ -311,7 +334,7 @@ def test_send_audit_log_event_to_dynatrace__environment_feature_version__sends_e
 
     responses.add(
         method=responses.POST,
-        url=f"{base_url}{EVENTS_API_URI}?api-token={api_key}",
+        url=f"{base_url}/{EVENTS_API_URI}?api-token={api_key}",
         status=201,
         json={
             "reportCount": 1,
