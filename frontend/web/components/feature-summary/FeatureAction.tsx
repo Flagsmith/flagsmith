@@ -6,8 +6,7 @@ import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
 import Icon from 'components/icons/Icon'
 import { Tag } from 'common/types/responses'
-import { getTagColor } from 'components/tags/Tag'
-import { getTagSwatchUtilities } from 'components/tags/tagSwatch'
+import { tagChipHtml } from 'components/tags/tagChipHtml'
 import ActionButton from 'components/ActionButton'
 import ActionItem from 'components/shared/ActionItem'
 import { calculateListPosition } from 'common/utils/calculateListPosition'
@@ -171,14 +170,8 @@ const FeatureAction: FC<FeatureActionProps> = ({
                       ? `<span>This feature has been tagged with the permanent tag${
                           protectedTags?.length > 1 ? 's' : ''
                         } ${protectedTags
-                          ?.map(
-                            // dangerouslySetInnerHTML, so not a component.
-                            (tag) =>
-                              `<strong class='ds-chip ds-chip--xs d-inline-flex align-items-center rounded-md ms-1 ${getTagSwatchUtilities(
-                                getTagColor(tag),
-                              )}'>
-                        ${tag.label}
-                      </strong>`,
+                          ?.map((tag) =>
+                            tagChipHtml(tag, { className: 'ms-1' }),
                           )
                           .join('')}. Please remove the tag${
                           protectedTags?.length > 1 ? 's' : ''

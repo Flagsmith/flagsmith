@@ -5,18 +5,11 @@ import Tooltip from 'components/Tooltip'
 import OrganisationStore from 'common/stores/organisation-store'
 import classNames from 'classnames'
 import Icon, { IconName } from 'components/icons/Icon'
-import { getTagSwatchUtilities } from './tagSwatch'
-import { SYSTEM_TAG_UTILITIES, isSystemTag } from './systemTag'
-type TagContent = {
+import { tagChipHtml } from './tagChipHtml'
+
+type TagContentProps = {
   disabled?: boolean
   tag: Partial<TTag>
-}
-// Numeric-entity everything that is not alphanumeric or beyond Latin-1.
-function escapeHTML(unsafe: string) {
-  return unsafe.replace(
-    /[^0-9A-Za-z\u0100-\uFFFF]/g,
-    (c) => `&#${`000${c.charCodeAt(0)}`.slice(-4)};`,
-  )
 }
 
 const VCS_ICON_BY_LABEL: Record<string, IconName> = {
@@ -48,7 +41,7 @@ const renderIcon = (tag: Partial<TTag>) => {
   }
 }
 
-const getTooltip = (tag: TTag | undefined, disabled: boolean) => {
+const getTooltip = (tag: Partial<TTag>, disabled: boolean) => {
   if (!tag) {
     return null
   }
@@ -75,26 +68,14 @@ const getTooltip = (tag: TTag | undefined, disabled: boolean) => {
       'Features marked with this tag are not monitored for staleness and have deletion protection.'
   }
   if (isTruncated) {
-    // Goes through dangerouslySetInnerHTML, so it cannot be a component. Same
-    // classes as the real chip, so there is one set of colour rules.
-    const utilities = isSystemTag(tag)
-      ? SYSTEM_TAG_UTILITIES
-      : getTagSwatchUtilities(tag.color)
-    return `<div>
-        <span
-          class="ds-chip ds-chip--xs d-inline-flex align-items-center rounded-md me-1 ${utilities}${
-      disabled ? ' opacity-50' : ''
-    }"
-        >
-          ${`${escapeHTML(tag.label)}`}
-        </span>
-          ${tooltip ?? ''}
-      </div>`
+    return `<div>${tagChipHtml(tag, { className: 'me-1', disabled })}${
+      tooltip ?? ''
+    }</div>`
   }
   return tooltip
 }
 
-const TagContent: FC<TagContent> = ({ disabled = false, tag }) => {
+const TagContent: FC<TagContentProps> = ({ disabled = false, tag }) => {
   const tagLabel = Format.truncateText(tag.label, 12)
 
   if (!tagLabel) {
@@ -105,7 +86,7 @@ const TagContent: FC<TagContent> = ({ disabled = false, tag }) => {
     <Tooltip
       title={
         <span
-          className={classNames('mr-1 gap-1 flex-row align-items-center', {
+          className={classNames('gap-1 flex-row', {
             'opacity-50': disabled,
           })}
         >
