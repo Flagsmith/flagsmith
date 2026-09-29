@@ -181,7 +181,7 @@ class IdentifyWithTraitsSerializer(
         all_feature_states = get_identity_feature_states(
             identity,
             traits=traits,
-            additional_filters=self.context.get("feature_states_additional_filters"),
+            hide_server_key_only=self.context.get("hide_server_key_only", False),
         )
         identify_integrations(identity, all_feature_states, traits)  # type: ignore[no-untyped-call]
 
