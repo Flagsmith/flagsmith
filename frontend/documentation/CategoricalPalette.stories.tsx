@@ -2,39 +2,18 @@ import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import './docs.scss'
+import Chip from 'components/base/Chip'
 import DocPage from './components/DocPage'
 import Swatch from './components/Swatch'
+import tokens from 'common/theme/tokens.json'
+import { AA_NORMAL_TEXT, contrastRatio } from 'common/theme/contrast'
 
 // ---------------------------------------------------------------------------
 // Colour data — inlined to avoid importing Constants (which pulls in the
 // full app dependency tree and breaks Storybook's ESM context).
-// Source of truth: common/constants.ts
+// Source of truth: common/constants.ts. The tag scale is not copied here; it
+// comes from tokens.json below, so it cannot drift.
 // ---------------------------------------------------------------------------
-
-const TAG_COLOURS = [
-  { hex: '#3d4db6', name: 'Indigo' },
-  { hex: '#ea5a45', name: 'Coral' },
-  { hex: '#c6b215', name: 'Gold' },
-  { hex: '#60bd4e', name: 'Green' },
-  { hex: '#fe5505', name: 'Orange' },
-  { hex: '#1492f4', name: 'Blue' },
-  { hex: '#14c0f4', name: 'Cyan' },
-  { hex: '#c277e0', name: 'Lavender' },
-  { hex: '#039587', name: 'Teal' },
-  { hex: '#344562', name: 'Navy' },
-  { hex: '#ffa500', name: 'Amber' },
-  { hex: '#3cb371', name: 'Mint' },
-  { hex: '#d3d3d3', name: 'Silver' },
-  { hex: '#5D6D7E', name: 'Slate' },
-  { hex: '#641E16', name: 'Maroon' },
-  { hex: '#5B2C6F', name: 'Plum' },
-  { hex: '#D35400', name: 'Burnt Orange' },
-  { hex: '#F08080', name: 'Salmon' },
-  { hex: '#AAC200', name: 'Lime' },
-  { hex: '#DE3163', name: 'Cerise' },
-]
-
-const DEFAULT_TAG_COLOUR = '#dedede'
 
 const PROJECT_COLOURS = [
   '#906AF6',
@@ -60,30 +39,61 @@ export default meta
 // Stories
 // ---------------------------------------------------------------------------
 
-export const TagColours: StoryObj = {
-  name: 'Tag colours',
+const PRIMITIVES = tokens.primitives as Record<string, string>
+
+// The Content palette, fixed rather than theme-aware: a tag chip carries its
+// own surface, so it does not follow the page. One ink serves all of them.
+const TAG_FILLS = Object.entries(PRIMITIVES)
+  .filter(([name]) => name.startsWith('content-'))
+  .map(([name, hex]) => [name.replace('content-', ''), hex] as const)
+const TAG_INK = PRIMITIVES['slate-600']
+
+export const TagSwatches: StoryObj = {
+  name: 'Tag swatches',
+  parameters: { chromatic: { disableSnapshot: false } },
   render: () => (
     <DocPage
-      title='Tag colours'
+      title='Tag swatches'
       description={
         <>
-          20 decorative colours users pick from when creating tags. Will be
-          defined in <code>_categorical.scss</code> as CSS custom properties (
-          <code>--color-tag-1</code> through <code>--color-tag-20</code>).
-          Currently in <code>constants.ts</code> pending migration. These are
-          NOT semantic tokens &mdash; they are categorical identifiers that need
-          to be visually distinct from each other.
+          The scale a custom tag picks from, replacing the runtime colour maths
+          that made contrast a function of the user&rsquo;s chosen hue. These
+          are the design system&rsquo;s Content colours, fixed in both themes
+          because a chip carries its own surface. Every one clears AA (
+          {AA_NORMAL_TEXT}:1) against the shared ink, enforced by{' '}
+          <code>tagSwatches.test.ts</code>.
         </>
       }
     >
-      <div className='cat-grid'>
-        {TAG_COLOURS.map(({ hex, name }) => (
-          <Swatch key={hex} colour={hex} label={`${name}\n${hex}`} />
+      <div className='d-flex flex-wrap gap-3'>
+        {TAG_FILLS.map(([name, hex]) => (
+          <div
+            className='d-flex flex-column align-items-center gap-1'
+            key={name}
+          >
+            <Chip className={`border-0 tag-${name}`} size='xs'>
+              {name}
+            </Chip>
+            <small className='text-secondary'>
+              {contrastRatio(hex, TAG_INK).toFixed(2)}:1
+            </small>
+          </div>
         ))}
       </div>
       <p className='cat-note'>
-        Default tag colour: <code>{DEFAULT_TAG_COLOUR}</code>
+        System tags (Issue, PR, Stale, Unhealthy) are not on this scale. They
+        stay on existing tokens &mdash; <code>bg-surface-default</code>,{' '}
+        <code>border-default</code>, <code>text-default</code> &mdash; plus a
+        coloured icon, so the state is carried by the icon rather than the fill.
       </p>
+      <div className='d-flex mt-3'>
+        <Chip
+          className='bg-surface-default border-default text-default'
+          size='xs'
+        >
+          System tag
+        </Chip>
+      </div>
     </DocPage>
   ),
 }
