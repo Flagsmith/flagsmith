@@ -22,9 +22,8 @@ const cssVars = (node: unknown): string[] => {
   return Object.values(node).flatMap(cssVars)
 }
 
-// Derived, not listed: a group added to tokens.json is covered here the day it
-// arrives. Listing them would miss exactly the case that prompted this, a new
-// group reaching the CSS while the other generators were left behind.
+// Derived, not listed: a hardcoded list would miss the case that prompted this,
+// a new group reaching the CSS while the other generators were left behind.
 const groups = Object.entries(tokens)
   .map(([name, node]) => [name, cssVars(node)] as const)
   .filter(([, vars]) => vars.length > 0)

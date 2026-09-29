@@ -42,17 +42,15 @@ const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 const DESCRIBED = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 // Chart colours are like colour tokens (light/dark) but not under "color"
 const CHART_CATEGORY = 'chart'
-// The Primary ramp: light/dark like colour tokens. Custom properties only,
-// no utilities: a .bg-primary-500 in a component would bypass the semantic
-// layer and stop following whatever that role is later defined as.
 const PRIMARY_CATEGORY = 'primary'
 const NEUTRAL_CATEGORY = 'neutral'
 const STATE_CATEGORY = 'state'
 const ALWAYS_CATEGORY = 'always'
 
 // The design system's own ramps, between the primitives and the semantic
-// tokens. Exported so a page can be built quickly against the palette; reach
-// for a `color.*` token first, and add one when a role turns out to be real.
+// tokens. Custom properties and TypeScript exports, but no utilities: a
+// .bg-primary-500 in a component would bypass the semantic layer. Reach for a
+// `color.*` token first.
 const RAMPS = [
   PRIMARY_CATEGORY,
   NEUTRAL_CATEGORY,
@@ -155,7 +153,6 @@ function buildScssLines() {
     rootLines.push('')
   }
 
-  // Primary ramp
   if (json[PRIMARY_CATEGORY]) {
     rootLines.push('  // Primary')
     for (const [, e] of sorted(json[PRIMARY_CATEGORY])) {
@@ -167,7 +164,6 @@ function buildScssLines() {
     rootLines.push('')
   }
 
-  // Neutrals ramp
   if (json[NEUTRAL_CATEGORY]) {
     rootLines.push('  // Neutral')
     for (const [, e] of sorted(json[NEUTRAL_CATEGORY])) {
@@ -179,7 +175,6 @@ function buildScssLines() {
     rootLines.push('')
   }
 
-  // State ramps, from his Supporting collection
   if (json[STATE_CATEGORY]) {
     rootLines.push('  // State')
     for (const [, e] of sorted(json[STATE_CATEGORY])) {
@@ -326,7 +321,6 @@ function buildFlatConstants() {
     lines.push('')
   }
 
-  // Design system ramps — primary, neutral, state, always
   for (const cat of RAMPS) {
     if (!json[cat]) continue
     lines.push(`// ${cap(cat)}`)
