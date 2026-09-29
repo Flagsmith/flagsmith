@@ -1,56 +1,36 @@
 import { contentColours } from 'common/theme/tokens'
 import { getTagSwatch, getTagSwatchUtilities } from 'components/tags/tagSwatch'
 
-// Constants.tagColors, inlined: importing common/constants pulls in the Flux
-// dispatcher, which wants a `window` this node-environment suite has not got.
-const PICKER_COLOURS = [
-  '#1492f4',
-  '#14c0f4',
-  '#d3d3d3',
-  '#039587',
-  '#c6b215',
-  '#d35400',
-  '#f08080',
-  '#de3163',
-  '#c277e0',
-  '#641e16',
-  '#60bd4e',
-]
-
 describe('getTagSwatch', () => {
-  // The picker offers one colour per Content swatch, so two tags picked apart
-  // in the list never come out the same. #8465 found the old 20 collapsing to
-  // 7 once contrast was applied.
-  it('maps the picker one-to-one onto the Content colours', () => {
-    const swatches = PICKER_COLOURS.map(getTagSwatch)
-    expect(new Set(swatches).size).toBe(PICKER_COLOURS.length)
-    expect(new Set(swatches)).toEqual(new Set(Object.keys(contentColours)))
+  // What the picker stores now, so this is the common path.
+  it.each(Object.entries(contentColours))('knows its own %s', (name, hex) => {
+    expect(getTagSwatch(hex)).toBe(name)
   })
 
-  // Colours the picker never offered still have to render as tags: `color` is
-  // a bare CharField, so the API and imports can store anything.
+  // The colours the picker used to offer, and the ones the app still assigns
+  // itself. These are what existing tags hold.
   it.each([
     ['#3d4db6', 'blue'],
-    ['#5b2c6f', 'light-purple'],
+    ['#344562', 'blue'],
+    ['#5d6d7e', 'blue'],
     ['#ea5a45', 'light-brown'],
+    ['#641e16', 'light-brown'],
     ['#ffa500', 'light-peach'],
+    ['#d35400', 'light-peach'],
     ['#aac200', 'light-yellow'],
     ['#3cb371', 'light-green'],
-  ])('matches %s on hue', (colour, expected) => {
+    ['#dedede', 'light-grey'],
+    ['#8f8f8f', 'light-grey'],
+  ])('maps the legacy %s', (colour, expected) => {
     expect(getTagSwatch(colour)).toBe(expected)
-  })
-
-  it('sends greys to the grey swatch', () => {
-    expect(getTagSwatch('#d3d3d3')).toBe('light-grey')
-    // Constants.untaggedTag
-    expect(getTagSwatch('#dedede')).toBe('light-grey')
   })
 
   it('is case-insensitive', () => {
     expect(getTagSwatch('#1492F4')).toBe('blue')
   })
 
-  it.each([undefined, null, '', 'rebeccapurple', '#fff'])(
+  // A colour we never issued gets the neutral, not a guess.
+  it.each([undefined, null, '', 'rebeccapurple', '#123456'])(
     'has no swatch for %s',
     (colour) => {
       expect(getTagSwatch(colour)).toBeNull()
@@ -58,7 +38,7 @@ describe('getTagSwatch', () => {
   )
 
   it('falls back to neutral utilities when there is no swatch', () => {
-    expect(getTagSwatchUtilities('rebeccapurple')).toBe(
+    expect(getTagSwatchUtilities('#123456')).toBe(
       'bg-surface-subtle text-default',
     )
     expect(getTagSwatchUtilities('#1492f4')).toBe('tag-blue')

@@ -5,74 +5,52 @@ import type { ContentColour } from 'common/theme/tokens'
 /** One swatch per Content hue, named as the design system names it. */
 export type TagSwatch = ContentColour
 
-/** Hue in degrees and chroma, from the OKLCH transform of an sRGB hex. */
-function oklch(hex: string): { chroma: number; hue: number } | null {
-  const h = hex.replace('#', '')
-  if (!/^[0-9a-f]{6}$/i.test(h)) return null
-
-  const toLinear = (v: number) =>
-    v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4
-  const [r, g, b] = [0, 2, 4].map((i) =>
-    toLinear(parseInt(h.slice(i, i + 2), 16) / 255),
-  )
-
-  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b)
-  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b)
-  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
-
-  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s
-  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s
-
-  return {
-    chroma: Math.hypot(a, bb),
-    hue: ((Math.atan2(bb, a) * 180) / Math.PI + 360) % 360,
-  }
+// Every colour a tag has been given a way to hold: the twenty the picker used
+// to offer, plus the four the app assigns itself. `Tag.color` is an unvalidated
+// CharField, so anything else falls through to the neutral below.
+const SWATCH_BY_COLOR: Record<string, TagSwatch> = {
+  '#039587': 'light-mint',
+  '#1492f4': 'blue',
+  '#14c0f4': 'light-blue',
+  '#344562': 'blue',
+  '#3cb371': 'light-green',
+  '#3d4db6': 'blue',
+  '#5b2c6f': 'light-purple',
+  '#5d6d7e': 'blue',
+  '#60bd4e': 'light-green',
+  '#641e16': 'light-brown',
+  '#8f8f8f': 'light-grey',
+  '#aac200': 'light-yellow',
+  '#c277e0': 'light-purple',
+  '#c6b215': 'light-yellow',
+  '#d35400': 'light-peach',
+  '#d3d3d3': 'light-grey',
+  '#de3163': 'light-pink',
+  '#dedede': 'light-grey',
+  '#ea5a45': 'light-brown',
+  '#f08080': 'light-red',
+  '#fe5505': 'light-peach',
+  '#ffa500': 'light-peach',
 }
 
-// Below this there is no meaningful hue to match on.
-const ACHROMATIC = 0.02
-const GREY: TagSwatch = 'light-grey'
+const BY_SWATCH_VALUE = Object.fromEntries(
+  Object.entries(contentColours).map(([name, hex]) => [hex, name as TagSwatch]),
+)
 
-const SWATCHES = Object.entries(contentColours)
-  .map(([name, hex]) => ({ name: name as TagSwatch, ...oklch(hex)! }))
-  // Grey has no hue, so it would otherwise attract indigo and navy.
-  .filter(({ name }) => name !== GREY)
-
-const cache = new Map<string, TagSwatch | null>()
-
-/**
- * The swatch nearest a colour in hue. `Tag.color` is an unvalidated CharField,
- * so a tag can hold anything; matching keeps the eleven swatches the only fills
- * a tag can take, and needs no migration.
- */
-export const getTagSwatch = (colour?: string | null): TagSwatch | null => {
-  if (!colour) return null
-  const key = colour.toLowerCase()
-  if (cache.has(key)) return cache.get(key)!
-
-  const parsed = oklch(key)
-  let swatch: TagSwatch | null = null
-  if (parsed) {
-    swatch =
-      parsed.chroma < ACHROMATIC
-        ? GREY
-        : SWATCHES.reduce((best, s) => {
-            const d = (x: number) => Math.min(x, 360 - x)
-            return d(Math.abs(parsed.hue - s.hue)) <
-              d(Math.abs(parsed.hue - best.hue))
-              ? s
-              : best
-          }).name
-  }
-
-  cache.set(key, swatch)
-  return swatch
+export const getTagSwatch = (color?: string | null): TagSwatch | null => {
+  if (!color) return null
+  const key = color.toLowerCase()
+  // The picker stores the swatch itself, so a current tag needs no lookup.
+  return BY_SWATCH_VALUE[key] ?? SWATCH_BY_COLOR[key] ?? null
 }
 
+// A colour we have never issued, from the API or an import. Neutral rather than
+// a guess: the label still reads, and the tag is not claiming a category it was
+// not given.
 const NEUTRAL_UTILITIES = 'bg-surface-subtle text-default'
 
-export const getTagSwatchUtilities = (colour?: string | null): string => {
-  const swatch = getTagSwatch(colour)
+export const getTagSwatchUtilities = (color?: string | null): string => {
+  const swatch = getTagSwatch(color)
   return swatch ? `tag-${swatch}` : NEUTRAL_UTILITIES
 }
 

@@ -31,12 +31,7 @@ const TagValues: FC<TagValuesType> = ({
   const { data } = useGetTagsQuery({ projectId })
   const Wrapper = inline ? Fragment : Row
 
-  // Feature health is a paid feature, and its tag is applied by the system
-  // rather than chosen, so with the feature off the tag should not appear at
-  // all. Filtered here rather than inside Tag, which has no business knowing
-  // about feature flags: this is the display path for ProjectFeatureRow,
-  // FeatureOverrideRow, FeatureTags, ReleaseManagerPage and
-  // FlagEnvironmentsPage.
+  // Filtered here, not in Tag: a chip has no business reading feature flags.
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
 
   const tags = data?.filter(
@@ -60,8 +55,7 @@ const TagValues: FC<TagValuesType> = ({
             <Tag
               disabled={Utils.tagDisabled(tag)}
               key={tag.id}
-              // Closes over the real tag from the query rather than taking the
-              // Partial the chip hands back, so callers still get a whole one.
+              // The chip hands back a Partial; callers here want the whole tag.
               onClick={() => (onAdd ?? onClick)?.(tag)}
               tag={tag}
             />
