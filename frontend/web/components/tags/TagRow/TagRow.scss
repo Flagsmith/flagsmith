@@ -1,0 +1,59 @@
+.tag-row {
+
+  padding: 6px 14px;
+
+  &--selectable {
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--color-surface-hover);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-border-action);
+      outline-offset: -2px;
+    }
+  }
+
+  &--disabled {
+    cursor: not-allowed;
+  }
+}
+
+// Grow in from the right edge. Opacity and width, never display:none, so the
+// button stays in the tab order.
+.tag-row__spacer {
+  flex: 1;
+}
+
+.tag-row__mark {
+  flex: none;
+}
+
+.tag-row__actions {
+  display: flex;
+  align-items: center;
+  flex: none;
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  color: var(--color-text-secondary);
+  transition: width var(--duration-fast) var(--easing-standard),
+    opacity var(--duration-fast) var(--easing-standard),
+    margin-left var(--duration-fast) var(--easing-standard);
+}
+
+.tag-row:hover .tag-row__actions,
+// :has(:focus-visible), not :focus-within: a row keeps DOM focus after a mouse
+// click, which left the menu showing once the pointer had gone.
+.tag-row:has(:focus-visible) .tag-row__actions {
+  width: 20px;
+  margin-left: 8px;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tag-row__actions {
+    transition: none;
+  }
+}

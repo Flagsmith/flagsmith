@@ -87,7 +87,7 @@ const TagFilter: FC<TagFilterType> = ({
                 <Tag
                   key={unTagged.id}
                   selected={isSelected(unTagged as any)}
-                  onClick={onSelect}
+                  onClick={(tag) => onSelect(tag as TTag)}
                   className='px-2 py-2'
                   tag={unTagged as any}
                 />
@@ -98,7 +98,7 @@ const TagFilter: FC<TagFilterType> = ({
                 <Tag
                   key={tag.id}
                   selected={isSelected(tag)}
-                  onClick={onSelect}
+                  onClick={(tag) => onSelect(tag as TTag)}
                   className='px-2 py-2 mr-1'
                   tag={tag}
                 />
