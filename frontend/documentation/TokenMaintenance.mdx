@@ -13,14 +13,13 @@ How to add, modify, or remove design tokens. Follow this process to keep the tok
 
 The token system has two layers. **You should only use semantic tokens in components** — never reference primitives directly.
 
-**Primitives** (`_primitives.scss`) are raw colour definitions:
+**Primitives** (`tokens.json`, under `primitives`) are raw colour definitions. They exist so a
+colour can change once and update everything referencing it. Do NOT use them in components:
 
-```scss
-// These exist so we can change a colour once and update everything that references it.
-// Do NOT use these in components.
-:root {
-  --red-600: #dc2626;
-  --purple-600: #6837fc;
+```json
+{
+  "red-600": "#dc2626",
+  "purple-600": "#6837fc"
 }
 ```
 
@@ -75,7 +74,7 @@ import { colorTextDanger, colorSurfaceAction } from 'common/theme/tokens'
     <tr><td><code>web/styles/_tokens.scss</code></td><td><strong>Generated.</strong> CSS custom properties with <code>:root</code> and <code>.dark</code>.</td><td>Never — auto-generated.</td></tr>
     <tr><td><code>web/styles/_token-utilities.scss</code></td><td><strong>Generated.</strong> Utility classes consuming tokens (e.g. <code>.bg-surface-subtle</code>, <code>.icon-secondary</code>).</td><td>Never — auto-generated.</td></tr>
     <tr><td><code>documentation/TokenReference.generated.stories.tsx</code></td><td><strong>Generated.</strong> Flat JSX for Storybook MCP.</td><td>Never — auto-generated.</td></tr>
-    <tr><td><code>web/styles/_primitives.scss</code></td><td>Raw colour scales (50-950).</td><td>Only when adding a new colour family or adjusting a scale.</td></tr>
+    <tr><td><code>common/theme/tokens.json</code></td><td>The source of truth: raw colour scales (50-950) under <code>primitives</code>, and every semantic token beneath them.</td><td>Whenever a colour or token changes.</td></tr>
   </tbody>
 </table>
 
@@ -159,7 +158,7 @@ You can also run `npm run generate:tokens` manually at any time.
   <tbody>
     <tr><td>Token Reference</td><td>Auto-generated (codegen)</td><td>MCP-optimised. Every token inlined as flat JSX. AI agents read this.</td></tr>
     <tr><td>Semantic Colour Tokens</td><td>Auto-generated (runtime)</td><td>Visual. Reads <code>--color-*</code> CSS vars from the DOM. Shows computed colours with theme toggle.</td></tr>
-    <tr><td>Colour Palette</td><td>Auto-generated (build time)</td><td>Visual. Parses <code>_primitives.scss</code> and renders swatch grids.</td></tr>
+    <tr><td>Colour Palette</td><td>Auto-generated (build time)</td><td>Visual. Reads <code>tokens.json</code> and renders swatch grids.</td></tr>
     <tr><td>Radius, Elevation, Motion</td><td>Imports from tokens.ts</td><td>Visual. Shows previews (rounded boxes, shadow cards, interactive demos). Data derived from <code>tokens.ts</code>.</td></tr>
   </tbody>
 </table>

@@ -67,12 +67,10 @@ export const TagColours: StoryObj = {
       title='Tag colours'
       description={
         <>
-          20 decorative colours users pick from when creating tags. Will be
-          defined in <code>_categorical.scss</code> as CSS custom properties (
-          <code>--color-tag-1</code> through <code>--color-tag-20</code>).
-          Currently in <code>constants.ts</code> pending migration. These are
-          NOT semantic tokens &mdash; they are categorical identifiers that need
-          to be visually distinct from each other.
+          20 decorative colours users pick from when creating tags, defined in{' '}
+          <code>constants.ts</code>. These are NOT semantic tokens &mdash; they
+          are categorical identifiers that need to be visually distinct from
+          each other.
         </>
       }
     >
@@ -95,11 +93,9 @@ export const ProjectColours: StoryObj = {
       title='Project colours'
       description={
         <>
-          6 colours assigned by index for project avatar badges. Will be defined
-          in <code>_categorical.scss</code> as <code>--color-project-1</code>{' '}
-          through <code>--color-project-6</code>. Currently in{' '}
-          <code>constants.ts</code> pending migration. Decorative &mdash; not
-          tied to any UI role or theme.
+          6 colours assigned by index for project avatar badges, defined in{' '}
+          <code>constants.ts</code>. Decorative &mdash; not tied to any UI role
+          or theme.
         </>
       }
     >
