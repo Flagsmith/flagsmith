@@ -16,6 +16,8 @@ import {
 } from 'common/services/useTag'
 import { Tag as TTag } from 'common/types/responses'
 import Tag from 'components/tags/Tag'
+import BareButton from 'components/base/forms/BareButton'
+import Icon from 'components/icons/Icon'
 import CreateEditTag from 'components/tags/CreateEditTag'
 import Input from 'components/base/forms/Input'
 import Button from 'components/base/forms/Button'
@@ -131,6 +133,8 @@ const AddEditTags: FC<AddEditTagsType> = ({
     return null
   }, [filter, projectTags])
   const noTags = projectTags && !projectTags.length
+  // Nothing to create when the box is empty, or when the name is already taken.
+  const canCreate = !!filter && !exactTag
 
   const palette = Object.values(contentColours)
   const color = palette[(projectTags?.length || 0) % palette.length]
@@ -163,7 +167,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
               autoFocus
               value={filter}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && canCreate) {
                   submit()
                 }
               }}
@@ -243,21 +247,17 @@ const AddEditTags: FC<AddEditTagsType> = ({
                     }
                   />
                 ))}
-              {!!filter && !exactTag ? (
-                <div
+              {canCreate && (
+                <BareButton
+                  className='tag-create d-flex align-items-center gap-2'
                   onClick={submit}
-                  className='text-center flex-row text-default justify-content-center'
                 >
-                  <div className='me-2'>Create</div>
-                  <Tag
-                    className='truncated-tag text-truncate'
-                    tag={{
-                      color,
-                      label: filter,
-                    }}
-                  />
-                </div>
-              ) : null}
+                  <Icon name='plus' width={16} />
+                  <span className='text-truncate'>{`Create "${filter}"`}</span>
+                  {/* Enter does the same thing, so the row says so. */}
+                  <kbd className='tag-create__enter ms-auto'>&#9166;</kbd>
+                </BareButton>
+              )}
               {noTags && (
                 <div className='text-center text-default mt-4'>
                   You have no tags yet
