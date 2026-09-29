@@ -95,7 +95,7 @@ export const WithDot: Story = {
   ),
 }
 
-// The one filled variant.
+// The design system's Primary chip.
 export const Solid: Story = {
   args: { children: 'Live', variant: 'solid' },
 }

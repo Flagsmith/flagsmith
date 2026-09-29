@@ -42,7 +42,8 @@ const VARIANT_UTILITIES: Record<ChipVariant, string> = {
   info: 'bg-surface-info text-info',
   muted: 'bg-surface-muted text-secondary',
   neutral: 'bg-surface-subtle text-default',
-  // text-white, not a token: there is no inverse-text token yet. 5.93:1, AA.
+  // The design system's Primary chip. text-white, not a token: there is no
+  // inverse-text token yet. 5.93:1, AA.
   solid: 'bg-surface-action text-white',
   success: 'bg-surface-success text-success',
   warning: 'bg-surface-warning text-warning',
