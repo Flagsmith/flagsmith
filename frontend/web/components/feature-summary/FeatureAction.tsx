@@ -174,7 +174,7 @@ const FeatureAction: FC<FeatureActionProps> = ({
                           ?.map(
                             // dangerouslySetInnerHTML, so not a component.
                             (tag) =>
-                              `<strong class='ds-chip ds-chip--xs d-inline-flex align-items-center rounded-md ms-1 border-0 ${getTagSwatchUtilities(
+                              `<strong class='ds-chip ds-chip--xs d-inline-flex align-items-center rounded-md ms-1 ${getTagSwatchUtilities(
                                 getTagColor(tag),
                               )}'>
                         ${tag.label}

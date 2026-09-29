@@ -44,7 +44,9 @@ const renderIcon = (tag: Partial<TTag>) => {
       return icon ? <Icon name={icon} /> : null
     }
     default:
-      return tag.is_permanent ? <Icon name='lock' width={16} /> : null
+      // 12px, not the icon's 16: a sm chip sets 12px text, and a padlock
+      // heavier than the label reads as a sticker rather than an attribute.
+      return tag.is_permanent ? <Icon name='lock' width={12} /> : null
   }
 }
 
