@@ -27,7 +27,6 @@ const TagColourPicker: FC<TagColourPickerProps> = ({
     className={`tag-colour-picker d-flex flex-wrap gap-3 ${className ?? ''}`}
   >
     {PALETTE.map(([swatch, colour]) => (
-      // The swatch is decorative, so the button carries the name and the state.
       <BareButton
         key={colour}
         aria-label={swatchLabel(swatch)}
