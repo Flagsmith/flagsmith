@@ -1,6 +1,8 @@
 import React, { FC } from 'react'
+import classNames from 'classnames'
 import { contentColours } from 'common/theme/tokens'
-import Chip from 'components/base/Chip'
+import BareButton from 'components/base/forms/BareButton'
+import ColorSwatch from 'components/ColorSwatch'
 import { swatchLabel, swatchUtilities } from 'components/tags/tagSwatch'
 import type { TagSwatch } from 'components/tags/tagSwatch'
 import './TagColourPicker.scss'
@@ -25,16 +27,22 @@ const TagColourPicker: FC<TagColourPickerProps> = ({
     className={`tag-colour-picker d-flex flex-wrap gap-3 ${className ?? ''}`}
   >
     {PALETTE.map(([swatch, colour]) => (
-      // A bare swatch, so it is named by its colour or it reaches a screen
-      // reader as an unnamed button.
-      <Chip
+      // The swatch is decorative, so the button carries the name and the state.
+      <BareButton
         key={colour}
         aria-label={swatchLabel(swatch)}
-        className={swatchUtilities(swatch)}
+        aria-pressed={value === colour}
+        className={classNames('tag-colour-picker__swatch', {
+          'tag-colour-picker__swatch--selected': value === colour,
+        })}
         onClick={() => onChange(colour)}
-        selected={value === colour}
-        variant='none'
-      />
+      >
+        <ColorSwatch
+          className={swatchUtilities(swatch)}
+          shape='rounded'
+          size='xl'
+        />
+      </BareButton>
     ))}
   </div>
 )
