@@ -29,14 +29,6 @@
 
 // Grow in from the right edge. Opacity and width, never display:none, so the
 // button stays in the tab order.
-.tag-row__spacer {
-  flex: 1;
-}
-
-.tag-row__mark {
-  flex: none;
-}
-
 .tag-row__actions {
   display: flex;
   align-items: center;

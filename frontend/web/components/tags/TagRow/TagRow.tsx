@@ -63,10 +63,9 @@ const TagRow: FC<TagRowProps> = ({
         aria-checked={selectable ? checked : undefined}
       >
         <Tag className='me-0' disabled={disabled} tag={tag} />
-        <span className='tag-row__spacer' />
         {checked !== undefined && (
           <Icon
-            className={classNames('tag-row__mark text-default', {
+            className={classNames('ms-auto flex-shrink-0 text-default', {
               'opacity-0': !checked,
             })}
             name='checkmark'
