@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.277.0](https://github.com/Flagsmith/flagsmith/compare/v2.276.0...v2.277.0) (2026-09-29)
+
+
+### Features
+
+* **SaaS:** Add email verification as mandatory in SaaS ([#8595](https://github.com/Flagsmith/flagsmith/issues/8595)) ([4ce3684](https://github.com/Flagsmith/flagsmith/commit/4ce3684934aad5cd957cb1afbaefe90e2ceea8ce))
+* **usage:** project end-of-period usage ([#8599](https://github.com/Flagsmith/flagsmith/issues/8599)) ([8334b42](https://github.com/Flagsmith/flagsmith/commit/8334b42d11bd587c86e8e34eb23d68046a69ed50))
+* **usage:** show the billing period dates on the dashboard ([#8598](https://github.com/Flagsmith/flagsmith/issues/8598)) ([78e3fd0](https://github.com/Flagsmith/flagsmith/commit/78e3fd06ce43637b02bc55a0e465dc77b16ccedd))
+
+
+### Bug Fixes
+
+* **API:** _validate_owner_removal counts non-existent group IDs as removals ([#8137](https://github.com/Flagsmith/flagsmith/issues/8137)) ([30a33d7](https://github.com/Flagsmith/flagsmith/commit/30a33d7d4aa298e850f34624df76d764a223fc64))
+* **Flag Dependency:** Race condition when validating flag dependencies ([#8601](https://github.com/Flagsmith/flagsmith/issues/8601)) ([607fc95](https://github.com/Flagsmith/flagsmith/commit/607fc956713490ee21469438527b30641daadfd9))
+* **identities:** Pagination arrows in dark mode identities tab barely visible ([#8564](https://github.com/Flagsmith/flagsmith/issues/8564)) ([d5d44d4](https://github.com/Flagsmith/flagsmith/commit/d5d44d477585b6d72b654953c7bd3b911dd7c3d8))
+
+
+### CI
+
+* pre-commit autoupdate ([#8609](https://github.com/Flagsmith/flagsmith/issues/8609)) ([8114178](https://github.com/Flagsmith/flagsmith/commit/811417839a003d6f967b96ecb7f6efc5cb65b0a3))
+
+
+### Docs
+
+* add more visibility to trust.flagsmith.com ([#8328](https://github.com/Flagsmith/flagsmith/issues/8328)) ([2b571b4](https://github.com/Flagsmith/flagsmith/commit/2b571b4e1722c603afa4d079ffd4609e5c9377be))
+* fix Okta application link on SAML page ([#8611](https://github.com/Flagsmith/flagsmith/issues/8611)) ([acc3f2d](https://github.com/Flagsmith/flagsmith/commit/acc3f2d2dbea2b3b9abc7f2c9e68bd8bf758abe5))
+
+
+### Refactoring
+
+* Minor changes to DB interactions to make compatible with Oracle for EE ([#7930](https://github.com/Flagsmith/flagsmith/issues/7930)) ([7619f4c](https://github.com/Flagsmith/flagsmith/commit/7619f4c30ed2989d6beb8e3628beb5d0e255acc6))
+
 ## [2.276.0](https://github.com/Flagsmith/flagsmith/compare/v2.275.0...v2.276.0) (2026-09-24)
 
 

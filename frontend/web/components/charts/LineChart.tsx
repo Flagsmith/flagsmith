@@ -13,22 +13,22 @@ import {
 } from 'recharts'
 import { colorTextSecondary } from 'common/theme/tokens'
 import ChartTooltip from './ChartTooltip'
-import { ChartDataPoint } from './types'
+import { ChartDataPoint, ChartSeries } from './types'
 
 type LineChartProps = {
   data: ChartDataPoint[]
-  series: string[]
-  colorMap: Record<string, string>
+  series: ChartSeries[]
   height?: number
   xAxisInterval?: number
   showLegend?: boolean
-  seriesLabels?: Record<string, string>
-  dashedSeries?: string[]
-  /** For series whose sum means nothing, such as a cumulative line. */
-  hideTooltipTotal?: boolean
   verticalGrid?: boolean
   referenceLine?: Threshold
 }
+
+const labelsOf = (series: ChartSeries[]): Record<string, string> =>
+  Object.fromEntries(
+    series.filter((s) => s.label).map((s) => [s.key, s.label as string]),
+  )
 
 type Threshold = { value: number; label?: string; colour: string }
 
@@ -51,18 +51,18 @@ const thresholdLabelFor = (referenceLine?: Threshold) =>
     : undefined
 
 const LineChart: FC<LineChartProps> = ({
-  colorMap,
-  dashedSeries,
   data,
   height = 400,
-  hideTooltipTotal = false,
   referenceLine,
   series,
-  seriesLabels,
   showLegend = false,
   verticalGrid = true,
   xAxisInterval = 0,
 }) => {
+  const seriesLabels = labelsOf(series)
+  // A total is only meaningful when every line on the chart can be added up.
+  const hideTooltipTotal = series.some((s) => s.summable === false)
+
   return (
     <ResponsiveContainer height={height} width='100%'>
       <RawLineChart data={data}>
@@ -115,14 +115,14 @@ const LineChart: FC<LineChartProps> = ({
             label={thresholdLabelFor(referenceLine)}
           />
         )}
-        {series.map((label, index) => (
+        {series.map((line, index) => (
           <Line
-            key={label}
+            key={line.key}
             type='monotone'
-            dataKey={label}
-            stroke={colorMap[label]}
+            dataKey={line.key}
+            stroke={line.colour}
             strokeWidth={2}
-            strokeDasharray={dashedSeries?.includes(label) ? '6 6' : undefined}
+            strokeDasharray={line.dashed ? '6 6' : undefined}
             dot={false}
             // Recharts' default, pinned: a gap in a series must stay a gap.
             connectNulls={false}
