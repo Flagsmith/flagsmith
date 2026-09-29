@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Icon, { IconName } from 'components/icons/Icon'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
@@ -36,6 +36,24 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   const btnRef = useRef<HTMLButtonElement>(null)
   const dropDownRef = useRef<HTMLDivElement>(null)
   useOutsideClick(dropDownRef, () => setIsOpen(false))
+
+  // The menu is portalled to the body, so anything else watching for a click
+  // outside itself counts a click in here as one: an InlineModal holding this
+  // menu would close on the very item you picked. The menu belongs to its
+  // trigger wherever it is drawn, so the event stops at its root. Native
+  // rather than React's onMouseUp, because those listeners sit below document,
+  // which is where the outside-click watchers are.
+  useEffect(() => {
+    const node = dropDownRef.current
+    if (!isOpen || !node) return
+    const stop = (e: Event) => e.stopPropagation()
+    node.addEventListener('mouseup', stop)
+    node.addEventListener('touchend', stop)
+    return () => {
+      node.removeEventListener('mouseup', stop)
+      node.removeEventListener('touchend', stop)
+    }
+  }, [isOpen])
 
   useLayoutEffect(() => {
     if (!isOpen || !dropDownRef.current || !btnRef.current) return
