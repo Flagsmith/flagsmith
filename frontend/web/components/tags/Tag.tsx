@@ -68,9 +68,6 @@ const Tag: FC<TagType> = ({
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
-        // A tag with no text is a bare swatch, as in the colour picker, so it
-        // is named by its colour or it reaches a screen reader as an unnamed
-        // button.
         label={tag.label || swatchName(getTagColor(tag))}
         className={cx(colourUtilities, className)}
         active={selected}

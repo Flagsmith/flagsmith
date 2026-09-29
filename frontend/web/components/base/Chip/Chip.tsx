@@ -40,8 +40,6 @@ export type ChipProps = {
 const VARIANT_UTILITIES: Record<ChipVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
   neutral: 'bg-surface-subtle text-default',
-  // No utilities: a caller-supplied colour class would otherwise have to beat
-  // these on source order alone, which a reordered stylesheet would break.
   none: '',
 }
 

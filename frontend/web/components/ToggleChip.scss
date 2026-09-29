@@ -1,6 +1,4 @@
-// The leading checkbox. Its styles used to come from `.chip .icon-check` in
-// _chip.scss, which no longer applies now ToggleChip composes the chip
-// primitive, so they live with the component that owns them.
+// The leading checkbox.
 .toggle-chip__check {
   width: 14px;
   height: 14px;

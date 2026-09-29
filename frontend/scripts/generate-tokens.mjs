@@ -383,7 +383,7 @@ function buildContentColours() {
   )
   if (!entries.length) return []
   return [
-    '/** One colour per tag hue. The same value in both themes: it is only ever a border. */',
+    '/** One colour per tag hue, the same on both themes. */',
     'export const contentColours = {',
     ...entries.map(([n, hex]) => `  '${n.replace('content-', '')}': '${hex}',`),
     '} as const',

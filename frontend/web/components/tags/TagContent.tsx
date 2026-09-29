@@ -15,8 +15,6 @@ type TagContent = {
   disabled?: boolean
 }
 // Numeric-entity everything that is not alphanumeric or beyond Latin-1.
-// Stated as the characters it keeps rather than the four ranges it escaped:
-// the same set, without control characters in the literal.
 function escapeHTML(unsafe: string) {
   return unsafe.replace(
     /[^0-9A-Za-z\u0100-\uFFFF]/g,
