@@ -3,6 +3,10 @@
 
 export const AA_NORMAL_TEXT = 4.5
 
+// WCAG 1.4.11: graphical objects needed to understand the content, and the
+// visual boundary of a component. A tag's border in dark mode is both.
+export const AA_NON_TEXT = 3
+
 export const relativeLuminance = (hex: string): number => {
   const value = hex.replace('#', '')
   const [r, g, b] = [0, 2, 4]

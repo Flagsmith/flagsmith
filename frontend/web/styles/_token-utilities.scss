@@ -55,17 +55,17 @@
 .icon-warning { color: var(--color-icon-warning); fill: var(--color-icon-warning); }
 
 // Tags
-.tag-blue { background-color: var(--content-blue); color: var(--slate-600); }
-.tag-light-blue { background-color: var(--content-light-blue); color: var(--slate-600); }
-.tag-light-brown { background-color: var(--content-light-brown); color: var(--slate-600); }
-.tag-light-green { background-color: var(--content-light-green); color: var(--slate-600); }
-.tag-light-grey { background-color: var(--content-light-grey); color: var(--slate-600); }
-.tag-light-mint { background-color: var(--content-light-mint); color: var(--slate-600); }
-.tag-light-peach { background-color: var(--content-light-peach); color: var(--slate-600); }
-.tag-light-pink { background-color: var(--content-light-pink); color: var(--slate-600); }
-.tag-light-purple { background-color: var(--content-light-purple); color: var(--slate-600); }
-.tag-light-red { background-color: var(--content-light-red); color: var(--slate-600); }
-.tag-light-yellow { background-color: var(--content-light-yellow); color: var(--slate-600); }
+.tag-blue { --tag-hue: var(--content-blue); background-color: var(--tag-blue-surface); color: var(--tag-blue-ink); --ds-chip-border: var(--tag-blue-border); }
+.tag-light-blue { --tag-hue: var(--content-light-blue); background-color: var(--tag-light-blue-surface); color: var(--tag-light-blue-ink); --ds-chip-border: var(--tag-light-blue-border); }
+.tag-light-brown { --tag-hue: var(--content-light-brown); background-color: var(--tag-light-brown-surface); color: var(--tag-light-brown-ink); --ds-chip-border: var(--tag-light-brown-border); }
+.tag-light-green { --tag-hue: var(--content-light-green); background-color: var(--tag-light-green-surface); color: var(--tag-light-green-ink); --ds-chip-border: var(--tag-light-green-border); }
+.tag-light-grey { --tag-hue: var(--content-light-grey); background-color: var(--tag-light-grey-surface); color: var(--tag-light-grey-ink); --ds-chip-border: var(--tag-light-grey-border); }
+.tag-light-mint { --tag-hue: var(--content-light-mint); background-color: var(--tag-light-mint-surface); color: var(--tag-light-mint-ink); --ds-chip-border: var(--tag-light-mint-border); }
+.tag-light-peach { --tag-hue: var(--content-light-peach); background-color: var(--tag-light-peach-surface); color: var(--tag-light-peach-ink); --ds-chip-border: var(--tag-light-peach-border); }
+.tag-light-pink { --tag-hue: var(--content-light-pink); background-color: var(--tag-light-pink-surface); color: var(--tag-light-pink-ink); --ds-chip-border: var(--tag-light-pink-border); }
+.tag-light-purple { --tag-hue: var(--content-light-purple); background-color: var(--tag-light-purple-surface); color: var(--tag-light-purple-ink); --ds-chip-border: var(--tag-light-purple-border); }
+.tag-light-red { --tag-hue: var(--content-light-red); background-color: var(--tag-light-red-surface); color: var(--tag-light-red-ink); --ds-chip-border: var(--tag-light-red-border); }
+.tag-light-yellow { --tag-hue: var(--content-light-yellow); background-color: var(--tag-light-yellow-surface); color: var(--tag-light-yellow-ink); --ds-chip-border: var(--tag-light-yellow-border); }
 
 // Radius
 .rounded-2xl { border-radius: var(--radius-2xl); }

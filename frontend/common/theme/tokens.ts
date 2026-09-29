@@ -273,7 +273,7 @@ export const fontWeightMedium = 'var(--font-weight-medium, 500)'
 export const fontWeightRegular = 'var(--font-weight-regular, 400)'
 export const fontWeightSemibold = 'var(--font-weight-semibold, 600)'
 
-/** Tag and read-only content colours. Fixed: they do not follow the theme. */
+/** One colour per tag hue. The same value in both themes: it is only ever a border. */
 export const contentColours = {
   'blue': '#c7e6ff',
   'light-blue': '#c9f1fe',
