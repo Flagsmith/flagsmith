@@ -1057,19 +1057,19 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             return self._get_flags_response_with_identifier(request, identifier)
 
         if "feature" in request.GET:
-            feature_states = get_environment_feature_states(
+            evaluated_feature_states = get_environment_feature_states(
                 request.environment,
                 additional_filters=self._additional_filters
                 & Q(feature__name=request.GET["feature"]),
                 from_replica=True,
             )
-            if not feature_states:
+            if not evaluated_feature_states:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            return Response(self.get_serializer(feature_states[0]).data)
+            return Response(self.get_serializer(evaluated_feature_states[0]).data)
 
         if settings.CACHE_FLAGS_SECONDS > 0:
             data = self._get_flags_from_cache(request.environment, from_replica=True)
@@ -1139,30 +1139,30 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             )
         replace_identity_environment(identity, request.environment)
 
-        feature_states = get_identity_feature_states(identity)
+        evaluated_feature_states = get_identity_feature_states(identity)
 
         if feature_name := request.GET.get("feature"):
             # Filtered after evaluation rather than before: a segment may
             # depend on a flag other than the one asked for.
-            feature_state = next(
+            evaluated_feature_state = next(
                 (
-                    feature_state
-                    for feature_state in feature_states
-                    if feature_state.evaluation_result["name"] == feature_name
+                    evaluated_feature_state
+                    for evaluated_feature_state in evaluated_feature_states
+                    if evaluated_feature_state.evaluation_result["name"] == feature_name
                 ),
                 None,
             )
-            if feature_state is None:
+            if evaluated_feature_state is None:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
             return Response(
-                self.get_serializer(feature_state).data,
+                self.get_serializer(evaluated_feature_state).data,
                 status=status.HTTP_200_OK,
             )
 
-        flags = self.get_serializer(feature_states, many=True)
+        flags = self.get_serializer(evaluated_feature_states, many=True)
         return Response(flags.data, status=status.HTTP_200_OK)
 
 

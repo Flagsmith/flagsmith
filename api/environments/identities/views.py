@@ -290,13 +290,13 @@ class SDKIdentities(SDKAPIView):
     ) -> Response:
         context = self.get_serializer_context()  # type: ignore[no-untyped-call]
 
-        for feature_state in get_identity_feature_states(
+        for evaluated_feature_state in get_identity_feature_states(
             identity,
             additional_filters=self._get_additional_filters(),
         ):
-            if feature_state.evaluation_result["name"] == feature_name:
+            if evaluated_feature_state.evaluation_result["name"] == feature_name:
                 serializer = SDKIdentityFeatureStateSerializer(
-                    feature_state, context=context
+                    evaluated_feature_state, context=context
                 )
                 return Response(
                     data=serializer.data, status=status.HTTP_200_OK, headers=headers
