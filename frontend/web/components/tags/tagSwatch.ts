@@ -5,10 +5,8 @@ import type { ContentColour } from 'common/theme/tokens'
 /** One swatch per Content hue, named as the design system names it. */
 export type TagSwatch = ContentColour
 
-// Existing tags to the palette #8465 replaced them with: the twenty colours
-// the picker used to offer, plus the four the app assigns itself. `Tag.color`
-// is an unvalidated CharField, so anything else falls through to the neutral
-// below.
+// Existing tags to the palette that replaced them (#8465): Constants.tagColors
+// plus the archived and untagged pseudo-tags. Anything else gets the neutral.
 const SWATCH_BY_COLOR: Record<string, TagSwatch> = {
   '#039587': 'light-mint',
   '#1492f4': 'blue',
