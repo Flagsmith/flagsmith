@@ -1,8 +1,4 @@
 .tag-colour-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-
   // Each swatch is a Tag with no label, so without a size it collapses to the
   // chip's minimum width and reads as a sliver rather than a colour.
   .ds-chip {
@@ -11,8 +7,8 @@
     padding: 0;
     justify-content: center;
 
-    // Tag adds `me-1` for tags sitting in a row of their own. The grid has its
-    // own gap, and Bootstrap emits spacing utilities with !important.
+    // Tag adds `me-1` for tags sitting in a row of their own. This row has a
+    // gap instead, and Bootstrap emits spacing utilities with !important.
     margin-right: 0 !important;
   }
 

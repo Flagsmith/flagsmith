@@ -15,7 +15,9 @@ const TagColourPicker: FC<TagColourPickerProps> = ({
   onChange,
   value,
 }) => (
-  <div className={`tag-colour-picker ${className ?? ''}`}>
+  <div
+    className={`tag-colour-picker d-flex flex-wrap gap-3 ${className ?? ''}`}
+  >
     {Constants.tagColors.map((colour: string) => (
       <Tag
         key={colour}
