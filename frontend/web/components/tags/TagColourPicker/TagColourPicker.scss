@@ -7,8 +7,8 @@
     padding: 0;
     justify-content: center;
 
-    // Tag adds `me-1` for tags sitting in a row of their own. This row has a
-    // gap instead, and Bootstrap emits spacing utilities with !important.
+    // Cancels Tag's own `me-1`, which this grid does not want: it has a gap.
+    // !important because Bootstrap's spacing utilities are !important.
     margin-right: 0 !important;
   }
 

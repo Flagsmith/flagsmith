@@ -66,8 +66,8 @@ export const SystemTags: Story = {
   ),
 }
 
-// A colour the picker never offered. The API takes any hex, so it is matched to
-// the nearest Content hue rather than rendered as stored.
+// A colour we never issued, which the API allows. It takes the neutral rather
+// than a guess: the label still reads, and the tag claims no category.
 export const UnknownColour: Story = {
   args: { tag: tag({ color: '#123456', label: 'Set via API' }) },
   name: 'Colour outside the scale',
