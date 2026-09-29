@@ -11,7 +11,7 @@ const meta: Meta<typeof TagColourPicker> = {
     docs: {
       description: {
         component:
-          "The swatch grid a custom tag picks its colour from, shared by the create/edit form and the inline picker. Each swatch is a `Tag` with no label, so the grid sizes it: without that it collapses to the chip's minimum width and reads as a sliver. Colours come from the design system's Content palette and are fixed rather than theme-aware, because a chip carries its own surface.",
+          "The swatch grid a custom tag picks its colour from, shared by the create/edit form and the inline picker. Each swatch is an empty `Chip`, so the grid sizes it: without that it collapses to its padding and reads as a sliver. Colours come from the design system's Content palette and are fixed rather than theme-aware, because a chip carries its own surface.",
       },
     },
     layout: 'padded',

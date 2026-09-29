@@ -1,22 +1,9 @@
 .tag-colour-picker {
-  // Each swatch is a Tag with no label, so without a size it collapses to the
-  // chip's minimum width and reads as a sliver rather than a colour.
+  // Each swatch is an empty Chip, so without a size it collapses to its
+  // padding and reads as a sliver rather than a colour.
   .ds-chip {
     width: 44px;
     height: 44px;
     padding: 0;
-    justify-content: center;
-
-    // Cancels Tag's own `me-1`, which this grid does not want: it has a gap.
-    // !important because Bootstrap's spacing utilities are !important.
-    margin-right: 0 !important;
-  }
-
-  // The tick marking the current choice. Chip sizes it for a label beside it,
-  // far too small on a bare swatch, and CSS beats the svg's width attribute.
-  .ds-chip svg {
-    margin: 0;
-    width: 20px;
-    height: 20px;
   }
 }

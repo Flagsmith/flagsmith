@@ -13,7 +13,8 @@ export type ChipVariant =
   | 'none'
 
 export type ChipProps = {
-  children: ReactNode
+  // Optional: a bare colour swatch is a chip with nothing in it.
+  children?: ReactNode
   variant?: ChipVariant
   size?: ChipSize
   truncate?: boolean
