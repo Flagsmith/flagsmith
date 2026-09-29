@@ -32,23 +32,19 @@ const VCS_ICON_BY_LABEL: Record<string, IconName> = {
   'PR Open': 'pr-linked',
 }
 
-const renderIcon = (
-  tagType: string,
-  tagLabel: string,
-  isPermanent: boolean,
-) => {
-  switch (tagType) {
+const renderIcon = (tag: Partial<TTag>) => {
+  switch (tag.type) {
     case 'STALE':
       return <Icon name='stale' />
     case 'UNHEALTHY':
       return <Icon name='warning' width={16} />
     case 'GITHUB':
     case 'GITLAB': {
-      const icon = VCS_ICON_BY_LABEL[tagLabel]
+      const icon = VCS_ICON_BY_LABEL[tag.label ?? '']
       return icon ? <Icon name={icon} /> : null
     }
     default:
-      return isPermanent ? <Icon name='lock' width={16} /> : null
+      return tag.is_permanent ? <Icon name='lock' width={16} /> : null
   }
 }
 
@@ -114,7 +110,7 @@ const TagContent: FC<TagContent> = ({ disabled = false, tag }) => {
           })}
         >
           {tagLabel}
-          {renderIcon(tag.type!, tag.label!, !!tag.is_permanent)}
+          {renderIcon(tag)}
         </span>
       }
     >
