@@ -1050,25 +1050,25 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
 
         if feature_name := request.GET.get("feature"):
             # Filtered after evaluating, not before, because of dependent flags
-            feature_state = next(
+            evaluated_feature_state = next(
                 (
-                    feature_state
-                    for feature_state in get_environment_feature_states(
+                    evaluated_feature_state
+                    for evaluated_feature_state in get_environment_feature_states(
                         request.environment,
                         hide_server_key_only=self._hide_server_key_only,
                         from_replica=True,
                     )
-                    if feature_state.evaluation_result["name"] == feature_name
+                    if evaluated_feature_state.evaluation_result["name"] == feature_name
                 ),
                 None,
             )
-            if feature_state is None:
+            if evaluated_feature_state is None:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            return Response(self.get_serializer(feature_state).data)
+            return Response(self.get_serializer(evaluated_feature_state).data)
 
         if settings.CACHE_FLAGS_SECONDS > 0:
             data = self._get_flags_from_cache(request.environment)
