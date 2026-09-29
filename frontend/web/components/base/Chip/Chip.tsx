@@ -28,6 +28,10 @@ export type ChipProps = {
   tabIndex?: number
   'aria-checked'?: boolean
   'aria-expanded'?: boolean
+  // For a chip whose content cannot name it, such as a bare colour swatch.
+  'aria-label'?: string
+  // Toggle state, for a chip that is on or off rather than navigating.
+  'aria-pressed'?: boolean
   onKeyDown?: (e: KeyboardEvent) => void
   ref?: Ref<HTMLSpanElement>
 }
@@ -49,6 +53,8 @@ const VARIANT_UTILITIES: Record<ChipVariant, string> = {
 const Chip = ({
   'aria-checked': ariaChecked,
   'aria-expanded': ariaExpanded,
+  'aria-label': ariaLabel,
+  'aria-pressed': ariaPressed,
   children,
   className,
   onClick,
@@ -81,6 +87,8 @@ const Chip = ({
       tabIndex={interactive ? tabIndex ?? 0 : undefined}
       aria-checked={ariaChecked}
       aria-expanded={ariaExpanded}
+      aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
       onKeyDown={
         onKeyDown ??
         (onClick

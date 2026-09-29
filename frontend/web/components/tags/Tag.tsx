@@ -9,6 +9,7 @@ import TagContent from './TagContent'
 import Constants from 'common/constants'
 import {
   SYSTEM_TAG_UTILITIES,
+  getTagSwatch,
   getTagSwatchUtilities,
   isSystemTag,
 } from './tagSwatch'
@@ -21,6 +22,14 @@ type TagType = {
   selected?: boolean
   tag: Partial<TTag>
   isDot?: boolean
+}
+
+/** "light-green" reads as "Light green": a swatch has no other name. */
+const swatchName = (colour?: string | null) => {
+  const swatch = getTagSwatch(colour)
+  if (!swatch) return colour ?? undefined
+  const words = swatch.replace(/-/g, ' ')
+  return words[0].toUpperCase() + words.slice(1)
 }
 
 export const getTagColor = (tag: Partial<TTag>) => {
@@ -59,6 +68,10 @@ const Tag: FC<TagType> = ({
   if (!hideNames && !!onClick) {
     return (
       <ToggleChip
+        // A tag with no text is a bare swatch, as in the colour picker, so it
+        // is named by its colour or it reaches a screen reader as an unnamed
+        // button.
+        label={tag.label || swatchName(getTagColor(tag))}
         className={cx(colourUtilities, className)}
         active={selected}
         // No handler when disabled, so it is not a focusable button that does

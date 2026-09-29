@@ -9,15 +9,22 @@ type ToggleChipProps = {
   onClick?: () => void
   className?: string
   children?: ReactNode
+  /** Names a chip whose content cannot, such as a bare colour swatch. */
+  label?: string
 }
 
 const ToggleChip: FC<ToggleChipProps> = ({
   active,
   children,
   className,
+  label,
   onClick,
 }) => (
   <Chip
+    aria-label={label}
+    // Only where it toggles: on a chip that does nothing, a pressed state
+    // would announce an interaction that is not there.
+    aria-pressed={onClick ? !!active : undefined}
     className={cx('no-wrap mr-1 mt-0', className)}
     onClick={onClick}
     size='xs'
