@@ -1,5 +1,5 @@
 import { Tag as TTag } from 'common/types/responses'
-import { contentColours } from 'common/theme/tokens'
+import { contentColourNames, contentColours } from 'common/theme/tokens'
 import type { ContentColour } from 'common/theme/tokens'
 
 /** One swatch per Content hue, named as the design system names it. */
@@ -33,8 +33,8 @@ const SWATCH_BY_COLOR: Record<string, TagSwatch> = {
   '#ffa500': 'light-peach',
 }
 
-const BY_SWATCH_VALUE = Object.fromEntries(
-  Object.entries(contentColours).map(([name, hex]) => [hex, name as TagSwatch]),
+const BY_SWATCH_VALUE: Record<string, TagSwatch> = Object.fromEntries(
+  contentColourNames.map((name) => [contentColours[name], name]),
 )
 
 export const getTagSwatch = (color?: string | null): TagSwatch | null => {

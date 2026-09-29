@@ -388,7 +388,12 @@ function buildContentColours() {
     ...entries.map(([n, hex]) => `  '${n.replace('content-', '')}': '${hex}',`),
     '} as const',
     '',
-    'export type ContentColour = keyof typeof contentColours',
+    '/** The palette in order, so a picker can map it without a cast. */',
+    'export const contentColourNames = [',
+    ...entries.map(([n]) => `  '${n.replace('content-', '')}',`),
+    '] as const',
+    '',
+    'export type ContentColour = (typeof contentColourNames)[number]',
   ]
 }
 

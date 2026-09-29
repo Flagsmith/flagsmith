@@ -288,4 +288,19 @@ export const contentColours = {
   'light-yellow': '#f3edca',
 } as const
 
-export type ContentColour = keyof typeof contentColours
+/** The palette in order, so a picker can map it without a cast. */
+export const contentColourNames = [
+  'blue',
+  'light-blue',
+  'light-brown',
+  'light-green',
+  'light-grey',
+  'light-mint',
+  'light-peach',
+  'light-pink',
+  'light-purple',
+  'light-red',
+  'light-yellow',
+] as const
+
+export type ContentColour = (typeof contentColourNames)[number]
