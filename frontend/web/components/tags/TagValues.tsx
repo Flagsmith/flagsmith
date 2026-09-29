@@ -49,6 +49,7 @@ const TagValues: FC<TagValuesType> = ({
           value?.includes(tag.id) && (
             <Tag
               key={tag.id}
+              disabled={Utils.tagDisabled(tag)}
               hideNames={hideNames}
               onClick={onAdd ?? onClick}
               tag={tag}

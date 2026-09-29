@@ -3,7 +3,6 @@ import { Tag as TTag } from 'common/types/responses'
 import Format from 'common/utils/format'
 import Tooltip from 'components/Tooltip'
 import OrganisationStore from 'common/stores/organisation-store'
-import Utils from 'common/utils/utils'
 import classNames from 'classnames'
 import Icon, { IconName } from 'components/icons/Icon'
 import {
@@ -13,6 +12,7 @@ import {
 } from './tagSwatch'
 type TagContent = {
   tag: Partial<TTag>
+  disabled?: boolean
 }
 // Numeric-entity everything that is not alphanumeric or beyond Latin-1.
 // Stated as the characters it keeps rather than the four ranges it escaped:
@@ -54,14 +54,13 @@ const renderIcon = (
   }
 }
 
-const getTooltip = (tag: TTag | undefined) => {
+const getTooltip = (tag: TTag | undefined, disabled?: boolean) => {
   if (!tag) {
     return null
   }
   const stale_flags_limit_days = OrganisationStore.getProject(
     tag.project,
   )?.stale_flags_limit_days
-  const disabled = Utils.tagDisabled(tag)
   const truncated = Format.truncateText(tag.label, 12)
   const isTruncated = truncated !== tag.label ? tag.label : null
   let tooltip = null
@@ -86,7 +85,7 @@ const getTooltip = (tag: TTag | undefined) => {
     // classes as the real chip, so there is one set of colour rules.
     const utilities = isSystemTag(tag)
       ? SYSTEM_TAG_UTILITIES
-      : `${getTagSwatchUtilities(tag.color)} border-0`
+      : getTagSwatchUtilities(tag.color)
     return `<div>
         <span
           class="ds-chip ds-chip--xs d-inline-flex align-items-center rounded-md me-1 ${utilities}${
@@ -101,14 +100,12 @@ const getTooltip = (tag: TTag | undefined) => {
   return tooltip
 }
 
-const TagContent: FC<TagContent> = ({ tag }) => {
+const TagContent: FC<TagContent> = ({ disabled, tag }) => {
   const tagLabel = Format.truncateText(tag.label, 12)
 
   if (!tagLabel) {
     return null
   }
-
-  const disabled = Utils.tagDisabled(tag)
 
   return (
     <Tooltip
@@ -123,7 +120,7 @@ const TagContent: FC<TagContent> = ({ tag }) => {
         </span>
       }
     >
-      {getTooltip(tag)}
+      {getTooltip(tag, disabled)}
     </Tooltip>
   )
 }

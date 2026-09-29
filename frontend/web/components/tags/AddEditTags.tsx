@@ -93,7 +93,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
         <div>
           Are you sure you wish to delete the tag{' '}
           <div className='d-inline-block'>
-            <Tag tag={tag} />
+            <Tag disabled={Utils.tagDisabled(tag)} tag={tag} />
           </div>
           ? This action cannot be undone.
           <TagUsage projectId={projectId} tag={tag.id} />
@@ -217,8 +217,9 @@ const AddEditTags: FC<AddEditTagsType> = ({
                 filteredTags.map((tag) => (
                   <div key={tag.id}>
                     <Row>
-                      <Flex>
+                      <Flex className='align-items-start'>
                         <Tag
+                          disabled={Utils.tagDisabled(tag)}
                           onClick={selectTag}
                           selected={value?.includes(tag.id)}
                           tag={tag}
