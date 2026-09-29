@@ -9,11 +9,16 @@ import { Meta } from '@storybook/addon-docs/blocks'
 
 Use this decision framework when you need to add a colour to the codebase. It ensures colours end up in the right layer.
 
-### Is it for tags, projects, or data visualisation?
+### Is it for tags or projects?
 
-→ Add to `tokens.json` as its own group, alongside `chart`, not under `color`.
+→ Add to `constants.ts`, where the existing ones live.
 → Does NOT need a primitive scale.
-→ These are decorative identifiers, not UI roles.
+→ These are decorative identifiers a user picks, not UI roles.
+
+### Is it for data visualisation?
+
+→ Add to the `chart` group in `tokens.json`, not under `color`.
+→ Themed, so it needs a light and a dark value, but scoped to one feature.
 
 ### Does it fit an existing colour family?
 
