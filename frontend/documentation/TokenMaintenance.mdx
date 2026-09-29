@@ -11,7 +11,9 @@ How to add, modify, or remove design tokens. Follow this process to keep the tok
 
 ## Primitives vs Semantic Tokens
 
-The token system has two layers. **You should only use semantic tokens in components** — never reference primitives directly.
+The token system has three layers. **Reach for a semantic token first.** The design system's own
+ramps are exported too, for building something quickly against the palette, but a colour you use
+twice is a role that wants a semantic token. Never reference a primitive directly.
 
 **Primitives** (`tokens.json`, under `primitives`) are raw colour definitions. They exist so a
 colour can change once and update everything referencing it. Do NOT use them in components:

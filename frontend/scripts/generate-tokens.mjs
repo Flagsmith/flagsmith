@@ -50,6 +50,16 @@ const NEUTRAL_CATEGORY = 'neutral'
 const STATE_CATEGORY = 'state'
 const ALWAYS_CATEGORY = 'always'
 
+// The design system's own ramps, between the primitives and the semantic
+// tokens. Exported so a page can be built quickly against the palette; reach
+// for a `color.*` token first, and add one when a role turns out to be real.
+const RAMPS = [
+  PRIMARY_CATEGORY,
+  NEUTRAL_CATEGORY,
+  STATE_CATEGORY,
+  ALWAYS_CATEGORY,
+]
+
 // Build reverse lookups for primitives
 const hexToPrimitive = new Map()
 const rgbToPrimitive = new Map()
@@ -316,6 +326,18 @@ function buildFlatConstants() {
     lines.push('')
   }
 
+  // Design system ramps — primary, neutral, state, always
+  for (const cat of RAMPS) {
+    if (!json[cat]) continue
+    lines.push(`// ${cap(cat)}`)
+    for (const [, e] of sorted(json[cat])) {
+      const constName = cssVarToConstName(e.cssVar)
+      const fallback = lightVal(e)
+      lines.push(`export const ${constName} = 'var(${e.cssVar}, ${fallback})'`)
+    }
+    lines.push('')
+  }
+
   // Non-colour tokens — radius, shadow, duration, easing
   for (const cat of NON_COLOUR) {
     if (!json[cat]) continue
@@ -415,6 +437,15 @@ function generateMcpStory() {
       value: toPrimitiveRef(e.light),
     }))
     tables.push(...buildTableRows(`Colour: ${cat}`, data))
+  }
+
+  for (const cat of RAMPS) {
+    if (!json[cat]) continue
+    const data = Object.values(json[cat]).map((e) => ({
+      cssVar: e.cssVar,
+      value: toPrimitiveRef(e.light),
+    }))
+    tables.push(...buildTableRows(`Ramp: ${cat}`, data))
   }
 
   // Chart colours

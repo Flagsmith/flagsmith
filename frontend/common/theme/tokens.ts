@@ -231,6 +231,43 @@ export const CHART_COLOURS = [
   colorChart10,
 ] as const
 
+// Primary
+export const primary50 = 'var(--primary-50, #f5f0ff)'
+export const primary100 = 'var(--primary-100, #e7e1f4)'
+export const primary300 = 'var(--primary-300, #d4beff)'
+export const primary400 = 'var(--primary-400, #9168fd)'
+export const primary500 = 'var(--primary-500, #6837fc)'
+export const primary600 = 'var(--primary-600, #4f28d8)'
+export const primary900 = 'var(--primary-900, #1a0a78)'
+
+// Neutral
+export const neutral0 = 'var(--neutral-0, #ffffff)'
+export const neutral50 = 'var(--neutral-50, #fafafb)'
+export const neutral100 = 'var(--neutral-100, #f3f4f5)'
+export const neutral300 = 'var(--neutral-300, #e1e2eb)'
+export const neutral400 = 'var(--neutral-400, #bfc0c5)'
+export const neutral500 = 'var(--neutral-500, #656d7b)'
+export const neutral600 = 'var(--neutral-600, #1a2634)'
+export const neutral900 = 'var(--neutral-900, #0e1629)'
+
+// State
+export const danger100 = 'var(--danger-100, #ffeddb)'
+export const danger500 = 'var(--danger-500, #e61b26)'
+export const danger900 = 'var(--danger-900, #7a0e18)'
+export const info100 = 'var(--info-100, #dff3ff)'
+export const info500 = 'var(--info-500, #0fa5fc)'
+export const info900 = 'var(--info-900, #023078)'
+export const success100 = 'var(--success-100, #f0fff2)'
+export const success500 = 'var(--success-500, #6ad0a1)'
+export const success900 = 'var(--success-900, #1b392b)'
+export const warning100 = 'var(--warning-100, #fff7cd)'
+export const warning500 = 'var(--warning-500, #ffbc05)'
+export const warning900 = 'var(--warning-900, #744800)'
+
+// Always
+export const alwaysPrimary = 'var(--always-primary, #6837fc)'
+export const alwaysWhite = 'var(--always-white, #ffffff)'
+
 // Radius
 export const radius2xl = 'var(--radius-2xl, 18px)'
 export const radiusFull = 'var(--radius-full, 9999px)'
