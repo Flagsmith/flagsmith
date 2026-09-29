@@ -85,6 +85,8 @@ from . import audit_helpers
 logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
+    from flagsmith_schemas.types import FeatureValue
+
     from environments.identities.models import Identity
     from environments.models import Environment
 
@@ -741,7 +743,7 @@ class FeatureState(
         # hasattr as we want to return None if no feature state value exists.
         return feature_state_value and feature_state_value.value
 
-    def get_feature_state_value(self) -> typing.Any:
+    def get_feature_state_value(self) -> "FeatureValue":
         """This state's stored value, before any evaluation."""
         feature_state_value = getattr(self, "feature_state_value", None)
         return feature_state_value and feature_state_value.value
