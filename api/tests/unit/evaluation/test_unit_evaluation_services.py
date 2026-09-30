@@ -350,20 +350,60 @@ def test_get_edge_identity_feature_states__segment_and_identity_override__identi
     assert evaluated_feature_state.feature_state == (edge_identity.feature_overrides[0])
 
 
+@pytest.fixture()
+def identity_dependent_rules_data_segment(project: Project) -> Segment:
+    # Deliberately no rule rows: were they read instead of `rules_data`, the
+    # segment would match everyone.
+    segment: Segment = Segment.objects.create(
+        name="beta testers",
+        project=project,
+        rules_data=[
+            {
+                "type": "ALL",
+                "conditions": [
+                    {
+                        "property": "beta_tester",
+                        "operator": IS_SET,
+                        "value": None,
+                        "description": None,
+                    }
+                ],
+            }
+        ],
+    )
+    return segment
+
+
+@pytest.fixture()
+def identity_dependent_cohort_segment(project: Project) -> Segment:
+    # A cohort's segment only has rule rows, and no `rules_data`.
+    segment: Segment = Segment.objects.create(name="beta testers", project=project)
+    Condition.objects.create(
+        rule=SegmentRule.objects.create(
+            rule=SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE),
+            type=SegmentRule.ANY_RULE,
+        ),
+        property="beta_tester",
+        operator=IS_SET,
+    )
+    return segment
+
+
+@pytest.mark.parametrize(
+    "segment",
+    [
+        lazy_fixture("identity_dependent_rules_data_segment"),
+        lazy_fixture("identity_dependent_cohort_segment"),
+    ],
+)
 def test_get_environment_feature_states__identity_dependent_segment__skips_reading_its_overrides(
-    project: Project,
+    segment: Segment,
     environment: Environment,
     feature: Feature,
     feature_state: FeatureState,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    segment = Segment.objects.create(name="beta testers", project=project)
-    Condition.objects.create(
-        rule=SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE),
-        property="beta_tester",
-        operator=IS_SET,
-    )
     FeatureState.objects.create(
         feature=feature,
         environment=environment,

@@ -2,6 +2,7 @@ from collections.abc import Iterable
 from math import inf
 from typing import TYPE_CHECKING, Any
 
+from flag_engine.context import types as engine_types
 from flag_engine.engine import get_evaluation_result
 
 from evaluation.mappers import (
@@ -10,6 +11,7 @@ from evaluation.mappers import (
     map_engine_feature_state_to_feature_context,
     map_environment_to_evaluation_context,
     map_identity_overrides_to_segment_context,
+    map_rule_to_segment_rule,
 )
 from evaluation.types import (
     EvaluatedFeatureState,
@@ -23,7 +25,8 @@ if TYPE_CHECKING:
     from environments.identities.traits.models import Trait
     from environments.models import Environment
     from features.models import FeatureState
-    from segments.models import Segment, SegmentRule
+    from segments.models import Segment
+    from segments.types import SegmentRule as SegmentRuleData
     from util.engine_models.features.models import FeatureStateModel
 
 
@@ -94,7 +97,7 @@ def get_environment_feature_states(
         segments=[
             segment
             for segment in environment.get_segments_from_cache()
-            if _is_identity_free(segment.rules.all())
+            if _is_identity_free(segment)
         ],
         from_replica=from_replica,
     )
@@ -190,13 +193,25 @@ def get_edge_identity_segments(edge_identity: "EdgeIdentity") -> "list[Segment]"
     ]
 
 
-def _is_identity_free(rules: "Iterable[SegmentRule]") -> bool:
+def _is_identity_free(segment: "Segment") -> bool:
+    if (rules_data := segment.rules_data) is None:
+        # A cohort's segment is not given `rules_data` yet.
+        # TODO: Drop this fallback as per https://github.com/Flagsmith/flagsmith/issues/7816
+        return _are_identity_free(
+            map_rule_to_segment_rule(rule) for rule in segment.rules.all()
+        )
+    return _are_identity_free(rules_data)
+
+
+def _are_identity_free(
+    rules: "Iterable[SegmentRuleData | engine_types.SegmentRule]",
+) -> bool:
     return all(
         all(
-            (condition.property or "").startswith(_IDENTITY_FREE_PROPERTY_PREFIXES)
-            for condition in rule.conditions.all()
+            (condition["property"] or "").startswith(_IDENTITY_FREE_PROPERTY_PREFIXES)
+            for condition in rule["conditions"]
         )
-        and _is_identity_free(rule.rules.all())
+        and _are_identity_free(rule.get("rules", []))
         for rule in rules
     )
 
