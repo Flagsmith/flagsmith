@@ -990,28 +990,26 @@ export class E2EHelpers {
     await addTagButton.scrollIntoViewIfNeeded();
     await addTagButton.click();
 
-    // Wait for either the create tag modal or the "Add New Tag" button
-    const addNewTagButton = this.page.locator('button').filter({ hasText: 'Add New Tag' });
+    // The panel lists existing tags with a row that opens the form, unless the
+    // project has none yet, in which case the form opens on its own.
+    const newTagButton = this.page.getByRole('button', { name: 'New tag', exact: true });
     const tagLabelInput = this.page.locator(byId('tag-label'));
 
-    // Wait for one of them to appear
     await Promise.race([
-      addNewTagButton.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {}),
+      newTagButton.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {}),
       tagLabelInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {})
     ]);
 
-    // If "Add New Tag" button is visible, click it
-    const hasAddNewTagButton = await addNewTagButton.isVisible().catch(() => false);
-    if (hasAddNewTagButton) {
-      await addNewTagButton.click();
+    if (await newTagButton.isVisible().catch(() => false)) {
+      await newTagButton.click();
     }
 
     // Fill in tag details
     await this.setText(byId('tag-label'), label);
     await this.page.waitForTimeout(300);
 
-    // Click the first available color
-    const firstColor = this.page.locator('.tag--select').first();
+    // Click the first available colour
+    const firstColor = this.page.locator('.tag-colour-picker__swatch').first();
     await firstColor.waitFor({ state: 'visible', timeout: LONG_TIMEOUT });
     await firstColor.click();
     await this.page.waitForTimeout(300);
