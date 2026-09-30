@@ -12,7 +12,7 @@ class _Feature(TypedDict):
     name: FeatureName
 
 
-class _ReferencingSegment(TypedDict):
+class ReferencingSegment(TypedDict):
     """The segment whose rules hold the `$.flags` condition making up a dependency."""
 
     id: int
@@ -34,7 +34,7 @@ class DependencyEdge(TypedDict):
 
     feature: _Feature
     prerequisite: _Feature
-    segment: _ReferencingSegment
+    segment: ReferencingSegment
 
 
 DependencyPath = list[DependencyEdge]

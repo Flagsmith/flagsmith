@@ -8,10 +8,14 @@ from django.test.utils import CaptureQueriesContext
 from pytest_django import DjangoAssertNumQueries
 
 from environments.models import Environment
-from features.dependencies.exceptions import CircularDependencyError
+from features.dependencies.exceptions import (
+    CircularDependencyError,
+    FeatureIsReferencedError,
+)
 from features.dependencies.models import SegmentFlagReference
 from features.dependencies.services import (
     FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE,
+    validate_feature_is_not_prerequisite,
     validate_segment_flag_dependencies,
 )
 from features.models import Feature, FeatureSegment, FeatureState
@@ -274,6 +278,32 @@ def test_validate_segment_flag_dependencies__concurrent_opposite_edges__rejects_
     # Then
     assert [type(error) for error in errors] == [CircularDependencyError]
     assert not FeatureSegment.objects.filter(feature=egg).exists()
+
+
+def test_validate_feature_is_not_prerequisite__feature_with_references__locks_project_before_reading(
+    feature: Feature,
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    SegmentFlagReference.objects.create(
+        segment=segment,
+        prerequisite_feature=feature,
+        condition_json_path="$[0].conditions[0]",
+    )
+
+    # When
+    with (
+        CaptureQueriesContext(connection) as captured,
+        pytest.raises(FeatureIsReferencedError),
+    ):
+        validate_feature_is_not_prerequisite(feature)
+
+    # Then
+    assert captured.captured_queries[0]["sql"] == (
+        "SELECT pg_advisory_xact_lock("
+        f"{FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE}, {project.id})"
+    )
 
 
 def _assert_project_lock_contended(project_id: int, timeout: float = 5) -> None:

@@ -23,7 +23,12 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    PolymorphicProxySerializer,
+    extend_schema,
+    extend_schema_view,
+)
 from flagsmith_schemas import api as api_schemas
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import (
@@ -67,18 +72,22 @@ from evaluation.services import (
     get_environment_feature_states,
     get_identity_feature_states,
 )
+from features.dependencies.exceptions import (
+    DependencyConflictDetail,
+    FeatureIsReferencedDetail,
+)
 from features.dependencies.services import validate_segment_flag_dependencies
 from features.feature_lifecycle.services import (
     annotate_feature_queryset_with_lifecycle_stage,
     is_feature_lifecycle_enabled,
 )
+from features.services import delete_feature
 from features.value_types import BOOLEAN, INTEGER, STRING
 from projects.code_references.services import (
     annotate_feature_queryset_with_code_references_summary,
 )
 from projects.models import Project
 from users.models import FFAdminUser, UserPermissionGroup
-from webhooks.webhooks import WebhookEventType
 
 from .constants import INTERSECTION, UNION
 from .features_service import get_overrides_data
@@ -114,7 +123,6 @@ from .serializers import (  # type: ignore[attr-defined]
     UpdateFeatureSerializer,
     WritableNestedFeatureStateSerializer,
 )
-from .tasks import trigger_feature_state_change_webhooks
 from .versioning.models import EnvironmentFeatureVersion
 from .versioning.versioning_service import (
     get_environment_flags_list,
@@ -178,6 +186,18 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
         operation_id="update_feature",
         description="Updates feature flag properties such as name and description.",
     ),
+)
+@extend_schema_view(
+    destroy=extend_schema(
+        responses={
+            204: None,
+            400: PolymorphicProxySerializer(
+                component_name="FeatureDeletionRefusedDetail",
+                serializers=[DependencyConflictDetail, FeatureIsReferencedDetail],  # type: ignore[list-item]
+                resource_type_field_name=None,
+            ),
+        },
+    )
 )
 class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [FeaturePermissions]
@@ -340,11 +360,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.save(project_id=self.kwargs.get("project_pk"))
 
     def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
-        feature_states = list(
-            instance.feature_states.filter(identity=None, feature_segment=None)
-        )
-        self._trigger_feature_state_change_webhooks(feature_states)
-        instance.delete()
+        delete_feature(instance)
 
     def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super().get_serializer_context()
@@ -577,14 +593,6 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = FeatureEvaluationDataSerializer(usage_data, many=True)
 
         return Response(serializer.data)
-
-    def _trigger_feature_state_change_webhooks(  # type: ignore[no-untyped-def]
-        self, feature_states: typing.List[FeatureState]
-    ):
-        for feature_state in feature_states:
-            trigger_feature_state_change_webhooks(
-                feature_state, WebhookEventType.FLAG_DELETED
-            )
 
     def filter_owners_and_group_owners(
         self,

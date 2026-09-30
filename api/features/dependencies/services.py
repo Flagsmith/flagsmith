@@ -16,13 +16,16 @@ from environments.models import Environment
 from features.dependencies.exceptions import (
     CircularDependencyError,
     DependencyExistsError,
+    FeatureHasDependentsError,
     FeatureIsPrerequisiteError,
+    FeatureIsReferencedError,
     PrerequisiteFeatureNotFoundError,
     PrerequisiteHasPrerequisiteError,
     PrerequisiteIsSelfError,
 )
 from features.dependencies.mappers import (
     map_reference_to_dependency_edge,
+    map_reference_to_referencing_segment,
     map_rules_to_prerequisite_feature_names,
 )
 from features.dependencies.models import SegmentFlagReference
@@ -180,6 +183,46 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
             pending += [[*path, edge] for edge in edges[prerequisite_feature_name]]
 
 
+def validate_feature_is_not_prerequisite(feature: Feature) -> None:
+    """Raise if any segment condition names the feature as a prerequisite."""
+    _lock_project_flag_dependencies(feature.project_id)
+    references = list(
+        SegmentFlagReference.objects.filter(
+            prerequisite_feature=feature
+        ).select_related("segment")
+    )
+    if not references:
+        return
+    dependent_override = (
+        get_live_overrides(include_scheduled=True)
+        .filter(segment__flag_references__prerequisite_feature=feature)
+        .select_related("environment")
+        .order_by("environment_id")
+        .first()
+    )
+    if dependent_override is None:
+        raise FeatureIsReferencedError(
+            feature_name=feature.name,
+            segments=[
+                map_reference_to_referencing_segment(reference)
+                for reference in references
+            ],
+        )
+    environment = dependent_override.environment
+    edges = _get_dependency_edges(
+        get_live_overrides(include_scheduled=True).filter(environment=environment)
+    )
+    raise FeatureHasDependentsError(
+        environment={"key": environment.api_key, "name": environment.name},
+        path=[
+            edge
+            for feature_edges in edges.values()
+            for edge in feature_edges
+            if edge["prerequisite"]["id"] == feature.id
+        ],
+    )
+
+
 def _lock_project_flag_dependencies(project_id: int) -> None:
     connection = transaction.get_connection()
     if not connection.in_atomic_block:
@@ -266,6 +309,27 @@ def list_flag_dependents(
             for edge in feature_edges
             if edge["prerequisite"]["id"] == feature.id
         ]
+    }
+
+
+def get_prerequisite_feature_names_by_environment(
+    feature: Feature,
+) -> dict[Environment, set[FeatureName]]:
+    """Return the features the feature depends on, live or scheduled, per environment."""
+    names_by_environment_id: dict[int, set[FeatureName]] = defaultdict(set)
+    for environment_id, prerequisite_feature_name in (
+        get_live_overrides(include_scheduled=True)
+        .filter(feature=feature, segment__flag_references__isnull=False)
+        .values_list(
+            "environment_id", "segment__flag_references__prerequisite_feature__name"
+        )
+    ):
+        names_by_environment_id[environment_id].add(prerequisite_feature_name)
+    return {
+        environment: names_by_environment_id[environment.id]
+        for environment in Environment.objects.filter(
+            id__in=names_by_environment_id.keys()
+        ).select_related("project")
     }
 
 
