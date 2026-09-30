@@ -9,6 +9,13 @@ import Constants from 'common/constants'
 import { TagStrategy } from 'common/types/responses'
 import TagContent from 'components/tags/TagContent'
 
+// Not a tag: it stands for the absence of one, so it has no row behind it.
+const UNTAGGED_ID = ''
+
+// The two rows with no tag behind them, so the search can reach them too.
+const ARCHIVED_LABEL = 'archived'
+const UNTAGGED_LABEL = 'untagged'
+
 type TableFilterType = {
   projectId: number
   value: (number | string)[] | undefined
@@ -54,6 +61,9 @@ const TableTagFilter: FC<TableFilterType> = ({
     if (!search) return flagGatedTags
     return flagGatedTags?.filter((v) => v.label.toLowerCase().includes(search))
   }, [flagGatedTags, search])
+
+  const showArchivedRow = ARCHIVED_LABEL.includes(search)
+  const showUntaggedRow = UNTAGGED_LABEL.includes(search)
   const length = (value?.length || 0) + (showArchived ? 1 : 0)
   return (
     <div className={isLoading ? 'disabled' : ''}>
@@ -115,40 +125,44 @@ const TableTagFilter: FC<TableFilterType> = ({
               search
             />
           </div>
-          {filteredTags?.length === 0 && (
-            <div className='text-center'>No tags</div>
-          )}
+          {filteredTags?.length === 0 &&
+            !showArchivedRow &&
+            !showUntaggedRow && <div className='text-center'>No tags</div>}
           <div className='table-filter-list'>
-            <TableFilterItem
-              onClick={() => {
-                if (!isLoading) {
-                  onToggleArchived(!showArchived)
+            {showArchivedRow && (
+              <TableFilterItem
+                onClick={() => {
+                  if (!isLoading) {
+                    onToggleArchived(!showArchived)
+                  }
+                }}
+                isActive={showArchived}
+                title={
+                  <Row className='overflow-hidden'>
+                    <Tag isDot tag={Constants.archivedTag} />
+                    <div className='ml-2 text-overflow'>{ARCHIVED_LABEL}</div>
+                  </Row>
                 }
-              }}
-              isActive={showArchived}
-              title={
-                <Row className='overflow-hidden'>
-                  <Tag isDot tag={Constants.archivedTag} />
-                  <div className='ml-2 text-overflow'>archived</div>
-                </Row>
-              }
-            />
-            <TableFilterItem
-              onClick={() => {
-                if (value?.includes('')) {
-                  onChange((value || []).filter((v) => v !== ''))
-                } else {
-                  onChange((value || []).concat(['']))
+              />
+            )}
+            {showUntaggedRow && (
+              <TableFilterItem
+                onClick={() => {
+                  if (value?.includes(UNTAGGED_ID)) {
+                    onChange((value || []).filter((v) => v !== UNTAGGED_ID))
+                  } else {
+                    onChange((value || []).concat([UNTAGGED_ID]))
+                  }
+                }}
+                isActive={value?.includes(UNTAGGED_ID)}
+                title={
+                  <Row className='overflow-hidden'>
+                    <Tag isDot tag={Constants.untaggedTag} />
+                    <div className='ml-2 text-overflow'>{UNTAGGED_LABEL}</div>
+                  </Row>
                 }
-              }}
-              isActive={value?.includes('')}
-              title={
-                <Row className='overflow-hidden'>
-                  <Tag isDot tag={Constants.untaggedTag} />
-                  <div className='ml-2 text-overflow'>untagged</div>
-                </Row>
-              }
-            />
+              />
+            )}
             {filteredTags?.map((tag) => (
               <TableFilterItem
                 onClick={() => {
