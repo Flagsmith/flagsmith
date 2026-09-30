@@ -30,12 +30,18 @@ describe('getTagSwatch', () => {
   })
 
   // A colour we never issued gets the neutral, not a guess.
-  it.each([undefined, null, '', 'rebeccapurple', '#123456'])(
-    'has no swatch for %s',
-    (colour) => {
-      expect(getTagSwatch(colour)).toBeNull()
-    },
-  )
+  it.each([
+    undefined,
+    null,
+    '',
+    'rebeccapurple',
+    '#123456',
+    // Would find an inherited property if the map were an object literal.
+    'constructor',
+    '__proto__',
+  ])('has no swatch for %s', (colour) => {
+    expect(getTagSwatch(colour)).toBeNull()
+  })
 
   it('falls back to neutral utilities when there is no swatch', () => {
     expect(getTagSwatchUtilities('#123456')).toBe(
