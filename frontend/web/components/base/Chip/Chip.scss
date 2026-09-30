@@ -26,10 +26,11 @@
     font-size: 0.75rem;
   }
 
+  // No frame gives xs a height, so it keeps the one its padding produces
+  // rather than the base's. Undo that and it inherits 32px.
   &--xs {
-    // Stated for the same reason as --sm: the base fixes a height now.
-    height: 20px;
-    padding: 0 6px;
+    height: auto;
+    padding: 1px 6px;
     font-size: 0.6875rem;
   }
 
