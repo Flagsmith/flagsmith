@@ -191,10 +191,7 @@ To sync groups, use the "Push Groups" tab to select the Okta groups you want to 
 
 :::caution
 
-Do not add the `aadOptscim062020` flag to the tenant URL. Flagsmith does not support it.
-
-Microsoft and the setup guides of other products recommend this flag for SCIM compliance. With the flag enabled, Entra
-sends group membership changes that Flagsmith cannot apply, so group membership stops syncing.
+Flagsmith does not support the `aadOptscim062020` flag.
 
 :::
 
