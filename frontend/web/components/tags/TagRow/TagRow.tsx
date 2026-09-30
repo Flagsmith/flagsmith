@@ -12,9 +12,8 @@ type TagRowProps = {
   disabled?: boolean
   onToggle?: (tag: TTag) => void
   tag: TTag
-  /** A single icon-width control on the right, revealed on hover: see the
-   * menu in AddEditTags. The slot animates to a fixed 20px, so anything
-   * wider is clipped. */
+  /** Revealed on hover. The slot animates to a fixed 20px, so it takes one
+   * icon-width control and clips anything wider. */
   trailing?: ReactNode
 }
 
