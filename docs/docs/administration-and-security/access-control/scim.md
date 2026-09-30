@@ -199,7 +199,7 @@ Flagsmith does not support the `aadOptscim062020` flag.
 2. Go to "Provisioning" and click "Get started".
 3. Set the provisioning mode to "Automatic".
 4. Under "Admin Credentials", set the tenant URL to your Flagsmith SCIM base URL and the secret token to your SCIM
-   bearer token. Use the SCIM base URL exactly as shown in Flagsmith, without any query parameters.
+   bearer token.
 5. Click "Test Connection" to verify, then save.
 6. Under "Mappings", configure the user and group attribute mappings. Ensure `emails[type eq "work"].value` maps to the
    user's email address.
@@ -243,8 +243,6 @@ endpoints as defined by the SCIM 2.0 specification.
   permission group. If the group was created by SCIM, this is set automatically.
 - If you are also using SAML group sync, note that SAML will re-sync group membership at each login. The two mechanisms
   are designed to work together, but if they use different group identifiers, they may conflict.
-- If you use Microsoft Entra ID, check that the tenant URL does not end with `?aadOptscim062020`. Flagsmith does not
-  support this flag. See [Microsoft Entra ID](#microsoft-entra-id-azure-ad).
 
 ### Deprovisioned users still appear in the organisation
 
