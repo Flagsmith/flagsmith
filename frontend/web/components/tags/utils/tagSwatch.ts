@@ -35,7 +35,10 @@ const LEGACY_COLOURS: Record<string, TagSwatch> = {
 // inherited property and hand back something that is not a swatch.
 const SWATCH_BY_COLOR = new Map<string, TagSwatch>([
   ...Object.entries(LEGACY_COLOURS),
-  ...contentColourNames.map((name) => [contentColours[name], name] as const),
+  ...contentColourNames.map((name): [string, TagSwatch] => [
+    contentColours[name],
+    name,
+  ]),
 ])
 
 export const getTagSwatch = (color?: string | null): TagSwatch | null =>
