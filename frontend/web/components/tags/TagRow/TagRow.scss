@@ -13,8 +13,15 @@
   min-width: 0;
   text-align: left;
 
-  &:not(:disabled) {
+  &:not(:disabled):not([aria-disabled='true']) {
     cursor: pointer;
+  }
+
+  // BareButton drops pointer events on aria-disabled; this row needs them so
+  // the tag's tooltip can still explain why it is unavailable.
+  &[aria-disabled='true'] {
+    pointer-events: auto;
+    cursor: not-allowed;
   }
 
   &:focus-visible {
@@ -23,7 +30,9 @@
   }
 }
 
-.tag-row:has(.tag-row__select:not(:disabled):hover) {
+.tag-row:has(
+    .tag-row__select:not(:disabled):not([aria-disabled='true']):hover
+  ) {
   background-color: var(--color-surface-hover);
 }
 

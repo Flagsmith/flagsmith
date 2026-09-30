@@ -44,7 +44,9 @@ const TagRow: FC<TagRowProps> = ({
   tag,
   trailing,
 }) => {
-  const selectable = checked !== undefined && !!onToggle && !disabled
+  // A row with nothing to toggle is inert; one blocked by the plan is not.
+  const isCheckbox = checked !== undefined && !!onToggle
+  const selectable = isCheckbox && !disabled
 
   return (
     <div
@@ -56,11 +58,15 @@ const TagRow: FC<TagRowProps> = ({
           its menu button is not inside this one. */}
       <BareButton
         className='tag-row__select d-flex align-items-center gap-2'
-        disabled={!selectable}
-        onClick={() => onToggle?.(tag)}
+        // aria-disabled, not the attribute: the row keeps its place in the tab
+        // order, so arrow keys can pass it and its tooltip still says why it is
+        // unavailable.
+        aria-disabled={disabled || undefined}
+        disabled={!isCheckbox}
+        onClick={selectable ? () => onToggle?.(tag) : undefined}
         onKeyDown={moveFocus}
-        role={selectable ? 'checkbox' : undefined}
-        aria-checked={selectable ? checked : undefined}
+        role={isCheckbox ? 'checkbox' : undefined}
+        aria-checked={isCheckbox ? checked : undefined}
       >
         <Tag className='me-0' disabled={disabled} tag={tag} />
         {checked !== undefined && (
