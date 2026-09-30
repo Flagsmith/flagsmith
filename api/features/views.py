@@ -128,6 +128,12 @@ logger = logging.getLogger(__name__)
 flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 
+def _feature_name_matches(name: str, requested_name: str) -> bool:
+    # Feature names are unique per project regardless of case, and SDKs
+    # have historically relied on case-insensitive lookups.
+    return name.casefold() == requested_name.casefold()
+
+
 @extend_schema(responses={200: CreateFeatureSerializer()})
 @api_view(["GET"])
 def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
@@ -1058,7 +1064,10 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
                         hide_server_key_only=self._hide_server_key_only,
                         from_replica=True,
                     )
-                    if evaluated_feature_state.evaluation_result["name"] == feature_name
+                    if _feature_name_matches(
+                        evaluated_feature_state.evaluation_result["name"],
+                        feature_name,
+                    )
                 ),
                 None,
             )
@@ -1138,7 +1147,10 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
                 (
                     evaluated_feature_state
                     for evaluated_feature_state in evaluated_feature_states
-                    if evaluated_feature_state.evaluation_result["name"] == feature_name
+                    if _feature_name_matches(
+                        evaluated_feature_state.evaluation_result["name"],
+                        feature_name,
+                    )
                 ),
                 None,
             )
