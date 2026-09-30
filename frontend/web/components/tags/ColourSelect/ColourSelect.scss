@@ -1,0 +1,7 @@
+// A swatch on its own is a dot, not a control. The frame gives it the size and
+// the edge the chip it replaced had.
+.colour-select__trigger {
+  padding: 4px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+}

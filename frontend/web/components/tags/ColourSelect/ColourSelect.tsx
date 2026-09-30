@@ -3,7 +3,8 @@ import InlineModal from 'components/InlineModal'
 import BareButton from 'components/base/forms/BareButton'
 import ColorSwatch from 'components/ColorSwatch'
 import { contentColours } from 'common/theme/tokens'
-import TagColourPicker from './TagColourPicker'
+import TagColourPicker from 'components/tags/TagColourPicker'
+import './ColourSelect.scss'
 
 type ColourSelectType = {
   value: string
@@ -19,6 +20,7 @@ const ColourSelect: FC<ColourSelectType> = ({ onChange, value: _value }) => {
       <BareButton
         aria-expanded={isOpen}
         aria-label='Select a colour'
+        className='colour-select__trigger'
         onClick={() => setIsOpen(true)}
       >
         <ColorSwatch color={value} shape='rounded' size='lg' />
