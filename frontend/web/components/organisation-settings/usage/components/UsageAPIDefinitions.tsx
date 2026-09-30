@@ -1,5 +1,6 @@
 import React from 'react'
 import InfoMessage from 'components/InfoMessage'
+import Text from 'components/base/Text'
 
 const UsageAPIDefinitions: React.FC = () => {
   return (
@@ -8,8 +9,12 @@ const UsageAPIDefinitions: React.FC = () => {
         Please be aware that usage data can be delayed by up to 3 hours.
       </InfoMessage>
       <div>
-        <h4>What do these numbers mean?</h4>
-        <h5>Flags</h5>
+        <Text variant='h4' level={4}>
+          What do these numbers mean?
+        </Text>
+        <Text variant='h5' level={5}>
+          Flags
+        </Text>
         <p>
           This is a single call to get the Environment Flag defaults, without
           providing an Identity. Note that if you trigger an update of flags via
@@ -24,7 +29,9 @@ const UsageAPIDefinitions: React.FC = () => {
             Learn more.
           </a>
         </p>
-        <h5>Identities</h5>
+        <Text variant='h5' level={5}>
+          Identities
+        </Text>
         <p>
           This is a single call to get the flags for a specific Identity. If
           this is the first time flags have been requested for that Identity, it
@@ -43,7 +50,9 @@ const UsageAPIDefinitions: React.FC = () => {
             Learn more.
           </a>
         </p>
-        <h5>Environment Document</h5>
+        <Text variant='h5' level={5}>
+          Environment Document
+        </Text>
         <p>
           This is a single call made by Server-Side SDKs (when running in Local
           Evaluation Mode), and the Edge Proxy to get the entire Environment
@@ -63,7 +72,9 @@ const UsageAPIDefinitions: React.FC = () => {
             Learn more.
           </a>
         </p>
-        <h5>Traits</h5>
+        <Text variant='h5' level={5}>
+          Traits
+        </Text>
         <p>
           This is the number of times Traits for an Identity have been written.
         </p>
@@ -76,7 +87,9 @@ const UsageAPIDefinitions: React.FC = () => {
             Learn more.
           </a>
         </p>
-        <h5>Total API calls</h5>
+        <Text variant='h5' level={5}>
+          Total API calls
+        </Text>
         <p>This is a sum of the above.</p>
       </div>
     </div>

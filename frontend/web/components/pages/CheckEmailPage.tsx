@@ -10,6 +10,7 @@ import InfoMessage from 'components/InfoMessage'
 import NavIconSmall from 'components/icons/NavIconSmall'
 import API from 'project/api'
 import { useResendActivationEmailMutation } from 'common/services/useEmailActivation'
+import Text from 'components/base/Text'
 
 type LocationState = { email?: string } | undefined
 
@@ -52,7 +53,9 @@ const CheckEmailPage: FC = () => {
       </div>
       <div className='container'>
         <div className='text-center mb-4'>
-          <h3>Check your email</h3>
+          <Text variant='h3' level={3}>
+            Check your email
+          </Text>
           <p className='mb-0'>
             We've sent a verification link to <strong>{email}</strong>.
           </p>

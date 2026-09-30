@@ -2,6 +2,7 @@ import React, { FC, KeyboardEvent } from 'react'
 import { colorIconDefault } from 'common/theme/tokens'
 import Icon, { IconName } from './icons/Icon'
 import Tooltip from './Tooltip'
+import Text from './base/Text'
 
 type VisibilityToggleProps = {
   colour: string
@@ -48,7 +49,7 @@ const StatItem: FC<StatItemProps> = ({
         <p className='fs-small lh-sm mb-0'>
           {tooltip ? <Tooltip title={label}>{tooltip}</Tooltip> : label}
         </p>
-        <h4 className='mb-0'>
+        <Text variant='h4' level={4} className='mb-0'>
           {formattedValue}
           {limit !== null && limit !== undefined && (
             <span className='text-muted fs-small fw-normal'>
@@ -56,7 +57,7 @@ const StatItem: FC<StatItemProps> = ({
               / {formatNumber(limit)}
             </span>
           )}
-        </h4>
+        </Text>
         {visibilityToggle && (
           <div
             role='checkbox'

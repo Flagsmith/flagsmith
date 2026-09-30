@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
+import Text from './base/Text'
 
 // Running a test is a real SDK evaluation, which marks the environment as
 // integrated (environment.first_evaluated) — hide it until the project looks
@@ -62,7 +63,9 @@ const TryIt = class extends Component {
       <div>
         <Row space>
           <Flex className='align-items-start'>
-            <h5 className='mb-2'>Try it out</h5>
+            <Text variant='h5' level={5} className='mb-2'>
+              Try it out
+            </Text>
             <div className='fs-small lh-sm'>{this.props.title}</div>
           </Flex>
           <div>

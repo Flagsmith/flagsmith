@@ -10,6 +10,7 @@ import { withRouter } from 'react-router-dom'
 import { getStore } from 'common/store'
 import { removeProjectFlag } from 'common/services/useProjectFlag'
 import { hasMultivariateChange } from 'common/utils/compareMultivariate'
+import Text from './base/Text'
 
 const featureNameWidth = 300
 
@@ -69,7 +70,9 @@ class CompareFeatures extends Component {
     return (
       <div>
         <div className='col-md-8'>
-          <h5 className='mb-1'>Compare Feature Values</h5>
+          <Text variant='h5' level={5} className='mb-1'>
+            Compare Feature Values
+          </Text>
           <p className='fs-small mb-4 lh-sm'>
             Compare a feature's value across all of your environments. Select an
             environment to compare against others.

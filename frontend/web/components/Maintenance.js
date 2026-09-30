@@ -1,5 +1,6 @@
 import React from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import Text from './base/Text'
 
 const HomePage = class extends React.Component {
   static displayName = 'HomePage'
@@ -12,7 +13,9 @@ const HomePage = class extends React.Component {
   render = () => (
     <div className='fullscreen-container maintenance justify-content-center'>
       <div className='col-md-6 mt-5' id='sign-up'>
-        <h1>Maintenance</h1>
+        <Text variant='h1' level={1}>
+          Maintenance
+        </Text>
         We are currently undergoing some scheduled maintenance of the admin
         site, this will not affect your application's feature flags.
         {

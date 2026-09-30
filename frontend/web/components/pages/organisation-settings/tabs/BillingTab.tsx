@@ -5,6 +5,7 @@ import Utils from 'common/utils/utils'
 import Payment from 'components/modals/payment'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import StatItem, { StatItemProps } from 'components/StatItem'
+import Text from 'components/base/Text'
 
 type BillingTabProps = {
   organisation: Organisation
@@ -79,20 +80,29 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
                 </div>
                 <div>
                   <p className='fs-small lh-sm mb-0'>Your plan</p>
-                  <h4 className='mb-0'>{planName}</h4>
+                  <Text variant='h4' level={4} className='mb-0'>
+                    {planName}
+                  </Text>
                 </div>
               </Row>
             </div>
             <div>
               <Row style={{ width: '230px' }}>
                 <div className='plan-icon'>
-                  <h4 className='mb-0 text-center' style={{ width: '32px' }}>
+                  <Text
+                    variant='h4'
+                    level={4}
+                    className='mb-0 text-center'
+                    style={{ width: '32px' }}
+                  >
                     ID
-                  </h4>
+                  </Text>
                 </div>
                 <div>
                   <p className='fs-small lh-sm mb-0'>Organisation ID</p>
-                  <h4 className='mb-0'>{organisation.id}</h4>
+                  <Text variant='h4' level={4} className='mb-0'>
+                    {organisation.id}
+                  </Text>
                 </div>
               </Row>
             </div>
@@ -104,7 +114,9 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
                   </div>
                   <div>
                     <p className='fs-small lh-sm mb-0'>Management Email</p>
-                    <h6 className='mb-0'>{chargebee_email}</h6>
+                    <Text variant='h6' level={6} className='mb-0'>
+                      {chargebee_email}
+                    </Text>
                   </div>
                 </Row>
               </div>
@@ -126,7 +138,9 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
       </Row>
       {subscriptionMeta && (
         <>
-          <h5 className='mt-4 mb-3'>Subscription Limits</h5>
+          <Text variant='h5' level={5} className='mt-4 mb-3'>
+            Subscription Limits
+          </Text>
           <Row className='plan p-4 mb-4 flex-wrap gap-4'>
             {limitItems.map((item) => (
               <StatItem
@@ -139,7 +153,9 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
           </Row>
         </>
       )}
-      <h5>Manage Payment Plan</h5>
+      <Text variant='h5' level={5}>
+        Manage Payment Plan
+      </Text>
       <Payment
         organisation={organisation}
         isPaymentsEnabled={Utils.getFlagsmithHasFeature('payments_enabled')}

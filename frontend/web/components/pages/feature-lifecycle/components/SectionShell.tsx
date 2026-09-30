@@ -4,6 +4,7 @@ import LifecycleFiltersHeader from './LifecycleFiltersHeader'
 import type { ProjectFlag } from 'common/types/responses'
 import type { FilterState } from 'common/types/featureFilters'
 import type { Pagination } from 'components/pages/feature-lifecycle/types'
+import Text from 'components/base/Text'
 
 type SectionShellProps = {
   id: string
@@ -80,7 +81,9 @@ const SectionShell: FC<SectionShellProps> = ({
   if (error) {
     return (
       <div className='text-center'>
-        <h4 className='mb-3'>Unable to Load Features</h4>
+        <Text variant='h4' level={4} className='mb-3'>
+          Unable to Load Features
+        </Text>
         <p className='text-muted mb-3'>
           We couldn&apos;t load your feature flags. This might be due to a
           network issue or a temporary server problem.

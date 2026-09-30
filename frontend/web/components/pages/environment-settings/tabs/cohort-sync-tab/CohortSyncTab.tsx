@@ -21,6 +21,7 @@ import Icon from 'components/icons/Icon'
 import PanelSearch from 'components/PanelSearch'
 import Tooltip from 'components/Tooltip'
 import CreateCohortSyncKeyModal from './CreateCohortSyncKeyModal'
+import Text from 'components/base/Text'
 
 type CohortSyncTabProps = {
   environmentApiKey: string
@@ -119,7 +120,9 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({
   return (
     <FormGroup className='my-4'>
       <div className='col-md-8'>
-        <h5 className='mb-2'>Cohort Synchronisation Keys</h5>
+        <Text variant='h5' level={5} className='mb-2'>
+          Cohort Synchronisation Keys
+        </Text>
         <p className='fs-small lh-sm mb-0'>
           Cohort synchronisation keys authenticate cohort synchronisation from
           providers such as Mixpanel and Amplitude into this environment.{' '}

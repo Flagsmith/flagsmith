@@ -22,6 +22,7 @@ import API from 'project/api'
 import Constants from 'common/constants'
 import { isPendingAuthorisation } from 'common/utils/pendingAuthorisation'
 import './OnboardingFlow.scss'
+import Text from 'components/base/Text'
 
 type OnboardingSnippet = 'install' | 'wire'
 
@@ -224,7 +225,9 @@ const OnboardingFlow: FC = () => {
   if (status === 'error') {
     return (
       <div className='onboarding-flow mx-auto text-center'>
-        <h2 className='mb-2'>We couldn’t set up your workspace</h2>
+        <Text variant='h2' level={2} className='mb-2'>
+          We couldn’t set up your workspace
+        </Text>
         <p className='text-muted mb-3'>
           Something went wrong creating your starter project. Please try again.
         </p>

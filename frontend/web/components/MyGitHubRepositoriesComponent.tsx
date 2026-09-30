@@ -6,6 +6,7 @@ import GitHubRepositoriesSelect from './GitHubRepositoriesSelect'
 import GithubRepositoriesTable from './GithubRepositoriesTable'
 import DeleteGithubIntegration from './DeleteGithubIntegration'
 import { Repository } from 'common/types/responses'
+import Text from './base/Text'
 
 type MyGitHubRepositoriesComponentType = {
   installationId: string
@@ -58,7 +59,9 @@ const MyGitHubRepositoriesComponent: FC<MyGitHubRepositoriesComponentType> = ({
         <>
           {!!reposSelect.length && (
             <>
-              <h5 className='title'>Add Your Repository</h5>
+              <Text variant='h5' level={5} className='title'>
+                Add Your Repository
+              </Text>
               <GitHubRepositoriesSelect
                 githubId={githubId}
                 organisationId={organisationId}

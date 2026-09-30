@@ -8,6 +8,7 @@ import { useGetFeatureAnalyticsQuery } from 'common/services/useFeatureAnalytics
 import Utils from 'common/utils/utils'
 import { aggregateByLabels, hasLabelledData } from './utils'
 import { useEnvChartProps } from './useEnvChartProps'
+import Text from 'components/base/Text'
 
 type FlagAnalyticsType = {
   projectId: number
@@ -97,7 +98,9 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
   return (
     <>
       <FormGroup className='mb-4'>
-        <h5 className='mb-2'>Flag events for last 30 days</h5>
+        <Text variant='h5' level={5} className='mb-2'>
+          Flag events for last 30 days
+        </Text>
         <div className='d-flex gap-3 mb-3 flex-wrap'>
           <div className='flex-fill'>
             <EnvironmentTagSelect

@@ -16,6 +16,7 @@ import Switch from 'components/Switch'
 import moment from 'moment'
 import Panel from 'components/base/grid/Panel'
 import PanelSearch from 'components/PanelSearch'
+import Text from 'components/base/Text'
 
 type AuditLogWebhooksType = {
   organisationId: string
@@ -69,7 +70,9 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
       <JSONReference title={'Webhooks'} json={webhooks} />
       <div className='d-flex align-items-center'>
         <div className='flex-fill'>
-          <h5 className='mb-2'>Audit Webhooks</h5>
+          <Text variant='h5' level={5} className='mb-2'>
+            Audit Webhooks
+          </Text>
           <p className='fs-small lh-sm mb-4'>
             Audit webhooks let you know when audit logs occur. You can configure
             1 or more audit webhooks per organisation.
@@ -135,9 +138,9 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
               title={
                 <Tooltip
                   title={
-                    <h5 className='mb-0'>
+                    <Text variant='h5' level={5} className='mb-0'>
                       Webhooks <Icon name='info-outlined' />
-                    </h5>
+                    </Text>
                   }
                   place='right'
                 >

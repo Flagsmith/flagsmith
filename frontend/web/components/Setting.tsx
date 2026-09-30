@@ -3,6 +3,7 @@ import Utils, { PaidFeature } from 'common/utils/utils'
 import Switch from './Switch'
 import classNames from 'classnames'
 import PlanBasedBanner, { featureDescriptions } from './PlanBasedAccess'
+import Text from './base/Text'
 
 type PlanBasedAccessSettingType = {
   feature?: PaidFeature
@@ -40,7 +41,11 @@ const Setting: FC<PlanBasedAccessSettingType> = ({
             />
           </div>
         )}
-        <h5 className={'mb-0 d-flex gap-2 align-items-center'}>
+        <Text
+          variant='h5'
+          level={5}
+          className={'mb-0 d-flex gap-2 align-items-center'}
+        >
           <span
             className={classNames({
               'opacity-50': !hasPlan,
@@ -49,7 +54,7 @@ const Setting: FC<PlanBasedAccessSettingType> = ({
             {feature ? featureDescriptions[feature].title : title}
           </span>
           {!!feature && <PlanBasedBanner feature={feature} theme={'badge'} />}
-        </h5>
+        </Text>
       </Row>
       {feature ? (
         <PlanBasedBanner feature={feature} theme={'description'} />

@@ -12,6 +12,7 @@ import WarehouseSqlSnippet from './WarehouseSqlSnippet'
 import { getClickHouseOnboardingSql } from './clickhouseSetupSql'
 import { ClickHouseFormData } from './clickhouseConfig'
 import './WarehouseSetup.scss'
+import Text from 'components/base/Text'
 
 type WarehouseSetupProps = {
   environmentId: string
@@ -41,7 +42,9 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
   return (
     <div className='warehouse-setup'>
       <div>
-        <h5 className='mb-2'>Warehouse Type</h5>
+        <Text variant='h5' level={5} className='mb-2'>
+          Warehouse Type
+        </Text>
         <div className='warehouse-setup__type-row'>
           <div className='warehouse-setup__type-card'>
             <SelectableCard
@@ -148,9 +151,9 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
                 aria-expanded={sqlExpanded}
                 onClick={() => setSqlExpanded(!sqlExpanded)}
               >
-                <h6 className='mb-0'>
+                <Text variant='h6' level={6} className='mb-0'>
                   Configure your warehouse for experimentation
-                </h6>
+                </Text>
                 <Icon
                   name={sqlExpanded ? 'chevron-up' : 'chevron-down'}
                   width={22}
@@ -174,7 +177,9 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
               <div className='warehouse-setup__step-marker'>2</div>
             </div>
             <div className='warehouse-setup__step-content'>
-              <h6 className='mb-2'>Connect your warehouse</h6>
+              <Text variant='h6' level={6} className='mb-2'>
+                Connect your warehouse
+              </Text>
               <p className='text-muted mb-3'>
                 Enter the connection details for the user you created in step 1.
               </p>

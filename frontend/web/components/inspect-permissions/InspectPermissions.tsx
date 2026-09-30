@@ -10,6 +10,7 @@ import PlanBasedAccess from 'components/PlanBasedAccess'
 import Permissions from './Permissions'
 import ProjectPermissions from './ProjectPermissions'
 import EnvironmentPermissions from './EnvironmentPermissions'
+import Text from 'components/base/Text'
 
 type InspectPermissionsType = {
   orgId?: number
@@ -76,7 +77,9 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
           data-test='environment-permissions-tab'
         >
           <Row className='justify-content-between'>
-            <h5 className='my-3'>Permissions</h5>
+            <Text variant='h5' level={5} className='my-3'>
+              Permissions
+            </Text>
             <Input
               type='text'
               className='ml-3'

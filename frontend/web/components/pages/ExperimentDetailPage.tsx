@@ -18,6 +18,7 @@ import ExperimentMetricScorecard from 'components/experiments/results/Experiment
 import ExperimentExposuresPanel from 'components/experiments/results/ExperimentExposuresPanel'
 import ExperimentResultsRefreshControl from 'components/experiments/results/ExperimentResultsRefreshControl'
 import ExperimentConversionRateCard from 'components/experiments/results/ExperimentConversionRateCard'
+import Text from 'components/base/Text'
 
 type ExperimentDetailParams = {
   projectId: string
@@ -104,7 +105,9 @@ const ExperimentDetailPage: FC = () => {
       {experiment.status !== 'created' && (
         <>
           <div className='d-flex justify-content-between align-items-center mb-3 mt-5'>
-            <h5 className='mb-0'>Results</h5>
+            <Text variant='h5' level={5} className='mb-0'>
+              Results
+            </Text>
             <ExperimentResultsRefreshControl
               environmentId={environmentId}
               experimentId={numericId}
@@ -117,7 +120,9 @@ const ExperimentDetailPage: FC = () => {
             usersEnrolled={usersEnrolled}
           />
 
-          <h5 className='mb-3 mt-5'>Analysis</h5>
+          <Text variant='h5' level={5} className='mb-3 mt-5'>
+            Analysis
+          </Text>
           <ExperimentMetricScorecard
             experiment={experiment}
             results={results}
@@ -128,7 +133,9 @@ const ExperimentDetailPage: FC = () => {
             results={results}
           />
 
-          <h5 className='mb-3 mt-5'>Exposures</h5>
+          <Text variant='h5' level={5} className='mb-3 mt-5'>
+            Exposures
+          </Text>
           <ExperimentExposuresPanel
             environmentId={environmentId}
             experiment={experiment}

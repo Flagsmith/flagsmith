@@ -1,4 +1,5 @@
 import React, { PureComponent, ReactNode } from 'react'
+import Text from 'components/base/Text'
 
 type PanelProps = {
   children?: ReactNode
@@ -23,7 +24,11 @@ class Panel extends PureComponent<PanelProps> {
           <div className='panel-heading mb-2'>
             <Row space>
               <Row className='flex-1 mr-3'>
-                {title && <h5 className='m-b-0 title'>{title}</h5>}
+                {title && (
+                  <Text variant='h5' level={5} className='m-b-0 title'>
+                    {title}
+                  </Text>
+                )}
               </Row>
               {action}
             </Row>

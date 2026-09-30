@@ -7,6 +7,7 @@ import OnboardingStep from 'components/onboarding/OnboardingStep'
 import OnboardingAccountForm from 'components/onboarding/OnboardingAccountForm'
 import OnboardingOrganisationForm from 'components/onboarding/OnboardingOrganisationForm'
 import Utils from 'common/utils/utils'
+import Text from 'components/base/Text'
 
 type OnboardingPageProps = {
   onComplete?: () => void
@@ -102,11 +103,13 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
               ) : (
                 <div className='text-center'>
                   <Logo size={100} />
-                  <h3 className='fw-semibold mt-2'>Welcome to Flagsmith</h3>
-                  <h5 className='fw-normal text-muted'>
+                  <Text variant='h3' level={3} className='fw-semibold mt-2'>
+                    Welcome to Flagsmith
+                  </Text>
+                  <Text variant='h5' level={5} className='fw-normal text-muted'>
                     You've successfully installed Flagsmith v{version?.tag},
                     let's get started!
-                  </h5>
+                  </Text>
                   <Button onClick={() => setStep(1)} className='mt-4'>
                     Get Started
                   </Button>

@@ -18,6 +18,7 @@ import { links, resources } from 'components/onboarding/data/onboarding.data'
 import { useGetProfileQuery } from 'common/services/useProfile'
 import IntegrationSelect from 'components/IntegrationSelect'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
+import Text from 'components/base/Text'
 
 const GettingStartedPage: FC = () => {
   useGetBuildVersionQuery({})
@@ -176,7 +177,9 @@ const GettingStartedPage: FC = () => {
         <div className='row row-gap-4'>
           <div className='col-xxl-9 col-xl-8'>
             <div className='card h-100 bg-card py-3 shadow rounded'>
-              <h5 className='mb-3 px-3'>Getting Started</h5>
+              <Text variant='h5' level={5} className='mb-3 px-3'>
+                Getting Started
+              </Text>
               <hr className='mt-0 py-0' />
               <div className='row px-3 row-gap-4'>
                 {items.map((v, i) => (
@@ -188,7 +191,9 @@ const GettingStartedPage: FC = () => {
 
           <div className='col-xxl-3 col-xl-4'>
             <div className='card bg-card h-100 py-3 shadow rounded'>
-              <h5 className='mb-3 px-3'>Community links</h5>
+              <Text variant='h5' level={5} className='mb-3 px-3'>
+                Community links
+              </Text>
               <hr className='mt-0 py-0' />
               <div className='d-flex mb-3 flex-column align-items-start gap-2'>
                 {links.map((v) => (
@@ -199,7 +204,9 @@ const GettingStartedPage: FC = () => {
                 ))}
               </div>
               <hr className='mt-0 py-0' />
-              <h5 className='mb-3 px-3'>Resources</h5>
+              <Text variant='h5' level={5} className='mb-3 px-3'>
+                Resources
+              </Text>
               <hr className='mt-0 py-0' />
               <div
                 style={{ maxHeight: 450 }}

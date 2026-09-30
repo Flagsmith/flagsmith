@@ -7,6 +7,7 @@ import { EnvironmentPermission } from 'common/types/permissions.types'
 import CreateServerSideKeyModal from './CreateServerSideKeyModal'
 import ServerSideKeyRow from './ServerSideKeyRow'
 import { useServerSideKeys } from 'components/pages/sdk-keys/hooks/useServerSideKeys'
+import Text from 'components/base/Text'
 
 type ServerSideKey = {
   id: string
@@ -59,7 +60,9 @@ const ServerSideSDKKeys: FC<ServerSideSDKKeysProps> = ({
   return (
     <FormGroup className='my-4'>
       <div className='col-md-6'>
-        <h5 className='mb-2'>Server-side Environment Keys</h5>
+        <Text variant='h5' level={5} className='mb-2'>
+          Server-side Environment Keys
+        </Text>
         <p className='fs-small lh-sm mb-0'>
           Flags can be evaluated locally within your own Server environments
           using our{' '}

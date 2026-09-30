@@ -24,6 +24,7 @@ import Tooltip from './Tooltip'
 import PageTitle from './PageTitle'
 import { getDarkMode } from 'project/darkMode'
 import { EnvironmentPermission } from 'common/types/permissions.types'
+import Text from './base/Text'
 
 type CompareIdentitiesType = {
   projectId: string
@@ -176,7 +177,9 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
   return (
     <div>
       <div className='col-md-8'>
-        <h5 className='mb-1'>Compare Identities</h5>
+        <Text variant='h5' level={5} className='mb-1'>
+          Compare Identities
+        </Text>
         <p className='fs-small mb-4 lh-sm'>
           Compare feature states between 2 identities.
         </p>

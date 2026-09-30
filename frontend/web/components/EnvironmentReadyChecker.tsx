@@ -1,6 +1,7 @@
 import { PropsWithChildren, useEffect, useState } from 'react'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import { useRouteMatch } from 'react-router-dom'
+import Text from './base/Text'
 
 interface RouteParams {
   environmentId?: string
@@ -45,7 +46,9 @@ const EnvironmentReadyChecker = ({
       <div className='container'>
         <div className='d-flex flex-column h-100 flex-1 justify-content-center align-items-center'>
           <Loader />
-          <h3>Preparing your environment</h3>
+          <Text variant='h3' level={3}>
+            Preparing your environment
+          </Text>
           <p>We are setting up your new environment...</p>
         </div>
       </div>

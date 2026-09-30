@@ -7,6 +7,7 @@ import {
 import Utils from 'common/utils/utils'
 import Icon from 'components/icons/Icon'
 import Logo from 'components/Logo'
+import Text from 'components/base/Text'
 
 const OAuthAuthorizePage = () => {
   const location = useLocation()
@@ -66,7 +67,9 @@ const OAuthAuthorizePage = () => {
     if (!hasRequiredParams) {
       return (
         <div className='oauth-authorize__card card shadow p-4'>
-          <h3>Invalid authorisation request</h3>
+          <Text variant='h3' level={3}>
+            Invalid authorisation request
+          </Text>
           <p className='text-muted'>
             Required OAuth parameters are missing. Please return to the
             application and try again.
@@ -88,7 +91,9 @@ const OAuthAuthorizePage = () => {
     if (error || !data) {
       return (
         <div className='oauth-authorize__card card shadow p-4'>
-          <h3>Authorisation error</h3>
+          <Text variant='h3' level={3}>
+            Authorisation error
+          </Text>
           <p className='text-muted'>
             The authorisation request is invalid. The application may have
             provided incorrect parameters.
@@ -101,10 +106,10 @@ const OAuthAuthorizePage = () => {
       <div className='oauth-authorize__card card shadow p-4'>
         <div className='text-center mb-4'>
           <Logo size={48} />
-          <h3 className='oauth-authorize__title mb-0'>
+          <Text variant='h3' level={3} className='oauth-authorize__title mb-0'>
             <strong>{data.application.name}</strong> would like to connect to
             your Flagsmith account
-          </h3>
+          </Text>
         </div>
 
         {!data.is_verified && (

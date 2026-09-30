@@ -19,6 +19,7 @@ import {
   VISIBLE_TAB_ORDER,
 } from 'components/experiments/constants'
 import Icon from 'components/icons/Icon'
+import Text from 'components/base/Text'
 
 const PAGE_SIZE = 10
 
@@ -139,7 +140,9 @@ const ExperimentsPage: FC = () => {
             width={48}
             className='text-muted mb-3 d-block mx-auto'
           />
-          <h5>Data warehouse not configured</h5>
+          <Text variant='h5' level={5}>
+            Data warehouse not configured
+          </Text>
           <p className='text-muted mb-4'>
             Experiments require a data warehouse connection to collect and
             analyse results. Configure one in your environment settings to get
@@ -159,7 +162,9 @@ const ExperimentsPage: FC = () => {
             width={48}
             className='text-muted mb-3 d-block mx-auto'
           />
-          <h5>No experiments yet</h5>
+          <Text variant='h5' level={5}>
+            No experiments yet
+          </Text>
           <p className='text-muted mb-4'>
             Create your first experiment to start testing hypotheses with your
             feature flags.

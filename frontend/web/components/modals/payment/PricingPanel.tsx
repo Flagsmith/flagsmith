@@ -6,6 +6,7 @@ import { PricingFeaturesList } from './PricingFeaturesList'
 import { PaymentButton } from './PaymentButton'
 import { openChat } from 'common/loadChat'
 import { PricingFeature } from './types'
+import Text from 'components/base/Text'
 
 export type PricingPanelProps = {
   title: string
@@ -64,22 +65,34 @@ export const PricingPanel = ({
                   width={32}
                   fill={isEnterprise ? 'white' : undefined}
                 />
-                <h4
+                <Text
+                  variant='h4'
+                  level={4}
                   className={classNames('mb-0 ml-2', {
                     'text-white': isEnterprise,
                   })}
                 >
                   {title}
-                </h4>
+                </Text>
               </Row>
 
               {priceYearly && priceMonthly && (
                 <Row className='pt-3 justify-content-center'>
-                  <h5 className='mb-0 align-self-start'>$</h5>
-                  <h1 className='mb-0 d-flex align-items-end'>
+                  <Text
+                    variant='h5'
+                    level={5}
+                    className='mb-0 align-self-start'
+                  >
+                    $
+                  </Text>
+                  <Text
+                    variant='h1'
+                    level={1}
+                    className='mb-0 d-flex align-items-end'
+                  >
                     {isYearly ? priceYearly : priceMonthly}{' '}
                     <span className='fs-lg mb-0'>/mo</span>
-                  </h1>
+                  </Text>
                 </Row>
               )}
 
@@ -121,7 +134,9 @@ export const PricingPanel = ({
         </div>
 
         <div className='panel-footer mt-3'>
-          <h5
+          <Text
+            variant='h5'
+            level={5}
             className={classNames('m-2 mb-4', {
               'text-white': isEnterprise,
             })}
@@ -131,7 +146,7 @@ export const PricingPanel = ({
               {includesFrom},
             </span>{' '}
             plus
-          </h5>
+          </Text>
           <PricingFeaturesList
             features={features}
             iconClass={isEnterprise ? 'pricing-accent' : undefined}

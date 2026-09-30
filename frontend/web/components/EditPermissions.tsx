@@ -73,6 +73,7 @@ import {
 import { isOrgAdmin } from './users-permissions/isOrgAdmin'
 
 import Project from 'common/project'
+import Text from './base/Text'
 
 type EditPermissionModalType = {
   group?: UserGroupSummary
@@ -1072,7 +1073,9 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   return (
     <div className='mt-4'>
       <Row>
-        <h5>Manage Permissions</h5>
+        <Text variant='h5' level={5}>
+          Manage Permissions
+        </Text>
       </Row>
       <p className='fs-small lh-sm col-md-8 mb-4'>
         Flagsmith lets you manage fine-grained permissions for your projects and
@@ -1249,7 +1252,9 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
           <TabItem tabLabel='Roles'>
             <PlanBasedAccess className='mt-4' feature={'RBAC'} theme='page'>
               <Row space className='mt-4'>
-                <h5 className='m-b-0'>{roleTabTitle}</h5>
+                <Text variant='h5' level={5} className='m-b-0'>
+                  {roleTabTitle}
+                </Text>
               </Row>
               <PanelSearch
                 id='org-members-list'

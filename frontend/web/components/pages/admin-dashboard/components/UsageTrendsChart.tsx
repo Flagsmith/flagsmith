@@ -7,6 +7,7 @@ import {
   ChartDataPoint,
   LineChart,
 } from 'components/charts'
+import Text from 'components/base/Text'
 
 interface UsageTrendsChartProps {
   trends: UsageTrend[]
@@ -44,7 +45,9 @@ const UsageTrendsChart: FC<UsageTrendsChartProps> = ({ days = 30, trends }) => {
 
   return (
     <Card className='shadow p-4'>
-      <h5 className='mb-4 mt-2'>API Usage Trends (Last {days} Days)</h5>
+      <Text variant='h5' level={5} className='mb-4 mt-2'>
+        API Usage Trends (Last {days} Days)
+      </Text>
       <LineChart data={data} series={series} xAxisInterval={2} showLegend />
     </Card>
   )

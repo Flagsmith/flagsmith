@@ -1,5 +1,6 @@
 import React from 'react'
 import AccountStore from 'common/stores/account-store'
+import Text from 'components/base/Text'
 
 interface EmptyFeatureHealthProvidersProps {
   projectId: number
@@ -13,7 +14,9 @@ const EmptyFeatureHealthProviders: React.FC<
   return (
     <>
       <div className='mb-4'>
-        <h5>No Provider Configured</h5>
+        <Text variant='h5' level={5}>
+          No Provider Configured
+        </Text>
       </div>
       <div className='d-flex flex-column gap-4'>
         <div className='text-center'>

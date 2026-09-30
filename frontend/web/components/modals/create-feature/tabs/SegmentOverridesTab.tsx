@@ -15,6 +15,7 @@ import { ProjectFlag } from 'common/types/responses'
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { EnvironmentPermission } from 'common/types/permissions.types'
+import Text from 'components/base/Text'
 
 export type SegmentOverrideValue = {
   enabled?: boolean
@@ -136,7 +137,9 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
         featureId={projectFlag?.id}
         renderFallback={(matchingReleasePipeline) => (
           <>
-            <h5 className='mb-2'>Segment Overrides </h5>
+            <Text variant='h5' level={5} className='mb-2'>
+              Segment Overrides{' '}
+            </Text>
             <InfoMessage title={`Feature in release pipeline`}>
               This feature is in <b>{matchingReleasePipeline?.name}</b> release
               pipeline and no segment overrides can be created
@@ -150,9 +153,9 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               <div className='flex-fill'>
                 <Tooltip
                   title={
-                    <h5 className='mb-0'>
+                    <Text variant='h5' level={5} className='mb-0'>
                       Segment Overrides <Icon name='info-outlined' />
-                    </h5>
+                    </Text>
                   }
                   place='top'
                 >

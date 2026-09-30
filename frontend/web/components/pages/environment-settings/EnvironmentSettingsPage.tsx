@@ -51,6 +51,7 @@ import PlanBasedBanner from 'components/PlanBasedAccess'
 import { getSegmentSources } from 'components/modals/CreateSegmentSourcesModal'
 import CohortSyncTab from './tabs/cohort-sync-tab'
 import WarehouseTab from './tabs/warehouse-tab'
+import Text from 'components/base/Text'
 
 const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
   { label: 'Inherit from Project', value: null },
@@ -640,9 +641,9 @@ const EnvironmentSettingsPage: React.FC = () => {
                       />
                       <form onSubmit={() => saveEnv()}>
                         <div>
-                          <h5 className='mb-2'>
+                          <Text variant='h5' level={5} className='mb-2'>
                             Hide disabled flags from SDKs
-                          </h5>
+                          </Text>
                           <Select
                             value={
                               showDisabledFlagOptions.find(
@@ -802,7 +803,9 @@ const EnvironmentSettingsPage: React.FC = () => {
                   <TabItem tabLabel='Webhooks'>
                     <FormGroup className='mt-4'>
                       <div className='col-md-8'>
-                        <h5 className='mb-2'>Feature Webhooks</h5>
+                        <Text variant='h5' level={5} className='mb-2'>
+                          Feature Webhooks
+                        </Text>
                         <p className='fs-small lh-sm mb-4'>
                           Feature webhooks let you know when features have
                           changed. You can configure 1 or more Feature Webhooks
@@ -829,9 +832,9 @@ const EnvironmentSettingsPage: React.FC = () => {
                           title={
                             <Tooltip
                               title={
-                                <h5 className='mb-0'>
+                                <Text variant='h5' level={5} className='mb-0'>
                                   Webhooks <Icon name='info-outlined' />
-                                </h5>
+                                </Text>
                               }
                               place='right'
                             >
@@ -889,9 +892,13 @@ const EnvironmentSettingsPage: React.FC = () => {
                               title={
                                 <Tooltip
                                   title={
-                                    <h5 className='mb-0'>
+                                    <Text
+                                      variant='h5'
+                                      level={5}
+                                      className='mb-0'
+                                    >
                                       Webhooks <Icon name='info-outlined' />
-                                    </h5>
+                                    </Text>
                                   }
                                   place='right'
                                 >

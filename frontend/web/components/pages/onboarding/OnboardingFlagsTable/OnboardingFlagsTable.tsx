@@ -6,6 +6,7 @@ import Tag from 'components/tags/Tag'
 import Switch from 'components/Switch'
 import Icon from 'components/icons/Icon'
 import './OnboardingFlagsTable.scss'
+import Text from 'components/base/Text'
 
 export type OnboardingFlagsTableStatus = 'waiting' | 'connected'
 
@@ -43,12 +44,14 @@ const OnboardingFlagsTable: FC<OnboardingFlagsTableProps> = ({
       aria-labelledby='onboarding-flags-title'
     >
       <div className='onboarding-flags__heading d-flex align-items-center gap-2'>
-        <h3
+        <Text
+          variant='h3'
+          level={3}
           className='onboarding-flags__title m-0 fw-bold'
           id='onboarding-flags-title'
         >
           Your flags
-        </h3>
+        </Text>
         {waiting && (
           <span className='onboarding-flags__hint d-flex align-items-center gap-1'>
             <Icon name='lock' width={13} />

@@ -15,6 +15,7 @@ import { components } from 'react-select'
 import InteractiveDemo from 'components/InteractiveDemo'
 import FeatureHealthProviderDocumentationNote from 'components/feature-health/components/FeatureHealthProviderDocumentationNote'
 import { FeatureHealthProviderName } from 'components/feature-health/feature-health.types'
+import Text from 'components/base/Text'
 
 type EditHealthProviderType = {
   projectId: number
@@ -135,9 +136,9 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
   return (
     <div className='mt-4'>
       <Row>
-        <h5>
+        <Text variant='h5' level={5}>
           Manage Health Providers <InteractiveDemo feature={'FEATURE_HEALTH'} />
-        </h5>
+        </Text>
       </Row>
       <p className='fs-small lh-sm col-md-8 mb-4'>
         Connect your monitoring tools to Flagsmith and get updates on the health

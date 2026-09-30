@@ -6,6 +6,7 @@ import classNames from 'classnames'
 import Icon, { IconName } from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
 import { Link } from 'react-router-dom'
+import Text from 'components/base/Text'
 
 export type GettingStartedItemType = {
   duration: number
@@ -87,9 +88,13 @@ const GettingStartedItem: FC<GettingStartedItemType> = (data) => {
                     {title}
                   </span>
 
-                  <h6 className='fw-normal d-flex fs-small text-muted flex-1 mb-0'>
+                  <Text
+                    variant='h6'
+                    level={6}
+                    className='fw-normal d-flex fs-small text-muted flex-1 mb-0'
+                  >
                     {description}
-                  </h6>
+                  </Text>
                 </div>
               </div>
 

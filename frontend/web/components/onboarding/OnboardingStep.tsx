@@ -2,6 +2,7 @@ import React, { FC } from 'react'
 import Card from 'components/Card'
 import Icon from 'components/icons/Icon'
 import classNames from 'classnames'
+import Text from 'components/base/Text'
 
 type StepProps = {
   currentStep: number
@@ -74,9 +75,13 @@ const Step: FC<StepProps> = ({
         )}
       </div>
       <div className='d-flex align-items-center gap-1'>
-        <h5 className={`mb-0 ${isComplete ? 'text-success' : 'text-action'}`}>
+        <Text
+          variant='h5'
+          level={5}
+          className={`mb-0 ${isComplete ? 'text-success' : 'text-action'}`}
+        >
           {isComplete ? completedTitle : title}
-        </h5>
+        </Text>
       </div>
 
       {isActive && description && <p className='text-muted'>{description}</p>}

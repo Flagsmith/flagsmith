@@ -37,6 +37,7 @@ import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import { useUTMs } from 'common/useUTMs'
 import useSignupExperiment from 'common/useSignupExperiment'
+import Text from 'components/base/Text'
 
 type LoginLocationState = { isGettingStarted?: boolean } | undefined
 type EmailFieldError = string | string[]
@@ -417,7 +418,9 @@ const HomePage: React.FC = () => {
           <div className='container mb-4'>
             {isSignup ? (
               <div className='text-center mb-4'>
-                <h3>It's free to get started.</h3>
+                <Text variant='h3' level={3}>
+                  It's free to get started.
+                </Text>
                 {!isInvite && (
                   <>
                     <p className='mb-0'>
@@ -436,7 +439,9 @@ const HomePage: React.FC = () => {
               </div>
             ) : (
               <div className='text-center mb-4'>
-                <h3>Sign in to Flagsmith</h3>
+                <Text variant='h3' level={3}>
+                  Sign in to Flagsmith
+                </Text>
                 {!!oauths.length && (
                   <p>Log in to your account with one of these services.</p>
                 )}

@@ -26,6 +26,7 @@ import {
   MetricFormState,
 } from 'components/experiments/CreateMetricForm/utils'
 import './MetricsPage.scss'
+import Text from 'components/base/Text'
 
 const WAREHOUSE_TYPE_LABEL: Record<WarehouseType, string> = {
   clickhouse: 'ClickHouse',
@@ -219,7 +220,9 @@ const MetricsPage: FC = () => {
             width={48}
             className='text-muted mb-3 d-block mx-auto'
           />
-          <h5>No metrics yet</h5>
+          <Text variant='h5' level={5}>
+            No metrics yet
+          </Text>
           <p className='text-muted mb-4'>
             Create your first metric to measure experiment outcomes.
           </p>

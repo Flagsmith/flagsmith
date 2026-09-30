@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import Constants from 'common/constants'
 import { withRouter } from 'react-router-dom'
 import AccountProvider from 'common/providers/AccountProvider'
+import Text from 'components/base/Text'
 const InvitePage = class extends Component {
   static displayName = 'InvitePage'
 
@@ -41,7 +42,9 @@ const InvitePage = class extends Component {
               <div>
                 {error ? (
                   <div>
-                    <h3 className='pt-5'>Oops</h3>
+                    <Text variant='h3' level={3} className='pt-5'>
+                      Oops
+                    </Text>
                     <p>{this.getErrorMessage(error)}</p>
                   </div>
                 ) : (

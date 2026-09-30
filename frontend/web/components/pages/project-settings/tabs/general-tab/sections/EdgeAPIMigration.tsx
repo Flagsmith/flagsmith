@@ -3,6 +3,7 @@ import Icon from 'components/icons/Icon'
 import { Project } from 'common/types/responses'
 import { useMigrateProjectMutation } from 'common/services/useProject'
 import Utils from 'common/utils/utils'
+import Text from 'components/base/Text'
 
 type EdgeAPIMigrationProps = {
   project: Project
@@ -29,7 +30,9 @@ export const EdgeAPIMigration = ({ project }: EdgeAPIMigrationProps) => {
   return (
     <FormGroup className='mt-4'>
       <Row className='mb-2'>
-        <h5 className='mb-0 mr-3'>Global Edge API Opt in</h5>
+        <Text variant='h5' level={5} className='mb-0 mr-3'>
+          Global Edge API Opt in
+        </Text>
         <Button
           disabled={isMigrating || Utils.isMigrating()}
           onClick={handleMigrate}

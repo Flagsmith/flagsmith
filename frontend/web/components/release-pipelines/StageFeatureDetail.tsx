@@ -5,6 +5,7 @@ import { Features, ProjectFlag } from 'common/types/responses'
 import moment from 'moment'
 import { useCallback, useEffect, useState } from 'react'
 import { useHistory } from 'react-router-dom'
+import Text from 'components/base/Text'
 
 type StageFeatureDetailProps = {
   features: Features | number[]
@@ -53,7 +54,9 @@ const StageFeatureDetail = ({
   if (!featureIds.length) {
     return (
       <>
-        <h6>Features (0)</h6>
+        <Text variant='h6' level={6}>
+          Features (0)
+        </Text>
         <p className='text-muted'>No features at this stage.</p>
       </>
     )
@@ -95,7 +98,9 @@ const StageFeatureDetail = ({
 
   return (
     <>
-      <h6>Features ({featureIds.length})</h6>
+      <Text variant='h6' level={6}>
+        Features ({featureIds.length})
+      </Text>
       {projectFlags?.map((flag) => (
         <div key={flag.id}>
           <b

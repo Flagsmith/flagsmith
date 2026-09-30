@@ -4,6 +4,7 @@ import ModalHR from './modals/ModalHR'
 import Icon from './icons/Icon'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
+import Text from './base/Text'
 
 interface InlineModalProps {
   bottom?: React.ReactNode
@@ -71,7 +72,9 @@ const InlineModal: FC<InlineModalProps> = ({
                       </span>
                     )}
                     {typeof title === 'string' ? (
-                      <h5 className='mb-0'>{title}</h5>
+                      <Text variant='h5' level={5} className='mb-0'>
+                        {title}
+                      </Text>
                     ) : (
                       title
                     )}

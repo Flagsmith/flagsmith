@@ -1,6 +1,7 @@
 import React, { FC } from 'react'
 import BarChart, { ChartDataPoint } from 'components/charts/BarChart'
 import EmptyState from 'components/EmptyState'
+import Text from 'components/base/Text'
 
 interface SingleSDKLabelsChartProps {
   title: string
@@ -19,7 +20,9 @@ const SingleSDKLabelsChart: FC<SingleSDKLabelsChartProps> = ({
 
   return (
     <div className='border rounded p-3'>
-      <h5>{title}</h5>
+      <Text variant='h5' level={5}>
+        {title}
+      </Text>
       {hasData ? (
         <BarChart
           data={data}

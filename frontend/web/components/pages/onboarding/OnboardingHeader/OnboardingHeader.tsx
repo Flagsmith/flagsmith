@@ -3,6 +3,7 @@ import Constants from 'common/constants'
 import { sanitizeFeatureName } from 'common/utils/sanitizeFeatureName'
 import InlineInput from 'components/pages/onboarding/InlineInput'
 import './OnboardingHeader.scss'
+import Text from 'components/base/Text'
 
 export type OnboardingHeaderProps = {
   organisationName: string
@@ -28,9 +29,9 @@ const OnboardingHeader: FC<OnboardingHeaderProps> = ({
     <div className='onboarding-header__crumb text-muted'>
       Onboarding / Connect your app
     </div>
-    <h1 className='onboarding-header__title mb-0'>
+    <Text variant='h1' level={1} className='onboarding-header__title mb-0'>
       Welcome, let’s get you live 👋
-    </h1>
+    </Text>
     <p className='onboarding-header__subtitle text-muted mb-0'>
       We created your organisation{' '}
       <InlineInput

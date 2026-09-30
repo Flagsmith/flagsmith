@@ -1,6 +1,7 @@
 import React, { FC, ReactNode } from 'react'
 import ModalClose from './ModalClose'
 import ModalHR from 'components/modals/ModalHR'
+import Text from 'components/base/Text'
 
 type ModalHeaderType = {
   children: ReactNode
@@ -11,7 +12,9 @@ const ModalHeader: FC<ModalHeaderType> = ({ children, onDismissClick }) => {
   return (
     <>
       <div className='modal-header'>
-        <h5 className='modal-title'>{children}</h5>
+        <Text variant='h5' level={5} className='modal-title'>
+          {children}
+        </Text>
         <ModalClose onClick={onDismissClick} />
       </div>
       <ModalHR />

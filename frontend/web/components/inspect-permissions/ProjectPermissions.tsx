@@ -7,6 +7,7 @@ import Utils from 'common/utils/utils'
 import OrganisationStore from 'common/stores/organisation-store'
 import Input from 'components/base/forms/Input'
 import ExpandablePermissionsList from './ExpandablePermissionsList'
+import Text from 'components/base/Text'
 
 const ProjectPermissions = ({ userId }: { userId?: number }) => {
   const projectData: Project[] = OrganisationStore.getProjects()
@@ -21,7 +22,9 @@ const ProjectPermissions = ({ userId }: { userId?: number }) => {
   return (
     <>
       <Row className='justify-content-between'>
-        <h5 className='my-3'>Permissions</h5>
+        <Text variant='h5' level={5} className='my-3'>
+          Permissions
+        </Text>
         <Input
           type='text'
           className='ml-3='

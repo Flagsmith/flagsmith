@@ -20,6 +20,7 @@ import {
 } from 'components/experiments/constants'
 import 'components/base/SelectableCard/SelectableCard.scss'
 import './results.scss'
+import Text from 'components/base/Text'
 
 type ExperimentDetailHeaderProps = {
   experiment: Experiment
@@ -275,9 +276,14 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
       <div className='mb-4'>
         <div className='flex-row justify-content-between align-items-center'>
           <div className='flex-row align-items-center gap-2'>
-            <h2 className='text-default fw-bold mb-0' style={{ fontSize: 20 }}>
+            <Text
+              variant='h2'
+              level={2}
+              className='text-default fw-bold mb-0'
+              style={{ fontSize: 20 }}
+            >
               {experiment.name}
-            </h2>
+            </Text>
             <StatusBadge status={experiment.status} />
           </div>
           {renderActions()}

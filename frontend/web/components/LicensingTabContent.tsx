@@ -2,6 +2,7 @@ import { useUploadOrganisationLicenceMutation } from 'common/services/useOrganis
 import React, { useEffect, useRef, useState } from 'react'
 import Button from './base/forms/Button'
 import Utils from 'common/utils/utils'
+import Text from './base/Text'
 
 type LicensingTabContentProps = {
   organisationId: number
@@ -44,7 +45,9 @@ const LicensingTabContent: React.FC<LicensingTabContentProps> = ({
 
   return (
     <div className='mt-4'>
-      <h5 className='mb-5'>Upload Licensing Files</h5>
+      <Text variant='h5' level={5} className='mb-5'>
+        Upload Licensing Files
+      </Text>
       <form
         className='upload-licensing-tab'
         onSubmit={(e) => {

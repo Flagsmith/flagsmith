@@ -7,6 +7,7 @@ import AccountStore from 'common/stores/account-store'
 import { OrganisationPermission } from 'common/types/permissions.types'
 import { useHasPermission } from 'common/providers/Permission'
 import API from 'project/api'
+import Text from 'components/base/Text'
 
 const OrganisationIntegrationsPage = ({ match }) => {
   useEffect(() => {
@@ -56,7 +57,9 @@ const OrganisationIntegrationsPage = ({ match }) => {
       />
       {!!projectIntegrations.length && (
         <>
-          <h5 className='mt-5 mb-3'>Project-level integrations</h5>
+          <Text variant='h5' level={5} className='mt-5 mb-3'>
+            Project-level integrations
+          </Text>
           <IntegrationList
             organisationId={organisationId}
             integrations={projectIntegrations}

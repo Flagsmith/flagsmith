@@ -4,6 +4,7 @@ import { useGetProjectQuery } from 'common/services/useProject'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import UsageBar from 'components/shared/UsageBar'
 import EnvironmentOverrideUsage from './EnvironmentOverrideUsage'
+import Text from 'components/base/Text'
 
 type ProjectUsageTabProps = {
   projectId: string
@@ -34,7 +35,9 @@ const ProjectUsageTab: FC<ProjectUsageTabProps> = ({ projectId }) => {
           </InfoMessage>
         </Row>
         <Row className='mb-2'>
-          <h5 className='mb-0'>Project Usage</h5>
+          <Text variant='h5' level={5} className='mb-0'>
+            Project Usage
+          </Text>
         </Row>
         <div className='d-flex flex-column gap-1' style={{ maxWidth: 400 }}>
           {!!maxFeatures && (
@@ -55,7 +58,9 @@ const ProjectUsageTab: FC<ProjectUsageTabProps> = ({ projectId }) => {
         {!!maxSegmentOverrides && (
           <>
             <Row className='mb-2 mt-3'>
-              <h6 className='mb-0'>Segment Overrides (per environment)</h6>
+              <Text variant='h6' level={6} className='mb-0'>
+                Segment Overrides (per environment)
+              </Text>
             </Row>
             <div className='d-flex flex-column gap-1' style={{ maxWidth: 400 }}>
               {environments?.results.map((env) => (

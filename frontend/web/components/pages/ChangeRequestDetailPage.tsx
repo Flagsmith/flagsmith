@@ -44,6 +44,7 @@ import { useHistory } from 'react-router-dom'
 import { openPublishChangeRequestConfirm } from 'components/PublishChangeRequestModal'
 import { getChangeRequestLiveDate } from 'common/utils/getChangeRequestLiveDate'
 import { EnvironmentPermission } from 'common/types/permissions.types'
+import Text from 'components/base/Text'
 
 type ChangeRequestPageType = {
   match: {
@@ -288,7 +289,9 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         id='change-requests-page'
         className='app-container container'
       >
-        <h3>Change Request not Found</h3>
+        <Text variant='h3' level={3}>
+          Change Request not Found
+        </Text>
         <p>The Change Request may have been deleted.</p>
       </div>
     )
@@ -481,7 +484,9 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
         id='change-requests-page'
         className='app-container container'
       >
-        <h3>Change Request not Found</h3>
+        <Text variant='h3' level={3}>
+          Change Request not Found
+        </Text>
         <p>The Change Request may have been deleted.</p>
       </div>
     )

@@ -24,6 +24,7 @@ import each from 'lodash/each'
 import { useGetProjectQuery } from 'common/services/useProject'
 import API from 'project/api'
 import Constants from 'common/constants'
+import Text from './base/Text'
 
 type IntegrationAction = {
   label: string
@@ -278,7 +279,9 @@ const Integration: FC<IntegrationProps> = (props) => {
       <div className='d-flex align-items-center gap-4'>
         <img src={image} alt='Integration' />
         <div className='flex-1 flex-column'>
-          <h4 className='mb-0'>{title}</h4>
+          <Text variant='h4' level={4} className='mb-0'>
+            {title}
+          </Text>
           <div className='subtitle'>
             {description}{' '}
             {docs && (

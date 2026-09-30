@@ -3,6 +3,7 @@ import flagsmith from '@flagsmith/flagsmith'
 import Project from 'common/project'
 import FeatureAnalytics from 'components/feature-page/FeatureNavTab/FeatureAnalytics'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
+import Text from 'components/base/Text'
 
 type UsageTabProps = {
   projectId: number | string
@@ -31,7 +32,9 @@ const UsageTab: FC<UsageTabProps> = ({
       )}
       <FormGroup className='mb-4'>
         <div className='d-flex align-items-center gap-2 mb-2'>
-          <h5 className='mb-0'>Code references</h5>
+          <Text variant='h5' level={5} className='mb-0'>
+            Code references
+          </Text>
           <span
             className='chip chip--xs bg-primary text-white'
             style={{ border: 'none' }}

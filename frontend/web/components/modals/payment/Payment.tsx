@@ -20,6 +20,7 @@ import {
 import { useScript } from 'common/hooks/useScript'
 import { usePaymentState } from './hooks'
 import { bindChargebeeButtons } from './chargebee'
+import Text from 'components/base/Text'
 
 export type PaymentProps = {
   isDisableAccountText?: string
@@ -74,12 +75,12 @@ export const Payment: FC<PaymentProps> = ({
           {isDisableAccountText && (
             <div className='d-lg-flex flex-lg-row align-items-end justify-content-between w-100 gap-4'>
               <div>
-                <h4>
+                <Text variant='h4' level={4}>
                   {isDisableAccountText}{' '}
                   <a target='_blank' href={SUPPORT_EMAIL_URL} rel='noreferrer'>
                     {SUPPORT_EMAIL}
                   </a>
-                </h4>
+                </Text>
               </div>
               <div>
                 <BlockedOrgInfo />

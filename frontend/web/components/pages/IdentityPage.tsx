@@ -37,6 +37,7 @@ import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { buildApiFilterParams } from 'common/utils/featureFilterParams'
 import { useFeatureFilters } from './features/hooks/useFeatureFilters'
+import Text from 'components/base/Text'
 
 interface RouteParams {
   environmentId: string
@@ -169,7 +170,11 @@ const IdentityPage: FC = () => {
                         />
                       </span>
                       {showAliases && (
-                        <h6 className='d-flex mb-0 align-items-baseline gap-1'>
+                        <Text
+                          variant='h6'
+                          level={6}
+                          className='d-flex mb-0 align-items-baseline gap-1'
+                        >
                           <Tooltip
                             title={
                               <span className='user-select-none'>Alias: </span>
@@ -184,7 +189,7 @@ const IdentityPage: FC = () => {
                               environmentId={environmentId}
                             />
                           )}
-                        </h6>
+                        </Text>
                       )}
                       <div className='text-nowrap fs-regular fw-normal mt-2'>
                         View and manage feature states and traits for this

@@ -13,6 +13,7 @@ import Constants from 'common/constants'
 import { useHasPermission } from 'common/providers/Permission'
 import { withRouter, useHistory, RouteComponentProps } from 'react-router-dom'
 import { OrganisationPermission } from 'common/types/permissions.types'
+import Text from './base/Text'
 const rolesWidths = [250, 100]
 
 interface RolesTableType extends RouteComponentProps {
@@ -81,7 +82,9 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
   return (
     <>
       <Row space className='mt-4'>
-        <h5 className='m-b-0'>Roles</h5>
+        <Text variant='h5' level={5} className='m-b-0'>
+          Roles
+        </Text>
         {Utils.renderWithPermission(
           isAdmin,
           Constants.organisationPermissions(OrganisationPermission.ADMIN),

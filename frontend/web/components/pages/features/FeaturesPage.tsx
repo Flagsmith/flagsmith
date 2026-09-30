@@ -34,6 +34,7 @@ import type {
   ProjectFlag,
 } from 'common/types/responses'
 import { ProjectPermission } from 'common/types/permissions.types'
+import Text from 'components/base/Text'
 
 const DEFAULT_PAGINATION: Pagination = {
   count: 0,
@@ -373,7 +374,9 @@ const FeaturesPage: FC<FeaturesPageProps> = ({ forcedTagIds, pageTitle }) => {
       <div className='features-page'>
         {error || projectEnvError ? (
           <div className='text-center'>
-            <h4 className='mb-3'>Unable to Load Features</h4>
+            <Text variant='h4' level={4} className='mb-3'>
+              Unable to Load Features
+            </Text>
             <p className='text-muted mb-3'>
               We couldn't load your feature flags. This might be due to a
               network issue or a temporary server problem.

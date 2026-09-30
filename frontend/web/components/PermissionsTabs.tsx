@@ -16,6 +16,7 @@ import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
+import Text from './base/Text'
 
 type PermissionsTabsType = {
   orgId?: number
@@ -105,7 +106,9 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
           data-test='project-permissions-tab'
         >
           <Row className='justify-content-between'>
-            <h5 className='my-3'>Permissions</h5>
+            <Text variant='h5' level={5} className='my-3'>
+              Permissions
+            </Text>
             <Input
               type='text'
               className='ml-3'
@@ -135,7 +138,9 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
           data-test='environment-permissions-tab'
         >
           <Row className='justify-content-between'>
-            <h5 className='my-3'>Permissions</h5>
+            <Text variant='h5' level={5} className='my-3'>
+              Permissions
+            </Text>
             <Input
               type='text'
               className='ml-3'

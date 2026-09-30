@@ -1,5 +1,6 @@
 import React, { FC, ReactNode } from 'react'
 import Icon, { IconName } from './icons/Icon'
+import Text from './base/Text'
 
 type EmptyStateProps = {
   title: string
@@ -29,7 +30,9 @@ const EmptyState: FC<EmptyStateProps> = ({
           <Icon name={icon} width={40} fill={iconColour} />
         </div>
       )}
-      <h5 className='empty-state__title'>{title}</h5>
+      <Text variant='h5' level={5} className='empty-state__title'>
+        {title}
+      </Text>
       {description && (
         <div className='empty-state__description text-muted'>{description}</div>
       )}

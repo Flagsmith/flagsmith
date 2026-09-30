@@ -11,6 +11,7 @@ import { useCreateGithubIntegrationMutation } from 'common/services/useGithubInt
 import { useCreateGithubRepositoryMutation } from 'common/services/useGithubRepository'
 import { useGetGithubReposQuery } from 'common/services/useGithub'
 import PanelSearch from 'components/PanelSearch'
+import Text from 'components/base/Text'
 
 type Location = {
   search: string
@@ -118,7 +119,9 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
     >
       {!githubIntegrationSetupFromFlagsmithValue ? (
         <>
-          <h3 className='my-3'>Configure your integration with GitHub</h3>
+          <Text variant='h3' level={3} className='my-3'>
+            Configure your integration with GitHub
+          </Text>
           <InputGroup
             value={installationId}
             data-test='InstallationId'
@@ -280,7 +283,9 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
         </>
       ) : (
         <div className='text-center py-5'>
-          <h1 className='mb-3'>GitHub installation completed!</h1>
+          <Text variant='h1' level={1} className='mb-3'>
+            GitHub installation completed!
+          </Text>
           <p className='text-muted'>You can close this window.</p>
         </div>
       )}

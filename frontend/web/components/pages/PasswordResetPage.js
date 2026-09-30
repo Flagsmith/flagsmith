@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import { withRouter } from 'react-router-dom'
+import Text from 'components/base/Text'
 const PasswordResetPage = class extends Component {
   static displayName = 'PasswordResetPage'
 
@@ -41,7 +42,9 @@ const PasswordResetPage = class extends Component {
         <AccountProvider onSave={this.onSave}>
           {({ error, isSaving }) => (
             <div className='card signup-form container px-4 py-4'>
-              <h3>Reset Password</h3>
+              <Text variant='h3' level={3}>
+                Reset Password
+              </Text>
 
               {isSaving ? (
                 <div className='centered-container'>
@@ -91,7 +94,9 @@ const PasswordResetPage = class extends Component {
               <div>
                 {error ? (
                   <div>
-                    <h3 className='pt-5'>Oops</h3>
+                    <Text variant='h3' level={3} className='pt-5'>
+                      Oops
+                    </Text>
                     <ErrorMessage
                       error='We could not reset your password with the details
                       provided, please try again.'

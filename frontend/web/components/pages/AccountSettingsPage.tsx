@@ -25,6 +25,7 @@ import AppActions from 'common/dispatcher/app-actions'
 import Project from 'common/project'
 import flagsmith from '@flagsmith/flagsmith'
 import { Account, AuthType } from 'common/types/responses'
+import Text from 'components/base/Text'
 
 const AccountSettingsPage: FC = () => {
   const [firstName, setFirstName] = useState<string>(
@@ -164,7 +165,9 @@ const AccountSettingsPage: FC = () => {
   if (forced2Factor) {
     return (
       <div className='app-container container'>
-        <h3>Two-Factor Authentication</h3>
+        <Text variant='h3' level={3}>
+          Two-Factor Authentication
+        </Text>
         <p>
           One of your organisations has enfoced Two-Factor Authentication,
           please enable it to continue.
@@ -308,7 +311,9 @@ const AccountSettingsPage: FC = () => {
         <TabItem tabLabel='API Keys'>
           <div className='mt-6'>
             <div className='col-md-6'>
-              <h5>Manage API Keys</h5>
+              <Text variant='h5' level={5}>
+                Manage API Keys
+              </Text>
               <InfoMessage>
                 <p>
                   You can use this token to securely integrate with the private
@@ -349,7 +354,9 @@ const AccountSettingsPage: FC = () => {
           <div className='mt-4'>
             {account?.auth_type === 'EMAIL' && (
               <div className='col-md-6'>
-                <h5 className='mb-5'>Change password</h5>
+                <Text variant='h5' level={5} className='mb-5'>
+                  Change password
+                </Text>
                 <form className='mb-0' onSubmit={savePassword}>
                   <InputGroup
                     title='Current Password'

@@ -1,5 +1,6 @@
 import React, { FC, useEffect } from 'react'
 import Constants from 'common/constants'
+import Text from 'components/base/Text'
 
 const NotFoundErrorPage: FC = () => {
   useEffect(() => {
@@ -8,7 +9,9 @@ const NotFoundErrorPage: FC = () => {
 
   return (
     <div className='app-container container'>
-      <h3 className='pt-5'>Oops!</h3>
+      <Text variant='h3' level={3} className='pt-5'>
+        Oops!
+      </Text>
       <p>
         It looks like you do not have permission to view this{' '}
         {Utils.fromParam().entity || 'page'}. Please contact a member with

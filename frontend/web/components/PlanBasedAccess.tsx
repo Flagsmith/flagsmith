@@ -6,6 +6,7 @@ import { IonIcon } from '@ionic/react'
 import { documents, lockClosed } from 'ionicons/icons'
 import classNames from 'classnames'
 import API from 'project/api'
+import Text from './base/Text'
 
 type PlanBasedBannerType = {
   className?: string
@@ -214,10 +215,10 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({ children, ...props }) => {
   }
   return (
     <div className={className}>
-      <h4 className='d-flex align-items-center gap-2'>
+      <Text variant='h4' level={4} className='d-flex align-items-center gap-2'>
         <span>{featureDescriptions[feature].title}</span>
         <PlanBasedBanner {...props} theme={'badge'} />
-      </h4>
+      </Text>
       <PlanBasedBanner {...props} theme={'description'} />
     </div>
   )

@@ -1,5 +1,6 @@
 import classNames from 'classnames'
 import Switch from 'components/Switch'
+import Text from 'components/base/Text'
 
 export type PricingToggleProps = {
   isYearly: boolean
@@ -9,26 +10,30 @@ export type PricingToggleProps = {
 export const PricingToggle = ({ isYearly, onChange }: PricingToggleProps) => {
   return (
     <div className='d-flex mb-4 font-weight-medium justify-content-center align-items-center gap-2'>
-      <h5
+      <Text
+        variant='h5'
+        level={5}
         className={classNames('mb-0', {
           'text-muted': !isYearly,
         })}
       >
         Pay Yearly & Save
-      </h5>
+      </Text>
       <Switch
         checked={!isYearly}
         onChange={() => {
           onChange(!isYearly)
         }}
       />
-      <h5
+      <Text
+        variant='h5'
+        level={5}
         className={classNames('mb-0', {
           'text-muted': isYearly,
         })}
       >
         Pay Monthly
-      </h5>
+      </Text>
     </div>
   )
 }

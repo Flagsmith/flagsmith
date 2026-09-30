@@ -10,6 +10,7 @@ import {
 import Icon from 'components/icons/Icon'
 
 import { renderActionDetail } from './FlagActionDetail'
+import Text from 'components/base/Text'
 
 interface StageSummaryDataProps {
   stageActions?: StageAction[]
@@ -46,7 +47,9 @@ const StageSummaryData = ({
 
   return (
     <div className='py-2'>
-      <h6>Status</h6>
+      <Text variant='h6' level={6}>
+        Status
+      </Text>
       {isWaitType && (
         <div>
           <Row>

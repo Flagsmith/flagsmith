@@ -4,6 +4,7 @@ import { rocket } from 'ionicons/icons'
 import Button from 'components/base/forms/Button'
 import Panel from 'components/base/grid/Panel'
 import { Link } from 'react-router-dom'
+import Text from 'components/base/Text'
 
 type FeaturesEmptyStateProps = {
   environmentId: string
@@ -20,7 +21,9 @@ export const FeaturesEmptyState: FC<FeaturesEmptyStateProps> = ({
 }) => {
   return (
     <div>
-      <h3>Brilliant! Now create your features.</h3>
+      <Text variant='h3' level={3}>
+        Brilliant! Now create your features.
+      </Text>
       <FormGroup>
         <Panel
           icon='ion-ios-settings'

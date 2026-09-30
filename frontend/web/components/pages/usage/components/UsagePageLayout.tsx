@@ -1,5 +1,6 @@
 import { FC, ReactNode } from 'react'
 import EmptyState from 'components/EmptyState'
+import Text from 'components/base/Text'
 
 export type UsagePageLayoutProps = {
   isError?: boolean
@@ -45,7 +46,9 @@ const UsagePageLayout: FC<UsagePageLayoutProps> = ({
 
   return (
     <div className='px-3 px-md-4 py-4'>
-      <h4 className='mb-4'>Usage</h4>
+      <Text variant='h4' level={4} className='mb-4'>
+        Usage
+      </Text>
       {alert}
       {content}
     </div>

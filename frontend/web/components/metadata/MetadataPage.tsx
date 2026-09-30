@@ -13,6 +13,7 @@ import {
 } from 'common/services/useMetadataField'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import RedirectCreateCustomFields from './RedirectCreateCustomFields'
+import Text from 'components/base/Text'
 
 const PAGE_SIZE = 20
 const metadataWidth = [200, 150, 150, 90]
@@ -169,7 +170,9 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
       <PlanBasedBanner className='mt-4' feature={'METADATA'} theme={'page'}>
         <Row space className='mb-2'>
           <Row>
-            <h5>Custom Fields</h5>
+            <Text variant='h5' level={5}>
+              Custom Fields
+            </Text>
           </Row>
           <Button className='mt-2' onClick={() => openCreateMetadataField()}>
             {'Create Custom Field'}
@@ -189,7 +192,9 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         </p>
 
         <FormGroup className='mt-4'>
-          <h6 className='mb-2'>Organisation Fields</h6>
+          <Text variant='h6' level={6} className='mb-2'>
+            Organisation Fields
+          </Text>
           <PanelSearch
             id='org-fields-list'
             items={orgFields}
@@ -215,7 +220,9 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         </FormGroup>
 
         <FormGroup className='mt-4'>
-          <h6 className='mb-2'>Project Fields</h6>
+          <Text variant='h6' level={6} className='mb-2'>
+            Project Fields
+          </Text>
           <PanelSearch
             id='project-fields-list'
             items={projectFields}
@@ -244,7 +251,9 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
     <PlanBasedBanner className='mt-4' feature={'METADATA'} theme={'page'}>
       <Row space className='mb-2'>
         <Row>
-          <h5>Custom Fields</h5>
+          <Text variant='h5' level={5}>
+            Custom Fields
+          </Text>
         </Row>
         <Button className='mt-2' onClick={() => openCreateMetadataField()}>
           {'Create Custom Field'}

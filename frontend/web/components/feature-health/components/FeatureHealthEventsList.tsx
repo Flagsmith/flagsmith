@@ -10,6 +10,7 @@ import { HealthEvent } from 'common/types/responses'
 import AppActions from 'common/dispatcher/app-actions'
 import EventTextBlocks from './EventTextBlocks'
 import EventURLBlocks from './EventUrlsBlock'
+import Text from 'components/base/Text'
 
 interface FeatureHealthEventsListProps {
   featureHealthEvents: HealthEvent[]
@@ -50,7 +51,9 @@ const FeatureHealthEventsList: React.FC<FeatureHealthEventsListProps> = ({
   }
   return (
     <>
-      <h5 className='mb-4'>Unhealthy Events</h5>
+      <Text variant='h5' level={5} className='mb-4'>
+        Unhealthy Events
+      </Text>
       <div className='d-flex flex-column gap-4'>
         {unhealthyEvents?.length === 0 && (
           <div className='text-center'>
@@ -77,7 +80,9 @@ const FeatureHealthEventsList: React.FC<FeatureHealthEventsListProps> = ({
                 />
                 <div>
                   <Row>
-                    <h6 className='mb-0'>{event.provider_name} Provider</h6>
+                    <Text variant='h6' level={6} className='mb-0'>
+                      {event.provider_name} Provider
+                    </Text>
                     <div className='ml-2'>
                       <Tooltip title={moment(event.created_at).fromNow()}>
                         {moment(event.created_at).format('Do MMM YYYY HH:mma')}

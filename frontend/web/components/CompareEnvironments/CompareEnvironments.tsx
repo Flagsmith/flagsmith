@@ -20,6 +20,7 @@ import CompareFeatureRow, { EditFeatureHandler } from './CompareFeatureRow'
 import { ENV_COLUMN_WIDTH, SEGMENTS_COLUMN_WIDTH } from './constants'
 import { FeatureChange } from './types'
 import { useEnvironmentComparison } from './useEnvironmentComparison'
+import Text from 'components/base/Text'
 
 type CompareEnvironmentsProps = {
   projectId: string
@@ -277,7 +278,9 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
   return (
     <div>
       <div className='col-md-8'>
-        <h5 className='mb-1'>Compare Environments</h5>
+        <Text variant='h5' level={5} className='mb-1'>
+          Compare Environments
+        </Text>
         <p className='fs-small mb-4 lh-sm'>
           Compare feature flag configurations across environments.
         </p>

@@ -12,6 +12,7 @@ import Button from 'components/base/forms/Button'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import ErrorMessage from 'components/ErrorMessage'
+import Text from 'components/base/Text'
 
 const AdminDashboardPage: FC = () => {
   const [days, setDays] = useState<30 | 60 | 90>(30)
@@ -38,7 +39,9 @@ const AdminDashboardPage: FC = () => {
   if (!isEnabled) {
     return (
       <div className='app-container text-center py-5'>
-        <h3>Access Denied</h3>
+        <Text variant='h3' level={3}>
+          Access Denied
+        </Text>
         <p className='text-muted'>
           This page is only accessible to instance administrators.
         </p>
@@ -49,7 +52,9 @@ const AdminDashboardPage: FC = () => {
   return (
     <div className='app-container container'>
       <div className='py-2' style={{ marginBottom: -48 }}>
-        <h2 className='mb-0'>Platform Hub</h2>
+        <Text variant='h2' level={2} className='mb-0'>
+          Platform Hub
+        </Text>
         <p className='text-muted mb-0'>
           Centralised view of platform-wide usage, lifecycle, and adoption data
         </p>

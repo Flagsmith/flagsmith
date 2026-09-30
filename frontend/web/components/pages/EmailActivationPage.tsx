@@ -23,6 +23,7 @@ import {
   useActivateAccountMutation,
   useResendActivationEmailMutation,
 } from 'common/services/useEmailActivation'
+import Text from 'components/base/Text'
 
 type ActivationParams = { uid: string; token: string }
 
@@ -32,7 +33,9 @@ const PageShell: FC<{ title: string; children: React.ReactNode }> = ({
 }) => (
   <>
     <div className='text-center mb-4'>
-      <h3>{title}</h3>
+      <Text variant='h3' level={3}>
+        {title}
+      </Text>
     </div>
     <div className='row'>
       <div className='col-md-6 offset-md-3'>

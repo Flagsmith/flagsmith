@@ -5,12 +5,15 @@ import AccountProvider from 'common/providers/AccountProvider'
 import { Organisation } from 'common/types/responses'
 import Payment from './modals/payment'
 import BlockedOrgInfo from './BlockedOrgInfo'
+import Text from './base/Text'
 
 const Blocked = () => (
   <div className='fullscreen-container maintenance fullscreen-container__grey justify-content-center dark'>
     {!Utils.isSaas() ? (
       <div className='col-md-6 mt-5' id='sign-up'>
-        <h1>Please get in touch</h1>
+        <Text variant='h1' level={1}>
+          Please get in touch
+        </Text>
         <span className='h4'>
           Your organisation has been disabled. Please contact Flagsmith support
           at{' '}

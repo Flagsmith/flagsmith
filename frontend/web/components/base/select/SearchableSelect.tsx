@@ -1,5 +1,6 @@
 import Icon from 'components/icons/Icon'
 import React from 'react'
+import Text from 'components/base/Text'
 export interface OptionType {
   disabled?: boolean
   label: string
@@ -24,9 +25,9 @@ export const GroupLabel = ({
       {tooltipText && (
         <Tooltip
           title={
-            <h5 className='mb-1 cursor-pointer'>
+            <Text variant='h5' level={5} className='mb-1 cursor-pointer'>
               <Icon name='info-outlined' height={16} width={16} />
-            </h5>
+            </Text>
           }
           place='right'
         >

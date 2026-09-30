@@ -10,6 +10,7 @@ import StageArrow from './StageArrow'
 import moment from 'moment'
 import StageFeatureDetail from './StageFeatureDetail'
 import FlagActionDetail from './FlagActionDetail'
+import Text from 'components/base/Text'
 
 type StageInfoProps = {
   environmentData?: Environment
@@ -47,7 +48,9 @@ const StageInfo = ({
       <Row className='align-items-start no-wrap'>
         <StageCard>
           <div>
-            <h5>{stageData?.name}</h5>
+            <Text variant='h5' level={5}>
+              {stageData?.name}
+            </Text>
             <p>{environmentData?.name}</p>
             <p className='text-muted'>
               {getTriggerText(

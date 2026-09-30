@@ -8,6 +8,7 @@ import {
   getRolloutSteps,
 } from './rolloutSteps'
 import './OnboardingRolloutQuest.scss'
+import Text from 'components/base/Text'
 
 export type OnboardingRolloutQuestProps = {
   featureName: string
@@ -30,7 +31,9 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
     </p>
 
     <section className='onboarding-rollout-quest__card bg-surface-muted rounded-xl p-4 d-flex flex-column gap-3'>
-      <h6 className='m-0'>How to roll out gradually today</h6>
+      <Text variant='h6' level={6} className='m-0'>
+        How to roll out gradually today
+      </Text>
       <ol className='list-unstyled d-flex flex-column gap-3 m-0'>
         {getRolloutSteps(featureName).map((step, index) => (
           <li key={step.title} className='d-flex gap-3'>

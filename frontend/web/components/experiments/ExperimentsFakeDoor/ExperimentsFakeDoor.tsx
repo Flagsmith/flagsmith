@@ -5,6 +5,7 @@ import MetricsComparisonTable from 'components/experiments/MetricsComparisonTabl
 import MetricsTrendChart from 'components/experiments/MetricsTrendChart'
 import { MOCK_METRICS, MOCK_TRENDS } from './mockData'
 import './ExperimentsFakeDoor.scss'
+import Text from 'components/base/Text'
 
 const TRAIT_KEY = 'experimentation_beta'
 
@@ -68,16 +69,24 @@ const ExperimentsFakeDoor: FC = () => {
 
       <div className='experiments-fake-door__preview'>
         <div>
-          <h5 className='experiments-fake-door__section-title'>
+          <Text
+            variant='h5'
+            level={5}
+            className='experiments-fake-door__section-title'
+          >
             Metrics Comparison
-          </h5>
+          </Text>
           <MetricsComparisonTable metrics={MOCK_METRICS} />
         </div>
 
         <div>
-          <h5 className='experiments-fake-door__section-title'>
+          <Text
+            variant='h5'
+            level={5}
+            className='experiments-fake-door__section-title'
+          >
             Trend over time
-          </h5>
+          </Text>
           <MetricsTrendChart trends={MOCK_TRENDS} />
         </div>
       </div>

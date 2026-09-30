@@ -16,6 +16,7 @@ import PanelSearch from './PanelSearch'
 import Icon from './icons/Icon'
 import AppActions from 'common/dispatcher/app-actions'
 import CreateProjectModal from './modals/CreateProject'
+import Text from './base/Text'
 
 type SegmentsPageType = {
   organisationId: number | null
@@ -80,9 +81,9 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
             ) : (
               isAdmin && (
                 <div className='container-mw-700 mb-4'>
-                  <h5 className='mb-2'>
+                  <Text variant='h5' level={5} className='mb-2'>
                     Great! Now you can create your first project.
-                  </h5>
+                  </Text>
                   <p className='fs-small lh-sm mb-0'>
                     When you create a project we'll also generate a{' '}
                     <strong>development</strong> and <strong>production</strong>{' '}
@@ -162,14 +163,16 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                           >
                             <Button className='btn-project'>
                               <Row className='flex-nowrap'>
-                                <h2
+                                <Text
+                                  variant='h2'
+                                  level={2}
                                   style={{
                                     backgroundColor: Utils.getProjectColour(i),
                                   }}
                                   className='btn-project-letter mb-0'
                                 >
                                   {name[0]}
-                                </h2>
+                                </Text>
                                 <div className='font-weight-medium btn-project-title overflow-hidden'>
                                   {name}
                                 </div>
@@ -183,7 +186,9 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                       <div>
                         {!canCreateProject && (
                           <>
-                            <h5 className='mt-4 mb-2'>Projects</h5>
+                            <Text variant='h5' level={5} className='mt-4 mb-2'>
+                              Projects
+                            </Text>
                             <div className='container-mw-700 mb-4'>
                               <p className='fs-small lh-sm mb-0'>
                                 You do not have access to any projects within

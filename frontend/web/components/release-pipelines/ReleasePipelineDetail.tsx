@@ -13,6 +13,7 @@ import { Environment } from 'common/types/responses'
 import { useRouteContext } from 'components/providers/RouteContext'
 import StageFeatureDetail from './StageFeatureDetail'
 import Tag from 'components/tags/Tag'
+import Text from 'components/base/Text'
 
 const LaunchedCard = ({
   completedFeatures,
@@ -25,7 +26,9 @@ const LaunchedCard = ({
     <StageCard>
       <Row className=' gap-2 align-items-center mb-2'>
         <Icon name='checkmark-circle' width={30} fill='#27AB95' />
-        <h5 className='mb-0'>Launched</h5>
+        <Text variant='h5' level={5} className='mb-0'>
+          Launched
+        </Text>
       </Row>
       <p className='text-muted'>
         Features that completed this pipeline in the last 30 days

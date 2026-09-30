@@ -4,6 +4,7 @@ import Button from 'components/base/forms/Button'
 import Chip from 'components/base/Chip'
 import Icon from 'components/icons/Icon'
 import { ROLLOUT_BETA_REQUESTED } from './trackRolloutInterest'
+import Text from 'components/base/Text'
 
 export const ROLLOUT_FEEDBACK_URL =
   'mailto:support@flagsmith.com?subject=Gradual%20rollout'
@@ -38,7 +39,9 @@ const RolloutComingSoonCard: FC<RolloutComingSoonCardProps> = ({
         <Icon name='flash' width={12} />
         Coming soon
       </Chip>
-      <h6 className='m-0'>We’re making gradual rollouts one-click</h6>
+      <Text variant='h6' level={6} className='m-0'>
+        We’re making gradual rollouts one-click
+      </Text>
       <p className='fs-caption lh-sm text-secondary m-0'>
         Automatically release according to a schedule, without manual editing of
         segments. Want early access?

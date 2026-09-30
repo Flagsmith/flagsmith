@@ -17,6 +17,7 @@ import Constants from 'common/constants'
 import { useHistory } from 'react-router-dom'
 import { ProjectPermission } from 'common/types/permissions.types'
 import { useHasPermission } from 'common/providers/Permission'
+import Text from 'components/base/Text'
 
 type ImportPageType = {
   projectId: string
@@ -132,7 +133,9 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
           <strong>Visit the documentation for more details.</strong>
         </a>
       </InfoMessage>
-      <h5>Import LaunchDarkly Projects</h5>
+      <Text variant='h5' level={5}>
+        Import LaunchDarkly Projects
+      </Text>
       <label>Set LaunchDarkly key</label>
       <FormGroup>
         <Row className='align-items-start col-md-8'>
@@ -194,14 +197,16 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
                         }
                       >
                         <Row className='flex-nowrap'>
-                          <h2
+                          <Text
+                            variant='h2'
+                            level={2}
                             style={{
                               backgroundColor: Utils.getProjectColour(i),
                             }}
                             className='btn-project-letter mb-0'
                           >
                             {name[0]}
-                          </h2>
+                          </Text>
                           <div className='font-weight-medium btn-project-title'>
                             {name}
                           </div>

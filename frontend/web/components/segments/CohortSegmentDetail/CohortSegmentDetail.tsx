@@ -15,6 +15,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import InputGroup from 'components/base/forms/InputGroup'
 import CohortCsvSync from './CohortCsvSync'
 import './CohortSegmentDetail.scss'
+import Text from 'components/base/Text'
 
 const SYNC_POLL_INTERVAL_MS = 3000
 
@@ -125,7 +126,9 @@ const CohortSegmentDetail: FC<CohortSegmentDetailType> = ({
     >
       {!hideHeader && (
         <div className='cohort-segment-detail__header d-flex align-items-center gap-2 px-4 py-3'>
-          <h5 className='mb-0'>{segment.name}</h5>
+          <Text variant='h5' level={5} className='mb-0'>
+            {segment.name}
+          </Text>
           <Chip size='xs' variant='accent'>
             CSV list
           </Chip>

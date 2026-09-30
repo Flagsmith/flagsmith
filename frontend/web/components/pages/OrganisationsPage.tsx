@@ -11,6 +11,7 @@ import AppActions from 'common/dispatcher/app-actions'
 import { useHistory } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { routes } from 'web/routes'
+import Text from 'components/base/Text'
 
 const OrganisationsPage: FC = () => {
   const history = useHistory()
@@ -31,7 +32,9 @@ const OrganisationsPage: FC = () => {
           <div className='app-container container'>
             {Utils.getFlagsmithHasFeature('platform_hub') && (
               <div className='mb-4'>
-                <h5 className='mb-3'>Instance Administration</h5>
+                <Text variant='h5' level={5} className='mb-3'>
+                  Instance Administration
+                </Text>
                 <div className='row'>
                   <div className='col-md-6 col-xl-3'>
                     <Button
@@ -111,14 +114,16 @@ const OrganisationsPage: FC = () => {
                     >
                       <Button className='btn-project'>
                         <Row className='flex-nowrap'>
-                          <h2
+                          <Text
+                            variant='h2'
+                            level={2}
                             style={{
                               backgroundColor: Utils.getProjectColour(i),
                             }}
                             className='btn-project-letter mb-0'
                           >
                             {name[0]}
-                          </h2>
+                          </Text>
                           <div className='font-weight-medium btn-project-title overflow-hidden'>
                             {name}
                           </div>

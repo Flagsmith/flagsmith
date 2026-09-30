@@ -2,6 +2,7 @@ import React, { FC, HTMLAttributes, ReactNode, useId } from 'react'
 import cn from 'classnames'
 import Switch from 'components/Switch'
 import './setting-row.scss'
+import Text from 'components/base/Text'
 
 type SettingRowProps = Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> & {
   title: ReactNode
@@ -36,9 +37,14 @@ const SettingRow: FC<SettingRowProps> = ({
             aria-describedby={descId}
           />
         </div>
-        <h5 id={titleId} className='setting-row__title'>
+        <Text
+          variant='h5'
+          level={5}
+          id={titleId}
+          className='setting-row__title'
+        >
           {title}
-        </h5>
+        </Text>
       </div>
       <small id={descId} className='setting-row__description'>
         {description}

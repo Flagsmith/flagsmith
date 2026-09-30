@@ -1,5 +1,6 @@
 import React, { FC } from 'react'
 import { Resource } from './data/onboarding.data'
+import Text from 'components/base/Text'
 
 const GettingStartedResource: FC<Resource> = ({
   description,
@@ -24,7 +25,13 @@ const GettingStartedResource: FC<Resource> = ({
             />
           </div>
           <div className='h-100 d-flex flex-column justify-content-center p-3'>
-            <h6 className={`d-flex align-items-center gap-1`}>{title}</h6>
+            <Text
+              variant='h6'
+              level={6}
+              className={`d-flex align-items-center gap-1`}
+            >
+              {title}
+            </Text>
 
             <span className='fw-normal fs-small  text-muted '>
               {description}

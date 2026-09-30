@@ -43,6 +43,7 @@ import {
 import OrganisationUsersTable from 'components/users-permissions/OrganisationUsersTable/OrganisationUsersTable'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 import { OrganisationPermission } from 'common/types/permissions.types'
+import Text from 'components/base/Text'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -165,7 +166,9 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
 
       <FormGroup className='mt-4'>
         <div className='col-md-8'>
-          <h5 className='mb-2'>Manage Users and Permissions</h5>
+          <Text variant='h5' level={5} className='mb-2'>
+            Manage Users and Permissions
+          </Text>
           <p className='mb-4 fs-small lh-sm'>
             Flagsmith lets you manage fine-grained permissions for your projects
             and environments, invite members as a user or an administrator and
@@ -193,7 +196,9 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                   <Tabs urlParam={'type'} theme='pill' uncontrolled>
                     <TabItem tabLabel='Members'>
                       <Row space className='mt-4'>
-                        <h5 className='mb-0'>Team Members</h5>
+                        <Text variant='h5' level={5} className='mb-0'>
+                          Team Members
+                        </Text>
                         {Utils.renderWithPermission(
                           hasInvitePermission,
                           tooltipText,
@@ -542,7 +547,9 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                     <TabItem tabLabel='Groups' data-test='tab-item-groups'>
                       <div>
                         <Row space className='mt-4 mb-1'>
-                          <h5 className='mb-0'>User Groups</h5>
+                          <Text variant='h5' level={5} className='mb-0'>
+                            User Groups
+                          </Text>
                           {Utils.renderWithPermission(
                             manageGroupsPermission.permission,
                             Constants.organisationPermissions(

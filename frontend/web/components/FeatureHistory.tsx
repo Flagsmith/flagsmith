@@ -14,6 +14,7 @@ import classNames from 'classnames'
 import PlanBasedBanner from './PlanBasedAccess'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+import Text from './base/Text'
 
 const widths = [250, 150]
 type FeatureHistoryPageType = {
@@ -56,7 +57,9 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
   const [diff, setDiff] = useState<null | string>(null)
   return (
     <div>
-      <h5>Change History</h5>
+      <Text variant='h5' level={5}>
+        Change History
+      </Text>
       <div>
         View and rollback history of feature values, multivariate values and
         segment overrides.

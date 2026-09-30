@@ -3,6 +3,7 @@ import cn from 'classnames'
 import Icon from 'components/icons/Icon'
 import SelectableCard from 'components/base/SelectableCard/SelectableCard'
 import './OnboardingNextSteps.scss'
+import Text from 'components/base/Text'
 
 export type OnboardingNextStep = 'rollout' | 'experiment' | 'remote-config'
 
@@ -86,9 +87,13 @@ const OnboardingNextSteps: FC<OnboardingNextStepsProps> = ({
       inert={locked || undefined}
     >
       <div className='d-flex flex-column gap-1'>
-        <h3 className='onboarding-next-steps__title m-0 fw-bold text-default'>
+        <Text
+          variant='h3'
+          level={3}
+          className='onboarding-next-steps__title m-0 fw-bold text-default'
+        >
           Choose your next quest
-        </h3>
+        </Text>
         <p className='onboarding-next-steps__subtitle m-0'>
           You&apos;ve built a basic on/off feature toggle. The same flag can
           evolve into any of these, no new code, just configuration.

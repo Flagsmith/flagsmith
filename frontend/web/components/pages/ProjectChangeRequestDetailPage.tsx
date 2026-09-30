@@ -19,6 +19,7 @@ import DiffSegment from 'components/diff/DiffSegment'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useHistory } from 'react-router-dom'
 import { ProjectPermission } from 'common/types/permissions.types'
+import Text from 'components/base/Text'
 
 type ProjectChangeRequestPageType = {
   router: RouterChildContext['router']
@@ -191,7 +192,9 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
         id='change-requests-page'
         className='app-container container'
       >
-        <h3>Change Request not Found</h3>
+        <Text variant='h3' level={3}>
+          Change Request not Found
+        </Text>
         <p>The Change Request may have been deleted.</p>
       </div>
     )
