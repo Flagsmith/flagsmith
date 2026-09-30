@@ -5144,6 +5144,91 @@
           "HEALTHY"
         ]
       },
+      "FeatureIsReferencedDetailSegmentCondition": {
+        "type": "object",
+        "properties": {
+          "property": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Property"
+          },
+          "operator": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Operator2a7Enum"
+              }
+            ],
+            "title": "Operator"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "required": [
+          "property",
+          "operator",
+          "value",
+          "description"
+        ],
+        "title": "SegmentCondition"
+      },
+      "FeatureIsReferencedDetailSegmentRule": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TypeC8eEnum"
+              }
+            ],
+            "title": "Type"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeatureIsReferencedDetailSegmentCondition"
+            },
+            "title": "Conditions"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeatureIsReferencedDetailSegmentRule"
+            },
+            "title": "Rules"
+          }
+        },
+        "required": [
+          "type",
+          "conditions"
+        ],
+        "title": "SegmentRule"
+      },
       "FeatureLifecycleCounts": {
         "description": "Number of features in each lifecycle stage for an environment",
         "type": "object",

@@ -16404,6 +16404,12 @@ paths:
       responses:
         '204':
           description: No response body
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeatureDeletionRefusedDetail'
       security:
         - tokenAuth: []
         - Master API Key: []
@@ -20768,7 +20774,7 @@ components:
         prerequisite:
           $ref: '#/components/schemas/DependencyConflictDetail_Feature'
         segment:
-          $ref: '#/components/schemas/DependencyConflictDetail_ReferencingSegment'
+          $ref: '#/components/schemas/DependencyConflictDetailReferencingSegment'
       required:
         - feature
         - prerequisite
@@ -20788,6 +20794,34 @@ components:
         - key
         - name
       title: ReferencingEnvironment
+    DependencyConflictDetailReferencingSegment:
+      description: The segment whose rules hold the `$.flags` condition making up a dependency.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyConflictDetailSegmentRule'
+          title: Rules
+        condition_json_path:
+          type: string
+          title: Condition Json Path
+        is_system:
+          type: boolean
+          title: Is System
+      required:
+        - id
+        - name
+        - rules
+        - condition_json_path
+        - is_system
+      title: ReferencingSegment
     DependencyConflictDetailSegmentCondition:
       type: object
       properties:
@@ -20851,7 +20885,22 @@ components:
         - id
         - name
       title: _Feature
-    DependencyConflictDetail_ReferencingSegment:
+    DependencyEdge:
+      description: One feature's dependency on another.
+      type: object
+      properties:
+        feature:
+          $ref: '#/components/schemas/DependencyEdge_Feature'
+        prerequisite:
+          $ref: '#/components/schemas/DependencyEdge_Feature'
+        segment:
+          $ref: '#/components/schemas/DependencyEdgeReferencingSegment'
+      required:
+        - feature
+        - prerequisite
+        - segment
+      title: DependencyEdge
+    DependencyEdgeReferencingSegment:
       description: The segment whose rules hold the `$.flags` condition making up a dependency.
       type: object
       properties:
@@ -20864,7 +20913,7 @@ components:
         rules:
           type: array
           items:
-            $ref: '#/components/schemas/DependencyConflictDetailSegmentRule'
+            $ref: '#/components/schemas/DependencyEdgeSegmentRule'
           title: Rules
         condition_json_path:
           type: string
@@ -20878,22 +20927,7 @@ components:
         - rules
         - condition_json_path
         - is_system
-      title: _ReferencingSegment
-    DependencyEdge:
-      description: One feature's dependency on another.
-      type: object
-      properties:
-        feature:
-          $ref: '#/components/schemas/DependencyEdge_Feature'
-        prerequisite:
-          $ref: '#/components/schemas/DependencyEdge_Feature'
-        segment:
-          $ref: '#/components/schemas/DependencyEdge_ReferencingSegment'
-      required:
-        - feature
-        - prerequisite
-        - segment
-      title: DependencyEdge
+      title: ReferencingSegment
     DependencyEdgeSegmentCondition:
       type: object
       properties:
@@ -20957,34 +20991,6 @@ components:
         - id
         - name
       title: _Feature
-    DependencyEdge_ReferencingSegment:
-      description: The segment whose rules hold the `$.flags` condition making up a dependency.
-      type: object
-      properties:
-        id:
-          type: integer
-          title: Id
-        name:
-          type: string
-          title: Name
-        rules:
-          type: array
-          items:
-            $ref: '#/components/schemas/DependencyEdgeSegmentRule'
-          title: Rules
-        condition_json_path:
-          type: string
-          title: Condition Json Path
-        is_system:
-          type: boolean
-          title: Is System
-      required:
-        - id
-        - name
-        - rules
-        - condition_json_path
-        - is_system
-      title: _ReferencingSegment
     DependencyList:
       description: The live dependencies a feature takes part in within an environment.
       type: object
@@ -21006,12 +21012,40 @@ components:
         prerequisite:
           $ref: '#/components/schemas/DependencyList_Feature'
         segment:
-          $ref: '#/components/schemas/DependencyList_ReferencingSegment'
+          $ref: '#/components/schemas/DependencyListReferencingSegment'
       required:
         - feature
         - prerequisite
         - segment
       title: DependencyEdge
+    DependencyListReferencingSegment:
+      description: The segment whose rules hold the `$.flags` condition making up a dependency.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyListSegmentRule'
+          title: Rules
+        condition_json_path:
+          type: string
+          title: Condition Json Path
+        is_system:
+          type: boolean
+          title: Is System
+      required:
+        - id
+        - name
+        - rules
+        - condition_json_path
+        - is_system
+      title: ReferencingSegment
     DependencyListSegmentCondition:
       type: object
       properties:
@@ -21075,34 +21109,6 @@ components:
         - id
         - name
       title: _Feature
-    DependencyList_ReferencingSegment:
-      description: The segment whose rules hold the `$.flags` condition making up a dependency.
-      type: object
-      properties:
-        id:
-          type: integer
-          title: Id
-        name:
-          type: string
-          title: Name
-        rules:
-          type: array
-          items:
-            $ref: '#/components/schemas/DependencyListSegmentRule'
-          title: Rules
-        condition_json_path:
-          type: string
-          title: Condition Json Path
-        is_system:
-          type: boolean
-          title: Is System
-      required:
-        - id
-        - name
-        - rules
-        - condition_json_path
-        - is_system
-      title: _ReferencingSegment
     DependencyRefusedDetail:
       oneOf:
         - $ref: '#/components/schemas/APIErrorDetail'
@@ -22181,6 +22187,10 @@ components:
         - conversions
         - evaluations
         - variant
+    FeatureDeletionRefusedDetail:
+      oneOf:
+        - $ref: '#/components/schemas/DependencyConflictDetail'
+        - $ref: '#/components/schemas/FeatureIsReferencedDetail'
     FeatureEvaluationData:
       type: object
       properties:
@@ -22488,6 +22498,103 @@ components:
             additionalProperties: {}
       required:
         - events_list
+    FeatureIsReferencedDetail:
+      description: The body served where segment conditions naming a feature refuse deleting it.
+      type: object
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureIsReferencedDetailReferencingSegment'
+          title: Segments
+      required:
+        - code
+        - message
+        - segments
+      title: FeatureIsReferencedDetail
+    FeatureIsReferencedDetailReferencingSegment:
+      description: The segment whose rules hold the `$.flags` condition making up a dependency.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureIsReferencedDetailSegmentRule'
+          title: Rules
+        condition_json_path:
+          type: string
+          title: Condition Json Path
+        is_system:
+          type: boolean
+          title: Is System
+      required:
+        - id
+        - name
+        - rules
+        - condition_json_path
+        - is_system
+      title: ReferencingSegment
+    FeatureIsReferencedDetailSegmentCondition:
+      type: object
+      properties:
+        property:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Property
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/Operator2a7Enum'
+          title: Operator
+        value:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Value
+        description:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Description
+      required:
+        - property
+        - operator
+        - value
+        - description
+      title: SegmentCondition
+    FeatureIsReferencedDetailSegmentRule:
+      type: object
+      properties:
+        type:
+          allOf:
+            - $ref: '#/components/schemas/TypeC8eEnum'
+          title: Type
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureIsReferencedDetailSegmentCondition'
+          title: Conditions
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureIsReferencedDetailSegmentRule'
+          title: Rules
+      required:
+        - type
+        - conditions
+      title: SegmentRule
     FeatureLifecycleCounts:
       description: Number of features in each lifecycle stage for an environment
       type: object
