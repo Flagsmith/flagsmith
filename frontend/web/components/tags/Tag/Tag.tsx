@@ -1,9 +1,9 @@
 import React, { FC } from 'react'
 import cx from 'classnames'
-import './Tag.scss'
 
 import { Tag as TTag } from 'common/types/responses'
 import Chip from 'components/base/Chip'
+import ColorSwatch from 'components/ColorSwatch'
 import TagContent from 'components/tags/TagContent'
 import Constants from 'common/constants'
 import {
@@ -51,13 +51,8 @@ const Tag: FC<TagType> = ({
   tag,
 }) => {
   if (isDot) {
-    return (
-      <div
-        className={'tag--dot'}
-        // No text on the dot, so the tag's own colour is safe here.
-        style={{ backgroundColor: getTagColor(tag) }}
-      />
-    )
+    // The stored colour, not the swatch: a tint this small would not read.
+    return <ColorSwatch color={getTagColor(tag)} shape='circle' size='lg' />
   }
 
   // A system tag carries its state in the icon, so it keeps the plain surface.
