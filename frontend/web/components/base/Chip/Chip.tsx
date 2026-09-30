@@ -67,7 +67,7 @@ const Chip = ({
     <span
       ref={ref}
       className={classNames(
-        // 6px radius is fixed by the design system's tags frame.
+        // Radius is pinned by the design system's tags frame.
         'ds-chip d-inline-flex align-items-center align-middle gap-2 rounded-md',
         VARIANT_UTILITIES[variant],
         {
