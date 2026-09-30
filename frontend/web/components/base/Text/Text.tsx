@@ -27,6 +27,13 @@ export type TextProps = CommonProps &
         as?: never
       }
     | {
+        // Heading-sized text that is not a heading: an avatar initial, a price,
+        // a stat value. Say so with `as` and it stays out of the outline.
+        variant: HeadingVariant
+        level?: never
+        as: BodyElement
+      }
+    | {
         variant: BodyVariant
         as?: BodyElement
         level?: never
@@ -45,9 +52,13 @@ const Text = ({
   weight,
   ...rest
 }: TextProps) => {
-  // span by default: it adds no margin, so wrapping existing text doesn't move
-  // anything. Callers ask for p or div when they want block flow.
-  const Element = (isHeading(variant) ? `h${level}` : as ?? 'span') as 'span'
+  // A heading variant renders a heading tag only when a level says where it
+  // sits. Given `as` instead, it is just big text and stays out of the outline.
+  // span is the default because it adds no margin, so wrapping existing text
+  // doesn't move anything. Callers ask for p or div when they want block flow.
+  const Element = (
+    isHeading(variant) && level ? `h${level}` : as ?? 'span'
+  ) as 'span'
 
   return (
     <Element

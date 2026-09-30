@@ -104,3 +104,22 @@ export const WithColourUtilities: Story = {
     </div>
   ),
 }
+
+// Heading-sized text that is not a heading. `as` instead of `level` keeps it
+// out of the document outline, which is what avatar initials, prices and stat
+// values want.
+export const NotAHeading: Story = {
+  render: () => (
+    <div className='d-flex align-items-center gap-4'>
+      <Text variant='h2' as='span'>
+        F
+      </Text>
+      <Text variant='h1' as='span'>
+        $49
+      </Text>
+      <Text variant='h4' as='span'>
+        1,284
+      </Text>
+    </div>
+  ),
+}
