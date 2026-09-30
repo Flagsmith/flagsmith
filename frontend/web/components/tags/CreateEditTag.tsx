@@ -190,7 +190,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
         </Tooltip>
 
         <div className='form-group select-colour'>
-          <FieldLabel>Select a color</FieldLabel>
+          <FieldLabel>Select a colour</FieldLabel>
           <TagColourPicker
             onChange={(colour) => update('color', colour)}
             value={tag?.color}

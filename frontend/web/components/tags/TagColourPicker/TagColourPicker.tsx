@@ -3,7 +3,11 @@ import classNames from 'classnames'
 import { contentColourNames, contentColours } from 'common/theme/tokens'
 import BareButton from 'components/base/forms/BareButton'
 import ColorSwatch from 'components/ColorSwatch'
-import { swatchLabel, swatchUtilities } from 'components/tags/utils'
+import {
+  getTagSwatch,
+  swatchLabel,
+  swatchUtilities,
+} from 'components/tags/utils'
 import './TagColourPicker.scss'
 
 type TagColourPickerProps = {
@@ -17,19 +21,22 @@ const TagColourPicker: FC<TagColourPickerProps> = ({
   className,
   onChange,
   value,
-}) => (
-  <div className={`d-flex flex-wrap gap-3 ${className ?? ''}`}>
-    {contentColourNames.map((swatch) => {
-      const colour = contentColours[swatch]
-      return (
+}) => {
+  // By swatch, not by hex: a tag made before this palette holds a colour that
+  // is none of these, and it still renders as one of them.
+  const selected = getTagSwatch(value)
+
+  return (
+    <div className={classNames('d-flex flex-wrap gap-3', className)}>
+      {contentColourNames.map((swatch) => (
         <BareButton
           key={swatch}
           aria-label={swatchLabel(swatch)}
-          aria-pressed={value === colour}
+          aria-pressed={selected === swatch}
           className={classNames('tag-colour-picker__swatch', {
-            'tag-colour-picker__swatch--selected': value === colour,
+            'tag-colour-picker__swatch--selected': selected === swatch,
           })}
-          onClick={() => onChange(colour)}
+          onClick={() => onChange(contentColours[swatch])}
         >
           <ColorSwatch
             className={swatchUtilities(swatch)}
@@ -37,9 +44,9 @@ const TagColourPicker: FC<TagColourPickerProps> = ({
             size='xl'
           />
         </BareButton>
-      )
-    })}
-  </div>
-)
+      ))}
+    </div>
+  )
+}
 
 export default TagColourPicker
