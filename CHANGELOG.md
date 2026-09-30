@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.278.1](https://github.com/Flagsmith/flagsmith/compare/v2.278.0...v2.278.1) (2026-09-30)
+
+
+### Bug Fixes
+
+* **api:** SDK flag feature filter is case-sensitive ([#8630](https://github.com/Flagsmith/flagsmith/issues/8630)) ([c906648](https://github.com/Flagsmith/flagsmith/commit/c90664827db2f9eb28233f71dd0f8a91c3f5abb2))
+* **change-requests:** Can not create change request for deleting segment override ([#8565](https://github.com/Flagsmith/flagsmith/issues/8565)) ([bb3a425](https://github.com/Flagsmith/flagsmith/commit/bb3a425aa46275ed9d521adcb878d0295d9406b5))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.14.1,&lt;1 ([#8623](https://github.com/Flagsmith/flagsmith/issues/8623)) ([1fd0cf6](https://github.com/Flagsmith/flagsmith/commit/1fd0cf6987dbfb59b86242e33b3fde3d6ffb7a45))
+
 ## [2.278.0](https://github.com/Flagsmith/flagsmith/compare/v2.277.0...v2.278.0) (2026-09-30)
 
 
