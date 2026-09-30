@@ -2,7 +2,6 @@ from collections.abc import Iterable
 from math import inf
 from typing import TYPE_CHECKING, Any
 
-from flag_engine.context import types as engine_types
 from flag_engine.engine import get_evaluation_result
 
 from evaluation.mappers import (
@@ -11,7 +10,6 @@ from evaluation.mappers import (
     map_engine_feature_state_to_feature_context,
     map_environment_to_evaluation_context,
     map_identity_overrides_to_segment_context,
-    map_rule_to_segment_rule,
 )
 from evaluation.types import (
     EvaluatedFeatureState,
@@ -194,18 +192,11 @@ def get_edge_identity_segments(edge_identity: "EdgeIdentity") -> "list[Segment]"
 
 
 def _is_identity_free(segment: "Segment") -> bool:
-    if (rules_data := segment.rules_data) is None:
-        # A cohort's segment is not given `rules_data` yet.
-        # TODO: Drop this fallback as per https://github.com/Flagsmith/flagsmith/issues/7816
-        return _are_identity_free(
-            map_rule_to_segment_rule(rule) for rule in segment.rules.all()
-        )
-    return _are_identity_free(rules_data)
+    # A segment without `rules_data` is a cohort's, which never applies here.
+    return segment.rules_data is not None and _are_identity_free(segment.rules_data)
 
 
-def _are_identity_free(
-    rules: "Iterable[SegmentRuleData | engine_types.SegmentRule]",
-) -> bool:
+def _are_identity_free(rules: "Iterable[SegmentRuleData]") -> bool:
     return all(
         all(
             (condition["property"] or "").startswith(_IDENTITY_FREE_PROPERTY_PREFIXES)

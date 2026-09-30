@@ -375,17 +375,10 @@ def identity_dependent_rules_data_segment(project: Project) -> Segment:
 
 
 @pytest.fixture()
-def identity_dependent_cohort_segment(project: Project) -> Segment:
-    # A cohort's segment only has rule rows, and no `rules_data`.
-    segment: Segment = Segment.objects.create(name="beta testers", project=project)
-    Condition.objects.create(
-        rule=SegmentRule.objects.create(
-            rule=SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE),
-            type=SegmentRule.ANY_RULE,
-        ),
-        property="beta_tester",
-        operator=IS_SET,
-    )
+def cohort_segment(project: Project) -> Segment:
+    # A cohort's segment has no `rules_data`. Were its (absent) rule rows read
+    # instead, it would match everyone.
+    segment: Segment = Segment.objects.create(name="cohort", project=project)
     return segment
 
 
@@ -393,10 +386,10 @@ def identity_dependent_cohort_segment(project: Project) -> Segment:
     "segment",
     [
         lazy_fixture("identity_dependent_rules_data_segment"),
-        lazy_fixture("identity_dependent_cohort_segment"),
+        lazy_fixture("cohort_segment"),
     ],
 )
-def test_get_environment_feature_states__identity_dependent_segment__skips_reading_its_overrides(
+def test_get_environment_feature_states__segment_not_applying__skips_reading_its_overrides(
     segment: Segment,
     environment: Environment,
     feature: Feature,
