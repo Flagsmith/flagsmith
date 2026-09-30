@@ -12,7 +12,9 @@ type TagRowProps = {
   disabled?: boolean
   onToggle?: (tag: TTag) => void
   tag: TTag
-  /** Whatever the list wants on the right: a menu, a usage count. */
+  /** A single icon-width control on the right, revealed on hover: see the
+   * menu in AddEditTags. The slot animates to a fixed 20px, so anything
+   * wider is clipped. */
   trailing?: ReactNode
 }
 
