@@ -113,34 +113,32 @@ const AddEditTags: FC<AddEditTagsType> = ({
     })
   }
 
+  // Trimmed, so the duplicate check and the tag it creates agree.
+  const newLabel = filter.trim()
+  const search = newLabel.toLowerCase()
+
   const filteredTags = useMemo(() => {
-    const _filter = filter.toLowerCase()
-    if (_filter) {
-      return loFilter(projectTags, (tag) =>
-        tag.label.toLowerCase().includes(filter),
-      )
-    }
+    if (!search) return projectTags || []
+    return loFilter(projectTags, (tag) =>
+      tag.label.toLowerCase().includes(search),
+    )
+  }, [search, projectTags])
 
-    return projectTags || []
-  }, [filter, projectTags])
-
-  const exactTag = useMemo(() => {
-    const _filter = filter.toLowerCase()
-    if (_filter) {
-      return projectTags?.find((tag) => tag.label === filter)
-    }
-    return null
-  }, [filter, projectTags])
+  // Case-insensitive, or the box offers to create a name that is already taken.
+  const exactTag = useMemo(
+    () => projectTags?.find((tag) => tag.label.toLowerCase() === search),
+    [search, projectTags],
+  )
   const noTags = projectTags && !projectTags.length
   // Nothing to create when the box is empty, or when the name is already taken.
-  const canCreate = !!filter && !exactTag
+  const canCreate = !!search && !exactTag
 
   const palette = Object.values(contentColours)
   const color = palette[(projectTags?.length || 0) % palette.length]
   const submit = () => {
     createTag({
       projectId,
-      tag: { color, description: '', label: filter, project: projectId },
+      tag: { color, description: '', label: newLabel, project: projectId },
     }).then((res) => {
       if (!res?.error && res.data) {
         selectTag(res.data)
@@ -165,7 +163,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
             <Input
               autoFocus
               value={filter}
-              onKeyPress={(e) => {
+              onKeyDown={(e) => {
                 if (e.key === 'Enter' && canCreate) {
                   submit()
                 }
@@ -220,11 +218,6 @@ const AddEditTags: FC<AddEditTagsType> = ({
                     }
                   />
                 ))}
-              {noTags && (
-                <div className='text-center text-default mt-4'>
-                  You have no tags yet
-                </div>
-              )}
             </div>
             {/* The only way to make a tag, and outside the scrolling list so
                 it stays in reach. Named, it creates one; unnamed, it opens
@@ -247,7 +240,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
                 >
                   <Icon name='plus' width={16} />
                   <span className='text-truncate'>
-                    {canCreate ? `Create "${filter}"` : 'New tag'}
+                    {canCreate ? `Create "${newLabel}"` : 'New tag'}
                   </span>
                   {/* Enter does the same thing, so the row says so. */}
                   {canCreate && (
