@@ -53,6 +53,7 @@ export const Sizes: Story = {
       <ColorSwatch color={colorChart1} size='md' />
       <ColorSwatch color={colorChart1} size='lg' />
       <ColorSwatch color={colorChart1} size='xl' />
+      <ColorSwatch color={colorChart1} size='2xl' />
     </div>
   ),
 }

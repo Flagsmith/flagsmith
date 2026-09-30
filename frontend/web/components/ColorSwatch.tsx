@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 import classNames from 'classnames'
 
-type ColorSwatchSize = 'sm' | 'md' | 'lg' | 'xl'
+type ColorSwatchSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl'
 type ColorSwatchShape = 'square' | 'rounded' | 'circle'
 
 type ColorSwatchProps = {
@@ -12,10 +12,11 @@ type ColorSwatchProps = {
 }
 
 const SIZE_MAP: Record<ColorSwatchSize, number> = {
-  lg: 16,
-  md: 12,
-  sm: 8,
-  xl: 44,
+  '2xl': 44,
+  'lg': 16,
+  'md': 12,
+  'sm': 8,
+  'xl': 32,
 }
 
 const SHAPE_CLASS: Record<ColorSwatchShape, string> = {

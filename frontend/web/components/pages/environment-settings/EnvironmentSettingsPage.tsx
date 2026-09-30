@@ -536,7 +536,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                               }}
                               className='full-width'
                             />
-                            <div className='ml-2'>
+                            <div className='mx-2'>
                               <ColourSelect
                                 value={currentEnv?.banner_colour || ''}
                                 onChange={(banner_colour) =>

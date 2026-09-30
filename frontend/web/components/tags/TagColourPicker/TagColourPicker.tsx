@@ -41,7 +41,7 @@ const TagColourPicker: FC<TagColourPickerProps> = ({
           <ColorSwatch
             className={swatchUtilities(swatch)}
             shape='rounded'
-            size='xl'
+            size='2xl'
           />
         </BareButton>
       ))}

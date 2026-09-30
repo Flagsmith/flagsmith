@@ -23,7 +23,7 @@ const ColourSelect: FC<ColourSelectType> = ({ onChange, value: _value }) => {
         className='colour-select__trigger'
         onClick={() => setIsOpen(true)}
       >
-        <ColorSwatch color={value} shape='rounded' size='lg' />
+        <ColorSwatch color={value} shape='rounded' size='xl' />
       </BareButton>
 
       <InlineModal
