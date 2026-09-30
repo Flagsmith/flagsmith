@@ -33,7 +33,7 @@ const PageShell: FC<{ title: string; children: React.ReactNode }> = ({
 }) => (
   <>
     <div className='text-center mb-4'>
-      <Text variant='h3' level={3}>
+      <Text variant='h3' level={1}>
         {title}
       </Text>
     </div>

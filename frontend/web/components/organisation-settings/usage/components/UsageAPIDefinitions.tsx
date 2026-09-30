@@ -9,10 +9,10 @@ const UsageAPIDefinitions: React.FC = () => {
         Please be aware that usage data can be delayed by up to 3 hours.
       </InfoMessage>
       <div>
-        <Text variant='h4' level={4}>
+        <Text variant='h4' level={2}>
           What do these numbers mean?
         </Text>
-        <Text variant='h5' level={5}>
+        <Text variant='h5' level={3}>
           Flags
         </Text>
         <p>
@@ -29,7 +29,7 @@ const UsageAPIDefinitions: React.FC = () => {
             Learn more.
           </a>
         </p>
-        <Text variant='h5' level={5}>
+        <Text variant='h5' level={3}>
           Identities
         </Text>
         <p>
@@ -50,7 +50,7 @@ const UsageAPIDefinitions: React.FC = () => {
             Learn more.
           </a>
         </p>
-        <Text variant='h5' level={5}>
+        <Text variant='h5' level={3}>
           Environment Document
         </Text>
         <p>
@@ -72,7 +72,7 @@ const UsageAPIDefinitions: React.FC = () => {
             Learn more.
           </a>
         </p>
-        <Text variant='h5' level={5}>
+        <Text variant='h5' level={3}>
           Traits
         </Text>
         <p>
@@ -87,7 +87,7 @@ const UsageAPIDefinitions: React.FC = () => {
             Learn more.
           </a>
         </p>
-        <Text variant='h5' level={5}>
+        <Text variant='h5' level={3}>
           Total API calls
         </Text>
         <p>This is a sum of the above.</p>

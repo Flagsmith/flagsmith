@@ -60,7 +60,7 @@ const ServerSideSDKKeys: FC<ServerSideSDKKeysProps> = ({
   return (
     <FormGroup className='my-4'>
       <div className='col-md-6'>
-        <Text variant='h5' level={5} className='mb-2'>
+        <Text variant='h5' level={2} className='mb-2'>
           Server-side Environment Keys
         </Text>
         <p className='fs-small lh-sm mb-0'>

@@ -25,7 +25,7 @@ export const GroupLabel = ({
       {tooltipText && (
         <Tooltip
           title={
-            <Text variant='h5' level={5} className='mb-1 cursor-pointer'>
+            <Text variant='h5' level={2} className='mb-1 cursor-pointer'>
               <Icon name='info-outlined' height={16} width={16} />
             </Text>
           }

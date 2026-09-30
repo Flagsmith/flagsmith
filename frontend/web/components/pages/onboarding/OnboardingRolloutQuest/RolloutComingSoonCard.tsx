@@ -39,7 +39,7 @@ const RolloutComingSoonCard: FC<RolloutComingSoonCardProps> = ({
         <Icon name='flash' width={12} />
         Coming soon
       </Chip>
-      <Text variant='h6' level={6} className='m-0'>
+      <Text variant='h6' level={3} className='m-0'>
         We’re making gradual rollouts one-click
       </Text>
       <p className='fs-caption lh-sm text-secondary m-0'>

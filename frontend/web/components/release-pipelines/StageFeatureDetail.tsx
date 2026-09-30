@@ -54,7 +54,7 @@ const StageFeatureDetail = ({
   if (!featureIds.length) {
     return (
       <>
-        <Text variant='h6' level={6}>
+        <Text variant='h6' level={3}>
           Features (0)
         </Text>
         <p className='text-muted'>No features at this stage.</p>
@@ -98,7 +98,7 @@ const StageFeatureDetail = ({
 
   return (
     <>
-      <Text variant='h6' level={6}>
+      <Text variant='h6' level={3}>
         Features ({featureIds.length})
       </Text>
       {projectFlags?.map((flag) => (

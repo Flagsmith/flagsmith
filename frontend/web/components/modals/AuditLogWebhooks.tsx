@@ -70,7 +70,7 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
       <JSONReference title={'Webhooks'} json={webhooks} />
       <div className='d-flex align-items-center'>
         <div className='flex-fill'>
-          <Text variant='h5' level={5} className='mb-2'>
+          <Text variant='h5' level={2} className='mb-2'>
             Audit Webhooks
           </Text>
           <p className='fs-small lh-sm mb-4'>
@@ -138,7 +138,7 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
               title={
                 <Tooltip
                   title={
-                    <Text variant='h5' level={5} className='mb-0'>
+                    <Text variant='h5' level={2} className='mb-0'>
                       Webhooks <Icon name='info-outlined' />
                     </Text>
                   }

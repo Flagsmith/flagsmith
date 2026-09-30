@@ -46,7 +46,7 @@ const UsagePageLayout: FC<UsagePageLayoutProps> = ({
 
   return (
     <div className='px-3 px-md-4 py-4'>
-      <Text variant='h4' level={4} className='mb-4'>
+      <Text variant='h4' level={2} className='mb-4'>
         Usage
       </Text>
       {alert}

@@ -35,7 +35,7 @@ const ProjectUsageTab: FC<ProjectUsageTabProps> = ({ projectId }) => {
           </InfoMessage>
         </Row>
         <Row className='mb-2'>
-          <Text variant='h5' level={5} className='mb-0'>
+          <Text variant='h5' level={2} className='mb-0'>
             Project Usage
           </Text>
         </Row>
@@ -58,7 +58,7 @@ const ProjectUsageTab: FC<ProjectUsageTabProps> = ({ projectId }) => {
         {!!maxSegmentOverrides && (
           <>
             <Row className='mb-2 mt-3'>
-              <Text variant='h6' level={6} className='mb-0'>
+              <Text variant='h6' level={3} className='mb-0'>
                 Segment Overrides (per environment)
               </Text>
             </Row>

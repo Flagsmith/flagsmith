@@ -172,7 +172,7 @@ const IdentityPage: FC = () => {
                       {showAliases && (
                         <Text
                           variant='h6'
-                          level={6}
+                          level={3}
                           className='d-flex mb-0 align-items-baseline gap-1'
                         >
                           <Tooltip

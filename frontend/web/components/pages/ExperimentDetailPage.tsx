@@ -105,7 +105,7 @@ const ExperimentDetailPage: FC = () => {
       {experiment.status !== 'created' && (
         <>
           <div className='d-flex justify-content-between align-items-center mb-3 mt-5'>
-            <Text variant='h5' level={5} className='mb-0'>
+            <Text variant='h5' level={2} className='mb-0'>
               Results
             </Text>
             <ExperimentResultsRefreshControl
@@ -120,7 +120,7 @@ const ExperimentDetailPage: FC = () => {
             usersEnrolled={usersEnrolled}
           />
 
-          <Text variant='h5' level={5} className='mb-3 mt-5'>
+          <Text variant='h5' level={2} className='mb-3 mt-5'>
             Analysis
           </Text>
           <ExperimentMetricScorecard
@@ -133,7 +133,7 @@ const ExperimentDetailPage: FC = () => {
             results={results}
           />
 
-          <Text variant='h5' level={5} className='mb-3 mt-5'>
+          <Text variant='h5' level={2} className='mb-3 mt-5'>
             Exposures
           </Text>
           <ExperimentExposuresPanel

@@ -45,7 +45,7 @@ const UsageTrendsChart: FC<UsageTrendsChartProps> = ({ days = 30, trends }) => {
 
   return (
     <Card className='shadow p-4'>
-      <Text variant='h5' level={5} className='mb-4 mt-2'>
+      <Text variant='h5' level={2} className='mb-4 mt-2'>
         API Usage Trends (Last {days} Days)
       </Text>
       <LineChart data={data} series={series} xAxisInterval={2} showLegend />

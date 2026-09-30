@@ -57,7 +57,7 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
   const [diff, setDiff] = useState<null | string>(null)
   return (
     <div>
-      <Text variant='h5' level={5}>
+      <Text variant='h5' level={2}>
         Change History
       </Text>
       <div>

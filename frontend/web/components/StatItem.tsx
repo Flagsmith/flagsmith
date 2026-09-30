@@ -49,7 +49,7 @@ const StatItem: FC<StatItemProps> = ({
         <p className='fs-small lh-sm mb-0'>
           {tooltip ? <Tooltip title={label}>{tooltip}</Tooltip> : label}
         </p>
-        <Text variant='h4' level={4} className='mb-0'>
+        <Text variant='h4' as='span' className='mb-0'>
           {formattedValue}
           {limit !== null && limit !== undefined && (
             <span className='text-muted fs-small fw-normal'>

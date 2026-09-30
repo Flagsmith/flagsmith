@@ -77,7 +77,7 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
           data-test='environment-permissions-tab'
         >
           <Row className='justify-content-between'>
-            <Text variant='h5' level={5} className='my-3'>
+            <Text variant='h5' level={2} className='my-3'>
               Permissions
             </Text>
             <Input

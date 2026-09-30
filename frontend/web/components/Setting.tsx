@@ -43,7 +43,7 @@ const Setting: FC<PlanBasedAccessSettingType> = ({
         )}
         <Text
           variant='h5'
-          level={5}
+          level={3}
           className={'mb-0 d-flex gap-2 align-items-center'}
         >
           <span

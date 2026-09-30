@@ -72,7 +72,7 @@ const InlineModal: FC<InlineModalProps> = ({
                       </span>
                     )}
                     {typeof title === 'string' ? (
-                      <Text variant='h5' level={5} className='mb-0'>
+                      <Text variant='h5' level={2} className='mb-0'>
                         {title}
                       </Text>
                     ) : (

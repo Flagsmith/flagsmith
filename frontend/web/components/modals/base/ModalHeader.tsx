@@ -12,7 +12,7 @@ const ModalHeader: FC<ModalHeaderType> = ({ children, onDismissClick }) => {
   return (
     <>
       <div className='modal-header'>
-        <Text variant='h5' level={5} className='modal-title'>
+        <Text variant='h5' level={2} className='modal-title'>
           {children}
         </Text>
         <ModalClose onClick={onDismissClick} />

@@ -63,7 +63,7 @@ const TryIt = class extends Component {
       <div>
         <Row space>
           <Flex className='align-items-start'>
-            <Text variant='h5' level={5} className='mb-2'>
+            <Text variant='h5' level={2} className='mb-2'>
               Try it out
             </Text>
             <div className='fs-small lh-sm'>{this.props.title}</div>

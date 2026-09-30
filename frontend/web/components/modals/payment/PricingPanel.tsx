@@ -67,7 +67,7 @@ export const PricingPanel = ({
                 />
                 <Text
                   variant='h4'
-                  level={4}
+                  level={2}
                   className={classNames('mb-0 ml-2', {
                     'text-white': isEnterprise,
                   })}
@@ -80,14 +80,14 @@ export const PricingPanel = ({
                 <Row className='pt-3 justify-content-center'>
                   <Text
                     variant='h5'
-                    level={5}
+                    as='span'
                     className='mb-0 align-self-start'
                   >
                     $
                   </Text>
                   <Text
                     variant='h1'
-                    level={1}
+                    as='span'
                     className='mb-0 d-flex align-items-end'
                   >
                     {isYearly ? priceYearly : priceMonthly}{' '}
@@ -136,7 +136,7 @@ export const PricingPanel = ({
         <div className='panel-footer mt-3'>
           <Text
             variant='h5'
-            level={5}
+            level={2}
             className={classNames('m-2 mb-4', {
               'text-white': isEnterprise,
             })}

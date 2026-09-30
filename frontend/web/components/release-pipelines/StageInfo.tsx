@@ -48,7 +48,7 @@ const StageInfo = ({
       <Row className='align-items-start no-wrap'>
         <StageCard>
           <div>
-            <Text variant='h5' level={5}>
+            <Text variant='h5' level={2}>
               {stageData?.name}
             </Text>
             <p>{environmentData?.name}</p>

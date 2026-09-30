@@ -374,7 +374,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({ forcedTagIds, pageTitle }) => {
       <div className='features-page'>
         {error || projectEnvError ? (
           <div className='text-center'>
-            <Text variant='h4' level={4} className='mb-3'>
+            <Text variant='h4' level={2} className='mb-3'>
               Unable to Load Features
             </Text>
             <p className='text-muted mb-3'>

@@ -67,7 +67,7 @@ const OAuthAuthorizePage = () => {
     if (!hasRequiredParams) {
       return (
         <div className='oauth-authorize__card card shadow p-4'>
-          <Text variant='h3' level={3}>
+          <Text variant='h3' level={1}>
             Invalid authorisation request
           </Text>
           <p className='text-muted'>
@@ -91,7 +91,7 @@ const OAuthAuthorizePage = () => {
     if (error || !data) {
       return (
         <div className='oauth-authorize__card card shadow p-4'>
-          <Text variant='h3' level={3}>
+          <Text variant='h3' level={1}>
             Authorisation error
           </Text>
           <p className='text-muted'>
@@ -106,7 +106,7 @@ const OAuthAuthorizePage = () => {
       <div className='oauth-authorize__card card shadow p-4'>
         <div className='text-center mb-4'>
           <Logo size={48} />
-          <Text variant='h3' level={3} className='oauth-authorize__title mb-0'>
+          <Text variant='h3' level={1} className='oauth-authorize__title mb-0'>
             <strong>{data.application.name}</strong> would like to connect to
             your Flagsmith account
           </Text>

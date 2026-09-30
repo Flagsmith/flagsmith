@@ -32,7 +32,7 @@ const OrganisationsPage: FC = () => {
           <div className='app-container container'>
             {Utils.getFlagsmithHasFeature('platform_hub') && (
               <div className='mb-4'>
-                <Text variant='h5' level={5} className='mb-3'>
+                <Text variant='h5' level={1} className='mb-3'>
                   Instance Administration
                 </Text>
                 <div className='row'>
@@ -116,7 +116,7 @@ const OrganisationsPage: FC = () => {
                         <Row className='flex-nowrap'>
                           <Text
                             variant='h2'
-                            level={2}
+                            as='span'
                             style={{
                               backgroundColor: Utils.getProjectColour(i),
                             }}

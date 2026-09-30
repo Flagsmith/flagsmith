@@ -39,7 +39,7 @@ const SettingRow: FC<SettingRowProps> = ({
         </div>
         <Text
           variant='h5'
-          level={5}
+          level={3}
           id={titleId}
           className='setting-row__title'
         >

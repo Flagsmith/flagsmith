@@ -641,7 +641,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                       />
                       <form onSubmit={() => saveEnv()}>
                         <div>
-                          <Text variant='h5' level={5} className='mb-2'>
+                          <Text variant='h5' level={2} className='mb-2'>
                             Hide disabled flags from SDKs
                           </Text>
                           <Select
@@ -803,7 +803,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                   <TabItem tabLabel='Webhooks'>
                     <FormGroup className='mt-4'>
                       <div className='col-md-8'>
-                        <Text variant='h5' level={5} className='mb-2'>
+                        <Text variant='h5' level={2} className='mb-2'>
                           Feature Webhooks
                         </Text>
                         <p className='fs-small lh-sm mb-4'>
@@ -832,7 +832,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                           title={
                             <Tooltip
                               title={
-                                <Text variant='h5' level={5} className='mb-0'>
+                                <Text variant='h5' level={2} className='mb-0'>
                                   Webhooks <Icon name='info-outlined' />
                                 </Text>
                               }
@@ -894,7 +894,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                                   title={
                                     <Text
                                       variant='h5'
-                                      level={5}
+                                      level={2}
                                       className='mb-0'
                                     >
                                       Webhooks <Icon name='info-outlined' />

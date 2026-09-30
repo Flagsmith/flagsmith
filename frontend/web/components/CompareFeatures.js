@@ -70,7 +70,7 @@ class CompareFeatures extends Component {
     return (
       <div>
         <div className='col-md-8'>
-          <Text variant='h5' level={5} className='mb-1'>
+          <Text variant='h5' level={2} className='mb-1'>
             Compare Feature Values
           </Text>
           <p className='fs-small mb-4 lh-sm'>

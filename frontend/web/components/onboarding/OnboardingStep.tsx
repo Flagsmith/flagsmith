@@ -77,7 +77,7 @@ const Step: FC<StepProps> = ({
       <div className='d-flex align-items-center gap-1'>
         <Text
           variant='h5'
-          level={5}
+          level={3}
           className={`mb-0 ${isComplete ? 'text-success' : 'text-action'}`}
         >
           {isComplete ? completedTitle : title}

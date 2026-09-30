@@ -80,7 +80,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
                 </div>
                 <div>
                   <p className='fs-small lh-sm mb-0'>Your plan</p>
-                  <Text variant='h4' level={4} className='mb-0'>
+                  <Text variant='h4' level={2} className='mb-0'>
                     {planName}
                   </Text>
                 </div>
@@ -91,7 +91,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
                 <div className='plan-icon'>
                   <Text
                     variant='h4'
-                    level={4}
+                    as='span'
                     className='mb-0 text-center'
                     style={{ width: '32px' }}
                   >
@@ -100,7 +100,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
                 </div>
                 <div>
                   <p className='fs-small lh-sm mb-0'>Organisation ID</p>
-                  <Text variant='h4' level={4} className='mb-0'>
+                  <Text variant='h4' as='span' className='mb-0'>
                     {organisation.id}
                   </Text>
                 </div>
@@ -114,7 +114,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
                   </div>
                   <div>
                     <p className='fs-small lh-sm mb-0'>Management Email</p>
-                    <Text variant='h6' level={6} className='mb-0'>
+                    <Text variant='h6' as='span' className='mb-0'>
                       {chargebee_email}
                     </Text>
                   </div>
@@ -138,7 +138,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
       </Row>
       {subscriptionMeta && (
         <>
-          <Text variant='h5' level={5} className='mt-4 mb-3'>
+          <Text variant='h5' level={2} className='mt-4 mb-3'>
             Subscription Limits
           </Text>
           <Row className='plan p-4 mb-4 flex-wrap gap-4'>
@@ -153,7 +153,7 @@ export const BillingTab = ({ organisation }: BillingTabProps) => {
           </Row>
         </>
       )}
-      <Text variant='h5' level={5}>
+      <Text variant='h5' level={2}>
         Manage Payment Plan
       </Text>
       <Payment

@@ -133,7 +133,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
           <strong>Visit the documentation for more details.</strong>
         </a>
       </InfoMessage>
-      <Text variant='h5' level={5}>
+      <Text variant='h5' level={2}>
         Import LaunchDarkly Projects
       </Text>
       <label>Set LaunchDarkly key</label>
@@ -199,7 +199,7 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
                         <Row className='flex-nowrap'>
                           <Text
                             variant='h2'
-                            level={2}
+                            as='span'
                             style={{
                               backgroundColor: Utils.getProjectColour(i),
                             }}

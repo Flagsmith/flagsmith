@@ -215,7 +215,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({ children, ...props }) => {
   }
   return (
     <div className={className}>
-      <Text variant='h4' level={4} className='d-flex align-items-center gap-2'>
+      <Text variant='h4' level={3} className='d-flex align-items-center gap-2'>
         <span>{featureDescriptions[feature].title}</span>
         <PlanBasedBanner {...props} theme={'badge'} />
       </Text>

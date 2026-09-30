@@ -220,7 +220,7 @@ const MetricsPage: FC = () => {
             width={48}
             className='text-muted mb-3 d-block mx-auto'
           />
-          <Text variant='h5' level={5}>
+          <Text variant='h5' level={2}>
             No metrics yet
           </Text>
           <p className='text-muted mb-4'>

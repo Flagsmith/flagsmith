@@ -46,7 +46,7 @@ const EnvironmentReadyChecker = ({
       <div className='container'>
         <div className='d-flex flex-column h-100 flex-1 justify-content-center align-items-center'>
           <Loader />
-          <Text variant='h3' level={3}>
+          <Text variant='h3' level={2}>
             Preparing your environment
           </Text>
           <p>We are setting up your new environment...</p>

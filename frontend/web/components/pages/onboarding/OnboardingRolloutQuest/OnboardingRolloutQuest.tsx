@@ -31,7 +31,7 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
     </p>
 
     <section className='onboarding-rollout-quest__card bg-surface-muted rounded-xl p-4 d-flex flex-column gap-3'>
-      <Text variant='h6' level={6} className='m-0'>
+      <Text variant='h6' level={3} className='m-0'>
         How to roll out gradually today
       </Text>
       <ol className='list-unstyled d-flex flex-column gap-3 m-0'>

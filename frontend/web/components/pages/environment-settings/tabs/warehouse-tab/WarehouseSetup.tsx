@@ -42,7 +42,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
   return (
     <div className='warehouse-setup'>
       <div>
-        <Text variant='h5' level={5} className='mb-2'>
+        <Text variant='h5' level={2} className='mb-2'>
           Warehouse Type
         </Text>
         <div className='warehouse-setup__type-row'>
@@ -151,7 +151,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
                 aria-expanded={sqlExpanded}
                 onClick={() => setSqlExpanded(!sqlExpanded)}
               >
-                <Text variant='h6' level={6} className='mb-0'>
+                <Text variant='h6' level={3} className='mb-0'>
                   Configure your warehouse for experimentation
                 </Text>
                 <Icon
@@ -177,7 +177,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
               <div className='warehouse-setup__step-marker'>2</div>
             </div>
             <div className='warehouse-setup__step-content'>
-              <Text variant='h6' level={6} className='mb-2'>
+              <Text variant='h6' level={3} className='mb-2'>
                 Connect your warehouse
               </Text>
               <p className='text-muted mb-3'>

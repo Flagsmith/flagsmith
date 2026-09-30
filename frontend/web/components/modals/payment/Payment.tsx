@@ -75,7 +75,7 @@ export const Payment: FC<PaymentProps> = ({
           {isDisableAccountText && (
             <div className='d-lg-flex flex-lg-row align-items-end justify-content-between w-100 gap-4'>
               <div>
-                <Text variant='h4' level={4}>
+                <Text variant='h4' level={2}>
                   {isDisableAccountText}{' '}
                   <a target='_blank' href={SUPPORT_EMAIL_URL} rel='noreferrer'>
                     {SUPPORT_EMAIL}

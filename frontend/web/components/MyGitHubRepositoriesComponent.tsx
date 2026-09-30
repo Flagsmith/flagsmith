@@ -59,7 +59,7 @@ const MyGitHubRepositoriesComponent: FC<MyGitHubRepositoriesComponentType> = ({
         <>
           {!!reposSelect.length && (
             <>
-              <Text variant='h5' level={5} className='title'>
+              <Text variant='h5' level={2} className='title'>
                 Add Your Repository
               </Text>
               <GitHubRepositoriesSelect

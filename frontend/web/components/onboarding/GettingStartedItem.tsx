@@ -90,7 +90,7 @@ const GettingStartedItem: FC<GettingStartedItemType> = (data) => {
 
                   <Text
                     variant='h6'
-                    level={6}
+                    level={4}
                     className='fw-normal d-flex fs-small text-muted flex-1 mb-0'
                   >
                     {description}

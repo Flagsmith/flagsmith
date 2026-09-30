@@ -12,7 +12,7 @@ export const PricingToggle = ({ isYearly, onChange }: PricingToggleProps) => {
     <div className='d-flex mb-4 font-weight-medium justify-content-center align-items-center gap-2'>
       <Text
         variant='h5'
-        level={5}
+        level={2}
         className={classNames('mb-0', {
           'text-muted': !isYearly,
         })}
@@ -27,7 +27,7 @@ export const PricingToggle = ({ isYearly, onChange }: PricingToggleProps) => {
       />
       <Text
         variant='h5'
-        level={5}
+        level={2}
         className={classNames('mb-0', {
           'text-muted': isYearly,
         })}

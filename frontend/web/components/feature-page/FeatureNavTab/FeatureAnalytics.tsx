@@ -98,7 +98,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
   return (
     <>
       <FormGroup className='mb-4'>
-        <Text variant='h5' level={5} className='mb-2'>
+        <Text variant='h5' level={2} className='mb-2'>
           Flag events for last 30 days
         </Text>
         <div className='d-flex gap-3 mb-3 flex-wrap'>

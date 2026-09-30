@@ -11,7 +11,7 @@ const SettingTitle: FC<SettingTitleType> = ({ children, danger }) => {
     <>
       <Text
         variant='h5'
-        level={5}
+        level={3}
         className={classNames('mt-5 mb-0', { 'text-danger': danger })}
       >
         {children}

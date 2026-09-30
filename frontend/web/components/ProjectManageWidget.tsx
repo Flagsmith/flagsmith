@@ -81,7 +81,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
             ) : (
               isAdmin && (
                 <div className='container-mw-700 mb-4'>
-                  <Text variant='h5' level={5} className='mb-2'>
+                  <Text variant='h5' level={2} className='mb-2'>
                     Great! Now you can create your first project.
                   </Text>
                   <p className='fs-small lh-sm mb-0'>
@@ -165,7 +165,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                               <Row className='flex-nowrap'>
                                 <Text
                                   variant='h2'
-                                  level={2}
+                                  as='span'
                                   style={{
                                     backgroundColor: Utils.getProjectColour(i),
                                   }}
@@ -186,7 +186,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
                       <div>
                         {!canCreateProject && (
                           <>
-                            <Text variant='h5' level={5} className='mt-4 mb-2'>
+                            <Text variant='h5' level={2} className='mt-4 mb-2'>
                               Projects
                             </Text>
                             <div className='container-mw-700 mb-4'>

@@ -10,7 +10,7 @@ const DevViewPage: FC = () => {
       </PageTitle>
 
       <div className='text-center py-5'>
-        <Text variant='h2' level={2} className='text-muted'>
+        <Text variant='h2' level={1} className='text-muted'>
           Coming Soon
         </Text>
         <p className='text-muted mt-3'>

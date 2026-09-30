@@ -9,7 +9,7 @@ const NotFoundErrorPage: FC = () => {
 
   return (
     <div className='app-container container'>
-      <Text variant='h3' level={3} className='pt-5'>
+      <Text variant='h3' level={1} className='pt-5'>
         Oops!
       </Text>
       <p>

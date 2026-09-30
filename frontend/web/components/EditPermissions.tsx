@@ -1073,7 +1073,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   return (
     <div className='mt-4'>
       <Row>
-        <Text variant='h5' level={5}>
+        <Text variant='h5' level={2}>
           Manage Permissions
         </Text>
       </Row>
@@ -1252,7 +1252,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
           <TabItem tabLabel='Roles'>
             <PlanBasedAccess className='mt-4' feature={'RBAC'} theme='page'>
               <Row space className='mt-4'>
-                <Text variant='h5' level={5} className='m-b-0'>
+                <Text variant='h5' level={2} className='m-b-0'>
                   {roleTabTitle}
                 </Text>
               </Row>

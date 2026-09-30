@@ -57,7 +57,7 @@ const OrganisationIntegrationsPage = ({ match }) => {
       />
       {!!projectIntegrations.length && (
         <>
-          <Text variant='h5' level={5} className='mt-5 mb-3'>
+          <Text variant='h5' level={2} className='mt-5 mb-3'>
             Project-level integrations
           </Text>
           <IntegrationList

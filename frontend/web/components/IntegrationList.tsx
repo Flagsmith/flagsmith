@@ -279,7 +279,7 @@ const Integration: FC<IntegrationProps> = (props) => {
       <div className='d-flex align-items-center gap-4'>
         <img src={image} alt='Integration' />
         <div className='flex-1 flex-column'>
-          <Text variant='h4' level={4} className='mb-0'>
+          <Text variant='h4' level={2} className='mb-0'>
             {title}
           </Text>
           <div className='subtitle'>

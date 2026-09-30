@@ -39,7 +39,7 @@ const AdminDashboardPage: FC = () => {
   if (!isEnabled) {
     return (
       <div className='app-container text-center py-5'>
-        <Text variant='h3' level={3}>
+        <Text variant='h3' level={2}>
           Access Denied
         </Text>
         <p className='text-muted'>
@@ -52,7 +52,7 @@ const AdminDashboardPage: FC = () => {
   return (
     <div className='app-container container'>
       <div className='py-2' style={{ marginBottom: -48 }}>
-        <Text variant='h2' level={2} className='mb-0'>
+        <Text variant='h2' level={1} className='mb-0'>
           Platform Hub
         </Text>
         <p className='text-muted mb-0'>

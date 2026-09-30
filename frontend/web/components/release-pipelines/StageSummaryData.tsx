@@ -47,7 +47,7 @@ const StageSummaryData = ({
 
   return (
     <div className='py-2'>
-      <Text variant='h6' level={6}>
+      <Text variant='h6' level={3}>
         Status
       </Text>
       {isWaitType && (

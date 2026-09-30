@@ -26,7 +26,7 @@ const LaunchedCard = ({
     <StageCard>
       <Row className=' gap-2 align-items-center mb-2'>
         <Icon name='checkmark-circle' width={30} fill='#27AB95' />
-        <Text variant='h5' level={5} className='mb-0'>
+        <Text variant='h5' level={2} className='mb-0'>
           Launched
         </Text>
       </Row>

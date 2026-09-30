@@ -278,7 +278,7 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
           <div className='flex-row align-items-center gap-2'>
             <Text
               variant='h2'
-              level={2}
+              level={1}
               className='text-default fw-bold mb-0'
               style={{ fontSize: 20 }}
             >

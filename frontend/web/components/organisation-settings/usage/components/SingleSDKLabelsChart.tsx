@@ -20,7 +20,7 @@ const SingleSDKLabelsChart: FC<SingleSDKLabelsChartProps> = ({
 
   return (
     <div className='border rounded p-3'>
-      <Text variant='h5' level={5}>
+      <Text variant='h5' level={2}>
         {title}
       </Text>
       {hasData ? (

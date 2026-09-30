@@ -30,7 +30,7 @@ export const EdgeAPIMigration = ({ project }: EdgeAPIMigrationProps) => {
   return (
     <FormGroup className='mt-4'>
       <Row className='mb-2'>
-        <Text variant='h5' level={5} className='mb-0 mr-3'>
+        <Text variant='h5' level={2} className='mb-0 mr-3'>
           Global Edge API Opt in
         </Text>
         <Button

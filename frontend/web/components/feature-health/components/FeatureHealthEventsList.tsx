@@ -51,7 +51,7 @@ const FeatureHealthEventsList: React.FC<FeatureHealthEventsListProps> = ({
   }
   return (
     <>
-      <Text variant='h5' level={5} className='mb-4'>
+      <Text variant='h5' level={2} className='mb-4'>
         Unhealthy Events
       </Text>
       <div className='d-flex flex-column gap-4'>
@@ -80,7 +80,7 @@ const FeatureHealthEventsList: React.FC<FeatureHealthEventsListProps> = ({
                 />
                 <div>
                   <Row>
-                    <Text variant='h6' level={6} className='mb-0'>
+                    <Text variant='h6' level={3} className='mb-0'>
                       {event.provider_name} Provider
                     </Text>
                     <div className='ml-2'>

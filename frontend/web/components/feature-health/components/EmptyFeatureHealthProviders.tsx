@@ -14,7 +14,7 @@ const EmptyFeatureHealthProviders: React.FC<
   return (
     <>
       <div className='mb-4'>
-        <Text variant='h5' level={5}>
+        <Text variant='h5' level={2}>
           No Provider Configured
         </Text>
       </div>

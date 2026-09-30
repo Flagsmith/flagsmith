@@ -137,7 +137,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
         featureId={projectFlag?.id}
         renderFallback={(matchingReleasePipeline) => (
           <>
-            <Text variant='h5' level={5} className='mb-2'>
+            <Text variant='h5' level={2} className='mb-2'>
               Segment Overrides{' '}
             </Text>
             <InfoMessage title={`Feature in release pipeline`}>
@@ -153,7 +153,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
               <div className='flex-fill'>
                 <Tooltip
                   title={
-                    <Text variant='h5' level={5} className='mb-0'>
+                    <Text variant='h5' level={2} className='mb-0'>
                       Segment Overrides <Icon name='info-outlined' />
                     </Text>
                   }

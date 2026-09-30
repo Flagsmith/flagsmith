@@ -289,7 +289,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         id='change-requests-page'
         className='app-container container'
       >
-        <Text variant='h3' level={3}>
+        <Text variant='h3' level={2}>
           Change Request not Found
         </Text>
         <p>The Change Request may have been deleted.</p>
@@ -484,7 +484,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
         id='change-requests-page'
         className='app-container container'
       >
-        <Text variant='h3' level={3}>
+        <Text variant='h3' level={2}>
           Change Request not Found
         </Text>
         <p>The Change Request may have been deleted.</p>

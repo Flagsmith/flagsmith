@@ -30,7 +30,7 @@ const EmptyState: FC<EmptyStateProps> = ({
           <Icon name={icon} width={40} fill={iconColour} />
         </div>
       )}
-      <Text variant='h5' level={5} className='empty-state__title'>
+      <Text variant='h5' level={3} className='empty-state__title'>
         {title}
       </Text>
       {description && (

@@ -418,7 +418,7 @@ const HomePage: React.FC = () => {
           <div className='container mb-4'>
             {isSignup ? (
               <div className='text-center mb-4'>
-                <Text variant='h3' level={3}>
+                <Text variant='h3' level={1}>
                   It's free to get started.
                 </Text>
                 {!isInvite && (
@@ -439,7 +439,7 @@ const HomePage: React.FC = () => {
               </div>
             ) : (
               <div className='text-center mb-4'>
-                <Text variant='h3' level={3}>
+                <Text variant='h3' level={1}>
                   Sign in to Flagsmith
                 </Text>
                 {!!oauths.length && (

@@ -278,7 +278,7 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
   return (
     <div>
       <div className='col-md-8'>
-        <Text variant='h5' level={5} className='mb-1'>
+        <Text variant='h5' level={2} className='mb-1'>
           Compare Environments
         </Text>
         <p className='fs-small mb-4 lh-sm'>

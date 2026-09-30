@@ -82,7 +82,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
   return (
     <>
       <Row space className='mt-4'>
-        <Text variant='h5' level={5} className='m-b-0'>
+        <Text variant='h5' level={2} className='m-b-0'>
           Roles
         </Text>
         {Utils.renderWithPermission(

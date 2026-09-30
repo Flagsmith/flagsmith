@@ -120,7 +120,7 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({
   return (
     <FormGroup className='my-4'>
       <div className='col-md-8'>
-        <Text variant='h5' level={5} className='mb-2'>
+        <Text variant='h5' level={2} className='mb-2'>
           Cohort Synchronisation Keys
         </Text>
         <p className='fs-small lh-sm mb-0'>

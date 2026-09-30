@@ -53,7 +53,7 @@ const CheckEmailPage: FC = () => {
       </div>
       <div className='container'>
         <div className='text-center mb-4'>
-          <Text variant='h3' level={3}>
+          <Text variant='h3' level={1}>
             Check your email
           </Text>
           <p className='mb-0'>

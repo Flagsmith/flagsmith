@@ -166,7 +166,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
 
       <FormGroup className='mt-4'>
         <div className='col-md-8'>
-          <Text variant='h5' level={5} className='mb-2'>
+          <Text variant='h5' level={1} className='mb-2'>
             Manage Users and Permissions
           </Text>
           <p className='mb-4 fs-small lh-sm'>
@@ -196,7 +196,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                   <Tabs urlParam={'type'} theme='pill' uncontrolled>
                     <TabItem tabLabel='Members'>
                       <Row space className='mt-4'>
-                        <Text variant='h5' level={5} className='mb-0'>
+                        <Text variant='h5' level={2} className='mb-0'>
                           Team Members
                         </Text>
                         {Utils.renderWithPermission(
@@ -547,7 +547,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                     <TabItem tabLabel='Groups' data-test='tab-item-groups'>
                       <div>
                         <Row space className='mt-4 mb-1'>
-                          <Text variant='h5' level={5} className='mb-0'>
+                          <Text variant='h5' level={2} className='mb-0'>
                             User Groups
                           </Text>
                           {Utils.renderWithPermission(

@@ -170,7 +170,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
       <PlanBasedBanner className='mt-4' feature={'METADATA'} theme={'page'}>
         <Row space className='mb-2'>
           <Row>
-            <Text variant='h5' level={5}>
+            <Text variant='h5' level={2}>
               Custom Fields
             </Text>
           </Row>
@@ -192,7 +192,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         </p>
 
         <FormGroup className='mt-4'>
-          <Text variant='h6' level={6} className='mb-2'>
+          <Text variant='h6' level={3} className='mb-2'>
             Organisation Fields
           </Text>
           <PanelSearch
@@ -220,7 +220,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         </FormGroup>
 
         <FormGroup className='mt-4'>
-          <Text variant='h6' level={6} className='mb-2'>
+          <Text variant='h6' level={3} className='mb-2'>
             Project Fields
           </Text>
           <PanelSearch
@@ -251,7 +251,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
     <PlanBasedBanner className='mt-4' feature={'METADATA'} theme={'page'}>
       <Row space className='mb-2'>
         <Row>
-          <Text variant='h5' level={5}>
+          <Text variant='h5' level={2}>
             Custom Fields
           </Text>
         </Row>

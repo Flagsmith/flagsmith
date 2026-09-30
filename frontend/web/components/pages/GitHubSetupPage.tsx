@@ -119,7 +119,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
     >
       {!githubIntegrationSetupFromFlagsmithValue ? (
         <>
-          <Text variant='h3' level={3} className='my-3'>
+          <Text variant='h3' level={1} className='my-3'>
             Configure your integration with GitHub
           </Text>
           <InputGroup

@@ -12,7 +12,7 @@ const PageTitle: FC<PageTitleType> = ({ children, className, cta, title }) => {
     <div className={className || 'mb-4'}>
       <div className='flex-row flex-lg-row gap-2 align-items-start align-items-lg-center justify-content-between'>
         <div className='flex flex-fill'>
-          <Text variant='h4' level={4} className={children ? 'mb-1' : 'mb-0'}>
+          <Text variant='h4' level={1} className={children ? 'mb-1' : 'mb-0'}>
             {title}
           </Text>
           {children && (

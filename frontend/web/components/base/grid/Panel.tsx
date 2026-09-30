@@ -25,7 +25,7 @@ class Panel extends PureComponent<PanelProps> {
             <Row space>
               <Row className='flex-1 mr-3'>
                 {title && (
-                  <Text variant='h5' level={5} className='m-b-0 title'>
+                  <Text variant='h5' level={3} className='m-b-0 title'>
                     {title}
                   </Text>
                 )}

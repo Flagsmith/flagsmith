@@ -163,7 +163,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
           <div className='flex-fill'>
             <Tooltip
               title={
-                <Text variant='h5' level={5} className='mb-0'>
+                <Text variant='h5' level={2} className='mb-0'>
                   Identity Overrides{' '}
                   <Icon name='info-outlined' width={20} fill='#9DA4AE' />
                 </Text>

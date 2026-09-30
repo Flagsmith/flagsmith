@@ -45,7 +45,7 @@ const LicensingTabContent: React.FC<LicensingTabContentProps> = ({
 
   return (
     <div className='mt-4'>
-      <Text variant='h5' level={5} className='mb-5'>
+      <Text variant='h5' level={2} className='mb-5'>
         Upload Licensing Files
       </Text>
       <form

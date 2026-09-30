@@ -165,7 +165,7 @@ const AccountSettingsPage: FC = () => {
   if (forced2Factor) {
     return (
       <div className='app-container container'>
-        <Text variant='h3' level={3}>
+        <Text variant='h3' level={2}>
           Two-Factor Authentication
         </Text>
         <p>
@@ -311,7 +311,7 @@ const AccountSettingsPage: FC = () => {
         <TabItem tabLabel='API Keys'>
           <div className='mt-6'>
             <div className='col-md-6'>
-              <Text variant='h5' level={5}>
+              <Text variant='h5' level={2}>
                 Manage API Keys
               </Text>
               <InfoMessage>
@@ -354,7 +354,7 @@ const AccountSettingsPage: FC = () => {
           <div className='mt-4'>
             {account?.auth_type === 'EMAIL' && (
               <div className='col-md-6'>
-                <Text variant='h5' level={5} className='mb-5'>
+                <Text variant='h5' level={2} className='mb-5'>
                   Change password
                 </Text>
                 <form className='mb-0' onSubmit={savePassword}>

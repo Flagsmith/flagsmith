@@ -42,7 +42,7 @@ const PasswordResetPage = class extends Component {
         <AccountProvider onSave={this.onSave}>
           {({ error, isSaving }) => (
             <div className='card signup-form container px-4 py-4'>
-              <Text variant='h3' level={3}>
+              <Text variant='h3' level={1}>
                 Reset Password
               </Text>
 
@@ -94,7 +94,7 @@ const PasswordResetPage = class extends Component {
               <div>
                 {error ? (
                   <div>
-                    <Text variant='h3' level={3} className='pt-5'>
+                    <Text variant='h3' level={1} className='pt-5'>
                       Oops
                     </Text>
                     <ErrorMessage

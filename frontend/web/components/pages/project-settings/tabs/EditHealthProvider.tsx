@@ -136,7 +136,7 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
   return (
     <div className='mt-4'>
       <Row>
-        <Text variant='h5' level={5}>
+        <Text variant='h5' level={2}>
           Manage Health Providers <InteractiveDemo feature={'FEATURE_HEALTH'} />
         </Text>
       </Row>
