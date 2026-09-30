@@ -599,9 +599,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
               setSegmentsChanged(false)
               // Variation edits stay unsaved if the user cancels the request.
               setValueChanged(hasVariationChanges)
-              const segmentFeatureStates = (segmentOverrides || [])
-                .filter((override: any) => !override.toRemove)
-                .map((override: any) => ({
+              // Keep overrides marked for removal, flagged with `toRemove`, so
+              // the change request's "no changes" check sees the deletion.
+              const segmentFeatureStates = (segmentOverrides || []).map(
+                (override: any) => ({
                   enabled: override.enabled,
                   feature: override.feature,
                   feature_segment: {
@@ -619,7 +620,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   id: override.id,
                   multivariate_feature_state_values:
                     override.multivariate_options,
-                }))
+                  toRemove: override.toRemove,
+                }),
+              )
               const featureStates = [
                 ...segmentFeatureStates,
                 {
