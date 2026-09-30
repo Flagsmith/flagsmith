@@ -16,14 +16,12 @@ import {
 
 type TagType = {
   className?: string
-  // Whether the tag is unavailable to this organisation. The rule is a plan
-  // entitlement, so it belongs to whoever knows about plans: see
-  // Utils.tagDisabled. Reading it in here made a chip depend on AccountStore.
+  // Unavailable to this organisation: a plan entitlement, see
+  // Utils.tagDisabled.
   disabled?: boolean
-  // Partial, because `tag` is: the filter renders an "Untagged" pseudo-tag
-  // with no id, and the create row previews a tag that does not exist yet.
   onClick?: (tag: Partial<TTag>) => void
   selected?: boolean
+  // Partial: the archived and untagged pseudo-tags have no id.
   tag: Partial<TTag>
   isDot?: boolean
 }
