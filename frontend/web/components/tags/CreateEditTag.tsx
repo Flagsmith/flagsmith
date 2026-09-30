@@ -72,7 +72,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
     //eslint-disable-next-line
   }, [createSuccess])
   useEffect(() => {
-    if (createSuccess && editData) {
+    if (editSuccess && editData) {
       onComplete(editData)
     }
     //eslint-disable-next-line
@@ -96,9 +96,11 @@ const CreateEditTag: FC<CreateEditTagType> = ({
     _onComplete?.(tag)
   }
 
+  // One condition, or Enter saves what the button refuses: a duplicate name.
+  const cannotSave = !!existingTag || tagsSaving || !tag?.color || !tag?.label
+
   const save = () => {
-    const disabled = tagsSaving || !tag?.color || !tag?.label
-    if (disabled) return
+    if (cannotSave) return
     if (isEdit) {
       editTag({ projectId, tag: tag as TTag })
     } else {
@@ -138,13 +140,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
                   <Button
                     onClick={save}
                     type='button'
-                    disabled={
-                      !!existingTag ||
-                      tagsSaving ||
-                      !tag?.color ||
-                      !tag?.label ||
-                      !permission
-                    }
+                    disabled={cannotSave || !permission}
                   >
                     Save Tag
                   </Button>
