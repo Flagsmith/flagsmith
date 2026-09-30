@@ -38,8 +38,8 @@ const esc = (s) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 const lightVal = (e) => e.light ?? e.value
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
-const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
-const DESCRIBED = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
+const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing', 'font-weight', 'font-size', 'line-height']
+const DESCRIBED = ['radius', 'shadow', 'duration', 'easing', 'font-weight', 'font-size', 'line-height']
 // Chart colours are like colour tokens (light/dark) but not under "color"
 const CHART_CATEGORY = 'chart'
 

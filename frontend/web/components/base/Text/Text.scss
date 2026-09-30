@@ -1,0 +1,85 @@
+// Design-system typography. Sizes and line heights come from the token scale;
+// colour stays out of here so the text-* token utilities still apply.
+// Distinct class (`ds-text`) so it beats the global h1..h6 rules in
+// project/_type.scss, which style headings by tag.
+//
+// No margin rule here on purpose: the element keeps whatever margin it already
+// had, so swapping a raw tag for this component changes type, not spacing.
+.ds-text {
+  &--h1 {
+    font-size: var(--font-size-h1);
+    line-height: var(--line-height-h1);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &--h2 {
+    font-size: var(--font-size-h2);
+    line-height: var(--line-height-h2);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &--h3 {
+    font-size: var(--font-size-h3);
+    line-height: var(--line-height-h3);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &--h4 {
+    font-size: var(--font-size-h4);
+    line-height: var(--line-height-h4);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &--h5 {
+    font-size: var(--font-size-h5);
+    line-height: var(--line-height-h5);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &--h6 {
+    font-size: var(--font-size-h6);
+    line-height: var(--line-height-h6);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &--b1 {
+    font-size: var(--font-size-b1);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-regular);
+  }
+
+  &--b2 {
+    font-size: var(--font-size-b2);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-regular);
+  }
+
+  &--b3 {
+    font-size: var(--font-size-b3);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-regular);
+  }
+
+  &--b4 {
+    font-size: var(--font-size-b4);
+    line-height: var(--line-height-body);
+    font-weight: var(--font-weight-regular);
+  }
+
+  // Listed after the variants so an explicit weight wins.
+  &--weight-regular {
+    font-weight: var(--font-weight-regular);
+  }
+
+  &--weight-medium {
+    font-weight: var(--font-weight-medium);
+  }
+
+  &--weight-semibold {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &--weight-bold {
+    font-weight: var(--font-weight-bold);
+  }
+}
