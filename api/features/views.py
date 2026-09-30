@@ -1049,16 +1049,14 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             return self._get_flags_response_with_identifier(request, identifier)
 
         if feature_name := request.GET.get("feature"):
-            # Filtered after evaluating, not before, because of dependent flags
             evaluated_feature_state = next(
-                (
-                    evaluated_feature_state
-                    for evaluated_feature_state in get_environment_feature_states(
+                iter(
+                    get_environment_feature_states(
                         request.environment,
+                        feature_name=feature_name,
                         hide_server_key_only=self._hide_server_key_only,
                         from_replica=True,
                     )
-                    if evaluated_feature_state.evaluation_result["name"] == feature_name
                 ),
                 None,
             )
