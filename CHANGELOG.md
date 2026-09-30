@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.278.0](https://github.com/Flagsmith/flagsmith/compare/v2.277.0...v2.278.0) (2026-09-30)
+
+
+### Features
+
+* **api:** Add an evaluation context mapping layer ([#8573](https://github.com/Flagsmith/flagsmith/issues/8573)) ([abd6780](https://github.com/Flagsmith/flagsmith/commit/abd6780a77f31cb82b879722602a8f2c6661fffa))
+* **api:** Evaluate edge identity flags through flag-engine ([#8575](https://github.com/Flagsmith/flagsmith/issues/8575)) ([bb93d2e](https://github.com/Flagsmith/flagsmith/commit/bb93d2eddfddb06ed940e7084b433b001d7a3928))
+* **api:** Evaluate identity flags through flag-engine ([#8574](https://github.com/Flagsmith/flagsmith/issues/8574)) ([fd480b0](https://github.com/Flagsmith/flagsmith/commit/fd480b00316e519e664e1c1d2104fa0632e588ab))
+* **api:** Evaluate segments for environment flags ([#8576](https://github.com/Flagsmith/flagsmith/issues/8576)) ([2150ed5](https://github.com/Flagsmith/flagsmith/commit/2150ed55bf5e00be11b204055935e10e2f09235c))
+* **experimentation:** add the environment keys db view for the ingestion server ([#8610](https://github.com/Flagsmith/flagsmith/issues/8610)) ([552c89d](https://github.com/Flagsmith/flagsmith/commit/552c89dbc9331321c795695657b3eed405053b65))
+* **Flag Dependency:** Add prerequisites to a feature ([#8570](https://github.com/Flagsmith/flagsmith/issues/8570)) ([7c8cc87](https://github.com/Flagsmith/flagsmith/commit/7c8cc879e20d165683cc96a73b3ce00cfb9b1de1))
+* **Flag Dependency:** List dependencies ([#8571](https://github.com/Flagsmith/flagsmith/issues/8571)) ([68cbe99](https://github.com/Flagsmith/flagsmith/commit/68cbe9961e9f49923f553700f7f84b98172d0ea5))
+
+
+### Bug Fixes
+
+* **LaunchDarkly:** Imported startsWith and endsWith conditions match values that only contain the value ([#8607](https://github.com/Flagsmith/flagsmith/issues/8607)) ([7c32b89](https://github.com/Flagsmith/flagsmith/commit/7c32b89dcd80a604fe4b2c1a9a2113b9561dea74))
+
+
+### Dependency Updates
+
+* Add constraints on release age for non-flagsmith dependencies ([#8566](https://github.com/Flagsmith/flagsmith/issues/8566)) ([2451fe4](https://github.com/Flagsmith/flagsmith/commit/2451fe49f29af61363117dc301fac62b0f20a9a1))
+
+
+### Refactoring
+
+* **charts:** describe a line chart's series in one place ([#8600](https://github.com/Flagsmith/flagsmith/issues/8600)) ([77d7fbf](https://github.com/Flagsmith/flagsmith/commit/77d7fbfe48c1ef02c1aba6a3b4a02a59845fc875))
+
 ## [2.277.0](https://github.com/Flagsmith/flagsmith/compare/v2.276.0...v2.277.0) (2026-09-29)
 
 
