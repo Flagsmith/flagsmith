@@ -8,6 +8,7 @@ import { SortOrder } from 'common/types/requests'
 import PanelSearch from 'components/PanelSearch'
 import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
+import Text from 'components/base/Text'
 
 type IntegrationScope = 'environment' | 'organisation' | 'project'
 
@@ -223,9 +224,9 @@ const IntegrationAdoptionTable: FC<IntegrationAdoptionTableProps> = ({
               className='flex-fill d-flex align-items-center'
               style={{ gap: 6 }}
             >
-              <span className='font-weight-medium' style={{ fontSize: 13 }}>
+              <Text variant='b2' className='font-weight-medium'>
                 {org.organisation_name}
-              </span>
+              </Text>
               {verified && (
                 <Icon fill='#27AB95' name='checkmark-circle' width={16} />
               )}
@@ -240,12 +241,13 @@ const IntegrationAdoptionTable: FC<IntegrationAdoptionTableProps> = ({
                   className='d-flex align-items-center'
                   style={{ gap: 8, width: '100%' }}
                 >
-                  <span
+                  <Text
+                    variant='b4'
                     className='text-muted'
-                    style={{ fontSize: 11, minWidth: 90, textAlign: 'right' }}
+                    style={{ minWidth: 90, textAlign: 'right' }}
                   >
                     {SCOPE_LABELS[detail.scope]}
-                  </span>
+                  </Text>
                   <div
                     style={{
                       background: '#e9ecef',
@@ -267,18 +269,19 @@ const IntegrationAdoptionTable: FC<IntegrationAdoptionTableProps> = ({
                       }}
                     />
                   </div>
-                  <span
+                  <Text
+                    variant='b4'
                     className='text-muted'
-                    style={{ fontSize: 11, minWidth: 120, textAlign: 'right' }}
+                    style={{ minWidth: 120, textAlign: 'right' }}
                   >
                     {renderScopeLabel(detail)}
-                  </span>
+                  </Text>
                 </div>
               ))}
               {org.scope_details.length === 0 && (
-                <span className='text-muted' style={{ fontSize: 12 }}>
+                <Text variant='b3' className='text-muted'>
                   Not installed
-                </span>
+                </Text>
               )}
             </div>
           </div>
@@ -399,19 +402,22 @@ const IntegrationAdoptionTable: FC<IntegrationAdoptionTableProps> = ({
                     }}
                   />
                 </div>
-                <span
+                <Text
+                  variant='b2'
                   className='font-weight-medium'
-                  style={{ fontSize: 13, minWidth: 36, textAlign: 'right' }}
+                  style={{ minWidth: 36, textAlign: 'right' }}
                 >
                   {row.adoption_pct}%
-                </span>
+                </Text>
               </div>
-              <div
+              <Text
+                variant='b2'
+                as='div'
                 className='table-column text-muted'
-                style={{ fontSize: 13, width: 200 }}
+                style={{ width: 200 }}
               >
                 {renderBreakdownSummary(row)}
-              </div>
+              </Text>
             </div>
             {isExpanded && renderOrgDetails(row)}
           </div>

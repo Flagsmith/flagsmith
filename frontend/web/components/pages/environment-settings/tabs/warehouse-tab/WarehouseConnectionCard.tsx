@@ -12,6 +12,7 @@ import WarehouseEventCodeHelp from './WarehouseEventCodeHelp'
 import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
 import { CLICKHOUSE_DEFAULTS } from './clickhouseConfig'
 import WarehouseStats from './WarehouseStats'
+import Text from 'components/base/Text'
 
 type WarehouseConnectionCardProps = {
   connection: WarehouseConnection
@@ -98,7 +99,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
             </Tooltip>
           </div>
           {typeLabel && (
-            <span className='fst-italic text-muted' style={{ fontSize: 13 }}>
+            <Text variant='b2' className='fst-italic text-muted'>
               {typeLabel}
               {connection.config &&
                 'account_identifier' in connection.config &&
@@ -108,7 +109,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
                 'host' in connection.config &&
                 connection.config.host &&
                 `: ${connection.config.host}`}
-            </span>
+            </Text>
           )}
         </div>
         <div className='d-flex flex-row align-items-center gap-2'>

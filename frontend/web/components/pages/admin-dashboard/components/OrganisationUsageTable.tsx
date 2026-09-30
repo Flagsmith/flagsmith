@@ -4,6 +4,7 @@ import { SortOrder } from 'common/types/requests'
 import Utils from 'common/utils/utils'
 import PanelSearch from 'components/PanelSearch'
 import Icon from 'components/icons/Icon'
+import Text from 'components/base/Text'
 
 interface OrganisationUsageTableProps {
   days: 30 | 60 | 90
@@ -63,24 +64,28 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
             style={{ paddingBottom: 8, paddingLeft: 80, paddingTop: 8 }}
           >
             <div className='flex-fill'>
-              <span className='text-muted' style={{ fontSize: 13 }}>
+              <Text variant='b2' className='text-muted'>
                 {env.name}
-              </span>
+              </Text>
             </div>
             <div style={{ width: 120 }} />
             <div style={{ width: 120 }} />
-            <div
+            <Text
+              variant='b2'
+              as='div'
               className='table-column text-muted'
-              style={{ fontSize: 13, width: 160 }}
+              style={{ width: 160 }}
             >
               {Utils.numberWithCommas(env.api_calls_30d)}
-            </div>
-            <div
+            </Text>
+            <Text
+              variant='b2'
+              as='div'
               className='table-column text-muted'
-              style={{ fontSize: 13, width: 140 }}
+              style={{ width: 140 }}
             >
               {envPct}% of org usage
-            </div>
+            </Text>
           </div>
         )
       })}
@@ -115,32 +120,38 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
                     }
                     width={14}
                   />
-                  <span className='font-weight-medium' style={{ fontSize: 13 }}>
+                  <Text variant='b2' className='font-weight-medium'>
                     {project.name}
-                  </span>
-                  <span className='text-muted' style={{ fontSize: 12 }}>
+                  </Text>
+                  <Text variant='b3' className='text-muted'>
                     ({project.environments.length} environments)
-                  </span>
+                  </Text>
                 </div>
-                <div
+                <Text
+                  variant='b2'
+                  as='div'
                   className='table-column text-muted'
-                  style={{ fontSize: 13, width: 120 }}
+                  style={{ width: 120 }}
                 >
                   {project.flags}
-                </div>
+                </Text>
                 <div style={{ width: 120 }} />
-                <div
+                <Text
+                  variant='b2'
+                  as='div'
                   className='table-column text-muted'
-                  style={{ fontSize: 13, width: 160 }}
+                  style={{ width: 160 }}
                 >
                   {Utils.numberWithCommas(project.api_calls_30d)}
-                </div>
-                <div
+                </Text>
+                <Text
+                  variant='b2'
+                  as='div'
                   className='table-column text-muted'
-                  style={{ fontSize: 13, width: 140 }}
+                  style={{ width: 140 }}
                 >
                   {projectPct}% of org usage
-                </div>
+                </Text>
               </div>
               {expandedProjects.includes(project.id) &&
                 renderEnvironments(project, orgApiCalls)}
@@ -202,9 +213,9 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
               />
               <div>
                 <div className='font-weight-medium mb-1'>{org.name}</div>
-                <div className='text-muted' style={{ fontSize: 13 }}>
+                <Text variant='b2' as='div' className='text-muted'>
                   {Utils.numberWithCommas(org.active_users_30d)} active users
-                </div>
+                </Text>
               </div>
             </div>
             <div
@@ -215,9 +226,9 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
                 {Utils.numberWithCommas(org.total_flags)}
               </div>
               {org.stale_flags > 0 && (
-                <div className='text-muted' style={{ fontSize: 12 }}>
+                <Text variant='b3' as='div' className='text-muted'>
                   {Utils.numberWithCommas(org.stale_flags)} stale
-                </div>
+                </Text>
               )}
             </div>
             <div
@@ -227,9 +238,9 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
               <div className='font-weight-medium'>
                 {Utils.numberWithCommas(org.total_users)}
               </div>
-              <div className='text-muted' style={{ fontSize: 12 }}>
+              <Text variant='b3' as='div' className='text-muted'>
                 {Utils.numberWithCommas(org.active_users_30d)} active
-              </div>
+              </Text>
             </div>
             <div
               className='table-column font-weight-medium'
@@ -241,14 +252,19 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
                 ] as number,
               )}
             </div>
-            <div className='table-column' style={{ fontSize: 13, width: 140 }}>
+            <Text
+              variant='b2'
+              as='div'
+              className='table-column'
+              style={{ width: 140 }}
+            >
               {overageCell(
                 org[
                   `api_calls_${days}d` as keyof OrganisationMetrics
                 ] as number,
                 org.api_calls_allowed * (days / 30),
               )}
-            </div>
+            </Text>
           </div>
           {expandedOrgs.includes(org.id) && renderProjects(org)}
         </div>

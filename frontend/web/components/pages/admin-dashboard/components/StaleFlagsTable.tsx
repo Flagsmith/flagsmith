@@ -2,6 +2,7 @@ import { FC } from 'react'
 import { StaleFlagsPerProject } from 'common/types/responses'
 import { SortOrder } from 'common/types/requests'
 import PanelSearch from 'components/PanelSearch'
+import Text from 'components/base/Text'
 
 interface StaleFlagsTableProps {
   data: StaleFlagsPerProject[]
@@ -41,9 +42,9 @@ const StaleFlagsTable: FC<StaleFlagsTableProps> = ({ data }) => {
         >
           <div className='flex-fill' style={{ paddingLeft: 20 }}>
             <div className='font-weight-medium'>{row.project_name}</div>
-            <div className='text-muted' style={{ fontSize: 12 }}>
+            <Text variant='b3' as='div' className='text-muted'>
               {row.organisation_name}
-            </div>
+            </Text>
           </div>
           <div
             className='table-column font-weight-medium'
