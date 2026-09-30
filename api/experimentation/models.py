@@ -101,6 +101,8 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
 
 
 class WarehouseDeliveryStatus(models.Model):
+    """Updated by the warehouse-delivery service after each delivery."""
+
     connection = models.OneToOneField(
         WarehouseConnection,
         on_delete=models.CASCADE,
