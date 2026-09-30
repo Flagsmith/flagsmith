@@ -1,7 +1,8 @@
 import React, { FC, useState } from 'react'
 import InlineModal from 'components/InlineModal'
-import Constants from 'common/constants'
-import Tag from './Tag'
+import BareButton from 'components/base/forms/BareButton'
+import ColorSwatch from 'components/ColorSwatch'
+import { contentColours } from 'common/theme/tokens'
 import TagColourPicker from './TagColourPicker'
 
 type ColourSelectType = {
@@ -11,11 +12,17 @@ type ColourSelectType = {
 
 const ColourSelect: FC<ColourSelectType> = ({ onChange, value: _value }) => {
   const [isOpen, setIsOpen] = useState(false)
-  const value = _value || Constants.tagColors[0]
+  const value = _value || contentColours.blue
 
   return (
     <>
-      <Tag selected onClick={() => setIsOpen(true)} tag={{ color: value }} />
+      <BareButton
+        aria-expanded={isOpen}
+        aria-label='Select a colour'
+        onClick={() => setIsOpen(true)}
+      >
+        <ColorSwatch color={value} shape='rounded' size='lg' />
+      </BareButton>
 
       <InlineModal
         title='Select a colour'

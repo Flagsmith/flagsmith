@@ -83,14 +83,13 @@ const Chip = ({
       role={role ?? (onClick ? 'button' : undefined)}
       tabIndex={interactive ? tabIndex ?? 0 : undefined}
       // `selected` reports through whichever the role supports: a button is
-      // pressed, a radio or checkbox is checked.
-      aria-checked={
-        ariaChecked ?? (role && role !== 'button' ? selected : undefined)
-      }
+      // pressed, a radio is checked. A chip that is not a control reports
+      // nothing, and `selected` is only its ring.
+      aria-checked={ariaChecked ?? (role === 'radio' ? selected : undefined)}
       aria-expanded={ariaExpanded}
       aria-label={ariaLabel}
       aria-pressed={
-        ariaPressed ?? (role && role !== 'button' ? undefined : selected)
+        ariaPressed ?? (interactive && role !== 'radio' ? selected : undefined)
       }
       onKeyDown={
         onKeyDown ??
