@@ -20,6 +20,8 @@ from experimentation.models import (
     ExperimentExposures,
     ExperimentResults,
     WarehouseConnection,
+    WarehouseConnectionStatus,
+    WarehouseDeliveryStatus,
     WarehouseType,
 )
 from experimentation.stats import VariantStats
@@ -99,6 +101,48 @@ def test_warehouse_connection__after_update__enqueues_ingestion_sync_task_on_det
         )
     else:
         mock_task.delay.assert_not_called()
+
+
+def test_warehouse_connection__credentials_changed__removes_delivery_status(
+    clickhouse_connection: WarehouseConnection,
+) -> None:
+    # Given a connection whose last delivery failed
+    WarehouseDeliveryStatus.objects.create(
+        connection=clickhouse_connection,
+        status=WarehouseConnectionStatus.ERRORED,
+        detail="Authentication failed",
+        updated_at=timezone.now(),
+    )
+
+    # When
+    clickhouse_connection.credentials = {"password": "rotated"}
+    clickhouse_connection.save()
+
+    # Then
+    assert not WarehouseDeliveryStatus.objects.filter(
+        connection=clickhouse_connection
+    ).exists()
+
+
+def test_warehouse_connection__renamed__keeps_delivery_status(
+    clickhouse_connection: WarehouseConnection,
+) -> None:
+    # Given a connection whose last delivery failed
+    WarehouseDeliveryStatus.objects.create(
+        connection=clickhouse_connection,
+        status=WarehouseConnectionStatus.ERRORED,
+        detail="Authentication failed",
+        updated_at=timezone.now(),
+    )
+
+    # When
+    clickhouse_connection.name = "Renamed ClickHouse"
+    clickhouse_connection.save()
+
+    # Then
+    assert WarehouseDeliveryStatus.objects.filter(
+        connection=clickhouse_connection
+    ).exists()
 
 
 def _summary() -> ExposuresSummary:

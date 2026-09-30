@@ -91,6 +91,14 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
             kwargs={"environment_id": self.environment_id},
         )
 
+    @hook(  # type: ignore[misc]
+        AFTER_UPDATE,
+        when_any=["warehouse_type", "config", "credentials"],
+        has_changed=True,
+    )
+    def clear_delivery_status(self) -> None:
+        WarehouseDeliveryStatus.objects.filter(connection=self).delete()
+
 
 class WarehouseDeliveryStatus(models.Model):
     connection = models.OneToOneField(
