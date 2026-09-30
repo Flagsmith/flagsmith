@@ -81,6 +81,7 @@ def map_environment_to_evaluation_context(
     identity_context: "IdentityContext | None" = None,
     traits: "Iterable[Trait] | None" = None,
     segments: "Iterable[Segment] | None" = None,
+    feature_name: str | None = None,
     from_replica: bool = False,
 ) -> EvaluationContext:
     """Map Django ORM models to a flag-engine `EvaluationContext`.
@@ -100,6 +101,8 @@ def map_environment_to_evaluation_context(
         identity keeps both its traits and its overrides in DynamoDB.
     :param segments: segments to evaluate. Only these segments' overrides are
         read, as the engine could not apply any other segment's.
+    :param feature_name: only read this feature's states, for a caller that
+        knows no other flag can affect it.
     """
     context: EvaluationContext = {
         "environment": {
@@ -128,6 +131,7 @@ def map_environment_to_evaluation_context(
         environment=environment,
         identity=identity,
         segment_ids=[segment.pk for segment in segments or ()],
+        feature_name=feature_name,
         from_replica=from_replica,
         # The engine only splits between variants for an identity.
         with_variants=identity is not None or identity_context is not None,
@@ -194,6 +198,7 @@ def _resolve_feature_states(
     environment: "Environment",
     identity: "Identity | None",
     segment_ids: "Collection[int]",
+    feature_name: str | None,
     from_replica: bool,
     with_variants: bool,
 ) -> _ResolvedFeatureStates:
@@ -215,6 +220,7 @@ def _resolve_feature_states(
 
     feature_states = get_environment_flags_list(
         environment=environment,
+        feature_name=feature_name,
         additional_filters=override_filters,
         from_replica=from_replica,
         additional_select_related_args=["feature_segment__segment"],

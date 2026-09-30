@@ -51,6 +51,7 @@ from features.feature_types import MULTIVARIATE, STANDARD
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
+from features.versioning import versioning_service
 from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import (
     MetadataField,
@@ -1001,6 +1002,45 @@ def test_get_flags__hide_disabled_flags__hides_dependent(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == []
+
+
+def test_get_flags__feature_filter_with_prerequisite_disabled__returns_dependent_disabled(
+    api_client: APIClient,
+    client_api_key: str,
+    payments_prerequisite_rule: SegmentRuleType,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=client_api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/?feature=checkout")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["enabled"] is False
+
+
+def test_get_flags__feature_filter_without_segments__reads_that_feature_only(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    feature_with_value: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_environment_flags_list_spy = mocker.spy(
+        versioning_service, "get_environment_flags_list"
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.get(f"/api/v1/flags/?feature={feature.name}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["feature"]["name"] == feature.name
+    assert get_environment_flags_list_spy.spy_return == [feature_state]
 
 
 @pytest.mark.parametrize("cache_flags_seconds", [0, 30])

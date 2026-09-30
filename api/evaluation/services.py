@@ -2,6 +2,7 @@ from collections.abc import Iterable
 from math import inf
 from typing import TYPE_CHECKING, Any
 
+from common.core.utils import using_database_replica
 from flag_engine.engine import get_evaluation_result
 
 from evaluation.mappers import (
@@ -80,6 +81,7 @@ def get_identity_feature_states(
 def get_environment_feature_states(
     environment: "Environment",
     *,
+    feature_name: str | None = None,
     hide_server_key_only: bool = False,
     from_replica: bool = False,
 ) -> list[EvaluatedFeatureState]:
@@ -87,22 +89,30 @@ def get_environment_feature_states(
 
     Evaluated without an identity, so segments reading traits or identity
     context are left out.
+
+    :param feature_name: only return this feature's flag.
     """
+    segments = _get_identity_free_segments(environment, from_replica=from_replica)
     context = map_environment_to_evaluation_context(
         environment=environment,
-        # A segment reading identity data cannot match without an identity.
-        # Leaving it out before mapping also saves reading its overrides.
-        segments=[
-            segment
-            for segment in environment.get_segments_from_cache()
-            if _is_identity_free(segment)
-        ],
+        segments=segments,
+        # Only a segment can make one flag depend on another. Without any,
+        # the other features' states need not be read.
+        feature_name=None if segments else feature_name,
         from_replica=from_replica,
     )
-    result = get_evaluation_result(context)
+    evaluated_feature_states = _map_result_to_evaluated_feature_states(
+        get_evaluation_result(context)
+    )
+    if feature_name is not None:
+        evaluated_feature_states = [
+            evaluated_feature_state
+            for evaluated_feature_state in evaluated_feature_states
+            if evaluated_feature_state.evaluation_result["name"] == feature_name
+        ]
     return _hide_flags(
         environment,
-        _map_result_to_evaluated_feature_states(result),
+        evaluated_feature_states,
         hide_server_key_only=hide_server_key_only,
     )
 
@@ -188,6 +198,34 @@ def get_edge_identity_segments(edge_identity: "EdgeIdentity") -> "list[Segment]"
         segments_by_pk[pk]
         for segment_result in get_evaluation_result(context)["segments"]
         if (pk := segment_result["metadata"].get("pk")) is not None
+    ]
+
+
+def _get_identity_free_segments(
+    environment: "Environment",
+    *,
+    from_replica: bool,
+) -> "list[Segment]":
+    """The segments overriding flags in `environment` that match without an identity.
+
+    Told apart by their `rules_data` alone, which saves reading the rule tree
+    of the segments left out: in most environments, all of them.
+    """
+    # Deferred: `environments.models` imports this module's package.
+    from features.models import FeatureSegment
+    from segments.models import Segment
+
+    segments = Segment.live_objects
+    if from_replica:
+        segments = using_database_replica(segments)
+    return [
+        segment
+        for segment in segments.filter(
+            id__in=FeatureSegment.objects.filter(environment=environment).values(
+                "segment_id"
+            )
+        ).only("id", "name", "rules_data")
+        if _is_identity_free(segment)
     ]
 
 
