@@ -53,7 +53,6 @@ const Tag: FC<TagType> = ({
     return <ColorSwatch color={getTagColor(tag)} shape='circle' size='lg' />
   }
 
-  // A system tag carries its state in the icon, so it keeps the plain surface.
   const isSystem = isSystemTag(tag)
   const colourUtilities = isSystem
     ? SYSTEM_TAG_UTILITIES
