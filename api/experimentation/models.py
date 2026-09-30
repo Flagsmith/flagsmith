@@ -92,6 +92,21 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
         )
 
 
+class WarehouseDeliveryStatus(models.Model):
+    connection = models.OneToOneField(
+        WarehouseConnection,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="delivery_status",
+    )
+    status = models.CharField(
+        max_length=50,
+        choices=WarehouseConnectionStatus.choices,
+    )
+    detail = models.TextField(null=True, blank=True)
+    updated_at = models.DateTimeField()
+
+
 class ExperimentStatus(models.TextChoices):
     CREATED = "created", "Created"
     RUNNING = "running", "Running"
