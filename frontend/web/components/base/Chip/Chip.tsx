@@ -12,19 +12,14 @@ export type ChipVariant =
   // colour is a user's decorative choice rather than a semantic role.
   | 'none'
 
-export type ChipProps = {
+type ChipBase = {
   children: ReactNode
   variant?: ChipVariant
   size?: ChipSize
   truncate?: boolean
   /** Rings the chip when chosen. Lists mark rows instead: see TagRow. */
   selected?: boolean
-  onRemove?: () => void
-  onClick?: () => void
   className?: string
-  // Membership of a caller-driven keyboard group, overriding the default
-  // button semantics. See SdkPicker.
-  role?: 'button' | 'radio'
   tabIndex?: number
   'aria-checked'?: boolean
   'aria-expanded'?: boolean
@@ -35,6 +30,20 @@ export type ChipProps = {
   onKeyDown?: (e: KeyboardEvent) => void
   ref?: Ref<HTMLSpanElement>
 }
+
+// A chip is either the control or it holds one, never both: a button inside a
+// button reaches a screen reader as neither.
+export type ChipProps = ChipBase &
+  (
+    | { onRemove: () => void; onClick?: never; role?: never }
+    | {
+        onRemove?: never
+        onClick?: () => void
+        // Membership of a caller-driven keyboard group, overriding the default
+        // button semantics. See SdkPicker.
+        role?: 'button' | 'radio'
+      }
+  )
 
 // bg + text come from token utilities; the variant border lives in Chip.scss.
 const VARIANT_UTILITIES: Record<ChipVariant, string> = {
@@ -92,17 +101,18 @@ const Chip = ({
         ariaPressed ?? (interactive && role !== 'radio' ? selected : undefined)
       }
       onKeyDown={
-        onKeyDown ??
-        (onClick
+        onKeyDown || onClick
           ? (e: KeyboardEvent) => {
-              // Activate like a button: Enter/Space fire onClick (preventDefault
-              // stops Space scrolling the page).
+              onKeyDown?.(e)
+              // Activate like a button, after the caller has had the key and
+              // unless it took it (preventDefault stops Space scrolling).
+              if (!onClick || e.defaultPrevented) return
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
                 onClick()
               }
             }
-          : undefined)
+          : undefined
       }
     >
       {truncate ? <span className='ds-chip__label'>{children}</span> : children}

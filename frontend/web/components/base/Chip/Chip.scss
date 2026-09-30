@@ -26,9 +26,10 @@
     font-size: 0.75rem;
   }
 
-  // 24px from the design system's tags frame.
   &--xs {
-    padding: 1px 6px;
+    // Stated for the same reason as --sm: the base fixes a height now.
+    height: 20px;
+    padding: 0 6px;
     font-size: 0.6875rem;
   }
 
@@ -47,7 +48,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-
 
   &__remove {
     padding: 0;
