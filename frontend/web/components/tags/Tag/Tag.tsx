@@ -10,8 +10,9 @@ import {
   getTagSwatch,
   getTagSwatchUtilities,
   swatchLabel,
-} from 'components/tags/tagSwatch'
-import { SYSTEM_TAG_UTILITIES, isSystemTag } from 'components/tags/systemTag'
+  SYSTEM_TAG_UTILITIES,
+  isSystemTag,
+} from 'components/tags/utils'
 
 type TagType = {
   className?: string

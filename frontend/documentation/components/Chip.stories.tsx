@@ -4,7 +4,7 @@ import type { Meta, StoryObj } from 'storybook'
 import Chip from 'components/base/Chip'
 import Icon, { IconName } from 'components/icons/Icon'
 import { contentColours } from 'common/theme/tokens'
-import { getTagSwatchUtilities } from 'components/tags/tagSwatch'
+import { getTagSwatchUtilities } from 'components/tags/utils'
 
 const meta: Meta<typeof Chip> = {
   args: { children: 'Production' },

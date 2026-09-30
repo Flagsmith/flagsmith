@@ -5,7 +5,7 @@ import Tooltip from 'components/Tooltip'
 import OrganisationStore from 'common/stores/organisation-store'
 import classNames from 'classnames'
 import Icon, { IconName } from 'components/icons/Icon'
-import { tagChipHtml } from './tagChipHtml'
+import { tagChipHtml } from './utils'
 
 type TagContentProps = {
   disabled?: boolean

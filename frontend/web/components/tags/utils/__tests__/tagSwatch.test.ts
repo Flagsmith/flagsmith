@@ -1,5 +1,5 @@
 import { contentColours } from 'common/theme/tokens'
-import { getTagSwatch, getTagSwatchUtilities } from 'components/tags/tagSwatch'
+import { getTagSwatch, getTagSwatchUtilities } from './..'
 
 describe('getTagSwatch', () => {
   // What the picker stores now, so this is the common path.

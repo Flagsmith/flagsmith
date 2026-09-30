@@ -3,7 +3,7 @@ import classNames from 'classnames'
 import { contentColourNames, contentColours } from 'common/theme/tokens'
 import BareButton from 'components/base/forms/BareButton'
 import ColorSwatch from 'components/ColorSwatch'
-import { swatchLabel, swatchUtilities } from 'components/tags/tagSwatch'
+import { swatchLabel, swatchUtilities } from 'components/tags/utils'
 import './TagColourPicker.scss'
 
 type TagColourPickerProps = {
