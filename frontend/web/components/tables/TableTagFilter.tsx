@@ -49,11 +49,11 @@ const TableTagFilter: FC<TableFilterType> = ({
     return tags
   }, [data, isFeatureHealthEnabled, excludeTag])
 
+  const search = filter.trim().toLowerCase()
   const filteredTags = useMemo(() => {
-    return filter
-      ? flagGatedTags?.filter((v) => v.label.toLowerCase().includes(filter))
-      : flagGatedTags?.filter((tag) => tag)
-  }, [flagGatedTags, filter])
+    if (!search) return flagGatedTags
+    return flagGatedTags?.filter((v) => v.label.toLowerCase().includes(search))
+  }, [flagGatedTags, search])
   const length = (value?.length || 0) + (showArchived ? 1 : 0)
   return (
     <div className={isLoading ? 'disabled' : ''}>
