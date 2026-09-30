@@ -16,7 +16,7 @@ const meta: Meta<typeof TagColourPicker> = {
     },
     layout: 'padded',
   },
-  title: 'Components/Forms/TagColourPicker',
+  title: 'Components/Tags/TagColourPicker',
 }
 export default meta
 

@@ -17,7 +17,7 @@ const meta: Meta<typeof Tag> = {
     },
     layout: 'padded',
   },
-  title: 'Components/Data Display/Tag',
+  title: 'Components/Tags/Tag',
 }
 export default meta
 
