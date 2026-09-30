@@ -2,6 +2,7 @@ import React, { FC, ReactNode } from 'react'
 import { filter } from 'lodash'
 import { TagStrategy } from 'common/types/responses'
 import { useGetTagsQuery } from 'common/services/useTag'
+import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import Tag from './Tag'
 import Button from 'components/base/forms/Button'
@@ -97,6 +98,7 @@ const TagFilter: FC<TagFilterType> = ({
 
               {projectTags?.map((tag) => (
                 <Tag
+                  disabled={Utils.tagDisabled(tag)}
                   key={tag.id}
                   selected={isSelected(tag.id)}
                   onClick={() => onSelect(tag.id)}
