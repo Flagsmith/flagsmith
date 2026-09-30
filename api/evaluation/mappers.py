@@ -5,7 +5,7 @@ current for an environment, lay them out as the engine expects, and let it
 decide which override wins and which variant an identity lands in.
 """
 
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from math import inf
 from operator import attrgetter
 from typing import TYPE_CHECKING, NamedTuple
@@ -98,7 +98,8 @@ def map_environment_to_evaluation_context(
     :param identity_context: who is being evaluated, for an identity that is
         not an ORM row and so has no overrides to read from it. An edge
         identity keeps both its traits and its overrides in DynamoDB.
-    :param segments: segments to evaluate.
+    :param segments: segments to evaluate. Only these segments' overrides are
+        read, as the engine could not apply any other segment's.
     """
     context: EvaluationContext = {
         "environment": {
@@ -115,6 +116,9 @@ def map_environment_to_evaluation_context(
             traits=traits,
         )
 
+    if segments is not None:
+        segments = list(segments)
+
     (
         feature_states,
         identity_overrides,
@@ -123,12 +127,12 @@ def map_environment_to_evaluation_context(
     ) = _resolve_feature_states(
         environment=environment,
         identity=identity,
+        segment_ids=[segment.pk for segment in segments or ()],
         from_replica=from_replica,
         # The engine only splits between variants for an identity.
         with_variants=identity is not None or identity_context is not None,
     )
     if segments is not None:
-        segments = list(segments)
         prefetch_related_objects(segments, *_SEGMENT_RULES_LOOKUPS)
 
     # No reading from ORM past this point!
@@ -189,19 +193,25 @@ def _resolve_feature_states(
     *,
     environment: "Environment",
     identity: "Identity | None",
+    segment_ids: "Collection[int]",
     from_replica: bool,
     with_variants: bool,
 ) -> _ResolvedFeatureStates:
-    """Read the feature states current for `environment`, split by what they override."""
+    """Read the feature states current for `environment`, split by what they override.
+
+    Segment overrides are only read for `segment_ids`.
+    """
     # Deferred: `environments.models` imports this module's package.
     from features.multivariate.models import MultivariateFeatureStateValue
     from features.versioning.versioning_service import get_environment_flags_list
 
-    override_filters = Q(identity__isnull=True)
+    override_filters = Q(identity__isnull=True, feature_segment__isnull=True)
+    if segment_ids:
+        override_filters |= Q(feature_segment__segment_id__in=segment_ids)
     if identity is not None and identity.pk:
         # The identity is persisted (non-transient).
         # Look for its identity overrides in addition to segment overrides.
-        override_filters = Q(identity=identity) | override_filters
+        override_filters |= Q(identity=identity)
 
     feature_states = get_environment_flags_list(
         environment=environment,

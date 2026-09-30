@@ -2,7 +2,6 @@ from collections.abc import Iterable
 from math import inf
 from typing import TYPE_CHECKING, Any
 
-from flag_engine.context import types as engine_types
 from flag_engine.engine import get_evaluation_result
 
 from evaluation.mappers import (
@@ -24,7 +23,7 @@ if TYPE_CHECKING:
     from environments.identities.traits.models import Trait
     from environments.models import Environment
     from features.models import FeatureState
-    from segments.models import Segment
+    from segments.models import Segment, SegmentRule
     from util.engine_models.features.models import FeatureStateModel
 
 
@@ -90,15 +89,15 @@ def get_environment_feature_states(
     """
     context = map_environment_to_evaluation_context(
         environment=environment,
-        segments=environment.get_segments_from_cache(),
+        # A segment reading identity data cannot match without an identity.
+        # Leaving it out before mapping also saves reading its overrides.
+        segments=[
+            segment
+            for segment in environment.get_segments_from_cache()
+            if _is_identity_free(segment.rules.all())
+        ],
         from_replica=from_replica,
     )
-    if segments := context.get("segments"):
-        context["segments"] = {
-            key: segment
-            for key, segment in segments.items()
-            if _is_identity_free(segment["rules"])
-        }
     result = get_evaluation_result(context)
     return _hide_flags(
         environment,
@@ -191,13 +190,13 @@ def get_edge_identity_segments(edge_identity: "EdgeIdentity") -> "list[Segment]"
     ]
 
 
-def _is_identity_free(rules: "Iterable[engine_types.SegmentRule]") -> bool:
+def _is_identity_free(rules: "Iterable[SegmentRule]") -> bool:
     return all(
         all(
-            condition["property"].startswith(_IDENTITY_FREE_PROPERTY_PREFIXES)
-            for condition in rule.get("conditions", [])
+            (condition.property or "").startswith(_IDENTITY_FREE_PROPERTY_PREFIXES)
+            for condition in rule.conditions.all()
         )
-        and _is_identity_free(rule.get("rules", []))
+        and _is_identity_free(rule.rules.all())
         for rule in rules
     )
 
