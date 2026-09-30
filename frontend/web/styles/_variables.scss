@@ -215,18 +215,16 @@ $font-sizes: (
         captionSmall: $font-caption-sm,
         captionXSmall: $font-caption-xs,
 );
+// Bootstrap sizes a raw h1..h6 from these. Headings in the app go through the
+// Text component, which reads --font-size-h* instead. Keep the two in step.
+// The matching $h*-line-height variables are gone: only the deleted rules in
+// project/_type.scss used them, and Bootstrap has its own $headings-line-height.
 $h1-font-size: 42px;
-$h1-line-height: 46px;
 $h2-font-size: 34px;
-$h2-line-height: 40px;
 $h3-font-size: 30px;
-$h3-line-height: 40px;
 $h4-font-size: 24px;
-$h4-line-height: 32px;
 $h5-font-size: 18px;
-$h5-line-height: 28px;
 $h6-font-size: 16px;
-$h6-line-height: 24px;
 
 //Input
 $input-bg: #fff;
