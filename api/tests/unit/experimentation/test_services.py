@@ -2654,6 +2654,58 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     assert {option_a.key, option_b.key} <= set(before.values())
 
 
+def test_apply_experiment_rollout__segment_id_equals_variant_hashing_seed__enrols_into_every_variant(
+    environment: Environment,
+    multivariate_feature: Feature,
+    multivariate_options: list[MultivariateFeatureOption],
+    admin_user: FFAdminUser,
+    variant_assignment: VariantAssignmentFixture,
+) -> None:
+    # Given a running experiment whose rollout enrols half of identities and
+    # splits them 50/50 across two variants
+    option_a, option_b, _ = multivariate_options
+    for index, option in enumerate(multivariate_options):
+        option.key = f"variant-{index}"
+        option.save()
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=multivariate_feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=50.0,
+            feature_state_value="control",
+            value_type="string",
+            multivariate_values=[
+                MultivariateValueChangeSet(option_a.id, 50.0),
+                MultivariateValueChangeSet(option_b.id, 50.0),
+            ],
+            author=AuthorData(user=admin_user),
+        ),
+    )
+    experiment.refresh_from_db()
+    # and the rollout segment's id happens to equal the variant hashing seed, as
+    # it can whenever the two id sequences line up
+    FeatureState.objects.filter(
+        feature_segment__segment_id=experiment.rollout_segment_id
+    ).update(mv_hashing_salt=experiment.rollout_segment_id)
+    identities = [
+        Identity.objects.create(identifier=f"identity-{i}", environment=environment)
+        for i in range(50)
+    ]
+
+    # When
+    assignment = variant_assignment(identities, multivariate_feature.name)
+
+    # Then enrolled identities land in both variants, not only the first
+    assert {option_a.key, option_b.key} <= set(assignment.values())
+
+
 def _verification_count(result: str) -> float:
     return (
         REGISTRY.get_sample_value(
