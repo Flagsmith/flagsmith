@@ -4,7 +4,7 @@ from collections.abc import Collection
 
 import structlog
 from django.db import transaction
-from django.db.models import Count, QuerySet
+from django.db.models import QuerySet
 from flag_engine.segments import constants
 from ordered_model.models import OrderedModelQuerySet  # type: ignore[import-untyped]
 
@@ -435,21 +435,6 @@ def _get_or_create_dependency_segment(
     its rules never change once created. This makes dependency changes pure
     segment override changes, versioned along with the feature.
     """
-    existing_segment: Segment | None = (
-        Segment.live_objects.annotate(
-            reference_count=Count("flag_references", distinct=True)
-        )
-        .filter(
-            project_id=feature.project_id,
-            is_system_segment=True,
-            feature=feature,
-            flag_references__prerequisite_feature=prerequisite_feature,
-            reference_count=1,
-        )
-        .first()
-    )
-    if existing_segment:
-        return existing_segment
     condition: SegmentCondition = {
         "property": f"$.flags[{json.dumps(prerequisite_feature.name)}].enabled",
         "operator": constants.NOT_EQUAL,
@@ -459,15 +444,19 @@ def _get_or_create_dependency_segment(
     rules: list[SegmentRule] = [
         {"type": constants.ANY_RULE, "conditions": [condition], "rules": []}
     ]
-    segment: Segment = Segment.objects.create(
+    segment: Segment
+    created: bool
+    # Segment names aren't unique, so the lookup is scoped further.
+    segment, created = Segment.live_objects.get_or_create(
         project_id=feature.project_id,
-        name=f"{feature.name}-depends-on-{prerequisite_feature.name}",
         is_system_segment=True,
         feature=feature,
-        rules_data=rules,
+        name=f"{feature.name}-depends-on-{prerequisite_feature.name}",
+        defaults={"rules_data": rules},
     )
-    write_segment_rules(segment, rules)
-    index_segment_flag_references(segment)
+    if created:
+        write_segment_rules(segment, rules)
+        index_segment_flag_references(segment)
     return segment
 
 
