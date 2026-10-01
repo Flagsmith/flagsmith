@@ -9,6 +9,7 @@ import UserAction from 'components/UserAction'
 import LastLogin from './LastLogin'
 import AppActions from 'common/dispatcher/app-actions'
 import { getPlanBasedOption } from 'components/PlanBasedAccess'
+import InactiveMembershipChip from 'components/users-permissions/InactiveMembershipChip'
 
 interface OrganisationUsersTableRowProps {
   widths: number[]
@@ -41,7 +42,10 @@ const OrganisationUsersTableRow: React.FC<OrganisationUsersTableRowProps> = ({
       key={id}
     >
       <Flex className='table-column px-3 font-weight-medium'>
-        {`${first_name} ${last_name}`} {isActiveUser && '(You)'}
+        <div>
+          {`${first_name} ${last_name}`} {isActiveUser && '(You)'}
+          <InactiveMembershipChip user={user} />
+        </div>
         <div className='list-item-subtitle mt-1'>{email}</div>
       </Flex>
 

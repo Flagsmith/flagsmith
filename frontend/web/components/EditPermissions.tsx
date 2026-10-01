@@ -71,6 +71,7 @@ import {
   userTableSorting,
 } from './users-permissions/sortUsers'
 import { isOrgAdmin } from './users-permissions/isOrgAdmin'
+import InactiveMembershipChip from './users-permissions/InactiveMembershipChip'
 
 import Project from 'common/project'
 
@@ -1162,6 +1163,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                       {String(id) ===
                                         String(AccountStore.getUserId()) &&
                                         '(You)'}
+                                      <InactiveMembershipChip user={user} />
                                     </div>
                                     <div className='list-item-subtitle'>
                                       {email}

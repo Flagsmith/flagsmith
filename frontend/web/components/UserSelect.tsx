@@ -4,6 +4,7 @@ import Icon from './icons/Icon'
 import classNames from 'classnames'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
+import InactiveMembershipChip from './users-permissions/InactiveMembershipChip'
 interface UserSelectProps {
   users: any[]
   value: any[]
@@ -96,6 +97,7 @@ const UserSelect: React.FC<UserSelectProps> = ({
                   )}
                 >
                   {v.first_name} {v.last_name}
+                  <InactiveMembershipChip user={v} />
                   <div className='text-muted text-small'>{v.email}</div>
                 </div>
                 {selectedValue.includes(v.id) && (
