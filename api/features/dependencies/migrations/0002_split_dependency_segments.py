@@ -1,6 +1,7 @@
 import uuid
 from typing import Any
 
+import jsonpath_rfc9535
 from django.apps.registry import Apps
 from django.db import migrations, models
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
@@ -15,11 +16,6 @@ def _clone(instance: Any, **attrs: Any) -> Any:
         setattr(instance, name, value)
     instance.save()
     return instance
-
-
-def _get_condition_index(condition_json_path: str) -> int:
-    """Return `i` from a `$[0].conditions[i]` path, as written by the old form."""
-    return int(condition_json_path.removeprefix("$[0].conditions[").removesuffix("]"))
 
 
 def split_dependency_segments(
@@ -50,7 +46,7 @@ def split_dependency_segments(
     dependency_segments: dict[tuple[int, int], Any] = {}
 
     def get_or_create_dependency_segment(
-        old_segment: Any, prerequisite_feature_id: int, condition: dict[str, Any]
+        old_segment: Any, prerequisite_feature_id: int, condition: Any
     ) -> Any:
         key = (old_segment.feature_id, prerequisite_feature_id)
         if segment := dependency_segments.get(key):
@@ -104,18 +100,19 @@ def split_dependency_segments(
             continue
         # A hard-deleted prerequisite leaves its condition behind without a
         # reference. Its flag is absent from evaluation, so the condition never
-        # matches, and dropping it doesn't change evaluation results.
-        conditions = old_segment.rules_data[0]["conditions"]
+        # matches, and dropping it doesn't change evaluation results. References
+        # are indexed in the order of their conditions, preserving priorities.
         new_segments = [
             get_or_create_dependency_segment(
-                old_segment, prerequisite_feature_id, conditions[index]
+                old_segment,
+                prerequisite_feature_id,
+                jsonpath_rfc9535.find(json_path, old_segment.rules_data).values()[0],
             )
-            for index, prerequisite_feature_id in sorted(
-                (_get_condition_index(json_path), prerequisite_feature_id)
-                for json_path, prerequisite_feature_id in SegmentFlagReference.objects.filter(
-                    segment=old_segment
-                ).values_list("condition_json_path", "prerequisite_feature_id")
+            for json_path, prerequisite_feature_id in SegmentFlagReference.objects.filter(
+                segment=old_segment
             )
+            .order_by("id")
+            .values_list("condition_json_path", "prerequisite_feature_id")
         ]
         for override in FeatureSegment.objects.filter(segment=old_segment):
             # Make room for the extra overrides right after the replaced one.
