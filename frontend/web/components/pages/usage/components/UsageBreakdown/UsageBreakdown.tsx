@@ -15,7 +15,6 @@ export type UsageBreakdownProps = {
   rows: BreakdownRow[]
   scope?: string
   status?: BreakdownStatus
-  retryInSeconds?: number
   onRetry?: () => void
 }
 
@@ -25,7 +24,6 @@ const UsageBreakdown: FC<UsageBreakdownProps> = ({
   dimension,
   onChangeDimension,
   onRetry,
-  retryInSeconds,
   rows,
   scope,
   status,
@@ -53,12 +51,7 @@ const UsageBreakdown: FC<UsageBreakdownProps> = ({
       </div>
     </div>
 
-    <List
-      rows={rows}
-      status={status}
-      retryInSeconds={retryInSeconds}
-      onRetry={onRetry}
-    />
+    <List rows={rows} status={status} onRetry={onRetry} />
   </div>
 )
 

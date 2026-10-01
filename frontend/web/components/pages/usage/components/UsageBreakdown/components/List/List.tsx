@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import EmptyState from 'components/EmptyState'
 import { Button } from 'components/base/forms/Button'
-import { throttledMessage } from 'components/pages/usage/throttle'
+import { THROTTLED } from 'components/pages/usage/throttle'
 import Row from 'components/pages/usage/components/UsageBreakdown/components/Row'
 import {
   BreakdownRow,
@@ -12,16 +12,10 @@ import {
 export type ListProps = {
   rows: BreakdownRow[]
   status?: BreakdownStatus
-  retryInSeconds?: number
   onRetry?: () => void
 }
 
-const List: FC<ListProps> = ({
-  onRetry,
-  retryInSeconds,
-  rows,
-  status = 'ready',
-}) => {
+const List: FC<ListProps> = ({ onRetry, rows, status = 'ready' }) => {
   if (status === 'needs-project') {
     return (
       <EmptyState
@@ -44,24 +38,17 @@ const List: FC<ListProps> = ({
     )
   }
 
-  if (status === 'throttled') {
-    return (
-      <div role='status'>
-        <EmptyState
-          title='Too many requests'
-          description={throttledMessage(retryInSeconds ?? 0)}
-          icon='bar-chart'
-        />
-      </div>
-    )
-  }
-
-  if (status === 'error') {
+  if (status === 'error' || status === 'throttled') {
+    const throttled = status === 'throttled'
     return (
       <div role='alert'>
         <EmptyState
-          title='Breakdown could not be loaded'
-          description='Something went wrong fetching this breakdown. Try again in a moment.'
+          title={throttled ? THROTTLED.title : 'Breakdown could not be loaded'}
+          description={
+            throttled
+              ? THROTTLED.description
+              : 'Something went wrong fetching this breakdown. Try again in a moment.'
+          }
           icon='bar-chart'
           action={
             onRetry && (
