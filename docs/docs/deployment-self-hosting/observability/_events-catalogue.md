@@ -33,9 +33,9 @@ Attributes:
 ### `app_analytics.no_analytics_database_configured`
 
 Logged at `warning` from:
- - `api/app_analytics/analytics_db_service.py:74`
- - `api/app_analytics/analytics_db_service.py:187`
- - `api/app_analytics/analytics_db_service.py:278`
+ - `api/app_analytics/analytics_db_service.py:82`
+ - `api/app_analytics/analytics_db_service.py:225`
+ - `api/app_analytics/analytics_db_service.py:316`
 
 Attributes:
  - `details`
