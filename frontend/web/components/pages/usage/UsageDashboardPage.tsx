@@ -18,7 +18,8 @@ import { overLimitOf } from './overLimit'
 import {
   isBilledOnAPeriod,
   isBillingPeriodSelected,
-  isChargedForOverages,
+  overageStatusOf,
+  restrictionWarningOf,
   showsContribution,
   showsPlanCeiling,
   showsProjection,
@@ -75,12 +76,12 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   )
 
   // The block outlives going over the limit, so this cannot key off exceeded.
-  const isRestricted = !!organisation?.block_access_to_admin
-  const mayBeCharged =
-    isBilledOnAPeriod(basis) && isChargedForOverages(subscription)
+  const isRestricted =
+    !!organisation?.block_access_to_admin || !!organisation?.stop_serving_flags
 
   const limit = subscriptionMeta?.max_api_calls
   const allowanceTotal = usage.allowance?.totals?.total ?? 0
+  const overageStatus = overageStatusOf(organisation, allowanceTotal, limit)
   // Walks every day in the window to find the crossing, so not per render.
   const exceeded = useMemo(
     () => overLimitOf(allowanceTotal, limit, usage.allowance),
@@ -140,7 +141,9 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
             over={exceeded}
             basis={basis}
             canUpgrade={Utils.getFlagsmithHasFeature('payments_enabled')}
-            mayBeCharged={mayBeCharged}
+            overageStatus={overageStatus}
+            restrictionWarning={restrictionWarningOf(organisation)}
+            flagsPaused={organisation?.stop_serving_flags}
             isRestricted={isRestricted}
           />
         )

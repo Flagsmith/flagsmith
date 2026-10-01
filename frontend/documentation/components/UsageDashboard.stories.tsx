@@ -18,7 +18,8 @@ import {
   allowanceWindow,
   isBilledOnAPeriod,
   isBillingPeriodSelected,
-  isChargedForOverages,
+  overageStatusOf,
+  restrictionWarningOf,
   periodLabel,
   periodsFor,
   PeriodSelection,
@@ -29,7 +30,7 @@ import {
 } from 'components/pages/usage/utils'
 import { BillingPeriod, PeriodOption } from 'common/types/requests'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
-import { Subscription } from 'common/types/responses'
+import { Organisation, Subscription } from 'common/types/responses'
 import { toUsageResponse, USAGE_SCENARIOS } from './fixtures/usage'
 
 // UsageFilters sets this in its stylesheet, which the harness never loads:
@@ -83,6 +84,15 @@ type HarnessProps = {
   isLoading?: boolean
   isError?: boolean
   isRestricted?: boolean
+  organisation?: Partial<
+    Pick<
+      Organisation,
+      | 'api_limit_grace_period_used'
+      | 'api_limit_restriction_enabled'
+      | 'overage_billing_eligible'
+      | 'stop_serving_flags'
+    >
+  >
 }
 
 /**
@@ -95,6 +105,7 @@ const UsagePage: FC<HarnessProps> = ({
   isLoading,
   isRestricted,
   limit,
+  organisation = {},
   scale = 1,
   subscription,
 }) => {
@@ -149,9 +160,23 @@ const UsagePage: FC<HarnessProps> = ({
             basis={basis}
             canUpgrade
             isRestricted={isRestricted}
-            mayBeCharged={
-              isBilledOnAPeriod(basis) && isChargedForOverages(subscription)
-            }
+            flagsPaused={organisation.stop_serving_flags}
+            overageStatus={overageStatusOf(
+              {
+                api_limit_grace_period_used:
+                  !!organisation.api_limit_grace_period_used,
+                overage_billing_eligible:
+                  !!organisation.overage_billing_eligible,
+              },
+              allowanceTotal,
+              limit,
+            )}
+            restrictionWarning={restrictionWarningOf({
+              api_limit_grace_period_used:
+                !!organisation.api_limit_grace_period_used,
+              api_limit_restriction_enabled:
+                !!organisation.api_limit_restriction_enabled,
+            })}
           />
         )
       }
@@ -234,9 +259,51 @@ export const PaidApproachingTheLimit: Story = {
   args: { limit: 1400000, subscription: billed },
 }
 
-// Billed on a term, so the banner mentions charges.
+// Not eligible for overage billing, so the banner says nothing about charges.
 export const PaidOverTheLimit: Story = {
   args: { limit: 900000, subscription: billed },
+}
+
+// The first overage is forgiven once.
+export const PaidOverTheLimitCovered: Story = {
+  args: {
+    limit: 900000,
+    organisation: { overage_billing_eligible: true },
+    subscription: billed,
+  },
+}
+
+export const PaidOverTheLimitCharged: Story = {
+  args: {
+    limit: 900000,
+    organisation: {
+      api_limit_grace_period_used: true,
+      overage_billing_eligible: true,
+    },
+    subscription: billed,
+  },
+}
+
+export const FreeOverTheLimit: Story = {
+  args: {
+    limit: 50000,
+    organisation: { api_limit_restriction_enabled: true },
+    scale: 1.5,
+    subscription: subscriptionOf({ plan: 'free' }),
+  },
+}
+
+// A grace row means the restriction task skips the 7 day wait.
+export const FreeOverTheLimitGraceUsed: Story = {
+  args: {
+    limit: 50000,
+    organisation: {
+      api_limit_grace_period_used: true,
+      api_limit_restriction_enabled: true,
+    },
+    scale: 1.5,
+    subscription: subscriptionOf({ plan: 'free' }),
+  },
 }
 
 // Only free plans are ever restricted, and this is where they are sent.
@@ -244,6 +311,7 @@ export const FreeAndRestricted: Story = {
   args: {
     isRestricted: true,
     limit: 50000,
+    organisation: { stop_serving_flags: true },
     subscription: subscriptionOf({ plan: 'free' }),
   },
 }

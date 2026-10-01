@@ -1,7 +1,12 @@
 import Format from 'common/utils/format'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import { OverLimit } from './overLimit'
-import { allowanceWindowLabel, UsageBasis } from './utils'
+import {
+  allowanceWindowLabel,
+  OverageStatus,
+  RestrictionWarning,
+  UsageBasis,
+} from './utils'
 
 /**
  * Everything the usage page says about a plan and its limit, in one place, so
@@ -29,12 +34,12 @@ const COPY = {
   // and the unrestricting task both skip organisations with no
   // APILimitAccessBlock, so this is all we can offer without evidence.
   askSupport: 'Contact support to restore access.',
+  flagsPaused: 'Flags are not being served for your organisation.',
   noBillingPeriod:
     'We are unable to show exact billing periods for your subscription plan.',
   noPlanLimit: 'This installation has no plan limit.',
   overLimitTitle: 'Your organisation has exceeded its plan limit',
   planTitle: 'Your plan',
-  // Says access, not flags: the API does not expose stop_serving_flags.
   recovery:
     'Upgrading restores access straight away. Otherwise access returns once' +
     ' your usage has stayed under the limit for 30 days.',
@@ -44,28 +49,55 @@ const COPY = {
 }
 
 export type BannerContext = {
-  /** The organisation is on a plan that gets billed for overages. */
-  mayBeCharged?: boolean
+  overageStatus?: OverageStatus
+  restrictionWarning?: RestrictionWarning
+  flagsPaused?: boolean
+}
+
+const overageSentence = (
+  status: OverageStatus | undefined,
+  basis: UsageBasis,
+): string | undefined => {
+  const window = allowanceWindowLabel(basis)
+  switch (status) {
+    case 'covered':
+      return `Your first overage is covered, so you will not be charged for ${window}. Future overages will be charged.`
+    case 'charged':
+      return `Overage charges will apply for ${window}.`
+    default:
+      return undefined
+  }
+}
+
+// The restriction task runs every 12 hours.
+const RESTRICTION_WARNING: Record<RestrictionWarning, string> = {
+  'after-grace':
+    'If usage stays over the limit, your organisation will be restricted after 7 days.',
+  'next-check':
+    'Your 7 day grace period has already been used, so your organisation can be restricted within 12 hours.',
 }
 
 // The block outlives going over the limit, so the overage is optional here.
 export const restrictedBannerCopy = (
   over: OverLimit | undefined,
+  { flagsPaused }: BannerContext = {},
 ): { title: string; body: string } => ({
-  body: over ? sentences(limitReached(over), COPY.recovery) : COPY.askSupport,
+  body: sentences(
+    flagsPaused && COPY.flagsPaused,
+    over ? sentences(limitReached(over), COPY.recovery) : COPY.askSupport,
+  ),
   title: COPY.restrictedTitle,
 })
 
 export const overLimitBannerCopy = (
   over: OverLimit,
   basis: UsageBasis,
-  { mayBeCharged }: BannerContext = {},
+  { overageStatus, restrictionWarning }: BannerContext = {},
 ): { title: string; body: string } => ({
   body: sentences(
     limitReached(over),
-    // Hedged: the API does not say whether the charge actually lands.
-    mayBeCharged &&
-      `Overage charges may apply over ${allowanceWindowLabel(basis)}.`,
+    overageSentence(overageStatus, basis),
+    restrictionWarning && RESTRICTION_WARNING[restrictionWarning],
     COPY.staysVisible,
   ),
   title: COPY.overLimitTitle,
