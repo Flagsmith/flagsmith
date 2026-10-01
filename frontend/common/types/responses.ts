@@ -558,6 +558,7 @@ export type Organisation = {
   stop_serving_flags: boolean
   api_limit_restriction_enabled: boolean
   api_limit_grace_period_used: boolean
+  overage_billing_eligible: boolean
   restrict_project_create_to_admin: boolean
 }
 export type Identity = {

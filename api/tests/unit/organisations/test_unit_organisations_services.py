@@ -1,8 +1,18 @@
+from datetime import timedelta
+
 import pytest
+from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
 
 from organisations.dataclasses import APILimitRestrictions
-from organisations.models import Organisation
-from organisations.services import get_api_limit_restrictions
+from organisations.models import (
+    Organisation,
+    OrganisationSubscriptionInformationCache,
+)
+from organisations.services import (
+    get_api_limit_restrictions,
+    is_overage_billing_eligible,
+)
 from organisations.subscriptions.constants import FREE_PLAN_ID
 from tests.types import EnableFeaturesFixture
 
@@ -79,3 +89,44 @@ def test_get_api_limit_restrictions__no_subscription__returns_no_restrictions(
 
     # Then
     assert restrictions == APILimitRestrictions(False, False)
+
+
+@pytest.mark.parametrize(
+    "missing",
+    ["subscription", "subscription_id", "cache", "billing_period", "alerting_setting"],
+)
+def test_is_overage_billing_eligible__missing_billing_data__returns_false(
+    organisation: Organisation,
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+    missing: str,
+) -> None:
+    # Given
+    settings.ENABLE_API_USAGE_ALERTING = missing != "alerting_setting"
+    enable_features("api_usage_overage_charges")
+    organisation.subscription.plan = "startup-v2"
+    organisation.subscription.subscription_id = (
+        None if missing == "subscription_id" else "sub_id"
+    )
+    organisation.subscription.save()
+    if missing == "subscription":
+        organisation.subscription.hard_delete()
+    if missing != "cache":
+        now = timezone.now()
+        OrganisationSubscriptionInformationCache.objects.create(
+            organisation=organisation,
+            allowed_30d_api_calls=100_000,
+            current_billing_term_starts_at=now - timedelta(days=31),
+            current_billing_term_ends_at=(
+                now - timedelta(days=1)
+                if missing == "billing_period"
+                else now + timedelta(days=1)
+            ),
+        )
+    organisation = Organisation.objects.get(id=organisation.id)
+
+    # When
+    eligible = is_overage_billing_eligible(organisation)
+
+    # Then
+    assert eligible is False

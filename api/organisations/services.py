@@ -1,7 +1,22 @@
+from datetime import timedelta
+
+from django.conf import settings
+from django.utils import timezone
+
 from integrations.flagsmith.client import get_openfeature_client
 from organisations.dataclasses import APILimitRestrictions
 from organisations.models import Organisation
-from organisations.subscriptions.constants import FREE_PLAN_ID
+from organisations.subscriptions.constants import (
+    FREE_PLAN_ID,
+    SubscriptionPlanFamily,
+)
+
+OVERAGE_BILLING_PLAN_FAMILIES = (
+    SubscriptionPlanFamily.START_UP,
+    SubscriptionPlanFamily.SCALE_UP,
+)
+OVERAGE_BILLING_MIN_TERM = timedelta(days=25)
+OVERAGE_BILLING_MAX_TERM = timedelta(days=35)
 
 
 def get_api_limit_restrictions(organisation: Organisation) -> APILimitRestrictions:
@@ -27,4 +42,34 @@ def get_api_limit_restrictions(organisation: Organisation) -> APILimitRestrictio
             default_value=False,
             evaluation_context=evaluation_context,
         ),
+    )
+
+
+def is_overage_billing_eligible(organisation: Organisation) -> bool:
+    if not (
+        settings.ENABLE_API_USAGE_ALERTING
+        and organisation.has_paid_subscription()
+        and organisation.subscription.subscription_plan_family
+        in OVERAGE_BILLING_PLAN_FAMILIES
+        and organisation.subscription.cancellation_date is None
+        and organisation.has_subscription_information_cache()
+    ):
+        return False
+
+    cache = organisation.subscription_information_cache
+    starts_at = cache.current_billing_term_starts_at
+    ends_at = cache.current_billing_term_ends_at
+    if (
+        starts_at is None
+        or ends_at is None
+        or not starts_at <= timezone.now() < ends_at
+    ):
+        return False
+    if not OVERAGE_BILLING_MIN_TERM <= ends_at - starts_at <= OVERAGE_BILLING_MAX_TERM:
+        return False
+
+    return get_openfeature_client().get_boolean_value(
+        "api_usage_overage_charges",
+        default_value=False,
+        evaluation_context=organisation.openfeature_evaluation_context,
     )

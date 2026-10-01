@@ -28,6 +28,7 @@ from organisations.models import (
     OrganisationSubscriptionInformationCache,
     UserOrganisation,
 )
+from organisations.services import is_overage_billing_eligible
 from organisations.subscriptions.constants import (
     CHARGEBEE,
     FREE_PLAN_ID,
@@ -2253,3 +2254,75 @@ def test_restrict_use_due_to_api_limit_grace_period_over__cc_recipient_list_set_
     # Then
     assert len(mailoutbox) == 1
     assert mailoutbox[0].cc == [cs_email]
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+@pytest.mark.parametrize(
+    "plan, term_days, cancellation_offset_days, enabled_features, expected",
+    [
+        ("scale-up-v2", 30, None, ("api_usage_overage_charges",), True),
+        ("startup-v2", 30, None, ("api_usage_overage_charges",), True),
+        ("startup-v2", 25, None, ("api_usage_overage_charges",), True),
+        ("startup-v2", 35, None, ("api_usage_overage_charges",), True),
+        ("startup-v2", 24, None, ("api_usage_overage_charges",), False),
+        ("startup-v2", 36, None, ("api_usage_overage_charges",), False),
+        ("startup-v2", 365, None, ("api_usage_overage_charges",), False),
+        ("enterprise-v2", 30, None, ("api_usage_overage_charges",), False),
+        (FREE_PLAN_ID, 30, None, ("api_usage_overage_charges",), False),
+        ("startup-v2", 30, 0, ("api_usage_overage_charges",), False),
+        ("startup-v2", 30, 10, ("api_usage_overage_charges",), False),
+        ("startup-v2", 30, None, (), False),
+    ],
+)
+def test_charge_for_api_call_count_overages__eligibility__matches_is_overage_billing_eligible(
+    organisation: Organisation,
+    mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+    plan: str,
+    term_days: int,
+    cancellation_offset_days: int | None,
+    enabled_features: tuple[str, ...],
+    expected: bool,
+) -> None:
+    # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=100_000,
+        current_billing_term_starts_at=now
+        - timedelta(days=term_days)
+        + timedelta(minutes=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = plan
+    organisation.subscription.cancellation_date = (
+        None
+        if cancellation_offset_days is None
+        else now + timedelta(days=cancellation_offset_days)
+    )
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+    enable_features(*enabled_features)
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
+    )
+    mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+        return_value=300_000,
+    )
+    organisation = Organisation.objects.get(id=organisation.id)
+
+    # When
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
+
+    # Then
+    assert mock_chargebee_update.called is expected
+    assert is_overage_billing_eligible(organisation) is expected

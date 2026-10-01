@@ -6111,6 +6111,10 @@
             "type": "boolean",
             "readOnly": true
           },
+          "overage_billing_eligible": {
+            "type": "boolean",
+            "readOnly": true
+          },
           "restrict_project_create_to_admin": {
             "type": "boolean"
           },

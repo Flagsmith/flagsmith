@@ -24189,6 +24189,9 @@ components:
         api_limit_grace_period_used:
           type: boolean
           readOnly: true
+        overage_billing_eligible:
+          type: boolean
+          readOnly: true
         restrict_project_create_to_admin:
           type: boolean
         force_2fa:
@@ -26196,6 +26199,9 @@ components:
           type: boolean
           readOnly: true
         api_limit_grace_period_used:
+          type: boolean
+          readOnly: true
+        overage_billing_eligible:
           type: boolean
           readOnly: true
         restrict_project_create_to_admin:

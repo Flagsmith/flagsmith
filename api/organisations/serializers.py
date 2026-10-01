@@ -11,7 +11,10 @@ from organisations.chargebee import (  # type: ignore[attr-defined]
     get_subscription_data_from_hosted_page,
 )
 from organisations.invites.models import Invite
-from organisations.services import get_api_limit_restrictions
+from organisations.services import (
+    get_api_limit_restrictions,
+    is_overage_billing_eligible,
+)
 from users.models import FFAdminUser, UserPermissionGroup
 
 from .models import (
@@ -59,6 +62,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
     role = serializers.SerializerMethodField()
     api_limit_restriction_enabled = serializers.SerializerMethodField()
     api_limit_grace_period_used = serializers.SerializerMethodField()
+    overage_billing_eligible = serializers.SerializerMethodField()
 
     class Meta:
         model = Organisation
@@ -76,6 +80,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "stop_serving_flags",
             "api_limit_restriction_enabled",
             "api_limit_grace_period_used",
+            "overage_billing_eligible",
             "restrict_project_create_to_admin",
             "force_2fa",
             "targeting_key",
@@ -90,6 +95,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "stop_serving_flags",
             "api_limit_restriction_enabled",
             "api_limit_grace_period_used",
+            "overage_billing_eligible",
         )
         extra_kwargs = {
             "targeting_key": {"write_only": True},
@@ -118,6 +124,10 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
     @extend_schema_field({"type": "boolean"})
     def get_api_limit_grace_period_used(self, instance: Organisation) -> bool:
         return hasattr(instance, "breached_grace_period")
+
+    @extend_schema_field({"type": "boolean"})
+    def get_overage_billing_eligible(self, instance: Organisation) -> bool:
+        return is_overage_billing_eligible(instance)
 
 
 class OrganisationSerializerBasic(serializers.ModelSerializer):  # type: ignore[type-arg]

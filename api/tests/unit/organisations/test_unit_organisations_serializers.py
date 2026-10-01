@@ -69,6 +69,7 @@ def test_organisation_serializer_full__api_limit_state__returns_expected(
     assert data["stop_serving_flags"] is True
     assert data["api_limit_restriction_enabled"] is True
     assert data["api_limit_grace_period_used"] is has_breached_grace_period
+    assert data["overage_billing_eligible"] is False
 
 
 def test_organisation_serializer_full__update_api_limit_state__ignored(
@@ -82,6 +83,7 @@ def test_organisation_serializer_full__update_api_limit_state__ignored(
             "stop_serving_flags": True,
             "api_limit_restriction_enabled": True,
             "api_limit_grace_period_used": True,
+            "overage_billing_eligible": True,
         },
     )
 
