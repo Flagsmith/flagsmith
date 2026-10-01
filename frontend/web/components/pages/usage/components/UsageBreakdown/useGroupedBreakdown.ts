@@ -3,7 +3,7 @@ import { skipToken } from '@reduxjs/toolkit/query'
 import { BillingPeriod } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import { useGetProjectsQuery } from 'common/services/useProject'
-import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
 import {
   breakdownStatusOf,
   byScope,
@@ -50,7 +50,7 @@ export const useGroupedBreakdown = ({
   const projects = useGetProjectsQuery(
     groupBy === 'project' ? { organisationId } : skipToken,
   )
-  const environments = useGetEnvironmentsQuery(
+  const environments = useGetAllEnvironmentsQuery(
     groupBy === 'environment' && projectId ? { projectId } : skipToken,
   )
 
@@ -67,9 +67,7 @@ export const useGroupedBreakdown = ({
       return byScope(
         grouped.currentData,
         'environment_id',
-        new Map(
-          environments.currentData?.results.map(({ id, name }) => [id, name]),
-        ),
+        new Map(environments.currentData?.map(({ id, name }) => [id, name])),
         'Deleted environment',
       )
     }

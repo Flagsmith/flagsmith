@@ -27,7 +27,11 @@ const List: FC<ListProps> = ({ onRetry, rows, status = 'ready' }) => {
 
   if (status === 'loading') {
     return (
-      <div className='text-center py-5'>
+      <div
+        className='text-center py-5'
+        role='status'
+        aria-label='Loading breakdown'
+      >
         <Loader />
       </div>
     )
@@ -35,18 +39,20 @@ const List: FC<ListProps> = ({ onRetry, rows, status = 'ready' }) => {
 
   if (status === 'error') {
     return (
-      <EmptyState
-        title='Breakdown could not be loaded'
-        description='Something went wrong fetching this breakdown. Try again in a moment.'
-        icon='bar-chart'
-        action={
-          onRetry && (
-            <Button theme='secondary' onClick={onRetry}>
-              Try again
-            </Button>
-          )
-        }
-      />
+      <div role='alert'>
+        <EmptyState
+          title='Breakdown could not be loaded'
+          description='Something went wrong fetching this breakdown. Try again in a moment.'
+          icon='bar-chart'
+          action={
+            onRetry && (
+              <Button theme='secondary' onClick={onRetry}>
+                Try again
+              </Button>
+            )
+          }
+        />
+      </div>
     )
   }
 
