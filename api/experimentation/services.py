@@ -1436,10 +1436,7 @@ def annotate_warehouse_delivery_statuses(
     connections: Sequence[WarehouseConnection],
 ) -> None:
     """For external connections that passed verification, show what the
-    warehouse-delivery service last saw. Read-only: nothing is saved.
-
-    Without `select_related("delivery_status")` on the connections, this runs
-    one query per verified connection."""
+    warehouse-delivery service last saw. Read-only: nothing is saved."""
     for connection in connections:
         if (
             connection.warehouse_type == WarehouseType.FLAGSMITH
