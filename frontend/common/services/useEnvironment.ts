@@ -1,4 +1,5 @@
-import { Res } from 'common/types/responses'
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { Environment, Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import { fetchAllPages } from 'common/utils/fetchAllPages'
@@ -23,12 +24,13 @@ export const environmentService = service
         Req['getAllEnvironments']
       >({
         providesTags: [{ id: 'LIST', type: 'Environment' }],
-        queryFn: async ({ projectId }, _, _2, baseQuery) =>
-          (await fetchAllPages((page) =>
-            baseQuery({
+        queryFn: ({ projectId }, _, _2, baseQuery) =>
+          fetchAllPages<Environment, FetchBaseQueryError>(async (page) => {
+            const { data, error } = await baseQuery({
               url: `environments/?project=${projectId}&page=${page}`,
-            }),
-          )) as { data: Res['allEnvironments'] } | { error: never },
+            })
+            return { data: data as Res['environments'] | undefined, error }
+          }),
       }),
       getEnvironment: builder.query<Res['environment'], Req['getEnvironment']>({
         providesTags: (res) => [{ id: res?.id, type: 'Environment' }],

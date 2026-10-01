@@ -15,6 +15,12 @@ describe('fetchAllPages', () => {
     expect(fetchPage.mock.calls).toEqual([[1], [2]])
   })
 
+  it('stops at a page with no next', async () => {
+    const fetchPage = jest.fn().mockResolvedValueOnce(page([]))
+
+    expect(await fetchAllPages(fetchPage)).toEqual({ data: [] })
+  })
+
   it('returns the error of a failed page instead of a partial list', async () => {
     const error = { status: 500 }
     const fetchPage = jest
