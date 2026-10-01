@@ -286,7 +286,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                               <div className='d-flex align-items-center gap-2'>
                                 <span>
                                   {`${first_name} ${last_name}`}{' '}
-                                  {id == AccountStore.getUserId() && '(You)'}
+                                  {id === AccountStore.getUserId() && '(You)'}
                                 </span>
                                 <InactiveMembershipChip
                                   user={props.data.user}
@@ -381,7 +381,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                             <div className='font-weight-medium d-flex align-items-center gap-2'>
                               <span>
                                 {`${first_name} ${last_name}`}{' '}
-                                {id == AccountStore.getUserId() && '(You)'}
+                                {id === AccountStore.getUserId() && '(You)'}
                               </span>
                               <InactiveMembershipChip user={organisationUser} />
                               {isEdit && userEdited && (
