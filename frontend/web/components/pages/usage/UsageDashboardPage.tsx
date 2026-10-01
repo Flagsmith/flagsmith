@@ -12,14 +12,14 @@ import UsageMeter from './components/UsageMeter'
 import UsageOverTime from './components/UsageOverTime'
 import UsagePageLayout from './components/UsagePageLayout'
 import { useUsageData } from './useUsageData'
-import { contributionNote, overLimitNote, planSectionCopy } from './copy'
+import { contributionNote, showsContribution } from './contribution'
+import { planHeading } from './planHeading'
 import { projectionNote, projectUsage } from './projection'
-import { overLimitOf } from './overLimit'
+import { overLimitNote, overLimitOf } from './overLimit'
 import { bannerStateOf } from './bannerState'
 import {
   isBilledOnAPeriod,
   isBillingPeriodSelected,
-  showsContribution,
   showsPlanCeiling,
   showsProjection,
   periodLabel,
@@ -145,7 +145,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         usage.retry()
       }}
     >
-      <SectionHeading {...planSectionCopy(basis, limit)} />
+      <SectionHeading {...planHeading(basis, limit)} />
 
       <BillingStrip period={period} />
 

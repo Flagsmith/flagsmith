@@ -1,4 +1,4 @@
-import { bannerCopy, overLimitNote } from 'components/pages/usage/copy'
+import { bannerMessage } from 'components/pages/usage/bannerMessage'
 import { BannerState } from 'components/pages/usage/bannerState'
 import { OverLimit, overLimitOf } from 'components/pages/usage/overLimit'
 import { UsageBasis } from 'components/pages/usage/utils'
@@ -23,9 +23,9 @@ const exceeding = (
 
 const over = exceeding(60000, 50000, days([40000, 20000]))
 
-describe('bannerCopy', () => {
+describe('bannerMessage', () => {
   it('names the day when the data shows it', () => {
-    expect(bannerCopy({ kind: 'over-limit', over }, billed).body).toBe(
+    expect(bannerMessage({ kind: 'over-limit', over }, billed).body).toBe(
       'You reached your plan limit of 50K API calls on 2 Aug.' +
         ' Your usage stays visible below so you can see what happened.',
     )
@@ -33,7 +33,7 @@ describe('bannerCopy', () => {
 
   // Artificial: totals and rows always arrive in the same response.
   it('leaves the day out when the rows are missing', () => {
-    const { body } = bannerCopy(
+    const { body } = bannerMessage(
       { kind: 'over-limit', over: exceeding(60000, 50000) },
       billed,
     )
@@ -49,7 +49,7 @@ describe('bannerCopy', () => {
     ${'restriction-after-grace'} | ${'If usage stays over the limit, your organisation will be restricted after 7 days.'}
     ${'restriction-imminent'}    | ${'Your 7 day grace period has already been used, so your organisation can be restricted within 12 hours.'}
   `('explains what happens next for $kind', ({ expected, kind }) => {
-    const { body, title } = bannerCopy({ kind, over } as BannerState, billed)
+    const { body, title } = bannerMessage({ kind, over } as BannerState, billed)
 
     expect(title).toBe('Your organisation has exceeded its plan limit')
     expect(body).toBe(
@@ -61,12 +61,12 @@ describe('bannerCopy', () => {
 
   it('names the rolling window where there is no billing period', () => {
     expect(
-      bannerCopy({ kind: 'overage-charged', over }, rolling).body,
+      bannerMessage({ kind: 'overage-charged', over }, rolling).body,
     ).toContain('Overage charges will apply for the last 30 days.')
   })
 
   it('tells a restricted organisation how to get access back', () => {
-    const { body, title } = bannerCopy(
+    const { body, title } = bannerMessage(
       { flagsPaused: false, kind: 'restricted', over },
       billed,
     )
@@ -81,13 +81,14 @@ describe('bannerCopy', () => {
 
   it('says flags are paused when serving has stopped', () => {
     expect(
-      bannerCopy({ flagsPaused: true, kind: 'restricted', over }, billed).body,
+      bannerMessage({ flagsPaused: true, kind: 'restricted', over }, billed)
+        .body,
     ).toMatch(/^Flags are not being served for your organisation\. /)
   })
 
   // Most of that 30 day window has no overage left to report.
   it('explains the restriction with no overage to report', () => {
-    const { body } = bannerCopy(
+    const { body } = bannerMessage(
       { flagsPaused: false, kind: 'restricted', over: undefined },
       billed,
     )
@@ -96,17 +97,5 @@ describe('bannerCopy', () => {
     // works for such a block, so with no overage in evidence we promise
     // nothing.
     expect(body).toBe('Contact support to restore access.')
-  })
-})
-
-describe('overLimitNote', () => {
-  it('says how far over in the note under the meter', () => {
-    expect(overLimitNote(exceeding(60000, 50000, days([60000])))).toBe(
-      '10K calls over your 50K limit.',
-    )
-    // shortenNumber leaves small counts alone, so one is reachable.
-    expect(overLimitNote(exceeding(50001, 50000, days([50001])))).toBe(
-      '1 call over your 50K limit.',
-    )
   })
 })

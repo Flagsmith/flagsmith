@@ -10,10 +10,10 @@ import UsageMeter from 'components/pages/usage/components/UsageMeter'
 import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
 import {
   contributionNote,
-  overLimitNote,
-  planSectionCopy,
-} from 'components/pages/usage/copy'
-import { overLimitOf } from 'components/pages/usage/overLimit'
+  showsContribution,
+} from 'components/pages/usage/contribution'
+import { planHeading } from 'components/pages/usage/planHeading'
+import { overLimitNote, overLimitOf } from 'components/pages/usage/overLimit'
 import { bannerStateOf } from 'components/pages/usage/bannerState'
 import {
   allowanceWindow,
@@ -23,7 +23,6 @@ import {
   periodsFor,
   PeriodSelection,
   resolvePeriod,
-  showsContribution,
   showsPlanCeiling,
   usageBasisOf,
 } from 'components/pages/usage/utils'
@@ -169,7 +168,7 @@ const UsagePage: FC<HarnessProps> = ({
       // Nothing to refetch here; passed so FailedToLoad renders its button.
       onRetry={() => {}}
     >
-      <SectionHeading {...planSectionCopy(basis, limit)} />
+      <SectionHeading {...planHeading(basis, limit)} />
 
       <UsageMeter
         total={allowanceTotal}
