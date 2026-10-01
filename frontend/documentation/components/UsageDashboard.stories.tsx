@@ -131,7 +131,9 @@ const UsagePage: FC<HarnessProps> = ({
 
   // The note needs the organisation over the period on screen, not over the
   // allowance window, or a project can read as more than all of it.
-  const { setDimension, ...breakdown } = useUsageBreakdown({ data: scoped })
+  const { dimension, rows, setDimension } = useUsageBreakdown({
+    data: scoped,
+  })
 
   const scope = `${filtered ? project : 'All projects'} · ${periodLabel(
     periods,
@@ -207,7 +209,8 @@ const UsagePage: FC<HarnessProps> = ({
       />
 
       <UsageBreakdown
-        {...breakdown}
+        dimension={dimension}
+        rows={rows ?? []}
         onChangeDimension={setDimension}
         scope={scope}
       />

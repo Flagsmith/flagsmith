@@ -1,7 +1,12 @@
 import { FC } from 'react'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import List from './components/List'
-import { BREAKDOWN_DIMENSIONS, BreakdownDimension, BreakdownRow } from './utils'
+import {
+  BREAKDOWN_DIMENSIONS,
+  BreakdownDimension,
+  BreakdownRow,
+  BreakdownStatus,
+} from './utils'
 import './UsageBreakdown.scss'
 
 export type UsageBreakdownProps = {
@@ -9,9 +14,7 @@ export type UsageBreakdownProps = {
   onChangeDimension: (dimension: BreakdownDimension) => void
   rows: BreakdownRow[]
   scope?: string
-  isLoading?: boolean
-  isError?: boolean
-  needsProject?: boolean
+  status?: BreakdownStatus
   onRetry?: () => void
 }
 
@@ -19,13 +22,11 @@ type DimensionOption = (typeof BREAKDOWN_DIMENSIONS)[number]
 
 const UsageBreakdown: FC<UsageBreakdownProps> = ({
   dimension,
-  isError,
-  isLoading,
-  needsProject,
   onChangeDimension,
   onRetry,
   rows,
   scope,
+  status,
 }) => (
   <div className='p-4 mt-3 border border-default rounded-lg bg-surface-default'>
     <div className='d-flex align-items-end justify-content-between gap-3 mb-3'>
@@ -50,13 +51,7 @@ const UsageBreakdown: FC<UsageBreakdownProps> = ({
       </div>
     </div>
 
-    <List
-      rows={rows}
-      isLoading={isLoading}
-      isError={isError}
-      needsProject={needsProject}
-      onRetry={onRetry}
-    />
+    <List rows={rows} status={status} onRetry={onRetry} />
   </div>
 )
 
