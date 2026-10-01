@@ -25,6 +25,7 @@ import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import { Req } from 'common/types/requests'
 import PermissionsTabs from 'components/PermissionsTabs'
+import InactiveMembershipChip from 'components/users-permissions/InactiveMembershipChip'
 
 const widths = [80, 80]
 
@@ -282,8 +283,15 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                             props.data.user || {}
                           return (
                             <components.Option {...props}>
-                              {`${first_name} ${last_name}`}{' '}
-                              {id == AccountStore.getUserId() && '(You)'}
+                              <div className='d-flex align-items-center gap-2'>
+                                <span>
+                                  {`${first_name} ${last_name}`}{' '}
+                                  {id === AccountStore.getUserId() && '(You)'}
+                                </span>
+                                <InactiveMembershipChip
+                                  user={props.data.user}
+                                />
+                              </div>
                               <div className='list-item-footer faint'>
                                 {email}
                               </div>
@@ -361,16 +369,21 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                         </Row>
                       </>
                     }
-                    renderRow={({ email, first_name, id, last_name }) => {
+                    renderRow={(organisationUser) => {
+                      const { email, first_name, id, last_name } =
+                        organisationUser
                       const matchingUser = users.find((v) => v.id === id)
                       const isGroupAdmin = matchingUser?.group_admin
                       const userEdited = matchingUser?.edited
                       return (
                         <Row className='list-item' key={id}>
                           <Flex className='table-column px-3'>
-                            <div className='font-weight-medium'>
-                              {`${first_name} ${last_name}`}{' '}
-                              {id == AccountStore.getUserId() && '(You)'}{' '}
+                            <div className='font-weight-medium d-flex align-items-center gap-2'>
+                              <span>
+                                {`${first_name} ${last_name}`}{' '}
+                                {id === AccountStore.getUserId() && '(You)'}
+                              </span>
+                              <InactiveMembershipChip user={organisationUser} />
                               {isEdit && userEdited && (
                                 <div className='unread'>Unsaved</div>
                               )}
