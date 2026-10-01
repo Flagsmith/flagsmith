@@ -359,13 +359,6 @@ def create_flag_dependency(
         "key": environment.api_key,
         "name": environment.name,
     }
-    condition: SegmentCondition = {
-        "property": f"$.flags[{json.dumps(prerequisite_feature.name)}].enabled",
-        "operator": constants.NOT_EQUAL,
-        "value": "true",
-        "description": None,
-    }
-    segment_name = f"{feature.name}-dependencies-{environment.api_key}"
     with transaction.atomic():
         _lock_project_flag_dependencies(environment.project_id)
         edges = _get_dependency_edges(
@@ -395,41 +388,28 @@ def create_flag_dependency(
             raise FeatureIsPrerequisiteError(
                 environment=referencing_environment, path=dependent_edges
             )
-        rules: list[SegmentRule] = [
-            {"type": constants.ANY_RULE, "conditions": [condition], "rules": []}
-        ]
-        segment, created = Segment.objects.get_or_create(
-            project_id=environment.project_id,
-            name=segment_name,
-            is_system_segment=True,
-            defaults={"feature": feature, "rules_data": rules},
+        segment = _get_or_create_dependency_segment(
+            feature=feature, prerequisite_feature=prerequisite_feature
         )
-        if not created:
-            assert (rules := segment.rules_data) is not None
-            rules[0]["conditions"].append(condition)
-            segment.save(update_fields=["rules_data"])
-        write_segment_rules(segment, rules)
-        index_segment_flag_references(segment)
-        if created:
-            overrides: OrderedModelQuerySet = get_live_overrides(
-                include_scheduled=True
-            ).filter(environment=environment, feature=feature)
-            update_flag(
-                environment=environment,
-                feature=feature,
-                changes={
-                    "segment_overrides": [
-                        {
-                            "segment": {"id": segment.id},
-                            "enabled": False,
-                            "priority": overrides.get_next_order(),
-                        }
-                    ]
-                },
-                replace=False,
-                author=author,
-            )
-            overrides.get(segment=segment).to(0)
+        overrides: OrderedModelQuerySet = get_live_overrides(
+            include_scheduled=True
+        ).filter(environment=environment, feature=feature)
+        update_flag(
+            environment=environment,
+            feature=feature,
+            changes={
+                "segment_overrides": [
+                    {
+                        "segment": {"id": segment.id},
+                        "enabled": False,
+                        "priority": overrides.get_next_order(),
+                    }
+                ]
+            },
+            replace=False,
+            author=author,
+        )
+        overrides.get(segment=segment).to(0)
         _create_dependency_audit_log(
             environment=environment,
             feature=feature,
@@ -442,6 +422,41 @@ def create_flag_dependency(
             "segment", "prerequisite_feature"
         ).get(segment=segment, prerequisite_feature=prerequisite_feature),
     )
+
+
+def _get_or_create_dependency_segment(
+    *,
+    feature: Feature,
+    prerequisite_feature: Feature,
+) -> Segment:
+    """Get the system segment matching when the prerequisite isn't enabled.
+
+    The segment is shared by every environment the dependency exists in, and
+    its rules never change once created. This makes dependency changes pure
+    segment override changes, versioned along with the feature.
+    """
+    condition: SegmentCondition = {
+        "property": f"$.flags[{json.dumps(prerequisite_feature.name)}].enabled",
+        "operator": constants.NOT_EQUAL,
+        "value": "true",
+        "description": None,
+    }
+    rules: list[SegmentRule] = [
+        {"type": constants.ANY_RULE, "conditions": [condition], "rules": []}
+    ]
+    segment: Segment
+    created: bool
+    segment, created = Segment.objects.get_or_create(
+        project_id=feature.project_id,
+        is_system_segment=True,
+        feature=feature,
+        name=f"{feature.name}-depends-on-{prerequisite_feature.name}",
+        defaults={"rules_data": rules},
+    )
+    if created:
+        write_segment_rules(segment, rules)
+        index_segment_flag_references(segment)
+    return segment
 
 
 def _create_dependency_audit_log(
