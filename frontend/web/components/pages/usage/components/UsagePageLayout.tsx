@@ -1,9 +1,12 @@
 import { FC, ReactNode } from 'react'
 import EmptyState from 'components/EmptyState'
+import { throttledMessage } from 'components/pages/usage/throttle'
 
 export type UsagePageLayoutProps = {
   isError?: boolean
   isLoading?: boolean
+  /** Seconds until a rate limited page retries itself. */
+  retryInSeconds?: number
   onRetry?: () => void
   /** Outlives the loading and error states: a restricted organisation needs
    * to know why it is cut off even when the usage request fails. */
@@ -17,6 +20,7 @@ const UsagePageLayout: FC<UsagePageLayoutProps> = ({
   isError,
   isLoading,
   onRetry,
+  retryInSeconds,
 }) => {
   let content = children
 
@@ -24,6 +28,16 @@ const UsagePageLayout: FC<UsagePageLayoutProps> = ({
     content = (
       <div className='text-center'>
         <Loader />
+      </div>
+    )
+  } else if (retryInSeconds !== undefined) {
+    content = (
+      <div role='status'>
+        <EmptyState
+          title='Too many requests'
+          description={throttledMessage(retryInSeconds)}
+          icon='bar-chart'
+        />
       </div>
     )
   } else if (isError) {

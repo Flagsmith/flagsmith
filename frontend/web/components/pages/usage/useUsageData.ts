@@ -2,6 +2,7 @@ import { skipToken } from '@reduxjs/toolkit/query'
 import { BillingPeriod } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
+import { isThrottled } from './throttle'
 import { allowanceWindow, UsageBasis } from './utils'
 
 type UseUsageData = {
@@ -20,6 +21,8 @@ export type UsageData = {
   isLoadingPlan: boolean
   isLoadingScoped: boolean
   failed: boolean
+  /** Rate limited, not broken: worth retrying once the window passes. */
+  throttled: boolean
   retry: () => void
 }
 
@@ -49,10 +52,12 @@ export const useUsageData = ({
     OPTIONS,
   )
 
+  const throttled = isThrottled(scoped.error) || isThrottled(allowance.error)
+
   return {
     allowance: allowance.data,
     // Either query failing leaves a number missing, so both are fatal.
-    failed: scoped.isError || allowance.isError,
+    failed: !throttled && (scoped.isError || allowance.isError),
 
     isLoadingPlan: allowance.isFetching,
 
@@ -63,5 +68,6 @@ export const useUsageData = ({
       if (!allowance.isUninitialized) allowance.refetch()
     },
     scoped: scoped.data,
+    throttled,
   }
 }
