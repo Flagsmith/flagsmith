@@ -208,6 +208,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
             dimension={dimension}
             rows={grouped?.rows ?? rows}
             status={grouped?.status}
+            retryInSeconds={grouped?.retryInSeconds}
             onRetry={grouped?.onRetry}
             onChangeDimension={setDimension}
             scope={scope}

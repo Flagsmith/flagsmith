@@ -205,12 +205,14 @@ describe('UsageBreakdown utils', () => {
     const idle = { isError: false, isFetching: false }
 
     it.each`
-      groupBy      | queries                                  | expected
-      ${undefined} | ${[idle]}                                | ${'needs-project'}
-      ${'project'} | ${[idle, { ...idle, isFetching: true }]} | ${'loading'}
-      ${'project'} | ${[{ ...idle, isError: true }, idle]}    | ${'error'}
-      ${'project'} | ${[{ isError: true, isFetching: true }]} | ${'loading'}
-      ${'project'} | ${[idle, idle]}                          | ${'ready'}
+      groupBy      | queries                                                 | expected
+      ${undefined} | ${[idle]}                                               | ${'needs-project'}
+      ${'project'} | ${[idle, { ...idle, isFetching: true }]}                | ${'loading'}
+      ${'project'} | ${[{ ...idle, isError: true }, idle]}                   | ${'error'}
+      ${'project'} | ${[{ isError: true, isFetching: true }]}                | ${'loading'}
+      ${'project'} | ${[{ ...idle, error: { status: 429 }, isError: true }]} | ${'throttled'}
+      ${'project'} | ${[{ ...idle, error: { status: 500 }, isError: true }]} | ${'error'}
+      ${'project'} | ${[idle, idle]}                                         | ${'ready'}
     `('is $expected', ({ expected, groupBy, queries }) => {
       expect(breakdownStatusOf(groupBy, queries)).toBe(expected)
     })
