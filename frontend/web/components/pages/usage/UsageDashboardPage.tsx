@@ -16,7 +16,7 @@ import { contributionNote, showsContribution } from './contribution'
 import { planHeading } from './planHeading'
 import { projectionNote, projectUsage } from './projection'
 import { overLimitNote, overLimitOf } from './overLimit'
-import { bannerStateOf } from './bannerState'
+import { limitStatusOf } from './limitStatus'
 import {
   isBilledOnAPeriod,
   isBillingPeriodSelected,
@@ -81,7 +81,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     () => overLimitOf(allowanceTotal, limit, usage.allowance),
     [allowanceTotal, limit, usage.allowance],
   )
-  const banner = bannerStateOf(organisation, exceeded)
+  const limitStatus = limitStatusOf(organisation, exceeded)
 
   const periods = periodsFor(planIsBilled)
 
@@ -131,9 +131,9 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       isError={organisationFailed || usage.failed || limitFailed}
       isLoading={loadingOrganisation || usage.isLoadingPlan || loadingLimit}
       alert={
-        banner && (
+        limitStatus && (
           <OverLimitBanner
-            state={banner}
+            status={limitStatus}
             basis={basis}
             canUpgrade={Utils.getFlagsmithHasFeature('payments_enabled')}
           />

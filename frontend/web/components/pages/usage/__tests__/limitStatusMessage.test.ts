@@ -1,5 +1,5 @@
-import { bannerMessage } from 'components/pages/usage/bannerMessage'
-import { BannerState } from 'components/pages/usage/bannerState'
+import { limitStatusMessage } from 'components/pages/usage/limitStatusMessage'
+import { LimitStatus } from 'components/pages/usage/limitStatus'
 import { OverLimit, overLimitOf } from 'components/pages/usage/overLimit'
 import { UsageBasis } from 'components/pages/usage/utils'
 import { usageEvent, usageResponse } from './fixtures'
@@ -23,9 +23,9 @@ const exceeding = (
 
 const over = exceeding(60000, 50000, days([40000, 20000]))
 
-describe('bannerMessage', () => {
+describe('limitStatusMessage', () => {
   it('names the day when the data shows it', () => {
-    expect(bannerMessage({ kind: 'over-limit', over }, billed).body).toBe(
+    expect(limitStatusMessage({ kind: 'over-limit', over }, billed).body).toBe(
       'You reached your plan limit of 50K API calls on 2 Aug.' +
         ' Your usage stays visible below so you can see what happened.',
     )
@@ -33,7 +33,7 @@ describe('bannerMessage', () => {
 
   // Artificial: totals and rows always arrive in the same response.
   it('leaves the day out when the rows are missing', () => {
-    const { body } = bannerMessage(
+    const { body } = limitStatusMessage(
       { kind: 'over-limit', over: exceeding(60000, 50000) },
       billed,
     )
@@ -49,7 +49,10 @@ describe('bannerMessage', () => {
     ${'restriction-after-grace'} | ${'If usage stays over the limit, your organisation will be restricted 7 days after it first went over.'}
     ${'restriction-imminent'}    | ${'Your 7 day grace period has already been used, so your organisation can be restricted within 12 hours.'}
   `('explains what happens next for $kind', ({ expected, kind }) => {
-    const { body, title } = bannerMessage({ kind, over } as BannerState, billed)
+    const { body, title } = limitStatusMessage(
+      { kind, over } as LimitStatus,
+      billed,
+    )
 
     expect(title).toBe('Your organisation has exceeded its plan limit')
     expect(body).toBe(
@@ -61,12 +64,12 @@ describe('bannerMessage', () => {
 
   it('names the rolling window where there is no billing period', () => {
     expect(
-      bannerMessage({ kind: 'overage-charged', over }, rolling).body,
+      limitStatusMessage({ kind: 'overage-charged', over }, rolling).body,
     ).toContain('Overage charges will apply for the last 30 days.')
   })
 
   it('tells a restricted organisation how to get access back', () => {
-    const { body, title } = bannerMessage(
+    const { body, title } = limitStatusMessage(
       { flagsPaused: false, kind: 'restricted', over },
       billed,
     )
@@ -81,14 +84,16 @@ describe('bannerMessage', () => {
 
   it('says flags are paused when serving has stopped', () => {
     expect(
-      bannerMessage({ flagsPaused: true, kind: 'restricted', over }, billed)
-        .body,
+      limitStatusMessage(
+        { flagsPaused: true, kind: 'restricted', over },
+        billed,
+      ).body,
     ).toMatch(/^Flags are not being served for your organisation\. /)
   })
 
   // Most of that 30 day window has no overage left to report.
   it('explains the restriction with no overage to report', () => {
-    const { body } = bannerMessage(
+    const { body } = limitStatusMessage(
       { flagsPaused: false, kind: 'restricted', over: undefined },
       billed,
     )
