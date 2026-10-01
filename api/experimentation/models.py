@@ -91,6 +91,31 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
             kwargs={"environment_id": self.environment_id},
         )
 
+    @hook(  # type: ignore[misc]
+        AFTER_UPDATE,
+        when_any=["warehouse_type", "config", "credentials"],
+        has_changed=True,
+    )
+    def clear_delivery_status(self) -> None:
+        WarehouseDeliveryStatus.objects.filter(connection=self).delete()
+
+
+class WarehouseDeliveryStatus(models.Model):
+    """Updated by the warehouse-delivery service after each delivery."""
+
+    connection = models.OneToOneField(
+        WarehouseConnection,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="delivery_status",
+    )
+    status = models.CharField(
+        max_length=50,
+        choices=WarehouseConnectionStatus.choices,
+    )
+    detail = models.TextField(null=True, blank=True)
+    updated_at = models.DateTimeField()
+
 
 class ExperimentStatus(models.TextChoices):
     CREATED = "created", "Created"
