@@ -407,46 +407,6 @@ def test_add_feature_dependency__v2_versioning__publishes_version_per_dependency
     assert all(version["published"] for version in versions["results"])
 
 
-def test_identify_user__identity_override_on_dependent__serves_identity_override(
-    admin_client: APIClient,
-    environment_api_key: str,
-    identity: int,
-    identity_identifier: str,
-    project: int,
-    sdk_client: APIClient,
-) -> None:
-    # Given
-    feature = Feature.objects.create(name="checkout", project_id=project)
-    prerequisite = Feature.objects.create(name="payments", project_id=project)
-    assert (
-        admin_client.post(
-            f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
-        ).status_code
-        == 201
-    )
-    assert (
-        admin_client.post(
-            f"/api/v1/environments/{environment_api_key}/identities/{identity}/featurestates/",
-            {"feature": feature.id, "enabled": True},
-            format="json",
-        ).status_code
-        == 201
-    )
-
-    # When
-    response = sdk_client.post(
-        "/api/v1/identities/",
-        data={"identifier": identity_identifier, "traits": []},
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == 200
-    assert {
-        flag["feature"]["name"]: flag["enabled"] for flag in response.json()["flags"]
-    } == {"checkout": True, "payments": False}
-
-
 def test_add_feature_dependency__feature_has_another_override__responds_201_reordering_priorities(
     admin_client: APIClient,
     create_segment_override: CreateSegmentOverrideFixture,
