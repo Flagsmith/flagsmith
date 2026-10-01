@@ -481,13 +481,14 @@ def delete_flag_dependency(
             raise DependencyInUserSegmentError(
                 environment=referencing_environment, path=user_segment_edges
             )
-        for segment_id in sorted({edge["segment"]["id"] for edge in edges}):
-            delete_segment_override(
-                environment=environment,
-                feature=feature,
-                segment_id=segment_id,
-                author=author,
-            )
+        # Adding a dependency targets one system segment, and refuses to add it again.
+        [edge] = edges
+        delete_segment_override(
+            environment=environment,
+            feature=feature,
+            segment_id=edge["segment"]["id"],
+            author=author,
+        )
         _create_dependency_audit_log(
             environment=environment,
             feature=feature,
