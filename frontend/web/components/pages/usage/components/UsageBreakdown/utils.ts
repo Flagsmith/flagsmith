@@ -12,6 +12,13 @@ export type BreakdownDimension =
   | 'environment'
   | 'sdk'
 
+// Project and environment need their own grouped request; request type and
+// SDK come from the rows the page already holds.
+export const isGroupedDimension = (dimension: BreakdownDimension): boolean =>
+  dimension === 'project' || dimension === 'environment'
+
+export type BreakdownStatus = 'ready' | 'loading' | 'error' | 'needs-project'
+
 export type BreakdownRow = {
   key: string
   label: string

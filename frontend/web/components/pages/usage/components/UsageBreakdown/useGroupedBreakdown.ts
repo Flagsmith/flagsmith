@@ -4,7 +4,13 @@ import { BillingPeriod, UsageGroupBy } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import { byScope, BreakdownDimension, BreakdownRow } from './utils'
+import {
+  byScope,
+  BreakdownDimension,
+  BreakdownRow,
+  BreakdownStatus,
+  isGroupedDimension,
+} from './utils'
 
 type UseGroupedBreakdown = {
   dimension: BreakdownDimension
@@ -15,9 +21,7 @@ type UseGroupedBreakdown = {
 
 export type GroupedBreakdown = {
   rows: BreakdownRow[]
-  isLoading: boolean
-  isError: boolean
-  needsProject: boolean
+  status: BreakdownStatus
   onRetry: () => void
 }
 
@@ -31,8 +35,19 @@ const groupByOf = (
   return undefined
 }
 
-// Project and environment need their own grouped request; request type and
-// SDK come from the rows the page already holds.
+type QueryState = { isFetching: boolean; isError: boolean }
+
+const statusOf = (
+  groupBy: UsageGroupBy | undefined,
+  queries: QueryState[],
+): BreakdownStatus => {
+  if (!groupBy) return 'needs-project'
+  if (queries.some((query) => query.isFetching)) return 'loading'
+  // A failed scope must not read as zero usage.
+  if (queries.some((query) => query.isError)) return 'error'
+  return 'ready'
+}
+
 export const useGroupedBreakdown = ({
   billingPeriod,
   dimension,
@@ -87,21 +102,18 @@ export const useGroupedBreakdown = ({
     projects.currentData,
   ])
 
-  if (dimension !== 'project' && dimension !== 'environment') {
+  if (!isGroupedDimension(dimension)) {
     return undefined
   }
 
+  const queries = [grouped, projects, environments]
+
   return {
-    // A failed scope must not read as zero usage.
-    isError: grouped.isError || projects.isError || environments.isError,
-    isLoading:
-      grouped.isFetching || projects.isFetching || environments.isFetching,
-    needsProject: !groupBy,
-    onRetry: () => {
-      if (!grouped.isUninitialized) grouped.refetch()
-      if (!projects.isUninitialized) projects.refetch()
-      if (!environments.isUninitialized) environments.refetch()
-    },
+    onRetry: () =>
+      queries.forEach((query) => {
+        if (!query.isUninitialized) query.refetch()
+      }),
     rows,
+    status: statusOf(groupBy, queries),
   }
 }

@@ -4,25 +4,18 @@ import { Button } from 'components/base/forms/Button'
 import Row from 'components/pages/usage/components/UsageBreakdown/components/Row'
 import {
   BreakdownRow,
+  BreakdownStatus,
   sharesOf,
 } from 'components/pages/usage/components/UsageBreakdown/utils'
 
 export type ListProps = {
   rows: BreakdownRow[]
-  isLoading?: boolean
-  isError?: boolean
-  needsProject?: boolean
+  status?: BreakdownStatus
   onRetry?: () => void
 }
 
-const List: FC<ListProps> = ({
-  isError,
-  isLoading,
-  needsProject,
-  onRetry,
-  rows,
-}) => {
-  if (needsProject) {
+const List: FC<ListProps> = ({ onRetry, rows, status = 'ready' }) => {
+  if (status === 'needs-project') {
     return (
       <EmptyState
         title='Select a project'
@@ -32,7 +25,7 @@ const List: FC<ListProps> = ({
     )
   }
 
-  if (isLoading) {
+  if (status === 'loading') {
     return (
       <div className='text-center py-5'>
         <Loader />
@@ -40,7 +33,7 @@ const List: FC<ListProps> = ({
     )
   }
 
-  if (isError) {
+  if (status === 'error') {
     return (
       <EmptyState
         title='Breakdown could not be loaded'

@@ -115,14 +115,14 @@ export const ByProject: Story = {
 
 // Environments are ranked within one project, so one has to be chosen first.
 export const EnvironmentNeedsAProject: Story = {
-  args: { dimension: 'environment', needsProject: true, rows: [] },
+  args: { dimension: 'environment', rows: [], status: 'needs-project' },
 }
 
 export const LoadingAScope: Story = {
-  args: { dimension: 'project', isLoading: true, rows: [] },
+  args: { dimension: 'project', rows: [], status: 'loading' },
 }
 
 // A failed scope must not read as zero usage.
 export const ScopeFailedToLoad: Story = {
-  args: { dimension: 'project', isError: true, onRetry: () => {}, rows: [] },
+  args: { dimension: 'project', onRetry: () => {}, rows: [], status: 'error' },
 }

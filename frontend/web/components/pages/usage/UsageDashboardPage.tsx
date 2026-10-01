@@ -92,12 +92,12 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   const periods = periodsFor(planIsBilled)
 
-  const { setDimension, ...breakdown } = useUsageBreakdown({
+  const { dimension, rows, setDimension } = useUsageBreakdown({
     data: usage.scoped,
   })
   const grouped = useGroupedBreakdown({
     billingPeriod,
-    dimension: breakdown.dimension,
+    dimension,
     organisationId: organisationId ?? 0,
     projectId: selectedProjectId,
   })
@@ -205,8 +205,10 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
           />
 
           <UsageBreakdown
-            {...breakdown}
-            {...grouped}
+            dimension={dimension}
+            rows={grouped?.rows ?? rows ?? []}
+            status={grouped?.status}
+            onRetry={grouped?.onRetry}
             onChangeDimension={setDimension}
             scope={scope}
           />
