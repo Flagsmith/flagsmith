@@ -1,5 +1,5 @@
 import { PlanLimit } from 'components/shared/UsageBar/utils'
-import { sentences } from './wording'
+import { joinSentences } from './usageText'
 import { allowanceWindowLabel, UsageBasis } from './utils'
 
 export type PlanHeading = { title: string; hint: string }
@@ -12,7 +12,7 @@ export const planHeading = (
 
   if (!limit) {
     return {
-      hint: sentences(
+      hint: joinSentences(
         `API calls over ${window}.`,
         'This installation has no plan limit.',
       ),
@@ -21,7 +21,7 @@ export const planHeading = (
   }
 
   return {
-    hint: sentences(
+    hint: joinSentences(
       `Usage against your plan limit over ${window}.`,
       basis.window === 'rolling' &&
         basis.reason === 'no-period' &&
