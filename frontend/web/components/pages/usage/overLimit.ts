@@ -2,7 +2,7 @@ import { Res } from 'common/types/responses'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import Format from 'common/utils/format'
 import { cumulativeTotals, dailyTotals } from './components/UsageOverTime/utils'
-import { calls } from './sentences'
+import { calls } from './wording'
 
 export type OverLimit = {
   limit: number

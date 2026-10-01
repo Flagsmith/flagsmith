@@ -1,5 +1,5 @@
 import { PlanLimit } from 'components/shared/UsageBar/utils'
-import { sentences } from './sentences'
+import { sentences } from './wording'
 import { allowanceWindowLabel, UsageBasis } from './utils'
 
 export type PlanHeading = { title: string; hint: string }

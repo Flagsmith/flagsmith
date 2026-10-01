@@ -18,7 +18,7 @@ export type BannerState =
 
 export type BannerKind = BannerState['kind']
 
-type BannerOrganisation = Pick<
+export type BannerOrganisation = Pick<
   Organisation,
   | 'api_limit_grace_period_used'
   | 'api_limit_restriction_enabled'
@@ -26,6 +26,15 @@ type BannerOrganisation = Pick<
   | 'overage_billing_eligible'
   | 'stop_serving_flags'
 >
+
+/** An organisation with none of the banner fields set. */
+export const NO_BANNER_FLAGS: BannerOrganisation = {
+  api_limit_grace_period_used: false,
+  api_limit_restriction_enabled: false,
+  block_access_to_admin: false,
+  overage_billing_eligible: false,
+  stop_serving_flags: false,
+}
 
 // Overage billing is paid only and restriction is free only, so at most one
 // of them applies to an organisation.

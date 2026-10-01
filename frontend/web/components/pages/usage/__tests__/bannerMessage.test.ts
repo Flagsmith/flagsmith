@@ -46,7 +46,7 @@ describe('bannerMessage', () => {
     kind                         | expected
     ${'overage-covered'}         | ${'Your first overage is covered for this billing period, unless usage reaches 100K API calls. Overages after this will be charged.'}
     ${'overage-charged'}         | ${'Overage charges will apply for this billing period.'}
-    ${'restriction-after-grace'} | ${'If usage stays over the limit, your organisation will be restricted after 7 days.'}
+    ${'restriction-after-grace'} | ${'If usage stays over the limit, your organisation will be restricted 7 days after it first went over.'}
     ${'restriction-imminent'}    | ${'Your 7 day grace period has already been used, so your organisation can be restricted within 12 hours.'}
   `('explains what happens next for $kind', ({ expected, kind }) => {
     const { body, title } = bannerMessage({ kind, over } as BannerState, billed)
