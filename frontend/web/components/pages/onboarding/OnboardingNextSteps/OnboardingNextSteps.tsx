@@ -88,9 +88,9 @@ const OnboardingNextSteps: FC<OnboardingNextStepsProps> = ({
     >
       <div className='d-flex flex-column gap-1'>
         <Text
-          variant='h3'
+          variant='h6'
           level={2}
-          className='onboarding-next-steps__title m-0 fw-bold text-default'
+          className='onboarding-next-steps__title m-0 text-default'
         >
           Choose your next quest
         </Text>

@@ -120,7 +120,7 @@ const OrganisationUsageTable: FC<OrganisationUsageTableProps> = ({
                     }
                     width={14}
                   />
-                  <Text variant='b2' className='font-weight-medium'>
+                  <Text variant='b2' weight='medium'>
                     {project.name}
                   </Text>
                   <Text variant='b3' className='text-muted'>

@@ -106,7 +106,12 @@ const OAuthAuthorizePage = () => {
       <div className='oauth-authorize__card card shadow p-4'>
         <div className='text-center mb-4'>
           <Logo size={48} />
-          <Text variant='h3' level={1} className='oauth-authorize__title mb-0'>
+          <Text
+            variant='h3'
+            level={1}
+            weight='regular'
+            className='oauth-authorize__title mb-0'
+          >
             <strong>{data.application.name}</strong> would like to connect to
             your Flagsmith account
           </Text>

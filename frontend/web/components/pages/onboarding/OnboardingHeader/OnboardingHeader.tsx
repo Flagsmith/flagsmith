@@ -29,7 +29,7 @@ const OnboardingHeader: FC<OnboardingHeaderProps> = ({
     <div className='onboarding-header__crumb text-muted'>
       Onboarding / Connect your app
     </div>
-    <Text variant='h1' level={1} className='onboarding-header__title mb-0'>
+    <Text variant='h4' level={1} className='onboarding-header__title mb-0'>
       Welcome, let’s get you live 👋
     </Text>
     <p className='onboarding-header__subtitle text-muted mb-0'>

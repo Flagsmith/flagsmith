@@ -45,9 +45,9 @@ const OnboardingFlagsTable: FC<OnboardingFlagsTableProps> = ({
     >
       <div className='onboarding-flags__heading d-flex align-items-center gap-2'>
         <Text
-          variant='h3'
+          variant='h6'
           level={2}
-          className='onboarding-flags__title m-0 fw-bold'
+          className='onboarding-flags__title m-0'
           id='onboarding-flags-title'
         >
           Your flags

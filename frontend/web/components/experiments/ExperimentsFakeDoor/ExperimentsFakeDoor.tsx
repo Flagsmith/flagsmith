@@ -72,6 +72,7 @@ const ExperimentsFakeDoor: FC = () => {
           <Text
             variant='h5'
             level={2}
+            weight='semibold'
             className='experiments-fake-door__section-title'
           >
             Metrics Comparison
@@ -83,6 +84,7 @@ const ExperimentsFakeDoor: FC = () => {
           <Text
             variant='h5'
             level={2}
+            weight='semibold'
             className='experiments-fake-door__section-title'
           >
             Trend over time

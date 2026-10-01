@@ -224,7 +224,7 @@ const IntegrationAdoptionTable: FC<IntegrationAdoptionTableProps> = ({
               className='flex-fill d-flex align-items-center'
               style={{ gap: 6 }}
             >
-              <Text variant='b2' className='font-weight-medium'>
+              <Text variant='b2' weight='medium'>
                 {org.organisation_name}
               </Text>
               {verified && (
@@ -404,7 +404,7 @@ const IntegrationAdoptionTable: FC<IntegrationAdoptionTableProps> = ({
                 </div>
                 <Text
                   variant='b2'
-                  className='font-weight-medium'
+                  weight='medium'
                   style={{ minWidth: 36, textAlign: 'right' }}
                 >
                   {row.adoption_pct}%

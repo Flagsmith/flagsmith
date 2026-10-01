@@ -278,8 +278,9 @@ const ExperimentDetailHeader: FC<ExperimentDetailHeaderProps> = ({
           <div className='flex-row align-items-center gap-2'>
             <Text
               variant='h2'
+              weight='bold'
               level={1}
-              className='text-default fw-bold mb-0'
+              className='text-default mb-0'
               style={{ fontSize: 20 }}
             >
               {experiment.name}

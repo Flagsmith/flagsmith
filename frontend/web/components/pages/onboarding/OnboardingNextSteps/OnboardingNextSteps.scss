@@ -1,13 +1,9 @@
 // "Choose your next quest" section. Layout comes from utilities in the markup;
-// this file holds the type sizes, secondary text colour, the dimmed locked
+// this file holds the remaining type sizes, secondary text colour, the dimmed locked
 // state, and the small per-card preview shapes (rollout track, A/B segmented,
 // value pill). Secondary text isn't a utility: Bootstrap's .text-secondary
 // (gold, !important) would win over our token utility, so it's set here.
 .onboarding-next-steps {
-  &__title {
-    font-size: 16px;
-  }
-
   &__subtitle {
     font-size: 13px;
     line-height: 1.5;
