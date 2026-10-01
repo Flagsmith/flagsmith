@@ -9,10 +9,12 @@ type UseUsageBreakdown = {
 export const useUsageBreakdown = ({ data }: UseUsageBreakdown) => {
   const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
 
-  const rows = useMemo(
-    () => (dimension === 'sdk' ? bySdk(data) : byRequestType(data)),
-    [dimension, data],
-  )
+  const rows = useMemo(() => {
+    if (dimension === 'request-type') return byRequestType(data)
+    if (dimension === 'sdk') return bySdk(data)
+    // Project and environment come from useGroupedBreakdown.
+    return []
+  }, [dimension, data])
 
   return { dimension, rows, setDimension }
 }
