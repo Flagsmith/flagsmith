@@ -22,10 +22,7 @@ from audit.related_object_type import RelatedObjectType
 from cohorts.models import Cohort
 from core.dataclasses import AuthorData
 from environments.tasks import rebuild_environment_document
-from experimentation import (
-    warehouse_delivery_sync_service,
-    warehouse_verification_service,
-)
+from experimentation import warehouse_verification_service
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -65,6 +62,7 @@ from experimentation.models import (
     MetricDirection,
     WarehouseConnection,
     WarehouseConnectionStatus,
+    WarehouseDeliveryStatus,
     WarehouseType,
 )
 from experimentation.results_query import (
@@ -1447,14 +1445,16 @@ def annotate_warehouse_delivery_statuses(
     ]
     if not verified:
         return
-    statuses = warehouse_delivery_sync_service.get_warehouse_delivery_statuses(
-        [connection.id for connection in verified]
+    errors = dict(
+        WarehouseDeliveryStatus.objects.filter(
+            connection__in=verified,
+            status=WarehouseConnectionStatus.ERRORED,
+        ).values_list("connection_id", "detail")
     )
     for connection in verified:
-        outcome = statuses.get(connection.id)
-        if outcome is not None and outcome.status == WarehouseConnectionStatus.ERRORED:
+        if connection.id in errors:
             connection.status = WarehouseConnectionStatus.ERRORED
-            connection.status_detail = outcome.detail
+            connection.status_detail = errors[connection.id]
 
 
 def annotate_warehouse_event_stats(

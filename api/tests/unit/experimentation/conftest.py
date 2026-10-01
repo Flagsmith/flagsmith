@@ -2,6 +2,7 @@ from typing import Protocol
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 from flag_engine.segments.constants import EQUAL
 from pytest_mock import MockerFixture
 
@@ -14,6 +15,8 @@ from experimentation.models import (
     ExperimentStatus,
     Metric,
     WarehouseConnection,
+    WarehouseConnectionStatus,
+    WarehouseDeliveryStatus,
     WarehouseType,
 )
 from experimentation.services import apply_experiment_rollout
@@ -127,6 +130,31 @@ def clickhouse_connection(
         credentials={"password": "hunter2"},
     )
     return connection
+
+
+@pytest.fixture()
+def failing_delivery_status(
+    clickhouse_connection: WarehouseConnection,
+) -> WarehouseDeliveryStatus:
+    status: WarehouseDeliveryStatus = WarehouseDeliveryStatus.objects.create(
+        connection=clickhouse_connection,
+        status=WarehouseConnectionStatus.ERRORED,
+        detail="Authentication failed.",
+        updated_at=timezone.now(),
+    )
+    return status
+
+
+@pytest.fixture()
+def successful_delivery_status(
+    clickhouse_connection: WarehouseConnection,
+) -> WarehouseDeliveryStatus:
+    status: WarehouseDeliveryStatus = WarehouseDeliveryStatus.objects.create(
+        connection=clickhouse_connection,
+        status=WarehouseConnectionStatus.CONNECTED,
+        updated_at=timezone.now(),
+    )
+    return status
 
 
 @pytest.fixture()
