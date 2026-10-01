@@ -1,7 +1,7 @@
 import Format from 'common/utils/format'
 import { OverLimit } from './overLimit'
 import { BannerKind, BannerState } from './bannerState'
-import { calls, sentences } from './sentences'
+import { calls, sentences } from './wording'
 import { allowanceWindowLabel, UsageBasis } from './utils'
 
 export type BannerMessage = { title: string; body: string }
@@ -43,8 +43,9 @@ const OVER_LIMIT_MESSAGE: Record<
     `Your first overage is covered for ${window}, unless usage reaches ${Format.shortenNumber(
       2 * over.limit,
     )} API calls. Overages after this will be charged.`,
+  // The task counts the 7 days from the first notification at 100%, not from now.
   'restriction-after-grace': () =>
-    'If usage stays over the limit, your organisation will be restricted after 7 days.',
+    'If usage stays over the limit, your organisation will be restricted 7 days after it first went over.',
   // The restriction task runs every 12 hours.
   'restriction-imminent': () =>
     'Your 7 day grace period has already been used, so your organisation can be restricted within 12 hours.',

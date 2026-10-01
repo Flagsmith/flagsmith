@@ -1,16 +1,12 @@
-import { bannerStateOf } from 'components/pages/usage/bannerState'
+import {
+  bannerStateOf,
+  NO_BANNER_FLAGS,
+} from 'components/pages/usage/bannerState'
 import { OverLimit } from 'components/pages/usage/overLimit'
 
 const over: OverLimit = { crossedOn: '2 Aug', limit: 100000, overBy: 50000 }
 
-const organisation = (values = {}) => ({
-  api_limit_grace_period_used: false,
-  api_limit_restriction_enabled: false,
-  block_access_to_admin: false,
-  overage_billing_eligible: false,
-  stop_serving_flags: false,
-  ...values,
-})
+const organisation = (values = {}) => ({ ...NO_BANNER_FLAGS, ...values })
 
 describe('bannerStateOf', () => {
   it('shows nothing under the limit and unrestricted', () => {

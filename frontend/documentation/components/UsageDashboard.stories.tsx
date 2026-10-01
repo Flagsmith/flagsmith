@@ -14,7 +14,10 @@ import {
 } from 'components/pages/usage/contribution'
 import { planHeading } from 'components/pages/usage/planHeading'
 import { overLimitNote, overLimitOf } from 'components/pages/usage/overLimit'
-import { bannerStateOf } from 'components/pages/usage/bannerState'
+import {
+  bannerStateOf,
+  NO_BANNER_FLAGS,
+} from 'components/pages/usage/bannerState'
 import {
   allowanceWindow,
   isBilledOnAPeriod,
@@ -131,11 +134,8 @@ const UsagePage: FC<HarnessProps> = ({
   const exceeded = overLimitOf(allowanceTotal, limit, allowance)
   const banner = bannerStateOf(
     {
-      api_limit_grace_period_used: false,
-      api_limit_restriction_enabled: false,
+      ...NO_BANNER_FLAGS,
       block_access_to_admin: !!isRestricted,
-      overage_billing_eligible: false,
-      stop_serving_flags: false,
       ...organisation,
     },
     exceeded,
