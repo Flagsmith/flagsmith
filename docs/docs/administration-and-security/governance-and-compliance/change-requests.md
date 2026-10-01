@@ -25,6 +25,11 @@ Once an environment is configured with Feature Change Requests enabled, a Change
 an environment default for a feature flag, or when creating or updating a segment override. **Identity overrides are
 applied immediately**.
 
+In environments using [Feature Versioning](/managing-flags/feature-versioning), this applies to the API as well as the
+dashboard: publishing a feature version directly, either with `publish_immediately` or through the version's `publish`
+action, is rejected with a `409 Conflict` and a `change_requests_enabled` error code. Unpublished versions can still be
+created.
+
 When creating a Feature Change Request, you will need to provide it a **title** and, optionally, a **description**.
 
 ![A Feature Change Request](/img/change-requests/feature-change-request.png)

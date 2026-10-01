@@ -354,6 +354,18 @@ Attributes:
  - `segment_overrides.deleted.segment.ids`
  - `segment_overrides.updated.segment.ids`
 
+### `features.version.publish_rejected`
+
+Logged at `warning` from:
+ - `api/features/versioning/views.py:59`
+
+Attributes:
+ - `environment.id`
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `reason`
+
 ### `gitlab.api_call.failed`
 
 Logged at `error` from:
