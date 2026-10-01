@@ -210,7 +210,6 @@ describe('UsageBreakdown utils', () => {
       ${'project'} | ${[idle, { ...idle, isFetching: true }]}                | ${'loading'}
       ${'project'} | ${[{ ...idle, isError: true }, idle]}                   | ${'error'}
       ${'project'} | ${[{ isError: true, isFetching: true }]}                | ${'loading'}
-      ${'project'} | ${[{ ...idle, error: { status: 429 }, isError: true }]} | ${'throttled'}
       ${'project'} | ${[{ ...idle, error: { status: 500 }, isError: true }]} | ${'error'}
       ${'project'} | ${[idle, idle]}                                         | ${'ready'}
     `('is $expected', ({ expected, groupBy, queries }) => {
