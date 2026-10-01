@@ -4,6 +4,7 @@ import { BillingPeriod } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
+import { useThrottleRetry } from 'components/pages/usage/throttle'
 import {
   breakdownStatusOf,
   byScope,
@@ -24,6 +25,7 @@ type UseGroupedBreakdown = {
 export type GroupedBreakdown = {
   rows: BreakdownRow[]
   status: BreakdownStatus
+  retryInSeconds: number | undefined
   onRetry: () => void
 }
 
@@ -79,18 +81,17 @@ export const useGroupedBreakdown = ({
     projects.currentData,
   ])
 
+  const queries = [grouped, projects, environments]
+  const status = breakdownStatusOf(groupBy, queries)
+  const onRetry = () =>
+    queries.forEach((query) => {
+      if (!query.isUninitialized) query.refetch()
+    })
+  const retryInSeconds = useThrottleRetry(status === 'throttled', onRetry)
+
   if (!isGroupedDimension(dimension)) {
     return undefined
   }
 
-  const queries = [grouped, projects, environments]
-
-  return {
-    onRetry: () =>
-      queries.forEach((query) => {
-        if (!query.isUninitialized) query.refetch()
-      }),
-    rows,
-    status: breakdownStatusOf(groupBy, queries),
-  }
+  return { onRetry, retryInSeconds, rows, status }
 }

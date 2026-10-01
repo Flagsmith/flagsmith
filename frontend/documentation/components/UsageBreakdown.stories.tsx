@@ -126,3 +126,13 @@ export const LoadingAScope: Story = {
 export const ScopeFailedToLoad: Story = {
   args: { dimension: 'project', onRetry: () => {}, rows: [], status: 'error' },
 }
+
+// Rate limited is not broken: it says when it retries instead of failing.
+export const ScopeThrottled: Story = {
+  args: {
+    dimension: 'project',
+    retryInSeconds: 42,
+    rows: [],
+    status: 'throttled',
+  },
+}
