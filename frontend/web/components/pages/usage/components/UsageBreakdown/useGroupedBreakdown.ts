@@ -1,14 +1,16 @@
 import { useMemo } from 'react'
 import { skipToken } from '@reduxjs/toolkit/query'
-import { BillingPeriod, UsageGroupBy } from 'common/types/requests'
+import { BillingPeriod } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import {
+  breakdownStatusOf,
   byScope,
   BreakdownDimension,
   BreakdownRow,
   BreakdownStatus,
+  groupByOf,
   isGroupedDimension,
 } from './utils'
 
@@ -23,29 +25,6 @@ export type GroupedBreakdown = {
   rows: BreakdownRow[]
   status: BreakdownStatus
   onRetry: () => void
-}
-
-const groupByOf = (
-  dimension: BreakdownDimension,
-  projectId: number | undefined,
-): UsageGroupBy | undefined => {
-  if (dimension === 'project') return 'project'
-  // Environments are only ranked within one project.
-  if (dimension === 'environment' && projectId) return 'environment'
-  return undefined
-}
-
-type QueryState = { isFetching: boolean; isError: boolean }
-
-const statusOf = (
-  groupBy: UsageGroupBy | undefined,
-  queries: QueryState[],
-): BreakdownStatus => {
-  if (!groupBy) return 'needs-project'
-  if (queries.some((query) => query.isFetching)) return 'loading'
-  // A failed scope must not read as zero usage.
-  if (queries.some((query) => query.isError)) return 'error'
-  return 'ready'
 }
 
 export const useGroupedBreakdown = ({
@@ -114,6 +93,6 @@ export const useGroupedBreakdown = ({
         if (!query.isUninitialized) query.refetch()
       }),
     rows,
-    status: statusOf(groupBy, queries),
+    status: breakdownStatusOf(groupBy, queries),
   }
 }
