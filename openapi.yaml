@@ -13623,6 +13623,19 @@ paths:
           in: query
           schema:
             type: integer
+        - name: group_by
+          in: query
+          description: |-
+            * `project` - project
+            * `environment` - environment
+          schema:
+            type:
+              - string
+              - 'null'
+            enum:
+              - project
+              - environment
+              - null
         - name: organisation_pk
           in: path
           required: true
@@ -29630,6 +29643,14 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Labels'
             - type: 'null'
+        project_id:
+          type:
+            - integer
+            - 'null'
+        environment_id:
+          type:
+            - integer
+            - 'null'
       required:
         - day
         - environment_document

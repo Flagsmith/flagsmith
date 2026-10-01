@@ -1,6 +1,6 @@
 from datetime import date
 from enum import StrEnum
-from typing import TYPE_CHECKING, Literal, NamedTuple, TypeAlias, TypedDict
+from typing import TYPE_CHECKING, Literal, NamedTuple, NotRequired, TypeAlias, TypedDict
 
 if TYPE_CHECKING:
     from app_analytics.models import Resource
@@ -26,6 +26,8 @@ PeriodType = Literal[
     "previous_billing_period",
     "90_day_period",
 ]
+
+UsageGroupBy = Literal["project", "environment"]
 
 
 class DownsampleSize(StrEnum):
@@ -62,11 +64,15 @@ class AnnotatedAPIUsageBucket(TypedDict):
     created_at__date: date
     labels: "Labels"
     resource: "Resource"
+    project_id: NotRequired[int | None]
+    environment_id: NotRequired[int | None]
 
 
 class AnnotatedAPIUsageKey(NamedTuple):
     date: date
     labels: tuple[tuple["Label", str], ...]
+    project_id: int | None = None
+    environment_id: int | None = None
 
 
 # Optional labels Flagsmith stores for API usage and feature evaluation data.

@@ -25,7 +25,12 @@ from app_analytics.models import (
     APIUsageBucket,
     FeatureEvaluationBucket,
 )
-from app_analytics.types import Labels, PeriodType
+from app_analytics.types import (
+    AnnotatedAPIUsageBucket,
+    Labels,
+    PeriodType,
+    UsageGroupBy,
+)
 from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation, OrganisationSubscriptionInformationCache
@@ -39,6 +44,7 @@ def get_usage_data(
     project_id: int | None = None,
     period: PeriodType | None = None,
     labels_filter: Labels | None = None,
+    group_by: UsageGroupBy | None = None,
 ) -> list[UsageData]:
     sub_cache = (
         using_database_replica(OrganisationSubscriptionInformationCache.objects)
@@ -59,6 +65,7 @@ def get_usage_data(
             date_start=date_start,
             date_stop=date_stop,
             labels_filter=labels_filter,
+            group_by=group_by,
         )
 
     if settings.INFLUXDB_TOKEN:
@@ -69,6 +76,7 @@ def get_usage_data(
             date_start=date_start,
             date_stop=date_stop,
             labels_filter=labels_filter,
+            group_by=group_by,
         )
 
     logger.warning(
@@ -83,9 +91,12 @@ def _get_api_usage_bucket_qs(
     environment_id: int | None = None,
     project_id: int | None = None,
     labels_filter: Labels | None = None,
+    organisation_environment_ids: list[int] | None = None,
 ) -> QuerySet[APIUsageBucket]:
+    if organisation_environment_ids is None:
+        organisation_environment_ids = _get_environment_ids_for_org(organisation)
     qs = APIUsageBucket.objects.filter(
-        environment_id__in=_get_environment_ids_for_org(organisation),
+        environment_id__in=organisation_environment_ids,
         bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
     )
     if project_id:
@@ -122,22 +133,49 @@ def get_usage_data_from_local_db(
     date_start: datetime | None = None,
     date_stop: datetime | None = None,
     labels_filter: Labels | None = None,
+    group_by: UsageGroupBy | None = None,
 ) -> list[UsageData]:
     if date_start is None:
         date_start = timezone.now() - timedelta(days=30)
     if date_stop is None:
         date_stop = timezone.now()
 
+    project_ids_by_environment_id = (
+        _get_project_ids_by_environment_id_for_org(organisation) if group_by else {}
+    )
     qs = _get_api_usage_bucket_qs(
         organisation,
         environment_id=environment_id,
         project_id=project_id,
         labels_filter=labels_filter,
+        organisation_environment_ids=(
+            list(project_ids_by_environment_id) if group_by else None
+        ),
     ).filter(
         created_at__date__lte=date_stop,
         created_at__date__gt=date_start,
     )
-    return _aggregate_buckets(qs)
+    if not group_by:
+        return _aggregate_buckets(qs)
+
+    annotated = (
+        qs.order_by("created_at__date")
+        .values("created_at__date", "resource", "labels", "environment_id")
+        .annotate(count=Sum("total_count"))
+    )
+    return map_annotated_api_usage_buckets_to_usage_data(
+        AnnotatedAPIUsageBucket(
+            created_at__date=row["created_at__date"],
+            resource=row["resource"],
+            labels=row["labels"],
+            count=row["count"],
+            project_id=project_ids_by_environment_id[row["environment_id"]],
+            environment_id=(
+                row["environment_id"] if group_by == "environment" else None
+            ),
+        )
+        for row in annotated
+    )
 
 
 def get_usage_data_from_local_db_for_window(
@@ -321,6 +359,16 @@ def _get_environment_ids_for_org(organisation: Organisation) -> list[int]:
         using_database_replica(Environment.objects)
         .filter(project__organisation=organisation)
         .values_list("id", flat=True)
+    )
+
+
+def _get_project_ids_by_environment_id_for_org(
+    organisation: Organisation,
+) -> dict[int, int]:
+    return dict(
+        using_database_replica(Environment.objects)
+        .filter(project__organisation=organisation)
+        .values_list("id", "project_id")
     )
 
 

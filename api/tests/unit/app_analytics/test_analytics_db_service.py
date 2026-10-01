@@ -489,6 +489,7 @@ def test_get_usage_data__postgres_not_configured__calls_influxdb(
         date_start=None,
         date_stop=None,
         labels_filter=None,
+        group_by=None,
     )
 
 
@@ -515,6 +516,7 @@ def test_get_usage_data__postgres_configured__calls_local_db(
         date_start=None,
         date_stop=None,
         labels_filter=None,
+        group_by=None,
     )
 
 
@@ -704,6 +706,7 @@ def test_get_usage_data__current_billing_period__passes_correct_date_range(
         date_start=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=UTC),
         date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=UTC),
         labels_filter=None,
+        group_by=None,
     )
 
 
@@ -733,6 +736,7 @@ def test_get_usage_data__previous_billing_period__passes_correct_date_range(
         date_start=datetime(2022, 11, 30, 9, 9, 47, 325132, tzinfo=UTC),
         date_stop=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=UTC),
         labels_filter=None,
+        group_by=None,
     )
 
 
@@ -966,3 +970,78 @@ def test_get_usage_data_for_window__no_analytics_configured__returns_empty(
 
     # Then
     assert result == []
+
+
+@pytest.fixture
+def usage_buckets_per_environment(
+    environment: Environment,
+    environment_two: Environment,
+    project_two_environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    settings.ANALYTICS_BUCKET_SIZE = 15
+    for environment_id in [
+        environment.id,
+        environment_two.id,
+        project_two_environment.id,
+    ]:
+        for resource in [Resource.FLAGS, Resource.IDENTITIES]:
+            APIUsageBucket.objects.create(
+                environment_id=environment_id,
+                resource=resource,
+                total_count=10,
+                bucket_size=15,
+                created_at=timezone.now(),
+            )
+
+
+@pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+@pytest.mark.usefixtures("usage_buckets_per_environment")
+def test_get_usage_data_from_local_db__group_by_project__returns_row_per_project(
+    organisation: Organisation,
+    project: Project,
+    project_two: Project,
+) -> None:
+    # Given
+    today = date(2023, 1, 19)
+
+    # When
+    usage_data = get_usage_data_from_local_db(organisation, group_by="project")
+
+    # Then
+    assert sorted(usage_data, key=lambda data: data.project_id or 0) == [
+        UsageData(day=today, flags=20, identities=20, labels={}, project_id=project.id),
+        UsageData(
+            day=today, flags=10, identities=10, labels={}, project_id=project_two.id
+        ),
+    ]
+
+
+@pytest.mark.use_analytics_db
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+@pytest.mark.usefixtures("usage_buckets_per_environment")
+def test_get_usage_data_from_local_db__group_by_environment__returns_row_per_environment(
+    organisation: Organisation,
+    environment: Environment,
+    environment_two: Environment,
+    project_two_environment: Environment,
+) -> None:
+    # Given
+    today = date(2023, 1, 19)
+
+    # When
+    usage_data = get_usage_data_from_local_db(organisation, group_by="environment")
+
+    # Then
+    assert sorted(usage_data, key=lambda data: data.environment_id or 0) == [
+        UsageData(
+            day=today,
+            flags=10,
+            identities=10,
+            labels={},
+            project_id=env.project_id,
+            environment_id=env.id,
+        )
+        for env in [environment, environment_two, project_two_environment]
+    ]
