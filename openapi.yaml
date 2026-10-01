@@ -4260,6 +4260,51 @@ paths:
         - Master API Key: []
       tags:
         - Features
+    delete:
+      operationId: api_v1_environments_features_dependencies_destroy
+      description: Stop the feature depending on the prerequisite feature.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prerequisite_feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No response body
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyConflictDetail'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorDetail'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorDetail'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Features
   '/api/v1/environments/{environment_api_key}/features/{feature_id}/dependents/':
     get:
       operationId: api_v1_environments_features_dependents_retrieve

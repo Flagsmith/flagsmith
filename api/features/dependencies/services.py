@@ -9,13 +9,18 @@ from flag_engine.segments import constants
 from ordered_model.models import OrderedModelQuerySet  # type: ignore[import-untyped]
 
 from api_keys.user import APIKeyUser
-from audit.constants import FEATURE_DEPENDENCY_CREATED_MESSAGE
+from audit.constants import (
+    FEATURE_DEPENDENCY_CREATED_MESSAGE,
+    FEATURE_DEPENDENCY_DELETED_MESSAGE,
+)
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from features.dependencies.exceptions import (
     CircularDependencyError,
     DependencyExistsError,
+    DependencyInUserSegmentError,
+    DependencyNotFoundError,
     FeatureHasDependentsError,
     FeatureIsPrerequisiteError,
     FeatureIsReferencedError,
@@ -415,6 +420,7 @@ def create_flag_dependency(
             feature=feature,
             prerequisite_feature=prerequisite_feature,
             author=author,
+            message=FEATURE_DEPENDENCY_CREATED_MESSAGE,
         )
     return map_reference_to_dependency_edge(
         feature=feature,
@@ -422,6 +428,73 @@ def create_flag_dependency(
             "segment", "prerequisite_feature"
         ).get(segment=segment, prerequisite_feature=prerequisite_feature),
     )
+
+
+def delete_flag_dependency(
+    *,
+    environment: Environment,
+    feature: Feature,
+    prerequisite_feature: Feature,
+    author: FFAdminUser | APIKeyUser,
+) -> None:
+    """Stop the feature depending on the prerequisite in the environment.
+
+    Only removes the feature's override for the dependency's system segment,
+    leaving the segment, shared across environments, as is.
+    """
+    from features.future.services import (  # It imports this module.
+        delete_segment_override,
+    )
+
+    log = logger.bind(
+        organisation__id=environment.project.organisation_id,
+        project__id=environment.project_id,
+        environment__key=environment.api_key,
+        feature__name=feature.name,
+        prerequisite_feature__name=prerequisite_feature.name,
+    )
+    referencing_environment: ReferencingEnvironment = {
+        "key": environment.api_key,
+        "name": environment.name,
+    }
+    with transaction.atomic():
+        _lock_project_flag_dependencies(environment.project_id)
+        feature_edges = _get_dependency_edges(
+            get_live_overrides().filter(environment=environment, feature=feature)
+        )[feature.name]
+        if not (
+            edges := [
+                edge
+                for edge in feature_edges
+                if edge["prerequisite"]["id"] == prerequisite_feature.id
+            ]
+        ):
+            log.info("dependencies.delete_failed")
+            raise DependencyNotFoundError(
+                feature_name=feature.name,
+                prerequisite_feature_name=prerequisite_feature.name,
+            )
+        if user_segment_edges := [
+            edge for edge in edges if not edge["segment"]["is_system"]
+        ]:
+            log.info("dependencies.delete_failed")
+            raise DependencyInUserSegmentError(
+                environment=referencing_environment, path=user_segment_edges
+            )
+        for segment_id in sorted({edge["segment"]["id"] for edge in edges}):
+            delete_segment_override(
+                environment=environment,
+                feature=feature,
+                segment_id=segment_id,
+                author=author,
+            )
+        _create_dependency_audit_log(
+            environment=environment,
+            feature=feature,
+            prerequisite_feature=prerequisite_feature,
+            author=author,
+            message=FEATURE_DEPENDENCY_DELETED_MESSAGE,
+        )
 
 
 def _get_or_create_dependency_segment(
@@ -465,6 +538,7 @@ def _create_dependency_audit_log(
     feature: Feature,
     prerequisite_feature: Feature,
     author: FFAdminUser | APIKeyUser,
+    message: str,
 ) -> None:
     user = author if isinstance(author, FFAdminUser) else None
     AuditLog.objects.create(
@@ -474,6 +548,5 @@ def _create_dependency_audit_log(
         related_object_id=feature.id,
         author=user,
         master_api_key=None if user else author.key,
-        log=FEATURE_DEPENDENCY_CREATED_MESSAGE
-        % (prerequisite_feature.name, feature.name),
+        log=message % (prerequisite_feature.name, feature.name),
     )
