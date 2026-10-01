@@ -126,13 +126,3 @@ export const LoadingAScope: Story = {
 export const ScopeFailedToLoad: Story = {
   args: { dimension: 'project', onRetry: () => {}, rows: [], status: 'error' },
 }
-
-// The rate limit passes within a minute, so it says to wait.
-export const ScopeThrottled: Story = {
-  args: {
-    dimension: 'project',
-    onRetry: () => {},
-    rows: [],
-    status: 'throttled',
-  },
-}

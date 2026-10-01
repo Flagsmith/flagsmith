@@ -1,7 +1,6 @@
 import { FC } from 'react'
 import EmptyState from 'components/EmptyState'
 import { Button } from 'components/base/forms/Button'
-import { THROTTLED } from 'components/pages/usage/throttle'
 import Row from 'components/pages/usage/components/UsageBreakdown/components/Row'
 import {
   BreakdownRow,
@@ -38,17 +37,12 @@ const List: FC<ListProps> = ({ onRetry, rows, status = 'ready' }) => {
     )
   }
 
-  if (status === 'error' || status === 'throttled') {
-    const throttled = status === 'throttled'
+  if (status === 'error') {
     return (
       <div role='alert'>
         <EmptyState
-          title={throttled ? THROTTLED.title : 'Breakdown could not be loaded'}
-          description={
-            throttled
-              ? THROTTLED.description
-              : 'Something went wrong fetching this breakdown. Try again in a moment.'
-          }
+          title='Breakdown could not be loaded'
+          description='Something went wrong fetching this breakdown. Try again in a moment.'
           icon='bar-chart'
           action={
             onRetry && (

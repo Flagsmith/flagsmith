@@ -6,7 +6,6 @@ import {
 } from 'common/theme/tokens'
 import { UsageGroupBy } from 'common/types/requests'
 import { Res, UsageEventsList } from 'common/types/responses'
-import { isThrottled } from 'components/pages/usage/throttle'
 
 export type BreakdownDimension =
   | 'request-type'
@@ -21,12 +20,7 @@ export const isGroupedDimension = (
 ): dimension is UsageGroupBy =>
   dimension === 'project' || dimension === 'environment'
 
-export type BreakdownStatus =
-  | 'ready'
-  | 'loading'
-  | 'throttled'
-  | 'error'
-  | 'needs-project'
+export type BreakdownStatus = 'ready' | 'loading' | 'error' | 'needs-project'
 
 export const groupByOf = (
   dimension: BreakdownDimension,
@@ -38,11 +32,7 @@ export const groupByOf = (
   return dimension
 }
 
-export type QueryState = {
-  isFetching: boolean
-  isError: boolean
-  error?: unknown
-}
+export type QueryState = { isFetching: boolean; isError: boolean }
 
 export const breakdownStatusOf = (
   groupBy: UsageGroupBy | undefined,
@@ -50,7 +40,6 @@ export const breakdownStatusOf = (
 ): BreakdownStatus => {
   if (!groupBy) return 'needs-project'
   if (queries.some((query) => query.isFetching)) return 'loading'
-  if (queries.some((query) => isThrottled(query.error))) return 'throttled'
   // A failed scope must not read as zero usage.
   if (queries.some((query) => query.isError)) return 'error'
   return 'ready'
