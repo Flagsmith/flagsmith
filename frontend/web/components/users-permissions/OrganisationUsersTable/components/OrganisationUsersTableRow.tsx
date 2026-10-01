@@ -42,8 +42,10 @@ const OrganisationUsersTableRow: React.FC<OrganisationUsersTableRowProps> = ({
       key={id}
     >
       <Flex className='table-column px-3 font-weight-medium'>
-        <div>
-          {`${first_name} ${last_name}`} {isActiveUser && '(You)'}
+        <div className='d-flex align-items-center gap-2'>
+          <span>
+            {`${first_name} ${last_name}`} {isActiveUser && '(You)'}
+          </span>
           <InactiveMembershipChip user={user} />
         </div>
         <div className='list-item-subtitle mt-1'>{email}</div>

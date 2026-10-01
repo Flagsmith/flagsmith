@@ -283,9 +283,15 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                             props.data.user || {}
                           return (
                             <components.Option {...props}>
-                              {`${first_name} ${last_name}`}{' '}
-                              {id == AccountStore.getUserId() && '(You)'}
-                              <InactiveMembershipChip user={props.data.user} />
+                              <div className='d-flex align-items-center gap-2'>
+                                <span>
+                                  {`${first_name} ${last_name}`}{' '}
+                                  {id == AccountStore.getUserId() && '(You)'}
+                                </span>
+                                <InactiveMembershipChip
+                                  user={props.data.user}
+                                />
+                              </div>
                               <div className='list-item-footer faint'>
                                 {email}
                               </div>
@@ -372,13 +378,12 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                       return (
                         <Row className='list-item' key={id}>
                           <Flex className='table-column px-3'>
-                            <div className='font-weight-medium'>
-                              {`${first_name} ${last_name}`}{' '}
-                              {id == AccountStore.getUserId() && '(You)'}{' '}
-                              <InactiveMembershipChip
-                                className='mr-2'
-                                user={organisationUser}
-                              />
+                            <div className='font-weight-medium d-flex align-items-center gap-2'>
+                              <span>
+                                {`${first_name} ${last_name}`}{' '}
+                                {id == AccountStore.getUserId() && '(You)'}
+                              </span>
+                              <InactiveMembershipChip user={organisationUser} />
                               {isEdit && userEdited && (
                                 <div className='unread'>Unsaved</div>
                               )}

@@ -8,29 +8,19 @@ export const INACTIVE_MEMBERSHIP_TOOLTIP =
 
 type InactiveMembershipChipProps = {
   user: Pick<User, 'is_organisation_membership_active'> | undefined
-  className?: string
 }
 
 // Flags users whose organisation membership was deactivated, e.g. via SCIM.
 // Renders nothing unless the API explicitly reports an inactive membership,
 // so it is safe to use with user payloads that omit the field.
-const InactiveMembershipChip: FC<InactiveMembershipChipProps> = ({
-  className = 'ml-2',
-  user,
-}) => {
+// The chip carries no margin of its own: parents own the spacing, typically
+// via `d-flex align-items-center gap-2`.
+const InactiveMembershipChip: FC<InactiveMembershipChipProps> = ({ user }) => {
   if (user?.is_organisation_membership_active !== false) {
     return null
   }
   return (
-    <Tooltip
-      plainText
-      delayShow={100}
-      title={
-        <Chip className={className} size='xs'>
-          Inactive
-        </Chip>
-      }
-    >
+    <Tooltip plainText delayShow={100} title={<Chip size='xs'>Inactive</Chip>}>
       {INACTIVE_MEMBERSHIP_TOOLTIP}
     </Tooltip>
   )

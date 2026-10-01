@@ -1158,11 +1158,13 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                   key={id}
                                 >
                                   <Flex className='table-column px-3'>
-                                    <div className='mb-1 font-weight-medium'>
-                                      {`${first_name} ${last_name}`}{' '}
-                                      {String(id) ===
-                                        String(AccountStore.getUserId()) &&
-                                        '(You)'}
+                                    <div className='mb-1 font-weight-medium d-flex align-items-center gap-2'>
+                                      <span>
+                                        {`${first_name} ${last_name}`}{' '}
+                                        {String(id) ===
+                                          String(AccountStore.getUserId()) &&
+                                          '(You)'}
+                                      </span>
                                       <InactiveMembershipChip user={user} />
                                     </div>
                                     <div className='list-item-subtitle'>
