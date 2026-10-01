@@ -4,6 +4,7 @@ import {
   colorChart3,
   colorChart4,
 } from 'common/theme/tokens'
+import { UsageGroupBy } from 'common/types/requests'
 import { Res, UsageEventsList } from 'common/types/responses'
 
 export type BreakdownDimension =
@@ -18,6 +19,29 @@ export const isGroupedDimension = (dimension: BreakdownDimension): boolean =>
   dimension === 'project' || dimension === 'environment'
 
 export type BreakdownStatus = 'ready' | 'loading' | 'error' | 'needs-project'
+
+export const groupByOf = (
+  dimension: BreakdownDimension,
+  projectId: number | undefined,
+): UsageGroupBy | undefined => {
+  if (dimension === 'project') return 'project'
+  // Environments are only ranked within one project.
+  if (dimension === 'environment' && projectId) return 'environment'
+  return undefined
+}
+
+export type QueryState = { isFetching: boolean; isError: boolean }
+
+export const breakdownStatusOf = (
+  groupBy: UsageGroupBy | undefined,
+  queries: QueryState[],
+): BreakdownStatus => {
+  if (!groupBy) return 'needs-project'
+  if (queries.some((query) => query.isFetching)) return 'loading'
+  // A failed scope must not read as zero usage.
+  if (queries.some((query) => query.isError)) return 'error'
+  return 'ready'
+}
 
 export type BreakdownRow = {
   key: string

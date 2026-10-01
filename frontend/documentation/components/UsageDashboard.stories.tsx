@@ -4,6 +4,8 @@ import UsagePageLayout from 'components/pages/usage/components/UsagePageLayout'
 import OverLimitBanner from 'components/pages/usage/components/OverLimitBanner'
 import SectionHeading from 'components/pages/usage/components/SectionHeading'
 import UsageBreakdown, {
+  BreakdownDimension,
+  GroupedBreakdown,
   useUsageBreakdown,
 } from 'components/pages/usage/components/UsageBreakdown'
 import UsageMeter from 'components/pages/usage/components/UsageMeter'
@@ -51,6 +53,37 @@ const PROJECT_SHARE: Record<string, number> = {
   'Internal tools': 0.07,
   'Marketing site': 0.13,
   'Mobile app': 0.42,
+}
+
+// Stands in for useGroupedBreakdown, which needs the store and the API.
+const fakeGrouped = (
+  dimension: BreakdownDimension,
+  project: string,
+  total: number,
+): Pick<GroupedBreakdown, 'rows' | 'status'> | undefined => {
+  const row = (label: string, share: number) => ({
+    key: label,
+    label,
+    value: Math.round(total * share),
+  })
+
+  if (dimension === 'project') {
+    return {
+      rows: PROJECTS.slice(1)
+        .map((name) => row(name, PROJECT_SHARE[name]))
+        .sort((a, b) => b.value - a.value),
+      status: 'ready',
+    }
+  }
+  if (dimension === 'environment') {
+    return project === 'All Projects'
+      ? { rows: [], status: 'needs-project' }
+      : {
+          rows: [row('Production', 0.85), row('Staging', 0.15)],
+          status: 'ready',
+        }
+  }
+  return undefined
 }
 
 const SCENARIO_FOR: Record<string, keyof typeof USAGE_SCENARIOS> = {
@@ -134,6 +167,7 @@ const UsagePage: FC<HarnessProps> = ({
   const { dimension, rows, setDimension } = useUsageBreakdown({
     data: scoped,
   })
+  const grouped = fakeGrouped(dimension, project, scoped.totals.total)
 
   const scope = `${filtered ? project : 'All projects'} · ${periodLabel(
     periods,
@@ -210,7 +244,8 @@ const UsagePage: FC<HarnessProps> = ({
 
       <UsageBreakdown
         dimension={dimension}
-        rows={rows ?? []}
+        rows={grouped?.rows ?? rows}
+        status={grouped?.status}
         onChangeDimension={setDimension}
         scope={scope}
       />

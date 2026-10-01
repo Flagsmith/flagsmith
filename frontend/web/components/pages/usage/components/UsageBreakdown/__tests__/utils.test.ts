@@ -4,8 +4,10 @@ import {
   usageResponse,
 } from 'components/pages/usage/__tests__/fixtures'
 import {
+  breakdownStatusOf,
   byRequestType,
   byScope,
+  groupByOf,
   barPercent,
   bySdk,
   sharesOf,
@@ -180,6 +182,37 @@ describe('UsageBreakdown utils', () => {
           'Deleted environment',
         ),
       ).toEqual([])
+    })
+  })
+
+  describe('groupByOf', () => {
+    it.each`
+      dimension         | projectId    | expected
+      ${'request-type'} | ${undefined} | ${undefined}
+      ${'sdk'}          | ${12}        | ${undefined}
+      ${'project'}      | ${undefined} | ${'project'}
+      ${'environment'}  | ${undefined} | ${undefined}
+      ${'environment'}  | ${12}        | ${'environment'}
+    `(
+      '$dimension with project $projectId groups by $expected',
+      ({ dimension, expected, projectId }) => {
+        expect(groupByOf(dimension, projectId)).toBe(expected)
+      },
+    )
+  })
+
+  describe('breakdownStatusOf', () => {
+    const idle = { isError: false, isFetching: false }
+
+    it.each`
+      groupBy      | queries                                  | expected
+      ${undefined} | ${[idle]}                                | ${'needs-project'}
+      ${'project'} | ${[idle, { ...idle, isFetching: true }]} | ${'loading'}
+      ${'project'} | ${[{ ...idle, isError: true }, idle]}    | ${'error'}
+      ${'project'} | ${[{ isError: true, isFetching: true }]} | ${'loading'}
+      ${'project'} | ${[idle, idle]}                          | ${'ready'}
+    `('is $expected', ({ expected, groupBy, queries }) => {
+      expect(breakdownStatusOf(groupBy, queries)).toBe(expected)
     })
   })
 })

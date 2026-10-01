@@ -206,7 +206,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
           <UsageBreakdown
             dimension={dimension}
-            rows={grouped?.rows ?? rows ?? []}
+            rows={grouped?.rows ?? rows}
             status={grouped?.status}
             onRetry={grouped?.onRetry}
             onChangeDimension={setDimension}
