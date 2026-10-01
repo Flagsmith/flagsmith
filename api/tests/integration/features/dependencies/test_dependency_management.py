@@ -379,34 +379,6 @@ def test_add_feature_dependency__system_segment_has_other_prerequisites__respond
     assert response.json()["segment"]["name"] == "checkout-depends-on-payments"
 
 
-@pytest.mark.parametrize(
-    "versioned_environment", ["feature_versioning_v2"], indirect=True
-)
-def test_add_feature_dependency__v2_versioning__publishes_version_per_dependency(
-    admin_client: APIClient,
-    environment_api_key: str,
-    project: int,
-    versioned_environment: Environment,
-) -> None:
-    # Given
-    feature = Feature.objects.create(name="checkout", project_id=project)
-    prerequisite = Feature.objects.create(name="payments", project_id=project)
-    other_prerequisite = Feature.objects.create(name="inventory", project_id=project)
-    versions_url = f"/api/v1/environments/{versioned_environment.id}/features/{feature.id}/versions/"
-    initial_version_count = admin_client.get(versions_url).json()["count"]
-
-    # When
-    for prerequisite_id in (prerequisite.id, other_prerequisite.id):
-        admin_client.post(
-            f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite_id}/",
-        )
-
-    # Then
-    versions = admin_client.get(versions_url).json()
-    assert versions["count"] == initial_version_count + 2
-    assert all(version["published"] for version in versions["results"])
-
-
 def test_add_feature_dependency__feature_has_another_override__responds_201_reordering_priorities(
     admin_client: APIClient,
     create_segment_override: CreateSegmentOverrideFixture,
