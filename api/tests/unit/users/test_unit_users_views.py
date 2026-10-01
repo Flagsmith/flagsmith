@@ -261,12 +261,9 @@ def test_list_organisation_users__deactivated_membership__exposes_membership_sta
 ) -> None:
     # Given
     staff_user.set_organisation_membership_active(organisation, is_active=False)
-    url = reverse(
-        "api-v1:organisations:organisation-users-list", args=[organisation.pk]
-    )
 
     # When
-    response = admin_client_new.get(url)
+    response = admin_client_new.get(f"/api/v1/organisations/{organisation.pk}/users/")
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -286,13 +283,12 @@ def test_update_user_role__deactivated_membership__exposes_membership_status(
 ) -> None:
     # Given
     staff_user.set_organisation_membership_active(organisation, is_active=False)
-    url = reverse(
-        "api-v1:organisations:organisation-users-update-role",
-        args=[organisation.pk, staff_user.pk],
-    )
 
     # When
-    response = admin_client_new.post(url, data={"role": OrganisationRole.ADMIN.name})
+    response = admin_client_new.post(
+        f"/api/v1/organisations/{organisation.pk}/users/{staff_user.pk}/update-role/",
+        data={"role": OrganisationRole.ADMIN.name},
+    )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
