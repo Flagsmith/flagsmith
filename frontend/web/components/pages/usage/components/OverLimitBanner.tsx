@@ -3,7 +3,7 @@ import Constants from 'common/constants'
 import { Button } from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import { BannerState } from 'components/pages/usage/bannerState'
-import { bannerCopy } from 'components/pages/usage/copy'
+import { bannerMessage } from 'components/pages/usage/bannerMessage'
 import { UsageBasis } from 'components/pages/usage/utils'
 
 export type OverLimitBannerProps = {
@@ -17,7 +17,7 @@ const OverLimitBanner: FC<OverLimitBannerProps> = ({
   canUpgrade,
   state,
 }) => {
-  const { body, title } = bannerCopy(state, basis)
+  const { body, title } = bannerMessage(state, basis)
 
   return (
     <div

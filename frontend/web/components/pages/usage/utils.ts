@@ -73,15 +73,6 @@ export const resolvePeriod = (
 export const isBillingPeriodSelected = (period: BillingPeriod): boolean =>
   period === 'current_billing_period' || period === 'previous_billing_period'
 
-// The note sits under the meter, so it can only compare over the window the
-// meter shows. On any other period "that usage" would name a figure that is
-// not on screen.
-export const showsContribution = (
-  basis: UsageBasis,
-  period: BillingPeriod,
-  projectId: number | undefined,
-): boolean => !!projectId && period === allowanceWindow(basis)
-
 // The chart projects towards one period end, so it can only draw a projection
 // for the period that end belongs to, over the whole organisation.
 export const showsProjection = (
