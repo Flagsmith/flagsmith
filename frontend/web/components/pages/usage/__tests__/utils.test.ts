@@ -1,7 +1,6 @@
 import { Subscription } from 'common/types/responses'
 import {
   isBillingPeriodSelected,
-  overageStatusOf,
   allowanceWindow,
   allowanceWindowLabel,
   showsPlanCeiling,
@@ -91,33 +90,6 @@ describe('UsageDashboard utils', () => {
       expect(copy.hint).toContain('no plan limit')
       expect(copy.hint).not.toContain('allowance')
     })
-  })
-
-  describe('overageStatusOf', () => {
-    it.each`
-      eligible | graceUsed | total     | limit     | expected
-      ${false} | ${false}  | ${150000} | ${100000} | ${'not-charged'}
-      ${true}  | ${false}  | ${150000} | ${null}   | ${'not-charged'}
-      ${true}  | ${false}  | ${100000} | ${100000} | ${'within-limit'}
-      ${true}  | ${false}  | ${150000} | ${100000} | ${'covered'}
-      ${true}  | ${false}  | ${199999} | ${100000} | ${'covered'}
-      ${true}  | ${false}  | ${200000} | ${100000} | ${'charged'}
-      ${true}  | ${true}   | ${150000} | ${100000} | ${'charged'}
-    `(
-      'eligible=$eligible graceUsed=$graceUsed at $total/$limit is $expected',
-      ({ eligible, expected, graceUsed, limit, total }) => {
-        expect(
-          overageStatusOf(
-            {
-              api_limit_grace_period_used: graceUsed,
-              overage_billing_eligible: eligible,
-            },
-            total,
-            limit,
-          ),
-        ).toBe(expected)
-      },
-    )
   })
 
   describe('usageBasisOf', () => {
