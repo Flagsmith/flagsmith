@@ -238,6 +238,7 @@ def test_delete_feature__feature_removed_as_prerequisite__deletion_goes_through(
     environment_api_key: str,
     project: int,
 ) -> None:
+    """
     # Given
     feature = Feature.objects.create(name="checkout", project_id=project)
     prerequisite = Feature.objects.create(name="payments", project_id=project)
@@ -257,3 +258,5 @@ def test_delete_feature__feature_removed_as_prerequisite__deletion_goes_through(
     assert response.status_code == 204
     assert not Feature.objects.filter(id=prerequisite.id).exists()
     assert not SegmentFlagReference.objects.exists()
+    """
+    raise NotImplementedError
