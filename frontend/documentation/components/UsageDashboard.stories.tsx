@@ -14,12 +14,11 @@ import {
   planSectionCopy,
 } from 'components/pages/usage/copy'
 import { overLimitOf } from 'components/pages/usage/overLimit'
+import { bannerStateOf } from 'components/pages/usage/bannerState'
 import {
   allowanceWindow,
   isBilledOnAPeriod,
   isBillingPeriodSelected,
-  overageStatusOf,
-  restrictionWarningOf,
   periodLabel,
   periodsFor,
   PeriodSelection,
@@ -131,6 +130,17 @@ const UsagePage: FC<HarnessProps> = ({
   )
   const allowanceTotal = allowance.totals.total
   const exceeded = overLimitOf(allowanceTotal, limit, allowance)
+  const banner = bannerStateOf(
+    {
+      api_limit_grace_period_used: false,
+      api_limit_restriction_enabled: false,
+      block_access_to_admin: !!isRestricted,
+      overage_billing_eligible: false,
+      stop_serving_flags: false,
+      ...organisation,
+    },
+    exceeded,
+  )
 
   const contribution = showsContribution(
     basis,
@@ -154,31 +164,7 @@ const UsagePage: FC<HarnessProps> = ({
       isError={isError}
       isLoading={isLoading}
       alert={
-        (exceeded || isRestricted) && (
-          <OverLimitBanner
-            over={exceeded}
-            basis={basis}
-            canUpgrade
-            isRestricted={isRestricted}
-            flagsPaused={organisation.stop_serving_flags}
-            overageStatus={overageStatusOf(
-              {
-                api_limit_grace_period_used:
-                  !!organisation.api_limit_grace_period_used,
-                overage_billing_eligible:
-                  !!organisation.overage_billing_eligible,
-              },
-              allowanceTotal,
-              limit,
-            )}
-            restrictionWarning={restrictionWarningOf({
-              api_limit_grace_period_used:
-                !!organisation.api_limit_grace_period_used,
-              api_limit_restriction_enabled:
-                !!organisation.api_limit_restriction_enabled,
-            })}
-          />
-        )
+        banner && <OverLimitBanner state={banner} basis={basis} canUpgrade />
       }
       // Nothing to refetch here; passed so FailedToLoad renders its button.
       onRetry={() => {}}

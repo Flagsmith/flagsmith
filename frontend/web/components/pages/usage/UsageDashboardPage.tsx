@@ -15,11 +15,10 @@ import { useUsageData } from './useUsageData'
 import { contributionNote, overLimitNote, planSectionCopy } from './copy'
 import { projectionNote, projectUsage } from './projection'
 import { overLimitOf } from './overLimit'
+import { bannerStateOf } from './bannerState'
 import {
   isBilledOnAPeriod,
   isBillingPeriodSelected,
-  overageStatusOf,
-  restrictionWarningOf,
   showsContribution,
   showsPlanCeiling,
   showsProjection,
@@ -75,18 +74,14 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     organisationId ? { id: organisationId } : skipToken,
   )
 
-  // The block outlives going over the limit, so this cannot key off exceeded.
-  const isRestricted =
-    !!organisation?.block_access_to_admin || !!organisation?.stop_serving_flags
-
   const limit = subscriptionMeta?.max_api_calls
   const allowanceTotal = usage.allowance?.totals?.total ?? 0
-  const overageStatus = overageStatusOf(organisation, allowanceTotal, limit)
   // Walks every day in the window to find the crossing, so not per render.
   const exceeded = useMemo(
     () => overLimitOf(allowanceTotal, limit, usage.allowance),
     [allowanceTotal, limit, usage.allowance],
   )
+  const banner = bannerStateOf(organisation, exceeded)
 
   const periods = periodsFor(planIsBilled)
 
@@ -136,15 +131,11 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       isError={organisationFailed || usage.failed || limitFailed}
       isLoading={loadingOrganisation || usage.isLoadingPlan || loadingLimit}
       alert={
-        (exceeded || isRestricted) && (
+        banner && (
           <OverLimitBanner
-            over={exceeded}
+            state={banner}
             basis={basis}
             canUpgrade={Utils.getFlagsmithHasFeature('payments_enabled')}
-            overageStatus={overageStatus}
-            restrictionWarning={restrictionWarningOf(organisation)}
-            flagsPaused={organisation?.stop_serving_flags}
-            isRestricted={isRestricted}
           />
         )
       }

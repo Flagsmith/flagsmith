@@ -1,12 +1,8 @@
 import Format from 'common/utils/format'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import { OverLimit } from './overLimit'
-import {
-  allowanceWindowLabel,
-  OverageStatus,
-  RestrictionWarning,
-  UsageBasis,
-} from './utils'
+import { BannerKind, BannerState } from './bannerState'
+import { allowanceWindowLabel, UsageBasis } from './utils'
 
 /**
  * Everything the usage page says about a plan and its limit, in one place, so
@@ -48,60 +44,55 @@ const COPY = {
   usageTitle: 'Your usage',
 }
 
-export type BannerContext = {
-  overageStatus?: OverageStatus
-  restrictionWarning?: RestrictionWarning
-  flagsPaused?: boolean
-}
+export type BannerCopy = { title: string; body: string }
 
-const overageSentence = (
-  status: OverageStatus | undefined,
-  basis: UsageBasis,
-): string | undefined => {
-  const window = allowanceWindowLabel(basis)
-  switch (status) {
-    case 'covered':
-      return `Your first overage is covered, so you will not be charged for ${window}. Future overages will be charged.`
-    case 'charged':
-      return `Overage charges will apply for ${window}.`
-    default:
-      return undefined
-  }
-}
+type OverLimitKind = Exclude<BannerKind, 'restricted'>
 
-// The restriction task runs every 12 hours.
-const RESTRICTION_WARNING: Record<RestrictionWarning, string> = {
-  'after-grace':
+/** What each over-limit banner adds between the overage and the footer. */
+const OVER_LIMIT_MESSAGE: Record<
+  OverLimitKind,
+  (over: OverLimit, window: string) => string | undefined
+> = {
+  'over-limit': () => undefined,
+  // The charge is settled at the end of the period, so this states what
+  // holds now and what would change it.
+  'overage-charged': (_, window) => `Overage charges will apply for ${window}.`,
+  'overage-covered': (over, window) =>
+    `Your first overage is covered for ${window}, unless usage reaches ${Format.shortenNumber(
+      2 * over.limit,
+    )} API calls. Overages after this will be charged.`,
+  'restriction-after-grace': () =>
     'If usage stays over the limit, your organisation will be restricted after 7 days.',
-  'next-check':
+  // The restriction task runs every 12 hours.
+  'restriction-imminent': () =>
     'Your 7 day grace period has already been used, so your organisation can be restricted within 12 hours.',
 }
 
-// The block outlives going over the limit, so the overage is optional here.
-export const restrictedBannerCopy = (
-  over: OverLimit | undefined,
-  { flagsPaused }: BannerContext = {},
-): { title: string; body: string } => ({
-  body: sentences(
-    flagsPaused && COPY.flagsPaused,
-    over ? sentences(limitReached(over), COPY.recovery) : COPY.askSupport,
-  ),
-  title: COPY.restrictedTitle,
-})
-
-export const overLimitBannerCopy = (
-  over: OverLimit,
+export const bannerCopy = (
+  state: BannerState,
   basis: UsageBasis,
-  { overageStatus, restrictionWarning }: BannerContext = {},
-): { title: string; body: string } => ({
-  body: sentences(
-    limitReached(over),
-    overageSentence(overageStatus, basis),
-    restrictionWarning && RESTRICTION_WARNING[restrictionWarning],
-    COPY.staysVisible,
-  ),
-  title: COPY.overLimitTitle,
-})
+): BannerCopy => {
+  if (state.kind === 'restricted') {
+    return {
+      body: sentences(
+        state.flagsPaused && COPY.flagsPaused,
+        state.over
+          ? sentences(limitReached(state.over), COPY.recovery)
+          : COPY.askSupport,
+      ),
+      title: COPY.restrictedTitle,
+    }
+  }
+
+  return {
+    body: sentences(
+      limitReached(state.over),
+      OVER_LIMIT_MESSAGE[state.kind](state.over, allowanceWindowLabel(basis)),
+      COPY.staysVisible,
+    ),
+    title: COPY.overLimitTitle,
+  }
+}
 
 export const overLimitNote = (over: OverLimit): string =>
   `${Format.shortenNumber(over.overBy)} ${calls(
