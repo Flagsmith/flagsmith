@@ -33,6 +33,7 @@ describe('bannerStateOf', () => {
   it.each`
     values                                                                        | overBy    | kind
     ${{ overage_billing_eligible: true }}                                         | ${50000}  | ${'overage-covered'}
+    ${{ overage_billing_eligible: true }}                                         | ${99999}  | ${'overage-covered'}
     ${{ overage_billing_eligible: true }}                                         | ${100000} | ${'overage-charged'}
     ${{ api_limit_grace_period_used: true, overage_billing_eligible: true }}      | ${50000}  | ${'overage-charged'}
     ${{ api_limit_restriction_enabled: true }}                                    | ${50000}  | ${'restriction-after-grace'}

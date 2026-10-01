@@ -4,8 +4,7 @@ import {
   periodOptions,
   rollingPeriodOptions,
 } from 'common/types/requests'
-import { Organisation, Subscription } from 'common/types/responses'
-import { PlanLimit } from 'components/shared/UsageBar/utils'
+import { Subscription } from 'common/types/responses'
 
 export type PeriodSelection = BillingPeriod | 'default'
 
@@ -33,32 +32,6 @@ export const usageBasisOf = (
 
 export const isBilledOnAPeriod = (basis: UsageBasis): boolean =>
   basis.window === 'billing-period'
-
-export type OverageStatus =
-  | 'not-charged'
-  | 'within-limit'
-  | 'covered'
-  | 'charged'
-
-// Mirrors charge_for_api_call_count_overages: the first overage is forgiven
-// once, unless usage reaches twice the limit.
-export const overageStatusOf = (
-  organisation:
-    | Pick<
-        Organisation,
-        'overage_billing_eligible' | 'api_limit_grace_period_used'
-      >
-    | undefined,
-  total: number,
-  limit: PlanLimit,
-): OverageStatus => {
-  if (!organisation?.overage_billing_eligible || !limit) return 'not-charged'
-  if (total <= limit) return 'within-limit'
-  if (organisation.api_limit_grace_period_used || total >= 2 * limit) {
-    return 'charged'
-  }
-  return 'covered'
-}
 
 export const resolvePeriod = (
   chosen: PeriodSelection,

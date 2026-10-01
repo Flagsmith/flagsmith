@@ -1,6 +1,5 @@
 import { Organisation } from 'common/types/responses'
 import { OverLimit } from './overLimit'
-import { overageStatusOf } from './utils'
 
 /** Which banner the usage page shows. One kind, one message. */
 export type BannerState =
@@ -47,13 +46,13 @@ export const bannerStateOf = (
     return undefined
   }
 
-  const overage = overageStatusOf(
-    organisation,
-    over.limit + over.overBy,
-    over.limit,
-  )
-  if (overage === 'covered') return { kind: 'overage-covered', over }
-  if (overage === 'charged') return { kind: 'overage-charged', over }
+  // Mirrors charge_for_api_call_count_overages: the first overage is forgiven
+  // once, unless usage reaches twice the limit.
+  if (organisation?.overage_billing_eligible) {
+    const charged =
+      organisation.api_limit_grace_period_used || over.overBy >= over.limit
+    return { kind: charged ? 'overage-charged' : 'overage-covered', over }
+  }
 
   if (organisation?.api_limit_restriction_enabled) {
     return organisation.api_limit_grace_period_used
