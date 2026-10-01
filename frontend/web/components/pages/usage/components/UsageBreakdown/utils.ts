@@ -15,7 +15,9 @@ export type BreakdownDimension =
 
 // Project and environment need their own grouped request; request type and
 // SDK come from the rows the page already holds.
-export const isGroupedDimension = (dimension: BreakdownDimension): boolean =>
+export const isGroupedDimension = (
+  dimension: BreakdownDimension,
+): dimension is UsageGroupBy =>
   dimension === 'project' || dimension === 'environment'
 
 export type BreakdownStatus = 'ready' | 'loading' | 'error' | 'needs-project'
@@ -24,10 +26,10 @@ export const groupByOf = (
   dimension: BreakdownDimension,
   projectId: number | undefined,
 ): UsageGroupBy | undefined => {
-  if (dimension === 'project') return 'project'
+  if (!isGroupedDimension(dimension)) return undefined
   // Environments are only ranked within one project.
-  if (dimension === 'environment' && projectId) return 'environment'
-  return undefined
+  if (dimension === 'environment' && !projectId) return undefined
+  return dimension
 }
 
 export type QueryState = { isFetching: boolean; isError: boolean }
