@@ -9,13 +9,21 @@ export type UsageBreakdownProps = {
   onChangeDimension: (dimension: BreakdownDimension) => void
   rows: BreakdownRow[]
   scope?: string
+  isLoading?: boolean
+  isError?: boolean
+  needsProject?: boolean
+  onRetry?: () => void
 }
 
 type DimensionOption = (typeof BREAKDOWN_DIMENSIONS)[number]
 
 const UsageBreakdown: FC<UsageBreakdownProps> = ({
   dimension,
+  isError,
+  isLoading,
+  needsProject,
   onChangeDimension,
+  onRetry,
   rows,
   scope,
 }) => (
@@ -42,7 +50,13 @@ const UsageBreakdown: FC<UsageBreakdownProps> = ({
       </div>
     </div>
 
-    <List rows={rows} />
+    <List
+      rows={rows}
+      isLoading={isLoading}
+      isError={isError}
+      needsProject={needsProject}
+      onRetry={onRetry}
+    />
   </div>
 )
 

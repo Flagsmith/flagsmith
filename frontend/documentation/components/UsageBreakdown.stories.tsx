@@ -99,3 +99,30 @@ export const ScopedToAProject: Story = {
 export const NoUsageRecorded: Story = {
   args: { dimension: 'request-type', rows: [] },
 }
+
+export const ByProject: Story = {
+  args: {
+    dimension: 'project',
+    rows: [
+      { key: 'project_id-1', label: 'Mobile app', value: 512000 },
+      { key: 'project_id-2', label: 'Checkout', value: 463000 },
+      { key: 'project_id-3', label: 'Marketing site', value: 158000 },
+      { key: 'project_id-4', label: 'Deleted project', value: 12000 },
+    ],
+    scope: 'All projects · Current billing period',
+  },
+}
+
+// Environments are ranked within one project, so one has to be chosen first.
+export const EnvironmentNeedsAProject: Story = {
+  args: { dimension: 'environment', needsProject: true, rows: [] },
+}
+
+export const LoadingAScope: Story = {
+  args: { dimension: 'project', isLoading: true, rows: [] },
+}
+
+// A failed scope must not read as zero usage.
+export const ScopeFailedToLoad: Story = {
+  args: { dimension: 'project', isError: true, onRetry: () => {}, rows: [] },
+}
