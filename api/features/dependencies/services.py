@@ -446,8 +446,7 @@ def _get_or_create_dependency_segment(
     ]
     segment: Segment
     created: bool
-    # Segment names aren't unique, so the lookup is scoped further.
-    segment, created = Segment.live_objects.get_or_create(
+    segment, created = Segment.objects.get_or_create(
         project_id=feature.project_id,
         is_system_segment=True,
         feature=feature,
