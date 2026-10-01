@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.279.0](https://github.com/Flagsmith/flagsmith/compare/v2.278.1...v2.279.0) (2026-10-01)
+
+
+### Features
+
+* **experimentation:** add the delivery connections db view and status table ([#8622](https://github.com/Flagsmith/flagsmith/issues/8622)) ([8ef97c9](https://github.com/Flagsmith/flagsmith/commit/8ef97c97b736e299efdb4985846502e40fca190b))
+
+
+### Bug Fixes
+
+* **docs:** pin Node 24.x for Vercel builds ([#8642](https://github.com/Flagsmith/flagsmith/issues/8642)) ([10a8f7e](https://github.com/Flagsmith/flagsmith/commit/10a8f7e076860b66cff18d0828e48b9b7baba0eb))
+
 ## [2.278.1](https://github.com/Flagsmith/flagsmith/compare/v2.278.0...v2.278.1) (2026-09-30)
 
 
