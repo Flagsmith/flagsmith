@@ -4,7 +4,11 @@ from jsonpath_rfc9535.segments import JSONPathChildSegment, JSONPathSegment
 from jsonpath_rfc9535.selectors import NameSelector
 
 from features.dependencies.models import SegmentFlagReference
-from features.dependencies.types import DependencyEdge, FeatureName
+from features.dependencies.types import (
+    DependencyEdge,
+    FeatureName,
+    ReferencingSegment,
+)
 from features.models import Feature
 from segments.types import SegmentRule
 
@@ -51,27 +55,34 @@ def _get_prerequisite_feature_name(condition_property: str) -> FeatureName | Non
     return _get_selected_name(query_segments[1])
 
 
+def map_reference_to_referencing_segment(
+    reference: SegmentFlagReference,
+) -> ReferencingSegment:
+    """Describe the segment holding the indexed `$.flags` condition."""
+    segment = reference.segment
+    assert (rules := segment.rules_data) is not None
+    return {
+        "id": segment.id,
+        "name": segment.name,
+        "rules": rules,
+        "condition_json_path": reference.condition_json_path,
+        "is_system": segment.is_system_segment,
+    }
+
+
 def map_reference_to_dependency_edge(
     *,
     feature: Feature,
     reference: SegmentFlagReference,
 ) -> DependencyEdge:
     """Describe the feature's dependency the indexed `$.flags` condition makes up."""
-    segment = reference.segment
-    assert (rules := segment.rules_data) is not None
     return {
         "feature": {"id": feature.id, "name": feature.name},
         "prerequisite": {
             "id": reference.prerequisite_feature.id,
             "name": reference.prerequisite_feature.name,
         },
-        "segment": {
-            "id": segment.id,
-            "name": segment.name,
-            "rules": rules,
-            "condition_json_path": reference.condition_json_path,
-            "is_system": segment.is_system_segment,
-        },
+        "segment": map_reference_to_referencing_segment(reference),
     }
 
 

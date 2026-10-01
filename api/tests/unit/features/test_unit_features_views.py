@@ -175,7 +175,7 @@ def test_create_feature__with_owners__assigns_specified_owners(
     assert response_owners[0]["email"] == admin_user.email
 
 
-@mock.patch("features.views.trigger_feature_state_change_webhooks")
+@mock.patch("features.services.trigger_feature_state_change_webhooks")
 def test_delete_feature__with_feature_states__triggers_webhooks(
     mocked_trigger_fs_change_webhook: mock.MagicMock,
     project: Project,
