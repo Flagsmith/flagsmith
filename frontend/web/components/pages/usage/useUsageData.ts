@@ -21,7 +21,7 @@ export type UsageData = {
   isLoadingPlan: boolean
   isLoadingScoped: boolean
   failed: boolean
-  /** Rate limited, not broken: worth retrying once the window passes. */
+  /** The failure is the rate limit, which passes within a minute. */
   throttled: boolean
   retry: () => void
 }
@@ -52,12 +52,10 @@ export const useUsageData = ({
     OPTIONS,
   )
 
-  const throttled = isThrottled(scoped.error) || isThrottled(allowance.error)
-
   return {
     allowance: allowance.data,
     // Either query failing leaves a number missing, so both are fatal.
-    failed: !throttled && (scoped.isError || allowance.isError),
+    failed: scoped.isError || allowance.isError,
 
     isLoadingPlan: allowance.isFetching,
 
@@ -68,6 +66,6 @@ export const useUsageData = ({
       if (!allowance.isUninitialized) allowance.refetch()
     },
     scoped: scoped.data,
-    throttled,
+    throttled: isThrottled(scoped.error) || isThrottled(allowance.error),
   }
 }

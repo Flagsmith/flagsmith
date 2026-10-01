@@ -82,6 +82,7 @@ type HarnessProps = {
   empty?: boolean
   isLoading?: boolean
   isError?: boolean
+  isThrottled?: boolean
   isRestricted?: boolean
 }
 
@@ -94,6 +95,7 @@ const UsagePage: FC<HarnessProps> = ({
   isError,
   isLoading,
   isRestricted,
+  isThrottled,
   limit,
   scale = 1,
   subscription,
@@ -142,6 +144,7 @@ const UsagePage: FC<HarnessProps> = ({
     <UsagePageLayout
       isError={isError}
       isLoading={isLoading}
+      isThrottled={isThrottled}
       alert={
         (exceeded || isRestricted) && (
           <OverLimitBanner
@@ -309,4 +312,14 @@ export const Loading: Story = {
 
 export const FailedToLoad: Story = {
   args: { isError: true, limit: 2000000, subscription: billed },
+}
+
+// The rate limit passes within a minute, so it says to wait.
+export const Throttled: Story = {
+  args: {
+    isError: true,
+    isThrottled: true,
+    limit: 2000000,
+    subscription: billed,
+  },
 }

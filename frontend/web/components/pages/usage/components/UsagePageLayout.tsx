@@ -1,12 +1,12 @@
 import { FC, ReactNode } from 'react'
 import EmptyState from 'components/EmptyState'
-import { throttledMessage } from 'components/pages/usage/throttle'
+import { THROTTLED } from 'components/pages/usage/throttle'
 
 export type UsagePageLayoutProps = {
   isError?: boolean
   isLoading?: boolean
-  /** Seconds until a rate limited page retries itself. */
-  retryInSeconds?: number
+  /** The error is the rate limit, so it says to wait rather than that it broke. */
+  isThrottled?: boolean
   onRetry?: () => void
   /** Outlives the loading and error states: a restricted organisation needs
    * to know why it is cut off even when the usage request fails. */
@@ -19,8 +19,8 @@ const UsagePageLayout: FC<UsagePageLayoutProps> = ({
   children,
   isError,
   isLoading,
+  isThrottled,
   onRetry,
-  retryInSeconds,
 }) => {
   let content = children
 
@@ -30,21 +30,15 @@ const UsagePageLayout: FC<UsagePageLayoutProps> = ({
         <Loader />
       </div>
     )
-  } else if (retryInSeconds !== undefined) {
-    content = (
-      <div role='status'>
-        <EmptyState
-          title='Too many requests'
-          description={throttledMessage(retryInSeconds)}
-          icon='bar-chart'
-        />
-      </div>
-    )
   } else if (isError) {
     content = (
       <EmptyState
-        title='Usage could not be loaded'
-        description='Something went wrong fetching usage for this period. Try again in a moment.'
+        title={isThrottled ? THROTTLED.title : 'Usage could not be loaded'}
+        description={
+          isThrottled
+            ? THROTTLED.description
+            : 'Something went wrong fetching usage for this period. Try again in a moment.'
+        }
         icon='bar-chart'
         action={
           onRetry && (

@@ -12,7 +12,6 @@ import UsageMeter from './components/UsageMeter'
 import UsageOverTime from './components/UsageOverTime'
 import UsagePageLayout from './components/UsagePageLayout'
 import { useUsageData } from './useUsageData'
-import { useThrottleRetry } from './throttle'
 import { contributionNote, overLimitNote, planSectionCopy } from './copy'
 import { projectionNote, projectUsage } from './projection'
 import { overLimitOf } from './overLimit'
@@ -65,8 +64,6 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     projectId: selectedProjectId,
     ready: !!organisation,
   })
-
-  const retryInSeconds = useThrottleRetry(usage.throttled, usage.retry)
 
   const {
     data: subscriptionMeta,
@@ -136,7 +133,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   return (
     <UsagePageLayout
       isError={organisationFailed || usage.failed || limitFailed}
-      retryInSeconds={retryInSeconds}
+      isThrottled={usage.throttled}
       isLoading={loadingOrganisation || usage.isLoadingPlan || loadingLimit}
       alert={
         (exceeded || isRestricted) && (
