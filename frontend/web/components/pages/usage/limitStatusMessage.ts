@@ -1,10 +1,10 @@
 import Format from 'common/utils/format'
 import { OverLimit } from './overLimit'
-import { BannerKind, BannerState } from './bannerState'
+import { LimitStatusKind, LimitStatus } from './limitStatus'
 import { apiCallsWord, joinSentences } from './usageText'
 import { allowanceWindowLabel, UsageBasis } from './utils'
 
-export type BannerMessage = { title: string; body: string }
+export type LimitStatusMessage = { title: string; body: string }
 
 // Only the overage is evidence the limit was reached. block_access_to_admin
 // says an organisation is blocked, not why, and support can set it by hand.
@@ -30,7 +30,7 @@ const RECOVERY =
 // APILimitAccessBlock, so this is all we can offer without evidence.
 const ASK_SUPPORT = 'Contact support to restore access.'
 
-type OverLimitKind = Exclude<BannerKind, 'restricted'>
+type OverLimitKind = Exclude<LimitStatusKind, 'restricted'>
 
 /** What each over-limit banner adds between the overage and the footer. */
 const OVER_LIMIT_MESSAGE: Record<
@@ -53,16 +53,16 @@ const OVER_LIMIT_MESSAGE: Record<
     'Your 7 day grace period has already been used, so your organisation can be restricted within 12 hours.',
 }
 
-export const bannerMessage = (
-  state: BannerState,
+export const limitStatusMessage = (
+  status: LimitStatus,
   basis: UsageBasis,
-): BannerMessage => {
-  if (state.kind === 'restricted') {
+): LimitStatusMessage => {
+  if (status.kind === 'restricted') {
     return {
       body: joinSentences(
-        state.flagsPaused && FLAGS_PAUSED,
-        state.over
-          ? joinSentences(limitReached(state.over), RECOVERY)
+        status.flagsPaused && FLAGS_PAUSED,
+        status.over
+          ? joinSentences(limitReached(status.over), RECOVERY)
           : ASK_SUPPORT,
       ),
       title: RESTRICTED_TITLE,
@@ -71,8 +71,8 @@ export const bannerMessage = (
 
   return {
     body: joinSentences(
-      limitReached(state.over),
-      OVER_LIMIT_MESSAGE[state.kind](state.over, allowanceWindowLabel(basis)),
+      limitReached(status.over),
+      OVER_LIMIT_MESSAGE[status.kind](status.over, allowanceWindowLabel(basis)),
       STAYS_VISIBLE,
     ),
     title: OVER_LIMIT_TITLE,

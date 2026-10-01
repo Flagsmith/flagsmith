@@ -1,8 +1,8 @@
 import { Organisation } from 'common/types/responses'
 import { OverLimit } from './overLimit'
 
-/** Which banner the usage page shows. One kind, one message. */
-export type BannerState =
+/** Where an organisation stands against its plan limit. */
+export type LimitStatus =
   | {
       kind: 'restricted'
       /** Absent while restricted but back under the limit. */
@@ -16,9 +16,9 @@ export type BannerState =
   | { kind: 'restriction-imminent'; over: OverLimit }
   | { kind: 'over-limit'; over: OverLimit }
 
-export type BannerKind = BannerState['kind']
+export type LimitStatusKind = LimitStatus['kind']
 
-export type BannerOrganisation = Pick<
+export type LimitOrganisation = Pick<
   Organisation,
   | 'api_limit_grace_period_used'
   | 'api_limit_restriction_enabled'
@@ -27,8 +27,8 @@ export type BannerOrganisation = Pick<
   | 'stop_serving_flags'
 >
 
-/** An organisation with none of the banner fields set. */
-export const NO_BANNER_FLAGS: BannerOrganisation = {
+/** An organisation with none of the limit fields set. */
+export const NO_LIMIT_FLAGS: LimitOrganisation = {
   api_limit_grace_period_used: false,
   api_limit_restriction_enabled: false,
   block_access_to_admin: false,
@@ -38,10 +38,10 @@ export const NO_BANNER_FLAGS: BannerOrganisation = {
 
 // Overage billing is paid only and restriction is free only, so at most one
 // of them applies to an organisation.
-export const bannerStateOf = (
-  organisation: BannerOrganisation | undefined,
+export const limitStatusOf = (
+  organisation: LimitOrganisation | undefined,
   over: OverLimit | undefined,
-): BannerState | undefined => {
+): LimitStatus | undefined => {
   // The block outlives going over the limit, so this cannot key off over.
   if (organisation?.block_access_to_admin || organisation?.stop_serving_flags) {
     return {

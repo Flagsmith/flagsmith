@@ -17,9 +17,9 @@ import {
 import { planHeading } from 'components/pages/usage/planHeading'
 import { overLimitNote, overLimitOf } from 'components/pages/usage/overLimit'
 import {
-  bannerStateOf,
-  NO_BANNER_FLAGS,
-} from 'components/pages/usage/bannerState'
+  limitStatusOf,
+  NO_LIMIT_FLAGS,
+} from 'components/pages/usage/limitStatus'
 import {
   allowanceWindow,
   isBilledOnAPeriod,
@@ -165,9 +165,9 @@ const UsagePage: FC<HarnessProps> = ({
   )
   const allowanceTotal = allowance.totals.total
   const exceeded = overLimitOf(allowanceTotal, limit, allowance)
-  const banner = bannerStateOf(
+  const limitStatus = limitStatusOf(
     {
-      ...NO_BANNER_FLAGS,
+      ...NO_LIMIT_FLAGS,
       block_access_to_admin: !!isRestricted,
       ...organisation,
     },
@@ -201,7 +201,9 @@ const UsagePage: FC<HarnessProps> = ({
       isError={isError}
       isLoading={isLoading}
       alert={
-        banner && <OverLimitBanner state={banner} basis={basis} canUpgrade />
+        limitStatus && (
+          <OverLimitBanner status={limitStatus} basis={basis} canUpgrade />
+        )
       }
       // Nothing to refetch here; passed so FailedToLoad renders its button.
       onRetry={() => {}}

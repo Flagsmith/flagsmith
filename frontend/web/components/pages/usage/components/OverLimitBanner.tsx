@@ -2,12 +2,12 @@ import { FC } from 'react'
 import Constants from 'common/constants'
 import { Button } from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
-import { BannerState } from 'components/pages/usage/bannerState'
-import { bannerMessage } from 'components/pages/usage/bannerMessage'
+import { LimitStatus } from 'components/pages/usage/limitStatus'
+import { limitStatusMessage } from 'components/pages/usage/limitStatusMessage'
 import { UsageBasis } from 'components/pages/usage/utils'
 
 export type OverLimitBannerProps = {
-  state: BannerState
+  status: LimitStatus
   basis: UsageBasis
   canUpgrade?: boolean
 }
@@ -15,9 +15,9 @@ export type OverLimitBannerProps = {
 const OverLimitBanner: FC<OverLimitBannerProps> = ({
   basis,
   canUpgrade,
-  state,
+  status,
 }) => {
-  const { body, title } = bannerMessage(state, basis)
+  const { body, title } = limitStatusMessage(status, basis)
 
   return (
     <div
