@@ -8,7 +8,6 @@ from pytest_mock import MockerFixture
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
-from experimentation import ingestion_redis
 from experimentation.dataclasses import AudienceSpec, RolloutSpec
 from experimentation.models import (
     Experiment,
@@ -37,12 +36,6 @@ class RolloutSpecFactory(Protocol):
         multivariate_values: list[MultivariateValueChangeSet] | None = ...,
         audience: AudienceSpec | None = ...,
     ) -> RolloutSpec: ...
-
-
-@pytest.fixture(autouse=True)
-def mock_ingestion_redis_client(mocker: MockerFixture) -> None:
-    ingestion_redis.get_client.cache_clear()
-    mocker.patch("experimentation.ingestion_redis.RedisCluster.from_url")
 
 
 @pytest.fixture()
