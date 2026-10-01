@@ -35,8 +35,8 @@ export const isBilledOnAPeriod = (basis: UsageBasis): boolean =>
   basis.window === 'billing-period'
 
 export type OverageStatus =
-  | 'not_charged'
-  | 'within_limit'
+  | 'not-charged'
+  | 'within-limit'
   | 'covered'
   | 'charged'
 
@@ -52,27 +52,12 @@ export const overageStatusOf = (
   total: number,
   limit: PlanLimit,
 ): OverageStatus => {
-  if (!organisation?.overage_billing_eligible || !limit) return 'not_charged'
-  if (total <= limit) return 'within_limit'
+  if (!organisation?.overage_billing_eligible || !limit) return 'not-charged'
+  if (total <= limit) return 'within-limit'
   if (organisation.api_limit_grace_period_used || total >= 2 * limit) {
     return 'charged'
   }
   return 'covered'
-}
-
-// The restriction task skips the 7 day wait once a grace row exists.
-export type RestrictionWarning = 'after-grace' | 'next-check'
-
-export const restrictionWarningOf = (
-  organisation:
-    | Pick<
-        Organisation,
-        'api_limit_restriction_enabled' | 'api_limit_grace_period_used'
-      >
-    | undefined,
-): RestrictionWarning | undefined => {
-  if (!organisation?.api_limit_restriction_enabled) return undefined
-  return organisation.api_limit_grace_period_used ? 'next-check' : 'after-grace'
 }
 
 export const resolvePeriod = (

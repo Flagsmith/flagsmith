@@ -1,13 +1,11 @@
-import {
-  overLimitBannerCopy,
-  overLimitNote,
-  restrictedBannerCopy,
-} from 'components/pages/usage/copy'
+import { bannerCopy, overLimitNote } from 'components/pages/usage/copy'
+import { BannerState } from 'components/pages/usage/bannerState'
 import { OverLimit, overLimitOf } from 'components/pages/usage/overLimit'
 import { UsageBasis } from 'components/pages/usage/utils'
 import { usageEvent, usageResponse } from './fixtures'
 
 const billed: UsageBasis = { window: 'billing-period' }
+const rolling = { window: 'rolling' } as UsageBasis
 
 const days = (perDay: number[]) =>
   usageResponse(
@@ -23,113 +21,89 @@ const exceeding = (
   data?: ReturnType<typeof days>,
 ) => overLimitOf(total, limit, data) as OverLimit
 
-describe('usage copy', () => {
-  it('names the day when the data shows it', () => {
-    const over = exceeding(60000, 50000, days([40000, 20000]))
+const over = exceeding(60000, 50000, days([40000, 20000]))
 
-    expect(overLimitBannerCopy(over, billed).body).toContain(
-      'API calls on 2 Aug',
+describe('bannerCopy', () => {
+  it('names the day when the data shows it', () => {
+    expect(bannerCopy({ kind: 'over-limit', over }, billed).body).toBe(
+      'You reached your plan limit of 50K API calls on 2 Aug.' +
+        ' Your usage stays visible below so you can see what happened.',
     )
   })
 
   // Artificial: totals and rows always arrive in the same response.
   it('leaves the day out when the rows are missing', () => {
-    const over = exceeding(60000, 50000)
-
-    const { body } = overLimitBannerCopy(over, billed)
+    const { body } = bannerCopy(
+      { kind: 'over-limit', over: exceeding(60000, 50000) },
+      billed,
+    )
 
     expect(body).toContain('your plan limit of 50K API calls.')
     expect(body).not.toContain(' on ')
   })
 
   it.each`
-    overageStatus | expected
-    ${'covered'}  | ${'Your first overage is covered, so you will not be charged for this billing period.'}
-    ${'charged'}  | ${'Overage charges will apply for this billing period.'}
-  `('says the overage is $overageStatus', ({ expected, overageStatus }) => {
-    const over = exceeding(60000, 50000, days([60000]))
+    kind                         | expected
+    ${'overage-covered'}         | ${'Your first overage is covered for this billing period, unless usage reaches 100K API calls. Overages after this will be charged.'}
+    ${'overage-charged'}         | ${'Overage charges will apply for this billing period.'}
+    ${'restriction-after-grace'} | ${'If usage stays over the limit, your organisation will be restricted after 7 days.'}
+    ${'restriction-imminent'}    | ${'Your 7 day grace period has already been used, so your organisation can be restricted within 12 hours.'}
+  `('explains what happens next for $kind', ({ expected, kind }) => {
+    const { body, title } = bannerCopy({ kind, over } as BannerState, billed)
 
-    expect(overLimitBannerCopy(over, billed, { overageStatus }).body).toContain(
-      expected,
+    expect(title).toBe('Your organisation has exceeded its plan limit')
+    expect(body).toBe(
+      'You reached your plan limit of 50K API calls on 2 Aug.' +
+        ` ${expected}` +
+        ' Your usage stays visible below so you can see what happened.',
     )
   })
 
-  it('says nothing about charges where none can land', () => {
-    const over = exceeding(60000, 50000, days([60000]))
-
-    const { body } = overLimitBannerCopy(over, billed, {
-      overageStatus: 'not_charged',
-    })
-
-    expect(body).not.toContain('charge')
-  })
-
-  it.each`
-    restrictionWarning | expected
-    ${'after-grace'}   | ${'restricted after 7 days'}
-    ${'next-check'}    | ${'restricted within 12 hours'}
-  `(
-    'warns a free organisation it will be restricted ($restrictionWarning)',
-    ({ expected, restrictionWarning }) => {
-      const over = exceeding(60000, 50000, days([60000]))
-
-      expect(
-        overLimitBannerCopy(over, billed, { restrictionWarning }).body,
-      ).toContain(expected)
-    },
-  )
-
-  it('still reports the overage itself on a rolling window', () => {
-    const over = exceeding(60000, 50000, days([40000, 20000]))
-    const body = overLimitBannerCopy(over, {
-      window: 'rolling',
-    } as UsageBasis).body
-
-    expect(body).toContain(
-      'You reached your plan limit of 50K API calls on 2 Aug.',
-    )
-    expect(body).toContain('Your usage stays visible below')
+  it('names the rolling window where there is no billing period', () => {
+    expect(
+      bannerCopy({ kind: 'overage-charged', over }, rolling).body,
+    ).toContain('Overage charges will apply for the last 30 days.')
   })
 
   it('tells a restricted organisation how to get access back', () => {
-    const over = exceeding(60000, 50000, days([40000, 20000]))
-    const { body, title } = restrictedBannerCopy(over)
+    const { body, title } = bannerCopy(
+      { flagsPaused: false, kind: 'restricted', over },
+      billed,
+    )
 
     expect(title).toBe('Your organisation is restricted')
-    expect(body).toContain(
-      'You reached your plan limit of 50K API calls on 2 Aug.',
+    expect(body).toBe(
+      'You reached your plan limit of 50K API calls on 2 Aug.' +
+        ' Upgrading restores access straight away. Otherwise access returns' +
+        ' once your usage has stayed under the limit for 30 days.',
     )
-    expect(body).toContain('stayed under the limit for 30 days')
-    // The charge is not the point once they are already cut off.
-    expect(body).not.toContain('Overage charges')
   })
 
   it('says flags are paused when serving has stopped', () => {
-    const over = exceeding(60000, 50000, days([60000]))
-
-    expect(restrictedBannerCopy(over, { flagsPaused: true }).body).toContain(
-      'Flags are not being served for your organisation.',
-    )
-    expect(restrictedBannerCopy(over).body).not.toContain('Flags are not')
+    expect(
+      bannerCopy({ flagsPaused: true, kind: 'restricted', over }, billed).body,
+    ).toMatch(/^Flags are not being served for your organisation\. /)
   })
 
   // Most of that 30 day window has no overage left to report.
   it('explains the restriction with no overage to report', () => {
-    const { body, title } = restrictedBannerCopy(undefined)
+    const { body } = bannerCopy(
+      { flagsPaused: false, kind: 'restricted', over: undefined },
+      billed,
+    )
 
-    expect(title).toBe('Your organisation is restricted')
-    expect(body).toBe('Contact support to restore access.')
     // block_access_to_admin can be set by hand, and neither recovery route
     // works for such a block, so with no overage in evidence we promise
     // nothing.
-    expect(body).not.toContain('plan limit')
-    expect(body).not.toContain('Upgrading')
+    expect(body).toBe('Contact support to restore access.')
   })
+})
 
+describe('overLimitNote', () => {
   it('says how far over in the note under the meter', () => {
-    const over = exceeding(60000, 50000, days([60000]))
-
-    expect(overLimitNote(over)).toBe('10K calls over your 50K limit.')
+    expect(overLimitNote(exceeding(60000, 50000, days([60000])))).toBe(
+      '10K calls over your 50K limit.',
+    )
     // shortenNumber leaves small counts alone, so one is reachable.
     expect(overLimitNote(exceeding(50001, 50000, days([50001])))).toBe(
       '1 call over your 50K limit.',

@@ -2,19 +2,12 @@ import { FC } from 'react'
 import Constants from 'common/constants'
 import { Button } from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
-import {
-  BannerContext,
-  overLimitBannerCopy,
-  restrictedBannerCopy,
-} from 'components/pages/usage/copy'
-import { OverLimit } from 'components/pages/usage/overLimit'
+import { BannerState } from 'components/pages/usage/bannerState'
+import { bannerCopy } from 'components/pages/usage/copy'
 import { UsageBasis } from 'components/pages/usage/utils'
 
-export type OverLimitBannerProps = BannerContext & {
-  /** Flag serving or admin access has already been cut off. */
-  isRestricted?: boolean
-  /** Absent while restricted but back under the limit. */
-  over?: OverLimit
+export type OverLimitBannerProps = {
+  state: BannerState
   basis: UsageBasis
   canUpgrade?: boolean
 }
@@ -22,22 +15,9 @@ export type OverLimitBannerProps = BannerContext & {
 const OverLimitBanner: FC<OverLimitBannerProps> = ({
   basis,
   canUpgrade,
-  flagsPaused,
-  isRestricted,
-  over,
-  overageStatus,
-  restrictionWarning,
+  state,
 }) => {
-  const copy = isRestricted
-    ? restrictedBannerCopy(over, { flagsPaused })
-    : over &&
-      overLimitBannerCopy(over, basis, { overageStatus, restrictionWarning })
-
-  if (!copy) {
-    return null
-  }
-
-  const { body, title } = copy
+  const { body, title } = bannerCopy(state, basis)
 
   return (
     <div
