@@ -1436,25 +1436,23 @@ def annotate_warehouse_delivery_statuses(
     connections: Sequence[WarehouseConnection],
 ) -> None:
     """For external connections that passed verification, show what the
-    warehouse-delivery service last saw. Read-only: nothing is saved."""
-    verified = [
-        connection
-        for connection in connections
-        if connection.warehouse_type != WarehouseType.FLAGSMITH
-        and connection.status == WarehouseConnectionStatus.CONNECTED
-    ]
-    if not verified:
-        return
-    errors = dict(
-        WarehouseDeliveryStatus.objects.filter(
-            connection__in=verified,
-            status=WarehouseConnectionStatus.ERRORED,
-        ).values_list("connection_id", "detail")
-    )
-    for connection in verified:
-        if connection.id in errors:
+    warehouse-delivery service last saw. Read-only: nothing is saved.
+
+    Without `select_related("delivery_status")` on the connections, this runs
+    one query per verified connection."""
+    for connection in connections:
+        if (
+            connection.warehouse_type == WarehouseType.FLAGSMITH
+            or connection.status != WarehouseConnectionStatus.CONNECTED
+        ):
+            continue
+        try:
+            delivery_status = connection.delivery_status
+        except WarehouseDeliveryStatus.DoesNotExist:
+            continue
+        if delivery_status.status == WarehouseConnectionStatus.ERRORED:
             connection.status = WarehouseConnectionStatus.ERRORED
-            connection.status_detail = errors[connection.id]
+            connection.status_detail = delivery_status.detail
 
 
 def annotate_warehouse_event_stats(

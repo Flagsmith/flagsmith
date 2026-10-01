@@ -115,6 +115,9 @@ class WarehouseConnectionViewSet(
             return [*super().get_throttles(), ScopedRateThrottle()]
         return super().get_throttles()
 
+    def get_queryset(self) -> "QuerySet[WarehouseConnection]":
+        return super().get_queryset().select_related("delivery_status")
+
     def perform_create(self, serializer: BaseSerializer[WarehouseConnection]) -> None:
         connection: WarehouseConnection = serializer.save(
             environment=self._get_environment()
