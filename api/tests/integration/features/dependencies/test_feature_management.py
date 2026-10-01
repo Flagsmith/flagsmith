@@ -74,7 +74,7 @@ def test_delete_feature__feature_is_prerequisite__deletion_rejected(
                     "prerequisite": {"id": prerequisite.id, "name": "payments"},
                     "segment": {
                         "id": segment_id,
-                        "name": f"checkout-dependencies-{environment_api_key}",
+                        "name": "checkout-depends-on-payments",
                         "rules": [
                             {
                                 "type": "ANY",
@@ -207,7 +207,7 @@ def test_delete_feature__feature_is_prerequisite_in_another_environment__deletio
                     "prerequisite": {"id": prerequisite.id, "name": "payments"},
                     "segment": {
                         "id": segment_id,
-                        "name": f"checkout-dependencies-{other_environment.api_key}",
+                        "name": "checkout-depends-on-payments",
                         "rules": [
                             {
                                 "type": "ANY",
