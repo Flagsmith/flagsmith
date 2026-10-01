@@ -19,11 +19,13 @@ import UsageDashboardPage from './usage'
 
 const OrganisationUsagePage: FC = () => {
   const isSdkViewEnabled = Utils.getFlagsmithHasFeature('sdk_usage_charts')
-  const isUsageDashboardEnabled =
-    Utils.getFlagsmithHasFeature('usage_dashboard')
-
   const { organisationId } = useRouteContext()
   const location = useLocation()
+
+  // ?dashboard=legacy shows the old page, so customer success can compare both.
+  const isUsageDashboardEnabled =
+    new URLSearchParams(location.search).get('dashboard') !== 'legacy' &&
+    Utils.getFlagsmithHasFeature('usage_dashboard')
 
   const getInitialView = useCallback((): 'global' | 'user-agents' => {
     if (!isSdkViewEnabled) {
