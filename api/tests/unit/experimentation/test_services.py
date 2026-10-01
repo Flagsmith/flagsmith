@@ -3845,7 +3845,7 @@ def test_apply_experiment_rollout__resubmitted__records_history_only_on_change( 
     assert _rule_ids() == rule_ids
 
 
-def test_annotate_warehouse_delivery_statuses__verified_connection_failing_delivery__shows_errored(
+def test_annotate_warehouse_delivery_statuses__verified_external_connection_failing_delivery__shows_errored(
     clickhouse_connection: WarehouseConnection,
     failing_delivery_status: WarehouseDeliveryStatus,
 ) -> None:
@@ -3863,7 +3863,7 @@ def test_annotate_warehouse_delivery_statuses__verified_connection_failing_deliv
     assert stored.status == WarehouseConnectionStatus.CREATED
 
 
-def test_annotate_warehouse_delivery_statuses__verified_connection_never_delivered__unchanged(
+def test_annotate_warehouse_delivery_statuses__verified_external_connection_never_delivered__stays_connected(
     clickhouse_connection: WarehouseConnection,
 ) -> None:
     # Given a verified connection the delivery service has not delivered for yet
@@ -3877,7 +3877,7 @@ def test_annotate_warehouse_delivery_statuses__verified_connection_never_deliver
     assert clickhouse_connection.status_detail is None
 
 
-def test_annotate_warehouse_delivery_statuses__verified_connection_delivering__unchanged(
+def test_annotate_warehouse_delivery_statuses__verified_external_connection_delivering__stays_connected(
     clickhouse_connection: WarehouseConnection,
     successful_delivery_status: WarehouseDeliveryStatus,
 ) -> None:
@@ -3892,7 +3892,7 @@ def test_annotate_warehouse_delivery_statuses__verified_connection_delivering__u
     assert clickhouse_connection.status_detail is None
 
 
-def test_annotate_warehouse_delivery_statuses__unverified_connection__keeps_verification_error(
+def test_annotate_warehouse_delivery_statuses__unverified_external_connection__keeps_verification_error(
     clickhouse_connection: WarehouseConnection,
     failing_delivery_status: WarehouseDeliveryStatus,
 ) -> None:
@@ -3908,7 +3908,7 @@ def test_annotate_warehouse_delivery_statuses__unverified_connection__keeps_veri
     assert clickhouse_connection.status_detail == "Could not connect to the host."
 
 
-def test_annotate_warehouse_delivery_statuses__flagsmith_connection__unchanged(
+def test_annotate_warehouse_delivery_statuses__flagsmith_warehouse__stays_connected(
     warehouse_connection: WarehouseConnection,
 ) -> None:
     # Given a Flagsmith connection, which the delivery service never handles
