@@ -1873,6 +1873,36 @@ def test_restrict_use_due_to_api_limit_grace_period_over__previously_breached__b
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over__restriction_flags_disabled__does_not_block(
+    mocker: MockerFixture,
+    organisation: Organisation,
+) -> None:
+    # Given
+    OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=10_000,
+    )
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+    mocker.patch("organisations.tasks.get_current_api_usage", return_value=12_005)
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=timezone.now(),
+        organisation=organisation,
+        percent_usage=120,
+    )
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    organisation.refresh_from_db()
+    assert organisation.stop_serving_flags is False
+    assert organisation.block_access_to_admin is False
+    assert not hasattr(organisation, "api_limit_access_block")
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_restrict_use_due_to_api_limit_grace_period_over__missing_subscription_cache__does_not_block(
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,

@@ -1,11 +1,13 @@
+import pytest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
-from organisations.models import Organisation
+from organisations.models import Organisation, OrganisationBreachedGracePeriod
 from organisations.serializers import (
     OrganisationSerializerFull,
     UpdateSubscriptionSerializer,
 )
+from tests.types import EnableFeaturesFixture
 
 
 def test_organisation_serializer_full__create_with_targeting_key__persists_write_only(
@@ -44,6 +46,55 @@ def test_organisation_serializer_full__update_targeting_key__ignored(
     # Then
     organisation.refresh_from_db()
     assert organisation.targeting_key == "a" * 32
+
+
+@pytest.mark.parametrize("has_breached_grace_period", [True, False])
+def test_organisation_serializer_full__api_limit_state__returns_expected(
+    organisation: Organisation,
+    enable_features: EnableFeaturesFixture,
+    has_breached_grace_period: bool,
+) -> None:
+    # Given
+    enable_features("api_limiting_stop_serving_flags")
+    organisation.stop_serving_flags = True
+    organisation.save()
+    if has_breached_grace_period:
+        OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
+    organisation = Organisation.objects.get(id=organisation.id)
+
+    # When
+    data = OrganisationSerializerFull(instance=organisation).data
+
+    # Then
+    assert data["stop_serving_flags"] is True
+    assert data["api_limit_restriction_enabled"] is True
+    assert data["api_limit_grace_period_used"] is has_breached_grace_period
+
+
+def test_organisation_serializer_full__update_api_limit_state__ignored(
+    organisation: Organisation,
+) -> None:
+    # Given
+    serializer = OrganisationSerializerFull(
+        instance=organisation,
+        data={
+            "name": organisation.name,
+            "stop_serving_flags": True,
+            "api_limit_restriction_enabled": True,
+            "api_limit_grace_period_used": True,
+        },
+    )
+
+    # When
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    # Then
+    organisation.refresh_from_db()
+    assert organisation.stop_serving_flags is False
+    assert not OrganisationBreachedGracePeriod.objects.filter(
+        organisation=organisation
+    ).exists()
 
 
 def test_update_subscription_serializer__create__updates_subscription(
