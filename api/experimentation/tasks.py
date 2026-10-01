@@ -20,23 +20,6 @@ COMPUTE_TASK_TIMEOUT = timedelta(minutes=3)
 logger = structlog.get_logger("experimentation")
 
 
-# Nothing enqueues these any more. They stay registered so tasks queued before
-# the Redis sync was removed do not fail; delete them once none remain.
-@register_task_handler()
-def sync_environment_ingestion(environment_id: int) -> None:
-    pass
-
-
-@register_task_handler()
-def write_environment_ingestion_key(environment_api_key_id: int) -> None:
-    pass
-
-
-@register_task_handler()
-def remove_environment_ingestion_key(key: str) -> None:
-    pass
-
-
 @register_task_handler(timeout=COMPUTE_TASK_TIMEOUT)
 def compute_experiment_exposures(experiment_id: int) -> None:
     experiment = (

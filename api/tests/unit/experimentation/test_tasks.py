@@ -28,38 +28,7 @@ from experimentation.stats import VariantStats
 from experimentation.tasks import (
     compute_experiment_exposures,
     compute_experiment_results,
-    remove_environment_ingestion_key,
-    sync_environment_ingestion,
-    write_environment_ingestion_key,
 )
-
-
-@pytest.mark.parametrize(
-    "task, kwargs",
-    [
-        pytest.param(
-            sync_environment_ingestion, {"environment_id": 1}, id="environment"
-        ),
-        pytest.param(
-            write_environment_ingestion_key,
-            {"environment_api_key_id": 1},
-            id="write-key",
-        ),
-        pytest.param(
-            remove_environment_ingestion_key,
-            {"key": "ser.test-key-001"},
-            id="remove-key",
-        ),
-    ],
-)
-def test_ingestion_sync_task__queued_before_redis_removal__completes(
-    task: Any,
-    kwargs: dict[str, object],
-) -> None:
-    # Given a task queued while Django still wrote to the ingestion Redis
-
-    # When / Then it runs without error
-    task(**kwargs)
 
 
 def _summary() -> ExposuresSummary:
