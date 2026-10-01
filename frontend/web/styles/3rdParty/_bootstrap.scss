@@ -72,6 +72,8 @@ $utilities: map-merge($utilities, ("shadow": $_shadow-util));
 
 // 5. Include any optional Bootstrap CSS as needed
 @import "~bootstrap/scss/type";
+// Provides .text-truncate, which the type import does not.
+@import "~bootstrap/scss/helpers/text-truncation";
 @import "~bootstrap/scss/containers";
 @import "~bootstrap/scss/grid";
 @import "~bootstrap/scss/tables";
