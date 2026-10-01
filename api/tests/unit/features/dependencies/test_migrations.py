@@ -56,7 +56,14 @@ def test_0002__dependency_segments__splits_into_segment_per_prerequisite(
     ]
     features = {
         name: Feature.objects.create(name=name, project=project)
-        for name in ("checkout", "storefront", "basket", "payments", "inventory")
+        for name in (
+            "checkout",
+            "storefront",
+            "basket",
+            "wishlist",
+            "payments",
+            "inventory",
+        )
     }
     variant = MultivariateFeatureOption.objects.create(
         feature=features["checkout"], key="fast", type="unicode", string_value="fast"
@@ -132,6 +139,10 @@ def test_0002__dependency_segments__splits_into_segment_per_prerequisite(
             environments[0], "basket", ["payments", "inventory"], ["inventory"]
         )
     )
+    # A reference that no longer matches the rules.
+    create_old_segment(
+        environments[0], "wishlist", ["payments"], ["payments"]
+    ).flag_references.update(condition_json_path="$[0].conditions[5]")
     # Another system segment referencing a flag, not created for a dependency.
     Segment.objects.create(
         name="checkout-rollout",
@@ -163,6 +174,7 @@ def test_0002__dependency_segments__splits_into_segment_per_prerequisite(
         ("checkout-depends-on-payments", "checkout", _rules("payments")),
         ("checkout-rollout", "checkout", _rules("payments")),
         ("storefront-depends-on-payments", "storefront", _rules("payments")),
+        ("wishlist-dependencies-production", "wishlist", _rules("payments")),
     ]
     assert not Segment.objects.filter(
         id__in=[segment.id for segment in old_segments], deleted_at__isnull=True
@@ -181,6 +193,7 @@ def test_0002__dependency_segments__splits_into_segment_per_prerequisite(
         ("checkout-depends-on-payments", "payments", "$[0].conditions[0]"),
         ("checkout-rollout", "payments", "$[0].conditions[0]"),
         ("storefront-depends-on-payments", "payments", "$[0].conditions[0]"),
+        ("wishlist-dependencies-production", "payments", "$[0].conditions[5]"),
     ]
     assert list(
         FeatureSegment.objects.order_by("environment__name", "feature__name", "priority")
@@ -199,6 +212,7 @@ def test_0002__dependency_segments__splits_into_segment_per_prerequisite(
         ("production", "checkout", "checkout-depends-on-inventory", 1, False, "old", 30),
         ("production", "checkout", "beta", 2, True, "old", 30),
         ("production", "storefront", "storefront-depends-on-payments", 0, False, "old", None),
+        ("production", "wishlist", "wishlist-dependencies-production", 0, False, "old", None),
         ("staging", "checkout", "checkout-depends-on-payments", 0, False, "old", 30),
         ("staging", "checkout", "checkout-depends-on-inventory", 1, False, "old", 30),
         ("staging", "checkout", "beta", 2, True, "old", 30),

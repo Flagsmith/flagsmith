@@ -102,17 +102,28 @@ def split_dependency_segments(
         # reference. Its flag is absent from evaluation, so the condition never
         # matches, and dropping it doesn't change evaluation results. References
         # are indexed in the order of their conditions, preserving priorities.
-        new_segments = [
-            get_or_create_dependency_segment(
-                old_segment,
-                prerequisite_feature_id,
-                jsonpath_rfc9535.find(json_path, old_segment.rules_data).values()[0],
-            )
+        conditions_by_prerequisite_feature_id = {
+            prerequisite_feature_id: jsonpath_rfc9535.find(
+                json_path, old_segment.rules_data
+            ).values()
             for json_path, prerequisite_feature_id in SegmentFlagReference.objects.filter(
                 segment=old_segment
             )
             .order_by("id")
             .values_list("condition_json_path", "prerequisite_feature_id")
+        }
+        if not all(conditions_by_prerequisite_feature_id.values()):
+            # Stale references, e.g. after a segment change request rewrote the
+            # rules: leave the segment as is, rather than guess which
+            # conditions make up the dependencies.
+            continue
+        new_segments = [
+            get_or_create_dependency_segment(
+                old_segment, prerequisite_feature_id, condition
+            )
+            for prerequisite_feature_id, (
+                condition,
+            ) in conditions_by_prerequisite_feature_id.items()
         ]
         for override in FeatureSegment.objects.filter(segment=old_segment):
             # Make room for the extra overrides right after the replaced one.
