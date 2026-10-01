@@ -4,7 +4,8 @@ import {
   periodOptions,
   rollingPeriodOptions,
 } from 'common/types/requests'
-import { Subscription } from 'common/types/responses'
+import { Organisation, Subscription } from 'common/types/responses'
+import { PlanLimit } from 'components/shared/UsageBar/utils'
 
 export type PeriodSelection = BillingPeriod | 'default'
 
@@ -33,13 +34,45 @@ export const usageBasisOf = (
 export const isBilledOnAPeriod = (basis: UsageBasis): boolean =>
   basis.window === 'billing-period'
 
-// Only Start-Up and Scale-Up are billed for overages. Mirrors
-// SubscriptionPlanFamily.get_by_plan_id.
-export const isChargedForOverages = (
-  subscription: Subscription | undefined,
-): boolean => {
-  const plan = (subscription?.plan ?? '').replace(/-/g, '').toLowerCase()
-  return plan.startsWith('startup') || plan.startsWith('scaleup')
+export type OverageStatus =
+  | 'not_charged'
+  | 'within_limit'
+  | 'covered'
+  | 'charged'
+
+// Mirrors charge_for_api_call_count_overages: the first overage is forgiven
+// once, unless usage reaches twice the limit.
+export const overageStatusOf = (
+  organisation:
+    | Pick<
+        Organisation,
+        'overage_billing_eligible' | 'api_limit_grace_period_used'
+      >
+    | undefined,
+  total: number,
+  limit: PlanLimit,
+): OverageStatus => {
+  if (!organisation?.overage_billing_eligible || !limit) return 'not_charged'
+  if (total <= limit) return 'within_limit'
+  if (organisation.api_limit_grace_period_used || total >= 2 * limit) {
+    return 'charged'
+  }
+  return 'covered'
+}
+
+// The restriction task skips the 7 day wait once a grace row exists.
+export type RestrictionWarning = 'after-grace' | 'next-check'
+
+export const restrictionWarningOf = (
+  organisation:
+    | Pick<
+        Organisation,
+        'api_limit_restriction_enabled' | 'api_limit_grace_period_used'
+      >
+    | undefined,
+): RestrictionWarning | undefined => {
+  if (!organisation?.api_limit_restriction_enabled) return undefined
+  return organisation.api_limit_grace_period_used ? 'next-check' : 'after-grace'
 }
 
 export const resolvePeriod = (

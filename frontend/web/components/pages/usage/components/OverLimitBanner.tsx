@@ -11,7 +11,7 @@ import { OverLimit } from 'components/pages/usage/overLimit'
 import { UsageBasis } from 'components/pages/usage/utils'
 
 export type OverLimitBannerProps = BannerContext & {
-  /** Admin access has already been cut off. */
+  /** Flag serving or admin access has already been cut off. */
   isRestricted?: boolean
   /** Absent while restricted but back under the limit. */
   over?: OverLimit
@@ -22,13 +22,16 @@ export type OverLimitBannerProps = BannerContext & {
 const OverLimitBanner: FC<OverLimitBannerProps> = ({
   basis,
   canUpgrade,
+  flagsPaused,
   isRestricted,
-  mayBeCharged,
   over,
+  overageStatus,
+  restrictionWarning,
 }) => {
   const copy = isRestricted
-    ? restrictedBannerCopy(over)
-    : over && overLimitBannerCopy(over, basis, { mayBeCharged })
+    ? restrictedBannerCopy(over, { flagsPaused })
+    : over &&
+      overLimitBannerCopy(over, basis, { overageStatus, restrictionWarning })
 
   if (!copy) {
     return null

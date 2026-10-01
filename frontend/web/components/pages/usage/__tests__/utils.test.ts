@@ -1,7 +1,8 @@
 import { Subscription } from 'common/types/responses'
 import {
   isBillingPeriodSelected,
-  isChargedForOverages,
+  overageStatusOf,
+  restrictionWarningOf,
   allowanceWindow,
   allowanceWindowLabel,
   showsContribution,
@@ -90,18 +91,50 @@ describe('UsageDashboard utils', () => {
     })
   })
 
-  describe('isChargedForOverages', () => {
+  describe('overageStatusOf', () => {
     it.each`
-      plan             | expected
-      ${'start-up'}    | ${true}
-      ${'startup-v2'}  | ${true}
-      ${'scale-up-v2'} | ${true}
-      ${'enterprise'}  | ${false}
-      ${'free'}        | ${false}
-      ${null}          | ${false}
-    `('$plan is charged for overages: $expected', ({ expected, plan }) => {
-      expect(isChargedForOverages(subscription({ plan }))).toBe(expected)
-    })
+      eligible | graceUsed | total     | limit     | expected
+      ${false} | ${false}  | ${150000} | ${100000} | ${'not_charged'}
+      ${true}  | ${false}  | ${150000} | ${null}   | ${'not_charged'}
+      ${true}  | ${false}  | ${100000} | ${100000} | ${'within_limit'}
+      ${true}  | ${false}  | ${150000} | ${100000} | ${'covered'}
+      ${true}  | ${false}  | ${199999} | ${100000} | ${'covered'}
+      ${true}  | ${false}  | ${200000} | ${100000} | ${'charged'}
+      ${true}  | ${true}   | ${150000} | ${100000} | ${'charged'}
+    `(
+      'eligible=$eligible graceUsed=$graceUsed at $total/$limit is $expected',
+      ({ eligible, expected, graceUsed, limit, total }) => {
+        expect(
+          overageStatusOf(
+            {
+              api_limit_grace_period_used: graceUsed,
+              overage_billing_eligible: eligible,
+            },
+            total,
+            limit,
+          ),
+        ).toBe(expected)
+      },
+    )
+  })
+
+  describe('restrictionWarningOf', () => {
+    it.each`
+      enabled  | graceUsed | expected
+      ${false} | ${false}  | ${undefined}
+      ${true}  | ${false}  | ${'after-grace'}
+      ${true}  | ${true}   | ${'next-check'}
+    `(
+      'enabled=$enabled graceUsed=$graceUsed warns $expected',
+      ({ enabled, expected, graceUsed }) => {
+        expect(
+          restrictionWarningOf({
+            api_limit_grace_period_used: graceUsed,
+            api_limit_restriction_enabled: enabled,
+          }),
+        ).toBe(expected)
+      },
+    )
   })
 
   describe('usageBasisOf', () => {

@@ -42,21 +42,42 @@ describe('usage copy', () => {
     expect(body).not.toContain(' on ')
   })
 
-  it('warns about charges only where they can be charged', () => {
+  it.each`
+    overageStatus | expected
+    ${'covered'}  | ${'Your first overage is covered, so you will not be charged for this billing period.'}
+    ${'charged'}  | ${'Overage charges will apply for this billing period.'}
+  `('says the overage is $overageStatus', ({ expected, overageStatus }) => {
     const over = exceeding(60000, 50000, days([60000]))
 
-    expect(
-      overLimitBannerCopy(over, billed, { mayBeCharged: true }).body,
-    ).toContain('Overage charges may apply over this billing period.')
-    expect(overLimitBannerCopy(over, billed).body).not.toContain(
-      'Overage charges',
+    expect(overLimitBannerCopy(over, billed, { overageStatus }).body).toContain(
+      expected,
     )
-    expect(
-      overLimitBannerCopy(over, { window: 'rolling' } as UsageBasis, {
-        mayBeCharged: true,
-      }).body,
-    ).not.toContain('this billing period')
   })
+
+  it('says nothing about charges where none can land', () => {
+    const over = exceeding(60000, 50000, days([60000]))
+
+    const { body } = overLimitBannerCopy(over, billed, {
+      overageStatus: 'not_charged',
+    })
+
+    expect(body).not.toContain('charge')
+  })
+
+  it.each`
+    restrictionWarning | expected
+    ${'after-grace'}   | ${'restricted after 7 days'}
+    ${'next-check'}    | ${'restricted within 12 hours'}
+  `(
+    'warns a free organisation it will be restricted ($restrictionWarning)',
+    ({ expected, restrictionWarning }) => {
+      const over = exceeding(60000, 50000, days([60000]))
+
+      expect(
+        overLimitBannerCopy(over, billed, { restrictionWarning }).body,
+      ).toContain(expected)
+    },
+  )
 
   it('still reports the overage itself on a rolling window', () => {
     const over = exceeding(60000, 50000, days([40000, 20000]))
@@ -81,6 +102,15 @@ describe('usage copy', () => {
     expect(body).toContain('stayed under the limit for 30 days')
     // The charge is not the point once they are already cut off.
     expect(body).not.toContain('Overage charges')
+  })
+
+  it('says flags are paused when serving has stopped', () => {
+    const over = exceeding(60000, 50000, days([60000]))
+
+    expect(restrictedBannerCopy(over, { flagsPaused: true }).body).toContain(
+      'Flags are not being served for your organisation.',
+    )
+    expect(restrictedBannerCopy(over).body).not.toContain('Flags are not')
   })
 
   // Most of that 30 day window has no overage left to report.
