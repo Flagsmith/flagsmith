@@ -1,7 +1,7 @@
 import Format from 'common/utils/format'
 import { OverLimit } from './overLimit'
 import { BannerKind, BannerState } from './bannerState'
-import { calls, sentences } from './wording'
+import { apiCallsWord, joinSentences } from './usageText'
 import { allowanceWindowLabel, UsageBasis } from './utils'
 
 export type BannerMessage = { title: string; body: string }
@@ -13,7 +13,9 @@ export type BannerMessage = { title: string; body: string }
 const limitReached = (over: OverLimit): string =>
   `You reached your plan limit of ${Format.shortenNumber(
     over.limit,
-  )} API ${calls(over.limit)}${over.crossedOn ? ` on ${over.crossedOn}` : ''}.`
+  )} API ${apiCallsWord(over.limit)}${
+    over.crossedOn ? ` on ${over.crossedOn}` : ''
+  }.`
 
 const OVER_LIMIT_TITLE = 'Your organisation has exceeded its plan limit'
 const RESTRICTED_TITLE = 'Your organisation is restricted'
@@ -57,10 +59,10 @@ export const bannerMessage = (
 ): BannerMessage => {
   if (state.kind === 'restricted') {
     return {
-      body: sentences(
+      body: joinSentences(
         state.flagsPaused && FLAGS_PAUSED,
         state.over
-          ? sentences(limitReached(state.over), RECOVERY)
+          ? joinSentences(limitReached(state.over), RECOVERY)
           : ASK_SUPPORT,
       ),
       title: RESTRICTED_TITLE,
@@ -68,7 +70,7 @@ export const bannerMessage = (
   }
 
   return {
-    body: sentences(
+    body: joinSentences(
       limitReached(state.over),
       OVER_LIMIT_MESSAGE[state.kind](state.over, allowanceWindowLabel(basis)),
       STAYS_VISIBLE,
