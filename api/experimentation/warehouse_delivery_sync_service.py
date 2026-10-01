@@ -1,12 +1,6 @@
 import json
-from collections.abc import Iterable, Sequence
-from typing import cast
+from collections.abc import Iterable
 
-import structlog
-from django.conf import settings
-from redis.exceptions import RedisClusterException, RedisError
-
-from experimentation.dataclasses import WarehouseDeliveryStatus
 from experimentation.ingestion_redis import get_client
 from experimentation.warehouse_credentials import encrypt_warehouse_credentials
 
@@ -17,8 +11,6 @@ WAREHOUSE_CONNECTION_KEY_PREFIX = "experimentation:environment_warehouses:"
 # One hash the warehouse-delivery service writes each connection's latest
 # outcome into, under the connection id, overwriting the previous one.
 WAREHOUSE_DELIVERY_STATUS_KEY = "experimentation:warehouse_delivery_status"
-
-logger = structlog.get_logger("experimentation")
 
 
 def publish_warehouse_connection(
@@ -55,45 +47,3 @@ def delete_warehouse_delivery_statuses(connection_ids: Iterable[int]) -> None:
     fields = [str(connection_id) for connection_id in connection_ids]
     if fields:
         get_client().hdel(WAREHOUSE_DELIVERY_STATUS_KEY, *fields)
-
-
-def get_warehouse_delivery_statuses(
-    connection_ids: Sequence[int],
-) -> dict[int, WarehouseDeliveryStatus]:
-    """The latest outcome the warehouse-delivery service left for each of these
-    connections, by id. A connection it has never delivered for is absent.
-
-    Returns nothing at all when the ingestion Redis is not configured or does
-    not answer, so the connections page never depends on it being up."""
-    if not connection_ids or not settings.INGESTION_REDIS_URL:
-        return {}
-    fields = [str(connection_id) for connection_id in connection_ids]
-    try:
-        # The stub types hmget for the async client too; this client is
-        # synchronous.
-        values = cast(
-            list[bytes | None],
-            get_client().hmget(WAREHOUSE_DELIVERY_STATUS_KEY, fields),
-        )
-    except (RedisError, RedisClusterException):
-        logger.warning("delivery_status.unavailable", exc_info=True)
-        return {}
-    statuses: dict[int, WarehouseDeliveryStatus] = {}
-    for connection_id, value in zip(connection_ids, values, strict=True):
-        if value is None:
-            continue
-        try:
-            outcome = json.loads(value)
-            detail = outcome.get("detail")
-            statuses[connection_id] = WarehouseDeliveryStatus(
-                connection_id=connection_id,
-                status=str(outcome["status"]),
-                detail=str(detail) if detail is not None else None,
-            )
-        except (ValueError, KeyError, TypeError, AttributeError):
-            logger.warning(
-                "delivery_status.unreadable",
-                connection__id=connection_id,
-                exc_info=True,
-            )
-    return statuses
