@@ -210,3 +210,143 @@ def test_0002__segment_is_not_a_dependency_segment__leaves_it_alone(
             "name", "deleted_at", "rules_data"
         )
     ) == [("checkout-rollout", None, rules_data)]
+
+
+def _create_old_dependency_segment(
+    apps: Any,
+    *,
+    environment: Any,
+    feature: Any,
+    prerequisites: list[Any],
+    referenced_prerequisites: list[Any] | None = None,
+) -> Any:
+    FeatureSegment = apps.get_model("features", "FeatureSegment")
+    FeatureState = apps.get_model("features", "FeatureState")
+    Segment = apps.get_model("segments", "Segment")
+    SegmentFlagReference = apps.get_model(
+        "feature_dependencies", "SegmentFlagReference"
+    )
+    segment = Segment.objects.create(
+        name=f"{feature.name}-dependencies-{environment.api_key}",
+        project=feature.project,
+        feature=feature,
+        is_system_segment=True,
+        rules_data=[
+            {
+                "type": "ANY",
+                "conditions": [
+                    _condition(prerequisite.name) for prerequisite in prerequisites
+                ],
+                "rules": [],
+            }
+        ],
+    )
+    for index, prerequisite in enumerate(prerequisites):
+        if referenced_prerequisites is None or prerequisite in referenced_prerequisites:
+            SegmentFlagReference.objects.create(
+                segment=segment,
+                prerequisite_feature=prerequisite,
+                condition_json_path=f"$[0].conditions[{index}]",
+            )
+    feature_segment = FeatureSegment.objects.create(
+        feature=feature, environment=environment, segment=segment, priority=0
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+        enabled=False,
+    )
+    return segment
+
+
+def test_0002__segments_with_single_prerequisite__share_one_segment(
+    migrator: Migrator,
+) -> None:
+    # Given
+    old_state = migrator.apply_initial_migration(
+        ("feature_dependencies", "0001_initial")
+    )
+    apps = old_state.apps
+    Environment = apps.get_model("environments", "Environment")
+    Feature = apps.get_model("features", "Feature")
+    Organisation = apps.get_model("organisations", "Organisation")
+    Project = apps.get_model("projects", "Project")
+
+    organisation = Organisation.objects.create(name="Test Org")
+    project = Project.objects.create(name="Test Project", organisation=organisation)
+    checkout = Feature.objects.create(name="checkout", project=project)
+    payments = Feature.objects.create(name="payments", project=project)
+    for name in ("production", "staging"):
+        _create_old_dependency_segment(
+            apps,
+            environment=Environment.objects.create(
+                name=name, project=project, api_key=name
+            ),
+            feature=checkout,
+            prerequisites=[payments],
+        )
+
+    # When
+    new_state = migrator.apply_tested_migration(
+        ("feature_dependencies", "0002_split_dependency_segments")
+    )
+
+    # Then
+    apps = new_state.apps
+    FeatureSegment = apps.get_model("features", "FeatureSegment")
+    Segment = apps.get_model("segments", "Segment")
+    (segment,) = Segment.objects.filter(is_system_segment=True, deleted_at__isnull=True)
+    assert segment.name == "checkout-depends-on-payments"
+    assert segment.flag_references.count() == 1
+    assert list(
+        FeatureSegment.objects.order_by("environment__name").values_list(
+            "environment__name", "segment_id", "priority"
+        )
+    ) == [("production", segment.id, 0), ("staging", segment.id, 0)]
+
+
+def test_0002__prerequisite_hard_deleted__drops_its_condition(
+    migrator: Migrator,
+) -> None:
+    # Given
+    old_state = migrator.apply_initial_migration(
+        ("feature_dependencies", "0001_initial")
+    )
+    apps = old_state.apps
+    Environment = apps.get_model("environments", "Environment")
+    Feature = apps.get_model("features", "Feature")
+    Organisation = apps.get_model("organisations", "Organisation")
+    Project = apps.get_model("projects", "Project")
+
+    organisation = Organisation.objects.create(name="Test Org")
+    project = Project.objects.create(name="Test Project", organisation=organisation)
+    environment = Environment.objects.create(
+        name="production", project=project, api_key="production"
+    )
+    checkout = Feature.objects.create(name="checkout", project=project)
+    payments = Feature.objects.create(name="payments", project=project)
+    inventory = Feature.objects.create(name="inventory", project=project)
+    _create_old_dependency_segment(
+        apps,
+        environment=environment,
+        feature=checkout,
+        prerequisites=[payments, inventory],
+        referenced_prerequisites=[inventory],
+    )
+
+    # When
+    new_state = migrator.apply_tested_migration(
+        ("feature_dependencies", "0002_split_dependency_segments")
+    )
+
+    # Then
+    FeatureSegment = new_state.apps.get_model("features", "FeatureSegment")
+    assert list(
+        FeatureSegment.objects.values_list("segment__name", "segment__rules_data")
+    ) == [
+        (
+            "checkout-depends-on-inventory",
+            [{"type": "ANY", "conditions": [_condition("inventory")], "rules": []}],
+        )
+    ]

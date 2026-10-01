@@ -17,6 +17,11 @@ def _clone(instance: Any, **attrs: Any) -> Any:
     return instance
 
 
+def _get_condition_index(condition_json_path: str) -> int:
+    """Return `i` from a `$[0].conditions[i]` path, as written by the old form."""
+    return int(condition_json_path.removeprefix("$[0].conditions[").removesuffix("]"))
+
+
 def split_dependency_segments(
     apps: Apps, schema_editor: BaseDatabaseSchemaEditor
 ) -> None:
@@ -40,19 +45,17 @@ def split_dependency_segments(
     )
     SegmentRule = apps.get_model("segments", "SegmentRule")
 
+    # Segments created so far, by dependent and prerequisite feature IDs. Only
+    # this migration creates segments of the new form, so no lookup is needed.
+    dependency_segments: dict[tuple[int, int], Any] = {}
+
     def get_or_create_dependency_segment(
         old_segment: Any, prerequisite_feature_id: int, condition: dict[str, Any]
     ) -> Any:
+        key = (old_segment.feature_id, prerequisite_feature_id)
+        if segment := dependency_segments.get(key):
+            return segment
         rules = [{"type": "ANY", "conditions": [condition], "rules": []}]
-        for segment in Segment.objects.filter(
-            project_id=old_segment.project_id,
-            is_system_segment=True,
-            deleted_at__isnull=True,
-            feature_id=old_segment.feature_id,
-            flag_references__prerequisite_feature_id=prerequisite_feature_id,
-        ):
-            if segment.rules_data == rules:
-                return segment
         prerequisite_feature_name = (
             SegmentFlagReference.objects.filter(
                 segment=old_segment,
@@ -83,9 +86,10 @@ def split_dependency_segments(
             prerequisite_feature_id=prerequisite_feature_id,
             condition_json_path="$[0].conditions[0]",
         )
+        dependency_segments[key] = segment
         return segment
 
-    old_segments = (
+    old_segments = list(
         Segment.objects.filter(
             is_system_segment=True,
             deleted_at__isnull=True,
@@ -98,18 +102,20 @@ def split_dependency_segments(
     for old_segment in old_segments:
         if not old_segment.name.startswith(f"{old_segment.feature.name}-dependencies-"):
             continue
-        prerequisite_feature_ids_by_json_path = dict(
-            SegmentFlagReference.objects.filter(segment=old_segment).values_list(
-                "condition_json_path", "prerequisite_feature_id"
-            )
-        )
+        # A hard-deleted prerequisite leaves its condition behind without a
+        # reference. Its flag is absent from evaluation, so the condition never
+        # matches, and dropping it doesn't change evaluation results.
+        conditions = old_segment.rules_data[0]["conditions"]
         new_segments = [
             get_or_create_dependency_segment(
-                old_segment,
-                prerequisite_feature_ids_by_json_path[f"$[0].conditions[{index}]"],
-                condition,
+                old_segment, prerequisite_feature_id, conditions[index]
             )
-            for index, condition in enumerate(old_segment.rules_data[0]["conditions"])
+            for index, prerequisite_feature_id in sorted(
+                (_get_condition_index(json_path), prerequisite_feature_id)
+                for json_path, prerequisite_feature_id in SegmentFlagReference.objects.filter(
+                    segment=old_segment
+                ).values_list("condition_json_path", "prerequisite_feature_id")
+            )
         ]
         for override in FeatureSegment.objects.filter(segment=old_segment):
             # Make room for the extra overrides right after the replaced one.

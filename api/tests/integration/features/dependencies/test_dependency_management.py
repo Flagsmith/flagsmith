@@ -9,6 +9,7 @@ from rest_framework.test import APIClient
 from audit.models import AuditLog
 from environments.models import Environment
 from features.dependencies.models import SegmentFlagReference
+from features.dependencies.services import index_segment_flag_references
 from features.dependencies.types import DependencyEdge
 from features.models import Feature
 from organisations.models import Organisation
@@ -333,6 +334,49 @@ def test_add_feature_dependency__dependency_added_again__responds_201_reusing_se
             "variants": [],
         }
     ]
+
+
+def test_add_feature_dependency__system_segment_has_other_prerequisites__responds_201_with_new_segment(
+    admin_client: APIClient,
+    environment_api_key: str,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    Feature.objects.create(name="inventory", project_id=project)
+    legacy_segment = Segment.objects.create(
+        name="checkout-legacy",
+        project_id=project,
+        feature=feature,
+        is_system_segment=True,
+        rules_data=[
+            {
+                "type": "ANY",
+                "conditions": [
+                    {
+                        "property": f'$.flags["{name}"].enabled',
+                        "operator": "NOT_EQUAL",
+                        "value": "true",
+                        "description": None,
+                    }
+                    for name in ("payments", "inventory")
+                ],
+                "rules": [],
+            }
+        ],
+    )
+    index_segment_flag_references(legacy_segment)
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 201
+    assert response.json()["segment"]["id"] != legacy_segment.id
+    assert response.json()["segment"]["name"] == "checkout-depends-on-payments"
 
 
 @pytest.mark.parametrize(
