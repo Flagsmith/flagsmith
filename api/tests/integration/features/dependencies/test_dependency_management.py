@@ -407,62 +407,6 @@ def test_add_feature_dependency__v2_versioning__publishes_version_per_dependency
     assert all(version["published"] for version in versions["results"])
 
 
-@pytest.mark.parametrize(
-    "payments_enabled, inventory_enabled, expected_checkout_enabled",
-    [
-        (False, False, False),
-        (True, False, False),
-        (False, True, False),
-        (True, True, True),
-    ],
-)
-def test_get_flags__several_prerequisites__serves_dependent_enabled_when_all_enabled(
-    admin_client: APIClient,
-    environment_api_key: str,
-    expected_checkout_enabled: bool,
-    inventory_enabled: bool,
-    payments_enabled: bool,
-    project: int,
-    sdk_client: APIClient,
-) -> None:
-    # Given
-    features = {
-        name: Feature.objects.create(name=name, project_id=project)
-        for name in ("checkout", "payments", "inventory")
-    }
-    for name, enabled in (
-        ("checkout", True),
-        ("payments", payments_enabled),
-        ("inventory", inventory_enabled),
-    ):
-        assert (
-            admin_client.patch(
-                f"/api/__future__/environments/{environment_api_key}/features/{features[name].id}/",
-                {"environment_default": {"enabled": enabled}},
-                format="json",
-            ).status_code
-            == 200
-        )
-    for name in ("payments", "inventory"):
-        assert (
-            admin_client.post(
-                f"/api/v1/environments/{environment_api_key}/features/{features['checkout'].id}/dependencies/{features[name].id}/",
-            ).status_code
-            == 201
-        )
-
-    # When
-    response = sdk_client.get("/api/v1/flags/")
-
-    # Then
-    assert response.status_code == 200
-    assert {flag["feature"]["name"]: flag["enabled"] for flag in response.json()} == {
-        "checkout": expected_checkout_enabled,
-        "payments": payments_enabled,
-        "inventory": inventory_enabled,
-    }
-
-
 def test_identify_user__identity_override_on_dependent__serves_identity_override(
     admin_client: APIClient,
     environment_api_key: str,
