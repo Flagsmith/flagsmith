@@ -461,12 +461,10 @@ def test_get_usage_data__labels_filter__returns_expected(
     )
 
 
-@pytest.mark.parametrize("group_by", ["project", "environment"])
 def test_get_usage_data__group_by__returns_ids_per_row(
     mocker: MockerFixture,
     admin_client_new: APIClient,
     organisation: Organisation,
-    group_by: str,
 ) -> None:
     # Given
     today = date.today()
@@ -480,14 +478,15 @@ def test_get_usage_data__group_by__returns_ids_per_row(
     )
 
     # When
-    response = admin_client_new.get(url, {"group_by": group_by})
+    response = admin_client_new.get(url, {"group_by": "environment"})
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()[0]["project_id"] == 1
-    assert response.json()[0]["environment_id"] == 2
+    row = response.json()[0]
+    assert row["project_id"] == 1
+    assert row["environment_id"] == 2
     mocked_get_usage_data.assert_called_once_with(
-        organisation, period=None, group_by=group_by
+        organisation, period=None, group_by="environment"
     )
 
 

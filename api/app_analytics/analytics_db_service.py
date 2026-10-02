@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
+from typing import Iterable, cast
 
 import structlog
 from common.core.utils import is_saas, using_database_replica
@@ -29,7 +30,7 @@ from app_analytics.types import (
     AnnotatedAPIUsageBucket,
     Labels,
     PeriodType,
-    UsageGroupBy,
+    UsageGroupByType,
 )
 from environments.models import Environment
 from features.models import Feature
@@ -44,7 +45,7 @@ def get_usage_data(
     project_id: int | None = None,
     period: PeriodType | None = None,
     labels_filter: Labels | None = None,
-    group_by: UsageGroupBy | None = None,
+    group_by: UsageGroupByType | None = None,
 ) -> list[UsageData]:
     sub_cache = (
         using_database_replica(OrganisationSubscriptionInformationCache.objects)
@@ -87,26 +88,23 @@ def get_usage_data(
 
 
 def _get_api_usage_bucket_qs(
-    organisation: Organisation,
+    project_ids_by_environment_id: dict[int, int],
     environment_id: int | None = None,
     project_id: int | None = None,
     labels_filter: Labels | None = None,
-    organisation_environment_ids: list[int] | None = None,
 ) -> QuerySet[APIUsageBucket]:
-    if organisation_environment_ids is None:
-        organisation_environment_ids = _get_environment_ids_for_org(organisation)
     qs = APIUsageBucket.objects.filter(
-        environment_id__in=organisation_environment_ids,
+        environment_id__in=list(project_ids_by_environment_id),
         bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
     )
     if project_id:
-        # Evaluate the queryset because the analytics database has no environments table
-        environment_ids = list(
-            using_database_replica(Environment.objects)
-            .filter(project_id=project_id)
-            .values_list("id", flat=True)
+        qs = qs.filter(
+            environment_id__in=[
+                env_id
+                for env_id, env_project_id in project_ids_by_environment_id.items()
+                if env_project_id == project_id
+            ]
         )
-        qs = qs.filter(environment_id__in=environment_ids)
 
     if environment_id:
         qs = qs.filter(environment_id=environment_id)
@@ -117,13 +115,20 @@ def _get_api_usage_bucket_qs(
     return qs
 
 
-def _aggregate_buckets(qs: QuerySet[APIUsageBucket]) -> list[UsageData]:
-    annotated = (
-        qs.order_by("created_at__date")
-        .values("created_at__date", "resource", "labels")
-        .annotate(count=Sum("total_count"))
+def _annotate_buckets(
+    qs: QuerySet[APIUsageBucket],
+    *group_columns: str,
+) -> Iterable[AnnotatedAPIUsageBucket]:
+    return cast(
+        Iterable[AnnotatedAPIUsageBucket],
+        qs.order_by("created_at__date", *group_columns)
+        .values("created_at__date", "resource", "labels", *group_columns)
+        .annotate(count=Sum("total_count")),
     )
-    return map_annotated_api_usage_buckets_to_usage_data(annotated)  # type: ignore[arg-type]
+
+
+def _aggregate_buckets(qs: QuerySet[APIUsageBucket]) -> list[UsageData]:
+    return map_annotated_api_usage_buckets_to_usage_data(_annotate_buckets(qs))
 
 
 def get_usage_data_from_local_db(
@@ -133,24 +138,21 @@ def get_usage_data_from_local_db(
     date_start: datetime | None = None,
     date_stop: datetime | None = None,
     labels_filter: Labels | None = None,
-    group_by: UsageGroupBy | None = None,
+    group_by: UsageGroupByType | None = None,
 ) -> list[UsageData]:
     if date_start is None:
         date_start = timezone.now() - timedelta(days=30)
     if date_stop is None:
         date_stop = timezone.now()
 
-    project_ids_by_environment_id = (
-        _get_project_ids_by_environment_id_for_org(organisation) if group_by else {}
+    project_ids_by_environment_id = _get_project_ids_by_environment_id_for_org(
+        organisation
     )
     qs = _get_api_usage_bucket_qs(
-        organisation,
+        project_ids_by_environment_id,
         environment_id=environment_id,
         project_id=project_id,
         labels_filter=labels_filter,
-        organisation_environment_ids=(
-            list(project_ids_by_environment_id) if group_by else None
-        ),
     ).filter(
         created_at__date__lte=date_stop,
         created_at__date__gt=date_start,
@@ -158,23 +160,25 @@ def get_usage_data_from_local_db(
     if not group_by:
         return _aggregate_buckets(qs)
 
-    annotated = (
-        qs.order_by("created_at__date")
-        .values("created_at__date", "resource", "labels", "environment_id")
-        .annotate(count=Sum("total_count"))
-    )
     return map_annotated_api_usage_buckets_to_usage_data(
-        AnnotatedAPIUsageBucket(
-            created_at__date=row["created_at__date"],
-            resource=row["resource"],
-            labels=row["labels"],
-            count=row["count"],
-            project_id=project_ids_by_environment_id[row["environment_id"]],
-            environment_id=(
-                row["environment_id"] if group_by == "environment" else None
-            ),
-        )
-        for row in annotated
+        _group_bucket(row, project_ids_by_environment_id, group_by)
+        for row in _annotate_buckets(qs, "environment_id")
+    )
+
+
+def _group_bucket(
+    row: AnnotatedAPIUsageBucket,
+    project_ids_by_environment_id: dict[int, int],
+    group_by: UsageGroupByType,
+) -> AnnotatedAPIUsageBucket:
+    environment_id = cast(int, row["environment_id"])
+    return AnnotatedAPIUsageBucket(
+        created_at__date=row["created_at__date"],
+        resource=row["resource"],
+        labels=row["labels"],
+        count=row["count"],
+        project_id=project_ids_by_environment_id[environment_id],
+        environment_id=environment_id if group_by == "environment" else None,
     )
 
 
@@ -185,7 +189,7 @@ def get_usage_data_from_local_db_for_window(
     project_id: int | None = None,
 ) -> list[UsageData]:
     qs = _get_api_usage_bucket_qs(
-        organisation,
+        _get_project_ids_by_environment_id_for_org(organisation),
         project_id=project_id,
     ).filter(
         created_at__gte=date_start,

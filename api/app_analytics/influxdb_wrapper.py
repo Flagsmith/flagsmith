@@ -22,7 +22,7 @@ from app_analytics.mappers import (
     map_flux_tables_to_usage_data,
     map_labels_to_influx_record_values,
 )
-from app_analytics.types import DownsampleSize, Labels, UsageGroupBy
+from app_analytics.types import DownsampleSize, Labels, UsageGroupByType
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ DEFAULT_DROP_COLUMNS = (
     "host",
 )
 
-GROUP_BY_COLUMNS: dict[UsageGroupBy, tuple[str, ...]] = {
+GROUP_BY_COLUMNS: dict[UsageGroupByType, tuple[str, ...]] = {
     "project": ("project_id",),
     "environment": ("project_id", "environment_id"),
 }
@@ -208,7 +208,7 @@ def get_multiple_event_list_for_organisation(
     date_start: datetime | None = None,
     date_stop: datetime | None = None,
     labels_filter: Labels | None = None,
-    group_by: UsageGroupBy | None = None,
+    group_by: UsageGroupByType | None = None,
 ) -> list[UsageData]:
     """
     Query influx db for usage for given organisation id
@@ -269,7 +269,7 @@ def get_usage_data(
     date_start: datetime | None = None,
     date_stop: datetime | None = None,
     labels_filter: Labels | None = None,
-    group_by: UsageGroupBy | None = None,
+    group_by: UsageGroupByType | None = None,
 ) -> list[UsageData]:
     now = timezone.now()
     if date_start is None:

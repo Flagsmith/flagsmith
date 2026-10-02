@@ -29654,8 +29654,10 @@ components:
       required:
         - day
         - environment_document
+        - environment_id
         - flags
         - identities
+        - project_id
         - traits
     UsageTotalCount:
       type: object

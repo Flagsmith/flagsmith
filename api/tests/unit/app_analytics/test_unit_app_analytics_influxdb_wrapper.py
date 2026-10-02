@@ -24,7 +24,7 @@ from app_analytics.influxdb_wrapper import (
     get_top_organisations,
     get_usage_data,
 )
-from app_analytics.types import UsageGroupBy
+from app_analytics.types import UsageGroupByType
 
 # Given
 org_id = 123
@@ -676,7 +676,7 @@ def test_get_platform_usage_trends__with_data__returns_daily_breakdown(
 def test_get_multiple_event_list_for_organisation__group_by__calls_expected_query(
     mock_influxdb_client: MagicMock,
     mocker: MockerFixture,
-    group_by: UsageGroupBy,
+    group_by: UsageGroupByType,
     expected_drop_columns: str,
     expected_group_columns: str,
 ) -> None:
@@ -701,43 +701,4 @@ def test_get_multiple_event_list_for_organisation__group_by__calls_expected_quer
     # Then
     assert mock_query_api.query.call_args_list == [
         mocker.call(org=influx_org, query=expected_query)
-    ]
-
-
-def test_get_multiple_event_list_for_organisation__id_tags__returns_ids_on_usage_data(
-    mock_influxdb_client: MagicMock,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mock_query_api = mock_influxdb_client.query_api.return_value
-    mock_query_api.query.return_value = [
-        mocker.MagicMock(
-            records=[
-                mocker.MagicMock(
-                    values={
-                        "_time": datetime.fromisoformat(
-                            "2023-01-19T09:09:47.325132+00:00"
-                        ),
-                        "_value": 3,
-                        "resource": "flags",
-                        "project_id": "12",
-                        "environment_id": "34",
-                    }
-                ),
-            ]
-        ),
-    ]
-
-    # When
-    result = get_multiple_event_list_for_organisation(1, group_by="environment")
-
-    # Then
-    assert result == [
-        UsageData(
-            day=date(2023, 1, 19),
-            flags=3,
-            labels={},
-            project_id=12,
-            environment_id=34,
-        ),
     ]

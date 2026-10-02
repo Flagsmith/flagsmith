@@ -35,7 +35,7 @@ def test_influx_data_endpoint__rate_limit_exceeded__returns_throttled(
     assert second_response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
 
-def test_usage_data_endpoint__rate_limit_exceeded__does_not_share_influx_query_budget(
+def test_usage_data_endpoint__influx_query_rate_limit_exceeded__returns_ok(
     admin_client: APIClient,
     organisation: int,
     mocker: MockerFixture,
@@ -43,23 +43,23 @@ def test_usage_data_endpoint__rate_limit_exceeded__does_not_share_influx_query_b
 ) -> None:
     # Given
     mocker.patch(
-        "app_analytics.throttles.UsageDataThrottle.get_rate", return_value="1/minute"
+        "app_analytics.throttles.InfluxQueryThrottle.get_rate", return_value="1/minute"
     )
     mocker.patch("app_analytics.views.get_usage_data", return_value=[])
     mocker.patch(
         "organisations.views.get_multiple_event_list_for_organisation", return_value=[]
     )
-    usage_data_url = reverse("api-v1:organisations:usage-data", args=[organisation])
     influx_data_url = reverse(
         "api-v1:organisations:organisation-get-influx-data", args=[organisation]
     )
+    usage_data_url = reverse("api-v1:organisations:usage-data", args=[organisation])
 
     # When
-    first_response = admin_client.get(usage_data_url)
-    influx_response = admin_client.get(influx_data_url)
-    second_response = admin_client.get(usage_data_url)
+    first_influx_response = admin_client.get(influx_data_url)
+    second_influx_response = admin_client.get(influx_data_url)
+    usage_data_response = admin_client.get(usage_data_url)
 
     # Then
-    assert first_response.status_code == status.HTTP_200_OK
-    assert influx_response.status_code == status.HTTP_200_OK
-    assert second_response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+    assert first_influx_response.status_code == status.HTTP_200_OK
+    assert second_influx_response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+    assert usage_data_response.status_code == status.HTTP_200_OK

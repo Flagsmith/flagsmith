@@ -98,9 +98,9 @@ def map_annotated_api_usage_buckets_to_usage_data(
     api_usage_buckets: Iterable[AnnotatedAPIUsageBucket],
 ) -> list[UsageData]:
     """
-    Aggregates API usage data buckets by date and labels.
-    Each resulting `UsageData` object contains the total count for each resource
-    for that date and labels combination.
+    Aggregates API usage data buckets by date, labels and, when grouped,
+    project and environment id. Each resulting `UsageData` object contains
+    the total count for each resource for that combination.
     """
     data_by_key: dict[AnnotatedAPIUsageKey, UsageData] = {}
     for row in api_usage_buckets:
@@ -134,9 +134,9 @@ def map_flux_tables_to_usage_data(
     flux_tables: list[FluxTable],
 ) -> list[UsageData]:
     """
-    Aggregates API usage data buckets by date and labels.
-    Each resulting `UsageData` object contains the total count for each resource
-    for that date and labels combination.
+    Aggregates API usage data buckets by date, labels and, when grouped,
+    project and environment id. Each resulting `UsageData` object contains
+    the total count for each resource for that combination.
     """
     data_by_key: dict[AnnotatedAPIUsageKey, UsageData] = {}
     for flux_table in flux_tables:
@@ -167,7 +167,7 @@ def map_flux_tables_to_usage_data(
                 setattr(
                     data_by_key[key],
                     resource_attr,
-                    value,
+                    getattr(data_by_key[key], resource_attr) + value,
                 )
     return list(data_by_key.values())
 

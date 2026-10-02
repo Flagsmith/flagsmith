@@ -27,7 +27,7 @@ PeriodType = Literal[
     "90_day_period",
 ]
 
-UsageGroupBy = Literal["project", "environment"]
+UsageGroupByType = Literal["project", "environment"]
 
 
 class DownsampleSize(StrEnum):
