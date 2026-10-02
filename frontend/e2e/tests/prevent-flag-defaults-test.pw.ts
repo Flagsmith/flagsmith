@@ -11,6 +11,7 @@ test.describe('Prevent Flag Defaults', () => {
       featureValueField,
       login,
       setText,
+      variationValueField,
       waitForElementVisible,
       waitForToast,
     } = createHelpers(page)
@@ -45,6 +46,14 @@ test.describe('Prevent Flag Defaults', () => {
     log('Everything the API keeps stays editable')
     await expect(page.locator(byId('featureID'))).toBeEnabled()
     await expect(page.locator(byId('featureDesc'))).toBeEnabled()
+
+    // The reason this is not just isDisabled: the setting does not clear
+    // variations, so locking them too would discard work it never touches.
+    log('Variations stay editable')
+    await click(byId('add-variation'))
+    await waitForElementVisible(variationValueField(0))
+    await expect(variationValueField(0)).toBeEnabled()
+    await expect(page.locator(byId('add-variation'))).toBeEnabled()
 
     await visualSnapshot(page, 'prevent-flag-defaults-modal', testInfo)
   })
