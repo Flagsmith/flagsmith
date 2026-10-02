@@ -2651,7 +2651,18 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     # assigned; tuning the rollout must not re-randomise the split.
     assert before == after
     # and the split is not trivially one-sided, so the above means something
-    assert {option_a.key, option_b.key} <= set(before.values())
+    # TODO: remove this temporary failure message once the cause is found
+    experiment.refresh_from_db()
+    rollout_seeds = [
+        (state.id, state.mv_hashing_salt, state.mv_hashing_seed)
+        for state in FeatureState.objects.filter(
+            feature_segment__segment_id=experiment.rollout_segment_id
+        )
+    ]
+    assert {option_a.key, option_b.key} <= set(before.values()), (
+        f"rollout_segment_id={experiment.rollout_segment_id} "
+        f"rollout_states(id, salt, seed)={rollout_seeds}"
+    )
 
 
 def _verification_count(result: str) -> float:
