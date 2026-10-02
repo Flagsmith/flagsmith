@@ -3,6 +3,7 @@ import { DependencyEdge } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import Table from 'components/base/Table'
 import Icon from 'components/icons/Icon'
+import './DependentFeaturesTable.scss'
 
 type DependentFeaturesTableProps = {
   edges: DependencyEdge[]
@@ -19,7 +20,7 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
       <Table.Row>
         <Table.ColumnHeader>Feature</Table.ColumnHeader>
         <Table.ColumnHeader
-          className='prerequisite-actions text-end'
+          className='dependent-actions text-end'
           aria-label='Actions'
         />
       </Table.Row>
@@ -31,7 +32,7 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
           className='cursor-pointer'
           onClick={() => onSelect(edge)}
         >
-          <Table.Cell className='prerequisite-name text-truncate'>
+          <Table.Cell className='dependent-name text-truncate'>
             <Button
               theme='text'
               onClick={(e: MouseEvent) => {
@@ -42,7 +43,7 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
               {edge.feature.name}
             </Button>
           </Table.Cell>
-          <Table.Cell className='prerequisite-actions text-end' aria-hidden>
+          <Table.Cell className='dependent-actions text-end' aria-hidden>
             <Icon
               name='chevron-right'
               width={16}
