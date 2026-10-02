@@ -1,0 +1,66 @@
+// Banner, per the design system's Banner frame: a bordered surface carrying a
+// status icon, a coloured title and body text, with an optional trailing slot.
+//
+// The frame's Supporting palette arrives with #8594, which re-anchors our
+// ramps on it. These semantic tokens then resolve to the frame's own values:
+// border/title are #0fa5fc/#023078 info, #ffbc05/#744800 warning and
+// #e61b26/#7a0e18 error. Success border lands on #47aa7f rather than the
+// frame's #6ad0a1, deliberately: #8594 darkens it because the 500s do not
+// clear 3:1 against white, and the border is the only thing carrying type
+// here.
+.ds-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-default);
+
+  &__icon {
+    flex-shrink: 0;
+  }
+
+  &__text {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 16px;
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.3;
+  }
+
+  &__body {
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--color-text-default);
+  }
+
+  &__action {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  &--info {
+    border-color: var(--color-border-info);
+    .ds-banner__title { color: var(--color-text-info); }
+  }
+
+  &--success {
+    border-color: var(--color-border-success);
+    .ds-banner__title { color: var(--color-text-success); }
+  }
+
+  &--warning {
+    border-color: var(--color-border-warning);
+    .ds-banner__title { color: var(--color-text-warning); }
+  }
+
+  &--error {
+    border-color: var(--color-border-danger);
+    .ds-banner__title { color: var(--color-text-danger); }
+  }
+}
