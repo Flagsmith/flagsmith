@@ -1,16 +1,15 @@
 import type { Meta, StoryObj } from 'storybook'
 
 import { DependencyEdge } from 'common/types/responses'
-import BlockedBanner from 'components/modals/create-feature/tabs/FeatureDependenciesTab/BlockedBanner'
-import DependentFeatures from 'components/modals/create-feature/tabs/FeatureDependenciesTab/DependentFeatures'
-import FeatureDependenciesSkeleton from 'components/modals/create-feature/tabs/FeatureDependenciesTab/FeatureDependenciesSkeleton'
-import PrerequisitesTable from 'components/modals/create-feature/tabs/FeatureDependenciesTab/PrerequisitesTable'
-import { toPrerequisiteRow } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/prerequisiteState'
 import {
+  BlockedBanner,
+  DependentFeatures,
   DependentsEmptyState,
+  FeatureDependenciesSkeleton,
   PrerequisitesEmptyState,
-} from 'components/modals/create-feature/tabs/FeatureDependenciesTab/DependenciesEmptyStates'
-import 'components/modals/create-feature/tabs/FeatureDependenciesTab/FeatureDependenciesTab.scss'
+  PrerequisitesTable,
+  toPrerequisiteRow,
+} from 'components/modals/create-feature/tabs/FeatureDependenciesTab'
 
 const FEATURE = 'checkout_v2'
 const ENVIRONMENT = 'Development'
@@ -43,10 +42,18 @@ const handWritten = toPrerequisiteRow(
 
 const noop = () => undefined
 
-const Panel = ({ children }: { children: React.ReactNode }) => (
+// Every story renders inside the tab's own width, so the table and the banner
+// wrap the way they do in the modal.
+const Tab = ({ children }: { children: React.ReactNode }) => (
   <div className='feature-dependencies' style={{ maxWidth: 720 }}>
-    <div className='feature-dependencies__panel'>{children}</div>
+    {children}
   </div>
+)
+
+const Panel = ({ children }: { children: React.ReactNode }) => (
+  <Tab>
+    <div className='feature-dependencies__panel'>{children}</div>
+  </Tab>
 )
 
 const meta: Meta = {
@@ -114,18 +121,18 @@ export const PrerequisiteRemoving: Story = {
 export const BannerBlocked: Story = {
   name: 'Banner, one prerequisite off',
   render: () => (
-    <div className='feature-dependencies' style={{ maxWidth: 720 }}>
+    <Tab>
       <BlockedBanner environmentName={ENVIRONMENT} rows={[billing, payments]} />
-    </div>
+    </Tab>
   ),
 }
 
 export const BannerAllOff: Story = {
   name: 'Banner, every prerequisite off',
   render: () => (
-    <div className='feature-dependencies' style={{ maxWidth: 720 }}>
+    <Tab>
       <BlockedBanner environmentName={ENVIRONMENT} rows={[payments]} />
-    </div>
+    </Tab>
   ),
 }
 
@@ -148,14 +155,14 @@ export const CannotTakePrerequisites: Story = {
 
 export const Dependents: Story = {
   render: () => (
-    <div className='feature-dependencies' style={{ maxWidth: 720 }}>
+    <Tab>
       <DependentFeatures
         featureName={FEATURE}
         edges={[edge('express_lane', 201), edge('one_click_pay', 202)]}
         hasPrerequisites={false}
         onSelect={noop}
       />
-    </div>
+    </Tab>
   ),
 }
 
@@ -178,8 +185,8 @@ export const NoDependentsBecausePrerequisites: Story = {
 
 export const Loading: Story = {
   render: () => (
-    <div style={{ maxWidth: 720 }}>
+    <Tab>
       <FeatureDependenciesSkeleton />
-    </div>
+    </Tab>
   ),
 }

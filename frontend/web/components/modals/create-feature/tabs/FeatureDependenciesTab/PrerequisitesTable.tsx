@@ -6,6 +6,11 @@ import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
 import { PrerequisiteRow } from './prerequisiteState'
 
+// The actions column only exists where the user can manage dependencies, so a
+// row spanning the table has to know that too.
+export const prerequisiteColumnCount = (canManage: boolean) =>
+  canManage ? 4 : 3
+
 type PrerequisitesTableProps = {
   rows: PrerequisiteRow[]
   canManage: boolean

@@ -14,11 +14,15 @@ import ModalHR from 'components/modals/ModalHR'
 import BlockedBanner from './BlockedBanner'
 import DependentFeatures from './DependentFeatures'
 import FeatureDependenciesSkeleton from './FeatureDependenciesSkeleton'
-import PrerequisitesTable from './PrerequisitesTable'
+import PrerequisitesTable, {
+  prerequisiteColumnCount,
+} from './PrerequisitesTable'
 import { PrerequisitesEmptyState } from './DependenciesEmptyStates'
 import { useDependencies } from './hooks/useDependencies'
 import './FeatureDependenciesTab.scss'
 
+// Flag dependencies have no page of their own yet, so this points at the
+// nearest one that exists. See #8666.
 export const DEPENDENCIES_DOCS_URL =
   'https://docs.flagsmith.com/basic-features/managing-features'
 
@@ -116,6 +120,9 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   }
 
   const isPrerequisite = !!dependentEdges.length
+  // A flag that gains a dependent cannot take prerequisites, so the picker goes
+  // with it rather than waiting for the API to refuse.
+  const isOpenForAdding = isAdding && !isPrerequisite
 
   return (
     <div className='feature-dependencies'>
@@ -144,7 +151,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         </div>
       )}
 
-      {rows.length || isAdding ? (
+      {rows.length || isOpenForAdding ? (
         <>
           <BlockedBanner environmentName={environmentName} rows={rows} />
           <div className='feature-dependencies__panel'>
@@ -155,10 +162,10 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
               isRemoving={removingId}
               onRemove={onRemove}
               addRow={
-                isAdding && (
+                isOpenForAdding && (
                   <tr className='feature-dependencies__add-row'>
                     {/* One cell: the picker has no column to line up with. */}
-                    <td colSpan={4}>
+                    <td colSpan={prerequisiteColumnCount(canManage)}>
                       <div className='feature-dependencies__add-control d-flex align-items-center gap-2'>
                         <FeatureSelect
                           data-test='add-prerequisite'
@@ -205,7 +212,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         </Banner>
       )}
 
-      {!isPrerequisite && canManage && !isAdding && (
+      {!isPrerequisite && canManage && !isOpenForAdding && (
         <div className='mt-3'>
           <Button
             theme='outline'
