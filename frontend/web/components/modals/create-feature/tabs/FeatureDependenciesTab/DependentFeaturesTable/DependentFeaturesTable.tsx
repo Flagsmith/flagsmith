@@ -7,7 +7,6 @@ import './DependentFeaturesTable.scss'
 
 type DependentFeaturesTableProps = {
   edges: DependencyEdge[]
-  // Opens that feature's own Dependencies tab.
   onSelect: (edge: DependencyEdge) => void
 }
 

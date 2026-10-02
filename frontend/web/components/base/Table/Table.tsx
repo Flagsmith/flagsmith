@@ -8,13 +8,8 @@ import {
 import cn from 'classnames'
 import './Table.scss'
 
-// Surface draws its own border and fills the header, which is what
-// MetricsTable and ExperimentsTable do. Ghost draws neither, for a table
-// inside a container that already has a border.
 export type TableVariant = 'surface' | 'ghost'
 
-// Fixed shares the width evenly and truncates long cells; auto lets content
-// size the columns.
 export type TableLayout = 'auto' | 'fixed'
 
 export type TableProps = TableHTMLAttributes<HTMLTableElement> & {

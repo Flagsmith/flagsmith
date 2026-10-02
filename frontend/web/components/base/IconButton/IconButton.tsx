@@ -20,7 +20,6 @@ export type IconButtonProps = BareButtonProps & {
   'aria-label': string
   variant?: IconButtonVariant
   size?: IconButtonSize
-  // The icon, as a child.
   children: ReactNode
 }
 

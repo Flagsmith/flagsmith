@@ -1,13 +1,7 @@
-// Banner, per the design system's Banner frame: a bordered surface carrying a
-// status icon, a coloured title and body text, with an optional trailing slot.
-//
-// The frame's Supporting palette arrives with #8594, which re-anchors our
-// ramps on it. These semantic tokens then resolve to the frame's own values:
-// border/title are #0fa5fc/#023078 info, #ffbc05/#744800 warning and
-// #e61b26/#7a0e18 error. Success border lands on #47aa7f rather than the
-// frame's #6ad0a1, deliberately: #8594 darkens it because the 500s do not
-// clear 3:1 against white, and the border is the only thing carrying type
-// here.
+// Semantic tokens throughout, so #8594 re-anchoring our ramps on the frame's
+// Supporting palette needs no change here. Success resolves darker than the
+// frame draws it, because the 500s do not clear 3:1 and the border is the only
+// thing carrying type.
 .ds-banner {
   display: flex;
   align-items: center;

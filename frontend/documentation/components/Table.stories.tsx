@@ -66,7 +66,6 @@ export const Surface: Story = {
   ),
 }
 
-// For a table inside a container that already has a border.
 export const Ghost: Story = {
   render: () => (
     <DependenciesPanel>

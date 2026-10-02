@@ -42,7 +42,11 @@ export const useDependencies = ({
   // environmentId as the numeric id, not the api key.
   const { getEnvironmentIdFromKey } = useProjectEnvironments(projectId)
   const numericEnvId = getEnvironmentIdFromKey(environmentId)
-  const { data: featureList } = useGetFeatureListQuery(
+  const {
+    data: featureList,
+    isError: isFeatureListError,
+    isLoading: isLoadingFeatureList,
+  } = useGetFeatureListQuery(
     {
       environmentId: String(numericEnvId ?? ''),
       page: 1,
@@ -72,8 +76,17 @@ export const useDependencies = ({
       }).unwrap(),
     dependentEdges: dependents?.results ?? [],
     isCreating,
-    isError: isDependenciesError || isDependentsError,
-    isLoading: isLoadingDependencies || isLoadingDependents,
+    // The feature list counts too. Without it every prerequisite reads as off,
+    // so the tab would claim the flag is serving off while the list is still
+    // in flight, or for good if the request fails.
+    isError: isDependenciesError || isDependentsError || isFeatureListError,
+    isLoading:
+      isLoadingDependencies ||
+      isLoadingDependents ||
+      isLoadingFeatureList ||
+      // The query is skipped until the environment resolves, so it reports
+      // neither loading nor error in the meantime.
+      !numericEnvId,
     remove: (prerequisiteFeatureId: number) =>
       deleteDependency({
         environmentId,
