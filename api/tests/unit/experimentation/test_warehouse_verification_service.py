@@ -149,6 +149,15 @@ def test_check_events_table_exists__exists_query_result__raises_only_when_missin
             id="bad-auth",
         ),
         pytest.param(
+            DatabaseError(
+                "Code: 194. DB::Exception: default: Authentication failed: "
+                "password is incorrect, or there is no user with such name",
+                code=194,
+            ),
+            "Authentication failed.",
+            id="bad-password",
+        ),
+        pytest.param(
             DatabaseError("Code: 81. DB::Exception: no database", code=81),
             "Database does not exist.",
             id="missing-database",

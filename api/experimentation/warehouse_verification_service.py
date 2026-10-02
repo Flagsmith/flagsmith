@@ -73,8 +73,8 @@ def describe_warehouse_error(error: Exception) -> str:
     if isinstance(error, OperationalError):
         return "Could not connect to the host."
     if isinstance(error, DatabaseError):
-        # 516 = AUTHENTICATION_FAILED, 81 = UNKNOWN_DATABASE, 60 = UNKNOWN_TABLE
-        if error.code == 516:
+        # 516/194 = AUTHENTICATION_FAILED/REQUIRED_PASSWORD, 81 = UNKNOWN_DATABASE, 60 = UNKNOWN_TABLE
+        if error.code in (516, 194):
             return "Authentication failed."
         if error.code == 81:
             return "Database does not exist."
