@@ -342,8 +342,6 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     openfeature_client = get_openfeature_client()
 
     for organisation in organisations:
-        ctx = organisation.openfeature_evaluation_context
-
         restrictions = get_api_limit_restrictions(organisation)
         if not restrictions.enabled:
             continue
@@ -353,6 +351,7 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
 
         OrganisationBreachedGracePeriod.objects.get_or_create(organisation=organisation)
 
+        ctx = organisation.openfeature_evaluation_context
         subscription_cache = organisation.subscription_information_cache
         # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
         if openfeature_client.get_boolean_value(

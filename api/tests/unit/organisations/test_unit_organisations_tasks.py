@@ -59,6 +59,8 @@ from organisations.tasks import (  # type: ignore[attr-defined]
 from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
 
+OVERAGE_FLAG = ("api_usage_overage_charges",)
+
 
 def test_send_org_over_limit_alert__free_subscription__sends_alert_with_free_plan_details(  # type: ignore[no-untyped-def]
     organisation, mocker
@@ -1609,8 +1611,10 @@ def test_restrict_use_due_to_api_limit_grace_period_over__multiple_organisations
     admin_user: FFAdminUser,
     staff_user: FFAdminUser,
     enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
     enable_features(
         "api_limiting_stop_serving_flags",
         "api_limiting_block_access_to_admin",
@@ -1823,8 +1827,10 @@ def test_restrict_use_due_to_api_limit_grace_period_over__previously_breached__b
     admin_user: FFAdminUser,
     staff_user: FFAdminUser,
     enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
     enable_features(
         "api_limiting_stop_serving_flags",
         "api_limiting_block_access_to_admin",
@@ -1909,8 +1915,10 @@ def test_restrict_use_due_to_api_limit_grace_period_over__missing_subscription_c
     freezer: FrozenDateTimeFactory,
     mailoutbox: list[EmailMultiAlternatives],
     enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
     assert not organisation.has_subscription_information_cache()
     enable_features(
         "api_limiting_stop_serving_flags",
@@ -1952,8 +1960,10 @@ def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__doe
     mailoutbox: list[EmailMultiAlternatives],
     caplog: pytest.LogCaptureFixture,
     enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
     assert not organisation.has_subscription_information_cache()
 
     enable_features(
@@ -2216,6 +2226,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over__cc_recipient_list_set_
     settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
     cs_email = "cs@flagsmith.com"
     settings.API_USAGE_ALERT_CC_RECIPIENT_LIST = [cs_email]
 
@@ -2260,18 +2271,20 @@ def test_restrict_use_due_to_api_limit_grace_period_over__cc_recipient_list_set_
 @pytest.mark.parametrize(
     "plan, term_days, cancellation_offset_days, enabled_features, expected",
     [
-        ("scale-up-v2", 30, None, ("api_usage_overage_charges",), True),
-        ("startup-v2", 30, None, ("api_usage_overage_charges",), True),
-        ("startup-v2", 25, None, ("api_usage_overage_charges",), True),
-        ("startup-v2", 35, None, ("api_usage_overage_charges",), True),
-        ("startup-v2", 24, None, ("api_usage_overage_charges",), False),
-        ("startup-v2", 36, None, ("api_usage_overage_charges",), False),
-        ("startup-v2", 365, None, ("api_usage_overage_charges",), False),
-        ("enterprise-v2", 30, None, ("api_usage_overage_charges",), False),
-        (FREE_PLAN_ID, 30, None, ("api_usage_overage_charges",), False),
-        ("startup-v2", 30, 0, ("api_usage_overage_charges",), False),
-        ("startup-v2", 30, 10, ("api_usage_overage_charges",), False),
-        ("startup-v2", 30, None, (), False),
+        pytest.param("scale-up-v2", 30, None, OVERAGE_FLAG, True, id="scale-up"),
+        pytest.param("startup-v2", 30, None, OVERAGE_FLAG, True, id="start-up"),
+        pytest.param("startup-v2", 25, None, OVERAGE_FLAG, True, id="25-day-term"),
+        pytest.param("startup-v2", 35, None, OVERAGE_FLAG, True, id="35-day-term"),
+        pytest.param("startup-v2", 24, None, OVERAGE_FLAG, False, id="24-day-term"),
+        pytest.param("startup-v2", 36, None, OVERAGE_FLAG, False, id="36-day-term"),
+        pytest.param("startup-v2", 365, None, OVERAGE_FLAG, False, id="annual"),
+        pytest.param("enterprise-v2", 30, None, OVERAGE_FLAG, False, id="enterprise"),
+        pytest.param(FREE_PLAN_ID, 30, None, OVERAGE_FLAG, False, id="free"),
+        pytest.param("startup-v2", 30, 0, OVERAGE_FLAG, False, id="cancelled"),
+        pytest.param(
+            "startup-v2", 30, 10, OVERAGE_FLAG, False, id="cancellation-scheduled"
+        ),
+        pytest.param("startup-v2", 30, None, (), False, id="flag-disabled"),
     ],
 )
 def test_charge_for_api_call_count_overages__eligibility__matches_is_overage_billing_eligible(
@@ -2318,7 +2331,7 @@ def test_charge_for_api_call_count_overages__eligibility__matches_is_overage_bil
         "organisations.tasks.get_current_api_usage",
         return_value=300_000,
     )
-    organisation = Organisation.objects.get(id=organisation.id)
+    organisation.refresh_from_db()
 
     # When
     charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]

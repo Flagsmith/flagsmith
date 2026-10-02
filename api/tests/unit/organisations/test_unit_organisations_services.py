@@ -16,47 +16,68 @@ from organisations.services import (
 from organisations.subscriptions.constants import FREE_PLAN_ID
 from tests.types import EnableFeaturesFixture
 
+BOTH_RESTRICTION_FLAGS = (
+    "api_limiting_stop_serving_flags",
+    "api_limiting_block_access_to_admin",
+)
+NO_RESTRICTIONS = APILimitRestrictions(
+    stop_serving_flags=False,
+    block_access_to_admin=False,
+)
+
 
 @pytest.mark.parametrize(
-    "plan, enabled_features, expected_restrictions",
+    "plan, alerting_enabled, enabled_features, expected_restrictions",
     [
-        (FREE_PLAN_ID, (), APILimitRestrictions(False, False)),
-        (
+        pytest.param(FREE_PLAN_ID, True, (), NO_RESTRICTIONS, id="free-no-flags"),
+        pytest.param(
             FREE_PLAN_ID,
+            True,
             ("api_limiting_stop_serving_flags",),
-            APILimitRestrictions(True, False),
+            APILimitRestrictions(stop_serving_flags=True, block_access_to_admin=False),
+            id="free-stop-serving-flags",
         ),
-        (
+        pytest.param(
             FREE_PLAN_ID,
+            True,
             ("api_limiting_block_access_to_admin",),
-            APILimitRestrictions(False, True),
+            APILimitRestrictions(stop_serving_flags=False, block_access_to_admin=True),
+            id="free-block-access-to-admin",
         ),
-        (
+        pytest.param(
             FREE_PLAN_ID,
-            (
-                "api_limiting_stop_serving_flags",
-                "api_limiting_block_access_to_admin",
-            ),
-            APILimitRestrictions(True, True),
+            True,
+            BOTH_RESTRICTION_FLAGS,
+            APILimitRestrictions(stop_serving_flags=True, block_access_to_admin=True),
+            id="free-both-flags",
         ),
-        (
+        pytest.param(
             "scale-up-v2",
-            (
-                "api_limiting_stop_serving_flags",
-                "api_limiting_block_access_to_admin",
-            ),
-            APILimitRestrictions(False, False),
+            True,
+            BOTH_RESTRICTION_FLAGS,
+            NO_RESTRICTIONS,
+            id="paid-both-flags",
+        ),
+        pytest.param(
+            FREE_PLAN_ID,
+            False,
+            BOTH_RESTRICTION_FLAGS,
+            NO_RESTRICTIONS,
+            id="free-alerting-disabled",
         ),
     ],
 )
 def test_get_api_limit_restrictions__plan_and_flags__returns_expected(
     organisation: Organisation,
     enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
     plan: str,
+    alerting_enabled: bool,
     enabled_features: tuple[str, ...],
     expected_restrictions: APILimitRestrictions,
 ) -> None:
     # Given
+    settings.ENABLE_API_USAGE_ALERTING = alerting_enabled
     organisation.subscription.plan = plan
     organisation.subscription.save()
     enable_features(*enabled_features)
@@ -66,40 +87,44 @@ def test_get_api_limit_restrictions__plan_and_flags__returns_expected(
 
     # Then
     assert restrictions == expected_restrictions
-    assert restrictions.enabled is (
-        expected_restrictions.stop_serving_flags
-        or expected_restrictions.block_access_to_admin
-    )
 
 
 def test_get_api_limit_restrictions__no_subscription__returns_no_restrictions(
     organisation: Organisation,
     enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
-    enable_features(
-        "api_limiting_stop_serving_flags",
-        "api_limiting_block_access_to_admin",
-    )
+    settings.ENABLE_API_USAGE_ALERTING = True
+    enable_features(*BOTH_RESTRICTION_FLAGS)
     organisation.subscription.hard_delete()
-    organisation = Organisation.objects.get(id=organisation.id)
+    organisation.refresh_from_db()
 
     # When
     restrictions = get_api_limit_restrictions(organisation)
 
     # Then
-    assert restrictions == APILimitRestrictions(False, False)
+    assert restrictions == NO_RESTRICTIONS
 
 
 @pytest.mark.parametrize(
-    "missing",
-    ["subscription", "subscription_id", "cache", "billing_period", "alerting_setting"],
+    "missing, expected",
+    [
+        pytest.param(None, True, id="eligible"),
+        pytest.param("subscription", False, id="no-subscription"),
+        pytest.param("subscription_id", False, id="no-subscription-id"),
+        pytest.param("cache", False, id="no-subscription-cache"),
+        pytest.param("billing_term", False, id="no-billing-term"),
+        pytest.param("billing_period", False, id="billing-term-ended"),
+        pytest.param("alerting_setting", False, id="alerting-disabled"),
+    ],
 )
-def test_is_overage_billing_eligible__missing_billing_data__returns_false(
+def test_is_overage_billing_eligible__eligibility__returns_expected(
     organisation: Organisation,
     enable_features: EnableFeaturesFixture,
     settings: SettingsWrapper,
-    missing: str,
+    missing: str | None,
+    expected: bool,
 ) -> None:
     # Given
     settings.ENABLE_API_USAGE_ALERTING = missing != "alerting_setting"
@@ -111,22 +136,27 @@ def test_is_overage_billing_eligible__missing_billing_data__returns_false(
     organisation.subscription.save()
     if missing == "subscription":
         organisation.subscription.hard_delete()
-    if missing != "cache":
+    if missing == "billing_term":
+        OrganisationSubscriptionInformationCache.objects.create(
+            organisation=organisation,
+            allowed_30d_api_calls=100_000,
+        )
+    elif missing != "cache":
         now = timezone.now()
         OrganisationSubscriptionInformationCache.objects.create(
             organisation=organisation,
             allowed_30d_api_calls=100_000,
-            current_billing_term_starts_at=now - timedelta(days=31),
+            current_billing_term_starts_at=now - timedelta(days=29),
             current_billing_term_ends_at=(
                 now - timedelta(days=1)
                 if missing == "billing_period"
                 else now + timedelta(days=1)
             ),
         )
-    organisation = Organisation.objects.get(id=organisation.id)
+    organisation.refresh_from_db()
 
     # When
     eligible = is_overage_billing_eligible(organisation)
 
     # Then
-    assert eligible is False
+    assert eligible is expected

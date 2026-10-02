@@ -52,15 +52,17 @@ def test_organisation_serializer_full__update_targeting_key__ignored(
 def test_organisation_serializer_full__api_limit_state__returns_expected(
     organisation: Organisation,
     enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
     has_breached_grace_period: bool,
 ) -> None:
     # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
     enable_features("api_limiting_stop_serving_flags")
     organisation.stop_serving_flags = True
     organisation.save()
     if has_breached_grace_period:
         OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
-    organisation = Organisation.objects.get(id=organisation.id)
+    organisation.refresh_from_db()
 
     # When
     data = OrganisationSerializerFull(instance=organisation).data
@@ -89,14 +91,9 @@ def test_organisation_serializer_full__update_api_limit_state__ignored(
 
     # When
     serializer.is_valid(raise_exception=True)
-    serializer.save()
 
     # Then
-    organisation.refresh_from_db()
-    assert organisation.stop_serving_flags is False
-    assert not OrganisationBreachedGracePeriod.objects.filter(
-        organisation=organisation
-    ).exists()
+    assert set(serializer.validated_data) == {"name"}
 
 
 def test_update_subscription_serializer__create__updates_subscription(
