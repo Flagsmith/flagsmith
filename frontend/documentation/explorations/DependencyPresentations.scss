@@ -1,0 +1,290 @@
+// Explorations only. Scoped to .pres so nothing here can reach the app.
+.pres {
+  max-width: 640px;
+
+  &-panel {
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  &-panel--empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+  }
+
+  &-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 8px 6px 16px;
+    border-bottom: 1px solid var(--color-border-default);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &__name {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 13px;
+      font-weight: var(--font-weight-medium);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    font-size: 13px;
+
+    &--on {
+      color: var(--color-text-success);
+    }
+
+    &--off {
+      color: var(--color-text-warning);
+    }
+  }
+}
+
+/* 1 · Resolved state ----------------------------------------------------- */
+
+.pres-resolved {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+
+  &__env {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  &__value {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 16px;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-warning);
+  }
+
+  &__why {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    text-align: right;
+  }
+}
+
+/* 2 · Gate --------------------------------------------------------------- */
+
+.pres-gate {
+  display: grid;
+  grid-template-columns: 1fr 24px auto 1fr;
+  align-items: center;
+  gap: 0;
+
+  &__inputs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 13px;
+
+    &--on {
+      color: var(--color-text-default);
+    }
+
+    &--off {
+      color: var(--color-text-warning);
+    }
+  }
+
+  &__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // The wire end. Filled when the input is satisfied, hollow when it is not,
+  // so the gate reads at a glance without reading any names.
+  &__dot {
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+  }
+
+  &__input--on &__dot {
+    background: var(--color-icon-success);
+    border-color: var(--color-icon-success);
+  }
+
+  // The bus every input feeds into.
+  &__bus {
+    align-self: stretch;
+    margin: 12px 0 12px 4px;
+    border-left: 1px solid var(--color-border-default);
+    border-top: 1px solid var(--color-border-default);
+    border-bottom: 1px solid var(--color-border-default);
+    border-radius: 6px 0 0 6px;
+    height: calc(100% - 24px);
+  }
+
+  &__op {
+    padding: 6px 10px;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-muted);
+    font-size: 11px;
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0.06em;
+    color: var(--color-text-secondary);
+  }
+
+  &__out {
+    margin-left: 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+  }
+
+  &__feature {
+    font-size: 13px;
+    font-weight: var(--font-weight-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__result {
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--color-text-warning);
+  }
+}
+
+/* 3 · Grouped ------------------------------------------------------------ */
+
+.pres-group {
+  & + & {
+    margin-top: 20px;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+  }
+
+  &__head--off {
+    color: var(--color-text-warning);
+  }
+
+  &__count {
+    margin-left: 2px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--color-surface-muted);
+    color: var(--color-text-secondary);
+    font-size: 11px;
+    line-height: 18px;
+  }
+}
+
+/* 4 · Split -------------------------------------------------------------- */
+
+.pres-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+
+  &__sub {
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  &__empty {
+    opacity: 0.75;
+  }
+}
+
+@media (max-width: 720px) {
+  .pres-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 1b · Toggle-shaped indicator ------------------------------------------- */
+
+.pres-toggle-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+// Not a control: no pointer, no focus, no hover. The resolved-state header
+// above carries the consequence, so the track stays neutral when off rather
+// than turning the list amber.
+.pres-toggle {
+  display: inline-block;
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--color-surface-emphasis);
+  transition: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--slate-0);
+  }
+
+  &--on {
+    background: var(--color-icon-success);
+
+    &::after {
+      left: auto;
+      right: 2px;
+    }
+  }
+}

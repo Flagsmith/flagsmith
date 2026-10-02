@@ -1,0 +1,123 @@
+// Explorations only. Not part of the shipped tab.
+.explore {
+  width: 36rem;
+  max-width: 100%;
+  color: var(--color-text-default);
+}
+
+.explore-foot {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  margin: 0.75rem 0 0;
+}
+
+/* ---- A: checklist ---- */
+.explore-check {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--color-border-default);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__name {
+    flex: 1 1 auto;
+    font-size: 13px;
+    font-weight: var(--font-weight-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // The one word that says why this row is the problem.
+  &__state {
+    flex: none;
+    font-size: 12px;
+    color: var(--color-text-warning);
+  }
+
+  &__remove {
+    flex: none;
+    background: none;
+    border: 0;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--color-icon-secondary);
+    border-radius: var(--radius-sm);
+
+    &:focus-visible {
+      outline: 2px solid var(--color-border-action);
+      outline-offset: 1px;
+    }
+  }
+}
+
+/* ---- C: shape ---- */
+.explore-graph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  &__tier {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  // A rule with the relationship named on it, so direction is readable
+  // rather than inferred from position.
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 0;
+    color: var(--color-text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1 1 auto;
+      border-top: 1px solid var(--color-border-default);
+    }
+  }
+}
+
+.explore-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-default);
+  font-size: 13px;
+  white-space: nowrap;
+
+  &--off {
+    border-color: var(--color-border-warning);
+  }
+
+  &--self {
+    border-color: var(--color-border-action);
+    background: var(--color-surface-action-subtle);
+    font-weight: var(--font-weight-semibold);
+    padding: 8px 16px;
+  }
+}
