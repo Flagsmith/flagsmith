@@ -41,7 +41,13 @@ test.describe('Prevent Flag Defaults', () => {
 
     log('The two controls the API discards are locked')
     await expect(page.locator(byId('toggle-feature-button'))).toBeDisabled()
-    await expect(featureValueField()).toBeDisabled()
+    // ValueEditor is a contenteditable <code>, not a form control, so
+    // toBeDisabled() does not apply. These are what it actually sets.
+    await expect(featureValueField()).toHaveAttribute('aria-readonly', 'true')
+    await expect(featureValueField()).toHaveAttribute(
+      'contenteditable',
+      'false',
+    )
 
     log('Everything the API keeps stays editable')
     await expect(page.locator(byId('featureID'))).toBeEnabled()
@@ -52,7 +58,10 @@ test.describe('Prevent Flag Defaults', () => {
     log('Variations stay editable')
     await click(byId('add-variation'))
     await waitForElementVisible(variationValueField(0))
-    await expect(variationValueField(0)).toBeEnabled()
+    await expect(variationValueField(0)).toHaveAttribute(
+      'contenteditable',
+      'true',
+    )
     await expect(page.locator(byId('add-variation'))).toBeEnabled()
 
     await visualSnapshot(page, 'prevent-flag-defaults-modal', testInfo)
