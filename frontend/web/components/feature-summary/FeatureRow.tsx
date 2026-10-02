@@ -202,11 +202,6 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     openedFor.current = `${projectFlag.id}`
     const tabValue = tab || Utils.fromParam().tab || 'value'
 
-    history.replace({
-      pathname: document.location.pathname,
-      search: `?feature=${projectFlag.id}&tab=${tabValue}`,
-    })
-
     const modalProps = {
       environmentFlag,
       environmentId,
@@ -275,6 +270,14 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         })
       },
     )
+
+    // After openModal, not before: replacing a modal fires the outgoing one's
+    // close callback, and that clears the query string. Written first, the tab
+    // would be gone before the new modal's Tabs reads it.
+    history.replace({
+      pathname: document.location.pathname,
+      search: `?feature=${projectFlag.id}&tab=${tabValue}`,
+    })
   }
 
   const isReadOnly = readOnly || Utils.getFlagsmithHasFeature('read_only_mode')

@@ -95,6 +95,15 @@ test.describe('Flag Dependencies', () => {
     await expect(page.getByRole('cell', { name: DEPENDENT })).toBeVisible()
     await visualSnapshot(page, 'dependencies-dependents', testInfo)
 
+    log('Following a dependent lands on its own Dependencies tab')
+    await page.getByRole('cell', { name: DEPENDENT }).click()
+    // Replacing a modal fires the outgoing one's close callback, which clears
+    // the query string, so this is where the tab gets lost.
+    await expect(page).toHaveURL(/tab=dependencies/)
+    await expect(
+      page.getByRole('row', { name: new RegExp(PREREQUISITE) }),
+    ).toBeVisible()
+
     // Removing a prerequisite needs the DELETE endpoint from #8650. Add the
     // step here once it merges: the bin, the confirmation, then the row gone
     // from this tab and the dependent gone from the other one.
