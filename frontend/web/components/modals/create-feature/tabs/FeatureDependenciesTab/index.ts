@@ -1,5 +1,3 @@
-import './FeatureDependenciesTab.scss'
-
 export { default } from './FeatureDependenciesTab'
 export { default as BlockedBanner } from './BlockedBanner'
 export { default as DependenciesPanel } from './DependenciesPanel'
