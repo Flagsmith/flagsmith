@@ -557,6 +557,10 @@ export type Organisation = {
   role: string
   persist_trait_data: boolean
   block_access_to_admin: boolean
+  stop_serving_flags: boolean
+  api_limit_restriction_enabled: boolean
+  api_limit_grace_period_used: boolean
+  overage_billing_eligible: boolean
   restrict_project_create_to_admin: boolean
 }
 export type Identity = {
