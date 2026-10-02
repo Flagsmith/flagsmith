@@ -581,7 +581,8 @@ export type APIKey = {
   name: string
 }
 
-export type TagType = 'STALE' | 'UNHEALTHY' | 'NONE'
+// Mirrors TagType in api/projects/tags/models.py.
+export type TagType = 'NONE' | 'STALE' | 'GITHUB' | 'UNHEALTHY' | 'GITLAB'
 
 export type Tag = {
   id: number

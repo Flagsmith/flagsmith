@@ -52,6 +52,8 @@ export const Sizes: Story = {
       <ColorSwatch color={colorChart1} size='sm' />
       <ColorSwatch color={colorChart1} size='md' />
       <ColorSwatch color={colorChart1} size='lg' />
+      <ColorSwatch color={colorChart1} size='xl' />
+      <ColorSwatch color={colorChart1} size='2xl' />
     </div>
   ),
 }
@@ -103,13 +105,14 @@ export const Shapes: Story = {
     docs: {
       description: {
         story:
-          '`square` (default) is the standard swatch. `circle` is used as a dot indicator — typical for boolean or status keys.',
+          '`square` (default) is the standard swatch. `rounded` is for a swatch big enough to pick from. `circle` is used as a dot indicator, typical for boolean or status keys.',
       },
     },
   },
   render: () => (
     <div className='d-flex align-items-center gap-3'>
       <ColorSwatch color={colorChart1} shape='square' size='lg' />
+      <ColorSwatch color={colorChart1} shape='rounded' size='lg' />
       <ColorSwatch color={colorChart1} shape='circle' size='lg' />
     </div>
   ),

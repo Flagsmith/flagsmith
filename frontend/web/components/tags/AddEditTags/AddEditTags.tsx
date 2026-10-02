@@ -1,21 +1,25 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
 import { filter as loFilter } from 'lodash'
+import './AddEditTags.scss'
 import { useHasPermission } from 'common/providers/Permission'
 import Utils from 'common/utils/utils'
+import { contentColours } from 'common/theme/tokens'
 import InlineModal from 'components/InlineModal'
+import TagRow from 'components/tags/TagRow'
+import DropdownMenu from 'components/base/DropdownMenu'
 import Constants from 'common/constants'
-import TagValues from './TagValues'
+import TagValues from 'components/tags/TagValues'
 import {
   useCreateTagMutation,
   useDeleteTagMutation,
   useGetTagsQuery,
 } from 'common/services/useTag'
 import { Tag as TTag } from 'common/types/responses'
-import Tag from './Tag'
-import CreateEditTag from './CreateEditTag'
-import Input from 'components/base/forms/Input'
-import Button from 'components/base/forms/Button'
+import Tag from 'components/tags/Tag'
+import BareButton from 'components/base/forms/BareButton'
 import Icon from 'components/icons/Icon'
+import CreateEditTag from 'components/tags/CreateEditTag'
+import Input from 'components/base/forms/Input'
 import TagUsage from 'components/TagUsage'
 import { ProjectPermission } from 'common/types/permissions.types'
 
@@ -36,21 +40,17 @@ const AddEditTags: FC<AddEditTagsType> = ({
     projectId,
   })
 
-  const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
-
   const unhealthyTagId = useMemo(() => {
     return data?.find((tag) => tag?.type === 'UNHEALTHY')?.id
   }, [data])
 
-  const projectTags = useMemo(() => {
-    if (!isFeatureHealthEnabled) {
-      return data
-    }
-
-    return data?.filter(
-      (projectTag) => !['UNHEALTHY'].includes(projectTag.type),
-    )
-  }, [data, isFeatureHealthEnabled])
+  // The unhealthy tag is applied by the system, never picked, so it stays out
+  // of the list whatever the feature flag says. This used to keep it when the
+  // flag was off and rely on Tag returning null to hide it again.
+  const projectTags = useMemo(
+    () => data?.filter((projectTag) => projectTag.type !== 'UNHEALTHY'),
+    [data],
+  )
 
   const [filter, setFilter] = useState('')
   const [isOpen, setIsOpen] = useState(false)
@@ -113,32 +113,32 @@ const AddEditTags: FC<AddEditTagsType> = ({
     })
   }
 
+  // Trimmed, so the duplicate check and the tag it creates agree.
+  const newLabel = filter.trim()
+  const search = newLabel.toLowerCase()
+
   const filteredTags = useMemo(() => {
-    const _filter = filter.toLowerCase()
-    if (_filter) {
-      return loFilter(projectTags, (tag) =>
-        tag.label.toLowerCase().includes(filter),
-      )
-    }
+    if (!search) return projectTags || []
+    return loFilter(projectTags, (tag) =>
+      tag.label.toLowerCase().includes(search),
+    )
+  }, [search, projectTags])
 
-    return projectTags || []
-  }, [filter, projectTags])
-
-  const exactTag = useMemo(() => {
-    const _filter = filter.toLowerCase()
-    if (_filter) {
-      return projectTags?.find((tag) => tag.label === filter)
-    }
-    return null
-  }, [filter, projectTags])
+  // Case-insensitive, or the box offers to create a name that is already taken.
+  const exactTag = useMemo(
+    () => projectTags?.find((tag) => tag.label.toLowerCase() === search),
+    [search, projectTags],
+  )
   const noTags = projectTags && !projectTags.length
+  // Nothing to create when the box is empty, or when the name is already taken.
+  const canCreate = !!search && !exactTag
 
-  const color =
-    Constants.tagColors[projectTags?.length || 0] || Constants.tagColors[0]
+  const palette = Object.values(contentColours)
+  const color = palette[(projectTags?.length || 0) % palette.length]
   const submit = () => {
     createTag({
       projectId,
-      tag: { color, description: '', label: filter, project: projectId },
+      tag: { color, description: '', label: newLabel, project: projectId },
     }).then((res) => {
       if (!res?.error && res.data) {
         selectTag(res.data)
@@ -150,7 +150,6 @@ const AddEditTags: FC<AddEditTagsType> = ({
     <div>
       <Row className='inline-tags mt-2'>
         <TagValues
-          hideNames={false}
           hideTags={unhealthyTagId ? [unhealthyTagId] : undefined}
           projectId={projectId}
           onAdd={readOnly ? undefined : toggle}
@@ -164,8 +163,8 @@ const AddEditTags: FC<AddEditTagsType> = ({
             <Input
               autoFocus
               value={filter}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && canCreate) {
                   submit()
                 }
               }}
@@ -177,34 +176,9 @@ const AddEditTags: FC<AddEditTagsType> = ({
             />
           }
           isOpen={isOpen}
-          onBack={() => setTab('SELECT')}
-          showBack={tab !== 'SELECT'}
           onClose={toggle}
           className='inline-modal--sm pb-0'
-          bottom={
-            !readOnly && (
-              <div className='text-right'>
-                {Utils.renderWithPermission(
-                  createEditTagPermission,
-                  Constants.projectPermissions(ProjectPermission.MANAGE_TAGS),
-                  <div className='text-center'>
-                    <Button
-                      size='small'
-                      className=''
-                      disabled={!createEditTagPermission}
-                      onClick={() => {
-                        setTab('CREATE')
-                        setFilter('')
-                      }}
-                      type='button'
-                    >
-                      Add New Tag
-                    </Button>
-                  </div>,
-                )}
-              </div>
-            )
-          }
+          containerClassName='px-0 py-2'
         >
           <div>
             {tagsLoading && !projectTags && (
@@ -212,64 +186,70 @@ const AddEditTags: FC<AddEditTagsType> = ({
                 <Loader />
               </div>
             )}
-            <div className='tag-list d-flex flex-column gap-3'>
+            <div className='tag-list d-flex flex-column'>
               {filteredTags &&
                 filteredTags.map((tag) => (
-                  <div key={tag.id}>
-                    <Row>
-                      <Flex>
-                        <Tag
-                          onClick={selectTag}
-                          selected={value?.includes(tag.id)}
-                          tag={tag}
+                  <TagRow
+                    checked={value?.includes(tag.id)}
+                    disabled={Utils.tagDisabled(tag)}
+                    key={tag.id}
+                    onToggle={selectTag}
+                    tag={tag}
+                    trailing={
+                      !readOnly &&
+                      !!createEditTagPermission &&
+                      !tag.is_system_tag && (
+                        <DropdownMenu
+                          items={[
+                            {
+                              icon: 'setting',
+                              label: 'Edit',
+                              onClick: () => editTag(tag),
+                            },
+                            {
+                              className: 'text-danger',
+                              icon: 'trash-2',
+                              label: 'Delete',
+                              onClick: () => confirmDeleteTag(tag),
+                            },
+                          ]}
                         />
-                      </Flex>
-                      {!readOnly &&
-                        !!createEditTagPermission &&
-                        !tag.is_system_tag && (
-                          <>
-                            <div
-                              onClick={() => editTag(tag)}
-                              className={
-                                !readOnly
-                                  ? 'clickable'
-                                  : 'opacity-0 pointer-events-none'
-                              }
-                            >
-                              <Icon width={18} name='setting' fill='#9DA4AE' />
-                            </div>
-                            <div
-                              onClick={() => confirmDeleteTag(tag)}
-                              className='ml-3 clickable'
-                            >
-                              <Icon width={18} name='trash-2' fill='#ef4d56' />
-                            </div>
-                          </>
-                        )}
-                    </Row>
-                  </div>
-                ))}
-              {!!filter && !exactTag ? (
-                <div
-                  onClick={submit}
-                  className='text-center flex-row text-default justify-content-center'
-                >
-                  <div className='me-2'>Create</div>
-                  <Tag
-                    className='truncated-tag'
-                    tag={{
-                      color,
-                      label: filter,
-                    }}
+                      )
+                    }
                   />
-                </div>
-              ) : null}
-              {noTags && (
-                <div className='text-center text-default mt-4'>
-                  You have no tags yet
-                </div>
-              )}
+                ))}
             </div>
+            {/* The only way to make a tag, and outside the scrolling list so
+                it stays in reach. Named, it creates one; unnamed, it opens
+                the full form. */}
+            {!readOnly &&
+              Utils.renderWithPermission(
+                createEditTagPermission,
+                Constants.projectPermissions(ProjectPermission.MANAGE_TAGS),
+                <BareButton
+                  className='tag-create d-flex align-items-center gap-2 w-100 text-default'
+                  disabled={!createEditTagPermission}
+                  onClick={
+                    canCreate
+                      ? submit
+                      : () => {
+                          setTab('CREATE')
+                          setFilter('')
+                        }
+                  }
+                >
+                  <Icon name='plus' width={16} />
+                  <span className='text-truncate'>
+                    {canCreate ? `Create "${newLabel}"` : 'New tag'}
+                  </span>
+                  {/* Enter does the same thing, so the row says so. */}
+                  {canCreate && (
+                    <kbd className='tag-create__enter ms-auto rounded-sm bg-surface-subtle text-secondary'>
+                      &#9166;
+                    </kbd>
+                  )}
+                </BareButton>,
+              )}
           </div>
         </InlineModal>
       )}

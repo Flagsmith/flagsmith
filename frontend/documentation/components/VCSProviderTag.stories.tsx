@@ -11,7 +11,7 @@ const meta: Meta<typeof VCSProviderTag> = {
   },
   component: VCSProviderTag,
   parameters: { layout: 'centered' },
-  title: 'Components/Data Display/VCSProviderTag',
+  title: 'Components/Tags/VCSProviderTag',
 }
 export default meta
 

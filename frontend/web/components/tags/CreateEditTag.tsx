@@ -12,7 +12,7 @@ import {
 
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
-import Tag from './Tag'
+import TagColourPicker from './TagColourPicker'
 import InlineModal from 'components/InlineModal'
 import ErrorMessage from 'components/ErrorMessage'
 import Switch from 'components/Switch'
@@ -72,7 +72,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
     //eslint-disable-next-line
   }, [createSuccess])
   useEffect(() => {
-    if (createSuccess && editData) {
+    if (editSuccess && editData) {
       onComplete(editData)
     }
     //eslint-disable-next-line
@@ -96,9 +96,11 @@ const CreateEditTag: FC<CreateEditTagType> = ({
     _onComplete?.(tag)
   }
 
+  // One condition, or Enter saves what the button refuses: a duplicate name.
+  const cannotSave = !!existingTag || tagsSaving || !tag?.color || !tag?.label
+
   const save = () => {
-    const disabled = tagsSaving || !tag?.color || !tag?.label
-    if (disabled) return
+    if (cannotSave) return
     if (isEdit) {
       editTag({ projectId, tag: tag as TTag })
     } else {
@@ -138,13 +140,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
                   <Button
                     onClick={save}
                     type='button'
-                    disabled={
-                      !!existingTag ||
-                      tagsSaving ||
-                      !tag?.color ||
-                      !tag?.label ||
-                      !permission
-                    }
+                    disabled={cannotSave || !permission}
                   >
                     Save Tag
                   </Button>
@@ -190,18 +186,11 @@ const CreateEditTag: FC<CreateEditTagType> = ({
         </Tooltip>
 
         <div className='form-group select-colour'>
-          <FieldLabel>Select a color</FieldLabel>
-          <Row className={'gap-3'}>
-            {Constants.tagColors.map((color) => (
-              <div key={color} className='tag--select'>
-                <Tag
-                  onClick={(e: TTag) => update('color', e.color)}
-                  selected={tag?.color === color}
-                  tag={{ color }}
-                />
-              </div>
-            ))}
-          </Row>
+          <FieldLabel>Select a colour</FieldLabel>
+          <TagColourPicker
+            onChange={(colour) => update('color', colour)}
+            value={tag?.color}
+          />
         </div>
         {existingTag && (
           <ErrorMessage error={'A tag already exists with this name'} />

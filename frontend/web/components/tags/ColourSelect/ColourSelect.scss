@@ -1,0 +1,7 @@
+// A swatch on its own has no edge against a pale fill, and no size to click.
+// The frame brings it to the height of the field beside it.
+.colour-select__trigger {
+  padding: 3px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+}

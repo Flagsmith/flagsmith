@@ -1,69 +1,53 @@
 import React, { FC } from 'react'
 import { Tag as TTag } from 'common/types/responses'
 import Format from 'common/utils/format'
-import { IonIcon } from '@ionic/react'
-import { alarmOutline, lockClosed, warning } from 'ionicons/icons'
 import Tooltip from 'components/Tooltip'
-import { getTagColor } from './Tag'
 import OrganisationStore from 'common/stores/organisation-store'
-import Utils from 'common/utils/utils'
 import classNames from 'classnames'
-import Icon from 'components/icons/Icon'
-import Color from 'color'
-type TagContent = {
+import Icon, { IconName } from 'components/icons/Icon'
+import { tagChipHtml } from './utils'
+
+type TagContentProps = {
+  disabled?: boolean
   tag: Partial<TTag>
 }
-function escapeHTML(unsafe: string) {
-  return unsafe.replace(
-    /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u00FF]/g,
-    (c) => `&#${`000${c.charCodeAt(0)}`.slice(-4)};`,
-  )
+
+const VCS_ICON_BY_LABEL: Record<string, IconName> = {
+  'Issue Closed': 'issue-closed',
+  'Issue Open': 'issue-linked',
+  'PR Closed': 'pr-closed',
+  'PR Dequeued': 'pr-dequeued',
+  'PR Draft': 'pr-draft',
+  'PR Merged': 'pr-merged',
+  'PR Open': 'pr-linked',
 }
 
-const renderIcon = (
-  tagType: string,
-  tagColor: string,
-  tagLabel: string,
-  isPermanent: boolean,
-) => {
-  const darkened = tagColor.darken(0.1).string()
-  switch (tagType) {
+const renderIcon = (tag: Partial<TTag>) => {
+  switch (tag.type) {
     case 'STALE':
-      return <IonIcon className='ms-1' icon={alarmOutline} color={darkened} />
+      return <Icon name='stale' />
     case 'UNHEALTHY':
-      return <IonIcon className='ms-1' icon={warning} color={darkened} />
+      return <Icon name='warning' width={16} />
     case 'GITHUB':
-      switch (tagLabel) {
-        case 'PR Open':
-          return <Icon name='pr-linked' />
-        case 'PR Merged':
-          return <Icon name='pr-merged' />
-        case 'PR Closed':
-          return <Icon name='pr-closed' />
-        case 'PR Draft':
-          return <Icon name='pr-draft' />
-        case 'Issue Open':
-          return <Icon name='issue-linked' />
-        case 'Issue Closed':
-          return <Icon name='issue-closed' />
-        default:
-          return
-      }
+    case 'GITLAB': {
+      const icon = VCS_ICON_BY_LABEL[tag.label ?? '']
+      return icon ? <Icon name={icon} /> : null
+    }
     default:
-      return isPermanent ? (
-        <IonIcon className='ms-1' icon={lockClosed} color={darkened} />
-      ) : null
+      // Outline at 12px, not the solid glyph at 16: a sm chip sets 12px text,
+      // and a padlock heavier than the label reads as a sticker stuck on top
+      // rather than an attribute of the tag.
+      return tag.is_permanent ? <Icon name='lock-outline' width={12} /> : null
   }
 }
 
-const getTooltip = (tag: TTag | undefined) => {
+const getTooltip = (tag: Partial<TTag>, disabled: boolean) => {
   if (!tag) {
     return null
   }
   const stale_flags_limit_days = OrganisationStore.getProject(
     tag.project,
   )?.stale_flags_limit_days
-  const disabled = Utils.tagDisabled(tag)
   const truncated = Format.truncateText(tag.label, 12)
   const isTruncated = truncated !== tag.label ? tag.label : null
   let tooltip = null
@@ -83,49 +67,35 @@ const getTooltip = (tag: TTag | undefined) => {
     tooltip =
       'Features marked with this tag are not monitored for staleness and have deletion protection.'
   }
-  const tagColor = Utils.colour(getTagColor(tag, false))
-
   if (isTruncated) {
-    return `<div>
-        <span
-          style='background-color: ${tagColor.fade(0.92)};
-          border: 1px solid ${tagColor.fade(0.76)};
-          color: ${tagColor.darken(0.1)};'
-          class="chip d-inline-block chip--xs me-1${
-            disabled ? ' disabled' : ''
-          }"
-        >
-          ${`${escapeHTML(tag.label)}`}
-        </span>
-          ${tooltip ?? ''}
-      </div>`
+    return `<div>${tagChipHtml(tag, { className: 'me-1', disabled })}${
+      tooltip ?? ''
+    }</div>`
   }
   return tooltip
 }
 
-const TagContent: FC<TagContent> = ({ tag }) => {
+const TagContent: FC<TagContentProps> = ({ disabled = false, tag }) => {
   const tagLabel = Format.truncateText(tag.label, 12)
 
   if (!tagLabel) {
     return null
   }
 
-  const disabled = Utils.tagDisabled(tag)
-
   return (
     <Tooltip
       title={
         <span
-          className={classNames('mr-1 flex-row align-items-center', {
+          className={classNames('gap-1 flex-row', {
             'opacity-50': disabled,
           })}
         >
           {tagLabel}
-          {renderIcon(tag.type!, Utils.colour(tag.color), tag.label!)}
+          {renderIcon(tag)}
         </span>
       }
     >
-      {getTooltip(tag)}
+      {getTooltip(tag, disabled)}
     </Tooltip>
   )
 }

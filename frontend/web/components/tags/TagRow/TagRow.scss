@@ -1,0 +1,67 @@
+.tag-row {
+  padding: 6px 14px;
+
+  &--disabled {
+    cursor: not-allowed;
+  }
+}
+
+// The control: everything but the trailing actions, so the row still reads as
+// one strip while the menu stays outside the button.
+.tag-row__select {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+
+  &:not(:disabled):not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+
+  // BareButton drops pointer events on aria-disabled; this row needs them so
+  // the tag's tooltip can still explain why it is unavailable.
+  &[aria-disabled='true'] {
+    pointer-events: auto;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-border-action);
+    outline-offset: -2px;
+  }
+}
+
+.tag-row:has(
+    .tag-row__select:not(:disabled):not([aria-disabled='true']):hover
+  ) {
+  background-color: var(--color-surface-hover);
+}
+
+// Grow in from the right edge. Opacity and width, never display:none, so the
+// button stays in the tab order.
+.tag-row__actions {
+  display: flex;
+  align-items: center;
+  flex: none;
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  color: var(--color-text-secondary);
+  transition: width var(--duration-fast) var(--easing-standard),
+    opacity var(--duration-fast) var(--easing-standard),
+    margin-left var(--duration-fast) var(--easing-standard);
+}
+
+.tag-row:hover .tag-row__actions,
+// :has(:focus-visible), not :focus-within: a row keeps DOM focus after a mouse
+// click, which left the menu showing once the pointer had gone.
+.tag-row:has(:focus-visible) .tag-row__actions {
+  width: 20px;
+  margin-left: 8px;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tag-row__actions {
+    transition: none;
+  }
+}

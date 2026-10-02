@@ -138,6 +138,21 @@ function buildScssLines() {
     rootLines.push('')
   }
 
+  // Feature palettes. Themed like the semantic tokens, but scoped to one
+  // feature, so they sit outside `color` where only cross-cutting roles live.
+  if (json.tag) {
+    rootLines.push('  // Tag')
+    for (const [, entries] of sorted(json.tag)) {
+      for (const [, e] of sorted(entries)) {
+        rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+        if (e.dark && e.dark !== e.light) {
+          darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+        }
+      }
+    }
+    rootLines.push('')
+  }
+
   // Chart colour tokens
   if (json[CHART_CATEGORY]) {
     rootLines.push('  // Chart')
@@ -348,9 +363,38 @@ function generateTs() {
     ...describedBlocks,
     '',
     ...flatLines,
+    '',
+    ...buildContentColours(),
   ]
 
   return output.join('\n')
+}
+
+/**
+ * The Content palette as a map, for anything that needs to iterate it —
+ * the tag colour picker, most obviously. Keyed by the design system's own
+ * name so a swatch in Figma and a key here read the same.
+ */
+function buildContentColours() {
+  // The base tints only: the -dark and -border siblings are the dark theme's
+  // half of the same hue, not colours a tag can be set to.
+  const entries = Object.entries(json.primitives ?? {}).filter(
+    ([n]) => n.startsWith('content-') && !/-(dark|border)$/.test(n),
+  )
+  if (!entries.length) return []
+  return [
+    '/** One colour per tag hue, the same on both themes. */',
+    'export const contentColours = {',
+    ...entries.map(([n, hex]) => `  '${n.replace('content-', '')}': '${hex}',`),
+    '} as const',
+    '',
+    '/** The palette in order, so a picker can map it without a cast. */',
+    'export const contentColourNames = [',
+    ...entries.map(([n]) => `  '${n.replace('content-', '')}',`),
+    '] as const',
+    '',
+    'export type ContentColour = (typeof contentColourNames)[number]',
+  ]
 }
 
 function generateMcpStory() {
@@ -466,6 +510,23 @@ function generateUtilities() {
       } else {
         lines.push(`.${cls} { ${mapping.property}: var(${e.cssVar}); }`)
       }
+    }
+    lines.push('')
+  }
+
+  // Tag utilities. One class per hue: surface, ink and border are only
+  // accessible together, and applying a fill without its label colour is the
+  // bug this scale exists to fix.
+  const TAG_INK = 'content-always-dark'
+  const utilHues = Object.keys(json.primitives ?? {})
+    .filter((n) => n.startsWith('content-') && n !== TAG_INK)
+    .map((n) => n.replace('content-', ''))
+  if (utilHues.length) {
+    lines.push('// Tags')
+    for (const hue of utilHues.sort()) {
+      lines.push(
+        `.tag-${hue} { background-color: var(--content-${hue}); color: var(--${TAG_INK}); --ds-chip-border: var(--content-${hue}); }`,
+      )
     }
     lines.push('')
   }

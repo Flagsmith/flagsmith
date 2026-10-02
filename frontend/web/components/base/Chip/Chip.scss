@@ -1,12 +1,16 @@
-// Canonical token-based chip. Layout and bg/text colour are utilities in the
-// markup; this holds padding, sizes, the variant border colour, truncation and
-// the remove-button reset. Distinct class (`ds-chip`) until the legacy `.chip`
-// (_chip.scss) migrates here under #6606.
+// Padding, sizes, variant border, truncation. Layout and bg/text colour are
+// utilities in the markup. `ds-chip` until the legacy `.chip` migrates here.
 .ds-chip {
-  padding: 4px 10px;
+  // 32px from the design system's chip frame. Stated, so an icon-only chip
+  // matches one holding text.
+  height: 32px;
+  padding: 0 10px;
   font-size: 0.8125rem;
   white-space: nowrap;
-  border: 1px solid var(--color-border-default);
+  // Read from a custom property, not set directly: this stylesheet is injected
+  // by the component at runtime, so it lands after _token-utilities and would
+  // otherwise beat any border-color a utility class sets on the same element.
+  border: 1px solid var(--ds-chip-border, var(--color-border-default));
 
   // Colour variant - bg/text are utilities; only the border colour is here.
   &--accent {
@@ -15,11 +19,17 @@
 
   // Sizes (default is the base above).
   &--sm {
-    padding: 3px 8px;
+    // Stated now the base has a fixed height, or this would inherit 32px.
+    // Matches what the padding produced before.
+    height: 24px;
+    padding: 0 8px;
     font-size: 0.75rem;
   }
 
+  // No frame gives xs a height, so it keeps the one its padding produces
+  // rather than the base's. Undo that and it inherits 32px.
   &--xs {
+    height: auto;
     padding: 1px 6px;
     font-size: 0.6875rem;
   }
@@ -40,7 +50,6 @@
     white-space: nowrap;
   }
 
-  // Removable close-X: a bare button that inherits the chip's colour.
   &__remove {
     padding: 0;
     border: 0;
@@ -48,4 +57,11 @@
     color: inherit;
     cursor: pointer;
   }
+}
+
+// Two rings: the inner is the page surface, so the outer reads against any fill.
+.ds-chip--ring {
+  box-shadow:
+    0 0 0 1px var(--color-surface-default),
+    0 0 0 3px var(--color-text-default);
 }

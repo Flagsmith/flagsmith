@@ -1,24 +1,29 @@
 import React, { FC } from 'react'
 import classNames from 'classnames'
 
-type ColorSwatchSize = 'sm' | 'md' | 'lg'
-type ColorSwatchShape = 'square' | 'circle'
+type ColorSwatchSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+type ColorSwatchShape = 'square' | 'rounded' | 'circle'
 
 type ColorSwatchProps = {
-  color: string
+  color?: string
   size?: ColorSwatchSize
   shape?: ColorSwatchShape
   className?: string
 }
 
+/* eslint-disable sort-keys-fix/sort-keys-fix -- a scale reads in size order */
 const SIZE_MAP: Record<ColorSwatchSize, number> = {
-  lg: 16,
-  md: 12,
   sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 32,
+  '2xl': 44,
 }
+/* eslint-enable sort-keys-fix/sort-keys-fix */
 
 const SHAPE_CLASS: Record<ColorSwatchShape, string> = {
   circle: 'rounded-circle',
+  rounded: 'rounded-lg',
   square: 'rounded-xs',
 }
 
