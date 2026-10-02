@@ -107,18 +107,22 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   )
   const enforceFeatureOwners = !!projectData?.enforce_feature_owners
 
+  // Read during render, so a push to ?feature=<id> from elsewhere in the app
+  // reopens the modal on the feature it names. Without it the effect only ran
+  // when the flag data changed, so following a dependency link did nothing.
+  const { feature: featureParam } = Utils.fromParam()
+
   useEffect(() => {
-    const { feature } = Utils.fromParam()
     const { id } = projectFlag
 
     const isModalOpen = !!document?.getElementsByClassName(
       'create-feature-modal',
     )?.length
-    if (`${id}` === feature && !isModalOpen) {
+    if (`${id}` === featureParam && !isModalOpen) {
       editFeature()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [environmentFlags, projectFlag])
+  }, [environmentFlags, projectFlag, featureParam])
 
   const featureUnhealthyEvents = useMemo(
     () =>
