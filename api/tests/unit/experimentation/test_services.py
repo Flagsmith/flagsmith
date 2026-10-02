@@ -2642,6 +2642,12 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     # the experiment is running)
     services.apply_experiment_rollout(experiment, spec)
     experiment.refresh_from_db()
+    # Without this, a run where the rollout segment's id equals the variant
+    # hashing seed puts every enrolled identity in the first variant:
+    # https://github.com/Flagsmith/flagsmith-engine/issues/348
+    FeatureState.objects.filter(
+        feature_segment__segment_id=experiment.rollout_segment_id
+    ).update(mv_hashing_salt=experiment.rollout_segment_id + 1)
     before = variant_assignment(identities, multivariate_feature.name)
 
     services.apply_experiment_rollout(experiment, spec)
