@@ -1,0 +1,57 @@
+.ds-table {
+  width: 100%;
+
+  th {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  td {
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+// The house style: the table owns its border and the header carries a fill.
+.ds-table--surface {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
+  th {
+    padding: 10px 16px;
+    font-size: var(--font-body-sm-size);
+    background: var(--color-surface-subtle);
+  }
+
+  td {
+    padding: 14px 16px;
+    font-size: var(--font-body-sm-size);
+  }
+}
+
+// For a table inside something that already draws a border.
+.ds-table--ghost {
+  border-collapse: collapse;
+
+  th {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  td {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}
+
+.ds-table--fixed {
+  table-layout: fixed;
+}

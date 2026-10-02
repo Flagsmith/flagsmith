@@ -2,7 +2,7 @@ import { FC, ReactNode } from 'react'
 import cn from 'classnames'
 import { DependencyEdge } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
-import DependenciesTable from 'components/modals/create-feature/tabs/FeatureDependenciesTab/DependenciesTable'
+import Table from 'components/base/Table'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
@@ -81,72 +81,70 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
   onRemove,
   rows,
 }) => (
-  <DependenciesTable
-    head={
-      <>
-        <th scope='col'>Prerequisite</th>
-        <th scope='col'>Status</th>
-        <th scope='col'>Satisfies</th>
+  <Table variant='ghost' layout='fixed'>
+    <Table.Header>
+      <Table.Row>
+        <Table.ColumnHeader>Prerequisite</Table.ColumnHeader>
+        <Table.ColumnHeader>Status</Table.ColumnHeader>
+        <Table.ColumnHeader>Satisfies</Table.ColumnHeader>
         {canManage && (
-          <th
-            className='dependencies-table__actions text-end'
-            aria-label='Actions'
-          />
+          <th className='prerequisite-actions text-end' aria-label='Actions' />
         )}
-      </>
-    }
-  >
-    {rows.map(({ edge, isEnabled, isMet }) => (
-      <tr
-        key={edge.prerequisite.id}
-        className={cn({
-          'prerequisite-row--added': highlightedId === edge.prerequisite.id,
-          // Dimmed while the DELETE is in flight.
-          'prerequisite-row--removing': isRemoving === edge.prerequisite.id,
-        })}
-      >
-        <td className='dependencies-table__name text-truncate'>
-          {edge.prerequisite.name}
-        </td>
-        <td>
-          <StateToggle isEnabled={isEnabled} />
-        </td>
-        <td>
-          <Satisfies isMet={isMet} />
-        </td>
-        {canManage && (
-          <td className='dependencies-table__actions text-end'>
-            {/* An edge from a hand-written segment condition cannot be removed
-                through the dependencies API, so it gets no control. */}
-            {edge.segment.is_system && (
-              <IconButton
-                size='medium'
-                variant='ghost'
-                disabled={isRemoving === edge.prerequisite.id}
-                onClick={() => onRemove(edge)}
-                aria-label={`Remove ${edge.prerequisite.name} as a prerequisite`}
-              >
-                <Icon name='trash-2' width={20} />
-              </IconButton>
-            )}
+      </Table.Row>
+    </Table.Header>
+    <Table.Body>
+      {rows.map(({ edge, isEnabled, isMet }) => (
+        <tr
+          key={edge.prerequisite.id}
+          className={cn({
+            'prerequisite-row--added': highlightedId === edge.prerequisite.id,
+            // Dimmed while the DELETE is in flight.
+            'prerequisite-row--removing': isRemoving === edge.prerequisite.id,
+          })}
+        >
+          <td className='prerequisite-name text-truncate'>
+            {edge.prerequisite.name}
           </td>
-        )}
-      </tr>
-    ))}
-    {!!addControl && (
-      <tr className='prerequisite-add-row'>
-        {/* One cell: the picker has no column to line up with. */}
-        <td colSpan={columnCount(canManage)}>
-          <div className='prerequisite-add-control d-flex align-items-center gap-2'>
-            {addControl}
-            <Button theme='text' onClick={onCancelAdd}>
-              Cancel
-            </Button>
-          </div>
-        </td>
-      </tr>
-    )}
-  </DependenciesTable>
+          <td>
+            <StateToggle isEnabled={isEnabled} />
+          </td>
+          <td>
+            <Satisfies isMet={isMet} />
+          </td>
+          {canManage && (
+            <td className='prerequisite-actions text-end'>
+              {/* An edge from a hand-written segment condition cannot be removed
+                through the dependencies API, so it gets no control. */}
+              {edge.segment.is_system && (
+                <IconButton
+                  size='medium'
+                  variant='ghost'
+                  disabled={isRemoving === edge.prerequisite.id}
+                  onClick={() => onRemove(edge)}
+                  aria-label={`Remove ${edge.prerequisite.name} as a prerequisite`}
+                >
+                  <Icon name='trash-2' width={20} />
+                </IconButton>
+              )}
+            </td>
+          )}
+        </tr>
+      ))}
+      {!!addControl && (
+        <tr className='prerequisite-add-row'>
+          {/* One cell: the picker has no column to line up with. */}
+          <td colSpan={columnCount(canManage)}>
+            <div className='prerequisite-add-control d-flex align-items-center gap-2'>
+              {addControl}
+              <Button theme='text' onClick={onCancelAdd}>
+                Cancel
+              </Button>
+            </div>
+          </td>
+        </tr>
+      )}
+    </Table.Body>
+  </Table>
 )
 
 export default PrerequisitesTable

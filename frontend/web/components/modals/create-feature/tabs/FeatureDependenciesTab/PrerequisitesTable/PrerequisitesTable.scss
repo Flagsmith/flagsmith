@@ -1,3 +1,11 @@
+.prerequisite-name {
+  font-weight: var(--font-weight-medium);
+}
+
+.prerequisite-actions {
+  width: 60px;
+}
+
 // Position carries the state as well as colour, so it reads without one.
 .prerequisite-toggle {
   display: inline-block;
