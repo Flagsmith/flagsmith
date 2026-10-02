@@ -15,12 +15,9 @@ import BlockedBanner from './BlockedBanner'
 import DependenciesPanel from './DependenciesPanel'
 import DependentFeatures from './DependentFeatures'
 import FeatureDependenciesSkeleton from './FeatureDependenciesSkeleton'
-import PrerequisitesTable, {
-  prerequisiteColumnCount,
-} from './PrerequisitesTable'
+import PrerequisitesTable from './PrerequisitesTable'
 import { PrerequisitesEmptyState } from './DependenciesEmptyStates'
 import { useDependencies } from './hooks/useDependencies'
-import './FeatureDependenciesTab.scss'
 
 // Flag dependencies have no docs page of their own yet, so this points at the
 // nearest one that exists.
@@ -162,37 +159,25 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
               highlightedId={highlightedId}
               isRemoving={removingId}
               onRemove={onRemove}
-              addRow={
+              addControl={
                 isOpenForAdding && (
-                  <tr className='feature-dependencies__add-row'>
-                    {/* One cell: the picker has no column to line up with. */}
-                    <td colSpan={prerequisiteColumnCount(canManage)}>
-                      <div className='feature-dependencies__add-control d-flex align-items-center gap-2'>
-                        <FeatureSelect
-                          data-test='add-prerequisite'
-                          projectId={projectId}
-                          environmentId={environmentId}
-                          disabled={isCreating}
-                          placeholder='Add a prerequisite flag...'
-                          // The API refuses both of these, so keep them out of
-                          // the list.
-                          ignore={[
-                            projectFlag.id,
-                            ...rows.map((row) => row.edge.prerequisite.id),
-                          ]}
-                          onChange={onAdd}
-                        />
-                        <Button
-                          theme='text'
-                          onClick={() => onAddingChange(false)}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+                  <FeatureSelect
+                    data-test='add-prerequisite'
+                    projectId={projectId}
+                    environmentId={environmentId}
+                    disabled={isCreating}
+                    placeholder='Add a prerequisite flag...'
+                    // The API refuses both of these, so keep them out of the
+                    // list.
+                    ignore={[
+                      projectFlag.id,
+                      ...rows.map((row) => row.edge.prerequisite.id),
+                    ]}
+                    onChange={onAdd}
+                  />
                 )
               }
+              onCancelAdd={() => onAddingChange(false)}
             />
           </DependenciesPanel>
         </>

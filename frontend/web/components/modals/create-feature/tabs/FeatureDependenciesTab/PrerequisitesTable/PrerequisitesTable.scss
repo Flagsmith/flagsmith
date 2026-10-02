@@ -43,6 +43,21 @@
   color: var(--color-text-success);
 }
 
+// The picker as the table's last row, so a new prerequisite appears where it
+// was asked for. Same enter as the row it creates, without the tint: it already
+// has a surface of its own.
+.prerequisite-add-row td {
+  padding: 8px 16px;
+  background: var(--color-surface-muted);
+  animation: prerequisite-enter 180ms var(--easing-standard) both;
+}
+
+// The select needs permission to shrink or it pushes the row past the panel.
+.prerequisite-add-control > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 // The short enter says the row arrived; the long tint says which one.
 .prerequisite-row--added td {
   animation: prerequisite-enter 180ms var(--easing-standard) both,
@@ -81,6 +96,10 @@
   .prerequisite-row--added td {
     animation: none;
     background: var(--color-surface-action-subtle);
+  }
+
+  .prerequisite-add-row td {
+    animation: none;
   }
 
   .prerequisite-toggle,

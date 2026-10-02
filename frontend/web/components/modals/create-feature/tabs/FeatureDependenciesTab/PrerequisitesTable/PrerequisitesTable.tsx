@@ -1,6 +1,7 @@
 import { FC, ReactNode } from 'react'
 import cn from 'classnames'
 import { DependencyEdge } from 'common/types/responses'
+import Button from 'components/base/forms/Button'
 import DependenciesTable from 'components/modals/create-feature/tabs/FeatureDependenciesTab/DependenciesTable'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
@@ -8,10 +9,9 @@ import Tooltip from 'components/Tooltip'
 import { PrerequisiteRow } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/prerequisiteState'
 import './PrerequisitesTable.scss'
 
-// The actions column only exists where the user can manage dependencies, so a
-// row spanning the table has to know that too.
-export const prerequisiteColumnCount = (canManage: boolean) =>
-  canManage ? 4 : 3
+// The actions column only exists where the user can manage dependencies, so the
+// picker row has to span a different number of columns.
+const columnCount = (canManage: boolean) => (canManage ? 4 : 3)
 
 type PrerequisitesTableProps = {
   rows: PrerequisiteRow[]
@@ -19,8 +19,10 @@ type PrerequisitesTableProps = {
   highlightedId?: number
   isRemoving?: number
   onRemove: (edge: DependencyEdge) => void
-  // Rendered as the last row while adding.
-  addRow?: ReactNode
+  // The picker, shown as the last row. Selecting commits it, so the draft row
+  // never outlives the interaction.
+  addControl?: ReactNode
+  onCancelAdd?: () => void
 }
 
 // A span, not a Switch: nothing here edits the prerequisite.
@@ -69,10 +71,11 @@ const Satisfies: FC<{ isMet?: boolean }> = ({ isMet }) => {
 }
 
 const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
-  addRow,
+  addControl,
   canManage,
   highlightedId,
   isRemoving,
+  onCancelAdd,
   onRemove,
   rows,
 }) => (
@@ -128,7 +131,19 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
         )}
       </tr>
     ))}
-    {addRow}
+    {!!addControl && (
+      <tr className='prerequisite-add-row'>
+        {/* One cell: the picker has no column to line up with. */}
+        <td colSpan={columnCount(canManage)}>
+          <div className='prerequisite-add-control d-flex align-items-center gap-2'>
+            {addControl}
+            <Button theme='text' onClick={onCancelAdd}>
+              Cancel
+            </Button>
+          </div>
+        </td>
+      </tr>
+    )}
   </DependenciesTable>
 )
 

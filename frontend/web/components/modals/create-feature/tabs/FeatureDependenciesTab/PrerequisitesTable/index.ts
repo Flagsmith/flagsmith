@@ -1,1 +1,1 @@
-export { default, prerequisiteColumnCount } from './PrerequisitesTable'
+export { default } from './PrerequisitesTable'

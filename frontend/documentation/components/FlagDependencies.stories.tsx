@@ -43,16 +43,15 @@ const handWritten = toPrerequisiteRow(
 
 const noop = () => undefined
 
-// Every story renders inside the tab's own width, so the table and the banner
-// wrap the way they do in the modal.
-const Tab = ({ children }: { children: React.ReactNode }) => (
+// The modal's width, so the table and the banner wrap as they do in the app.
+const ModalWidth = ({ children }: { children: React.ReactNode }) => (
   <div style={{ maxWidth: 720 }}>{children}</div>
 )
 
 const Panel = ({ children }: { children: React.ReactNode }) => (
-  <Tab>
+  <ModalWidth>
     <DependenciesPanel>{children}</DependenciesPanel>
-  </Tab>
+  </ModalWidth>
 )
 
 const meta: Meta = {
@@ -120,18 +119,18 @@ export const PrerequisiteRemoving: Story = {
 export const BannerBlocked: Story = {
   name: 'Banner, one prerequisite off',
   render: () => (
-    <Tab>
+    <ModalWidth>
       <BlockedBanner environmentName={ENVIRONMENT} rows={[billing, payments]} />
-    </Tab>
+    </ModalWidth>
   ),
 }
 
 export const BannerAllOff: Story = {
   name: 'Banner, every prerequisite off',
   render: () => (
-    <Tab>
+    <ModalWidth>
       <BlockedBanner environmentName={ENVIRONMENT} rows={[payments]} />
-    </Tab>
+    </ModalWidth>
   ),
 }
 
@@ -154,14 +153,14 @@ export const CannotTakePrerequisites: Story = {
 
 export const Dependents: Story = {
   render: () => (
-    <Tab>
+    <ModalWidth>
       <DependentFeatures
         featureName={FEATURE}
         edges={[edge('express_lane', 201), edge('one_click_pay', 202)]}
         hasPrerequisites={false}
         onSelect={noop}
       />
-    </Tab>
+    </ModalWidth>
   ),
 }
 
@@ -184,8 +183,8 @@ export const NoDependentsBecausePrerequisites: Story = {
 
 export const Loading: Story = {
   render: () => (
-    <Tab>
+    <ModalWidth>
       <FeatureDependenciesSkeleton />
-    </Tab>
+    </ModalWidth>
   ),
 }

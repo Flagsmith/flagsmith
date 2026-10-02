@@ -12,13 +12,13 @@ const FeatureDependenciesSkeleton: FC = () => (
     <Skeleton width='70%' height={14} className='mb-3' />
 
     <DependenciesPanel>
-      <div className='dependencies-skeleton-row dependencies-skeleton-row--head'>
+      <div className='dependencies-skeleton-row px-3 py-2'>
         <Skeleton width={70} height={12} />
         <Skeleton width={44} height={12} />
         <Skeleton width={56} height={12} />
       </div>
       {Array.from({ length: ROW_COUNT }).map((_, index) => (
-        <div className='dependencies-skeleton-row' key={index}>
+        <div className='dependencies-skeleton-row px-3 py-2' key={index}>
           <Skeleton width={160} height={14} />
           <Skeleton width={28} height={14} />
           <Skeleton width={52} height={14} />
