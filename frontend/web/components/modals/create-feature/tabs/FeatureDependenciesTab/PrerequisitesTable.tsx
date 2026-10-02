@@ -9,19 +9,14 @@ import { PrerequisiteRow } from './prerequisiteState'
 type PrerequisitesTableProps = {
   rows: PrerequisiteRow[]
   canManage: boolean
-  // The row just added, highlighted briefly so it can be picked out of a list
-  // that is not ordered by recency.
   highlightedId?: number
   isRemoving?: number
   onRemove: (edge: DependencyEdge) => void
-  // The picker, rendered as the last row while adding. Selecting commits it,
-  // so the draft row never outlives the interaction.
+  // Rendered as the last row while adding.
   addRow?: ReactNode
 }
 
-// Borrows the toggle's silhouette without being a control: a span, not a
-// button, at full contrast rather than rc-switch's disabled grey. Nothing here
-// edits the prerequisite, so nothing should invite a click.
+// A span, not a Switch: nothing here edits the prerequisite.
 const StateToggle: FC<{ isEnabled: boolean }> = ({ isEnabled }) => (
   <span
     className={cn('feature-dependencies__toggle', {
@@ -32,10 +27,8 @@ const StateToggle: FC<{ isEnabled: boolean }> = ({ isEnabled }) => (
   />
 )
 
-// Two columns on two different axes: Status is the prerequisite's own state,
-// Satisfies is whether that state meets this flag's rule. They agree on every
-// row today, and stop agreeing as soon as a rule can be something other than
-// "must be enabled". Only Satisfies carries colour.
+// Status is the prerequisite's own state; Satisfies is whether that state meets
+// this flag's rule. Only Satisfies carries colour.
 const Satisfies: FC<{ isMet?: boolean }> = ({ isMet }) => {
   if (isMet === undefined) {
     return (
@@ -84,7 +77,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
         <th scope='col'>Satisfies</th>
         {canManage && (
           <th
-            className='feature-dependencies__actions-cell'
+            className='feature-dependencies__actions-cell text-end'
             aria-label='Actions'
           />
         )}
@@ -97,13 +90,12 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
           className={cn({
             'feature-dependencies__row--added':
               highlightedId === edge.prerequisite.id,
-            // The row stays put while the DELETE is in flight, dimmed, so the
-            // gap between confirming and the refetch is not silent.
+            // Dimmed while the DELETE is in flight.
             'feature-dependencies__row--removing':
               isRemoving === edge.prerequisite.id,
           })}
         >
-          <td className='feature-dependencies__name'>
+          <td className='feature-dependencies__name text-truncate'>
             {edge.prerequisite.name}
           </td>
           <td>
@@ -113,7 +105,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
             <Satisfies isMet={isMet} />
           </td>
           {canManage && (
-            <td className='feature-dependencies__actions-cell'>
+            <td className='feature-dependencies__actions-cell text-end'>
               {/* An edge from a hand-written segment condition cannot be removed
                   through the dependencies API, so it gets no control. */}
               {edge.segment.is_system && (

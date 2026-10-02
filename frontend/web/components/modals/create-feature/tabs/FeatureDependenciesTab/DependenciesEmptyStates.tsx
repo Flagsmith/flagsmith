@@ -10,8 +10,6 @@ type PrerequisitesEmptyStateProps = {
   isPrerequisite: boolean
 }
 
-// The Add prerequisite button sits directly below this panel, so neither state
-// repeats it.
 export const PrerequisitesEmptyState: FC<PrerequisitesEmptyStateProps> = ({
   featureName,
   isPrerequisite,
@@ -67,8 +65,6 @@ export const DependentsEmptyState: FC<DependentsEmptyStateProps> = ({
       }
     />
   ) : (
-    // Nothing is stopping this one from gaining dependents, so it says where
-    // they come from rather than only that there are none.
     <EmptyState
       className='p-4'
       icon='layers'

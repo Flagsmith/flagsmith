@@ -21,8 +21,7 @@ const DependentFeatures: FC<DependentFeaturesProps> = ({
 
     {edges.length ? (
       <>
-        {/* Describes the rows, so it only appears when there are rows. The
-            heading already says what they are; this says what it costs them. */}
+        {/* Describes the rows, so it only appears when there are rows. */}
         <div className='text-muted mb-3'>
           These flags are off while <strong>{featureName}</strong> is off.
         </div>

@@ -2,8 +2,7 @@ import { FC } from 'react'
 import Skeleton from 'components/Skeleton'
 import './FeatureDependenciesTab.scss'
 
-// Two rows, which is the common case. Mirrors the tab's real shape so the
-// layout does not jump when the data lands.
+// Mirrors the tab's real shape so the layout does not jump when data lands.
 const ROW_COUNT = 2
 
 const FeatureDependenciesSkeleton: FC = () => (

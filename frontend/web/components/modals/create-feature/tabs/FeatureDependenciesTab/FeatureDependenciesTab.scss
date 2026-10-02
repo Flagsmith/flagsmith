@@ -5,33 +5,16 @@
     overflow: hidden;
   }
 
-  // Sits above the table and reads as its summary, so it takes a muted surface
-  // rather than a border of its own competing with the panel's.
-  &__add {
-    margin-top: 12px;
-  }
-
-  // The picker as the table's last row, so a new prerequisite appears where it
-  // was asked for.
   &__add-row td {
     padding: 8px 16px;
     background: var(--color-surface-muted);
-    // Enters the same way the row it creates will, without the tint: it
-    // already has a surface of its own.
     animation: feature-dependencies-enter 180ms var(--easing-standard) both;
   }
 
-  &__add-control {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    // The select carries its own intrinsic width, so it needs permission to
-    // shrink or it pushes the row past the panel.
-    > :first-child {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
+  // The select needs permission to shrink or it pushes the row past the panel.
+  &__add-control > :first-child {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   &__table {
@@ -60,15 +43,12 @@
 
   }
 
+  // No weight utility exists; the rest is .text-truncate on the cell.
   &__name {
     font-weight: var(--font-weight-medium);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
-  // A fact, not a verdict. Position carries the state as well as colour, so it
-  // still reads without one.
+  // Position carries the state as well as colour, so it reads without one.
   &__toggle {
     display: inline-block;
     position: relative;
@@ -79,8 +59,7 @@
 
     transition: background-color var(--duration-fast) var(--easing-standard);
 
-    // Translated rather than swapped between left and right, so the knob can
-    // slide when a prerequisite is toggled elsewhere and the list refetches.
+    // Translated rather than swapped sides, so the knob can slide.
     &::after {
       content: '';
       position: absolute;
@@ -94,8 +73,7 @@
     }
   }
 
-  // The product's own toggle colour, not green: green is reserved for the
-  // Satisfies column, where it means the rule is met rather than the flag is on.
+  // The product's toggle colour. Green is reserved for Satisfies.
   &__toggle--on {
     background: var(--color-surface-action);
 
@@ -111,25 +89,16 @@
     color: var(--color-text-secondary);
   }
 
-  // Only the satisfied rows are coloured. An unsatisfied one stays neutral:
-  // the header above already carries the one warning on the page, and at nine
-  // rows an amber column shouts louder than the verdict it belongs to.
+  // Only the satisfied rows are coloured; the banner carries the warning.
   &__satisfies--met {
     color: var(--color-text-success);
   }
 
   &__actions-cell {
     width: 60px;
-    text-align: right;
   }
 
-
-  &__row--clickable {
-    cursor: pointer;
-  }
-
-  // Same padding and column split as a real table row, so nothing moves when
-  // the data lands.
+  // Same padding and columns as a real row, so nothing moves when data lands.
   &__skeleton-row {
     display: grid;
     grid-template-columns: 1fr 72px 88px;
@@ -148,9 +117,7 @@
     padding-bottom: 8px;
   }
 
-  // Two jobs: the short enter says the row arrived where the picker was, the
-  // long tint says which row it is once the eye catches up. Feedback rather
-  // than state, so both end.
+  // The short enter says the row arrived; the long tint says which one.
   &__row--added td {
     animation: feature-dependencies-enter 180ms var(--easing-standard) both,
       feature-dependencies-added 2s ease-out;

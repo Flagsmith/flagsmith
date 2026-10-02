@@ -18,7 +18,7 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
       <tr>
         <th scope='col'>Feature</th>
         <th
-          className='feature-dependencies__actions-cell'
+          className='feature-dependencies__actions-cell text-end'
           aria-label='Actions'
         />
       </tr>
@@ -27,10 +27,10 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
       {edges.map((edge) => (
         <tr
           key={edge.feature.id}
-          className='feature-dependencies__row--clickable'
+          className='cursor-pointer'
           onClick={() => onSelect(edge)}
         >
-          <td className='feature-dependencies__name'>
+          <td className='feature-dependencies__name text-truncate'>
             <Button
               theme='text'
               onClick={(e: MouseEvent) => {
@@ -41,7 +41,10 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
               {edge.feature.name}
             </Button>
           </td>
-          <td className='feature-dependencies__actions-cell' aria-hidden>
+          <td
+            className='feature-dependencies__actions-cell text-end'
+            aria-hidden
+          >
             <Icon
               name='chevron-right'
               width={16}

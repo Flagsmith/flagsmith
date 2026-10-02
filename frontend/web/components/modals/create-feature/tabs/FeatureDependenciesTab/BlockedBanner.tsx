@@ -11,9 +11,8 @@ type BlockedBannerProps = {
   rows: PrerequisiteRow[]
 }
 
-// Only rendered when the flag is held off, so there is always something to act
-// on. A flag serving its own value needs no announcement: the table's ticks
-// already say so.
+// Only rendered when the flag is held off. A flag serving its own value needs
+// no announcement.
 const BlockedBanner: FC<BlockedBannerProps> = ({ environmentName, rows }) =>
   isBlocked(rows) ? (
     <Banner

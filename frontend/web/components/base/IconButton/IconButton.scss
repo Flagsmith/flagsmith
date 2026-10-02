@@ -1,13 +1,8 @@
-// Icon-only button, per the design system's Button-icon frame: a 44px square
-// holding a 24px icon, in four variants across five states.
+// Per the design system's Button-icon frame. Semantic tokens throughout, so
+// #8594 re-anchoring our ramps on the frame's palettes needs no change here.
 //
-// The frame's Primary and Supporting palettes arrive with #8594, which
-// re-anchors our ramps on them, so these semantic tokens pick up the frame's
-// values without changing anything here.
-//
-// Icons on a filled variant use --slate-0 rather than a semantic token: ink on
-// a coloured surface stays white in both themes, and we have no token for that
-// yet (the legacy $text-icon-light is its stand-in).
+// Icons on a filled variant use --slate-0: ink on a coloured surface stays
+// white in both themes, and we have no token for that yet.
 .ds-icon-button {
   justify-content: center;
   border-radius: var(--radius-md);
@@ -15,19 +10,17 @@
     border-color var(--duration-fast) var(--easing-standard);
 
   // Icons drawn with currentColor follow `color`. The few that hardcode a fill
-  // on the path need it passed as a prop instead.
+  // need it passed as a prop.
   &__icon {
     display: inline-flex;
   }
 
-  // The frame draws a 3px ring. BareButton already gives a focus-visible
-  // outline, so this only widens it to match.
+  // BareButton gives the outline; the frame's ring is 3px.
   &:focus-visible {
     outline-width: 3px;
   }
 
-  // The frame draws 44px only. The two smaller steps are ours, for dense rows
-  // where a 44px square is taller than the row it sits in.
+  // The frame draws 44px only. The smaller steps are ours, for dense rows.
   &--large {
     width: 44px;
     height: 44px;
@@ -103,8 +96,7 @@
     }
   }
 
-  // No surface at rest, so it can sit in a list row without turning every row
-  // into a strip of buttons. Not in the frame: ours, for row actions.
+  // No surface at rest, for row actions. Not in the frame: ours.
   &--ghost {
     background: transparent;
     color: var(--color-icon-secondary);

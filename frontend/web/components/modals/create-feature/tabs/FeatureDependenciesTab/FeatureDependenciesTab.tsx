@@ -18,7 +18,6 @@ type FeatureDependenciesTabProps = {
   onSelectFeature: (featureId: number) => void
 }
 
-// Long enough to catch the eye, short enough not to look like state.
 const HIGHLIGHT_MS = 2000
 
 const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
@@ -36,8 +35,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
     undefined,
   )
 
-  // The highlight outlives the interaction by two seconds, so it can outlive
-  // the modal too.
+  // The highlight outlives the interaction, so it can outlive the modal.
   useEffect(() => () => clearTimeout(highlightTimeout.current), [])
 
   const { permission: canManage } = useHasPermission({
@@ -49,8 +47,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   const { add, dependentEdges, isCreating, isError, isLoading, remove, rows } =
     useDependencies({ environmentId, featureId: projectFlag.id, projectId })
 
-  // A refusal belongs to the add it came from, so it goes when that ends,
-  // whether the user picked something else or gave up.
+  // A refusal belongs to the add it came from, so it ends with it.
   const onAddingChange = useCallback((adding: boolean) => {
     setConflict(null)
     setIsAdding(adding)
@@ -59,7 +56,6 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   const onAdd = (feature: ProjectFlag) => {
     setConflict(null)
     add(feature)
-      // The row appearing and lighting up says it landed, so no toast.
       .then(() => {
         setIsAdding(false)
         setHighlightedId(feature.id)
@@ -68,8 +64,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
           HIGHLIGHT_MS,
         )
       })
-      // Every refusal names the features and the rule it broke, so the
-      // message is more use than anything we would write here.
+      // The API message names both features and the rule.
       .catch((error: { data?: { message?: string } }) =>
         setConflict(error?.data?.message ?? 'Could not add that prerequisite.'),
       )
@@ -91,8 +86,6 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         setRemovingId(edge.prerequisite.id)
         remove(edge.prerequisite.id)
           .then(() => toast('Prerequisite removed'))
-          // Nothing is left on screen to correct, so this goes to a toast
-          // rather than the picker's error slot.
           .catch(() => toast('Could not remove that prerequisite.', 'danger'))
           .finally(() => setRemovingId(undefined))
       },
@@ -104,8 +97,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
     return <FeatureDependenciesSkeleton />
   }
 
-  // An empty list and a failed request look the same once the data is gone, so
-  // say which it is rather than claiming nothing is gated.
+  // Otherwise a failed request reads as "no prerequisites".
   if (isError) {
     return <ErrorMessage error="Could not load this feature's dependencies." />
   }
@@ -131,8 +123,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
           environmentId={environmentId}
           disabled={isCreating}
           placeholder='Add a prerequisite flag...'
-          // A feature cannot depend on itself, and a prerequisite cannot be
-          // added twice; the API refuses both, so keep them out of the list.
+          // The API refuses both of these, so keep them out of the list.
           ignore={[
             projectFlag.id,
             ...rows.map((row) => row.edge.prerequisite.id),
