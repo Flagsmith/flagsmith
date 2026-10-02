@@ -8,6 +8,7 @@ import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
 import FeatureSelect from 'components/FeatureSelect'
 import Icon from 'components/icons/Icon'
+import Link from 'components/base/link'
 import Tooltip from 'components/Tooltip'
 import ModalHR from 'components/modals/ModalHR'
 import BlockedBanner from './BlockedBanner'
@@ -137,9 +138,9 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         <div className='text-muted mb-3'>
           This flag only serves its own value when every prerequisite below is
           on.{' '}
-          <a href={DEPENDENCIES_DOCS_URL} target='_blank' rel='noreferrer'>
+          <Link href={DEPENDENCIES_DOCS_URL} target='_blank'>
             Learn more
-          </a>
+          </Link>
         </div>
       )}
 
