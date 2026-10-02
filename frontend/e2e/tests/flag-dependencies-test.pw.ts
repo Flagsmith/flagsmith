@@ -1,5 +1,11 @@
 import { test, expect } from '../test-setup'
-import { createHelpers, getFlagsmith, log, LONG_TIMEOUT } from '../helpers'
+import {
+  createHelpers,
+  getFlagsmith,
+  log,
+  LONG_TIMEOUT,
+  visualSnapshot,
+} from '../helpers'
 import { E2E_USER, PASSWORD, E2E_TEST_PROJECT } from '../config'
 
 const PREREQUISITE = 'dependency_parent'
@@ -8,7 +14,7 @@ const DEPENDENT = 'dependency_child'
 test.describe('Flag Dependencies', () => {
   test('A flag can be gated behind another, and says so on both sides @oss', async ({
     page,
-  }) => {
+  }, testInfo) => {
     const {
       closeModal,
       createFeature,
@@ -44,6 +50,7 @@ test.describe('Flag Dependencies', () => {
     log('The dependent has no prerequisites yet')
     await openDependencies(DEPENDENT)
     await expect(page.getByText('No prerequisites')).toBeVisible()
+    await visualSnapshot(page, 'dependencies-empty', testInfo)
 
     log('Add the prerequisite')
     await page.getByRole('button', { name: 'Add prerequisite' }).click()
@@ -62,7 +69,8 @@ test.describe('Flag Dependencies', () => {
     log('The prerequisite is off, so the flag is held off')
     await expect(row.getByRole('img', { name: 'Off' })).toBeVisible()
     await expect(row.getByText('No', { exact: true })).toBeVisible()
-    await expect(page.getByText(/is serving off in/)).toBeVisible()
+    await expect(page.getByText(/Serving off in/)).toBeVisible()
+    await visualSnapshot(page, 'dependencies-blocked', testInfo)
 
     log('Turning the prerequisite on satisfies it')
     await closeModal()
@@ -71,7 +79,8 @@ test.describe('Flag Dependencies', () => {
     await openDependencies(DEPENDENT)
     await expect(row.getByRole('img', { name: 'On' })).toBeVisible()
     await expect(row.getByText('Yes', { exact: true })).toBeVisible()
-    await expect(page.getByText(/is serving off in/)).toBeHidden()
+    await expect(page.getByText(/Serving off in/)).toBeHidden()
+    await visualSnapshot(page, 'dependencies-satisfied', testInfo)
 
     log('The prerequisite names its dependent and cannot take one of its own')
     await closeModal()
@@ -84,6 +93,7 @@ test.describe('Flag Dependencies', () => {
       page.getByRole('button', { name: 'Add prerequisite' }),
     ).toBeHidden()
     await expect(page.getByRole('cell', { name: DEPENDENT })).toBeVisible()
+    await visualSnapshot(page, 'dependencies-dependents', testInfo)
 
     // Removing a prerequisite needs the DELETE endpoint from #8650. Add the
     // step here once it merges: the bin, the confirmation, then the row gone
@@ -95,5 +105,13 @@ test.describe('Flag Dependencies', () => {
     await gotoFeatures()
     await deleteFeature(DEPENDENT)
     await deleteFeature(PREREQUISITE)
+    // A half-finished teardown leaves both names taken, and the next run on
+    // this project cannot create them again.
+    await expect(
+      page.locator('[data-test^="feature-item-"]', { hasText: DEPENDENT }),
+    ).toHaveCount(0)
+    await expect(
+      page.locator('[data-test^="feature-item-"]', { hasText: PREREQUISITE }),
+    ).toHaveCount(0)
   })
 })
