@@ -173,7 +173,7 @@ def test_map_influx_tag_to_id__tag_value__returns_expected(
     value: str | None,
     expected: int | None,
 ) -> None:
-    # When
+    # Given / When
     result = _map_influx_tag_to_id(value)
 
     # Then
