@@ -7,13 +7,10 @@ import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
 import ModalHR from 'components/modals/ModalHR'
 import BlockedBanner from './BlockedBanner'
-import DependentFeaturesTable from './DependentFeaturesTable'
+import DependentFeatures from './DependentFeatures'
 import PrerequisitesTable from './PrerequisitesTable'
 import { PrerequisiteRow } from './prerequisiteState'
-import {
-  DependentsEmptyState,
-  PrerequisitesEmptyState,
-} from './DependenciesEmptyStates'
+import { PrerequisitesEmptyState } from './DependenciesEmptyStates'
 
 export const DEPENDENCIES_DOCS_URL =
   'https://docs.flagsmith.com/basic-features/managing-features'
@@ -33,7 +30,7 @@ export type FeatureDependenciesViewProps = {
   isAdding: boolean
   onAddingChange: (isAdding: boolean) => void
   highlightedId?: number
-  removingId?: number
+  isRemoving?: number
   onRemove: (edge: DependencyEdge) => void
   onSelectFeature: (featureId: number) => void
 }
@@ -47,10 +44,10 @@ const FeatureDependenciesView: FC<FeatureDependenciesViewProps> = ({
   featureName,
   highlightedId,
   isAdding,
+  isRemoving,
   onAddingChange,
   onRemove,
   onSelectFeature,
-  removingId,
   rows,
 }) => {
   const isPrerequisite = !!dependentEdges.length
@@ -92,7 +89,7 @@ const FeatureDependenciesView: FC<FeatureDependenciesViewProps> = ({
               rows={rows}
               canManage={canManage}
               highlightedId={highlightedId}
-              isRemoving={removingId}
+              isRemoving={isRemoving}
               onRemove={onRemove}
               addRow={
                 isAdding && (
@@ -103,6 +100,8 @@ const FeatureDependenciesView: FC<FeatureDependenciesViewProps> = ({
                     <td colSpan={4}>
                       <div className='feature-dependencies__add-control'>
                         {addControl}
+                        {/* The refusal belonged to the interaction being
+                            cancelled, so it goes with it. */}
                         <Button
                           theme='text'
                           onClick={() => onAddingChange(false)}
@@ -153,31 +152,12 @@ const FeatureDependenciesView: FC<FeatureDependenciesViewProps> = ({
 
       <ModalHR className='mt-4' />
 
-      <h5 className='mt-4 mb-2'>Dependent features</h5>
-
-      {dependentEdges.length ? (
-        <>
-          {/* Describes the rows, so it only appears when there are rows. */}
-          <div className='text-muted mb-3'>
-            These features list <strong>{featureName}</strong> as a
-            prerequisite. Each is off by default in this environment whenever{' '}
-            <strong>{featureName}</strong> is not on.
-          </div>
-          <div className='feature-dependencies__panel'>
-            <DependentFeaturesTable
-              edges={dependentEdges}
-              onSelect={(edge) => onSelectFeature(edge.feature.id)}
-            />
-          </div>
-        </>
-      ) : (
-        <div className='feature-dependencies__panel'>
-          <DependentsEmptyState
-            featureName={featureName}
-            hasPrerequisites={!!rows.length}
-          />
-        </div>
-      )}
+      <DependentFeatures
+        featureName={featureName}
+        edges={dependentEdges}
+        hasPrerequisites={!!rows.length}
+        onSelect={onSelectFeature}
+      />
     </div>
   )
 }

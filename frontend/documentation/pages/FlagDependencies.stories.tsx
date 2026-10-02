@@ -6,6 +6,7 @@ import {
   FeatureDependenciesSkeleton,
   FeatureDependenciesView,
   PrerequisiteRow,
+  toPrerequisiteRow,
 } from 'components/modals/create-feature/tabs/FeatureDependenciesTab'
 
 const ENVIRONMENT = 'Development'
@@ -70,11 +71,14 @@ const Prototype = ({
   const [highlightedId, setHighlightedId] = useState<number | undefined>()
   const [isAdding, setIsAdding] = useState(false)
 
-  const rows: PrerequisiteRow[] = prerequisites.map((prerequisite) => ({
-    edge: edge(self, prerequisite, prerequisite.isSystem ?? true),
-    isEnabled: !!CATALOGUE.find((flag) => flag.id === prerequisite.id)?.enabled,
-    isMet: !!CATALOGUE.find((flag) => flag.id === prerequisite.id)?.enabled,
-  }))
+  // Through the same helper the tab uses, so a hand-written segment row shows
+  // its unknown state here rather than only in production.
+  const rows: PrerequisiteRow[] = prerequisites.map((prerequisite) =>
+    toPrerequisiteRow(
+      edge(self, prerequisite, prerequisite.isSystem ?? true),
+      !!CATALOGUE.find((flag) => flag.id === prerequisite.id)?.enabled,
+    ),
+  )
 
   const taken = prerequisites.map((prerequisite) => prerequisite.id)
   const available = CATALOGUE.filter((flag) => !taken.includes(flag.id))
@@ -89,7 +93,10 @@ const Prototype = ({
         canManage={canManage}
         conflict={conflict}
         isAdding={isAdding}
-        onAddingChange={setIsAdding}
+        onAddingChange={(adding: boolean) => {
+          setConflict(null)
+          setIsAdding(adding)
+        }}
         highlightedId={highlightedId}
         onRemove={(removed) => {
           setConflict(null)
