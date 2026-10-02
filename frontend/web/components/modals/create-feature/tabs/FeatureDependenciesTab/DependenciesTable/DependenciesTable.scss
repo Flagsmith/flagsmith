@@ -1,0 +1,32 @@
+.dependencies-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+
+  th {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  td {
+    padding: 10px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  &__name {
+    font-weight: var(--font-weight-medium);
+  }
+
+  &__actions {
+    width: 60px;
+  }
+}

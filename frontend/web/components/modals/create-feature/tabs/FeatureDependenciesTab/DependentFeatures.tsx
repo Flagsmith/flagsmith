@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { DependencyEdge } from 'common/types/responses'
+import DependenciesPanel from './DependenciesPanel'
 import DependentFeaturesTable from './DependentFeaturesTable'
 import { DependentsEmptyState } from './DependenciesEmptyStates'
 
@@ -25,20 +26,20 @@ const DependentFeatures: FC<DependentFeaturesProps> = ({
         <div className='text-muted mb-3'>
           These flags are off while <strong>{featureName}</strong> is off.
         </div>
-        <div className='feature-dependencies__panel'>
+        <DependenciesPanel>
           <DependentFeaturesTable
             edges={edges}
             onSelect={(edge) => onSelect(edge.feature.id)}
           />
-        </div>
+        </DependenciesPanel>
       </>
     ) : (
-      <div className='feature-dependencies__panel'>
+      <DependenciesPanel>
         <DependentsEmptyState
           featureName={featureName}
           hasPrerequisites={hasPrerequisites}
         />
-      </div>
+      </DependenciesPanel>
     )}
   </>
 )

@@ -12,6 +12,7 @@ import Link from 'components/base/link'
 import Tooltip from 'components/Tooltip'
 import ModalHR from 'components/modals/ModalHR'
 import BlockedBanner from './BlockedBanner'
+import DependenciesPanel from './DependenciesPanel'
 import DependentFeatures from './DependentFeatures'
 import FeatureDependenciesSkeleton from './FeatureDependenciesSkeleton'
 import PrerequisitesTable, {
@@ -125,7 +126,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   const isOpenForAdding = isAdding && !isPrerequisite
 
   return (
-    <div className='feature-dependencies'>
+    <div>
       <div className='d-flex align-items-center gap-1 mb-2'>
         <Tooltip
           title={
@@ -154,7 +155,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
       {rows.length || isOpenForAdding ? (
         <>
           <BlockedBanner environmentName={environmentName} rows={rows} />
-          <div className='feature-dependencies__panel'>
+          <DependenciesPanel>
             <PrerequisitesTable
               rows={rows}
               canManage={canManage}
@@ -193,15 +194,15 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
                 )
               }
             />
-          </div>
+          </DependenciesPanel>
         </>
       ) : (
-        <div className='feature-dependencies__panel'>
+        <DependenciesPanel>
           <PrerequisitesEmptyState
             featureName={projectFlag.name}
             isPrerequisite={isPrerequisite}
           />
-        </div>
+        </DependenciesPanel>
       )}
 
       {/* Warning, not error: nothing failed, a rule is being stated. On

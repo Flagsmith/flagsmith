@@ -1,10 +1,12 @@
 import { FC, ReactNode } from 'react'
 import cn from 'classnames'
 import { DependencyEdge } from 'common/types/responses'
+import DependenciesTable from 'components/modals/create-feature/tabs/FeatureDependenciesTab/DependenciesTable'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
-import { PrerequisiteRow } from './prerequisiteState'
+import { PrerequisiteRow } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/prerequisiteState'
+import './PrerequisitesTable.scss'
 
 // The actions column only exists where the user can manage dependencies, so a
 // row spanning the table has to know that too.
@@ -24,8 +26,8 @@ type PrerequisitesTableProps = {
 // A span, not a Switch: nothing here edits the prerequisite.
 const StateToggle: FC<{ isEnabled: boolean }> = ({ isEnabled }) => (
   <span
-    className={cn('feature-dependencies__toggle', {
-      'feature-dependencies__toggle--on': isEnabled,
+    className={cn('prerequisite-toggle', {
+      'prerequisite-toggle--on': isEnabled,
     })}
     role='img'
     aria-label={isEnabled ? 'On' : 'Off'}
@@ -40,7 +42,7 @@ const Satisfies: FC<{ isMet?: boolean }> = ({ isMet }) => {
       <Tooltip
         title={
           <span
-            className='feature-dependencies__satisfies'
+            className='prerequisite-satisfies'
             role='img'
             aria-label='Unknown'
           >
@@ -56,9 +58,9 @@ const Satisfies: FC<{ isMet?: boolean }> = ({ isMet }) => {
   }
   return (
     <span
-      className={`feature-dependencies__satisfies${
-        isMet ? ' feature-dependencies__satisfies--met' : ''
-      }`}
+      className={cn('prerequisite-satisfies', {
+        'prerequisite-satisfies--met': isMet,
+      })}
     >
       <Icon name={isMet ? 'checkmark-circle' : 'minus-circle'} width={16} />
       {isMet ? 'Yes' : 'No'}
@@ -74,63 +76,60 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
   onRemove,
   rows,
 }) => (
-  <table className='feature-dependencies__table'>
-    <thead>
-      <tr>
+  <DependenciesTable
+    head={
+      <>
         <th scope='col'>Prerequisite</th>
         <th scope='col'>Status</th>
         <th scope='col'>Satisfies</th>
         {canManage && (
           <th
-            className='feature-dependencies__actions-cell text-end'
+            className='dependencies-table__actions text-end'
             aria-label='Actions'
           />
         )}
+      </>
+    }
+  >
+    {rows.map(({ edge, isEnabled, isMet }) => (
+      <tr
+        key={edge.prerequisite.id}
+        className={cn({
+          'prerequisite-row--added': highlightedId === edge.prerequisite.id,
+          // Dimmed while the DELETE is in flight.
+          'prerequisite-row--removing': isRemoving === edge.prerequisite.id,
+        })}
+      >
+        <td className='dependencies-table__name text-truncate'>
+          {edge.prerequisite.name}
+        </td>
+        <td>
+          <StateToggle isEnabled={isEnabled} />
+        </td>
+        <td>
+          <Satisfies isMet={isMet} />
+        </td>
+        {canManage && (
+          <td className='dependencies-table__actions text-end'>
+            {/* An edge from a hand-written segment condition cannot be removed
+                through the dependencies API, so it gets no control. */}
+            {edge.segment.is_system && (
+              <IconButton
+                size='medium'
+                variant='ghost'
+                disabled={isRemoving === edge.prerequisite.id}
+                onClick={() => onRemove(edge)}
+                aria-label={`Remove ${edge.prerequisite.name} as a prerequisite`}
+              >
+                <Icon name='trash-2' width={20} />
+              </IconButton>
+            )}
+          </td>
+        )}
       </tr>
-    </thead>
-    <tbody>
-      {rows.map(({ edge, isEnabled, isMet }) => (
-        <tr
-          key={edge.prerequisite.id}
-          className={cn({
-            'feature-dependencies__row--added':
-              highlightedId === edge.prerequisite.id,
-            // Dimmed while the DELETE is in flight.
-            'feature-dependencies__row--removing':
-              isRemoving === edge.prerequisite.id,
-          })}
-        >
-          <td className='feature-dependencies__name text-truncate'>
-            {edge.prerequisite.name}
-          </td>
-          <td>
-            <StateToggle isEnabled={isEnabled} />
-          </td>
-          <td>
-            <Satisfies isMet={isMet} />
-          </td>
-          {canManage && (
-            <td className='feature-dependencies__actions-cell text-end'>
-              {/* An edge from a hand-written segment condition cannot be removed
-                  through the dependencies API, so it gets no control. */}
-              {edge.segment.is_system && (
-                <IconButton
-                  size='medium'
-                  variant='ghost'
-                  disabled={isRemoving === edge.prerequisite.id}
-                  onClick={() => onRemove(edge)}
-                  aria-label={`Remove ${edge.prerequisite.name} as a prerequisite`}
-                >
-                  <Icon name='trash-2' width={20} />
-                </IconButton>
-              )}
-            </td>
-          )}
-        </tr>
-      ))}
-      {addRow}
-    </tbody>
-  </table>
+    ))}
+    {addRow}
+  </DependenciesTable>
 )
 
 export default PrerequisitesTable

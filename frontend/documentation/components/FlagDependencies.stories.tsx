@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from 'storybook'
 import { DependencyEdge } from 'common/types/responses'
 import {
   BlockedBanner,
+  DependenciesPanel,
   DependentFeatures,
   DependentsEmptyState,
   FeatureDependenciesSkeleton,
@@ -45,14 +46,12 @@ const noop = () => undefined
 // Every story renders inside the tab's own width, so the table and the banner
 // wrap the way they do in the modal.
 const Tab = ({ children }: { children: React.ReactNode }) => (
-  <div className='feature-dependencies' style={{ maxWidth: 720 }}>
-    {children}
-  </div>
+  <div style={{ maxWidth: 720 }}>{children}</div>
 )
 
 const Panel = ({ children }: { children: React.ReactNode }) => (
   <Tab>
-    <div className='feature-dependencies__panel'>{children}</div>
+    <DependenciesPanel>{children}</DependenciesPanel>
   </Tab>
 )
 
