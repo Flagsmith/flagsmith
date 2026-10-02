@@ -28,7 +28,7 @@ $bg-light300: primitive('slate-100');
 $bg-light500: primitive('slate-200');
 
 // Body
-$dark-highlight-color: #e1e1e1;
+$dark-highlight-color: primitive('slate-200');
 $body-bg-dark: $bg-dark500;
 $body-color-dark: white;
 $body-color: primitive('slate-600');
@@ -73,14 +73,14 @@ $anchor-color-hover: lighten($header-color, 10);
 $anchor-color-dark: $dark-highlight-color;
 
 // Alerts
-$success-solid-alert: rgba(238, 248, 247);
-$info-solid-alert: rgba(236, 249, 252);
-$warning-solid-alert: rgba(255, 248, 240);
-$danger-solid-alert: rgba(254, 239, 241);
-$success-solid-dark-alert: rgba(17, 32, 46);
-$info-solid-dark-alert: rgba(15, 32, 52);
-$warning-solid-dark-alert: rgba(34, 31, 39);
-$danger-solid-dark-alert: rgba(34, 23, 40);
+$success-solid-alert: primitive('green-50');
+$info-solid-alert: primitive('blue-100');
+$warning-solid-alert: primitive('gold-100');
+$danger-solid-alert: primitive('red-100');
+$success-solid-dark-alert: primitive('green-900');
+$info-solid-dark-alert: primitive('blue-900');
+$warning-solid-dark-alert: primitive('gold-950');
+$danger-solid-dark-alert: primitive('red-900');
 
 // Alphas
 $info-alfa-8: rgba(primitive('blue-500'), 0.08);
@@ -147,8 +147,8 @@ $btn-outline-hover-bg: $primary-alfa-8;
 $btn-outline-hover-bg-dark: $basic-alpha-8;
 $btn-outline-focus-bg-dark: $primary-alfa-8;
 $btn-outline-active-bg: $primary-alfa-16;
-$btn-danger-hover: #cd384d;
-$btn-danger-active: #ac2646;
+$btn-danger-hover: primitive('red-600');
+$btn-danger-active: primitive('red-700');
 $btn-success: $success400;
 $btn-success-hover: $success;
 $btn-success-active: $success600;
@@ -235,7 +235,6 @@ $h6-line-height: 24px;
 //Input
 $input-bg: primitive('slate-0');
 $input-bg-dark: $bg-dark300;
-$input-bg-alt: #f7f7f7;
 $input-color-dark: $text-icon-light-grey;
 $input-border-radius: $border-radius;
 $input-height: 44px;
@@ -341,7 +340,6 @@ $panel-heading-border: 1px solid $primary900;
 // Code help e.g. installing the SDK
 $btn-code-button-color: $header-color;
 $btn-color: white;
-$btn-color-dark: #d9d9d9;
 
 $scrollbar-track: $white-alpha-16;
 $scrollbar-thumb: $bg-light300;
@@ -376,7 +374,7 @@ $theme-colors: (
   }
 }
 .bg-faint {
-  background-color: #fafafa;
+  background-color: primitive('slate-50');
 }
 
 .dark .bg-faint {
