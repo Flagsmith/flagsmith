@@ -38,7 +38,6 @@ $text-icon-light-grey: primitive('slate-300');
 $text-muted: var(--color-text-secondary);
 
 // Header
-$header-color: #1e0d26; // for headers and labels
 $header-color-dark: $text-icon-light;
 
 // Other colors
@@ -69,7 +68,6 @@ $secondary: primitive('gold-300');
 $link-color: $primary;
 $anchor-color: $primary900;
 $anchor-color-dark: $text-icon-light;
-$anchor-color-hover: lighten($header-color, 10);
 $anchor-color-dark: $dark-highlight-color;
 
 // Alerts
@@ -338,7 +336,6 @@ $panel-heading-color-dark: $header-color-dark;
 $panel-heading-border: 1px solid $primary900;
 
 // Code help e.g. installing the SDK
-$btn-code-button-color: $header-color;
 $btn-color: white;
 
 $scrollbar-track: $white-alpha-16;
