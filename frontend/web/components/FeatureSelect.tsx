@@ -37,7 +37,8 @@ const FeatureSelect: FC<FeatureSelectProps> = ({
 }) => {
   const { search, searchInput, setSearchInput } = useDebouncedSearch()
   // getFeatureList parses environmentId as the numeric id, not the api key.
-  const { getEnvironmentIdFromKey } = useProjectEnvironments(projectId)
+  const { getEnvironmentIdFromKey, isLoading: isLoadingEnvironments } =
+    useProjectEnvironments(projectId)
   const numericEnvId = getEnvironmentIdFromKey(environmentId)
 
   const { data, isLoading: isLoadingFeatures } = useGetFeatureListQuery(
@@ -53,10 +54,10 @@ const FeatureSelect: FC<FeatureSelectProps> = ({
     { skip: !numericEnvId },
   )
 
-  // A skipped query reports neither loading nor error, so without this the
-  // picker reads as "no features to choose from" until the environment
-  // resolves.
-  const isLoading = isLoadingFeatures || !numericEnvId
+  // The feature list is skipped until the environment resolves, and a skipped
+  // query reports neither loading nor error. Taken from the lookup itself, so a
+  // failed one stops the spinner rather than running it forever.
+  const isLoading = isLoadingEnvironments || isLoadingFeatures
 
   const options = (data?.results ?? [])
     .filter((feature) => !ignore?.includes(feature.id))

@@ -95,10 +95,7 @@ export const useDependencies = ({
       isLoadingDependencies ||
       isLoadingDependents ||
       isLoadingEnvironments ||
-      isLoadingFeatureList ||
-      // The feature list is skipped until the environment resolves, and a
-      // skipped query reports neither loading nor error.
-      (!!numericEnvId && isLoadingFeatureList),
+      isLoadingFeatureList,
     remove: (prerequisiteFeatureId: number) =>
       deleteDependency({
         environmentId,
