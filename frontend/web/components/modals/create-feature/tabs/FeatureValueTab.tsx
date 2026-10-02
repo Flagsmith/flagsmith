@@ -51,6 +51,7 @@ type FeatureValueTabProps = {
   projectId: number | string
   identity?: string
   noPermissions: boolean
+  preventFlagDefaults?: boolean
   freeze?: FeatureExperimentFreeze
   featureState: FeatureState
   // As saved. featureState is the editor's copy, which moves with every click.
@@ -104,12 +105,15 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
   onSaveFeatureValue,
   onSaveVariationValues,
   originalMultivariateOptions,
+  preventFlagDefaults,
   projectFlag,
   projectId,
   storedFeatureState,
 }) => {
   const isEdit = !!projectFlag?.id
   const isDisabled = !!noPermissions || !!freeze?.isFrozen
+  // Not isDisabled: variations are kept on create, only these two are not.
+  const isDefaultDisabled = isDisabled || !!preventFlagDefaults
 
   const { permission: createFeature } = useHasPermission({
     id: projectId,
@@ -375,7 +379,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               <Switch
                 data-test='toggle-feature-button'
                 defaultChecked={default_enabled}
-                disabled={isDisabled}
+                disabled={isDefaultDisabled}
                 checked={default_enabled}
                 onChange={(enabled) => onEnvironmentFlagChange({ enabled })}
                 className='ml-0'
@@ -415,7 +419,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
                   feature_state_value: Utils.getTypedValue(newValue),
                 })
               }}
-              disabled={isDisabled}
+              disabled={isDefaultDisabled}
             />
           </div>
           {canCompareValue && (
