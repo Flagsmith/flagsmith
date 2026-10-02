@@ -81,20 +81,23 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
   onRemove,
   rows,
 }) => (
-  <Table variant='ghost' layout='fixed'>
+  <Table variant='ghost' layout='fixed' hover>
     <Table.Header>
       <Table.Row>
         <Table.ColumnHeader>Prerequisite</Table.ColumnHeader>
         <Table.ColumnHeader>Status</Table.ColumnHeader>
         <Table.ColumnHeader>Satisfies</Table.ColumnHeader>
         {canManage && (
-          <th className='prerequisite-actions text-end' aria-label='Actions' />
+          <Table.ColumnHeader
+            className='prerequisite-actions text-end'
+            aria-label='Actions'
+          />
         )}
       </Table.Row>
     </Table.Header>
     <Table.Body>
       {rows.map(({ edge, isEnabled, isMet }) => (
-        <tr
+        <Table.Row
           key={edge.prerequisite.id}
           className={cn({
             'prerequisite-row--added': highlightedId === edge.prerequisite.id,
@@ -102,17 +105,17 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
             'prerequisite-row--removing': isRemoving === edge.prerequisite.id,
           })}
         >
-          <td className='prerequisite-name text-truncate'>
+          <Table.Cell className='prerequisite-name text-truncate'>
             {edge.prerequisite.name}
-          </td>
-          <td>
+          </Table.Cell>
+          <Table.Cell>
             <StateToggle isEnabled={isEnabled} />
-          </td>
-          <td>
+          </Table.Cell>
+          <Table.Cell>
             <Satisfies isMet={isMet} />
-          </td>
+          </Table.Cell>
           {canManage && (
-            <td className='prerequisite-actions text-end'>
+            <Table.Cell className='prerequisite-actions text-end'>
               {/* An edge from a hand-written segment condition cannot be removed
                 through the dependencies API, so it gets no control. */}
               {edge.segment.is_system && (
@@ -126,22 +129,22 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
                   <Icon name='trash-2' width={20} />
                 </IconButton>
               )}
-            </td>
+            </Table.Cell>
           )}
-        </tr>
+        </Table.Row>
       ))}
       {!!addControl && (
-        <tr className='prerequisite-add-row'>
+        <Table.Row className='prerequisite-add-row'>
           {/* One cell: the picker has no column to line up with. */}
-          <td colSpan={columnCount(canManage)}>
+          <Table.Cell colSpan={columnCount(canManage)}>
             <div className='prerequisite-add-control d-flex align-items-center gap-2'>
               {addControl}
               <Button theme='text' onClick={onCancelAdd}>
                 Cancel
               </Button>
             </div>
-          </td>
-        </tr>
+          </Table.Cell>
+        </Table.Row>
       )}
     </Table.Body>
   </Table>

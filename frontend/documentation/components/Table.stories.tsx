@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from 'storybook'
 
 import Table from 'components/base/Table'
+import { DependenciesPanel } from 'components/modals/create-feature/tabs/FeatureDependenciesTab'
 
 const meta: Meta<typeof Table> = {
   component: Table,
@@ -47,6 +48,15 @@ const Head = () => (
 )
 
 // The house style: MetricsTable and ExperimentsTable both already draw this.
+export const Hover: Story = {
+  render: () => (
+    <Table hover>
+      <Head />
+      <Rows />
+    </Table>
+  ),
+}
+
 export const Surface: Story = {
   render: () => (
     <Table>
@@ -59,18 +69,12 @@ export const Surface: Story = {
 // For a table inside a container that already has a border.
 export const Ghost: Story = {
   render: () => (
-    <div
-      style={{
-        border: '1px solid var(--color-border-default)',
-        borderRadius: 'var(--radius-md)',
-        overflow: 'hidden',
-      }}
-    >
+    <DependenciesPanel>
       <Table variant='ghost'>
         <Head />
         <Rows />
       </Table>
-    </div>
+    </DependenciesPanel>
   ),
 }
 

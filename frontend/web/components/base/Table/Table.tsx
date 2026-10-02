@@ -1,4 +1,10 @@
-import { FC, ReactNode, TableHTMLAttributes } from 'react'
+import {
+  FC,
+  HTMLAttributes,
+  TableHTMLAttributes,
+  TdHTMLAttributes,
+  ThHTMLAttributes,
+} from 'react'
 import cn from 'classnames'
 import './Table.scss'
 
@@ -12,22 +18,25 @@ export type TableVariant = 'surface' | 'ghost'
 export type TableLayout = 'auto' | 'fixed'
 
 export type TableProps = TableHTMLAttributes<HTMLTableElement> & {
-  children: ReactNode
   variant?: TableVariant
   layout?: TableLayout
+  // Rows take a hover fill, for tracking one across its columns. A clickable
+  // row needs .cursor-pointer as well.
+  hover?: boolean
 }
 
-type Part = FC<{ children?: ReactNode; className?: string }>
-
+// Every part takes its element's own attributes, so a row can be clickable and
+// a cell can span columns without dropping back to bare markup.
 const Table: FC<TableProps> & {
-  Header: Part
-  Body: Part
-  Row: Part
-  ColumnHeader: Part
-  Cell: Part
+  Header: FC<HTMLAttributes<HTMLTableSectionElement>>
+  Body: FC<HTMLAttributes<HTMLTableSectionElement>>
+  Row: FC<HTMLAttributes<HTMLTableRowElement>>
+  ColumnHeader: FC<ThHTMLAttributes<HTMLTableCellElement>>
+  Cell: FC<TdHTMLAttributes<HTMLTableCellElement>>
 } = ({
   children,
   className,
+  hover,
   layout = 'auto',
   variant = 'surface',
   ...rest
@@ -38,6 +47,7 @@ const Table: FC<TableProps> & {
       'ds-table',
       `ds-table--${variant}`,
       `ds-table--${layout}`,
+      { 'ds-table--hover': hover },
       className,
     )}
   >
@@ -45,28 +55,24 @@ const Table: FC<TableProps> & {
   </table>
 )
 
-Table.Header = ({ children, className }) => (
-  <thead className={className}>{children}</thead>
-)
-
-Table.Body = ({ children, className }) => (
-  <tbody className={className}>{children}</tbody>
-)
-
-Table.Row = ({ children, className }) => (
-  <tr className={className}>{children}</tr>
-)
+Table.Header = ({ children, ...rest }) => <thead {...rest}>{children}</thead>
+Table.Body = ({ children, ...rest }) => <tbody {...rest}>{children}</tbody>
+Table.Row = ({ children, ...rest }) => <tr {...rest}>{children}</tr>
 
 // scope is what lets a screen reader read a cell with its column name.
-Table.ColumnHeader = ({ children, className }) => (
-  <th scope='col' className={className}>
+Table.ColumnHeader = ({ children, scope = 'col', ...rest }) => (
+  <th {...rest} scope={scope}>
     {children}
   </th>
 )
 
-Table.Cell = ({ children, className }) => (
-  <td className={className}>{children}</td>
-)
+Table.Cell = ({ children, ...rest }) => <td {...rest}>{children}</td>
 
 Table.displayName = 'Table'
+Table.Header.displayName = 'Table.Header'
+Table.Body.displayName = 'Table.Body'
+Table.Row.displayName = 'Table.Row'
+Table.ColumnHeader.displayName = 'Table.ColumnHeader'
+Table.Cell.displayName = 'Table.Cell'
+
 export default Table
