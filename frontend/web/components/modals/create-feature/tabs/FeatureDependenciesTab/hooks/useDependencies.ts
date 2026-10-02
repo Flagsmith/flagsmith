@@ -8,7 +8,7 @@ import {
 } from 'common/services/useFeatureDependency'
 import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
-import { toPrerequisiteRows } from './prerequisiteState'
+import { toPrerequisiteRows } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/prerequisiteState'
 
 type UseDependenciesArgs = {
   environmentId: string

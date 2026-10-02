@@ -6,7 +6,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import FeatureSelect from 'components/FeatureSelect'
 import FeatureDependenciesSkeleton from './FeatureDependenciesSkeleton'
 import FeatureDependenciesView from './FeatureDependenciesView'
-import { useDependencies } from './useDependencies'
+import { useDependencies } from './hooks/useDependencies'
 import './FeatureDependenciesTab.scss'
 
 type FeatureDependenciesTabProps = {
