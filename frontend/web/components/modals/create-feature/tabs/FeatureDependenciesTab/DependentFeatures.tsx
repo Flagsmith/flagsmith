@@ -21,11 +21,10 @@ const DependentFeatures: FC<DependentFeaturesProps> = ({
 
     {edges.length ? (
       <>
-        {/* Describes the rows, so it only appears when there are rows. */}
+        {/* Describes the rows, so it only appears when there are rows. The
+            heading already says what they are; this says what it costs them. */}
         <div className='text-muted mb-3'>
-          These features list <strong>{featureName}</strong> as a prerequisite.
-          Each is off by default in this environment whenever{' '}
-          <strong>{featureName}</strong> is not on.
+          These flags are off while <strong>{featureName}</strong> is off.
         </div>
         <div className='feature-dependencies__panel'>
           <DependentFeaturesTable
