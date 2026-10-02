@@ -33,3 +33,33 @@ def test_influx_data_endpoint__rate_limit_exceeded__returns_throttled(
 
     # But the second request should have been throttled
     assert second_response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+
+def test_usage_data_endpoint__influx_query_rate_limit_exceeded__returns_ok(
+    admin_client: APIClient,
+    organisation: int,
+    mocker: MockerFixture,
+    reset_cache: None,
+) -> None:
+    # Given
+    mocker.patch(
+        "app_analytics.throttles.InfluxQueryThrottle.get_rate", return_value="1/minute"
+    )
+    mocker.patch("app_analytics.views.get_usage_data", return_value=[])
+    mocker.patch(
+        "organisations.views.get_multiple_event_list_for_organisation", return_value=[]
+    )
+    influx_data_url = reverse(
+        "api-v1:organisations:organisation-get-influx-data", args=[organisation]
+    )
+    usage_data_url = reverse("api-v1:organisations:usage-data", args=[organisation])
+
+    # When
+    first_influx_response = admin_client.get(influx_data_url)
+    second_influx_response = admin_client.get(influx_data_url)
+    usage_data_response = admin_client.get(usage_data_url)
+
+    # Then
+    assert first_influx_response.status_code == status.HTTP_200_OK
+    assert second_influx_response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+    assert usage_data_response.status_code == status.HTTP_200_OK

@@ -90,32 +90,42 @@ def map_influx_record_values_to_labels(values: dict[str, Any]) -> Labels:
     return labels
 
 
+def _map_influx_tag_to_id(value: str | None) -> int | None:
+    return int(value) if value else None
+
+
 def map_annotated_api_usage_buckets_to_usage_data(
     api_usage_buckets: Iterable[AnnotatedAPIUsageBucket],
 ) -> list[UsageData]:
     """
-    Aggregates API usage data buckets by date and labels.
-    Each resulting `UsageData` object contains the total count for each resource
-    for that date and labels combination.
+    Aggregates API usage data buckets by date, labels and, when grouped,
+    project and environment id. Each resulting `UsageData` object contains
+    the total count for each resource for that combination.
     """
     data_by_key: dict[AnnotatedAPIUsageKey, UsageData] = {}
     for row in api_usage_buckets:
         date = row["created_at__date"]
         labels = row["labels"]
+        project_id = row.get("project_id")
+        environment_id = row.get("environment_id")
         key = AnnotatedAPIUsageKey(
             date=date,
             labels=tuple(labels.items()),
+            project_id=project_id,
+            environment_id=environment_id,
         )
         if key not in data_by_key:
             data_by_key[key] = UsageData(
                 day=date,
                 labels=labels,
+                project_id=project_id,
+                environment_id=environment_id,
             )
         if column_name := Resource(row["resource"]).column_name:
             setattr(
                 data_by_key[key],
                 column_name,
-                row["count"],
+                getattr(data_by_key[key], column_name) + row["count"],
             )
     return list(data_by_key.values())
 
@@ -124,9 +134,9 @@ def map_flux_tables_to_usage_data(
     flux_tables: list[FluxTable],
 ) -> list[UsageData]:
     """
-    Aggregates API usage data buckets by date and labels.
-    Each resulting `UsageData` object contains the total count for each resource
-    for that date and labels combination.
+    Aggregates API usage data buckets by date, labels and, when grouped,
+    project and environment id. Each resulting `UsageData` object contains
+    the total count for each resource for that combination.
     """
     data_by_key: dict[AnnotatedAPIUsageKey, UsageData] = {}
     for flux_table in flux_tables:
@@ -134,14 +144,20 @@ def map_flux_tables_to_usage_data(
             values = record.values
             date = values["_time"].date()
             labels: Labels = map_influx_record_values_to_labels(values)
+            project_id = _map_influx_tag_to_id(values.get("project_id"))
+            environment_id = _map_influx_tag_to_id(values.get("environment_id"))
             key = AnnotatedAPIUsageKey(
                 date=date,
                 labels=tuple(labels.items()),
+                project_id=project_id,
+                environment_id=environment_id,
             )
             if key not in data_by_key:
                 data_by_key[key] = UsageData(
                     day=date,
                     labels=labels,
+                    project_id=project_id,
+                    environment_id=environment_id,
                 )
             if (
                 (value := values["_value"]) is not None
@@ -151,7 +167,7 @@ def map_flux_tables_to_usage_data(
                 setattr(
                     data_by_key[key],
                     resource_attr,
-                    value,
+                    getattr(data_by_key[key], resource_attr) + value,
                 )
     return list(data_by_key.values())
 

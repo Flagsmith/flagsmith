@@ -1362,6 +1362,8 @@ export interface UsageEventsList extends AggregateUsageDataItem {
   labels: {
     user_agent: string | null
   }
+  project_id: number | null
+  environment_id: number | null
 }
 
 export type WarehouseConnectionStatus =

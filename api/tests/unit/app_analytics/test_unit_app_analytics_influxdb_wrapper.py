@@ -24,6 +24,7 @@ from app_analytics.influxdb_wrapper import (
     get_top_organisations,
     get_usage_data,
 )
+from app_analytics.types import UsageGroupByType
 
 # Given
 org_id = 123
@@ -386,6 +387,7 @@ def test_get_usage_data__default_params__calls_get_multiple_event_list(
         date_start=date_start,
         date_stop=date_stop,
         labels_filter=None,
+        group_by=None,
     )
 
 
@@ -649,3 +651,54 @@ def test_get_platform_usage_trends__with_data__returns_daily_breakdown(
     assert "2023-01-17" in result
     assert result["2023-01-17"]["flags"] == 75
     influx_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "group_by, expected_drop_columns, expected_group_columns",
+    [
+        (
+            "project",
+            '["organisation", "organisation_id", "type", "project", '
+            '"environment", "environment_id", "host"]',
+            '["resource", "client_application_name", "client_application_version", '
+            '"user_agent", "project_id"]',
+        ),
+        (
+            "environment",
+            '["organisation", "organisation_id", "type", "project", '
+            '"environment", "host"]',
+            '["resource", "client_application_name", "client_application_version", '
+            '"user_agent", "project_id", "environment_id"]',
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_multiple_event_list_for_organisation__group_by__calls_expected_query(
+    mock_influxdb_client: MagicMock,
+    mocker: MockerFixture,
+    group_by: UsageGroupByType,
+    expected_drop_columns: str,
+    expected_group_columns: str,
+) -> None:
+    # Given
+    mock_query_api = mock_influxdb_client.query_api.return_value
+    expected_filters = [
+        'r._measurement == "api_call"',
+        f'r["organisation_id"] == "{org_id}"',
+    ]
+    expected_query = (
+        f'from(bucket:"{read_bucket}") '
+        "|> range(start: 2022-12-20T09:09:47.325132+00:00, stop: 2023-01-19T09:09:47.325132+00:00) "
+        f"{build_filter_string(expected_filters)} "
+        f"|> drop(columns: {expected_drop_columns}) "
+        f"|> group(columns: {expected_group_columns}) "
+        '|> aggregateWindow(every: 24h, fn: sum, createEmpty: false, timeSrc: "_start")'
+    )
+
+    # When
+    get_multiple_event_list_for_organisation(org_id, group_by=group_by)
+
+    # Then
+    assert mock_query_api.query.call_args_list == [
+        mocker.call(org=influx_org, query=expected_query)
+    ]
