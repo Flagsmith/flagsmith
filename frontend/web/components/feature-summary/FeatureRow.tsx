@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useMemo } from 'react'
+import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateFlagModal from 'components/modals/create-feature'
@@ -108,17 +108,20 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   const enforceFeatureOwners = !!projectData?.enforce_feature_owners
 
   // Read during render, so a push to ?feature=<id> from elsewhere in the app
-  // reopens the modal on the feature it names. Without it the effect only ran
+  // opens the modal on the feature it names. Without it the effect only ran
   // when the flag data changed, so following a dependency link did nothing.
   const { feature: featureParam } = Utils.fromParam()
 
-  useEffect(() => {
-    const { id } = projectFlag
+  // Which feature this row last opened the modal for. The modal lives in its
+  // own React root behind a fade, so checking whether one is in the DOM says
+  // nothing about which feature it is showing.
+  const openedFor = useRef<string | undefined>(undefined)
 
-    const isModalOpen = !!document?.getElementsByClassName(
-      'create-feature-modal',
-    )?.length
-    if (`${id}` === featureParam && !isModalOpen) {
+  useEffect(() => {
+    if (
+      `${projectFlag.id}` === featureParam &&
+      openedFor.current !== featureParam
+    ) {
       editFeature()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -196,6 +199,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     }
 
     API.trackEvent(Constants.events.VIEW_FEATURE)
+    openedFor.current = `${projectFlag.id}`
     const tabValue = tab || Utils.fromParam().tab || 'value'
 
     history.replace({
@@ -264,6 +268,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
           return onCloseEditModal()
         }
 
+        openedFor.current = undefined
         history.replace({
           pathname: document.location.pathname,
           search: '',

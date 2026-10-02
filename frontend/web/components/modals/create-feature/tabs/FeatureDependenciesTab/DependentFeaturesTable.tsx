@@ -41,7 +41,7 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
               {edge.feature.name}
             </Button>
           </td>
-          <td className='feature-dependencies__actions-cell'>
+          <td className='feature-dependencies__actions-cell' aria-hidden>
             <Icon
               name='chevron-right'
               width={16}

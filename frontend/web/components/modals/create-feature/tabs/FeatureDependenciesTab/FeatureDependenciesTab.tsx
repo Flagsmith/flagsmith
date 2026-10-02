@@ -12,7 +12,7 @@ import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import ErrorMessage from 'components/ErrorMessage'
 import FeatureSelect from 'components/FeatureSelect'
-import { PrerequisiteRow } from './PrerequisitesTable'
+import { PrerequisiteRow, toPrerequisiteRows } from './prerequisiteState'
 import FeatureDependenciesSkeleton from './FeatureDependenciesSkeleton'
 import FeatureDependenciesView from './FeatureDependenciesView'
 import './FeatureDependenciesTab.scss'
@@ -39,6 +39,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   const [conflict, setConflict] = useState<string | null>(null)
   const [removingId, setRemovingId] = useState<number | undefined>()
   const [highlightedId, setHighlightedId] = useState<number | undefined>()
+  const [isAdding, setIsAdding] = useState(false)
 
   const { permission: canManage } = useHasPermission({
     id: environmentId,
@@ -83,26 +84,10 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
 
   const rows: PrerequisiteRow[] = useMemo(
     () =>
-      [...(dependencies?.results ?? [])]
-        // The API does not order the list. Each prerequisite gets its own
-        // segment, so the segment id is the order they were added in and a new
-        // one lands at the bottom where it was asked for.
-        .sort((a, b) => a.segment.id - b.segment.id)
-        .map((edge) => {
-          const isEnabled = !!featureList?.results.find(
-            (flag) => flag.id === edge.prerequisite.id,
-          )?.environment_feature_state?.enabled
-          return {
-            edge,
-            isEnabled,
-            // A system edge is always the hardcoded `enabled != true` condition
-            // (api/features/dependencies/services.py), so on means met. A
-            // hand-written segment that happens to reference a flag is also
-            // listed here, and neither its operator nor its override value is
-            // in the response, so there is nothing to judge it against.
-            isMet: edge.segment.is_system ? isEnabled : undefined,
-          }
-        }),
+      toPrerequisiteRows(
+        dependencies?.results ?? [],
+        featureList?.results ?? [],
+      ),
     [dependencies, featureList],
   )
 
@@ -116,6 +101,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
       .unwrap()
       // The row appearing and lighting up says it landed, so no toast.
       .then(() => {
+        setIsAdding(false)
         setHighlightedId(feature.id)
         setTimeout(() => setHighlightedId(undefined), HIGHLIGHT_MS)
       })
@@ -174,6 +160,8 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
       dependentEdges={dependentEdges}
       canManage={canManage}
       conflict={conflict}
+      isAdding={isAdding}
+      onAddingChange={setIsAdding}
       highlightedId={highlightedId}
       removingId={removingId}
       onRemove={onRemove}

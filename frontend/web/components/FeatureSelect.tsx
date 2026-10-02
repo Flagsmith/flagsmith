@@ -44,7 +44,9 @@ const FeatureSelect: FC<FeatureSelectProps> = ({
     {
       environmentId: String(numericEnvId ?? ''),
       page: 1,
-      page_size: 100,
+      // One page has to cover the project, or a feature past the first page is
+      // unpickable unless the user happens to search for it.
+      page_size: 999,
       projectId,
       search: search || undefined,
     },

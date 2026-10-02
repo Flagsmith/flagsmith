@@ -836,11 +836,11 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         projectId={projectId}
                         projectFlag={projectFlag}
                         onSelectFeature={(featureId) => {
-                          // The features list owns the deep link, so send the
-                          // browser there rather than swapping this modal's
-                          // feature underneath itself. The row watching
-                          // ?feature= reopens the modal on that feature.
-                          closeModal()
+                          // The features list owns the deep link, so point it
+                          // at the other feature and let its row open the
+                          // modal. Not closeModal() first: the modal clears the
+                          // query string when its fade finishes, which would
+                          // undo this.
                           props.history?.replace({
                             pathname: document.location.pathname,
                             search: `?feature=${featureId}&tab=dependencies`,

@@ -1,4 +1,4 @@
-import { FC, ReactNode, useEffect, useState } from 'react'
+import { FC, ReactNode } from 'react'
 import { DependencyEdge } from 'common/types/responses'
 import Constants from 'common/constants'
 import Banner from 'components/base/Banner'
@@ -6,9 +6,10 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
 import ModalHR from 'components/modals/ModalHR'
-import DependencyStatusHeader from './DependencyStatusHeader'
+import BlockedBanner from './BlockedBanner'
 import DependentFeaturesTable from './DependentFeaturesTable'
-import PrerequisitesTable, { PrerequisiteRow } from './PrerequisitesTable'
+import PrerequisitesTable from './PrerequisitesTable'
+import { PrerequisiteRow } from './prerequisiteState'
 import {
   DependentsEmptyState,
   PrerequisitesEmptyState,
@@ -27,6 +28,10 @@ export type FeatureDependenciesViewProps = {
   // lets Storybook render the real markup.
   addControl: ReactNode
   conflict?: string | null
+  // Whether the picker row is open. The container owns it, because only the
+  // container knows when an add succeeded and the row should close.
+  isAdding: boolean
+  onAddingChange: (isAdding: boolean) => void
   highlightedId?: number
   removingId?: number
   onRemove: (edge: DependencyEdge) => void
@@ -41,20 +46,13 @@ const FeatureDependenciesView: FC<FeatureDependenciesViewProps> = ({
   environmentName,
   featureName,
   highlightedId,
+  isAdding,
+  onAddingChange,
   onRemove,
   onSelectFeature,
   removingId,
   rows,
 }) => {
-  const [isAdding, setIsAdding] = useState(false)
-
-  // A prerequisite landing is the end of the interaction the button started,
-  // so the picker row closes rather than sitting open under the new row.
-  useEffect(() => {
-    if (highlightedId) {
-      setIsAdding(false)
-    }
-  }, [highlightedId])
   const isPrerequisite = !!dependentEdges.length
 
   return (
@@ -88,10 +86,7 @@ const FeatureDependenciesView: FC<FeatureDependenciesViewProps> = ({
 
       {rows.length || isAdding ? (
         <>
-          <DependencyStatusHeader
-            environmentName={environmentName}
-            rows={rows}
-          />
+          <BlockedBanner environmentName={environmentName} rows={rows} />
           <div className='feature-dependencies__panel'>
             <PrerequisitesTable
               rows={rows}
@@ -108,7 +103,10 @@ const FeatureDependenciesView: FC<FeatureDependenciesViewProps> = ({
                     <td colSpan={4}>
                       <div className='feature-dependencies__add-control'>
                         {addControl}
-                        <Button theme='text' onClick={() => setIsAdding(false)}>
+                        <Button
+                          theme='text'
+                          onClick={() => onAddingChange(false)}
+                        >
                           Cancel
                         </Button>
                       </div>
@@ -145,7 +143,7 @@ const FeatureDependenciesView: FC<FeatureDependenciesViewProps> = ({
           <Button
             theme='outline'
             size='small'
-            onClick={() => setIsAdding(true)}
+            onClick={() => onAddingChange(true)}
             data-test='add-prerequisite-btn'
           >
             Add prerequisite

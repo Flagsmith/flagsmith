@@ -4,16 +4,7 @@ import { DependencyEdge } from 'common/types/responses'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
-
-export type PrerequisiteRow = {
-  edge: DependencyEdge
-  // The prerequisite's own state in this environment. One with no feature state
-  // resolved yet is treated as off.
-  isEnabled: boolean
-  // Whether that state satisfies the rule. Only known for a system edge, where
-  // the rule is always "must be enabled". Undefined otherwise.
-  isMet?: boolean
-}
+import { PrerequisiteRow } from './prerequisiteState'
 
 type PrerequisitesTableProps = {
   rows: PrerequisiteRow[]
@@ -33,9 +24,9 @@ type PrerequisitesTableProps = {
 // edits the prerequisite, so nothing should invite a click.
 const StateToggle: FC<{ isEnabled: boolean }> = ({ isEnabled }) => (
   <span
-    className={`feature-dependencies__toggle${
-      isEnabled ? ' feature-dependencies__toggle--on' : ''
-    }`}
+    className={cn('feature-dependencies__toggle', {
+      'feature-dependencies__toggle--on': isEnabled,
+    })}
     role='img'
     aria-label={isEnabled ? 'On' : 'Off'}
   />
@@ -50,7 +41,11 @@ const Satisfies: FC<{ isMet?: boolean }> = ({ isMet }) => {
     return (
       <Tooltip
         title={
-          <span className='feature-dependencies__satisfies'>
+          <span
+            className='feature-dependencies__satisfies'
+            role='img'
+            aria-label='Unknown'
+          >
             <Icon name='info-outlined' width={16} />
           </span>
         }

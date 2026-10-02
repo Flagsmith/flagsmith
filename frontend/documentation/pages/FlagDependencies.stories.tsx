@@ -2,10 +2,11 @@ import { useState } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import { DependencyEdge } from 'common/types/responses'
-import FeatureDependenciesSkeleton from 'components/modals/create-feature/tabs/FeatureDependenciesTab/FeatureDependenciesSkeleton'
-import FeatureDependenciesView from 'components/modals/create-feature/tabs/FeatureDependenciesTab/FeatureDependenciesView'
-import { PrerequisiteRow } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/PrerequisitesTable'
-import 'components/modals/create-feature/tabs/FeatureDependenciesTab/FeatureDependenciesTab.scss'
+import {
+  FeatureDependenciesSkeleton,
+  FeatureDependenciesView,
+  PrerequisiteRow,
+} from 'components/modals/create-feature/tabs/FeatureDependenciesTab'
 
 const ENVIRONMENT = 'Development'
 
@@ -67,6 +68,7 @@ const Prototype = ({
   const [prerequisites, setPrerequisites] = useState(initialPrerequisites)
   const [conflict, setConflict] = useState<string | null>(null)
   const [highlightedId, setHighlightedId] = useState<number | undefined>()
+  const [isAdding, setIsAdding] = useState(false)
 
   const rows: PrerequisiteRow[] = prerequisites.map((prerequisite) => ({
     edge: edge(self, prerequisite, prerequisite.isSystem ?? true),
@@ -86,6 +88,8 @@ const Prototype = ({
         dependentEdges={dependents.map((dependent) => edge(dependent, self))}
         canManage={canManage}
         conflict={conflict}
+        isAdding={isAdding}
+        onAddingChange={setIsAdding}
         highlightedId={highlightedId}
         onRemove={(removed) => {
           setConflict(null)
