@@ -21,8 +21,8 @@ import { PrerequisitesEmptyState } from './DependenciesEmptyStates'
 import { useDependencies } from './hooks/useDependencies'
 import './FeatureDependenciesTab.scss'
 
-// Flag dependencies have no page of their own yet, so this points at the
-// nearest one that exists. See #8666.
+// Flag dependencies have no docs page of their own yet, so this points at the
+// nearest one that exists.
 export const DEPENDENCIES_DOCS_URL =
   'https://docs.flagsmith.com/basic-features/managing-features'
 
