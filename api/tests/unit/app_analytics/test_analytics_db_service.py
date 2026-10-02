@@ -1045,7 +1045,10 @@ def test_get_usage_data_from_local_db__group_by_environment__returns_row_per_env
             project_id=env.project_id,
             environment_id=env.id,
         )
-        for env in [environment, environment_two, project_two_environment]
+        for env in sorted(
+            [environment, environment_two, project_two_environment],
+            key=lambda env: env.id,
+        )
     ]
 
 
