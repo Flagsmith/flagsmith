@@ -42,6 +42,21 @@ const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 const DESCRIBED = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 // Chart colours are like colour tokens (light/dark) but not under "color"
 const CHART_CATEGORY = 'chart'
+const PRIMARY_CATEGORY = 'primary'
+const NEUTRAL_CATEGORY = 'neutral'
+const STATE_CATEGORY = 'state'
+const ALWAYS_CATEGORY = 'always'
+
+// The design system's own ramps, between the primitives and the semantic
+// tokens. Custom properties and TypeScript exports, but no utilities: a
+// .bg-primary-500 in a component would bypass the semantic layer. Reach for a
+// `color.*` token first.
+const RAMPS = [
+  PRIMARY_CATEGORY,
+  NEUTRAL_CATEGORY,
+  STATE_CATEGORY,
+  ALWAYS_CATEGORY,
+]
 
 // Build reverse lookups for primitives
 const hexToPrimitive = new Map()
@@ -134,6 +149,48 @@ function buildScssLines() {
       if (e.dark && e.dark !== e.light) {
         darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
       }
+    }
+    rootLines.push('')
+  }
+
+  if (json[PRIMARY_CATEGORY]) {
+    rootLines.push('  // Primary')
+    for (const [, e] of sorted(json[PRIMARY_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  if (json[NEUTRAL_CATEGORY]) {
+    rootLines.push('  // Neutral')
+    for (const [, e] of sorted(json[NEUTRAL_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  if (json[STATE_CATEGORY]) {
+    rootLines.push('  // State')
+    for (const [, e] of sorted(json[STATE_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  // Always-* : pinned across themes, so no dark override
+  if (json[ALWAYS_CATEGORY]) {
+    rootLines.push('  // Always')
+    for (const [, e] of sorted(json[ALWAYS_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
     }
     rootLines.push('')
   }
@@ -264,6 +321,17 @@ function buildFlatConstants() {
     lines.push('')
   }
 
+  for (const cat of RAMPS) {
+    if (!json[cat]) continue
+    lines.push(`// ${cap(cat)}`)
+    for (const [, e] of sorted(json[cat])) {
+      const constName = cssVarToConstName(e.cssVar)
+      const fallback = lightVal(e)
+      lines.push(`export const ${constName} = 'var(${e.cssVar}, ${fallback})'`)
+    }
+    lines.push('')
+  }
+
   // Non-colour tokens — radius, shadow, duration, easing
   for (const cat of NON_COLOUR) {
     if (!json[cat]) continue
@@ -363,6 +431,15 @@ function generateMcpStory() {
       value: toPrimitiveRef(e.light),
     }))
     tables.push(...buildTableRows(`Colour: ${cat}`, data))
+  }
+
+  for (const cat of RAMPS) {
+    if (!json[cat]) continue
+    const data = Object.values(json[cat]).map((e) => ({
+      cssVar: e.cssVar,
+      value: toPrimitiveRef(e.light),
+    }))
+    tables.push(...buildTableRows(`Ramp: ${cat}`, data))
   }
 
   // Chart colours

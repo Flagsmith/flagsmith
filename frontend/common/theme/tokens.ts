@@ -137,44 +137,44 @@ export const fontWeight: Record<string, TokenEntry> = {
 
 // Border
 export const colorBorderAction = 'var(--color-border-action, #6837fc)'
-export const colorBorderDanger = 'var(--color-border-danger, #ef4d56)'
+export const colorBorderDanger = 'var(--color-border-danger, #e61b26)'
 export const colorBorderDefault =
   'var(--color-border-default, rgba(101, 109, 123, 0.16))'
 export const colorBorderDisabled =
   'var(--color-border-disabled, rgba(101, 109, 123, 0.08))'
-export const colorBorderInfo = 'var(--color-border-info, #0aaddf)'
+export const colorBorderInfo = 'var(--color-border-info, #0fa5fc)'
 export const colorBorderStrong =
   'var(--color-border-strong, rgba(101, 109, 123, 0.24))'
-export const colorBorderSuccess = 'var(--color-border-success, #27ab95)'
-export const colorBorderWarning = 'var(--color-border-warning, #ff9f43)'
+export const colorBorderSuccess = 'var(--color-border-success, #47aa7f)'
+export const colorBorderWarning = 'var(--color-border-warning, #ffbc05)'
 
 // Code
-export const colorCodeBuiltin = 'var(--color-code-builtin, #d4b050)'
+export const colorCodeBuiltin = 'var(--color-code-builtin, #e8a705)'
 export const colorCodeComment = 'var(--color-code-comment, #9da4ae)'
 export const colorCodeKeyword = 'var(--color-code-keyword, #6837fc)'
-export const colorCodeLiteral = 'var(--color-code-literal, #0b8bb2)'
+export const colorCodeLiteral = 'var(--color-code-literal, #0b82d7)'
 export const colorCodeName = 'var(--color-code-name, #ef4d56)'
-export const colorCodeString = 'var(--color-code-string, #27ab95)'
+export const colorCodeString = 'var(--color-code-string, #47aa7f)'
 export const colorCodeText = 'var(--color-code-text, #2d3443)'
-export const colorCodeTitle = 'var(--color-code-title, #0aaddf)'
+export const colorCodeTitle = 'var(--color-code-title, #0fa5fc)'
 export const colorCodeVariable = 'var(--color-code-variable, #d06907)'
 
 // Icon
 export const colorIconAction = 'var(--color-icon-action, #6837fc)'
-export const colorIconDanger = 'var(--color-icon-danger, #ef4d56)'
+export const colorIconDanger = 'var(--color-icon-danger, #e61b26)'
 export const colorIconDefault = 'var(--color-icon-default, #1a2634)'
 export const colorIconDisabled = 'var(--color-icon-disabled, #9da4ae)'
-export const colorIconInfo = 'var(--color-icon-info, #0aaddf)'
+export const colorIconInfo = 'var(--color-icon-info, #0fa5fc)'
 export const colorIconSecondary = 'var(--color-icon-secondary, #656d7b)'
-export const colorIconSuccess = 'var(--color-icon-success, #27ab95)'
-export const colorIconWarning = 'var(--color-icon-warning, #ff9f43)'
+export const colorIconSuccess = 'var(--color-icon-success, #47aa7f)'
+export const colorIconWarning = 'var(--color-icon-warning, #ffbc05)'
 
 // Surface
 export const colorSurfaceAction = 'var(--color-surface-action, #6837fc)'
 export const colorSurfaceActionActive =
   'var(--color-surface-action-active, #3919b7)'
 export const colorSurfaceActionHover =
-  'var(--color-surface-action-hover, #4e25db)'
+  'var(--color-surface-action-hover, #4f28d8)'
 export const colorSurfaceActionMuted =
   'var(--color-surface-action-muted, rgba(104, 55, 252, 0.16))'
 export const colorSurfaceActionSubtle =
@@ -182,42 +182,38 @@ export const colorSurfaceActionSubtle =
 export const colorSurfaceActionTint =
   'var(--color-surface-action-tint, rgba(104, 55, 252, 0.12))'
 export const colorSurfaceActive =
-  'var(--color-surface-active, rgba(0, 0, 0, 0.16))'
-export const colorSurfaceDanger =
-  'var(--color-surface-danger, rgba(239, 77, 86, 0.08))'
+  'var(--color-surface-active, rgba(8, 12, 23, 0.16))'
+export const colorSurfaceDanger = 'var(--color-surface-danger, #ffeddb)'
 export const colorSurfaceDefault = 'var(--color-surface-default, #ffffff)'
-export const colorSurfaceEmphasis = 'var(--color-surface-emphasis, #e0e3e9)'
+export const colorSurfaceEmphasis = 'var(--color-surface-emphasis, #e1e2eb)'
 export const colorSurfaceHover =
-  'var(--color-surface-hover, rgba(0, 0, 0, 0.08))'
-export const colorSurfaceInfo =
-  'var(--color-surface-info, rgba(10, 173, 223, 0.08))'
-export const colorSurfaceMuted = 'var(--color-surface-muted, #eff1f4)'
+  'var(--color-surface-hover, rgba(8, 12, 23, 0.08))'
+export const colorSurfaceInfo = 'var(--color-surface-info, #dff3ff)'
+export const colorSurfaceMuted = 'var(--color-surface-muted, #f3f4f5)'
 export const colorSurfaceSubtle = 'var(--color-surface-subtle, #fafafb)'
-export const colorSurfaceSuccess =
-  'var(--color-surface-success, rgba(39, 171, 149, 0.08))'
-export const colorSurfaceWarning =
-  'var(--color-surface-warning, rgba(255, 159, 67, 0.08))'
+export const colorSurfaceSuccess = 'var(--color-surface-success, #f0fff2)'
+export const colorSurfaceWarning = 'var(--color-surface-warning, #fff7cd)'
 
 // Text
 export const colorTextAction = 'var(--color-text-action, #6837fc)'
-export const colorTextDanger = 'var(--color-text-danger, #bb1720)'
+export const colorTextDanger = 'var(--color-text-danger, #7a0e18)'
 export const colorTextDefault = 'var(--color-text-default, #1a2634)'
 export const colorTextDisabled = 'var(--color-text-disabled, #9da4ae)'
-export const colorTextInfo = 'var(--color-text-info, #0aaddf)'
+export const colorTextInfo = 'var(--color-text-info, #023078)'
 export const colorTextSecondary = 'var(--color-text-secondary, #656d7b)'
-export const colorTextSuccess = 'var(--color-text-success, #13787b)'
+export const colorTextSuccess = 'var(--color-text-success, #1b392b)'
 export const colorTextTertiary = 'var(--color-text-tertiary, #656d7b)'
-export const colorTextWarning = 'var(--color-text-warning, #9f5208)'
+export const colorTextWarning = 'var(--color-text-warning, #744800)'
 
 // Chart
-export const colorChart1 = 'var(--color-chart-1, #0aaddf)'
+export const colorChart1 = 'var(--color-chart-1, #0fa5fc)'
 export const colorChart2 = 'var(--color-chart-2, #ef4d56)'
-export const colorChart3 = 'var(--color-chart-3, #27ab95)'
+export const colorChart3 = 'var(--color-chart-3, #47aa7f)'
 export const colorChart4 = 'var(--color-chart-4, #ff9f43)'
 export const colorChart5 = 'var(--color-chart-5, #7a4dfc)'
-export const colorChart6 = 'var(--color-chart-6, #0b8bb2)'
+export const colorChart6 = 'var(--color-chart-6, #0b82d7)'
 export const colorChart7 = 'var(--color-chart-7, #e61b26)'
-export const colorChart8 = 'var(--color-chart-8, #13787b)'
+export const colorChart8 = 'var(--color-chart-8, #35795a)'
 export const colorChart9 = 'var(--color-chart-9, #fa810c)'
 export const colorChart10 = 'var(--color-chart-10, #6837fc)'
 
@@ -234,6 +230,43 @@ export const CHART_COLOURS = [
   colorChart9,
   colorChart10,
 ] as const
+
+// Primary
+export const primary50 = 'var(--primary-50, #f5f0ff)'
+export const primary100 = 'var(--primary-100, #e7e1f4)'
+export const primary300 = 'var(--primary-300, #d4beff)'
+export const primary400 = 'var(--primary-400, #9168fd)'
+export const primary500 = 'var(--primary-500, #6837fc)'
+export const primary600 = 'var(--primary-600, #4f28d8)'
+export const primary900 = 'var(--primary-900, #1a0a78)'
+
+// Neutral
+export const neutral0 = 'var(--neutral-0, #ffffff)'
+export const neutral50 = 'var(--neutral-50, #fafafb)'
+export const neutral100 = 'var(--neutral-100, #f3f4f5)'
+export const neutral300 = 'var(--neutral-300, #e1e2eb)'
+export const neutral400 = 'var(--neutral-400, #bfc0c5)'
+export const neutral500 = 'var(--neutral-500, #656d7b)'
+export const neutral600 = 'var(--neutral-600, #1a2634)'
+export const neutral900 = 'var(--neutral-900, #0e1629)'
+
+// State
+export const danger100 = 'var(--danger-100, #ffeddb)'
+export const danger500 = 'var(--danger-500, #e61b26)'
+export const danger900 = 'var(--danger-900, #7a0e18)'
+export const info100 = 'var(--info-100, #dff3ff)'
+export const info500 = 'var(--info-500, #0fa5fc)'
+export const info900 = 'var(--info-900, #023078)'
+export const success100 = 'var(--success-100, #f0fff2)'
+export const success500 = 'var(--success-500, #6ad0a1)'
+export const success900 = 'var(--success-900, #1b392b)'
+export const warning100 = 'var(--warning-100, #fff7cd)'
+export const warning500 = 'var(--warning-500, #ffbc05)'
+export const warning900 = 'var(--warning-900, #744800)'
+
+// Always
+export const alwaysPrimary = 'var(--always-primary, #6837fc)'
+export const alwaysWhite = 'var(--always-white, #ffffff)'
 
 // Radius
 export const radius2xl = 'var(--radius-2xl, 18px)'
