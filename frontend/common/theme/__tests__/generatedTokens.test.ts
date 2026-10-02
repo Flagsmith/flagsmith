@@ -6,11 +6,17 @@ import tokens from 'common/theme/tokens.json'
 const read = (path: string) =>
   readFileSync(resolve(__dirname, '../../..', path), 'utf-8')
 
+// Each output wraps a token in its own delimiters. Matching them, not the bare
+// name, keeps --primary-500 from standing in for a missing --primary-50.
 const outputs = {
-  'the token reference': read(
-    'documentation/TokenReference.generated.stories.tsx',
-  ),
-  'tokens.ts': read('common/theme/tokens.ts'),
+  'the token reference': {
+    source: read('documentation/TokenReference.generated.stories.tsx'),
+    wrap: (cssVar: string) => `<code>${cssVar}</code>`,
+  },
+  'tokens.ts': {
+    source: read('common/theme/tokens.ts'),
+    wrap: (cssVar: string) => `var(${cssVar},`,
+  },
 }
 
 // Every custom property a group declares, however deeply it nests: `color`
@@ -35,9 +41,8 @@ describe('generated token outputs', () => {
 
   describe.each(groups)('%s', (_name, vars) => {
     it.each(Object.keys(outputs))('reaches %s', (output) => {
-      const missing = vars.filter(
-        (cssVar) => !outputs[output as keyof typeof outputs].includes(cssVar),
-      )
+      const { source, wrap } = outputs[output as keyof typeof outputs]
+      const missing = vars.filter((cssVar) => !source.includes(wrap(cssVar)))
       expect(missing).toEqual([])
     })
   })
@@ -46,7 +51,7 @@ describe('generated token outputs', () => {
   // reaching past the semantic layer is what the layering exists to prevent.
   it('keeps primitives out of tokens.ts', () => {
     const leaked = Object.keys(tokens.primitives).filter((name) =>
-      outputs['tokens.ts'].includes(`var(--${name},`),
+      outputs['tokens.ts'].source.includes(`var(--${name},`),
     )
     expect(leaked).toEqual([])
   })
