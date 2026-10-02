@@ -12,16 +12,20 @@ $black-alpha-8: rgba(0, 0, 0, 0.08);
 $black-alpha-16: rgba(0, 0, 0, 0.16);
 $black-alpha-32: rgba(0, 0, 0, 0.32);
 
+// Legacy names, kept on the same values as tokens.json until their last use
+// is gone. New code uses the tokens. Sass colour functions read these, so
+// they have to stay hex rather than var(--...).
+
 // Backgrounds
-$bg-dark500: #101628;
+$bg-dark500: #0e1629;
 $bg-dark400: #15192b;
 $bg-dark300: #161d30;
 $bg-dark200: #202839;
 $bg-dark100: #2d3443;
 $bg-light100: #ffffff;
 $bg-light200: #fafafb;
-$bg-light300: #eff1f4;
-$bg-light500: #e0e3e9;
+$bg-light300: #f3f4f5;
+$bg-light500: #e1e2eb;
 
 // Body
 $dark-highlight-color: #e1e1e1;
@@ -39,27 +43,27 @@ $header-color-dark: $text-icon-light;
 
 // Other colors
 $primary: #6837fc;
-$primary400: #906af6;
-$primary600: #4e25db;
+$primary400: #9168fd;
+$primary600: #4f28d8;
 $primary700: #3919b7;
-$primary800: #2a2054;
+$primary800: #1a0a78;
 $primary900: #1E0D26;
 
 $danger: #ef4d56;
 $danger400: #f57c78;
 
-$success: #27ab95;
-$success400: #56ccad;
-$success600: #13787b;
+$success: #47aa7f;
+$success400: #6ad0a1;
+$success600: #35795a;
 
-$info: #0aaddf;
-$warning: #ff9f43;
+$info: #0fa5fc;
+$warning: #ffbc05;
 
-$secondary400: #fae392;
-$secondary500: #F7D56E;
-$secondary600: #e5c55f;
-$secondary700: #d4b050;
-$secondary: #fae392;
+$secondary400: #fce294;
+$secondary500: #fcd36a;
+$secondary600: #ffbc05;
+$secondary700: #e8a705;
+$secondary: #fce294;
 
 // Links and Anchors
 $link-color: $primary;
