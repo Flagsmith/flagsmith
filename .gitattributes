@@ -3,5 +3,6 @@
 # excluded from language stats: read the source, not the output.
 frontend/common/theme/tokens.ts linguist-generated=true
 frontend/web/styles/_tokens.scss linguist-generated=true
+frontend/web/styles/_primitives.scss linguist-generated=true
 frontend/web/styles/_token-utilities.scss linguist-generated=true
 frontend/documentation/TokenReference.generated.stories.tsx linguist-generated=true

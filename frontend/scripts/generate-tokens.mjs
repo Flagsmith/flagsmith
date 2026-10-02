@@ -550,11 +550,38 @@ function generateUtilities() {
   return lines.join('\n')
 }
 
+// Sass colour functions (lighten, mix, Bootstrap's theme maps) need a real
+// colour at build time, which var() is not. Legacy Sass reads primitives here.
+function generatePrimitivesScss() {
+  const entries = sorted(json.primitives).map(
+    ([name, hex]) => `  '${name}': ${hex},`,
+  )
+  return [
+    '// =============================================================================',
+    '// Primitives for Sass — AUTO-GENERATED from common/theme/tokens.json',
+    '// Do not edit manually. Run: npm run generate:tokens',
+    '// =============================================================================',
+    '',
+    '$primitives: (',
+    ...entries,
+    ');',
+    '',
+    '@function primitive($name) {',
+    '  @if not map-has-key($primitives, $name) {',
+    "    @error 'Unknown primitive `#{$name}`. See common/theme/tokens.json.';",
+    '  }',
+    '  @return map-get($primitives, $name);',
+    '}',
+    '',
+  ].join('\n')
+}
+
 // ---------------------------------------------------------------------------
 // Write and format
 // ---------------------------------------------------------------------------
 
 const scssPath = resolve(ROOT, 'web/styles/_tokens.scss')
+const primitivesPath = resolve(ROOT, 'web/styles/_primitives.scss')
 const utilitiesPath = resolve(ROOT, 'web/styles/_token-utilities.scss')
 const tsPath = resolve(ROOT, 'common/theme/tokens.ts')
 const storyPath = resolve(
@@ -563,6 +590,7 @@ const storyPath = resolve(
 )
 
 writeFileSync(scssPath, generateScss(), 'utf-8')
+writeFileSync(primitivesPath, generatePrimitivesScss(), 'utf-8')
 writeFileSync(utilitiesPath, generateUtilities(), 'utf-8')
 writeFileSync(tsPath, generateTs(), 'utf-8')
 writeFileSync(storyPath, generateMcpStory(), 'utf-8')
@@ -586,6 +614,7 @@ const nonColorCount = NON_COLOUR.reduce(
 )
 console.log('Generated from tokens.json:')
 console.log(`  ${scssPath}`)
+console.log(`  ${primitivesPath}`)
 console.log(`  ${utilitiesPath}`)
 console.log(`  ${tsPath}`)
 console.log(`  ${storyPath}`)
