@@ -13,13 +13,13 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from experimentation.dataclasses import (
-    WarehouseDeliveryStatus,
     WarehouseEventNames,
     WarehouseEventStats,
 )
 from experimentation.models import (
     WarehouseConnection,
     WarehouseConnectionStatus,
+    WarehouseDeliveryStatus,
     WarehouseType,
 )
 from experimentation.views import WarehouseConnectionViewSet
@@ -1931,23 +1931,13 @@ def test_list__verified_connection_failing_delivery__shows_errored_without_savin
     environment: Environment,
     enable_features: EnableFeaturesFixture,
     clickhouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
+    failing_delivery_status: WarehouseDeliveryStatus,
 ) -> None:
     # Given a connection that passed verification when saved, whose warehouse
     # has since started refusing the events the delivery service sends
     enable_features("experimentation_warehouse_connection")
     clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
     clickhouse_connection.save()
-    mocker.patch(
-        "experimentation.services.warehouse_delivery_sync_service.get_warehouse_delivery_statuses",
-        return_value={
-            clickhouse_connection.id: WarehouseDeliveryStatus(
-                connection_id=clickhouse_connection.id,
-                status="errored",
-                detail="Authentication failed.",
-            )
-        },
-    )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-list",
         args=[environment.api_key],

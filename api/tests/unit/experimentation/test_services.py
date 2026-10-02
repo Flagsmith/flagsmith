@@ -37,7 +37,6 @@ from experimentation.dataclasses import (
     MetricSpec,
     ResultsAggregates,
     RolloutSpec,
-    WarehouseDeliveryStatus,
     WarehouseEventNames,
     WarehouseEventStats,
 )
@@ -51,6 +50,7 @@ from experimentation.models import (
     MetricDirection,
     WarehouseConnection,
     WarehouseConnectionStatus,
+    WarehouseDeliveryStatus,
     WarehouseType,
 )
 from experimentation.results_query import ResultsQueryBuilder, _MetricSlot
@@ -2642,6 +2642,12 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     # the experiment is running)
     services.apply_experiment_rollout(experiment, spec)
     experiment.refresh_from_db()
+    # Without this, a run where the rollout segment's id equals the variant
+    # hashing seed puts every enrolled identity in the first variant:
+    # https://github.com/Flagsmith/flagsmith-engine/issues/348
+    FeatureState.objects.filter(
+        feature_segment__segment_id=experiment.rollout_segment_id
+    ).update(mv_hashing_salt=experiment.rollout_segment_id + 1)
     before = variant_assignment(identities, multivariate_feature.name)
 
     services.apply_experiment_rollout(experiment, spec)
@@ -3845,56 +3851,29 @@ def test_apply_experiment_rollout__resubmitted__records_history_only_on_change( 
     assert _rule_ids() == rule_ids
 
 
-def test_annotate_warehouse_delivery_statuses__verified_connection_failing_delivery__shows_errored(
+def test_annotate_warehouse_delivery_statuses__verified_external_connection_failing_delivery__shows_errored(
     clickhouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
+    failing_delivery_status: WarehouseDeliveryStatus,
 ) -> None:
     # Given a connection that passed verification when it was saved, whose
     # warehouse has since started refusing our login
     clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
-    mock_get = mocker.patch(
-        "experimentation.services.warehouse_delivery_sync_service.get_warehouse_delivery_statuses",
-        return_value={
-            clickhouse_connection.id: WarehouseDeliveryStatus(
-                connection_id=clickhouse_connection.id,
-                status="errored",
-                detail="Authentication failed.",
-            )
-        },
-    )
 
     # When
     services.annotate_warehouse_delivery_statuses([clickhouse_connection])
 
     # Then the dashboard shows the failure and its reason, without a save
-    mock_get.assert_called_once_with([clickhouse_connection.id])
     assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
     assert clickhouse_connection.status_detail == "Authentication failed."
     stored = WarehouseConnection.objects.get(id=clickhouse_connection.id)
     assert stored.status == WarehouseConnectionStatus.CREATED
 
 
-@pytest.mark.parametrize(
-    "outcome",
-    [
-        pytest.param(None, id="never-delivered"),
-        pytest.param(
-            WarehouseDeliveryStatus(connection_id=0, status="connected", detail=None),
-            id="delivering",
-        ),
-    ],
-)
-def test_annotate_warehouse_delivery_statuses__verified_connection_delivering__unchanged(
+def test_annotate_warehouse_delivery_statuses__verified_external_connection_never_delivered__stays_connected(
     clickhouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
-    outcome: WarehouseDeliveryStatus | None,
 ) -> None:
-    # Given a verified connection the delivery service has no complaint about
+    # Given a verified connection the delivery service has not delivered for yet
     clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
-    mocker.patch(
-        "experimentation.services.warehouse_delivery_sync_service.get_warehouse_delivery_statuses",
-        return_value={clickhouse_connection.id: outcome} if outcome else {},
-    )
 
     # When
     services.annotate_warehouse_delivery_statuses([clickhouse_connection])
@@ -3904,31 +3883,52 @@ def test_annotate_warehouse_delivery_statuses__verified_connection_delivering__u
     assert clickhouse_connection.status_detail is None
 
 
-def test_annotate_warehouse_delivery_statuses__unverified_or_flagsmith__redis_not_consulted(
+def test_annotate_warehouse_delivery_statuses__verified_external_connection_delivering__stays_connected(
     clickhouse_connection: WarehouseConnection,
-    environment: Environment,
-    mocker: MockerFixture,
+    successful_delivery_status: WarehouseDeliveryStatus,
 ) -> None:
-    # Given a ClickHouse connection that failed verification, and a Flagsmith
-    # connection, which the delivery service never handles
+    # Given a verified connection whose last delivery succeeded
+    clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
+
+    # When
+    services.annotate_warehouse_delivery_statuses([clickhouse_connection])
+
+    # Then
+    assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
+    assert clickhouse_connection.status_detail is None
+
+
+def test_annotate_warehouse_delivery_statuses__unverified_external_connection__keeps_verification_error(
+    clickhouse_connection: WarehouseConnection,
+    failing_delivery_status: WarehouseDeliveryStatus,
+) -> None:
+    # Given a connection that failed verification
     clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
     clickhouse_connection.status_detail = "Could not connect to the host."
-    flagsmith_connection = WarehouseConnection(
-        environment=environment,
-        warehouse_type=WarehouseType.FLAGSMITH,
-        name="Flagsmith",
-        status=WarehouseConnectionStatus.CONNECTED,
-    )
-    mock_get = mocker.patch(
-        "experimentation.services.warehouse_delivery_sync_service.get_warehouse_delivery_statuses",
+
+    # When
+    services.annotate_warehouse_delivery_statuses([clickhouse_connection])
+
+    # Then
+    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+    assert clickhouse_connection.status_detail == "Could not connect to the host."
+
+
+def test_annotate_warehouse_delivery_statuses__flagsmith_warehouse__stays_connected(
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given a Flagsmith connection, which the delivery service never handles
+    warehouse_connection.status = WarehouseConnectionStatus.CONNECTED
+    WarehouseDeliveryStatus.objects.create(
+        connection=warehouse_connection,
+        status=WarehouseConnectionStatus.ERRORED,
+        detail="Authentication failed.",
+        updated_at=datetime.now(timezone.utc),
     )
 
     # When
-    services.annotate_warehouse_delivery_statuses(
-        [clickhouse_connection, flagsmith_connection]
-    )
+    services.annotate_warehouse_delivery_statuses([warehouse_connection])
 
-    # Then the verification result stands, and Redis is not even asked
-    mock_get.assert_not_called()
-    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
-    assert clickhouse_connection.status_detail == "Could not connect to the host."
+    # Then
+    assert warehouse_connection.status == WarehouseConnectionStatus.CONNECTED
+    assert warehouse_connection.status_detail is None

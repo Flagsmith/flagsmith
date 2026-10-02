@@ -22,10 +22,7 @@ from audit.related_object_type import RelatedObjectType
 from cohorts.models import Cohort
 from core.dataclasses import AuthorData
 from environments.tasks import rebuild_environment_document
-from experimentation import (
-    warehouse_delivery_sync_service,
-    warehouse_verification_service,
-)
+from experimentation import warehouse_verification_service
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
     EXPERIMENT_FLAG,
@@ -65,6 +62,7 @@ from experimentation.models import (
     MetricDirection,
     WarehouseConnection,
     WarehouseConnectionStatus,
+    WarehouseDeliveryStatus,
     WarehouseType,
 )
 from experimentation.results_query import (
@@ -1439,22 +1437,19 @@ def annotate_warehouse_delivery_statuses(
 ) -> None:
     """For external connections that passed verification, show what the
     warehouse-delivery service last saw. Read-only: nothing is saved."""
-    verified = [
-        connection
-        for connection in connections
-        if connection.warehouse_type != WarehouseType.FLAGSMITH
-        and connection.status == WarehouseConnectionStatus.CONNECTED
-    ]
-    if not verified:
-        return
-    statuses = warehouse_delivery_sync_service.get_warehouse_delivery_statuses(
-        [connection.id for connection in verified]
-    )
-    for connection in verified:
-        outcome = statuses.get(connection.id)
-        if outcome is not None and outcome.status == WarehouseConnectionStatus.ERRORED:
+    for connection in connections:
+        if (
+            connection.warehouse_type == WarehouseType.FLAGSMITH
+            or connection.status != WarehouseConnectionStatus.CONNECTED
+        ):
+            continue
+        try:
+            delivery_status = connection.delivery_status
+        except WarehouseDeliveryStatus.DoesNotExist:
+            continue
+        if delivery_status.status == WarehouseConnectionStatus.ERRORED:
             connection.status = WarehouseConnectionStatus.ERRORED
-            connection.status_detail = outcome.detail
+            connection.status_detail = delivery_status.detail
 
 
 def annotate_warehouse_event_stats(
