@@ -31,18 +31,6 @@
   }
 }
 
-.prerequisite-satisfies {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-text-secondary);
-}
-
-// Only the satisfied rows are coloured; the banner carries the warning.
-.prerequisite-satisfies--met {
-  color: var(--color-text-success);
-}
-
 // The picker as the table's last row, so a new prerequisite appears where it
 // was asked for. Same enter as the row it creates, without the tint: it already
 // has a surface of its own.
@@ -73,7 +61,7 @@
 @keyframes prerequisite-enter {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-4px);
   }
 
   to {

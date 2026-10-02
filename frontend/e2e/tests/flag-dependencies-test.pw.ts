@@ -47,9 +47,14 @@ test.describe('Flag Dependencies', () => {
 
     log('Add the prerequisite')
     await page.getByRole('button', { name: 'Add prerequisite' }).click()
-    await page.getByText('Add a prerequisite flag...').click()
-    await page.keyboard.type(PREREQUISITE)
-    await page.getByText(PREREQUISITE, { exact: true }).last().click()
+    // An E2E build swaps the Select for an input and a link per option, so the
+    // picker is the one thing here with no role to select on.
+    await page
+      .locator('[data-test^="add-prerequisite-option-"]', {
+        hasText: PREREQUISITE,
+      })
+      .first()
+      .click()
 
     const row = page.getByRole('row', { name: new RegExp(PREREQUISITE) })
     await row.waitFor({ state: 'visible', timeout: LONG_TIMEOUT })

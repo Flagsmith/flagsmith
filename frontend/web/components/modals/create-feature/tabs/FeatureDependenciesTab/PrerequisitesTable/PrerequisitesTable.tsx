@@ -44,7 +44,7 @@ const Satisfies: FC<{ isMet?: boolean }> = ({ isMet }) => {
       <Tooltip
         title={
           <span
-            className='prerequisite-satisfies'
+            className='d-inline-flex align-items-center gap-1 text-secondary'
             role='img'
             aria-label='Unknown'
           >
@@ -58,11 +58,13 @@ const Satisfies: FC<{ isMet?: boolean }> = ({ isMet }) => {
       </Tooltip>
     )
   }
+  // Only the satisfied rows are coloured; the banner carries the warning.
   return (
     <span
-      className={cn('prerequisite-satisfies', {
-        'prerequisite-satisfies--met': isMet,
-      })}
+      className={cn(
+        'd-inline-flex align-items-center gap-1',
+        isMet ? 'text-success' : 'text-secondary',
+      )}
     >
       <Icon name={isMet ? 'checkmark-circle' : 'minus-circle'} width={16} />
       {isMet ? 'Yes' : 'No'}

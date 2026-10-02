@@ -162,6 +162,8 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
               addControl={
                 isOpenForAdding && (
                   <FeatureSelect
+                    // In an E2E build the global Select becomes a bare input
+                    // and a list of links, with no role or label to select on.
                     data-test='add-prerequisite'
                     projectId={projectId}
                     environmentId={environmentId}
@@ -204,7 +206,6 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
             theme='outline'
             size='small'
             onClick={() => onAddingChange(true)}
-            data-test='add-prerequisite-btn'
           >
             Add prerequisite
           </Button>
