@@ -40,7 +40,7 @@ const FeatureSelect: FC<FeatureSelectProps> = ({
   const { getEnvironmentIdFromKey } = useProjectEnvironments(projectId)
   const numericEnvId = getEnvironmentIdFromKey(environmentId)
 
-  const { data, isLoading } = useGetFeatureListQuery(
+  const { data, isLoading: isLoadingFeatures } = useGetFeatureListQuery(
     {
       environmentId: String(numericEnvId ?? ''),
       page: 1,
@@ -52,6 +52,11 @@ const FeatureSelect: FC<FeatureSelectProps> = ({
     },
     { skip: !numericEnvId },
   )
+
+  // A skipped query reports neither loading nor error, so without this the
+  // picker reads as "no features to choose from" until the environment
+  // resolves.
+  const isLoading = isLoadingFeatures || !numericEnvId
 
   const options = (data?.results ?? [])
     .filter((feature) => !ignore?.includes(feature.id))

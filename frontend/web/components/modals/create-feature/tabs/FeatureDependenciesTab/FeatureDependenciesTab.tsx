@@ -53,11 +53,12 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   // The highlight outlives the interaction, so it can outlive the modal.
   useEffect(() => () => clearTimeout(highlightTimeout.current), [])
 
-  const { permission: canManage } = useHasPermission({
-    id: environmentId,
-    level: 'environment',
-    permission: EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
-  })
+  const { isLoading: isLoadingPermission, permission: canManage } =
+    useHasPermission({
+      id: environmentId,
+      level: 'environment',
+      permission: EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
+    })
 
   const { add, dependentEdges, isCreating, isError, isLoading, remove, rows } =
     useDependencies({ environmentId, featureId: projectFlag.id, projectId })
@@ -108,7 +109,9 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
       yesText: 'Confirm',
     })
 
-  if (isLoading) {
+  // Without the permission, canManage is false, so the add button and every
+  // bin would appear a moment after the rows.
+  if (isLoading || isLoadingPermission) {
     return <FeatureDependenciesSkeleton />
   }
 
