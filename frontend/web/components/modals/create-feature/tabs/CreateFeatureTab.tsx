@@ -72,7 +72,7 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
       {!!projectFlag && (
         <>
           {preventFlagDefaults && (
-            <InfoMessage collapseId='create-flag'>
+            <InfoMessage collapseId='prevent-flag-defaults'>
               This project <strong>prevents flag defaults</strong>, so the
               feature starts disabled with no value in{' '}
               <strong>all environments</strong>. Set its enabled state and value

@@ -51,8 +51,6 @@ type FeatureValueTabProps = {
   projectId: number | string
   identity?: string
   noPermissions: boolean
-  // The project discards the initial state and value on create, so the two
-  // controls that set them are locked rather than silently ignored.
   preventFlagDefaults?: boolean
   freeze?: FeatureExperimentFreeze
   featureState: FeatureState
@@ -114,7 +112,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
 }) => {
   const isEdit = !!projectFlag?.id
   const isDisabled = !!noPermissions || !!freeze?.isFrozen
-  // Variations are kept on create, so this covers only the state and value.
+  // Not isDisabled: variations are kept on create, only these two are not.
   const isDefaultDisabled = isDisabled || !!preventFlagDefaults
 
   const { permission: createFeature } = useHasPermission({
