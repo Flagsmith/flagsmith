@@ -2,12 +2,24 @@ import { FC, useCallback, useEffect, useRef, useState } from 'react'
 import { DependencyEdge, ProjectFlag } from 'common/types/responses'
 import { EnvironmentPermission } from 'common/types/permissions.types'
 import { useHasPermission } from 'common/providers/Permission'
+import Constants from 'common/constants'
+import Banner from 'components/base/Banner'
+import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
 import FeatureSelect from 'components/FeatureSelect'
+import Icon from 'components/icons/Icon'
+import Tooltip from 'components/Tooltip'
+import ModalHR from 'components/modals/ModalHR'
+import BlockedBanner from './BlockedBanner'
+import DependentFeatures from './DependentFeatures'
 import FeatureDependenciesSkeleton from './FeatureDependenciesSkeleton'
-import FeatureDependenciesView from './FeatureDependenciesView'
+import PrerequisitesTable from './PrerequisitesTable'
+import { PrerequisitesEmptyState } from './DependenciesEmptyStates'
 import { useDependencies } from './hooks/useDependencies'
 import './FeatureDependenciesTab.scss'
+
+export const DEPENDENCIES_DOCS_URL =
+  'https://docs.flagsmith.com/basic-features/managing-features'
 
 type FeatureDependenciesTabProps = {
   environmentId: string
@@ -102,36 +114,118 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
     return <ErrorMessage error="Could not load this feature's dependencies." />
   }
 
+  const isPrerequisite = !!dependentEdges.length
+
   return (
-    <FeatureDependenciesView
-      featureName={projectFlag.name}
-      environmentName={environmentName}
-      rows={rows}
-      dependentEdges={dependentEdges}
-      canManage={canManage}
-      conflict={conflict}
-      isAdding={isAdding}
-      onAddingChange={onAddingChange}
-      highlightedId={highlightedId}
-      isRemoving={removingId}
-      onRemove={onRemove}
-      onSelectFeature={onSelectFeature}
-      addControl={
-        <FeatureSelect
-          data-test='add-prerequisite'
-          projectId={projectId}
-          environmentId={environmentId}
-          disabled={isCreating}
-          placeholder='Add a prerequisite flag...'
-          // The API refuses both of these, so keep them out of the list.
-          ignore={[
-            projectFlag.id,
-            ...rows.map((row) => row.edge.prerequisite.id),
-          ]}
-          onChange={onAdd}
-        />
-      }
-    />
+    <div className='feature-dependencies'>
+      <div className='d-flex align-items-center gap-1 mb-2'>
+        <Tooltip
+          title={
+            <h5 className='mb-0'>
+              Flag dependencies <Icon name='info-outlined' />
+            </h5>
+          }
+          place='top'
+        >
+          {Constants.strings.FEATURE_DEPENDENCIES_DESCRIPTION}
+        </Tooltip>
+      </div>
+
+      {/* The rule cannot apply to a flag that cannot have prerequisites, so
+          the empty state explains that case instead. */}
+      {!isPrerequisite && (
+        <div className='text-muted mb-3'>
+          This flag only serves its own value when every prerequisite below is
+          on.{' '}
+          <a href={DEPENDENCIES_DOCS_URL} target='_blank' rel='noreferrer'>
+            Learn more
+          </a>
+        </div>
+      )}
+
+      {rows.length || isAdding ? (
+        <>
+          <BlockedBanner environmentName={environmentName} rows={rows} />
+          <div className='feature-dependencies__panel'>
+            <PrerequisitesTable
+              rows={rows}
+              canManage={canManage}
+              highlightedId={highlightedId}
+              isRemoving={removingId}
+              onRemove={onRemove}
+              addRow={
+                isAdding && (
+                  <tr className='feature-dependencies__add-row'>
+                    {/* One cell: the picker has no column to line up with. */}
+                    <td colSpan={4}>
+                      <div className='feature-dependencies__add-control d-flex align-items-center gap-2'>
+                        <FeatureSelect
+                          data-test='add-prerequisite'
+                          projectId={projectId}
+                          environmentId={environmentId}
+                          disabled={isCreating}
+                          placeholder='Add a prerequisite flag...'
+                          // The API refuses both of these, so keep them out of
+                          // the list.
+                          ignore={[
+                            projectFlag.id,
+                            ...rows.map((row) => row.edge.prerequisite.id),
+                          ]}
+                          onChange={onAdd}
+                        />
+                        <Button
+                          theme='text'
+                          onClick={() => onAddingChange(false)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              }
+            />
+          </div>
+        </>
+      ) : (
+        <div className='feature-dependencies__panel'>
+          <PrerequisitesEmptyState
+            featureName={projectFlag.name}
+            isPrerequisite={isPrerequisite}
+          />
+        </div>
+      )}
+
+      {/* Warning, not error: nothing failed, a rule is being stated. On
+          screen rather than a toast, because the user has to choose again. */}
+      {!!conflict && (
+        <Banner type='warning' className='mt-3'>
+          {conflict}
+        </Banner>
+      )}
+
+      {!isPrerequisite && canManage && !isAdding && (
+        <div className='mt-3'>
+          <Button
+            theme='outline'
+            size='small'
+            onClick={() => onAddingChange(true)}
+            data-test='add-prerequisite-btn'
+          >
+            Add prerequisite
+          </Button>
+        </div>
+      )}
+
+      <ModalHR className='mt-4' />
+
+      <DependentFeatures
+        featureName={projectFlag.name}
+        edges={dependentEdges}
+        hasPrerequisites={!!rows.length}
+        onSelect={onSelectFeature}
+      />
+    </div>
   )
 }
 
