@@ -1,0 +1,106 @@
+.prerequisite-name {
+  font-weight: var(--font-weight-medium);
+}
+
+.prerequisite-actions {
+  width: 60px;
+}
+
+// Position carries the state as well as colour, so it reads without one.
+.prerequisite-toggle {
+  display: inline-block;
+  position: relative;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--color-surface-emphasis);
+  transition: background-color var(--duration-fast) var(--easing-standard);
+
+  // Translated rather than swapped sides, so the knob can slide.
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--slate-0);
+    transition: transform var(--duration-fast) var(--easing-standard);
+  }
+}
+
+// The product's toggle colour. Green is reserved for Satisfies.
+.prerequisite-toggle--on {
+  background: var(--color-surface-action);
+
+  &::after {
+    transform: translateX(14px);
+  }
+}
+
+// The picker as the table's last row, so a new prerequisite appears where it
+// was asked for. Same enter as the row it creates, without the tint: it already
+// has a surface of its own.
+.prerequisite-add-row td {
+  padding: 8px 16px;
+  background: var(--color-surface-muted);
+  animation: prerequisite-enter 180ms var(--easing-standard) both;
+}
+
+// The select needs permission to shrink or it pushes the row past the panel.
+.prerequisite-add-control > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+// The short enter says the row arrived; the long tint says which one.
+.prerequisite-row--added td {
+  animation: prerequisite-enter 180ms var(--easing-standard) both,
+    prerequisite-added 2s ease-out;
+}
+
+.prerequisite-row--removing td {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--easing-standard);
+}
+
+@keyframes prerequisite-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes prerequisite-added {
+  from {
+    background: var(--color-surface-action-subtle);
+  }
+
+  to {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prerequisite-row--added td {
+    animation: none;
+    background: var(--color-surface-action-subtle);
+  }
+
+  .prerequisite-add-row td {
+    animation: none;
+  }
+
+  .prerequisite-toggle,
+  .prerequisite-toggle::after,
+  .prerequisite-row--removing td {
+    transition: none;
+  }
+}

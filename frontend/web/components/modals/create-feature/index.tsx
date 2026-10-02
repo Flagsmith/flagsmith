@@ -46,6 +46,7 @@ import SegmentOverridesTab, {
   SegmentOverrideValue,
 } from './tabs/SegmentOverridesTab'
 import UsageTab from './tabs/UsageTab'
+import FeatureDependenciesTab from './tabs/FeatureDependenciesTab'
 import FeatureLimitAlert from './components/FeatureLimitAlert'
 import FeatureUpdateSummary from './components/FeatureUpdateSummary'
 import FeatureNameInput from './components/FeatureNameInput'
@@ -459,6 +460,12 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     controlValue < 0
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
+  // Change requests are out of scope for the first version, so the tab stays
+  // hidden where they are enforced. See #8428.
+  const isDependenciesTabEnabled =
+    Utils.getFlagsmithHasFeature('flag_dependencies') &&
+    !existingChangeRequest &&
+    !is4Eyes
 
   let regexValid = true
   try {
@@ -818,6 +825,30 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         />
                       </TabItem>
                     )}
+                  {isDependenciesTabEnabled && (
+                    <TabItem
+                      data-test='feature_dependencies'
+                      tabLabel='Dependencies'
+                    >
+                      <FeatureDependenciesTab
+                        environmentId={environmentId}
+                        environmentName={environmentName}
+                        projectId={projectId}
+                        projectFlag={projectFlag}
+                        onSelectFeature={(featureId) => {
+                          // The features list owns the deep link, so point it
+                          // at the other feature and let its row open the
+                          // modal. Not closeModal() first: the modal clears the
+                          // query string when its fade finishes, which would
+                          // undo this.
+                          props.history?.replace({
+                            pathname: document.location.pathname,
+                            search: `?feature=${featureId}&tab=dependencies`,
+                          })
+                        }}
+                      />
+                    </TabItem>
+                  )}
                   {!existingChangeRequest && !hideIdentityOverridesTab && (
                     <TabItem
                       data-test='identity_overrides'

@@ -1,0 +1,13 @@
+// Same columns as a real row, so nothing moves when the data lands. The padding
+// is px-3 py-2 on the element, matching the table's cells.
+.dependencies-skeleton-row {
+  display: grid;
+  grid-template-columns: 1fr 72px 88px;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--color-border-default);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
