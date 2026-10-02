@@ -56,9 +56,11 @@ from experimentation.models import (
 from experimentation.results_query import ResultsQueryBuilder, _MetricSlot
 from experimentation.services import (
     annotate_warehouse_event_stats,
-    verify_clickhouse_connection,
+    verify_warehouse_connection,
 )
 from experimentation.stats import VariantStats
+from experimentation.warehouses import clickhouse
+from experimentation.warehouses.base import UnsupportedWarehouseOperation
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -260,7 +262,7 @@ def test_get_warehouse_event_names__clickhouse_connection__queries_customer_inst
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     if isinstance(query_result, Exception):
         get_client.return_value.query.side_effect = query_result
@@ -313,7 +315,7 @@ def test_get_warehouse_event_names__connection_details_changed__cache_keyed_by_c
 ) -> None:
     # Given — a cached result for the connection's current details
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     get_client.return_value.query.return_value = mocker.Mock(
         result_rows=[("old_event",)]
@@ -349,7 +351,7 @@ def test_get_warehouse_event_names__unsupported_type__raises(
     )
 
     # When / Then
-    with pytest.raises(ValueError, match="Unsupported warehouse type"):
+    with pytest.raises(UnsupportedWarehouseOperation):
         services.get_warehouse_event_names(connection, "test-env-key")
 
 
@@ -2670,21 +2672,21 @@ def _verification_count(result: str) -> float:
     )
 
 
-def test_verify_clickhouse_connection__reachable__sets_connected(
+def test_verify_warehouse_connection__reachable__sets_connected(
     clickhouse_connection: WarehouseConnection,
     log: StructuredLogCapture,
     mocker: MockerFixture,
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     success_count_before = _verification_count("success")
     clickhouse_connection.status_detail = "stale detail"
     clickhouse_connection.save()
 
     # When
-    verify_clickhouse_connection(clickhouse_connection)
+    verify_warehouse_connection(clickhouse_connection)
 
     # Then the check ran over the same HTTP client delivery uses
     clickhouse_connection.refresh_from_db()
@@ -2698,7 +2700,7 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
         database="acme_dwh",
         secure=True,
         connect_timeout=10,
-        send_receive_timeout=services.CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
+        send_receive_timeout=clickhouse.VERIFY_TIMEOUT_SECONDS,
         pool_mgr=mocker.ANY,
     )
     get_client.return_value.query.assert_called_once_with("EXISTS TABLE events")
@@ -2730,7 +2732,7 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
     ],
     ids=["client_error", "missing_events_table", "missing_credentials"],
 )
-def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
+def test_verify_warehouse_connection__failure__sets_errored_with_detail(
     clickhouse_connection: WarehouseConnection,
     credentials: dict[str, str] | None,
     query_results: Exception | list[list[tuple[int]]] | None,
@@ -2740,7 +2742,7 @@ def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     if isinstance(query_results, list):
         get_client.return_value.query.side_effect = [
@@ -2753,7 +2755,7 @@ def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
     failure_count_before = _verification_count("failure")
 
     # When
-    verify_clickhouse_connection(clickhouse_connection)
+    verify_warehouse_connection(clickhouse_connection)
 
     # Then
     clickhouse_connection.refresh_from_db()
@@ -2765,13 +2767,13 @@ def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
     )
 
 
-def test_verify_clickhouse_connection__internal_host__sets_errored_without_connecting(
+def test_verify_warehouse_connection__internal_host__sets_errored_without_connecting(
     clickhouse_connection: WarehouseConnection,
     mocker: MockerFixture,
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     clickhouse_connection.config = {
         **(clickhouse_connection.config or {}),
@@ -2780,7 +2782,7 @@ def test_verify_clickhouse_connection__internal_host__sets_errored_without_conne
     clickhouse_connection.save()
 
     # When
-    verify_clickhouse_connection(clickhouse_connection)
+    verify_warehouse_connection(clickhouse_connection)
 
     # Then
     clickhouse_connection.refresh_from_db()
@@ -2813,7 +2815,7 @@ def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     if isinstance(query_result, Exception):
         get_client.return_value.query.side_effect = query_result
