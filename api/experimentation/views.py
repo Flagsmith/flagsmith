@@ -1,4 +1,5 @@
 import logging
+from contextlib import suppress
 from dataclasses import asdict
 from datetime import timedelta
 from typing import Any
@@ -60,7 +61,6 @@ from experimentation.serializers import (
     WarehouseConnectionSerializer,
 )
 from experimentation.services import (
-    EVENT_NAMES_SUPPORTED_WAREHOUSE_TYPES,
     annotate_warehouse_delivery_statuses,
     annotate_warehouse_event_stats,
     apply_experiment_rollout,
@@ -72,12 +72,13 @@ from experimentation.services import (
     mark_warehouse_pending_connection,
     refresh_warehouse_connection_status,
     transition_experiment_status,
-    verify_clickhouse_connection,
+    verify_warehouse_connection,
 )
 from experimentation.tasks import (
     compute_experiment_exposures,
     compute_experiment_results,
 )
+from experimentation.warehouses.base import UnsupportedWarehouseOperation
 from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
@@ -125,19 +126,20 @@ class WarehouseConnectionViewSet(
         create_warehouse_audit_log(
             connection, self._get_user(self.request), action="created"
         )
-        if connection.warehouse_type == WarehouseType.CLICKHOUSE:
-            verify_clickhouse_connection(connection)
+        with suppress(UnsupportedWarehouseOperation):
+            verify_warehouse_connection(connection)
 
     def perform_update(self, serializer: BaseSerializer[WarehouseConnection]) -> None:
         connection: WarehouseConnection = serializer.save()
         create_warehouse_audit_log(
             connection, self._get_user(self.request), action="updated"
         )
-        if connection.warehouse_type == WarehouseType.CLICKHOUSE and (
+        if (
             "config" in serializer.validated_data
             or "credentials" in serializer.validated_data
         ):
-            verify_clickhouse_connection(connection)
+            with suppress(UnsupportedWarehouseOperation):
+                verify_warehouse_connection(connection)
 
     def perform_destroy(self, instance: WarehouseConnection) -> None:
         create_warehouse_audit_log(
@@ -168,16 +170,17 @@ class WarehouseConnectionViewSet(
     @action(detail=True, methods=["post"], url_path="test-warehouse-connection")
     def test_warehouse_connection(self, request: Request, **kwargs: object) -> Response:
         connection: WarehouseConnection = self.get_object()
-        if connection.warehouse_type == WarehouseType.CLICKHOUSE:
-            verify_clickhouse_connection(connection)
-            return Response(self.get_serializer(connection).data)
         if connection.warehouse_type != WarehouseType.FLAGSMITH:
-            return Response(
-                {
-                    "detail": "Connection testing is not supported for this warehouse type."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            try:
+                verify_warehouse_connection(connection)
+            except UnsupportedWarehouseOperation:
+                return Response(
+                    {
+                        "detail": "Connection testing is not supported for this warehouse type."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return Response(self.get_serializer(connection).data)
         mark_warehouse_pending_connection(connection)
         annotate_warehouse_event_stats(connection, self.kwargs["environment_api_key"])
         if connection.event_stats is not None:
@@ -213,20 +216,21 @@ class WarehouseConnectionViewSet(
     ) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        if serializer.validated_data.get("warehouse_type") != WarehouseType.CLICKHOUSE:
-            return Response(
-                {
-                    "detail": "Connection testing is not supported for this warehouse type."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         connection = WarehouseConnection(
             environment=self._get_environment(),
             warehouse_type=serializer.validated_data["warehouse_type"],
             config=serializer.validated_data.get("config"),
             credentials=serializer.validated_data.get("credentials"),
         )
-        verify_clickhouse_connection(connection, persist=False)
+        try:
+            verify_warehouse_connection(connection, persist=False)
+        except UnsupportedWarehouseOperation:
+            return Response(
+                {
+                    "detail": "Connection testing is not supported for this warehouse type."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response(
             {"status": connection.status, "status_detail": connection.status_detail}
         )
@@ -255,14 +259,15 @@ class WarehouseConnectionViewSet(
     def events(self, request: Request, **kwargs: object) -> Response:
         """List the distinct event names in the connection's warehouse."""
         connection: WarehouseConnection = self.get_object()
-        if connection.warehouse_type not in EVENT_NAMES_SUPPORTED_WAREHOUSE_TYPES:
+        try:
+            event_names = get_warehouse_event_names(
+                connection, self.kwargs["environment_api_key"]
+            )
+        except UnsupportedWarehouseOperation:
             return Response(
                 {"detail": "Event listing is not supported for this warehouse type."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        event_names = get_warehouse_event_names(
-            connection, self.kwargs["environment_api_key"]
-        )
         if event_names is None:
             return Response(
                 {"detail": "The warehouse is currently unreachable."},
