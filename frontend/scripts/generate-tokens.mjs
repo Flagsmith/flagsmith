@@ -153,44 +153,14 @@ function buildScssLines() {
     rootLines.push('')
   }
 
-  if (json[PRIMARY_CATEGORY]) {
-    rootLines.push('  // Primary')
-    for (const [, e] of sorted(json[PRIMARY_CATEGORY])) {
+  for (const cat of RAMPS) {
+    if (!json[cat]) continue
+    rootLines.push(`  // ${cap(cat)}`)
+    for (const [, e] of sorted(json[cat])) {
       rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
       if (e.dark && e.dark !== e.light) {
         darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
       }
-    }
-    rootLines.push('')
-  }
-
-  if (json[NEUTRAL_CATEGORY]) {
-    rootLines.push('  // Neutral')
-    for (const [, e] of sorted(json[NEUTRAL_CATEGORY])) {
-      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
-      if (e.dark && e.dark !== e.light) {
-        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
-      }
-    }
-    rootLines.push('')
-  }
-
-  if (json[STATE_CATEGORY]) {
-    rootLines.push('  // State')
-    for (const [, e] of sorted(json[STATE_CATEGORY])) {
-      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
-      if (e.dark && e.dark !== e.light) {
-        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
-      }
-    }
-    rootLines.push('')
-  }
-
-  // Always-* : pinned across themes, so no dark override
-  if (json[ALWAYS_CATEGORY]) {
-    rootLines.push('  // Always')
-    for (const [, e] of sorted(json[ALWAYS_CATEGORY])) {
-      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
     }
     rootLines.push('')
   }
