@@ -6,7 +6,10 @@ import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscription
 import OverLimitBanner from './components/OverLimitBanner'
 import BillingStrip from './components/BillingStrip'
 import SectionHeading from './components/SectionHeading'
-import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
+import UsageBreakdown, {
+  useGroupedBreakdown,
+  useUsageBreakdown,
+} from './components/UsageBreakdown'
 import UsageFilters from './components/UsageFilters'
 import UsageMeter from './components/UsageMeter'
 import UsageOverTime from './components/UsageOverTime'
@@ -89,8 +92,14 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   const periods = periodsFor(planIsBilled)
 
-  const { setDimension, ...breakdown } = useUsageBreakdown({
+  const { dimension, rows, setDimension } = useUsageBreakdown({
     data: usage.scoped,
+  })
+  const grouped = useGroupedBreakdown({
+    billingPeriod,
+    dimension,
+    organisationId: organisationId ?? 0,
+    projectId: selectedProjectId,
   })
 
   const selectedPeriod = periodLabel(periods, billingPeriod)
@@ -196,7 +205,10 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
           />
 
           <UsageBreakdown
-            {...breakdown}
+            dimension={dimension}
+            rows={grouped?.rows ?? rows}
+            status={grouped?.status}
+            onRetry={grouped?.onRetry}
             onChangeDimension={setDimension}
             scope={scope}
           />

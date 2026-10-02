@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Res } from 'common/types/responses'
-import { byRequestType, bySdk, BreakdownDimension } from './utils'
+import { byRequestType, bySdk, BreakdownDimension, BreakdownRow } from './utils'
 
 type UseUsageBreakdown = {
   data: Res['organisationUsage'] | undefined
@@ -9,10 +9,12 @@ type UseUsageBreakdown = {
 export const useUsageBreakdown = ({ data }: UseUsageBreakdown) => {
   const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
 
-  const rows = useMemo(
-    () => (dimension === 'sdk' ? bySdk(data) : byRequestType(data)),
-    [dimension, data],
-  )
+  const rows = useMemo((): BreakdownRow[] => {
+    if (dimension === 'request-type') return byRequestType(data)
+    if (dimension === 'sdk') return bySdk(data)
+    // Project and environment come from useGroupedBreakdown.
+    return []
+  }, [dimension, data])
 
   return { dimension, rows, setDimension }
 }

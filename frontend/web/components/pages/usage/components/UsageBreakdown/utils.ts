@@ -4,9 +4,46 @@ import {
   colorChart3,
   colorChart4,
 } from 'common/theme/tokens'
+import { UsageGroupBy } from 'common/types/requests'
 import { Res, UsageEventsList } from 'common/types/responses'
 
-export type BreakdownDimension = 'request-type' | 'sdk'
+export type BreakdownDimension =
+  | 'request-type'
+  | 'project'
+  | 'environment'
+  | 'sdk'
+
+// Project and environment need their own grouped request; request type and
+// SDK come from the rows the page already holds.
+export const isGroupedDimension = (
+  dimension: BreakdownDimension,
+): dimension is UsageGroupBy =>
+  dimension === 'project' || dimension === 'environment'
+
+export type BreakdownStatus = 'ready' | 'loading' | 'error' | 'needs-project'
+
+export const groupByOf = (
+  dimension: BreakdownDimension,
+  projectId: number | undefined,
+): UsageGroupBy | undefined => {
+  if (!isGroupedDimension(dimension)) return undefined
+  // Environments are only ranked within one project.
+  if (dimension === 'environment' && !projectId) return undefined
+  return dimension
+}
+
+export type QueryState = { isFetching: boolean; isError: boolean }
+
+export const breakdownStatusOf = (
+  groupBy: UsageGroupBy | undefined,
+  queries: QueryState[],
+): BreakdownStatus => {
+  if (!groupBy) return 'needs-project'
+  if (queries.some((query) => query.isFetching)) return 'loading'
+  // A failed scope must not read as zero usage.
+  if (queries.some((query) => query.isError)) return 'error'
+  return 'ready'
+}
 
 export type BreakdownRow = {
   key: string
@@ -20,6 +57,8 @@ export const BREAKDOWN_DIMENSIONS: {
   value: BreakdownDimension
 }[] = [
   { label: 'By request type', value: 'request-type' },
+  { label: 'By project', value: 'project' },
+  { label: 'By environment', value: 'environment' },
   { label: 'By SDK', value: 'sdk' },
 ]
 
@@ -78,6 +117,33 @@ export const bySdk = (
     [...totals.entries()].map(([label, value]) => ({
       key: label,
       label,
+      value,
+    })),
+  )
+}
+
+type ScopeKey = 'project_id' | 'environment_id'
+
+// Usage outlives the project or environment that made it, so an id can be
+// missing from the names.
+export const byScope = (
+  data: Res['organisationUsage'] | undefined,
+  key: ScopeKey,
+  names: Map<number, string>,
+  deletedLabel: string,
+): BreakdownRow[] => {
+  const totals = new Map<number, number>()
+
+  for (const event of data?.events_list ?? []) {
+    const id = event[key]
+    if (id === null || id === undefined) continue
+    totals.set(id, (totals.get(id) ?? 0) + totalOf(event))
+  }
+
+  return ranked(
+    [...totals.entries()].map(([id, value]) => ({
+      key: `${key}-${id}`,
+      label: names.get(id) ?? deletedLabel,
       value,
     })),
   )

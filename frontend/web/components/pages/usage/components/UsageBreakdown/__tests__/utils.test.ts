@@ -4,7 +4,10 @@ import {
   usageResponse,
 } from 'components/pages/usage/__tests__/fixtures'
 import {
+  breakdownStatusOf,
   byRequestType,
+  byScope,
+  groupByOf,
   barPercent,
   bySdk,
   sharesOf,
@@ -134,6 +137,83 @@ describe('UsageBreakdown utils', () => {
     it('draws nothing when there is nothing to draw', () => {
       expect(barPercent(0, 8_900_000)).toBe(0)
       expect(barPercent(10, 0)).toBe(0)
+    })
+  })
+
+  describe('byScope', () => {
+    it('ranks projects by their total and names them', () => {
+      const rows = byScope(
+        usageResponse([
+          usageEvent({ flags: 10, project_id: 1 }),
+          usageEvent({ flags: 5, identities: 20, project_id: 2 }),
+          usageEvent({ flags: 4, project_id: 1 }),
+        ]),
+        'project_id',
+        new Map([
+          [1, 'Checkout'],
+          [2, 'Mobile app'],
+        ]),
+        'Deleted project',
+      )
+
+      expect(rows.map(({ label, value }) => [label, value])).toEqual([
+        ['Mobile app', 25],
+        ['Checkout', 14],
+      ])
+    })
+
+    it('labels usage from a project that no longer exists', () => {
+      const rows = byScope(
+        usageResponse([usageEvent({ flags: 3, project_id: 9 })]),
+        'project_id',
+        new Map(),
+        'Deleted project',
+      )
+
+      expect(rows[0].label).toBe('Deleted project')
+    })
+
+    it('skips rows the API did not group', () => {
+      expect(
+        byScope(
+          usageResponse([usageEvent({ flags: 3 })]),
+          'environment_id',
+          new Map(),
+          'Deleted environment',
+        ),
+      ).toEqual([])
+    })
+  })
+
+  describe('groupByOf', () => {
+    it.each`
+      dimension         | projectId    | expected
+      ${'request-type'} | ${undefined} | ${undefined}
+      ${'sdk'}          | ${12}        | ${undefined}
+      ${'project'}      | ${undefined} | ${'project'}
+      ${'environment'}  | ${undefined} | ${undefined}
+      ${'environment'}  | ${12}        | ${'environment'}
+    `(
+      '$dimension with project $projectId groups by $expected',
+      ({ dimension, expected, projectId }) => {
+        expect(groupByOf(dimension, projectId)).toBe(expected)
+      },
+    )
+  })
+
+  describe('breakdownStatusOf', () => {
+    const idle = { isError: false, isFetching: false }
+
+    it.each`
+      groupBy      | queries                                                 | expected
+      ${undefined} | ${[idle]}                                               | ${'needs-project'}
+      ${'project'} | ${[idle, { ...idle, isFetching: true }]}                | ${'loading'}
+      ${'project'} | ${[{ ...idle, isError: true }, idle]}                   | ${'error'}
+      ${'project'} | ${[{ isError: true, isFetching: true }]}                | ${'loading'}
+      ${'project'} | ${[{ ...idle, error: { status: 500 }, isError: true }]} | ${'error'}
+      ${'project'} | ${[idle, idle]}                                         | ${'ready'}
+    `('is $expected', ({ expected, groupBy, queries }) => {
+      expect(breakdownStatusOf(groupBy, queries)).toBe(expected)
     })
   })
 })

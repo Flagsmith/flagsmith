@@ -1,4 +1,6 @@
 export { default } from './UsageBreakdown'
 export type { UsageBreakdownProps } from './UsageBreakdown'
-export type { BreakdownDimension, BreakdownRow } from './utils'
+export type { BreakdownDimension, BreakdownRow, BreakdownStatus } from './utils'
 export { useUsageBreakdown } from './useUsageBreakdown'
+export { useGroupedBreakdown } from './useGroupedBreakdown'
+export type { GroupedBreakdown } from './useGroupedBreakdown'
