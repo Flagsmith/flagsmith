@@ -66,22 +66,6 @@ const surface: Scale = {
   ],
 }
 
-const content: Scale = {
-  compact: true,
-  description:
-    'Decorative identifiers, most often a tag category. The same on both themes: pale enough to carry dark text and to separate from either page.',
-  name: 'Content',
-  swatches: Object.keys(primitives)
-    .filter(
-      (name) => name.startsWith('content-') && name !== 'content-always-dark',
-    )
-    .map((name) => ({
-      hex: primitives[name],
-      step: name.replace('content-', ''),
-      variable: `--${name}`,
-    })),
-}
-
 const scales: Scale[] = [
   ramp(
     'primary',
@@ -96,7 +80,6 @@ const scales: Scale[] = [
   stateHue('success', 'Success'),
   stateHue('warning', 'Warning'),
   stateHue('danger', 'Danger'),
-  ...(content.swatches.length ? [content] : []),
 ]
 
 const ColourSystemPage: React.FC = () => (
