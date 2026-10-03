@@ -1426,19 +1426,23 @@ def test_get_superseded_live_feature_state__scheduled_change_gone_live__returns_
 
 
 @pytest.mark.parametrize(
-    "override_kwargs, expected_function_name",
+    "feature_state, expected_function_name",
     (
-        ({"segment": True}, "get_segment_override_created_audit_message"),
-        ({"identity": True}, "get_identity_override_created_audit_message"),
+        (
+            lazy_fixture("segment_featurestate"),
+            "get_segment_override_created_audit_message",
+        ),
+        (
+            lazy_fixture("identity_featurestate"),
+            "get_identity_override_created_audit_message",
+        ),
     ),
 )
-def test_feature_state_get_create_log_message__environment_default_missing__returns_override_message(  # type: ignore[no-untyped-def]  # noqa: E501
+def test_feature_state_get_create_log_message__environment_default_missing__returns_override_message(
     mocker: MockerFixture,
     feature: Feature,
     environment: Environment,
-    segment: Segment,
-    identity: Identity,
-    override_kwargs: dict[str, bool],
+    feature_state: FeatureState,
     expected_function_name: str,
 ) -> None:
     # Given
@@ -1448,18 +1452,6 @@ def test_feature_state_get_create_log_message__environment_default_missing__retu
         feature_segment=None,
         identity=None,
     ).delete()
-    if override_kwargs.get("segment"):
-        feature_state = FeatureState(
-            feature=feature,
-            environment=environment,
-            feature_segment=FeatureSegment.objects.create(
-                feature=feature, segment=segment, environment=environment
-            ),
-        )
-    else:
-        feature_state = FeatureState(
-            feature=feature, environment=environment, identity=identity
-        )
     mock_audit_helpers = mocker.patch("features.models.audit_helpers")
     history_instance = mocker.MagicMock(history_type="+")
 
