@@ -1110,3 +1110,56 @@ def test_update_flag__v2_versioning_multivariate_weight_increase__keeps_enrolled
         for key in original_assignment
         if key not in movers
     )
+
+
+def _create_changed_version(
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    override_count: int,
+) -> EnvironmentFeatureVersion:
+    v1 = EnvironmentFeatureVersion.objects.get(environment=environment, feature=feature)
+    for i in range(override_count):
+        segment = Segment.objects.create(name=f"segment {i}", project=project)
+        feature_segment = FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment,
+            environment_feature_version=v1,
+        )
+        FeatureState.objects.create(
+            feature=feature,
+            environment=environment,
+            feature_segment=feature_segment,
+            environment_feature_version=v1,
+            enabled=False,
+        )
+
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment, feature=feature
+    )
+    for feature_state in v2.feature_states.all():
+        feature_state.enabled = not feature_state.enabled
+        feature_state.save()
+
+    return EnvironmentFeatureVersion.objects.get(uuid=v2.uuid)
+
+
+def test_get_updated_feature_states_for_version__more_overrides__same_query_count(
+    project: Project,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    django_assert_max_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    v2 = _create_changed_version(
+        project, environment_v2_versioning, feature, override_count=5
+    )
+
+    # When / Then
+    # Query count must not depend on the number of overrides. A flag with one
+    # override needs 7 queries in total.
+    with django_assert_max_num_queries(7):
+        updated_feature_states = get_updated_feature_states_for_version(v2)
+
+    assert len(updated_feature_states) == 6
