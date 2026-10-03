@@ -11,6 +11,19 @@
   border: none;
   background-color: $switch-bg;
   cursor: pointer;
+
+  // The track is 41x24, under the 44px minimum for a touch target. The visual
+  // stays as designed and this reaches out to 44 for the finger only.
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+  }
+
   &:focus {
     box-shadow: 0px 0px 0px 3px rgba(51, 102, 255, 0.32);
     border: 1px solid $primary;
