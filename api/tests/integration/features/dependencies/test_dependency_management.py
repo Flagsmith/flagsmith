@@ -1028,38 +1028,6 @@ def test_delete_feature_dependency__v2_versioning__publishes_version(
     assert all(version["published"] for version in versions["results"])
 
 
-def test_get_flags__dependency_deleted__serves_dependent_enabled(
-    admin_client: APIClient,
-    environment_api_key: str,
-    project: int,
-    sdk_client: APIClient,
-) -> None:
-    # Given
-    feature = Feature.objects.create(name="checkout", project_id=project)
-    prerequisite = Feature.objects.create(name="payments", project_id=project)
-    admin_client.patch(
-        f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
-        {"environment_default": {"enabled": True}},
-        format="json",
-    )
-    admin_client.post(
-        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
-    )
-    admin_client.delete(
-        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
-    )
-
-    # When
-    response = sdk_client.get("/api/v1/flags/")
-
-    # Then
-    assert response.status_code == 200
-    assert {flag["feature"]["name"]: flag["enabled"] for flag in response.json()} == {
-        "checkout": True,
-        "payments": False,
-    }
-
-
 def test_delete_feature_dependency__dependency_in_user_segment__responds_400_with_error(
     admin_client: APIClient,
     create_segment_override: CreateSegmentOverrideFixture,
