@@ -8,9 +8,11 @@ from typing_extensions import TypedDict
 from api.openapi import (
     TAGS,
     TypedDictSchemaExtension,
+    postprocessing_add_trait_value_max_length,
     postprocessing_assign_tags,
     preprocessing_filter_spec,
 )
+from environments.identities.traits.constants import TRAIT_STRING_VALUE_MAX_LENGTH
 
 
 def test_typeddict_schema_extension__nested_typed_dict__renders_expected_schema() -> (
@@ -266,3 +268,83 @@ def test_typeddict_schema_extension__simple_model__returns_correct_name() -> Non
 
     # Then
     assert name == "MyModel"
+
+
+def test_postprocessing_add_trait_value_max_length__string_variant__adds_max_length() -> (
+    None
+):
+    # Given
+    result: dict[str, Any] = {
+        "components": {
+            "schemas": {
+                "TraitInput": {
+                    "properties": {
+                        "trait_value": {
+                            "anyOf": [
+                                {"type": "integer"},
+                                {"type": "number"},
+                                {"type": "boolean"},
+                                {"type": "string"},
+                                {"type": "null"},
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    }
+
+    # When
+    postprocessing_add_trait_value_max_length(result, generator=None)
+
+    # Then
+    trait_value_schema = result["components"]["schemas"]["TraitInput"]["properties"][
+        "trait_value"
+    ]
+    assert trait_value_schema["anyOf"] == [
+        {"type": "integer"},
+        {"type": "number"},
+        {"type": "boolean"},
+        {"type": "string", "maxLength": TRAIT_STRING_VALUE_MAX_LENGTH},
+        {"type": "null"},
+    ]
+
+
+def test_postprocessing_add_trait_value_max_length__no_trait_value_property__left_unchanged() -> (
+    None
+):
+    # Given
+    result: dict[str, Any] = {
+        "components": {
+            "schemas": {
+                "Organisation": {
+                    "properties": {
+                        "name": {"type": "string"},
+                    },
+                },
+            },
+        },
+    }
+
+    # When
+    postprocessing_add_trait_value_max_length(result, generator=None)
+
+    # Then
+    assert result["components"]["schemas"]["Organisation"] == {
+        "properties": {
+            "name": {"type": "string"},
+        },
+    }
+
+
+def test_postprocessing_add_trait_value_max_length__no_components__returns_result_unchanged() -> (
+    None
+):
+    # Given
+    result: dict[str, Any] = {"paths": {}}
+
+    # When
+    output = postprocessing_add_trait_value_max_length(result, generator=None)
+
+    # Then
+    assert output == {"paths": {}}
