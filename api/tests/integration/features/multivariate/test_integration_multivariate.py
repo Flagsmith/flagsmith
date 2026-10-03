@@ -246,12 +246,12 @@ def test_update_mv_option__unchanged_key__returns_ok(
     assert response.json()["key"] == "variant-a"
 
 
-def test_update_mv_option__duplicate_sibling_key__returns_bad_request(
+def test_create_mv_option__duplicate_sibling_key__returns_bad_request(
     admin_client_new: APIClient,
     project: int,
     feature: int,
 ) -> None:
-    # Given - two options, one with a key
+    # Given - an option with a key
     create_url = reverse(
         "api-v1:projects:feature-mv-options-list",
         args=[project, feature],
@@ -263,12 +263,6 @@ def test_update_mv_option__duplicate_sibling_key__returns_bad_request(
         "default_percentage_allocation": 50,
         "key": "variant-a",
     }
-    unkeyed_option_data = {
-        "type": "unicode",
-        "feature": feature,
-        "string_value": "biggest",
-        "default_percentage_allocation": 50,
-    }
     assert (
         admin_client_new.post(
             create_url,
@@ -277,22 +271,11 @@ def test_update_mv_option__duplicate_sibling_key__returns_bad_request(
         ).status_code
         == status.HTTP_201_CREATED
     )
-    unkeyed_option_id = admin_client_new.post(
-        create_url,
-        data=json.dumps(unkeyed_option_data),
-        content_type="application/json",
-    ).json()["id"]
 
-    # When - the unkeyed option is updated to use its sibling's key
-    update_url = reverse(
-        "api-v1:projects:feature-mv-options-detail",
-        args=[project, feature, unkeyed_option_id],
-    )
-    response = admin_client_new.put(
-        update_url,
-        data=json.dumps(
-            {**unkeyed_option_data, "id": unkeyed_option_id, "key": "variant-a"}
-        ),
+    # When - a new option is created with the same key
+    response = admin_client_new.post(
+        create_url,
+        data=json.dumps(keyed_option_data),
         content_type="application/json",
     )
 
