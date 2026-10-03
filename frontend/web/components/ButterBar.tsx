@@ -71,12 +71,15 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
       environment,
     ) as Environment | null
     if (environmentDetail?.banner_text) {
+      // No colour means the stylesheet's own background, which differs between
+      // themes, so leave the text colour to it rather than guessing one.
+      const colour = environmentDetail.banner_colour || undefined
       return (
         <div
           className='butter-bar font-weight-medium'
           style={{
-            backgroundColor: environmentDetail.banner_colour,
-            color: Utils.getContrastColour(environmentDetail.banner_colour),
+            backgroundColor: colour,
+            color: colour ? Utils.getContrastColour(colour) : undefined,
           }}
         >
           {environmentDetail.banner_text}
