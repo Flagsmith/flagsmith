@@ -55,4 +55,14 @@ describe('generated token outputs', () => {
     )
     expect(leaked).toEqual([])
   })
+
+  // Legacy Sass reads primitives from this map, so a stale copy brings back
+  // two palettes.
+  it('mirrors every primitive in the Sass map', () => {
+    const sass = read('web/styles/_primitives.scss')
+    const entries = [...sass.matchAll(/^ {2}'([\w-]+)': (#[0-9a-f]{6}),$/gim)]
+    expect(
+      Object.fromEntries(entries.map(([, name, hex]) => [name, hex])),
+    ).toEqual(tokens.primitives)
+  })
 })
