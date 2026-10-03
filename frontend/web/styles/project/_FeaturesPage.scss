@@ -5,6 +5,24 @@
   flex-direction: column;
   align-items: end;
 
+  // The trigger is a 40x32 icon button, under the 44px minimum for a touch
+  // target. The icon stays its size; this reaches out for the finger.
+  @media (pointer: coarse) {
+    > button {
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: max(100%, 44px);
+        height: max(100%, 44px);
+      }
+    }
+  }
+
   &__list {
     position: absolute;
     z-index: 2000000000001;

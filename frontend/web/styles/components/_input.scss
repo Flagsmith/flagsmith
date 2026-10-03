@@ -243,6 +243,15 @@ textarea {
     top: 7px;
     right: 8px;
   }
+}
+
+// A text field is tapped to focus it, so the box itself has to reach 44px
+// rather than an invisible overlay. Touch only: desktop keeps its density.
+@media (pointer: coarse) {
+  .input.input-xsm,
+  .input.input-sm {
+    min-height: 44px;
+  }
   &.input-lg {
     top: 16px;
   }

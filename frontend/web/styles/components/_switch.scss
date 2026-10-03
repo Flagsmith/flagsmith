@@ -12,16 +12,19 @@
   background-color: $switch-bg;
   cursor: pointer;
 
-  // The track is 41x24, under the 44px minimum for a touch target. The visual
-  // stays as designed and this reaches out to 44 for the finger only.
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: max(100%, 44px);
-    height: max(100%, 44px);
+  // The track is 41x24, under the 44px minimum for a touch target, and a miss
+  // lands on the feature row, which opens the flag instead of toggling it. The
+  // visual stays as designed; this reaches out to 44 for the finger only.
+  @media (pointer: coarse) {
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: max(100%, 44px);
+      height: max(100%, 44px);
+    }
   }
 
   &:focus {
