@@ -491,7 +491,6 @@ def delete_flag_dependency(
             raise DependencyInUserSegmentError(
                 environment=referencing_environment, path=user_segment_edges
             )
-        # Adding a dependency targets one system segment, and refuses to add it again.
         [edge] = edges
         delete_segment_override(
             environment=environment,
