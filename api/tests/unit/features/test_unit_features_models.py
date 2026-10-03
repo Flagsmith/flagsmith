@@ -1423,3 +1423,50 @@ def test_get_superseded_live_feature_state__scheduled_change_gone_live__returns_
     # Then the state with the latest live_from is live, not the highest version
     assert superseded == scheduled
     assert superseded != committed_last
+
+
+@pytest.mark.parametrize(
+    "override_kwargs, expected_function_name",
+    (
+        ({"segment": True}, "get_segment_override_created_audit_message"),
+        ({"identity": True}, "get_identity_override_created_audit_message"),
+    ),
+)
+def test_feature_state_get_create_log_message__environment_default_missing__returns_override_message(  # type: ignore[no-untyped-def]  # noqa: E501
+    mocker: MockerFixture,
+    feature: Feature,
+    environment: Environment,
+    segment: Segment,
+    identity: Identity,
+    override_kwargs: dict[str, bool],
+    expected_function_name: str,
+) -> None:
+    # Given
+    FeatureState.objects.filter(
+        feature=feature,
+        environment=environment,
+        feature_segment=None,
+        identity=None,
+    ).delete()
+    if override_kwargs.get("segment"):
+        feature_state = FeatureState(
+            feature=feature,
+            environment=environment,
+            feature_segment=FeatureSegment.objects.create(
+                feature=feature, segment=segment, environment=environment
+            ),
+        )
+    else:
+        feature_state = FeatureState(
+            feature=feature, environment=environment, identity=identity
+        )
+    mock_audit_helpers = mocker.patch("features.models.audit_helpers")
+    history_instance = mocker.MagicMock(history_type="+")
+
+    # When
+    log = feature_state.get_create_log_message(history_instance)
+
+    # Then
+    expected_function = getattr(mock_audit_helpers, expected_function_name)
+    expected_function.assert_called_once_with(feature_state)
+    assert log == expected_function.return_value
