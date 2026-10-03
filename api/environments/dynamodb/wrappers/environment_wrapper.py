@@ -3,7 +3,8 @@ import typing
 from typing import Any, Iterable
 
 import structlog
-from boto3.dynamodb.conditions import ConditionBase, Key
+from boto3.dynamodb.conditions import Attr, ConditionBase, Key
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import prefetch_related_objects
@@ -215,6 +216,35 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
                         ENVIRONMENTS_V2_SORT_KEY: item["document_key"],
                     },
                 )
+
+    def delete_identity_override_if_unchanged(
+        self,
+        environment_id: int,
+        document_key: str,
+        identity_uuid: str,
+    ) -> bool:
+        """
+        Delete a single identity override document, unless it has been rewritten.
+
+        The condition guards against removing an override that was recreated
+        between a caller deciding it was stale and this delete landing — without
+        it, a repair would carry the same race as the bug it repairs.
+
+        :return: whether the document was deleted.
+        """
+        try:
+            self.table.delete_item(  # type: ignore[union-attr]
+                Key={
+                    ENVIRONMENTS_V2_PARTITION_KEY: str(environment_id),
+                    ENVIRONMENTS_V2_SORT_KEY: document_key,
+                },
+                ConditionExpression=Attr("identity_uuid").eq(identity_uuid),
+            )
+        except ClientError as exc:
+            if exc.response["Error"]["Code"] == "ConditionalCheckFailedException":
+                return False
+            raise
+        return True
 
     def delete_identity_overrides(self, environment_id: int, feature_id: int) -> None:
         filter_expression = self.get_identity_overrides_key_condition_expression(

@@ -20,6 +20,19 @@ def postpone(function):  # type: ignore[no-untyped-def]
     return decorator
 
 
+def iter_chunks(
+    iterable: Iterable[T],
+    *,
+    chunk_size: int,
+) -> Generator[list[T], None, None]:
+    """
+    Iterate over `iterable`, yielding lists of at most `chunk_size` items.
+    """
+    iterator = iter(iterable)
+    while chunk := list(islice(iterator, chunk_size)):
+        yield chunk
+
+
 def iter_paired_chunks(
     iterable_1: Iterable[T],
     iterable_2: Iterable[T],
