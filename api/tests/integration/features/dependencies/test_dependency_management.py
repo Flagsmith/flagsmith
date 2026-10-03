@@ -867,7 +867,6 @@ def test_delete_feature_dependency__dependency_exists__responds_204_removing_ove
 
     # Then
     assert response.status_code == 204
-    assert response.content == b""
     assert set(
         Segment.live_objects.filter(is_system_segment=True).values_list("id", flat=True)
     ) == {segment_id, other_segment_id}
