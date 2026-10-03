@@ -176,7 +176,13 @@ class Segment(
         cloned_segment = deepcopy(self)
         cloned_segment.pk = None
         cloned_segment.uuid = uuid.uuid4()
-        cloned_segment.version_of = None  # Unset for now
+        # A revision belongs to the segment it was taken from, and we know that
+        # before the insert. Setting it up front lets `get_skip_create_audit_log`
+        # recognise the revision, so no "segment created" audit log is written
+        # for it, and saves the `set_version_of_to_self_if_none` hook a write.
+        # A clone that is not a revision is its own `version_of`, which needs a
+        # primary key, so it stays unset until after the insert.
+        cloned_segment.version_of = self if is_revision else None
         cloned_segment.version = 0  # Unset for now
         for attr_name, value in extra_attrs.items():
             setattr(cloned_segment, attr_name, value)
