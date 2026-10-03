@@ -204,13 +204,17 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[d
 
     def is_feature_name_valid(self, feature_name: str) -> bool:
         """
-        Validate the feature name based on the feature_name_regex attribute.
+        Validate the feature name based on the only_allow_lower_case_feature_names and
+        feature_name_regex attributes.
 
         Since we always want to evaluate the regex against the whole string, we're wrapping the
         attribute value in ^(...)$. Note that ^(...)$ and ^^(...)$$ are equivalent (in case the
         attribute already has the boundaries defined)
         """
         return (
+            not self.only_allow_lower_case_feature_names
+            or feature_name == feature_name.lower()
+        ) and (
             not self.feature_name_regex
             or re.match(f"^{self.feature_name_regex}$", feature_name) is not None
         )
