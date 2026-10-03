@@ -13,7 +13,10 @@ const PageTitle: FC<PageTitleType> = ({ children, className, cta, title }) => {
         <div className='flex flex-fill'>
           <h4 className={children ? 'mb-1' : 'mb-0'}>{title}</h4>
           {children && (
-            <Row>
+            // Every call site passes descriptive prose here. On a phone that
+            // explainer is most of the first screen, so the list starts below
+            // the fold: hide it and lead with the content.
+            <Row className='d-none d-md-flex'>
               <div className='col-xl-8 col-12 mt-1'>
                 <div>{children}</div>
               </div>
