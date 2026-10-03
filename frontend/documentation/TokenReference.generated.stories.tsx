@@ -869,6 +869,183 @@ export const AllTokens: StoryObj = {
           </tr>
         </tbody>
       </table>
+      <h3>Font-size</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--font-size-h1</code>
+            </td>
+            <td>
+              <code>42px</code>
+            </td>
+            <td>Display. One per page at most.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-h2</code>
+            </td>
+            <td>
+              <code>34px</code>
+            </td>
+            <td>Page title.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-h3</code>
+            </td>
+            <td>
+              <code>30px</code>
+            </td>
+            <td>Major section.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-h4</code>
+            </td>
+            <td>
+              <code>24px</code>
+            </td>
+            <td>Section.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-h5</code>
+            </td>
+            <td>
+              <code>18px</code>
+            </td>
+            <td>Subsection, panel and card titles.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-h6</code>
+            </td>
+            <td>
+              <code>16px</code>
+            </td>
+            <td>Smallest heading.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-b1</code>
+            </td>
+            <td>
+              <code>14px</code>
+            </td>
+            <td>Body default.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-b2</code>
+            </td>
+            <td>
+              <code>13px</code>
+            </td>
+            <td>Dense body. Table cells, secondary detail.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-b3</code>
+            </td>
+            <td>
+              <code>12px</code>
+            </td>
+            <td>Labels and captions.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-b4</code>
+            </td>
+            <td>
+              <code>11px</code>
+            </td>
+            <td>Smallest readable text. Table meta, chart labels.</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Line-height</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--line-height-h1</code>
+            </td>
+            <td>
+              <code>46px</code>
+            </td>
+            <td>Pairs with --font-size-h1.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--line-height-h2</code>
+            </td>
+            <td>
+              <code>40px</code>
+            </td>
+            <td>Pairs with --font-size-h2.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--line-height-h3</code>
+            </td>
+            <td>
+              <code>40px</code>
+            </td>
+            <td>Pairs with --font-size-h3.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--line-height-h4</code>
+            </td>
+            <td>
+              <code>32px</code>
+            </td>
+            <td>Pairs with --font-size-h4.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--line-height-h5</code>
+            </td>
+            <td>
+              <code>28px</code>
+            </td>
+            <td>Pairs with --font-size-h5.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--line-height-h6</code>
+            </td>
+            <td>
+              <code>24px</code>
+            </td>
+            <td>Pairs with --font-size-h6.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--line-height-body</code>
+            </td>
+            <td>
+              <code>1.375</code>
+            </td>
+            <td>All body sizes. Unitless so it scales with the size.</td>
+          </tr>
+        </tbody>
+      </table>
 
       <h3>Dark mode shadows</h3>
       <p>

@@ -125,6 +125,80 @@ export const fontWeight: Record<string, TokenEntry> = {
     value: 'var(--font-weight-semibold, 600)',
   },
 }
+// Font-size
+export const fontSize: Record<string, TokenEntry> = {
+  'b1': {
+    description: 'Body default.',
+    value: 'var(--font-size-b1, 14px)',
+  },
+  'b2': {
+    description: 'Dense body. Table cells, secondary detail.',
+    value: 'var(--font-size-b2, 13px)',
+  },
+  'b3': {
+    description: 'Labels and captions.',
+    value: 'var(--font-size-b3, 12px)',
+  },
+  'b4': {
+    description: 'Smallest readable text. Table meta, chart labels.',
+    value: 'var(--font-size-b4, 11px)',
+  },
+  'h1': {
+    description: 'Display. One per page at most.',
+    value: 'var(--font-size-h1, 42px)',
+  },
+  'h2': {
+    description: 'Page title.',
+    value: 'var(--font-size-h2, 34px)',
+  },
+  'h3': {
+    description: 'Major section.',
+    value: 'var(--font-size-h3, 30px)',
+  },
+  'h4': {
+    description: 'Section.',
+    value: 'var(--font-size-h4, 24px)',
+  },
+  'h5': {
+    description: 'Subsection, panel and card titles.',
+    value: 'var(--font-size-h5, 18px)',
+  },
+  'h6': {
+    description: 'Smallest heading.',
+    value: 'var(--font-size-h6, 16px)',
+  },
+}
+// Line-height
+export const lineHeight: Record<string, TokenEntry> = {
+  'body': {
+    description: 'All body sizes. Unitless so it scales with the size.',
+    value: 'var(--line-height-body, 1.375)',
+  },
+  'h1': {
+    description: 'Pairs with --font-size-h1.',
+    value: 'var(--line-height-h1, 46px)',
+  },
+  'h2': {
+    description: 'Pairs with --font-size-h2.',
+    value: 'var(--line-height-h2, 40px)',
+  },
+  'h3': {
+    description: 'Pairs with --font-size-h3.',
+    value: 'var(--line-height-h3, 40px)',
+  },
+  'h4': {
+    description: 'Pairs with --font-size-h4.',
+    value: 'var(--line-height-h4, 32px)',
+  },
+  'h5': {
+    description: 'Pairs with --font-size-h5.',
+    value: 'var(--line-height-h5, 28px)',
+  },
+  'h6': {
+    description: 'Pairs with --font-size-h6.',
+    value: 'var(--line-height-h6, 24px)',
+  },
+}
 
 // =============================================================================
 // Flat token constants — semantic tokens as CSS value strings.
@@ -272,3 +346,24 @@ export const fontWeightBold = 'var(--font-weight-bold, 700)'
 export const fontWeightMedium = 'var(--font-weight-medium, 500)'
 export const fontWeightRegular = 'var(--font-weight-regular, 400)'
 export const fontWeightSemibold = 'var(--font-weight-semibold, 600)'
+
+// Font-size
+export const fontSizeB1 = 'var(--font-size-b1, 14px)'
+export const fontSizeB2 = 'var(--font-size-b2, 13px)'
+export const fontSizeB3 = 'var(--font-size-b3, 12px)'
+export const fontSizeB4 = 'var(--font-size-b4, 11px)'
+export const fontSizeH1 = 'var(--font-size-h1, 42px)'
+export const fontSizeH2 = 'var(--font-size-h2, 34px)'
+export const fontSizeH3 = 'var(--font-size-h3, 30px)'
+export const fontSizeH4 = 'var(--font-size-h4, 24px)'
+export const fontSizeH5 = 'var(--font-size-h5, 18px)'
+export const fontSizeH6 = 'var(--font-size-h6, 16px)'
+
+// Line-height
+export const lineHeightBody = 'var(--line-height-body, 1.375)'
+export const lineHeightH1 = 'var(--line-height-h1, 46px)'
+export const lineHeightH2 = 'var(--line-height-h2, 40px)'
+export const lineHeightH3 = 'var(--line-height-h3, 40px)'
+export const lineHeightH4 = 'var(--line-height-h4, 32px)'
+export const lineHeightH5 = 'var(--line-height-h5, 28px)'
+export const lineHeightH6 = 'var(--line-height-h6, 24px)'
