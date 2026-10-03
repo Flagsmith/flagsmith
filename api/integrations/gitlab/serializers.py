@@ -24,6 +24,10 @@ class PaginatedQueryParamsSerializer(serializers.Serializer[None]):
     page_size = serializers.IntegerField(default=100, min_value=1, max_value=100)
 
 
+class ProjectSearchQueryParamsSerializer(PaginatedQueryParamsSerializer):
+    search_text = serializers.CharField(required=False, allow_blank=True)
+
+
 class SearchQueryParamsSerializer(PaginatedQueryParamsSerializer):
     gitlab_project_id = serializers.IntegerField()
     search_text = serializers.CharField(required=False, allow_blank=True)
