@@ -992,9 +992,6 @@ class FeatureState(
             and (self.identity_id or self.feature_segment_id)
             else None
         )
-        # The environment default can be missing, e.g. if it was deleted
-        # concurrently. In that case we can't tell whether the override differs
-        # from it, so we still create the audit log.
         if (
             environment_default is not None
             and self.enabled == environment_default.enabled
