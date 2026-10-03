@@ -552,13 +552,20 @@ def get_updated_feature_states_for_version(
 
     previous_version = version.get_previous_version()
     previous_feature_states_map = (
-        {get_match_key(fs): fs for fs in previous_version.feature_states.all()}
+        {
+            get_match_key(fs): fs
+            for fs in previous_version.feature_states.select_related(
+                "feature_segment", "feature_state_value"
+            ).prefetch_related("multivariate_feature_state_values")
+        }
         if previous_version
         else {}
     )
 
     changed_feature_states = []
-    for feature_state in version.feature_states.all():
+    for feature_state in version.feature_states.select_related(
+        "feature_segment", "feature_state_value"
+    ).prefetch_related("multivariate_feature_state_values"):
         previous_fs = previous_feature_states_map.get(get_match_key(feature_state))
 
         if previous_fs is None or (
