@@ -149,7 +149,7 @@ class InfluxDBWrapper:
 
         try:
             return query_api.query(org=settings.INFLUXDB_ORG, query=query)
-        except HTTPError as e:
+        except (HTTPError, InfluxDBError) as e:
             capture_exception(e)
             return []
 
