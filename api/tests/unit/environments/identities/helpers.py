@@ -2,13 +2,14 @@ import typing
 
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
+from environments.sdk.types import SDKTraitData, TraitValue
 
 
-def generate_trait_data_item(  # type: ignore[no-untyped-def]
+def generate_trait_data_item(
     trait_key: str = "trait_key",
-    trait_value: typing.Any = "trait_value",
+    trait_value: TraitValue = "trait_value",
     transient: bool = False,
-):
+) -> SDKTraitData:
     return {
         "trait_key": trait_key,
         "trait_value": trait_value,
