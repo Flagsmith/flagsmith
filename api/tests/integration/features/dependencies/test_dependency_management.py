@@ -997,11 +997,10 @@ def test_delete_feature_dependency__feature_has_another_override__responds_204_k
     ]
 
 
-def test_delete_feature_dependency__dependency_in_user_segment__responds_400_with_error(
+def test_delete_feature_dependency__dependency_in_user_segment__responds_404_with_error(
     admin_client: APIClient,
     create_segment_override: CreateSegmentOverrideFixture,
     environment_api_key: str,
-    environment_name: str,
     log: StructuredLogCapture,
     organisation: int,
     project: int,
@@ -1040,26 +1039,10 @@ def test_delete_feature_dependency__dependency_in_user_segment__responds_400_wit
     )
 
     # Then
-    assert response.status_code == 400
+    assert response.status_code == 404
     assert response.json() == {
-        "code": "dependency_in_user_segment",
-        "message": 'The segment "paying" makes the feature "checkout" depend on the feature "payments". Edit the segment to remove the dependency.',
-        "environment": {"key": environment_api_key, "name": environment_name},
-        "path": [
-            DependencyEdge(
-                {
-                    "feature": {"id": feature.id, "name": "checkout"},
-                    "prerequisite": {"id": prerequisite.id, "name": "payments"},
-                    "segment": {
-                        "id": user_segment_id,
-                        "name": "paying",
-                        "rules": rules,
-                        "condition_json_path": "$[0].conditions[0]",
-                        "is_system": False,
-                    },
-                }
-            )
-        ],
+        "code": "dependency_not_found",
+        "message": 'The feature "checkout" does not depend on the feature "payments".',
     }
     flag_response = admin_client.get(
         f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",

@@ -4282,12 +4282,6 @@ paths:
       responses:
         '204':
           description: No response body
-        '400':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DependencyConflictDetail'
         '403':
           description: ''
           content:

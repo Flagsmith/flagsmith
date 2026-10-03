@@ -60,7 +60,6 @@ class FeatureDependencyAPIView(APIView):
     @extend_schema(
         responses={
             204: None,
-            400: DependencyConflictDetail,
             403: APIErrorDetail,
             404: APIErrorDetail,
         },

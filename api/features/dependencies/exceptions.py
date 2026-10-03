@@ -105,21 +105,6 @@ class DependencyExistsError(DependencyConflictError):
         )
 
 
-class DependencyInUserSegmentError(DependencyConflictError):
-    """Raised where a user-authored segment makes up the dependency to remove."""
-
-    default_code = "dependency_in_user_segment"
-
-    def get_message(self, path: DependencyPath) -> str:
-        edge = path[0]
-        return (
-            f'The segment "{edge["segment"]["name"]}" makes the feature'
-            f' "{edge["feature"]["name"]}" depend on the feature'
-            f' "{edge["prerequisite"]["name"]}". Edit the segment to remove'
-            " the dependency."
-        )
-
-
 class DependencyNotFoundError(NotFound):
     """Raised where the feature does not depend on the prerequisite in the environment."""
 

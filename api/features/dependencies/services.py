@@ -19,7 +19,6 @@ from environments.models import Environment
 from features.dependencies.exceptions import (
     CircularDependencyError,
     DependencyExistsError,
-    DependencyInUserSegmentError,
     DependencyNotFoundError,
     FeatureHasDependentsError,
     FeatureIsPrerequisiteError,
@@ -463,10 +462,6 @@ def delete_flag_dependency(
         feature__name=feature.name,
         prerequisite_feature__name=prerequisite_feature.name,
     )
-    referencing_environment: ReferencingEnvironment = {
-        "key": environment.api_key,
-        "name": environment.name,
-    }
     with transaction.atomic():
         _lock_project_flag_dependencies(environment.project_id)
         feature_edges = _get_dependency_edges(
@@ -477,19 +472,13 @@ def delete_flag_dependency(
                 edge
                 for edge in feature_edges
                 if edge["prerequisite"]["id"] == prerequisite_feature.id
+                and edge["segment"]["is_system"]
             ]
         ):
             log.info("dependencies.delete_failed")
             raise DependencyNotFoundError(
                 feature_name=feature.name,
                 prerequisite_feature_name=prerequisite_feature.name,
-            )
-        if user_segment_edges := [
-            edge for edge in edges if not edge["segment"]["is_system"]
-        ]:
-            log.info("dependencies.delete_failed")
-            raise DependencyInUserSegmentError(
-                environment=referencing_environment, path=user_segment_edges
             )
         [edge] = edges
         delete_segment_override(
