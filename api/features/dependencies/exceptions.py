@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from rest_framework import status
-from rest_framework.exceptions import APIException, PermissionDenied
+from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 
 from core.types import APIErrorDetail
 from features.dependencies.types import (
@@ -102,6 +102,23 @@ class DependencyExistsError(DependencyConflictError):
         return (
             f'The feature "{existing_edge["feature"]["name"]}" already depends'
             f' on the feature "{existing_edge["prerequisite"]["name"]}".'
+        )
+
+
+class DependencyNotFoundError(NotFound):
+    """Raised where the feature does not depend on the prerequisite in the environment."""
+
+    default_code = "dependency_not_found"
+
+    def __init__(
+        self, feature_name: FeatureName, prerequisite_feature_name: FeatureName
+    ) -> None:
+        super().__init__(
+            {
+                "code": self.default_code,
+                "message": f'The feature "{feature_name}" does not depend'
+                f' on the feature "{prerequisite_feature_name}".',
+            }
         )
 
 
