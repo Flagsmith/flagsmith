@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from django.utils import timezone
 from flag_engine.segments.constants import (
@@ -7,6 +9,7 @@ from flag_engine.segments.constants import (
     LESS_THAN_INCLUSIVE,
     NOT_EQUAL,
 )
+from freezegun.api import FrozenDateTimeFactory
 from pytest_django import DjangoAssertNumQueries
 
 from core.constants import FLOAT
@@ -1099,3 +1102,34 @@ def test_identity_get_all_feature_states__returns_identity_override__when_v2_fea
     # Then
     assert len(all_feature_states) == 1
     assert all_feature_states[0].feature_state == identity_override
+
+
+def test_update_traits__changed_new_and_unchanged__stamps_updated_at_on_writes_only(
+    environment: Environment,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    # Given
+    identity = Identity.objects.create(identifier="identifier", environment=environment)
+    created_at = timezone.now()
+    changed_trait = create_trait_for_identity(identity, "changed", 1)
+    unchanged_trait = create_trait_for_identity(identity, "unchanged", 1)
+    freezer.tick(timedelta(minutes=1))
+    written_at = timezone.now()
+
+    # When
+    identity.update_traits(
+        [
+            generate_trait_data_item(trait_key="changed", trait_value=2),
+            generate_trait_data_item(trait_key="unchanged", trait_value=1),
+            generate_trait_data_item(trait_key="new", trait_value=1),
+        ]
+    )
+
+    # Then
+    changed_trait.refresh_from_db()
+    unchanged_trait.refresh_from_db()
+    assert changed_trait.updated_at == written_at
+    assert unchanged_trait.updated_at == created_at
+    assert (
+        Trait.objects.get(identity=identity, trait_key="new").updated_at == written_at
+    )

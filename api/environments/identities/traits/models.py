@@ -22,6 +22,7 @@ class Trait(models.Model):
         "integer_value",
         "float_value",
         "boolean_value",
+        "updated_at",
     ]
 
     identity = models.ForeignKey(
@@ -37,6 +38,7 @@ class Trait(models.Model):
     float_value = models.FloatField(null=True, blank=True)
 
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
 
     class Meta:
         verbose_name_plural = "User Traits"
