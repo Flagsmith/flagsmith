@@ -189,7 +189,11 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
 
 
 def validate_feature_is_not_prerequisite(feature: Feature) -> None:
-    """Raise if any segment condition names the feature as a prerequisite."""
+    """Raise if the feature is a prerequisite, or a user segment references it.
+
+    System segments outlive their dependencies, for reuse and version history,
+    so only their live or scheduled overrides make the feature a prerequisite.
+    """
     _lock_project_flag_dependencies(feature.project_id)
     references = list(
         SegmentFlagReference.objects.filter(
@@ -206,13 +210,19 @@ def validate_feature_is_not_prerequisite(feature: Feature) -> None:
         .first()
     )
     if dependent_override is None:
-        raise FeatureIsReferencedError(
-            feature_name=feature.name,
-            segments=[
-                map_reference_to_referencing_segment(reference)
-                for reference in references
-            ],
-        )
+        if user_segment_references := [
+            reference
+            for reference in references
+            if not reference.segment.is_system_segment
+        ]:
+            raise FeatureIsReferencedError(
+                feature_name=feature.name,
+                segments=[
+                    map_reference_to_referencing_segment(reference)
+                    for reference in user_segment_references
+                ],
+            )
+        return
     environment = dependent_override.environment
     edges = _get_dependency_edges(
         get_live_overrides(include_scheduled=True).filter(environment=environment)
