@@ -436,4 +436,4 @@ class SegmentMembersResponseSerializer(serializers.Serializer):  # type: ignore[
     next_cursor = serializers.CharField(
         allow_null=True,
         help_text="Pass as `cursor` to fetch the next page; null when there are no more rows.",
-)
+    )
