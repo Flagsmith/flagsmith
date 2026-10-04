@@ -1485,3 +1485,43 @@ def test_segment_serializer__update_draft_segment_with_flag_condition__does_not_
 
     # Then
     assert not SegmentFlagReference.objects.filter(segment=draft_segment).exists()
+
+
+def test_segment_serializer__update_draft_segment_with_legacy_references__removes_them(
+    project: Project,
+    segment: Segment,
+    change_request: ChangeRequest,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    payments = Feature.objects.create(name="payments", project=project)
+    Feature.objects.create(name="billing", project=project)
+    draft_segment = Segment.objects.create(
+        name="draft",
+        change_request=change_request,
+        project=project,
+        version_of=segment,
+        rules_data=_flag_rules("payments"),
+    )
+    SegmentFlagReference.objects.create(
+        segment=draft_segment,
+        prerequisite_feature=payments,
+        condition_json_path="$[0].conditions[0]",
+    )
+    serializer = SegmentSerializer(
+        draft_segment,
+        data={
+            "name": "draft",
+            "project": project.id,
+            "rules": _flag_rules("billing"),
+        },
+        context={"view": mocker.Mock(kwargs={"project_pk": project.id})},
+    )
+    serializer.is_valid(raise_exception=True)
+
+    # When
+    serializer.save()  # type: ignore[no-untyped-call]
+
+    # Then
+    assert not SegmentFlagReference.objects.filter(segment=draft_segment).exists()
+    validate_feature_is_not_prerequisite(payments)
