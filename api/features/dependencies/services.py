@@ -492,4 +492,4 @@ def _create_dependency_audit_log(
         master_api_key=None if user else author.key,
         log=FEATURE_DEPENDENCY_CREATED_MESSAGE
         % (prerequisite_feature.name, feature.name),
-        )
+    )
