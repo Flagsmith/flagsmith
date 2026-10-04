@@ -13,6 +13,7 @@ from edge_api.utils import is_edge_enabled
 from features.dependencies.services import (
     index_segment_flag_references,
     validate_segment_flag_dependencies,
+    validate_segment_prerequisite_features_exist,
 )
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
@@ -225,7 +226,10 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         self._set_rules_data(validated_data)
         with transaction.atomic():
             segment = super().create(validated_data)  # type: ignore[no-untyped-call]
-            index_segment_flag_references(segment)
+            if segment.change_request_id:
+                validate_segment_prerequisite_features_exist(segment)
+            else:
+                index_segment_flag_references(segment)
         self._update_metadata(segment, metadata_data)
         enqueue_membership_refresh(segment.project)
         return segment
@@ -242,7 +246,10 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                     revision_id=segment_revision.id,
                 )
             segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
-            index_segment_flag_references(segment)
+            if segment.change_request_id:
+                validate_segment_prerequisite_features_exist(segment)
+            else:
+                index_segment_flag_references(segment)
             validate_segment_flag_dependencies(segment)
         self._update_metadata(segment, metadata)
         enqueue_membership_refresh(segment.project)
