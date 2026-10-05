@@ -1,5 +1,5 @@
 from dataclasses import asdict, replace
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 from unittest.mock import MagicMock
 
@@ -7,6 +7,7 @@ import pytest
 from django.db import IntegrityError, connection
 from django.test.utils import CaptureQueriesContext
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
+from freezegun.api import FrozenDateTimeFactory
 from prometheus_client import REGISTRY
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -1745,6 +1746,37 @@ def test_expected_variant_shares__keyed_options__control_takes_remainder(
 
     # Then control takes the unallocated remainder
     assert shares == pytest.approx({"variant_a": 0.3, "variant_b": 0.2, "control": 0.5})
+
+
+@pytest.mark.django_db
+def test_expected_variant_shares__split_edited_before_scheduled_change_goes_live__returns_split_being_served(
+    environment: Environment,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    # Given
+    feature = _multivariate_feature(environment, {"variant_a": 30})
+    experiment = Experiment.objects.create(
+        environment=environment,
+        feature=feature,
+        name="exp",
+        hypothesis="h",
+        status=ExperimentStatus.RUNNING,
+    )
+    original = FeatureState.objects.get(environment=environment, feature=feature)
+    tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
+    scheduled = original.clone(environment, live_from=tomorrow, version=2)
+    scheduled.multivariate_feature_state_values.update(percentage_allocation=50)
+    edited = original.clone(
+        environment, live_from=datetime.now(timezone.utc), version=3
+    )
+    edited.multivariate_feature_state_values.update(percentage_allocation=10)
+    freezer.move_to(tomorrow + timedelta(minutes=1))
+
+    # When
+    shares = services._expected_variant_shares(experiment)
+
+    # Then
+    assert shares == pytest.approx({"variant_a": 0.5, "control": 0.5})
 
 
 @pytest.mark.django_db
