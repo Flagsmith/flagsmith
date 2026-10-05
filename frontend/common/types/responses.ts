@@ -177,6 +177,8 @@ export type DependencyEdgeSegment = {
   is_system: boolean
 }
 
+// A link between two flags, not a flag: `feature` is the gated one and
+// `prerequisite` the one gating it, so which end a screen shows is up to it.
 export type DependencyEdge = {
   feature: DependencyFeature
   prerequisite: DependencyFeature
