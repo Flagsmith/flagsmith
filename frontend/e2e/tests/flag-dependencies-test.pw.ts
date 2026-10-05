@@ -54,13 +54,12 @@ test.describe('Flag Dependencies', () => {
 
     log('Add the prerequisite')
     await page.getByRole('button', { name: 'Add prerequisite' }).click()
-    // An E2E build swaps the Select for an input and a link per option, so the
-    // picker is the one thing here with no role to select on.
+    // An E2E build swaps the Select for an input and one anchor per option.
+    // The anchors carry no href, so they are not links in the accessibility
+    // tree and their text is the only thing to select on.
     await page
-      .locator('[data-test^="add-prerequisite-option-"]', {
-        hasText: PREREQUISITE,
-      })
-      .first()
+      .locator('#create-feature-modal')
+      .getByText(PREREQUISITE, { exact: true })
       .click()
 
     const row = page.getByRole('row', { name: new RegExp(PREREQUISITE) })

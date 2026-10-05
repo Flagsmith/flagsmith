@@ -160,9 +160,6 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
               addControl={
                 isOpenForAdding && (
                   <FeatureSelect
-                    // In an E2E build the global Select becomes a bare input
-                    // and a list of links, with no role or label to select on.
-                    data-test='add-prerequisite'
                     projectId={projectId}
                     environmentId={environmentId}
                     disabled={isCreating}

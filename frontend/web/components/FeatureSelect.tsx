@@ -11,7 +11,6 @@ export type FeatureSelectOption = {
 }
 
 type FeatureSelectProps = {
-  'data-test'?: string
   className?: string
   disabled?: boolean
   // Feature ids to leave out, e.g. the feature being edited and the ones
@@ -33,7 +32,6 @@ const FeatureSelect: FC<FeatureSelectProps> = ({
   placeholder,
   projectId,
   value,
-  ...rest
 }) => {
   const { search, searchInput, setSearchInput } = useDebouncedSearch()
   // getFeatureList parses environmentId as the numeric id, not the api key.
@@ -68,9 +66,7 @@ const FeatureSelect: FC<FeatureSelectProps> = ({
     }))
 
   return (
-    //@ts-ignore Select is a global defined in web/project/project-components.js
     <Select
-      data-test={rest['data-test']}
       className={className}
       isClearable={false}
       isDisabled={disabled}
