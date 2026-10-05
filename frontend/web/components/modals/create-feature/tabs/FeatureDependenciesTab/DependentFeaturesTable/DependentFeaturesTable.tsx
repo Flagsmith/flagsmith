@@ -19,7 +19,7 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
   edges,
   onSelect,
 }) => (
-  <Table variant='ghost' layout='fixed' hover>
+  <Table variant='ghost' layout='fixed' highlightRowOnHover>
     <TableHeader>
       <TableRow>
         <TableColumnHeader>Feature</TableColumnHeader>

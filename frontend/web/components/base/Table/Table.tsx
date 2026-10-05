@@ -9,9 +9,8 @@ export type TableLayout = 'auto' | 'fixed'
 export type TableProps = TableHTMLAttributes<HTMLTableElement> & {
   variant?: TableVariant
   layout?: TableLayout
-  // Rows take a hover fill, for tracking one across its columns. A clickable
-  // row needs .cursor-pointer as well.
-  hover?: boolean
+  // A clickable row needs .cursor-pointer on top of this.
+  highlightRowOnHover?: boolean
 }
 
 // Composed from its parts rather than configured: no columns or rows prop,
@@ -19,7 +18,7 @@ export type TableProps = TableHTMLAttributes<HTMLTableElement> & {
 const Table: FC<TableProps> = ({
   children,
   className,
-  hover,
+  highlightRowOnHover,
   layout = 'auto',
   variant = 'surface',
   ...rest
@@ -27,10 +26,12 @@ const Table: FC<TableProps> = ({
   <table
     {...rest}
     className={cn(
-      'ds-table',
+      'ds-table w-100',
       `ds-table--${variant}`,
       `ds-table--${layout}`,
-      { 'ds-table--hover': hover },
+      { 'ds-table--hover': highlightRowOnHover },
+      // The surface variant clips its rows to its own corners.
+      { 'overflow-hidden rounded-lg': variant === 'surface' },
       className,
     )}
   >

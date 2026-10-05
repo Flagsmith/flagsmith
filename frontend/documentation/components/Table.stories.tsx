@@ -57,7 +57,7 @@ const Head = () => (
 // The house style: MetricsTable and ExperimentsTable both already draw this.
 export const Hover: Story = {
   render: () => (
-    <Table hover>
+    <Table highlightRowOnHover>
       <Head />
       <Rows />
     </Table>

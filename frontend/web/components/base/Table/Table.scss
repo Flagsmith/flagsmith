@@ -1,12 +1,9 @@
+// Only what no utility expresses: off-scale sizes, a positional divider, and
+// the border, whose token utilities cannot win against Bootstrap yet.
 .ds-table {
-  width: 100%;
-
   th {
     padding: 10px 16px;
     font-size: 12px;
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text-secondary);
-    text-align: left;
     border-bottom: 1px solid var(--color-border-default);
   }
 
@@ -15,9 +12,7 @@
   // of text.
   td {
     height: 48px;
-    padding: 8px 16px;
     font-size: 13px;
-    vertical-align: middle;
   }
 
   // A divider is the lower row's top border, not the upper row's bottom one.
@@ -34,8 +29,6 @@
   border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
 
   th {
     background: var(--color-surface-subtle);

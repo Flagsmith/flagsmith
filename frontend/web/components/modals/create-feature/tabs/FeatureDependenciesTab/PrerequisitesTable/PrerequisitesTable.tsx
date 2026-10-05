@@ -88,7 +88,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
   onSelect,
   rows,
 }) => (
-  <Table variant='ghost' layout='fixed' hover>
+  <Table variant='ghost' layout='fixed' highlightRowOnHover>
     <TableHeader>
       <TableRow>
         <TableColumnHeader>Prerequisite</TableColumnHeader>
