@@ -1,4 +1,5 @@
 import json
+import uuid
 from datetime import timedelta
 from typing import Any
 
@@ -138,6 +139,7 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         response = super().create(request, *args, **kwargs)
         register_hubspot_tracker_and_track_user(request, user=self.user)
+        _store_signup_anonymous_id(self.user, request.data.get("signup_anonymous_id"))
 
         if settings.COOKIE_AUTH_ENABLED:
             authorise_response(self.user, response)
@@ -193,3 +195,16 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
             UserPasswordResetRequest.objects.create(user=user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def _store_signup_anonymous_id(user: FFAdminUser, signup_anonymous_id: Any) -> None:
+    if not isinstance(signup_anonymous_id, str):
+        return
+    try:
+        uuid.UUID(signup_anonymous_id)
+    except ValueError:
+        return
+    onboarding = json.loads(user.onboarding_data) if user.onboarding_data else {}
+    onboarding["signup_anonymous_id"] = signup_anonymous_id
+    user.onboarding_data = json.dumps(onboarding)
+    user.save(update_fields=["onboarding_data"])
