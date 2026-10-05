@@ -1,4 +1,4 @@
-import { FC, ReactNode } from 'react'
+import { FC, MouseEvent, ReactNode } from 'react'
 import cn from 'classnames'
 import { DependencyEdge } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
@@ -19,6 +19,7 @@ type PrerequisitesTableProps = {
   highlightedId?: number
   isRemoving?: number
   onRemove: (edge: DependencyEdge) => void
+  onSelect: (edge: DependencyEdge) => void
   // The picker, shown as the last row. Selecting commits it, so the draft row
   // never outlives the interaction.
   addControl?: ReactNode
@@ -79,6 +80,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
   isRemoving,
   onCancelAdd,
   onRemove,
+  onSelect,
   rows,
 }) => (
   <Table variant='ghost' layout='fixed' hover>
@@ -106,7 +108,15 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
           })}
         >
           <Table.Cell className='prerequisite-name text-truncate'>
-            {edge.prerequisite.name}
+            <Button
+              theme='text'
+              onClick={(e: MouseEvent) => {
+                e.stopPropagation()
+                onSelect(edge)
+              }}
+            >
+              {edge.prerequisite.name}
+            </Button>
           </Table.Cell>
           <Table.Cell>
             <StateToggle isEnabled={isEnabled} />

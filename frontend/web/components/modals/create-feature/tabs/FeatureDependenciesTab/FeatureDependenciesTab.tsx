@@ -162,6 +162,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
               highlightedId={highlightedId}
               isRemoving={removingId}
               onRemove={onRemove}
+              onSelect={(edge) => onSelectFeature(edge.prerequisite.id)}
               addControl={
                 isOpenForAdding && (
                   <FeatureSelect

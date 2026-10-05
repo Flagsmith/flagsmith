@@ -72,7 +72,12 @@ type Story = StoryObj
 export const PrerequisitesSatisfied: Story = {
   render: () => (
     <Panel>
-      <PrerequisitesTable rows={[billing]} canManage onRemove={noop} />
+      <PrerequisitesTable
+        rows={[billing]}
+        canManage
+        onRemove={noop}
+        onSelect={noop}
+      />
     </Panel>
   ),
 }
@@ -84,6 +89,7 @@ export const PrerequisitesMixed: Story = {
         rows={[billing, payments, handWritten]}
         canManage
         onRemove={noop}
+        onSelect={noop}
       />
     </Panel>
   ),
@@ -97,6 +103,7 @@ export const PrerequisitesReadOnly: Story = {
         rows={[billing, payments]}
         canManage={false}
         onRemove={noop}
+        onSelect={noop}
       />
     </Panel>
   ),
@@ -111,6 +118,7 @@ export const PrerequisiteRemoving: Story = {
         canManage
         isRemoving={payments.edge.prerequisite.id}
         onRemove={noop}
+        onSelect={noop}
       />
     </Panel>
   ),
