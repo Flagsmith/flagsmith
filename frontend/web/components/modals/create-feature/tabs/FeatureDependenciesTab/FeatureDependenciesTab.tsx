@@ -196,15 +196,14 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
       )}
 
       {!isPrerequisite && canManage && !isOpenForAdding && (
-        <div className='mt-3'>
-          <Button
-            theme='outline'
-            size='small'
-            onClick={() => onAddingChange(true)}
-          >
-            Add prerequisite
-          </Button>
-        </div>
+        <Button
+          theme='outline'
+          size='small'
+          className='mt-3'
+          onClick={() => onAddingChange(true)}
+        >
+          Add prerequisite
+        </Button>
       )}
 
       <ModalHR className='mt-4' />
