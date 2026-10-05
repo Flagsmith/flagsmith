@@ -28,7 +28,6 @@ SummaryT = TypeVar("SummaryT", ExposuresSummary, ResultsSummary)
 
 class WarehouseType(models.TextChoices):
     FLAGSMITH = "flagsmith", "Flagsmith"
-    SNOWFLAKE = "snowflake", "Snowflake"
     CLICKHOUSE = "clickhouse", "ClickHouse"
 
 

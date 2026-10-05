@@ -30651,12 +30651,10 @@ components:
     WarehouseTypeEnum:
       description: |-
         * `flagsmith` - Flagsmith
-        * `snowflake` - Snowflake
         * `clickhouse` - ClickHouse
       type: string
       enum:
         - flagsmith
-        - snowflake
         - clickhouse
     Webhook:
       type: object

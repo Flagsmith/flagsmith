@@ -4,7 +4,6 @@ from experimentation.models import WarehouseType
 from experimentation.warehouses.clickhouse import ClickHouseWarehouse
 from experimentation.warehouses.flagsmith import FlagsmithWarehouse
 from experimentation.warehouses.registry import WAREHOUSES, get_warehouse
-from experimentation.warehouses.snowflake import SnowflakeWarehouse
 
 
 def test_warehouses__every_warehouse_type__has_a_provider() -> None:
@@ -23,7 +22,6 @@ def test_warehouses__every_warehouse_type__has_a_provider() -> None:
     [
         (WarehouseType.FLAGSMITH, FlagsmithWarehouse),
         (WarehouseType.CLICKHOUSE, ClickHouseWarehouse),
-        (WarehouseType.SNOWFLAKE, SnowflakeWarehouse),
     ],
 )
 def test_get_warehouse__registered_type__returns_provider(
