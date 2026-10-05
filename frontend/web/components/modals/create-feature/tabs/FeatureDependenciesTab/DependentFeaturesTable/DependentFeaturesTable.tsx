@@ -19,7 +19,7 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
       <Table.Row>
         <Table.ColumnHeader>Feature</Table.ColumnHeader>
         <Table.ColumnHeader
-          className='dependent-actions text-end'
+          className='ds-table__actions text-end'
           aria-label='Actions'
         />
       </Table.Row>
@@ -42,7 +42,7 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
               {edge.feature.name}
             </Button>
           </Table.Cell>
-          <Table.Cell className='dependent-actions text-end' aria-hidden>
+          <Table.Cell className='ds-table__actions text-end' aria-hidden>
             <Icon
               name='chevron-right'
               width={16}

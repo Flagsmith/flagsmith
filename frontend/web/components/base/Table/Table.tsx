@@ -12,6 +12,14 @@ export type TableVariant = 'surface' | 'ghost'
 
 export type TableLayout = 'auto' | 'fixed'
 
+// `added` plays the enter and a fading tint, `pending` dims a row while a write
+// is in flight, `editor` is a row holding a control rather than data.
+export type TableRowState = 'added' | 'pending' | 'editor'
+
+export type TableRowProps = HTMLAttributes<HTMLTableRowElement> & {
+  state?: TableRowState
+}
+
 export type TableProps = TableHTMLAttributes<HTMLTableElement> & {
   variant?: TableVariant
   layout?: TableLayout
@@ -25,7 +33,7 @@ export type TableProps = TableHTMLAttributes<HTMLTableElement> & {
 const Table: FC<TableProps> & {
   Header: FC<HTMLAttributes<HTMLTableSectionElement>>
   Body: FC<HTMLAttributes<HTMLTableSectionElement>>
-  Row: FC<HTMLAttributes<HTMLTableRowElement>>
+  Row: FC<TableRowProps>
   ColumnHeader: FC<ThHTMLAttributes<HTMLTableCellElement>>
   Cell: FC<TdHTMLAttributes<HTMLTableCellElement>>
 } = ({
@@ -52,7 +60,14 @@ const Table: FC<TableProps> & {
 
 Table.Header = ({ children, ...rest }) => <thead {...rest}>{children}</thead>
 Table.Body = ({ children, ...rest }) => <tbody {...rest}>{children}</tbody>
-Table.Row = ({ children, ...rest }) => <tr {...rest}>{children}</tr>
+Table.Row = ({ children, className, state, ...rest }) => (
+  <tr
+    {...rest}
+    className={cn(className, { [`ds-table__row--${state}`]: state })}
+  >
+    {children}
+  </tr>
+)
 
 // scope is what lets a screen reader read a cell with its column name.
 Table.ColumnHeader = ({ children, scope = 'col', ...rest }) => (

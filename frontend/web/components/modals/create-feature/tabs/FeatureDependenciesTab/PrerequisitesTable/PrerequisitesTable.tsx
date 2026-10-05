@@ -20,25 +20,24 @@ type PrerequisitesTableProps = {
   isRemoving?: number
   onRemove: (edge: DependencyEdge) => void
   onSelect: (edge: DependencyEdge) => void
-  // The picker, shown as the last row. Selecting commits it, so the draft row
-  // never outlives the interaction.
   addControl?: ReactNode
   onCancelAdd?: () => void
 }
 
-// A span, not a Switch: nothing here edits the prerequisite.
 const StateToggle: FC<{ isEnabled: boolean }> = ({ isEnabled }) => (
-  <span
-    className={cn('prerequisite-toggle', {
-      'prerequisite-toggle--on': isEnabled,
-    })}
+  <Icon
+    name={isEnabled ? 'toggle-on' : 'toggle-off'}
+    width={32}
+    fill={
+      isEnabled
+        ? 'var(--color-surface-action)'
+        : 'var(--color-surface-emphasis)'
+    }
     role='img'
     aria-label={isEnabled ? 'On' : 'Off'}
   />
 )
 
-// Status is the prerequisite's own state; Satisfies is whether that state meets
-// this flag's rule. Only Satisfies carries colour.
 const Satisfies: FC<{ isMet?: boolean }> = ({ isMet }) => {
   if (isMet === undefined) {
     return (
@@ -59,7 +58,6 @@ const Satisfies: FC<{ isMet?: boolean }> = ({ isMet }) => {
       </Tooltip>
     )
   }
-  // Only the satisfied rows are coloured; the banner carries the warning.
   return (
     <span
       className={cn(
@@ -91,7 +89,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
         <Table.ColumnHeader>Satisfies</Table.ColumnHeader>
         {canManage && (
           <Table.ColumnHeader
-            className='prerequisite-actions text-end'
+            className='ds-table__actions text-end'
             aria-label='Actions'
           />
         )}
@@ -101,11 +99,11 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
       {rows.map(({ edge, isEnabled, isMet }) => (
         <Table.Row
           key={edge.prerequisite.id}
-          className={cn({
-            'prerequisite-row--added': highlightedId === edge.prerequisite.id,
-            // Dimmed while the DELETE is in flight.
-            'prerequisite-row--removing': isRemoving === edge.prerequisite.id,
-          })}
+          state={
+            (highlightedId === edge.prerequisite.id && 'added') ||
+            (isRemoving === edge.prerequisite.id && 'pending') ||
+            undefined
+          }
         >
           <Table.Cell className='prerequisite-name text-truncate'>
             <Button
@@ -125,7 +123,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
             <Satisfies isMet={isMet} />
           </Table.Cell>
           {canManage && (
-            <Table.Cell className='prerequisite-actions text-end'>
+            <Table.Cell className='ds-table__actions text-end'>
               {/* An edge from a hand-written segment condition cannot be removed
                 through the dependencies API, so it gets no control. */}
               {edge.segment.is_system && (
@@ -144,7 +142,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
         </Table.Row>
       ))}
       {!!addControl && (
-        <Table.Row className='prerequisite-add-row'>
+        <Table.Row state='editor'>
           {/* One cell: the picker has no column to line up with. */}
           <Table.Cell colSpan={columnCount(canManage)}>
             <div className='prerequisite-add-control d-flex align-items-center gap-2'>

@@ -1,5 +1,3 @@
-// Density lives here, not on the variants: a variant frames a table, it does
-// not set how tall its rows are. A row lands near the app's 50px list item.
 .ds-table {
   width: 100%;
 
@@ -44,6 +42,65 @@
 // For a table inside something that already draws a border.
 .ds-table--ghost {
   border-collapse: collapse;
+}
+
+// A column of row actions, so two tables do not each pick a width.
+.ds-table__actions {
+  width: 60px;
+}
+
+.ds-table__row--added td {
+  animation: ds-table-row-enter 180ms var(--easing-standard) both,
+    ds-table-row-added 2s ease-out;
+}
+
+// Holds a control rather than data, so it carries a surface of its own.
+.ds-table__row--editor td {
+  background: var(--color-surface-muted);
+  animation: ds-table-row-enter 180ms var(--easing-standard) both;
+}
+
+.ds-table__row--pending td {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--easing-standard);
+}
+
+@keyframes ds-table-row-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ds-table-row-added {
+  from {
+    background: var(--color-surface-action-subtle);
+  }
+
+  to {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-table__row--added td {
+    animation: none;
+    background: var(--color-surface-action-subtle);
+  }
+
+  .ds-table__row--editor td {
+    animation: none;
+  }
+
+  .ds-table__row--pending td {
+    transition: none;
+  }
 }
 
 // Tracking a row across its columns, not an affordance. A clickable row takes
