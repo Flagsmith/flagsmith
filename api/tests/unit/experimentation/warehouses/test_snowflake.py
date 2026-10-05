@@ -3,7 +3,7 @@ from collections.abc import Callable
 import pytest
 
 from experimentation.models import WarehouseConnection, WarehouseType
-from experimentation.warehouses.base import UnsupportedWarehouseOperation
+from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.snowflake import SnowflakeWarehouse
 
 

@@ -9,10 +9,6 @@ if typing.TYPE_CHECKING:
     from experimentation.models import WarehouseConnection
 
 
-class UnsupportedWarehouseOperation(Exception):
-    """Raised before any side effect when a warehouse type lacks an operation."""
-
-
 class Warehouse(Protocol):
     def validate_config(
         self,

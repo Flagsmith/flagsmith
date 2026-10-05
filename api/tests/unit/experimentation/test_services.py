@@ -60,7 +60,7 @@ from experimentation.services import (
 )
 from experimentation.stats import VariantStats
 from experimentation.warehouses import clickhouse
-from experimentation.warehouses.base import UnsupportedWarehouseOperation
+from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption

@@ -6,7 +6,7 @@ from typing import Any
 from rest_framework import serializers
 
 from experimentation.types import SNOWFLAKE_DEFAULTS, SnowflakeConfig
-from experimentation.warehouses.base import UnsupportedWarehouseOperation
+from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 
 if typing.TYPE_CHECKING:
     from experimentation.dataclasses import WarehouseEventNames, WarehouseEventStats

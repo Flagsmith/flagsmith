@@ -75,7 +75,8 @@ from experimentation.stats import (
     srm_p_value,
 )
 from experimentation.warehouses import clickhouse
-from experimentation.warehouses.base import UnsupportedWarehouseOperation
+from experimentation.warehouses.constants import EVENT_NAMES_CACHE_SECONDS
+from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.registry import get_warehouse
 from features.feature_states.models import API_VALUE_TYPES
 from features.models import FeatureState
@@ -224,7 +225,7 @@ def _get_flagsmith_clickhouse_event_names(
     finally:
         client.disconnect()
     event_names = clickhouse.build_event_names(rows)
-    cache.set(cache_key, event_names, clickhouse.EVENT_NAMES_CACHE_SECONDS)
+    cache.set(cache_key, event_names, EVENT_NAMES_CACHE_SECONDS)
     return event_names
 
 

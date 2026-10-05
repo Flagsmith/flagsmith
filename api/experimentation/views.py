@@ -78,7 +78,7 @@ from experimentation.tasks import (
     compute_experiment_exposures,
     compute_experiment_results,
 )
-from experimentation.warehouses.base import UnsupportedWarehouseOperation
+from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)

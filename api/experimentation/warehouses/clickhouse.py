@@ -1,5 +1,3 @@
-import hashlib
-import json
 import typing
 from contextlib import contextmanager
 from functools import lru_cache
@@ -22,6 +20,20 @@ from experimentation.types import (
     CLICKHOUSE_DEFAULTS,
     ClickHouseConfig,
     ClickHouseCredentials,
+)
+from experimentation.warehouses.cache import (
+    CUSTOMER_EVENT_UNAVAILABLE,
+    customer_cache_key,
+)
+from experimentation.warehouses.constants import (
+    CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS,
+    CUSTOMER_EVENT_STATS_CACHE_SECONDS,
+    EVENT_NAMES_CACHE_SECONDS,
+    EVENT_NAMES_LIMIT,
+)
+from experimentation.warehouses.exceptions import (
+    DeliveryConfigError,
+    MissingEventsTableError,
 )
 
 if typing.TYPE_CHECKING:
@@ -57,15 +69,6 @@ def _get_pool_manager() -> PoolManager:
     # Shared across delivery clients, as clickhouse-connect's own default pool
     # is: the manager pools connections per host and is thread-safe.
     return _NoRedirectPoolManager(**httputil.get_pool_manager_options())
-
-
-class DeliveryConfigError(Exception):
-    """The connection's stored configuration cannot be used to reach the
-    warehouse."""
-
-
-class MissingEventsTableError(Exception):
-    """The configured database has no events table to deliver into."""
 
 
 MISSING_EVENTS_TABLE_DETAIL = (
@@ -158,13 +161,6 @@ logger = structlog.get_logger("warehouse")
 VERIFY_TIMEOUT_SECONDS = 5
 EVENT_NAMES_TIMEOUT_SECONDS = 15
 
-EVENT_NAMES_LIMIT = 500
-EVENT_NAMES_CACHE_SECONDS = 300
-CUSTOMER_EVENT_STATS_CACHE_SECONDS = 60
-CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS = 60
-
-_CUSTOMER_EVENT_UNAVAILABLE = "unavailable"
-
 EVENT_NAMES_QUERY = (
     "SELECT event FROM events "
     "WHERE environment_key = %(environment_key)s "
@@ -198,19 +194,6 @@ def build_event_stats(rows: "Sequence[Sequence[Any]]") -> WarehouseEventStats:
         total_events_received=int(total),
         unique_events_count=int(unique),
     )
-
-
-def _customer_cache_key(kind: str, connection: "WarehouseConnection") -> str:
-    """Key cached warehouse reads by the connection's non-secret details, so a
-    config or type change can neither serve nor store stale reads. Credentials
-    stay out of the key material: they don't determine what the warehouse
-    holds, so rotating them keeps the cache valid."""
-    details = json.dumps(
-        [connection.warehouse_type, connection.config],
-        sort_keys=True,
-    )
-    digest = hashlib.sha256(details.encode()).hexdigest()[:12]
-    return f"experimentation:customer_{kind}:{connection.id}:{digest}"
 
 
 class ClickHouseWarehouse:
@@ -289,11 +272,11 @@ class ClickHouseWarehouse:
         connection: "WarehouseConnection",
         environment_key: str,
     ) -> WarehouseEventNames | None:
-        cache_key = _customer_cache_key("event_names", connection)
+        cache_key = customer_cache_key("event_names", connection)
         cached = cache.get(cache_key)
         if isinstance(cached, WarehouseEventNames):
             return cached
-        if cached == _CUSTOMER_EVENT_UNAVAILABLE:
+        if cached == CUSTOMER_EVENT_UNAVAILABLE:
             return None
         try:
             with delivery_client(
@@ -307,7 +290,7 @@ class ClickHouseWarehouse:
         except Exception:
             cache.set(
                 cache_key,
-                _CUSTOMER_EVENT_UNAVAILABLE,
+                CUSTOMER_EVENT_UNAVAILABLE,
                 CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS,
             )
             logger.warning(
@@ -325,11 +308,11 @@ class ClickHouseWarehouse:
         connection: "WarehouseConnection",
         environment_key: str,
     ) -> WarehouseEventStats | None:
-        cache_key = _customer_cache_key("event_stats", connection)
+        cache_key = customer_cache_key("event_stats", connection)
         cached = cache.get(cache_key)
         if isinstance(cached, WarehouseEventStats):
             return cached
-        if cached == _CUSTOMER_EVENT_UNAVAILABLE:
+        if cached == CUSTOMER_EVENT_UNAVAILABLE:
             return None
         try:
             with delivery_client(
@@ -344,7 +327,7 @@ class ClickHouseWarehouse:
         except Exception:
             cache.set(
                 cache_key,
-                _CUSTOMER_EVENT_UNAVAILABLE,
+                CUSTOMER_EVENT_UNAVAILABLE,
                 CUSTOMER_EVENT_STATS_CACHE_SECONDS,
             )
             logger.warning(

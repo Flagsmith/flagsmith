@@ -4,7 +4,7 @@ import pytest
 from rest_framework.exceptions import ValidationError
 
 from experimentation.models import WarehouseConnection, WarehouseType
-from experimentation.warehouses.base import UnsupportedWarehouseOperation
+from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.flagsmith import FlagsmithWarehouse
 
 

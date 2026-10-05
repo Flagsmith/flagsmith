@@ -3,7 +3,7 @@ from typing import Any
 from rest_framework import serializers
 
 from experimentation.models import WarehouseConnection
-from experimentation.warehouses.base import UnsupportedWarehouseOperation
+from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.registry import get_warehouse
 
 

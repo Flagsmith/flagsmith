@@ -5,6 +5,10 @@ from urllib3 import PoolManager
 
 from experimentation.models import WarehouseConnection
 from experimentation.warehouses import clickhouse
+from experimentation.warehouses.exceptions import (
+    DeliveryConfigError,
+    MissingEventsTableError,
+)
 
 
 def test_delivery_client__incomplete_config__raises_config_error(
@@ -15,7 +19,7 @@ def test_delivery_client__incomplete_config__raises_config_error(
 
     # When / Then
     with pytest.raises(
-        clickhouse.DeliveryConfigError,
+        DeliveryConfigError,
         match="incomplete",
     ):
         with clickhouse.delivery_client(
@@ -33,7 +37,7 @@ def test_delivery_client__internal_host__raises_config_error(
 
     # When / Then
     with pytest.raises(
-        clickhouse.DeliveryConfigError,
+        DeliveryConfigError,
         match="internal or private",
     ):
         with clickhouse.delivery_client(
@@ -121,7 +125,7 @@ def test_check_events_table_exists__exists_query_result__raises_only_when_missin
 
     # When / Then
     if expected_raise:
-        with pytest.raises(clickhouse.MissingEventsTableError):
+        with pytest.raises(MissingEventsTableError):
             clickhouse.check_events_table_exists(client)
     else:
         clickhouse.check_events_table_exists(client)
@@ -132,7 +136,7 @@ def test_check_events_table_exists__exists_query_result__raises_only_when_missin
     "error, expected_detail",
     [
         pytest.param(
-            clickhouse.DeliveryConfigError("Stored connection details are incomplete."),
+            DeliveryConfigError("Stored connection details are incomplete."),
             "Stored connection details are incomplete.",
             id="config-error",
         ),
@@ -172,7 +176,7 @@ def test_check_events_table_exists__exists_query_result__raises_only_when_missin
             id="other-server-error",
         ),
         pytest.param(
-            clickhouse.MissingEventsTableError(),
+            MissingEventsTableError(),
             "Events table not found in the configured database. "
             "Run the setup SQL to create it.",
             id="missing-events-table",
