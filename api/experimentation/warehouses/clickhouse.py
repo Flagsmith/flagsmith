@@ -34,14 +34,22 @@ from experimentation.warehouses.constants import (
 from experimentation.warehouses.exceptions import (
     DeliveryConfigError,
     MissingEventsTableError,
+    UnsupportedWarehouseOperation,
 )
 
 if typing.TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
+    from datetime import datetime
 
     from clickhouse_connect.driver.client import Client
 
+    from experimentation.dataclasses import (
+        ExposureBucket,
+        MetricSpec,
+        ResultsAggregates,
+    )
     from experimentation.models import WarehouseConnection
+    from experimentation.types import ExposureGranularity
 
 EVENTS_TABLE_NAME = "events"
 
@@ -338,3 +346,32 @@ class ClickHouseWarehouse:
             return None
         cache.set(cache_key, stats, CUSTOMER_EVENT_STATS_CACHE_SECONDS)
         return stats
+
+    def get_exposure_buckets(
+        self,
+        connection: "WarehouseConnection",
+        *,
+        environment_key: str,
+        feature_name: str,
+        window_start: "datetime",
+        window_end: "datetime",
+        granularity: "ExposureGranularity",
+    ) -> "list[ExposureBucket]":
+        raise UnsupportedWarehouseOperation(
+            "Results are read from the managed warehouse."
+        )
+
+    def get_results_aggregates(
+        self,
+        connection: "WarehouseConnection",
+        *,
+        environment_key: str,
+        feature_name: str,
+        window_start: "datetime",
+        window_end: "datetime",
+        specs: "Sequence[MetricSpec]",
+        granularity: "ExposureGranularity",
+    ) -> "ResultsAggregates":
+        raise UnsupportedWarehouseOperation(
+            "Results are read from the managed warehouse."
+        )

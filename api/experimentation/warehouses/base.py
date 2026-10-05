@@ -5,8 +5,18 @@ from collections.abc import Mapping
 from typing import Any, Protocol
 
 if typing.TYPE_CHECKING:
-    from experimentation.dataclasses import WarehouseEventNames, WarehouseEventStats
+    from collections.abc import Sequence
+    from datetime import datetime
+
+    from experimentation.dataclasses import (
+        ExposureBucket,
+        MetricSpec,
+        ResultsAggregates,
+        WarehouseEventNames,
+        WarehouseEventStats,
+    )
     from experimentation.models import WarehouseConnection
+    from experimentation.types import ExposureGranularity
 
 
 class Warehouse(Protocol):
@@ -40,3 +50,28 @@ class Warehouse(Protocol):
         environment_key: str,
     ) -> WarehouseEventStats | None:
         """Event counts received, or None when unreachable."""
+
+    def get_exposure_buckets(
+        self,
+        connection: WarehouseConnection,
+        *,
+        environment_key: str,
+        feature_name: str,
+        window_start: datetime,
+        window_end: datetime,
+        granularity: ExposureGranularity,
+    ) -> list[ExposureBucket]:
+        """First exposures per variant and time bucket in the window."""
+
+    def get_results_aggregates(
+        self,
+        connection: WarehouseConnection,
+        *,
+        environment_key: str,
+        feature_name: str,
+        window_start: datetime,
+        window_end: datetime,
+        specs: Sequence[MetricSpec],
+        granularity: ExposureGranularity,
+    ) -> ResultsAggregates:
+        """Metric statistics and chart rows behind one results refresh."""

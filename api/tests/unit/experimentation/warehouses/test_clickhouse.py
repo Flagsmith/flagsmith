@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from datetime import datetime, timezone
+
 import pytest
 from clickhouse_connect.driver.exceptions import DatabaseError, OperationalError
 from pytest_mock import MockerFixture
@@ -8,6 +11,7 @@ from experimentation.warehouses import clickhouse
 from experimentation.warehouses.exceptions import (
     DeliveryConfigError,
     MissingEventsTableError,
+    UnsupportedWarehouseOperation,
 )
 
 
@@ -215,3 +219,41 @@ def test_no_redirect_pool_manager__urlopen__refuses_to_follow_redirects(
     # Then the redirect is refused: a permitted host must not be able to bounce
     # the request, and its event payload, to an unchecked address
     assert urlopen.call_args.kwargs["redirect"] is False
+
+
+WINDOW_START = datetime(2026, 1, 1, tzinfo=timezone.utc)
+WINDOW_END = datetime(2026, 1, 8, tzinfo=timezone.utc)
+
+
+@pytest.mark.parametrize(
+    "operation",
+    [
+        lambda warehouse, connection: warehouse.get_exposure_buckets(
+            connection,
+            environment_key="key",
+            feature_name="checkout",
+            window_start=WINDOW_START,
+            window_end=WINDOW_END,
+            granularity="day",
+        ),
+        lambda warehouse, connection: warehouse.get_results_aggregates(
+            connection,
+            environment_key="key",
+            feature_name="checkout",
+            window_start=WINDOW_START,
+            window_end=WINDOW_END,
+            specs=[],
+            granularity="day",
+        ),
+    ],
+    ids=["exposure_buckets", "results_aggregates"],
+)
+def test_clickhouse_warehouse__results_read__raises_unsupported(
+    operation: Callable[[clickhouse.ClickHouseWarehouse, WarehouseConnection], object],
+) -> None:
+    # Given
+    connection = WarehouseConnection(config={"host": "ch.acme-corp.example"})
+
+    # When / Then
+    with pytest.raises(UnsupportedWarehouseOperation):
+        operation(clickhouse.ClickHouseWarehouse(), connection)
