@@ -217,6 +217,10 @@ test.describe('Deep link to feature slideout', () => {
     const firstRow = page.locator('[data-test="feature-value-0"]')
     const firstRowValue = await firstRow.locator('.feature-value').innerText()
     expect(firstRowValue).not.toEqual('')
+    // Or the assertion below would hold even if every environment had ended up
+    // serving the same value.
+    const shown = await rows.locator('.feature-value').allInnerTexts()
+    expect(new Set(shown).size).toBe(COMPARE_ENVIRONMENTS.length)
 
     await firstRow.click()
 

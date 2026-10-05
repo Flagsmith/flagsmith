@@ -107,7 +107,9 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         </div>
       )}
 
-      {rows.length || isOpenForAdding ? (
+      {/* addingName too: on a first add the picker has closed and no row has
+          arrived yet, and the empty state would take the pending row's place. */}
+      {rows.length || isOpenForAdding || addingName ? (
         <>
           <BlockedBanner environmentName={environmentName} rows={rows} />
           <DependenciesPanel>
