@@ -366,7 +366,7 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
         (1, "", datetime(2026, 6, 1, tzinfo=timezone.utc), 5),
     ]
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = rows
+    mock_client.execute.return_value = (rows, _exposure_columns())
     mock_get_client = mocker.patch(
         "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
@@ -429,7 +429,7 @@ def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
 ) -> None:
     # Given
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = []
+    mock_client.execute.return_value = ([], _exposure_columns())
     mocker.patch(
         "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
@@ -492,13 +492,15 @@ def test_background_query__execute_fails__disconnects_client(
 
 
 def test_compute_exposures_payload__window_within_72_hours__hourly_buckets(
+    experiment: Experiment,
     mocker: MockerFixture,
 ) -> None:
     # Given a window of exactly 72 hours and one exposure row
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = [
-        (0, "control", datetime(2026, 6, 1, tzinfo=timezone.utc), 10)
-    ]
+    mock_client.execute.return_value = (
+        [(0, "control", datetime(2026, 6, 1, tzinfo=timezone.utc), 10)],
+        _exposure_columns(),
+    )
     mocker.patch(
         "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
@@ -506,8 +508,7 @@ def test_compute_exposures_payload__window_within_72_hours__hourly_buckets(
 
     # When
     summary = services.compute_exposures_summary(
-        environment_key="env-key-123",
-        feature_name="my-feature",
+        experiment,
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
         window_end=datetime(2026, 6, 4, tzinfo=timezone.utc),
     )
@@ -525,11 +526,12 @@ def test_compute_exposures_payload__window_within_72_hours__hourly_buckets(
 
 
 def test_compute_exposures_payload__window_beyond_72_hours__daily_buckets(
+    experiment: Experiment,
     mocker: MockerFixture,
 ) -> None:
     # Given a window one second past 72 hours
     mock_client = mocker.Mock()
-    mock_client.execute.return_value = []
+    mock_client.execute.return_value = ([], _exposure_columns())
     mocker.patch(
         "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
@@ -537,8 +539,7 @@ def test_compute_exposures_payload__window_beyond_72_hours__daily_buckets(
 
     # When
     summary = services.compute_exposures_summary(
-        environment_key="env-key-123",
-        feature_name="my-feature",
+        experiment,
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
         window_end=datetime(2026, 6, 4, 0, 0, 1, tzinfo=timezone.utc),
     )
@@ -863,6 +864,16 @@ def _result_columns(metric_count: int) -> list[tuple[str, str]]:
     return columns
 
 
+def _exposure_columns() -> list[tuple[str, str]]:
+    """Column metadata for the exposure buckets query, in SELECT order."""
+    return [
+        ("quarantined", "UInt8"),
+        ("variant", "String"),
+        ("bucket", "DateTime('UTC')"),
+        ("first_exposed_identities", "UInt64"),
+    ]
+
+
 def _conversion_columns() -> list[tuple[str, str]]:
     """Column metadata for the conversions query, in SELECT order."""
     return [
@@ -896,7 +907,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     mock_client.execute.side_effect = [
         (rows, _result_columns(4)),
         ([], _conversion_columns()),
-        [],
+        ([], _exposure_columns()),
     ]
     mock_get_client = mocker.patch(
         "experimentation.warehouses.flagsmith._get_clickhouse_client",
@@ -972,7 +983,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     mock_get_client.assert_called_with(
         send_receive_timeout=flagsmith.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
-    assert mock_client.disconnect.call_count == 2
+    mock_client.disconnect.assert_called_once_with()
 
 
 def test_get_metric_variant_stats__three_variants__maps_all_variants(
@@ -988,7 +999,7 @@ def test_get_metric_variant_stats__three_variants__maps_all_variants(
     mock_client.execute.side_effect = [
         (rows, _result_columns(2)),
         ([], _conversion_columns()),
-        [],
+        ([], _exposure_columns()),
     ]
     mocker.patch(
         "experimentation.warehouses.flagsmith._get_clickhouse_client",
@@ -1028,7 +1039,7 @@ def test_get_metric_variant_stats__no_metrics__counts_variants_only(
     mock_client = mocker.Mock()
     mock_client.execute.side_effect = [
         ([("control", 1000), ("variant_a", 900)], _result_columns(0)),
-        [],
+        ([], _exposure_columns()),
     ]
     mocker.patch(
         "experimentation.warehouses.flagsmith._get_clickhouse_client",
@@ -1075,7 +1086,7 @@ def test_get_metric_variant_stats__shuffled_columns__maps_by_name(
     mock_client.execute.side_effect = [
         (rows, columns),
         ([], _conversion_columns()),
-        [],
+        ([], _exposure_columns()),
     ]
     mocker.patch(
         "experimentation.warehouses.flagsmith._get_clickhouse_client",
@@ -1238,7 +1249,7 @@ def test_get_results_aggregates__occurrence_metric__gathers_chart_rows(
             [("control", 0, bucket, 12), ("variant_a", 0, bucket, 15)],
             _conversion_columns(),
         ),
-        [(0, "control", bucket, 1000)],
+        ([(0, "control", bucket, 1000)], _exposure_columns()),
     ]
     mocker.patch(
         "experimentation.warehouses.flagsmith._get_clickhouse_client",
@@ -1296,7 +1307,7 @@ def test_get_results_aggregates__value_metrics_only__skips_conversions_query(
     mock_client = mocker.Mock()
     mock_client.execute.side_effect = [
         ([("control", 1000, 500.0, 900.0)], _result_columns(1)),
-        [],
+        ([], _exposure_columns()),
     ]
     mocker.patch(
         "experimentation.warehouses.flagsmith._get_clickhouse_client",
@@ -1840,6 +1851,83 @@ def test_expected_variant_shares__no_live_feature_state__returns_empty(
 
     # When / Then
     assert services._expected_variant_shares(experiment) == {}
+
+
+COMPUTE_SUMMARIES = pytest.mark.parametrize(
+    "compute_summary",
+    [
+        lambda experiment: services.compute_exposures_summary(
+            experiment,
+            window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+            window_end=datetime(2026, 6, 10, tzinfo=timezone.utc),
+        ),
+        lambda experiment: services.compute_results_summary(
+            experiment,
+            window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
+            window_end=datetime(2026, 6, 10, tzinfo=timezone.utc),
+        ),
+    ],
+    ids=["exposures", "results"],
+)
+
+
+def _mock_managed_client(mocker: MockerFixture) -> MagicMock:
+    managed_client = mocker.Mock()
+    managed_client.execute.return_value = ([], [])
+    mock_get_client: MagicMock = mocker.patch(
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
+        return_value=managed_client,
+    )
+    return mock_get_client
+
+
+def _mock_customer_client(mocker: MockerFixture) -> MagicMock:
+    mock_get_client: MagicMock = mocker.patch(
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
+    )
+    mock_get_client.return_value.query.return_value = mocker.Mock(
+        result_rows=[], column_names=()
+    )
+    return mock_get_client
+
+
+@COMPUTE_SUMMARIES
+def test_compute_summary__clickhouse_connection__reads_customer_store_only(
+    experiment: Experiment,
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+    compute_summary: Callable[[Experiment], object],
+) -> None:
+    # Given the experiment's environment delivers events to its own ClickHouse
+    managed_get_client = _mock_managed_client(mocker)
+    customer_get_client = _mock_customer_client(mocker)
+
+    # When
+    compute_summary(experiment)
+
+    # Then the customer's store is read and the managed one is never touched
+    assert customer_get_client.return_value.query.called
+    managed_get_client.assert_not_called()
+
+
+@COMPUTE_SUMMARIES
+def test_compute_summary__deleted_connection__reads_managed_store(
+    experiment: Experiment,
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+    compute_summary: Callable[[Experiment], object],
+) -> None:
+    # Given the environment's only connection was deleted
+    clickhouse_connection.delete()
+    managed_get_client = _mock_managed_client(mocker)
+    customer_get_client = _mock_customer_client(mocker)
+
+    # When
+    compute_summary(experiment)
+
+    # Then the managed store is read, as for any environment without one
+    managed_get_client.assert_called_once()
+    customer_get_client.assert_not_called()
 
 
 @pytest.mark.django_db
