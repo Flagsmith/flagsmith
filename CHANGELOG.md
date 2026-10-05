@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.280.0](https://github.com/Flagsmith/flagsmith/compare/v2.279.0...v2.280.0) (2026-10-05)
+
+
+### Features
+
+* **experimentation:** read delivery statuses from Postgres and drop the ingestion Redis ([#8643](https://github.com/Flagsmith/flagsmith/issues/8643)) ([5c3ba28](https://github.com/Flagsmith/flagsmith/commit/5c3ba28be07fd8f483555d6343941774ebf304f3))
+* **Flag Dependency:** Emit immutable system segments ([#8632](https://github.com/Flagsmith/flagsmith/issues/8632)) ([5abf24d](https://github.com/Flagsmith/flagsmith/commit/5abf24d17691efffd85bbc001d57348a60030d49))
+* **SCIM:** Display deactivated org memberships ([#8649](https://github.com/Flagsmith/flagsmith/issues/8649)) ([5853bc1](https://github.com/Flagsmith/flagsmith/commit/5853bc1a3452f371544dee6b0cadc1a9ab71bdc7))
+* **usage:** show the legacy usage page with ?dashboard=legacy ([#8647](https://github.com/Flagsmith/flagsmith/issues/8647)) ([a4d2a4d](https://github.com/Flagsmith/flagsmith/commit/a4d2a4ddbd0b23279b4fde18584ea8874b07e070))
+
+
+### Bug Fixes
+
+* **experimentation:** report ClickHouse error 194 as authentication failure ([#8660](https://github.com/Flagsmith/flagsmith/issues/8660)) ([e0c2e87](https://github.com/Flagsmith/flagsmith/commit/e0c2e87aaf093e5f17771010d1bff5754c76d154))
+* **Feature Versioning:** Publishing a feature version bypasses Feature Change Requests ([#8617](https://github.com/Flagsmith/flagsmith/issues/8617)) ([0a57e91](https://github.com/Flagsmith/flagsmith/commit/0a57e91acf3a38cc4e50a9b9405a8309c8d56435))
+* **Flag Dependency:** Prevent deleting prerequisite features ([#8626](https://github.com/Flagsmith/flagsmith/issues/8626)) ([df5e8a2](https://github.com/Flagsmith/flagsmith/commit/df5e8a2a57a71e21b015a6f22ac2565138b0df9c))
+* **styles:** text-truncation utility helper ([#8652](https://github.com/Flagsmith/flagsmith/issues/8652)) ([759f724](https://github.com/Flagsmith/flagsmith/commit/759f7247e24b74a96649dd89c639fca8fc7c6927))
+
+
+### Dependency Updates
+
+* **api:** update dependency pyjwt to v2.15.0 [security] ([#8639](https://github.com/Flagsmith/flagsmith/issues/8639)) ([e40965d](https://github.com/Flagsmith/flagsmith/commit/e40965dac8330e53f793b26fd3d3ad7de1e70b74))
+* **frontend:** update dependency dompurify to v3.4.16 [security] ([#8638](https://github.com/Flagsmith/flagsmith/issues/8638)) ([ab354cd](https://github.com/Flagsmith/flagsmith/commit/ab354cdc08debc65561bbd94e5bf93e5c852bd71))
+* lock file maintenance ([#8559](https://github.com/Flagsmith/flagsmith/issues/8559)) ([aac9e94](https://github.com/Flagsmith/flagsmith/commit/aac9e94786b165fcbf5b57737505054c5f4c59a5))
+
 ## [2.279.0](https://github.com/Flagsmith/flagsmith/compare/v2.278.1...v2.279.0) (2026-10-01)
 
 
