@@ -32,6 +32,10 @@ import FeatureTags from './FeatureTags'
 import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
 
 interface FeatureRowProps {
+  // Only the page that owns `?feature=` sets this. Compare renders one row per
+  // environment for the same flag, so every row would match the id and the last
+  // one mounted would win.
+  openFromUrl?: boolean
   disableControls?: boolean
   environmentFlags: FeatureListProviderData['environmentFlags']
   environmentId: string
@@ -74,6 +78,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     index,
     isCompact = false,
     onCloseEditModal,
+    openFromUrl = false,
     permission,
     projectFlag,
     projectId,
@@ -119,13 +124,14 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
 
   useEffect(() => {
     if (
+      openFromUrl &&
       `${projectFlag.id}` === featureParam &&
       openedFor.current !== featureParam
     ) {
       editFeature()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [environmentFlags, projectFlag, featureParam])
+  }, [openFromUrl, environmentFlags, projectFlag, featureParam])
 
   const featureUnhealthyEvents = useMemo(
     () =>
@@ -259,11 +265,12 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       <CreateFlagModal {...modalProps} />,
       'side-modal create-feature-modal',
       () => {
+        openedFor.current = undefined
+
         if (onCloseEditModal) {
           return onCloseEditModal()
         }
 
-        openedFor.current = undefined
         history.replace({
           pathname: document.location.pathname,
           search: '',
