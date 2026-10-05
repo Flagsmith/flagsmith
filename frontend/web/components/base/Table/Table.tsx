@@ -9,7 +9,6 @@ export type TableLayout = 'auto' | 'fixed'
 export type TableProps = TableHTMLAttributes<HTMLTableElement> & {
   variant?: TableVariant
   layout?: TableLayout
-  // A clickable row needs .cursor-pointer on top of this.
   highlightRowOnHover?: boolean
 }
 
