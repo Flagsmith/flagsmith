@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { DependencyEdge, ProjectFlag } from 'common/types/responses'
 import { useDependencies } from './useDependencies'
-import { useRowHighlight } from './useRowHighlight'
+import { useRowFlash } from './useRowFlash'
 
 type UsePrerequisitesArgs = {
   environmentId: string
@@ -13,7 +13,7 @@ type UsePrerequisitesArgs = {
 /**
  * The reads from useDependencies, plus everything a write puts on screen: the
  * picker, the row standing in for one being added, the dimmed row being
- * removed, the highlight that follows a success and the message that follows a
+ * removed, the flash that follows a success and the message that follows a
  * refusal. Kept together because each write touches several of them.
  */
 export const usePrerequisites = ({
@@ -26,7 +26,7 @@ export const usePrerequisites = ({
   const [removingId, setRemovingId] = useState<number | undefined>()
   const [isAdding, setIsAdding] = useState(false)
   const [addingName, setAddingName] = useState<string | undefined>()
-  const { highlight, highlightedId } = useRowHighlight()
+  const { flash, flashedId } = useRowFlash()
 
   const { add, dependentEdges, isCreating, isError, isLoading, remove, rows } =
     useDependencies({ environmentId, featureId: projectFlag.id, projectId })
@@ -44,7 +44,7 @@ export const usePrerequisites = ({
     // two sitting there naming the same flag.
     setIsAdding(false)
     add(feature)
-      .then(() => highlight(feature.id))
+      .then(() => flash(feature.id))
       // The API message names both features and the rule.
       .catch((error: { data?: { message?: string } }) => {
         setConflict(error?.data?.message ?? 'Could not add that prerequisite.')
@@ -83,7 +83,7 @@ export const usePrerequisites = ({
     addingName,
     conflict,
     dependentEdges,
-    highlightedId,
+    flashedId,
     isCreating,
     isError,
     isLoading,

@@ -134,7 +134,7 @@ export const PrerequisiteHighlighted: Story = {
       <PrerequisitesTable
         rows={[billing, payments]}
         canManage
-        highlightedId={payments.edge.prerequisite.id}
+        flashedId={payments.edge.prerequisite.id}
         onRemove={noop}
         onSelect={noop}
       />

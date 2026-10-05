@@ -1,8 +1,8 @@
 // The row that just arrived, and the row the picker sits in. Both are this
 // table's own affordances rather than anything a table does by itself.
-.prerequisite-row--highlighted {
+.prerequisite-row--flash {
   animation: prerequisite-row-enter 180ms var(--easing-standard) both,
-    prerequisite-row-highlight 2s ease-out;
+    prerequisite-row-flash 2s ease-out;
 }
 
 .prerequisite-row--input {
@@ -33,7 +33,7 @@
   }
 }
 
-@keyframes prerequisite-row-highlight {
+@keyframes prerequisite-row-flash {
   from {
     background: var(--color-surface-action-subtle);
   }
@@ -44,7 +44,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .prerequisite-row--highlighted {
+  .prerequisite-row--flash {
     animation: none;
     background: var(--color-surface-action-subtle);
   }

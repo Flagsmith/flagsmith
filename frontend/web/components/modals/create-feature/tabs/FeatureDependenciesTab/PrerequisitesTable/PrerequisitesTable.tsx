@@ -23,7 +23,7 @@ const columnCount = (canManage: boolean) => (canManage ? 4 : 3)
 type PrerequisitesTableProps = {
   rows: PrerequisiteRow[]
   canManage: boolean
-  highlightedId?: number
+  flashedId?: number
   isRemoving?: number
   onRemove: (edge: DependencyEdge) => void
   onSelect: (edge: DependencyEdge) => void
@@ -81,7 +81,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
   addControl,
   addingName,
   canManage,
-  highlightedId,
+  flashedId,
   isRemoving,
   onCancelAdd,
   onRemove,
@@ -107,8 +107,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
         <TableRow
           key={edge.prerequisite.id}
           className={cn({
-            'prerequisite-row--highlighted':
-              highlightedId === edge.prerequisite.id,
+            'prerequisite-row--flash': flashedId === edge.prerequisite.id,
           })}
           pending={isRemoving === edge.prerequisite.id}
         >

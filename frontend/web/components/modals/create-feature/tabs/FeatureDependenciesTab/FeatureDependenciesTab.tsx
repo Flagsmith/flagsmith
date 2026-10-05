@@ -51,7 +51,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
     addingName,
     conflict,
     dependentEdges,
-    highlightedId,
+    flashedId,
     isCreating,
     isError,
     isLoading,
@@ -116,7 +116,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
             <PrerequisitesTable
               rows={rows}
               canManage={canManage}
-              highlightedId={highlightedId}
+              flashedId={flashedId}
               addingName={addingName}
               isRemoving={removingId}
               onRemove={onRemove}
