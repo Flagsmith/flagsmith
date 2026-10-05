@@ -1,5 +1,5 @@
-import { FC, useCallback, useState } from 'react'
-import { DependencyEdge, ProjectFlag } from 'common/types/responses'
+import { FC } from 'react'
+import { ProjectFlag } from 'common/types/responses'
 import { EnvironmentPermission } from 'common/types/permissions.types'
 import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
@@ -17,8 +17,7 @@ import DependentFeatures from './DependentFeatures'
 import FeatureDependenciesSkeleton from './FeatureDependenciesSkeleton'
 import PrerequisitesTable from './PrerequisitesTable'
 import { PrerequisitesEmptyState } from './DependenciesEmptyStates'
-import { useDependencies } from './hooks/useDependencies'
-import { useRowHighlight } from './hooks/useRowHighlight'
+import { usePrerequisites } from './hooks/usePrerequisites'
 
 // Flag dependencies have no docs page of their own yet, so this points at the
 // nearest one that exists.
@@ -41,11 +40,6 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   projectFlag,
   projectId,
 }) => {
-  const [conflict, setConflict] = useState<string | null>(null)
-  const [removingId, setRemovingId] = useState<number | undefined>()
-  const { highlight, highlightedId } = useRowHighlight()
-  const [isAdding, setIsAdding] = useState(false)
-  const [addingName, setAddingName] = useState<string | undefined>()
   const { isLoading: isLoadingPermission, permission: canManage } =
     useHasPermission({
       id: environmentId,
@@ -53,54 +47,27 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
       permission: EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
     })
 
-  const { add, dependentEdges, isCreating, isError, isLoading, remove, rows } =
-    useDependencies({ environmentId, featureId: projectFlag.id, projectId })
-
-  // A refusal belongs to the add it came from, so it ends with it.
-  const onAddingChange = useCallback((adding: boolean) => {
-    setConflict(null)
-    setIsAdding(adding)
-  }, [])
-
-  const onAdd = (feature: ProjectFlag) => {
-    setConflict(null)
-    setAddingName(feature.name)
-    // The picker goes now and the pending row stands in for it, rather than the
-    // two sitting there naming the same flag.
-    setIsAdding(false)
-    add(feature)
-      .then(() => highlight(feature.id))
-      // The API message names both features and the rule.
-      .catch((error: { data?: { message?: string } }) => {
-        setConflict(error?.data?.message ?? 'Could not add that prerequisite.')
-        // Back to the picker, so the refusal can be answered in place.
-        setIsAdding(true)
-      })
-      .finally(() => setAddingName(undefined))
-  }
-
-  const onRemove = (edge: DependencyEdge) =>
-    openConfirm({
-      body: (
-        <>
-          <strong>{projectFlag.name}</strong> will no longer be gated by{' '}
-          <strong>{edge.prerequisite.name}</strong> in{' '}
-          <strong>{environmentName}</strong>. It will serve its own value even
-          when {edge.prerequisite.name} is disabled.
-        </>
-      ),
-      destructive: true,
-      onYes: () => {
-        setConflict(null)
-        setRemovingId(edge.prerequisite.id)
-        remove(edge.prerequisite.id)
-          .then(() => toast('Prerequisite removed'))
-          .catch(() => toast('Could not remove that prerequisite.', 'danger'))
-          .finally(() => setRemovingId(undefined))
-      },
-      title: 'Remove prerequisite',
-      yesText: 'Confirm',
-    })
+  const {
+    addingName,
+    conflict,
+    dependentEdges,
+    highlightedId,
+    isCreating,
+    isError,
+    isLoading,
+    isOpenForAdding,
+    isPrerequisite,
+    onAdd,
+    onAddingChange,
+    onRemove,
+    removingId,
+    rows,
+  } = usePrerequisites({
+    environmentId,
+    environmentName,
+    projectFlag,
+    projectId,
+  })
 
   // Without the permission, canManage is false, so the add button and every
   // bin would appear a moment after the rows.
@@ -112,11 +79,6 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   if (isError) {
     return <ErrorMessage error="Could not load this feature's dependencies." />
   }
-
-  const isPrerequisite = !!dependentEdges.length
-  // A flag that gains a dependent cannot take prerequisites, so the picker goes
-  // with it rather than waiting for the API to refuse.
-  const isOpenForAdding = isAdding && !isPrerequisite
 
   return (
     <div>
