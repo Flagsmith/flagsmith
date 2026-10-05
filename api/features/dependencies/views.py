@@ -10,6 +10,7 @@ from features.dependencies.exceptions import DependencyConflictDetail
 from features.dependencies.permissions import check_manage_permissions
 from features.dependencies.services import (
     create_flag_dependency,
+    delete_flag_dependency,
     list_flag_dependencies,
     list_flag_dependents,
 )
@@ -55,6 +56,33 @@ class FeatureDependencyAPIView(APIView):
             ),
             status=status.HTTP_201_CREATED,
         )
+
+    @extend_schema(
+        responses={
+            204: None,
+            403: APIErrorDetail,
+            404: APIErrorDetail,
+        },
+        description="Stop the feature depending on the prerequisite feature.",
+    )
+    def delete(
+        self,
+        request: AuthenticatedRequest,
+        environment_api_key: str,
+        feature_id: int,
+        prerequisite_feature_id: int,
+    ) -> Response:
+        environment = get_environment(environment_api_key)
+        check_manage_permissions(request.user, environment)
+        feature = get_feature(environment, feature_id)
+        prerequisite_feature = get_feature(environment, prerequisite_feature_id)
+        delete_flag_dependency(
+            environment=environment,
+            feature=feature,
+            prerequisite_feature=prerequisite_feature,
+            author=request.user,
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class FeatureDependenciesAPIView(APIView):
