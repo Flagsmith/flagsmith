@@ -18,11 +18,14 @@
     padding: 8px 16px;
     font-size: 13px;
     vertical-align: middle;
-    border-bottom: 1px solid var(--color-border-default);
   }
 
-  tbody tr:last-child td {
-    border-bottom: none;
+  // A divider is the lower row's top border, not the upper row's bottom one.
+  // Appending a row then only paints the row that arrived; with a bottom border
+  // and a :last-child exception it has to repaint the row above as well, and
+  // that does not happen until something else forces it, such as a hover.
+  tbody tr + tr td {
+    border-top: 1px solid var(--color-border-default);
   }
 }
 
@@ -49,18 +52,23 @@
   width: 60px;
 }
 
-.ds-table__row--added td {
+// One animated node per row rather than one per cell.
+.ds-table__row--added {
   animation: ds-table-row-enter 180ms var(--easing-standard) both,
     ds-table-row-added 2s ease-out;
 }
 
-// Holds a control rather than data, so it carries a surface of its own.
-.ds-table__row--editor td {
-  background: var(--color-surface-muted);
+.ds-table__row--editor {
   animation: ds-table-row-enter 180ms var(--easing-standard) both;
 }
 
-.ds-table__row--pending td {
+// Holds a control rather than data, so it carries a surface of its own. On the
+// cell, or the hover fill would replace it rather than sit under it.
+.ds-table__row--editor td {
+  background: var(--color-surface-muted);
+}
+
+.ds-table__row--pending {
   opacity: 0.45;
   pointer-events: none;
   transition: opacity var(--duration-fast) var(--easing-standard);
@@ -89,16 +97,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ds-table__row--added td {
+  .ds-table__row--added {
     animation: none;
     background: var(--color-surface-action-subtle);
   }
 
-  .ds-table__row--editor td {
+  .ds-table__row--editor {
     animation: none;
   }
 
-  .ds-table__row--pending td {
+  .ds-table__row--pending {
     transition: none;
   }
 }
