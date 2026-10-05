@@ -75,6 +75,8 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
       .then(() => {
         setIsAdding(false)
         setHighlightedId(feature.id)
+        // Or a second add inside HIGHLIGHT_MS ends its own highlight early.
+        clearTimeout(highlightTimeout.current)
         highlightTimeout.current = setTimeout(
           () => setHighlightedId(undefined),
           HIGHLIGHT_MS,
