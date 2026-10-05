@@ -3,7 +3,6 @@ import { DependencyEdge } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import Table from 'components/base/Table'
 import Icon from 'components/icons/Icon'
-import './DependentFeaturesTable.scss'
 
 type DependentFeaturesTableProps = {
   edges: DependencyEdge[]
@@ -31,7 +30,7 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
           className='cursor-pointer'
           onClick={() => onSelect(edge)}
         >
-          <Table.Cell className='dependent-name text-truncate'>
+          <Table.Cell className='font-weight-medium text-truncate'>
             <Button
               theme='text'
               onClick={(e: MouseEvent) => {

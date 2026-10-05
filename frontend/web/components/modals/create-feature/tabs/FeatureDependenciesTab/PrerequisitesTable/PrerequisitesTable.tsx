@@ -105,7 +105,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
             undefined
           }
         >
-          <Table.Cell className='prerequisite-name text-truncate'>
+          <Table.Cell className='font-weight-medium text-truncate'>
             <Button
               theme='text'
               onClick={(e: MouseEvent) => {
