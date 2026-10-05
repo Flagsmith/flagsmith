@@ -1,5 +1,6 @@
 import json
 import uuid
+from datetime import datetime
 
 import pytest
 import requests
@@ -17,11 +18,14 @@ from rest_framework.test import APIClient
 from app.utils import create_hash
 from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.enums import EnvironmentDocumentCacheMode
+from environments.models import Environment
 from features.future.types import SegmentOverrideRequest, UpdateFlagRequest
+from features.versioning.tasks import enable_v2_versioning
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
 from tests.types import (
     CreateSegmentOverrideFixture,
+    ScheduleFlagChangeFixture,
     SetMultivariateAllocationsFixture,
 )
 from users.models import FFAdminUser
@@ -177,6 +181,78 @@ def environment_v2_versioning(environment: int) -> int:
 
     enable_v2_versioning(environment_id=environment)
     return environment
+
+
+@pytest.fixture(params=["feature_versioning_v1", "feature_versioning_v2"])
+def versioned_environment(
+    request: pytest.FixtureRequest,
+    environment: int,
+) -> Environment:
+    if request.param == "feature_versioning_v2":
+        enable_v2_versioning(environment_id=environment)
+    return Environment.objects.get(id=environment)  # type: ignore[no-any-return]
+
+
+@pytest.fixture()
+def schedule_flag_change(
+    admin_client: APIClient,
+    environment_api_key: str,
+) -> ScheduleFlagChangeFixture:
+    """Return a callable committing a change request that sets a flag's environment default at a later time."""
+
+    def _schedule_flag_change(
+        *,
+        feature_id: int,
+        enabled: bool,
+        live_from: datetime,
+    ) -> None:
+        environment = Environment.objects.get(api_key=environment_api_key)
+        change = (
+            {
+                "feature_states": [],
+                "change_sets": [
+                    {
+                        "feature": feature_id,
+                        "live_from": live_from.isoformat(),
+                        "feature_states_to_update": [
+                            {
+                                "feature_segment": None,
+                                "enabled": enabled,
+                                "feature_state_value": {
+                                    "type": "unicode",
+                                    "string_value": None,
+                                },
+                            }
+                        ],
+                        "feature_states_to_create": [],
+                        "segment_ids_to_delete_overrides": [],
+                    }
+                ],
+            }
+            if environment.use_v2_feature_versioning
+            else {
+                "feature_states": [
+                    {
+                        "feature": feature_id,
+                        "feature_segment": None,
+                        "enabled": enabled,
+                        "live_from": live_from.isoformat(),
+                    }
+                ],
+            }
+        )
+        create_response = admin_client.post(
+            f"/api/v1/environments/{environment_api_key}/create-change-request/",
+            {"title": "Scheduled change", **change},
+            format="json",
+        )
+        assert create_response.status_code == 201, create_response.json()
+        commit_response = admin_client.post(
+            f"/api/v1/features/workflows/change-requests/{create_response.json()['id']}/commit/",
+        )
+        assert commit_response.status_code == 200
+
+    return _schedule_flag_change
 
 
 @pytest.fixture()
