@@ -117,9 +117,26 @@ test.describe('Flag Dependencies', () => {
     // back to.
     await expect(back).toBeHidden()
 
-    // Removing a prerequisite needs the DELETE endpoint from #8650. Add the
-    // step here once it merges: the bin, the confirmation, then the row gone
-    // from this tab and the dependent gone from the other one.
+    log('Removing a prerequisite clears it from both sides')
+    await closeModal()
+    await waitForModalToClose()
+    await openDependencies(DEPENDENT)
+    await page
+      .getByRole('button', { name: `Remove ${PREREQUISITE} as a prerequisite` })
+      .click()
+    await page.getByRole('button', { name: 'Confirm' }).click()
+    await expect(page.getByText('No prerequisites')).toBeVisible({
+      timeout: LONG_TIMEOUT,
+    })
+
+    // The other side loses its dependent, so it can take prerequisites again.
+    await closeModal()
+    await waitForModalToClose()
+    await openDependencies(PREREQUISITE)
+    await expect(page.getByRole('cell', { name: DEPENDENT })).toBeHidden()
+    await expect(
+      page.getByRole('button', { name: 'Add prerequisite' }),
+    ).toBeVisible()
 
     log('Clean up, dependent first so the prerequisite is free to delete')
     await closeModal()
