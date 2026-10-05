@@ -61,15 +61,18 @@ def test_user_activated__no_signup_anonymous_id__does_not_track(
     mock_openfeature_client.track.assert_not_called()
 
 
-def test_user_activated__tracking_fails__logs_and_does_not_raise(
+@pytest.mark.parametrize(
+    "onboarding_data",
+    [json.dumps({"signup_anonymous_id": SIGNUP_ANONYMOUS_ID}), "not-json", "1"],
+)
+def test_user_activated__tracking_or_parsing_fails__logs_and_does_not_raise(
     admin_user: FFAdminUser,
     mock_openfeature_client: MagicMock,
     log: StructuredLogCapture,
+    onboarding_data: str,
 ) -> None:
     # Given
-    admin_user.onboarding_data = json.dumps(
-        {"signup_anonymous_id": SIGNUP_ANONYMOUS_ID}
-    )
+    admin_user.onboarding_data = onboarding_data
     mock_openfeature_client.track.side_effect = RuntimeError("boom")
 
     # When

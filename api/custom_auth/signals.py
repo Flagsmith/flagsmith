@@ -30,10 +30,10 @@ def track_signup_conversion_on_activation(
     user: FFAdminUser,
     **kwargs: Any,
 ) -> None:
-    onboarding = json.loads(user.onboarding_data) if user.onboarding_data else {}
-    if not (signup_anonymous_id := onboarding.get("signup_anonymous_id")):
-        return
     try:
+        onboarding = json.loads(user.onboarding_data) if user.onboarding_data else {}
+        if not (signup_anonymous_id := onboarding.get("signup_anonymous_id")):
+            return
         get_openfeature_client().track(
             "signup_activated",
             evaluation_context=EvaluationContext(targeting_key=signup_anonymous_id),

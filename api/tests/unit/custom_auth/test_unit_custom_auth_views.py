@@ -278,12 +278,17 @@ def test_create_user__no_hubspot_cookie__does_not_create_hubspot_tracker(
             {"signup_anonymous_id": "6f1c5d2e-3b4a-4c8d-9e0f-1a2b3c4d5e6f"},
             {"signup_anonymous_id": "6f1c5d2e-3b4a-4c8d-9e0f-1a2b3c4d5e6f"},
         ),
-        ({"signup_anonymous_id": "1759651200000-0.123"}, None),
+        (
+            {"signup_anonymous_id": "1759651200000-0.123"},
+            {"signup_anonymous_id": "1759651200000-0.123"},
+        ),
+        ({"signup_anonymous_id": ""}, None),
+        ({"signup_anonymous_id": "a" * 65}, None),
         ({"signup_anonymous_id": 123}, None),
         ({}, None),
     ],
 )
-def test_create_user__signup_anonymous_id__stores_only_valid_uuid(
+def test_create_user__signup_anonymous_id__stores_only_bounded_string(
     db: None,
     api_client: APIClient,
     signup_data: dict[str, Any],

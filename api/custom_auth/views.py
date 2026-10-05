@@ -1,5 +1,4 @@
 import json
-import uuid
 from datetime import timedelta
 from typing import Any
 
@@ -198,11 +197,10 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
 
 
 def _store_signup_anonymous_id(user: FFAdminUser, signup_anonymous_id: Any) -> None:
-    if not isinstance(signup_anonymous_id, str):
-        return
-    try:
-        uuid.UUID(signup_anonymous_id)
-    except ValueError:
+    if (
+        not isinstance(signup_anonymous_id, str)
+        or not 0 < len(signup_anonymous_id) <= 64
+    ):
         return
     onboarding = json.loads(user.onboarding_data) if user.onboarding_data else {}
     onboarding["signup_anonymous_id"] = signup_anonymous_id
