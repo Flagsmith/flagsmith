@@ -6,6 +6,7 @@ import { DependenciesPanel } from 'components/modals/create-feature/tabs/Feature
 const meta: Meta<typeof Table> = {
   component: Table,
   parameters: {
+    chromatic: { disableSnapshot: false },
     docs: {
       description: {
         component:
@@ -107,6 +108,94 @@ export const Empty: Story = {
     <Table>
       <Head />
       <Table.Body />
+    </Table>
+  ),
+}
+
+// Chromatic pauses animations at their first frame, so the tint is caught at
+// full strength rather than part way through draining.
+export const RowAdded: Story = {
+  name: 'Row, just added',
+  render: () => (
+    <Table>
+      <Head />
+      <Table.Body>
+        <Table.Row>
+          <Table.Cell>billing_engine_v2</Table.Cell>
+          <Table.Cell>Production</Table.Cell>
+          <Table.Cell>On</Table.Cell>
+        </Table.Row>
+        <Table.Row state='added'>
+          <Table.Cell>payment_provider</Table.Cell>
+          <Table.Cell>Staging</Table.Cell>
+          <Table.Cell>Off</Table.Cell>
+        </Table.Row>
+      </Table.Body>
+    </Table>
+  ),
+}
+
+export const RowPending: Story = {
+  name: 'Row, write in flight',
+  render: () => (
+    <Table>
+      <Head />
+      <Table.Body>
+        <Table.Row>
+          <Table.Cell>billing_engine_v2</Table.Cell>
+          <Table.Cell>Production</Table.Cell>
+          <Table.Cell>On</Table.Cell>
+        </Table.Row>
+        <Table.Row pending>
+          <Table.Cell>payment_provider</Table.Cell>
+          <Table.Cell>Staging</Table.Cell>
+          <Table.Cell>Off</Table.Cell>
+        </Table.Row>
+      </Table.Body>
+    </Table>
+  ),
+}
+
+export const RowEditor: Story = {
+  name: 'Row holding a control',
+  render: () => (
+    <Table>
+      <Head />
+      <Table.Body>
+        <Table.Row>
+          <Table.Cell>billing_engine_v2</Table.Cell>
+          <Table.Cell>Production</Table.Cell>
+          <Table.Cell>On</Table.Cell>
+        </Table.Row>
+        <Table.Row state='editor'>
+          <Table.Cell colSpan={3}>Pick a feature...</Table.Cell>
+        </Table.Row>
+      </Table.Body>
+    </Table>
+  ),
+}
+
+// The actions column is the table's, so two tables do not each pick a width.
+export const ActionsColumn: Story = {
+  render: () => (
+    <Table>
+      <Table.Header>
+        <Table.Row>
+          <Table.ColumnHeader>Feature</Table.ColumnHeader>
+          <Table.ColumnHeader
+            className='ds-table__actions text-end'
+            aria-label='Actions'
+          />
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {ROWS.map((row) => (
+          <Table.Row key={row.flag}>
+            <Table.Cell>{row.flag}</Table.Cell>
+            <Table.Cell className='ds-table__actions text-end'>···</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
     </Table>
   ),
 }

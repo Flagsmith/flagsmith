@@ -56,6 +56,7 @@ const Panel = ({ children }: { children: React.ReactNode }) => (
 
 const meta: Meta = {
   parameters: {
+    chromatic: { disableSnapshot: false },
     docs: {
       description: {
         component:
@@ -117,6 +118,21 @@ export const PrerequisiteRemoving: Story = {
         rows={[billing, payments]}
         canManage
         isRemoving={payments.edge.prerequisite.id}
+        onRemove={noop}
+        onSelect={noop}
+      />
+    </Panel>
+  ),
+}
+
+export const PrerequisiteAdding: Story = {
+  name: 'Prerequisite being added',
+  render: () => (
+    <Panel>
+      <PrerequisitesTable
+        rows={[billing, payments]}
+        canManage
+        addingName='checkout_v2'
         onRemove={noop}
         onSelect={noop}
       />
