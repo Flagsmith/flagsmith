@@ -1,6 +1,6 @@
 import json
 from collections import defaultdict
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
 
 import structlog
 from django.db import transaction
@@ -91,6 +91,22 @@ def index_segment_flag_references(segment: "Segment") -> None:
             created=feature_ids_by_name.keys() - previous_feature_names,
             deleted=previous_feature_names - feature_ids_by_name.keys(),
         )
+
+
+def get_dependency_segment_ids(segments: Iterable[Segment]) -> set[int]:
+    """The ids of the system segments that carry a feature's dependencies."""
+    candidate_ids = [
+        segment.pk
+        for segment in segments
+        if segment.is_system_segment and segment.feature_id is not None
+    ]
+    if not candidate_ids:
+        return set()
+    return set(
+        SegmentFlagReference.objects.filter(segment__in=candidate_ids).values_list(
+            "segment_id", flat=True
+        )
+    )
 
 
 def delete_segment_flag_references(segment: "Segment") -> None:

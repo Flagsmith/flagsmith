@@ -100,6 +100,9 @@ def map_environment_to_evaluation_context(
         identity keeps both its traits and its overrides in DynamoDB.
     :param segments: segments to evaluate.
     """
+    # Deferred: `environments.models` imports this module's package.
+    from features.dependencies.services import get_dependency_segment_ids
+
     context: EvaluationContext = {
         "environment": {
             "key": environment.api_key,
@@ -127,9 +130,14 @@ def map_environment_to_evaluation_context(
         # The engine only splits between variants for an identity.
         with_variants=identity is not None or identity_context is not None,
     )
+    dependency_segment_ids: set[int] = set()
     if segments is not None:
         segments = list(segments)
         prefetch_related_objects(segments, *_SEGMENT_RULES_LOOKUPS)
+        dependency_segment_ids = get_dependency_segment_ids(segments)
+    default_feature_states = {
+        feature_state.feature_id: feature_state for feature_state in feature_states
+    }
 
     # No reading from ORM past this point!
 
@@ -137,11 +145,20 @@ def map_environment_to_evaluation_context(
         feature_state: "FeatureState",
         *,
         priority: float | None = None,
+        inherits_default: bool = False,
     ) -> FeatureContext:
+        value_from = (
+            default_feature_states.get(feature_state.feature_id)
+            if inherits_default
+            else None
+        )
         return map_feature_state_to_feature_context(
             feature_state,
-            mv_fs_values=mv_fs_values_by_feature_state_id.get(feature_state.pk),
+            mv_fs_values=mv_fs_values_by_feature_state_id.get(
+                (value_from or feature_state).pk
+            ),
             priority=priority,
+            value_from=value_from,
         )
 
     if segments is not None:
@@ -149,7 +166,10 @@ def map_environment_to_evaluation_context(
             str(segment.pk): map_segment_to_segment_context(
                 segment,
                 overrides=[
-                    to_feature_context(feature_state)
+                    to_feature_context(
+                        feature_state,
+                        inherits_default=segment.pk in dependency_segment_ids,
+                    )
                     for feature_state in segment_overrides.get(segment.pk) or ()
                 ],
             )
@@ -301,8 +321,13 @@ def map_feature_state_to_feature_context(
     *,
     mv_fs_values: "Iterable[MultivariateFeatureStateValue] | None" = None,
     priority: float | None = None,
+    value_from: "FeatureState | None" = None,
 ) -> FeatureContext:
-    """Map a Django ORM FeatureState to a flag-engine FeatureContext TypedDict."""
+    """Map a Django ORM FeatureState to a flag-engine FeatureContext TypedDict.
+
+    :param value_from: the feature state to read the value from, when it is not
+        `feature_state` itself. `mv_fs_values` then belong to it as well.
+    """
     feature = feature_state.feature
     feature_context: FeatureContext = {
         # The engine seeds multivariate variant allocation on the feature
@@ -314,7 +339,7 @@ def map_feature_state_to_feature_context(
         "enabled": feature_state.enabled,
         # Deliberately unparameterised by identity: picking a multivariate
         # value is the engine's job now.
-        "value": feature_state.get_feature_state_value(),
+        "value": (value_from or feature_state).get_feature_state_value(),
         "metadata": FeatureEngineMetadata(feature_state=feature_state),
     }
 

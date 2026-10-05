@@ -131,6 +131,7 @@ def map_feature_state_to_engine(
     *,
     mv_fs_values: Optional[Iterable["MultivariateFeatureStateValue"]] = None,
     metadata: Optional[dict[str, object]] = None,
+    value_from: Optional["FeatureState"] = None,
 ) -> FeatureStateModel:
     feature = feature_state.feature
     feature_segment: Optional["FeatureSegment"] = feature_state.feature_segment
@@ -150,7 +151,7 @@ def map_feature_state_to_engine(
         # a feature state is recreated, without changing the engine model or
         # environment document schema. See issue #7913.
         django_id=feature_state.mv_hashing_seed,
-        feature_state_value=feature_state.get_feature_state_value(),
+        feature_state_value=(value_from or feature_state).get_feature_state_value(),
         featurestate_uuid=feature_state.uuid,
         feature_segment=feature_segment_model,
         feature=map_feature_to_engine(feature),
@@ -204,6 +205,7 @@ def map_environment_to_engine(
     from experimentation.feature_state_metadata import (  # avoid circular import
         get_feature_state_metadata_builder,
     )
+    from features.dependencies.services import get_dependency_segment_ids
 
     project: "Project" = environment.project
     organisation: "Organisation" = project.organisation
@@ -239,6 +241,7 @@ def map_environment_to_engine(
         if ps.feature_id is None
         or project_segment_feature_states_by_segment_id.get(ps.pk)
     ]
+    dependency_segment_ids = get_dependency_segment_ids(project_segments)
     project_segment_rules_by_segment_id: Dict[
         int,
         Iterable["SegmentRule"],
@@ -259,6 +262,33 @@ def map_environment_to_engine(
         feature_state.pk: feature_state.multivariate_feature_state_values.all()
         for feature_state in all_environment_feature_states
     }
+    default_feature_states = {
+        feature_state.feature_id: feature_state
+        for feature_state in environment_feature_states
+    }
+
+    def map_segment_feature_state(
+        segment: "Segment", feature_state: "FeatureState"
+    ) -> FeatureStateModel:
+        mv_fs_values = multivariate_feature_state_values_by_feature_state_id.pop(
+            feature_state.pk
+        )
+        # A dependency override serves the feature's current default value.
+        value_from = (
+            default_feature_states.get(feature_state.feature_id)
+            if segment.pk in dependency_segment_ids
+            else None
+        )
+        if value_from is not None:
+            mv_fs_values = multivariate_feature_state_values_by_feature_state_id[
+                value_from.pk
+            ]
+        return map_feature_state_to_engine(
+            feature_state,
+            mv_fs_values=mv_fs_values,
+            metadata=get_feature_state_metadata(feature_state),
+            value_from=value_from,
+        )
 
     # Read integrations.
     integration_configs: dict[
@@ -289,13 +319,7 @@ def map_environment_to_engine(
                 for segment_rule in project_segment_rules_by_segment_id.pop(segment.pk)
             ],
             feature_states=[
-                map_feature_state_to_engine(
-                    feature_state,
-                    mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
-                        feature_state.pk,
-                    ),
-                    metadata=get_feature_state_metadata(feature_state),
-                )
+                map_segment_feature_state(segment, feature_state)
                 for feature_state in project_segment_feature_states_by_segment_id.pop(
                     segment.pk
                 )
