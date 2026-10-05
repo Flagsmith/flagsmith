@@ -128,6 +128,11 @@ test.describe('Flag Dependencies', () => {
       .getByRole('button', { name: `Remove ${PREREQUISITE} as a prerequisite` })
       .click()
     await page.getByRole('button', { name: 'Confirm' }).click()
+    // The confirmation is a modal of its own, so wait for it to go before
+    // closing the one underneath, or the body is still marked as having one.
+    await expect(
+      page.getByRole('button', { name: 'Confirm' }),
+    ).toBeHidden({ timeout: LONG_TIMEOUT })
     await expect(page.getByText('No prerequisites')).toBeVisible({
       timeout: LONG_TIMEOUT,
     })
