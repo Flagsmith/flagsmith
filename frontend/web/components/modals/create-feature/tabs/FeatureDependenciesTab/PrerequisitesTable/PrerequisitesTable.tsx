@@ -130,13 +130,13 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
                 through the dependencies API, so it gets no control. */}
               {edge.segment.is_system && (
                 <IconButton
-                  size='medium'
+                  size='small'
                   variant='ghost'
                   disabled={isRemoving === edge.prerequisite.id}
                   onClick={() => onRemove(edge)}
                   aria-label={`Remove ${edge.prerequisite.name} as a prerequisite`}
                 >
-                  <Icon name='trash-2' width={20} />
+                  <Icon name='trash-2' width={16} />
                 </IconButton>
               )}
             </Table.Cell>

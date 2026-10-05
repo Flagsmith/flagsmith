@@ -1,14 +1,25 @@
+// Density lives here, not on the variants: a variant frames a table, it does
+// not set how tall its rows are. A row lands near the app's 50px list item.
 .ds-table {
   width: 100%;
 
   th {
+    padding: 10px 16px;
+    font-size: 12px;
     font-weight: var(--font-weight-medium);
     color: var(--color-text-secondary);
     text-align: left;
     border-bottom: 1px solid var(--color-border-default);
   }
 
+  // A height rather than padding alone: on a cell `height` is a minimum, so
+  // two tables agree even when one holds an icon button and the other a line
+  // of text.
   td {
+    height: 48px;
+    padding: 8px 16px;
+    font-size: 13px;
+    vertical-align: middle;
     border-bottom: 1px solid var(--color-border-default);
   }
 
@@ -26,30 +37,13 @@
   overflow: hidden;
 
   th {
-    padding: 10px 16px;
-    font-size: 12px;
     background: var(--color-surface-subtle);
-  }
-
-  td {
-    padding: 14px 16px;
-    font-size: 13px;
   }
 }
 
 // For a table inside something that already draws a border.
 .ds-table--ghost {
   border-collapse: collapse;
-
-  th {
-    padding: 8px 16px;
-    font-size: 12px;
-  }
-
-  td {
-    padding: 8px 16px;
-    font-size: 13px;
-  }
 }
 
 // Tracking a row across its columns, not an affordance. A clickable row takes

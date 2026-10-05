@@ -43,7 +43,6 @@
 // was asked for. Same enter as the row it creates, without the tint: it already
 // has a surface of its own.
 .prerequisite-add-row td {
-  padding: 8px 16px;
   background: var(--color-surface-muted);
   animation: prerequisite-enter 180ms var(--easing-standard) both;
 }
