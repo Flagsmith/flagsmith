@@ -1,6 +1,7 @@
 import { FC, MouseEvent, ReactNode } from 'react'
 import cn from 'classnames'
 import { DependencyEdge } from 'common/types/responses'
+import { colorSurfaceAction, colorSurfaceEmphasis } from 'common/theme/tokens'
 import Button from 'components/base/forms/Button'
 import Table from 'components/base/Table'
 import IconButton from 'components/base/IconButton'
@@ -31,11 +32,7 @@ const StateToggle: FC<{ isEnabled: boolean }> = ({ isEnabled }) => (
   <Icon
     name={isEnabled ? 'toggle-on' : 'toggle-off'}
     width={32}
-    fill={
-      isEnabled
-        ? 'var(--color-surface-action)'
-        : 'var(--color-surface-emphasis)'
-    }
+    fill={isEnabled ? colorSurfaceAction : colorSurfaceEmphasis}
     role='img'
     aria-label={isEnabled ? 'On' : 'Off'}
   />
