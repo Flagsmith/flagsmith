@@ -3,7 +3,13 @@ import cn from 'classnames'
 import { DependencyEdge } from 'common/types/responses'
 import { colorSurfaceAction, colorSurfaceEmphasis } from 'common/theme/tokens'
 import Button from 'components/base/forms/Button'
-import Table from 'components/base/Table'
+import Table, {
+  TableBody,
+  TableCell,
+  TableColumnHeader,
+  TableHeader,
+  TableRow,
+} from 'components/base/Table'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
@@ -83,22 +89,22 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
   rows,
 }) => (
   <Table variant='ghost' layout='fixed' hover>
-    <Table.Header>
-      <Table.Row>
-        <Table.ColumnHeader>Prerequisite</Table.ColumnHeader>
-        <Table.ColumnHeader>Status</Table.ColumnHeader>
-        <Table.ColumnHeader>Satisfies</Table.ColumnHeader>
+    <TableHeader>
+      <TableRow>
+        <TableColumnHeader>Prerequisite</TableColumnHeader>
+        <TableColumnHeader>Status</TableColumnHeader>
+        <TableColumnHeader>Satisfies</TableColumnHeader>
         {canManage && (
-          <Table.ColumnHeader
+          <TableColumnHeader
             className='ds-table__actions text-end'
             aria-label='Actions'
           />
         )}
-      </Table.Row>
-    </Table.Header>
-    <Table.Body>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
       {rows.map(({ edge, isEnabled, isMet }) => (
-        <Table.Row
+        <TableRow
           key={edge.prerequisite.id}
           className={cn({
             'prerequisite-row--highlighted':
@@ -106,7 +112,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
           })}
           pending={isRemoving === edge.prerequisite.id}
         >
-          <Table.Cell className='font-weight-medium text-truncate'>
+          <TableCell className='font-weight-medium text-truncate'>
             <Button
               theme='text'
               onClick={(e: MouseEvent) => {
@@ -116,15 +122,15 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
             >
               {edge.prerequisite.name}
             </Button>
-          </Table.Cell>
-          <Table.Cell>
+          </TableCell>
+          <TableCell>
             <StateToggle isEnabled={isEnabled} />
-          </Table.Cell>
-          <Table.Cell>
+          </TableCell>
+          <TableCell>
             <Satisfies isMet={isMet} />
-          </Table.Cell>
+          </TableCell>
           {canManage && (
-            <Table.Cell className='ds-table__actions text-end'>
+            <TableCell className='ds-table__actions text-end'>
               {/* An edge from a hand-written segment condition cannot be removed
                 through the dependencies API, so it gets no control. */}
               {edge.segment.is_system && (
@@ -138,34 +144,34 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
                   <Icon name='trash-2' width={16} />
                 </IconButton>
               )}
-            </Table.Cell>
+            </TableCell>
           )}
-        </Table.Row>
+        </TableRow>
       ))}
       {/* Dropped the moment the real row lands, or the flag is listed twice. */}
       {!!addingName &&
         !rows.some((row) => row.edge.prerequisite.name === addingName) && (
-          <Table.Row pending>
-            <Table.Cell className='font-weight-medium text-truncate'>
+          <TableRow pending>
+            <TableCell className='font-weight-medium text-truncate'>
               {addingName}
-            </Table.Cell>
-            <Table.Cell colSpan={columnCount(canManage) - 1} />
-          </Table.Row>
+            </TableCell>
+            <TableCell colSpan={columnCount(canManage) - 1} />
+          </TableRow>
         )}
       {!!addControl && (
-        <Table.Row className='prerequisite-row--input'>
+        <TableRow className='prerequisite-row--input'>
           {/* One cell: the picker has no column to line up with. */}
-          <Table.Cell colSpan={columnCount(canManage)}>
+          <TableCell colSpan={columnCount(canManage)}>
             <div className='prerequisite-add-control d-flex align-items-center gap-2'>
               {addControl}
               <Button theme='text' onClick={onCancelAdd}>
                 Cancel
               </Button>
             </div>
-          </Table.Cell>
-        </Table.Row>
+          </TableCell>
+        </TableRow>
       )}
-    </Table.Body>
+    </TableBody>
   </Table>
 )
 

@@ -1,7 +1,13 @@
 import { FC, MouseEvent } from 'react'
 import { DependencyEdge } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
-import Table from 'components/base/Table'
+import Table, {
+  TableBody,
+  TableCell,
+  TableColumnHeader,
+  TableHeader,
+  TableRow,
+} from 'components/base/Table'
 import Icon from 'components/icons/Icon'
 
 type DependentFeaturesTableProps = {
@@ -14,23 +20,23 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
   onSelect,
 }) => (
   <Table variant='ghost' layout='fixed' hover>
-    <Table.Header>
-      <Table.Row>
-        <Table.ColumnHeader>Feature</Table.ColumnHeader>
-        <Table.ColumnHeader
+    <TableHeader>
+      <TableRow>
+        <TableColumnHeader>Feature</TableColumnHeader>
+        <TableColumnHeader
           className='ds-table__actions text-end'
           aria-label='Actions'
         />
-      </Table.Row>
-    </Table.Header>
-    <Table.Body>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
       {edges.map((edge) => (
-        <Table.Row
+        <TableRow
           key={edge.feature.id}
           className='cursor-pointer'
           onClick={() => onSelect(edge)}
         >
-          <Table.Cell className='font-weight-medium text-truncate'>
+          <TableCell className='font-weight-medium text-truncate'>
             <Button
               theme='text'
               onClick={(e: MouseEvent) => {
@@ -40,17 +46,17 @@ const DependentFeaturesTable: FC<DependentFeaturesTableProps> = ({
             >
               {edge.feature.name}
             </Button>
-          </Table.Cell>
-          <Table.Cell className='ds-table__actions text-end' aria-hidden>
+          </TableCell>
+          <TableCell className='ds-table__actions text-end' aria-hidden>
             <Icon
               name='chevron-right'
               width={16}
               fill='var(--color-icon-disabled)'
             />
-          </Table.Cell>
-        </Table.Row>
+          </TableCell>
+        </TableRow>
       ))}
-    </Table.Body>
+    </TableBody>
   </Table>
 )
 

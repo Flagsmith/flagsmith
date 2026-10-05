@@ -1,6 +1,12 @@
 import type { Meta, StoryObj } from 'storybook'
 
-import Table from 'components/base/Table'
+import Table, {
+  TableBody,
+  TableCell,
+  TableColumnHeader,
+  TableHeader,
+  TableRow,
+} from 'components/base/Table'
 import { DependenciesPanel } from 'components/modals/create-feature/tabs/FeatureDependenciesTab'
 
 const meta: Meta<typeof Table> = {
@@ -27,25 +33,25 @@ const ROWS = [
 ]
 
 const Rows = () => (
-  <Table.Body>
+  <TableBody>
     {ROWS.map((row) => (
-      <Table.Row key={row.flag}>
-        <Table.Cell>{row.flag}</Table.Cell>
-        <Table.Cell>{row.env}</Table.Cell>
-        <Table.Cell>{row.state}</Table.Cell>
-      </Table.Row>
+      <TableRow key={row.flag}>
+        <TableCell>{row.flag}</TableCell>
+        <TableCell>{row.env}</TableCell>
+        <TableCell>{row.state}</TableCell>
+      </TableRow>
     ))}
-  </Table.Body>
+  </TableBody>
 )
 
 const Head = () => (
-  <Table.Header>
-    <Table.Row>
-      <Table.ColumnHeader>Feature</Table.ColumnHeader>
-      <Table.ColumnHeader>Environment</Table.ColumnHeader>
-      <Table.ColumnHeader>State</Table.ColumnHeader>
-    </Table.Row>
-  </Table.Header>
+  <TableHeader>
+    <TableRow>
+      <TableColumnHeader>Feature</TableColumnHeader>
+      <TableColumnHeader>Environment</TableColumnHeader>
+      <TableColumnHeader>State</TableColumnHeader>
+    </TableRow>
+  </TableHeader>
 )
 
 // The house style: MetricsTable and ExperimentsTable both already draw this.
@@ -83,22 +89,22 @@ export const Ghost: Story = {
 export const FixedLayout: Story = {
   render: () => (
     <Table layout='fixed'>
-      <Table.Header>
-        <Table.Row>
-          <Table.ColumnHeader>Feature</Table.ColumnHeader>
-          <Table.ColumnHeader>Environment</Table.ColumnHeader>
-          <Table.ColumnHeader>State</Table.ColumnHeader>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>
-        <Table.Row>
-          <Table.Cell className='text-truncate'>
+      <TableHeader>
+        <TableRow>
+          <TableColumnHeader>Feature</TableColumnHeader>
+          <TableColumnHeader>Environment</TableColumnHeader>
+          <TableColumnHeader>State</TableColumnHeader>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow>
+          <TableCell className='text-truncate'>
             a_very_long_feature_name_that_would_otherwise_widen_the_table
-          </Table.Cell>
-          <Table.Cell>Production</Table.Cell>
-          <Table.Cell>On</Table.Cell>
-        </Table.Row>
-      </Table.Body>
+          </TableCell>
+          <TableCell>Production</TableCell>
+          <TableCell>On</TableCell>
+        </TableRow>
+      </TableBody>
     </Table>
   ),
 }
@@ -107,7 +113,7 @@ export const Empty: Story = {
   render: () => (
     <Table>
       <Head />
-      <Table.Body />
+      <TableBody />
     </Table>
   ),
 }
@@ -117,18 +123,18 @@ export const RowPending: Story = {
   render: () => (
     <Table>
       <Head />
-      <Table.Body>
-        <Table.Row>
-          <Table.Cell>billing_engine_v2</Table.Cell>
-          <Table.Cell>Production</Table.Cell>
-          <Table.Cell>On</Table.Cell>
-        </Table.Row>
-        <Table.Row pending>
-          <Table.Cell>payment_provider</Table.Cell>
-          <Table.Cell>Staging</Table.Cell>
-          <Table.Cell>Off</Table.Cell>
-        </Table.Row>
-      </Table.Body>
+      <TableBody>
+        <TableRow>
+          <TableCell>billing_engine_v2</TableCell>
+          <TableCell>Production</TableCell>
+          <TableCell>On</TableCell>
+        </TableRow>
+        <TableRow pending>
+          <TableCell>payment_provider</TableCell>
+          <TableCell>Staging</TableCell>
+          <TableCell>Off</TableCell>
+        </TableRow>
+      </TableBody>
     </Table>
   ),
 }
@@ -137,23 +143,23 @@ export const RowPending: Story = {
 export const ActionsColumn: Story = {
   render: () => (
     <Table>
-      <Table.Header>
-        <Table.Row>
-          <Table.ColumnHeader>Feature</Table.ColumnHeader>
-          <Table.ColumnHeader
+      <TableHeader>
+        <TableRow>
+          <TableColumnHeader>Feature</TableColumnHeader>
+          <TableColumnHeader
             className='ds-table__actions text-end'
             aria-label='Actions'
           />
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {ROWS.map((row) => (
-          <Table.Row key={row.flag}>
-            <Table.Cell>{row.flag}</Table.Cell>
-            <Table.Cell className='ds-table__actions text-end'>···</Table.Cell>
-          </Table.Row>
+          <TableRow key={row.flag}>
+            <TableCell>{row.flag}</TableCell>
+            <TableCell className='ds-table__actions text-end'>···</TableCell>
+          </TableRow>
         ))}
-      </Table.Body>
+      </TableBody>
     </Table>
   ),
 }

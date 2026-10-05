@@ -1,22 +1,10 @@
-import {
-  FC,
-  HTMLAttributes,
-  TableHTMLAttributes,
-  TdHTMLAttributes,
-  ThHTMLAttributes,
-} from 'react'
+import { FC, TableHTMLAttributes } from 'react'
 import cn from 'classnames'
 import './Table.scss'
 
 export type TableVariant = 'surface' | 'ghost'
 
 export type TableLayout = 'auto' | 'fixed'
-
-export type TableRowProps = HTMLAttributes<HTMLTableRowElement> & {
-  // A write for this row is in flight. Anything a table does for its own
-  // reasons, such as marking a row that just arrived, is the caller's class.
-  pending?: boolean
-}
 
 export type TableProps = TableHTMLAttributes<HTMLTableElement> & {
   variant?: TableVariant
@@ -26,15 +14,9 @@ export type TableProps = TableHTMLAttributes<HTMLTableElement> & {
   hover?: boolean
 }
 
-// Every part takes its element's own attributes, so a row can be clickable and
-// a cell can span columns without dropping back to bare markup.
-const Table: FC<TableProps> & {
-  Header: FC<HTMLAttributes<HTMLTableSectionElement>>
-  Body: FC<HTMLAttributes<HTMLTableSectionElement>>
-  Row: FC<TableRowProps>
-  ColumnHeader: FC<ThHTMLAttributes<HTMLTableCellElement>>
-  Cell: FC<TdHTMLAttributes<HTMLTableCellElement>>
-} = ({
+// Composed from its parts rather than configured: no columns or rows prop,
+// because cells hold toggles, buttons and tooltips.
+const Table: FC<TableProps> = ({
   children,
   className,
   hover,
@@ -55,32 +37,5 @@ const Table: FC<TableProps> & {
     {children}
   </table>
 )
-
-Table.Header = ({ children, ...rest }) => <thead {...rest}>{children}</thead>
-Table.Body = ({ children, ...rest }) => <tbody {...rest}>{children}</tbody>
-Table.Row = ({ children, className, pending, ...rest }) => (
-  <tr
-    {...rest}
-    className={cn(className, { 'ds-table__row--pending': pending })}
-  >
-    {children}
-  </tr>
-)
-
-// scope is what lets a screen reader read a cell with its column name.
-Table.ColumnHeader = ({ children, scope = 'col', ...rest }) => (
-  <th {...rest} scope={scope}>
-    {children}
-  </th>
-)
-
-Table.Cell = ({ children, ...rest }) => <td {...rest}>{children}</td>
-
-Table.displayName = 'Table'
-Table.Header.displayName = 'Table.Header'
-Table.Body.displayName = 'Table.Body'
-Table.Row.displayName = 'Table.Row'
-Table.ColumnHeader.displayName = 'Table.ColumnHeader'
-Table.Cell.displayName = 'Table.Cell'
 
 export default Table

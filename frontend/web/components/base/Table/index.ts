@@ -1,2 +1,8 @@
 export { default } from './Table'
+export { default as TableBody } from './TableBody'
+export { default as TableCell } from './TableCell'
+export { default as TableColumnHeader } from './TableColumnHeader'
+export { default as TableHeader } from './TableHeader'
+export { default as TableRow } from './TableRow'
 export type { TableLayout, TableProps, TableVariant } from './Table'
+export type { TableRowProps } from './TableRow'
