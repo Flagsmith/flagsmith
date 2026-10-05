@@ -389,6 +389,69 @@ By default, Flagsmith uses PostgreSQL to store time series data. You can alterna
 
 The task processor itself is documented [here](/deployment-self-hosting/scaling-and-performance/asynchronous-task-processor). See the table below for the values to set to configure the task processor using the Helm chart.
 
+### Experimentation
+
+The chart can run [experimentation](/experimentation). You bring your own Kafka and ClickHouse. The chart then:
+
+- Runs the event ingestion service, which receives SDK events and writes them to Kafka.
+- Runs a job after each install and upgrade. The job creates the Kafka topic and the ClickHouse tables that copy events from Kafka.
+- Gives the API the ClickHouse URL.
+
+Requirements:
+
+- Flagsmith API 2.280.0 or later.
+- Kafka with at least 3 brokers, for the default replication factor of 3.
+- ClickHouse that can connect to Kafka.
+
+```yaml
+experimentation:
+ enabled: true
+ clickhouse:
+  url: clickhouses://flagsmith:<password>@clickhouse.example.com:9440/flagsmith_exp
+ kafka:
+  bootstrapServers: kafka-1:9096,kafka-2:9096,kafka-3:9096
+  auth: scram
+  username: flagsmith
+  password: <password>
+
+ingress:
+ ingestion:
+  enabled: true
+  hosts:
+   - host: events.flagsmith.example.com
+     paths:
+      - /
+```
+
+Each value with a password also has a `…FromExistingSecret` form. Use it in production.
+
+The logins need these permissions:
+
+| Login                                     | Permissions                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------------------------ |
+| Kafka (`experimentation.kafka`)           | Write to the topic. Read the topic and the consumer group `clickhouse-events`. |
+| ClickHouse (`experimentation.clickhouse`) | `CREATE DATABASE`, `CREATE TABLE`, `CREATE VIEW`, and `SELECT` on `events`.    |
+
+To keep schema changes away from the runtime logins, give the job its own admin logins with
+`jobs.experimentationInit.clickhouseUrl` and `jobs.experimentationInit.kafka`.
+
+The ingestion service reads environment keys from the Flagsmith database, with the API's database URL by default. To
+give it a read-only role, create the role and pass its URL with `experimentation.ingestion.databaseUrl`:
+
+```sql
+CREATE ROLE ingestion_server WITH LOGIN PASSWORD '<password>';
+GRANT CONNECT ON DATABASE <database> TO ingestion_server;
+GRANT USAGE ON SCHEMA public TO ingestion_server;
+GRANT SELECT ON experimentation_environment_keys TO ingestion_server;
+```
+
+To turn experimentation on:
+
+1. Set up [Flagsmith on Flagsmith](/deployment-self-hosting/core-configuration/running-flagsmith-on-flagsmith).
+2. In that project, create the flags `experimental_flags` (value `{}`) and `experimentation_warehouse_connection`.
+   Enable both.
+3. In each environment that runs experiments, go to **Environment Settings > Warehouse** and select **Flagsmith**.
+
 ## Chart Values
 
 The following table lists the configurable parameters of the chart and their default values.
