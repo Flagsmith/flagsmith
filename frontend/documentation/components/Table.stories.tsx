@@ -112,29 +112,6 @@ export const Empty: Story = {
   ),
 }
 
-// Chromatic pauses animations at their first frame, so the tint is caught at
-// full strength rather than part way through draining.
-export const RowAdded: Story = {
-  name: 'Row, just added',
-  render: () => (
-    <Table>
-      <Head />
-      <Table.Body>
-        <Table.Row>
-          <Table.Cell>billing_engine_v2</Table.Cell>
-          <Table.Cell>Production</Table.Cell>
-          <Table.Cell>On</Table.Cell>
-        </Table.Row>
-        <Table.Row state='added'>
-          <Table.Cell>payment_provider</Table.Cell>
-          <Table.Cell>Staging</Table.Cell>
-          <Table.Cell>Off</Table.Cell>
-        </Table.Row>
-      </Table.Body>
-    </Table>
-  ),
-}
-
 export const RowPending: Story = {
   name: 'Row, write in flight',
   render: () => (
@@ -150,25 +127,6 @@ export const RowPending: Story = {
           <Table.Cell>payment_provider</Table.Cell>
           <Table.Cell>Staging</Table.Cell>
           <Table.Cell>Off</Table.Cell>
-        </Table.Row>
-      </Table.Body>
-    </Table>
-  ),
-}
-
-export const RowEditor: Story = {
-  name: 'Row holding a control',
-  render: () => (
-    <Table>
-      <Head />
-      <Table.Body>
-        <Table.Row>
-          <Table.Cell>billing_engine_v2</Table.Cell>
-          <Table.Cell>Production</Table.Cell>
-          <Table.Cell>On</Table.Cell>
-        </Table.Row>
-        <Table.Row state='editor'>
-          <Table.Cell colSpan={3}>Pick a feature...</Table.Cell>
         </Table.Row>
       </Table.Body>
     </Table>

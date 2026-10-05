@@ -100,7 +100,10 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
       {rows.map(({ edge, isEnabled, isMet }) => (
         <Table.Row
           key={edge.prerequisite.id}
-          state={highlightedId === edge.prerequisite.id ? 'added' : undefined}
+          className={cn({
+            'prerequisite-row--highlighted':
+              highlightedId === edge.prerequisite.id,
+          })}
           pending={isRemoving === edge.prerequisite.id}
         >
           <Table.Cell className='font-weight-medium text-truncate'>
@@ -150,7 +153,7 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
           </Table.Row>
         )}
       {!!addControl && (
-        <Table.Row state='editor'>
+        <Table.Row className='prerequisite-row--input'>
           {/* One cell: the picker has no column to line up with. */}
           <Table.Cell colSpan={columnCount(canManage)}>
             <div className='prerequisite-add-control d-flex align-items-center gap-2'>

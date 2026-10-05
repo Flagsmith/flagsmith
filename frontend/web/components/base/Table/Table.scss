@@ -52,60 +52,14 @@
   width: 60px;
 }
 
-// One animated node per row rather than one per cell.
-.ds-table__row--added {
-  animation: ds-table-row-enter 180ms var(--easing-standard) both,
-    ds-table-row-added 2s ease-out;
-}
-
-.ds-table__row--editor {
-  animation: ds-table-row-enter 180ms var(--easing-standard) both;
-}
-
-// Holds a control rather than data, so it carries a surface of its own. On the
-// cell, or the hover fill would replace it rather than sit under it.
-.ds-table__row--editor td {
-  background: var(--color-surface-muted);
-}
-
+// On the row rather than the cell, so one node animates instead of each column.
 .ds-table__row--pending {
   opacity: 0.45;
   pointer-events: none;
   transition: opacity var(--duration-fast) var(--easing-standard);
 }
 
-@keyframes ds-table-row-enter {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes ds-table-row-added {
-  from {
-    background: var(--color-surface-action-subtle);
-  }
-
-  to {
-    background: transparent;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .ds-table__row--added {
-    animation: none;
-    background: var(--color-surface-action-subtle);
-  }
-
-  .ds-table__row--editor {
-    animation: none;
-  }
-
   .ds-table__row--pending {
     transition: none;
   }

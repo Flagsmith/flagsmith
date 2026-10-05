@@ -125,6 +125,39 @@ export const PrerequisiteRemoving: Story = {
   ),
 }
 
+// Chromatic pauses animations at their first frame, so the tint is caught at
+// full strength rather than part way through draining.
+export const PrerequisiteHighlighted: Story = {
+  name: 'Prerequisite just added',
+  render: () => (
+    <Panel>
+      <PrerequisitesTable
+        rows={[billing, payments]}
+        canManage
+        highlightedId={payments.edge.prerequisite.id}
+        onRemove={noop}
+        onSelect={noop}
+      />
+    </Panel>
+  ),
+}
+
+export const PrerequisitePicker: Story = {
+  name: 'Picking a prerequisite',
+  render: () => (
+    <Panel>
+      <PrerequisitesTable
+        rows={[billing]}
+        canManage
+        addControl={<span>Add a prerequisite flag...</span>}
+        onCancelAdd={noop}
+        onRemove={noop}
+        onSelect={noop}
+      />
+    </Panel>
+  ),
+}
+
 export const PrerequisiteAdding: Story = {
   name: 'Prerequisite being added',
   render: () => (

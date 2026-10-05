@@ -1,5 +1,55 @@
+// The row that just arrived, and the row the picker sits in. Both are this
+// table's own affordances rather than anything a table does by itself.
+.prerequisite-row--highlighted {
+  animation: prerequisite-row-enter 180ms var(--easing-standard) both,
+    prerequisite-row-highlight 2s ease-out;
+}
+
+.prerequisite-row--input {
+  animation: prerequisite-row-enter 180ms var(--easing-standard) both;
+}
+
+// On the cell, or the table's hover fill would replace it rather than sit
+// under it.
+.prerequisite-row--input td {
+  background: var(--color-surface-muted);
+}
+
 // The select needs permission to shrink or it pushes the row past the panel.
 .prerequisite-add-control > :first-child {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+@keyframes prerequisite-row-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes prerequisite-row-highlight {
+  from {
+    background: var(--color-surface-action-subtle);
+  }
+
+  to {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prerequisite-row--highlighted {
+    animation: none;
+    background: var(--color-surface-action-subtle);
+  }
+
+  .prerequisite-row--input {
+    animation: none;
+  }
 }

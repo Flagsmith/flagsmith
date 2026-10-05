@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useRef, useState } from 'react'
+import { FC, useCallback, useState } from 'react'
 import { DependencyEdge, ProjectFlag } from 'common/types/responses'
 import { EnvironmentPermission } from 'common/types/permissions.types'
 import { useHasPermission } from 'common/providers/Permission'
@@ -18,6 +18,7 @@ import FeatureDependenciesSkeleton from './FeatureDependenciesSkeleton'
 import PrerequisitesTable from './PrerequisitesTable'
 import { PrerequisitesEmptyState } from './DependenciesEmptyStates'
 import { useDependencies } from './hooks/useDependencies'
+import { useRowHighlight } from './hooks/useRowHighlight'
 
 // Flag dependencies have no docs page of their own yet, so this points at the
 // nearest one that exists.
@@ -33,8 +34,6 @@ type FeatureDependenciesTabProps = {
   onSelectFeature: (featureId: number) => void
 }
 
-const HIGHLIGHT_MS = 2000
-
 const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   environmentId,
   environmentName,
@@ -44,16 +43,9 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
 }) => {
   const [conflict, setConflict] = useState<string | null>(null)
   const [removingId, setRemovingId] = useState<number | undefined>()
-  const [highlightedId, setHighlightedId] = useState<number | undefined>()
+  const { highlight, highlightedId } = useRowHighlight()
   const [isAdding, setIsAdding] = useState(false)
   const [addingName, setAddingName] = useState<string | undefined>()
-  const highlightTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  )
-
-  // The highlight outlives the interaction, so it can outlive the modal.
-  useEffect(() => () => clearTimeout(highlightTimeout.current), [])
-
   const { isLoading: isLoadingPermission, permission: canManage } =
     useHasPermission({
       id: environmentId,
@@ -77,15 +69,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
     // two sitting there naming the same flag.
     setIsAdding(false)
     add(feature)
-      .then(() => {
-        setHighlightedId(feature.id)
-        // Or a second add inside HIGHLIGHT_MS ends its own highlight early.
-        clearTimeout(highlightTimeout.current)
-        highlightTimeout.current = setTimeout(
-          () => setHighlightedId(undefined),
-          HIGHLIGHT_MS,
-        )
-      })
+      .then(() => highlight(feature.id))
       // The API message names both features and the rule.
       .catch((error: { data?: { message?: string } }) => {
         setConflict(error?.data?.message ?? 'Could not add that prerequisite.')
