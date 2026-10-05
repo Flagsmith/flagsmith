@@ -104,6 +104,19 @@ test.describe('Flag Dependencies', () => {
       page.getByRole('row', { name: new RegExp(PREREQUISITE) }),
     ).toBeVisible()
 
+    log('The back arrow returns to the flag that was followed from')
+    const back = page.getByRole('button', {
+      name: 'Back to the previous flag',
+    })
+    await expect(back).toBeVisible()
+    await back.click()
+    await expect(
+      page.getByRole('cell', { name: DEPENDENT }),
+    ).toBeVisible({ timeout: LONG_TIMEOUT })
+    // Arrived from the list rather than from another flag, so nothing to go
+    // back to.
+    await expect(back).toBeHidden()
+
     // Removing a prerequisite needs the DELETE endpoint from #8650. Add the
     // step here once it merges: the bin, the confirmation, then the row gone
     // from this tab and the dependent gone from the other one.

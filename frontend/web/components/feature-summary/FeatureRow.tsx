@@ -2,6 +2,7 @@ import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateFlagModal from 'components/modals/create-feature'
+import IconButton from 'components/base/IconButton'
 import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
@@ -32,9 +33,8 @@ import FeatureTags from './FeatureTags'
 import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
 
 interface FeatureRowProps {
-  // Only the page that owns `?feature=` sets this. Compare renders one row per
-  // environment for the same flag, so every row would match the id and the last
-  // one mounted would win.
+  // Only the page that owns `?feature=` sets this: Compare renders one row per
+  // environment for the same flag, so every row would match.
   openFromUrl?: boolean
   disableControls?: boolean
   environmentFlags: FeatureListProviderData['environmentFlags']
@@ -207,6 +207,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     API.trackEvent(Constants.events.VIEW_FEATURE)
     openedFor.current = `${projectFlag.id}`
     const tabValue = tab || Utils.fromParam().tab || 'value'
+    const cameFrom = Utils.fromParam().from
 
     const modalProps = {
       environmentFlag,
@@ -236,6 +237,17 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
 
     openModal(
       <Row className='align-items-center'>
+        {!!cameFrom && (
+          <IconButton
+            size='medium'
+            variant='ghost'
+            className='me-2'
+            onClick={() => history.goBack()}
+            aria-label='Back to the previous flag'
+          >
+            <Icon name='arrow-left' width={20} />
+          </IconButton>
+        )}
         <span>
           {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
         </span>
@@ -283,7 +295,10 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     // would be gone before the new modal's Tabs reads it.
     history.replace({
       pathname: document.location.pathname,
-      search: `?feature=${projectFlag.id}&tab=${tabValue}`,
+      // `from` is kept, or the arrow goes as soon as it arrives.
+      search: `?feature=${projectFlag.id}&tab=${tabValue}${
+        cameFrom ? `&from=${cameFrom}` : ''
+      }`,
     })
   }
 

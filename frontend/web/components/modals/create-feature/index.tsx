@@ -836,15 +836,12 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         projectId={projectId}
                         projectFlag={projectFlag}
                         onSelectFeature={(featureId) => {
-                          // The features list owns the deep link, so point it
-                          // at the other feature and let its row open the
-                          // modal. Not closeModal() first: the modal clears the
-                          // query string when its fade finishes, which would
-                          // undo this.
-                          props.history?.replace({
-                            pathname: document.location.pathname,
-                            search: `?feature=${featureId}&tab=dependencies`,
-                          })
+                          // The features list, never the current page: it
+                          // owns the deep link and hydrates an off-page
+                          // target. `from` puts a back arrow in the header.
+                          props.history?.push(
+                            `/project/${projectId}/environment/${environmentId}/features?feature=${featureId}&tab=dependencies&from=${projectFlag.id}`,
+                          )
                         }}
                       />
                     </TabItem>
