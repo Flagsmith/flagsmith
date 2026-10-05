@@ -840,7 +840,13 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                           // owns the deep link and hydrates an off-page
                           // target. `from` puts a back arrow in the header.
                           props.history?.push(
-                            `/project/${projectId}/environment/${environmentId}/features?feature=${featureId}&tab=dependencies&from=${projectFlag.id}`,
+                            `/project/${projectId}/environment/${environmentId}/features?${Utils.toParam(
+                              {
+                                feature: featureId,
+                                from: projectFlag.id,
+                                tab: 'dependencies',
+                              },
+                            )}`,
                           )
                         }}
                       />

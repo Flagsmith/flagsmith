@@ -62,7 +62,11 @@ test.describe('Flag Dependencies', () => {
       .getByText(PREREQUISITE, { exact: true })
       .click()
 
-    const row = page.getByRole('row', { name: new RegExp(PREREQUISITE) })
+    // The row standing in while the POST runs carries the same name, so pick
+    // the one that has a status.
+    const row = page
+      .getByRole('row', { name: new RegExp(PREREQUISITE) })
+      .filter({ has: page.getByRole('img', { name: /^(On|Off)$/ }) })
     await row.waitFor({ state: 'visible', timeout: LONG_TIMEOUT })
 
     log('The prerequisite is off, so the flag is held off')
