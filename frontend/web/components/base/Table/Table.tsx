@@ -12,12 +12,14 @@ export type TableVariant = 'surface' | 'ghost'
 
 export type TableLayout = 'auto' | 'fixed'
 
-// `added` plays the enter and a fading tint, `pending` dims a row while a write
-// is in flight, `editor` is a row holding a control rather than data.
-export type TableRowState = 'added' | 'pending' | 'editor'
+// What the row is: `added` plays the enter and a fading tint, `editor` holds a
+// control rather than data.
+export type TableRowState = 'added' | 'editor'
 
 export type TableRowProps = HTMLAttributes<HTMLTableRowElement> & {
   state?: TableRowState
+  // What is happening to it, so either kind of row can be mid-write.
+  pending?: boolean
 }
 
 export type TableProps = TableHTMLAttributes<HTMLTableElement> & {
@@ -60,10 +62,13 @@ const Table: FC<TableProps> & {
 
 Table.Header = ({ children, ...rest }) => <thead {...rest}>{children}</thead>
 Table.Body = ({ children, ...rest }) => <tbody {...rest}>{children}</tbody>
-Table.Row = ({ children, className, state, ...rest }) => (
+Table.Row = ({ children, className, pending, state, ...rest }) => (
   <tr
     {...rest}
-    className={cn(className, { [`ds-table__row--${state}`]: state })}
+    className={cn(className, {
+      'ds-table__row--pending': pending,
+      [`ds-table__row--${state}`]: state,
+    })}
   >
     {children}
   </tr>

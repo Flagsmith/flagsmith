@@ -46,6 +46,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   const [removingId, setRemovingId] = useState<number | undefined>()
   const [highlightedId, setHighlightedId] = useState<number | undefined>()
   const [isAdding, setIsAdding] = useState(false)
+  const [addingName, setAddingName] = useState<string | undefined>()
   const highlightTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   )
@@ -71,9 +72,12 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
 
   const onAdd = (feature: ProjectFlag) => {
     setConflict(null)
+    setAddingName(feature.name)
+    // The picker goes now and the pending row stands in for it, rather than the
+    // two sitting there naming the same flag.
+    setIsAdding(false)
     add(feature)
       .then(() => {
-        setIsAdding(false)
         setHighlightedId(feature.id)
         // Or a second add inside HIGHLIGHT_MS ends its own highlight early.
         clearTimeout(highlightTimeout.current)
@@ -83,9 +87,12 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         )
       })
       // The API message names both features and the rule.
-      .catch((error: { data?: { message?: string } }) =>
-        setConflict(error?.data?.message ?? 'Could not add that prerequisite.'),
-      )
+      .catch((error: { data?: { message?: string } }) => {
+        setConflict(error?.data?.message ?? 'Could not add that prerequisite.')
+        // Back to the picker, so the refusal can be answered in place.
+        setIsAdding(true)
+      })
+      .finally(() => setAddingName(undefined))
   }
 
   const onRemove = (edge: DependencyEdge) =>
@@ -162,6 +169,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
               rows={rows}
               canManage={canManage}
               highlightedId={highlightedId}
+              addingName={addingName}
               isRemoving={removingId}
               onRemove={onRemove}
               onSelect={(edge) => onSelectFeature(edge.prerequisite.id)}

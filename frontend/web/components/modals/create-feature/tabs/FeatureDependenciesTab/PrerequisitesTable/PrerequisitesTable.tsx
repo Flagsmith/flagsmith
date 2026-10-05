@@ -20,6 +20,9 @@ type PrerequisitesTableProps = {
   isRemoving?: number
   onRemove: (edge: DependencyEdge) => void
   onSelect: (edge: DependencyEdge) => void
+  // The prerequisite being added, shown as a row of its own until the POST
+  // resolves. Otherwise nothing moves between picking one and it appearing.
+  addingName?: string
   addControl?: ReactNode
   onCancelAdd?: () => void
 }
@@ -73,6 +76,7 @@ const Satisfies: FC<{ isMet?: boolean }> = ({ isMet }) => {
 
 const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
   addControl,
+  addingName,
   canManage,
   highlightedId,
   isRemoving,
@@ -99,11 +103,8 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
       {rows.map(({ edge, isEnabled, isMet }) => (
         <Table.Row
           key={edge.prerequisite.id}
-          state={
-            (highlightedId === edge.prerequisite.id && 'added') ||
-            (isRemoving === edge.prerequisite.id && 'pending') ||
-            undefined
-          }
+          state={highlightedId === edge.prerequisite.id ? 'added' : undefined}
+          pending={isRemoving === edge.prerequisite.id}
         >
           <Table.Cell className='font-weight-medium text-truncate'>
             <Button
@@ -141,6 +142,16 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
           )}
         </Table.Row>
       ))}
+      {/* Dropped the moment the real row lands, or the flag is listed twice. */}
+      {!!addingName &&
+        !rows.some((row) => row.edge.prerequisite.name === addingName) && (
+          <Table.Row pending>
+            <Table.Cell className='font-weight-medium text-truncate'>
+              {addingName}
+            </Table.Cell>
+            <Table.Cell colSpan={columnCount(canManage) - 1} />
+          </Table.Row>
+        )}
       {!!addControl && (
         <Table.Row state='editor'>
           {/* One cell: the picker has no column to line up with. */}
