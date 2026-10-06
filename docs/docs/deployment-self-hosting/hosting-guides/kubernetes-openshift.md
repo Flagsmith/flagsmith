@@ -456,6 +456,17 @@ login then also needs these permissions:
 If your Kafka has `auto.create.topics.enable=true`, create these two topics with the same partition count before you
 turn on warehouse delivery. Otherwise, Kafka can create them first with its default partition count.
 
+Warehouse delivery also uses the API's database user by default. To give it its own user, create the user and pass its
+URL with `experimentation.warehouseDelivery.databaseUrlFromExistingSecret`:
+
+```sql
+CREATE ROLE warehouse_delivery WITH LOGIN PASSWORD '<password>';
+GRANT CONNECT ON DATABASE <database> TO warehouse_delivery;
+GRANT USAGE ON SCHEMA public TO warehouse_delivery;
+GRANT SELECT ON experimentation_delivery_connections TO warehouse_delivery;
+GRANT SELECT, INSERT, UPDATE ON experimentation_warehousedeliverystatus TO warehouse_delivery;
+```
+
 To turn experimentation on:
 
 1. Set up [Flagsmith on Flagsmith](/deployment-self-hosting/core-configuration/running-flagsmith-on-flagsmith).
