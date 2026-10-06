@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react'
 import Icon, { IconName } from 'components/icons/Icon'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
+import useContainClicks from 'common/useContainClicks'
 import { createPortal } from 'react-dom'
 import { calculateListPosition } from 'common/utils/calculateListPosition'
 
@@ -36,6 +37,10 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   const btnRef = useRef<HTMLButtonElement>(null)
   const dropDownRef = useRef<HTMLDivElement>(null)
   useOutsideClick(dropDownRef, () => setIsOpen(false))
+
+  // The menu is portalled to the body, so it belongs to its trigger rather
+  // than to wherever it is drawn.
+  useContainClicks(dropDownRef, isOpen)
 
   useLayoutEffect(() => {
     if (!isOpen || !dropDownRef.current || !btnRef.current) return
