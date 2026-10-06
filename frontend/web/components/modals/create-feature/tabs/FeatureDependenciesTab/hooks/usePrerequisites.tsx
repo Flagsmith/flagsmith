@@ -58,10 +58,9 @@ export const usePrerequisites = ({
     openConfirm({
       body: (
         <>
-          <strong>{projectFlag.name}</strong> will no longer be gated by{' '}
-          <strong>{edge.prerequisite.name}</strong> in{' '}
-          <strong>{environmentName}</strong>. It will serve its own value even
-          when {edge.prerequisite.name} is disabled.
+          In <strong>{environmentName}</strong>,{' '}
+          <strong>{projectFlag.name}</strong> will stop depending on{' '}
+          <strong>{edge.prerequisite.name}</strong>.
         </>
       ),
       destructive: true,
