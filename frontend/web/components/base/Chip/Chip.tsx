@@ -5,42 +5,59 @@ import { colorIconSecondary } from 'common/theme/tokens'
 import './Chip.scss'
 
 export type ChipSize = 'default' | 'sm' | 'xs'
-export type ChipVariant = 'neutral' | 'accent'
+export type ChipVariant =
+  | 'neutral'
+  | 'accent'
+  // The caller supplies the colour through className. Used by tags, whose
+  // colour is a user's decorative choice rather than a semantic role.
+  | 'none'
 
-export type ChipProps = {
+type ChipBase = {
   children: ReactNode
   variant?: ChipVariant
   size?: ChipSize
   truncate?: boolean
-  onRemove?: () => void
-  onClick?: () => void
+  /** Rings the chip when chosen. Lists mark rows instead: see TagRow. */
+  selected?: boolean
   className?: string
-  // Opt into membership of a keyboard group (e.g. a radiogroup): supply the
-  // role, roving tabIndex, checked state, key handler and ref. These override
-  // the button semantics onClick applies by default, so the group owner can
-  // drive arrow-key navigation. See SdkPicker.
-  role?: 'button' | 'radio'
   tabIndex?: number
   'aria-checked'?: boolean
   'aria-expanded'?: boolean
+  // For a chip whose content cannot name it, such as a bare colour swatch.
+  'aria-label'?: string
+  // Toggle state, for a chip that is on or off rather than navigating.
+  'aria-pressed'?: boolean
   onKeyDown?: (e: KeyboardEvent) => void
   ref?: Ref<HTMLSpanElement>
 }
+
+// A chip is either the control or it holds one, never both: a button inside a
+// button reaches a screen reader as neither.
+export type ChipProps = ChipBase &
+  (
+    | { onRemove: () => void; onClick?: never; role?: never }
+    | {
+        onRemove?: never
+        onClick?: () => void
+        // Membership of a caller-driven keyboard group, overriding the default
+        // button semantics. See SdkPicker.
+        role?: 'button' | 'radio'
+      }
+  )
 
 // bg + text come from token utilities; the variant border lives in Chip.scss.
 const VARIANT_UTILITIES: Record<ChipVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
   neutral: 'bg-surface-subtle text-default',
+  none: '',
 }
 
-// Token-based chip primitive. Uses `ds-chip` rather than the legacy `.chip`
-// (old SCSS vars + a manual `.dark {}` block, ~35 usages) so the two coexist
-// until those migrate under #6606. Clickable on its own (role=button), or a
-// member of a caller-driven keyboard group via the role/tabIndex/onKeyDown/ref
-// props. Count badges are out of scope.
+// `ds-chip` rather than the legacy `.chip`, which ~35 components still use.
 const Chip = ({
   'aria-checked': ariaChecked,
   'aria-expanded': ariaExpanded,
+  'aria-label': ariaLabel,
+  'aria-pressed': ariaPressed,
   children,
   className,
   onClick,
@@ -48,6 +65,7 @@ const Chip = ({
   onRemove,
   ref,
   role,
+  selected,
   size = 'default',
   tabIndex,
   truncate = false,
@@ -58,33 +76,43 @@ const Chip = ({
     <span
       ref={ref}
       className={classNames(
-        'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
+        // Radius is pinned by the design system's tags frame.
+        'ds-chip d-inline-flex align-items-center align-middle gap-2 rounded-md',
         VARIANT_UTILITIES[variant],
         {
           'ds-chip--accent': variant === 'accent',
           'ds-chip--clickable': interactive,
-          [`ds-chip--${size}`]: size !== 'default',
+          'ds-chip--ring': selected,
           'ds-chip--truncate': truncate,
+          [`ds-chip--${size}`]: size !== 'default',
         },
         className,
       )}
       onClick={onClick}
       role={role ?? (onClick ? 'button' : undefined)}
       tabIndex={interactive ? tabIndex ?? 0 : undefined}
-      aria-checked={ariaChecked}
+      // `selected` reports through whichever the role supports: a button is
+      // pressed, a radio is checked. A chip that is not a control reports
+      // nothing, and `selected` is only its ring.
+      aria-checked={ariaChecked ?? (role === 'radio' ? selected : undefined)}
       aria-expanded={ariaExpanded}
+      aria-label={ariaLabel}
+      aria-pressed={
+        ariaPressed ?? (interactive && role !== 'radio' ? selected : undefined)
+      }
       onKeyDown={
-        onKeyDown ??
-        (onClick
+        onKeyDown || onClick
           ? (e: KeyboardEvent) => {
-              // Activate like a button: Enter/Space fire onClick (preventDefault
-              // stops Space scrolling the page).
+              onKeyDown?.(e)
+              // Activate like a button, after the caller has had the key and
+              // unless it took it (preventDefault stops Space scrolling).
+              if (!onClick || e.defaultPrevented) return
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
                 onClick()
               }
             }
-          : undefined)
+          : undefined
       }
     >
       {truncate ? <span className='ds-chip__label'>{children}</span> : children}
