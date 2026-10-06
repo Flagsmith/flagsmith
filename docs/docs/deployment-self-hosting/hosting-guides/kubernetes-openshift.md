@@ -413,6 +413,8 @@ experimentation:
   auth: scram
   username: flagsmith
   password: <password>
+ warehouseDelivery:
+  enabled: true # optional: send events to your own ClickHouse
 
 ingress:
  ingestion:
@@ -435,12 +437,19 @@ The logins need these permissions:
 To keep schema changes away from the runtime logins, give the job its own admin logins with
 `jobs.experimentationInit.clickhouseUrl` and `jobs.experimentationInit.kafka`.
 
+To send events to an environment's own ClickHouse, set `experimentation.warehouseDelivery.enabled: true`. The Kafka
+login then also needs these permissions:
+
+- Read and write the topics `external_warehouse_events` and `external_warehouse_events_retry`.
+- Read the consumer groups `warehouse-delivery` and `warehouse-delivery-retry`.
+
 To turn experimentation on:
 
 1. Set up [Flagsmith on Flagsmith](/deployment-self-hosting/core-configuration/running-flagsmith-on-flagsmith).
 2. In that project, create the flags `experimental_flags` (value `{}`) and `experimentation_warehouse_connection`.
    Enable both.
-3. In each environment that runs experiments, go to **Environment Settings > Warehouse** and select **Flagsmith**.
+3. In each environment that runs experiments, go to **Environment Settings > Warehouse** and select **Flagsmith**. With
+   warehouse delivery, you can also select **ClickHouse**.
 
 ## Chart Values
 
