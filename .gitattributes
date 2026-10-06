@@ -1,0 +1,7 @@
+# Generated from frontend/common/theme/tokens.json by `npm run generate:tokens`,
+# which lint-staged reruns whenever that file changes. Collapsed in diffs and
+# excluded from language stats: read the source, not the output.
+frontend/common/theme/tokens.ts linguist-generated=true
+frontend/web/styles/_tokens.scss linguist-generated=true
+frontend/web/styles/_token-utilities.scss linguist-generated=true
+frontend/documentation/TokenReference.generated.stories.tsx linguist-generated=true
