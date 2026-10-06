@@ -1,5 +1,4 @@
 from datetime import timedelta
-from typing import Any
 
 import structlog
 from django.utils import timezone
@@ -8,7 +7,6 @@ from task_processor.exceptions import TaskBackoffError
 
 from experimentation.models import (
     Experiment,
-    ExperimentComputation,
     ExperimentExposures,
     ExperimentResults,
 )
@@ -45,8 +43,13 @@ def compute_experiment_exposures(experiment_id: int) -> None:
             window_end=as_of,
         )
     except UnsupportedWarehouseOperation:
-        _record_unsupported_warehouse(
-            exposures, experiment, "exposures.compute_unsupported"
+        exposures.record_failure()
+        logger.warning(
+            "exposures.compute_unsupported",
+            experiment__id=experiment.id,
+            environment__id=experiment.environment_id,
+            organisation__id=experiment.environment.project.organisation_id,
+            warehouse__type=_warehouse_type(experiment),
         )
         return
     except Exception as exc:
@@ -88,8 +91,13 @@ def compute_experiment_results(experiment_id: int) -> None:
             window_end=as_of,
         )
     except UnsupportedWarehouseOperation:
-        _record_unsupported_warehouse(
-            results, experiment, "results.compute_unsupported"
+        results.record_failure()
+        logger.warning(
+            "results.compute_unsupported",
+            experiment__id=experiment.id,
+            environment__id=experiment.environment_id,
+            organisation__id=experiment.environment.project.organisation_id,
+            warehouse__type=_warehouse_type(experiment),
         )
         return
     except Exception as exc:
@@ -108,18 +116,8 @@ def compute_experiment_results(experiment_id: int) -> None:
     results.record_refresh(summary, as_of)
 
 
-def _record_unsupported_warehouse(
-    computation: "ExperimentComputation[Any]",
-    experiment: Experiment,
-    event: str,
-) -> None:
-    computation.record_failure()
-    logger.warning(
-        event,
-        experiment__id=experiment.id,
-        environment__id=experiment.environment_id,
-        organisation__id=experiment.environment.project.organisation_id,
-        warehouse__type=experiment.environment.warehouse_connections.values_list(
-            "warehouse_type", flat=True
-        ).first(),
-    )
+def _warehouse_type(experiment: Experiment) -> str | None:
+    connection = experiment.environment.warehouse_connections.only(
+        "warehouse_type"
+    ).first()
+    return connection.warehouse_type if connection else None

@@ -298,6 +298,7 @@ def test_clickhouse_warehouse__get_exposure_buckets__reads_customer_store(
             "window_end": WINDOW_END,
         },
         "settings": clickhouse.RESULTS_QUERY_SETTINGS,
+        "tz_mode": "aware",
     }
     client.close.assert_called_once_with()
 
@@ -354,10 +355,12 @@ def test_clickhouse_warehouse__get_results_aggregates__reads_customer_store(
         ],
         conversion_buckets={7: [ConversionBucket("control", BUCKET, 12)]},
     )
-    # And all three reads share one client with the pinned settings
+    # And all three reads share one client with the pinned settings and
+    # timezone-aware datetimes
     get_client.assert_called_once()
     assert all(
         call.kwargs["settings"] == clickhouse.RESULTS_QUERY_SETTINGS
+        and call.kwargs["tz_mode"] == "aware"
         for call in client.query.call_args_list
     )
     client.close.assert_called_once_with()

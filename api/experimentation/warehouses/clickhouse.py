@@ -328,7 +328,13 @@ def _customer_query_runner(client: "Client") -> QueryRunner:
     def run_query(
         query: str, params: dict[str, object]
     ) -> "tuple[Sequence[Sequence[Any]], list[str]]":
-        result = client.query(query, parameters=params, settings=RESULTS_QUERY_SETTINGS)
+        # "aware" keeps UTC on bucket datetimes so charts serialise with an offset.
+        result = client.query(
+            query,
+            parameters=params,
+            settings=RESULTS_QUERY_SETTINGS,
+            tz_mode="aware",
+        )
         return result.result_rows, list(result.column_names)
 
     return run_query
