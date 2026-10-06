@@ -34,13 +34,13 @@ def mock_clickhouse_stats(
     settings: SettingsWrapper,
 ) -> object:
     """Default every view test to a configured, empty warehouse. Tests that need
-    events re-patch experimentation.services.get_warehouse_event_stats; tests for the
+    events re-patch experimentation.warehouses.flagsmith.get_warehouse_event_stats; tests for the
     unconfigured/erroring paths override the setting / raise."""
     settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://localhost:9000/test"
     mock_client = mocker.Mock()
     mock_client.execute.return_value = [(0, 0)]
     return mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -850,7 +850,7 @@ def test_get__warehouse_type__returns_expected_event_stats(
         config=config,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         return_value=WarehouseEventStats(
             total_events_received=12,
             unique_events_count=3,
@@ -883,7 +883,7 @@ def test_get__pending_connection_with_events__shows_stats_but_does_not_flip(
         status=WarehouseConnectionStatus.PENDING_CONNECTION,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         return_value=WarehouseEventStats(
             total_events_received=1,
             unique_events_count=1,
@@ -962,7 +962,7 @@ def test_test_warehouse_connection__pending_with_events__flips_to_connected(
         status=WarehouseConnectionStatus.PENDING_CONNECTION,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         return_value=WarehouseEventStats(
             total_events_received=1,
             unique_events_count=1,
@@ -1026,7 +1026,7 @@ def test_test_warehouse_connection__clickhouse_unreachable__stays_pending(
         status=WarehouseConnectionStatus.PENDING_CONNECTION,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         side_effect=OSError("clickhouse unreachable"),
     )
     url = reverse(
@@ -1149,7 +1149,9 @@ def test_get__clickhouse_unconfigured__returns_200_without_stats(
     # Given
     enable_features("experimentation_warehouse_connection")
     settings.EXPERIMENTATION_CLICKHOUSE_URL = None
-    stats_spy = mocker.patch("experimentation.services.get_warehouse_event_stats")
+    stats_spy = mocker.patch(
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats"
+    )
 
     # When
     response = admin_client.get(warehouse_connection_url)
@@ -1202,7 +1204,7 @@ def test_get__clickhouse_errors__returns_200_without_stats(
         status=WarehouseConnectionStatus.PENDING_CONNECTION,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         side_effect=OSError("clickhouse unreachable"),
     )
 

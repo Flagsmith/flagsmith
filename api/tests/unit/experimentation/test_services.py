@@ -59,7 +59,7 @@ from experimentation.services import (
     verify_warehouse_connection,
 )
 from experimentation.stats import VariantStats
-from experimentation.warehouses import clickhouse
+from experimentation.warehouses import clickhouse, flagsmith
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
@@ -83,10 +83,10 @@ def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
     settings.EXPERIMENTATION_CLICKHOUSE_URL = (
         "clickhouse://user:pass@ch.example.com:9440/flagsmith_exp?secure=True"
     )
-    mock_client_cls = mocker.patch("experimentation.services.Client")
+    mock_client_cls = mocker.patch("experimentation.warehouses.flagsmith.Client")
 
     # When
-    client = services._get_clickhouse_client()
+    client = flagsmith._get_clickhouse_client()
 
     # Then
     mock_client_cls.assert_called_once_with(
@@ -96,8 +96,8 @@ def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
         user="user",
         password="pass",
         secure=True,
-        connect_timeout=services.CLICKHOUSE_CONNECT_TIMEOUT_SECONDS,
-        send_receive_timeout=services.CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
+        connect_timeout=flagsmith.CLICKHOUSE_CONNECT_TIMEOUT_SECONDS,
+        send_receive_timeout=flagsmith.CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
         client_name=settings.CLICKHOUSE_CONNECTION_CLIENT_NAME,
     )
     assert client is mock_client_cls.return_value
@@ -111,10 +111,10 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
     settings.EXPERIMENTATION_CLICKHOUSE_URL = (
         "clickhouse://ch.example.com:9000/db?connect_timeout=1&send_receive_timeout=2"
     )
-    mock_client_cls = mocker.patch("experimentation.services.Client")
+    mock_client_cls = mocker.patch("experimentation.warehouses.flagsmith.Client")
 
     # When
-    services._get_clickhouse_client()
+    flagsmith._get_clickhouse_client()
 
     # Then
     mock_client_cls.assert_called_once_with(
@@ -134,13 +134,13 @@ def test_get_clickhouse_client__repeated_calls__builds_fresh_clients(
     # Given
     settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://ch.example.com/db"
     mock_client_cls = mocker.patch(
-        "experimentation.services.Client",
+        "experimentation.warehouses.flagsmith.Client",
         side_effect=lambda *args, **kwargs: mocker.Mock(),
     )
 
     # When
-    client = services._get_clickhouse_client()
-    other_client = services._get_clickhouse_client()
+    client = flagsmith._get_clickhouse_client()
+    other_client = flagsmith._get_clickhouse_client()
 
     # Then
     assert client is not other_client
@@ -177,7 +177,7 @@ def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -226,7 +226,7 @@ def test_get_warehouse_event_names__flagsmith_warehouse_unavailable__returns_non
     mock_client = mocker.Mock()
     mock_client.execute.side_effect = execute_side_effect
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -368,14 +368,14 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
     mock_get_client = mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
     window_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
 
     # When
-    result = services.get_exposure_buckets(
+    result = flagsmith.get_exposure_buckets(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=window_start,
@@ -419,7 +419,7 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
         "window_end": window_end,
     }
     mock_get_client.assert_called_once_with(
-        send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+        send_receive_timeout=flagsmith.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
     mock_client.disconnect.assert_called_once_with()
 
@@ -431,12 +431,12 @@ def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
     mock_client = mocker.Mock()
     mock_client.execute.return_value = []
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
     # When
-    result = services.get_exposure_buckets(
+    result = flagsmith.get_exposure_buckets(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -453,14 +453,14 @@ def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
 @pytest.mark.parametrize(
     "run_query",
     [
-        lambda: services.get_exposure_buckets(
+        lambda: flagsmith.get_exposure_buckets(
             environment_key="env-key-123",
             feature_name="my-feature",
             window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
             window_end=datetime(2026, 6, 2, tzinfo=timezone.utc),
             granularity="hour",
         ),
-        lambda: services.get_results_aggregates(
+        lambda: flagsmith.get_results_aggregates(
             environment_key="env-key-123",
             feature_name="my-feature",
             window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -479,7 +479,7 @@ def test_background_query__execute_fails__disconnects_client(
     mock_client = mocker.Mock()
     mock_client.execute.side_effect = OSError("Bad file descriptor")
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -500,7 +500,7 @@ def test_compute_exposures_payload__window_within_72_hours__hourly_buckets(
         (0, "control", datetime(2026, 6, 1, tzinfo=timezone.utc), 10)
     ]
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -531,7 +531,7 @@ def test_compute_exposures_payload__window_beyond_72_hours__daily_buckets(
     mock_client = mocker.Mock()
     mock_client.execute.return_value = []
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -681,12 +681,12 @@ def test_get_warehouse_event_stats__rows__returns_counts(
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
     # When
-    result = services.get_warehouse_event_stats("env-key-123")
+    result = flagsmith.get_warehouse_event_stats("env-key-123")
 
     # Then
     assert result.total_events_received == expected_total
@@ -899,7 +899,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
         [],
     ]
     mock_get_client = mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
     specs = [
@@ -912,7 +912,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
 
     # When
-    aggregates = services.get_results_aggregates(
+    aggregates = flagsmith.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=window_start,
@@ -970,7 +970,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     # And the conversions join is narrowed to the occurrence metric's event
     assert params["conversion_events"] == ["purchase"]
     mock_get_client.assert_called_with(
-        send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+        send_receive_timeout=flagsmith.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
     assert mock_client.disconnect.call_count == 2
 
@@ -991,7 +991,7 @@ def test_get_metric_variant_stats__three_variants__maps_all_variants(
         [],
     ]
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
     specs = [
@@ -1000,7 +1000,7 @@ def test_get_metric_variant_stats__three_variants__maps_all_variants(
     ]
 
     # When
-    aggregates = services.get_results_aggregates(
+    aggregates = flagsmith.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -1031,12 +1031,12 @@ def test_get_metric_variant_stats__no_metrics__counts_variants_only(
         [],
     ]
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
     # When
-    aggregates = services.get_results_aggregates(
+    aggregates = flagsmith.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -1078,7 +1078,7 @@ def test_get_metric_variant_stats__shuffled_columns__maps_by_name(
         [],
     ]
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
     specs = [
@@ -1087,7 +1087,7 @@ def test_get_metric_variant_stats__shuffled_columns__maps_by_name(
     ]
 
     # When
-    aggregates = services.get_results_aggregates(
+    aggregates = flagsmith.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -1241,7 +1241,7 @@ def test_get_results_aggregates__occurrence_metric__gathers_chart_rows(
         [(0, "control", bucket, 1000)],
     ]
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
     specs = [
@@ -1252,7 +1252,7 @@ def test_get_results_aggregates__occurrence_metric__gathers_chart_rows(
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
 
     # When
-    aggregates = services.get_results_aggregates(
+    aggregates = flagsmith.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=window_start,
@@ -1299,12 +1299,12 @@ def test_get_results_aggregates__value_metrics_only__skips_conversions_query(
         [],
     ]
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
     # When
-    aggregates = services.get_results_aggregates(
+    aggregates = flagsmith.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -1888,7 +1888,7 @@ def test_compute_results_summary__experiment__queries_warehouse_and_builds(
     window_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
     mock_gather = mocker.patch(
-        "experimentation.services.get_results_aggregates",
+        "experimentation.warehouses.flagsmith.get_results_aggregates",
         return_value=replace(
             aggregates,
             exposure_buckets=[

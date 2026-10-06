@@ -23,11 +23,13 @@ from experimentation.models import (
     ExperimentResults,
     ExperimentStatus,
 )
-from experimentation.services import CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS
 from experimentation.stats import VariantStats
 from experimentation.tasks import (
     compute_experiment_exposures,
     compute_experiment_results,
+)
+from experimentation.warehouses.flagsmith import (
+    CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
 )
 
 

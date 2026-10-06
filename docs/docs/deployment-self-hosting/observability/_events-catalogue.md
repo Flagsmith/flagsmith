@@ -218,7 +218,7 @@ Attributes:
 ### `experimentation.rollout.applied`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1186`
+ - `api/experimentation/services.py:992`
 
 Attributes:
  - `audience.match`
@@ -873,7 +873,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1358`
+ - `api/experimentation/services.py:1164`
 
 Attributes:
  - `environment.id`
@@ -882,8 +882,8 @@ Attributes:
 ### `warehouse.connection.event_names_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:219`
- - `api/experimentation/warehouses/clickhouse.py:296`
+ - `api/experimentation/warehouses/clickhouse.py:304`
+ - `api/experimentation/warehouses/flagsmith.py:240`
 
 Attributes:
  - `environment.id`
@@ -893,7 +893,7 @@ Attributes:
 ### `warehouse.connection.event_stats_failed`
 
 Logged at `warning` from:
- - `api/experimentation/warehouses/clickhouse.py:333`
+ - `api/experimentation/warehouses/clickhouse.py:341`
 
 Attributes:
  - `environment.id`
@@ -902,7 +902,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1301`
+ - `api/experimentation/services.py:1107`
 
 Attributes:
  - `environment.id`
@@ -911,7 +911,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1333`
+ - `api/experimentation/services.py:1139`
 
 Attributes:
  - `environment.id`
@@ -921,7 +921,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1343`
+ - `api/experimentation/services.py:1149`
 
 Attributes:
  - `environment.id`
@@ -930,7 +930,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:571`
+ - `api/experimentation/services.py:377`
 
 Attributes:
  - `environment.id`
@@ -940,7 +940,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:557`
+ - `api/experimentation/services.py:363`
 
 Attributes:
  - `environment.id`
