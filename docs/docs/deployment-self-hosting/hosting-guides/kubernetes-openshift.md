@@ -437,6 +437,16 @@ The logins need these permissions:
 To keep schema changes away from the runtime logins, give the job its own admin logins with
 `jobs.experimentationInit.clickhouseUrl` and `jobs.experimentationInit.kafka`.
 
+The ingestion service uses the API's database user by default. To give it a user that can only read environment keys,
+create the user and pass its URL with `experimentation.ingestion.databaseUrlFromExistingSecret`:
+
+```sql
+CREATE ROLE ingestion_server WITH LOGIN PASSWORD '<password>';
+GRANT CONNECT ON DATABASE <database> TO ingestion_server;
+GRANT USAGE ON SCHEMA public TO ingestion_server;
+GRANT SELECT ON experimentation_environment_keys TO ingestion_server;
+```
+
 To send events to an environment's own ClickHouse, set `experimentation.warehouseDelivery.enabled: true`. The Kafka
 login then also needs these permissions:
 
