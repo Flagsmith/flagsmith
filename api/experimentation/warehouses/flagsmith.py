@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing
+from contextlib import contextmanager
 from typing import Any
 
 import structlog
@@ -11,32 +12,31 @@ from django.core.cache import cache
 from rest_framework import serializers
 
 from experimentation.dataclasses import (
-    ConversionBucket,
-    ExposureBucket,
-    ResultsAggregates,
     WarehouseEventNames,
     WarehouseEventStats,
-)
-from experimentation.results_query import (
-    _EXPOSURES_CTE,
-    ResultsQueryBuilder,
-    exposure_window_params,
 )
 from experimentation.warehouses.clickhouse import (
     EVENT_NAMES_QUERY,
     EVENT_STATS_QUERY,
+    QueryRunner,
     build_event_names,
     build_event_stats,
     event_names_query_params,
+    read_exposure_buckets,
+    read_results_aggregates,
 )
 from experimentation.warehouses.constants import EVENT_NAMES_CACHE_SECONDS
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterator, Sequence
     from datetime import datetime
 
-    from experimentation.dataclasses import MetricSpec
+    from experimentation.dataclasses import (
+        ExposureBucket,
+        MetricSpec,
+        ResultsAggregates,
+    )
     from experimentation.models import WarehouseConnection
     from experimentation.types import ExposureGranularity
 
@@ -76,24 +76,22 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
     return build_event_stats(rows)
 
 
-EXPOSURE_BUCKETS_QUERY = (
-    _EXPOSURES_CTE
-    + """
-SELECT
-    quarantined,
-    variant,
-    {bucket_function}(first_exposure, 'UTC') AS bucket,
-    count() AS first_exposed_identities
-FROM exposures
-GROUP BY quarantined, variant, bucket
-ORDER BY bucket
-"""
-)
+@contextmanager
+def _background_query_runner() -> Iterator[QueryRunner]:
+    client = _get_clickhouse_client(
+        send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    )
 
-_EXPOSURE_BUCKET_FUNCTIONS: dict[str, str] = {
-    "hour": "toStartOfHour",
-    "day": "toStartOfDay",
-}
+    def run_query(
+        query: str, params: dict[str, object]
+    ) -> tuple[Sequence[Sequence[Any]], list[str]]:
+        rows, columns = client.execute(query, params, with_column_types=True)
+        return rows, [name for name, _type in columns]
+
+    try:
+        yield run_query
+    finally:
+        client.disconnect()
 
 
 def get_exposure_buckets(
@@ -104,32 +102,15 @@ def get_exposure_buckets(
     window_end: datetime,
     granularity: ExposureGranularity,
 ) -> list[ExposureBucket]:
-    client = _get_clickhouse_client(
-        send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
-    )
-    try:
-        rows = client.execute(
-            EXPOSURE_BUCKETS_QUERY.format(
-                bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
-            ),
-            exposure_window_params(
-                environment_key=environment_key,
-                feature_name=feature_name,
-                window_start=window_start,
-                window_end=window_end,
-            ),
+    with _background_query_runner() as run_query:
+        return read_exposure_buckets(
+            run_query,
+            environment_key=environment_key,
+            feature_name=feature_name,
+            window_start=window_start,
+            window_end=window_end,
+            granularity=granularity,
         )
-    finally:
-        client.disconnect()
-    return [
-        ExposureBucket(
-            variant=variant,
-            bucket=bucket,
-            first_exposed_identities=int(first_exposed_identities),
-            quarantined=bool(quarantined),
-        )
-        for quarantined, variant, bucket, first_exposed_identities in rows
-    ]
 
 
 def get_results_aggregates(
@@ -141,58 +122,16 @@ def get_results_aggregates(
     specs: Sequence[MetricSpec],
     granularity: ExposureGranularity,
 ) -> ResultsAggregates:
-    """Run the warehouse reads behind one results refresh: per-variant identity
-    counts and sufficient statistics, exposure buckets, and per charted metric
-    the buckets of first post-exposure conversions.
-
-    Three separate reads, so events landing mid-run can leave the chart's last
-    point a few identities off the table until the next refresh."""
-    builder = ResultsQueryBuilder(specs)
-    params = builder.params(
-        environment_key=environment_key,
-        feature_name=feature_name,
-        window_start=window_start,
-        window_end=window_end,
-    )
-    client = _get_clickhouse_client(
-        send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
-    )
-    try:
-        rows, columns = client.execute(
-            builder.build_query(), params, with_column_types=True
-        )
-        exposure_counts, metric_stats = builder.decode_rows(
-            rows, [name for name, _type in columns]
-        )
-
-        conversion_buckets: dict[int, list[ConversionBucket]] = {}
-        conversions_query = builder.build_conversions_query(
-            bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
-        )
-        if conversions_query is not None:
-            rows, columns = client.execute(
-                conversions_query, params, with_column_types=True
-            )
-            conversion_buckets = builder.decode_conversion_rows(
-                rows, [name for name, _type in columns]
-            )
-    finally:
-        client.disconnect()
-
-    return ResultsAggregates(
-        specs=list(specs),
-        exposure_counts=exposure_counts,
-        metric_stats=metric_stats,
-        granularity=granularity,
-        exposure_buckets=get_exposure_buckets(
+    with _background_query_runner() as run_query:
+        return read_results_aggregates(
+            run_query,
             environment_key=environment_key,
             feature_name=feature_name,
             window_start=window_start,
             window_end=window_end,
+            specs=specs,
             granularity=granularity,
-        ),
-        conversion_buckets=conversion_buckets,
-    )
+        )
 
 
 class FlagsmithWarehouse:

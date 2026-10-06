@@ -22,12 +22,14 @@ from experimentation.models import (
     ExperimentExposures,
     ExperimentResults,
     ExperimentStatus,
+    WarehouseConnection,
 )
 from experimentation.stats import VariantStats
 from experimentation.tasks import (
     compute_experiment_exposures,
     compute_experiment_results,
 )
+from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.flagsmith import (
     CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
 )
@@ -67,8 +69,7 @@ def test_compute_experiment_exposures__running_experiment__stores_summary(
 
     # Then the full window up to now is computed and stored on the row
     mock_compute.assert_called_once_with(
-        environment_key=experiment.environment.api_key,
-        feature_name=experiment.feature.name,
+        experiment,
         window_start=experiment.started_at,
         window_end=timezone.now(),
     )
@@ -97,8 +98,7 @@ def test_compute_experiment_exposures__completed_experiment__window_ends_at_ende
 
     # Then the window is frozen at the experiment's end
     mock_compute.assert_called_once_with(
-        environment_key=experiment.environment.api_key,
-        feature_name=experiment.feature.name,
+        experiment,
         window_start=experiment.started_at,
         window_end=experiment.ended_at,
     )
@@ -377,6 +377,59 @@ def test_compute_experiment_results__transient_warehouse_error__records_failure_
     results = ExperimentResults.objects.get(experiment=experiment)
     assert results.last_error_at is not None
     assert log.has("results.compute_failed", level="error")
+
+
+@pytest.mark.parametrize(
+    "task_handler, compute_path, computation_model, event",
+    [
+        (
+            compute_experiment_exposures,
+            "experimentation.tasks.compute_exposures_summary",
+            ExperimentExposures,
+            "exposures.compute_unsupported",
+        ),
+        (
+            compute_experiment_results,
+            "experimentation.tasks.compute_results_summary",
+            ExperimentResults,
+            "results.compute_unsupported",
+        ),
+    ],
+    ids=["exposures", "results"],
+)
+def test_compute_experiment_task_handlers__unsupported_warehouse__records_failure_without_backoff(
+    experiment: Experiment,
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+    log: StructuredLogCapture,
+    task_handler: Any,
+    compute_path: str,
+    computation_model: type[ExperimentExposures] | type[ExperimentResults],
+    event: str,
+) -> None:
+    # Given a running experiment whose warehouse cannot compute the panel
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mocker.patch(compute_path, side_effect=UnsupportedWarehouseOperation())
+
+    # When
+    task_handler(experiment_id=experiment.id)
+
+    # Then the failure is recorded without a retry
+    computation = computation_model.objects.get(experiment=experiment)
+    assert computation.last_error_at is not None
+    # And a warning names the warehouse type rather than an error traceback
+    assert log.events == [
+        {
+            "event": event,
+            "level": "warning",
+            "experiment__id": experiment.id,
+            "environment__id": experiment.environment_id,
+            "organisation__id": experiment.environment.project.organisation_id,
+            "warehouse__type": "clickhouse",
+        }
+    ]
 
 
 @pytest.mark.parametrize(

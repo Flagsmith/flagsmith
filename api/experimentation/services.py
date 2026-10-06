@@ -101,6 +101,14 @@ logger = structlog.get_logger("warehouse")
 experimentation_logger = structlog.get_logger("experimentation")
 
 
+class _ExposureReadKwargs(typing.TypedDict):
+    environment_key: str
+    feature_name: str
+    window_start: datetime
+    window_end: datetime
+    granularity: ExposureGranularity
+
+
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
     return get_openfeature_client().get_boolean_value(
         WAREHOUSE_CONNECTION_FLAG,
@@ -168,20 +176,28 @@ def get_warehouse_event_names(
 
 
 def compute_exposures_summary(
+    experiment: Experiment,
     *,
-    environment_key: str,
-    feature_name: str,
     window_start: datetime,
     window_end: datetime,
 ) -> ExposuresSummary:
+    """Read an experiment's exposures from its environment's warehouse, or the
+    managed one when the environment has no connection."""
     granularity = _select_exposure_granularity(window_start, window_end)
-    buckets = flagsmith.get_exposure_buckets(
-        environment_key=environment_key,
-        feature_name=feature_name,
-        window_start=window_start,
-        window_end=window_end,
-        granularity=granularity,
-    )
+    read_kwargs: _ExposureReadKwargs = {
+        "environment_key": experiment.environment.api_key,
+        "feature_name": experiment.feature.name,
+        "window_start": window_start,
+        "window_end": window_end,
+        "granularity": granularity,
+    }
+    connection = experiment.environment.warehouse_connections.first()
+    if connection is None:
+        buckets = flagsmith.get_exposure_buckets(**read_kwargs)
+    else:
+        buckets = get_warehouse(connection.warehouse_type).get_exposure_buckets(
+            connection, **read_kwargs
+        )
     return build_exposures_summary(buckets, granularity=granularity)
 
 
@@ -299,16 +315,24 @@ def compute_results_summary(
     window_start: "datetime",
     window_end: "datetime",
 ) -> ResultsSummary:
-    """Gather an experiment's metric statistics and chart rows from the
-    warehouse and reduce them to the stored results payload."""
-    aggregates = flagsmith.get_results_aggregates(
-        environment_key=experiment.environment.api_key,
-        feature_name=experiment.feature.name,
-        window_start=window_start,
-        window_end=window_end,
-        specs=_experiment_metric_specs(experiment),
-        granularity=_select_exposure_granularity(window_start, window_end),
-    )
+    """Gather an experiment's metric statistics and chart rows from its
+    environment's warehouse, or the managed one when the environment has no
+    connection, and reduce them to the stored results payload."""
+    read_kwargs: _ExposureReadKwargs = {
+        "environment_key": experiment.environment.api_key,
+        "feature_name": experiment.feature.name,
+        "window_start": window_start,
+        "window_end": window_end,
+        "granularity": _select_exposure_granularity(window_start, window_end),
+    }
+    specs = _experiment_metric_specs(experiment)
+    connection = experiment.environment.warehouse_connections.first()
+    if connection is None:
+        aggregates = flagsmith.get_results_aggregates(specs=specs, **read_kwargs)
+    else:
+        aggregates = get_warehouse(connection.warehouse_type).get_results_aggregates(
+            connection, specs=specs, **read_kwargs
+        )
     return build_results_summary(
         aggregates,
         expected_shares=_expected_variant_shares(experiment),
