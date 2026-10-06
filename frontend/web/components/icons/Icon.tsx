@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import { colorIconSecondary, colorIconWarning } from 'common/theme/tokens'
 
 export type IconName =
   | 'arrow-left'
@@ -50,7 +51,9 @@ export type IconName =
   | 'pr-closed'
   | 'pr-draft'
   | 'pr-linked'
+  | 'pr-dequeued'
   | 'pr-merged'
+  | 'stale'
   | 'radio'
   | 'refresh'
   | 'request'
@@ -61,6 +64,7 @@ export type IconName =
   | 'shield'
   | 'link'
   | 'lock'
+  | 'lock-outline'
   | 'sun'
   | 'timer'
   | 'toggle-off'
@@ -172,6 +176,38 @@ const Icon: FC<IconType> = ({
           <path
             d='M368 192h-16v-80a96 96 0 10-192 0v80h-16a64.07 64.07 0 00-64 64v176a64.07 64.07 0 0064 64h224a64.07 64.07 0 0064-64V256a64.07 64.07 0 00-64-64zm-48 0H192v-80a64 64 0 11128 0z'
             fill={fill || 'currentColor'}
+          />
+        </svg>
+      )
+    }
+    case 'lock-outline': {
+      return (
+        <svg
+          xmlns='http://www.w3.org/2000/svg'
+          width={width || '24'}
+          height={height || width || '24'}
+          viewBox='0 0 512 512'
+          fill='none'
+          {...rest}
+        >
+          <rect
+            x='80'
+            y='192'
+            width='352'
+            height='272'
+            rx='48'
+            ry='48'
+            stroke={fill || 'currentColor'}
+            strokeWidth='32'
+            strokeLinecap='round'
+            strokeLinejoin='round'
+          />
+          <path
+            d='M144 192v-40a112 112 0 01224 0v40'
+            stroke={fill || 'currentColor'}
+            strokeWidth='32'
+            strokeLinecap='round'
+            strokeLinejoin='round'
           />
         </svg>
       )
@@ -1303,13 +1339,53 @@ const Icon: FC<IconType> = ({
         </svg>
       )
     }
+    case 'pr-dequeued': {
+      return (
+        <svg
+          width={width || '16'}
+          height={height || width || '16'}
+          viewBox='0 0 16 16'
+          fill='none'
+          stroke='#8957e5'
+          strokeWidth='1.5'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <path d='M10.7 3.5a5.3 5.3 0 1 1-5.4 0' />
+          <path d='M8.4 6.2 6.5 8l1.9 1.8' />
+          <circle cx='12.6' cy='3.7' r='1.2' fill='#8957e5' stroke='none' />
+        </svg>
+      )
+    }
+    case 'stale': {
+      return (
+        <svg
+          width={width || '16'}
+          height={height || width || '16'}
+          viewBox='0 0 16 16'
+          fill='none'
+          stroke={fill || colorIconWarning}
+          strokeWidth='1.5'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <path d='M10.6 3.6a5.3 5.3 0 1 0 1.9 2.8' />
+          <path d='M7.7 5v3.2l2.1 1.5' />
+          <path d='M11.2 2.8h2l-2 2.3h2' />
+        </svg>
+      )
+    }
     case 'pr-draft': {
       return (
         <svg
           height={height || '16'}
           version='1.1'
           width={width || '16'}
-          fill={fill || 'currentColor'}
+          // A neutral, unlike its hardcoded brand-coloured siblings, so it
+          // has to lift in dark mode.
+          fill={fill || colorIconSecondary}
           className='ml-1'
           xmlns='http://www.w3.org/2000/svg'
         >
