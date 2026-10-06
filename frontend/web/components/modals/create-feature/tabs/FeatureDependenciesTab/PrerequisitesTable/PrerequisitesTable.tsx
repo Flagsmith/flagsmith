@@ -106,9 +106,10 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
       {rows.map(({ edge, isEnabled, isMet }) => (
         <TableRow
           key={edge.prerequisite.id}
-          className={cn({
+          className={cn('cursor-pointer', {
             'prerequisite-row--flash': flashedId === edge.prerequisite.id,
           })}
+          onClick={() => onSelect(edge)}
           pending={isRemoving === edge.prerequisite.id}
         >
           <TableCell className='font-weight-medium text-truncate'>
@@ -137,7 +138,10 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
                   size='small'
                   variant='ghost'
                   disabled={isRemoving === edge.prerequisite.id}
-                  onClick={() => onRemove(edge)}
+                  onClick={(e: MouseEvent) => {
+                    e.stopPropagation()
+                    onRemove(edge)
+                  }}
                   aria-label={`Remove ${edge.prerequisite.name} as a prerequisite`}
                 >
                   <Icon name='trash-2' width={16} />
