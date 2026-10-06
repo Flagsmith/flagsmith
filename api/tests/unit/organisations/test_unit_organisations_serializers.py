@@ -48,15 +48,17 @@ def test_organisation_serializer_full__update_targeting_key__ignored(
     assert organisation.targeting_key == "a" * 32
 
 
+@pytest.mark.parametrize("api_usage_alerting_enabled", [True, False])
 @pytest.mark.parametrize("has_breached_grace_period", [True, False])
 def test_organisation_serializer_full__api_limit_state__returns_expected(
     organisation: Organisation,
     enable_features: EnableFeaturesFixture,
     settings: SettingsWrapper,
+    api_usage_alerting_enabled: bool,
     has_breached_grace_period: bool,
 ) -> None:
     # Given
-    settings.ENABLE_API_USAGE_ALERTING = True
+    settings.ENABLE_API_USAGE_ALERTING = api_usage_alerting_enabled
     enable_features("api_limiting_stop_serving_flags")
     organisation.stop_serving_flags = True
     organisation.save()
@@ -69,8 +71,10 @@ def test_organisation_serializer_full__api_limit_state__returns_expected(
 
     # Then
     assert data["stop_serving_flags"] is True
-    assert data["api_limit_restriction_enabled"] is True
-    assert data["api_limit_grace_period_used"] is has_breached_grace_period
+    assert data["api_limit_restriction_enabled"] is api_usage_alerting_enabled
+    assert data["api_limit_grace_period_used"] is (
+        api_usage_alerting_enabled and has_breached_grace_period
+    )
     assert data["overage_billing_eligible"] is False
 
 

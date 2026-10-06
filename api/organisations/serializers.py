@@ -12,7 +12,7 @@ from organisations.chargebee import (  # type: ignore[attr-defined]
 )
 from organisations.invites.models import Invite
 from organisations.services import (
-    get_api_limit_restrictions,
+    get_api_limit_enforcement,
     is_overage_billing_eligible,
 )
 from users.models import FFAdminUser, UserPermissionGroup
@@ -119,10 +119,12 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
 
     @extend_schema_field({"type": "boolean"})
     def get_api_limit_restriction_enabled(self, instance: Organisation) -> bool:
-        return get_api_limit_restrictions(instance).enabled
+        return get_api_limit_enforcement(instance).enabled
 
     @extend_schema_field({"type": "boolean"})
     def get_api_limit_grace_period_used(self, instance: Organisation) -> bool:
+        if not settings.ENABLE_API_USAGE_ALERTING:
+            return False
         return hasattr(instance, "breached_grace_period")
 
     @extend_schema_field({"type": "boolean"})

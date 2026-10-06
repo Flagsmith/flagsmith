@@ -4,13 +4,13 @@ import pytest
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 
-from organisations.dataclasses import APILimitRestrictions
+from organisations.dataclasses import APILimitEnforcement
 from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
 )
 from organisations.services import (
-    get_api_limit_restrictions,
+    get_api_limit_enforcement,
     is_overage_billing_eligible,
 )
 from organisations.subscriptions.constants import FREE_PLAN_ID
@@ -20,61 +20,61 @@ BOTH_RESTRICTION_FLAGS = (
     "api_limiting_stop_serving_flags",
     "api_limiting_block_access_to_admin",
 )
-NO_RESTRICTIONS = APILimitRestrictions(
-    stop_serving_flags=False,
-    block_access_to_admin=False,
+NO_ENFORCEMENT = APILimitEnforcement(
+    stops_serving_flags=False,
+    blocks_access_to_admin=False,
 )
 
 
 @pytest.mark.parametrize(
-    "plan, alerting_enabled, enabled_features, expected_restrictions",
+    "plan, alerting_enabled, enabled_features, expected_enforcement",
     [
-        pytest.param(FREE_PLAN_ID, True, (), NO_RESTRICTIONS, id="free-no-flags"),
+        pytest.param(FREE_PLAN_ID, True, (), NO_ENFORCEMENT, id="free-no-flags"),
         pytest.param(
             FREE_PLAN_ID,
             True,
             ("api_limiting_stop_serving_flags",),
-            APILimitRestrictions(stop_serving_flags=True, block_access_to_admin=False),
+            APILimitEnforcement(stops_serving_flags=True, blocks_access_to_admin=False),
             id="free-stop-serving-flags",
         ),
         pytest.param(
             FREE_PLAN_ID,
             True,
             ("api_limiting_block_access_to_admin",),
-            APILimitRestrictions(stop_serving_flags=False, block_access_to_admin=True),
+            APILimitEnforcement(stops_serving_flags=False, blocks_access_to_admin=True),
             id="free-block-access-to-admin",
         ),
         pytest.param(
             FREE_PLAN_ID,
             True,
             BOTH_RESTRICTION_FLAGS,
-            APILimitRestrictions(stop_serving_flags=True, block_access_to_admin=True),
+            APILimitEnforcement(stops_serving_flags=True, blocks_access_to_admin=True),
             id="free-both-flags",
         ),
         pytest.param(
             "scale-up-v2",
             True,
             BOTH_RESTRICTION_FLAGS,
-            NO_RESTRICTIONS,
+            NO_ENFORCEMENT,
             id="paid-both-flags",
         ),
         pytest.param(
             FREE_PLAN_ID,
             False,
             BOTH_RESTRICTION_FLAGS,
-            NO_RESTRICTIONS,
+            NO_ENFORCEMENT,
             id="free-alerting-disabled",
         ),
     ],
 )
-def test_get_api_limit_restrictions__plan_and_flags__returns_expected(
+def test_get_api_limit_enforcement__plan_and_flags__returns_expected(
     organisation: Organisation,
     enable_features: EnableFeaturesFixture,
     settings: SettingsWrapper,
     plan: str,
     alerting_enabled: bool,
     enabled_features: tuple[str, ...],
-    expected_restrictions: APILimitRestrictions,
+    expected_enforcement: APILimitEnforcement,
 ) -> None:
     # Given
     settings.ENABLE_API_USAGE_ALERTING = alerting_enabled
@@ -83,13 +83,13 @@ def test_get_api_limit_restrictions__plan_and_flags__returns_expected(
     enable_features(*enabled_features)
 
     # When
-    restrictions = get_api_limit_restrictions(organisation)
+    enforcement = get_api_limit_enforcement(organisation)
 
     # Then
-    assert restrictions == expected_restrictions
+    assert enforcement == expected_enforcement
 
 
-def test_get_api_limit_restrictions__no_subscription__returns_no_restrictions(
+def test_get_api_limit_enforcement__no_subscription__returns_no_enforcement(
     organisation: Organisation,
     enable_features: EnableFeaturesFixture,
     settings: SettingsWrapper,
@@ -101,10 +101,10 @@ def test_get_api_limit_restrictions__no_subscription__returns_no_restrictions(
     organisation.refresh_from_db()
 
     # When
-    restrictions = get_api_limit_restrictions(organisation)
+    enforcement = get_api_limit_enforcement(organisation)
 
     # Then
-    assert restrictions == NO_RESTRICTIONS
+    assert enforcement == NO_ENFORCEMENT
 
 
 @pytest.mark.parametrize(
