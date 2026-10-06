@@ -125,12 +125,6 @@ def checkout_prerequisites_segment(
     return segment
 
 
-def _set_segment_rules(segment: Segment, rules: list[SegmentRuleType]) -> None:
-    segment.rules_data = rules
-    segment.save(update_fields=["rules_data"])
-    write_segment_rules(segment, rules)
-
-
 @pytest.fixture()
 def payments_prerequisite_rule(
     payments_feature: Feature,
@@ -147,7 +141,9 @@ def payments_prerequisite_rule(
             }
         ],
     }
-    _set_segment_rules(checkout_prerequisites_segment, [rule])
+    checkout_prerequisites_segment.rules_data = [rule]
+    checkout_prerequisites_segment.save(update_fields=["rules_data"])
+    write_segment_rules(checkout_prerequisites_segment, [rule])
     return rule
 
 
@@ -854,23 +850,23 @@ def test_get_flags__prerequisite_disabled__returns_dependent_disabled(
     checkout_prerequisites_segment: Segment,
 ) -> None:
     # Given
-    _set_segment_rules(
-        checkout_prerequisites_segment,
-        [
-            {
-                "type": "ALL",
-                "conditions": [
-                    {
-                        "property": property_,
-                        "operator": operator,
-                        "value": value,
-                        "description": None,
-                    }
-                    for property_, operator, value in conditions
-                ],
-            }
-        ],
-    )
+    rules: list[SegmentRuleType] = [
+        {
+            "type": "ALL",
+            "conditions": [
+                {
+                    "property": property_,
+                    "operator": operator,
+                    "value": value,
+                    "description": None,
+                }
+                for property_, operator, value in conditions
+            ],
+        }
+    ]
+    checkout_prerequisites_segment.rules_data = rules
+    checkout_prerequisites_segment.save(update_fields=["rules_data"])
+    write_segment_rules(checkout_prerequisites_segment, rules)
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=client_api_key)
 
     # When
@@ -893,27 +889,27 @@ def test_get_flags__dependency_for_some_identities__returns_dependent_default(
     payments_prerequisite_rule: SegmentRuleType,
 ) -> None:
     # Given
-    _set_segment_rules(
-        checkout_prerequisites_segment,
-        [
-            {
-                **payments_prerequisite_rule,
-                "rules": [
-                    {
-                        "type": "ALL",
-                        "conditions": [
-                            {
-                                "property": identity_property,
-                                "operator": IS_NOT_SET,
-                                "value": None,
-                                "description": None,
-                            }
-                        ],
-                    }
-                ],
-            }
-        ],
-    )
+    rules: list[SegmentRuleType] = [
+        {
+            **payments_prerequisite_rule,
+            "rules": [
+                {
+                    "type": "ALL",
+                    "conditions": [
+                        {
+                            "property": identity_property,
+                            "operator": IS_NOT_SET,
+                            "value": None,
+                            "description": None,
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
+    checkout_prerequisites_segment.rules_data = rules
+    checkout_prerequisites_segment.save(update_fields=["rules_data"])
+    write_segment_rules(checkout_prerequisites_segment, rules)
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=client_api_key)
 
     # When
