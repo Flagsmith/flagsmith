@@ -105,10 +105,14 @@ def get_environment_feature_states(
         get_evaluation_result(context)
     )
     if feature_name is not None:
+        # Feature names are unique per project regardless of case, and SDKs
+        # have historically relied on case-insensitive lookups.
+        requested_name = feature_name.casefold()
         evaluated_feature_states = [
             evaluated_feature_state
             for evaluated_feature_state in evaluated_feature_states
-            if evaluated_feature_state.evaluation_result["name"] == feature_name
+            if evaluated_feature_state.evaluation_result["name"].casefold()
+            == requested_name
         ]
     return _hide_flags(
         environment,

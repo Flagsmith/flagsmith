@@ -188,7 +188,7 @@ def test_create_feature__with_owners__assigns_specified_owners(
     assert response_owners[0]["email"] == admin_user.email
 
 
-@mock.patch("features.views.trigger_feature_state_change_webhooks")
+@mock.patch("features.services.trigger_feature_state_change_webhooks")
 def test_delete_feature__with_feature_states__triggers_webhooks(
     mocked_trigger_fs_change_webhook: mock.MagicMock,
     project: Project,
@@ -1253,6 +1253,51 @@ def test_sdk_feature_states_get__missing_feature_filter__returns_404(
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.parametrize("transform", [str.upper, str.lower])
+def test_sdk_feature_states_get__feature_filter_with_different_case__returns_feature(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    transform: typing.Callable[[str], str],
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    requested_name = transform(feature.name)
+    assert requested_name != feature.name
+
+    # When
+    response = api_client.get(f"/api/v1/flags/?feature={requested_name}")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["id"] == feature_state.id
+    assert response.json()["feature"]["name"] == feature.name
+
+
+@pytest.mark.parametrize("transform", [str.upper, str.lower])
+def test_sdk_feature_states_get__identifier_and_feature_filter_with_different_case__returns_feature(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    transform: typing.Callable[[str], str],
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    requested_name = transform(feature.name)
+    assert requested_name != feature.name
+
+    # When
+    response = api_client.get(
+        f"/api/v1/flags/{identity.identifier}?feature={requested_name}"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["feature"]["name"] == feature.name
 
 
 def test_get_flags__multivariate_feature__expected_num_queries(

@@ -7,7 +7,6 @@ from django.db import connection as django_db_connection
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
-from environments.models import Environment
 from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
@@ -20,85 +19,52 @@ from experimentation.models import (
     ExperimentExposures,
     ExperimentResults,
     WarehouseConnection,
-    WarehouseType,
+    WarehouseConnectionStatus,
+    WarehouseDeliveryStatus,
 )
 from experimentation.stats import VariantStats
 
 
-def test_warehouse_connection__after_create__enqueues_ingestion_sync_task(
-    environment: Environment,
-    mocker: MockerFixture,
+def test_warehouse_connection__credentials_changed__removes_delivery_status(
+    clickhouse_connection: WarehouseConnection,
 ) -> None:
-    # Given
-    mock_task = mocker.patch(
-        "experimentation.tasks.sync_environment_ingestion",
+    # Given a connection whose last delivery failed
+    WarehouseDeliveryStatus.objects.create(
+        connection=clickhouse_connection,
+        status=WarehouseConnectionStatus.ERRORED,
+        detail="Authentication failed",
+        updated_at=timezone.now(),
     )
 
     # When
-    WarehouseConnection.objects.create(
-        environment=environment,
-        warehouse_type=WarehouseType.FLAGSMITH,
-        name="warehouse",
-    )
+    clickhouse_connection.credentials = {"password": "rotated"}
+    clickhouse_connection.save()
 
     # Then
-    mock_task.delay.assert_called_once_with(
-        kwargs={"environment_id": environment.id},
-    )
+    assert not WarehouseDeliveryStatus.objects.filter(
+        connection=clickhouse_connection
+    ).exists()
 
 
-def test_warehouse_connection__after_delete__enqueues_ingestion_sync_task(
-    warehouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
+def test_warehouse_connection__renamed__keeps_delivery_status(
+    clickhouse_connection: WarehouseConnection,
 ) -> None:
-    # Given
-    mock_task = mocker.patch(
-        "experimentation.tasks.sync_environment_ingestion",
+    # Given a connection whose last delivery failed
+    WarehouseDeliveryStatus.objects.create(
+        connection=clickhouse_connection,
+        status=WarehouseConnectionStatus.ERRORED,
+        detail="Authentication failed",
+        updated_at=timezone.now(),
     )
-    environment_id = warehouse_connection.environment_id
 
     # When
-    warehouse_connection.delete()
+    clickhouse_connection.name = "Renamed ClickHouse"
+    clickhouse_connection.save()
 
     # Then
-    mock_task.delay.assert_called_once_with(
-        kwargs={"environment_id": environment_id},
-    )
-
-
-@pytest.mark.parametrize(
-    "field, value, expected_enqueued",
-    [
-        pytest.param("warehouse_type", WarehouseType.CLICKHOUSE, True, id="type"),
-        pytest.param("config", {"host": "ch.acme-corp.example"}, True, id="config"),
-        pytest.param("credentials", {"password": "rotated"}, True, id="credentials"),
-        pytest.param("name", "renamed", False, id="name"),
-    ],
-)
-def test_warehouse_connection__after_update__enqueues_ingestion_sync_task_on_detail_change(
-    warehouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
-    field: str,
-    value: object,
-    expected_enqueued: bool,
-) -> None:
-    # Given
-    mock_task = mocker.patch(
-        "experimentation.tasks.sync_environment_ingestion",
-    )
-
-    # When
-    setattr(warehouse_connection, field, value)
-    warehouse_connection.save()
-
-    # Then anything the delivery service reads from Redis republishes the
-    # connection; a rename does not
-    if expected_enqueued:
-        mock_task.delay.assert_called_once_with(
-            kwargs={"environment_id": warehouse_connection.environment_id},
-        )
-    else:
-        mock_task.delay.assert_not_called()
+    assert WarehouseDeliveryStatus.objects.filter(
+        connection=clickhouse_connection
+    ).exists()
 
 
 def _summary() -> ExposuresSummary:

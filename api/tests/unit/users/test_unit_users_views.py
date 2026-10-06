@@ -253,6 +253,49 @@ def test_list_organisation_users__exclude_current_user__returns_other_users(  # 
     assert response.data[1]["id"] == organisation_user.id
 
 
+def test_list_organisation_users__deactivated_membership__exposes_membership_status(
+    admin_client_new: APIClient,
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    staff_user.set_organisation_membership_active(organisation, is_active=False)
+
+    # When
+    response = admin_client_new.get(f"/api/v1/organisations/{organisation.pk}/users/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert {
+        user["id"]: user["is_organisation_membership_active"]
+        for user in response.json()
+    } == {
+        admin_user.id: True,
+        staff_user.id: False,
+    }
+
+
+def test_update_user_role__deactivated_membership__exposes_membership_status(
+    admin_client_new: APIClient,
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    staff_user.set_organisation_membership_active(organisation, is_active=False)
+
+    # When
+    response = admin_client_new.post(
+        f"/api/v1/organisations/{organisation.pk}/users/{staff_user.pk}/update-role/",
+        data={"role": OrganisationRole.ADMIN.name},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["role"] == OrganisationRole.ADMIN.name
+    assert response.json()["is_organisation_membership_active"] is False
+
+
 def test_permission_groups__admin_crud_operations__succeeds(
     organisation: Organisation,
     admin_client_new: APIClient,

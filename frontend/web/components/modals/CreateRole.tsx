@@ -453,7 +453,7 @@ const CreateRole: FC<CreateRoleType> = ({
               </SettingsButton>
               {showUserSelect && (
                 <UserSelect
-                  users={users}
+                  users={users ?? []}
                   value={usersAdded && usersAdded.map((v) => v.id)}
                   onAdd={addUserOrGroup}
                   onRemove={removeUserOrGroup}

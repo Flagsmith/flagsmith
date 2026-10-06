@@ -32,10 +32,8 @@ from experimentation.services import (
     get_experiment_rollout,
 )
 from experimentation.types import MetricExperimentResult
-from experimentation.warehouse_validation import (
-    CONFIG_VALIDATORS,
-    validate_credentials,
-)
+from experimentation.warehouse_validation import validate_credentials
+from experimentation.warehouses.registry import get_warehouse
 from features.feature_states.serializers import (
     FeatureValueSerializer,
     MultivariateValueSerializer,
@@ -88,21 +86,16 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
 
         config: dict[str, Any] | None = attrs.get("config")
 
-        if config_validator := CONFIG_VALIDATORS.get(warehouse_type):
-            stored = (
-                getattr(self.instance, "config", None)
-                if self.instance is not None
-                and not type_changed
-                and isinstance(getattr(self.instance, "config", None), dict)
-                else None
-            )
-            attrs["config"] = config_validator(config or {}, stored=stored)
-        elif warehouse_type == WarehouseType.FLAGSMITH:
-            if config:
-                raise serializers.ValidationError(
-                    {"config": "Flagsmith warehouse does not accept configuration."}
-                )
-            attrs["config"] = None
+        stored = (
+            getattr(self.instance, "config", None)
+            if self.instance is not None
+            and not type_changed
+            and isinstance(getattr(self.instance, "config", None), dict)
+            else None
+        )
+        attrs["config"] = get_warehouse(warehouse_type).validate_config(
+            config or {}, stored=stored
+        )
 
         if type_changed:
             attrs["status"] = WarehouseConnectionStatus.CREATED

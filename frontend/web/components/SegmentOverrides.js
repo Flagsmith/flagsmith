@@ -664,6 +664,9 @@ class TheComponent extends Component {
       onYes: () => {
         this.props.value[i].toRemove = true
         this.setState({ isLoading: false })
+        // Notify the parent like every other edit does, so a removal counts
+        // as a change when creating a change request.
+        this.props.onChange(this.props.value)
       },
       title: 'Delete Segment Override',
       yesText: 'Confirm',

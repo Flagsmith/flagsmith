@@ -37,6 +37,8 @@ jobs:
           commit_sha: ${{ github.sha }}
           actor: ${{ github.actor }}
           run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          repo_url: ${{ github.server_url }}/${{ github.repository }}
+          commit_message: ${{ github.event.head_commit.message }}
 
   run-unit-tests:
     runs-on: ubuntu-latest
@@ -169,6 +171,8 @@ jobs:
           commit_sha: ${{ github.sha }}
           actor: ${{ github.actor }}
           run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          repo_url: ${{ github.server_url }}/${{ github.repository }}
+          commit_message: ${{ github.event.head_commit.message }}
           started_at: ${{ steps.outcome.outputs.started_at }}
           ended_at: ${{ steps.outcome.outputs.ended_at }}
 

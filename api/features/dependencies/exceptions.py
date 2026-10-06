@@ -2,10 +2,15 @@ from abc import ABC, abstractmethod
 
 from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from rest_framework import status
-from rest_framework.exceptions import APIException, PermissionDenied
+from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 
 from core.types import APIErrorDetail
-from features.dependencies.types import DependencyPath, ReferencingEnvironment
+from features.dependencies.types import (
+    DependencyPath,
+    FeatureName,
+    ReferencingEnvironment,
+    ReferencingSegment,
+)
 
 
 class DependencyConflictDetail(APIErrorDetail):
@@ -76,6 +81,17 @@ class FeatureIsPrerequisiteError(DependencyConflictError):
         )
 
 
+class FeatureHasDependentsError(FeatureIsPrerequisiteError):
+    """Raised where the feature to delete is a prerequisite for other features."""
+
+    def get_message(self, path: DependencyPath) -> str:
+        dependent_edge = path[0]
+        return (
+            f'The feature "{dependent_edge["prerequisite"]["name"]}" is a prerequisite'
+            f' for the feature "{dependent_edge["feature"]["name"]}".'
+        )
+
+
 class DependencyExistsError(DependencyConflictError):
     """Raised where the requested dependency is already in place."""
 
@@ -86,6 +102,23 @@ class DependencyExistsError(DependencyConflictError):
         return (
             f'The feature "{existing_edge["feature"]["name"]}" already depends'
             f' on the feature "{existing_edge["prerequisite"]["name"]}".'
+        )
+
+
+class DependencyNotFoundError(NotFound):
+    """Raised where the feature does not depend on the prerequisite in the environment."""
+
+    default_code = "dependency_not_found"
+
+    def __init__(
+        self, feature_name: FeatureName, prerequisite_feature_name: FeatureName
+    ) -> None:
+        super().__init__(
+            {
+                "code": self.default_code,
+                "message": f'The feature "{feature_name}" does not depend'
+                f' on the feature "{prerequisite_feature_name}".',
+            }
         )
 
 
@@ -128,3 +161,30 @@ class PrerequisiteFeatureNotFoundError(APIException):
                 "condition_json_path": condition_json_path,
             }
         )
+
+
+class FeatureIsReferencedDetail(APIErrorDetail):
+    """The body served where segment conditions naming a feature refuse deleting it."""
+
+    segments: list[ReferencingSegment]
+
+
+class FeatureIsReferencedError(APIException):
+    """Raised where a segment condition names the feature to delete as a prerequisite."""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_code = "feature_is_referenced"
+
+    def __init__(
+        self, feature_name: FeatureName, segments: list[ReferencingSegment]
+    ) -> None:
+        super().__init__()
+        detail: FeatureIsReferencedDetail = {
+            "code": self.default_code,
+            "message": (
+                f'The segment "{segments[0]["name"]}" references'
+                f' the feature "{feature_name}".'
+            ),
+            "segments": segments,
+        }
+        self.detail = detail  # type: ignore[assignment]

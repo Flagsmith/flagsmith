@@ -48,6 +48,9 @@
       "last 1 safari version"
     ]
   },
+  "engines": {
+    "node": "24.x"
+  },
   "devDependencies": {
     "prettier": "3.3.3"
   },
@@ -55,6 +58,7 @@
     "qs": "^6.14.2",
     "lodash-es": "^4.18.0",
     "yaml": "^1.10.3",
-    "js-yaml@^4.0.0": "^4.3.2"
+    "js-yaml@^4.0.0": "^4.3.2",
+    "serialize-javascript": "^7.0.3"
   }
 }

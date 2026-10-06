@@ -6,8 +6,6 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
-    AFTER_CREATE,
-    AFTER_DELETE,
     AFTER_UPDATE,
     LifecycleModelMixin,
     hook,
@@ -77,19 +75,30 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
             ),
         ]
 
-    @hook(AFTER_CREATE)  # type: ignore[misc]
     @hook(  # type: ignore[misc]
         AFTER_UPDATE,
         when_any=["warehouse_type", "config", "credentials"],
         has_changed=True,
     )
-    @hook(AFTER_DELETE)  # type: ignore[misc]
-    def sync_to_ingestion(self) -> None:
-        from experimentation.tasks import sync_environment_ingestion
+    def clear_delivery_status(self) -> None:
+        WarehouseDeliveryStatus.objects.filter(connection=self).delete()
 
-        sync_environment_ingestion.delay(
-            kwargs={"environment_id": self.environment_id},
-        )
+
+class WarehouseDeliveryStatus(models.Model):
+    """Updated by the warehouse-delivery service after each delivery."""
+
+    connection = models.OneToOneField(
+        WarehouseConnection,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="delivery_status",
+    )
+    status = models.CharField(
+        max_length=50,
+        choices=WarehouseConnectionStatus.choices,
+    )
+    detail = models.TextField(null=True, blank=True)
+    updated_at = models.DateTimeField()
 
 
 class ExperimentStatus(models.TextChoices):

@@ -1,5 +1,83 @@
 # Changelog
 
+## [2.280.0](https://github.com/Flagsmith/flagsmith/compare/v2.279.0...v2.280.0) (2026-10-05)
+
+
+### Features
+
+* **experimentation:** read delivery statuses from Postgres and drop the ingestion Redis ([#8643](https://github.com/Flagsmith/flagsmith/issues/8643)) ([5c3ba28](https://github.com/Flagsmith/flagsmith/commit/5c3ba28be07fd8f483555d6343941774ebf304f3))
+* **Flag Dependency:** Emit immutable system segments ([#8632](https://github.com/Flagsmith/flagsmith/issues/8632)) ([5abf24d](https://github.com/Flagsmith/flagsmith/commit/5abf24d17691efffd85bbc001d57348a60030d49))
+* **SCIM:** Display deactivated org memberships ([#8649](https://github.com/Flagsmith/flagsmith/issues/8649)) ([5853bc1](https://github.com/Flagsmith/flagsmith/commit/5853bc1a3452f371544dee6b0cadc1a9ab71bdc7))
+* **usage:** show the legacy usage page with ?dashboard=legacy ([#8647](https://github.com/Flagsmith/flagsmith/issues/8647)) ([a4d2a4d](https://github.com/Flagsmith/flagsmith/commit/a4d2a4ddbd0b23279b4fde18584ea8874b07e070))
+
+
+### Bug Fixes
+
+* **experimentation:** report ClickHouse error 194 as authentication failure ([#8660](https://github.com/Flagsmith/flagsmith/issues/8660)) ([e0c2e87](https://github.com/Flagsmith/flagsmith/commit/e0c2e87aaf093e5f17771010d1bff5754c76d154))
+* **Feature Versioning:** Publishing a feature version bypasses Feature Change Requests ([#8617](https://github.com/Flagsmith/flagsmith/issues/8617)) ([0a57e91](https://github.com/Flagsmith/flagsmith/commit/0a57e91acf3a38cc4e50a9b9405a8309c8d56435))
+* **Flag Dependency:** Prevent deleting prerequisite features ([#8626](https://github.com/Flagsmith/flagsmith/issues/8626)) ([df5e8a2](https://github.com/Flagsmith/flagsmith/commit/df5e8a2a57a71e21b015a6f22ac2565138b0df9c))
+* **styles:** text-truncation utility helper ([#8652](https://github.com/Flagsmith/flagsmith/issues/8652)) ([759f724](https://github.com/Flagsmith/flagsmith/commit/759f7247e24b74a96649dd89c639fca8fc7c6927))
+
+
+### Dependency Updates
+
+* **api:** update dependency pyjwt to v2.15.0 [security] ([#8639](https://github.com/Flagsmith/flagsmith/issues/8639)) ([e40965d](https://github.com/Flagsmith/flagsmith/commit/e40965dac8330e53f793b26fd3d3ad7de1e70b74))
+* **frontend:** update dependency dompurify to v3.4.16 [security] ([#8638](https://github.com/Flagsmith/flagsmith/issues/8638)) ([ab354cd](https://github.com/Flagsmith/flagsmith/commit/ab354cdc08debc65561bbd94e5bf93e5c852bd71))
+* lock file maintenance ([#8559](https://github.com/Flagsmith/flagsmith/issues/8559)) ([aac9e94](https://github.com/Flagsmith/flagsmith/commit/aac9e94786b165fcbf5b57737505054c5f4c59a5))
+
+## [2.279.0](https://github.com/Flagsmith/flagsmith/compare/v2.278.1...v2.279.0) (2026-10-01)
+
+
+### Features
+
+* **experimentation:** add the delivery connections db view and status table ([#8622](https://github.com/Flagsmith/flagsmith/issues/8622)) ([8ef97c9](https://github.com/Flagsmith/flagsmith/commit/8ef97c97b736e299efdb4985846502e40fca190b))
+
+
+### Bug Fixes
+
+* **docs:** pin Node 24.x for Vercel builds ([#8642](https://github.com/Flagsmith/flagsmith/issues/8642)) ([10a8f7e](https://github.com/Flagsmith/flagsmith/commit/10a8f7e076860b66cff18d0828e48b9b7baba0eb))
+
+## [2.278.1](https://github.com/Flagsmith/flagsmith/compare/v2.278.0...v2.278.1) (2026-09-30)
+
+
+### Bug Fixes
+
+* **api:** SDK flag feature filter is case-sensitive ([#8630](https://github.com/Flagsmith/flagsmith/issues/8630)) ([c906648](https://github.com/Flagsmith/flagsmith/commit/c90664827db2f9eb28233f71dd0f8a91c3f5abb2))
+* **change-requests:** Can not create change request for deleting segment override ([#8565](https://github.com/Flagsmith/flagsmith/issues/8565)) ([bb3a425](https://github.com/Flagsmith/flagsmith/commit/bb3a425aa46275ed9d521adcb878d0295d9406b5))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.14.1,&lt;1 ([#8623](https://github.com/Flagsmith/flagsmith/issues/8623)) ([1fd0cf6](https://github.com/Flagsmith/flagsmith/commit/1fd0cf6987dbfb59b86242e33b3fde3d6ffb7a45))
+
+## [2.278.0](https://github.com/Flagsmith/flagsmith/compare/v2.277.0...v2.278.0) (2026-09-30)
+
+
+### Features
+
+* **api:** Add an evaluation context mapping layer ([#8573](https://github.com/Flagsmith/flagsmith/issues/8573)) ([abd6780](https://github.com/Flagsmith/flagsmith/commit/abd6780a77f31cb82b879722602a8f2c6661fffa))
+* **api:** Evaluate edge identity flags through flag-engine ([#8575](https://github.com/Flagsmith/flagsmith/issues/8575)) ([bb93d2e](https://github.com/Flagsmith/flagsmith/commit/bb93d2eddfddb06ed940e7084b433b001d7a3928))
+* **api:** Evaluate identity flags through flag-engine ([#8574](https://github.com/Flagsmith/flagsmith/issues/8574)) ([fd480b0](https://github.com/Flagsmith/flagsmith/commit/fd480b00316e519e664e1c1d2104fa0632e588ab))
+* **api:** Evaluate segments for environment flags ([#8576](https://github.com/Flagsmith/flagsmith/issues/8576)) ([2150ed5](https://github.com/Flagsmith/flagsmith/commit/2150ed55bf5e00be11b204055935e10e2f09235c))
+* **experimentation:** add the environment keys db view for the ingestion server ([#8610](https://github.com/Flagsmith/flagsmith/issues/8610)) ([552c89d](https://github.com/Flagsmith/flagsmith/commit/552c89dbc9331321c795695657b3eed405053b65))
+* **Flag Dependency:** Add prerequisites to a feature ([#8570](https://github.com/Flagsmith/flagsmith/issues/8570)) ([7c8cc87](https://github.com/Flagsmith/flagsmith/commit/7c8cc879e20d165683cc96a73b3ce00cfb9b1de1))
+* **Flag Dependency:** List dependencies ([#8571](https://github.com/Flagsmith/flagsmith/issues/8571)) ([68cbe99](https://github.com/Flagsmith/flagsmith/commit/68cbe9961e9f49923f553700f7f84b98172d0ea5))
+
+
+### Bug Fixes
+
+* **LaunchDarkly:** Imported startsWith and endsWith conditions match values that only contain the value ([#8607](https://github.com/Flagsmith/flagsmith/issues/8607)) ([7c32b89](https://github.com/Flagsmith/flagsmith/commit/7c32b89dcd80a604fe4b2c1a9a2113b9561dea74))
+
+
+### Dependency Updates
+
+* Add constraints on release age for non-flagsmith dependencies ([#8566](https://github.com/Flagsmith/flagsmith/issues/8566)) ([2451fe4](https://github.com/Flagsmith/flagsmith/commit/2451fe49f29af61363117dc301fac62b0f20a9a1))
+
+
+### Refactoring
+
+* **charts:** describe a line chart's series in one place ([#8600](https://github.com/Flagsmith/flagsmith/issues/8600)) ([77d7fbf](https://github.com/Flagsmith/flagsmith/commit/77d7fbfe48c1ef02c1aba6a3b4a02a59845fc875))
+
 ## [2.277.0](https://github.com/Flagsmith/flagsmith/compare/v2.276.0...v2.277.0) (2026-09-29)
 
 

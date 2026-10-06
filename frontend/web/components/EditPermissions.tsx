@@ -71,6 +71,7 @@ import {
   userTableSorting,
 } from './users-permissions/sortUsers'
 import { isOrgAdmin } from './users-permissions/isOrgAdmin'
+import InactiveMembershipChip from './users-permissions/InactiveMembershipChip'
 
 import Project from 'common/project'
 
@@ -1157,11 +1158,14 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                   key={id}
                                 >
                                   <Flex className='table-column px-3'>
-                                    <div className='mb-1 font-weight-medium'>
-                                      {`${first_name} ${last_name}`}{' '}
-                                      {String(id) ===
-                                        String(AccountStore.getUserId()) &&
-                                        '(You)'}
+                                    <div className='mb-1 font-weight-medium d-flex align-items-center gap-2'>
+                                      <span>
+                                        {`${first_name} ${last_name}`}{' '}
+                                        {String(id) ===
+                                          String(AccountStore.getUserId()) &&
+                                          '(You)'}
+                                      </span>
+                                      <InactiveMembershipChip user={user} />
                                     </div>
                                     <div className='list-item-subtitle'>
                                       {email}

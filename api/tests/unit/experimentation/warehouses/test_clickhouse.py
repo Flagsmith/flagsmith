@@ -1,10 +1,18 @@
+from collections.abc import Callable
+from datetime import datetime, timezone
+
 import pytest
 from clickhouse_connect.driver.exceptions import DatabaseError, OperationalError
 from pytest_mock import MockerFixture
 from urllib3 import PoolManager
 
-from experimentation import warehouse_verification_service
 from experimentation.models import WarehouseConnection
+from experimentation.warehouses import clickhouse
+from experimentation.warehouses.exceptions import (
+    DeliveryConfigError,
+    MissingEventsTableError,
+    UnsupportedWarehouseOperation,
+)
 
 
 def test_delivery_client__incomplete_config__raises_config_error(
@@ -15,10 +23,10 @@ def test_delivery_client__incomplete_config__raises_config_error(
 
     # When / Then
     with pytest.raises(
-        warehouse_verification_service.DeliveryConfigError,
+        DeliveryConfigError,
         match="incomplete",
     ):
-        with warehouse_verification_service.delivery_client(
+        with clickhouse.delivery_client(
             clickhouse_connection,
             send_receive_timeout=5,
         ):
@@ -33,10 +41,10 @@ def test_delivery_client__internal_host__raises_config_error(
 
     # When / Then
     with pytest.raises(
-        warehouse_verification_service.DeliveryConfigError,
+        DeliveryConfigError,
         match="internal or private",
     ):
-        with warehouse_verification_service.delivery_client(
+        with clickhouse.delivery_client(
             clickhouse_connection,
             send_receive_timeout=5,
         ):
@@ -49,11 +57,11 @@ def test_delivery_client__valid_config__yields_http_client_and_closes(
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
 
     # When
-    with warehouse_verification_service.delivery_client(
+    with clickhouse.delivery_client(
         clickhouse_connection,
         send_receive_timeout=5,
     ) as client:
@@ -75,7 +83,7 @@ def test_delivery_client__valid_config__yields_http_client_and_closes(
         pool_manager = get_client.call_args.kwargs["pool_mgr"]
         assert isinstance(
             pool_manager,
-            warehouse_verification_service._NoRedirectPoolManager,
+            clickhouse._NoRedirectPoolManager,
         )
         get_client.return_value.close.assert_not_called()
 
@@ -88,12 +96,12 @@ def test_delivery_client__body_raises__still_closes_client(
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
 
     # When a query inside the block fails
     with pytest.raises(RuntimeError, match="boom"):
-        with warehouse_verification_service.delivery_client(
+        with clickhouse.delivery_client(
             clickhouse_connection,
             send_receive_timeout=5,
         ):
@@ -121,10 +129,10 @@ def test_check_events_table_exists__exists_query_result__raises_only_when_missin
 
     # When / Then
     if expected_raise:
-        with pytest.raises(warehouse_verification_service.MissingEventsTableError):
-            warehouse_verification_service.check_events_table_exists(client)
+        with pytest.raises(MissingEventsTableError):
+            clickhouse.check_events_table_exists(client)
     else:
-        warehouse_verification_service.check_events_table_exists(client)
+        clickhouse.check_events_table_exists(client)
     client.query.assert_called_once_with("EXISTS TABLE events")
 
 
@@ -132,9 +140,7 @@ def test_check_events_table_exists__exists_query_result__raises_only_when_missin
     "error, expected_detail",
     [
         pytest.param(
-            warehouse_verification_service.DeliveryConfigError(
-                "Stored connection details are incomplete."
-            ),
+            DeliveryConfigError("Stored connection details are incomplete."),
             "Stored connection details are incomplete.",
             id="config-error",
         ),
@@ -147,6 +153,15 @@ def test_check_events_table_exists__exists_query_result__raises_only_when_missin
             DatabaseError("Code: 516. DB::Exception: nope", code=516),
             "Authentication failed.",
             id="bad-auth",
+        ),
+        pytest.param(
+            DatabaseError(
+                "Code: 194. DB::Exception: default: Authentication failed: "
+                "password is incorrect, or there is no user with such name",
+                code=194,
+            ),
+            "Authentication failed.",
+            id="bad-password",
         ),
         pytest.param(
             DatabaseError("Code: 81. DB::Exception: no database", code=81),
@@ -165,7 +180,7 @@ def test_check_events_table_exists__exists_query_result__raises_only_when_missin
             id="other-server-error",
         ),
         pytest.param(
-            warehouse_verification_service.MissingEventsTableError(),
+            MissingEventsTableError(),
             "Events table not found in the configured database. "
             "Run the setup SQL to create it.",
             id="missing-events-table",
@@ -184,7 +199,7 @@ def test_describe_warehouse_error__known_failures__returns_user_facing_detail(
     # Given a parametrised verification failure
 
     # When
-    detail = warehouse_verification_service.describe_warehouse_error(error)
+    detail = clickhouse.describe_warehouse_error(error)
 
     # Then
     assert detail == expected_detail
@@ -196,7 +211,7 @@ def test_no_redirect_pool_manager__urlopen__refuses_to_follow_redirects(
     # Given a manager asked to follow redirects, as clickhouse-connect's own
     # request path does
     urlopen = mocker.patch.object(PoolManager, "urlopen")
-    manager = warehouse_verification_service._NoRedirectPoolManager()
+    manager = clickhouse._NoRedirectPoolManager()
 
     # When
     manager.urlopen("POST", "https://ch.acme-corp.example/", redirect=True)
@@ -204,3 +219,41 @@ def test_no_redirect_pool_manager__urlopen__refuses_to_follow_redirects(
     # Then the redirect is refused: a permitted host must not be able to bounce
     # the request, and its event payload, to an unchecked address
     assert urlopen.call_args.kwargs["redirect"] is False
+
+
+WINDOW_START = datetime(2026, 1, 1, tzinfo=timezone.utc)
+WINDOW_END = datetime(2026, 1, 8, tzinfo=timezone.utc)
+
+
+@pytest.mark.parametrize(
+    "operation",
+    [
+        lambda warehouse, connection: warehouse.get_exposure_buckets(
+            connection,
+            environment_key="key",
+            feature_name="checkout",
+            window_start=WINDOW_START,
+            window_end=WINDOW_END,
+            granularity="day",
+        ),
+        lambda warehouse, connection: warehouse.get_results_aggregates(
+            connection,
+            environment_key="key",
+            feature_name="checkout",
+            window_start=WINDOW_START,
+            window_end=WINDOW_END,
+            specs=[],
+            granularity="day",
+        ),
+    ],
+    ids=["exposure_buckets", "results_aggregates"],
+)
+def test_clickhouse_warehouse__results_read__raises_unsupported(
+    operation: Callable[[clickhouse.ClickHouseWarehouse, WarehouseConnection], object],
+) -> None:
+    # Given
+    connection = WarehouseConnection(config={"host": "ch.acme-corp.example"})
+
+    # When / Then
+    with pytest.raises(UnsupportedWarehouseOperation):
+        operation(clickhouse.ClickHouseWarehouse(), connection)
