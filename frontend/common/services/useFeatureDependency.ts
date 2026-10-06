@@ -34,6 +34,32 @@ export const featureDependencyService = service
         Req['createFeatureDependency']
       >({
         invalidatesTags: (res, err, query) => invalidateEnvironment(query),
+        // The POST answers with the edge, so the row need not wait on the
+        // refetch the invalidation triggers.
+        onQueryStarted: async (query, { dispatch, queryFulfilled }) => {
+          let edge: Res['featureDependency']
+          try {
+            edge = (await queryFulfilled).data
+          } catch {
+            // Refused; the caller reports it. Uncaught it would surface twice.
+            return
+          }
+          dispatch(
+            featureDependencyService.util.updateQueryData(
+              'getFeatureDependencies',
+              {
+                environmentId: query.environmentId,
+                featureId: query.featureId,
+              },
+              (draft) => {
+                // The refetch may have landed first.
+                if (draft.results.some((e) => e.segment.id === edge.segment.id))
+                  return
+                draft.results.push(edge)
+              },
+            ),
+          )
+        },
         query: (query: Req['createFeatureDependency']) => ({
           method: 'POST',
           url: `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`,
