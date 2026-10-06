@@ -118,7 +118,7 @@ class _MetricSlot:
         if agg == MetricAggregation.SUM:
             return f"{d.sum_if(value, cond)} AS {self._alias}"
         if agg == MetricAggregation.MEAN:
-            return f"if({count} > 0, {d.avg_if(value, cond)}, 0) AS {self._alias}"
+            return f"{d.avg_if(value, cond)} AS {self._alias}"
         raise ValueError(f"Unsupported metric aggregation: {agg}")
 
     def outer_select(self) -> str:

@@ -111,6 +111,29 @@ FROM unit_values
 GROUP BY variant"""
 )
 
+RESULTS_COUNT_ONLY_SQL = (
+    EXPOSURES_CTE_SQL
+    + """,
+unit_values AS (
+    SELECT
+        e.variant AS variant,
+        countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) AS m0
+    FROM exposures AS e
+    LEFT JOIN events AS m
+        ON m.identifier = e.identifier
+        AND m.environment_key = %(environment_key)s
+        AND m.event IN %(metric_events)s
+        AND m.timestamp >= %(window_start)s
+        AND m.timestamp < %(window_end)s
+    WHERE e.quarantined = 0
+    GROUP BY e.identifier, e.variant
+)
+SELECT variant, count() AS n,
+    sum(m0) AS m0_sum, sum(m0 * m0) AS m0_sum_squares
+FROM unit_values
+GROUP BY variant"""
+)
+
 CONVERSIONS_HOUR_SQL = (
     EXPOSURES_CTE_SQL
     + """,
@@ -296,6 +319,21 @@ def test_get_exposure_buckets__granularity__sends_pinned_sql(
             ],
         ),
         (
+            [MetricSpec(12, "page_view", MetricAggregation.COUNT, False)],
+            [
+                (
+                    RESULTS_COUNT_ONLY_SQL,
+                    {
+                        **WINDOW_PARAMS,
+                        "metric_events": ["page_view"],
+                        "conversion_events": [],
+                        "metric_0_event": "page_view",
+                    },
+                ),
+                (EXPOSURE_BUCKETS_HOUR_SQL, WINDOW_PARAMS),
+            ],
+        ),
+        (
             SPECS,
             [
                 (RESULTS_SQL, METRIC_PARAMS),
@@ -304,7 +342,7 @@ def test_get_exposure_buckets__granularity__sends_pinned_sql(
             ],
         ),
     ],
-    ids=["no-metrics", "every-aggregation"],
+    ids=["no-metrics", "count-only", "every-aggregation"],
 )
 def test_get_results_aggregates__specs__sends_pinned_sql(
     provider: Provider,

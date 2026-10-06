@@ -30,7 +30,9 @@ class Dialect(Protocol):
         """Zero, not NULL, when no row matches."""
         ...
 
-    def avg_if(self, expr: str, cond: str) -> str: ...
+    def avg_if(self, expr: str, cond: str) -> str:
+        """Zero, not NULL, when no row matches."""
+        ...
 
     def min_if(self, expr: str, cond: str) -> str:
         """NULL when no row matches."""
@@ -81,7 +83,7 @@ class ClickHouseDialect:
         return f"sumIf({expr}, {cond})"
 
     def avg_if(self, expr: str, cond: str) -> str:
-        return f"avgIf({expr}, {cond})"
+        return f"if({self.count_if(cond)} > 0, avgIf({expr}, {cond}), 0)"
 
     def min_if(self, expr: str, cond: str) -> str:
         return f"minIfOrNull({expr}, {cond})"
