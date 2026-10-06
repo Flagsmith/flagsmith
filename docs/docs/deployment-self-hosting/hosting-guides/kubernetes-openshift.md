@@ -435,16 +435,6 @@ The logins need these permissions:
 To keep schema changes away from the runtime logins, give the job its own admin logins with
 `jobs.experimentationInit.clickhouseUrl` and `jobs.experimentationInit.kafka`.
 
-The ingestion service reads environment keys from the Flagsmith database, with the API's database URL by default. To
-give it a read-only role, create the role and pass its URL with `experimentation.ingestion.databaseUrl`:
-
-```sql
-CREATE ROLE ingestion_server WITH LOGIN PASSWORD '<password>';
-GRANT CONNECT ON DATABASE <database> TO ingestion_server;
-GRANT USAGE ON SCHEMA public TO ingestion_server;
-GRANT SELECT ON experimentation_environment_keys TO ingestion_server;
-```
-
 To turn experimentation on:
 
 1. Set up [Flagsmith on Flagsmith](/deployment-self-hosting/core-configuration/running-flagsmith-on-flagsmith).
