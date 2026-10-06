@@ -15,18 +15,19 @@ from experimentation.dataclasses import (
     WarehouseEventNames,
     WarehouseEventStats,
 )
-from experimentation.warehouses.clickhouse import (
-    EVENT_NAMES_QUERY,
-    EVENT_STATS_QUERY,
+from experimentation.warehouses.constants import EVENT_NAMES_CACHE_SECONDS
+from experimentation.warehouses.dialect import CLICKHOUSE_DIALECT
+from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
+from experimentation.warehouses.queries import (
     QueryRunner,
     build_event_names,
     build_event_stats,
+    event_names_query,
     event_names_query_params,
+    event_stats_query,
     read_exposure_buckets,
     read_results_aggregates,
 )
-from experimentation.warehouses.constants import EVENT_NAMES_CACHE_SECONDS
-from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 
 if typing.TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -68,7 +69,7 @@ def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
     client = _get_clickhouse_client()
     try:
         rows = client.execute(
-            EVENT_STATS_QUERY,
+            event_stats_query(CLICKHOUSE_DIALECT),
             {"environment_key": environment_key},
         )
     finally:
@@ -105,6 +106,7 @@ def get_exposure_buckets(
     with _background_query_runner() as run_query:
         return read_exposure_buckets(
             run_query,
+            CLICKHOUSE_DIALECT,
             environment_key=environment_key,
             feature_name=feature_name,
             window_start=window_start,
@@ -125,6 +127,7 @@ def get_results_aggregates(
     with _background_query_runner() as run_query:
         return read_results_aggregates(
             run_query,
+            CLICKHOUSE_DIALECT,
             environment_key=environment_key,
             feature_name=feature_name,
             window_start=window_start,
@@ -172,7 +175,7 @@ class FlagsmithWarehouse:
         client = _get_clickhouse_client()
         try:
             rows = client.execute(
-                EVENT_NAMES_QUERY,
+                event_names_query(CLICKHOUSE_DIALECT),
                 event_names_query_params(environment_key),
             )
         except Exception:

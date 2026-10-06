@@ -1,5 +1,4 @@
 import typing
-from collections.abc import Callable
 from contextlib import contextmanager
 from functools import lru_cache
 from typing import Any
@@ -17,16 +16,10 @@ from urllib3 import PoolManager
 
 from core.network import is_internal_address
 from experimentation.dataclasses import (
-    ConversionBucket,
     ExposureBucket,
     ResultsAggregates,
     WarehouseEventNames,
     WarehouseEventStats,
-)
-from experimentation.results_query import (
-    _EXPOSURES_CTE,
-    ResultsQueryBuilder,
-    exposure_window_params,
 )
 from experimentation.types import (
     CLICKHOUSE_DEFAULTS,
@@ -41,11 +34,21 @@ from experimentation.warehouses.constants import (
     CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS,
     CUSTOMER_EVENT_STATS_CACHE_SECONDS,
     EVENT_NAMES_CACHE_SECONDS,
-    EVENT_NAMES_LIMIT,
 )
+from experimentation.warehouses.dialect import CLICKHOUSE_DIALECT
 from experimentation.warehouses.exceptions import (
     DeliveryConfigError,
     MissingEventsTableError,
+)
+from experimentation.warehouses.queries import (
+    QueryRunner,
+    build_event_names,
+    build_event_stats,
+    event_names_query,
+    event_names_query_params,
+    event_stats_query,
+    read_exposure_buckets,
+    read_results_aggregates,
 )
 
 if typing.TYPE_CHECKING:
@@ -183,146 +186,6 @@ RESULTS_QUERY_SETTINGS = {
     "aggregate_functions_null_for_empty": 0,
 }
 
-EVENT_NAMES_QUERY = (
-    "SELECT event FROM events "
-    "WHERE environment_key = %(environment_key)s "
-    "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s"
-)
-EVENT_STATS_QUERY = (
-    "SELECT count() AS total, uniqExact(event) AS unique "
-    "FROM events WHERE environment_key = %(environment_key)s"
-)
-
-
-def event_names_query_params(environment_key: str) -> dict[str, str | int]:
-    # Fetch one row past the limit so truncation is detectable.
-    return {
-        "environment_key": environment_key,
-        "limit": EVENT_NAMES_LIMIT + 1,
-    }
-
-
-def build_event_names(rows: "Sequence[Sequence[Any]]") -> WarehouseEventNames:
-    names = [event for (event,) in rows]
-    return WarehouseEventNames(
-        events=names[:EVENT_NAMES_LIMIT],
-        is_truncated=len(names) > EVENT_NAMES_LIMIT,
-    )
-
-
-def build_event_stats(rows: "Sequence[Sequence[Any]]") -> WarehouseEventStats:
-    total, unique = rows[0] if rows else (0, 0)
-    return WarehouseEventStats(
-        total_events_received=int(total),
-        unique_events_count=int(unique),
-    )
-
-
-QueryRunner = Callable[
-    [str, dict[str, object]], tuple["Sequence[Sequence[Any]]", list[str]]
-]
-
-EXPOSURE_BUCKETS_QUERY = (
-    _EXPOSURES_CTE
-    + """
-SELECT
-    quarantined,
-    variant,
-    {bucket_function}(first_exposure, 'UTC') AS bucket,
-    count() AS first_exposed_identities
-FROM exposures
-GROUP BY quarantined, variant, bucket
-ORDER BY bucket
-"""
-)
-
-EXPOSURE_BUCKET_FUNCTIONS: dict[str, str] = {
-    "hour": "toStartOfHour",
-    "day": "toStartOfDay",
-}
-
-
-def read_exposure_buckets(
-    run_query: QueryRunner,
-    *,
-    environment_key: str,
-    feature_name: str,
-    window_start: "datetime",
-    window_end: "datetime",
-    granularity: "ExposureGranularity",
-) -> list[ExposureBucket]:
-    rows, _columns = run_query(
-        EXPOSURE_BUCKETS_QUERY.format(
-            bucket_function=EXPOSURE_BUCKET_FUNCTIONS[granularity]
-        ),
-        exposure_window_params(
-            environment_key=environment_key,
-            feature_name=feature_name,
-            window_start=window_start,
-            window_end=window_end,
-        ),
-    )
-    return [
-        ExposureBucket(
-            variant=variant,
-            bucket=bucket,
-            first_exposed_identities=int(first_exposed_identities),
-            quarantined=bool(quarantined),
-        )
-        for quarantined, variant, bucket, first_exposed_identities in rows
-    ]
-
-
-def read_results_aggregates(
-    run_query: QueryRunner,
-    *,
-    environment_key: str,
-    feature_name: str,
-    window_start: "datetime",
-    window_end: "datetime",
-    specs: "Sequence[MetricSpec]",
-    granularity: "ExposureGranularity",
-) -> ResultsAggregates:
-    """Run the reads behind one results refresh: per-variant identity counts
-    and sufficient statistics, per charted metric the buckets of first
-    post-exposure conversions, then exposure buckets.
-
-    Three separate reads, so events landing mid-run can leave the chart's last
-    point a few identities off the table until the next refresh."""
-    builder = ResultsQueryBuilder(specs)
-    params = builder.params(
-        environment_key=environment_key,
-        feature_name=feature_name,
-        window_start=window_start,
-        window_end=window_end,
-    )
-    rows, columns = run_query(builder.build_query(), params)
-    exposure_counts, metric_stats = builder.decode_rows(list(rows), columns)
-
-    conversion_buckets: dict[int, list[ConversionBucket]] = {}
-    conversions_query = builder.build_conversions_query(
-        bucket_function=EXPOSURE_BUCKET_FUNCTIONS[granularity]
-    )
-    if conversions_query is not None:
-        rows, columns = run_query(conversions_query, params)
-        conversion_buckets = builder.decode_conversion_rows(rows, columns)
-
-    return ResultsAggregates(
-        specs=list(specs),
-        exposure_counts=exposure_counts,
-        metric_stats=metric_stats,
-        granularity=granularity,
-        exposure_buckets=read_exposure_buckets(
-            run_query,
-            environment_key=environment_key,
-            feature_name=feature_name,
-            window_start=window_start,
-            window_end=window_end,
-            granularity=granularity,
-        ),
-        conversion_buckets=conversion_buckets,
-    )
-
 
 def _customer_query_runner(client: "Client") -> QueryRunner:
     def run_query(
@@ -428,7 +291,7 @@ class ClickHouseWarehouse:
                 send_receive_timeout=EVENT_NAMES_TIMEOUT_SECONDS,
             ) as client:
                 rows = client.query(
-                    EVENT_NAMES_QUERY,
+                    event_names_query(CLICKHOUSE_DIALECT),
                     parameters=event_names_query_params(environment_key),
                 ).result_rows
         except Exception:
@@ -464,7 +327,7 @@ class ClickHouseWarehouse:
                 send_receive_timeout=VERIFY_TIMEOUT_SECONDS,
             ) as client:
                 rows = client.query(
-                    EVENT_STATS_QUERY,
+                    event_stats_query(CLICKHOUSE_DIALECT),
                     parameters={"environment_key": environment_key},
                 ).result_rows
             stats = build_event_stats(rows)
@@ -499,6 +362,7 @@ class ClickHouseWarehouse:
         ) as client:
             return read_exposure_buckets(
                 _customer_query_runner(client),
+                CLICKHOUSE_DIALECT,
                 environment_key=environment_key,
                 feature_name=feature_name,
                 window_start=window_start,
@@ -523,6 +387,7 @@ class ClickHouseWarehouse:
         ) as client:
             return read_results_aggregates(
                 _customer_query_runner(client),
+                CLICKHOUSE_DIALECT,
                 environment_key=environment_key,
                 feature_name=feature_name,
                 window_start=window_start,

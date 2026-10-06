@@ -60,6 +60,7 @@ from experimentation.services import (
 )
 from experimentation.stats import VariantStats
 from experimentation.warehouses import clickhouse, flagsmith
+from experimentation.warehouses.dialect import CLICKHOUSE_DIALECT
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
@@ -1147,7 +1148,9 @@ def test_metric_slot_unit_select__aggregation__builds_expression(
     # Given a metric slot for each aggregation type
     # When / Then it produces the correct per-identity unit-value expression
     assert (
-        _MetricSlot(spec=_spec(aggregation=aggregation), index=0).unit_select()
+        _MetricSlot(
+            spec=_spec(aggregation=aggregation), index=0, dialect=CLICKHOUSE_DIALECT
+        ).unit_select()
         == expected
     )
 
@@ -1156,7 +1159,9 @@ def test_metric_slot_unit_select__unknown_aggregation__raises() -> None:
     # Given an aggregation the slot does not support
     # When / Then it refuses rather than silently emitting the wrong clause
     with pytest.raises(ValueError, match="Unsupported metric aggregation"):
-        _MetricSlot(spec=_spec(aggregation="median"), index=0).unit_select()
+        _MetricSlot(
+            spec=_spec(aggregation="median"), index=0, dialect=CLICKHOUSE_DIALECT
+        ).unit_select()
 
 
 def test_build_conversions_query__mixed_slots__occurrence_slots_only() -> None:
@@ -1166,11 +1171,12 @@ def test_build_conversions_query__mixed_slots__occurrence_slots_only() -> None:
             _spec(metric_id=7, event="purchase", aggregation="occurrence"),
             _spec(metric_id=9, event="revenue", aggregation="sum"),
             _spec(metric_id=11, event="signup", aggregation="occurrence"),
-        ]
+        ],
+        CLICKHOUSE_DIALECT,
     )
 
     # When
-    sql = builder.build_conversions_query(bucket_function="toStartOfDay")
+    sql = builder.build_conversions_query(granularity="day")
 
     # Then each occurrence slot records the identity's first post-exposure
     # conversion, with the same attribution condition as the results query
@@ -1201,11 +1207,12 @@ def test_build_conversions_query__no_occurrence_slots__returns_none() -> None:
         [
             _spec(metric_id=9, event="revenue", aggregation="sum"),
             _spec(metric_id=13, event="session", aggregation="mean"),
-        ]
+        ],
+        CLICKHOUSE_DIALECT,
     )
 
     # When / Then
-    assert builder.build_conversions_query(bucket_function="toStartOfDay") is None
+    assert builder.build_conversions_query(granularity="day") is None
 
 
 def test_decode_conversion_rows__rows__groups_by_metric_behind_slot_index() -> None:
@@ -1216,7 +1223,8 @@ def test_decode_conversion_rows__rows__groups_by_metric_behind_slot_index() -> N
             _spec(metric_id=7, event="purchase", aggregation="occurrence"),
             _spec(metric_id=9, event="revenue", aggregation="sum"),
             _spec(metric_id=11, event="signup", aggregation="occurrence"),
-        ]
+        ],
+        CLICKHOUSE_DIALECT,
     )
     bucket = datetime(2026, 6, 1, tzinfo=timezone.utc)
     columns = ["converted_identities", "variant", "bucket", "metric_index"]
