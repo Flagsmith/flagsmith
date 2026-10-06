@@ -9,6 +9,7 @@ from rest_framework.test import APIClient
 from audit.models import AuditLog
 from environments.models import Environment
 from features.dependencies.models import SegmentFlagReference
+from features.dependencies.services import index_segment_flag_references
 from features.dependencies.types import DependencyEdge
 from features.models import Feature
 from organisations.models import Organisation
@@ -59,7 +60,7 @@ def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependenc
             "prerequisite": {"id": prerequisite.id, "name": prerequisite_name},
             "segment": {
                 "id": segment.id,
-                "name": f"checkout-dependencies-{environment_api_key}",
+                "name": f"checkout-depends-on-{prerequisite_name}",
                 "rules": [
                     {
                         "type": "ANY",
@@ -124,7 +125,7 @@ def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependenc
     )
 
 
-def test_add_feature_dependency__feature_has_another_prerequisite__responds_201_reusing_segment(
+def test_add_feature_dependency__feature_has_another_prerequisite__responds_201_with_another_override(
     admin_client: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -146,25 +147,20 @@ def test_add_feature_dependency__feature_has_another_prerequisite__responds_201_
 
     # Then
     assert response.status_code == 201
-    segment = Segment.live_objects.get(feature=feature, is_system_segment=True)
-    assert segment.id == segment_id
+    other_segment = Segment.objects.get(
+        feature=feature, is_system_segment=True, name="checkout-depends-on-inventory"
+    )
     assert response.json() == DependencyEdge(
         {
             "feature": {"id": feature.id, "name": "checkout"},
             "prerequisite": {"id": other_prerequisite.id, "name": "inventory"},
             "segment": {
-                "id": segment.id,
-                "name": f"checkout-dependencies-{environment_api_key}",
+                "id": other_segment.id,
+                "name": "checkout-depends-on-inventory",
                 "rules": [
                     {
                         "type": "ANY",
                         "conditions": [
-                            {
-                                "property": '$.flags["payments"].enabled',
-                                "operator": "NOT_EQUAL",
-                                "value": "true",
-                                "description": None,
-                            },
                             {
                                 "property": '$.flags["inventory"].enabled',
                                 "operator": "NOT_EQUAL",
@@ -175,25 +171,39 @@ def test_add_feature_dependency__feature_has_another_prerequisite__responds_201_
                         "rules": [],
                     }
                 ],
-                "condition_json_path": "$[0].conditions[1]",
+                "condition_json_path": "$[0].conditions[0]",
                 "is_system": True,
             },
         }
     )
+    assert Segment.objects.get(id=segment_id).rules_data == [
+        {
+            "type": "ANY",
+            "conditions": [
+                {
+                    "property": '$.flags["payments"].enabled',
+                    "operator": "NOT_EQUAL",
+                    "value": "true",
+                    "description": None,
+                },
+            ],
+            "rules": [],
+        }
+    ]
     assert list(
-        SegmentFlagReference.objects.order_by("condition_json_path").values(
+        SegmentFlagReference.objects.order_by("segment").values(
             "segment", "prerequisite_feature", "condition_json_path"
         )
     ) == [
         {
-            "segment": segment.id,
+            "segment": segment_id,
             "prerequisite_feature": prerequisite.id,
             "condition_json_path": "$[0].conditions[0]",
         },
         {
-            "segment": segment.id,
+            "segment": other_segment.id,
             "prerequisite_feature": other_prerequisite.id,
-            "condition_json_path": "$[0].conditions[1]",
+            "condition_json_path": "$[0].conditions[0]",
         },
     ]
     flag_response = admin_client.get(
@@ -201,12 +211,19 @@ def test_add_feature_dependency__feature_has_another_prerequisite__responds_201_
     )
     assert flag_response.json()["segment_overrides"] == [
         {
-            "segment": {"id": segment.id},
+            "segment": {"id": other_segment.id},
             "priority": 0,
             "enabled": False,
             "value": None,
             "variants": [],
-        }
+        },
+        {
+            "segment": {"id": segment_id},
+            "priority": 1,
+            "enabled": False,
+            "value": None,
+            "variants": [],
+        },
     ]
     assert list(
         AuditLog.objects.filter(related_object_type="FEATURE").values(
@@ -233,6 +250,88 @@ def test_add_feature_dependency__feature_has_another_prerequisite__responds_201_
         feature__name="checkout",
         prerequisite_feature__name="inventory",
     )
+
+
+def test_add_feature_dependency__dependency_exists_in_another_environment__responds_201_reusing_segment(
+    admin_client: APIClient,
+    environment_api_key: str,
+    other_environment: Environment,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    segment_id = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    ).json()["segment"]["id"]
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{other_environment.api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 201
+    assert response.json()["segment"]["id"] == segment_id
+    assert list(
+        Segment.objects.filter(is_system_segment=True).values_list("id", flat=True)
+    ) == [segment_id]
+    for api_key in (environment_api_key, other_environment.api_key):
+        flag_response = admin_client.get(
+            f"/api/__future__/environments/{api_key}/features/{feature.id}/",
+        )
+        assert flag_response.json()["segment_overrides"] == [
+            {
+                "segment": {"id": segment_id},
+                "priority": 0,
+                "enabled": False,
+                "value": None,
+                "variants": [],
+            }
+        ]
+
+
+def test_add_feature_dependency__dependency_added_again__responds_201_reusing_segment(
+    admin_client: APIClient,
+    environment_api_key: str,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    segment_id = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    ).json()["segment"]["id"]
+    assert (
+        admin_client.delete(
+            f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+        ).status_code
+        == 204
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 201
+    assert response.json()["segment"]["id"] == segment_id
+    assert list(
+        Segment.objects.filter(is_system_segment=True).values_list("id", flat=True)
+    ) == [segment_id]
+    flag_response = admin_client.get(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
+    )
+    assert flag_response.json()["segment_overrides"] == [
+        {
+            "segment": {"id": segment_id},
+            "priority": 0,
+            "enabled": False,
+            "value": None,
+            "variants": [],
+        }
+    ]
 
 
 def test_add_feature_dependency__feature_has_another_override__responds_201_reordering_priorities(
@@ -269,7 +368,7 @@ def test_add_feature_dependency__feature_has_another_override__responds_201_reor
             "prerequisite": {"id": prerequisite.id, "name": "payments"},
             "segment": {
                 "id": system_segment.id,
-                "name": f"checkout-dependencies-{environment_api_key}",
+                "name": "checkout-depends-on-payments",
                 "rules": [
                     {
                         "type": "ANY",
@@ -381,7 +480,7 @@ def test_add_feature_dependency__prerequisite_already_has_prerequisite__responds
                     },
                     "segment": {
                         "id": prerequisite_segment.id,
-                        "name": f"payments-dependencies-{environment_api_key}",
+                        "name": "payments-depends-on-inventory",
                         "rules": [
                             {
                                 "type": "ANY",
@@ -476,7 +575,7 @@ def test_add_feature_dependency__feature_is_already_a_prerequisite__responds_400
                     "prerequisite": {"id": feature.id, "name": "checkout"},
                     "segment": {
                         "id": dependent_segment.id,
-                        "name": f"storefront-dependencies-{environment_api_key}",
+                        "name": "storefront-depends-on-checkout",
                         "rules": [
                             {
                                 "type": "ANY",
@@ -571,7 +670,7 @@ def test_add_feature_dependency__dependency_already_exists__responds_400_with_er
                     "prerequisite": {"id": prerequisite.id, "name": "payments"},
                     "segment": {
                         "id": segment.id,
-                        "name": f"checkout-dependencies-{environment_api_key}",
+                        "name": "checkout-depends-on-payments",
                         "rules": [
                             {
                                 "type": "ANY",
@@ -741,6 +840,432 @@ def test_add_feature_dependency__missing_environment_permission__responds_403_wi
     assert not SegmentFlagReference.objects.exists()
     assert list(AuditLog.objects.filter(related_object_type="FEATURE")) == []
     assert not log.has("dependencies.created")
+
+
+def test_delete_feature_dependency__dependency_exists__responds_204_removing_override(
+    admin_client: APIClient,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    other_prerequisite = Feature.objects.create(name="inventory", project_id=project)
+    segment_id = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    ).json()["segment"]["id"]
+    other_segment_id = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{other_prerequisite.id}/",
+    ).json()["segment"]["id"]
+
+    # When
+    response = admin_client.delete(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 204
+    assert set(
+        Segment.live_objects.filter(is_system_segment=True).values_list("id", flat=True)
+    ) == {segment_id, other_segment_id}
+    assert list(
+        SegmentFlagReference.objects.order_by("segment").values(
+            "segment", "prerequisite_feature"
+        )
+    ) == [
+        {"segment": segment_id, "prerequisite_feature": prerequisite.id},
+        {"segment": other_segment_id, "prerequisite_feature": other_prerequisite.id},
+    ]
+    flag_response = admin_client.get(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
+    )
+    assert flag_response.json()["segment_overrides"] == [
+        {
+            "segment": {"id": other_segment_id},
+            "priority": 0,
+            "enabled": False,
+            "value": None,
+            "variants": [],
+        }
+    ]
+    dependencies_response = admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
+    )
+    assert [
+        edge["prerequisite"]["name"] for edge in dependencies_response.json()["results"]
+    ] == ["inventory"]
+    assert list(
+        AuditLog.objects.filter(related_object_type="FEATURE").values(
+            "environment__api_key", "related_object_id", "log"
+        )
+    )[0] == {
+        "environment__api_key": environment_api_key,
+        "related_object_id": feature.id,
+        "log": "Feature 'payments' removed as a dependency for feature 'checkout'.",
+    }
+    assert log.has(
+        "dependencies.deleted",
+        level="info",
+        organisation__id=organisation,
+        project__id=project,
+        environment__key=environment_api_key,
+        feature__name="checkout",
+        prerequisite_feature__name="payments",
+    )
+
+
+def test_delete_feature_dependency__dependency_exists_in_another_environment__responds_204_keeping_it(
+    admin_client: APIClient,
+    environment_api_key: str,
+    other_environment: Environment,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    for api_key in (environment_api_key, other_environment.api_key):
+        segment_id = admin_client.post(
+            f"/api/v1/environments/{api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+        ).json()["segment"]["id"]
+
+    # When
+    response = admin_client.delete(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 204
+    flag_response = admin_client.get(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
+    )
+    assert flag_response.json()["segment_overrides"] == []
+    other_flag_response = admin_client.get(
+        f"/api/__future__/environments/{other_environment.api_key}/features/{feature.id}/",
+    )
+    assert other_flag_response.json()["segment_overrides"] == [
+        {
+            "segment": {"id": segment_id},
+            "priority": 0,
+            "enabled": False,
+            "value": None,
+            "variants": [],
+        }
+    ]
+
+
+def test_delete_feature_dependency__feature_has_another_override__responds_204_keeping_it(
+    admin_client: APIClient,
+    create_segment_override: CreateSegmentOverrideFixture,
+    environment_api_key: str,
+    project: int,
+    segment: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=feature.id,
+        segment_id=segment,
+        enabled=True,
+        priority=0,
+    )
+    admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # When
+    response = admin_client.delete(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 204
+    flag_response = admin_client.get(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
+    )
+    assert flag_response.json()["segment_overrides"] == [
+        {
+            "segment": {"id": segment},
+            "priority": 1,  # Removing an override leaves its priority vacant.
+            "enabled": True,
+            "value": None,
+            "variants": [],
+        }
+    ]
+
+
+def test_delete_feature_dependency__dependency_in_user_segment__responds_404_with_error(
+    admin_client: APIClient,
+    create_segment_override: CreateSegmentOverrideFixture,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    rules: list[SegmentRule] = [
+        {
+            "type": "ALL",
+            "conditions": [
+                {
+                    "property": "$.flags.payments.enabled",
+                    "operator": "EQUAL",
+                    "value": "true",
+                    "description": None,
+                }
+            ],
+            "rules": [],
+        }
+    ]
+    user_segment_id = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        data={"name": "paying", "rules": rules},
+        format="json",
+    ).json()["id"]
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=feature.id,
+        segment_id=user_segment_id,
+    )
+
+    # When
+    response = admin_client.delete(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {
+        "code": "dependency_not_found",
+        "message": 'The feature "checkout" does not depend on the feature "payments".',
+    }
+    flag_response = admin_client.get(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
+    )
+    assert [
+        override["segment"]["id"]
+        for override in flag_response.json()["segment_overrides"]
+    ] == [user_segment_id]
+    assert not AuditLog.objects.filter(
+        related_object_type="FEATURE", log__contains="removed as a dependency"
+    ).exists()
+    assert log.has(
+        "dependencies.delete_failed",
+        level="info",
+        organisation__id=organisation,
+        project__id=project,
+        environment__key=environment_api_key,
+        feature__name="checkout",
+        prerequisite_feature__name="payments",
+    )
+    assert not log.has("dependencies.deleted")
+
+
+def test_delete_feature_dependency__dependency_does_not_exist__responds_404_with_error(
+    admin_client: APIClient,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    organisation: int,
+    other_environment: Environment,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    admin_client.post(
+        f"/api/v1/environments/{other_environment.api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # When
+    response = admin_client.delete(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {
+        "code": "dependency_not_found",
+        "message": 'The feature "checkout" does not depend on the feature "payments".',
+    }
+    other_flag_response = admin_client.get(
+        f"/api/__future__/environments/{other_environment.api_key}/features/{feature.id}/",
+    )
+    assert len(other_flag_response.json()["segment_overrides"]) == 1
+    assert log.has(
+        "dependencies.delete_failed",
+        level="info",
+        organisation__id=organisation,
+        project__id=project,
+        environment__key=environment_api_key,
+        feature__name="checkout",
+        prerequisite_feature__name="payments",
+    )
+
+
+def test_delete_feature_dependency__committed_but_scheduled_dependency__responds_404_with_error(
+    admin_client: APIClient,
+    create_change_request_segment_override: CreateChangeRequestSegmentOverrideFixture,
+    environment_api_key: str,
+    project: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    system_segment = Segment.objects.create(
+        name="checkout-depends-on-payments",
+        project_id=project,
+        feature=feature,
+        is_system_segment=True,
+        rules_data=[
+            {
+                "type": "ANY",
+                "conditions": [
+                    {
+                        "property": '$.flags["payments"].enabled',
+                        "operator": "NOT_EQUAL",
+                        "value": "true",
+                        "description": None,
+                    }
+                ],
+                "rules": [],
+            }
+        ],
+    )
+    index_segment_flag_references(system_segment)
+    create_change_request_segment_override(
+        versioned_environment,
+        feature.id,
+        system_segment.id,
+        committed=True,
+        live_from=timezone.now() + timedelta(days=1),
+    )
+
+    # When
+    response = admin_client.delete(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json()["code"] == "dependency_not_found"
+
+
+@pytest.mark.parametrize(
+    "url, message",
+    [
+        pytest.param(
+            "/api/v1/environments/{environment_api_key}/features/777333777/dependencies/{prerequisite_feature_id}/",
+            "Feature ID '777333777' does not exist in the project.",
+            id="feature",
+        ),
+        pytest.param(
+            "/api/v1/environments/{environment_api_key}/features/{feature_id}/dependencies/333777333/",
+            "Feature ID '333777333' does not exist in the project.",
+            id="prerequisite_feature",
+        ),
+    ],
+)
+def test_delete_feature_dependency__either_feature_does_not_exist__responds_404_with_error(
+    admin_client: APIClient,
+    environment_api_key: str,
+    message: str,
+    project: int,
+    url: str,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+
+    # When
+    response = admin_client.delete(
+        url.format(
+            environment_api_key=environment_api_key,
+            feature_id=feature.id,
+            prerequisite_feature_id=prerequisite.id,
+        ),
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {"code": "feature_not_found", "message": message}
+
+
+def test_delete_feature_dependency__missing_manage_segment_overrides_permission__responds_403_with_error(
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    organisation: int,
+    project: int,
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+    staff_user.add_organisation(Organisation.objects.get(id=organisation))
+    with_environment_permissions([UPDATE_FEATURE_STATE], environment, False)
+
+    # When
+    response = staff_client.delete(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": "permission_denied",
+        "message": 'The permission "Manage segment overrides" is necessary to manage feature dependencies.',
+    }
+    flag_response = admin_client.get(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
+    )
+    assert len(flag_response.json()["segment_overrides"]) == 1
+
+
+def test_delete_feature_dependency__missing_environment_permission__responds_404_with_error(
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    organisation: int,
+    project: int,
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+    staff_user.add_organisation(Organisation.objects.get(id=organisation))
+    with_environment_permissions([], environment, False)
+
+    # When
+    response = staff_client.delete(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {
+        "code": "environment_not_found",
+        "message": f"Environment key '{environment_api_key}' does not exist.",
+    }
+    flag_response = admin_client.get(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
+    )
+    assert len(flag_response.json()["segment_overrides"]) == 1
 
 
 def test_list_feature_dependencies__feature_has_prerequisites__responds_200_with_prerequisites(

@@ -37,7 +37,6 @@ from experimentation.dataclasses import (
     MetricSpec,
     ResultsAggregates,
     RolloutSpec,
-    WarehouseDeliveryStatus,
     WarehouseEventNames,
     WarehouseEventStats,
 )
@@ -51,14 +50,17 @@ from experimentation.models import (
     MetricDirection,
     WarehouseConnection,
     WarehouseConnectionStatus,
+    WarehouseDeliveryStatus,
     WarehouseType,
 )
 from experimentation.results_query import ResultsQueryBuilder, _MetricSlot
 from experimentation.services import (
     annotate_warehouse_event_stats,
-    verify_clickhouse_connection,
+    verify_warehouse_connection,
 )
 from experimentation.stats import VariantStats
+from experimentation.warehouses import clickhouse, flagsmith
+from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -81,10 +83,10 @@ def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
     settings.EXPERIMENTATION_CLICKHOUSE_URL = (
         "clickhouse://user:pass@ch.example.com:9440/flagsmith_exp?secure=True"
     )
-    mock_client_cls = mocker.patch("experimentation.services.Client")
+    mock_client_cls = mocker.patch("experimentation.warehouses.flagsmith.Client")
 
     # When
-    client = services._get_clickhouse_client()
+    client = flagsmith._get_clickhouse_client()
 
     # Then
     mock_client_cls.assert_called_once_with(
@@ -94,8 +96,8 @@ def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
         user="user",
         password="pass",
         secure=True,
-        connect_timeout=services.CLICKHOUSE_CONNECT_TIMEOUT_SECONDS,
-        send_receive_timeout=services.CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
+        connect_timeout=flagsmith.CLICKHOUSE_CONNECT_TIMEOUT_SECONDS,
+        send_receive_timeout=flagsmith.CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
         client_name=settings.CLICKHOUSE_CONNECTION_CLIENT_NAME,
     )
     assert client is mock_client_cls.return_value
@@ -109,10 +111,10 @@ def test_get_clickhouse_client__dsn_timeouts__are_preserved(
     settings.EXPERIMENTATION_CLICKHOUSE_URL = (
         "clickhouse://ch.example.com:9000/db?connect_timeout=1&send_receive_timeout=2"
     )
-    mock_client_cls = mocker.patch("experimentation.services.Client")
+    mock_client_cls = mocker.patch("experimentation.warehouses.flagsmith.Client")
 
     # When
-    services._get_clickhouse_client()
+    flagsmith._get_clickhouse_client()
 
     # Then
     mock_client_cls.assert_called_once_with(
@@ -132,13 +134,13 @@ def test_get_clickhouse_client__repeated_calls__builds_fresh_clients(
     # Given
     settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://ch.example.com/db"
     mock_client_cls = mocker.patch(
-        "experimentation.services.Client",
+        "experimentation.warehouses.flagsmith.Client",
         side_effect=lambda *args, **kwargs: mocker.Mock(),
     )
 
     # When
-    client = services._get_clickhouse_client()
-    other_client = services._get_clickhouse_client()
+    client = flagsmith._get_clickhouse_client()
+    other_client = flagsmith._get_clickhouse_client()
 
     # Then
     assert client is not other_client
@@ -175,7 +177,7 @@ def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -224,7 +226,7 @@ def test_get_warehouse_event_names__flagsmith_warehouse_unavailable__returns_non
     mock_client = mocker.Mock()
     mock_client.execute.side_effect = execute_side_effect
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -260,7 +262,7 @@ def test_get_warehouse_event_names__clickhouse_connection__queries_customer_inst
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     if isinstance(query_result, Exception):
         get_client.return_value.query.side_effect = query_result
@@ -313,7 +315,7 @@ def test_get_warehouse_event_names__connection_details_changed__cache_keyed_by_c
 ) -> None:
     # Given — a cached result for the connection's current details
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     get_client.return_value.query.return_value = mocker.Mock(
         result_rows=[("old_event",)]
@@ -349,7 +351,7 @@ def test_get_warehouse_event_names__unsupported_type__raises(
     )
 
     # When / Then
-    with pytest.raises(ValueError, match="Unsupported warehouse type"):
+    with pytest.raises(UnsupportedWarehouseOperation):
         services.get_warehouse_event_names(connection, "test-env-key")
 
 
@@ -366,14 +368,14 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
     mock_get_client = mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
     window_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
 
     # When
-    result = services.get_exposure_buckets(
+    result = flagsmith.get_exposure_buckets(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=window_start,
@@ -417,7 +419,7 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
         "window_end": window_end,
     }
     mock_get_client.assert_called_once_with(
-        send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+        send_receive_timeout=flagsmith.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
     mock_client.disconnect.assert_called_once_with()
 
@@ -429,12 +431,12 @@ def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
     mock_client = mocker.Mock()
     mock_client.execute.return_value = []
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
     # When
-    result = services.get_exposure_buckets(
+    result = flagsmith.get_exposure_buckets(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -451,14 +453,14 @@ def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
 @pytest.mark.parametrize(
     "run_query",
     [
-        lambda: services.get_exposure_buckets(
+        lambda: flagsmith.get_exposure_buckets(
             environment_key="env-key-123",
             feature_name="my-feature",
             window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
             window_end=datetime(2026, 6, 2, tzinfo=timezone.utc),
             granularity="hour",
         ),
-        lambda: services.get_results_aggregates(
+        lambda: flagsmith.get_results_aggregates(
             environment_key="env-key-123",
             feature_name="my-feature",
             window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -477,7 +479,7 @@ def test_background_query__execute_fails__disconnects_client(
     mock_client = mocker.Mock()
     mock_client.execute.side_effect = OSError("Bad file descriptor")
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -498,7 +500,7 @@ def test_compute_exposures_payload__window_within_72_hours__hourly_buckets(
         (0, "control", datetime(2026, 6, 1, tzinfo=timezone.utc), 10)
     ]
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -529,7 +531,7 @@ def test_compute_exposures_payload__window_beyond_72_hours__daily_buckets(
     mock_client = mocker.Mock()
     mock_client.execute.return_value = []
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -679,12 +681,12 @@ def test_get_warehouse_event_stats__rows__returns_counts(
     mock_client = mocker.Mock()
     mock_client.execute.return_value = rows
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
     # When
-    result = services.get_warehouse_event_stats("env-key-123")
+    result = flagsmith.get_warehouse_event_stats("env-key-123")
 
     # Then
     assert result.total_events_received == expected_total
@@ -897,7 +899,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
         [],
     ]
     mock_get_client = mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
     specs = [
@@ -910,7 +912,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
 
     # When
-    aggregates = services.get_results_aggregates(
+    aggregates = flagsmith.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=window_start,
@@ -968,7 +970,7 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     # And the conversions join is narrowed to the occurrence metric's event
     assert params["conversion_events"] == ["purchase"]
     mock_get_client.assert_called_with(
-        send_receive_timeout=services.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+        send_receive_timeout=flagsmith.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
     assert mock_client.disconnect.call_count == 2
 
@@ -989,7 +991,7 @@ def test_get_metric_variant_stats__three_variants__maps_all_variants(
         [],
     ]
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
     specs = [
@@ -998,7 +1000,7 @@ def test_get_metric_variant_stats__three_variants__maps_all_variants(
     ]
 
     # When
-    aggregates = services.get_results_aggregates(
+    aggregates = flagsmith.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -1029,12 +1031,12 @@ def test_get_metric_variant_stats__no_metrics__counts_variants_only(
         [],
     ]
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
     # When
-    aggregates = services.get_results_aggregates(
+    aggregates = flagsmith.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -1076,7 +1078,7 @@ def test_get_metric_variant_stats__shuffled_columns__maps_by_name(
         [],
     ]
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
     specs = [
@@ -1085,7 +1087,7 @@ def test_get_metric_variant_stats__shuffled_columns__maps_by_name(
     ]
 
     # When
-    aggregates = services.get_results_aggregates(
+    aggregates = flagsmith.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -1239,7 +1241,7 @@ def test_get_results_aggregates__occurrence_metric__gathers_chart_rows(
         [(0, "control", bucket, 1000)],
     ]
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
     specs = [
@@ -1250,7 +1252,7 @@ def test_get_results_aggregates__occurrence_metric__gathers_chart_rows(
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
 
     # When
-    aggregates = services.get_results_aggregates(
+    aggregates = flagsmith.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=window_start,
@@ -1297,12 +1299,12 @@ def test_get_results_aggregates__value_metrics_only__skips_conversions_query(
         [],
     ]
     mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
     # When
-    aggregates = services.get_results_aggregates(
+    aggregates = flagsmith.get_results_aggregates(
         environment_key="env-key-123",
         feature_name="my-feature",
         window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
@@ -1886,7 +1888,7 @@ def test_compute_results_summary__experiment__queries_warehouse_and_builds(
     window_start = datetime(2026, 6, 1, tzinfo=timezone.utc)
     window_end = datetime(2026, 6, 10, tzinfo=timezone.utc)
     mock_gather = mocker.patch(
-        "experimentation.services.get_results_aggregates",
+        "experimentation.warehouses.flagsmith.get_results_aggregates",
         return_value=replace(
             aggregates,
             exposure_buckets=[
@@ -2642,6 +2644,12 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     # the experiment is running)
     services.apply_experiment_rollout(experiment, spec)
     experiment.refresh_from_db()
+    # Without this, a run where the rollout segment's id equals the variant
+    # hashing seed puts every enrolled identity in the first variant:
+    # https://github.com/Flagsmith/flagsmith-engine/issues/348
+    FeatureState.objects.filter(
+        feature_segment__segment_id=experiment.rollout_segment_id
+    ).update(mv_hashing_salt=experiment.rollout_segment_id + 1)
     before = variant_assignment(identities, multivariate_feature.name)
 
     services.apply_experiment_rollout(experiment, spec)
@@ -2664,21 +2672,21 @@ def _verification_count(result: str) -> float:
     )
 
 
-def test_verify_clickhouse_connection__reachable__sets_connected(
+def test_verify_warehouse_connection__reachable__sets_connected(
     clickhouse_connection: WarehouseConnection,
     log: StructuredLogCapture,
     mocker: MockerFixture,
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     success_count_before = _verification_count("success")
     clickhouse_connection.status_detail = "stale detail"
     clickhouse_connection.save()
 
     # When
-    verify_clickhouse_connection(clickhouse_connection)
+    verify_warehouse_connection(clickhouse_connection)
 
     # Then the check ran over the same HTTP client delivery uses
     clickhouse_connection.refresh_from_db()
@@ -2692,7 +2700,7 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
         database="acme_dwh",
         secure=True,
         connect_timeout=10,
-        send_receive_timeout=services.CLICKHOUSE_VERIFY_TIMEOUT_SECONDS,
+        send_receive_timeout=clickhouse.VERIFY_TIMEOUT_SECONDS,
         pool_mgr=mocker.ANY,
     )
     get_client.return_value.query.assert_called_once_with("EXISTS TABLE events")
@@ -2724,7 +2732,7 @@ def test_verify_clickhouse_connection__reachable__sets_connected(
     ],
     ids=["client_error", "missing_events_table", "missing_credentials"],
 )
-def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
+def test_verify_warehouse_connection__failure__sets_errored_with_detail(
     clickhouse_connection: WarehouseConnection,
     credentials: dict[str, str] | None,
     query_results: Exception | list[list[tuple[int]]] | None,
@@ -2734,7 +2742,7 @@ def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     if isinstance(query_results, list):
         get_client.return_value.query.side_effect = [
@@ -2747,7 +2755,7 @@ def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
     failure_count_before = _verification_count("failure")
 
     # When
-    verify_clickhouse_connection(clickhouse_connection)
+    verify_warehouse_connection(clickhouse_connection)
 
     # Then
     clickhouse_connection.refresh_from_db()
@@ -2759,13 +2767,13 @@ def test_verify_clickhouse_connection__failure__sets_errored_with_detail(
     )
 
 
-def test_verify_clickhouse_connection__internal_host__sets_errored_without_connecting(
+def test_verify_warehouse_connection__internal_host__sets_errored_without_connecting(
     clickhouse_connection: WarehouseConnection,
     mocker: MockerFixture,
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     clickhouse_connection.config = {
         **(clickhouse_connection.config or {}),
@@ -2774,7 +2782,7 @@ def test_verify_clickhouse_connection__internal_host__sets_errored_without_conne
     clickhouse_connection.save()
 
     # When
-    verify_clickhouse_connection(clickhouse_connection)
+    verify_warehouse_connection(clickhouse_connection)
 
     # Then
     clickhouse_connection.refresh_from_db()
@@ -2807,7 +2815,7 @@ def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer
 ) -> None:
     # Given
     get_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     if isinstance(query_result, Exception):
         get_client.return_value.query.side_effect = query_result
@@ -3845,56 +3853,29 @@ def test_apply_experiment_rollout__resubmitted__records_history_only_on_change( 
     assert _rule_ids() == rule_ids
 
 
-def test_annotate_warehouse_delivery_statuses__verified_connection_failing_delivery__shows_errored(
+def test_annotate_warehouse_delivery_statuses__verified_external_connection_failing_delivery__shows_errored(
     clickhouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
+    failing_delivery_status: WarehouseDeliveryStatus,
 ) -> None:
     # Given a connection that passed verification when it was saved, whose
     # warehouse has since started refusing our login
     clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
-    mock_get = mocker.patch(
-        "experimentation.services.warehouse_delivery_sync_service.get_warehouse_delivery_statuses",
-        return_value={
-            clickhouse_connection.id: WarehouseDeliveryStatus(
-                connection_id=clickhouse_connection.id,
-                status="errored",
-                detail="Authentication failed.",
-            )
-        },
-    )
 
     # When
     services.annotate_warehouse_delivery_statuses([clickhouse_connection])
 
     # Then the dashboard shows the failure and its reason, without a save
-    mock_get.assert_called_once_with([clickhouse_connection.id])
     assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
     assert clickhouse_connection.status_detail == "Authentication failed."
     stored = WarehouseConnection.objects.get(id=clickhouse_connection.id)
     assert stored.status == WarehouseConnectionStatus.CREATED
 
 
-@pytest.mark.parametrize(
-    "outcome",
-    [
-        pytest.param(None, id="never-delivered"),
-        pytest.param(
-            WarehouseDeliveryStatus(connection_id=0, status="connected", detail=None),
-            id="delivering",
-        ),
-    ],
-)
-def test_annotate_warehouse_delivery_statuses__verified_connection_delivering__unchanged(
+def test_annotate_warehouse_delivery_statuses__verified_external_connection_never_delivered__stays_connected(
     clickhouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
-    outcome: WarehouseDeliveryStatus | None,
 ) -> None:
-    # Given a verified connection the delivery service has no complaint about
+    # Given a verified connection the delivery service has not delivered for yet
     clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
-    mocker.patch(
-        "experimentation.services.warehouse_delivery_sync_service.get_warehouse_delivery_statuses",
-        return_value={clickhouse_connection.id: outcome} if outcome else {},
-    )
 
     # When
     services.annotate_warehouse_delivery_statuses([clickhouse_connection])
@@ -3904,31 +3885,52 @@ def test_annotate_warehouse_delivery_statuses__verified_connection_delivering__u
     assert clickhouse_connection.status_detail is None
 
 
-def test_annotate_warehouse_delivery_statuses__unverified_or_flagsmith__redis_not_consulted(
+def test_annotate_warehouse_delivery_statuses__verified_external_connection_delivering__stays_connected(
     clickhouse_connection: WarehouseConnection,
-    environment: Environment,
-    mocker: MockerFixture,
+    successful_delivery_status: WarehouseDeliveryStatus,
 ) -> None:
-    # Given a ClickHouse connection that failed verification, and a Flagsmith
-    # connection, which the delivery service never handles
+    # Given a verified connection whose last delivery succeeded
+    clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
+
+    # When
+    services.annotate_warehouse_delivery_statuses([clickhouse_connection])
+
+    # Then
+    assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
+    assert clickhouse_connection.status_detail is None
+
+
+def test_annotate_warehouse_delivery_statuses__unverified_external_connection__keeps_verification_error(
+    clickhouse_connection: WarehouseConnection,
+    failing_delivery_status: WarehouseDeliveryStatus,
+) -> None:
+    # Given a connection that failed verification
     clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
     clickhouse_connection.status_detail = "Could not connect to the host."
-    flagsmith_connection = WarehouseConnection(
-        environment=environment,
-        warehouse_type=WarehouseType.FLAGSMITH,
-        name="Flagsmith",
-        status=WarehouseConnectionStatus.CONNECTED,
-    )
-    mock_get = mocker.patch(
-        "experimentation.services.warehouse_delivery_sync_service.get_warehouse_delivery_statuses",
+
+    # When
+    services.annotate_warehouse_delivery_statuses([clickhouse_connection])
+
+    # Then
+    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
+    assert clickhouse_connection.status_detail == "Could not connect to the host."
+
+
+def test_annotate_warehouse_delivery_statuses__flagsmith_warehouse__stays_connected(
+    warehouse_connection: WarehouseConnection,
+) -> None:
+    # Given a Flagsmith connection, which the delivery service never handles
+    warehouse_connection.status = WarehouseConnectionStatus.CONNECTED
+    WarehouseDeliveryStatus.objects.create(
+        connection=warehouse_connection,
+        status=WarehouseConnectionStatus.ERRORED,
+        detail="Authentication failed.",
+        updated_at=datetime.now(timezone.utc),
     )
 
     # When
-    services.annotate_warehouse_delivery_statuses(
-        [clickhouse_connection, flagsmith_connection]
-    )
+    services.annotate_warehouse_delivery_statuses([warehouse_connection])
 
-    # Then the verification result stands, and Redis is not even asked
-    mock_get.assert_not_called()
-    assert clickhouse_connection.status == WarehouseConnectionStatus.ERRORED
-    assert clickhouse_connection.status_detail == "Could not connect to the host."
+    # Then
+    assert warehouse_connection.status == WarehouseConnectionStatus.CONNECTED
+    assert warehouse_connection.status_detail is None

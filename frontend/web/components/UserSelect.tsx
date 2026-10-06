@@ -4,8 +4,10 @@ import Icon from './icons/Icon'
 import classNames from 'classnames'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
+import { User } from 'common/types/responses'
+import InactiveMembershipChip from './users-permissions/InactiveMembershipChip'
 interface UserSelectProps {
-  users: any[]
+  users: User[]
   value: any[]
   isOpen: boolean
   onToggle: () => void
@@ -95,7 +97,12 @@ const UserSelect: React.FC<UserSelectProps> = ({
                     'overflow-ellipsis w-100',
                   )}
                 >
-                  {v.first_name} {v.last_name}
+                  <div className='d-flex align-items-center gap-2'>
+                    <span>
+                      {v.first_name} {v.last_name}
+                    </span>
+                    <InactiveMembershipChip user={v} />
+                  </div>
                   <div className='text-muted text-small'>{v.email}</div>
                 </div>
                 {selectedValue.includes(v.id) && (

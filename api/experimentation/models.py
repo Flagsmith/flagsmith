@@ -6,8 +6,6 @@ from django.db import models, transaction
 from django.db.models import Q
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
-    AFTER_CREATE,
-    AFTER_DELETE,
     AFTER_UPDATE,
     LifecycleModelMixin,
     hook,
@@ -76,20 +74,6 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
                 name="unique_active_warehouse_per_env",
             ),
         ]
-
-    @hook(AFTER_CREATE)  # type: ignore[misc]
-    @hook(  # type: ignore[misc]
-        AFTER_UPDATE,
-        when_any=["warehouse_type", "config", "credentials"],
-        has_changed=True,
-    )
-    @hook(AFTER_DELETE)  # type: ignore[misc]
-    def sync_to_ingestion(self) -> None:
-        from experimentation.tasks import sync_environment_ingestion
-
-        sync_environment_ingestion.delay(
-            kwargs={"environment_id": self.environment_id},
-        )
 
     @hook(  # type: ignore[misc]
         AFTER_UPDATE,

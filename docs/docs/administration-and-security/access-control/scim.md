@@ -77,7 +77,13 @@ When your identity provider deprovisions a user by sending a PUT or a PATCH requ
 2. The membership no longer counts towards your plan's seat limit.
 3. Their role, project and environment permissions, and
    [permission group](/administration-and-security/access-control/rbac#groups) memberships are all retained.
-4. The membership can be reactivated by sending a PUT or a PATCH request with `active: true`.
+4. The user still appears in the organisation's member lists, such as the **Members** list under **Users and
+   Permissions**, marked with an **Inactive** chip.
+5. The membership can be reactivated by sending a PUT or a PATCH request with `active: true`.
+
+Membership status is managed by your identity provider, and cannot be changed from the Flagsmith dashboard. The
+[organisation users API](https://api.flagsmith.com/api/v1/docs/) exposes it as the `is_organisation_membership_active`
+attribute.
 
 ### User attributes
 
@@ -240,8 +246,9 @@ endpoints as defined by the SCIM 2.0 specification.
 
 ### Deprovisioned users still appear in the organisation
 
-- Deactivated users are intentionally retained. They keep their `active: false` membership so they can be reactivated
-  later, and they do not count towards your seat limit. If you want the membership gone entirely, your identity provider
-  must send a DELETE request.
+- Deactivated users are intentionally retained, and are marked with an **Inactive** chip in the Flagsmith dashboard.
+  They keep their `active: false` membership so they can be reactivated later, and they do not count towards your seat
+  limit. This is why the number of members listed can be higher than the number of seats in use. If you want the
+  membership gone entirely, your identity provider must send a DELETE request.
 - Check that your identity provider is configured to send deprovisioning events at all — in Okta, for example,
   "Deactivate Users" must be enabled under "Provisioning to App".

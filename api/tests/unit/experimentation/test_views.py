@@ -13,13 +13,13 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from experimentation.dataclasses import (
-    WarehouseDeliveryStatus,
     WarehouseEventNames,
     WarehouseEventStats,
 )
 from experimentation.models import (
     WarehouseConnection,
     WarehouseConnectionStatus,
+    WarehouseDeliveryStatus,
     WarehouseType,
 )
 from experimentation.views import WarehouseConnectionViewSet
@@ -34,13 +34,13 @@ def mock_clickhouse_stats(
     settings: SettingsWrapper,
 ) -> object:
     """Default every view test to a configured, empty warehouse. Tests that need
-    events re-patch experimentation.services.get_warehouse_event_stats; tests for the
+    events re-patch experimentation.warehouses.flagsmith.get_warehouse_event_stats; tests for the
     unconfigured/erroring paths override the setting / raise."""
     settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://localhost:9000/test"
     mock_client = mocker.Mock()
     mock_client.execute.return_value = [(0, 0)]
     return mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -850,7 +850,7 @@ def test_get__warehouse_type__returns_expected_event_stats(
         config=config,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         return_value=WarehouseEventStats(
             total_events_received=12,
             unique_events_count=3,
@@ -883,7 +883,7 @@ def test_get__pending_connection_with_events__shows_stats_but_does_not_flip(
         status=WarehouseConnectionStatus.PENDING_CONNECTION,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         return_value=WarehouseEventStats(
             total_events_received=1,
             unique_events_count=1,
@@ -962,7 +962,7 @@ def test_test_warehouse_connection__pending_with_events__flips_to_connected(
         status=WarehouseConnectionStatus.PENDING_CONNECTION,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         return_value=WarehouseEventStats(
             total_events_received=1,
             unique_events_count=1,
@@ -1026,7 +1026,7 @@ def test_test_warehouse_connection__clickhouse_unreachable__stays_pending(
         status=WarehouseConnectionStatus.PENDING_CONNECTION,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         side_effect=OSError("clickhouse unreachable"),
     )
     url = reverse(
@@ -1149,7 +1149,9 @@ def test_get__clickhouse_unconfigured__returns_200_without_stats(
     # Given
     enable_features("experimentation_warehouse_connection")
     settings.EXPERIMENTATION_CLICKHOUSE_URL = None
-    stats_spy = mocker.patch("experimentation.services.get_warehouse_event_stats")
+    stats_spy = mocker.patch(
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats"
+    )
 
     # When
     response = admin_client.get(warehouse_connection_url)
@@ -1202,7 +1204,7 @@ def test_get__clickhouse_errors__returns_200_without_stats(
         status=WarehouseConnectionStatus.PENDING_CONNECTION,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         side_effect=OSError("clickhouse unreachable"),
     )
 
@@ -1228,7 +1230,7 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
     # Given
     enable_features("experimentation_warehouse_connection")
     mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
 
     # When
@@ -1525,7 +1527,7 @@ def test_post__clickhouse_verification_outcome__returns_201_with_status(
     # Given
     enable_features("experimentation_warehouse_connection")
     mock_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     mock_client.return_value.query.side_effect = query_side_effect
 
@@ -1578,7 +1580,7 @@ def test_patch__clickhouse_config_without_credentials__keeps_stored_password(
     # Given
     enable_features("experimentation_warehouse_connection")
     mock_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
@@ -1613,7 +1615,7 @@ def test_patch__clickhouse_name_only__does_not_reverify(
     # Given
     enable_features("experimentation_warehouse_connection")
     mock_client = mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
@@ -1638,7 +1640,7 @@ def test_put__clickhouse_name_only__preserves_config_and_credentials(
     # Given
     enable_features("experimentation_warehouse_connection")
     mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
@@ -1674,7 +1676,7 @@ def test_test_warehouse_connection__clickhouse__reverifies_and_returns_status(
     clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
     clickhouse_connection.save()
     mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     url = reverse(
         "api-v1:environments:experimentation:"
@@ -1745,7 +1747,7 @@ def test_test_warehouse_connection_config__payload__returns_expected_response(
     # Given
     enable_features("experimentation_warehouse_connection")
     mocker.patch(
-        "experimentation.warehouse_verification_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
         side_effect=client_side_effect,
     )
     url = reverse(
@@ -1899,11 +1901,9 @@ def test_get_events__unsupported_type__returns_400(
     admin_client: APIClient,
     environment: Environment,
     enable_features: EnableFeaturesFixture,
-    mocker: MockerFixture,
 ) -> None:
     # Given
     enable_features("experimentation_warehouse_connection")
-    get_event_names = mocker.patch("experimentation.views.get_warehouse_event_names")
     connection = WarehouseConnection.objects.create(
         environment=environment,
         warehouse_type=WarehouseType.SNOWFLAKE,
@@ -1923,7 +1923,6 @@ def test_get_events__unsupported_type__returns_400(
     assert response.json() == {
         "detail": "Event listing is not supported for this warehouse type."
     }
-    get_event_names.assert_not_called()
 
 
 def test_list__verified_connection_failing_delivery__shows_errored_without_saving(
@@ -1931,23 +1930,13 @@ def test_list__verified_connection_failing_delivery__shows_errored_without_savin
     environment: Environment,
     enable_features: EnableFeaturesFixture,
     clickhouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
+    failing_delivery_status: WarehouseDeliveryStatus,
 ) -> None:
     # Given a connection that passed verification when saved, whose warehouse
     # has since started refusing the events the delivery service sends
     enable_features("experimentation_warehouse_connection")
     clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
     clickhouse_connection.save()
-    mocker.patch(
-        "experimentation.services.warehouse_delivery_sync_service.get_warehouse_delivery_statuses",
-        return_value={
-            clickhouse_connection.id: WarehouseDeliveryStatus(
-                connection_id=clickhouse_connection.id,
-                status="errored",
-                detail="Authentication failed.",
-            )
-        },
-    )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-list",
         args=[environment.api_key],

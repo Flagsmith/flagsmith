@@ -431,6 +431,8 @@ export type User = {
   isGettingStarted?: boolean
   // TODO: Use enum
   role: string
+  // Only returned when users are listed in the context of an organisation.
+  is_organisation_membership_active?: boolean
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean
