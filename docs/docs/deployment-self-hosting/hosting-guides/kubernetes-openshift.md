@@ -443,6 +443,9 @@ login then also needs these permissions:
 - Read and write the topics `external_warehouse_events` and `external_warehouse_events_retry`.
 - Read the consumer groups `warehouse-delivery` and `warehouse-delivery-retry`.
 
+If your Kafka has `auto.create.topics.enable=true`, create these two topics with the same partition count before you
+turn on warehouse delivery. Otherwise, Kafka can create them first with its default partition count.
+
 To turn experimentation on:
 
 1. Set up [Flagsmith on Flagsmith](/deployment-self-hosting/core-configuration/running-flagsmith-on-flagsmith).
