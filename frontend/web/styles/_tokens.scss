@@ -16,18 +16,18 @@
   --blue-800: #0b576e;
   --blue-900: #094456;
   --blue-950: #07313e;
-  --content-always-dark: #080c17;
   --content-blue: #c7e6ff;
-  --content-light-blue: #c9f1fe;
-  --content-light-brown: #dfc8c6;
-  --content-light-green: #d6f1d4;
-  --content-light-grey: #eff0f3;
-  --content-light-mint: #c7e7e2;
-  --content-light-peach: #fcd6c7;
-  --content-light-pink: #ffceda;
-  --content-light-purple: #dacdde;
-  --content-light-red: #ffe0df;
-  --content-light-yellow: #f3edca;
+  --content-brown: #dfc8c6;
+  --content-green: #d6f1d4;
+  --content-grey: #eff0f3;
+  --content-ink: #080c17;
+  --content-mint: #c7e7e2;
+  --content-peach: #fcd6c7;
+  --content-pink: #ffceda;
+  --content-purple: #dacdde;
+  --content-red: #ffe0df;
+  --content-sky: #c9f1fe;
+  --content-yellow: #f3edca;
   --gold-50: #fefbf0;
   --gold-100: #fdf6e0;
   --gold-200: #faeec5;
@@ -170,6 +170,45 @@
   --color-chart-9: var(--orange-600);
   --color-chart-10: var(--purple-600);
 
+  // ContentBg
+  --color-content-blue-bg: var(--content-blue);
+  --color-content-brown-bg: var(--content-brown);
+  --color-content-green-bg: var(--content-green);
+  --color-content-grey-bg: var(--content-grey);
+  --color-content-mint-bg: var(--content-mint);
+  --color-content-peach-bg: var(--content-peach);
+  --color-content-pink-bg: var(--content-pink);
+  --color-content-purple-bg: var(--content-purple);
+  --color-content-red-bg: var(--content-red);
+  --color-content-sky-bg: var(--content-sky);
+  --color-content-yellow-bg: var(--content-yellow);
+
+  // ContentBorder
+  --color-content-blue-border: var(--content-blue);
+  --color-content-brown-border: var(--content-brown);
+  --color-content-green-border: var(--content-green);
+  --color-content-grey-border: var(--content-grey);
+  --color-content-mint-border: var(--content-mint);
+  --color-content-peach-border: var(--content-peach);
+  --color-content-pink-border: var(--content-pink);
+  --color-content-purple-border: var(--content-purple);
+  --color-content-red-border: var(--content-red);
+  --color-content-sky-border: var(--content-sky);
+  --color-content-yellow-border: var(--content-yellow);
+
+  // ContentText
+  --color-content-blue-text: var(--content-ink);
+  --color-content-brown-text: var(--content-ink);
+  --color-content-green-text: var(--content-ink);
+  --color-content-grey-text: var(--content-ink);
+  --color-content-mint-text: var(--content-ink);
+  --color-content-peach-text: var(--content-ink);
+  --color-content-pink-text: var(--content-ink);
+  --color-content-purple-text: var(--content-ink);
+  --color-content-red-text: var(--content-ink);
+  --color-content-sky-text: var(--content-ink);
+  --color-content-yellow-text: var(--content-ink);
+
   // Radius
   --radius-2xl: 18px;
   --radius-full: 9999px;
@@ -256,6 +295,28 @@
   --color-chart-8: var(--green-300);
   --color-chart-9: var(--orange-200);
   --color-chart-10: var(--purple-300);
+  --color-content-blue-bg: transparent;
+  --color-content-brown-bg: transparent;
+  --color-content-green-bg: transparent;
+  --color-content-grey-bg: transparent;
+  --color-content-mint-bg: transparent;
+  --color-content-peach-bg: transparent;
+  --color-content-pink-bg: transparent;
+  --color-content-purple-bg: transparent;
+  --color-content-red-bg: transparent;
+  --color-content-sky-bg: transparent;
+  --color-content-yellow-bg: transparent;
+  --color-content-blue-text: var(--content-blue);
+  --color-content-brown-text: var(--content-brown);
+  --color-content-green-text: var(--content-green);
+  --color-content-grey-text: var(--content-grey);
+  --color-content-mint-text: var(--content-mint);
+  --color-content-peach-text: var(--content-peach);
+  --color-content-pink-text: var(--content-pink);
+  --color-content-purple-text: var(--content-purple);
+  --color-content-red-text: var(--content-red);
+  --color-content-sky-text: var(--content-sky);
+  --color-content-yellow-text: var(--content-yellow);
   --shadow-lg: 0px 8px 16px oklch(from var(--slate-1000) l c h / 0.35);
   --shadow-md: 0px 4px 8px oklch(from var(--slate-1000) l c h / 0.30);
   --shadow-sm: 0px 1px 2px oklch(from var(--slate-1000) l c h / 0.20);

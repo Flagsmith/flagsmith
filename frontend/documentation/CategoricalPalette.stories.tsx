@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { FC } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import './docs.scss'
@@ -6,7 +6,6 @@ import Chip from 'components/base/Chip'
 import DocPage from './components/DocPage'
 import Swatch from './components/Swatch'
 import tokens from 'common/theme/tokens.json'
-import { contentColourNames, contentColours } from 'common/theme/tokens'
 import { AA_NORMAL_TEXT, contrastRatio } from 'common/theme/contrast'
 
 // ---------------------------------------------------------------------------
@@ -40,14 +39,43 @@ export default meta
 // Stories
 // ---------------------------------------------------------------------------
 
-const PRIMITIVES = tokens.primitives as Record<string, string>
+// One group per slot, keyed alike by the generator, which fails the build if
+// they drift. Dark draws on the page, since the fill there is transparent.
+type Slot = Record<string, { dark: string; light: string }>
+const BG: Slot = tokens.contentBg
+const BORDER: Slot = tokens.contentBorder
+const TEXT: Slot = tokens.contentText
 
-// The Content palette, fixed rather than theme-aware: a tag chip carries its
-// own surface, so it does not follow the page. One ink serves all of them.
-const TAG_INK_NAME = 'content-always-dark'
-const TAG_INK = PRIMITIVES[TAG_INK_NAME]
-const TAG_FILLS = contentColourNames.map(
-  (name) => [name, contentColours[name]] as const,
+const TAG_PAIRINGS = Object.keys(BG).map((name) => ({
+  dark: {
+    border: BORDER[name].dark,
+    fill: tokens.primitives['slate-950'],
+    ink: TEXT[name].dark,
+  },
+  light: {
+    border: BORDER[name].light,
+    fill: BG[name].light,
+    ink: TEXT[name].light,
+  },
+  name,
+}))
+
+type TagPreviewProps = {
+  border: string
+  fill: string
+  ink: string
+  name: string
+}
+
+// The only place a tag is drawn from values rather than its utility class: the
+// page shows both themes at once, so neither can come from the ambient one.
+const TagPreview: FC<TagPreviewProps> = ({ border, fill, ink, name }) => (
+  <span
+    className='cat-tag'
+    style={{ backgroundColor: fill, borderColor: border, color: ink }}
+  >
+    {name}
+  </span>
 )
 
 export const TagSwatches: StoryObj = {
@@ -60,28 +88,40 @@ export const TagSwatches: StoryObj = {
         <>
           The scale a custom tag picks from, replacing the runtime colour maths
           that made contrast a function of the user&rsquo;s chosen hue. These
-          are the design system&rsquo;s Content colours, fixed in both themes
-          because a chip carries its own surface. Every one clears AA (
-          {AA_NORMAL_TEXT}:1) against the shared ink, enforced by{' '}
+          are the design system&rsquo;s Content colours, shown here on light,
+          where the shared ink below is the label. Dark drops the fill: the tint
+          moves to the border and the label, so no new colours are needed. Both
+          pairings clear AA ({AA_NORMAL_TEXT}:1), enforced by{' '}
           <code>tagSwatches.test.ts</code>.
         </>
       }
     >
-      <div className='d-flex flex-wrap gap-3'>
-        {TAG_FILLS.map(([name, hex]) => (
-          <div
-            className='d-flex flex-column align-items-center gap-1'
-            key={name}
-          >
-            <Chip colour={name} size='xs'>
-              {name}
-            </Chip>
-            <small className='text-secondary'>
-              {contrastRatio(hex, TAG_INK).toFixed(2)}:1
-            </small>
+      {(['light', 'dark'] as const).map((theme) => (
+        <div key={theme}>
+          <h3 className='cat-note'>{theme}</h3>
+          <div className='d-flex flex-wrap gap-3'>
+            {TAG_PAIRINGS.map(({ name, ...pairing }) => {
+              const { border, fill, ink } = pairing[theme]
+              return (
+                <div
+                  className='d-flex flex-column align-items-center gap-1'
+                  key={name}
+                >
+                  <TagPreview
+                    border={border}
+                    fill={fill}
+                    ink={ink}
+                    name={name}
+                  />
+                  <small className='text-secondary'>
+                    {contrastRatio(fill, ink).toFixed(2)}:1
+                  </small>
+                </div>
+              )
+            })}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
       <p className='cat-note'>
         System tags (Issue, PR, Stale, Unhealthy) are not on this scale. They
         take no fill at all: <code>border-default</code> and{' '}

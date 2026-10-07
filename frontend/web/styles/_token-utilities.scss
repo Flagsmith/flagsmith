@@ -55,17 +55,17 @@
 .icon-warning { color: var(--color-icon-warning); fill: var(--color-icon-warning); }
 
 // Tags
-.tag-blue { background-color: var(--content-blue); color: var(--content-always-dark); --ds-chip-border: var(--content-blue); }
-.tag-light-blue { background-color: var(--content-light-blue); color: var(--content-always-dark); --ds-chip-border: var(--content-light-blue); }
-.tag-light-brown { background-color: var(--content-light-brown); color: var(--content-always-dark); --ds-chip-border: var(--content-light-brown); }
-.tag-light-green { background-color: var(--content-light-green); color: var(--content-always-dark); --ds-chip-border: var(--content-light-green); }
-.tag-light-grey { background-color: var(--content-light-grey); color: var(--content-always-dark); --ds-chip-border: var(--content-light-grey); }
-.tag-light-mint { background-color: var(--content-light-mint); color: var(--content-always-dark); --ds-chip-border: var(--content-light-mint); }
-.tag-light-peach { background-color: var(--content-light-peach); color: var(--content-always-dark); --ds-chip-border: var(--content-light-peach); }
-.tag-light-pink { background-color: var(--content-light-pink); color: var(--content-always-dark); --ds-chip-border: var(--content-light-pink); }
-.tag-light-purple { background-color: var(--content-light-purple); color: var(--content-always-dark); --ds-chip-border: var(--content-light-purple); }
-.tag-light-red { background-color: var(--content-light-red); color: var(--content-always-dark); --ds-chip-border: var(--content-light-red); }
-.tag-light-yellow { background-color: var(--content-light-yellow); color: var(--content-always-dark); --ds-chip-border: var(--content-light-yellow); }
+.tag-blue { background-color: var(--color-content-blue-bg); color: var(--color-content-blue-text); --ds-chip-border: var(--color-content-blue-border); }
+.tag-brown { background-color: var(--color-content-brown-bg); color: var(--color-content-brown-text); --ds-chip-border: var(--color-content-brown-border); }
+.tag-green { background-color: var(--color-content-green-bg); color: var(--color-content-green-text); --ds-chip-border: var(--color-content-green-border); }
+.tag-grey { background-color: var(--color-content-grey-bg); color: var(--color-content-grey-text); --ds-chip-border: var(--color-content-grey-border); }
+.tag-mint { background-color: var(--color-content-mint-bg); color: var(--color-content-mint-text); --ds-chip-border: var(--color-content-mint-border); }
+.tag-peach { background-color: var(--color-content-peach-bg); color: var(--color-content-peach-text); --ds-chip-border: var(--color-content-peach-border); }
+.tag-pink { background-color: var(--color-content-pink-bg); color: var(--color-content-pink-text); --ds-chip-border: var(--color-content-pink-border); }
+.tag-purple { background-color: var(--color-content-purple-bg); color: var(--color-content-purple-text); --ds-chip-border: var(--color-content-purple-border); }
+.tag-red { background-color: var(--color-content-red-bg); color: var(--color-content-red-text); --ds-chip-border: var(--color-content-red-border); }
+.tag-sky { background-color: var(--color-content-sky-bg); color: var(--color-content-sky-text); --ds-chip-border: var(--color-content-sky-border); }
+.tag-yellow { background-color: var(--color-content-yellow-bg); color: var(--color-content-yellow-text); --ds-chip-border: var(--color-content-yellow-border); }
 
 // Radius
 .rounded-2xl { border-radius: var(--radius-2xl); }

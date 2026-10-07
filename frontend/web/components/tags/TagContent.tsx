@@ -84,10 +84,11 @@ const TagContent: FC<TagContentProps> = ({ disabled = false, tag }) => {
     <Tooltip
       title={
         // The only fade: TableTagFilter renders this without a Tag around it,
-        // and two of them compound to 25%.
+        // and two of them compound. 75 rather than 50 because in dark the
+        // label carries the hue, and half of it drops under AA on the page.
         <span
           className={classNames('gap-1 flex-row', {
-            'opacity-50': disabled,
+            'opacity-75': disabled,
           })}
         >
           {tagLabel}

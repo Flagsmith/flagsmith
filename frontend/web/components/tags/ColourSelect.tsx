@@ -15,10 +15,9 @@ type ColourSelectType = {
 // The tick sits on the colour itself, which is a hex a user picked rather than
 // a token, so neither ink nor pale reads on all of them. Pick per colour.
 const tickFill = (colour: string) =>
-  contrastRatio(contentInk, colour) >
-  contrastRatio(contentColours['light-grey'], colour)
+  contrastRatio(contentInk, colour) > contrastRatio(contentColours.grey, colour)
     ? contentInk
-    : contentColours['light-grey']
+    : contentColours.grey
 
 // The banner colour, not a tag: these are raw hexes rather than the tag
 // palette, so they render as themselves rather than through a swatch lookup.

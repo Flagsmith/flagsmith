@@ -77,6 +77,20 @@ export const UnknownColour: Story = {
   name: 'Colour outside the scale',
 }
 
+// A plan entitlement rather than a UI state: the organisation cannot use this
+// tag, so it fades rather than disappearing. In dark the label carries the hue,
+// so the fade has to stop short of dropping it under AA.
+export const Disabled: Story = {
+  render: () => (
+    <div className='d-flex flex-wrap gap-1'>
+      <Tag disabled tag={tag({ label: 'Checkout' })} />
+      <Tag disabled tag={tag({ label: 'Stale', type: 'STALE' })} />
+      <Tag disabled selected={false} tag={tag({ label: 'Billing' })} />
+      <Tag disabled selected tag={tag({ label: 'Search' })} />
+    </div>
+  ),
+}
+
 /** Hooks cannot live in a story's render, so selection state gets a component. */
 const SelectableTags: React.FC = () => {
   const [picked, setPicked] = useState<string>('Checkout')

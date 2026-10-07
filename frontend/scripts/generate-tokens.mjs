@@ -42,6 +42,9 @@ const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 const DESCRIBED = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 // Chart colours are like colour tokens (light/dark) but not under "color"
 const CHART_CATEGORY = 'chart'
+// One group per paintable slot, so nothing has to read a primitive directly.
+// The first is the one the palette is keyed on, since every hue has a fill.
+const CONTENT_SLOTS = ['contentBg', 'contentBorder', 'contentText']
 
 // Build reverse lookups for primitives
 const hexToPrimitive = new Map()
@@ -62,6 +65,26 @@ if (json.primitives) {
     rgbToPrimitive.set(hexToRgb(hex), name)
   }
 }
+
+// A slot missing a hue would fall back to whatever the chip inherits, so fail
+// rather than emit a tag drawn from the page's own colours.
+function assertSlotsCoverTheSameHues() {
+  const [first, ...rest] = CONTENT_SLOTS
+  const hues = Object.keys(json[first] ?? {})
+  for (const slot of rest) {
+    const theirs = Object.keys(json[slot] ?? {})
+    const missing = hues.filter((n) => !theirs.includes(n))
+    const unknown = theirs.filter((n) => !hues.includes(n))
+    if (missing.length || unknown.length) {
+      throw new Error(
+        `${slot} must name the same hues as ${first}. Missing: ${
+          missing.join(', ') || 'none'
+        }. Unknown: ${unknown.join(', ') || 'none'}.`,
+      )
+    }
+  }
+}
+assertSlotsCoverTheSameHues()
 
 /**
  * Replace a colour value with its primitive reference.
@@ -157,6 +180,20 @@ function buildScssLines() {
   if (json[CHART_CATEGORY]) {
     rootLines.push('  // Chart')
     for (const [, e] of sorted(json[CHART_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  // Keyed alike, so what a tag paints is data a designer can read rather than
+  // a rule in here.
+  for (const cat of CONTENT_SLOTS) {
+    if (!json[cat]) continue
+    rootLines.push(`  // ${cap(cat)}`)
+    for (const [, e] of sorted(json[cat])) {
       rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
       if (e.dark && e.dark !== e.light) {
         darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
@@ -370,14 +407,10 @@ function generateTs() {
   return output.join('\n')
 }
 
-const TAG_INK = 'content-always-dark'
+const TAG_INK = 'content-ink'
 
-// The one rule for what a tag can be set to. The ink is excluded by name, not
-// by the shape of its name, so renaming it cannot quietly make it selectable.
 function tagSwatchEntries() {
-  return Object.entries(json.primitives ?? {}).filter(
-    ([n]) => n.startsWith('content-') && n !== TAG_INK,
-  )
+  return Object.entries(json[CONTENT_SLOTS[0]] ?? {})
 }
 
 /**
@@ -390,17 +423,17 @@ function buildContentColours() {
   if (!entries.length) return []
   const ink = json.primitives?.[TAG_INK]
   return [
-    '/** The label colour every tag fill is chosen to carry. */',
+    '/** The label on a filled tag. Dark has no fill, so the tint reads instead. */',
     `export const contentInk = '${ink}'`,
     '',
-    '/** One colour per tag hue, the same on both themes. */',
+    '/** One colour per tag hue. The fill in light, the border and label in dark. */',
     'export const contentColours = {',
-    ...entries.map(([n, hex]) => `  '${n.replace('content-', '')}': '${hex}',`),
+    ...entries.map(([n, e]) => `  '${n}': '${e.light}',`),
     '} as const',
     '',
     '/** The palette in order, so a picker can map it without a cast. */',
     'export const contentColourNames = [',
-    ...entries.map(([n]) => `  '${n.replace('content-', '')}',`),
+    ...entries.map(([n]) => `  '${n}',`),
     '] as const',
     '',
     'export type ContentColour = (typeof contentColourNames)[number]',
@@ -527,12 +560,12 @@ function generateUtilities() {
   // Tag utilities. One class per hue: surface, ink and border are only
   // accessible together, and applying a fill without its label colour is the
   // bug this scale exists to fix.
-  const utilHues = tagSwatchEntries().map(([n]) => n.replace('content-', ''))
+  const utilHues = tagSwatchEntries().map(([n]) => n)
   if (utilHues.length) {
     lines.push('// Tags')
     for (const hue of utilHues.sort()) {
       lines.push(
-        `.tag-${hue} { background-color: var(--content-${hue}); color: var(--${TAG_INK}); --ds-chip-border: var(--content-${hue}); }`,
+        `.tag-${hue} { background-color: var(--color-content-${hue}-bg); color: var(--color-content-${hue}-text); --ds-chip-border: var(--color-content-${hue}-border); }`,
       )
     }
     lines.push('')

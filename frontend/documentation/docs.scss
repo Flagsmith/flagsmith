@@ -110,7 +110,8 @@
 
 .token-swatch {
   align-items: center;
-  border-bottom: 1px solid var(--color-border-default, rgba(101, 109, 123, 0.16));
+  border-bottom: 1px solid
+    var(--color-border-default, rgba(101, 109, 123, 0.16));
   display: grid;
   gap: 12px;
   grid-template-columns: 48px 1fr 1fr;
@@ -278,7 +279,8 @@
 
   th,
   td {
-    border-bottom: 1px solid var(--color-border-default, rgba(101, 109, 123, 0.16));
+    border-bottom: 1px solid
+      var(--color-border-default, rgba(101, 109, 123, 0.16));
     padding: 8px 12px;
     text-align: left;
   }
@@ -294,4 +296,13 @@
   code {
     font-size: var(--font-caption-size, 12px);
   }
+}
+
+.cat-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
 }

@@ -27,7 +27,7 @@ export const tagChipHtml = (
   const classes = [
     'ds-chip ds-chip--xs d-inline-flex align-items-center rounded-md',
     utilities,
-    disabled ? 'opacity-50' : '',
+    disabled ? 'opacity-75' : '',
     className,
   ]
     .filter(Boolean)
