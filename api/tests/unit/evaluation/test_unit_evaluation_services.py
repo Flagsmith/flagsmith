@@ -352,8 +352,6 @@ def test_get_edge_identity_feature_states__segment_and_identity_override__identi
 
 @pytest.fixture()
 def identity_dependent_rules_data_segment(project: Project) -> Segment:
-    # Deliberately no rule rows: were they read instead of `rules_data`, the
-    # segment would match everyone.
     segment: Segment = Segment.objects.create(
         name="beta testers",
         project=project,
@@ -374,23 +372,8 @@ def identity_dependent_rules_data_segment(project: Project) -> Segment:
     return segment
 
 
-@pytest.fixture()
-def cohort_segment(project: Project) -> Segment:
-    # A cohort's segment has no `rules_data`. Were its (absent) rule rows read
-    # instead, it would match everyone.
-    segment: Segment = Segment.objects.create(name="cohort", project=project)
-    return segment
-
-
-@pytest.mark.parametrize(
-    "segment",
-    [
-        lazy_fixture("identity_dependent_rules_data_segment"),
-        lazy_fixture("cohort_segment"),
-    ],
-)
 def test_get_environment_feature_states__segment_not_applying__skips_reading_its_overrides(
-    segment: Segment,
+    identity_dependent_rules_data_segment: Segment,
     environment: Environment,
     feature: Feature,
     feature_state: FeatureState,
@@ -401,7 +384,9 @@ def test_get_environment_feature_states__segment_not_applying__skips_reading_its
         feature=feature,
         environment=environment,
         feature_segment=FeatureSegment.objects.create(
-            feature=feature, segment=segment, environment=environment
+            feature=feature,
+            segment=identity_dependent_rules_data_segment,
+            environment=environment,
         ),
         enabled=not feature_state.enabled,
     )

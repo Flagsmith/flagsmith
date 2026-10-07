@@ -234,7 +234,7 @@ def _get_identity_free_segments(
 
 
 def _is_identity_free(segment: "Segment") -> bool:
-    # A segment without `rules_data` is a cohort's, which never applies here.
+    # TODO: remove None check and inline after https://github.com/Flagsmith/flagsmith/issues/7814 is done
     return segment.rules_data is not None and _are_identity_free(segment.rules_data)
 
 
