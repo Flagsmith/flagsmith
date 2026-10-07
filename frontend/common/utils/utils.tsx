@@ -762,6 +762,11 @@ const Utils = Object.assign({}, BaseUtils, {
     return tag?.type === 'STALE' && !hasStaleFlagsPermission
   },
 
+  // Unhealthy tags exist only where Feature Health does. Asked at the list
+  // rather than inside Tag: a chip has no business reading feature flags.
+  tagVisible: (tag: Tag | undefined) =>
+    tag?.type !== 'UNHEALTHY' || Utils.getFlagsmithHasFeature('feature_health'),
+
   toKebabCase: (string: string) =>
     string
       .replace(/([a-z])([A-Z])/g, '$1-$2')

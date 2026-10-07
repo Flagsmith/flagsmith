@@ -16,13 +16,11 @@ type TagValuesType = {
   projectId: string
   children?: ReactNode
   inline?: boolean
-  hideNames?: boolean
   hideTags?: number[]
 }
 
 const TagValues: FC<TagValuesType> = ({
   children,
-  hideNames = true,
   hideTags = [],
   inline,
   onAdd,
@@ -33,7 +31,9 @@ const TagValues: FC<TagValuesType> = ({
   const { data } = useGetTagsQuery({ projectId })
   const Wrapper = inline ? Fragment : Row
 
-  const tags = data?.filter((tag) => !hideTags?.includes(tag.id))
+  const tags = data?.filter(
+    (tag) => !hideTags?.includes(tag.id) && Utils.tagVisible(tag),
+  )
 
   const { permission: createEditTagPermission } = useHasPermission({
     id: projectId,
@@ -42,16 +42,15 @@ const TagValues: FC<TagValuesType> = ({
   })
 
   return (
-    <Wrapper className='tag-values align-content-center'>
+    <Wrapper className='row-gap-2 align-content-center'>
       {children}
       {tags?.map(
         (tag) =>
           value?.includes(tag.id) && (
             <Tag
+              disabled={Utils.tagDisabled(tag)}
               key={tag.id}
-              className='chip--xs'
-              hideNames={hideNames}
-              onClick={onAdd ?? onClick}
+              onClick={() => (onAdd ?? onClick)?.(tag)}
               tag={tag}
             />
           ),

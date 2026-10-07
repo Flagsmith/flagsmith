@@ -1,9 +1,10 @@
-import React, { FC, useMemo, useState } from 'react'
+import React, { FC, useState } from 'react'
 import TableFilter from './TableFilter'
 import Input from 'components/base/forms/Input'
 import Utils from 'common/utils/utils'
 import { useGetTagsQuery } from 'common/services/useTag'
-import Tag from 'components/tags/Tag'
+import ColorSwatch from 'components/ColorSwatch'
+import { getTagColor } from 'components/tags/Tag'
 import TableFilterItem from './TableFilterItem'
 import Constants from 'common/constants'
 import { TagStrategy } from 'common/types/responses'
@@ -40,20 +41,15 @@ const TableTagFilter: FC<TableFilterType> = ({
     { skip: !projectId },
   )
 
-  const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
-  const flagGatedTags = useMemo(() => {
-    let tags = data
-    if (!isFeatureHealthEnabled)
-      tags = tags?.filter((tag) => tag.type !== 'UNHEALTHY')
-    if (excludeTag) tags = tags?.filter((tag) => !excludeTag(tag))
-    return tags
-  }, [data, isFeatureHealthEnabled, excludeTag])
+  // Not memoised: tagVisible reads a feature flag that arrives after the first
+  // render, and a dependency array cannot see that. The list is small.
+  const flagGatedTags = data?.filter(
+    (tag) => Utils.tagVisible(tag) && (!excludeTag || !excludeTag(tag)),
+  )
 
-  const filteredTags = useMemo(() => {
-    return filter
-      ? flagGatedTags?.filter((v) => v.label.toLowerCase().includes(filter))
-      : flagGatedTags?.filter((tag) => tag)
-  }, [flagGatedTags, filter])
+  const filteredTags = filter
+    ? flagGatedTags?.filter((v) => v.label.toLowerCase().includes(filter))
+    : flagGatedTags
   const length = (value?.length || 0) + (showArchived ? 1 : 0)
   return (
     <div className={isLoading ? 'disabled' : ''}>
@@ -128,11 +124,10 @@ const TableTagFilter: FC<TableFilterType> = ({
               isActive={showArchived}
               title={
                 <Row className='overflow-hidden'>
-                  <Tag
-                    isDot
-                    selected={showArchived}
-                    className='px-2 py-2 mr-1'
-                    tag={Constants.archivedTag}
+                  <ColorSwatch
+                    color={getTagColor(Constants.archivedTag)}
+                    shape='circle'
+                    size='lg'
                   />
                   <div className='ml-2 text-overflow'>archived</div>
                 </Row>
@@ -149,11 +144,10 @@ const TableTagFilter: FC<TableFilterType> = ({
               isActive={value?.includes('')}
               title={
                 <Row className='overflow-hidden'>
-                  <Tag
-                    isDot
-                    selected={value?.includes('')}
-                    className='px-2 py-2 mr-1'
-                    tag={Constants.untaggedTag}
+                  <ColorSwatch
+                    color={getTagColor(Constants.untaggedTag)}
+                    shape='circle'
+                    size='lg'
                   />
                   <div className='ml-2 text-overflow'>untagged</div>
                 </Row>
@@ -178,12 +172,11 @@ const TableTagFilter: FC<TableFilterType> = ({
                 isActive={value?.includes(tag.id)}
                 title={
                   <Row>
-                    <Tag
+                    <ColorSwatch
+                      color={getTagColor(tag)}
                       key={tag.id}
-                      isDot
-                      selected={value?.includes(tag.id)}
-                      className='px-2 py-2 mr-1'
-                      tag={tag}
+                      shape='circle'
+                      size='lg'
                     />
                     <div
                       style={{ width: 150 }}

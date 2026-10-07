@@ -6,8 +6,7 @@ import Constants from 'common/constants'
 import Permission from 'common/providers/Permission'
 import Icon from 'components/icons/Icon'
 import { Tag } from 'common/types/responses'
-import color from 'color'
-import { getTagColor } from 'components/tags/Tag'
+import { tagChipHtml } from 'components/tags/utils'
 import ActionButton from 'components/ActionButton'
 import ActionItem from 'components/shared/ActionItem'
 import { calculateListPosition } from 'common/utils/calculateListPosition'
@@ -171,16 +170,9 @@ const FeatureAction: FC<FeatureActionProps> = ({
                       ? `<span>This feature has been tagged with the permanent tag${
                           protectedTags?.length > 1 ? 's' : ''
                         } ${protectedTags
-                          ?.map((tag) => {
-                            const tagColor = Utils.colour(getTagColor(tag))
-                            return `<strong class='chip chip--xs d-inline-block ms-1' style='background:${color(
-                              tagColor,
-                            ).fade(0.92)};border-color:${tagColor.darken(
-                              0.1,
-                            )};color:${tagColor.darken(0.1)};'>
-                        ${tag.label}
-                      </strong>`
-                          })
+                          ?.map((tag) =>
+                            tagChipHtml(tag, { className: 'ms-1' }),
+                          )
                           .join('')}. Please remove the tag${
                           protectedTags?.length > 1 ? 's' : ''
                         } before attempting to delete this flag.</span>`

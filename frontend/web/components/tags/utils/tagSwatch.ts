@@ -1,20 +1,21 @@
 import { contentColourNames, contentColours } from 'common/theme/tokens'
 import type { ContentColour } from 'common/theme/tokens'
 
-/** One swatch per Content hue, named as the design system names it. */
-export type TagSwatch = ContentColour
+type TagSwatch = ContentColour
 
 // Existing tags to the palette that replaced them (#8465): Constants.tagColors
-// plus the archived and untagged pseudo-tags. Anything else gets the neutral.
+// plus the archived and untagged pseudo-tags.
 const LEGACY_COLOURS: Record<string, TagSwatch> = {
   '#039587': 'light-mint',
   '#1492f4': 'blue',
   '#14c0f4': 'light-blue',
-  '#344562': 'blue',
+  // Navy and slate carry a hue but never showed one: both were drawn as an 8%
+  // wash, so what a user has always seen is grey.
+  '#344562': 'light-grey',
   '#3cb371': 'light-green',
   '#3d4db6': 'blue',
   '#5b2c6f': 'light-purple',
-  '#5d6d7e': 'blue',
+  '#5d6d7e': 'light-grey',
   '#60bd4e': 'light-green',
   '#641e16': 'light-brown',
   '#8f8f8f': 'light-grey',
@@ -25,7 +26,9 @@ const LEGACY_COLOURS: Record<string, TagSwatch> = {
   '#d3d3d3': 'light-grey',
   '#de3163': 'light-pink',
   '#dedede': 'light-grey',
-  '#ea5a45': 'light-brown',
+  // Coral is a red, not a brown. light-brown is 3deg closer in hue but 72
+  // points less saturated, so it reads as neither.
+  '#ea5a45': 'light-red',
   '#f08080': 'light-red',
   '#fe5505': 'light-peach',
   '#ffa500': 'light-peach',
@@ -44,19 +47,12 @@ const SWATCH_BY_COLOR = new Map<string, TagSwatch>([
 export const getTagSwatch = (color?: string | null): TagSwatch | null =>
   (color && SWATCH_BY_COLOR.get(color.toLowerCase())) || null
 
-/** "light-green" reads as "Light green": a swatch has no other name. */
-export const swatchLabel = (swatch: TagSwatch): string => {
+const swatchLabel = (swatch: TagSwatch): string => {
   const words = swatch.replace(/-/g, ' ')
   return words[0].toUpperCase() + words.slice(1)
 }
 
-/** The generator emits one of these per Content hue. */
-export const swatchUtilities = (swatch: TagSwatch): string => `tag-${swatch}`
-
-// A colour we never issued, so no swatch is a better answer than a guess.
-const NEUTRAL_UTILITIES = 'bg-surface-subtle text-default'
-
-export const getTagSwatchUtilities = (color?: string | null): string => {
-  const swatch = getTagSwatch(color)
-  return swatch ? swatchUtilities(swatch) : NEUTRAL_UTILITIES
+export const swatchName = (colour?: string | null) => {
+  const swatch = getTagSwatch(colour)
+  return swatch ? swatchLabel(swatch) : 'Custom colour'
 }

@@ -6,6 +6,7 @@ import Chip from 'components/base/Chip'
 import DocPage from './components/DocPage'
 import Swatch from './components/Swatch'
 import tokens from 'common/theme/tokens.json'
+import { contentColourNames, contentColours } from 'common/theme/tokens'
 import { AA_NORMAL_TEXT, contrastRatio } from 'common/theme/contrast'
 
 // ---------------------------------------------------------------------------
@@ -45,9 +46,9 @@ const PRIMITIVES = tokens.primitives as Record<string, string>
 // own surface, so it does not follow the page. One ink serves all of them.
 const TAG_INK_NAME = 'content-always-dark'
 const TAG_INK = PRIMITIVES[TAG_INK_NAME]
-const TAG_FILLS = Object.entries(PRIMITIVES)
-  .filter(([name]) => name.startsWith('content-') && name !== TAG_INK_NAME)
-  .map(([name, hex]) => [name.replace('content-', ''), hex] as const)
+const TAG_FILLS = contentColourNames.map(
+  (name) => [name, contentColours[name]] as const,
+)
 
 export const TagSwatches: StoryObj = {
   name: 'Tag swatches',
@@ -72,7 +73,7 @@ export const TagSwatches: StoryObj = {
             className='d-flex flex-column align-items-center gap-1'
             key={name}
           >
-            <Chip className={`border-0 tag-${name}`} size='xs'>
+            <Chip colour={name} size='xs'>
               {name}
             </Chip>
             <small className='text-secondary'>
@@ -83,15 +84,14 @@ export const TagSwatches: StoryObj = {
       </div>
       <p className='cat-note'>
         System tags (Issue, PR, Stale, Unhealthy) are not on this scale. They
-        stay on existing tokens &mdash; <code>bg-surface-default</code>,{' '}
+        stay on existing tokens &mdash; <code>bg-surface-muted</code>,{' '}
         <code>border-default</code>, <code>text-default</code> &mdash; plus a
         coloured icon, so the state is carried by the icon rather than the fill.
+        Muted rather than the default surface: the panels these sit in are the
+        default surface, so a system tag on one had no edge but its border.
       </p>
       <div className='d-flex mt-3'>
-        <Chip
-          className='bg-surface-default border-default text-default'
-          size='xs'
-        >
+        <Chip size='xs' variant='muted'>
           System tag
         </Chip>
       </div>

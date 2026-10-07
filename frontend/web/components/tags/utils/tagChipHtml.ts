@@ -1,8 +1,9 @@
 import { Tag as TTag } from 'common/types/responses'
-import { getTagSwatchUtilities } from './tagSwatch'
-import { SYSTEM_TAG_UTILITIES, isSystemTag } from './systemTag'
+// The inner module, not the component: this must stay free of the stylesheet
+// import so the tag utils can be unit tested.
+import { chipColourUtilities } from 'components/base/Chip/chipColour'
+import { tagChipColour } from './tagChipColour'
 
-// Numeric-entity everything that is not alphanumeric or beyond Latin-1.
 const escapeHTML = (unsafe: string) =>
   unsafe.replace(
     /[^0-9A-Za-z\u0100-\uFFFF]/g,
@@ -15,17 +16,14 @@ type TagChipOptions = {
 }
 
 /**
- * A tag chip as markup, for the tooltips that go through innerHTML and so
- * cannot render a component. Same classes as the real chip, so there is one
- * set of colour rules.
+ * A tag chip as markup, for tooltips that go through innerHTML and cannot take
+ * a component. Same classes, so the colour rules are not written twice.
  */
 export const tagChipHtml = (
   tag: Partial<TTag>,
   { className = '', disabled = false }: TagChipOptions = {},
 ): string => {
-  const utilities = isSystemTag(tag)
-    ? SYSTEM_TAG_UTILITIES
-    : getTagSwatchUtilities(tag.color)
+  const utilities = chipColourUtilities(tagChipColour(tag))
   const classes = [
     'ds-chip ds-chip--xs d-inline-flex align-items-center rounded-md',
     utilities,

@@ -1,19 +1,26 @@
 import React, { FC, ReactNode } from 'react'
 import { filter } from 'lodash'
-import { Tag as TTag, TagStrategy } from 'common/types/responses'
+import { TagStrategy } from 'common/types/responses'
 import { useGetTagsQuery } from 'common/services/useTag'
+import Utils from 'common/utils/utils'
+import Constants from 'common/constants'
 import Tag from './Tag'
 import Button from 'components/base/forms/Button'
 
+type TagId = number | string
+
+// Not a tag: it stands for the absence of one, so it has no row behind it.
+const UNTAGGED_ID = ''
+
 type TagFilterType = {
-  value?: (number | string)[]
+  value?: TagId[]
   onClearAll?: () => void
   showClearAll?: boolean
   showUntagged?: boolean
   tagStrategy: TagStrategy
   onChangeStrategy?: (value: TagStrategy) => void
   projectId: string
-  onChange: (value: (number | string)[]) => void
+  onChange: (value: TagId[]) => void
   children?: ReactNode
 }
 
@@ -32,26 +39,24 @@ const TagFilter: FC<TagFilterType> = ({
     projectId,
   })
 
-  const isSelected = (tag: TTag) => _value?.includes(tag?.id)
-  const onSelect = (tag: TTag) => {
+  const visibleTags = projectTags?.filter(Utils.tagVisible)
+
+  // Both only ever read the id, and the untagged pseudo-tag has a string one.
+  const isSelected = (id: TagId) => !!_value?.includes(id)
+  const onSelect = (id: TagId) => {
     const value = _value || []
-    if (value.includes(tag.id)) {
-      onChange(filter(value, (v) => v !== tag.id))
+    if (value.includes(id)) {
+      onChange(filter(value, (v) => v !== id))
     } else {
-      onChange(value.concat([tag.id]))
+      onChange(value.concat([id]))
     }
   }
-  const unTagged = !!showUntagged && {
-    color: '#656D7B',
-    id: '',
-    label: 'Untagged',
-  }
   return (
-    <Row className='tag-filter mt-2'>
+    <Row className='mt-2'>
       <div className='ml-1'>
         <Row>
           <Flex>
-            <Row className='tag-filter-list'>
+            <Row className='gap-2'>
               {!!onChangeStrategy && (
                 <div style={{ width: 140 }}>
                   <Select
@@ -83,23 +88,22 @@ const TagFilter: FC<TagFilterType> = ({
                   />
                 </div>
               )}
-              {unTagged && (
+              {showUntagged && (
                 <Tag
-                  key={unTagged.id}
-                  selected={isSelected(unTagged as any)}
-                  onClick={onSelect}
-                  className='px-2 py-2'
-                  tag={unTagged as any}
+                  key={UNTAGGED_ID}
+                  selected={isSelected(UNTAGGED_ID)}
+                  onClick={() => onSelect(UNTAGGED_ID)}
+                  tag={Constants.untaggedTag}
                 />
               )}
               {children}
 
-              {projectTags?.map((tag) => (
+              {visibleTags?.map((tag) => (
                 <Tag
+                  disabled={Utils.tagDisabled(tag)}
                   key={tag.id}
-                  selected={isSelected(tag)}
-                  onClick={onSelect}
-                  className='px-2 py-2 mr-1'
+                  selected={isSelected(tag.id)}
+                  onClick={() => onSelect(tag.id)}
                   tag={tag}
                 />
               ))}
@@ -109,17 +113,15 @@ const TagFilter: FC<TagFilterType> = ({
           {showClearAll && (
             <Button
               onClick={() => {
-                if ((_value?.length || 0) >= (projectTags?.length || 0)) {
+                if ((_value?.length || 0) >= (visibleTags?.length || 0)) {
                   onChange([])
                 } else {
+                  const untagged: TagId[] = showUntagged ? [UNTAGGED_ID] : []
                   onChange(
-                    (showUntagged ? [''] : []).concat(
-                      // @ts-ignore mixed array type
-                      (projectTags || [])?.map((v) => v.id),
-                    ),
+                    untagged.concat((visibleTags ?? []).map((v) => v.id)),
                   )
                 }
-                onClearAll && onClearAll()
+                onClearAll?.()
               }}
               className='mr-2'
               theme='outline'

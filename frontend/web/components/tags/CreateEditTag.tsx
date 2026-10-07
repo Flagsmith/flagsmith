@@ -2,6 +2,7 @@ import React, { FC, KeyboardEvent, useEffect, useMemo, useState } from 'react'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import { Tag as TTag } from 'common/types/responses'
 import Constants from 'common/constants'
+import { contentColourNames, contentColours } from 'common/theme/tokens'
 import Permission from 'common/providers/Permission'
 import Utils from 'common/utils/utils'
 import {
@@ -192,15 +193,18 @@ const CreateEditTag: FC<CreateEditTagType> = ({
         <div className='form-group select-colour'>
           <FieldLabel>Select a color</FieldLabel>
           <Row className={'gap-3'}>
-            {Constants.tagColors.map((color) => (
-              <div key={color} className='tag--select'>
-                <Tag
-                  onClick={(e: TTag) => update('color', e.color)}
-                  selected={tag?.color === color}
-                  tag={{ color }}
-                />
-              </div>
-            ))}
+            {contentColourNames.map((name) => {
+              const colour = contentColours[name]
+              return (
+                <div key={name} className='tag--select'>
+                  <Tag
+                    onClick={() => update('color', colour)}
+                    selected={tag?.color === colour}
+                    tag={{ color: colour }}
+                  />
+                </div>
+              )
+            })}
           </Row>
         </div>
         {existingTag && (

@@ -150,7 +150,6 @@ const AddEditTags: FC<AddEditTagsType> = ({
     <div>
       <Row className='inline-tags mt-2'>
         <TagValues
-          hideNames={false}
           hideTags={unhealthyTagId ? [unhealthyTagId] : undefined}
           projectId={projectId}
           onAdd={readOnly ? undefined : toggle}
@@ -219,8 +218,10 @@ const AddEditTags: FC<AddEditTagsType> = ({
                     <Row>
                       <Flex>
                         <Tag
-                          onClick={selectTag}
-                          selected={value?.includes(tag.id)}
+                          disabled={Utils.tagDisabled(tag)}
+                          onClick={() => selectTag(tag)}
+                          size='md'
+                          selected={!!value?.includes(tag.id)}
                           tag={tag}
                         />
                       </Flex>
