@@ -12,14 +12,14 @@ import UsageMeter from './components/UsageMeter'
 import UsageOverTime from './components/UsageOverTime'
 import UsagePageLayout from './components/UsagePageLayout'
 import { useUsageData } from './useUsageData'
-import { contributionNote, overLimitNote, planSectionCopy } from './copy'
+import { contributionNote, showsContribution } from './contribution'
+import { planHeading } from './planHeading'
 import { projectionNote, projectUsage } from './projection'
-import { overLimitOf } from './overLimit'
+import { overLimitNote, overLimitOf } from './overLimit'
+import { limitStatusOf } from './limitStatus'
 import {
   isBilledOnAPeriod,
   isBillingPeriodSelected,
-  isChargedForOverages,
-  showsContribution,
   showsPlanCeiling,
   showsProjection,
   periodLabel,
@@ -74,11 +74,6 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     organisationId ? { id: organisationId } : skipToken,
   )
 
-  // The block outlives going over the limit, so this cannot key off exceeded.
-  const isRestricted = !!organisation?.block_access_to_admin
-  const mayBeCharged =
-    isBilledOnAPeriod(basis) && isChargedForOverages(subscription)
-
   const limit = subscriptionMeta?.max_api_calls
   const allowanceTotal = usage.allowance?.totals?.total ?? 0
   // Walks every day in the window to find the crossing, so not per render.
@@ -86,6 +81,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     () => overLimitOf(allowanceTotal, limit, usage.allowance),
     [allowanceTotal, limit, usage.allowance],
   )
+  const limitStatus = limitStatusOf(organisation, exceeded)
 
   const periods = periodsFor(planIsBilled)
 
@@ -135,13 +131,11 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
       isError={organisationFailed || usage.failed || limitFailed}
       isLoading={loadingOrganisation || usage.isLoadingPlan || loadingLimit}
       alert={
-        (exceeded || isRestricted) && (
+        limitStatus && (
           <OverLimitBanner
-            over={exceeded}
+            status={limitStatus}
             basis={basis}
             canUpgrade={Utils.getFlagsmithHasFeature('payments_enabled')}
-            mayBeCharged={mayBeCharged}
-            isRestricted={isRestricted}
           />
         )
       }
@@ -151,7 +145,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
         usage.retry()
       }}
     >
-      <SectionHeading {...planSectionCopy(basis, limit)} />
+      <SectionHeading {...planHeading(basis, limit)} />
 
       <BillingStrip period={period} />
 

@@ -10,26 +10,28 @@ import UsageMeter from 'components/pages/usage/components/UsageMeter'
 import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
 import {
   contributionNote,
-  overLimitNote,
-  planSectionCopy,
-} from 'components/pages/usage/copy'
-import { overLimitOf } from 'components/pages/usage/overLimit'
+  showsContribution,
+} from 'components/pages/usage/contribution'
+import { planHeading } from 'components/pages/usage/planHeading'
+import { overLimitNote, overLimitOf } from 'components/pages/usage/overLimit'
+import {
+  limitStatusOf,
+  NO_LIMIT_FLAGS,
+} from 'components/pages/usage/limitStatus'
 import {
   allowanceWindow,
   isBilledOnAPeriod,
   isBillingPeriodSelected,
-  isChargedForOverages,
   periodLabel,
   periodsFor,
   PeriodSelection,
   resolvePeriod,
-  showsContribution,
   showsPlanCeiling,
   usageBasisOf,
 } from 'components/pages/usage/utils'
 import { BillingPeriod, PeriodOption } from 'common/types/requests'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
-import { Subscription } from 'common/types/responses'
+import { Organisation, Subscription } from 'common/types/responses'
 import { toUsageResponse, USAGE_SCENARIOS } from './fixtures/usage'
 
 // UsageFilters sets this in its stylesheet, which the harness never loads:
@@ -83,6 +85,15 @@ type HarnessProps = {
   isLoading?: boolean
   isError?: boolean
   isRestricted?: boolean
+  organisation?: Partial<
+    Pick<
+      Organisation,
+      | 'api_limit_grace_period_used'
+      | 'api_limit_restriction_enabled'
+      | 'overage_billing_eligible'
+      | 'stop_serving_flags'
+    >
+  >
 }
 
 /**
@@ -95,6 +106,7 @@ const UsagePage: FC<HarnessProps> = ({
   isLoading,
   isRestricted,
   limit,
+  organisation = {},
   scale = 1,
   subscription,
 }) => {
@@ -120,6 +132,14 @@ const UsagePage: FC<HarnessProps> = ({
   )
   const allowanceTotal = allowance.totals.total
   const exceeded = overLimitOf(allowanceTotal, limit, allowance)
+  const limitStatus = limitStatusOf(
+    {
+      ...NO_LIMIT_FLAGS,
+      block_access_to_admin: !!isRestricted,
+      ...organisation,
+    },
+    exceeded,
+  )
 
   const contribution = showsContribution(
     basis,
@@ -143,22 +163,14 @@ const UsagePage: FC<HarnessProps> = ({
       isError={isError}
       isLoading={isLoading}
       alert={
-        (exceeded || isRestricted) && (
-          <OverLimitBanner
-            over={exceeded}
-            basis={basis}
-            canUpgrade
-            isRestricted={isRestricted}
-            mayBeCharged={
-              isBilledOnAPeriod(basis) && isChargedForOverages(subscription)
-            }
-          />
+        limitStatus && (
+          <OverLimitBanner status={limitStatus} basis={basis} canUpgrade />
         )
       }
       // Nothing to refetch here; passed so FailedToLoad renders its button.
       onRetry={() => {}}
     >
-      <SectionHeading {...planSectionCopy(basis, limit)} />
+      <SectionHeading {...planHeading(basis, limit)} />
 
       <UsageMeter
         total={allowanceTotal}
@@ -234,9 +246,51 @@ export const PaidApproachingTheLimit: Story = {
   args: { limit: 1400000, subscription: billed },
 }
 
-// Billed on a term, so the banner mentions charges.
+// Not eligible for overage billing, so the banner says nothing about charges.
 export const PaidOverTheLimit: Story = {
   args: { limit: 900000, subscription: billed },
+}
+
+// The first overage is forgiven once.
+export const PaidOverTheLimitCovered: Story = {
+  args: {
+    limit: 900000,
+    organisation: { overage_billing_eligible: true },
+    subscription: billed,
+  },
+}
+
+export const PaidOverTheLimitCharged: Story = {
+  args: {
+    limit: 900000,
+    organisation: {
+      api_limit_grace_period_used: true,
+      overage_billing_eligible: true,
+    },
+    subscription: billed,
+  },
+}
+
+export const FreeOverTheLimit: Story = {
+  args: {
+    limit: 50000,
+    organisation: { api_limit_restriction_enabled: true },
+    scale: 1.5,
+    subscription: subscriptionOf({ plan: 'free' }),
+  },
+}
+
+// A grace row means the restriction task skips the 7 day wait.
+export const FreeOverTheLimitGraceUsed: Story = {
+  args: {
+    limit: 50000,
+    organisation: {
+      api_limit_grace_period_used: true,
+      api_limit_restriction_enabled: true,
+    },
+    scale: 1.5,
+    subscription: subscriptionOf({ plan: 'free' }),
+  },
 }
 
 // Only free plans are ever restricted, and this is where they are sent.
@@ -244,6 +298,7 @@ export const FreeAndRestricted: Story = {
   args: {
     isRestricted: true,
     limit: 50000,
+    organisation: { stop_serving_flags: true },
     subscription: subscriptionOf({ plan: 'free' }),
   },
 }
