@@ -5,7 +5,12 @@ import { colorIconSecondary } from 'common/theme/tokens'
 import './Chip.scss'
 
 export type ChipSize = 'default' | 'sm' | 'xs'
-export type ChipVariant = 'neutral' | 'accent'
+export type ChipVariant =
+  | 'neutral'
+  | 'accent'
+  // The caller supplies the colour through className. Used by tags, whose
+  // colour is a user's decorative choice rather than a semantic role.
+  | 'none'
 
 export type ChipProps = {
   children: ReactNode
@@ -23,6 +28,8 @@ export type ChipProps = {
   tabIndex?: number
   'aria-checked'?: boolean
   'aria-expanded'?: boolean
+  // For a chip whose content cannot name it, such as a bare colour swatch.
+  'aria-label'?: string
   onKeyDown?: (e: KeyboardEvent) => void
   ref?: Ref<HTMLSpanElement>
 }
@@ -31,6 +38,7 @@ export type ChipProps = {
 const VARIANT_UTILITIES: Record<ChipVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
   neutral: 'bg-surface-subtle text-default',
+  none: '',
 }
 
 // Token-based chip primitive. Uses `ds-chip` rather than the legacy `.chip`
@@ -41,6 +49,7 @@ const VARIANT_UTILITIES: Record<ChipVariant, string> = {
 const Chip = ({
   'aria-checked': ariaChecked,
   'aria-expanded': ariaExpanded,
+  'aria-label': ariaLabel,
   children,
   className,
   onClick,
@@ -73,6 +82,7 @@ const Chip = ({
       tabIndex={interactive ? tabIndex ?? 0 : undefined}
       aria-checked={ariaChecked}
       aria-expanded={ariaExpanded}
+      aria-label={ariaLabel}
       onKeyDown={
         onKeyDown ??
         (onClick

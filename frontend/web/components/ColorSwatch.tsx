@@ -5,7 +5,7 @@ type ColorSwatchSize = 'sm' | 'md' | 'lg'
 type ColorSwatchShape = 'square' | 'circle'
 
 type ColorSwatchProps = {
-  color: string
+  color?: string
   size?: ColorSwatchSize
   shape?: ColorSwatchShape
   className?: string
