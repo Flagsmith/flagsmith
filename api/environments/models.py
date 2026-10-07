@@ -3,14 +3,14 @@ import typing
 import uuid
 from copy import deepcopy
 from datetime import datetime
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from common.core.utils import using_database_replica
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Max, Prefetch, Q, QuerySet
+from django.db.models import Prefetch, Q, QuerySet
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
@@ -410,64 +410,25 @@ class Environment(
         )
 
     def get_identity_overrides_queryset(self) -> QuerySet[FeatureState]:
-        ids = self._get_active_feature_states_ids(
-            "identity_id",
-            {"identity__isnull": False, "feature_segment__isnull": True},
-        )
-        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
-        return result
-
-    def _get_active_feature_states_ids(
-        self,
-        extra_group_by_fields: Literal["identity_id"] | None = None,
-        filter_kwargs: dict[str, typing.Any] | None = None,
-    ) -> list[int]:
-        base_qs = FeatureState.objects.get_live_feature_states(
+        return FeatureState.objects.get_live_feature_states(
             environment=self,
-            **(filter_kwargs or {}),
-        ).filter(
-            feature__is_archived=False,
-        )
-
-        group_fields = ["feature_id", "environment_id"]
-        if extra_group_by_fields is not None:
-            group_fields.append(extra_group_by_fields)
-
-        return list(
-            base_qs.values(*group_fields)
-            .annotate(id=Max("id"))
-            .values_list("id", flat=True)
-        )
-
-    def get_features_metrics_queryset(self) -> QuerySet[FeatureState]:
-        ids = self._get_active_feature_states_ids(
-            None,
-            {"identity__isnull": True, "feature_segment__isnull": True},
-        )
-        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
-        return result
-
-    def _get_latest_segment_state_ids_subquery(self) -> list[int]:
-        feature_states_qs = FeatureState.objects.get_live_feature_states(
-            environment=self,
-            additional_filters=Q(
-                identity_id__isnull=True,
-                feature_segment_id__isnull=False,
-            ),
+            identity__isnull=False,
+            feature_segment__isnull=True,
         ).filter(feature__is_archived=False)
 
-        return list(
-            feature_states_qs.values(
-                "feature_id", "feature_segment_id", "environment_id"
-            )
-            .annotate(id=Max("id"))
-            .values_list("id", flat=True)
-        )
+    def get_features_metrics_queryset(self) -> QuerySet[FeatureState]:
+        return FeatureState.objects.get_live_feature_states(
+            environment=self,
+            identity__isnull=True,
+            feature_segment__isnull=True,
+        ).filter(feature__is_archived=False)
 
     def get_segment_metrics_queryset(self) -> QuerySet[FeatureState]:
-        ids = self._get_latest_segment_state_ids_subquery()
-        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
-        return result
+        return FeatureState.objects.get_live_feature_states(
+            environment=self,
+            identity__isnull=True,
+            feature_segment__isnull=False,
+        ).filter(feature__is_archived=False)
 
     def get_change_requests_metrics_queryset(self) -> QuerySet["ChangeRequest"]:
         from features.workflows.core.models import ChangeRequest

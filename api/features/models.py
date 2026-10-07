@@ -1065,16 +1065,12 @@ class FeatureState(
 
     def get_environment_default(self) -> typing.Optional["FeatureState"]:
         if self.feature_segment_id or self.identity_id:
-            return (
-                self.__class__.objects.get_live_feature_states(
-                    environment=self.environment,  # type: ignore[arg-type]
-                    feature_id=self.feature_id,
-                    feature_segment_id__isnull=True,
-                    identity_id__isnull=True,
-                )
-                .order_by("-version", "-environment_feature_version__live_from")
-                .first()
-            )
+            return FeatureState.objects.get_live_feature_states(
+                environment=self.environment,  # type: ignore[arg-type]
+                feature_id=self.feature_id,
+                feature_segment_id__isnull=True,
+                identity_id__isnull=True,
+            ).first()
 
         return None
 

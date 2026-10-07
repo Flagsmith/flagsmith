@@ -538,9 +538,6 @@ def _expected_variant_shares(experiment: "Experiment") -> dict[str, float]:
         .prefetch_related(
             "multivariate_feature_state_values__multivariate_feature_option"
         )
-        # Highest id is the current version, matching how Environment selects
-        # active feature states (Max("id")); the default ordering is ascending.
-        .order_by("-id")
         .first()
     )
     if feature_state is None:
@@ -1224,7 +1221,7 @@ def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | No
             feature_segment__segment_id=segment_id, identity__isnull=True
         ),
         feature_id=experiment.feature_id,
-    ).latest("id")
+    ).get()
 
     condition = Condition.objects.get(
         rule__segment_id=segment_id, operator=PERCENTAGE_SPLIT
