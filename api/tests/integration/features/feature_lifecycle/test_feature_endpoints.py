@@ -3,6 +3,7 @@ import pytest
 from pytest_django.fixtures import SettingsWrapper
 from rest_framework.test import APIClient
 
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from features.feature_lifecycle.types import LifecycleStage
 from features.models import Feature
 from projects.tags.models import Tag
@@ -117,6 +118,55 @@ def test_feature_list_endpoint__varied_stages_influxdb__responds_200_with_lifecy
         == LifecycleStage.NEEDS_MONITORING
     )
     assert json_features["to_remove"]["lifecycle_stage"] == LifecycleStage.TO_REMOVE
+
+
+@freezegun.freeze_time("2099-01-01T12:00:00Z")
+def test_feature_list_endpoint__influxdb_down__responds_200_without_usage_data(
+    admin_client: APIClient,
+    environment: int,
+    make_code_references: MakeCodeReferencesFixture,
+    permanent_tag: Tag,
+    project: int,
+    request: pytest.FixtureRequest,
+    settings: SettingsWrapper,
+    stale_tag: Tag,
+) -> None:
+    # Given
+    settings.INFLUXDB_URL = "http://localhost:1"  # Nothing listens here
+    settings.INFLUXDB_TOKEN = "admin-token"
+    InfluxDBWrapper.get_client.cache_clear()
+    request.addfinalizer(InfluxDBWrapper.get_client.cache_clear)
+
+    Feature.objects.create(project_id=project, name="new")
+
+    live_feature = Feature.objects.create(project_id=project, name="live")
+    make_code_references(live_feature, [{"file_path": "file.py", "line_number": 1}])
+
+    stale_feature = Feature.objects.create(project_id=project, name="stale")
+    make_code_references(stale_feature, [])
+    stale_feature.tags.add(stale_tag)
+
+    permanent_feature = Feature.objects.create(project_id=project, name="permanent")
+    permanent_feature.tags.add(permanent_tag)
+
+    unknown_usage_feature = Feature.objects.create(
+        project_id=project, name="unknown_usage"
+    )
+    unknown_usage_feature.tags.add(stale_tag)
+
+    # When
+    response = admin_client.get(
+        f"/api/v1/projects/{project}/features/?environment={environment}"
+    )
+
+    # Then
+    assert response.status_code == 200
+    json_features = {feature["name"]: feature for feature in response.json()["results"]}
+    assert json_features["new"]["lifecycle_stage"] == LifecycleStage.NEW
+    assert json_features["live"]["lifecycle_stage"] == LifecycleStage.LIVE
+    assert json_features["stale"]["lifecycle_stage"] == LifecycleStage.STALE
+    assert json_features["permanent"]["lifecycle_stage"] == LifecycleStage.PERMANENT
+    assert json_features["unknown_usage"]["lifecycle_stage"] is None
 
 
 @freezegun.freeze_time("2099-01-01T12:00:00Z")
