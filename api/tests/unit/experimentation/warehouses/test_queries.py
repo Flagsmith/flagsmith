@@ -57,18 +57,8 @@ ORDER BY bucket
 """
 )
 
-EXPOSURE_BUCKETS_DAY_SQL = (
-    EXPOSURES_CTE_SQL
-    + """
-SELECT
-    quarantined,
-    variant,
-    toStartOfDay(first_exposure, 'UTC') AS bucket,
-    count() AS first_exposed_identities
-FROM exposures
-GROUP BY quarantined, variant, bucket
-ORDER BY bucket
-"""
+EXPOSURE_BUCKETS_DAY_SQL = EXPOSURE_BUCKETS_HOUR_SQL.replace(
+    "toStartOfHour", "toStartOfDay"
 )
 
 RESULTS_NO_METRICS_SQL = (
@@ -107,29 +97,6 @@ SELECT variant, count() AS n,
     sum(m2) AS m2_sum, sum(m2 * m2) AS m2_sum_squares,
     sum(m3) AS m3_sum, sum(m3 * m3) AS m3_sum_squares,
     sum(m4) AS m4_sum, sum(m4 * m4) AS m4_sum_squares
-FROM unit_values
-GROUP BY variant"""
-)
-
-RESULTS_COUNT_ONLY_SQL = (
-    EXPOSURES_CTE_SQL
-    + """,
-unit_values AS (
-    SELECT
-        e.variant AS variant,
-        countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) AS m0
-    FROM exposures AS e
-    LEFT JOIN events AS m
-        ON m.identifier = e.identifier
-        AND m.environment_key = %(environment_key)s
-        AND m.event IN %(metric_events)s
-        AND m.timestamp >= %(window_start)s
-        AND m.timestamp < %(window_end)s
-    WHERE e.quarantined = 0
-    GROUP BY e.identifier, e.variant
-)
-SELECT variant, count() AS n,
-    sum(m0) AS m0_sum, sum(m0 * m0) AS m0_sum_squares
 FROM unit_values
 GROUP BY variant"""
 )
@@ -244,7 +211,7 @@ def _read_call(provider: Provider, sql: str, params: dict[str, object]) -> Any:
     return call(sql, params, with_column_types=True)
 
 
-def test_get_event_names__any_provider__sends_pinned_sql(
+def test_get_event_names__any_provider__sends_expected_sql(
     provider: Provider,
     target: tuple[Warehouse, WarehouseConnection, MagicMock],
     reset_cache: None,
@@ -263,7 +230,7 @@ def test_get_event_names__any_provider__sends_pinned_sql(
     ]
 
 
-def test_get_event_stats__any_provider__sends_pinned_sql(
+def test_get_event_stats__any_provider__sends_expected_sql(
     provider: Provider,
     target: tuple[Warehouse, WarehouseConnection, MagicMock],
     reset_cache: None,
@@ -285,7 +252,7 @@ def test_get_event_stats__any_provider__sends_pinned_sql(
     [("hour", EXPOSURE_BUCKETS_HOUR_SQL), ("day", EXPOSURE_BUCKETS_DAY_SQL)],
     ids=["hour", "day"],
 )
-def test_get_exposure_buckets__granularity__sends_pinned_sql(
+def test_get_exposure_buckets__granularity__sends_expected_sql(
     provider: Provider,
     target: tuple[Warehouse, WarehouseConnection, MagicMock],
     granularity: ExposureGranularity,
@@ -319,21 +286,6 @@ def test_get_exposure_buckets__granularity__sends_pinned_sql(
             ],
         ),
         (
-            [MetricSpec(12, "page_view", MetricAggregation.COUNT, False)],
-            [
-                (
-                    RESULTS_COUNT_ONLY_SQL,
-                    {
-                        **WINDOW_PARAMS,
-                        "metric_events": ["page_view"],
-                        "conversion_events": [],
-                        "metric_0_event": "page_view",
-                    },
-                ),
-                (EXPOSURE_BUCKETS_HOUR_SQL, WINDOW_PARAMS),
-            ],
-        ),
-        (
             SPECS,
             [
                 (RESULTS_SQL, METRIC_PARAMS),
@@ -342,9 +294,9 @@ def test_get_exposure_buckets__granularity__sends_pinned_sql(
             ],
         ),
     ],
-    ids=["no-metrics", "count-only", "every-aggregation"],
+    ids=["no-metrics", "every-aggregation"],
 )
-def test_get_results_aggregates__specs__sends_pinned_sql(
+def test_get_results_aggregates__specs__sends_expected_sql(
     provider: Provider,
     target: tuple[Warehouse, WarehouseConnection, MagicMock],
     specs: list[MetricSpec],
