@@ -77,6 +77,16 @@ class CreateSegmentOverrideFixture(Protocol):
     ) -> None: ...
 
 
+class UpdateFlagFixture(Protocol):
+    def __call__(
+        self,
+        *,
+        feature_id: int,
+        enabled: bool | None = None,
+        value: str | None = None,
+    ) -> None: ...
+
+
 class ScheduleFlagChangeFixture(Protocol):
     def __call__(
         self,
@@ -84,6 +94,7 @@ class ScheduleFlagChangeFixture(Protocol):
         feature_id: int,
         enabled: bool,
         live_from: datetime,
+        value: str | None = None,
     ) -> None: ...
 
 

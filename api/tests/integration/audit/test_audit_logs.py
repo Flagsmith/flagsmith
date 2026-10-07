@@ -14,11 +14,14 @@ from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from core.signals import create_audit_log_from_historical_record
-from features.future.types import UpdateFlagRequest
 from features.models import Feature, FeatureState
 from features.workflows.core.models import ChangeRequest
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
-from tests.types import CreateSegmentOverrideFixture, ScheduleFlagChangeFixture
+from tests.types import (
+    CreateSegmentOverrideFixture,
+    ScheduleFlagChangeFixture,
+    UpdateFlagFixture,
+)
 from users.models import FFAdminUser
 
 
@@ -459,6 +462,7 @@ def test_list_audit_logs__segment_override_differs_from_flag_edited_while_change
     segment: int,
     segment_name: str,
     freezer: FrozenDateTimeFactory,
+    update_flag: UpdateFlagFixture,
     schedule_flag_change: ScheduleFlagChangeFixture,
     create_segment_override: CreateSegmentOverrideFixture,
 ) -> None:
@@ -466,11 +470,7 @@ def test_list_audit_logs__segment_override_differs_from_flag_edited_while_change
     checkout = Feature.objects.create(name="checkout", project_id=project)
     tomorrow = datetime.now(tz=UTC) + timedelta(days=1)
     freezer.tick(timedelta(minutes=1))
-    admin_client.patch(
-        f"/api/__future__/environments/{environment_api_key}/features/{checkout.id}/",
-        UpdateFlagRequest({"environment_default": {"enabled": True}}),
-        format="json",
-    )
+    update_flag(feature_id=checkout.id, enabled=True)
     freezer.tick(timedelta(minutes=1))
     schedule_flag_change(feature_id=checkout.id, enabled=False, live_from=tomorrow)
     freezer.tick(timedelta(minutes=1))
