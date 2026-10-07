@@ -4,7 +4,6 @@ import cx from 'classnames'
 import { Tag as TTag } from 'common/types/responses'
 import Chip, { ChipSize } from 'components/base/Chip'
 import Icon from 'components/icons/Icon'
-import { colorSurfaceDefault } from 'common/theme/tokens'
 import Constants from 'common/constants'
 import TagContent from 'components/tags/TagContent'
 import './Tag.scss'
@@ -58,7 +57,11 @@ const Tag: FC<TagType> = ({
           )}
         >
           {selected && (
-            <Icon name='checkmark' width={14} fill={colorSurfaceDefault} />
+            <Icon
+              name='checkmark'
+              width={14}
+              fill='var(--ds-chip-fill, var(--color-surface-default))'
+            />
           )}
         </span>
       )}

@@ -42,6 +42,8 @@ const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 const DESCRIBED = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 // Chart colours are like colour tokens (light/dark) but not under "color"
 const CHART_CATEGORY = 'chart'
+const CONTENT_CATEGORY = 'content'
+const CONTENT_INK_CATEGORY = 'contentInk'
 
 // Build reverse lookups for primitives
 const hexToPrimitive = new Map()
@@ -62,6 +64,23 @@ if (json.primitives) {
     rgbToPrimitive.set(hexToRgb(hex), name)
   }
 }
+
+// A fill with no ink would fall back to the chip's inherited colour, which is
+// the page's, so fail rather than emit a tag whose label is invisible.
+function assertInksPairWithFills() {
+  const fills = Object.keys(json[CONTENT_CATEGORY] ?? {})
+  const inks = Object.keys(json[CONTENT_INK_CATEGORY] ?? {})
+  const missing = fills.filter((n) => !inks.includes(n))
+  const unknown = inks.filter((n) => !fills.includes(n))
+  if (missing.length || unknown.length) {
+    throw new Error(
+      `${CONTENT_INK_CATEGORY} must name the same hues as ${CONTENT_CATEGORY}. Missing: ${
+        missing.join(', ') || 'none'
+      }. Unknown: ${unknown.join(', ') || 'none'}.`,
+    )
+  }
+}
+assertInksPairWithFills()
 
 /**
  * Replace a colour value with its primitive reference.
@@ -157,6 +176,20 @@ function buildScssLines() {
   if (json[CHART_CATEGORY]) {
     rootLines.push('  // Chart')
     for (const [, e] of sorted(json[CHART_CATEGORY])) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  // Content palette. Fills and inks are separate groups keyed alike, so the
+  // pairing a tag relies on is data a designer can read, not a rule in here.
+  for (const cat of [CONTENT_CATEGORY, CONTENT_INK_CATEGORY]) {
+    if (!json[cat]) continue
+    rootLines.push(`  // ${cap(cat)}`)
+    for (const [, e] of sorted(json[cat])) {
       rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
       if (e.dark && e.dark !== e.light) {
         darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
@@ -370,14 +403,11 @@ function generateTs() {
   return output.join('\n')
 }
 
-const TAG_INK = 'content-always-dark'
+const TAG_INK = 'content-ink'
 
-// The one rule for what a tag can be set to. The ink is excluded by name, not
-// by the shape of its name, so renaming it cannot quietly make it selectable.
+// The one rule for what a tag can be set to.
 function tagSwatchEntries() {
-  return Object.entries(json.primitives ?? {}).filter(
-    ([n]) => n.startsWith('content-') && n !== TAG_INK,
-  )
+  return Object.entries(json[CONTENT_CATEGORY] ?? {})
 }
 
 /**
@@ -390,20 +420,25 @@ function buildContentColours() {
   if (!entries.length) return []
   const ink = json.primitives?.[TAG_INK]
   return [
-    '/** The label colour every tag fill is chosen to carry. */',
+    '/** The label on a light fill. Dark pairs each fill with its own ink. */',
     `export const contentInk = '${ink}'`,
     '',
-    '/** One colour per tag hue, the same on both themes. */',
+    '/** One colour per tag hue. The light theme fill; dark inverts it. */',
     'export const contentColours = {',
-    ...entries.map(([n, hex]) => `  '${n.replace('content-', '')}': '${hex}',`),
+    ...entries.map(([n, e]) => `  '${n}': '${e.light}',`),
     '} as const',
     '',
     '/** The palette in order, so a picker can map it without a cast. */',
     'export const contentColourNames = [',
-    ...entries.map(([n]) => `  '${n.replace('content-', '')}',`),
+    ...entries.map(([n]) => `  '${n}',`),
     '] as const',
     '',
     'export type ContentColour = (typeof contentColourNames)[number]',
+    '',
+    '/** The dark theme fill. In dark the light fill above becomes the ink. */',
+    'export const contentColoursDark = {',
+    ...entries.map(([n, e]) => `  '${n}': '${e.dark}',`),
+    '} as const',
   ]
 }
 
@@ -527,12 +562,14 @@ function generateUtilities() {
   // Tag utilities. One class per hue: surface, ink and border are only
   // accessible together, and applying a fill without its label colour is the
   // bug this scale exists to fix.
-  const utilHues = tagSwatchEntries().map(([n]) => n.replace('content-', ''))
+  const utilHues = tagSwatchEntries().map(([n]) => n)
   if (utilHues.length) {
+    // Border and fill hold the same value but answer different questions: the
+    // border is the chip's edge, the fill is what a swatch lends its tick.
     lines.push('// Tags')
     for (const hue of utilHues.sort()) {
       lines.push(
-        `.tag-${hue} { background-color: var(--content-${hue}); color: var(--${TAG_INK}); --ds-chip-border: var(--content-${hue}); }`,
+        `.tag-${hue} { background-color: var(--color-content-${hue}); color: var(--color-content-${hue}-ink); --ds-chip-border: var(--color-content-${hue}); --ds-chip-fill: var(--color-content-${hue}); }`,
       )
     }
     lines.push('')

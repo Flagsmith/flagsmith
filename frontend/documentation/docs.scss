@@ -295,3 +295,13 @@
     font-size: var(--font-caption-size, 12px);
   }
 }
+
+// The tag preview on the swatch page draws both themes at once, so its fill
+// and ink come from props rather than the ambient theme's utility class.
+.cat-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+}

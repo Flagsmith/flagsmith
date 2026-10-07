@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { FC } from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import './docs.scss'
@@ -6,7 +6,6 @@ import Chip from 'components/base/Chip'
 import DocPage from './components/DocPage'
 import Swatch from './components/Swatch'
 import tokens from 'common/theme/tokens.json'
-import { contentColourNames, contentColours } from 'common/theme/tokens'
 import { AA_NORMAL_TEXT, contrastRatio } from 'common/theme/contrast'
 
 // ---------------------------------------------------------------------------
@@ -40,14 +39,27 @@ export default meta
 // Stories
 // ---------------------------------------------------------------------------
 
-const PRIMITIVES = tokens.primitives as Record<string, string>
+// The light theme fills. A tag carries its own surface rather than following
+// the page, and in dark the fill and the ink swap roles.
+// Both halves of every tag, per theme: a fill is only legible next to the ink
+// it ships with, so the page shows the pair rather than the fill alone.
+const TAG_PAIRINGS = Object.entries(tokens.content).map(([name, fill]) => {
+  const ink = tokens.contentInk[name as keyof typeof tokens.contentInk]
+  return {
+    dark: { fill: fill.dark, ink: ink.dark },
+    light: { fill: fill.light, ink: ink.light },
+    name,
+  }
+})
 
-// The Content palette, fixed rather than theme-aware: a tag chip carries its
-// own surface, so it does not follow the page. One ink serves all of them.
-const TAG_INK_NAME = 'content-always-dark'
-const TAG_INK = PRIMITIVES[TAG_INK_NAME]
-const TAG_FILLS = contentColourNames.map(
-  (name) => [name, contentColours[name]] as const,
+type TagPreviewProps = { fill: string; ink: string; name: string }
+
+// The only place a tag is drawn from values rather than its utility class: the
+// page shows both themes at once, so neither can come from the ambient one.
+const TagPreview: FC<TagPreviewProps> = ({ fill, ink, name }) => (
+  <span className='cat-tag' style={{ backgroundColor: fill, color: ink }}>
+    {name}
+  </span>
 )
 
 export const TagSwatches: StoryObj = {
@@ -60,28 +72,35 @@ export const TagSwatches: StoryObj = {
         <>
           The scale a custom tag picks from, replacing the runtime colour maths
           that made contrast a function of the user&rsquo;s chosen hue. These
-          are the design system&rsquo;s Content colours, fixed in both themes
-          because a chip carries its own surface. Every one clears AA (
-          {AA_NORMAL_TEXT}:1) against the shared ink, enforced by{' '}
+          are the design system&rsquo;s Content colours, shown here on light,
+          where the shared ink below is the label. Dark swaps the two: the fill
+          becomes the ink and a deep version of the same hue becomes the fill.
+          Both pairings clear AA ({AA_NORMAL_TEXT}:1), enforced by{' '}
           <code>tagSwatches.test.ts</code>.
         </>
       }
     >
-      <div className='d-flex flex-wrap gap-3'>
-        {TAG_FILLS.map(([name, hex]) => (
-          <div
-            className='d-flex flex-column align-items-center gap-1'
-            key={name}
-          >
-            <Chip colour={name} size='xs'>
-              {name}
-            </Chip>
-            <small className='text-secondary'>
-              {contrastRatio(hex, TAG_INK).toFixed(2)}:1
-            </small>
+      {(['light', 'dark'] as const).map((theme) => (
+        <div key={theme}>
+          <h3 className='cat-note'>{theme}</h3>
+          <div className='d-flex flex-wrap gap-3'>
+            {TAG_PAIRINGS.map(({ name, ...pairing }) => {
+              const { fill, ink } = pairing[theme]
+              return (
+                <div
+                  className='d-flex flex-column align-items-center gap-1'
+                  key={name}
+                >
+                  <TagPreview fill={fill} ink={ink} name={name} />
+                  <small className='text-secondary'>
+                    {contrastRatio(fill, ink).toFixed(2)}:1
+                  </small>
+                </div>
+              )
+            })}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
       <p className='cat-note'>
         System tags (Issue, PR, Stale, Unhealthy) are not on this scale. They
         take no fill at all: <code>border-default</code> and{' '}
