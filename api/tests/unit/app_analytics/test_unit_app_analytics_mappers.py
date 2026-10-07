@@ -5,7 +5,6 @@ from influxdb_client.client.flux_table import FluxRecord, FluxTable
 
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
 from app_analytics.mappers import (
-    _map_influx_tag_to_id,
     map_annotated_api_usage_buckets_to_usage_data,
     map_flux_tables_to_feature_evaluation_data,
     map_flux_tables_to_usage_data,
@@ -163,21 +162,6 @@ def test_map_flux_tables_to_usage_data__grouped_records__maps_tags_to_ids() -> N
             environment_id=34,
         )
     ]
-
-
-@pytest.mark.parametrize(
-    "value, expected",
-    [("12", 12), ("", None), (None, None)],
-)
-def test_map_influx_tag_to_id__tag_value__returns_expected(
-    value: str | None,
-    expected: int | None,
-) -> None:
-    # Given / When
-    result = _map_influx_tag_to_id(value)
-
-    # Then
-    assert result == expected
 
 
 def test_map_annotated_api_usage_buckets_to_usage_data__two_environments_same_project__sums_into_one_row() -> (

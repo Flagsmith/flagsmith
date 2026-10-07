@@ -999,11 +999,11 @@ def test_get_usage_data_for_window__no_analytics_configured__returns_empty(
 
 @pytest.mark.use_analytics_db
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-@pytest.mark.usefixtures("usage_buckets_per_environment")
 def test_get_usage_data_from_local_db__group_by_project__returns_row_per_project(
     organisation: Organisation,
     project: Project,
     project_two: Project,
+    usage_buckets_per_environment: None,
 ) -> None:
     # Given
     today = date(2023, 1, 19)
@@ -1022,12 +1022,12 @@ def test_get_usage_data_from_local_db__group_by_project__returns_row_per_project
 
 @pytest.mark.use_analytics_db
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-@pytest.mark.usefixtures("usage_buckets_per_environment")
 def test_get_usage_data_from_local_db__group_by_environment__returns_row_per_environment(
     organisation: Organisation,
     environment: Environment,
     environment_two: Environment,
     project_two_environment: Environment,
+    usage_buckets_per_environment: None,
 ) -> None:
     # Given
     today = date(2023, 1, 19)
@@ -1054,12 +1054,12 @@ def test_get_usage_data_from_local_db__group_by_environment__returns_row_per_env
 
 @pytest.mark.use_analytics_db
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-@pytest.mark.usefixtures("usage_buckets_per_environment")
 def test_get_usage_data_from_local_db__group_by_project_with_labels__splits_rows_per_label(
     organisation: Organisation,
     project: Project,
     project_two: Project,
     environment: Environment,
+    usage_buckets_per_environment: None,
 ) -> None:
     # Given
     today = date(2023, 1, 19)
@@ -1092,11 +1092,11 @@ def test_get_usage_data_from_local_db__group_by_project_with_labels__splits_rows
 
 @pytest.mark.use_analytics_db
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-@pytest.mark.usefixtures("usage_buckets_per_environment")
 def test_get_usage_data_from_local_db__group_by_environment_with_project_id__returns_project_environments_only(
     organisation: Organisation,
     project_two: Project,
     project_two_environment: Environment,
+    usage_buckets_per_environment: None,
 ) -> None:
     # Given
     today = date(2023, 1, 19)

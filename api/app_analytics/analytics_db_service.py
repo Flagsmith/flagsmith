@@ -93,18 +93,18 @@ def _get_api_usage_bucket_qs(
     project_id: int | None = None,
     labels_filter: Labels | None = None,
 ) -> QuerySet[APIUsageBucket]:
+    environment_ids = project_ids_by_environment_id.keys()
     qs = APIUsageBucket.objects.filter(
-        environment_id__in=list(project_ids_by_environment_id),
+        environment_id__in=environment_ids,
         bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
     )
     if project_id:
-        qs = qs.filter(
-            environment_id__in=[
-                env_id
-                for env_id, env_project_id in project_ids_by_environment_id.items()
-                if env_project_id == project_id
-            ]
-        )
+        env_ids_in_project = [
+            env_id
+            for env_id, env_project_id in project_ids_by_environment_id.items()
+            if env_project_id == project_id
+        ]
+        qs = qs.filter(environment_id__in=env_ids_in_project)
 
     if environment_id:
         qs = qs.filter(environment_id=environment_id)
@@ -160,6 +160,7 @@ def get_usage_data_from_local_db(
     if not group_by:
         return _aggregate_buckets(qs)
 
+    # Always annotate per environment, then roll up to project in _group_bucket.
     return map_annotated_api_usage_buckets_to_usage_data(
         _group_bucket(row, project_ids_by_environment_id, group_by)
         for row in _annotate_buckets(qs, "environment_id")
