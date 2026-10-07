@@ -61,7 +61,7 @@ def is_overage_billing_eligible(organisation: Organisation) -> bool:
         return False
     if not starts_at <= timezone.now() < ends_at:
         return False
-    # TODO: Support annual plans, which the overage billing task does not charge yet.
+    # TODO: Support annual plans — https://github.com/Flagsmith/flagsmith-private/issues/335
     if not OVERAGE_BILLING_MIN_TERM <= ends_at - starts_at <= OVERAGE_BILLING_MAX_TERM:
         return False
 
