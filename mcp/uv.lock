@@ -6,14 +6,17 @@ resolution-markers = [
     "python_full_version == '3.14.*' and sys_platform == 'win32'",
     "python_full_version == '3.14.*' and sys_platform != 'win32'",
     "python_full_version == '3.13.*' and sys_platform == 'win32'",
-    "python_full_version < '3.13' and sys_platform == 'win32'",
     "python_full_version == '3.13.*' and sys_platform != 'win32'",
+    "python_full_version < '3.13' and sys_platform == 'win32'",
     "python_full_version < '3.13' and sys_platform != 'win32'",
 ]
 
 [options]
 exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
 exclude-newer-span = "P1W"
+
+[options.exclude-newer-package]
+flagsmith-common = false
 
 [[package]]
 name = "aiofile"
@@ -767,11 +770,11 @@ server = [
 
 [[package]]
 name = "flagsmith-common"
-version = "3.15.0"
+version = "3.15.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/59/a4/c8605bb5fbf853a8d06838241d89d0b70ea93b5c5b68c234f51c660b74b0/flagsmith_common-3.15.0.tar.gz", hash = "sha256:970290aa8b5aa0399c6e9f64b843de95e5a458fcbe0623425a6d15305c7e3559", size = 62639, upload-time = "2026-09-15T11:15:51.097Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3d/23/09f6eebd78db6783fa490fe34228d0c2df00dedf90a4cfa4727933479bb1/flagsmith_common-3.15.1.tar.gz", hash = "sha256:6dda69107b169c3643711a2e87ac63c107b9c4294c1eec547d6d0c8ba6786718", size = 62716, upload-time = "2026-10-01T17:47:12.394Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/97/57/08475196dc972e2d980b267d0bea25353c402983a8ea13f9fdfed6745f38/flagsmith_common-3.15.0-py3-none-any.whl", hash = "sha256:bd7b54970fb0ebe563fe007ef25cbc45bd1a4c586648d8c2bf6df27e82469565", size = 100743, upload-time = "2026-09-15T11:15:49.505Z" },
+    { url = "https://files.pythonhosted.org/packages/80/f7/b372cbe876f495870bfe71f6ac8ae10453e384b635db6c4945cd8dd3208e/flagsmith_common-3.15.1-py3-none-any.whl", hash = "sha256:16705517a7d9d3a1eda652e0980cb4a2bf1392fa81d7a1d5a213040404e3a776", size = 100826, upload-time = "2026-10-01T17:47:10.75Z" },
 ]
 
 [package.optional-dependencies]
@@ -821,7 +824,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=3.3.1,<4.0.0" },
-    { name = "flagsmith-common", extras = ["otel"], specifier = ">=3.12.1,<4.0.0" },
+    { name = "flagsmith-common", extras = ["otel"], specifier = ">=3.15.1,<4.0.0" },
     { name = "opentelemetry-instrumentation-httpx", specifier = ">=0.46b0,<1.0.0" },
     { name = "prometheus-client", specifier = ">=0.21.0,<1.0.0" },
     { name = "pydantic-settings", specifier = ">=2.0.0,<3.0.0" },
@@ -830,7 +833,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "flagsmith-common", extras = ["test-tools"], specifier = ">=3.12.1,<4.0.0" },
+    { name = "flagsmith-common", extras = ["test-tools"], specifier = ">=3.15.1,<4.0.0" },
     { name = "mypy", specifier = ">=2.1.0,<3.0.0" },
     { name = "openapi-pydantic", specifier = ">=0.5.0,<1.0.0" },
     { name = "pyfakefs", specifier = ">=6.0.0,<7.0.0" },

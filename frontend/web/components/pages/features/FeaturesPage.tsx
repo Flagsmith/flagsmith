@@ -272,6 +272,7 @@ const FeaturesPage: FC<FeaturesPageProps> = ({ forcedTagIds, pageTitle }) => {
       >
         {({ permission }) => (
           <FeatureRow
+            openFromUrl
             environmentFlags={environmentFlagsOverride ?? environmentFlags}
             permission={permission}
             environmentId={environmentId}

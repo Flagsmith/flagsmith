@@ -46,6 +46,7 @@ import SegmentOverridesTab, {
   SegmentOverrideValue,
 } from './tabs/SegmentOverridesTab'
 import UsageTab from './tabs/UsageTab'
+import FeatureDependenciesTab from './tabs/FeatureDependenciesTab'
 import FeatureLimitAlert from './components/FeatureLimitAlert'
 import FeatureUpdateSummary from './components/FeatureUpdateSummary'
 import FeatureNameInput from './components/FeatureNameInput'
@@ -459,6 +460,12 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     controlValue < 0
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
+  // Change requests are out of scope for the first version, so the tab stays
+  // hidden where they are enforced. See #8428.
+  const isDependenciesTabEnabled =
+    Utils.getFlagsmithHasFeature('flag_dependencies') &&
+    !existingChangeRequest &&
+    !is4Eyes
 
   let regexValid = true
   try {
@@ -818,6 +825,33 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         />
                       </TabItem>
                     )}
+                  {isDependenciesTabEnabled && (
+                    <TabItem
+                      data-test='feature_dependencies'
+                      tabLabel='Dependencies'
+                    >
+                      <FeatureDependenciesTab
+                        environmentId={environmentId}
+                        environmentName={environmentName}
+                        projectId={projectId}
+                        projectFlag={projectFlag}
+                        onSelectFeature={(featureId) => {
+                          // The features list, never the current page: it
+                          // owns the deep link and hydrates an off-page
+                          // target. `from` puts a back arrow in the header.
+                          props.history?.push(
+                            `/project/${projectId}/environment/${environmentId}/features?${Utils.toParam(
+                              {
+                                feature: featureId,
+                                from: projectFlag.id,
+                                tab: 'dependencies',
+                              },
+                            )}`,
+                          )
+                        }}
+                      />
+                    </TabItem>
+                  )}
                   {!existingChangeRequest && !hideIdentityOverridesTab && (
                     <TabItem
                       data-test='identity_overrides'

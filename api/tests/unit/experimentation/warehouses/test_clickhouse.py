@@ -1,9 +1,22 @@
+from datetime import datetime, timezone
+from unittest.mock import MagicMock
+
 import pytest
 from clickhouse_connect.driver.exceptions import DatabaseError, OperationalError
 from pytest_mock import MockerFixture
 from urllib3 import PoolManager
 
-from experimentation.models import WarehouseConnection
+from experimentation.dataclasses import (
+    ConversionBucket,
+    ExposureBucket,
+    MetricSpec,
+    ResultsAggregates,
+)
+from experimentation.models import (
+    MetricAggregation,
+    WarehouseConnection,
+)
+from experimentation.stats import VariantStats
 from experimentation.warehouses import clickhouse
 from experimentation.warehouses.exceptions import (
     DeliveryConfigError,
@@ -215,3 +228,139 @@ def test_no_redirect_pool_manager__urlopen__refuses_to_follow_redirects(
     # Then the redirect is refused: a permitted host must not be able to bounce
     # the request, and its event payload, to an unchecked address
     assert urlopen.call_args.kwargs["redirect"] is False
+
+
+WINDOW_START = datetime(2026, 1, 1, tzinfo=timezone.utc)
+WINDOW_END = datetime(2026, 1, 8, tzinfo=timezone.utc)
+
+
+BUCKET = datetime(2026, 1, 2, tzinfo=timezone.utc)
+EXPOSURE_BUCKET_COLUMNS = (
+    "quarantined",
+    "variant",
+    "bucket",
+    "first_exposed_identities",
+)
+
+
+def _query_result(
+    mocker: MockerFixture,
+    rows: list[tuple[object, ...]],
+    columns: tuple[str, ...],
+) -> MagicMock:
+    result: MagicMock = mocker.MagicMock(result_rows=rows, column_names=columns)
+    return result
+
+
+def test_clickhouse_warehouse__get_exposure_buckets__reads_customer_store(
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given the customer's ClickHouse holds one exposure row per variant
+    get_client = mocker.patch(
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
+    )
+    client = get_client.return_value
+    client.query.return_value = _query_result(
+        mocker,
+        [(0, "control", BUCKET, 10), (1, "", BUCKET, 2)],
+        EXPOSURE_BUCKET_COLUMNS,
+    )
+
+    # When
+    buckets = clickhouse.ClickHouseWarehouse().get_exposure_buckets(
+        clickhouse_connection,
+        environment_key="key",
+        feature_name="checkout",
+        window_start=WINDOW_START,
+        window_end=WINDOW_END,
+        granularity="day",
+    )
+
+    # Then the rows are mapped to buckets
+    assert buckets == [
+        ExposureBucket("control", BUCKET, first_exposed_identities=10),
+        ExposureBucket("", BUCKET, first_exposed_identities=2, quarantined=True),
+    ]
+    # And the read uses the background timeout and pinned settings
+    assert (
+        get_client.call_args.kwargs["send_receive_timeout"]
+        == clickhouse.BACKGROUND_QUERY_TIMEOUT_SECONDS
+    )
+    (query,) = client.query.call_args.args
+    assert "toStartOfDay(first_exposure, 'UTC') AS bucket" in query
+    assert client.query.call_args.kwargs == {
+        "parameters": {
+            "environment_key": "key",
+            "exposure_event": "$flag_exposure",
+            "feature_name": "checkout",
+            "window_start": WINDOW_START,
+            "window_end": WINDOW_END,
+        },
+        "settings": clickhouse.RESULTS_QUERY_SETTINGS,
+        "tz_mode": "aware",
+    }
+    client.close.assert_called_once_with()
+
+
+def test_clickhouse_warehouse__get_results_aggregates__reads_customer_store(
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given the customer's ClickHouse answers the results, conversions and
+    # exposure buckets queries in turn
+    get_client = mocker.patch(
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
+    )
+    client = get_client.return_value
+    client.query.side_effect = [
+        _query_result(
+            mocker,
+            [("control", 100, 12.0, 12.0)],
+            ("variant", "n", "m0_sum", "m0_sum_squares"),
+        ),
+        _query_result(
+            mocker,
+            [("control", 0, BUCKET, 12)],
+            ("variant", "metric_index", "bucket", "converted_identities"),
+        ),
+        _query_result(mocker, [(0, "control", BUCKET, 100)], EXPOSURE_BUCKET_COLUMNS),
+    ]
+    spec = MetricSpec(
+        metric_id=7,
+        event="purchase",
+        aggregation=MetricAggregation.OCCURRENCE,
+        lower_is_better=False,
+    )
+
+    # When
+    aggregates = clickhouse.ClickHouseWarehouse().get_results_aggregates(
+        clickhouse_connection,
+        environment_key="key",
+        feature_name="checkout",
+        window_start=WINDOW_START,
+        window_end=WINDOW_END,
+        specs=[spec],
+        granularity="hour",
+    )
+
+    # Then the statistics and chart rows come from the customer's store
+    assert aggregates == ResultsAggregates(
+        specs=[spec],
+        exposure_counts={"control": 100},
+        metric_stats={7: {"control": VariantStats(n=100, sum=12.0, sum_squares=12.0)}},
+        granularity="hour",
+        exposure_buckets=[
+            ExposureBucket("control", BUCKET, first_exposed_identities=100)
+        ],
+        conversion_buckets={7: [ConversionBucket("control", BUCKET, 12)]},
+    )
+    # And all three reads share one client with the pinned settings and
+    # timezone-aware datetimes
+    get_client.assert_called_once()
+    assert all(
+        call.kwargs["settings"] == clickhouse.RESULTS_QUERY_SETTINGS
+        and call.kwargs["tz_mode"] == "aware"
+        for call in client.query.call_args_list
+    )
+    client.close.assert_called_once_with()

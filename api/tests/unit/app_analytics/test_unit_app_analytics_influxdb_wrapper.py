@@ -386,6 +386,7 @@ def test_get_usage_data__default_params__calls_get_multiple_event_list(
         date_start=date_start,
         date_stop=date_stop,
         labels_filter=None,
+        group_by=None,
     )
 
 

@@ -5,10 +5,6 @@ import typing
 from dataclasses import replace
 
 import structlog
-from clickhouse_driver import Client
-from clickhouse_driver.util.helpers import parse_url
-from django.conf import settings
-from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -33,7 +29,6 @@ from experimentation.constants import (
 )
 from experimentation.dataclasses import (
     AudienceSpec,
-    ConversionBucket,
     ConversionsTimeseries,
     ConversionsTimeseriesPoint,
     ExposureBucket,
@@ -63,19 +58,13 @@ from experimentation.models import (
     WarehouseDeliveryStatus,
     WarehouseType,
 )
-from experimentation.results_query import (
-    _EXPOSURES_CTE,
-    ResultsQueryBuilder,
-    exposure_window_params,
-)
 from experimentation.stats import (
     Inference,
     VariantStats,
     compare_to_control,
     srm_p_value,
 )
-from experimentation.warehouses import clickhouse
-from experimentation.warehouses.constants import EVENT_NAMES_CACHE_SECONDS
+from experimentation.warehouses import flagsmith
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.registry import get_warehouse
 from features.feature_states.models import API_VALUE_TYPES
@@ -111,9 +100,13 @@ if typing.TYPE_CHECKING:
 logger = structlog.get_logger("warehouse")
 experimentation_logger = structlog.get_logger("experimentation")
 
-CLICKHOUSE_CONNECT_TIMEOUT_SECONDS = 5
-CLICKHOUSE_QUERY_TIMEOUT_SECONDS = 30
-CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS = 120
+
+class _ExposureReadKwargs(typing.TypedDict):
+    environment_key: str
+    feature_name: str
+    window_start: datetime
+    window_end: datetime
+    granularity: ExposureGranularity
 
 
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
@@ -173,110 +166,38 @@ def ensure_flagsmith_warehouse_connection(
         return None
 
 
-def _get_clickhouse_client(
-    send_receive_timeout: int = CLICKHOUSE_QUERY_TIMEOUT_SECONDS,
-) -> Client:
-    """Build a clickhouse-driver client for the experimentation event store.
-
-    The database is taken from the DSN path, so queries can reference the
-    `events` table unqualified. Connect and query timeouts are bounded unless the
-    DSN overrides them.
-    """
-    host, kwargs = parse_url(settings.EXPERIMENTATION_CLICKHOUSE_URL)
-    kwargs.setdefault("connect_timeout", CLICKHOUSE_CONNECT_TIMEOUT_SECONDS)
-    kwargs.setdefault("send_receive_timeout", send_receive_timeout)
-    kwargs.setdefault("client_name", settings.CLICKHOUSE_CONNECTION_CLIENT_NAME)
-    return Client(host, **kwargs)
-
-
 def get_warehouse_event_names(
     connection: "WarehouseConnection",
     environment_key: str,
 ) -> WarehouseEventNames | None:
-    if connection.warehouse_type == WarehouseType.FLAGSMITH:
-        return _get_flagsmith_clickhouse_event_names(environment_key)
     return get_warehouse(connection.warehouse_type).get_event_names(
         connection, environment_key
     )
 
 
-def _get_flagsmith_clickhouse_event_names(
-    environment_key: str,
-) -> WarehouseEventNames | None:
-    if not settings.EXPERIMENTATION_CLICKHOUSE_URL:
-        return None
-    cache_key = f"experimentation:event_names:{environment_key}"
-    cached = cache.get(cache_key)
-    if isinstance(cached, WarehouseEventNames):
-        return cached
-    client = _get_clickhouse_client()
-    try:
-        rows = client.execute(
-            clickhouse.EVENT_NAMES_QUERY,
-            clickhouse.event_names_query_params(environment_key),
-        )
-    except Exception:
-        logger.warning(
-            "connection.event_names_failed",
-            environment__key=environment_key,
-            exc_info=True,
-        )
-        return None
-    finally:
-        client.disconnect()
-    event_names = clickhouse.build_event_names(rows)
-    cache.set(cache_key, event_names, EVENT_NAMES_CACHE_SECONDS)
-    return event_names
-
-
-def get_warehouse_event_stats(environment_key: str) -> WarehouseEventStats:
-    """Return event counts recorded for `environment_key` in the warehouse."""
-    client = _get_clickhouse_client()
-    try:
-        rows = client.execute(
-            clickhouse.EVENT_STATS_QUERY,
-            {"environment_key": environment_key},
-        )
-    finally:
-        client.disconnect()
-    return clickhouse.build_event_stats(rows)
-
-
-EXPOSURE_BUCKETS_QUERY = (
-    _EXPOSURES_CTE
-    + """
-SELECT
-    quarantined,
-    variant,
-    {bucket_function}(first_exposure, 'UTC') AS bucket,
-    count() AS first_exposed_identities
-FROM exposures
-GROUP BY quarantined, variant, bucket
-ORDER BY bucket
-"""
-)
-
-_EXPOSURE_BUCKET_FUNCTIONS: dict[str, str] = {
-    "hour": "toStartOfHour",
-    "day": "toStartOfDay",
-}
-
-
 def compute_exposures_summary(
+    experiment: Experiment,
     *,
-    environment_key: str,
-    feature_name: str,
     window_start: datetime,
     window_end: datetime,
 ) -> ExposuresSummary:
+    """Read an experiment's exposures from its environment's warehouse, or the
+    managed one when the environment has no connection."""
     granularity = _select_exposure_granularity(window_start, window_end)
-    buckets = get_exposure_buckets(
-        environment_key=environment_key,
-        feature_name=feature_name,
-        window_start=window_start,
-        window_end=window_end,
-        granularity=granularity,
-    )
+    read_kwargs: _ExposureReadKwargs = {
+        "environment_key": experiment.environment.api_key,
+        "feature_name": experiment.feature.name,
+        "window_start": window_start,
+        "window_end": window_end,
+        "granularity": granularity,
+    }
+    connection = experiment.environment.warehouse_connections.first()
+    if connection is None:
+        buckets = flagsmith.get_exposure_buckets(**read_kwargs)
+    else:
+        buckets = get_warehouse(connection.warehouse_type).get_exposure_buckets(
+            connection, **read_kwargs
+        )
     return build_exposures_summary(buckets, granularity=granularity)
 
 
@@ -353,105 +274,6 @@ def _select_exposure_granularity(
     return "day"
 
 
-def get_exposure_buckets(
-    *,
-    environment_key: str,
-    feature_name: str,
-    window_start: datetime,
-    window_end: datetime,
-    granularity: ExposureGranularity,
-) -> list[ExposureBucket]:
-    client = _get_clickhouse_client(
-        send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
-    )
-    try:
-        rows = client.execute(
-            EXPOSURE_BUCKETS_QUERY.format(
-                bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
-            ),
-            exposure_window_params(
-                environment_key=environment_key,
-                feature_name=feature_name,
-                window_start=window_start,
-                window_end=window_end,
-            ),
-        )
-    finally:
-        client.disconnect()
-    return [
-        ExposureBucket(
-            variant=variant,
-            bucket=bucket,
-            first_exposed_identities=int(first_exposed_identities),
-            quarantined=bool(quarantined),
-        )
-        for quarantined, variant, bucket, first_exposed_identities in rows
-    ]
-
-
-def get_results_aggregates(
-    *,
-    environment_key: str,
-    feature_name: str,
-    window_start: datetime,
-    window_end: datetime,
-    specs: Sequence[MetricSpec],
-    granularity: ExposureGranularity,
-) -> ResultsAggregates:
-    """Run the warehouse reads behind one results refresh: per-variant identity
-    counts and sufficient statistics, exposure buckets, and per charted metric
-    the buckets of first post-exposure conversions.
-
-    Three separate reads, so events landing mid-run can leave the chart's last
-    point a few identities off the table until the next refresh."""
-    builder = ResultsQueryBuilder(specs)
-    params = builder.params(
-        environment_key=environment_key,
-        feature_name=feature_name,
-        window_start=window_start,
-        window_end=window_end,
-    )
-    client = _get_clickhouse_client(
-        send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
-    )
-    try:
-        rows, columns = client.execute(
-            builder.build_query(), params, with_column_types=True
-        )
-        exposure_counts, metric_stats = builder.decode_rows(
-            rows, [name for name, _type in columns]
-        )
-
-        conversion_buckets: dict[int, list[ConversionBucket]] = {}
-        conversions_query = builder.build_conversions_query(
-            bucket_function=_EXPOSURE_BUCKET_FUNCTIONS[granularity]
-        )
-        if conversions_query is not None:
-            rows, columns = client.execute(
-                conversions_query, params, with_column_types=True
-            )
-            conversion_buckets = builder.decode_conversion_rows(
-                rows, [name for name, _type in columns]
-            )
-    finally:
-        client.disconnect()
-
-    return ResultsAggregates(
-        specs=list(specs),
-        exposure_counts=exposure_counts,
-        metric_stats=metric_stats,
-        granularity=granularity,
-        exposure_buckets=get_exposure_buckets(
-            environment_key=environment_key,
-            feature_name=feature_name,
-            window_start=window_start,
-            window_end=window_end,
-            granularity=granularity,
-        ),
-        conversion_buckets=conversion_buckets,
-    )
-
-
 def build_results_summary(
     aggregates: ResultsAggregates,
     *,
@@ -493,16 +315,24 @@ def compute_results_summary(
     window_start: "datetime",
     window_end: "datetime",
 ) -> ResultsSummary:
-    """Gather an experiment's metric statistics and chart rows from the
-    warehouse and reduce them to the stored results payload."""
-    aggregates = get_results_aggregates(
-        environment_key=experiment.environment.api_key,
-        feature_name=experiment.feature.name,
-        window_start=window_start,
-        window_end=window_end,
-        specs=_experiment_metric_specs(experiment),
-        granularity=_select_exposure_granularity(window_start, window_end),
-    )
+    """Gather an experiment's metric statistics and chart rows from its
+    environment's warehouse, or the managed one when the environment has no
+    connection, and reduce them to the stored results payload."""
+    read_kwargs: _ExposureReadKwargs = {
+        "environment_key": experiment.environment.api_key,
+        "feature_name": experiment.feature.name,
+        "window_start": window_start,
+        "window_end": window_end,
+        "granularity": _select_exposure_granularity(window_start, window_end),
+    }
+    specs = _experiment_metric_specs(experiment)
+    connection = experiment.environment.warehouse_connections.first()
+    if connection is None:
+        aggregates = flagsmith.get_results_aggregates(specs=specs, **read_kwargs)
+    else:
+        aggregates = get_warehouse(connection.warehouse_type).get_results_aggregates(
+            connection, specs=specs, **read_kwargs
+        )
     return build_results_summary(
         aggregates,
         expected_shares=_expected_variant_shares(experiment),
@@ -1389,19 +1219,11 @@ def annotate_warehouse_event_stats(
     others. No-op for types that cannot be read or when no warehouse is
     configured; leaves stats unset when the warehouse is unreachable.
     Read-only: never changes status."""
-    if connection.warehouse_type != WarehouseType.FLAGSMITH:
-        try:
-            stats = get_warehouse(connection.warehouse_type).get_event_stats(
-                connection, environment_key
-            )
-        except UnsupportedWarehouseOperation:
-            return
-        if stats is not None:
-            connection.event_stats = stats
-        return
-    if not settings.EXPERIMENTATION_CLICKHOUSE_URL:
-        return
     try:
-        connection.event_stats = get_warehouse_event_stats(environment_key)
-    except Exception:
+        stats = get_warehouse(connection.warehouse_type).get_event_stats(
+            connection, environment_key
+        )
+    except UnsupportedWarehouseOperation:
         return
+    if stats is not None:
+        connection.event_stats = stats

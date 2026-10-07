@@ -9,8 +9,18 @@ from experimentation.types import SNOWFLAKE_DEFAULTS, SnowflakeConfig
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 
 if typing.TYPE_CHECKING:
-    from experimentation.dataclasses import WarehouseEventNames, WarehouseEventStats
+    from collections.abc import Sequence
+    from datetime import datetime
+
+    from experimentation.dataclasses import (
+        ExposureBucket,
+        MetricSpec,
+        ResultsAggregates,
+        WarehouseEventNames,
+        WarehouseEventStats,
+    )
     from experimentation.models import WarehouseConnection
+    from experimentation.types import ExposureGranularity
 
 
 class SnowflakeWarehouse:
@@ -66,3 +76,28 @@ class SnowflakeWarehouse:
         environment_key: str,
     ) -> WarehouseEventStats | None:
         raise UnsupportedWarehouseOperation("Snowflake connections cannot be read.")
+
+    def get_exposure_buckets(
+        self,
+        connection: WarehouseConnection,
+        *,
+        environment_key: str,
+        feature_name: str,
+        window_start: datetime,
+        window_end: datetime,
+        granularity: ExposureGranularity,
+    ) -> list[ExposureBucket]:
+        raise UnsupportedWarehouseOperation("Snowflake results are not supported.")
+
+    def get_results_aggregates(
+        self,
+        connection: WarehouseConnection,
+        *,
+        environment_key: str,
+        feature_name: str,
+        window_start: datetime,
+        window_end: datetime,
+        specs: Sequence[MetricSpec],
+        granularity: ExposureGranularity,
+    ) -> ResultsAggregates:
+        raise UnsupportedWarehouseOperation("Snowflake results are not supported.")

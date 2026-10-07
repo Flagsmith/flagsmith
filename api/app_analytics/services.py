@@ -48,7 +48,10 @@ def get_features_in_use(
     if settings.USE_POSTGRES_FOR_ANALYTICS:
         feature_names = _get_feature_names_in_use_from_analytics_db(environment, since)
     elif settings.INFLUXDB_TOKEN:
-        feature_names = _get_feature_names_in_use_from_influxdb(environment, since)
+        try:
+            feature_names = _get_feature_names_in_use_from_influxdb(environment, since)
+        except Exception:
+            return None
     else:
         return None
     features_in_use: QuerySet[Feature] = Feature.objects.filter(
@@ -91,6 +94,7 @@ def _get_feature_names_in_use_from_influxdb(
             '|> distinct(column: "feature_id") '
             '|> yield(name: "distinct")'
         ),
+        return_empty_on_error=False,
     )
     return [
         feature_name

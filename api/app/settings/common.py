@@ -383,6 +383,7 @@ REST_FRAMEWORK = {
         "invite": "10/min",
         "user": USER_THROTTLE_RATE,
         "influx_query": "5/min",
+        "usage_data": "30/min",
         "warehouse_connection_write": "10/min",
         "warehouse_connection_read": "60/min",
     },

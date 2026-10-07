@@ -33,9 +33,9 @@ Attributes:
 ### `app_analytics.no_analytics_database_configured`
 
 Logged at `warning` from:
- - `api/app_analytics/analytics_db_service.py:74`
- - `api/app_analytics/analytics_db_service.py:187`
- - `api/app_analytics/analytics_db_service.py:278`
+ - `api/app_analytics/analytics_db_service.py:83`
+ - `api/app_analytics/analytics_db_service.py:230`
+ - `api/app_analytics/analytics_db_service.py:321`
 
 Attributes:
  - `details`
@@ -195,7 +195,7 @@ Attributes:
 ### `experimentation.exposures.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:47`
+ - `api/experimentation/tasks.py:57`
 
 Attributes:
  - `environment.id`
@@ -204,10 +204,21 @@ Attributes:
  - `feature.id`
  - `organisation.id`
 
+### `experimentation.exposures.compute_unsupported`
+
+Logged at `warning` from:
+ - `api/experimentation/tasks.py:47`
+
+Attributes:
+ - `environment.id`
+ - `experiment.id`
+ - `organisation.id`
+ - `warehouse.type`
+
 ### `experimentation.results.compute_failed`
 
 Logged at `error` from:
- - `api/experimentation/tasks.py:85`
+ - `api/experimentation/tasks.py:105`
 
 Attributes:
  - `environment.id`
@@ -215,10 +226,21 @@ Attributes:
  - `experiment.id`
  - `organisation.id`
 
+### `experimentation.results.compute_unsupported`
+
+Logged at `warning` from:
+ - `api/experimentation/tasks.py:95`
+
+Attributes:
+ - `environment.id`
+ - `experiment.id`
+ - `organisation.id`
+ - `warehouse.type`
+
 ### `experimentation.rollout.applied`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1186`
+ - `api/experimentation/services.py:1016`
 
 Attributes:
  - `audience.match`
@@ -873,7 +895,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1358`
+ - `api/experimentation/services.py:1188`
 
 Attributes:
  - `environment.id`
@@ -882,8 +904,8 @@ Attributes:
 ### `warehouse.connection.event_names_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:219`
- - `api/experimentation/warehouses/clickhouse.py:296`
+ - `api/experimentation/warehouses/clickhouse.py:440`
+ - `api/experimentation/warehouses/flagsmith.py:179`
 
 Attributes:
  - `environment.id`
@@ -893,7 +915,7 @@ Attributes:
 ### `warehouse.connection.event_stats_failed`
 
 Logged at `warning` from:
- - `api/experimentation/warehouses/clickhouse.py:333`
+ - `api/experimentation/warehouses/clickhouse.py:477`
 
 Attributes:
  - `environment.id`
@@ -902,7 +924,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1301`
+ - `api/experimentation/services.py:1131`
 
 Attributes:
  - `environment.id`
@@ -911,7 +933,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1333`
+ - `api/experimentation/services.py:1163`
 
 Attributes:
  - `environment.id`
@@ -921,7 +943,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1343`
+ - `api/experimentation/services.py:1173`
 
 Attributes:
  - `environment.id`
@@ -930,7 +952,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:571`
+ - `api/experimentation/services.py:401`
 
 Attributes:
  - `environment.id`
@@ -940,7 +962,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:557`
+ - `api/experimentation/services.py:387`
 
 Attributes:
  - `environment.id`

@@ -79,7 +79,6 @@ from features.dependencies.exceptions import (
 from features.dependencies.services import validate_segment_flag_dependencies
 from features.feature_lifecycle.services import (
     annotate_feature_queryset_with_lifecycle_stage,
-    is_feature_lifecycle_enabled,
 )
 from features.services import delete_feature
 from features.value_types import BOOLEAN, INTEGER, STRING
@@ -306,12 +305,11 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         if environment_id:
             self.environment = Environment.objects.get(id=environment_id)
-            if is_feature_lifecycle_enabled(project.organisation):
-                queryset = annotate_feature_queryset_with_lifecycle_stage(
-                    queryset, self.environment
-                )
-                if lifecycle_stage := query_data.get("lifecycle_stage"):
-                    queryset = queryset.filter(lifecycle_stage=lifecycle_stage)
+            queryset = annotate_feature_queryset_with_lifecycle_stage(
+                queryset, self.environment
+            )
+            if lifecycle_stage := query_data.get("lifecycle_stage"):
+                queryset = queryset.filter(lifecycle_stage=lifecycle_stage)
             page = self.paginate_queryset(queryset)
             self.feature_ids = [feature.id for feature in page]
             feature_states_query = Q(

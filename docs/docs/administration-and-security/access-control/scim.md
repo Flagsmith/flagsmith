@@ -195,6 +195,12 @@ To sync groups, use the "Push Groups" tab to select the Okta groups you want to 
 
 ### Microsoft Entra ID (Azure AD)
 
+:::caution
+
+Flagsmith does not support the `aadOptscim062020` flag.
+
+:::
+
 1. In the Entra admin centre, go to Enterprise Applications and find your Flagsmith application.
 2. Go to "Provisioning" and click "Get started".
 3. Set the provisioning mode to "Automatic".
