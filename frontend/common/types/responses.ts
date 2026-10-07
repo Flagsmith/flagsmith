@@ -160,6 +160,48 @@ export type SegmentRule = {
   conditions: SegmentCondition[]
   version_of: number | undefined
 }
+// One feature's dependency on another, as served by the dependencies API.
+// Mirrors `DependencyEdge` in api/features/dependencies/types.py.
+export type DependencyFeature = {
+  id: number
+  name: string
+}
+
+export type DependencyEdgeSegment = {
+  id: number
+  name: string
+  rules: SegmentRule[]
+  condition_json_path: string
+  // False for edges a user wrote by hand in a segment; those cannot be
+  // removed through the dependencies API.
+  is_system: boolean
+}
+
+// A link between two flags, not a flag: `feature` is the gated one and
+// `prerequisite` the one gating it, so which end a screen shows is up to it.
+export type DependencyEdge = {
+  feature: DependencyFeature
+  prerequisite: DependencyFeature
+  segment: DependencyEdgeSegment
+}
+
+export type DependencyConflictCode =
+  | 'circular_dependency'
+  | 'dependency_exists'
+  | 'feature_is_prerequisite'
+  | 'prerequisite_has_prerequisite'
+  | 'prerequisite_is_self'
+
+export type DependencyConflictDetail = {
+  code: DependencyConflictCode
+  message: string
+  environment: {
+    key: string
+    name: string
+  }
+  path: DependencyEdge[]
+}
+
 export type SegmentMembership = {
   environment: number
   count: number
@@ -1551,6 +1593,9 @@ export type Res = {
   githubRepos: GithubPaginatedRepos<Repository>
   segmentPriorities: {}
   featureSegment: FeatureState['feature_segment']
+  featureDependencies: { results: DependencyEdge[] }
+  featureDependents: { results: DependencyEdge[] }
+  featureDependency: DependencyEdge
   featureVersions: PagedResponse<FeatureVersion>
   users: User[]
   enableFeatureVersioning: { id: string }
