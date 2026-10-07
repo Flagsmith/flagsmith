@@ -51,18 +51,16 @@ const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
       >
         Segments
       </NavSubLink>
-      {Utils.getFlagsmithHasFeature('feature_lifecycle') && (
-        <NavSubLink
-          icon={<Icon name='refresh' />}
-          id='lifecycle-link'
-          to={`/project/${projectId}/lifecycle`}
-          isActive={(_, location) =>
-            location.pathname.startsWith(`/project/${projectId}/lifecycle`)
-          }
-        >
-          Lifecycle
-        </NavSubLink>
-      )}
+      <NavSubLink
+        icon={<Icon name='refresh' />}
+        id='lifecycle-link'
+        to={`/project/${projectId}/lifecycle`}
+        isActive={(_, location) =>
+          location.pathname.startsWith(`/project/${projectId}/lifecycle`)
+        }
+      >
+        Lifecycle
+      </NavSubLink>
       <Permission
         level='project'
         permission={ProjectPermission.VIEW_AUDIT_LOG}
