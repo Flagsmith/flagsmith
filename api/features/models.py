@@ -776,6 +776,7 @@ class FeatureState(
             FeatureState.objects.get_live_feature_states(
                 environment=self.environment,  # type: ignore[arg-type]
                 additional_filters=lineage_filter,
+                include_superseded=True,
                 feature_id=self.feature_id,
                 identity__isnull=True,
             )

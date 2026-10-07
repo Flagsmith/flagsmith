@@ -2,7 +2,8 @@ from __future__ import unicode_literals
 
 import typing
 
-from django.db.models import Q, QuerySet
+from django.db.models import F, Q, QuerySet, Value, Window
+from django.db.models.functions import Coalesce, RowNumber
 from django.utils import timezone
 from ordered_model.models import OrderedModelManager  # type: ignore[import-untyped]
 from softdelete.models import SoftDeleteManager  # type: ignore[import-untyped]
@@ -27,7 +28,9 @@ class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):  # typ
     def get_live_feature_states(  # type: ignore[no-untyped-def]
         self,
         environment: "Environment",
-        additional_filters: Q = None,  # type: ignore[assignment]
+        additional_filters: Q | None = None,
+        *,
+        include_superseded: bool = False,
         **kwargs,
     ) -> QuerySet["FeatureState"]:
         # TODO: replace additional_filters with just using kwargs in calling locations
@@ -61,7 +64,21 @@ class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):  # typ
         if additional_filters:
             qs_filter &= additional_filters
 
-        return self.filter(qs_filter, **kwargs)  # type: ignore[no-any-return]
+        queryset: QuerySet["FeatureState"] = self.filter(qs_filter, **kwargs)
+        if include_superseded or environment.use_v2_feature_versioning:
+            return queryset
+        live_feature_states = queryset.annotate(
+            version_rank=Window(
+                expression=RowNumber(),
+                partition_by=[
+                    F("feature_id"),
+                    Coalesce("feature_segment_id", Value(0)),
+                    Coalesce("identity_id", Value(0)),
+                ],
+                order_by=[F("live_from").desc(), F("version").desc()],
+            ),
+        ).filter(version_rank=1)
+        return self.filter(id__in=live_feature_states.values("id"))  # type: ignore[no-any-return]
 
 
 class FeatureStateValueManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):  # type: ignore[misc]
