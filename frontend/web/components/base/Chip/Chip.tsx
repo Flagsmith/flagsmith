@@ -56,7 +56,7 @@ const Chip = ({
     <span
       ref={ref}
       className={classNames(
-        'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-sm',
+        'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-md',
         colour ? chipColourClass(colour) : chipVariantClass(variant),
         {
           'ds-chip--accent': variant === 'accent',

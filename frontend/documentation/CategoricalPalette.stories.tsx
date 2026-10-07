@@ -84,14 +84,12 @@ export const TagSwatches: StoryObj = {
       </div>
       <p className='cat-note'>
         System tags (Issue, PR, Stale, Unhealthy) are not on this scale. They
-        stay on existing tokens &mdash; <code>bg-surface-muted</code>,{' '}
-        <code>border-default</code>, <code>text-default</code> &mdash; plus a
-        coloured icon, so the state is carried by the icon rather than the fill.
-        Muted rather than the default surface: the panels these sit in are the
-        default surface, so a system tag on one had no edge but its border.
+        take no fill at all: <code>border-default</code> and{' '}
+        <code>text-default</code> plus a coloured icon, so the state is carried
+        by the icon and the border rather than the fill.
       </p>
       <div className='d-flex mt-3'>
-        <Chip size='xs' variant='muted'>
+        <Chip size='xs' variant='outline'>
           System tag
         </Chip>
       </div>

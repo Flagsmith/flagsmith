@@ -50,7 +50,7 @@ export const AsSystemTag: Story = {
   render: () => (
     <div className='d-flex flex-wrap gap-2'>
       {SYSTEM_TAGS.map(({ icon, label }) => (
-        <Chip key={label} size='xs' variant='muted'>
+        <Chip key={label} size='xs' variant='outline'>
           {label}
           <Icon name={icon} />
         </Chip>

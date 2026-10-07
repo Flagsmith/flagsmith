@@ -1,11 +1,13 @@
 import type { ContentColour } from 'common/theme/tokens'
 
-export type ChipVariant = 'neutral' | 'accent' | 'muted'
+export type ChipVariant = 'neutral' | 'accent' | 'outline'
 
 const VARIANT_UTILITIES: Record<ChipVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
-  muted: 'bg-surface-muted text-default',
+
   neutral: 'bg-surface-subtle text-default',
+  // No fill: the border carries the edge, so a system tag takes no hue.
+  outline: 'text-default',
 }
 
 export const chipVariantClass = (variant: ChipVariant = 'neutral') =>

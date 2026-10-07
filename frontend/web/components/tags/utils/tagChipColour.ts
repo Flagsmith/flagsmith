@@ -7,7 +7,7 @@ import { isSystemTag } from './systemTag'
 // issued gets the neutral variant rather than a guess at the nearest swatch.
 export const tagChipColour = (tag: Partial<TTag>): ChipColourChoice => {
   if (isSystemTag(tag)) {
-    return { variant: 'muted' }
+    return { variant: 'outline' }
   }
   const swatch = getTagSwatch(tag.color)
   return swatch ? { colour: swatch } : { variant: 'neutral' }

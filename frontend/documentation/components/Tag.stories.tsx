@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from 'storybook'
 
 import Tag from 'components/tags/Tag'
 import Constants from 'common/constants'
+import { contentColourNames, contentColours } from 'common/theme/tokens'
 import type { Tag as TTag } from 'common/types/responses'
 
 const meta: Meta<typeof Tag> = {
@@ -12,7 +13,7 @@ const meta: Meta<typeof Tag> = {
     docs: {
       description: {
         component:
-          'A project tag. Custom tags take a fill from the design system Content palette, keyed on the colour stored on the tag so nothing needs migrating. System tags (Stale, GitHub, GitLab, Unhealthy) stay on the default surface and carry their state in a coloured icon rather than the fill, so the state survives for anyone who cannot tell the fills apart.',
+          'A project tag. Custom tags take a fill from the design system Content palette, keyed on the colour stored on the tag so nothing needs migrating. System tags (Stale, GitHub, GitLab, Unhealthy) take no fill and carry their state in a coloured icon and their border rather than the fill, so the state survives for anyone who cannot tell the fills apart.',
       },
     },
     layout: 'padded',
@@ -36,8 +37,11 @@ export const EveryColour: Story = {
   name: 'Every colour',
   render: () => (
     <div className='d-flex flex-wrap gap-1'>
-      {Constants.tagColors.map((colour: string) => (
-        <Tag key={colour} tag={tag({ color: colour, label: 'Checkout' })} />
+      {contentColourNames.map((name) => (
+        <Tag
+          key={name}
+          tag={tag({ color: contentColours[name], label: 'Checkout' })}
+        />
       ))}
     </div>
   ),
