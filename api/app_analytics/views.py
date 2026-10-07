@@ -15,7 +15,7 @@ from app_analytics.analytics_db_service import (
     get_usage_data,
 )
 from app_analytics.cache import FeatureEvaluationCache
-from app_analytics.throttles import InfluxQueryThrottle
+from app_analytics.throttles import InfluxQueryThrottle, UsageDataThrottle
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
 from organisations.models import Organisation
@@ -105,7 +105,7 @@ def get_usage_data_total_count_view(request: Request, organisation_pk: int) -> R
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, UsageDataPermission])
-@throttle_classes([InfluxQueryThrottle])
+@throttle_classes([UsageDataThrottle])
 def get_usage_data_view(request: Request, organisation_pk: int) -> Response:
     filters = UsageDataQuerySerializer(data=request.query_params)
     filters.is_valid(raise_exception=True)

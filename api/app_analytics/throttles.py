@@ -21,3 +21,7 @@ class InfluxQueryThrottle(SimpleRateThrottle):
             "scope": self.scope,
             "ident": self.get_ident(request),
         }
+
+
+class UsageDataThrottle(InfluxQueryThrottle):
+    scope = "usage_data"
