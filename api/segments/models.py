@@ -85,7 +85,6 @@ class SegmentManagedBy(models.TextChoices):
     # value every unmanaged segment carries.
     UNMANAGED = "", "Unmanaged"
     COHORT = "cohort", "Cohort"
-    # System segments, owned by the feature that created them.
     DEPENDENCY = "dependency", "Flag dependency"
     EXPERIMENT = "experiment", "Experiment"
     RELEASE_PIPELINE = "release_pipeline", "Gradual rollout"
