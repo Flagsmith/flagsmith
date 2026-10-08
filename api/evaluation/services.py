@@ -210,11 +210,7 @@ def _get_identity_free_segments(
     *,
     from_replica: bool,
 ) -> "list[Segment]":
-    """The segments overriding flags in `environment` that match without an identity.
-
-    Told apart by their `rules_data` alone, which saves reading the rule tree
-    of the segments left out: in most environments, all of them.
-    """
+    """The segments overriding flags in `environment` that match without an identity."""
     # Deferred: `environments.models` imports this module's package.
     from features.models import FeatureSegment
     from segments.models import Segment
