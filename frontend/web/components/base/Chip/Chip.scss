@@ -28,6 +28,13 @@
     cursor: pointer;
   }
 
+  // Chosen. A ring rather than a tick: the chip is small, and a box inside it
+  // competes with the dot already in front of the label.
+  &--selected {
+    border-color: var(--color-border-action);
+    box-shadow: 0 0 0 1px var(--color-border-action);
+  }
+
   // Value chips: cap the width and ellipsis the label.
   &--truncate {
     max-width: 200px;

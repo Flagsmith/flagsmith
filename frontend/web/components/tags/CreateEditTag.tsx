@@ -12,12 +12,15 @@ import {
 
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
-import Tag from './Tag'
+import BareButton from 'components/base/forms/BareButton'
+import ColorSwatch from 'components/ColorSwatch'
 import InlineModal from 'components/InlineModal'
 import ErrorMessage from 'components/ErrorMessage'
 import Switch from 'components/Switch'
 import Icon from 'components/icons/Icon'
 import { ProjectPermission } from 'common/types/permissions.types'
+import { dotColour } from 'common/theme/dotColour'
+import { colorSurfaceDefault } from 'common/theme/tokens'
 
 type CreateEditTagType = {
   projectId: string
@@ -193,13 +196,26 @@ const CreateEditTag: FC<CreateEditTagType> = ({
           <FieldLabel>Select a color</FieldLabel>
           <Row className={'gap-3'}>
             {Constants.tagColors.map((color) => (
-              <div key={color} className='tag--select'>
-                <Tag
-                  onClick={(e: TTag) => update('color', e.color)}
-                  selected={tag?.color === color}
-                  tag={{ color }}
-                />
-              </div>
+              // The swatch is the colour the dot will be, not the colour on
+              // the record: a few of these are too pale or too dark to read
+              // as a dot, and are moved to where they do.
+              <BareButton
+                aria-label={color}
+                aria-pressed={tag?.color === color}
+                className='position-relative d-inline-flex'
+                key={color}
+                onClick={() => update('color', color)}
+              >
+                <ColorSwatch color={dotColour(color)} size='xl' />
+                {tag?.color === color && (
+                  <Icon
+                    className='position-absolute top-50 start-50 translate-middle'
+                    fill={colorSurfaceDefault}
+                    name='checkmark'
+                    width={14}
+                  />
+                )}
+              </BareButton>
             ))}
           </Row>
         </div>

@@ -4,34 +4,35 @@ import Format from 'common/utils/format'
 import { IonIcon } from '@ionic/react'
 import { alarmOutline, lockClosed, warning } from 'ionicons/icons'
 import Tooltip from 'components/Tooltip'
-import { getTagColor } from './Tag'
+import { tagDotColour } from './Tag'
 import OrganisationStore from 'common/stores/organisation-store'
 import Utils from 'common/utils/utils'
 import classNames from 'classnames'
 import Icon from 'components/icons/Icon'
-import Color from 'color'
 type TagContent = {
   tag: Partial<TTag>
 }
+// Everything but letters, digits and the ranges above Latin-1 goes to a
+// numeric entity. Stated as what is kept rather than as the ranges to
+// escape: the same set, without naming control characters to list them.
 function escapeHTML(unsafe: string) {
   return unsafe.replace(
-    /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u00FF]/g,
+    /[^0-9A-Za-z\u0100-\uFFFF]/g,
     (c) => `&#${`000${c.charCodeAt(0)}`.slice(-4)};`,
   )
 }
 
 const renderIcon = (
   tagType: string,
-  tagColor: string,
+  iconColour: string,
   tagLabel: string,
   isPermanent: boolean,
 ) => {
-  const darkened = tagColor.darken(0.1).string()
   switch (tagType) {
     case 'STALE':
-      return <IonIcon className='ms-1' icon={alarmOutline} color={darkened} />
+      return <IonIcon className='ms-1' icon={alarmOutline} color={iconColour} />
     case 'UNHEALTHY':
-      return <IonIcon className='ms-1' icon={warning} color={darkened} />
+      return <IonIcon className='ms-1' icon={warning} color={iconColour} />
     case 'GITHUB':
       switch (tagLabel) {
         case 'PR Open':
@@ -51,7 +52,7 @@ const renderIcon = (
       }
     default:
       return isPermanent ? (
-        <IonIcon className='ms-1' icon={lockClosed} color={darkened} />
+        <IonIcon className='ms-1' icon={lockClosed} color={iconColour} />
       ) : null
   }
 }
@@ -83,18 +84,19 @@ const getTooltip = (tag: TTag | undefined) => {
     tooltip =
       'Features marked with this tag are not monitored for staleness and have deletion protection.'
   }
-  const tagColor = Utils.colour(getTagColor(tag, false))
-
   if (isTruncated) {
+    // The same chip as the component, as markup: a tooltip goes through
+    // innerHTML and cannot take one, so the dot is ColorSwatch's output
+    // written out rather than the component.
     return `<div>
         <span
-          style='background-color: ${tagColor.fade(0.92)};
-          border: 1px solid ${tagColor.fade(0.76)};
-          color: ${tagColor.darken(0.1)};'
-          class="chip d-inline-block chip--xs me-1${
-            disabled ? ' disabled' : ''
+          class="ds-chip ds-chip--xs bg-surface-subtle text-default d-inline-flex align-items-center align-middle gap-1 rounded-sm me-1${
+            disabled ? ' opacity-50' : ''
           }"
         >
+          <span class="d-inline-block flex-shrink-0 rounded-circle" style="width: 8px; height: 8px; background-color: ${tagDotColour(
+            tag,
+          )}"></span>
           ${`${escapeHTML(tag.label)}`}
         </span>
           ${tooltip ?? ''}
@@ -121,7 +123,12 @@ const TagContent: FC<TagContent> = ({ tag }) => {
           })}
         >
           {tagLabel}
-          {renderIcon(tag.type!, Utils.colour(tag.color), tag.label!)}
+          {renderIcon(
+            tag.type!,
+            tagDotColour(tag),
+            tag.label!,
+            !!tag.is_permanent,
+          )}
         </span>
       }
     >

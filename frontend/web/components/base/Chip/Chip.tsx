@@ -1,6 +1,7 @@
 import React, { KeyboardEvent, ReactNode, Ref } from 'react'
 import classNames from 'classnames'
 import Icon from 'components/icons/Icon'
+import ColorSwatch from 'components/ColorSwatch'
 import { colorIconSecondary } from 'common/theme/tokens'
 import './Chip.scss'
 
@@ -10,6 +11,14 @@ export type ChipVariant = 'neutral' | 'accent'
 export type ChipProps = {
   children: ReactNode
   variant?: ChipVariant
+  // A colour the chip carries as a dot in front of its label, rather than as
+  // a fill. Any CSS colour; see dotColour for moving an arbitrary one to
+  // where it reads on the chip.
+  dot?: string
+  // Chosen. Draws the ring, and announces itself as pressed where the chip is
+  // a button, so the two cannot disagree. A caller driving a keyboard group
+  // sets aria-checked instead and keeps the ring.
+  selected?: boolean
   size?: ChipSize
   truncate?: boolean
   onRemove?: () => void
@@ -23,6 +32,7 @@ export type ChipProps = {
   tabIndex?: number
   'aria-checked'?: boolean
   'aria-expanded'?: boolean
+  'aria-label'?: string
   onKeyDown?: (e: KeyboardEvent) => void
   ref?: Ref<HTMLSpanElement>
 }
@@ -41,19 +51,23 @@ const VARIANT_UTILITIES: Record<ChipVariant, string> = {
 const Chip = ({
   'aria-checked': ariaChecked,
   'aria-expanded': ariaExpanded,
+  'aria-label': ariaLabel,
   children,
   className,
+  dot,
   onClick,
   onKeyDown,
   onRemove,
   ref,
   role,
+  selected,
   size = 'default',
   tabIndex,
   truncate = false,
   variant = 'neutral',
 }: ChipProps) => {
   const interactive = !!onClick || !!role
+  const chosen = selected || ariaChecked === true
   return (
     <span
       ref={ref}
@@ -63,6 +77,7 @@ const Chip = ({
         {
           'ds-chip--accent': variant === 'accent',
           'ds-chip--clickable': interactive,
+          'ds-chip--selected': chosen,
           [`ds-chip--${size}`]: size !== 'default',
           'ds-chip--truncate': truncate,
         },
@@ -73,6 +88,11 @@ const Chip = ({
       tabIndex={interactive ? tabIndex ?? 0 : undefined}
       aria-checked={ariaChecked}
       aria-expanded={ariaExpanded}
+      aria-label={ariaLabel}
+      aria-pressed={
+        // aria-pressed needs the button role, which only onClick gives it.
+        onClick && !role ? selected : undefined
+      }
       onKeyDown={
         onKeyDown ??
         (onClick
@@ -87,6 +107,7 @@ const Chip = ({
           : undefined)
       }
     >
+      {dot && <ColorSwatch color={dot} shape='circle' size='sm' />}
       {truncate ? <span className='ds-chip__label'>{children}</span> : children}
       {onRemove && (
         <button
