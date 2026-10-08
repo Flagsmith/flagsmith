@@ -3,11 +3,8 @@ import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
 import Chip, { ChipSize } from 'components/base/Chip'
-import Icon from 'components/icons/Icon'
-import { colorSurfaceDefault } from 'common/theme/tokens'
 import Constants from 'common/constants'
 import TagContent from 'components/tags/TagContent'
-import './Tag.scss'
 import { tagChipColour } from 'components/tags/utils'
 
 type TagType = {
@@ -35,30 +32,19 @@ const Tag: FC<TagType> = ({
   tag,
 }) => {
   const isInteractive = !disabled && !!onClick
-  const isToggle = isInteractive && selected !== undefined
   return (
     <Chip
       // TagContent cuts the label at 12 characters, so a button named by its
       // content would read as the truncation.
       aria-label={isInteractive ? tag.label : undefined}
-      aria-pressed={isToggle ? selected : undefined}
       {...tagChipColour(tag)}
       className={cx('me-1', className)}
       onClick={isInteractive ? () => onClick?.(tag) : undefined}
+      // A tag can be both chosen and out of plan, so the ring is not the
+      // clickable state.
+      selected={selected}
       size={size}
     >
-      {selected !== undefined && (
-        <span
-          className={cx(
-            'tag-check d-inline-flex align-items-center justify-content-center flex-shrink-0 rounded-sm',
-            { 'opacity-50': disabled, 'tag-check--on': selected },
-          )}
-        >
-          {selected && (
-            <Icon name='checkmark' width={14} fill={colorSurfaceDefault} />
-          )}
-        </span>
-      )}
       <TagContent disabled={disabled} tag={tag} />
     </Chip>
   )

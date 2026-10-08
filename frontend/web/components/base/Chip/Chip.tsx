@@ -13,6 +13,10 @@ export type ChipProps = {
   // A hue the chip carries as a dot rather than as a fill, so the surface and
   // the label stay the neutral ones in both themes.
   dot?: ContentColour
+  // Chosen. Draws the ring, and announces itself as pressed where the chip is
+  // a button, so the two cannot disagree. A caller driving a keyboard group
+  // sets aria-checked instead and keeps the ring.
+  selected?: boolean
   children: ReactNode
   size?: ChipSize
   truncate?: boolean
@@ -46,12 +50,14 @@ const Chip = ({
   onRemove,
   ref,
   role,
+  selected,
   size = 'md',
   tabIndex,
   truncate = false,
   variant,
 }: ChipProps) => {
   const interactive = !!onClick || !!role
+  const chosen = selected || ariaPressed === true || ariaChecked === true
   return (
     <span
       ref={ref}
@@ -61,6 +67,7 @@ const Chip = ({
         {
           'ds-chip--accent': variant === 'accent',
           'ds-chip--clickable': interactive,
+          'ds-chip--selected': chosen,
           [`ds-chip--${size}`]: size !== 'md',
           'ds-chip--truncate': truncate,
         },
@@ -71,7 +78,10 @@ const Chip = ({
       tabIndex={interactive ? tabIndex ?? 0 : undefined}
       aria-checked={ariaChecked}
       aria-expanded={ariaExpanded}
-      aria-pressed={ariaPressed}
+      aria-pressed={
+        // aria-pressed needs the button role, which only onClick gives it.
+        ariaPressed ?? (onClick && !role ? selected : undefined)
+      }
       aria-label={ariaLabel}
       onKeyDown={
         onKeyDown ??
