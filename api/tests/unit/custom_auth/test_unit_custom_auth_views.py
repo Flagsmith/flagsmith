@@ -3,6 +3,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from django.contrib.auth.hashers import make_password
 from django.urls import reverse
 from freezegun import freeze_time
 from pytest_django.fixtures import SettingsWrapper
@@ -272,7 +273,7 @@ def test_set_password__token_auth__revokes_token_for_all_sessions(
     staff_user: FFAdminUser,
 ) -> None:
     # Given
-    staff_user.set_password("old-password")
+    staff_user.password = make_password("old-password")
     staff_user.save()
     token = Token.objects.create(user=staff_user)
     current_client = APIClient()
