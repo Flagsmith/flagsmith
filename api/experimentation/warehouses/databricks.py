@@ -5,26 +5,79 @@ import typing
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager, suppress
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, TypeVar
 
 import requests
+import structlog
+from django.core.cache import cache
+from rest_framework import serializers
 
 from core.network import is_internal_address
-from experimentation.types import DatabricksConfig, DatabricksCredentials
-from experimentation.warehouses.constants import MISSING_EVENTS_TABLE_DETAIL
+from experimentation.dataclasses import (
+    ExposureBucket,
+    ResultsAggregates,
+    WarehouseEventNames,
+    WarehouseEventStats,
+)
+from experimentation.types import (
+    DATABRICKS_DEFAULTS,
+    DatabricksConfig,
+    DatabricksCredentials,
+)
+from experimentation.warehouses.cache import (
+    CUSTOMER_EVENT_UNAVAILABLE,
+    customer_cache_key,
+)
+from experimentation.warehouses.constants import (
+    BACKGROUND_QUERY_TIMEOUT_SECONDS,
+    CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS,
+    CUSTOMER_EVENT_STATS_CACHE_SECONDS,
+    EVENT_NAMES_CACHE_SECONDS,
+    EVENT_NAMES_TIMEOUT_SECONDS,
+    MISSING_EVENTS_TABLE_DETAIL,
+    VERIFY_TIMEOUT_SECONDS,
+)
+from experimentation.warehouses.dialect import DATABRICKS_DIALECT
 from experimentation.warehouses.exceptions import DeliveryConfigError
+from experimentation.warehouses.queries import (
+    build_event_names,
+    build_event_stats,
+    event_names_query,
+    event_names_query_params,
+    event_stats_query,
+    read_exposure_buckets,
+    read_results_aggregates,
+)
 
 if typing.TYPE_CHECKING:
-    from experimentation.models import WarehouseConnection
+    from collections.abc import Sequence
 
+    from experimentation.dataclasses import MetricSpec
+    from experimentation.models import WarehouseConnection
+    from experimentation.types import ExposureGranularity
+
+logger = structlog.get_logger("warehouse")
+
+T = TypeVar("T")
+
+HOST_SUFFIXES = (".cloud.databricks.com", ".azuredatabricks.net", ".gcp.databricks.com")
+_HOSTNAME = re.compile(r"(?!-)[a-z0-9-]+(?<!-)(\.(?!-)[a-z0-9-]+(?<!-))+")
+_WAREHOUSE_ID = re.compile(r"[A-Za-z0-9]+")
+_IDENTIFIER = re.compile(r"[A-Za-z0-9_]+")
+_WORKSPACE_ID = re.compile(r"[0-9]+")
+_REGION = re.compile(r"[a-z0-9-]+")
+_HOST_WORKSPACE_ID = re.compile(r"[?&]o=([0-9]+)")
 _ERROR_CLASS = re.compile(r"\[([A-Z_]+)\]")
 _SCOPE_NOT_ASSIGNED = re.compile(r"scopes? .* not assigned", re.IGNORECASE)
+ORG_ID_HEADER = "x-databricks-org-id"
 
 CONNECT_TIMEOUT_SECONDS = 5
 POLL_INTERVAL_SECONDS = 1
 MAX_WAIT_TIMEOUT_SECONDS = 30
 MIN_WAIT_TIMEOUT_SECONDS = 5
 _TERMINAL_STATES = {"SUCCEEDED", "FAILED", "CANCELED", "CLOSED"}
+
+VERIFY_QUERY = "SELECT 1 FROM events LIMIT 0"
 
 WAREHOUSE_STARTING_DETAIL = (
     "The SQL warehouse is starting. Test the connection again in a few minutes."
@@ -40,6 +93,10 @@ class DatabricksAuthError(Exception):
 
 
 class DatabricksSecretScopeError(Exception):
+    pass
+
+
+class DatabricksWorkspaceMismatch(Exception):
     pass
 
 
@@ -146,7 +203,12 @@ class _Session:
         self._config = config
         self._base_url = f"https://{config['host']}"
         self._deadline = deadline
+        self.org_id: str | None = None
         self._headers = {"Authorization": f"Bearer {self._fetch_token(credentials)}"}
+
+    def check_workspace(self) -> None:
+        if self.org_id and self.org_id != self._config["workspace_id"]:
+            raise DatabricksWorkspaceMismatch()
 
     def _remaining(self) -> float:
         return self._deadline - time.monotonic()
@@ -171,6 +233,7 @@ class _Session:
                 _error_class(error),
                 error.get("error_description"),
             )
+        self.org_id = response.headers.get(ORG_ID_HEADER) or self.org_id
         payload: dict[str, Any] = response.json()
         return payload
 
@@ -292,6 +355,8 @@ def describe_databricks_error(error: Exception) -> str:
         return "Authentication failed."
     if isinstance(error, DatabricksSecretScopeError):
         return SECRET_SCOPE_DETAIL
+    if isinstance(error, DatabricksWorkspaceMismatch):
+        return "The workspace ID does not match this workspace."
     if isinstance(error, DatabricksWarehouseStarting):
         return WAREHOUSE_STARTING_DETAIL
     if isinstance(
@@ -301,3 +366,235 @@ def describe_databricks_error(error: Exception) -> str:
     if isinstance(error, DatabricksRequestError):
         return _describe_request_error(error)
     return "Connection failed."
+
+
+def _workspace_id_from_host(host: str) -> str | None:
+    match = _HOST_WORKSPACE_ID.search(host)
+    return match.group(1) if match else None
+
+
+def _normalise_host(host: str) -> str:
+    host = host.strip().lower().split("://", 1)[-1]
+    return host.split("/", 1)[0].split("?", 1)[0]
+
+
+def _normalise_warehouse_id(warehouse_id: str) -> str:
+    return warehouse_id.strip().rstrip("/").rsplit("/", 1)[-1]
+
+
+_NORMALISERS: dict[str, Callable[[str], str]] = {
+    "host": _normalise_host,
+    "workspace_id": str.strip,
+    "region": lambda region: region.strip().lower(),
+    "warehouse_id": _normalise_warehouse_id,
+}
+
+
+def _normalise_config(config: dict[str, Any], merged: dict[str, Any]) -> None:
+    host = merged["host"]
+    if (
+        isinstance(host, str)
+        and not config.get("workspace_id")
+        and (workspace_id := _workspace_id_from_host(host))
+    ):
+        merged["workspace_id"] = workspace_id
+    for key, normalise in _NORMALISERS.items():
+        if isinstance(merged[key], str):
+            merged[key] = normalise(merged[key])
+
+
+def _validate_host(host: object) -> None:
+    if not host or not isinstance(host, str):
+        raise serializers.ValidationError(
+            {"config": {"host": "This field is required."}}
+        )
+    if not _HOSTNAME.fullmatch(host) or not host.endswith(HOST_SUFFIXES):
+        raise serializers.ValidationError(
+            {"config": {"host": "Enter a Databricks workspace hostname."}}
+        )
+    if is_internal_address(host, include_shared=True):
+        raise serializers.ValidationError(
+            {
+                "config": {
+                    "host": (
+                        "Host must not target internal or private network addresses."
+                    )
+                }
+            }
+        )
+
+
+class DatabricksWarehouse:
+    def validate_config(
+        self,
+        config: dict[str, Any],
+        *,
+        stored: dict[str, Any] | None = None,
+    ) -> DatabricksConfig:
+        if not isinstance(config, dict):
+            raise serializers.ValidationError({"config": "Must be an object."})
+        if unknown_keys := set(config) - set(DATABRICKS_DEFAULTS):
+            raise serializers.ValidationError(
+                {"config": {key: "Unknown field." for key in sorted(unknown_keys)}}
+            )
+        merged: dict[str, Any] = {**DATABRICKS_DEFAULTS, **(stored or {}), **config}
+        _normalise_config(config, merged)
+        _validate_host(merged["host"])
+        for key, pattern, message in (
+            ("workspace_id", _WORKSPACE_ID, "Enter the numeric workspace ID."),
+            ("region", _REGION, "Enter the workspace region, e.g. us-east-1."),
+            ("warehouse_id", _WAREHOUSE_ID, "Enter a valid identifier."),
+            ("catalog", _IDENTIFIER, "Enter a valid identifier."),
+            ("schema", _IDENTIFIER, "Enter a valid identifier."),
+        ):
+            value = merged[key]
+            if not isinstance(value, str) or not pattern.fullmatch(value):
+                raise serializers.ValidationError({"config": {key: message}})
+        return typing.cast(DatabricksConfig, merged)
+
+    def validate_credentials(
+        self, credentials: dict[str, Any]
+    ) -> DatabricksCredentials:
+        if not isinstance(credentials, dict):
+            raise serializers.ValidationError({"credentials": "Must be an object."})
+        for key in ("client_id", "client_secret"):
+            value = credentials.get(key)
+            if not value or not isinstance(value, str):
+                raise serializers.ValidationError(
+                    {"credentials": {key: "This field is required."}}
+                )
+        return {
+            "client_id": credentials["client_id"],
+            "client_secret": credentials["client_secret"],
+        }
+
+    def verify(self, connection: "WarehouseConnection") -> None:
+        with databricks_session(
+            connection, budget_seconds=VERIFY_TIMEOUT_SECONDS
+        ) as session:
+            session.check_workspace()
+            session.run(VERIFY_QUERY, {})
+
+    def describe_error(self, error: Exception) -> str:
+        return describe_databricks_error(error)
+
+    def _cached_read(
+        self,
+        connection: "WarehouseConnection",
+        *,
+        kind: str,
+        result_type: type[T],
+        success_seconds: int,
+        failure_seconds: int,
+        budget_seconds: float,
+        read: Callable[[_Session], T],
+    ) -> T | None:
+        cache_key = customer_cache_key(kind, connection)
+        cached = cache.get(cache_key)
+        if isinstance(cached, result_type):
+            return cached
+        if cached == CUSTOMER_EVENT_UNAVAILABLE:
+            return None
+        try:
+            with databricks_session(
+                connection, budget_seconds=budget_seconds
+            ) as session:
+                result = read(session)
+        except Exception:
+            cache.set(cache_key, CUSTOMER_EVENT_UNAVAILABLE, failure_seconds)
+            logger.warning(
+                f"connection.{kind}_failed",
+                environment__id=connection.environment_id,
+                exc_info=True,
+            )
+            return None
+        cache.set(cache_key, result, success_seconds)
+        return result
+
+    def get_event_names(
+        self,
+        connection: "WarehouseConnection",
+        environment_key: str,
+    ) -> WarehouseEventNames | None:
+        return self._cached_read(
+            connection,
+            kind="event_names",
+            result_type=WarehouseEventNames,
+            success_seconds=EVENT_NAMES_CACHE_SECONDS,
+            failure_seconds=CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS,
+            budget_seconds=EVENT_NAMES_TIMEOUT_SECONDS,
+            read=lambda session: build_event_names(
+                session.run(
+                    event_names_query(DATABRICKS_DIALECT),
+                    event_names_query_params(environment_key),
+                )[0]
+            ),
+        )
+
+    def get_event_stats(
+        self,
+        connection: "WarehouseConnection",
+        environment_key: str,
+    ) -> WarehouseEventStats | None:
+        return self._cached_read(
+            connection,
+            kind="event_stats",
+            result_type=WarehouseEventStats,
+            success_seconds=CUSTOMER_EVENT_STATS_CACHE_SECONDS,
+            failure_seconds=CUSTOMER_EVENT_STATS_CACHE_SECONDS,
+            budget_seconds=VERIFY_TIMEOUT_SECONDS,
+            read=lambda session: build_event_stats(
+                session.run(
+                    event_stats_query(DATABRICKS_DIALECT),
+                    {"environment_key": environment_key},
+                )[0]
+            ),
+        )
+
+    def get_exposure_buckets(
+        self,
+        connection: "WarehouseConnection",
+        *,
+        environment_key: str,
+        feature_name: str,
+        window_start: datetime,
+        window_end: datetime,
+        granularity: "ExposureGranularity",
+    ) -> list[ExposureBucket]:
+        with databricks_session(
+            connection, budget_seconds=BACKGROUND_QUERY_TIMEOUT_SECONDS
+        ) as session:
+            return read_exposure_buckets(
+                session.run,
+                DATABRICKS_DIALECT,
+                environment_key=environment_key,
+                feature_name=feature_name,
+                window_start=window_start,
+                window_end=window_end,
+                granularity=granularity,
+            )
+
+    def get_results_aggregates(
+        self,
+        connection: "WarehouseConnection",
+        *,
+        environment_key: str,
+        feature_name: str,
+        window_start: datetime,
+        window_end: datetime,
+        specs: "Sequence[MetricSpec]",
+        granularity: "ExposureGranularity",
+    ) -> ResultsAggregates:
+        with databricks_session(
+            connection, budget_seconds=BACKGROUND_QUERY_TIMEOUT_SECONDS
+        ) as session:
+            return read_results_aggregates(
+                session.run,
+                DATABRICKS_DIALECT,
+                environment_key=environment_key,
+                feature_name=feature_name,
+                window_start=window_start,
+                window_end=window_end,
+                specs=specs,
+                granularity=granularity,
+            )

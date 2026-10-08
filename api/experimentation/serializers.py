@@ -32,7 +32,10 @@ from experimentation.services import (
     get_experiment_rollout,
 )
 from experimentation.types import MetricExperimentResult
-from experimentation.warehouse_validation import validate_credentials
+from experimentation.warehouse_validation import (
+    validate_credentials,
+    validate_warehouse_type_allowed,
+)
 from experimentation.warehouses.registry import get_warehouse
 from features.feature_states.serializers import (
     FeatureValueSerializer,
@@ -79,6 +82,11 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             and getattr(self.instance, "warehouse_type", "") != warehouse_type
         )
 
+        validate_warehouse_type_allowed(
+            warehouse_type,
+            self.instance,  # type: ignore[arg-type]
+            self.context.get("environment"),
+        )
         validate_credentials(attrs, warehouse_type, self.instance)  # type: ignore[arg-type]
 
         if "config" not in attrs and self.instance is not None and not type_changed:

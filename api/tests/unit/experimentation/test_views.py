@@ -5,6 +5,7 @@ from clickhouse_connect.driver.exceptions import OperationalError
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from requests_mock import Mocker as RequestsMockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework.throttling import ScopedRateThrottle
@@ -1952,3 +1953,198 @@ def test_list__verified_connection_failing_delivery__shows_errored_without_savin
     assert connection["status_detail"] == "Authentication failed."
     clickhouse_connection.refresh_from_db()
     assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
+
+
+DATABRICKS_HOST = "https://acme.cloud.databricks.com"
+DATABRICKS_PAYLOAD = {
+    "warehouse_type": "databricks",
+    "config": {
+        "host": "acme.cloud.databricks.com",
+        "workspace_id": "1234567890",
+        "region": "us-east-1",
+        "warehouse_id": "abc123",
+        "catalog": "main",
+    },
+    "credentials": {"client_id": "sp-id", "client_secret": "sp-secret"},
+}
+DATABRICKS_UNAVAILABLE = {
+    "warehouse_type": ["Databricks connections are not available yet."]
+}
+
+
+@pytest.fixture()
+def databricks_workspace(
+    mocker: MockerFixture,
+    requests_mock: RequestsMockerFixture,
+) -> RequestsMockerFixture:
+    mocker.patch(
+        "experimentation.warehouses.databricks.is_internal_address",
+        return_value=False,
+    )
+    requests_mock.post(
+        f"{DATABRICKS_HOST}/oidc/v1/token", json={"access_token": "t0k3n"}
+    )
+    requests_mock.post(
+        f"{DATABRICKS_HOST}/api/2.0/sql/statements",
+        json={
+            "statement_id": "st-1",
+            "status": {"state": "SUCCEEDED"},
+            "manifest": {"schema": {"columns": []}},
+            "result": {},
+        },
+    )
+    return requests_mock
+
+
+@pytest.mark.parametrize(
+    "statement_response, expected_status, expected_detail",
+    [
+        (None, "connected", None),
+        (
+            {
+                "statement_id": "st-1",
+                "status": {
+                    "state": "FAILED",
+                    "error": {
+                        "error_code": "BAD_REQUEST",
+                        "message": "[TABLE_OR_VIEW_NOT_FOUND] The table `events` cannot be found.",
+                    },
+                },
+            },
+            "errored",
+            "Events table not found in the configured database. Run the setup SQL to create it.",
+        ),
+    ],
+    ids=["reachable", "missing-table"],
+)
+def test_post__databricks_flag_enabled__returns_201_with_verification_status(
+    admin_client: APIClient,
+    enable_features: EnableFeaturesFixture,
+    databricks_workspace: RequestsMockerFixture,
+    statement_response: dict[str, object] | None,
+    expected_status: str,
+    expected_detail: str | None,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection", "databricks_warehouse")
+    if statement_response is not None:
+        databricks_workspace.post(
+            f"{DATABRICKS_HOST}/api/2.0/sql/statements", json=statement_response
+        )
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url, data=DATABRICKS_PAYLOAD, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == expected_status
+    assert response.json()["status_detail"] == expected_detail
+    assert response.json()["config"] == {
+        "host": "acme.cloud.databricks.com",
+        "workspace_id": "1234567890",
+        "region": "us-east-1",
+        "warehouse_id": "abc123",
+        "catalog": "main",
+        "schema": "flagsmith_exp",
+    }
+    assert response.json()["name"] == f"Databricks Warehouse - {environment.name}"
+    assert "credentials" not in response.json()
+
+
+@pytest.mark.parametrize(
+    "url_name",
+    [
+        "warehouse-connections-list",
+        "warehouse-connections-test-warehouse-connection-config",
+    ],
+    ids=["create", "test-unsaved"],
+)
+def test_post__databricks_flag_disabled__returns_400(
+    admin_client: APIClient,
+    enable_features: EnableFeaturesFixture,
+    databricks_workspace: RequestsMockerFixture,
+    environment: Environment,
+    url_name: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        f"api-v1:environments:experimentation:{url_name}", args=[environment.api_key]
+    )
+
+    # When
+    response = admin_client.post(url, data=DATABRICKS_PAYLOAD, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == DATABRICKS_UNAVAILABLE
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+    assert databricks_workspace.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "flags, expected_status_code, expected_type",
+    [
+        (
+            ("experimentation_warehouse_connection",),
+            status.HTTP_400_BAD_REQUEST,
+            WarehouseType.CLICKHOUSE,
+        ),
+        (
+            ("experimentation_warehouse_connection", "databricks_warehouse"),
+            status.HTTP_200_OK,
+            WarehouseType.DATABRICKS,
+        ),
+    ],
+    ids=["flag-off", "flag-on"],
+)
+def test_patch__clickhouse_to_databricks__gated_by_flag(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    enable_features: EnableFeaturesFixture,
+    databricks_workspace: RequestsMockerFixture,
+    environment: Environment,
+    flags: tuple[str, ...],
+    expected_status_code: int,
+    expected_type: str,
+) -> None:
+    # Given
+    enable_features(*flags)
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(url, data=DATABRICKS_PAYLOAD, format="json")
+
+    # Then
+    assert response.status_code == expected_status_code
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.warehouse_type == expected_type
+
+
+def test_patch__existing_databricks_flag_disabled__saves(
+    admin_client: APIClient,
+    databricks_connection: WarehouseConnection,
+    enable_features: EnableFeaturesFixture,
+    environment: Environment,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, databricks_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(url, data={"name": "Renamed"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    databricks_connection.refresh_from_db()
+    assert databricks_connection.name == "Renamed"

@@ -2,9 +2,28 @@ from typing import Any
 
 from rest_framework import serializers
 
-from experimentation.models import WarehouseConnection
+from environments.models import Environment
+from experimentation.models import WarehouseConnection, WarehouseType
+from experimentation.services import is_databricks_warehouse_enabled
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.registry import get_warehouse
+
+
+def validate_warehouse_type_allowed(
+    warehouse_type: str,
+    instance: WarehouseConnection | None,
+    environment: Environment | None,
+) -> None:
+    if warehouse_type != WarehouseType.DATABRICKS:
+        return
+    if instance is not None and instance.warehouse_type == warehouse_type:
+        return
+    if environment is None or not is_databricks_warehouse_enabled(
+        environment.project.organisation
+    ):
+        raise serializers.ValidationError(
+            {"warehouse_type": "Databricks connections are not available yet."}
+        )
 
 
 def validate_credentials(
@@ -26,7 +45,7 @@ def validate_credentials(
     except UnsupportedWarehouseOperation:
         if credentials is not None:
             raise serializers.ValidationError(
-                {"credentials": "Only ClickHouse connections accept credentials."}
+                {"credentials": "This warehouse type does not accept credentials."}
             )
         if instance is not None and instance.credentials is not None:
             attrs["credentials"] = None

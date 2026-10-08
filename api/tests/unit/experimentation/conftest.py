@@ -126,9 +126,13 @@ def clickhouse_connection(
 
 
 @pytest.fixture()
-def databricks_connection() -> WarehouseConnection:
-    connection = WarehouseConnection(
-        warehouse_type="databricks",
+def databricks_connection(
+    environment: Environment,
+) -> WarehouseConnection:
+    connection: WarehouseConnection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.DATABRICKS,
+        name="Production Databricks",
         config={
             "host": "acme.cloud.databricks.com",
             "workspace_id": "1234567890",
@@ -137,8 +141,8 @@ def databricks_connection() -> WarehouseConnection:
             "catalog": "main",
             "schema": "flagsmith_exp",
         },
+        credentials={"client_id": "sp-id", "client_secret": "sp-secret"},
     )
-    connection.credentials = {"client_id": "sp-id", "client_secret": "sp-secret"}
     return connection
 
 
