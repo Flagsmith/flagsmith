@@ -5,6 +5,7 @@ import {
 import {
   breakdownStatusOf,
   breakdownViewOf,
+  retryFailed,
 } from 'components/pages/usage/components/UsageBreakdown/breakdownView'
 import {
   byRequestType,
@@ -65,6 +66,24 @@ describe('breakdownView', () => {
         rows: [],
         status: 'loading',
       })
+    })
+  })
+
+  describe('retryFailed', () => {
+    it('refetches only the queries that failed', () => {
+      const refetched: string[] = []
+      const query = (name: string, isError: boolean) => ({
+        isError,
+        refetch: () => refetched.push(name),
+      })
+
+      retryFailed([
+        query('usage', false),
+        query('environments', true),
+        query('projects', false),
+      ])
+
+      expect(refetched).toEqual(['environments'])
     })
   })
 })

@@ -25,6 +25,15 @@ export const breakdownStatusOf = (
   return 'ready'
 }
 
+// Only the failed ones: a retry that refetched usage would spend the
+// usage-data allowance of five requests a minute.
+export const retryFailed = (
+  queries: { isError: boolean; refetch: () => unknown }[],
+) =>
+  queries.forEach((query) => {
+    if (query.isError) query.refetch()
+  })
+
 export type BreakdownView = {
   rows: BreakdownRow[]
   status?: BreakdownStatus

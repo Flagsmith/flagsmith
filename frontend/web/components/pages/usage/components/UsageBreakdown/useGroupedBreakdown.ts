@@ -4,7 +4,7 @@ import { BillingPeriod } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
-import { breakdownStatusOf } from './breakdownView'
+import { breakdownStatusOf, retryFailed } from './breakdownView'
 import {
   byScope,
   BreakdownDimension,
@@ -81,10 +81,7 @@ export const useGroupedBreakdown = ({
 
   const queries = [grouped, projects, environments]
   const status = breakdownStatusOf(groupBy, queries, !!organisationId)
-  const onRetry = () =>
-    queries.forEach((query) => {
-      if (!query.isUninitialized) query.refetch()
-    })
+  const onRetry = () => retryFailed(queries)
 
   return { onRetry, rows, status }
 }
