@@ -21,6 +21,7 @@ from features.future.exceptions import (
 )
 from features.future.mappers import (
     map_environment_default,
+    map_flag_value,
     map_segment_override,
     map_variants,
 )
@@ -35,6 +36,7 @@ from features.models import Feature, FeatureSegment, FeatureState, FeatureStateV
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import get_environment_flags_list
+from segments.exceptions import SystemSegmentModificationError
 from segments.models import Segment
 from users.models import FFAdminUser
 
@@ -247,6 +249,68 @@ def _check_priorities(
         raise DuplicatePriorityError(f"Duplicate priority: {duplicate}.")
 
 
+def _get_system_segment_ids(segment_ids: Collection[int]) -> set[int]:
+    return set(
+        Segment.objects.filter(id__in=segment_ids, is_system_segment=True).values_list(
+            "id", flat=True
+        )
+    )
+
+
+def _map_served_state(feature_state: FeatureState) -> tuple[object, ...]:
+    """What an override serves, regardless of its priority."""
+    return (
+        feature_state.enabled,
+        map_flag_value(feature_state.feature_state_value),
+        map_variants(feature_state),
+    )
+
+
+def _check_system_segment_override_changes(
+    *,
+    overrides: dict[int, FeatureState],
+    changes: Sequence[SegmentOverrideRequest],
+    deleted_segment_ids: Collection[int],
+) -> dict[int, tuple[object, ...]]:
+    """Refuse to create, delete or reorder system segment overrides.
+
+    Return what the system segment overrides being written serve now, to make
+    sure writing them changes nothing.
+    """
+    system_segment_ids = _get_system_segment_ids(
+        {*overrides, *(change["segment"]["id"] for change in changes)}
+    )
+    if system_segment_ids & {*deleted_segment_ids}:
+        raise SystemSegmentModificationError()
+    served_states = {}
+    for change in changes:
+        if (segment_id := change["segment"]["id"]) not in system_segment_ids:
+            continue
+        feature_state = overrides.get(segment_id)
+        if feature_state is None or feature_state.feature_segment is None:
+            raise SystemSegmentModificationError()
+        priority = feature_state.feature_segment.priority
+        if change.get("priority", priority) != priority:
+            raise SystemSegmentModificationError()
+        served_states[segment_id] = _map_served_state(feature_state)
+    return served_states
+
+
+def _check_system_segment_overrides_unchanged(
+    overrides: dict[int, FeatureState],
+    served_states: dict[int, tuple[object, ...]],
+) -> None:
+    for segment_id, served_state in served_states.items():
+        # Read afresh, as writes leave prefetched variants behind.
+        feature_state = (
+            FeatureState.objects.select_related("feature_state_value")
+            .prefetch_related("multivariate_feature_state_values")
+            .get(pk=overrides[segment_id].pk)
+        )
+        if _map_served_state(feature_state) != served_state:
+            raise SystemSegmentModificationError()
+
+
 def _write_segment_overrides(
     *,
     environment: Environment,
@@ -256,6 +320,7 @@ def _write_segment_overrides(
     overrides: dict[int, FeatureState],
     changes: Sequence[SegmentOverrideRequest],
     replace: bool,
+    system: bool,
 ) -> _OverriddenSegments:
     segments = _OverriddenSegments([], [], [])
 
@@ -263,6 +328,20 @@ def _write_segment_overrides(
         segments.deleted.extend(
             sorted(overrides.keys() - {change["segment"]["id"] for change in changes})
         )
+
+    # Only the features owning system segments can change their overrides, but
+    # anyone can write them as they are, e.g. to replace a flag as they read it.
+    system_served_states = (
+        {}
+        if system
+        else _check_system_segment_override_changes(
+            overrides=overrides,
+            changes=changes,
+            deleted_segment_ids=segments.deleted,
+        )
+    )
+
+    if replace:
         _delete_segment_overrides(
             environment=environment,
             feature=feature,
@@ -290,6 +369,8 @@ def _write_segment_overrides(
             environment_default=environment_default,
         )
 
+    _check_system_segment_overrides_unchanged(overrides, system_served_states)
+
     _check_priorities(environment, feature, version)
 
     return segments
@@ -316,8 +397,13 @@ def update_flag(
     changes: UpdateFlagRequest,
     replace: bool,
     author: FFAdminUser | APIKeyUser,
+    system: bool,
 ) -> UpdateFlagResponse:
-    """Write the given parts of a flag, whichever versioning the environment uses."""
+    """Write the given parts of a flag, whichever versioning the environment uses.
+
+    Overrides of system segments can only be changed by their owners,
+    passing `system=True`.
+    """
     writes_nothing = not changes if replace else not any(changes.values())
     if writes_nothing:
         return get_flag(environment=environment, feature=feature)
@@ -347,6 +433,7 @@ def update_flag(
                 overrides=_get_overrides_by_segment_id(feature_states),
                 changes=override_changes,
                 replace=replace,
+                system=system,
             )
 
         if version is not None:
@@ -382,8 +469,16 @@ def delete_segment_override(
     feature: Feature,
     segment_id: int,
     author: FFAdminUser | APIKeyUser,
+    system: bool,
 ) -> UpdateFlagResponse:
-    """Remove a flag's override for one segment, leaving the rest of the flag alone."""
+    """Remove a flag's override for one segment, leaving the rest of the flag alone.
+
+    Overrides of system segments can only be removed by their owners,
+    passing `system=True`.
+    """
+    if not system and _get_system_segment_ids([segment_id]):
+        raise SystemSegmentModificationError()
+
     with transaction.atomic():
         version = _create_draft_version(environment, feature)
         feature_states = _get_feature_states_to_write(environment, feature, version)
