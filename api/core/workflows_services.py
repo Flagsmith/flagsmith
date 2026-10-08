@@ -5,6 +5,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from environments.tasks import rebuild_environment_document
+from features.dependencies.services import index_segment_flag_references
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
@@ -144,3 +145,4 @@ class ChangeRequestCommitService:
             live_segment.rules_data = draft_segment.rules_data
             live_segment.save()
             live_segment.copy_rules_and_conditions_from(draft_segment)
+            index_segment_flag_references(live_segment)

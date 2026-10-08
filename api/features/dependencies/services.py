@@ -52,8 +52,13 @@ logger = structlog.get_logger("features")
 FLAG_DEPENDENCIES_ADVISORY_LOCK_NAMESPACE = int.from_bytes(b"FLDP")
 
 
-def index_segment_flag_references(segment: "Segment") -> None:
-    """Materialise the segment's `$.flags` conditions as SegmentFlagReference rows."""
+def validate_segment_prerequisite_features_exist(
+    segment: "Segment",
+) -> tuple[dict[str, FeatureName], dict[FeatureName, int]]:
+    """Raise if a `$.flags` condition names a feature that doesn't exist.
+
+    Returns the feature names keyed by condition JSONPath, and the feature ids keyed by name.
+    """
     feature_names_by_json_path = map_rules_to_prerequisite_feature_names(
         segment.rules_data or []
     )
@@ -69,6 +74,14 @@ def index_segment_flag_references(segment: "Segment") -> None:
                 prerequisite_feature=feature_name,
                 condition_json_path=condition_json_path,
             )
+    return feature_names_by_json_path, feature_ids_by_name
+
+
+def index_segment_flag_references(segment: "Segment") -> None:
+    """Materialise the segment's `$.flags` conditions as SegmentFlagReference rows."""
+    feature_names_by_json_path, feature_ids_by_name = (
+        validate_segment_prerequisite_features_exist(segment)
+    )
     references = SegmentFlagReference.objects.filter(segment=segment)
     previous_feature_names = set(
         references.values_list("prerequisite_feature__name", flat=True)
