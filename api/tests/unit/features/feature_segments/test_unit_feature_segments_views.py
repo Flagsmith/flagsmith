@@ -21,7 +21,7 @@ from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project, UserProjectPermission
-from segments.models import Segment
+from segments.models import Segment, SegmentManagedBy
 from tests.types import (
     WithEnvironmentPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -173,6 +173,48 @@ def test_list_feature_segments__feature_specific_segment__returns_is_feature_spe
     response_json = response.json()
     assert response_json["count"] == 1
     assert response_json["results"][0]["is_feature_specific"]
+
+
+@pytest.mark.parametrize(
+    "is_system_segment, managed_by",
+    [
+        (False, SegmentManagedBy.UNMANAGED),
+        (False, SegmentManagedBy.COHORT),
+        (True, SegmentManagedBy.DEPENDENCY),
+        (True, SegmentManagedBy.EXPERIMENT),
+        (True, SegmentManagedBy.RELEASE_PIPELINE),
+    ],
+)
+def test_list_feature_segments__managed_segment__returns_segment_owner(
+    admin_client_new: APIClient,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    is_system_segment: bool,
+    managed_by: SegmentManagedBy,
+) -> None:
+    # Given
+    segment = Segment.objects.create(
+        project=project,
+        name="Managed segment",
+        is_system_segment=is_system_segment,
+        managed_by=managed_by,
+    )
+    FeatureSegment.objects.create(
+        feature=feature, segment=segment, environment=environment
+    )
+
+    # When
+    response = admin_client_new.get(
+        reverse("api-v1:features:feature-segment-list"),
+        data={"environment": environment.id, "feature": feature.id},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    [result] = response.json()["results"]
+    assert result["is_system_segment"] is is_system_segment
+    assert result["segment_managed_by"] == managed_by
 
 
 @pytest.mark.parametrize(

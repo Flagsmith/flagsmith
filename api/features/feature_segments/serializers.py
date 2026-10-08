@@ -15,6 +15,7 @@ from features.feature_segments.limits import (
     exceeds_segment_override_limit,
 )
 from features.models import FeatureSegment
+from segments.models import SegmentManagedBy
 
 
 class FeatureSegmentCreateSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -88,6 +89,17 @@ class FeatureSegmentQuerySerializer(serializers.Serializer):  # type: ignore[typ
 class FeatureSegmentListSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     segment_name = serializers.SerializerMethodField()
     is_feature_specific = serializers.SerializerMethodField()
+    is_system_segment = serializers.BooleanField(
+        source="segment.is_system_segment",
+        read_only=True,
+        help_text="System segment overrides can't be changed directly.",
+    )
+    segment_managed_by = serializers.ChoiceField(
+        source="segment.managed_by",
+        choices=SegmentManagedBy.choices,
+        read_only=True,
+        help_text="The feature managing the segment, if any.",
+    )
 
     class Meta:
         model = FeatureSegment
@@ -99,6 +111,8 @@ class FeatureSegmentListSerializer(serializers.ModelSerializer):  # type: ignore
             "environment",
             "segment_name",
             "is_feature_specific",
+            "is_system_segment",
+            "segment_managed_by",
         )
         read_only_fields = (
             "id",
@@ -108,6 +122,8 @@ class FeatureSegmentListSerializer(serializers.ModelSerializer):  # type: ignore
             "environment",
             "segment_name",
             "is_feature_specific",
+            "is_system_segment",
+            "segment_managed_by",
         )
 
     def get_value(self, instance):  # type: ignore[no-untyped-def]

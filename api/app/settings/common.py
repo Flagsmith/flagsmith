@@ -618,6 +618,7 @@ SPECTACULAR_SETTINGS = {
         "WarehouseConnectionStatusEnum": (
             "experimentation.models.WarehouseConnectionStatus.choices"
         ),
+        "SegmentManagedByEnum": "segments.models.SegmentManagedBy.choices",
     },
     "COMPONENT_NO_READ_ONLY_REQUIRED": True,
 }

@@ -85,6 +85,10 @@ class SegmentManagedBy(models.TextChoices):
     # value every unmanaged segment carries.
     UNMANAGED = "", "Unmanaged"
     COHORT = "cohort", "Cohort"
+    # System segments, owned by the feature that created them.
+    DEPENDENCY = "dependency", "Flag dependency"
+    EXPERIMENT = "experiment", "Experiment"
+    RELEASE_PIPELINE = "release_pipeline", "Release pipeline"
 
 
 class Segment(
@@ -135,9 +139,10 @@ class Segment(
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
     is_system_segment = models.BooleanField(default=False)
-    # A managed segment is created and maintained by another feature (e.g. a
-    # cohort). Unlike system segments it stays visible in the API, but the
-    # dashboard renders it differently and cannot edit it.
+    # A managed segment is created and maintained by another feature. Cohort
+    # segments stay visible in the API, but the dashboard renders them
+    # differently and cannot edit them. System segments are hidden from the
+    # segments API, and `managed_by` names the feature owning them.
     managed_by = models.CharField(
         max_length=50, choices=SegmentManagedBy.choices, default="", blank=True
     )

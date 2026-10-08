@@ -53,7 +53,9 @@ def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependenc
 
     # Then
     assert response.status_code == 201
-    segment = Segment.objects.get(feature=feature, is_system_segment=True)
+    segment = Segment.objects.get(
+        feature=feature, is_system_segment=True, managed_by="dependency"
+    )
     assert response.json() == DependencyEdge(
         {
             "feature": {"id": feature.id, "name": "checkout"},
