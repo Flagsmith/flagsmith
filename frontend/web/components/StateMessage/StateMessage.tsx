@@ -23,12 +23,9 @@ const StateMessage: FC<StateMessageProps> = ({
   role,
   title,
 }) => (
-  <div
-    className={cn('state-message text-center px-3 py-4', className)}
-    role={role}
-  >
+  <div className={cn('state-message text-center', className)} role={role}>
     {icon && (
-      <div className='mb-3'>
+      <div className='mb-3' aria-hidden>
         <Icon name={icon} width={40} fill={iconColour} />
       </div>
     )}

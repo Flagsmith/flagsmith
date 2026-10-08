@@ -16,7 +16,7 @@ export const PrerequisitesEmptyState: FC<PrerequisitesEmptyStateProps> = ({
 }) =>
   isPrerequisite ? (
     <EmptyState
-      className='px-4'
+      className='p-4'
       icon='layers'
       title='Other features depend on this flag'
       description={
@@ -30,7 +30,7 @@ export const PrerequisitesEmptyState: FC<PrerequisitesEmptyStateProps> = ({
     />
   ) : (
     <EmptyState
-      className='px-4'
+      className='p-4'
       icon='layers'
       title='No prerequisites'
       description={
@@ -53,7 +53,7 @@ export const DependentsEmptyState: FC<DependentsEmptyStateProps> = ({
 }) =>
   hasPrerequisites ? (
     <EmptyState
-      className='px-4'
+      className='p-4'
       icon='layers'
       title='No dependent features'
       description={
@@ -66,7 +66,7 @@ export const DependentsEmptyState: FC<DependentsEmptyStateProps> = ({
     />
   ) : (
     <EmptyState
-      className='px-4'
+      className='p-4'
       icon='layers'
       title='No dependent features'
       description={
