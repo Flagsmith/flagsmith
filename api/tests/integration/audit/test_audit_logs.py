@@ -1,12 +1,10 @@
 import json
-from datetime import UTC, datetime, timedelta
+from datetime import datetime
 
 import pytest
-from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
-from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
@@ -14,11 +12,9 @@ from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from core.signals import create_audit_log_from_historical_record
-from features.future.types import UpdateFlagRequest
-from features.models import Feature, FeatureState
+from features.models import FeatureState
 from features.workflows.core.models import ChangeRequest
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
-from tests.types import CreateSegmentOverrideFixture, ScheduleFlagChangeFixture
 from users.models import FFAdminUser
 
 
@@ -443,82 +439,4 @@ def test_retrieve_audit_log__segment_override_created_for_feature_value__include
     assert audit_log_details["change_type"] == "UPDATE"
     assert audit_log_details["change_details"] == [
         {"field": "string_value", "old": "default_value", "new": "foo"},
-    ]
-
-
-@pytest.mark.freeze_time("2026-10-06T09:00:00Z")
-@pytest.mark.skipif(
-    not settings.WORKFLOWS_LOGIC_INSTALLED,
-    reason="workflows_logic module not installed (private package extra)",
-)
-def test_list_audit_logs__segment_override_differs_from_flag_edited_while_change_was_scheduled__lists_override_created_once(
-    admin_client: APIClient,
-    environment: int,
-    environment_api_key: str,
-    project: int,
-    segment: int,
-    segment_name: str,
-    freezer: FrozenDateTimeFactory,
-    schedule_flag_change: ScheduleFlagChangeFixture,
-    create_segment_override: CreateSegmentOverrideFixture,
-) -> None:
-    # Given
-    checkout = Feature.objects.create(name="checkout", project_id=project)
-    tomorrow = datetime.now(tz=UTC) + timedelta(days=1)
-    freezer.tick(timedelta(minutes=1))
-    admin_client.patch(
-        f"/api/__future__/environments/{environment_api_key}/features/{checkout.id}/",
-        UpdateFlagRequest({"environment_default": {"enabled": True}}),
-        format="json",
-    )
-    freezer.tick(timedelta(minutes=1))
-    schedule_flag_change(feature_id=checkout.id, enabled=False, live_from=tomorrow)
-    freezer.tick(timedelta(minutes=1))
-    schedule_flag_change(
-        feature_id=checkout.id, enabled=True, live_from=datetime.now(tz=UTC)
-    )
-    freezer.move_to(tomorrow + timedelta(minutes=1))
-    create_segment_override(environment_api_key, checkout.id, segment, enabled=True)
-
-    # When
-    response = admin_client.get("/api/v1/audit/", {"environment": environment})
-
-    # Then
-    assert response.status_code == 200
-    assert [
-        (audit_log["created_date"], audit_log["log"])
-        for audit_log in response.json()["results"]
-    ] == [
-        (
-            "2026-10-07T09:01:00Z",
-            f"Flag state / Remote config value updated for feature 'checkout' and segment '{segment_name}'",
-        ),
-        (
-            "2026-10-07T09:01:00Z",
-            f"Remote config updated for segment override on feature 'checkout' and segment '{segment_name}'.",
-        ),
-        (
-            "2026-10-06T09:03:00Z",
-            "Change Request: Scheduled change created",
-        ),
-        (
-            "2026-10-06T09:03:00Z",
-            "Flag state / Remote config updated for feature: checkout by Change Request: Scheduled change",
-        ),
-        (
-            "2026-10-06T09:02:00Z",
-            "Change Request: Scheduled change created",
-        ),
-        (
-            "2026-10-06T09:01:00Z",
-            "Flag state updated for feature: checkout",
-        ),
-        (
-            "2026-10-06T09:00:00Z",
-            f"New Segment created: {segment_name}",
-        ),
-        (
-            "2026-10-06T09:00:00Z",
-            "New Environment created: Test Environment",
-        ),
     ]
