@@ -2,7 +2,11 @@ import React, { FC, KeyboardEvent, useEffect, useMemo, useState } from 'react'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import { Tag as TTag } from 'common/types/responses'
 import Constants from 'common/constants'
-import { contentColourNames, contentColours } from 'common/theme/tokens'
+import {
+  colorSurfaceDefault,
+  contentColourNames,
+  contentColours,
+} from 'common/theme/tokens'
 import Permission from 'common/providers/Permission'
 import Utils from 'common/utils/utils'
 import {
@@ -13,7 +17,8 @@ import {
 
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
-import Tag from './Tag'
+import BareButton from 'components/base/forms/BareButton'
+import ColorSwatch from 'components/ColorSwatch'
 import InlineModal from 'components/InlineModal'
 import ErrorMessage from 'components/ErrorMessage'
 import Switch from 'components/Switch'
@@ -196,13 +201,23 @@ const CreateEditTag: FC<CreateEditTagType> = ({
             {contentColourNames.map((name) => {
               const colour = contentColours[name]
               return (
-                <div key={name} className='tag--select'>
-                  <Tag
-                    onClick={() => update('color', colour)}
-                    selected={tag?.color === colour}
-                    tag={{ color: colour }}
-                  />
-                </div>
+                <BareButton
+                  aria-label={`${name} colour`}
+                  aria-pressed={tag?.color === colour}
+                  className='position-relative d-inline-flex'
+                  key={name}
+                  onClick={() => update('color', colour)}
+                >
+                  <ColorSwatch color={colour} size='xl' />
+                  {tag?.color === colour && (
+                    <Icon
+                      className='position-absolute top-50 start-50 translate-middle'
+                      fill={colorSurfaceDefault}
+                      name='checkmark'
+                      width={14}
+                    />
+                  )}
+                </BareButton>
               )
             })}
           </Row>

@@ -8,7 +8,7 @@ import { colorSurfaceDefault } from 'common/theme/tokens'
 import Constants from 'common/constants'
 import TagContent from 'components/tags/TagContent'
 import './Tag.scss'
-import { swatchName, tagChipColour } from 'components/tags/utils'
+import { tagChipColour } from 'components/tags/utils'
 
 type TagType = {
   className?: string
@@ -38,19 +38,16 @@ const Tag: FC<TagType> = ({
   const isToggle = isInteractive && selected !== undefined
   return (
     <Chip
-      // A swatch has no text, and only a button can carry the name.
-      aria-label={
-        isInteractive && !tag.label ? swatchName(getTagColor(tag)) : undefined
-      }
+      // TagContent cuts the label at 12 characters, so a button named by its
+      // content would read as the truncation.
+      aria-label={isInteractive ? tag.label : undefined}
       aria-pressed={isToggle ? selected : undefined}
       {...tagChipColour(tag)}
-      className={cx('me-1', { 'tag--swatch': !tag.label }, className)}
+      className={cx('me-1', className)}
       onClick={isInteractive ? () => onClick?.(tag) : undefined}
       size={size}
     >
-      {/* A swatch takes a box only once chosen, or the grid fills with empty
-          outlines. */}
-      {selected !== undefined && (tag.label || selected) && (
+      {selected !== undefined && (
         <span
           className={cx(
             'tag-check d-inline-flex align-items-center justify-content-center flex-shrink-0 rounded-sm',

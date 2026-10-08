@@ -54,18 +54,18 @@
 .icon-success { color: var(--color-icon-success); fill: var(--color-icon-success); }
 .icon-warning { color: var(--color-icon-warning); fill: var(--color-icon-warning); }
 
-// Tags
-.tag-blue { background-color: var(--content-blue); color: var(--content-ink); --ds-chip-border: var(--content-blue); }
-.tag-brown { background-color: var(--content-brown); color: var(--content-ink); --ds-chip-border: var(--content-brown); }
-.tag-green { background-color: var(--content-green); color: var(--content-ink); --ds-chip-border: var(--content-green); }
-.tag-grey { background-color: var(--content-grey); color: var(--content-ink); --ds-chip-border: var(--content-grey); }
-.tag-mint { background-color: var(--content-mint); color: var(--content-ink); --ds-chip-border: var(--content-mint); }
-.tag-peach { background-color: var(--content-peach); color: var(--content-ink); --ds-chip-border: var(--content-peach); }
-.tag-pink { background-color: var(--content-pink); color: var(--content-ink); --ds-chip-border: var(--content-pink); }
-.tag-purple { background-color: var(--content-purple); color: var(--content-ink); --ds-chip-border: var(--content-purple); }
-.tag-red { background-color: var(--content-red); color: var(--content-ink); --ds-chip-border: var(--content-red); }
-.tag-sky { background-color: var(--content-sky); color: var(--content-ink); --ds-chip-border: var(--content-sky); }
-.tag-yellow { background-color: var(--content-yellow); color: var(--content-ink); --ds-chip-border: var(--content-yellow); }
+// Tag dots
+.tag-dot-blue { background-color: var(--content-blue); }
+.tag-dot-brown { background-color: var(--content-brown); }
+.tag-dot-green { background-color: var(--content-green); }
+.tag-dot-grey { background-color: var(--content-grey); }
+.tag-dot-mint { background-color: var(--content-mint); }
+.tag-dot-peach { background-color: var(--content-peach); }
+.tag-dot-pink { background-color: var(--content-pink); }
+.tag-dot-purple { background-color: var(--content-purple); }
+.tag-dot-red { background-color: var(--content-red); }
+.tag-dot-sky { background-color: var(--content-sky); }
+.tag-dot-yellow { background-color: var(--content-yellow); }
 
 // Radius
 .rounded-2xl { border-radius: var(--radius-2xl); }

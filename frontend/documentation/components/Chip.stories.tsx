@@ -65,7 +65,7 @@ export const AsCustomTag: Story = {
   render: () => (
     <div className='d-flex flex-wrap gap-2'>
       {contentColourNames.map((colour) => (
-        <Chip colour={colour} key={colour} size='xs'>
+        <Chip dot={colour} key={colour} size='xs'>
           Custom
         </Chip>
       ))}

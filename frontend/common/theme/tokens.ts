@@ -273,22 +273,22 @@ export const fontWeightMedium = 'var(--font-weight-medium, 500)'
 export const fontWeightRegular = 'var(--font-weight-regular, 400)'
 export const fontWeightSemibold = 'var(--font-weight-semibold, 600)'
 
-/** The label colour every tag fill is chosen to carry. */
+/** Near-black, for a tick or a label drawn on one of the colours below. */
 export const contentInk = '#080c17'
 
-/** One colour per tag hue, the same on both themes. */
+/** One colour per tag hue, the same on both themes. Paints the dot. */
 export const contentColours = {
-  'blue': '#c7e6ff',
-  'brown': '#dfc8c6',
-  'green': '#d6f1d4',
-  'grey': '#eff0f3',
-  'mint': '#c7e7e2',
-  'peach': '#fcd6c7',
-  'pink': '#ffceda',
-  'purple': '#dacdde',
-  'red': '#ffe0df',
-  'sky': '#c9f1fe',
-  'yellow': '#f3edca',
+  'blue': '#3577e9',
+  'brown': '#aa6a46',
+  'green': '#108e25',
+  'grey': '#757c8a',
+  'mint': '#0b8970',
+  'peach': '#c9580d',
+  'pink': '#e12d87',
+  'purple': '#a054e3',
+  'red': '#e6373d',
+  'sky': '#0986a5',
+  'yellow': '#9a7504',
 } as const
 
 /** The palette in order, so a picker can map it without a cast. */

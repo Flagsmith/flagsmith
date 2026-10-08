@@ -390,10 +390,10 @@ function buildContentColours() {
   if (!entries.length) return []
   const ink = json.primitives?.[TAG_INK]
   return [
-    '/** The label colour every tag fill is chosen to carry. */',
+    '/** Near-black, for a tick or a label drawn on one of the colours below. */',
     `export const contentInk = '${ink}'`,
     '',
-    '/** One colour per tag hue, the same on both themes. */',
+    '/** One colour per tag hue, the same on both themes. Paints the dot. */',
     'export const contentColours = {',
     ...entries.map(([n, hex]) => `  '${n.replace('content-', '')}': '${hex}',`),
     '} as const',
@@ -524,15 +524,15 @@ function generateUtilities() {
     lines.push('')
   }
 
-  // Tag utilities. One class per hue: surface, ink and border are only
-  // accessible together, and applying a fill without its label colour is the
-  // bug this scale exists to fix.
+  // Tag dot utilities. The hue paints one 8px dot and nothing else, so the
+  // chip's own surface, label and border stay the neutral ones and a tag needs
+  // no colour pairing to clear contrast.
   const utilHues = tagSwatchEntries().map(([n]) => n.replace('content-', ''))
   if (utilHues.length) {
-    lines.push('// Tags')
+    lines.push('// Tag dots')
     for (const hue of utilHues.sort()) {
       lines.push(
-        `.tag-${hue} { background-color: var(--content-${hue}); color: var(--${TAG_INK}); --ds-chip-border: var(--content-${hue}); }`,
+        `.tag-dot-${hue} { background-color: var(--content-${hue}); }`,
       )
     }
     lines.push('')

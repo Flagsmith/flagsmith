@@ -3,16 +3,16 @@ import classNames from 'classnames'
 import Icon from 'components/icons/Icon'
 import { colorIconSecondary } from 'common/theme/tokens'
 import type { ContentColour } from 'common/theme/tokens'
-import { chipColourClass, chipVariantClass, ChipVariant } from './chipColour'
+import { chipDotClass, chipVariantClass, ChipVariant } from './chipColour'
 import './Chip.scss'
 
 export type ChipSize = 'md' | 'sm' | 'xs'
 
-type ChipColour =
-  | { variant?: ChipVariant; colour?: never }
-  | { variant?: never; colour: ContentColour }
-
-export type ChipProps = ChipColour & {
+export type ChipProps = {
+  variant?: ChipVariant
+  // A hue the chip carries as a dot rather than as a fill, so the surface and
+  // the label stay the neutral ones in both themes.
+  dot?: ContentColour
   children: ReactNode
   size?: ChipSize
   truncate?: boolean
@@ -40,7 +40,7 @@ const Chip = ({
   'aria-pressed': ariaPressed,
   children,
   className,
-  colour,
+  dot,
   onClick,
   onKeyDown,
   onRemove,
@@ -57,7 +57,7 @@ const Chip = ({
       ref={ref}
       className={classNames(
         'ds-chip d-inline-flex align-items-center align-middle gap-1 rounded-md',
-        colour ? chipColourClass(colour) : chipVariantClass(variant),
+        chipVariantClass(variant),
         {
           'ds-chip--accent': variant === 'accent',
           'ds-chip--clickable': interactive,
@@ -87,6 +87,15 @@ const Chip = ({
           : undefined)
       }
     >
+      {dot && (
+        <span
+          aria-hidden='true'
+          className={classNames(
+            'ds-chip__dot rounded-circle',
+            chipDotClass(dot),
+          )}
+        />
+      )}
       {truncate ? <span className='ds-chip__label'>{children}</span> : children}
       {onRemove && (
         <button

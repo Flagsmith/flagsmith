@@ -6,22 +6,21 @@ const VARIANT_UTILITIES: Record<ChipVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
 
   neutral: 'bg-surface-subtle text-default',
-  // No fill: the border carries the edge, so a system tag takes no hue.
+  // No fill: the border carries the edge, so the chip takes no surface.
   outline: 'text-default',
 }
 
 export const chipVariantClass = (variant: ChipVariant = 'neutral') =>
   VARIANT_UTILITIES[variant]
 
-export const chipColourClass = (colour: ContentColour) => `tag-${colour}`
+export const chipDotClass = (colour: ContentColour) => `tag-dot-${colour}`
 
-// The two channels as one value, so a caller that cannot pass props (markup
+// Surface and dot as one value, so a caller that cannot pass props (markup
 // built for innerHTML) resolves them the same way the component does.
-export type ChipColourChoice =
-  | { variant: ChipVariant }
-  | { colour: ContentColour }
+export type ChipColourChoice = {
+  variant?: ChipVariant
+  dot?: ContentColour
+}
 
-export const chipColourUtilities = (choice: ChipColourChoice) =>
-  'colour' in choice
-    ? chipColourClass(choice.colour)
-    : chipVariantClass(choice.variant)
+export const chipColourUtilities = ({ variant }: ChipColourChoice) =>
+  chipVariantClass(variant)

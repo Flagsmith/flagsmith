@@ -13,7 +13,7 @@ const meta: Meta<typeof Tag> = {
     docs: {
       description: {
         component:
-          'A project tag. Custom tags take a fill from the design system Content palette, keyed on the colour stored on the tag so nothing needs migrating. System tags (Stale, GitHub, GitLab, Unhealthy) take no fill and carry their state in a coloured icon and their border rather than the fill, so the state survives for anyone who cannot tell the fills apart.',
+          'A project tag. Every tag is the neutral chip, in both themes. A custom tag carries its hue as a dot, keyed on the colour stored on the tag so nothing needs migrating; a system tag (Stale, GitHub, GitLab, Unhealthy) carries its state as an icon in the same slot. The label is text-default either way, so it reads at full contrast and the hue never has to be legible for the tag to be.',
       },
     },
     layout: 'padded',
@@ -75,6 +75,11 @@ export const SystemTags: Story = {
 export const UnknownColour: Story = {
   args: { tag: tag({ color: '#123456', label: 'Set via API' }) },
   name: 'Colour outside the scale',
+}
+
+// The plan-entitlement state, which nothing else renders.
+export const Disabled: Story = {
+  args: { disabled: true, tag: tag({ label: 'Stale', type: 'STALE' }) },
 }
 
 /** Hooks cannot live in a story's render, so selection state gets a component. */

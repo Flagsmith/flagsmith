@@ -28,6 +28,13 @@
     max-width: 200px;
   }
 
+  // Carries the whole of a tag's hue, so it holds its size at every chip size.
+  &__dot {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+  }
+
   &__label {
     min-width: 0;
     overflow: hidden;

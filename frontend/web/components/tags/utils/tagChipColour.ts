@@ -3,12 +3,12 @@ import type { ChipColourChoice } from 'components/base/Chip/chipColour'
 import { getTagSwatch } from './tagSwatch'
 import { isSystemTag } from './systemTag'
 
-// A system tag's state is in its icon, so it takes no hue. A colour we never
-// issued gets the neutral variant rather than a guess at the nearest swatch.
+// Every tag is a neutral chip. A system tag's state is in its icon, so it
+// takes no dot; a custom tag's hue goes in one. A colour we never issued gets
+// no dot rather than a guess at the nearest swatch.
 export const tagChipColour = (tag: Partial<TTag>): ChipColourChoice => {
   if (isSystemTag(tag)) {
     return { variant: 'outline' }
   }
-  const swatch = getTagSwatch(tag.color)
-  return swatch ? { colour: swatch } : { variant: 'neutral' }
+  return { dot: getTagSwatch(tag.color) ?? undefined, variant: 'neutral' }
 }

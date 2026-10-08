@@ -1,6 +1,6 @@
 import { contentColours } from 'common/theme/tokens'
 import { getTagSwatch } from './..'
-import { chipColourClass } from 'components/base/Chip/chipColour'
+import { chipDotClass } from 'components/base/Chip/chipColour'
 
 describe('getTagSwatch', () => {
   it.each(Object.entries(contentColours))('knows its own %s', (name, hex) => {
@@ -45,6 +45,6 @@ describe('getTagSwatch', () => {
   it('maps a legacy colour to its swatch class', () => {
     const swatch = getTagSwatch('#1492f4')
     expect(swatch).toBe('blue')
-    expect(swatch && chipColourClass(swatch)).toBe('tag-blue')
+    expect(swatch && chipDotClass(swatch)).toBe('tag-dot-blue')
   })
 })

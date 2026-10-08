@@ -1,7 +1,10 @@
 import { Tag as TTag } from 'common/types/responses'
 // The inner module, not the component: this must stay free of the stylesheet
 // import so the tag utils can be unit tested.
-import { chipColourUtilities } from 'components/base/Chip/chipColour'
+import {
+  chipColourUtilities,
+  chipDotClass,
+} from 'components/base/Chip/chipColour'
 import { tagChipColour } from './tagChipColour'
 
 const escapeHTML = (unsafe: string) =>
@@ -23,14 +26,20 @@ export const tagChipHtml = (
   tag: Partial<TTag>,
   { className = '', disabled = false }: TagChipOptions = {},
 ): string => {
-  const utilities = chipColourUtilities(tagChipColour(tag))
+  const choice = tagChipColour(tag)
+  const utilities = chipColourUtilities(choice)
   const classes = [
-    'ds-chip ds-chip--xs d-inline-flex align-items-center rounded-md',
+    'ds-chip ds-chip--xs d-inline-flex align-items-center gap-1 rounded-md',
     utilities,
     disabled ? 'opacity-50' : '',
     className,
   ]
     .filter(Boolean)
     .join(' ')
-  return `<span class="${classes}">${escapeHTML(tag.label ?? '')}</span>`
+  const dot = choice.dot
+    ? `<span class="ds-chip__dot rounded-circle ${chipDotClass(
+        choice.dot,
+      )}"></span>`
+    : ''
+  return `<span class="${classes}">${dot}${escapeHTML(tag.label ?? '')}</span>`
 }

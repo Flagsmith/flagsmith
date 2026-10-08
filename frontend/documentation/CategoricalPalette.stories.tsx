@@ -7,7 +7,7 @@ import DocPage from './components/DocPage'
 import Swatch from './components/Swatch'
 import tokens from 'common/theme/tokens.json'
 import { contentColourNames, contentColours } from 'common/theme/tokens'
-import { AA_NORMAL_TEXT, contrastRatio } from 'common/theme/contrast'
+import { contrastRatio } from 'common/theme/contrast'
 
 // ---------------------------------------------------------------------------
 // Colour data — inlined to avoid importing Constants (which pulls in the
@@ -40,13 +40,10 @@ export default meta
 // Stories
 // ---------------------------------------------------------------------------
 
-const PRIMITIVES = tokens.primitives as Record<string, string>
-
-// The Content palette, fixed rather than theme-aware: a tag chip carries its
-// own surface, so it does not follow the page. One ink serves all of them.
-const TAG_INK_NAME = 'content-always-dark'
-const TAG_INK = PRIMITIVES[TAG_INK_NAME]
-const TAG_FILLS = contentColourNames.map(
+// A tag is a neutral chip in both themes and the hue is an 8px dot, so one
+// value per hue serves both. The chip it sits on is what it has to read on.
+const CHIP = tokens.color.surface.subtle
+const TAG_DOTS = contentColourNames.map(
   (name) => [name, contentColours[name]] as const,
 )
 
@@ -59,34 +56,36 @@ export const TagSwatches: StoryObj = {
       description={
         <>
           The scale a custom tag picks from, replacing the runtime colour maths
-          that made contrast a function of the user&rsquo;s chosen hue. These
-          are the design system&rsquo;s Content colours, fixed in both themes
-          because a chip carries its own surface. Every one clears AA (
-          {AA_NORMAL_TEXT}:1) against the shared ink, enforced by{' '}
-          <code>tagSwatches.test.ts</code>.
+          that made contrast a function of the user&rsquo;s chosen hue. The chip
+          is the neutral one in both themes and the hue is the dot, so the label
+          is always <code>text-default</code> and no pairing of fill and ink has
+          to be checked. One value per hue serves both themes: each clears 3:1
+          on the light chip and on the dark one, enforced by{' '}
+          <code>tagSwatches.test.ts</code>. The numbers below are the light
+          chip; the dark figure is alongside.
         </>
       }
     >
       <div className='d-flex flex-wrap gap-3'>
-        {TAG_FILLS.map(([name, hex]) => (
+        {TAG_DOTS.map(([name, hex]) => (
           <div
             className='d-flex flex-column align-items-center gap-1'
             key={name}
           >
-            <Chip colour={name} size='xs'>
+            <Chip dot={name} size='xs'>
               {name}
             </Chip>
             <small className='text-secondary'>
-              {contrastRatio(hex, TAG_INK).toFixed(2)}:1
+              {contrastRatio(hex, CHIP.light).toFixed(2)} /{' '}
+              {contrastRatio(hex, CHIP.dark).toFixed(2)}
             </small>
           </div>
         ))}
       </div>
       <p className='cat-note'>
-        System tags (Issue, PR, Stale, Unhealthy) are not on this scale. They
-        take no fill at all: <code>border-default</code> and{' '}
-        <code>text-default</code> plus a coloured icon, so the state is carried
-        by the icon and the border rather than the fill.
+        System tags (Issue, PR, Stale, Unhealthy) take no dot. Their state is in
+        a coloured icon in the same slot, so the two kinds of tag are the same
+        chip with a different thing in front of the label.
       </p>
       <div className='d-flex mt-3'>
         <Chip size='xs' variant='outline'>
