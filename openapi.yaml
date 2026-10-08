@@ -30653,11 +30653,13 @@ components:
         * `flagsmith` - Flagsmith
         * `snowflake` - Snowflake
         * `clickhouse` - ClickHouse
+        * `databricks` - Databricks
       type: string
       enum:
         - flagsmith
         - snowflake
         - clickhouse
+        - databricks
     Webhook:
       type: object
       properties:

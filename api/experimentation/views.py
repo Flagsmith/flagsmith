@@ -119,6 +119,11 @@ class WarehouseConnectionViewSet(
     def get_queryset(self) -> "QuerySet[WarehouseConnection]":
         return super().get_queryset().select_related("delivery_status")
 
+    def get_serializer_context(self) -> dict[str, Any]:
+        context = super().get_serializer_context()
+        context["environment"] = self._get_environment()
+        return context
+
     def perform_create(self, serializer: BaseSerializer[WarehouseConnection]) -> None:
         connection: WarehouseConnection = serializer.save(
             environment=self._get_environment()

@@ -98,3 +98,58 @@ class ClickHouseDialect:
 
 
 CLICKHOUSE_DIALECT = ClickHouseDialect()
+
+_BUCKET_SECONDS: dict[ExposureGranularity, int] = {
+    "hour": 3600,
+    "day": 86400,
+}
+
+
+class DatabricksDialect:
+    def param(self, name: str) -> str:
+        return f":{name}"
+
+    def in_list(self, expr: str, name: str, size: int) -> str:
+        markers = ", ".join(self.param(f"{name}_{i}") for i in range(size))
+        return f"{expr} IN ({markers})"
+
+    def list_params(self, name: str, values: Sequence[str]) -> dict[str, object]:
+        return {f"{name}_{i}": value for i, value in enumerate(values)}
+
+    def count_all(self) -> str:
+        return "count(*)"
+
+    def count_if(self, cond: str) -> str:
+        return f"count_if({cond})"
+
+    def count_distinct(self, expr: str) -> str:
+        return f"count(DISTINCT {expr})"
+
+    def any_value(self, expr: str) -> str:
+        return f"any_value({expr})"
+
+    def time_bucket(self, expr: str, granularity: ExposureGranularity) -> str:
+        seconds = _BUCKET_SECONDS[granularity]
+        return f"timestamp_seconds(floor(unix_seconds({expr}) / {seconds}) * {seconds})"
+
+    def float_or_zero(self, expr: str) -> str:
+        return f"coalesce(try_cast({expr} AS DOUBLE), 0)"
+
+    def sum_if(self, expr: str, cond: str) -> str:
+        return f"coalesce(sum(CASE WHEN {cond} THEN {expr} END), 0)"
+
+    def avg_if(self, expr: str, cond: str) -> str:
+        return f"coalesce(avg(CASE WHEN {cond} THEN {expr} END), 0)"
+
+    def min_if(self, expr: str, cond: str) -> str:
+        return f"min(CASE WHEN {cond} THEN {expr} END)"
+
+    def bool_to_number(self, expr: str) -> str:
+        return f"CAST({expr} AS INT)"
+
+    def zip_unnest(self, arrays: Mapping[str, Sequence[str]]) -> str:
+        zipped = ", ".join(f"array({', '.join(values)})" for values in arrays.values())
+        return f"LATERAL VIEW inline(arrays_zip({zipped})) AS {', '.join(arrays)}"
+
+
+DATABRICKS_DIALECT = DatabricksDialect()

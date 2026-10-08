@@ -30,6 +30,7 @@ class WarehouseType(models.TextChoices):
     FLAGSMITH = "flagsmith", "Flagsmith"
     SNOWFLAKE = "snowflake", "Snowflake"
     CLICKHOUSE = "clickhouse", "ClickHouse"
+    DATABRICKS = "databricks", "Databricks"
 
 
 class WarehouseConnectionStatus(models.TextChoices):
