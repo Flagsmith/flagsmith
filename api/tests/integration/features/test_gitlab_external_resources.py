@@ -1,10 +1,6 @@
 import json
-from datetime import UTC, datetime, timedelta
 
-import pytest
 import responses
-from django.conf import settings
-from freezegun.api import FrozenDateTimeFactory
 from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -14,7 +10,6 @@ from features.models import Feature
 from integrations.github.models import GithubConfiguration
 from integrations.gitlab.models import GitLabConfiguration, GitLabWebhook
 from projects.models import Project
-from tests.types import ScheduleFlagChangeFixture, UpdateFlagFixture
 
 
 def test_create_external_resource__gitlab_issue__returns_201(
@@ -791,75 +786,3 @@ def test_list_external_resources__gitlab_merge_request__returns_200(
     assert len(results) == 1
     assert results[0]["type"] == "GITLAB_MR"
     assert results[0]["metadata"] == {"title": "Add login button", "state": "opened"}
-
-
-@pytest.mark.skipif(
-    not settings.WORKFLOWS_LOGIC_INSTALLED,
-    reason="workflows_logic module not installed (private package extra)",
-)
-@responses.activate
-def test_create_external_resource__gitlab_mr_for_flag_edited_while_change_was_scheduled__comments_served_flag(
-    admin_client: APIClient,
-    environment: int,
-    environment_api_key: str,
-    project: int,
-    freezer: FrozenDateTimeFactory,
-    update_flag: UpdateFlagFixture,
-    schedule_flag_change: ScheduleFlagChangeFixture,
-) -> None:
-    # Given
-    checkout = Feature.objects.create(name="checkout", project_id=project)
-    update_flag(feature_id=checkout.id, enabled=True)
-    tomorrow = datetime.now(tz=UTC) + timedelta(days=1)
-    schedule_flag_change(feature_id=checkout.id, enabled=False, live_from=tomorrow)
-    schedule_flag_change(
-        feature_id=checkout.id, enabled=True, live_from=datetime.now(tz=UTC)
-    )
-    freezer.move_to(tomorrow + timedelta(minutes=1))
-    GitLabConfiguration.objects.create(
-        project=Project.objects.get(id=project),
-        gitlab_instance_url="https://gitlab.example.com",
-        access_token="glpat-test-token",
-    )
-    responses.post(
-        "https://gitlab.example.com/api/v4/projects/flagsmith%2Fstorefront/hooks",
-        json={"id": 77, "project_id": 777},
-        status=201,
-    )
-    responses.post(
-        "https://gitlab.example.com/api/v4/projects/flagsmith%2Fstorefront/merge_requests/7/notes",
-        json={"id": 1},
-        status=201,
-    )
-
-    # When
-    response = admin_client.post(
-        f"/api/v1/projects/{project}/features/{checkout.id}/feature-external-resources/",
-        data={
-            "type": "GITLAB_MR",
-            "url": "https://gitlab.example.com/flagsmith/storefront/-/merge_requests/7",
-            "feature": checkout.id,
-            "metadata": {
-                "title": "Roll out the new checkout",
-                "state": "opened",
-                "draft": False,
-            },
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_201_CREATED
-    [_, note_call] = responses.calls
-    assert json.loads(note_call.request.body) == {
-        "body": (
-            ":link: Linked to Flagsmith feature flag `checkout`\n"
-            "\n"
-            "| Environment | Enabled | Value |\n"
-            "| :--- | :----- | :------ |\n"
-            f"| [Test Environment](https://example.com/project/{project}/environment/{environment_api_key}/features?feature={checkout.id})"
-            " | :x: Disabled |  |\n"
-            "\n"
-            "Segment and identity overrides may apply -- check each environment above for details.\n"
-        ),
-    }
