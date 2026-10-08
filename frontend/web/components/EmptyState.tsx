@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import Link from './base/link'
 import StateMessage, { StateMessageProps } from './StateMessage'
 
 type EmptyStateProps = Omit<StateMessageProps, 'role'> & {
@@ -17,14 +18,9 @@ const EmptyState: FC<EmptyStateProps> = ({
     action={
       <>
         {docsUrl && (
-          <a
-            href={docsUrl}
-            target='_blank'
-            rel='noreferrer'
-            className='btn btn-link'
-          >
+          <Link href={docsUrl} target='_blank'>
             {docsLabel}
-          </a>
+          </Link>
         )}
         {action}
       </>

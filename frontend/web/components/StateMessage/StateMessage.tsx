@@ -1,6 +1,7 @@
 import { FC, ReactNode } from 'react'
 import { colorIconSecondary } from 'common/theme/tokens'
-import Icon, { IconName } from './icons/Icon'
+import Icon, { IconName } from 'components/icons/Icon'
+import './StateMessage.scss'
 
 export type StateMessageProps = {
   title: string
