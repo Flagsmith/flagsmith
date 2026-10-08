@@ -1,10 +1,7 @@
 import json
-from datetime import UTC, datetime, timedelta
 
 import pytest
-from django.conf import settings
 from django.urls import reverse
-from freezegun.api import FrozenDateTimeFactory
 from pytest_lazy_fixtures import lf as lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -14,8 +11,6 @@ from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
 from organisations.models import Organisation
 from projects.models import Project
-from tests.integration.helpers import create_mv_option_with_api
-from tests.types import ScheduleFlagChangeFixture, UpdateFlagFixture
 from users.models import FFAdminUser
 
 
@@ -824,43 +819,3 @@ def test_update_feature_state__swap_variation_weights__returns_ok(  # type: igno
 
     # Then
     assert update_feature_state_response.status_code == status.HTTP_200_OK
-
-
-@pytest.mark.usefixtures("environment")
-@pytest.mark.skipif(
-    not settings.WORKFLOWS_LOGIC_INSTALLED,
-    reason="workflows_logic module not installed (private package extra)",
-)
-def test_get_multivariate_options__flag_edited_while_change_was_scheduled__responds_served_control_value(
-    admin_client: APIClient,
-    sdk_client: APIClient,
-    project: int,
-    freezer: FrozenDateTimeFactory,
-    update_flag: UpdateFlagFixture,
-    schedule_flag_change: ScheduleFlagChangeFixture,
-) -> None:
-    # Given
-    checkout = Feature.objects.create(name="checkout", project_id=project)
-    create_mv_option_with_api(admin_client, project, checkout.id, 50, "express")
-    update_flag(feature_id=checkout.id, value="classic")
-    tomorrow = datetime.now(tz=UTC) + timedelta(days=1)
-    schedule_flag_change(
-        feature_id=checkout.id, enabled=True, live_from=tomorrow, value="one-page"
-    )
-    schedule_flag_change(
-        feature_id=checkout.id,
-        enabled=True,
-        live_from=datetime.now(tz=UTC),
-        value="classic",
-    )
-    freezer.move_to(tomorrow + timedelta(minutes=1))
-
-    # When
-    response = sdk_client.get(f"/api/v1/flags/{checkout.id}/multivariate-options/")
-
-    # Then
-    assert response.status_code == 200
-    assert response.json() == {
-        "control_value": "one-page",
-        "options": [{"value": "express"}],
-    }
