@@ -499,13 +499,6 @@ def test_0033_add_system_segment_managed_by__forwards__backfills_system_segment_
         feature=feature,
         is_system_segment=True,
     )
-    legacy_dependency_segment = Segment.objects.create(
-        name="checkout-dependencies-abc123",
-        project=project,
-        feature=feature,
-        is_system_segment=True,
-        deleted_at=timezone.now(),
-    )
     unknown_system_segment = Segment.objects.create(
         name="unknown", project=project, is_system_segment=True
     )
@@ -529,48 +522,7 @@ def test_0033_add_system_segment_managed_by__forwards__backfills_system_segment_
         phased_rollout_segment.id: "release_pipeline",
         orphaned_phased_rollout_segment.id: "release_pipeline",
         dependency_segment.id: "dependency",
-        legacy_dependency_segment.id: "dependency",
         unknown_system_segment.id: "",
         user_segment.id: "",
-        cohort_segment.id: "cohort",
-    }
-
-
-def test_0033_add_system_segment_managed_by__backwards__resets_system_segment_owners(
-    migrator: Migrator,
-) -> None:
-    # Given
-    state = migrator.apply_initial_migration(
-        ("segments", "0033_add_system_segment_managed_by")
-    )
-
-    Organisation = state.apps.get_model("organisations", "Organisation")
-    Project = state.apps.get_model("projects", "Project")
-    Segment = state.apps.get_model("segments", "Segment")
-
-    organisation = Organisation.objects.create(name="Test Org")
-    project = Project.objects.create(name="Test Project", organisation=organisation)
-    system_segments = [
-        Segment.objects.create(
-            name=managed_by,
-            project=project,
-            is_system_segment=True,
-            managed_by=managed_by,
-        )
-        for managed_by in ["dependency", "experiment", "release_pipeline"]
-    ]
-    cohort_segment = Segment.objects.create(
-        name="cohort", project=project, managed_by="cohort"
-    )
-
-    # When
-    new_state = migrator.apply_tested_migration(
-        ("segments", "0032_add_segment_rules_data")
-    )
-
-    # Then
-    NewSegment = new_state.apps.get_model("segments", "Segment")
-    assert dict(NewSegment.objects.values_list("id", "managed_by")) == {
-        **{segment.id: "" for segment in system_segments},
         cohort_segment.id: "cohort",
     }

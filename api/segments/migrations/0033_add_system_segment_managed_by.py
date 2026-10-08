@@ -11,7 +11,6 @@ MANAGED_BY_CHOICES = [
     ("experiment", "Experiment"),
     ("release_pipeline", "Gradual rollout"),
 ]
-SYSTEM_SEGMENT_OWNERS = ["dependency", "experiment", "release_pipeline"]
 
 
 def backfill_system_segment_managed_by(
@@ -47,19 +46,8 @@ def backfill_system_segment_managed_by(
     ).update(managed_by="release_pipeline")
 
     unmanaged_system_segments.filter(
-        # `{feature}-depends-on-{prerequisite}` since #8632,
-        # `{feature}-dependencies-{environment key}` before.
-        models.Q(name__contains="-depends-on-")
-        | models.Q(name__regex=r"-dependencies-[A-Za-z0-9]+$"),
-        feature__isnull=False,
+        feature__isnull=False, name__contains="-depends-on-"
     ).update(managed_by="dependency")
-
-
-def reset_system_segment_managed_by(
-    apps: Apps, _: BaseDatabaseSchemaEditor | None = None
-) -> None:
-    Segment = apps.get_model("segments", "Segment")
-    Segment.objects.filter(managed_by__in=SYSTEM_SEGMENT_OWNERS).update(managed_by="")
 
 
 class Migration(migrations.Migration):
@@ -87,6 +75,7 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(
             code=backfill_system_segment_managed_by,
-            reverse_code=reset_system_segment_managed_by,
+            # Older code ignores these values, so they can stay.
+            reverse_code=migrations.RunPython.noop,
         ),
     ]
