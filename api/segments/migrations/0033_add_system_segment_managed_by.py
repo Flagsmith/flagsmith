@@ -9,7 +9,7 @@ MANAGED_BY_CHOICES = [
     ("cohort", "Cohort"),
     ("dependency", "Flag dependency"),
     ("experiment", "Experiment"),
-    ("release_pipeline", "Release pipeline"),
+    ("release_pipeline", "Gradual rollout"),
 ]
 SYSTEM_SEGMENT_OWNERS = ["dependency", "experiment", "release_pipeline"]
 

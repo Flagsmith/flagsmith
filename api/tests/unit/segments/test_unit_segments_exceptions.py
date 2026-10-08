@@ -11,7 +11,7 @@ from segments.models import Segment, SegmentManagedBy
     [
         (SegmentManagedBy.DEPENDENCY, "its flag dependency"),
         (SegmentManagedBy.EXPERIMENT, "its experiment"),
-        (SegmentManagedBy.RELEASE_PIPELINE, "its release pipeline"),
+        (SegmentManagedBy.RELEASE_PIPELINE, "its gradual rollout"),
         (SegmentManagedBy.UNMANAGED, "the feature that created it"),
     ],
 )

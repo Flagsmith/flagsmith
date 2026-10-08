@@ -88,7 +88,7 @@ class SegmentManagedBy(models.TextChoices):
     # System segments, owned by the feature that created them.
     DEPENDENCY = "dependency", "Flag dependency"
     EXPERIMENT = "experiment", "Experiment"
-    RELEASE_PIPELINE = "release_pipeline", "Release pipeline"
+    RELEASE_PIPELINE = "release_pipeline", "Gradual rollout"
 
 
 class Segment(
