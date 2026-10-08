@@ -7,9 +7,10 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from freezegun.api import FrozenDateTimeFactory
 from rest_framework.test import APIClient
 
+from features.future.types import UpdateFlagRequest
 from features.import_export.types import FeatureExportData
 from features.models import Feature
-from tests.types import ScheduleFlagChangeFixture, UpdateFlagFixture
+from tests.types import ScheduleFlagChangeFixture
 
 
 @pytest.mark.skipif(
@@ -19,15 +20,19 @@ from tests.types import ScheduleFlagChangeFixture, UpdateFlagFixture
 def test_import_features__overwrite_flag_edited_while_change_was_scheduled__serves_imported_flag(
     admin_client: APIClient,
     environment: int,
+    environment_api_key: str,
     project: int,
     freezer: FrozenDateTimeFactory,
-    update_flag: UpdateFlagFixture,
     schedule_flag_change: ScheduleFlagChangeFixture,
     sdk_client: APIClient,
 ) -> None:
     # Given
     checkout = Feature.objects.create(name="checkout", project_id=project)
-    update_flag(feature_id=checkout.id, enabled=True)
+    admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{checkout.id}/",
+        UpdateFlagRequest({"environment_default": {"enabled": True}}),
+        format="json",
+    )
     tomorrow = datetime.now(tz=UTC) + timedelta(days=1)
     schedule_flag_change(feature_id=checkout.id, enabled=False, live_from=tomorrow)
     schedule_flag_change(

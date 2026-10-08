@@ -8,10 +8,11 @@ from django.conf import settings
 from freezegun.api import FrozenDateTimeFactory
 from rest_framework.test import APIClient
 
+from features.future.types import UpdateFlagRequest
 from features.models import Feature
 from integrations.github.models import GithubConfiguration, GitHubRepository
 from projects.models import Project
-from tests.types import ScheduleFlagChangeFixture, UpdateFlagFixture
+from tests.types import ScheduleFlagChangeFixture
 
 
 @pytest.mark.freeze_time("2026-10-06T09:00:00Z")
@@ -26,7 +27,6 @@ def test_create_external_resource__github_issue_for_flag_edited_while_change_was
     environment_api_key: str,
     project: int,
     freezer: FrozenDateTimeFactory,
-    update_flag: UpdateFlagFixture,
     schedule_flag_change: ScheduleFlagChangeFixture,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
@@ -34,7 +34,11 @@ def test_create_external_resource__github_issue_for_flag_edited_while_change_was
     checkout = Feature.objects.create(name="checkout", project_id=project)
     tomorrow = datetime.now(tz=UTC) + timedelta(days=1)
     freezer.tick(timedelta(minutes=1))
-    update_flag(feature_id=checkout.id, enabled=True)
+    admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{checkout.id}/",
+        UpdateFlagRequest({"environment_default": {"enabled": True}}),
+        format="json",
+    )
     freezer.tick(timedelta(minutes=1))
     schedule_flag_change(feature_id=checkout.id, enabled=False, live_from=tomorrow)
     freezer.tick(timedelta(minutes=1))

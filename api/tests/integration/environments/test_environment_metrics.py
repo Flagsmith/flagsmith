@@ -5,8 +5,9 @@ from django.conf import settings
 from freezegun.api import FrozenDateTimeFactory
 from rest_framework.test import APIClient
 
+from features.future.types import UpdateFlagRequest
 from features.models import Feature
-from tests.types import ScheduleFlagChangeFixture, UpdateFlagFixture
+from tests.types import ScheduleFlagChangeFixture
 
 
 @pytest.mark.usefixtures("versioned_environment")
@@ -14,12 +15,15 @@ def test_get_environment_metrics__some_features_enabled__responds_200_with_featu
     admin_client: APIClient,
     environment_api_key: str,
     project: int,
-    update_flag: UpdateFlagFixture,
 ) -> None:
     # Given
     checkout = Feature.objects.create(name="checkout", project_id=project)
     Feature.objects.create(name="payments", project_id=project)
-    update_flag(feature_id=checkout.id, enabled=True)
+    admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{checkout.id}/",
+        UpdateFlagRequest({"environment_default": {"enabled": True}}),
+        format="json",
+    )
 
     # When
     response = admin_client.get(
@@ -72,12 +76,15 @@ def test_get_environment_metrics__feature_versioning_v1_with_superseded_versions
     environment_api_key: str,
     project: int,
     freezer: FrozenDateTimeFactory,
-    update_flag: UpdateFlagFixture,
     schedule_flag_change: ScheduleFlagChangeFixture,
 ) -> None:
     # Given
     checkout = Feature.objects.create(name="checkout", project_id=project)
-    update_flag(feature_id=checkout.id, enabled=True)
+    admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{checkout.id}/",
+        UpdateFlagRequest({"environment_default": {"enabled": True}}),
+        format="json",
+    )
     tomorrow = datetime.now(tz=UTC) + timedelta(days=1)
     schedule_flag_change(feature_id=checkout.id, enabled=False, live_from=tomorrow)
     schedule_flag_change(

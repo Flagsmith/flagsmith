@@ -14,15 +14,11 @@ from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from core.signals import create_audit_log_from_historical_record
+from features.future.types import UpdateFlagRequest
 from features.models import Feature, FeatureState
 from features.workflows.core.models import ChangeRequest
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
-from segments.models import Segment
-from tests.types import (
-    CreateSegmentOverrideFixture,
-    ScheduleFlagChangeFixture,
-    UpdateFlagFixture,
-)
+from tests.types import CreateSegmentOverrideFixture, ScheduleFlagChangeFixture
 from users.models import FFAdminUser
 
 
@@ -460,9 +456,9 @@ def test_list_audit_logs__segment_override_differs_from_flag_edited_while_change
     environment: int,
     environment_api_key: str,
     project: int,
+    segment: int,
     segment_name: str,
     freezer: FrozenDateTimeFactory,
-    update_flag: UpdateFlagFixture,
     schedule_flag_change: ScheduleFlagChangeFixture,
     create_segment_override: CreateSegmentOverrideFixture,
 ) -> None:
@@ -470,24 +466,19 @@ def test_list_audit_logs__segment_override_differs_from_flag_edited_while_change
     checkout = Feature.objects.create(name="checkout", project_id=project)
     tomorrow = datetime.now(tz=UTC) + timedelta(days=1)
     freezer.tick(timedelta(minutes=1))
-    segment = Segment.objects.create(name=segment_name, project_id=project)
-    freezer.tick(timedelta(minutes=1))
-    update_flag(feature_id=checkout.id, enabled=True)
+    admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{checkout.id}/",
+        UpdateFlagRequest({"environment_default": {"enabled": True}}),
+        format="json",
+    )
     freezer.tick(timedelta(minutes=1))
     schedule_flag_change(feature_id=checkout.id, enabled=False, live_from=tomorrow)
     freezer.tick(timedelta(minutes=1))
     schedule_flag_change(
-        feature_id=checkout.id,
-        enabled=True,
-        live_from=datetime.now(tz=UTC),
+        feature_id=checkout.id, enabled=True, live_from=datetime.now(tz=UTC)
     )
     freezer.move_to(tomorrow + timedelta(minutes=1))
-    create_segment_override(
-        environment_api_key,
-        feature_id=checkout.id,
-        segment_id=segment.id,
-        enabled=True,
-    )
+    create_segment_override(environment_api_key, checkout.id, segment, enabled=True)
 
     # When
     response = admin_client.get("/api/v1/audit/", {"environment": environment})
@@ -507,20 +498,24 @@ def test_list_audit_logs__segment_override_differs_from_flag_edited_while_change
             f"Remote config updated for segment override on feature 'checkout' and segment '{segment_name}'.",
         ),
         (
-            "2026-10-06T09:04:00Z",
-            "Change Request: Scheduled change created",
-        ),
-        (
-            "2026-10-06T09:04:00Z",
-            "Flag state / Remote config updated for feature: checkout by Change Request: Scheduled change",
-        ),
-        (
             "2026-10-06T09:03:00Z",
             "Change Request: Scheduled change created",
         ),
         (
+            "2026-10-06T09:03:00Z",
+            "Flag state / Remote config updated for feature: checkout by Change Request: Scheduled change",
+        ),
+        (
             "2026-10-06T09:02:00Z",
+            "Change Request: Scheduled change created",
+        ),
+        (
+            "2026-10-06T09:01:00Z",
             "Flag state updated for feature: checkout",
+        ),
+        (
+            "2026-10-06T09:00:00Z",
+            f"New Segment created: {segment_name}",
         ),
         (
             "2026-10-06T09:00:00Z",

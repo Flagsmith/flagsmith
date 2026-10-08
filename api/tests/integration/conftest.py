@@ -19,11 +19,7 @@ from app.utils import create_hash
 from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.enums import EnvironmentDocumentCacheMode
 from environments.models import Environment
-from features.future.types import (
-    EnvironmentDefaultRequest,
-    SegmentOverrideRequest,
-    UpdateFlagRequest,
-)
+from features.future.types import SegmentOverrideRequest, UpdateFlagRequest
 from features.versioning.tasks import enable_v2_versioning
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
@@ -31,7 +27,6 @@ from tests.types import (
     CreateSegmentOverrideFixture,
     ScheduleFlagChangeFixture,
     SetMultivariateAllocationsFixture,
-    UpdateFlagFixture,
 )
 from users.models import FFAdminUser
 
@@ -199,34 +194,6 @@ def versioned_environment(
 
 
 @pytest.fixture()
-def update_flag(
-    admin_client: APIClient,
-    environment_api_key: str,
-) -> UpdateFlagFixture:
-    """Return a callable editing a flag's environment default straight away."""
-
-    def _update_flag(
-        *,
-        feature_id: int,
-        enabled: bool | None = None,
-        value: str | None = None,
-    ) -> None:
-        environment_default = EnvironmentDefaultRequest()
-        if enabled is not None:
-            environment_default["enabled"] = enabled
-        if value is not None:
-            environment_default["value"] = {"type": "string", "value": value}
-        response = admin_client.patch(
-            f"/api/__future__/environments/{environment_api_key}/features/{feature_id}/",
-            UpdateFlagRequest({"environment_default": environment_default}),
-            format="json",
-        )
-        assert response.status_code == status.HTTP_200_OK
-
-    return _update_flag
-
-
-@pytest.fixture()
 def schedule_flag_change(
     admin_client: APIClient,
     environment_api_key: str,
@@ -238,10 +205,8 @@ def schedule_flag_change(
         feature_id: int,
         enabled: bool,
         live_from: datetime,
-        value: str | None = None,
     ) -> None:
         environment = Environment.objects.get(api_key=environment_api_key)
-        feature_state_value = {"type": "unicode", "string_value": value}
         change = (
             {
                 "feature_states": [],
@@ -253,7 +218,10 @@ def schedule_flag_change(
                             {
                                 "feature_segment": None,
                                 "enabled": enabled,
-                                "feature_state_value": feature_state_value,
+                                "feature_state_value": {
+                                    "type": "unicode",
+                                    "string_value": None,
+                                },
                             }
                         ],
                         "feature_states_to_create": [],
@@ -268,7 +236,6 @@ def schedule_flag_change(
                         "feature": feature_id,
                         "feature_segment": None,
                         "enabled": enabled,
-                        "feature_state_value": feature_state_value,
                         "live_from": live_from.isoformat(),
                     }
                 ],
