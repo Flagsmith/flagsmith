@@ -5,8 +5,8 @@ import OverLimitBanner from 'components/pages/usage/components/OverLimitBanner'
 import SectionHeading from 'components/pages/usage/components/SectionHeading'
 import UsageBreakdown, {
   BreakdownDimension,
+  breakdownViewOf,
   BreakdownView,
-  useUsageBreakdown,
 } from 'components/pages/usage/components/UsageBreakdown'
 import UsageMeter from 'components/pages/usage/components/UsageMeter'
 import UsageOverTime from 'components/pages/usage/components/UsageOverTime'
@@ -165,11 +165,11 @@ const UsagePage: FC<HarnessProps> = ({
   // The note needs the organisation over the period on screen, not over the
   // allowance window, or a project can read as more than all of it.
   const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
-  const breakdown = useUsageBreakdown({
-    data: scoped,
+  const breakdown = breakdownViewOf(
     dimension,
-    grouped: fakeGrouped(dimension, project, scoped.totals.total),
-  })
+    scoped,
+    fakeGrouped(dimension, project, scoped.totals.total),
+  )
 
   const scope = `${filtered ? project : 'All projects'} · ${periodLabel(
     periods,

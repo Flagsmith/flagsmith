@@ -8,8 +8,8 @@ import BillingStrip from './components/BillingStrip'
 import SectionHeading from './components/SectionHeading'
 import UsageBreakdown, {
   BreakdownDimension,
+  breakdownViewOf,
   useGroupedBreakdown,
-  useUsageBreakdown,
 } from './components/UsageBreakdown'
 import UsageFilters from './components/UsageFilters'
 import UsageMeter from './components/UsageMeter'
@@ -100,11 +100,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
     organisationId: organisation?.id,
     projectId: selectedProjectId,
   })
-  const breakdown = useUsageBreakdown({
-    data: usage.scoped,
-    dimension,
-    grouped,
-  })
+  const breakdown = breakdownViewOf(dimension, usage.scoped, grouped)
 
   const selectedPeriod = periodLabel(periods, billingPeriod)
 

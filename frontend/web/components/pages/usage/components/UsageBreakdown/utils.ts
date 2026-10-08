@@ -37,7 +37,10 @@ export type QueryState = { isFetching: boolean; isError: boolean }
 export const breakdownStatusOf = (
   groupBy: UsageGroupBy | undefined,
   queries: QueryState[],
+  organisationLoaded: boolean,
 ): BreakdownStatus => {
+  // Every query skips until the organisation loads, which would read as ready.
+  if (!organisationLoaded) return 'loading'
   if (!groupBy) return 'needs-project'
   if (queries.some((query) => query.isFetching)) return 'loading'
   // A failed scope must not read as zero usage.
@@ -179,4 +182,21 @@ export const barPercent = (value: number, largest: number): number => {
   }
 
   return Math.max(1, Math.round((value / largest) * 100))
+}
+
+export type BreakdownView = {
+  rows: BreakdownRow[]
+  status?: BreakdownStatus
+  onRetry?: () => void
+}
+
+export const breakdownViewOf = (
+  dimension: BreakdownDimension,
+  data: Res['organisationUsage'] | undefined,
+  grouped: BreakdownView | undefined,
+): BreakdownView => {
+  if (!isGroupedDimension(dimension)) {
+    return { rows: dimension === 'sdk' ? bySdk(data) : byRequestType(data) }
+  }
+  return grouped ?? { rows: [], status: 'loading' }
 }

@@ -80,10 +80,7 @@ export const useGroupedBreakdown = ({
   ])
 
   const queries = [grouped, projects, environments]
-  // Every query skips until the organisation loads, which would read as ready.
-  const status = organisationId
-    ? breakdownStatusOf(groupBy, queries)
-    : 'loading'
+  const status = breakdownStatusOf(groupBy, queries, !!organisationId)
   const onRetry = () =>
     queries.forEach((query) => {
       if (!query.isUninitialized) query.refetch()
