@@ -12,7 +12,7 @@ import ForgotPasswordModal from 'components/modals/ForgotPasswordModal'
 import Card from 'components/Card'
 import NavIconSmall from 'components/icons/NavIconSmall'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Constants from 'common/constants'
+import Constants, { PASSWORD_CHANGED_SESSION_KEY } from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import PasswordRequirements from 'components/PasswordRequirements'
@@ -109,6 +109,12 @@ const HomePage: React.FC = () => {
   // component, so '' would match a login error that arrived before any signup.
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null)
   const [emailAlreadyRegistered, setEmailAlreadyRegistered] = useState(false)
+  const [passwordChanged] = useState(
+    () => sessionStorage.getItem(PASSWORD_CHANGED_SESSION_KEY) === 'true',
+  )
+  useEffect(() => {
+    sessionStorage.removeItem(PASSWORD_CHANGED_SESSION_KEY)
+  }, [])
   // Set by EmailActivationPage on the redirect it makes here.
   const isGettingStarted = !!(location.state as LoginLocationState)
     ?.isGettingStarted
@@ -493,6 +499,17 @@ const HomePage: React.FC = () => {
                                     <p className='notification__text mb-0'>
                                       You already have an account, log in to
                                       continue
+                                    </p>
+                                  </div>
+                                )}
+                                {passwordChanged && (
+                                  <div className='notification d-flex align-items-center justify-content-center gap-2 mb-3'>
+                                    <span className='notification__icon d-flex'>
+                                      <Icon name='info-outlined' width={20} />
+                                    </span>
+                                    <p className='notification__text mb-0'>
+                                      Your password has been changed, log in
+                                      again to continue
                                     </p>
                                   </div>
                                 )}

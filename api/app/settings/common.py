@@ -949,6 +949,7 @@ DJOSER = {
         "confirmation": "users.emails.ConfirmationEmail",
     },
     "SET_PASSWORD_RETYPE": True,
+    "LOGOUT_ON_PASSWORD_CHANGE": True,
     "PASSWORD_RESET_CONFIRM_RETYPE": True,
     "HIDE_USERS": True,
     "PERMISSIONS": {
