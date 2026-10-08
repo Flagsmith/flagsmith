@@ -6,6 +6,7 @@ from typing import NamedTuple
 import structlog
 from django.db import transaction
 from django.db.models import Count, Q
+from rest_framework.exceptions import ValidationError
 
 from api_keys.user import APIKeyUser
 from environments.models import Environment
@@ -15,6 +16,10 @@ from features.dependencies.services import (
     validate_segment_flag_dependencies,
 )
 from features.dependencies.types import FeatureName
+from features.feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+    exceeds_segment_override_limit,
+)
 from features.future.exceptions import (
     DuplicatePriorityError,
     SegmentOverrideNotFoundError,
@@ -329,17 +334,29 @@ def _write_segment_overrides(
             sorted(overrides.keys() - {change["segment"]["id"] for change in changes})
         )
 
-    # Only the features owning system segments can change their overrides, but
-    # anyone can write them as they are, e.g. to replace a flag as they read it.
-    system_served_states = (
-        {}
-        if system
-        else _check_system_segment_override_changes(
+    system_served_states: dict[int, tuple[object, ...]] = {}
+    if not system:
+        # Only the features owning system segments can change their overrides,
+        # but anyone can write them as they are, e.g. to replace a flag as read.
+        system_served_states = _check_system_segment_override_changes(
             overrides=overrides,
             changes=changes,
             deleted_segment_ids=segments.deleted,
         )
-    )
+        # The features owning system segments are not limited.
+        if exceeds_segment_override_limit(
+            environment,
+            segment_ids_to_create_overrides=[
+                change["segment"]["id"]
+                for change in changes
+                if change["segment"]["id"] not in overrides
+            ],
+            segment_ids_to_delete_overrides=segments.deleted,
+            exclusive=True,
+        ):
+            raise ValidationError(
+                {"segment_overrides": [SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE]}
+            )
 
     if replace:
         _delete_segment_overrides(
