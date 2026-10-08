@@ -66,6 +66,7 @@ def fetch_gitlab_projects(
     }
     if search_text:
         params["search"] = search_text
+        params["search_namespaces"] = "true"
 
     response = _get_from_gitlab_api(
         instance_url,

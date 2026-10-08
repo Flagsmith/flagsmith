@@ -130,6 +130,7 @@ def test_fetch_gitlab_projects__with_search_text__sends_search_param() -> None:
                     "per_page": "100",
                     "page": "1",
                     "search": "my-project",
+                    "search_namespaces": "true",
                 },
                 strict_match=False,
             ),

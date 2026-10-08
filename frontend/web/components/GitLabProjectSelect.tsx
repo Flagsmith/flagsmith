@@ -41,7 +41,7 @@ const GitLabProjectSelect: FC<GitLabProjectSelectProps> = ({
         value={value}
         onChange={(v: GitLabProjectOption) => onChange(v)}
         onInputChange={(e: string) => onInputChange(e)}
-        options={options}
+        options={isError ? [] : options}
         isLoading={isBusy}
         noOptionsMessage={() => {
           if (isBusy) return 'Loading...'
