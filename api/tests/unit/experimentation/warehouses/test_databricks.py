@@ -1006,7 +1006,7 @@ def test_describe_databricks_error__error__returns_user_facing_detail(
     error: Exception,
     expected_detail: str,
 ) -> None:
-    # When
+    # Given / When
     detail = databricks.describe_databricks_error(error)
 
     # Then
