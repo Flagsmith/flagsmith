@@ -45,13 +45,13 @@ from environments.dynamodb import (
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
+from evaluation import services as evaluation_services
 from features import views
 from features.dataclasses import EnvironmentFeatureOverridesData
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
-from features.versioning import versioning_service
 from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import (
     MetadataField,
@@ -1000,12 +1000,70 @@ def test_get_flags__hide_disabled_flags__hides_dependent(
     assert response.json() == []
 
 
-def test_get_flags__feature_filter_with_prerequisite_disabled__returns_dependent_disabled(
+@pytest.fixture()
+def beta_testers_checkout_segment(
+    checkout_prerequisites_segment: Segment,
+) -> Segment:
+    rules: list[SegmentRuleType] = [
+        {
+            "type": "ALL",
+            "conditions": [
+                {
+                    "property": "beta_tester",
+                    "operator": IS_SET,
+                    "value": None,
+                    "description": None,
+                }
+            ],
+        }
+    ]
+    checkout_prerequisites_segment.rules_data = rules
+    checkout_prerequisites_segment.save(update_fields=["rules_data"])
+    write_segment_rules(checkout_prerequisites_segment, rules)
+    return checkout_prerequisites_segment
+
+
+@pytest.mark.parametrize(
+    "segment",
+    [
+        pytest.param(None, id="no_segments"),
+        pytest.param(
+            lazy_fixture("beta_testers_checkout_segment"), id="identity_segment"
+        ),
+    ],
+)
+def test_get_flags__feature_filter_without_identity_free_segments__evaluates_that_feature_only(
+    segment: Segment | None,
     api_client: APIClient,
     client_api_key: str,
-    payments_prerequisite_rule: SegmentRuleType,
+    payments_feature: Feature,
+    checkout_feature: Feature,
+    mocker: MockerFixture,
 ) -> None:
     # Given
+    get_evaluation_result_spy = mocker.spy(evaluation_services, "get_evaluation_result")
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=client_api_key)
+
+    # When
+    response = api_client.get("/api/v1/flags/?feature=checkout")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["enabled"] is True
+    context = get_evaluation_result_spy.call_args.args[0]
+    assert context["features"].keys() == {"checkout"}
+    assert context["segments"] == {}
+
+
+def test_get_flags__feature_filter_with_prerequisite_segment__evaluates_environment(
+    api_client: APIClient,
+    client_api_key: str,
+    checkout_prerequisites_segment: Segment,
+    payments_prerequisite_rule: SegmentRuleType,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_evaluation_result_spy = mocker.spy(evaluation_services, "get_evaluation_result")
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=client_api_key)
 
     # When
@@ -1014,29 +1072,9 @@ def test_get_flags__feature_filter_with_prerequisite_disabled__returns_dependent
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["enabled"] is False
-
-
-def test_get_flags__feature_filter_without_segments__reads_that_feature_only(
-    api_client: APIClient,
-    environment: Environment,
-    feature: Feature,
-    feature_state: FeatureState,
-    feature_with_value: Feature,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    get_environment_flags_list_spy = mocker.spy(
-        versioning_service, "get_environment_flags_list"
-    )
-    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-
-    # When
-    response = api_client.get(f"/api/v1/flags/?feature={feature.name}")
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json()["feature"]["name"] == feature.name
-    assert get_environment_flags_list_spy.spy_return == [feature_state]
+    context = get_evaluation_result_spy.call_args.args[0]
+    assert context["features"].keys() == {"payments", "checkout"}
+    assert context["segments"].keys() == {str(checkout_prerequisites_segment.pk)}
 
 
 @pytest.mark.parametrize("cache_flags_seconds", [0, 30])
