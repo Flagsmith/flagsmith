@@ -1,4 +1,5 @@
 import { FC, ReactNode } from 'react'
+import cn from 'classnames'
 import { colorIconSecondary } from 'common/theme/tokens'
 import Icon, { IconName } from 'components/icons/Icon'
 import './StateMessage.scss'
@@ -22,15 +23,20 @@ const StateMessage: FC<StateMessageProps> = ({
   role,
   title,
 }) => (
-  <div className={`state-message ${className || ''}`} role={role}>
+  <div
+    className={cn('state-message text-center px-3 py-4', className)}
+    role={role}
+  >
     {icon && (
-      <div className='state-message__icon'>
+      <div className='mb-3'>
         <Icon name={icon} width={40} fill={iconColour} />
       </div>
     )}
-    <h5 className='state-message__title'>{title}</h5>
+    <h5 className='mb-2'>{title}</h5>
     {description && (
-      <div className='state-message__description text-muted'>{description}</div>
+      <div className='state-message__description mx-auto mb-3 text-muted'>
+        {description}
+      </div>
     )}
     {action}
   </div>
