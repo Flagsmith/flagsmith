@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 
 from pydantic import BaseModel, computed_field
@@ -36,23 +36,3 @@ class FlagChangeSet:
 class MultivariateValueChangeSet:
     multivariate_feature_option_id: int
     percentage_allocation: float
-
-
-@dataclass
-class SegmentOverrideChangeSet:
-    segment_id: int
-    enabled: bool
-    feature_state_value: str
-    type_: FeatureValueType
-    priority: int | None = None
-    multivariate_values: list[MultivariateValueChangeSet] | None = None
-
-
-@dataclass
-class FlagChangeSetV2:
-    author: AuthorData
-    environment_default_enabled: bool
-    environment_default_value: str
-    environment_default_type: FeatureValueType
-
-    segment_overrides: list[SegmentOverrideChangeSet] = field(default_factory=list)
