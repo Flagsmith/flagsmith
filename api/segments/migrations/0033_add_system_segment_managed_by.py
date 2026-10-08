@@ -25,8 +25,6 @@ def backfill_system_segment_managed_by(
         is_system_segment=True, managed_by=""
     )
 
-    # Owners point at their segments, but a segment can outlive its owner, and
-    # a change request could have renamed it. Match on either.
     unmanaged_system_segments.filter(
         models.Q(
             id__in=Experiment.objects.filter(
