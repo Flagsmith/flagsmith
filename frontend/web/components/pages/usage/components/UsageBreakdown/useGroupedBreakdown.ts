@@ -11,7 +11,6 @@ import {
   BreakdownRow,
   BreakdownStatus,
   groupByOf,
-  isGroupedDimension,
 } from './utils'
 
 type UseGroupedBreakdown = {
@@ -33,7 +32,7 @@ export const useGroupedBreakdown = ({
   dimension,
   organisationId,
   projectId,
-}: UseGroupedBreakdown): GroupedBreakdown | undefined => {
+}: UseGroupedBreakdown): GroupedBreakdown => {
   const groupBy = groupByOf(dimension, projectId)
 
   // currentData, so a dimension never shows the rows of the one before it.
@@ -89,10 +88,6 @@ export const useGroupedBreakdown = ({
     queries.forEach((query) => {
       if (!query.isUninitialized) query.refetch()
     })
-
-  if (!isGroupedDimension(dimension)) {
-    return undefined
-  }
 
   return { onRetry, rows, status }
 }

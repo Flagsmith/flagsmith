@@ -7,6 +7,7 @@ import OverLimitBanner from './components/OverLimitBanner'
 import BillingStrip from './components/BillingStrip'
 import SectionHeading from './components/SectionHeading'
 import UsageBreakdown, {
+  BreakdownDimension,
   useGroupedBreakdown,
   useUsageBreakdown,
 } from './components/UsageBreakdown'
@@ -92,14 +93,17 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   const periods = periodsFor(planIsBilled)
 
-  const { dimension, rows, setDimension } = useUsageBreakdown({
-    data: usage.scoped,
-  })
+  const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
   const grouped = useGroupedBreakdown({
     billingPeriod,
     dimension,
     organisationId: organisation?.id,
     projectId: selectedProjectId,
+  })
+  const breakdown = useUsageBreakdown({
+    data: usage.scoped,
+    dimension,
+    grouped,
   })
 
   const selectedPeriod = periodLabel(periods, billingPeriod)
@@ -206,9 +210,9 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
           <UsageBreakdown
             dimension={dimension}
-            rows={grouped?.rows ?? rows}
-            status={grouped?.status}
-            onRetry={grouped?.onRetry}
+            rows={breakdown.rows}
+            status={breakdown.status}
+            onRetry={breakdown.onRetry}
             onChangeDimension={setDimension}
             scope={scope}
           />

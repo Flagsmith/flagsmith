@@ -5,7 +5,7 @@ import OverLimitBanner from 'components/pages/usage/components/OverLimitBanner'
 import SectionHeading from 'components/pages/usage/components/SectionHeading'
 import UsageBreakdown, {
   BreakdownDimension,
-  GroupedBreakdown,
+  BreakdownView,
   useUsageBreakdown,
 } from 'components/pages/usage/components/UsageBreakdown'
 import UsageMeter from 'components/pages/usage/components/UsageMeter'
@@ -60,7 +60,7 @@ const fakeGrouped = (
   dimension: BreakdownDimension,
   project: string,
   total: number,
-): Pick<GroupedBreakdown, 'rows' | 'status'> | undefined => {
+): BreakdownView | undefined => {
   const row = (label: string, share: number) => ({
     key: label,
     label,
@@ -164,10 +164,12 @@ const UsagePage: FC<HarnessProps> = ({
 
   // The note needs the organisation over the period on screen, not over the
   // allowance window, or a project can read as more than all of it.
-  const { dimension, rows, setDimension } = useUsageBreakdown({
+  const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
+  const breakdown = useUsageBreakdown({
     data: scoped,
+    dimension,
+    grouped: fakeGrouped(dimension, project, scoped.totals.total),
   })
-  const grouped = fakeGrouped(dimension, project, scoped.totals.total)
 
   const scope = `${filtered ? project : 'All projects'} · ${periodLabel(
     periods,
@@ -244,8 +246,8 @@ const UsagePage: FC<HarnessProps> = ({
 
       <UsageBreakdown
         dimension={dimension}
-        rows={grouped?.rows ?? rows}
-        status={grouped?.status}
+        rows={breakdown.rows}
+        status={breakdown.status}
         onChangeDimension={setDimension}
         scope={scope}
       />
