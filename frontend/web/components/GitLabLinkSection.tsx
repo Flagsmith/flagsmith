@@ -1,11 +1,19 @@
 import React, { FC, useState } from 'react'
 import AppActions from 'common/dispatcher/app-actions'
 import ErrorMessage from './ErrorMessage'
-import GitLabProjectSelect from './GitLabProjectSelect'
+import GitLabProjectSelect, {
+  type GitLabProjectOption,
+} from './GitLabProjectSelect'
 import GitLabSearchSelect from './GitLabSearchSelect'
 import { useCreateExternalResourceMutation } from 'common/services/useExternalResource'
+import useInfiniteScroll from 'common/useInfiniteScroll'
+import { Req } from 'common/types/requests'
 import { useGetGitLabProjectsQuery } from 'common/services/useGitlab'
-import type { GitLabIssue, GitLabMergeRequest } from 'common/types/responses'
+import {
+  Res,
+  type GitLabIssue,
+  type GitLabMergeRequest,
+} from 'common/types/responses'
 
 type GitLabLinkSectionProps = {
   projectId: number
@@ -30,7 +38,9 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
   projectId,
 }) => {
   const [createExternalResource] = useCreateExternalResourceMutation()
-  const [gitlabProjectId, setGitlabProjectId] = useState<number | null>(null)
+  const [selectedProject, setSelectedProject] =
+    useState<GitLabProjectOption | null>(null)
+  const gitlabProjectId = selectedProject?.value ?? null
   const [linkType, setLinkType] = useState<GitLabLinkType>('GITLAB_ISSUE')
   const [selectedItem, setSelectedItem] = useState<
     GitLabIssue | GitLabMergeRequest | null
@@ -39,12 +49,17 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
   const {
     data: projectsData,
     isError: isProjectsError,
+    isFetching: isProjectsFetching,
     isLoading: isProjectsLoading,
-  } = useGetGitLabProjectsQuery({
-    page: 1,
-    page_size: 100,
-    project_id: projectId,
-  })
+    searchItems: searchProjects,
+  } = useInfiniteScroll<Req['getGitLabProjects'], Res['gitlabProjects']>(
+    useGetGitLabProjectsQuery,
+    {
+      page_size: 100,
+      project_id: projectId,
+    },
+    100,
+  )
   const projects = projectsData?.results ?? []
 
   const linkSelectedItem = async () => {
@@ -84,9 +99,11 @@ const GitLabLinkSection: FC<GitLabLinkSectionProps> = ({
         <GitLabProjectSelect
           projects={projects}
           isLoading={isProjectsLoading}
-          isDisabled={isProjectsError}
-          value={gitlabProjectId}
-          onChange={setGitlabProjectId}
+          isFetching={isProjectsFetching}
+          isError={isProjectsError}
+          value={selectedProject}
+          onChange={setSelectedProject}
+          onInputChange={searchProjects}
         />
         <div style={{ width: 200 }}>
           <Select

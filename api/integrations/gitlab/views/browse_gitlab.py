@@ -22,6 +22,7 @@ from integrations.gitlab.client.types import T
 from integrations.gitlab.models import GitLabConfiguration
 from integrations.gitlab.serializers import (
     PaginatedQueryParamsSerializer,
+    ProjectSearchQueryParamsSerializer,
     SearchQueryParamsSerializer,
 )
 from projects.permissions import NestedProjectPermissions
@@ -100,6 +101,8 @@ class _GitLabListView(ListAPIView, abc.ABC, Generic[T]):  # type: ignore[type-ar
 
 
 class BrowseGitLabProjects(_GitLabListView[GitLabProject]):
+    serializer_class = ProjectSearchQueryParamsSerializer
+
     def fetch_page(
         self,
         config: GitLabConfiguration,
@@ -110,6 +113,7 @@ class BrowseGitLabProjects(_GitLabListView[GitLabProject]):
             access_token=config.access_token,
             page=validated_data["page"],
             page_size=validated_data["page_size"],
+            search_text=validated_data.get("search_text"),
         )
 
         self._log_for(config).info("projects.fetched")
