@@ -422,6 +422,7 @@ def create_flag_dependency(
             },
             replace=False,
             author=author,
+            system=True,
         )
         overrides.get(segment=segment).to(0)
         _create_dependency_audit_log(
@@ -486,6 +487,7 @@ def delete_flag_dependency(
             feature=feature,
             segment_id=edge["segment"]["id"],
             author=author,
+            system=True,
         )
         _create_dependency_audit_log(
             environment=environment,
