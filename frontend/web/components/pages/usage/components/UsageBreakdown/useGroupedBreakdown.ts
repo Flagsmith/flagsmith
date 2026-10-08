@@ -4,8 +4,8 @@ import { BillingPeriod } from 'common/types/requests'
 import { useGetOrganisationUsageQuery } from 'common/services/useOrganisationUsage'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import { useGetAllEnvironmentsQuery } from 'common/services/useEnvironment'
+import { breakdownStatusOf } from './breakdownView'
 import {
-  breakdownStatusOf,
   byScope,
   BreakdownDimension,
   BreakdownRow,
