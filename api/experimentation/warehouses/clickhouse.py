@@ -31,9 +31,13 @@ from experimentation.warehouses.cache import (
     customer_cache_key,
 )
 from experimentation.warehouses.constants import (
+    BACKGROUND_QUERY_TIMEOUT_SECONDS,
     CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS,
     CUSTOMER_EVENT_STATS_CACHE_SECONDS,
     EVENT_NAMES_CACHE_SECONDS,
+    EVENT_NAMES_TIMEOUT_SECONDS,
+    MISSING_EVENTS_TABLE_DETAIL,
+    VERIFY_TIMEOUT_SECONDS,
 )
 from experimentation.warehouses.dialect import CLICKHOUSE_DIALECT
 from experimentation.warehouses.exceptions import (
@@ -87,11 +91,6 @@ def _get_pool_manager() -> PoolManager:
     # Shared across delivery clients, as clickhouse-connect's own default pool
     # is: the manager pools connections per host and is thread-safe.
     return _NoRedirectPoolManager(**httputil.get_pool_manager_options())
-
-
-MISSING_EVENTS_TABLE_DETAIL = (
-    "Events table not found in the configured database. Run the setup SQL to create it."
-)
 
 
 def describe_warehouse_error(error: Exception) -> str:
@@ -175,10 +174,6 @@ def check_events_table_exists(client: "Client") -> None:
 
 
 logger = structlog.get_logger("warehouse")
-
-VERIFY_TIMEOUT_SECONDS = 5
-EVENT_NAMES_TIMEOUT_SECONDS = 15
-BACKGROUND_QUERY_TIMEOUT_SECONDS = 120
 
 # Pinned so a customer's settings profile cannot change what results compute.
 RESULTS_QUERY_SETTINGS = {

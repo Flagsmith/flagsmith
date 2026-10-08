@@ -59,7 +59,8 @@ from experimentation.services import (
     verify_warehouse_connection,
 )
 from experimentation.stats import VariantStats
-from experimentation.warehouses import clickhouse, flagsmith
+from experimentation.warehouses import flagsmith
+from experimentation.warehouses.constants import VERIFY_TIMEOUT_SECONDS
 from experimentation.warehouses.dialect import CLICKHOUSE_DIALECT
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from features.feature_types import MULTIVARIATE
@@ -2614,7 +2615,7 @@ def test_verify_warehouse_connection__reachable__sets_connected(
         database="acme_dwh",
         secure=True,
         connect_timeout=10,
-        send_receive_timeout=clickhouse.VERIFY_TIMEOUT_SECONDS,
+        send_receive_timeout=VERIFY_TIMEOUT_SECONDS,
         pool_mgr=mocker.ANY,
     )
     get_client.return_value.query.assert_called_once_with("EXISTS TABLE events")
