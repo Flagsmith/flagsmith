@@ -653,7 +653,7 @@ def test_identities__segment_override_deleted__returns_default_environment_value
     )
 
 
-def test_versioned_featurestate__patch_without_feature_segment_id__updates_in_place(  # type: ignore[no-untyped-def]  # noqa: FT004
+def test_versioned_featurestate__patch_without_feature_segment_id__updates_in_place(  # noqa: FT004
     admin_client: "APIClient",
     environment_v2_versioning: int,
     feature: int,
@@ -692,9 +692,9 @@ def test_versioned_featurestate__patch_without_feature_segment_id__updates_in_pl
         "api-v1:versioning:environment-feature-version-featurestates-detail",
         args=[environment, feature, version_uuid, override_id],
     )
-    original_feature_segment_id = admin_client.get(detail_url).json()[
-        "feature_segment"
-    ]["id"]
+    original_feature_segment_id = create_override_response.json()["feature_segment"][
+        "id"
+    ]
 
     # When
     response = admin_client.patch(
