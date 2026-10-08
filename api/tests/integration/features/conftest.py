@@ -33,6 +33,16 @@ def other_environment(
     return environment
 
 
+@pytest.fixture(params=["feature_versioning_v1", "feature_versioning_v2"])
+def versioned_environment(
+    request: pytest.FixtureRequest,
+    environment: int,
+) -> Environment:
+    if request.param == "feature_versioning_v2":
+        enable_v2_versioning(environment_id=environment)
+    return Environment.objects.get(id=environment)  # type: ignore[no-any-return]
+
+
 @pytest.fixture()
 def create_change_request_segment_override(
     admin_user: FFAdminUser,
