@@ -55,17 +55,17 @@
 .icon-warning { color: var(--color-icon-warning); fill: var(--color-icon-warning); }
 
 // Tags
-.tag-blue { background-color: var(--content-blue); color: var(--content-always-dark); --ds-chip-border: var(--content-blue); }
-.tag-light-blue { background-color: var(--content-light-blue); color: var(--content-always-dark); --ds-chip-border: var(--content-light-blue); }
-.tag-light-brown { background-color: var(--content-light-brown); color: var(--content-always-dark); --ds-chip-border: var(--content-light-brown); }
-.tag-light-green { background-color: var(--content-light-green); color: var(--content-always-dark); --ds-chip-border: var(--content-light-green); }
-.tag-light-grey { background-color: var(--content-light-grey); color: var(--content-always-dark); --ds-chip-border: var(--content-light-grey); }
-.tag-light-mint { background-color: var(--content-light-mint); color: var(--content-always-dark); --ds-chip-border: var(--content-light-mint); }
-.tag-light-peach { background-color: var(--content-light-peach); color: var(--content-always-dark); --ds-chip-border: var(--content-light-peach); }
-.tag-light-pink { background-color: var(--content-light-pink); color: var(--content-always-dark); --ds-chip-border: var(--content-light-pink); }
-.tag-light-purple { background-color: var(--content-light-purple); color: var(--content-always-dark); --ds-chip-border: var(--content-light-purple); }
-.tag-light-red { background-color: var(--content-light-red); color: var(--content-always-dark); --ds-chip-border: var(--content-light-red); }
-.tag-light-yellow { background-color: var(--content-light-yellow); color: var(--content-always-dark); --ds-chip-border: var(--content-light-yellow); }
+.tag-blue { background-color: var(--content-blue); color: var(--content-ink); --ds-chip-border: var(--content-blue); }
+.tag-brown { background-color: var(--content-brown); color: var(--content-ink); --ds-chip-border: var(--content-brown); }
+.tag-green { background-color: var(--content-green); color: var(--content-ink); --ds-chip-border: var(--content-green); }
+.tag-grey { background-color: var(--content-grey); color: var(--content-ink); --ds-chip-border: var(--content-grey); }
+.tag-mint { background-color: var(--content-mint); color: var(--content-ink); --ds-chip-border: var(--content-mint); }
+.tag-peach { background-color: var(--content-peach); color: var(--content-ink); --ds-chip-border: var(--content-peach); }
+.tag-pink { background-color: var(--content-pink); color: var(--content-ink); --ds-chip-border: var(--content-pink); }
+.tag-purple { background-color: var(--content-purple); color: var(--content-ink); --ds-chip-border: var(--content-purple); }
+.tag-red { background-color: var(--content-red); color: var(--content-ink); --ds-chip-border: var(--content-red); }
+.tag-sky { background-color: var(--content-sky); color: var(--content-ink); --ds-chip-border: var(--content-sky); }
+.tag-yellow { background-color: var(--content-yellow); color: var(--content-ink); --ds-chip-border: var(--content-yellow); }
 
 // Radius
 .rounded-2xl { border-radius: var(--radius-2xl); }

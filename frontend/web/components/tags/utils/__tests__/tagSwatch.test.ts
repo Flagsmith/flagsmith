@@ -11,16 +11,16 @@ describe('getTagSwatch', () => {
   // itself. These are what existing tags hold.
   it.each([
     ['#3d4db6', 'blue'],
-    ['#344562', 'light-grey'],
-    ['#5d6d7e', 'light-grey'],
-    ['#ea5a45', 'light-red'],
-    ['#641e16', 'light-brown'],
-    ['#ffa500', 'light-peach'],
-    ['#d35400', 'light-peach'],
-    ['#aac200', 'light-yellow'],
-    ['#3cb371', 'light-green'],
-    ['#dedede', 'light-grey'],
-    ['#8f8f8f', 'light-grey'],
+    ['#344562', 'grey'],
+    ['#5d6d7e', 'grey'],
+    ['#ea5a45', 'red'],
+    ['#641e16', 'brown'],
+    ['#ffa500', 'peach'],
+    ['#d35400', 'peach'],
+    ['#aac200', 'yellow'],
+    ['#3cb371', 'green'],
+    ['#dedede', 'grey'],
+    ['#8f8f8f', 'grey'],
   ])('maps the legacy %s', (colour, expected) => {
     expect(getTagSwatch(colour)).toBe(expected)
   })

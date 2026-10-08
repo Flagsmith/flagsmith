@@ -370,7 +370,7 @@ function generateTs() {
   return output.join('\n')
 }
 
-const TAG_INK = 'content-always-dark'
+const TAG_INK = 'content-ink'
 
 // The one rule for what a tag can be set to. The ink is excluded by name, not
 // by the shape of its name, so renaming it cannot quietly make it selectable.

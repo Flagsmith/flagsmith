@@ -279,31 +279,31 @@ export const contentInk = '#080c17'
 /** One colour per tag hue, the same on both themes. */
 export const contentColours = {
   'blue': '#c7e6ff',
-  'light-blue': '#c9f1fe',
-  'light-brown': '#dfc8c6',
-  'light-green': '#d6f1d4',
-  'light-grey': '#eff0f3',
-  'light-mint': '#c7e7e2',
-  'light-peach': '#fcd6c7',
-  'light-pink': '#ffceda',
-  'light-purple': '#dacdde',
-  'light-red': '#ffe0df',
-  'light-yellow': '#f3edca',
+  'brown': '#dfc8c6',
+  'green': '#d6f1d4',
+  'grey': '#eff0f3',
+  'mint': '#c7e7e2',
+  'peach': '#fcd6c7',
+  'pink': '#ffceda',
+  'purple': '#dacdde',
+  'red': '#ffe0df',
+  'sky': '#c9f1fe',
+  'yellow': '#f3edca',
 } as const
 
 /** The palette in order, so a picker can map it without a cast. */
 export const contentColourNames = [
   'blue',
-  'light-blue',
-  'light-brown',
-  'light-green',
-  'light-grey',
-  'light-mint',
-  'light-peach',
-  'light-pink',
-  'light-purple',
-  'light-red',
-  'light-yellow',
+  'brown',
+  'green',
+  'grey',
+  'mint',
+  'peach',
+  'pink',
+  'purple',
+  'red',
+  'sky',
+  'yellow',
 ] as const
 
 export type ContentColour = (typeof contentColourNames)[number]
