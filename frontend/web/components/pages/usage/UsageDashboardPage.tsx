@@ -98,7 +98,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   const grouped = useGroupedBreakdown({
     billingPeriod,
     dimension,
-    organisationId: organisationId ?? 0,
+    organisationId: organisation?.id,
     projectId: selectedProjectId,
   })
 

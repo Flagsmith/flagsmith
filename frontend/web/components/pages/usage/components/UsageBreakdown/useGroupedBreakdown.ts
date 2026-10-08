@@ -16,7 +16,8 @@ import {
 
 type UseGroupedBreakdown = {
   dimension: BreakdownDimension
-  organisationId: number
+  // Undefined until the organisation loads, since its plan picks the period.
+  organisationId: number | undefined
   billingPeriod: BillingPeriod
   projectId: number | undefined
 }
@@ -37,7 +38,7 @@ export const useGroupedBreakdown = ({
 
   // currentData, so a dimension never shows the rows of the one before it.
   const grouped = useGetOrganisationUsageQuery(
-    groupBy
+    groupBy && organisationId
       ? {
           billing_period: billingPeriod,
           group_by: groupBy,
@@ -48,7 +49,7 @@ export const useGroupedBreakdown = ({
     { refetchOnFocus: false },
   )
   const projects = useGetProjectsQuery(
-    groupBy === 'project' ? { organisationId } : skipToken,
+    groupBy === 'project' && organisationId ? { organisationId } : skipToken,
   )
   const environments = useGetAllEnvironmentsQuery(
     groupBy === 'environment' && projectId ? { projectId } : skipToken,
@@ -80,7 +81,10 @@ export const useGroupedBreakdown = ({
   ])
 
   const queries = [grouped, projects, environments]
-  const status = breakdownStatusOf(groupBy, queries)
+  // Every query skips until the organisation loads, which would read as ready.
+  const status = organisationId
+    ? breakdownStatusOf(groupBy, queries)
+    : 'loading'
   const onRetry = () =>
     queries.forEach((query) => {
       if (!query.isUninitialized) query.refetch()
