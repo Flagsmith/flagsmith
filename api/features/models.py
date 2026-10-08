@@ -986,10 +986,15 @@ class FeatureState(
         return False
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
-        if (
-            history_instance.history_type == "+"
+        environment_default = (
+            self.get_environment_default()
+            if history_instance.history_type == "+"
             and (self.identity_id or self.feature_segment_id)
-            and self.enabled == self.get_environment_default().enabled  # type: ignore[union-attr]
+            else None
+        )
+        if (
+            environment_default is not None
+            and self.enabled == environment_default.enabled
         ):
             # Don't create an Audit Log for overrides that are created which don't differ
             # from the environment default. This likely means that an override was created
