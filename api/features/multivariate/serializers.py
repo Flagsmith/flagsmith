@@ -86,6 +86,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
         # has a model default, and a partial update omits whatever it isn't
         # changing. Validate the values that would actually be saved.
         if self.instance is None:
+            key = attrs.get("key")
             feature = attrs["feature"]
             default_percentage_allocation = attrs.get(
                 "default_percentage_allocation",
@@ -94,6 +95,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
                 ).get_default(),
             )
         else:
+            key = attrs.get("key", self.instance.key)  # type: ignore[union-attr]
             feature = attrs.get("feature", self.instance.feature)  # type: ignore[union-attr]
             default_percentage_allocation = attrs.get(
                 "default_percentage_allocation",
@@ -127,7 +129,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
                 feature, default_percentage_allocation
             )
 
-        self._validate_key_is_unique(feature, attrs.get("key"))
+        self._validate_key_is_unique(feature, key)
 
         return attrs
 
