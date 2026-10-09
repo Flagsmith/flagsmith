@@ -360,6 +360,37 @@ def test_create_feature_segment_then_feature_state__new_segment__creates_overrid
     ]
 
 
+def test_create_feature_segment__v2_versioning__leaves_flag_as_is(
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+) -> None:
+    """Feature segments are drafted for feature states of new versions."""
+    # Given
+    enable_v2_versioning(environment_id=environment)
+
+    # When
+    response = admin_client.post(
+        "/api/v1/features/feature-segments/",
+        {"feature": feature, "segment": segment, "environment": environment},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 201
+    assert response.json() == {
+        "id": mock.ANY,
+        "uuid": mock.ANY,
+        "feature": feature,
+        "segment": segment,
+        "environment": environment,
+        "priority": 0,
+    }
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == []
+
+
 def test_create_feature_segment__existing_override__responds_400(
     admin_client: APIClient,
     environment: int,
@@ -378,13 +409,19 @@ def test_create_feature_segment__existing_override__responds_400(
     assert response.json() == ["The flag is already overridden for this segment."]
 
 
+@pytest.mark.parametrize("v2_versioning", [False, True])
 def test_create_feature_segment__system_segment__responds_409(
     admin_client: APIClient,
     feature: int,
     other_environment: dict[str, Any],
     system_segment: int,
+    v2_versioning: bool,
 ) -> None:
-    # Given / When
+    # Given
+    if v2_versioning:
+        enable_v2_versioning(environment_id=other_environment["id"])
+
+    # When
     response = admin_client.post(
         "/api/v1/features/feature-segments/",
         {
