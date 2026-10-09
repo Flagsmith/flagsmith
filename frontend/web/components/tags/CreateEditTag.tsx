@@ -14,12 +14,12 @@ import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import BareButton from 'components/base/forms/BareButton'
 import ColorSwatch from 'components/ColorSwatch'
+import { dotColour } from 'components/base/Chip'
 import InlineModal from 'components/InlineModal'
 import ErrorMessage from 'components/ErrorMessage'
 import Switch from 'components/Switch'
 import Icon from 'components/icons/Icon'
 import { ProjectPermission } from 'common/types/permissions.types'
-import { dotColour } from 'common/theme/dotColour'
 import { colorSurfaceDefault } from 'common/theme/tokens'
 
 type CreateEditTagType = {

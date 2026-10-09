@@ -2,11 +2,10 @@ import React, { FC } from 'react'
 import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
-import Chip from 'components/base/Chip'
+import Chip, { dotColour } from 'components/base/Chip'
 import Utils from 'common/utils/utils'
 import TagContent from './TagContent'
 import Constants from 'common/constants'
-import { dotColour } from 'common/theme/dotColour'
 
 type TagType = {
   className?: string

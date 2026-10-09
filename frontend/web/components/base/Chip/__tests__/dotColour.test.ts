@@ -1,7 +1,6 @@
 import Color from 'color'
 import tokens from 'common/theme/tokens.json'
-import { AA_NON_TEXT, contrastRatio } from 'common/theme/contrast'
-import { dotColour } from 'common/theme/dotColour'
+import { dotColour } from 'components/base/Chip/dotColour'
 
 // Inlined rather than imported: Constants pulls in the dispatcher and the
 // stores, and this needs none of them. Source of truth: Constants.tagColors.
@@ -34,6 +33,11 @@ const GROUNDS: [string, string][] = [
   ['dark', CHIP.dark],
 ]
 
+// WCAG 1.4.11, non-text contrast.
+const NON_TEXT = 3
+
+const ratio = (a: string, b: string) => Color(a).contrast(Color(b))
+
 // Any colour the API will accept, not just the ones the picker offers.
 const arbitrary = (count: number): string[] => {
   let seed = 20_251_008
@@ -52,13 +56,13 @@ describe('dotColour', () => {
   describe.each(GROUNDS)('on the %s chip', (_theme, ground) => {
     it('clears non-text contrast for every colour in the picker', () => {
       const failing = TAG_COLOURS.map((colour) => [colour, dotColour(colour)])
-        // Negated rather than `<`: an unparseable hex gives NaN, and NaN is
+        // Negated rather than `<`: an unparseable value gives NaN, and NaN is
         // not less than anything, so a typo would pass this instead of
         // failing it.
-        .filter(([, dot]) => !(contrastRatio(dot, ground) >= AA_NON_TEXT))
+        .filter(([, dot]) => !(ratio(dot, ground) >= NON_TEXT))
         .map(
           ([colour, dot]) =>
-            `${colour} -> ${dot} ${contrastRatio(dot, ground).toFixed(2)}:1`,
+            `${colour} -> ${dot} ${ratio(dot, ground).toFixed(2)}:1`,
         )
       expect(failing).toEqual([])
     })
@@ -66,7 +70,7 @@ describe('dotColour', () => {
     it('clears non-text contrast for a colour set through the API', () => {
       const failing = arbitrary(2000)
         .map((colour) => [colour, dotColour(colour)])
-        .filter(([, dot]) => !(contrastRatio(dot, ground) >= AA_NON_TEXT))
+        .filter(([, dot]) => !(ratio(dot, ground) >= NON_TEXT))
         .map(([colour, dot]) => `${colour} -> ${dot}`)
       expect(failing).toEqual([])
     })
@@ -77,7 +81,7 @@ describe('dotColour', () => {
       Color(colour),
       Color(dotColour(colour)),
     ])
-      // Grey has no meaningful hue to keep, and rounding to 8 bits moves what
+      // Grey has no meaningful hue to keep, and rounding to 8 bits moves the
       // hue it reports by a lot.
       .filter(([before]) => before.saturationl() > 5)
       .filter(([before, after]) => Math.abs(before.hue() - after.hue()) > 2)
