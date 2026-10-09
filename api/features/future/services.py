@@ -5,7 +5,7 @@ from typing import NamedTuple
 
 import structlog
 from django.db import transaction
-from django.db.models import Count, Max, Q
+from django.db.models import Count, Q
 from django_lifecycle import AFTER_DELETE, BEFORE_DELETE  # type: ignore[import-untyped]
 from rest_framework.exceptions import ValidationError
 
@@ -33,8 +33,8 @@ from features.future.mappers import (
 )
 from features.future.types import (
     EnvironmentDefaultRequest,
-    FlagChanges,
-    SegmentOverrideChanges,
+    SegmentOverrideRequest,
+    UpdateFlagRequest,
     UpdateFlagResponse,
     Variant,
 )
@@ -42,7 +42,6 @@ from features.models import Feature, FeatureSegment, FeatureState, FeatureStateV
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import (
-    get_current_live_environment_feature_version,
     get_environment_flags_list,
 )
 from segments.exceptions import SystemSegmentModificationError
@@ -165,7 +164,7 @@ def _write_environment_default(
 
 def _write_segment_override(
     feature_state: FeatureState,
-    changes: SegmentOverrideChanges,
+    changes: SegmentOverrideRequest,
     *,
     replace: bool,
     environment_default: FeatureState,
@@ -187,11 +186,8 @@ def _write_segment_override(
 
     # Saving values only when they change keeps the audit log to actual changes.
     feature_state_value = feature_state.feature_state_value
-    if "value" in changes:
-        value = changes["value"]
-        if value is None and map_flag_value(feature_state_value) is not None:
-            _clear_value(feature_state_value)
-        elif value is not None and value != map_flag_value(feature_state_value):
+    if (value := changes.get("value")) is not None:
+        if value != map_flag_value(feature_state_value):
             feature_state_value.set_value(value["value"], value["type"])
             feature_state_value.save()
     elif replace and map_flag_value(feature_state_value) != map_flag_value(
@@ -294,7 +290,7 @@ def _write_segment_overrides(
     version: EnvironmentFeatureVersion | None,
     environment_default: FeatureState,
     overrides: dict[int, FeatureState],
-    changes: Sequence[SegmentOverrideChanges],
+    changes: Sequence[SegmentOverrideRequest],
     replace: bool,
     system: bool,
 ) -> _OverriddenSegments:
@@ -382,7 +378,7 @@ def update_flag(
     *,
     environment: Environment,
     feature: Feature,
-    changes: FlagChanges,
+    changes: UpdateFlagRequest,
     replace: bool,
     author: FFAdminUser | APIKeyUser,
     system: bool,
@@ -504,61 +500,6 @@ def delete_segment_override(
     )
 
     return get_flag(environment=environment, feature=feature)
-
-
-def get_segment_overrides(
-    *, environment: Environment, feature: Feature
-) -> dict[int, FeatureState]:
-    """Get the flag's live overrides, by segment ID.
-
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
-    """
-    return _get_overrides_by_segment_id(_get_feature_states(environment, feature))
-
-
-def get_segment_override(
-    *, environment: Environment, feature: Feature, segment_id: int
-) -> FeatureState | None:
-    """Get the flag's live override for a segment, if any.
-
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
-    """
-    return get_segment_overrides(environment=environment, feature=feature).get(
-        segment_id
-    )
-
-
-def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
-    """Whether a feature segment is the one the flag serves its segment from.
-
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
-    """
-    override = get_segment_override(
-        environment=feature_segment.environment,
-        feature=feature_segment.feature,
-        segment_id=feature_segment.segment_id,
-    )
-    return override is not None and override.feature_segment_id == feature_segment.id
-
-
-def get_next_segment_override_priority(
-    *, environment: Environment, feature: Feature
-) -> int:
-    """Get the priority of an override added after the flag's other overrides.
-
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
-    """
-    version = (
-        get_current_live_environment_feature_version(environment.id, feature.id)
-        if environment.use_v2_feature_versioning
-        else None
-    )
-    highest_priority: int | None = FeatureSegment.objects.filter(
-        environment=environment,
-        feature=feature,
-        environment_feature_version=version,
-    ).aggregate(highest_priority=Max("priority"))["highest_priority"]
-    return 0 if highest_priority is None else highest_priority + 1
 
 
 def get_flag(*, environment: Environment, feature: Feature) -> UpdateFlagResponse:

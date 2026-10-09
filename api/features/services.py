@@ -10,11 +10,13 @@ from features.dependencies.services import (
 )
 from features.dependencies.types import FeatureName
 from features.exceptions import FeatureNotFoundError
-from features.future.mappers import (
+from features.feature_segments.mappers import (
+    clears_legacy_flag_value,
     map_feature_state_data_to_segment_override,
-    map_flag_value,
 )
-from features.future.services import get_segment_override, update_flag
+from features.feature_segments.services import get_segment_override
+from features.future.mappers import map_flag_value
+from features.future.services import update_flag
 from features.models import Feature, FeatureSegment, FeatureState
 from features.tasks import trigger_feature_state_change_webhooks
 from features.types import LegacyFeatureStateData
@@ -101,39 +103,70 @@ def writes_live_segment_override(feature_state_data: LegacyFeatureStateData) -> 
     )
 
 
-def write_live_segment_override(
-    feature_segment: FeatureSegment,
-    feature_state_data: LegacyFeatureStateData,
+def write_segment_override(
     *,
+    environment: Environment,
+    feature: Feature,
+    segment_id: int,
+    feature_state_data: LegacyFeatureStateData,
     author: FFAdminUser | APIKeyUser,
+    priority: int | None = None,
 ) -> FeatureState:
     """Write a live override through the flag API, from data validated by a
     legacy API.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
-    environment = feature_segment.environment
-    feature = feature_segment.feature
-    update_flag(
-        environment=environment,
-        feature=feature,
-        changes={
-            "segment_overrides": [
-                map_feature_state_data_to_segment_override(
-                    feature_segment.segment_id, feature_state_data
-                )
-            ]
-        },
-        replace=False,
-        author=author,
-        system=False,
-    )
-    feature_state = get_segment_override(
-        environment=environment,
-        feature=feature,
+    with transaction.atomic():
+        update_flag(
+            environment=environment,
+            feature=feature,
+            changes={
+                "segment_overrides": [
+                    map_feature_state_data_to_segment_override(
+                        segment_id, feature_state_data, priority=priority
+                    )
+                ]
+            },
+            replace=False,
+            author=author,
+            system=False,
+        )
+        feature_state = get_segment_override(
+            environment=environment, feature=feature, segment_id=segment_id
+        )
+        assert feature_state is not None
+        feature_state_value = feature_state.feature_state_value
+        if clears_legacy_flag_value(feature_state_data) and (
+            map_flag_value(feature_state_value) is not None
+        ):
+            # Legacy APIs write overrides directly only without v2 feature
+            # versioning, so clearing values in place doesn't bypass it.
+            feature_state_value.string_value = None
+            feature_state_value.integer_value = None
+            feature_state_value.boolean_value = None
+            feature_state_value.save()
+    return feature_state
+
+
+def write_live_segment_override(
+    feature_segment: FeatureSegment,
+    feature_state_data: LegacyFeatureStateData,
+    *,
+    author: FFAdminUser | APIKeyUser,
+) -> FeatureState:
+    """Write a live override through the flag API, from data validated by the
+    legacy feature state API, notifying linked issues and pull requests.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
+    feature_state = write_segment_override(
+        environment=feature_segment.environment,
+        feature=feature_segment.feature,
         segment_id=feature_segment.segment_id,
+        feature_state_data=feature_state_data,
+        author=author,
     )
-    assert feature_state is not None
     notify_code_references_of_feature_state(feature_state)
     return feature_state
 
@@ -157,9 +190,14 @@ def is_segment_override_unchanged(
         )
         for multivariate_value in feature_state.multivariate_feature_state_values.all()
     }
+    new_value = (
+        None
+        if clears_legacy_flag_value(feature_state_data)
+        else changes.get("value", value)
+    )
     return (
         changes.get("enabled", feature_state.enabled) == feature_state.enabled
-        and changes.get("value", value) == value
+        and new_value == value
         and all(
             weights.get(variant["id"]) == variant["weight"]
             for variant in changes.get("variants", [])

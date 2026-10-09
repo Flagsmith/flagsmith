@@ -1216,3 +1216,36 @@ def test_update_draft_version_feature_state__to_system_segment__responds_409(
     # Then
     assert response.status_code == 409
     assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+
+
+def test_update_feature_state__system_segment_override_value_cleared__responds_409(
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    system_segment: int,
+) -> None:
+    # Given
+    overrides = _get_segment_overrides(admin_client, environment_api_key, feature)
+    feature_state_id = _get_segment_override_id(
+        admin_client, environment, feature, system_segment
+    )
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/features/featurestates/{feature_state_id}/",
+        {
+            "feature": feature,
+            "environment": environment,
+            "enabled": False,
+            "feature_state_value": {"type": "unicode", "string_value": None},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 409
+    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
+        overrides
+    )
