@@ -1,0 +1,8 @@
+// Default padding lives here, not in utilities, so a caller's padding class wins.
+.state-message {
+  padding: 1.5rem 1rem;
+}
+
+.state-message__description {
+  max-width: 400px;
+}

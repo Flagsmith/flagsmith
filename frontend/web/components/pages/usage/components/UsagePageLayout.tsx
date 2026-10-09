@@ -1,5 +1,5 @@
 import { FC, ReactNode } from 'react'
-import EmptyState from 'components/EmptyState'
+import ErrorState from 'components/ErrorState'
 
 export type UsagePageLayoutProps = {
   isError?: boolean
@@ -28,17 +28,11 @@ const UsagePageLayout: FC<UsagePageLayoutProps> = ({
     )
   } else if (isError) {
     content = (
-      <EmptyState
+      <ErrorState
         title='Usage could not be loaded'
         description='Something went wrong fetching usage for this period. Try again in a moment.'
         icon='bar-chart'
-        action={
-          onRetry && (
-            <Button onClick={onRetry} theme='secondary'>
-              Try again
-            </Button>
-          )
-        }
+        onRetry={onRetry}
       />
     )
   }
