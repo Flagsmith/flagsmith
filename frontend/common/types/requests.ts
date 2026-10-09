@@ -1,4 +1,6 @@
 import {
+  ChangeSet,
+  MultivariateFeatureStateValue,
   Account,
   ExternalResource,
   FeatureState,
@@ -875,12 +877,38 @@ export type Req = {
     environmentId: string
     featureId: number
     prerequisiteFeatureId: number
+    // Stages the change in this change request instead of publishing it.
+    changeRequestId?: number
+    // Read only by the fake that stands in for #8449.
+    prerequisiteName?: string
   }
   deleteFeatureDependency: {
     environmentId: string
     featureId: number
     prerequisiteFeatureId: number
+    changeRequestId?: number
+    prerequisiteName?: string
   }
+  createEnvironmentChangeRequest: {
+    environmentId: string
+    title: string
+    description: string
+    live_from?: string
+    approvals: Approval[]
+    change_sets?: (Omit<ChangeSet, 'feature_states_to_update'> & {
+      // New states, so no ids, theirs or their variations'.
+      feature_states_to_update: (Omit<
+        FeatureState,
+        'id' | 'multivariate_feature_state_values'
+      > & {
+        multivariate_feature_state_values?: Omit<
+          MultivariateFeatureStateValue,
+          'id'
+        >[]
+      })[]
+    })[]
+  }
+  deleteChangeRequest: { id: number }
   getSamlConfiguration: { name: string }
   getSamlConfigurations: { organisation_id: number }
   getSamlConfigurationMetadata: { name: string }
