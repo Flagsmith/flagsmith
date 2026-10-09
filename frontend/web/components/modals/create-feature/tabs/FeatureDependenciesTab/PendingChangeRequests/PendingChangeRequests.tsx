@@ -4,10 +4,10 @@ import moment from 'moment'
 import { ChangeRequestSummary } from 'common/types/responses'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import { useGetPendingDependencyChangesQuery } from 'common/services/useFeatureDependency'
+import Accordion from 'components/base/Accordion'
 import Chip from 'components/base/Chip'
 import ErrorMessage from 'components/ErrorMessage'
 import DependencyChangesTable from 'components/DependencyChangesTable'
-import DependenciesPanel from 'components/modals/create-feature/tabs/FeatureDependenciesTab/DependenciesPanel'
 import './PendingChangeRequests.scss'
 
 type PendingChangeRequestsProps = {
@@ -90,18 +90,23 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
               'pending-change-request--flash': changeRequest.id === highlightId,
             })}
           >
-            <DependenciesPanel>
-              <div className='d-flex align-items-center gap-2 px-3 py-2'>
+            <Accordion
+              defaultOpen
+              flush
+              title={`#${changeRequest.id} ${changeRequest.title}`}
+              meta={<Chip size='xs'>{describeStatus(changeRequest)}</Chip>}
+            >
+              <DependencyChangesTable changes={changes} />
+              {/* In the body, as the header is the toggle and a link cannot
+                  sit inside a button. */}
+              <div className='px-3 py-2'>
                 <a
-                  className='fw-semibold me-auto text-truncate'
                   href={`/project/${projectId}/environment/${environmentId}/change-requests/${changeRequest.id}`}
                 >
-                  #{changeRequest.id} {changeRequest.title}
+                  View change request
                 </a>
-                <Chip size='xs'>{describeStatus(changeRequest)}</Chip>
               </div>
-              <DependencyChangesTable changes={changes} />
-            </DependenciesPanel>
+            </Accordion>
           </div>
         ))}
       </div>
