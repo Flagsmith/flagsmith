@@ -100,6 +100,15 @@ class FeatureSegmentViewSet(
         environment = serializer.validated_data["environment"]
         feature = serializer.validated_data["feature"]
         segment = serializer.validated_data["segment"]
+        if environment.use_v2_feature_versioning:
+            # Overrides of v2 environments are drafted for their feature states
+            # to be added to versions, rather than going live.
+            # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+            check_segment_is_not_system(segment)
+            with transaction.atomic():
+                feature_segment = serializer.save()
+                validate_segment_flag_dependencies(feature_segment.segment)
+            return
         if get_segment_override(
             environment=environment, feature=feature, segment_id=segment.id
         ):
