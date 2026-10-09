@@ -2,7 +2,7 @@ import {
   useGetReleasePipelineQuery,
   useGetReleasePipelinesQuery,
 } from 'common/services/useReleasePipelines'
-import AccordionCard from 'components/base/AccordionCard'
+import Accordion from 'components/base/Accordion'
 import { useMemo } from 'react'
 
 import StageStatus from './StageStatus'
@@ -67,7 +67,7 @@ const FeaturePipelineStatus = ({
   if (!stages || !isReleasePipelineEnabled) return null
 
   return (
-    <AccordionCard title='Release Pipeline'>
+    <Accordion title='Release Pipeline'>
       <Row className='flex mt-4 align-items-start justify-content-between'>
         {stages?.map((stage) => (
           <StageStatus
@@ -92,7 +92,7 @@ const FeaturePipelineStatus = ({
           totalStages={totalStages}
         />
       </Row>
-    </AccordionCard>
+    </Accordion>
   )
 }
 
