@@ -2,7 +2,9 @@
 title: Connect a Warehouse
 sidebar_label: Connect a Warehouse
 sidebar_position: 2
-description: Enable the managed Flagsmith warehouse to store and query experiment events.
+description:
+ Enable the managed Flagsmith warehouse, or connect your own ClickHouse or Databricks, to store and query experiment
+ events.
 ---
 
 :::info Enterprise beta
@@ -48,7 +50,8 @@ The current status is shown on the warehouse card in **Environment Settings > Wa
 - **Created**: the connection exists but no events have been received yet.
 - **Pending Connection**: waiting for the first event to arrive.
 - **Connected**: events have been received; you are ready to run experiments.
-- **Errored**: something went wrong; [contact support](/support/).
+- **Errored**: the card shows the reason. For your own warehouse, see its troubleshooting section; otherwise
+  [contact support](/support/).
 
 ## Bring your own ClickHouse
 
@@ -106,10 +109,13 @@ Instead of the managed Flagsmith warehouse, you can store experiment events in y
 
 Connections use the ClickHouse HTTP(S) interface, with TLS enabled by default.
 
-Experiment results and exposure queries are currently computed from the managed Flagsmith warehouse; serving results
-directly from your own ClickHouse instance is not supported yet.
+Flagsmith computes experiment results by querying your ClickHouse instance directly.
+
+## Bring your own Databricks
+
+You can also store experiment events in your own **Databricks** workspace, and Flagsmith computes results there. See
+[Connect Databricks](/experimentation/connect-databricks) for setup and troubleshooting.
 
 ## Coming soon
 
-Bring your own warehouse: connections for **Snowflake**, **BigQuery** and **Databricks**, so experiment results are
-computed directly in your own data platform.
+Bring your own warehouse: connections for **Snowflake** and **BigQuery**.

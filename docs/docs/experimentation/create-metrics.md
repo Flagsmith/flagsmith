@@ -32,6 +32,13 @@ inside the experiment wizard's Measurement step.
 | **Sum**        | Total of a numeric value across events   | Total revenue       |
 | **Mean**       | Average of a numeric value across events | Average order value |
 
+:::note
+
+Events are delivered at least once, so a retried delivery can occasionally store an event twice. This can slightly
+inflate **Count**, **Sum** and **Mean** metrics. **Occurrence** metrics and exposures are not affected.
+
+:::
+
 :::important
 
 Sum and Mean aggregate the numeric `value` sent with each event, so your application must include it:
