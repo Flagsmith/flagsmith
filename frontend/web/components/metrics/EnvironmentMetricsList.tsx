@@ -1,5 +1,5 @@
 import React, { FC, useEffect } from 'react'
-import AccordionCard from 'components/base/AccordionCard'
+import Accordion from 'components/base/Accordion'
 import { useGetEnvironmentMetricsQuery } from 'common/services/useEnvironment'
 import EnvironmentMetric from './EnvironmentMetric'
 import { getExtraMetricsData } from './constants'
@@ -37,7 +37,11 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
 
   return (
     <div className='mb-3'>
-      <AccordionCard title='Summary' isLoading={isLoading}>
+      <Accordion
+        title='Summary'
+        disabled={isLoading}
+        meta={isLoading && <Loader width='15px' height='15px' />}
+      >
         <div className='flex gap-2 mt-4'>
           <div
             className='metrics-grid'
@@ -56,7 +60,7 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
             ))}
           </div>
         </div>
-      </AccordionCard>
+      </Accordion>
     </div>
   )
 }
