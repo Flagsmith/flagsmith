@@ -1085,17 +1085,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/EnvironmentFeatureVersionCreateRequest"
+                "$ref": "#/components/schemas/EnvironmentFeatureVersionCreate"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/EnvironmentFeatureVersionCreateRequest"
+                "$ref": "#/components/schemas/EnvironmentFeatureVersionCreate"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/EnvironmentFeatureVersionCreateRequest"
+                "$ref": "#/components/schemas/EnvironmentFeatureVersionCreate"
               }
             }
           }
@@ -1106,7 +1106,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EnvironmentFeatureVersionCreateRequest"
+                  "$ref": "#/components/schemas/EnvironmentFeatureVersionCreate"
                 }
               }
             }
@@ -4309,8 +4309,7 @@
           }
         }
       },
-      "EnvironmentFeatureVersionCreateRequest": {
-        "description": "Refuses users' changes to system segment overrides.\n\nChange sets publish through the parent class, as they can stage changes\nto system segment overrides made by their owners.\n\nTODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641",
+      "EnvironmentFeatureVersionCreate": {
         "type": "object",
         "properties": {
           "created_at": {
