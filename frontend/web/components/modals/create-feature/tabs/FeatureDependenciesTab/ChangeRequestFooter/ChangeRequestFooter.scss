@@ -4,17 +4,12 @@
   position: sticky;
   bottom: 0;
   z-index: 1;
-  margin-top: 16px;
-  padding: 12px 0;
   border-top: 1px solid var(--color-border-default);
-  background: var(--color-surface-default);
   animation: change-request-footer-enter var(--duration-normal)
     var(--easing-entrance) both;
 }
 
 .change-request-footer__count {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-default);
   animation: change-request-footer-pulse var(--duration-slow)
     var(--easing-standard);
 }
