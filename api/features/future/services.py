@@ -27,7 +27,6 @@ from features.future.exceptions import (
 )
 from features.future.mappers import (
     map_environment_default,
-    map_flag_value,
     map_segment_override,
     map_variants,
 )
@@ -184,15 +183,11 @@ def _write_segment_override(
         feature_state.enabled = changes.get("enabled", environment_default.enabled)
         feature_state.save(update_fields=["enabled"])
 
-    # Saving values only when they change keeps the audit log to actual changes.
     feature_state_value = feature_state.feature_state_value
     if (value := changes.get("value")) is not None:
-        if value != map_flag_value(feature_state_value):
-            feature_state_value.set_value(value["value"], value["type"])
-            feature_state_value.save()
-    elif replace and map_flag_value(feature_state_value) != map_flag_value(
-        environment_default.feature_state_value
-    ):
+        feature_state_value.set_value(value["value"], value["type"])
+        feature_state_value.save()
+    elif replace:
         feature_state_value.copy_from(environment_default.feature_state_value)
 
     if (variants := changes.get("variants")) is not None:
