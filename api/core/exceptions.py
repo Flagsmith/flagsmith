@@ -7,7 +7,6 @@ class APIError(APIException):
     wrong by code."""
 
     def __init__(self, message: str | None = None) -> None:
-        # DRF's default exception handler renders `detail` alone.
         super().__init__(
             {
                 "code": str(self.default_code),

@@ -31,13 +31,41 @@ class SegmentOverrideRequest(TypedDict):
     segment: SegmentReference
     enabled: NotRequired[bool]
     priority: NotRequired[int]
-    value: NotRequired[FlagValue | None]  # None clears the value
+    value: NotRequired[FlagValue]
     variants: NotRequired[Sequence[Variant]]
 
 
 class UpdateFlagRequest(TypedDict, total=False):
     environment_default: EnvironmentDefaultRequest
     segment_overrides: Sequence[SegmentOverrideRequest]
+
+
+class SegmentOverrideChanges(TypedDict):
+    """Changes to write to a segment override.
+
+    Unlike requests, these can clear the override's value, as the legacy
+    feature state APIs can.
+
+    TODO: Replace with `SegmentOverrideRequest` after
+    https://github.com/Flagsmith/flagsmith/issues/7641
+    """
+
+    segment: SegmentReference
+    enabled: NotRequired[bool]
+    priority: NotRequired[int]
+    value: NotRequired[FlagValue | None]
+    variants: NotRequired[Sequence[Variant]]
+
+
+class FlagChanges(TypedDict, total=False):
+    """Changes to write to a flag.
+
+    TODO: Replace with `UpdateFlagRequest` after
+    https://github.com/Flagsmith/flagsmith/issues/7641
+    """
+
+    environment_default: EnvironmentDefaultRequest
+    segment_overrides: Sequence[SegmentOverrideChanges]
 
 
 class EnvironmentDefaultResponse(TypedDict):
