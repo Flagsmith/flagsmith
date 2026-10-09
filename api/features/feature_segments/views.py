@@ -27,6 +27,7 @@ from features.future.services import (
     delete_segment_override,
     get_next_segment_override_priority,
     get_segment_override,
+    get_segment_overrides,
     is_live_segment_override,
     update_flag,
 )
@@ -198,7 +199,16 @@ class FeatureSegmentViewSet(
                 FeatureSegmentListSerializer(instance=reordered, many=True).data
             )
 
-        if not all(map(is_live_segment_override, feature_segments)):
+        live_feature_segment_ids = {
+            override.feature_segment_id
+            for override in get_segment_overrides(
+                environment=environment, feature=feature
+            ).values()
+        }
+        if any(
+            feature_segment.id not in live_feature_segment_ids
+            for feature_segment in feature_segments
+        ):
             # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
             for feature_segment in moved:
                 check_segment_is_not_system(feature_segment.segment)
@@ -232,18 +242,12 @@ class FeatureSegmentViewSet(
             feature_segment_ids=list(new_priorities),
         )
         # Overrides of v2 environments are now in a new version.
-        overrides = [
-            get_segment_override(
-                environment=environment,
-                feature=feature,
-                segment_id=feature_segment.segment_id,
-            )
-            for feature_segment in reordered
-        ]
+        overrides = get_segment_overrides(environment=environment, feature=feature)
         return Response(
             FeatureSegmentListSerializer(
                 instance=[
-                    override.feature_segment for override in overrides if override
+                    overrides[feature_segment.segment_id].feature_segment
+                    for feature_segment in reordered
                 ],
                 many=True,
             ).data
