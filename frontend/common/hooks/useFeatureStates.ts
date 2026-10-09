@@ -41,6 +41,9 @@ export const useFeatureStates = ({
   const features = data?.results ?? NO_FEATURES
   return {
     features,
+    isEnabled: (featureId: number) =>
+      !!features.find((feature) => feature.id === featureId)
+        ?.environment_feature_state?.enabled,
     isError:
       isFeatureListError ||
       !!environmentsError ||
