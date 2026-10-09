@@ -19,6 +19,7 @@ from integrations.github.github import call_github_task
 from integrations.gitlab.services import (
     post_gitlab_state_change_comment_for_feature_state,
 )
+from segments.exceptions import SystemSegmentModificationError
 from segments.models import Segment
 from users.models import FFAdminUser
 
@@ -335,6 +336,38 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             raise serializers.ValidationError(
                 {"environment": "Environment must use v2 feature versioning."}
             )
+
+
+class EnvironmentFeatureVersionCreateRequestSerializer(
+    EnvironmentFeatureVersionCreateSerializer
+):
+    """Refuses users' changes to system segment overrides.
+
+    Change sets publish through the parent class, as they can stage changes
+    to system segment overrides made by their owners.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
+
+    def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        attrs = super().validate(attrs)
+        feature_states = [
+            *(attrs.get("feature_states_to_create") or []),
+            *(attrs.get("feature_states_to_update") or []),
+        ]
+        segments = [
+            feature_segment["segment"]
+            for feature_state in feature_states
+            if (feature_segment := feature_state.get("feature_segment"))
+        ]
+        if any(segment.is_system_segment for segment in segments) or (
+            Segment.objects.filter(
+                id__in=attrs.get("segment_ids_to_delete_overrides") or [],
+                is_system_segment=True,
+            ).exists()
+        ):
+            raise SystemSegmentModificationError()
+        return attrs
 
 
 class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):  # type: ignore[type-arg]

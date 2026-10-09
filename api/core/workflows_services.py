@@ -12,6 +12,7 @@ from features.workflows.core.exceptions import (
     CannotModifyManagedSegmentError,
     ChangeRequestNotApprovedError,
 )
+from segments.services import check_segment_is_not_system
 
 if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
@@ -32,6 +33,7 @@ class ChangeRequestCommitService:
         # Runs before anything publishes: commit is not atomic as a whole, so
         # raising any later would leave the change request half-applied.
         self._validate_segments_are_not_cohort_managed()
+        self._validate_segments_are_not_system()
 
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
@@ -121,6 +123,11 @@ class ChangeRequestCommitService:
                     "Segments managed by a cohort cannot be changed "
                     "via a change request."
                 )
+
+    def _validate_segments_are_not_system(self) -> None:
+        for draft_segment in self.change_request.segments.select_related("version_of"):
+            if live_segment := draft_segment.version_of:
+                check_segment_is_not_system(live_segment)
 
     @transaction.atomic
     def _publish_segments(self) -> None:

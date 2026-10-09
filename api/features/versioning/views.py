@@ -40,12 +40,13 @@ from features.versioning.permissions import (
 )
 from features.versioning.serializers import (
     CustomEnvironmentFeatureVersionFeatureStateSerializer,
-    EnvironmentFeatureVersionCreateSerializer,
+    EnvironmentFeatureVersionCreateRequestSerializer,
     EnvironmentFeatureVersionPublishSerializer,
     EnvironmentFeatureVersionQuerySerializer,
     EnvironmentFeatureVersionRetrieveSerializer,
     EnvironmentFeatureVersionSerializer,
 )
+from segments.services import check_segment_is_not_system
 from users.models import FFAdminUser
 
 logger = structlog.get_logger("features")
@@ -106,7 +107,7 @@ class EnvironmentFeatureVersionViewSet(
             case "retrieve":
                 return EnvironmentFeatureVersionRetrieveSerializer
             case "create":
-                return EnvironmentFeatureVersionCreateSerializer
+                return EnvironmentFeatureVersionCreateRequestSerializer
             case _:
                 return EnvironmentFeatureVersionSerializer
 
@@ -315,6 +316,9 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         self,
         serializer: CustomCreateSegmentOverrideFeatureStateSerializer,  # type: ignore[override]
     ) -> None:
+        # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+        if feature_segment := serializer.validated_data.get("feature_segment"):
+            check_segment_is_not_system(feature_segment["segment"])
         serializer.save(
             feature=self.feature,
             environment=self.environment,
@@ -325,6 +329,11 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         self,
         serializer: CustomCreateSegmentOverrideFeatureStateSerializer,  # type: ignore[override]
     ) -> None:
+        # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+        if feature_segment := serializer.instance.feature_segment:  # type: ignore[union-attr]
+            check_segment_is_not_system(feature_segment.segment)
+        if feature_segment_data := serializer.validated_data.get("feature_segment"):
+            check_segment_is_not_system(feature_segment_data["segment"])
         serializer.save(
             feature=self.feature,
             environment=self.environment,
@@ -336,4 +345,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
             raise FeatureVersionDeleteError(
                 "Cannot delete environment default feature state."
             )
+        # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+        if instance.feature_segment:
+            check_segment_is_not_system(instance.feature_segment.segment)
         super().perform_destroy(instance)

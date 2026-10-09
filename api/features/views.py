@@ -791,6 +791,9 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = self.get_serializer(data=data)
 
         if serializer.is_valid(raise_exception=True):
+            # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+            if feature_segment := serializer.validated_data.get("feature_segment"):
+                check_segment_is_not_system(feature_segment.segment)
             feature_state = serializer.save()
             headers = self.get_success_headers(serializer.data)
 
