@@ -1,0 +1,46 @@
+// Pinned to the bottom of the tab, so the way out stays in view however long
+// the table gets.
+.change-request-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-top: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border-default);
+  background: var(--color-surface-default);
+  animation: change-request-footer-enter var(--duration-normal)
+    var(--easing-entrance) both;
+}
+
+.change-request-footer__count {
+  display: inline-block;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-default);
+  animation: change-request-footer-pulse var(--duration-slow)
+    var(--easing-standard);
+}
+
+@keyframes change-request-footer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes change-request-footer-pulse {
+  50% {
+    transform: scale(1.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .change-request-footer,
+  .change-request-footer__count {
+    animation: none;
+  }
+}

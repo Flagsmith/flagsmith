@@ -145,6 +145,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const [valueChanged, setValueChanged] = useState(false)
   const [settingsChanged, setSettingsChanged] = useState(false)
   const [segmentsChanged, setSegmentsChanged] = useState(false)
+  const [dependenciesChanged, setDependenciesChanged] = useState(false)
   const [hasMetadataRequired, setHasMetadataRequired] = useState(false)
   const [featureLimitAlert, setFeatureLimitAlert] = useState({
     percentage: 0,
@@ -164,7 +165,12 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const onClosing = useCallback(() => {
     if (isEdit) {
       return new Promise<boolean>((resolve) => {
-        if (settingsChanged || valueChanged || segmentsChanged) {
+        if (
+          settingsChanged ||
+          valueChanged ||
+          segmentsChanged ||
+          dependenciesChanged
+        ) {
           openConfirm({
             body: 'Closing this will discard your unsaved changes.',
             noText: 'Cancel',
@@ -179,7 +185,13 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
       })
     }
     return Promise.resolve(true)
-  }, [isEdit, settingsChanged, valueChanged, segmentsChanged])
+  }, [
+    isEdit,
+    settingsChanged,
+    valueChanged,
+    segmentsChanged,
+    dependenciesChanged,
+  ])
 
   const fetchChangeRequests = useCallback(
     (forceRefetch?: boolean) => {
@@ -830,6 +842,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                     <TabItem
                       data-test='feature_dependencies'
                       tabLabel='Dependencies'
+                      isDirty={dependenciesChanged}
                     >
                       <FeatureDependenciesTab
                         environmentId={environmentId}
@@ -838,6 +851,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         projectFlag={projectFlag}
                         requiresChangeRequests={is4Eyes}
                         isVersioned={isVersioned}
+                        onDirtyChange={setDependenciesChanged}
                         onSelectFeature={(featureId) => {
                           // The features list, never the current page: it
                           // owns the deep link and hydrates an off-page
