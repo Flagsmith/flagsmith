@@ -359,8 +359,8 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:490`
- - `api/features/future/services.py:547`
+ - `api/features/future/services.py:489`
+ - `api/features/future/services.py:546`
 
 Attributes:
  - `environment.id`
@@ -747,7 +747,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:239`
+ - `api/segments/serializers.py:245`
 
 Attributes:
  - `revision_id`
@@ -972,7 +972,7 @@ Attributes:
 ### `workflows.change_request.committed`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:47`
+ - `api/core/workflows_services.py:45`
 
 Attributes:
  - `environment.id`
@@ -982,7 +982,7 @@ Attributes:
 ### `workflows.missing_live_segment`
 
 Logged at `warning` from:
- - `api/core/workflows_services.py:137`
+ - `api/core/workflows_services.py:130`
 
 Attributes:
  - `draft_segment`
@@ -990,7 +990,7 @@ Attributes:
 ### `workflows.segment_revision_created`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:142`
+ - `api/core/workflows_services.py:135`
 
 Attributes:
  - `revision_id`

@@ -45,8 +45,7 @@ from features.workflows.core.models import (
 )
 from organisations.models import Organisation
 from projects.models import Project
-from segments.exceptions import SystemSegmentModificationError
-from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
+from segments.models import Condition, Segment, SegmentRule
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
@@ -1011,31 +1010,6 @@ def test_change_request_commit__draft_targets_cohort_managed_segment__raises(
 
     # When / Then
     with pytest.raises(CannotModifyManagedSegmentError):
-        change_request.commit(admin_user)
-    segment.refresh_from_db()
-    assert segment.name != "new-name"
-    change_request.refresh_from_db()
-    assert change_request.committed_at is None
-
-
-def test_change_request_commit__draft_targets_system_segment__raises(
-    segment: Segment,
-    change_request: ChangeRequest,
-    admin_user: FFAdminUser,
-) -> None:
-    # Given
-    segment.is_system_segment = True
-    segment.managed_by = SegmentManagedBy.EXPERIMENT
-    segment.save()
-    Segment.objects.create(
-        name="new-name",
-        change_request=change_request,
-        project=segment.project,
-        version_of=segment,
-    )
-
-    # When / Then
-    with pytest.raises(SystemSegmentModificationError):
         change_request.commit(admin_user)
     segment.refresh_from_db()
     assert segment.name != "new-name"
