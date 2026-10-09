@@ -19836,7 +19836,7 @@ components:
           readOnly: true
         managed_by:
           oneOf:
-            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/SegmentManagedByEnum'
             - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
         cohort:
@@ -22755,6 +22755,23 @@ components:
         is_feature_specific:
           type: boolean
           readOnly: true
+        is_system_segment:
+          description: System segment overrides can't be changed directly.
+          type: boolean
+          readOnly: true
+        segment_managed_by:
+          description: |-
+            The feature managing the segment, if any.
+
+            * `` - Unmanaged
+            * `cohort` - Cohort
+            * `dependency` - Flag dependency
+            * `experiment` - Experiment
+            * `release_pipeline` - Gradual rollout
+          oneOf:
+            - $ref: '#/components/schemas/SegmentManagedByEnum'
+            - $ref: '#/components/schemas/BlankEnum'
+          readOnly: true
     FeatureStateSerializerBasic:
       description: Adds nested create feature
       type: object
@@ -23742,13 +23759,6 @@ components:
           $ref: '#/components/schemas/UserList'
       required:
         - user
-    ManagedByEnum:
-      description: |-
-        * `` - Unmanaged
-        * `cohort` - Cohort
-      type: string
-      enum:
-        - cohort
     MasterAPIKey:
       type: object
       properties:
@@ -26811,7 +26821,7 @@ components:
           readOnly: true
         managed_by:
           oneOf:
-            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/SegmentManagedByEnum'
             - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
         cohort:
@@ -28594,7 +28604,7 @@ components:
           readOnly: true
         managed_by:
           oneOf:
-            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/SegmentManagedByEnum'
             - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
         cohort:
@@ -28645,6 +28655,19 @@ components:
           type: integer
       required:
         - id
+    SegmentManagedByEnum:
+      description: |-
+        * `` - Unmanaged
+        * `cohort` - Cohort
+        * `dependency` - Flag dependency
+        * `experiment` - Experiment
+        * `release_pipeline` - Gradual rollout
+      type: string
+      enum:
+        - cohort
+        - dependency
+        - experiment
+        - release_pipeline
     SegmentMember:
       type: object
       properties:
