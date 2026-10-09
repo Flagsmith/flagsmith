@@ -13,7 +13,6 @@
 }
 
 .change-request-footer__count {
-  display: inline-block;
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-default);
   animation: change-request-footer-pulse var(--duration-slow)
@@ -32,9 +31,11 @@
   }
 }
 
+// Colour, not scale: the count sits on the tab's clipping edge, so growing
+// it cut it off.
 @keyframes change-request-footer-pulse {
-  50% {
-    transform: scale(1.25);
+  from {
+    color: var(--color-text-action);
   }
 }
 
