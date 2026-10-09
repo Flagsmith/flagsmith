@@ -806,6 +806,14 @@ Attributes:
  - `feature_name`
  - `sentry_action`
 
+### `signup.conversion.tracking_failed`
+
+Logged at `exception` from:
+ - `api/custom_auth/signals.py:42`
+
+Attributes:
+ - `user.id`
+
 ### `trust_relationships.created`
 
 Logged at `info` from:

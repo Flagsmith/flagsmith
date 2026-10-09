@@ -63,6 +63,10 @@ def test_get_current_user__pylon_secret_configured__returns_pylon_signature(
     [
         (None, None),
         (
+            {"signup_anonymous_id": "6f1c5d2e-3b4a-4c8d-9e0f-1a2b3c4d5e6f"},
+            {"tasks": []},
+        ),
+        (
             {"tasks": [{"name": "task-1"}]},
             {"tasks": [{"name": "task-1", "completed_at": "2025-01-01T12:00:00Z"}]},
         ),
@@ -265,3 +269,46 @@ def test_create_user__no_hubspot_cookie__does_not_create_hubspot_tracker(
     assert user is not None
 
     mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))
+
+
+@pytest.mark.parametrize(
+    "signup_data, expected_onboarding_data",
+    [
+        (
+            {"signup_anonymous_id": "6f1c5d2e-3b4a-4c8d-9e0f-1a2b3c4d5e6f"},
+            {"signup_anonymous_id": "6f1c5d2e-3b4a-4c8d-9e0f-1a2b3c4d5e6f"},
+        ),
+        (
+            {"signup_anonymous_id": "1759651200000-0.123"},
+            {"signup_anonymous_id": "1759651200000-0.123"},
+        ),
+        ({"signup_anonymous_id": ""}, None),
+        ({"signup_anonymous_id": "a" * 65}, None),
+        ({"signup_anonymous_id": 123}, None),
+        ({}, None),
+    ],
+)
+def test_create_user__signup_anonymous_id__stores_only_bounded_string(
+    db: None,
+    api_client: APIClient,
+    signup_data: dict[str, Any],
+    expected_onboarding_data: dict[str, Any] | None,
+) -> None:
+    # Given
+    data = {
+        "first_name": "new",
+        "last_name": "user",
+        "email": "test@exemple.fr",
+        "password": "password123456!=&",
+        **signup_data,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    user = FFAdminUser.objects.get(email="test@exemple.fr")
+    onboarding_data = json.loads(user.onboarding_data) if user.onboarding_data else None
+    assert onboarding_data == expected_onboarding_data

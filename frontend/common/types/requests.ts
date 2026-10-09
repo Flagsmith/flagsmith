@@ -124,6 +124,7 @@ export type RegisterRequest = {
   organisation_name?: string
   marketing_consent_given?: boolean
   utm_data?: UtmsType
+  signup_anonymous_id?: string
 }
 export enum SortOrder {
   ASC = 'ASC',
