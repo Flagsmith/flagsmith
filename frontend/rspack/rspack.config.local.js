@@ -9,6 +9,18 @@ const base = require('../rspack.config')
 module.exports = {
   ...base,
   devServer: {
+    client: {
+      overlay: {
+        // Same as the dev server's defaults, which this object replaces.
+        errors: true,
+        // HubSpot's embedded forms resize their iframe from a ResizeObserver,
+        // which browsers report as this benign error (Sentry drops it too).
+        // Self-contained on purpose: the dev server rebuilds it in the browser.
+        runtimeErrors: (error) =>
+          !/ResizeObserver loop/.test(String(error && error.message)),
+        warnings: false,
+      },
+    },
     historyApiFallback: true,
     hot: true,
     liveReload: false,
