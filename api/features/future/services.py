@@ -6,6 +6,7 @@ from typing import NamedTuple
 import structlog
 from django.db import transaction
 from django.db.models import Count, Max, Q
+from django_lifecycle import AFTER_DELETE, BEFORE_DELETE  # type: ignore[import-untyped]
 from rest_framework.exceptions import ValidationError
 
 from api_keys.user import APIKeyUser
@@ -241,12 +242,16 @@ def _delete_segment_overrides(
         if version is None
         else version.feature_segments.all()
     )
-    feature_segments = feature_segments.filter(segment_id__in=segment_ids)
     # Deleting the queryset, rather than each instance, leaves the other
-    # priorities as they are, but skips the hooks of the instances.
-    for feature_segment in feature_segments:
-        feature_segment.create_github_comment()
-    feature_segments.delete()
+    # priorities as they are, but skips the lifecycle hooks of the instances.
+    deleted = list(feature_segments.filter(segment_id__in=segment_ids))
+    for feature_segment in deleted:
+        feature_segment._run_hooked_methods(BEFORE_DELETE)
+    FeatureSegment.objects.filter(
+        id__in=[feature_segment.id for feature_segment in deleted]
+    ).delete()
+    for feature_segment in deleted:
+        feature_segment._run_hooked_methods(AFTER_DELETE)
 
 
 def _check_priorities(
@@ -558,21 +563,30 @@ def delete_segment_override(
 def get_segment_overrides(
     *, environment: Environment, feature: Feature
 ) -> dict[int, FeatureState]:
-    """Get the flag's live overrides, by segment ID."""
+    """Get the flag's live overrides, by segment ID.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
     return _get_overrides_by_segment_id(_get_feature_states(environment, feature))
 
 
 def get_segment_override(
     *, environment: Environment, feature: Feature, segment_id: int
 ) -> FeatureState | None:
-    """Get the flag's live override for a segment, if any."""
+    """Get the flag's live override for a segment, if any.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
     return get_segment_overrides(environment=environment, feature=feature).get(
         segment_id
     )
 
 
 def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
-    """Whether a feature segment is the one the flag serves its segment from."""
+    """Whether a feature segment is the one the flag serves its segment from.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
     override = get_segment_override(
         environment=feature_segment.environment,
         feature=feature_segment.feature,
@@ -584,7 +598,10 @@ def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
 def get_next_segment_override_priority(
     *, environment: Environment, feature: Feature
 ) -> int:
-    """Get the priority of an override added after the flag's other overrides."""
+    """Get the priority of an override added after the flag's other overrides.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
     version = (
         get_current_live_environment_feature_version(environment.id, feature.id)
         if environment.use_v2_feature_versioning
