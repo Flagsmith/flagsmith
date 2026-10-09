@@ -19,6 +19,7 @@ import PrerequisitesTable from './PrerequisitesTable'
 import { PrerequisitesEmptyState } from './DependenciesEmptyStates'
 import ChangeRequestFooter from './ChangeRequestFooter'
 import ChangeRequestNotice from './ChangeRequestNotice'
+import PendingChangeRequests from './PendingChangeRequests'
 import { getDependenciesMode } from './dependenciesMode'
 import { withStagedChanges } from './prerequisiteState'
 import { usePrerequisites } from './hooks/usePrerequisites'
@@ -225,6 +226,14 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
           isSubmitting={staging.isSubmitting}
           onCreate={staging.openChangeRequest}
           onDiscard={staging.discard}
+        />
+      )}
+
+      {isChangeRequest && (
+        <PendingChangeRequests
+          environmentId={environmentId}
+          featureId={projectFlag.id}
+          projectId={projectId}
         />
       )}
 

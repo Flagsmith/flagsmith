@@ -909,6 +909,8 @@ export type Req = {
     })[]
   }
   deleteChangeRequest: { id: number }
+  getPendingDependencyChanges: { featureId: number }
+  getChangeRequestDependencyChanges: { changeRequestId: number }
   getSamlConfiguration: { name: string }
   getSamlConfigurations: { organisation_id: number }
   getSamlConfigurationMetadata: { name: string }

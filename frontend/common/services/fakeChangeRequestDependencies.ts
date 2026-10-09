@@ -6,12 +6,9 @@ import {
   DependencyConflictCode,
   DependencyEdge,
   DependencyFeature,
+  PendingDependencyChanges,
+  StagedDependencyChange,
 } from 'common/types/responses'
-
-export type StagedDependencyChange = {
-  action: 'add' | 'remove'
-  prerequisite: DependencyFeature
-}
 
 type StagedChanges = Record<string, StagedDependencyChange[]>
 
@@ -110,5 +107,28 @@ export const stageRemove = (
   changes[key] = stagedAdd
     ? staged.filter((c) => c.prerequisite.id !== prerequisite.id)
     : [...staged, { action: 'remove', prerequisite }]
+  write(changes)
+}
+
+const entries = (): PendingDependencyChanges[] =>
+  Object.entries(read())
+    .filter(([, changes]) => changes.length)
+    .map(([key, changes]) => {
+      const [changeRequestId, featureId] = key.split('-').map(Number)
+      return { changeRequestId, changes, featureId }
+    })
+
+export const getPendingByFeature = (featureId: number) =>
+  entries().filter((entry) => entry.featureId === featureId)
+
+export const getPendingByChangeRequest = (changeRequestId: number) =>
+  entries().filter((entry) => entry.changeRequestId === changeRequestId)
+
+// A deleted change request takes its staged changes with it.
+export const discardChangeRequest = (changeRequestId: number) => {
+  const changes = read()
+  Object.keys(changes)
+    .filter((key) => key.startsWith(`${changeRequestId}-`))
+    .forEach((key) => delete changes[key])
   write(changes)
 }
