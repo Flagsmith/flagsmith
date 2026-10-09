@@ -675,6 +675,25 @@ class SDKIdentityFeatureStateSerializer(SDKFeatureStateSerializer):
         return representation
 
 
+def notify_code_references_of_feature_state(feature_state: FeatureState) -> None:
+    """Comment on the issues and pull requests linked to the feature."""
+    if (
+        not feature_state.identity_id
+        and feature_state.feature.external_resources.exists()
+        and feature_state.environment.project.github_project.exists()  # type: ignore[union-attr]
+        and feature_state.environment.project.organisation.github_config.exists()  # type: ignore[union-attr]
+    ):
+        call_github_task(
+            organisation_id=feature_state.feature.project.organisation_id,
+            type=GitHubEventType.FLAG_UPDATED.value,
+            feature=feature_state.feature,
+            segment_name=None,
+            url=None,
+            feature_states=[feature_state],
+        )
+    post_gitlab_state_change_comment_for_feature_state(feature_state)
+
+
 class FeatureStateSerializerBasic(WritableNestedModelSerializer):
     feature_state_value = serializers.SerializerMethodField()
     multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
@@ -707,26 +726,8 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
     def save(self, **kwargs):  # type: ignore[no-untyped-def]
         try:
             response = super().save(**kwargs)  # type: ignore[no-untyped-call]
-
-            feature_state = self.instance
-            if (
-                not feature_state.identity_id  # type: ignore[union-attr]
-                and feature_state.feature.external_resources.exists()  # type: ignore[union-attr]
-                and feature_state.environment.project.github_project.exists()  # type: ignore[union-attr]
-                and feature_state.environment.project.organisation.github_config.exists()  # type: ignore[union-attr]
-            ):
-                call_github_task(
-                    organisation_id=feature_state.feature.project.organisation_id,  # type: ignore[union-attr]
-                    type=GitHubEventType.FLAG_UPDATED.value,
-                    feature=feature_state.feature,  # type: ignore[union-attr]
-                    segment_name=None,
-                    url=None,
-                    feature_states=[feature_state],
-                )
-
-            if isinstance(feature_state, FeatureState):
-                post_gitlab_state_change_comment_for_feature_state(feature_state)
-
+            if isinstance(feature_state := self.instance, FeatureState):
+                notify_code_references_of_feature_state(feature_state)
             return response
 
         except django.core.exceptions.ValidationError as e:

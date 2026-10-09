@@ -31,7 +31,7 @@ class SegmentOverrideRequest(TypedDict):
     segment: SegmentReference
     enabled: NotRequired[bool]
     priority: NotRequired[int]
-    value: NotRequired[FlagValue]
+    value: NotRequired[FlagValue | None]  # None clears the value
     variants: NotRequired[Sequence[Variant]]
 
 

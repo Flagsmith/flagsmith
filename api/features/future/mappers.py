@@ -1,9 +1,13 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
+from collections.abc import Mapping
+from typing import Any
+
 from features.feature_states.models import API_VALUE_TYPES
 from features.future.types import (
     EnvironmentDefaultResponse,
     FlagValue,
+    SegmentOverrideRequest,
     SegmentOverrideResponse,
     SegmentReference,
     Variant,
@@ -61,3 +65,37 @@ def map_segment_override(
         value=map_flag_value(feature_state.feature_state_value),
         variants=map_variants(feature_state),
     )
+
+
+def map_feature_state_data_to_segment_override(
+    segment_id: int,
+    feature_state_data: Mapping[str, Any],
+    *,
+    priority: int | None = None,
+) -> SegmentOverrideRequest:
+    """Map the feature state data validated by a legacy endpoint to an override.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
+    override = SegmentOverrideRequest(segment=SegmentReference(id=segment_id))
+    if priority is not None:
+        override["priority"] = priority
+    if "enabled" in feature_state_data:
+        override["enabled"] = feature_state_data["enabled"]
+    if value_data := feature_state_data.get("feature_state_value"):
+        override["value"] = map_flag_value(FeatureStateValue(**value_data))
+    if (
+        multivariate_values := feature_state_data.get(
+            "multivariate_feature_state_values"
+        )
+    ) is not None:
+        override["variants"] = [
+            Variant(
+                id=getattr(
+                    option := value["multivariate_feature_option"], "id", option
+                ),
+                weight=value["percentage_allocation"],
+            )
+            for value in multivariate_values
+        ]
+    return override

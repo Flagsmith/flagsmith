@@ -5,7 +5,7 @@ from typing import NamedTuple
 
 import structlog
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Max, Q
 from rest_framework.exceptions import ValidationError
 
 from api_keys.user import APIKeyUser
@@ -40,7 +40,10 @@ from features.future.types import (
 from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
-from features.versioning.versioning_service import get_environment_flags_list
+from features.versioning.versioning_service import (
+    get_current_live_environment_feature_version,
+    get_environment_flags_list,
+)
 from segments.exceptions import SystemSegmentModificationError
 from segments.models import Segment
 from users.models import FFAdminUser
@@ -165,6 +168,7 @@ def _write_segment_override(
     *,
     replace: bool,
     environment_default: FeatureState,
+    created: bool,
 ) -> None:
     """Write an override, inheriting from the environment default what it omits."""
     feature_segment = feature_state.feature_segment
@@ -175,15 +179,23 @@ def _write_segment_override(
         feature_segment.priority = priority
         feature_segment.save(update_fields=["priority"])
 
-    if replace or "enabled" in changes:
+    # New overrides are created enabled or not, so their audit log shows it.
+    if not created and (replace or "enabled" in changes):
         feature_state.enabled = changes.get("enabled", environment_default.enabled)
         feature_state.save(update_fields=["enabled"])
 
+    # Saving values only when they change keeps the audit log to actual changes.
     feature_state_value = feature_state.feature_state_value
-    if (value := changes.get("value")) is not None:
-        feature_state_value.set_value(value["value"], value["type"])
-        feature_state_value.save()
-    elif replace:
+    if "value" in changes:
+        value = changes["value"]
+        if value is None and map_flag_value(feature_state_value) is not None:
+            _clear_value(feature_state_value)
+        elif value is not None and value != map_flag_value(feature_state_value):
+            feature_state_value.set_value(value["value"], value["type"])
+            feature_state_value.save()
+    elif replace and map_flag_value(feature_state_value) != map_flag_value(
+        environment_default.feature_state_value
+    ):
         feature_state_value.copy_from(environment_default.feature_state_value)
 
     if (variants := changes.get("variants")) is not None:
@@ -199,6 +211,7 @@ def _create_segment_override(
     version: EnvironmentFeatureVersion | None,
     segment_id: int,
     priority: int,
+    enabled: bool,
 ) -> FeatureState:
     feature_segment = FeatureSegment.objects.create(
         feature=feature,
@@ -212,6 +225,7 @@ def _create_segment_override(
         environment=environment,
         environment_feature_version=version,
         feature_segment=feature_segment,
+        enabled=enabled,
     )
 
 
@@ -227,8 +241,13 @@ def _delete_segment_overrides(
         if version is None
         else version.feature_segments.all()
     )
+    feature_segments = feature_segments.filter(segment_id__in=segment_ids)
+    for feature_segment in feature_segments:
+        # Deleting the queryset leaves the other priorities as they are, but
+        # skips the hooks of each instance.
+        feature_segment.create_github_comment()
     # Deleting a `FeatureSegment` instance decrements every greater priority.
-    feature_segments.filter(segment_id__in=segment_ids).delete()
+    feature_segments.delete()
 
 
 def _check_priorities(
@@ -377,6 +396,7 @@ def _write_segment_overrides(
                 version=version,
                 segment_id=segment_id,
                 priority=change.get("priority", position),
+                enabled=change.get("enabled", environment_default.enabled),
             )
             segments.created.append(segment_id)
         _write_segment_override(
@@ -384,6 +404,7 @@ def _write_segment_overrides(
             change,
             replace=replace or segment_id in segments.created,
             environment_default=environment_default,
+            created=segment_id in segments.created,
         )
 
     _check_system_segment_overrides_unchanged(overrides, system_served_states)
@@ -535,6 +556,42 @@ def delete_segment_override(
     )
 
     return get_flag(environment=environment, feature=feature)
+
+
+def get_segment_override(
+    *, environment: Environment, feature: Feature, segment_id: int
+) -> FeatureState | None:
+    """Get the flag's live override for a segment, if any."""
+    return _get_overrides_by_segment_id(_get_feature_states(environment, feature)).get(
+        segment_id
+    )
+
+
+def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
+    """Whether a feature segment is the one the flag serves its segment from."""
+    override = get_segment_override(
+        environment=feature_segment.environment,
+        feature=feature_segment.feature,
+        segment_id=feature_segment.segment_id,
+    )
+    return override is not None and override.feature_segment_id == feature_segment.id
+
+
+def get_next_segment_override_priority(
+    *, environment: Environment, feature: Feature
+) -> int:
+    """Get the priority of an override added after the flag's other overrides."""
+    version = (
+        get_current_live_environment_feature_version(environment.id, feature.id)
+        if environment.use_v2_feature_versioning
+        else None
+    )
+    highest_priority: int | None = FeatureSegment.objects.filter(
+        environment=environment,
+        feature=feature,
+        environment_feature_version=version,
+    ).aggregate(highest_priority=Max("priority"))["highest_priority"]
+    return 0 if highest_priority is None else highest_priority + 1
 
 
 def get_flag(*, environment: Environment, feature: Feature) -> UpdateFlagResponse:

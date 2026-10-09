@@ -136,7 +136,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
                 )
 
             call_github_task(
-                organisation_id=self.feature.project.organisation_id,  # type: ignore[arg-type]
+                organisation_id=self.feature.project.organisation_id,
                 type=GitHubEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
                 feature=self.feature,
                 segment_name=None,
@@ -154,7 +154,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignor
             .github_config.first()
         ):
             call_github_task(
-                organisation_id=self.feature.project.organisation_id,  # type: ignore[arg-type]
+                organisation_id=self.feature.project.organisation_id,
                 type=GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
                 feature=self.feature,
                 segment_name=None,
