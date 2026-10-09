@@ -1,4 +1,3 @@
-import typing
 from datetime import timedelta
 
 import structlog
@@ -330,8 +329,9 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         self,
         serializer: CustomCreateSegmentOverrideFeatureStateSerializer,  # type: ignore[override]
     ) -> None:
-        feature_state = typing.cast(FeatureState, serializer.instance)
-        if feature_segment := feature_state.feature_segment:
+        if isinstance(feature_state := serializer.instance, FeatureState) and (
+            feature_segment := feature_state.feature_segment
+        ):
             check_segment_is_not_system(feature_segment.segment)
         if feature_segment_data := serializer.validated_data.get("feature_segment"):
             check_segment_is_not_system(feature_segment_data["segment"])
