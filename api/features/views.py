@@ -1350,15 +1350,24 @@ def create_segment_override(  # type: ignore[no-untyped-def]
     serializer.is_valid(raise_exception=True)
 
     if not (feature_segment_data := serializer.validated_data.get("feature_segment")):
-        # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
-        feature_state = serializer.save(environment=environment, feature=feature)  # type: ignore[no-untyped-call]
-        return Response(serializer.data, status=201)
+        raise ValidationError({"feature_segment": ["This field is required."]})
 
     segment = feature_segment_data["segment"]
-    if get_segment_override(
+    priority = feature_segment_data.get("priority")
+    feature_state_data = dict(serializer.validated_data)
+    if not get_segment_override(
         environment=environment, feature=feature, segment_id=segment.id
-    ) is None and exceeds_segment_override_limit(environment):
-        raise ValidationError({"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE})
+    ):
+        # Create overrides as the serializer would.
+        feature_state_data.setdefault("enabled", False)
+        if exceeds_segment_override_limit(environment):
+            raise ValidationError(
+                {"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE}
+            )
+        if priority is None:
+            priority = get_next_segment_override_priority(
+                environment=environment, feature=feature
+            )
 
     update_flag(
         environment=environment,
@@ -1366,14 +1375,7 @@ def create_segment_override(  # type: ignore[no-untyped-def]
         changes={
             "segment_overrides": [
                 map_feature_state_data_to_segment_override(
-                    segment.id,
-                    {"enabled": False, **serializer.validated_data},
-                    priority=feature_segment_data.get(
-                        "priority",
-                        get_next_segment_override_priority(
-                            environment=environment, feature=feature
-                        ),
-                    ),
+                    segment.id, feature_state_data, priority=priority
                 )
             ]
         },
