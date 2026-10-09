@@ -1,11 +1,20 @@
-import { DependencyEdge, ProjectFlag } from 'common/types/responses'
+import {
+  DependencyEdge,
+  DependencyFeature,
+  ProjectFlag,
+} from 'common/types/responses'
+import { stagedDependencyEdge } from 'common/utils/stagedDependencyEdge'
 
 export type PrerequisiteRow = {
   edge: DependencyEdge
   isEnabled: boolean
   // Undefined where the rule cannot be read. See toPrerequisiteRow.
   isMet?: boolean
+  // Held for a change request, not live yet.
+  staged?: StagedAction
 }
+
+export type StagedAction = 'add' | 'remove'
 
 // A system edge always carries the hardcoded `enabled != true` condition from
 // _get_or_create_dependency_segment in api/features/dependencies/services.py,
@@ -34,6 +43,32 @@ export const toPrerequisiteRows = (
           ?.environment_feature_state?.enabled,
       ),
     )
+
+// Live rows with their held removals marked, then the held adds.
+export const withStagedChanges = (
+  rows: PrerequisiteRow[],
+  staged: { action: StagedAction; prerequisite: DependencyFeature }[],
+  featureId: number,
+  isEnabled: (prerequisiteId: number) => boolean,
+): PrerequisiteRow[] => [
+  ...rows.map((row) =>
+    staged.some(
+      (c) =>
+        c.action === 'remove' && c.prerequisite.id === row.edge.prerequisite.id,
+    )
+      ? { ...row, staged: 'remove' as const }
+      : row,
+  ),
+  ...staged
+    .filter((c) => c.action === 'add')
+    .map(({ prerequisite }) => ({
+      ...toPrerequisiteRow(
+        stagedDependencyEdge(featureId, prerequisite),
+        isEnabled(prerequisite.id),
+      ),
+      staged: 'add' as const,
+    })),
+]
 
 export const isBlocked = (rows: PrerequisiteRow[]): boolean =>
   rows.some((row) => row.isMet === false)
