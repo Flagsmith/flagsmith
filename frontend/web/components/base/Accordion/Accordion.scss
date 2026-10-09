@@ -4,20 +4,19 @@
 .ds-accordion {
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+}
+
+// A heading for structure only: it takes the accordion's type, not the h3's.
+.ds-accordion__level {
+  margin: 0;
+  font: inherit;
 }
 
 .ds-accordion__header {
-  align-items: center;
-
   &:focus-visible {
     outline: 2px solid var(--color-border-action);
     outline-offset: -2px;
     border-radius: var(--radius-lg);
-  }
-
-  .ds-accordion--open & {
-    align-items: flex-start;
   }
 }
 
@@ -27,10 +26,6 @@
   min-width: 0;
   font-size: 0.8125rem;
   line-height: 1.4;
-}
-
-.ds-accordion__title {
-  font-weight: var(--font-weight-semibold);
 }
 
 .ds-accordion__chevron {

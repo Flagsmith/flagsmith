@@ -6,6 +6,10 @@ import { useEffect, useRef, useState } from 'react'
  * Uses a double requestAnimationFrame on collapse to ensure the browser
  * paints the current scrollHeight before transitioning to 0.
  */
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 export default function useCollapsibleHeight(open: boolean) {
   const contentRef = useRef<HTMLDivElement>(null)
   const [height, setHeight] = useState<number | undefined>(open ? undefined : 0)
@@ -34,7 +38,7 @@ export default function useCollapsibleHeight(open: boolean) {
   const style = {
     height: height !== undefined ? `${height}px` : 'auto',
     overflow: (height === undefined ? 'visible' : 'hidden') as const,
-    transition: 'height 0.3s ease',
+    transition: prefersReducedMotion() ? 'none' : 'height 0.3s ease',
   }
 
   return { contentRef, style }
