@@ -77,7 +77,7 @@ from features.versioning.versioning_service import (
     update_multivariate_values,
 )
 from integrations.flagsmith.client import get_openfeature_client
-from segments.models import Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from segments.services import write_segment_rules
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
@@ -840,6 +840,7 @@ def _create_rollout_segment(
         name=f"experiment-{experiment.id}-rollout",
         project=experiment.feature.project,
         is_system_segment=True,
+        managed_by=SegmentManagedBy.EXPERIMENT,
         rules_data=rules,
     )
     write_segment_rules(segment, rules)

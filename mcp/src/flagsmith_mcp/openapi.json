@@ -5292,6 +5292,23 @@
           "is_feature_specific": {
             "type": "boolean",
             "readOnly": true
+          },
+          "is_system_segment": {
+            "description": "System segment overrides can't be changed directly.",
+            "type": "boolean",
+            "readOnly": true
+          },
+          "segment_managed_by": {
+            "description": "The feature managing the segment, if any.\n\n* `` - Unmanaged\n* `cohort` - Cohort\n* `dependency` - Flag dependency\n* `experiment` - Experiment\n* `release_pipeline` - Gradual rollout",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SegmentManagedByEnum"
+              },
+              {
+                "$ref": "#/components/schemas/BlankEnum"
+              }
+            ],
+            "readOnly": true
           }
         }
       },
@@ -5839,13 +5856,6 @@
           "id",
           "last_login",
           "last_name"
-        ]
-      },
-      "ManagedByEnum": {
-        "description": "* `` - Unmanaged\n* `cohort` - Cohort",
-        "type": "string",
-        "enum": [
-          "cohort"
         ]
       },
       "MatchEnum": {
@@ -7326,7 +7336,7 @@
           "managed_by": {
             "oneOf": [
               {
-                "$ref": "#/components/schemas/ManagedByEnum"
+                "$ref": "#/components/schemas/SegmentManagedByEnum"
               },
               {
                 "$ref": "#/components/schemas/BlankEnum"
@@ -7354,6 +7364,16 @@
         "required": [
           "name",
           "rules"
+        ]
+      },
+      "SegmentManagedByEnum": {
+        "description": "* `` - Unmanaged\n* `cohort` - Cohort\n* `dependency` - Flag dependency\n* `experiment` - Experiment\n* `release_pipeline` - Gradual rollout",
+        "type": "string",
+        "enum": [
+          "cohort",
+          "dependency",
+          "experiment",
+          "release_pipeline"
         ]
       },
       "SegmentMembershipCount": {

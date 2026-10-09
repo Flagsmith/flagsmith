@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest import mock
 
 import pytest
 from common.environments.permissions import UPDATE_FEATURE_STATE
@@ -1768,4 +1769,64 @@ def test_either_list__missing_environment_permission__responds_404_with_error(
     assert response.json() == {
         "code": "environment_not_found",
         "message": f"Environment key '{environment_api_key}' does not exist.",
+    }
+
+
+def test_list_feature_segments__dependency_override__responds_with_system_segment_owner(
+    admin_client: APIClient,
+    create_segment_override: CreateSegmentOverrideFixture,
+    environment: int,
+    environment_api_key: str,
+    project: int,
+    segment: int,
+    segment_name: str,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=feature.id,
+        segment_id=segment,
+    )
+    system_segment_id = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    ).json()["segment"]["id"]
+
+    # When
+    response = admin_client.get(
+        "/api/v1/features/feature-segments/",
+        data={"environment": environment, "feature": feature.id},
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "id": mock.ANY,
+                "uuid": mock.ANY,
+                "segment": system_segment_id,
+                "priority": 0,
+                "environment": environment,
+                "segment_name": "checkout-depends-on-payments",
+                "is_feature_specific": True,
+                "is_system_segment": True,
+                "segment_managed_by": "dependency",
+            },
+            {
+                "id": mock.ANY,
+                "uuid": mock.ANY,
+                "segment": segment,
+                "priority": 1,
+                "environment": environment,
+                "segment_name": segment_name,
+                "is_feature_specific": False,
+                "is_system_segment": False,
+                "segment_managed_by": "",
+            },
+        ],
     }

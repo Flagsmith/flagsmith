@@ -68,7 +68,7 @@ from features.value_types import STRING
 from features.versioning.dataclasses import MultivariateValueChangeSet
 from organisations.models import Organisation
 from projects.models import Project
-from segments.models import Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from tests.types import VariantAssignmentFixture
 from tests.unit.experimentation.conftest import RolloutSpecFactory
 from users.models import FFAdminUser
@@ -2059,6 +2059,7 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
     segment = experiment.rollout_segment
     assert segment is not None
     assert segment.is_system_segment is True
+    assert segment.managed_by == SegmentManagedBy.EXPERIMENT
     assert segment.rules_data == [
         {
             "type": SegmentRule.ALL_RULE,
