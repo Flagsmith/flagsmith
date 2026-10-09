@@ -374,7 +374,7 @@ Attributes:
 ### `features.version.publish_rejected`
 
 Logged at `warning` from:
- - `api/features/versioning/views.py:61`
+ - `api/features/versioning/views.py:60`
 
 Attributes:
  - `environment.id`
