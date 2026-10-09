@@ -22,10 +22,13 @@ const ChangeRequestFooter: FC<ChangeRequestFooterProps> = ({
   onDiscard,
   progress,
 }) => (
-  <div className='change-request-footer d-flex align-items-center gap-2'>
+  <div className='change-request-footer d-flex align-items-center gap-2 mt-3 py-3 bg-surface-default'>
     <span className='text-secondary me-auto' aria-live='polite'>
       {/* Keyed on the count, so each change replays the pulse. */}
-      <span key={count} className='change-request-footer__count'>
+      <span
+        key={count}
+        className='change-request-footer__count fw-semibold text-default'
+      >
         {count}
       </span>{' '}
       {count === 1 ? 'change' : 'changes'} staged
