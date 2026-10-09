@@ -14,7 +14,7 @@
 .dark {
   // Docs page background
   .sbdocs-wrapper {
-    background-color: var(--color-surface-default, #101628);
+    background-color: var(--color-surface-default, #080c17);
     color: var(--color-text-default, #ffffff);
   }
 
@@ -157,7 +157,7 @@
 
   // Table row backgrounds (override Storybook's alternating white rows)
   .sbdocs tr {
-    background-color: var(--color-surface-default, #101628);
+    background-color: var(--color-surface-default, #080c17);
   }
 
   .sbdocs tr:nth-child(even) {

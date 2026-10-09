@@ -130,7 +130,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-danger</code>
             </td>
             <td>
-              <code>oklch(from var(--red-500) l c h / 0.08)</code>
+              <code>var(--red-100)</code>
             </td>
           </tr>
           <tr>
@@ -138,7 +138,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-success</code>
             </td>
             <td>
-              <code>oklch(from var(--green-500) l c h / 0.08)</code>
+              <code>var(--green-50)</code>
             </td>
           </tr>
           <tr>
@@ -146,7 +146,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-warning</code>
             </td>
             <td>
-              <code>oklch(from var(--orange-500) l c h / 0.08)</code>
+              <code>var(--gold-100)</code>
             </td>
           </tr>
           <tr>
@@ -154,7 +154,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-info</code>
             </td>
             <td>
-              <code>oklch(from var(--blue-500) l c h / 0.08)</code>
+              <code>var(--blue-100)</code>
             </td>
           </tr>
         </tbody>
@@ -213,7 +213,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-danger</code>
             </td>
             <td>
-              <code>var(--red-700)</code>
+              <code>var(--red-900)</code>
             </td>
           </tr>
           <tr>
@@ -221,7 +221,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-success</code>
             </td>
             <td>
-              <code>var(--green-600)</code>
+              <code>var(--green-900)</code>
             </td>
           </tr>
           <tr>
@@ -229,7 +229,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-warning</code>
             </td>
             <td>
-              <code>var(--orange-800)</code>
+              <code>var(--gold-950)</code>
             </td>
           </tr>
           <tr>
@@ -237,7 +237,7 @@ export const AllTokens: StoryObj = {
               <code>--color-text-info</code>
             </td>
             <td>
-              <code>var(--blue-500)</code>
+              <code>var(--blue-900)</code>
             </td>
           </tr>
         </tbody>
@@ -371,7 +371,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-danger</code>
             </td>
             <td>
-              <code>var(--red-500)</code>
+              <code>var(--red-600)</code>
             </td>
           </tr>
           <tr>
@@ -387,7 +387,7 @@ export const AllTokens: StoryObj = {
               <code>--color-border-warning</code>
             </td>
             <td>
-              <code>var(--orange-500)</code>
+              <code>var(--gold-600)</code>
             </td>
           </tr>
           <tr>
@@ -446,7 +446,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-danger</code>
             </td>
             <td>
-              <code>var(--red-500)</code>
+              <code>var(--red-600)</code>
             </td>
           </tr>
           <tr>
@@ -462,7 +462,7 @@ export const AllTokens: StoryObj = {
               <code>--color-icon-warning</code>
             </td>
             <td>
-              <code>var(--orange-500)</code>
+              <code>var(--gold-600)</code>
             </td>
           </tr>
           <tr>
@@ -471,6 +471,282 @@ export const AllTokens: StoryObj = {
             </td>
             <td>
               <code>var(--blue-500)</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Ramp: primary</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--primary-50</code>
+            </td>
+            <td>
+              <code>var(--purple-50)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--primary-100</code>
+            </td>
+            <td>
+              <code>var(--purple-100)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--primary-300</code>
+            </td>
+            <td>
+              <code>var(--purple-200)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--primary-400</code>
+            </td>
+            <td>
+              <code>var(--purple-400)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--primary-500</code>
+            </td>
+            <td>
+              <code>var(--purple-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--primary-600</code>
+            </td>
+            <td>
+              <code>var(--purple-700)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--primary-900</code>
+            </td>
+            <td>
+              <code>var(--purple-900)</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Ramp: neutral</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--neutral-0</code>
+            </td>
+            <td>
+              <code>var(--slate-0)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--neutral-50</code>
+            </td>
+            <td>
+              <code>var(--slate-50)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--neutral-100</code>
+            </td>
+            <td>
+              <code>var(--slate-100)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--neutral-300</code>
+            </td>
+            <td>
+              <code>var(--slate-200)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--neutral-400</code>
+            </td>
+            <td>
+              <code>var(--slate-250)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--neutral-500</code>
+            </td>
+            <td>
+              <code>var(--slate-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--neutral-600</code>
+            </td>
+            <td>
+              <code>var(--slate-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--neutral-900</code>
+            </td>
+            <td>
+              <code>var(--slate-950)</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Ramp: state</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--danger-100</code>
+            </td>
+            <td>
+              <code>var(--red-100)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--danger-500</code>
+            </td>
+            <td>
+              <code>var(--red-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--danger-900</code>
+            </td>
+            <td>
+              <code>var(--red-900)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--success-100</code>
+            </td>
+            <td>
+              <code>var(--green-50)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--success-500</code>
+            </td>
+            <td>
+              <code>var(--green-400)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--success-900</code>
+            </td>
+            <td>
+              <code>var(--green-900)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--warning-100</code>
+            </td>
+            <td>
+              <code>var(--gold-100)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--warning-500</code>
+            </td>
+            <td>
+              <code>var(--gold-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--warning-900</code>
+            </td>
+            <td>
+              <code>var(--gold-950)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--info-100</code>
+            </td>
+            <td>
+              <code>var(--blue-100)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--info-500</code>
+            </td>
+            <td>
+              <code>var(--blue-500)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--info-900</code>
+            </td>
+            <td>
+              <code>var(--blue-900)</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Ramp: always</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--always-primary</code>
+            </td>
+            <td>
+              <code>var(--purple-600)</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>--always-white</code>
+            </td>
+            <td>
+              <code>var(--slate-0)</code>
             </td>
           </tr>
         </tbody>
@@ -490,7 +766,7 @@ export const AllTokens: StoryObj = {
               <code>--color-chart-1</code>
             </td>
             <td>
-              <code>#0aaddf</code>
+              <code>#0fa5fc</code>
             </td>
             <td>First series in charts. Blue.</td>
           </tr>
@@ -508,7 +784,7 @@ export const AllTokens: StoryObj = {
               <code>--color-chart-3</code>
             </td>
             <td>
-              <code>#27ab95</code>
+              <code>#47aa7f</code>
             </td>
             <td>Third series. Green.</td>
           </tr>
@@ -535,7 +811,7 @@ export const AllTokens: StoryObj = {
               <code>--color-chart-6</code>
             </td>
             <td>
-              <code>#0b8bb2</code>
+              <code>#0b82d7</code>
             </td>
             <td>Sixth series. Blue dark.</td>
           </tr>
@@ -553,7 +829,7 @@ export const AllTokens: StoryObj = {
               <code>--color-chart-8</code>
             </td>
             <td>
-              <code>#13787b</code>
+              <code>#35795a</code>
             </td>
             <td>Eighth series. Green dark.</td>
           </tr>

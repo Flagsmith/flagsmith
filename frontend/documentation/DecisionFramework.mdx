@@ -9,15 +9,19 @@ import { Meta } from '@storybook/addon-docs/blocks'
 
 Use this decision framework when you need to add a colour to the codebase. It ensures colours end up in the right layer.
 
-### Is it for tags, projects, or data visualisation?
+### Is it decorative: a tag, a project, a chart series?
 
-→ Add to `_categorical.scss` as a CSS custom property.
+→ Add to `tokens.json` as its own group, alongside `chart`, not under `color`.
 → Does NOT need a primitive scale.
-→ These are decorative identifiers, not UI roles.
+→ These are identifiers that need to be distinct from each other, not UI roles.
+
+Tag and project colours are still hardcoded in `constants.ts`. That is debt, not
+the pattern: colour belongs to the colour system, and `constants.ts` should hold
+none of it. Do not add to it.
 
 ### Does it fit an existing colour family?
 
-→ Use the closest primitive from `_primitives.scss`.
+→ Use the closest primitive from `tokens.json`.
 → Pick the nearest step in the 50–950 scale.
 → Create or use a semantic token in `tokens.json` for the UI role.
 → Available families: **slate, purple, red, green, gold, blue, orange**.
@@ -25,7 +29,7 @@ Use this decision framework when you need to add a colour to the codebase. It en
 ### Is it a completely new hue not covered by any family?
 
 → This is rare. Discuss with the team first.
-→ If approved: add a full 50–950 scale to `_primitives.scss`.
+→ If approved: add a full 50–950 scale to the `primitives` block in `tokens.json`.
 → Then create semantic tokens that reference it.
 → Example: product adds a pink/magenta brand element.
 
@@ -49,9 +53,14 @@ Use this decision framework when you need to add a colour to the codebase. It en
 
 ## What is NOT a semantic token
 
-- **Tag colours** — 20 decorative values defined in `_categorical.scss` as CSS custom properties. Users pick these when creating tags. Many don't map to any primitive family (indigo, lime, cerise). Forcing them into scales would reduce visual distinction.
-- **Project colours** — 6 values in `_categorical.scss`, assigned by index for project avatar badges. Decorative, not semantic.
-- **Chart/data viz palettes** — future work. When needed, add `{'--color-chart-*'}` variables to `_categorical.scss`.
+- **Tag colours** — values a user picks when creating a tag. They do not map to a primitive family, and forcing them into scales would cost the visual distinction they exist for.
+- **Project colours** — assigned by index for project avatar badges.
+- **Chart/data viz palettes** — the `chart` group in `tokens.json`. Themed, but scoped to one feature rather than a cross-cutting UI role.
+
+Tags and projects are decorative rather than semantic, but they are still colour,
+so they belong in `tokens.json` beside `chart`. Both are in `constants.ts` today,
+along with `colours.primary` and `colours.white`, which simply restate
+`--primary-500` and `--always-white`.
 - **Third-party brand colours** — GitHub, Google, etc. Use their official values directly.
 
 ---
@@ -74,7 +83,7 @@ Follow the naming convention: `--color-[category]-[variant]`
 
 ### 2. Pick the primitive values
 
-Open `_primitives.scss` and choose the right step from the 50–950 scale. The pattern for light vs dark:
+Open `tokens.json` and choose the right step from the 50–950 scale in `primitives`. The pattern for light vs dark:
 
 <table>
   <thead>

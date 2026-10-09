@@ -1,13 +1,13 @@
 import { addons } from 'storybook/manager-api'
 import { create } from 'storybook/theming'
 
-// Primitive palette — mirrors _primitives.scss
+// Primitive palette — mirrors common/theme/tokens.json
 // Storybook manager runs outside the app, so CSS vars aren't available.
 const slate = {
   0: '#ffffff',
   50: '#fafafb',
-  100: '#eff1f4',
-  200: '#e0e3e9',
+  100: '#f3f4f5',
+  200: '#e1e2eb',
   300: '#9da4ae',
   500: '#656d7b',
   600: '#1a2634',

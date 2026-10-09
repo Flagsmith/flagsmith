@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import './docs.scss'
 import DocPage from './components/DocPage'
 import ScaleRow from './components/ScaleRow'
 import type { Scale } from './components/ScaleRow'
-
-// @ts-expect-error raw-loader import
-import primitivesSource from '!!raw-loader!../web/styles/_primitives.scss'
+import tokens from 'common/theme/tokens.json'
 
 const meta: Meta = {
   parameters: { layout: 'padded' },
@@ -15,64 +13,53 @@ const meta: Meta = {
 }
 export default meta
 
-// ---------------------------------------------------------------------------
-// Parse _primitives.scss at build time
-// ---------------------------------------------------------------------------
+const primitives = tokens.primitives as Record<string, string>
 
-function parsePrimitives(source: string): Scale[] {
-  const scales: Scale[] = []
-  let current: Scale | null = null
+/** Group `{ 'slate-50': '#fafafb' }` into scales, ordered by step. */
+function buildScales(): Scale[] {
+  const byFamily = new Map<string, Scale>()
 
-  for (const line of source.split('\n')) {
-    // Section comment: "// Slate (neutrals)" → name = "Slate"
-    const sectionMatch = line.match(/^\/\/\s+(\w+)\s+\(/)
-    if (sectionMatch) {
-      current = { name: sectionMatch[1], swatches: [] }
-      scales.push(current)
-      continue
+  for (const name of Object.keys(primitives)) {
+    const match = name.match(/^([a-z]+)-(\d+)$/)
+    if (!match) continue
+
+    const [, family, step] = match
+    const scale = byFamily.get(family) ?? {
+      name: family[0].toUpperCase() + family.slice(1),
+      swatches: [],
     }
+    byFamily.set(family, scale)
 
-    // Variable: "$slate-50:  #fafafb;" → step=50, hex=#fafafb
-    const varMatch = line.match(/^\$(\w+)-(\d+):\s*(#[0-9a-fA-F]{6});/)
-    if (varMatch && current) {
-      current.swatches.push({
-        hex: varMatch[3],
-        step: varMatch[2],
-        variable: `$${varMatch[1]}-${varMatch[2]}`,
-      })
-    }
+    scale.swatches.push({
+      hex: primitives[name],
+      step,
+      variable: `--${name}`,
+    })
   }
 
-  return scales
+  for (const scale of byFamily.values()) {
+    scale.swatches.sort((a, b) => Number(a.step) - Number(b.step))
+  }
+
+  return [...byFamily.values()]
 }
 
-// ---------------------------------------------------------------------------
-// Story
-// ---------------------------------------------------------------------------
-
-const PalettePage: React.FC = () => {
-  const [scales, setScales] = useState<Scale[]>([])
-
-  useEffect(() => {
-    setScales(parsePrimitives(primitivesSource))
-  }, [])
-
-  return (
-    <DocPage
-      title='Primitive Colour Palette'
-      description={
-        <>
-          Auto-generated from <code>web/styles/_primitives.scss</code>. Add a
-          new variable to the SCSS file and it will appear here automatically.
-        </>
-      }
-    >
-      {scales.map((scale) => (
-        <ScaleRow key={scale.name} scale={scale} />
-      ))}
-    </DocPage>
-  )
-}
+const PalettePage: React.FC = () => (
+  <DocPage
+    title='Primitive Colour Palette'
+    description={
+      <>
+        Generated from <code>common/theme/tokens.json</code>, the same source
+        the CSS custom properties are built from, so this page cannot drift from
+        what ships.
+      </>
+    }
+  >
+    {buildScales().map((scale) => (
+      <ScaleRow key={scale.name} scale={scale} />
+    ))}
+  </DocPage>
+)
 
 export const Primitives: StoryObj = {
   render: () => <PalettePage />,
