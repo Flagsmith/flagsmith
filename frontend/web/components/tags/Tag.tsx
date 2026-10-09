@@ -20,15 +20,12 @@ export const getTagColor = (tag: Partial<TTag>) =>
     ? Constants.featureHealth.unhealthyColor
     : tag.color ?? Constants.tagColors[0]
 
-/** The colour the tag's dot is painted in: the hex on the record, as stored. */
-export const tagDotColour = (tag: Partial<TTag>) => getTagColor(tag)
-
 const Tag: FC<TagType> = ({ className, isDot, onClick, selected, tag }) => {
   if (isDot) {
     return (
       <div
         className={'tag--dot'}
-        style={{ backgroundColor: tagDotColour(tag) }}
+        style={{ backgroundColor: getTagColor(tag) }}
       />
     )
   }
@@ -46,14 +43,12 @@ const Tag: FC<TagType> = ({ className, isDot, onClick, selected, tag }) => {
 
   return (
     <Chip
-      // TagContent cuts the label at 12 characters, so a button named by its
-      // content would read as the truncation.
+      // TagContent cuts the label at 12 characters.
       aria-label={isInteractive ? tag.label : undefined}
       className={cx('me-1', className)}
-      dot={tagDotColour(tag)}
+      dot={getTagColor(tag)}
       onClick={isInteractive ? () => onClick?.(tag as TTag) : undefined}
-      // A tag can be both chosen and out of plan, so the ring is not the
-      // clickable state.
+      // A tag can be chosen and out of plan at once.
       selected={selected}
       size='sm'
     >

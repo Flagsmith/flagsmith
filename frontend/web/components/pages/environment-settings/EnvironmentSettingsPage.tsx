@@ -521,7 +521,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                           }
                         />
                         {typeof currentEnv?.banner_text === 'string' && (
-                          <Row className='mt-4 flex-nowrap'>
+                          <Row className='mt-4 gap-2 flex-nowrap'>
                             <Input
                               placeholder='Banner text'
                               value={currentEnv?.banner_text}
@@ -536,14 +536,12 @@ const EnvironmentSettingsPage: React.FC = () => {
                               }}
                               className='full-width'
                             />
-                            <div className='ml-2'>
-                              <ColourSelect
-                                value={currentEnv?.banner_colour || ''}
-                                onChange={(banner_colour) =>
-                                  updateCurrentEnv({ banner_colour }, false)
-                                }
-                              />
-                            </div>
+                            <ColourSelect
+                              value={currentEnv?.banner_colour || ''}
+                              onChange={(banner_colour) =>
+                                updateCurrentEnv({ banner_colour }, false)
+                              }
+                            />
                             <Button onClick={() => saveEnv()} size='small'>
                               Save
                             </Button>

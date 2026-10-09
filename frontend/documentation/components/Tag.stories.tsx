@@ -43,8 +43,6 @@ export const EveryColour: Story = {
   ),
 }
 
-// The ends of the palette, where the stored hex is close enough to the chip
-// to disappear: the pale ones on light, the dark ones on dark.
 export const Extremes: Story = {
   name: 'Colours that barely read',
   render: () => (
@@ -61,7 +59,6 @@ export const Permanent: Story = {
   args: { tag: tag({ is_permanent: true, label: 'Core' }) },
 }
 
-/** Hooks cannot live in a story's render, so selection state gets a component. */
 const SelectableTags: React.FC = () => {
   const [picked, setPicked] = useState<string>('Checkout')
   return (

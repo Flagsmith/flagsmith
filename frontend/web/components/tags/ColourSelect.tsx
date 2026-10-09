@@ -11,9 +11,6 @@ type ColourSelectType = {
   onChange: (colour: string) => void
 }
 
-// The environment banner's colour, which is painted as a full width
-// background rather than as a dot, so these are the colours themselves and
-// are not moved to where a dot would read.
 const ColourSelect: FC<ColourSelectType> = ({ onChange, value: _value }) => {
   const [isOpen, setIsOpen] = useState(false)
   const value = _value || Constants.tagColors[0]

@@ -15,8 +15,6 @@ const SIZE_MAP: Record<ColorSwatchSize, number> = {
   lg: 16,
   md: 12,
   sm: 8,
-  // A cell in a colour picker, where the swatch is the thing being chosen
-  // rather than a mark beside a label.
   xl: 32,
 }
 

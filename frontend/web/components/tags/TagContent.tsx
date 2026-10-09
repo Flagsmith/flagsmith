@@ -4,7 +4,7 @@ import Format from 'common/utils/format'
 import { IonIcon } from '@ionic/react'
 import { alarmOutline, lockClosed, warning } from 'ionicons/icons'
 import Tooltip from 'components/Tooltip'
-import { tagDotColour } from './Tag'
+import { getTagColor } from './Tag'
 import OrganisationStore from 'common/stores/organisation-store'
 import Utils from 'common/utils/utils'
 import classNames from 'classnames'
@@ -12,9 +12,7 @@ import Icon from 'components/icons/Icon'
 type TagContent = {
   tag: Partial<TTag>
 }
-// Everything but letters, digits and the ranges above Latin-1 goes to a
-// numeric entity. Stated as what is kept rather than as the ranges to
-// escape: the same set, without naming control characters to list them.
+// Stated as what it keeps: the same set, without naming control characters.
 function escapeHTML(unsafe: string) {
   return unsafe.replace(
     /[^0-9A-Za-z\u0100-\uFFFF]/g,
@@ -85,16 +83,14 @@ const getTooltip = (tag: TTag | undefined) => {
       'Features marked with this tag are not monitored for staleness and have deletion protection.'
   }
   if (isTruncated) {
-    // The same chip as the component, as markup: a tooltip goes through
-    // innerHTML and cannot take one, so the dot is ColorSwatch's output
-    // written out rather than the component.
+    // A tooltip goes through innerHTML, so the chip is written out here.
     return `<div>
         <span
           class="ds-chip ds-chip--xs bg-surface-subtle text-default d-inline-flex align-items-center align-middle gap-1 rounded-sm me-1${
             disabled ? ' opacity-50' : ''
           }"
         >
-          <span class="d-inline-block flex-shrink-0 rounded-circle" style="width: 8px; height: 8px; background-color: ${tagDotColour(
+          <span class="d-inline-block flex-shrink-0 rounded-circle" style="width: 8px; height: 8px; background-color: ${getTagColor(
             tag,
           )}"></span>
           ${`${escapeHTML(tag.label)}`}
@@ -125,7 +121,7 @@ const TagContent: FC<TagContent> = ({ tag }) => {
           {tagLabel}
           {renderIcon(
             tag.type!,
-            tagDotColour(tag),
+            getTagColor(tag),
             tag.label!,
             !!tag.is_permanent,
           )}

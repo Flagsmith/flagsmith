@@ -11,12 +11,9 @@ export type ChipVariant = 'neutral' | 'accent'
 export type ChipProps = {
   children: ReactNode
   variant?: ChipVariant
-  // A colour the chip carries as a dot in front of its label, rather than as
-  // a fill. Any CSS colour, drawn as given.
   dot?: string
-  // Chosen. Draws the ring, and announces itself as pressed where the chip is
-  // a button, so the two cannot disagree. A caller driving a keyboard group
-  // sets aria-checked instead and keeps the ring.
+  // Draws the ring and sets aria-pressed, so the two cannot disagree. A
+  // keyboard group sets aria-checked instead and keeps the ring.
   selected?: boolean
   size?: ChipSize
   truncate?: boolean
