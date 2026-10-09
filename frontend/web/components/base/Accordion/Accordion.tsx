@@ -19,6 +19,8 @@ export type AccordionProps = {
   onToggle?: (open: boolean) => void
   // Drops the body's padding, for content with its own, like a table.
   flush?: boolean
+  // Stops toggling, for example while its content loads.
+  disabled?: boolean
   className?: string
 }
 
@@ -27,6 +29,7 @@ const Accordion: FC<AccordionProps> = ({
   className,
   defaultOpen = false,
   description,
+  disabled = false,
   flush = false,
   meta,
   onToggle,
@@ -52,14 +55,14 @@ const Accordion: FC<AccordionProps> = ({
       )}
     >
       <BareButton
-        id={`${id}-header`}
         className='ds-accordion__header d-flex gap-2 w-100 p-3 text-start text-default'
         aria-expanded={open}
         aria-controls={`${id}-body`}
+        disabled={disabled}
         onClick={toggle}
       >
         <span className='ds-accordion__heading d-flex flex-grow-1 gap-1'>
-          <span className='ds-accordion__title'>{title}</span>
+          <span>{title}</span>
           {!!description && (
             <span className='text-secondary'>{description}</span>
           )}
@@ -75,14 +78,7 @@ const Accordion: FC<AccordionProps> = ({
       </BareButton>
       {/* Inert while closed, so its content leaves the tab order and the
           accessibility tree, not just the screen. */}
-      <div
-        ref={contentRef}
-        style={style}
-        id={`${id}-body`}
-        role='region'
-        aria-labelledby={`${id}-header`}
-        inert={!open}
-      >
+      <div ref={contentRef} style={style} id={`${id}-body`} inert={!open}>
         <div className={cn({ 'px-3 pb-3': !flush })}>{children}</div>
       </div>
     </div>

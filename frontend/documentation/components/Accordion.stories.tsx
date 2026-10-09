@@ -3,6 +3,8 @@ import type { Meta, StoryObj } from 'storybook'
 
 import Accordion from 'components/base/Accordion'
 import Chip from 'components/base/Chip'
+import Loader from 'components/Loader'
+import Table, { TableBody, TableCell, TableRow } from 'components/base/Table'
 
 const meta: Meta<typeof Accordion> = {
   args: {
@@ -46,20 +48,24 @@ export const WithMeta: Story = {
 export const Flush: Story = {
   args: {
     children: (
-      <table className='table mb-0'>
-        <tbody>
-          <tr>
-            <td>search_ranking</td>
-          </tr>
-          <tr>
-            <td>payment_provider</td>
-          </tr>
-        </tbody>
-      </table>
+      <Table variant='ghost'>
+        <TableBody>
+          <TableRow>
+            <TableCell>search_ranking</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell>payment_provider</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     ),
     defaultOpen: true,
     flush: true,
   },
+}
+
+export const Disabled: Story = {
+  args: { disabled: true, meta: <Loader width='15px' height='15px' /> },
 }
 
 export const Group: Story = {
