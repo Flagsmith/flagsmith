@@ -38,8 +38,9 @@ const esc = (s) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 const lightVal = (e) => e.light ?? e.value
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 
-const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
-const DESCRIBED = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
+const TYPE_SCALE = ['font-weight', 'font-size', 'line-height']
+const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing', ...TYPE_SCALE]
+const DESCRIBED = ['radius', 'shadow', 'duration', 'easing', ...TYPE_SCALE]
 // Chart colours are like colour tokens (light/dark) but not under "color"
 const CHART_CATEGORY = 'chart'
 
@@ -495,6 +496,20 @@ function generateUtilities() {
     for (const [key, e] of sorted(json.duration)) {
       lines.push(
         `.transition-${key} { transition-duration: var(${e.cssVar}); transition-timing-function: var(--easing-standard); }`,
+      )
+    }
+    lines.push('')
+  }
+
+  // Text styles: size, line height and weight from one Figma text style
+  if (json['text-style']) {
+    lines.push('// Text styles')
+    for (const [key, s] of Object.entries(json['text-style'])) {
+      const size = json['font-size'][s.size].cssVar
+      const lineHeight = json['line-height'][s.lineHeight].cssVar
+      const weight = json['font-weight'][s.weight].cssVar
+      lines.push(
+        `.type-${key} { font-size: var(${size}); line-height: var(${lineHeight}); font-weight: var(${weight}); }`,
       )
     }
     lines.push('')

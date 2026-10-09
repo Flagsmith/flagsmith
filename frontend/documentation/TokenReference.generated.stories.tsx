@@ -869,6 +869,138 @@ export const AllTokens: StoryObj = {
           </tr>
         </tbody>
       </table>
+      <h3>Font-size</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--font-size-h1</code>
+            </td>
+            <td>
+              <code>42px</code>
+            </td>
+            <td>Headline 1.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-h2</code>
+            </td>
+            <td>
+              <code>34px</code>
+            </td>
+            <td>Headline 2.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-h3</code>
+            </td>
+            <td>
+              <code>30px</code>
+            </td>
+            <td>Headline 3.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-h4</code>
+            </td>
+            <td>
+              <code>24px</code>
+            </td>
+            <td>Headline 4.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-h5</code>
+            </td>
+            <td>
+              <code>18px</code>
+            </td>
+            <td>Headline 5.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-h6</code>
+            </td>
+            <td>
+              <code>16px</code>
+            </td>
+            <td>Headline 6.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-body-1</code>
+            </td>
+            <td>
+              <code>14px</code>
+            </td>
+            <td>Body 1. Default text, buttons, links.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-body-2</code>
+            </td>
+            <td>
+              <code>13px</code>
+            </td>
+            <td>Body 2. Secondary text.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-body-3</code>
+            </td>
+            <td>
+              <code>12px</code>
+            </td>
+            <td>Body 3. Captions, labels.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--font-size-body-4</code>
+            </td>
+            <td>
+              <code>11px</code>
+            </td>
+            <td>Body 4. Fine print.</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Line-height</h3>
+      <table className='docs-table'>
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Value</th>
+            <th>Usage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>--line-height-heading</code>
+            </td>
+            <td>
+              <code>1.3</code>
+            </td>
+            <td>Headlines H1 to H6.</td>
+          </tr>
+          <tr>
+            <td>
+              <code>--line-height-body</code>
+            </td>
+            <td>
+              <code>1.4</code>
+            </td>
+            <td>Body text, buttons, links.</td>
+          </tr>
+        </tbody>
+      </table>
 
       <h3>Dark mode shadows</h3>
       <p>
