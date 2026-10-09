@@ -1000,7 +1000,7 @@ class SimpleFeatureStateViewSet(
             if _writes_live_segment_override(
                 serializer.validated_data
             ) and is_live_segment_override(feature_segment):
-                feature_state = _write_segment_override(
+                feature_state = _write_live_segment_override(
                     feature_segment, serializer.validated_data, author=request.user
                 )
                 return Response(
@@ -1031,7 +1031,7 @@ class SimpleFeatureStateViewSet(
                 )
                 == feature_state
             ):
-                feature_state = _write_segment_override(
+                feature_state = _write_live_segment_override(
                     feature_segment, serializer.validated_data, author=request.user
                 )
                 return Response(self.get_serializer(feature_state).data)
@@ -1070,7 +1070,7 @@ def _writes_live_segment_override(feature_state_data: dict[str, typing.Any]) -> 
     )
 
 
-def _write_segment_override(
+def _write_live_segment_override(
     feature_segment: FeatureSegment,
     feature_state_data: dict[str, typing.Any],
     *,

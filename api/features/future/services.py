@@ -242,11 +242,10 @@ def _delete_segment_overrides(
         else version.feature_segments.all()
     )
     feature_segments = feature_segments.filter(segment_id__in=segment_ids)
+    # Deleting the queryset, rather than each instance, leaves the other
+    # priorities as they are, but skips the hooks of the instances.
     for feature_segment in feature_segments:
-        # Deleting the queryset leaves the other priorities as they are, but
-        # skips the hooks of each instance.
         feature_segment.create_github_comment()
-    # Deleting a `FeatureSegment` instance decrements every greater priority.
     feature_segments.delete()
 
 
@@ -558,11 +557,18 @@ def delete_segment_override(
     return get_flag(environment=environment, feature=feature)
 
 
+def get_segment_overrides(
+    *, environment: Environment, feature: Feature
+) -> dict[int, FeatureState]:
+    """Get the flag's live overrides, by segment ID."""
+    return _get_overrides_by_segment_id(_get_feature_states(environment, feature))
+
+
 def get_segment_override(
     *, environment: Environment, feature: Feature, segment_id: int
 ) -> FeatureState | None:
     """Get the flag's live override for a segment, if any."""
-    return _get_overrides_by_segment_id(_get_feature_states(environment, feature)).get(
+    return get_segment_overrides(environment=environment, feature=feature).get(
         segment_id
     )
 
