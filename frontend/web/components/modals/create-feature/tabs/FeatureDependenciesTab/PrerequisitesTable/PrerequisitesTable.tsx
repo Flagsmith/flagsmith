@@ -2,6 +2,7 @@ import { FC, MouseEvent, ReactNode } from 'react'
 import cn from 'classnames'
 import { DependencyEdge } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
+import Chip from 'components/base/Chip'
 import Table, {
   TableBody,
   TableCell,
@@ -26,6 +27,10 @@ type PrerequisitesTableProps = {
   flashedId?: number
   isRemoving?: number
   onRemove: (edge: DependencyEdge) => void
+  // Takes back a held removal.
+  onUndo?: (edge: DependencyEdge) => void
+  // The row a change request refused, marked until the user acts.
+  refusedId?: number
   onSelect: (edge: DependencyEdge) => void
   // The prerequisite being added, shown as a row of its own until the POST
   // resolves. Otherwise nothing moves between picking one and it appearing.
@@ -43,6 +48,8 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
   onCancelAdd,
   onRemove,
   onSelect,
+  onUndo,
+  refusedId,
   rows,
 }) => (
   <Table variant='ghost' layout='fixed' highlightRowOnHover>
@@ -60,25 +67,47 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
       </TableRow>
     </TableHeader>
     <TableBody>
-      {rows.map(({ edge, isEnabled, isMet }) => (
+      {rows.map(({ edge, isEnabled, isMet, staged }) => (
         <TableRow
           key={edge.prerequisite.id}
           className={cn('cursor-pointer', {
             'prerequisite-row--flash': flashedId === edge.prerequisite.id,
+            'prerequisite-row--refused': refusedId === edge.prerequisite.id,
           })}
           onClick={() => onSelect(edge)}
           pending={isRemoving === edge.prerequisite.id}
         >
-          <TableCell className='font-weight-medium text-truncate'>
-            <Button
-              theme='text'
-              onClick={(e: MouseEvent) => {
-                e.stopPropagation()
-                onSelect(edge)
-              }}
-            >
-              {edge.prerequisite.name}
-            </Button>
+          <TableCell className='font-weight-medium'>
+            {/* The name gives way to the chip, so a long name cannot hide
+                what is about to happen to it. */}
+            <div className='prerequisite-name d-flex align-items-center gap-2'>
+              <Button
+                theme='text'
+                className='justify-content-start'
+                onClick={(e: MouseEvent) => {
+                  e.stopPropagation()
+                  onSelect(edge)
+                }}
+              >
+                <span
+                  className={cn('prerequisite-name__text text-truncate', {
+                    'text-secondary text-decoration-line-through':
+                      staged === 'remove',
+                  })}
+                >
+                  {edge.prerequisite.name}
+                </span>
+              </Button>
+              {!!staged && (
+                <Chip
+                  size='xs'
+                  variant={staged === 'add' ? 'accent' : 'neutral'}
+                  className='flex-shrink-0'
+                >
+                  {staged === 'add' ? 'Staged: add' : 'Staged: remove'}
+                </Chip>
+              )}
+            </div>
           </TableCell>
           <TableCell>
             <StateToggle isEnabled={isEnabled} />
@@ -88,21 +117,35 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
           </TableCell>
           {canManage && (
             <TableCell className='ds-table__actions text-end'>
-              {/* An edge from a hand-written segment condition cannot be removed
-                through the dependencies API, so it gets no control. */}
-              {edge.segment.is_system && (
+              {staged === 'remove' && onUndo ? (
                 <IconButton
                   size='small'
                   variant='ghost'
-                  disabled={isRemoving === edge.prerequisite.id}
                   onClick={(e: MouseEvent) => {
                     e.stopPropagation()
-                    onRemove(edge)
+                    onUndo(edge)
                   }}
-                  aria-label={`Remove ${edge.prerequisite.name} as a prerequisite`}
+                  aria-label={`Keep ${edge.prerequisite.name} as a prerequisite`}
                 >
-                  <Icon name='trash-2' width={16} />
+                  <Icon name='refresh' width={16} />
                 </IconButton>
+              ) : (
+                // An edge from a hand-written segment condition cannot be
+                // removed through the dependencies API, so it gets no control.
+                edge.segment.is_system && (
+                  <IconButton
+                    size='small'
+                    variant='ghost'
+                    disabled={isRemoving === edge.prerequisite.id}
+                    onClick={(e: MouseEvent) => {
+                      e.stopPropagation()
+                      onRemove(edge)
+                    }}
+                    aria-label={`Remove ${edge.prerequisite.name} as a prerequisite`}
+                  >
+                    <Icon name='trash-2' width={16} />
+                  </IconButton>
+                )
               )}
             </TableCell>
           )}

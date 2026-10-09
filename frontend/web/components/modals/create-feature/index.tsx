@@ -460,12 +460,13 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     controlValue < 0
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
-  // Change requests are out of scope for the first version, so the tab stays
-  // hidden where they are enforced. See #8428.
+  // Where change requests are enforced, the tab waits on its own flag while the
+  // API for staging dependencies (#8449) is faked.
   const isDependenciesTabEnabled =
     Utils.getFlagsmithHasFeature('flag_dependencies') &&
     !existingChangeRequest &&
-    !is4Eyes
+    (!is4Eyes ||
+      Utils.getFlagsmithHasFeature('flag_dependencies_change_requests'))
 
   let regexValid = true
   try {
@@ -835,6 +836,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         environmentName={environmentName}
                         projectId={projectId}
                         projectFlag={projectFlag}
+                        requiresChangeRequests={is4Eyes}
+                        isVersioned={isVersioned}
                         onSelectFeature={(featureId) => {
                           // The features list, never the current page: it
                           // owns the deep link and hydrates an off-page
