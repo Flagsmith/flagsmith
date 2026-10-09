@@ -23,8 +23,12 @@ const ChangeRequestLink: FC<ChangeRequestLinkProps> = ({
     className='d-inline-flex align-items-center gap-1'
   >
     {children}
-    <Icon name='open-external-link' width={14} aria-hidden />
-    <span className='visually-hidden'>(opens in a new tab)</span>
+    <Icon
+      name='open-external-link'
+      width={12}
+      role='img'
+      aria-label='opens in a new tab'
+    />
   </a>
 )
 
