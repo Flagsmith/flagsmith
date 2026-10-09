@@ -80,6 +80,9 @@ export const useDependencies = ({
       }).unwrap(),
     dependentEdges: dependents?.results ?? [],
     isCreating,
+    isEnabled: (featureId: number) =>
+      !!featureList?.results.find((feature) => feature.id === featureId)
+        ?.environment_feature_state?.enabled,
     // The feature list counts too. Without it every prerequisite reads as off,
     // so the tab would claim the flag is serving off while the list is still
     // in flight, or for good if the request fails.
