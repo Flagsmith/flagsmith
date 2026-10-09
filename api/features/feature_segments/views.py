@@ -21,14 +21,14 @@ from features.feature_segments.serializers import (
 )
 from features.feature_segments.services import (
     create_priorities_changed_audit_log,
-    get_reordered_priorities,
-)
-from features.future.services import (
-    delete_segment_override,
     get_next_segment_override_priority,
+    get_reordered_priorities,
     get_segment_override,
     get_segment_overrides,
     is_live_segment_override,
+)
+from features.future.services import (
+    delete_segment_override,
     update_flag,
 )
 from features.models import FeatureSegment

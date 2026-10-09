@@ -82,17 +82,16 @@ from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
     exceeds_segment_override_limit,
 )
-from features.future.mappers import map_feature_state_data_to_segment_override
-from features.future.services import (
+from features.feature_segments.services import (
     get_next_segment_override_priority,
     get_segment_override,
     is_live_segment_override,
-    update_flag,
 )
 from features.services import (
     delete_feature,
     is_segment_override_unchanged,
     write_live_segment_override,
+    write_segment_override,
     writes_live_segment_override,
 )
 from features.types import LegacyFeatureStateData
@@ -1342,22 +1341,13 @@ def create_segment_override(  # type: ignore[no-untyped-def]
                 environment=environment, feature=feature
             )
 
-    update_flag(
+    feature_state = write_segment_override(
         environment=environment,
         feature=feature,
-        changes={
-            "segment_overrides": [
-                map_feature_state_data_to_segment_override(
-                    segment.id, feature_state_data, priority=priority
-                )
-            ]
-        },
-        replace=False,
+        segment_id=segment.id,
+        feature_state_data=feature_state_data,
         author=request.user,  # type: ignore[arg-type]
-        system=False,
-    )
-    feature_state = get_segment_override(
-        environment=environment, feature=feature, segment_id=segment.id
+        priority=priority,
     )
     return Response(
         CustomCreateSegmentOverrideFeatureStateSerializer(feature_state).data,
