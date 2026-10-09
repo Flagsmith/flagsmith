@@ -16,6 +16,7 @@ import {
 import { useLazyGetFeatureStatesQuery } from 'common/services/useFeatureState'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import ChangeRequestModal from 'components/modals/ChangeRequestModal'
+import ChangeRequestLink from 'components/modals/create-feature/tabs/FeatureDependenciesTab/ChangeRequestLink'
 import {
   StagingError,
   describeApiError,
@@ -139,11 +140,13 @@ export const useStagedPrerequisites = ({
       toast(
         <>
           Change request created.{' '}
-          <a
-            href={`/project/${projectId}/environment/${environmentId}/change-requests/${changeRequestId}`}
+          <ChangeRequestLink
+            projectId={projectId}
+            environmentId={environmentId}
+            changeRequestId={changeRequestId}
           >
             View it
-          </a>
+          </ChangeRequestLink>
         </>,
       )
     } catch (e) {
