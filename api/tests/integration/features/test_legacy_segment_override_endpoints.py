@@ -441,6 +441,47 @@ def test_create_feature_segment__system_segment__responds_409(
     )
 
 
+def test_update_feature_segment__other_segment__moves_override(
+    admin_client: APIClient,
+    create_segment_override: Any,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    project: int,
+    segment: int,
+) -> None:
+    # Given
+    create_segment_override(environment_api_key, feature, segment)
+    other_segment = _create_segment(admin_client, project, "other segment")
+    feature_segment_id = _get_feature_segment_id(
+        admin_client, environment, feature, segment
+    )
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/features/feature-segments/{feature_segment_id}/",
+        {"feature": feature, "segment": other_segment, "environment": environment},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": feature_segment_id,
+        "uuid": mock.ANY,
+        "feature": feature,
+        "segment": other_segment,
+        "environment": environment,
+        "priority": 0,
+    }
+    assert [
+        override["segment"]["id"]
+        for override in _get_segment_overrides(
+            admin_client, environment_api_key, feature
+        )
+    ] == [other_segment]
+
+
 def test_update_feature_segment__system_segment__responds_409(
     admin_client: APIClient,
     environment: int,
