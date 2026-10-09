@@ -152,7 +152,7 @@ class Feature(  # type: ignore[django-manager-missing]
             and self.deleted_at
         ):
             call_github_task(
-                organisation_id=self.project.organisation_id,  # type: ignore[arg-type]
+                organisation_id=self.project.organisation_id,
                 type=GitHubEventType.FLAG_DELETED.value,
                 feature=self,
                 segment_name=None,
@@ -450,7 +450,7 @@ class FeatureSegment(
             and self.feature.project.organisation.github_config.exists()
         ):
             call_github_task(
-                self.feature.project.organisation_id,  # type: ignore[arg-type]
+                self.feature.project.organisation_id,
                 GitHubEventType.SEGMENT_OVERRIDE_DELETED.value,
                 self.feature,
                 self.segment.name,
