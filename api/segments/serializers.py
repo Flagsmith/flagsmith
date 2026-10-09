@@ -20,7 +20,7 @@ from segment_membership.constants import MAX_SEGMENT_MEMBERS_PAGE_SIZE
 from segment_membership.models import SegmentMembershipCount
 from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
-from segments.services import get_live_overrides
+from segments.services import check_segment_is_not_system, get_live_overrides
 from segments.types import (
     LegacySegmentRule,
 )
@@ -202,6 +202,11 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     def to_internal_value(self, data: dict[str, Any]) -> Any:
         self._validate_rules_depth(data.get("rules", []))
         return super().to_internal_value(data)
+
+    def validate_version_of(self, version_of: Segment | None) -> Segment | None:
+        if version_of is not None:
+            check_segment_is_not_system(version_of)
+        return version_of
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)

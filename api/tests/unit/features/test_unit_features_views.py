@@ -2989,6 +2989,9 @@ def test_create_segment_override__max_limit_reached__returns_400(
     )
     assert response.status_code == status.HTTP_201_CREATED
 
+    another_segment = Segment.objects.create(name="Another segment", project=project)
+    data["feature_segment"] = {"segment": another_segment.id}
+
     # When
     response = admin_client_new.post(
         url, data=json.dumps(data), content_type="application/json"

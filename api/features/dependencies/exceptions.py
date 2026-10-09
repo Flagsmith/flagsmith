@@ -4,6 +4,7 @@ from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from rest_framework import status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 
+from core.exceptions import APIError
 from core.types import APIErrorDetail
 from features.dependencies.types import (
     DependencyPath,
@@ -105,7 +106,7 @@ class DependencyExistsError(DependencyConflictError):
         )
 
 
-class DependencyNotFoundError(NotFound):
+class DependencyNotFoundError(APIError, NotFound):
     """Raised where the feature does not depend on the prerequisite in the environment."""
 
     default_code = "dependency_not_found"
@@ -114,37 +115,28 @@ class DependencyNotFoundError(NotFound):
         self, feature_name: FeatureName, prerequisite_feature_name: FeatureName
     ) -> None:
         super().__init__(
-            {
-                "code": self.default_code,
-                "message": f'The feature "{feature_name}" does not depend'
-                f' on the feature "{prerequisite_feature_name}".',
-            }
+            f'The feature "{feature_name}" does not depend'
+            f' on the feature "{prerequisite_feature_name}".'
         )
 
 
-class FeatureDependencyPermissionDeniedError(PermissionDenied):
+class FeatureDependencyPermissionDeniedError(APIError, PermissionDenied):
     """Raised where a caller may not manage the environment's segment overrides."""
 
     def __init__(self) -> None:
         permission_name = MANAGE_SEGMENT_OVERRIDES.capitalize().replace("_", " ")
         super().__init__(
-            {
-                "code": self.default_code,
-                "message": f'The permission "{permission_name}" is necessary'
-                " to manage feature dependencies.",
-            }
+            f'The permission "{permission_name}" is necessary'
+            " to manage feature dependencies."
         )
 
 
-class PrerequisiteIsSelfError(APIException):
+class PrerequisiteIsSelfError(APIError):
     """Raised where a feature is requested as its own prerequisite."""
 
     status_code = status.HTTP_400_BAD_REQUEST
     default_code = "prerequisite_is_self"
     default_detail = "A feature cannot depend on itself."
-
-    def __init__(self) -> None:
-        super().__init__({"code": self.default_code, "message": self.default_detail})
 
 
 class PrerequisiteFeatureNotFoundError(APIException):
