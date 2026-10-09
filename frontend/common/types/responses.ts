@@ -1590,6 +1590,7 @@ export type Res = {
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   updateChangeRequest: ChangeRequest
+  createEnvironmentChangeRequest: ChangeRequest
   groupSummaries: UserGroupSummary[]
   supportedContentType: ContentType[]
   externalResource: PagedResponse<ExternalResource>
