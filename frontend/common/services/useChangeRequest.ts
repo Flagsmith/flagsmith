@@ -15,6 +15,31 @@ export const changeRequestService = service
   .enhanceEndpoints({ addTagTypes: ['ChangeRequest'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      createEnvironmentChangeRequest: builder.mutation<
+        Res['createEnvironmentChangeRequest'],
+        Req['createEnvironmentChangeRequest']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'ChangeRequest' }],
+        query: ({ approvals, environmentId, ...rest }) => ({
+          body: {
+            ...rest,
+            // The modal hands back users and groups in one list.
+            approvals: approvals.filter((approval) => !!approval.user),
+            // Required even when the changes are in change sets.
+            feature_states: [],
+            group_assignments: approvals.filter((approval) => !!approval.group),
+          },
+          method: 'POST',
+          url: `environments/${environmentId}/create-change-request/`,
+        }),
+      }),
+      deleteChangeRequest: builder.mutation<void, Req['deleteChangeRequest']>({
+        invalidatesTags: [{ id: 'LIST', type: 'ChangeRequest' }],
+        query: ({ id }) => ({
+          method: 'DELETE',
+          url: `features/workflows/change-requests/${id}/`,
+        }),
+      }),
       getChangeRequests: builder.query<
         Res['changeRequests'],
         Req['getChangeRequests']
@@ -67,6 +92,8 @@ export async function updateChangeRequest(
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useCreateEnvironmentChangeRequestMutation,
+  useDeleteChangeRequestMutation,
   useGetChangeRequestsQuery,
   useUpdateChangeRequestMutation,
   // END OF EXPORTS
