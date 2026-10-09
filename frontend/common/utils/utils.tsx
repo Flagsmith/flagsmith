@@ -73,11 +73,6 @@ export const planNames = {
 import BaseUtils from './base/_utils'
 import { copyToClipboard } from './copyToClipboard'
 const Utils = Object.assign({}, BaseUtils, {
-  appendImage: (src: string) => {
-    const img = document.createElement('img')
-    img.src = src
-    document.body.appendChild(img)
-  },
   calculateControl(
     multivariateOptions: MultivariateOption[],
     variations?: MultivariateFeatureStateValue[],
