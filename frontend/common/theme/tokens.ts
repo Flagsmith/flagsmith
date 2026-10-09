@@ -128,7 +128,7 @@ export const fontWeight: Record<string, TokenEntry> = {
 // Font-size
 export const fontSize: Record<string, TokenEntry> = {
   'body-1': {
-    description: 'Body 1. Default text, buttons, links.',
+    description: 'Body 1. Default text.',
     value: 'var(--font-size-body-1, 14px)',
   },
   'body-2': {
@@ -171,7 +171,7 @@ export const fontSize: Record<string, TokenEntry> = {
 // Line-height
 export const lineHeight: Record<string, TokenEntry> = {
   'body': {
-    description: 'Body text, buttons, links.',
+    description: 'Body text.',
     value: 'var(--line-height-body, 1.4)',
   },
   'heading': {
