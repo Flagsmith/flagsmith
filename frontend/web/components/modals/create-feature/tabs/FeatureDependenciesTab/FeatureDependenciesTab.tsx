@@ -12,15 +12,22 @@ import DependentFeatures from './DependentFeatures'
 import FeatureDependenciesSkeleton from './FeatureDependenciesSkeleton'
 import PrerequisitesTable from './PrerequisitesTable'
 import { PrerequisitesEmptyState } from './DependenciesEmptyStates'
+import ChangeRequestFooter from './ChangeRequestFooter'
+import ChangeRequestNotice from './ChangeRequestNotice'
 import DependenciesHeader from './DependenciesHeader'
 import PrerequisitePicker from './PrerequisitePicker'
+import { getDependenciesMode } from './dependenciesMode'
+import { withStagedChanges } from './prerequisiteState'
 import { usePrerequisites } from './hooks/usePrerequisites'
+import { useStagedPrerequisites } from './hooks/useStagedPrerequisites'
 
 type FeatureDependenciesTabProps = {
   environmentId: string
   environmentName: string
   projectId: number
   projectFlag: ProjectFlag
+  requiresChangeRequests: boolean
+  isVersioned: boolean
   // Opens another feature's modal on this tab.
   onSelectFeature: (featureId: number) => void
 }
@@ -28,16 +35,27 @@ type FeatureDependenciesTabProps = {
 const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   environmentId,
   environmentName,
+  isVersioned,
   onSelectFeature,
   projectFlag,
   projectId,
+  requiresChangeRequests,
 }) => {
-  const { isLoading: isLoadingPermission, permission: canManage } =
-    useHasPermission({
-      id: environmentId,
-      level: 'environment',
-      permission: EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
-    })
+  const mode = getDependenciesMode(requiresChangeRequests, isVersioned)
+  const isChangeRequest = mode === 'changeRequest'
+  const { isLoading: isLoadingPermission, permission } = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: isChangeRequest
+      ? EnvironmentPermission.CREATE_CHANGE_REQUEST
+      : EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
+  })
+  const canManage = permission && mode !== 'readOnly'
+  const staging = useStagedPrerequisites({
+    environmentId,
+    projectFlag,
+    projectId,
+  })
 
   const {
     addingName,
@@ -45,6 +63,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
     dependentEdges,
     flashedId,
     isCreating,
+    isEnabled,
     isError,
     isLoading,
     isOpenForAdding,
@@ -72,23 +91,43 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
     return <ErrorMessage error="Could not load this feature's dependencies." />
   }
 
+  const shownRows = isChangeRequest
+    ? withStagedChanges(rows, staging.staged, projectFlag.id, isEnabled)
+    : rows
+  const handleAdd = isChangeRequest
+    ? (feature: ProjectFlag) => {
+        staging.add(feature)
+        onAddingChange(false)
+      }
+    : onAdd
+
   return (
     <div>
       <DependenciesHeader isPrerequisite={isPrerequisite} />
 
+      <ChangeRequestNotice
+        mode={mode}
+        canCreate={permission}
+        environmentId={environmentId}
+        environmentName={environmentName}
+        projectId={projectId}
+      />
+
       {/* addingName too: on a first add the picker has closed and no row has
           arrived yet, and the empty state would take the pending row's place. */}
-      {rows.length || isOpenForAdding || addingName ? (
+      {shownRows.length || isOpenForAdding || addingName ? (
         <>
           <BlockedBanner environmentName={environmentName} rows={rows} />
           <DependenciesPanel>
             <PrerequisitesTable
-              rows={rows}
+              rows={shownRows}
               canManage={canManage}
               flashedId={flashedId}
               addingName={addingName}
               isRemoving={removingId}
-              onRemove={onRemove}
+              refusedId={staging.error?.prerequisiteId}
+              onRemove={isChangeRequest ? staging.remove : onRemove}
+              onUndo={(edge) => staging.undo(edge.prerequisite.id)}
               onSelect={(edge) => onSelectFeature(edge.prerequisite.id)}
               addControl={
                 isOpenForAdding && (
@@ -96,11 +135,11 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
                     projectId={projectId}
                     environmentId={environmentId}
                     featureId={projectFlag.id}
-                    existingPrerequisiteIds={rows.map(
+                    existingPrerequisiteIds={shownRows.map(
                       (row) => row.edge.prerequisite.id,
                     )}
                     disabled={isCreating}
-                    onChange={onAdd}
+                    onChange={handleAdd}
                   />
                 )
               }
@@ -125,6 +164,16 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         </Banner>
       )}
 
+      {!!staging.error && (
+        <Banner
+          type='error'
+          className='mt-3'
+          title='The change request was not created'
+        >
+          {staging.error.message}
+        </Banner>
+      )}
+
       {!isPrerequisite && canManage && !isOpenForAdding && (
         <Button
           theme='outline'
@@ -134,6 +183,15 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         >
           Add prerequisite
         </Button>
+      )}
+
+      {isChangeRequest && !!staging.staged.length && (
+        <ChangeRequestFooter
+          count={staging.staged.length}
+          isSubmitting={staging.isSubmitting}
+          onCreate={staging.openChangeRequest}
+          onDiscard={staging.discard}
+        />
       )}
 
       <ModalHR className='mt-4' />
