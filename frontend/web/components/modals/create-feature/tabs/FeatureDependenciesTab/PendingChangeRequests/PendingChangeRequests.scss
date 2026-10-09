@@ -1,0 +1,23 @@
+// The change request that was just created: the staged rows went into it, so
+// the eye is led from where they were to where they are now.
+.pending-change-request--flash {
+  border-radius: var(--radius-lg);
+  animation: pending-change-request-flash 2s var(--easing-standard);
+}
+
+@keyframes pending-change-request-flash {
+  from {
+    box-shadow: 0 0 0 3px var(--color-surface-action-muted);
+  }
+
+  to {
+    box-shadow: 0 0 0 3px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pending-change-request--flash {
+    animation: none;
+    box-shadow: 0 0 0 3px var(--color-surface-action-muted);
+  }
+}

@@ -16,12 +16,16 @@ import {
 import { useLazyGetFeatureStatesQuery } from 'common/services/useFeatureState'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import ChangeRequestModal from 'components/modals/ChangeRequestModal'
+import ChangeRequestLink from 'components/modals/create-feature/tabs/FeatureDependenciesTab/ChangeRequestLink'
 import {
   StagingError,
   describeApiError,
   toStagingError,
 } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/stagingError'
 import { unchangedChangeSet } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/unchangedChangeSet'
+
+// `done` is null while the change request itself is being created.
+export type SubmitProgress = { done: number | null; total: number }
 
 type UseStagedPrerequisitesArgs = {
   environmentId: string
@@ -45,7 +49,9 @@ export const useStagedPrerequisites = ({
 }: UseStagedPrerequisitesArgs) => {
   const [staged, setStaged] = useState<StagedDependencyChange[]>([])
   const [error, setError] = useState<StagingError | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [progress, setProgress] = useState<SubmitProgress | null>(null)
+  // The change request the last submit created, so the tab can point at it.
+  const [createdId, setCreatedId] = useState<number>()
 
   const [createChangeRequest] = useCreateEnvironmentChangeRequestMutation()
   const [deleteChangeRequest] = useDeleteChangeRequestMutation()
@@ -82,7 +88,8 @@ export const useStagedPrerequisites = ({
 
   const stage = async (changeRequestId: number) => {
     // In order, so the first refusal names the change that caused it.
-    for (const { action, prerequisite } of staged) {
+    for (const [index, { action, prerequisite }] of staged.entries()) {
+      setProgress({ done: index, total: staged.length })
       const query = {
         changeRequestId,
         environmentId,
@@ -106,8 +113,9 @@ export const useStagedPrerequisites = ({
   }
 
   const submitChangeRequest = async (fields: ChangeRequestFields) => {
-    setIsSubmitting(true)
+    setProgress({ done: null, total: staged.length })
     setError(null)
+    setCreatedId(undefined)
     let changeRequestId: number | undefined
     try {
       const featureStates = await getFeatureStates({
@@ -128,14 +136,17 @@ export const useStagedPrerequisites = ({
       ).id
       await stage(changeRequestId)
       setStaged([])
+      setCreatedId(changeRequestId)
       toast(
         <>
           Change request created.{' '}
-          <a
-            href={`/project/${projectId}/environment/${environmentId}/change-requests/${changeRequestId}`}
+          <ChangeRequestLink
+            projectId={projectId}
+            environmentId={environmentId}
+            changeRequestId={changeRequestId}
           >
             View it
-          </a>
+          </ChangeRequestLink>
         </>,
       )
     } catch (e) {
@@ -143,7 +154,7 @@ export const useStagedPrerequisites = ({
       if (changeRequestId) await deleteChangeRequest({ id: changeRequestId })
       setError(toStagingError(e, 'Could not create the change request.'))
     } finally {
-      setIsSubmitting(false)
+      setProgress(null)
     }
   }
 
@@ -161,13 +172,14 @@ export const useStagedPrerequisites = ({
 
   return {
     add,
+    createdId,
     discard: () => {
       setError(null)
       setStaged([])
     },
     error,
-    isSubmitting,
     openChangeRequest,
+    progress,
     remove,
     staged,
     undo: drop,

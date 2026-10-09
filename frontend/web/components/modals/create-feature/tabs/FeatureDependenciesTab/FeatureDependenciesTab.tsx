@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import { ProjectFlag } from 'common/types/responses'
 import { EnvironmentPermission } from 'common/types/permissions.types'
 import { useHasPermission } from 'common/providers/Permission'
@@ -37,6 +37,8 @@ type FeatureDependenciesTabProps = {
   projectFlag: ProjectFlag
   requiresChangeRequests: boolean
   isVersioned: boolean
+  // Held changes are lost when the modal closes, so the modal needs to know.
+  onDirtyChange?: (isDirty: boolean) => void
   // Opens another feature's modal on this tab.
   onSelectFeature: (featureId: number) => void
 }
@@ -45,6 +47,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   environmentId,
   environmentName,
   isVersioned,
+  onDirtyChange,
   onSelectFeature,
   projectFlag,
   projectId,
@@ -65,6 +68,10 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
     projectFlag,
     projectId,
   })
+  const isDirty = !!staging.staged.length
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
 
   const {
     addingName,
@@ -223,7 +230,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
       {isChangeRequest && !!staging.staged.length && (
         <ChangeRequestFooter
           count={staging.staged.length}
-          isSubmitting={staging.isSubmitting}
+          progress={staging.progress}
           onCreate={staging.openChangeRequest}
           onDiscard={staging.discard}
         />
@@ -231,6 +238,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
 
       {isChangeRequest && (
         <PendingChangeRequests
+          highlightId={staging.createdId}
           environmentId={environmentId}
           featureId={projectFlag.id}
           projectId={projectId}
