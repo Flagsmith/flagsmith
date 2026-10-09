@@ -204,7 +204,6 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         return super().to_internal_value(data)
 
     def validate_version_of(self, version_of: Segment | None) -> Segment | None:
-        # Also refuses change requests to change system segments.
         if version_of is not None:
             check_segment_is_not_system(version_of)
         return version_of

@@ -30,8 +30,8 @@ def test_create_segment__version_of_system_segment__responds_409(
     # Then
     assert response.status_code == 409
     assert response.json() == {
-        "detail": "System segments and their overrides can't be changed directly.",
         "code": "system_segment_modification",
+        "message": "System segments and their overrides can't be changed directly.",
     }
 
 

@@ -1,8 +1,5 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
-from collections.abc import Mapping
-from typing import Any
-
 from features.feature_states.models import API_VALUE_TYPES
 from features.future.types import (
     EnvironmentDefaultResponse,
@@ -13,6 +10,7 @@ from features.future.types import (
     Variant,
 )
 from features.models import FeatureState, FeatureStateValue
+from features.types import LegacyFeatureStateData
 
 
 def map_flag_value(feature_state_value: FeatureStateValue) -> FlagValue | None:
@@ -69,7 +67,7 @@ def map_segment_override(
 
 def map_feature_state_data_to_segment_override(
     segment_id: int,
-    feature_state_data: Mapping[str, Any],
+    feature_state_data: LegacyFeatureStateData,
     *,
     priority: int | None = None,
 ) -> SegmentOverrideRequest:
@@ -91,9 +89,7 @@ def map_feature_state_data_to_segment_override(
     ) is not None:
         override["variants"] = [
             Variant(
-                id=getattr(
-                    option := value["multivariate_feature_option"], "id", option
-                ),
+                id=value["multivariate_feature_option"].id,
                 weight=value["percentage_allocation"],
             )
             for value in multivariate_values

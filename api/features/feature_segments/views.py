@@ -42,6 +42,7 @@ from .permissions import FeatureSegmentPermissions
 logger = logging.getLogger(__name__)
 
 
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
 @method_decorator(
     name="list",
     decorator=extend_schema(
@@ -103,7 +104,6 @@ class FeatureSegmentViewSet(
         if environment.use_v2_feature_versioning:
             # Overrides of v2 environments are drafted for their feature states
             # to be added to versions, rather than going live.
-            # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
             check_segment_is_not_system(segment)
             with transaction.atomic():
                 feature_segment = serializer.save()
@@ -138,7 +138,6 @@ class FeatureSegmentViewSet(
 
     @transaction.atomic
     def perform_update(self, serializer: BaseSerializer[FeatureSegment]) -> None:
-        # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
         check_segment_is_not_system(serializer.instance.segment)  # type: ignore[union-attr]
         if segment := serializer.validated_data.get("segment"):
             check_segment_is_not_system(segment)
@@ -155,7 +154,6 @@ class FeatureSegmentViewSet(
                 system=False,
             )
             return
-        # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
         check_segment_is_not_system(instance.segment)
         instance.delete()
 
@@ -218,7 +216,6 @@ class FeatureSegmentViewSet(
             feature_segment.id not in live_feature_segment_ids
             for feature_segment in feature_segments
         ):
-            # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
             for feature_segment in moved:
                 check_segment_is_not_system(feature_segment.segment)
             return Response(
