@@ -2,6 +2,7 @@ import typing
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from api_keys.user import APIKeyUser
@@ -338,17 +339,14 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             )
 
 
+# Refuses users' changes to system segment overrides. Change sets publish
+# through the parent class, as they can stage changes to system segment
+# overrides made by their owners.
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+@extend_schema_serializer(component_name="EnvironmentFeatureVersionCreate")
 class EnvironmentFeatureVersionCreateRequestSerializer(
     EnvironmentFeatureVersionCreateSerializer
 ):
-    """Refuses users' changes to system segment overrides.
-
-    Change sets publish through the parent class, as they can stage changes
-    to system segment overrides made by their owners.
-
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
-    """
-
     def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
         attrs = super().validate(attrs)
         feature_states = [

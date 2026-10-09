@@ -4,7 +4,7 @@ from features.feature_states.models import API_VALUE_TYPES
 from features.future.types import (
     EnvironmentDefaultResponse,
     FlagValue,
-    SegmentOverrideRequest,
+    SegmentOverrideChanges,
     SegmentOverrideResponse,
     SegmentReference,
     Variant,
@@ -70,12 +70,12 @@ def map_feature_state_data_to_segment_override(
     feature_state_data: LegacyFeatureStateData,
     *,
     priority: int | None = None,
-) -> SegmentOverrideRequest:
+) -> SegmentOverrideChanges:
     """Map the feature state data validated by a legacy endpoint to an override.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
-    override = SegmentOverrideRequest(segment=SegmentReference(id=segment_id))
+    override = SegmentOverrideChanges(segment=SegmentReference(id=segment_id))
     if priority is not None:
         override["priority"] = priority
     if "enabled" in feature_state_data:

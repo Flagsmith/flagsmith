@@ -32,8 +32,8 @@ from features.future.mappers import (
 )
 from features.future.types import (
     EnvironmentDefaultRequest,
-    SegmentOverrideRequest,
-    UpdateFlagRequest,
+    FlagChanges,
+    SegmentOverrideChanges,
     UpdateFlagResponse,
     Variant,
 )
@@ -164,7 +164,7 @@ def _write_environment_default(
 
 def _write_segment_override(
     feature_state: FeatureState,
-    changes: SegmentOverrideRequest,
+    changes: SegmentOverrideChanges,
     *,
     replace: bool,
     environment_default: FeatureState,
@@ -292,7 +292,7 @@ def _map_served_state(feature_state: FeatureState) -> tuple[object, ...]:
 def _check_system_segment_override_changes(
     *,
     overrides: dict[int, FeatureState],
-    changes: Sequence[SegmentOverrideRequest],
+    changes: Sequence[SegmentOverrideChanges],
     deleted_segment_ids: Collection[int],
 ) -> dict[int, tuple[object, ...]]:
     """Refuse to create, delete or reorder system segment overrides.
@@ -341,7 +341,7 @@ def _write_segment_overrides(
     version: EnvironmentFeatureVersion | None,
     environment_default: FeatureState,
     overrides: dict[int, FeatureState],
-    changes: Sequence[SegmentOverrideRequest],
+    changes: Sequence[SegmentOverrideChanges],
     replace: bool,
     system: bool,
 ) -> _OverriddenSegments:
@@ -355,13 +355,13 @@ def _write_segment_overrides(
     system_served_states: dict[int, tuple[object, ...]] = {}
     if not system:
         # Only the features owning system segments can change their overrides,
-        # but anyone can write them as they are, e.g. to replace a flag as read.
+        # but anyone can write them as they are, e.g. when replacing all overrides
+        # for a feature wholesale.
         system_served_states = _check_system_segment_override_changes(
             overrides=overrides,
             changes=changes,
             deleted_segment_ids=segments.deleted,
         )
-        # The features owning system segments are not limited.
         if exceeds_segment_override_limit(
             environment,
             segment_ids_to_create_overrides=[
@@ -431,15 +431,14 @@ def update_flag(
     *,
     environment: Environment,
     feature: Feature,
-    changes: UpdateFlagRequest,
+    changes: FlagChanges,
     replace: bool,
     author: FFAdminUser | APIKeyUser,
     system: bool,
 ) -> UpdateFlagResponse:
     """Write the given parts of a flag, whichever versioning the environment uses.
 
-    Overrides of system segments can only be changed by their owners,
-    passing `system=True`.
+    Overrides of system segments can only be changed by passing `system=True`.
     """
     writes_nothing = not changes if replace else not any(changes.values())
     if writes_nothing:
@@ -510,8 +509,7 @@ def delete_segment_override(
 ) -> UpdateFlagResponse:
     """Remove a flag's override for one segment, leaving the rest of the flag alone.
 
-    Overrides of system segments can only be removed by their owners,
-    passing `system=True`.
+    Overrides of system segments can only be removed by passing `system=True`.
     """
     if not system and _get_system_segment_ids([segment_id]):
         raise SystemSegmentModificationError()
