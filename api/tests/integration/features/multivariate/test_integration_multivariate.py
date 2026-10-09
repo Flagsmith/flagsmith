@@ -819,3 +819,134 @@ def test_update_feature_state__swap_variation_weights__returns_ok(  # type: igno
 
     # Then
     assert update_feature_state_response.status_code == status.HTTP_200_OK
+
+
+def test_create_mv_option__omitted_allocation__uses_model_default(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given - a feature with no options and a payload without an allocation
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {"type": "unicode", "feature": feature, "string_value": "bigger"}
+
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["default_percentage_allocation"] == 100
+
+
+def test_create_mv_option__omitted_allocation_over_sibling_total__returns_bad_request(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given - a sibling already holds 50%, so the 100% default would overflow
+    url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    data = {"type": "unicode", "feature": feature, "string_value": "bigger"}
+
+    # When
+    response = admin_client_new.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "default_percentage_allocation" in response.json()
+
+
+def test_partial_update_mv_option__omitted_feature_and_allocation__returns_ok(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+
+    # When
+    response = admin_client_new.patch(
+        url,
+        data=json.dumps({"string_value": "renamed"}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["string_value"] == "renamed"
+    assert response.json()["default_percentage_allocation"] == 50
+
+
+def test_partial_update_mv_option__moves_to_feature_with_same_key__returns_bad_request(
+    admin_client_new: APIClient,
+    project: int,
+    feature: int,
+    feature_2_name: str,
+    default_feature_value: str,
+) -> None:
+    # Given - the same key on options of two different features
+    other_feature = admin_client_new.post(
+        f"/api/v1/projects/{project}/features/",
+        data={
+            "name": feature_2_name,
+            "initial_value": default_feature_value,
+            "project": project,
+        },
+    ).json()["id"]
+
+    def create_option(feature_id: int) -> int:
+        response = admin_client_new.post(
+            reverse(
+                "api-v1:projects:feature-mv-options-list",
+                args=[project, feature_id],
+            ),
+            data=json.dumps(
+                {
+                    "type": "unicode",
+                    "feature": feature_id,
+                    "string_value": "bigger",
+                    "default_percentage_allocation": 10,
+                    "key": "variant-a",
+                }
+            ),
+            content_type="application/json",
+        )
+        assert response.status_code == status.HTTP_201_CREATED
+        return int(response.json()["id"])
+
+    option_id = create_option(feature)
+    create_option(other_feature)
+
+    # When - the first option is moved without restating its key
+    response = admin_client_new.patch(
+        reverse(
+            "api-v1:projects:feature-mv-options-detail",
+            args=[project, feature, option_id],
+        ),
+        data=json.dumps({"feature": other_feature}),
+        content_type="application/json",
+    )
+
+    # Then - the existing key is checked against the destination feature
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["key"] == [
+        "Multivariate option with this key already exists for the feature."
+    ]
