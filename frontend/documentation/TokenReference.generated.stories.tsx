@@ -1214,7 +1214,7 @@ export const AllTokens: StoryObj = {
             <td>
               <code>14px</code>
             </td>
-            <td>Body 1. Default text, buttons, links.</td>
+            <td>Body 1. Default text.</td>
           </tr>
           <tr>
             <td>
@@ -1271,7 +1271,7 @@ export const AllTokens: StoryObj = {
             <td>
               <code>1.4</code>
             </td>
-            <td>Body text, buttons, links.</td>
+            <td>Body text.</td>
           </tr>
         </tbody>
       </table>
