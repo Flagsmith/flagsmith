@@ -5,6 +5,7 @@ import { ChangeRequestSummary } from 'common/types/responses'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import { useGetPendingDependencyChangesQuery } from 'common/services/useFeatureDependency'
 import Accordion from 'components/base/Accordion'
+import ChangeRequestLink from 'components/modals/create-feature/tabs/FeatureDependenciesTab/ChangeRequestLink'
 import Chip from 'components/base/Chip'
 import ErrorMessage from 'components/ErrorMessage'
 import DependencyChangesTable from 'components/DependencyChangesTable'
@@ -100,11 +101,13 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
               {/* In the body, as the header is the toggle and a link cannot
                   sit inside a button. */}
               <div className='px-3 py-2'>
-                <a
-                  href={`/project/${projectId}/environment/${environmentId}/change-requests/${changeRequest.id}`}
+                <ChangeRequestLink
+                  projectId={projectId}
+                  environmentId={environmentId}
+                  changeRequestId={changeRequest.id}
                 >
                   View change request
-                </a>
+                </ChangeRequestLink>
               </div>
             </Accordion>
           </div>
