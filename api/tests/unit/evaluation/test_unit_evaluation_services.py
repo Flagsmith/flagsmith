@@ -1,6 +1,7 @@
 import pytest
 from flag_engine.segments.constants import EQUAL, IN, IS_SET
 from pytest_lazy_fixtures import lf as lazy_fixture
+from pytest_mock import MockerFixture
 
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
@@ -11,6 +12,7 @@ from evaluation.services import (
     get_edge_identity_feature_states,
     get_edge_identity_override_value,
     get_edge_identity_segments,
+    get_environment_feature_states,
 )
 from features.constants import CONTROL_VARIANT_KEY
 from features.feature_types import MULTIVARIATE
@@ -20,6 +22,7 @@ from features.multivariate.models import (
     MultivariateFeatureStateValue,
 )
 from features.value_types import INTEGER, STRING
+from features.versioning import versioning_service
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from util.engine_models.features.models import (
@@ -345,6 +348,61 @@ def test_get_edge_identity_feature_states__segment_and_identity_override__identi
     ]
     assert evaluated_feature_state.evaluation_result["value"] == "identity"
     assert evaluated_feature_state.feature_state == (edge_identity.feature_overrides[0])
+
+
+@pytest.fixture()
+def identity_dependent_rules_data_segment(project: Project) -> Segment:
+    segment: Segment = Segment.objects.create(
+        name="beta testers",
+        project=project,
+        rules_data=[
+            {
+                "type": "ALL",
+                "conditions": [
+                    {
+                        "property": "beta_tester",
+                        "operator": IS_SET,
+                        "value": None,
+                        "description": None,
+                    }
+                ],
+            }
+        ],
+    )
+    return segment
+
+
+def test_get_environment_feature_states__segment_not_applying__skips_reading_its_overrides(
+    identity_dependent_rules_data_segment: Segment,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=identity_dependent_rules_data_segment,
+            environment=environment,
+        ),
+        enabled=not feature_state.enabled,
+    )
+    get_environment_flags_list_spy = mocker.spy(
+        versioning_service, "get_environment_flags_list"
+    )
+
+    # When
+    evaluated_feature_states = get_environment_feature_states(environment)
+
+    # Then
+    assert get_environment_flags_list_spy.spy_return == [feature_state]
+    assert [
+        evaluated_feature_state.feature_state
+        for evaluated_feature_state in evaluated_feature_states
+    ] == [feature_state]
 
 
 def test_get_edge_identity_segments__matching_segment_exists__returns_matching_only(

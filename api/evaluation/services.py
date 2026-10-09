@@ -2,7 +2,7 @@ from collections.abc import Iterable
 from math import inf
 from typing import TYPE_CHECKING, Any
 
-from flag_engine.context import types as engine_types
+from common.core.utils import using_database_replica
 from flag_engine.engine import get_evaluation_result
 
 from evaluation.mappers import (
@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from environments.models import Environment
     from features.models import FeatureState
     from segments.models import Segment
+    from segments.types import SegmentRule as SegmentRuleData
     from util.engine_models.features.models import FeatureStateModel
 
 
@@ -80,6 +81,7 @@ def get_identity_feature_states(
 def get_environment_feature_states(
     environment: "Environment",
     *,
+    feature_name: str | None = None,
     hide_server_key_only: bool = False,
     from_replica: bool = False,
 ) -> list[EvaluatedFeatureState]:
@@ -87,22 +89,34 @@ def get_environment_feature_states(
 
     Evaluated without an identity, so segments reading traits or identity
     context are left out.
+
+    :param feature_name: only return this feature's flag.
     """
+    segments = _get_identity_free_segments(environment, from_replica=from_replica)
     context = map_environment_to_evaluation_context(
         environment=environment,
-        segments=environment.get_segments_from_cache(),
+        segments=segments,
+        # Only a segment can make one flag depend on another. Without any,
+        # the other features' states need not be read.
+        feature_name=None if segments else feature_name,
         from_replica=from_replica,
     )
-    if segments := context.get("segments"):
-        context["segments"] = {
-            key: segment
-            for key, segment in segments.items()
-            if _is_identity_free(segment["rules"])
-        }
-    result = get_evaluation_result(context)
+    evaluated_feature_states = _map_result_to_evaluated_feature_states(
+        get_evaluation_result(context)
+    )
+    if feature_name is not None:
+        # Feature names are unique per project regardless of case, and SDKs
+        # have historically relied on case-insensitive lookups.
+        requested_name = feature_name.casefold()
+        evaluated_feature_states = [
+            evaluated_feature_state
+            for evaluated_feature_state in evaluated_feature_states
+            if evaluated_feature_state.evaluation_result["name"].casefold()
+            == requested_name
+        ]
     return _hide_flags(
         environment,
-        _map_result_to_evaluated_feature_states(result),
+        evaluated_feature_states,
         hide_server_key_only=hide_server_key_only,
     )
 
@@ -191,13 +205,42 @@ def get_edge_identity_segments(edge_identity: "EdgeIdentity") -> "list[Segment]"
     ]
 
 
-def _is_identity_free(rules: "Iterable[engine_types.SegmentRule]") -> bool:
+def _get_identity_free_segments(
+    environment: "Environment",
+    *,
+    from_replica: bool,
+) -> "list[Segment]":
+    """The segments overriding flags in `environment` that match without an identity."""
+    # Deferred: `environments.models` imports this module's package.
+    from features.models import FeatureSegment
+    from segments.models import Segment
+
+    segments = Segment.live_objects
+    if from_replica:
+        segments = using_database_replica(segments)
+    return [
+        segment
+        for segment in segments.filter(
+            id__in=FeatureSegment.objects.filter(environment=environment).values(
+                "segment_id"
+            )
+        ).only("id", "name", "rules_data")
+        if _is_identity_free(segment)
+    ]
+
+
+def _is_identity_free(segment: "Segment") -> bool:
+    # TODO: remove None check and inline after https://github.com/Flagsmith/flagsmith/issues/7814 is done
+    return segment.rules_data is not None and _are_identity_free(segment.rules_data)
+
+
+def _are_identity_free(rules: "Iterable[SegmentRuleData]") -> bool:
     return all(
         all(
-            condition["property"].startswith(_IDENTITY_FREE_PROPERTY_PREFIXES)
-            for condition in rule.get("conditions", [])
+            (condition["property"] or "").startswith(_IDENTITY_FREE_PROPERTY_PREFIXES)
+            for condition in rule["conditions"]
         )
-        and _is_identity_free(rule.get("rules", []))
+        and _are_identity_free(rule.get("rules", []))
         for rule in rules
     )
 
