@@ -30,9 +30,14 @@
 
   // Chosen. A ring rather than a tick: the chip is small, and a box inside it
   // competes with the dot already in front of the label.
+  //
+  // Inset, so the ring is painted inside the chip's own box. Drawn outside it
+  // the chip would need room from whatever contains it, and the tag panel is
+  // a scroll container flush against its left edge, which clipped that side
+  // of the ring off.
   &--selected {
     border-color: var(--color-border-action);
-    box-shadow: 0 0 0 1px var(--color-border-action);
+    box-shadow: inset 0 0 0 1px var(--color-border-action);
   }
 
   // Value chips: cap the width and ellipsis the label.
