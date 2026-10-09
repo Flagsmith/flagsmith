@@ -1,7 +1,6 @@
 import { FC, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
-import BareButton from 'components/base/forms/BareButton'
 import { WarehouseType } from 'common/types/responses'
 import { ConfigFormData } from './ConfigForm'
 import SelectableCard from 'components/base/SelectableCard'
@@ -9,8 +8,12 @@ import ConfigForm from './ConfigForm'
 import Utils from 'common/utils/utils'
 import ClickHouseConfigForm from './ClickHouseConfigForm'
 import WarehouseSqlSnippet from './WarehouseSqlSnippet'
+import WarehouseSetupSteps from './WarehouseSetupSteps'
 import { getClickHouseOnboardingSql } from './clickhouseSetupSql'
 import { ClickHouseFormData } from './clickhouseConfig'
+import DatabricksConfigForm from './DatabricksConfigForm'
+import { getDatabricksSetupSql } from './databricksSetupSql'
+import { DatabricksFormData } from './databricksConfig'
 import './WarehouseSetup.scss'
 
 type WarehouseSetupProps = {
@@ -18,25 +21,29 @@ type WarehouseSetupProps = {
   onEnableFlagsmith: () => void
   onCreateSnowflake: (data: ConfigFormData) => Promise<unknown>
   onCreateClickHouse: (data: ClickHouseFormData) => Promise<unknown>
+  onCreateDatabricks: (data: DatabricksFormData) => Promise<unknown>
   isCreating: boolean
 }
 
-type WarehouseTypeOption = WarehouseType | 'bigquery' | 'databricks'
+type WarehouseTypeOption = WarehouseType | 'bigquery'
 
 const WarehouseSetup: FC<WarehouseSetupProps> = ({
   environmentId,
   isCreating,
   onCreateClickHouse,
+  onCreateDatabricks,
   onCreateSnowflake,
   onEnableFlagsmith,
 }) => {
   const [selectedType, setSelectedType] =
     useState<WarehouseTypeOption>('flagsmith')
-  const [sqlExpanded, setSqlExpanded] = useState(true)
   const clickhouseEnabled = Utils.getFlagsmithHasFeature('clickhouse_warehouse')
-  const configurableTypes: WarehouseTypeOption[] = clickhouseEnabled
-    ? ['flagsmith', 'clickhouse']
-    : ['flagsmith']
+  const databricksEnabled = Utils.getFlagsmithHasFeature('databricks_warehouse')
+  const configurableTypes: WarehouseTypeOption[] = [
+    'flagsmith',
+    ...(clickhouseEnabled ? (['clickhouse'] as const) : []),
+    ...(databricksEnabled ? (['databricks'] as const) : []),
+  ]
 
   return (
     <div className='warehouse-setup'>
@@ -69,7 +76,9 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
               disabled={!clickhouseEnabled}
             />
             {!clickhouseEnabled && (
-              <span className='warehouse-setup__coming-soon'>Coming Soon</span>
+              <span className='warehouse-setup__coming-soon fs-captionXSmall'>
+                Coming Soon
+              </span>
             )}
           </div>
           <div className='warehouse-setup__type-card'>
@@ -81,7 +90,9 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
               onClick={() => {}}
               disabled
             />
-            <span className='warehouse-setup__coming-soon'>Coming Soon</span>
+            <span className='warehouse-setup__coming-soon fs-captionXSmall'>
+              Coming Soon
+            </span>
           </div>
           <div className='warehouse-setup__type-card'>
             <SelectableCard
@@ -92,18 +103,24 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
               onClick={() => {}}
               disabled
             />
-            <span className='warehouse-setup__coming-soon'>Coming Soon</span>
+            <span className='warehouse-setup__coming-soon fs-captionXSmall'>
+              Coming Soon
+            </span>
           </div>
           <div className='warehouse-setup__type-card'>
             <SelectableCard
               icon={<Icon name='layers' width={20} />}
               title='Databricks'
               description='Unified analytics platform'
-              selected={false}
-              onClick={() => {}}
-              disabled
+              selected={selectedType === 'databricks'}
+              onClick={() => databricksEnabled && setSelectedType('databricks')}
+              disabled={!databricksEnabled}
             />
-            <span className='warehouse-setup__coming-soon'>Coming Soon</span>
+            {!databricksEnabled && (
+              <span className='warehouse-setup__coming-soon fs-captionXSmall'>
+                Coming Soon
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -136,55 +153,71 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
       )}
 
       {selectedType === 'clickhouse' && (
-        <div className='warehouse-setup__steps'>
-          <div className='warehouse-setup__step'>
-            <div className='warehouse-setup__step-rail'>
-              <div className='warehouse-setup__step-marker'>1</div>
-              <div className='warehouse-setup__step-connector' />
-            </div>
-            <div className='warehouse-setup__step-content'>
-              <BareButton
-                className='warehouse-setup__step-toggle mb-2'
-                aria-expanded={sqlExpanded}
-                onClick={() => setSqlExpanded(!sqlExpanded)}
-              >
-                <h6 className='mb-0'>
-                  Configure your warehouse for experimentation
-                </h6>
-                <Icon
-                  name={sqlExpanded ? 'chevron-up' : 'chevron-down'}
-                  width={22}
-                  fill='#656D7B'
-                />
-              </BareButton>
-              {sqlExpanded && (
-                <>
-                  <p className='text-muted mb-3'>
-                    Run this once against your ClickHouse instance using an
-                    administrative user. Replace {'<USER>'} and{' '}
-                    {'<CHANGE_ME_PASSWORD>'} with your own values.
-                  </p>
-                  <WarehouseSqlSnippet sql={getClickHouseOnboardingSql()} />
-                </>
-              )}
-            </div>
-          </div>
-          <div className='warehouse-setup__step'>
-            <div className='warehouse-setup__step-rail'>
-              <div className='warehouse-setup__step-marker'>2</div>
-            </div>
-            <div className='warehouse-setup__step-content'>
-              <h6 className='mb-2'>Connect your warehouse</h6>
+        <WarehouseSetupSteps
+          configure={
+            <>
               <p className='text-muted mb-3'>
-                Enter the connection details for the user you created in step 1.
+                Run this once against your ClickHouse instance using an
+                administrative user. Replace {'<USER>'} and{' '}
+                {'<CHANGE_ME_PASSWORD>'} with your own values.
               </p>
-              <ClickHouseConfigForm
-                environmentId={environmentId}
-                onSave={onCreateClickHouse}
-              />
-            </div>
-          </div>
-        </div>
+              <WarehouseSqlSnippet sql={getClickHouseOnboardingSql()} />
+            </>
+          }
+          connectDescription='Enter the connection details for the user you created in step 1.'
+        >
+          <ClickHouseConfigForm
+            environmentId={environmentId}
+            onSave={onCreateClickHouse}
+          />
+        </WarehouseSetupSteps>
+      )}
+
+      {selectedType === 'databricks' && (
+        <WarehouseSetupSteps
+          configure={
+            <>
+              <ol className='text-muted mb-3'>
+                <li>
+                  Use a SQL warehouse. Serverless is recommended: it starts in
+                  seconds and costs nothing while idle. All-purpose clusters are
+                  not supported.
+                </li>
+                <li>
+                  Note the Server hostname and the Warehouse ID (the last part
+                  of the HTTP path) from SQL Warehouses › your warehouse ›
+                  Connection details.
+                </li>
+                <li>
+                  Create a service principal (Settings › Identity and access ›
+                  Service principals › Add new), then generate a secret with the
+                  sql scope and copy the client ID and secret. The secret is
+                  shown only once.
+                </li>
+                <li>
+                  On the SQL warehouse, open Permissions and give the service
+                  principal Can use.
+                </li>
+              </ol>
+              <p className='text-muted mb-3'>
+                Run this script in the SQL editor as an admin. It is safe to run
+                more than once. Replace {'<CATALOG>'} and {'<CLIENT_ID>'} with
+                your own values.
+              </p>
+              <WarehouseSqlSnippet sql={getDatabricksSetupSql()} />
+              <p className='text-muted mb-0'>
+                Service principal secrets expire. When you rotate the secret in
+                Databricks, update it here too.
+              </p>
+            </>
+          }
+          connectDescription='Enter the connection details and the service principal you created in step 1.'
+        >
+          <DatabricksConfigForm
+            environmentId={environmentId}
+            onSave={onCreateDatabricks}
+          />
+        </WarehouseSetupSteps>
       )}
 
       {!configurableTypes.includes(selectedType) && (

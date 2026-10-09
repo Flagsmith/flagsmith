@@ -6,13 +6,19 @@ import {
   useTestWarehouseConnectionMutation,
   useUpdateWarehouseConnectionMutation,
 } from 'common/services/useWarehouseConnection'
-import { ClickHouseConfig, SnowflakeConfig } from 'common/types/responses'
+import {
+  ClickHouseConfig,
+  DatabricksConfig,
+  SnowflakeConfig,
+} from 'common/types/responses'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 import WarehouseSetup from './WarehouseSetup'
 import WarehouseSetupSkeleton from './WarehouseSetupSkeleton'
 import ConfigForm from './ConfigForm'
 import ClickHouseConfigForm from './ClickHouseConfigForm'
 import { ClickHouseFormData } from './clickhouseConfig'
+import DatabricksConfigForm from './DatabricksConfigForm'
+import { DatabricksFormData } from './databricksConfig'
 import sendWarehouseTestEvent from './sendWarehouseTestEvent'
 import { getWarehousePollingInterval } from './warehousePolling'
 
@@ -155,6 +161,29 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
       })
   }
 
+  const handleCreateDatabricks = (data: DatabricksFormData) =>
+    createConnection({
+      environmentId,
+      warehouse_type: 'databricks',
+      ...data,
+    })
+      .unwrap()
+      .then(() => toast('Warehouse connection created'))
+
+  const handleUpdateDatabricks = (data: DatabricksFormData) => {
+    if (!connection) return Promise.reject()
+    return updateConnection({
+      environmentId,
+      id: connection.id,
+      ...data,
+    })
+      .unwrap()
+      .then(() => {
+        setEditing(false)
+        toast('Warehouse connection updated')
+      })
+  }
+
   const handleTestConnection = () => {
     if (!connection) return
     testConnection({ environmentId, id: connection.id })
@@ -222,6 +251,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
           onEnableFlagsmith={handleEnableFlagsmith}
           onCreateSnowflake={handleCreateSnowflake}
           onCreateClickHouse={handleCreateClickHouse}
+          onCreateDatabricks={handleCreateDatabricks}
           isCreating={isCreating || isEnabling}
         />
       </div>
@@ -257,6 +287,21 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     )
   }
 
+  if (editing && connection.warehouse_type === 'databricks') {
+    return (
+      <div className='mt-4 col-md-12'>
+        <DatabricksConfigForm
+          isEdit
+          environmentId={environmentId}
+          initialConfig={connection.config as DatabricksConfig}
+          initialName={connection.name}
+          onSave={handleUpdateDatabricks}
+          onCancel={() => setEditing(false)}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className='mt-4 col-md-12'>
       <WarehouseConnectionCard
@@ -269,7 +314,8 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
         }
         onSendTestEvent={handleSendTestEvent}
         onTestConnection={
-          connection.warehouse_type === 'clickhouse'
+          connection.warehouse_type === 'clickhouse' ||
+          connection.warehouse_type === 'databricks'
             ? handleTestConnection
             : undefined
         }

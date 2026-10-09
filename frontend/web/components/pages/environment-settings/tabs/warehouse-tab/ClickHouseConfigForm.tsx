@@ -1,12 +1,15 @@
-import React, { FC, useRef, useState } from 'react'
-import Button from 'components/base/forms/Button'
-import Input from 'components/base/forms/Input'
+import React, { FC, useState } from 'react'
 import Switch from 'components/Switch'
-import ErrorMessage from 'components/ErrorMessage'
-import FieldError from 'components/base/forms/FieldError'
 import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
+import WarehouseConfigField from './WarehouseConfigField'
+import WarehouseFormActions from './WarehouseFormActions'
+import useWarehouseConnectionTest from './useWarehouseConnectionTest'
+import useWarehouseFormSubmit from './useWarehouseFormSubmit'
+import {
+  CLICKHOUSE_SETUP_SQL_LABEL,
+  getClickHouseSetupSql,
+} from './clickhouseSetupSql'
 import { ClickHouseConfig } from 'common/types/responses'
-import { useTestWarehouseConnectionConfigMutation } from 'common/services/useWarehouseConnection'
 import {
   buildClickHousePayload,
   canTestClickHouseConnection,
@@ -17,12 +20,6 @@ import {
   isClickHouseFormValid,
   isValidPort,
 } from './clickhouseConfig'
-import {
-  getButtonLabel,
-  getTestFailureWarning,
-  getWarehouseErrorMessage,
-  isMissingEventsTableDetail,
-} from './warehouseFormUtils'
 import './ConfigForm.scss'
 
 type ClickHouseConfigFormProps = {
@@ -33,8 +30,6 @@ type ClickHouseConfigFormProps = {
   initialConfig?: ClickHouseConfig
   initialName?: string
 }
-
-type TestState = 'idle' | 'connected' | 'errored'
 
 const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
   environmentId,
@@ -52,17 +47,17 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
   const [username, setUsername] = useState(defaults.username)
   const [password, setPassword] = useState('')
   const [secure] = useState(defaults.secure)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState(false)
-  const [testState, setTestState] = useState<TestState>('idle')
-  const [testDetail, setTestDetail] = useState<string | null>(null)
-  // Sticky: the setup SQL stays offered once a test reports the table missing,
-  // even while the user edits fields (which resets the live test state).
-  const [showSetupSql, setShowSetupSql] = useState(false)
-  const testRevision = useRef(0)
-
-  const [testConnectionConfig, { isLoading: isTesting }] =
-    useTestWarehouseConnectionConfigMutation()
+  const {
+    hasTestResult,
+    isTesting,
+    runTest,
+    showSetupSql,
+    testDetail,
+    testState,
+    withTestReset,
+  } = useWarehouseConnectionTest(environmentId, 'clickhouse')
+  const { clearSaveFailed, isSaving, saveFailed, submit } =
+    useWarehouseFormSubmit(onSave)
 
   const form: ClickHouseFormState = {
     database,
@@ -77,159 +72,94 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
   const requiresTest = !isEdit || isClickHouseConfigDirty(form, initialConfig)
   const canTest = canTestClickHouseConnection(form)
   const hasInvalidPort = !!port && !isValidPort(port)
-  const canSave = isValid && (!requiresTest || testState !== 'idle')
+  const canSave = isValid && (!requiresTest || hasTestResult)
 
-  const setField =
-    <T,>(setter: (value: T) => void) =>
-    (value: T) => {
-      setter(value)
-      testRevision.current += 1
-      setTestState('idle')
-      setTestDetail(null)
-    }
-
-  const handleTest = async () => {
+  const handleTest = () => {
     if (!canTest || isTesting) return
-    setError(false)
-    const revision = testRevision.current
-    try {
-      const { config, credentials } = buildClickHousePayload(form)
-      const result = await testConnectionConfig({
-        config,
-        credentials,
-        environmentId,
-        warehouse_type: 'clickhouse',
-      }).unwrap()
-      if (revision !== testRevision.current) return
-      if (result.status === 'connected') {
-        setTestState('connected')
-        setTestDetail(null)
-        toast('Connection verified')
-      } else {
-        setTestState('errored')
-        setTestDetail(result.status_detail)
-        setShowSetupSql(isMissingEventsTableDetail(result.status_detail))
-      }
-    } catch {
-      if (revision !== testRevision.current) return
-      setTestState('errored')
-      setTestDetail(null)
-    }
+    clearSaveFailed()
+    const { config, credentials } = buildClickHousePayload(form)
+    runTest({ config, credentials })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!canSave || isSaving) return
-
-    setIsSaving(true)
-    setError(false)
-    try {
-      await onSave(buildClickHousePayload(form))
-    } catch {
-      setError(true)
-      setIsSaving(false)
-    }
+    if (!canSave) return
+    submit(buildClickHousePayload(form))
   }
 
   return (
     <form onSubmit={handleSubmit} className='wh-config-form'>
       <div className='wh-config-form__card'>
-        <div className='wh-config-form__field'>
-          <label className='wh-config-form__label'>Host</label>
-          <Input
-            value={host}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setField(setHost)(e.target.value)
-            }
-            placeholder='your-instance.clickhouse.cloud'
-            disabled={isEdit}
-          />
-          <span className='wh-config-form__hint'>
-            {isEdit
+        <WarehouseConfigField
+          id='warehouse-config-host'
+          label='Host'
+          value={host}
+          onChange={withTestReset(setHost)}
+          placeholder='your-instance.clickhouse.cloud'
+          disabled={isEdit}
+          hint={
+            isEdit
               ? "Host can't be changed. To use a different ClickHouse instance, disconnect and create a new connection."
-              : 'The hostname of your ClickHouse instance, without protocol or port.'}
-          </span>
-        </div>
+              : 'The hostname of your ClickHouse instance, without protocol or port.'
+          }
+        />
 
-        <div className='wh-config-form__field'>
-          <label className='wh-config-form__label'>Name this warehouse</label>
-          <Input
-            value={name}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setName(e.target.value)
-            }
-            placeholder='e.g. Production ClickHouse'
-          />
-        </div>
+        <WarehouseConfigField
+          id='warehouse-config-name'
+          label='Name this warehouse'
+          value={name}
+          onChange={setName}
+          placeholder='e.g. Production ClickHouse'
+        />
 
         <div className='wh-config-form__row'>
-          <div className='wh-config-form__field'>
-            <label className='wh-config-form__label'>HTTPS port</label>
-            <Input
-              value={port}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setField(setPort)(e.target.value)
-              }
-              placeholder='8443'
-              aria-invalid={hasInvalidPort}
-              aria-describedby={
-                hasInvalidPort ? 'warehouse-config-port-error' : undefined
-              }
-            />
-            <FieldError
-              id='warehouse-config-port-error'
-              error={
-                hasInvalidPort && 'Port must be a number between 1 and 65535.'
-              }
-            />
-          </div>
-          <div className='wh-config-form__field'>
-            <label className='wh-config-form__label'>Database Name</label>
-            <Input
-              value={database}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setField(setDatabase)(e.target.value)
-              }
-              placeholder='flagsmith_exp'
-            />
-          </div>
-        </div>
-
-        <div className='wh-config-form__field'>
-          <label className='wh-config-form__label'>Username</label>
-          <Input
-            value={username}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setField(setUsername)(e.target.value)
+          <WarehouseConfigField
+            id='warehouse-config-port'
+            label='HTTPS port'
+            value={port}
+            onChange={withTestReset(setPort)}
+            placeholder='8443'
+            error={
+              hasInvalidPort && 'Port must be a number between 1 and 65535.'
             }
-            placeholder='The user from the setup script'
+          />
+          <WarehouseConfigField
+            id='warehouse-config-database'
+            label='Database Name'
+            value={database}
+            onChange={withTestReset(setDatabase)}
+            placeholder='flagsmith_exp'
           />
         </div>
 
-        <div className='wh-config-form__field'>
-          <label className='wh-config-form__label'>Password</label>
-          <Input
-            value={password}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setField(setPassword)(e.target.value)
-            }
-            type='password'
-            autoComplete='new-password'
-            placeholder={isEdit ? '••••••••' : 'Password'}
-          />
-          {isEdit && (
-            <span className='wh-config-form__hint'>
-              {requiresTest && !password
-                ? 'Enter your password to test the connection before saving.'
-                : 'Leave blank to keep the current password.'}
-            </span>
-          )}
-        </div>
+        <WarehouseConfigField
+          id='warehouse-config-username'
+          label='Username'
+          value={username}
+          onChange={withTestReset(setUsername)}
+          placeholder='The user from the setup script'
+        />
+
+        <WarehouseConfigField
+          id='warehouse-config-password'
+          label='Password'
+          value={password}
+          onChange={withTestReset(setPassword)}
+          type='password'
+          autoComplete='new-password'
+          placeholder={isEdit ? '••••••••' : 'Password'}
+          hint={
+            isEdit &&
+            (requiresTest && !password
+              ? 'Enter your password to test the connection before saving.'
+              : 'Leave blank to keep the current password.')
+          }
+        />
 
         <div className='wh-config-form__field'>
           <div className='d-flex flex-row align-items-center gap-2'>
             <Switch checked={secure} disabled />
-            <label className='wh-config-form__label mb-0'>
+            <label className='wh-config-form__label fs-caption text-secondary mb-0'>
               Secure connection (TLS)
             </label>
           </div>
@@ -237,61 +167,26 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
 
         {isEdit && (
           <WarehouseSetupSqlHelp
-            database={database.trim() || CLICKHOUSE_DEFAULTS.database}
+            label={CLICKHOUSE_SETUP_SQL_LABEL}
+            sql={getClickHouseSetupSql(
+              database.trim() || CLICKHOUSE_DEFAULTS.database,
+            )}
             showInitially={showSetupSql}
           />
         )}
 
-        {error && <ErrorMessage error={getWarehouseErrorMessage(isEdit)} />}
-
-        <div className='wh-config-form__actions'>
-          {isEdit && onCancel && (
-            <Button
-              id='warehouse-config-cancel'
-              theme='outline'
-              size='small'
-              onClick={onCancel}
-              type='button'
-            >
-              Cancel
-            </Button>
-          )}
-          <Button
-            id='warehouse-config-test'
-            theme='outline'
-            size='small'
-            type='button'
-            onClick={handleTest}
-            disabled={!requiresTest || !canTest || isTesting}
-          >
-            {isTesting ? 'Testing...' : 'Test connection'}
-          </Button>
-          <Button
-            id='warehouse-config-save'
-            theme='primary'
-            size='small'
-            type='submit'
-            disabled={isSaving || !canSave}
-          >
-            {getButtonLabel(isEdit, isSaving)}
-          </Button>
-        </div>
-
-        {testState === 'connected' && (
-          <div className='d-flex justify-content-end'>
-            <span className='wh-config-form__hint text-success'>
-              Connection verified. You can now save.
-            </span>
-          </div>
-        )}
-        {testState === 'errored' && (
-          <div className='d-flex'>
-            <ErrorMessage
-              error={getTestFailureWarning(testDetail)}
-              errorMessageClass='mb-0 flex-1 wh-config-form__test-error'
-            />
-          </div>
-        )}
+        <WarehouseFormActions
+          isEdit={isEdit}
+          onCancel={onCancel}
+          onTest={handleTest}
+          canTest={requiresTest && canTest}
+          canSave={canSave}
+          isTesting={isTesting}
+          isSaving={isSaving}
+          saveFailed={saveFailed}
+          testState={testState}
+          testDetail={testDetail}
+        />
       </div>
     </form>
   )

@@ -1,3 +1,6 @@
+export const CLICKHOUSE_SETUP_SQL_LABEL =
+  'Run once against your ClickHouse instance to create the events table'
+
 export const getClickHouseSetupSql = (
   database: string,
 ): string => `CREATE DATABASE IF NOT EXISTS ${database};

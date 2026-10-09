@@ -154,6 +154,9 @@ export interface PipelineStageRequest {
 }
 
 type WarehouseConfigValue = string | number | boolean
+type WarehouseCredentials =
+  | { password: string }
+  | { client_id: string; client_secret: string }
 
 // Omitting `audience` leaves the stored audience untouched; an empty
 // `segment_ids` clears it back to every identity in the environment.
@@ -1148,7 +1151,7 @@ export type Req = {
     warehouse_type: string
     name?: string
     config?: Record<string, WarehouseConfigValue>
-    credentials?: { password: string }
+    credentials?: WarehouseCredentials
   }
   deleteWarehouseConnection: { environmentId: string; id: number }
   testWarehouseConnection: { environmentId: string; id: number }
@@ -1157,14 +1160,14 @@ export type Req = {
     warehouse_type: string
     name?: string
     config?: Record<string, WarehouseConfigValue>
-    credentials?: { password: string }
+    credentials?: WarehouseCredentials
   }
   updateWarehouseConnection: {
     environmentId: string
     id: number
     name?: string
     config?: Record<string, WarehouseConfigValue>
-    credentials?: { password: string }
+    credentials?: WarehouseCredentials
   }
   getExperiments: PagedRequest<{
     environmentId: string
