@@ -60,7 +60,7 @@ export const useGroupedBreakdown = ({
         grouped.currentData,
         'project_id',
         new Map(projects.currentData?.map(({ id, name }) => [id, name])),
-        'Deleted project',
+        'Deleted projects',
       )
     }
     if (groupBy === 'environment') {
@@ -68,7 +68,7 @@ export const useGroupedBreakdown = ({
         grouped.currentData,
         'environment_id',
         new Map(environments.currentData?.map(({ id, name }) => [id, name])),
-        'Deleted environment',
+        'Deleted environments',
       )
     }
     return []

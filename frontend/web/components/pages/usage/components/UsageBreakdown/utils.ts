@@ -112,28 +112,30 @@ export const bySdk = (
 type ScopeKey = 'project_id' | 'environment_id'
 
 // Usage outlives the project or environment that made it, so an id can be
-// missing from the names.
+// missing from the names. Those all share one row.
 export const byScope = (
   data: Res['organisationUsage'] | undefined,
   key: ScopeKey,
   names: Map<number, string>,
   deletedLabel: string,
 ): BreakdownRow[] => {
-  const totals = new Map<number, number>()
+  const deletedKey = `${key}-deleted`
+  const rows = new Map<string, BreakdownRow>()
 
   for (const event of data?.events_list ?? []) {
     const id = event[key]
     if (id === null || id === undefined) continue
-    totals.set(id, (totals.get(id) ?? 0) + totalOf(event))
+    const name = names.get(id)
+    const rowKey = name === undefined ? deletedKey : `${key}-${id}`
+    const row = rows.get(rowKey) ?? {
+      key: rowKey,
+      label: name ?? deletedLabel,
+      value: 0,
+    }
+    rows.set(rowKey, { ...row, value: row.value + totalOf(event) })
   }
 
-  return ranked(
-    [...totals.entries()].map(([id, value]) => ({
-      key: `${key}-${id}`,
-      label: names.get(id) ?? deletedLabel,
-      value,
-    })),
-  )
+  return ranked([...rows.values()])
 }
 
 export const sharesOf = (values: number[]): number[] => {

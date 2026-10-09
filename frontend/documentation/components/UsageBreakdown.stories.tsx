@@ -107,7 +107,7 @@ export const ByProject: Story = {
       { key: 'project_id-1', label: 'Mobile app', value: 512000 },
       { key: 'project_id-2', label: 'Checkout', value: 463000 },
       { key: 'project_id-3', label: 'Marketing site', value: 158000 },
-      { key: 'project_id-4', label: 'Deleted project', value: 12000 },
+      { key: 'project_id-deleted', label: 'Deleted projects', value: 12000 },
     ],
     scope: 'All projects · Current billing period',
   },

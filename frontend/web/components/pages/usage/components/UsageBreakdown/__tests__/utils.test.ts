@@ -161,15 +161,23 @@ describe('UsageBreakdown utils', () => {
       ])
     })
 
-    it('labels usage from a project that no longer exists', () => {
+    it('folds usage from every deleted project into one row', () => {
       const rows = byScope(
-        usageResponse([usageEvent({ flags: 3, project_id: 9 })]),
+        usageResponse([
+          usageEvent({ flags: 3, project_id: 9 }),
+          usageEvent({ flags: 10, project_id: 1 }),
+          usageEvent({ flags: 4, project_id: 7 }),
+          usageEvent({ flags: 2, project_id: 9 }),
+        ]),
         'project_id',
-        new Map(),
-        'Deleted project',
+        new Map([[1, 'Checkout']]),
+        'Deleted projects',
       )
 
-      expect(rows[0].label).toBe('Deleted project')
+      expect(rows.map(({ key, label, value }) => [key, label, value])).toEqual([
+        ['project_id-1', 'Checkout', 10],
+        ['project_id-deleted', 'Deleted projects', 9],
+      ])
     })
 
     it('skips rows the API did not group', () => {
