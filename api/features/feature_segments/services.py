@@ -1,5 +1,5 @@
 from django.utils import timezone
-from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
+from rest_framework.request import Request
 
 from audit.tasks import create_segment_priorities_changed_audit_log
 from features.models import FeatureSegment
@@ -40,6 +40,7 @@ def get_reordered_priorities(
 
 
 def create_priorities_changed_audit_log(
+    request: Request,
     previous_priorities: list[tuple[int, int]],
     feature_segment_ids: list[int],
 ) -> None:
@@ -47,8 +48,6 @@ def create_priorities_changed_audit_log(
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
-    if not (request := getattr(HistoricalRecords.thread, "request", None)):
-        return
     create_segment_priorities_changed_audit_log.delay(
         kwargs={
             "previous_id_priority_pairs": previous_priorities,

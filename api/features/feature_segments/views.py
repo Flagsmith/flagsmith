@@ -227,6 +227,7 @@ class FeatureSegmentViewSet(
             system=False,
         )
         create_priorities_changed_audit_log(
+            request,
             previous_priorities=previous_priorities,
             feature_segment_ids=list(new_priorities),
         )
