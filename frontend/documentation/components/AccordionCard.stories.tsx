@@ -1,7 +1,7 @@
 import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
-import AccordionCard from 'components/base/accordion/AccordionCard'
+import AccordionCard from 'components/base/AccordionCard'
 
 const meta: Meta = {
   parameters: {

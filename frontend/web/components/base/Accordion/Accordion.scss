@@ -1,0 +1,44 @@
+// Figma: Flagsmith DEV-Ready, Accordion (151:7090). The spec has no border; it
+// sits on a darker canvas there. Here it sits on surfaces of its own colour,
+// so the border keeps the container visible.
+.ds-accordion {
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.ds-accordion__header {
+  align-items: center;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-border-action);
+    outline-offset: -2px;
+    border-radius: var(--radius-lg);
+  }
+
+  .ds-accordion--open & {
+    align-items: flex-start;
+  }
+}
+
+// Not the .flex-column utility: this project's version adds side margins.
+.ds-accordion__heading {
+  flex-direction: column;
+  min-width: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.ds-accordion__chevron {
+  transition: transform var(--duration-normal) var(--easing-standard);
+
+  .ds-accordion--open & {
+    transform: rotate(180deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-accordion__chevron {
+    transition: none;
+  }
+}
