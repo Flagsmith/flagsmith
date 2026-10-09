@@ -19,6 +19,10 @@ from features.feature_segments.serializers import (
     FeatureSegmentListSerializer,
     FeatureSegmentQuerySerializer,
 )
+from features.feature_segments.services import (
+    create_priorities_changed_audit_log,
+    get_reordered_priorities,
+)
 from features.future.services import (
     delete_segment_override,
     get_next_segment_override_priority,
@@ -162,9 +166,86 @@ class FeatureSegmentViewSet(
     def update_priorities(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
-        feature_segments = serializer.save()
+        if not (
+            new_priorities := {
+                item["id"]: item["priority"] for item in serializer.validated_data
+            }
+        ):
+            return Response([])
+
+        reordered = list(
+            FeatureSegment.objects.filter(id__in=new_priorities).select_related(
+                "environment", "feature", "segment"
+            )
+        )
+        environment = reordered[0].environment
+        feature = reordered[0].feature
+        feature_segments = list(
+            FeatureSegment.objects.filter(
+                environment=environment,
+                feature=feature,
+                environment_feature_version=reordered[0].environment_feature_version,
+            ).select_related("segment")
+        )
+        priorities = get_reordered_priorities(feature_segments, new_priorities)
+        moved = [
+            feature_segment
+            for feature_segment in feature_segments
+            if priorities[feature_segment.id] != feature_segment.priority
+        ]
+        if not moved:
+            return Response(
+                FeatureSegmentListSerializer(instance=reordered, many=True).data
+            )
+
+        if not all(map(is_live_segment_override, feature_segments)):
+            # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+            for feature_segment in moved:
+                check_segment_is_not_system(feature_segment.segment)
+            return Response(
+                FeatureSegmentListSerializer(instance=serializer.save(), many=True).data
+            )
+
+        previous_priorities = [
+            (feature_segment.id, feature_segment.priority)
+            for feature_segment in reordered
+        ]
+        update_flag(
+            environment=environment,
+            feature=feature,
+            changes={
+                "segment_overrides": [
+                    {
+                        "segment": {"id": feature_segment.segment_id},
+                        "priority": priorities[feature_segment.id],
+                    }
+                    for feature_segment in moved
+                ]
+            },
+            replace=False,
+            author=request.user,
+            system=False,
+        )
+        create_priorities_changed_audit_log(
+            previous_priorities=previous_priorities,
+            feature_segment_ids=list(new_priorities),
+        )
+        # Overrides of v2 environments are now in a new version.
+        overrides = [
+            get_segment_override(
+                environment=environment,
+                feature=feature,
+                segment_id=feature_segment.segment_id,
+            )
+            for feature_segment in reordered
+        ]
         return Response(
-            FeatureSegmentListSerializer(instance=feature_segments, many=True).data
+            FeatureSegmentListSerializer(
+                instance=[
+                    override.feature_segment for override in overrides if override
+                ],
+                many=True,
+            ).data
         )
 
     @action(
