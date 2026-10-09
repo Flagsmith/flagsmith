@@ -374,7 +374,7 @@ Attributes:
 ### `features.version.publish_rejected`
 
 Logged at `warning` from:
- - `api/features/versioning/views.py:60`
+ - `api/features/versioning/views.py:61`
 
 Attributes:
  - `environment.id`
@@ -653,6 +653,139 @@ Logged at `warning` from:
 
 Attributes:
 
+### `scim.auth.failed`
+
+Logged at `warning` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/middleware.py:39`
+ - `api/.venv/lib/python3.11/site-packages/scim/middleware.py:61`
+ - `api/.venv/lib/python3.11/site-packages/scim/middleware.py:66`
+ - `api/.venv/lib/python3.11/site-packages/scim/middleware.py:71`
+ - `api/.venv/lib/python3.11/site-packages/scim/middleware.py:79`
+
+Attributes:
+ - `organisation.id`
+ - `reason`
+
+### `scim.configuration.created`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/services.py:45`
+
+Attributes:
+ - `organisation.id`
+
+### `scim.configuration.deleted`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/views.py:60`
+
+Attributes:
+ - `organisation.id`
+
+### `scim.configuration.token_rotated`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/services.py:61`
+
+Attributes:
+ - `organisation.id`
+
+### `scim.group.attribute_ignored`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/adapters.py:457`
+
+Attributes:
+ - `attribute`
+ - `group.id`
+ - `organisation.id`
+
+### `scim.group.created`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/adapters.py:355`
+
+Attributes:
+ - `group.id`
+ - `members.count`
+ - `organisation.id`
+
+### `scim.group.deleted`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/adapters.py:372`
+
+Attributes:
+ - `group.id`
+ - `organisation.id`
+
+### `scim.group.members_added`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/adapters.py:396`
+
+Attributes:
+ - `group.id`
+ - `members.count`
+ - `organisation.id`
+
+### `scim.group.members_removed`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/adapters.py:428`
+
+Attributes:
+ - `group.id`
+ - `members.count`
+ - `organisation.id`
+
+### `scim.group.members_replaced`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/adapters.py:362`
+
+Attributes:
+ - `group.id`
+ - `members.count`
+ - `organisation.id`
+
+### `scim.user.added_to_organisation`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/adapters.py:175`
+
+Attributes:
+ - `organisation.id`
+ - `user.uuid`
+
+### `scim.user.attribute_ignored`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/adapters.py:272`
+
+Attributes:
+ - `attribute`
+ - `organisation.id`
+ - `user.uuid`
+
+### `scim.user.created`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/adapters.py:169`
+
+Attributes:
+ - `organisation.id`
+ - `user.uuid`
+
+### `scim.user.removed_from_organisation`
+
+Logged at `info` from:
+ - `api/.venv/lib/python3.11/site-packages/scim/adapters.py:210`
+
+Attributes:
+ - `organisation.id`
+ - `user.uuid`
+
 ### `segment_membership.compute.segment.skipped`
 
 Logged at `error` from:
@@ -747,7 +880,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:245`
+ - `api/segments/serializers.py:244`
 
 Attributes:
  - `revision_id`

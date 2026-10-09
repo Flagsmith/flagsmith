@@ -1,3 +1,4 @@
+import typing
 from datetime import timedelta
 
 import structlog
@@ -231,6 +232,7 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
         return EnvironmentFeatureVersion.objects.all()
 
 
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
 @method_decorator(
     name="list",
     decorator=extend_schema(
@@ -316,7 +318,6 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         self,
         serializer: CustomCreateSegmentOverrideFeatureStateSerializer,  # type: ignore[override]
     ) -> None:
-        # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
         if feature_segment := serializer.validated_data.get("feature_segment"):
             check_segment_is_not_system(feature_segment["segment"])
         serializer.save(
@@ -329,8 +330,8 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         self,
         serializer: CustomCreateSegmentOverrideFeatureStateSerializer,  # type: ignore[override]
     ) -> None:
-        # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
-        if feature_segment := serializer.instance.feature_segment:  # type: ignore[union-attr]
+        feature_state = typing.cast(FeatureState, serializer.instance)
+        if feature_segment := feature_state.feature_segment:
             check_segment_is_not_system(feature_segment.segment)
         if feature_segment_data := serializer.validated_data.get("feature_segment"):
             check_segment_is_not_system(feature_segment_data["segment"])
@@ -345,7 +346,6 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
             raise FeatureVersionDeleteError(
                 "Cannot delete environment default feature state."
             )
-        # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
         if instance.feature_segment:
             check_segment_is_not_system(instance.feature_segment.segment)
         super().perform_destroy(instance)

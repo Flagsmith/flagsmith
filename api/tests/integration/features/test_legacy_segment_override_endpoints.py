@@ -12,8 +12,8 @@ from rest_framework.test import APIClient
 from features.versioning.tasks import enable_v2_versioning
 
 SYSTEM_SEGMENT_MODIFICATION_ERROR = {
-    "detail": "System segments and their overrides can't be changed directly.",
     "code": "system_segment_modification",
+    "message": "System segments and their overrides can't be changed directly.",
 }
 
 
