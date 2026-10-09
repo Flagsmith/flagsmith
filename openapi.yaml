@@ -145,171 +145,6 @@ paths:
         - Master API Key: []
       tags:
         - experimental
-  '/api/experiments/environments/{environment_key}/delete-segment-override/':
-    post:
-      operationId: api_experiments_environments_delete_segment_override_create
-      summary: Delete segment override
-      description: |2-
-
-            **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
-
-            Deletes a segment override for a feature in the given environment.
-
-            **Feature Identification:**
-            - Use `feature.name` OR `feature.id` (mutually exclusive)
-            - Feature must belong to the environment's project
-
-            **Segment Identification:**
-            - Use `segment.id` (required)
-
-            The segment override must exist for the given feature/environment combination.
-            Returns 400 if the segment override does not exist.
-            
-      parameters:
-        - name: environment_key
-          in: path
-          description: The environment API key
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeleteSegmentOverride'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/DeleteSegmentOverride'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/DeleteSegmentOverride'
-      responses:
-        '204':
-          description: No response body
-      security:
-        - tokenAuth: []
-        - Master API Key: []
-      tags:
-        - experimental
-  '/api/experiments/environments/{environment_key}/update-flag-v1/':
-    post:
-      operationId: api_experiments_environments_update_flag_v1_create
-      summary: Update single feature state
-      description: |2-
-
-            **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
-
-            Updates a single feature state within an environment. You can update either:
-            - The environment default state (when no segment is specified)
-            - A specific segment override (when segment.id is provided)
-
-            **Feature Identification:**
-            - Use `feature.name` OR `feature.id` (mutually exclusive)
-
-            **Value Format:**
-            - The `value` field is always a string representation
-            - The `type` field tells the server how to parse it
-            - Available types: integer, string, boolean
-            - Examples:
-              - `{"type": "integer", "value": "42"}`
-              - `{"type": "boolean", "value": "true"}`
-              - `{"type": "string", "value": "hello"}`
-
-            **Segment Priority:**
-            - Optional `segment.priority` field controls ordering
-            - If field value is null or the field is omitted, lowest priority is assumed
-            
-      parameters:
-        - name: environment_key
-          in: path
-          description: The environment API key
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateFlag'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/UpdateFlag'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/UpdateFlag'
-      responses:
-        '204':
-          description: No response body
-      security:
-        - tokenAuth: []
-        - Master API Key: []
-      tags:
-        - experimental
-  '/api/experiments/environments/{environment_key}/update-flag-v2/':
-    post:
-      operationId: api_experiments_environments_update_flag_v2_create
-      summary: Update multiple feature states
-      description: |2-
-
-            **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
-
-            Updates multiple feature states in a single request. This endpoint allows
-            you to configure an entire feature (environment default + all segment overrides)
-            in one operation.
-
-            **What You Can Update:**
-            - Environment default state (required)
-            - Multiple segment overrides (optional)
-            - Priority ordering for each segment
-
-            **Feature Identification:**
-            - Use `feature.name` OR `feature.id` (mutually exclusive)
-
-            **Value Format:**
-            - The `value` field is always a string representation
-            - The `type` field tells the server how to parse it
-            - Available types: integer, string, boolean
-            - Examples:
-              - `{"type": "string", "value": "production"}`
-              - `{"type": "integer", "value": "100"}`
-              - `{"type": "boolean", "value": "false"}`
-
-            **Segment Overrides:**
-            - Provide array of segment override configurations
-            - Each override must specify: segment_id, enabled, value
-            - Optional priority field controls ordering
-            - Duplicate segment_id values are not allowed
-
-            
-      parameters:
-        - name: environment_key
-          in: path
-          description: The environment API key
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateFlagV2'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/UpdateFlagV2'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/UpdateFlagV2'
-      responses:
-        '204':
-          description: No response body
-      security:
-        - tokenAuth: []
-        - Master API Key: []
-      tags:
-        - experimental
   /api/v1/admin/dashboard/integrations/:
     get:
       operationId: api_v1_admin_dashboard_integrations_retrieve
@@ -8205,20 +8040,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EnvironmentFeatureVersionCreate'
+              $ref: '#/components/schemas/EnvironmentFeatureVersionCreateRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/EnvironmentFeatureVersionCreate'
+              $ref: '#/components/schemas/EnvironmentFeatureVersionCreateRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/EnvironmentFeatureVersionCreate'
+              $ref: '#/components/schemas/EnvironmentFeatureVersionCreateRequest'
       responses:
         '201':
           description: ''
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EnvironmentFeatureVersionCreate'
+                $ref: '#/components/schemas/EnvironmentFeatureVersionCreateRequest'
       security:
         - tokenAuth: []
         - Master API Key: []
@@ -20784,16 +20619,6 @@ components:
           type: string
       required:
         - key
-    DeleteSegmentOverride:
-      type: object
-      properties:
-        feature:
-          $ref: '#/components/schemas/FeatureIdentifier'
-        segment:
-          $ref: '#/components/schemas/SegmentIdentifier'
-      required:
-        - feature
-        - segment
     DependencyConflictDetail:
       description: The body served where existing dependencies refuse a change.
       type: object
@@ -21442,16 +21267,6 @@ components:
           format: date-time
       required:
         - name
-    EnvironmentDefault:
-      type: object
-      properties:
-        enabled:
-          type: boolean
-        value:
-          $ref: '#/components/schemas/FeatureValue'
-      required:
-        - enabled
-        - value
     EnvironmentFeatureVersion:
       type: object
       properties:
@@ -21509,7 +21324,14 @@ components:
           format: date-time
       required:
         - feature_states
-    EnvironmentFeatureVersionCreate:
+    EnvironmentFeatureVersionCreateRequest:
+      description: |-
+        Refuses users' changes to system segment overrides.
+
+        Change sets publish through the parent class, as they can stage changes
+        to system segment overrides made by their owners.
+
+        TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
       type: object
       properties:
         created_at:
@@ -22487,13 +22309,6 @@ components:
       required:
         - name
         - project
-    FeatureIdentifier:
-      type: object
-      properties:
-        name:
-          type: string
-        id:
-          type: integer
     FeatureImport:
       type: object
       properties:
@@ -22984,17 +22799,6 @@ components:
           type:
             - boolean
             - 'null'
-    FeatureUpdateSegmentData:
-      type: object
-      properties:
-        id:
-          type: integer
-        priority:
-          type:
-            - integer
-            - 'null'
-      required:
-        - id
     FeatureValue:
       type: object
       properties:
@@ -28648,13 +28452,6 @@ components:
             - $ref: '#/components/schemas/BaseUrlEnum'
       required:
         - api_key
-    SegmentIdentifier:
-      type: object
-      properties:
-        id:
-          type: integer
-      required:
-        - id
     SegmentManagedByEnum:
       description: |-
         * `` - Unmanaged
@@ -28708,27 +28505,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-    SegmentOverride:
-      type: object
-      properties:
-        segment_id:
-          type: integer
-        priority:
-          type:
-            - integer
-            - 'null'
-        enabled:
-          type: boolean
-        value:
-          $ref: '#/components/schemas/FeatureValue'
-        multivariate_feature_state_values:
-          type: array
-          items:
-            $ref: '#/components/schemas/MultivariateValue'
-      required:
-        - enabled
-        - segment_id
-        - value
     SegmentRule:
       description: Adds nested create feature
       type: object
@@ -29580,21 +29356,6 @@ components:
           allOf:
             - $ref: '#/components/schemas/LifecycleStageEnum'
           readOnly: true
-    UpdateFlag:
-      type: object
-      properties:
-        feature:
-          $ref: '#/components/schemas/FeatureIdentifier'
-        segment:
-          $ref: '#/components/schemas/FeatureUpdateSegmentData'
-        enabled:
-          type: boolean
-        value:
-          $ref: '#/components/schemas/FeatureValue'
-      required:
-        - enabled
-        - feature
-        - value
     UpdateFlagRequest:
       type: object
       properties:
@@ -29646,7 +29407,9 @@ components:
           type: integer
           title: Priority
         value:
-          $ref: '#/components/schemas/UpdateFlagRequestFlagValue'
+          anyOf:
+            - $ref: '#/components/schemas/UpdateFlagRequestFlagValue'
+            - type: 'null'
         variants:
           type: array
           items:
@@ -29774,20 +29537,6 @@ components:
         - id
         - weight
       title: Variant
-    UpdateFlagV2:
-      type: object
-      properties:
-        feature:
-          $ref: '#/components/schemas/FeatureIdentifier'
-        environment_default:
-          $ref: '#/components/schemas/EnvironmentDefault'
-        segment_overrides:
-          type: array
-          items:
-            $ref: '#/components/schemas/SegmentOverride'
-      required:
-        - environment_default
-        - feature
     UpdateSubscription:
       type: object
       properties:
