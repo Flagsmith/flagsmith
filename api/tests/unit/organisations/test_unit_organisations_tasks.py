@@ -28,6 +28,7 @@ from organisations.models import (
     OrganisationSubscriptionInformationCache,
     UserOrganisation,
 )
+from organisations.services import is_overage_billing_eligible
 from organisations.subscriptions.constants import (
     CHARGEBEE,
     FREE_PLAN_ID,
@@ -57,6 +58,8 @@ from organisations.tasks import (  # type: ignore[attr-defined]
 )
 from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
+
+OVERAGE_FLAG = ("api_usage_overage_charges",)
 
 
 def test_send_org_over_limit_alert__free_subscription__sends_alert_with_free_plan_details(  # type: ignore[no-untyped-def]
@@ -1608,8 +1611,10 @@ def test_restrict_use_due_to_api_limit_grace_period_over__multiple_organisations
     admin_user: FFAdminUser,
     staff_user: FFAdminUser,
     enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
     enable_features(
         "api_limiting_stop_serving_flags",
         "api_limiting_block_access_to_admin",
@@ -1822,8 +1827,10 @@ def test_restrict_use_due_to_api_limit_grace_period_over__previously_breached__b
     admin_user: FFAdminUser,
     staff_user: FFAdminUser,
     enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
     enable_features(
         "api_limiting_stop_serving_flags",
         "api_limiting_block_access_to_admin",
@@ -1873,13 +1880,45 @@ def test_restrict_use_due_to_api_limit_grace_period_over__previously_breached__b
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over__restriction_flags_disabled__does_not_block(
+    mocker: MockerFixture,
+    organisation: Organisation,
+) -> None:
+    # Given
+    OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=10_000,
+    )
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+    mocker.patch("organisations.tasks.get_current_api_usage", return_value=12_005)
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=timezone.now(),
+        organisation=organisation,
+        percent_usage=120,
+    )
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    organisation.refresh_from_db()
+    assert organisation.stop_serving_flags is False
+    assert organisation.block_access_to_admin is False
+    assert not hasattr(organisation, "api_limit_access_block")
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_restrict_use_due_to_api_limit_grace_period_over__missing_subscription_cache__does_not_block(
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
     mailoutbox: list[EmailMultiAlternatives],
     enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
     assert not organisation.has_subscription_information_cache()
     enable_features(
         "api_limiting_stop_serving_flags",
@@ -1921,8 +1960,10 @@ def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__doe
     mailoutbox: list[EmailMultiAlternatives],
     caplog: pytest.LogCaptureFixture,
     enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
     assert not organisation.has_subscription_information_cache()
 
     enable_features(
@@ -2185,6 +2226,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over__cc_recipient_list_set_
     settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
     cs_email = "cs@flagsmith.com"
     settings.API_USAGE_ALERT_CC_RECIPIENT_LIST = [cs_email]
 
@@ -2223,3 +2265,77 @@ def test_restrict_use_due_to_api_limit_grace_period_over__cc_recipient_list_set_
     # Then
     assert len(mailoutbox) == 1
     assert mailoutbox[0].cc == [cs_email]
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+@pytest.mark.parametrize(
+    "plan, term_days, cancellation_offset_days, enabled_features, expected",
+    [
+        pytest.param("scale-up-v2", 30, None, OVERAGE_FLAG, True, id="scale-up"),
+        pytest.param("startup-v2", 30, None, OVERAGE_FLAG, True, id="start-up"),
+        pytest.param("startup-v2", 25, None, OVERAGE_FLAG, True, id="25-day-term"),
+        pytest.param("startup-v2", 35, None, OVERAGE_FLAG, True, id="35-day-term"),
+        pytest.param("startup-v2", 24, None, OVERAGE_FLAG, False, id="24-day-term"),
+        pytest.param("startup-v2", 36, None, OVERAGE_FLAG, False, id="36-day-term"),
+        pytest.param("startup-v2", 365, None, OVERAGE_FLAG, False, id="annual"),
+        pytest.param("enterprise-v2", 30, None, OVERAGE_FLAG, False, id="enterprise"),
+        pytest.param(FREE_PLAN_ID, 30, None, OVERAGE_FLAG, False, id="free"),
+        pytest.param("startup-v2", 30, 0, OVERAGE_FLAG, False, id="cancelled"),
+        pytest.param(
+            "startup-v2", 30, 10, OVERAGE_FLAG, False, id="cancellation-scheduled"
+        ),
+        pytest.param("startup-v2", 30, None, (), False, id="flag-disabled"),
+    ],
+)
+def test_charge_for_api_call_count_overages__eligibility__matches_is_overage_billing_eligible(
+    organisation: Organisation,
+    mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+    plan: str,
+    term_days: int,
+    cancellation_offset_days: int | None,
+    enabled_features: tuple[str, ...],
+    expected: bool,
+) -> None:
+    # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=100_000,
+        current_billing_term_starts_at=now
+        - timedelta(days=term_days)
+        + timedelta(minutes=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = plan
+    organisation.subscription.cancellation_date = (
+        None
+        if cancellation_offset_days is None
+        else now + timedelta(days=cancellation_offset_days)
+    )
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+    enable_features(*enabled_features)
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
+    )
+    mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+        return_value=300_000,
+    )
+    organisation.refresh_from_db()
+
+    # When
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
+
+    # Then
+    assert mock_chargebee_update.called is expected
+    assert is_overage_billing_eligible(organisation) is expected
