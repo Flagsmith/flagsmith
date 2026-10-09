@@ -173,6 +173,19 @@ def test_create_cohort__valid_name__creates_segment_with_is_set_condition(
     assert condition.operator == IS_SET
     assert condition.property == cohort.system_trait_key
     assert condition.created_with_segment is True
+    assert segment.rules_data == [
+        {
+            "type": SegmentRule.ALL_RULE,
+            "conditions": [
+                {
+                    "property": cohort.system_trait_key,
+                    "operator": IS_SET,
+                    "value": None,
+                    "description": None,
+                }
+            ],
+        }
+    ]
 
 
 def test_create_cohort__valid_name__logs_created_event(
