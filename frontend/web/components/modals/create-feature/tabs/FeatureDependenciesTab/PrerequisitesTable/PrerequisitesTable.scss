@@ -15,6 +15,30 @@
   background: var(--color-surface-muted);
 }
 
+// A button only shrinks below its text with a min width.
+.prerequisite-name > .btn {
+  min-width: 0;
+}
+
+.prerequisite-name__text {
+  min-width: 0;
+}
+
+// Held for a change request: still listed, but on its way out. On the inner
+// span, as .btn-link clears text-decoration with !important.
+.prerequisite-row--staged-remove .prerequisite-name .btn-link {
+  color: var(--color-text-secondary);
+}
+
+.prerequisite-row--staged-remove .prerequisite-name__text {
+  text-decoration: line-through;
+}
+
+// On the cell, as with the input row, so hover does not replace it.
+.prerequisite-row--refused td {
+  background: var(--color-surface-danger);
+}
+
 // The select needs permission to shrink or it pushes the row past the panel.
 .prerequisite-add-control > :first-child {
   flex: 1 1 auto;
