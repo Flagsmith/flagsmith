@@ -6,7 +6,6 @@ from typing import NamedTuple
 import structlog
 from django.db import transaction
 from django.db.models import Count, Q
-from django_lifecycle import AFTER_DELETE, BEFORE_DELETE  # type: ignore[import-untyped]
 from rest_framework.exceptions import ValidationError
 
 from api_keys.user import APIKeyUser
@@ -46,6 +45,7 @@ from features.versioning.versioning_service import (
 from segments.exceptions import SystemSegmentModificationError
 from segments.models import Segment
 from users.models import FFAdminUser
+from util.db import with_delete_hooks
 
 logger = structlog.get_logger("features")
 
@@ -234,17 +234,11 @@ def _delete_segment_overrides(
         else version.feature_segments.all()
     )
     # Deleting the queryset, rather than each instance, leaves the other
-    # priorities as they are, but skips the lifecycle hooks of the instances.
-    # TODO: Stop running private hooks after
-    # https://github.com/Flagsmith/flagsmith/issues/7315
-    deleted = list(feature_segments.filter(segment_id__in=segment_ids))
-    for feature_segment in deleted:
-        feature_segment._run_hooked_methods(BEFORE_DELETE)
-    FeatureSegment.objects.filter(
-        id__in=[feature_segment.id for feature_segment in deleted]
-    ).delete()
-    for feature_segment in deleted:
-        feature_segment._run_hooked_methods(AFTER_DELETE)
+    # priorities as they are.
+    with with_delete_hooks(
+        feature_segments.filter(segment_id__in=segment_ids)
+    ) as deleted_feature_segments:
+        deleted_feature_segments.delete()
 
 
 def _check_priorities(
