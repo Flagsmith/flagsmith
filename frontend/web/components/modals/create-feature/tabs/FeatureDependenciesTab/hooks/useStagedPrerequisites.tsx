@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import {
   DependencyEdge,
-  DependencyFeature,
   ProjectFlag,
+  StagedDependencyChange,
 } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import {
@@ -22,11 +22,6 @@ import {
   toStagingError,
 } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/stagingError'
 import { unchangedChangeSet } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/unchangedChangeSet'
-
-export type StagedChange = {
-  action: 'add' | 'remove'
-  prerequisite: DependencyFeature
-}
 
 type UseStagedPrerequisitesArgs = {
   environmentId: string
@@ -48,7 +43,7 @@ export const useStagedPrerequisites = ({
   projectFlag,
   projectId,
 }: UseStagedPrerequisitesArgs) => {
-  const [staged, setStaged] = useState<StagedChange[]>([])
+  const [staged, setStaged] = useState<StagedDependencyChange[]>([])
   const [error, setError] = useState<StagingError | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 

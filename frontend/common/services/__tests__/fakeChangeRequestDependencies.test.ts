@@ -1,5 +1,8 @@
 import { DependencyEdge } from 'common/types/responses'
 import {
+  discardChangeRequest,
+  getPendingByChangeRequest,
+  getPendingByFeature,
   getStagedDependencyChanges,
   stageAdd,
   stageRemove,
@@ -82,5 +85,34 @@ describe('stageRemove', () => {
     expect(getStagedDependencyChanges(12, 1)).toEqual([
       { action: 'remove', prerequisite },
     ])
+  })
+})
+
+describe('pending changes', () => {
+  it('lists staged changes by feature and by change request', () => {
+    stageAdd(args)
+    stageRemove(14, 1, { id: 4, name: 'feature_4' })
+    stageAdd({ ...args, featureId: 2 })
+    expect(getPendingByFeature(1).map((e) => e.changeRequestId)).toEqual([
+      12, 14,
+    ])
+    expect(getPendingByChangeRequest(12).map((e) => e.featureId)).toEqual([
+      1, 2,
+    ])
+  })
+
+  it('drops a change request emptied by its own removals', () => {
+    stageAdd(args)
+    stageRemove(12, 1, prerequisite)
+    expect(getPendingByFeature(1)).toEqual([])
+  })
+
+  it('forgets every feature of a discarded change request', () => {
+    stageAdd(args)
+    stageAdd({ ...args, featureId: 2 })
+    stageAdd({ ...args, changeRequestId: 120 })
+    discardChangeRequest(12)
+    expect(getPendingByChangeRequest(12)).toEqual([])
+    expect(getPendingByChangeRequest(120)).toHaveLength(1)
   })
 })

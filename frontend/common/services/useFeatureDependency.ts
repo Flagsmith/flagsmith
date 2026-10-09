@@ -1,7 +1,12 @@
 import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import { stagedDependencyEdge } from 'common/utils/stagedDependencyEdge'
-import { stageAdd, stageRemove } from './fakeChangeRequestDependencies'
+import {
+  getPendingByChangeRequest,
+  getPendingByFeature,
+  stageAdd,
+  stageRemove,
+} from './fakeChangeRequestDependencies'
 import { service } from 'common/service'
 
 type DependencyTag = { id: string; type: 'FeatureDependency' }
@@ -37,6 +42,11 @@ const dependencyUrl = (query: {
 const dependenciesUrl = (query: { environmentId: string }, featureId: number) =>
   `environments/${query.environmentId}/features/${featureId}/dependencies/`
 
+const pendingTags = (featureId: number): DependencyTag[] => [
+  { id: `PENDING-${featureId}`, type: 'FeatureDependency' },
+  { id: 'PENDING', type: 'FeatureDependency' },
+]
+
 export const featureDependencyService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureDependency'] })
   .injectEndpoints({
@@ -45,9 +55,11 @@ export const featureDependencyService = service
         Res['featureDependency'],
         Req['createFeatureDependency']
       >({
-        // A staged change is not live, so no list changes.
+        // A staged change is not live, so only the pending lists change.
         invalidatesTags: (res, err, query) =>
-          query.changeRequestId ? [] : invalidateEnvironment(query),
+          query.changeRequestId
+            ? pendingTags(query.featureId)
+            : invalidateEnvironment(query),
         // The POST answers with the edge, so the row need not wait on the
         // refetch the invalidation triggers.
         onQueryStarted: async (query, { dispatch, queryFulfilled }) => {
@@ -122,7 +134,9 @@ export const featureDependencyService = service
         Req['deleteFeatureDependency']
       >({
         invalidatesTags: (res, err, query) =>
-          query.changeRequestId ? [] : invalidateEnvironment(query),
+          query.changeRequestId
+            ? pendingTags(query.featureId)
+            : invalidateEnvironment(query),
         queryFn: async (query, _, _2, baseQuery) => {
           if (!query.changeRequestId) {
             const res = await baseQuery({
@@ -137,6 +151,17 @@ export const featureDependencyService = service
           })
           return { data: undefined }
         },
+      }),
+      // Faked until #8449: the API will list a feature's change requests and
+      // read each one's staged dependencies with GET ?change_request.
+      getChangeRequestDependencyChanges: builder.query<
+        Res['pendingDependencyChanges'],
+        Req['getChangeRequestDependencyChanges']
+      >({
+        providesTags: [{ id: 'PENDING', type: 'FeatureDependency' }],
+        queryFn: (query) => ({
+          data: getPendingByChangeRequest(query.changeRequestId),
+        }),
       }),
       getFeatureDependencies: builder.query<
         Res['featureDependencies'],
@@ -155,6 +180,13 @@ export const featureDependencyService = service
         query: (query: Req['getFeatureDependents']) => ({
           url: `environments/${query.environmentId}/features/${query.featureId}/dependents/`,
         }),
+      }),
+      getPendingDependencyChanges: builder.query<
+        Res['pendingDependencyChanges'],
+        Req['getPendingDependencyChanges']
+      >({
+        providesTags: (res, err, query) => pendingTags(query.featureId),
+        queryFn: (query) => ({ data: getPendingByFeature(query.featureId) }),
       }),
       // END OF ENDPOINTS
     }),
@@ -221,8 +253,10 @@ export async function getFeatureDependents(
 export const {
   useCreateFeatureDependencyMutation,
   useDeleteFeatureDependencyMutation,
+  useGetChangeRequestDependencyChangesQuery,
   useGetFeatureDependenciesQuery,
   useGetFeatureDependentsQuery,
+  useGetPendingDependencyChangesQuery,
   // END OF EXPORTS
 } = featureDependencyService
 

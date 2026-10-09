@@ -10,6 +10,7 @@ import Utils from 'common/utils/utils'
 import sortBy from 'lodash/sortBy'
 import moment from 'moment'
 import transformCorePaging from 'common/transformCorePaging'
+import { discardChangeRequest } from './fakeChangeRequestDependencies'
 
 export const changeRequestService = service
   .enhanceEndpoints({ addTagTypes: ['ChangeRequest'] })
@@ -35,6 +36,15 @@ export const changeRequestService = service
       }),
       deleteChangeRequest: builder.mutation<void, Req['deleteChangeRequest']>({
         invalidatesTags: [{ id: 'LIST', type: 'ChangeRequest' }],
+        // Until #8449, staged dependencies live outside the API.
+        onQueryStarted: async ({ id }, { queryFulfilled }) => {
+          try {
+            await queryFulfilled
+            discardChangeRequest(id)
+          } catch {
+            // The caller reports it.
+          }
+        },
         query: ({ id }) => ({
           method: 'DELETE',
           url: `features/workflows/change-requests/${id}/`,
