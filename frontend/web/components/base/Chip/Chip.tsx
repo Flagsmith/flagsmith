@@ -12,8 +12,7 @@ export type ChipProps = {
   children: ReactNode
   variant?: ChipVariant
   // A colour the chip carries as a dot in front of its label, rather than as
-  // a fill. Any CSS colour; see dotColour for moving an arbitrary one to
-  // where it reads on the chip.
+  // a fill. Any CSS colour, drawn as given.
   dot?: string
   // Chosen. Draws the ring, and announces itself as pressed where the chip is
   // a button, so the two cannot disagree. A caller driving a keyboard group

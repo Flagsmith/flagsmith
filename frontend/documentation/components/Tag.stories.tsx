@@ -12,7 +12,7 @@ const meta: Meta<typeof Tag> = {
     docs: {
       description: {
         component:
-          'A project tag. The chip is the neutral one in both themes and the colour is a dot, so the label is always text-default and the colour never has to be legible for the tag to be. The colour stored on the tag can be anything, including a value set through the API, so the dot moves it to the nearest lightness that reads on the chip in either theme. Hue and saturation are kept.',
+          'A project tag. The chip is the neutral one in both themes and the colour is a dot, so the label is always text-default and the colour never has to be legible for the tag to be. The dot is the hex stored on the tag, drawn as it is.',
       },
     },
     layout: 'padded',
@@ -43,10 +43,10 @@ export const EveryColour: Story = {
   ),
 }
 
-// The two ends of the palette, which cannot be drawn as stored: one is too
-// pale to see on the light chip, the other too dark to see on the dark one.
+// The ends of the palette, where the stored hex is close enough to the chip
+// to disappear: the pale ones on light, the dark ones on dark.
 export const Extremes: Story = {
-  name: 'Colours that have to move',
+  name: 'Colours that barely read',
   render: () => (
     <div className='d-flex flex-wrap gap-1'>
       <Tag tag={tag({ color: '#d3d3d3', label: 'Near white' })} />

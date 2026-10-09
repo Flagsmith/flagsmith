@@ -2,7 +2,7 @@ import React, { FC } from 'react'
 import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
-import Chip, { dotColour } from 'components/base/Chip'
+import Chip from 'components/base/Chip'
 import Utils from 'common/utils/utils'
 import TagContent from './TagContent'
 import Constants from 'common/constants'
@@ -20,8 +20,8 @@ export const getTagColor = (tag: Partial<TTag>) =>
     ? Constants.featureHealth.unhealthyColor
     : tag.color ?? Constants.tagColors[0]
 
-/** The tag's colour, moved to where it reads on a chip in either theme. */
-export const tagDotColour = (tag: Partial<TTag>) => dotColour(getTagColor(tag))
+/** The colour the tag's dot is painted in: the hex on the record, as stored. */
+export const tagDotColour = (tag: Partial<TTag>) => getTagColor(tag)
 
 const Tag: FC<TagType> = ({ className, isDot, onClick, selected, tag }) => {
   if (isDot) {
