@@ -91,6 +91,9 @@ const keywordsReactNative = {
   ...keywords,
   NPM_CLIENT: '@flagsmith/react-native',
 }
+// Set before logging out after a password change, so the login page can say why.
+export const PASSWORD_CHANGED_SESSION_KEY = 'password_changed'
+
 const Constants = {
   archivedTag: { color: '#8f8f8f', label: 'Archived' },
   codeHelp: {

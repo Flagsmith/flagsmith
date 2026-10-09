@@ -23,6 +23,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import AppActions from 'common/dispatcher/app-actions'
 // @ts-ignore
 import Project from 'common/project'
+import { PASSWORD_CHANGED_SESSION_KEY } from 'common/constants'
 import flagsmith from '@flagsmith/flagsmith'
 import { Account, AuthType } from 'common/types/responses'
 
@@ -135,23 +136,42 @@ const AccountSettingsPage: FC = () => {
     ) {
       return
     }
-    setIsSaving(true)
-    _data
-      .post(`${Project.api}auth/users/set_password/`, {
-        current_password: currentPassword,
-        new_password: newPassword1,
-        re_new_password: newPassword2,
-      })
-      .then(() => {
-        setIsSaving(false)
-        toast('Your password has been updated')
-      })
-      .catch(() => {
-        setIsSaving(false)
-        setPasswordError(
-          'There was an error setting your password, please check your details.',
-        )
-      })
+    openConfirm({
+      body: (
+        <div>
+          Changing your password will{' '}
+          <span className='text-default font-weight-medium'>
+            log you out on all devices
+          </span>
+          , including this one. You will need to log in again with your new
+          password.
+        </div>
+      ),
+      onYes: () => {
+        setIsSaving(true)
+        _data
+          .post(`${Project.api}auth/users/set_password/`, {
+            current_password: currentPassword,
+            new_password: newPassword1,
+            re_new_password: newPassword2,
+          })
+          .then(() => {
+            setIsSaving(false)
+            // Changing the password revokes the auth token on every device,
+            // including this one, so log out to show the login page.
+            sessionStorage.setItem(PASSWORD_CHANGED_SESSION_KEY, 'true')
+            AppActions.logout()
+          })
+          .catch(() => {
+            setIsSaving(false)
+            setPasswordError(
+              'There was an error setting your password, please check your details.',
+            )
+          })
+      },
+      title: 'Change Password',
+      yesText: 'Change password',
+    })
   }
 
   const forced2Factor = AccountStore.forced2Factor()
