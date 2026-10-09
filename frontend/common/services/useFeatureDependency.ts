@@ -1,5 +1,7 @@
 import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
+import { stagedDependencyEdge } from 'common/utils/stagedDependencyEdge'
+import { stageAdd, stageRemove } from './fakeChangeRequestDependencies'
 import { service } from 'common/service'
 
 type DependencyTag = { id: string; type: 'FeatureDependency' }
@@ -25,6 +27,16 @@ const invalidateEnvironment = (query: {
   { id: `LIST-${query.environmentId}`, type: 'FeatureDependency' },
 ]
 
+const dependencyUrl = (query: {
+  environmentId: string
+  featureId: number
+  prerequisiteFeatureId: number
+}) =>
+  `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`
+
+const dependenciesUrl = (query: { environmentId: string }, featureId: number) =>
+  `environments/${query.environmentId}/features/${featureId}/dependencies/`
+
 export const featureDependencyService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureDependency'] })
   .injectEndpoints({
@@ -33,10 +45,13 @@ export const featureDependencyService = service
         Res['featureDependency'],
         Req['createFeatureDependency']
       >({
-        invalidatesTags: (res, err, query) => invalidateEnvironment(query),
+        // A staged change is not live, so no list changes.
+        invalidatesTags: (res, err, query) =>
+          query.changeRequestId ? [] : invalidateEnvironment(query),
         // The POST answers with the edge, so the row need not wait on the
         // refetch the invalidation triggers.
         onQueryStarted: async (query, { dispatch, queryFulfilled }) => {
+          if (query.changeRequestId) return
           let edge: Res['featureDependency']
           try {
             edge = (await queryFulfilled).data
@@ -60,20 +75,68 @@ export const featureDependencyService = service
             ),
           )
         },
-        query: (query: Req['createFeatureDependency']) => ({
-          method: 'POST',
-          url: `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`,
-        }),
+        queryFn: async (query, _, _2, baseQuery) => {
+          if (!query.changeRequestId) {
+            const res = await baseQuery({
+              method: 'POST',
+              url: dependencyUrl(query),
+            })
+            return res.error
+              ? { error: res.error }
+              : { data: res.data as Res['featureDependency'] }
+          }
+          // Staged: checked against live data, then held by the fake.
+          const [liveRes, prerequisiteRes, dependentsRes] = await Promise.all([
+            baseQuery({ url: dependenciesUrl(query, query.featureId) }),
+            baseQuery({
+              url: dependenciesUrl(query, query.prerequisiteFeatureId),
+            }),
+            baseQuery({
+              url: `environments/${query.environmentId}/features/${query.featureId}/dependents/`,
+            }),
+          ])
+          const failed =
+            liveRes.error || prerequisiteRes.error || dependentsRes.error
+          if (failed) return { error: failed }
+          const prerequisite = {
+            id: query.prerequisiteFeatureId,
+            name: query.prerequisiteName ?? '',
+          }
+          const conflict = stageAdd({
+            changeRequestId: query.changeRequestId,
+            dependentEdges: (dependentsRes.data as Res['featureDependents'])
+              .results,
+            featureId: query.featureId,
+            liveEdges: (liveRes.data as Res['featureDependencies']).results,
+            prerequisite,
+            prerequisiteEdges: (
+              prerequisiteRes.data as Res['featureDependencies']
+            ).results,
+          })
+          if (conflict) return { error: { data: conflict, status: 400 } }
+          return { data: stagedDependencyEdge(query.featureId, prerequisite) }
+        },
       }),
       deleteFeatureDependency: builder.mutation<
         void,
         Req['deleteFeatureDependency']
       >({
-        invalidatesTags: (res, err, query) => invalidateEnvironment(query),
-        query: (query: Req['deleteFeatureDependency']) => ({
-          method: 'DELETE',
-          url: `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`,
-        }),
+        invalidatesTags: (res, err, query) =>
+          query.changeRequestId ? [] : invalidateEnvironment(query),
+        queryFn: async (query, _, _2, baseQuery) => {
+          if (!query.changeRequestId) {
+            const res = await baseQuery({
+              method: 'DELETE',
+              url: dependencyUrl(query),
+            })
+            return res.error ? { error: res.error } : { data: undefined }
+          }
+          stageRemove(query.changeRequestId, query.featureId, {
+            id: query.prerequisiteFeatureId,
+            name: query.prerequisiteName ?? '',
+          })
+          return { data: undefined }
+        },
       }),
       getFeatureDependencies: builder.query<
         Res['featureDependencies'],
