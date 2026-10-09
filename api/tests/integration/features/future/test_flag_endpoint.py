@@ -2369,6 +2369,7 @@ def system_segment(
 @pytest.mark.parametrize(
     "method, changes",
     [
+        ("patch", {}),
         ("patch", {"enabled": True}),
         ("patch", {"value": {"type": "string", "value": "bypassed"}}),
         ("patch", {"priority": 1}),
@@ -2408,32 +2409,46 @@ def test_update_flag__system_segment_override_changed__responds_409(
     assert admin_client_new.get(url).json() == flag
 
 
-def test_update_flag__put_without_system_segment_override__responds_409(
+def test_update_flag__put_without_system_segment_override__keeps_system_segment_override(
     admin_client_new: APIClient,
+    default_feature_value: str,
     environment_api_key: str,
     feature: int,
+    segment: int,
     system_segment: int,
 ) -> None:
-    # Given
-    url = f"/api/__future__/environments/{environment_api_key}/features/{feature}/"
-    flag = admin_client_new.get(url).json()
-
-    # When
+    # Given / When
     response = admin_client_new.put(
-        url,
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
         UpdateFlagRequest(
             {
                 "environment_default": {"enabled": False},
-                "segment_overrides": [],
+                "segment_overrides": [
+                    {"segment": {"id": segment}, "priority": 1, "enabled": True}
+                ],
             }
         ),
         format="json",
     )
 
     # Then
-    assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
-    assert admin_client_new.get(url).json() == flag
+    assert response.status_code == 200
+    assert response.json()["segment_overrides"] == [
+        {
+            "segment": {"id": system_segment},
+            "priority": 0,
+            "enabled": False,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [],
+        },
+        {
+            "segment": {"id": segment},
+            "priority": 1,
+            "enabled": True,
+            "value": None,
+            "variants": [],
+        },
+    ]
 
 
 def test_update_flag__system_segment_override_for_other_feature__responds_409(
@@ -2459,51 +2474,25 @@ def test_update_flag__system_segment_override_for_other_feature__responds_409(
     assert admin_client_new.get(url).json() == flag
 
 
-def test_update_flag__put_flag_as_read__keeps_system_segment_override(
+def test_update_flag__put_flag_as_read__responds_409(
     admin_client_new: APIClient,
-    default_feature_value: str,
     environment_api_key: str,
     feature: int,
-    segment: int,
     system_segment: int,
 ) -> None:
+    """Flags can be updated partially with PATCH, leaving system segment overrides."""
     # Given
     url = f"/api/__future__/environments/{environment_api_key}/features/{feature}/"
     flag = admin_client_new.get(url).json()
     for state in [flag["environment_default"], *flag["segment_overrides"]]:
         del state["variants"]  # Not a multivariate feature
-    flag["segment_overrides"].append(
-        {"segment": {"id": segment}, "priority": 1, "enabled": True}
-    )
 
     # When
     response = admin_client_new.put(url, flag, format="json")
 
     # Then
-    assert response.status_code == 200
-    assert response.json() == {
-        "environment_default": {
-            "enabled": False,
-            "value": {"type": "string", "value": default_feature_value},
-            "variants": [],
-        },
-        "segment_overrides": [
-            {
-                "segment": {"id": system_segment},
-                "priority": 0,
-                "enabled": False,
-                "value": {"type": "string", "value": default_feature_value},
-                "variants": [],
-            },
-            {
-                "segment": {"id": segment},
-                "priority": 1,
-                "enabled": True,
-                "value": {"type": "string", "value": default_feature_value},
-                "variants": [],
-            },
-        ],
-    }
+    assert response.status_code == 409
+    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
 
 
 def test_delete_segment_override__system_segment__responds_409(
