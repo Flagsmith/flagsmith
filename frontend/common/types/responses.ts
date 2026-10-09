@@ -185,6 +185,18 @@ export type DependencyEdge = {
   segment: DependencyEdgeSegment
 }
 
+// A dependency held in a change request, not live until it is published.
+export type StagedDependencyChange = {
+  action: 'add' | 'remove'
+  prerequisite: DependencyFeature
+}
+
+export type PendingDependencyChanges = {
+  changeRequestId: number
+  featureId: number
+  changes: StagedDependencyChange[]
+}
+
 export type DependencyConflictCode =
   | 'circular_dependency'
   | 'dependency_exists'
@@ -1599,6 +1611,7 @@ export type Res = {
   featureDependencies: { results: DependencyEdge[] }
   featureDependents: { results: DependencyEdge[] }
   featureDependency: DependencyEdge
+  pendingDependencyChanges: PendingDependencyChanges[]
   featureVersions: PagedResponse<FeatureVersion>
   users: User[]
   enableFeatureVersioning: { id: string }
