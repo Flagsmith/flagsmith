@@ -1,5 +1,45 @@
 # Changelog
 
+## [2.281.0](https://github.com/Flagsmith/flagsmith/compare/v2.280.0...v2.281.0) (2026-10-09)
+
+
+### Features
+
+* **dependencies:** add the Dependencies tab ([#8637](https://github.com/Flagsmith/flagsmith/issues/8637)) ([7ca6598](https://github.com/Flagsmith/flagsmith/commit/7ca6598c8abf041c7d32f164227a664df5863f31))
+* **experimentation:** read experiment results and exposures through the environment's warehouse ([#8683](https://github.com/Flagsmith/flagsmith/issues/8683)) ([fa52035](https://github.com/Flagsmith/flagsmith/commit/fa5203540d55312651751e17034ea109c2d501bc))
+* **Flag Dependency:** Remove a feature's prerequisite ([#8650](https://github.com/Flagsmith/flagsmith/issues/8650)) ([e588efa](https://github.com/Flagsmith/flagsmith/commit/e588efa444f2111f320677e4977f448c8f343901))
+* **Segments:** Expose managed feature segments ([#8699](https://github.com/Flagsmith/flagsmith/issues/8699)) ([1419461](https://github.com/Flagsmith/flagsmith/commit/1419461b2a4d93a51ae99d5509291ea7a4dd6fb9))
+* **usage:** group usage data by project or environment ([#8645](https://github.com/Flagsmith/flagsmith/issues/8645)) ([76c4802](https://github.com/Flagsmith/flagsmith/commit/76c480252978b3a90b90fd18c513bcfa10093589))
+
+
+### Bug Fixes
+
+* **Change Requests:** Scheduled feature changes inconsistent with actual state ([#8680](https://github.com/Flagsmith/flagsmith/issues/8680)) ([618f0fb](https://github.com/Flagsmith/flagsmith/commit/618f0fbccfeec065e3a80b09b3b55f10666ba5d3))
+* **Feature Lifecycle:** Release for public use ([#8694](https://github.com/Flagsmith/flagsmith/issues/8694)) ([6b0a8d1](https://github.com/Flagsmith/flagsmith/commit/6b0a8d1e71f2df5f14f82181f0b6b3ed4080dade))
+* **features:** lock the initial state and value when defaults are prevented ([#8664](https://github.com/Flagsmith/flagsmith/issues/8664)) ([da773ed](https://github.com/Flagsmith/flagsmith/commit/da773ed8c4183771961e8df9572bc292a1bb76cd))
+
+
+### Dependency Updates
+
+* **docs:** Bump serialize-javascript to 7.1.2 [security] ([#8672](https://github.com/Flagsmith/flagsmith/issues/8672)) ([a21c612](https://github.com/Flagsmith/flagsmith/commit/a21c61204b50ea9b3862752278ee6e9abbf68ea1))
+* update dependency flagsmith-common to v3.15.1 ([#8239](https://github.com/Flagsmith/flagsmith/issues/8239)) ([3166780](https://github.com/Flagsmith/flagsmith/commit/3166780af837923f5ed864cb1a1efb48d2092b8a))
+
+
+### CI
+
+* **frontend-deploy:** name what is being deployed ([#8431](https://github.com/Flagsmith/flagsmith/issues/8431)) ([68ce670](https://github.com/Flagsmith/flagsmith/commit/68ce670f43e5556aff31f4b9414c193555fed3dc))
+
+
+### Docs
+
+* **scim:** Document that Entra's `aadOptscim062020` flag is not supported ([#8621](https://github.com/Flagsmith/flagsmith/issues/8621)) ([a1522da](https://github.com/Flagsmith/flagsmith/commit/a1522dab03fce929c472da5e1834d325b1a4eaa6))
+
+
+### Refactoring
+
+* **experimentation:** introduce warehouse providers and port ClickHouse ([#8661](https://github.com/Flagsmith/flagsmith/issues/8661)) ([edfb91d](https://github.com/Flagsmith/flagsmith/commit/edfb91d1b5e41e5b047c3db8e609c0fa60536e0c))
+* **experimentation:** move managed warehouse reads into the Flagsmith provider ([#8677](https://github.com/Flagsmith/flagsmith/issues/8677)) ([7dfcd9a](https://github.com/Flagsmith/flagsmith/commit/7dfcd9acf1984820db8ea92d5f475e0b2d92c6ea))
+
 ## [2.280.0](https://github.com/Flagsmith/flagsmith/compare/v2.279.0...v2.280.0) (2026-10-05)
 
 
