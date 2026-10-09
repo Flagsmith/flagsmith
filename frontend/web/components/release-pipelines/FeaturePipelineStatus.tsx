@@ -2,7 +2,7 @@ import {
   useGetReleasePipelineQuery,
   useGetReleasePipelinesQuery,
 } from 'common/services/useReleasePipelines'
-import AccordionCard from 'components/base/accordion/AccordionCard'
+import AccordionCard from 'components/base/AccordionCard'
 import { useMemo } from 'react'
 
 import StageStatus from './StageStatus'

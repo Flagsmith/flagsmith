@@ -1,5 +1,5 @@
 import React, { FC, useEffect } from 'react'
-import AccordionCard from 'components/base/accordion/AccordionCard'
+import AccordionCard from 'components/base/AccordionCard'
 import { useGetEnvironmentMetricsQuery } from 'common/services/useEnvironment'
 import EnvironmentMetric from './EnvironmentMetric'
 import { getExtraMetricsData } from './constants'
