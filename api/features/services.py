@@ -10,7 +10,10 @@ from features.dependencies.services import (
 )
 from features.dependencies.types import FeatureName
 from features.exceptions import FeatureNotFoundError
-from features.future.mappers import map_feature_state_data_to_segment_override
+from features.future.mappers import (
+    map_feature_state_data_to_segment_override,
+    map_flag_value,
+)
 from features.future.services import get_segment_override, update_flag
 from features.models import Feature, FeatureSegment, FeatureState
 from features.tasks import trigger_feature_state_change_webhooks
@@ -133,3 +136,32 @@ def write_live_segment_override(
     assert feature_state is not None
     notify_code_references_of_feature_state(feature_state)
     return feature_state
+
+
+def is_segment_override_unchanged(
+    feature_segment: FeatureSegment,
+    feature_state: FeatureState,
+    feature_state_data: LegacyFeatureStateData,
+) -> bool:
+    """Whether writing data, validated by a legacy API, leaves an override as it is.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
+    changes = map_feature_state_data_to_segment_override(
+        feature_segment.segment_id, feature_state_data
+    )
+    value = map_flag_value(feature_state.feature_state_value)
+    weights = {
+        multivariate_value.multivariate_feature_option_id: (
+            multivariate_value.percentage_allocation
+        )
+        for multivariate_value in feature_state.multivariate_feature_state_values.all()
+    }
+    return (
+        changes.get("enabled", feature_state.enabled) == feature_state.enabled
+        and changes.get("value", value) == value
+        and all(
+            weights.get(variant["id"]) == variant["weight"]
+            for variant in changes.get("variants", [])
+        )
+    )

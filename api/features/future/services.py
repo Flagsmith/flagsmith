@@ -244,6 +244,8 @@ def _delete_segment_overrides(
     )
     # Deleting the queryset, rather than each instance, leaves the other
     # priorities as they are, but skips the lifecycle hooks of the instances.
+    # TODO: Stop running private hooks after
+    # https://github.com/Flagsmith/flagsmith/issues/7315
     deleted = list(feature_segments.filter(segment_id__in=segment_ids))
     for feature_segment in deleted:
         feature_segment._run_hooked_methods(BEFORE_DELETE)
@@ -285,60 +287,6 @@ def _get_system_segment_ids(segment_ids: Collection[int]) -> set[int]:
     )
 
 
-def _map_served_state(feature_state: FeatureState) -> tuple[object, ...]:
-    """What an override serves, regardless of its priority."""
-    return (
-        feature_state.enabled,
-        map_flag_value(feature_state.feature_state_value),
-        map_variants(feature_state),
-    )
-
-
-def _check_system_segment_override_changes(
-    *,
-    overrides: dict[int, FeatureState],
-    changes: Sequence[SegmentOverrideChanges],
-    deleted_segment_ids: Collection[int],
-) -> dict[int, tuple[object, ...]]:
-    """Refuse to create, delete or reorder system segment overrides.
-
-    Return what the system segment overrides being written serve now, to make
-    sure writing them changes nothing.
-    """
-    system_segment_ids = _get_system_segment_ids(
-        {*overrides, *(change["segment"]["id"] for change in changes)}
-    )
-    if system_segment_ids & {*deleted_segment_ids}:
-        raise SystemSegmentModificationError()
-    served_states = {}
-    for change in changes:
-        if (segment_id := change["segment"]["id"]) not in system_segment_ids:
-            continue
-        feature_state = overrides.get(segment_id)
-        if feature_state is None or feature_state.feature_segment is None:
-            raise SystemSegmentModificationError()
-        priority = feature_state.feature_segment.priority
-        if change.get("priority", priority) != priority:
-            raise SystemSegmentModificationError()
-        served_states[segment_id] = _map_served_state(feature_state)
-    return served_states
-
-
-def _check_system_segment_overrides_unchanged(
-    overrides: dict[int, FeatureState],
-    served_states: dict[int, tuple[object, ...]],
-) -> None:
-    for segment_id, served_state in served_states.items():
-        # Read afresh, as writes leave prefetched variants behind.
-        feature_state = (
-            FeatureState.objects.select_related("feature_state_value")
-            .prefetch_related("multivariate_feature_state_values")
-            .get(pk=overrides[segment_id].pk)
-        )
-        if _map_served_state(feature_state) != served_state:
-            raise SystemSegmentModificationError()
-
-
 def _write_segment_overrides(
     *,
     environment: Environment,
@@ -351,22 +299,22 @@ def _write_segment_overrides(
     system: bool,
 ) -> _OverriddenSegments:
     segments = _OverriddenSegments([], [], [])
+    changed_segment_ids = {change["segment"]["id"] for change in changes}
+
+    # Only the features owning system segments can change their overrides.
+    # Replacing the others leaves them as they are.
+    system_segment_ids = (
+        set() if system else _get_system_segment_ids({*overrides, *changed_segment_ids})
+    )
+    if system_segment_ids & changed_segment_ids:
+        raise SystemSegmentModificationError()
 
     if replace:
         segments.deleted.extend(
-            sorted(overrides.keys() - {change["segment"]["id"] for change in changes})
+            sorted(overrides.keys() - changed_segment_ids - system_segment_ids)
         )
 
-    system_served_states: dict[int, tuple[object, ...]] = {}
     if not system:
-        # Only the features owning system segments can change their overrides,
-        # but anyone can write them as they are, e.g. when replacing all overrides
-        # for a feature wholesale.
-        system_served_states = _check_system_segment_override_changes(
-            overrides=overrides,
-            changes=changes,
-            deleted_segment_ids=segments.deleted,
-        )
         if exceeds_segment_override_limit(
             environment,
             segment_ids_to_create_overrides=[
@@ -410,8 +358,6 @@ def _write_segment_overrides(
             environment_default=environment_default,
             created=segment_id in segments.created,
         )
-
-    _check_system_segment_overrides_unchanged(overrides, system_served_states)
 
     _check_priorities(environment, feature, version)
 

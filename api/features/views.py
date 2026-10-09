@@ -91,6 +91,7 @@ from features.future.services import (
 )
 from features.services import (
     delete_feature,
+    is_segment_override_unchanged,
     write_live_segment_override,
     writes_live_segment_override,
 )
@@ -1039,6 +1040,13 @@ class SimpleFeatureStateViewSet(
                 )
                 == feature_state
             ):
+                # The dashboard writes every override of the flags it saves.
+                if feature_segment.segment.is_system_segment and (
+                    is_segment_override_unchanged(
+                        feature_segment, feature_state, feature_state_data
+                    )
+                ):
+                    return Response(self.get_serializer(feature_state).data)
                 feature_state = write_live_segment_override(
                     feature_segment, feature_state_data, author=request.user
                 )
