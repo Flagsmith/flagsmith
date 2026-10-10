@@ -61,6 +61,14 @@ class FeatureMVOptionsValuesResponseSerializer(serializers.Serializer):  # type:
 
 
 class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSerializer):
+    # The model field has `default=100`, which only makes DRF mark this field
+    # `required=False` — it does not carry the default into `validated_data`.
+    # Declare it explicitly so omitting it from the request does not raise a
+    # `KeyError` in `validate()` below.
+    default_percentage_allocation = serializers.FloatField(
+        default=100, min_value=0, max_value=100
+    )
+
     class Meta(NestedMultivariateFeatureOptionSerializer.Meta):
         fields = NestedMultivariateFeatureOptionSerializer.Meta.fields + ("feature",)  # type: ignore[assignment]
         read_only_fields = ("uuid",)  # type: ignore[assignment]
