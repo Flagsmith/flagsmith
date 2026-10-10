@@ -11,6 +11,7 @@ from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.exceptions import InfluxDBError
 from influxdb_client.client.flux_table import FluxTable
 from influxdb_client.client.write_api import SYNCHRONOUS
+from influxdb_client.rest import ApiException
 from sentry_sdk import capture_exception
 from urllib3 import Retry
 from urllib3.exceptions import HTTPError
@@ -149,7 +150,7 @@ class InfluxDBWrapper:
 
         try:
             return query_api.query(org=settings.INFLUXDB_ORG, query=query)
-        except (HTTPError, InfluxDBError) as e:
+        except (HTTPError, InfluxDBError, ApiException) as e:
             capture_exception(e)
             return []
 
