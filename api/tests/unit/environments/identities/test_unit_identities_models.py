@@ -1119,7 +1119,7 @@ def test_update_traits__new_trait__sets_updated_at(
     assert new_trait.updated_at == timezone.now()
 
 
-def test_update_traits__existing_traits__sets_updated_at_only_if_updated(
+def test_update_traits__existing_traits__updates_updated_at_only_if_updated(
     environment: Environment,
     freezer: FrozenDateTimeFactory,
 ) -> None:
