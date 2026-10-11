@@ -173,6 +173,10 @@
                     "value": "300"
                 },
                 {
+                    "name": "ENABLE_API_USAGE_ALERTING",
+                    "value": "True"
+                },
+                {
                     "name": "EDGE_RELEASE_DATETIME",
                     "value": "2022-06-07T10:00:00Z"
                 },

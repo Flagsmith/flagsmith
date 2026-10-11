@@ -190,6 +190,10 @@
                     "value": "300"
                 },
                 {
+                    "name": "ENABLE_API_USAGE_ALERTING",
+                    "value": "True"
+                },
+                {
                     "name": "INFLUXDB_ORG",
                     "value": "ben.rometsch@bullet-train.io"
                 },
