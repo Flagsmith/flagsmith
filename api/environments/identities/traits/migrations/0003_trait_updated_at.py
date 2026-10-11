@@ -9,7 +9,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # Added without auto_now so existing rows stay NULL instead of being
+        # backfilled with the migration time; auto_now is applied after.
         migrations.AddField(
+            model_name="trait",
+            name="updated_at",
+            field=models.DateTimeField(null=True),
+        ),
+        migrations.AlterField(
             model_name="trait",
             name="updated_at",
             field=models.DateTimeField(auto_now=True, null=True),
