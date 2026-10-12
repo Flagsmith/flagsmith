@@ -622,13 +622,13 @@ def test_migrate_to_edge__too_many_segments__returns_400(  # type: ignore[no-unt
     environment,
     feature,
     settings,
-    feature_based_segment,
     segment,
 ):
     # Given
     settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = "some_table"
     project.max_segments_allowed = 1
     project.save()
+    Segment.objects.create(name="another segment", project=project)
 
     mocked_identity_migrator = mocker.patch("projects.views.IdentityMigrator")
 
@@ -1069,3 +1069,21 @@ def test_list_projects__default_enforce_feature_owners__returns_false(
     assert len(response.json()) > 0
     assert "enforce_feature_owners" in response.json()[0]
     assert response.json()[0]["enforce_feature_owners"] is False
+
+
+def test_get_project__hidden_segments__total_segments_excludes_them(
+    admin_client: APIClient,
+    project: Project,
+    segment: Segment,
+    feature_specific_segment: Segment,
+) -> None:
+    # Given
+    Segment.objects.create(name="system", project=project, is_system_segment=True)
+    url = reverse("api-v1:projects:project-detail", args=[project.id])
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["total_segments"] == 1
