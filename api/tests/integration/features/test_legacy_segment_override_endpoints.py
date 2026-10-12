@@ -689,6 +689,146 @@ def test_update_feature_state__system_segment_override_changed__responds_409(
     )
 
 
+@pytest.mark.parametrize("v2_versioning", [False, True])
+def test_update_priorities__one_override_moved_up__moves_others_down(
+    admin_client: APIClient,
+    create_segment_override: Any,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    project: int,
+    v2_versioning: bool,
+) -> None:
+    """The Flagsmith Go API client, and Terraform provider, move one at a time."""
+    # Given
+    if v2_versioning:
+        enable_v2_versioning(environment_id=environment)
+    segments = [
+        _create_segment(admin_client, project, f"segment {i}") for i in range(3)
+    ]
+    for priority, segment in enumerate(segments):
+        create_segment_override(
+            environment_api_key, feature, segment, priority=priority
+        )
+    feature_segment_id = _get_feature_segment_id(
+        admin_client, environment, feature, segments[2]
+    )
+
+    # When
+    response = admin_client.post(
+        "/api/v1/features/feature-segments/update-priorities/",
+        [{"id": feature_segment_id, "priority": 0}],
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": _get_feature_segment_id(
+                admin_client, environment, feature, segments[2]
+            ),
+            "uuid": mock.ANY,
+            "segment": segments[2],
+            "priority": 0,
+            "environment": environment,
+            "segment_name": "segment 2",
+            "is_feature_specific": False,
+            "is_system_segment": False,
+            "segment_managed_by": "",
+        },
+    ]
+    assert [
+        (override["segment"]["id"], override["priority"])
+        for override in _get_segment_overrides(
+            admin_client, environment_api_key, feature
+        )
+    ] == [(segments[2], 0), (segments[0], 1), (segments[1], 2)]
+
+
+def test_update_priorities__system_segment_override_moved__responds_409(
+    admin_client: APIClient,
+    create_segment_override: Any,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    system_segment: int,
+) -> None:
+    # Given
+    create_segment_override(environment_api_key, feature, segment, priority=1)
+    overrides = _get_segment_overrides(admin_client, environment_api_key, feature)
+
+    # When
+    response = admin_client.post(
+        "/api/v1/features/feature-segments/update-priorities/",
+        [
+            {
+                "id": _get_feature_segment_id(
+                    admin_client, environment, feature, segment
+                ),
+                "priority": 0,
+            }
+        ],
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 409
+    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
+        overrides
+    )
+
+
+def test_update_priorities__system_segment_override_kept__reorders_others(
+    admin_client: APIClient,
+    create_segment_override: Any,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    project: int,
+    system_segment: int,
+) -> None:
+    """The dashboard sends the priorities of every override when reordering."""
+    # Given
+    segments = [
+        _create_segment(admin_client, project, f"segment {i}") for i in range(2)
+    ]
+    for priority, segment in enumerate(segments, start=1):
+        create_segment_override(
+            environment_api_key, feature, segment, priority=priority
+        )
+
+    # When
+    response = admin_client.post(
+        "/api/v1/features/feature-segments/update-priorities/",
+        [
+            {
+                "id": _get_feature_segment_id(
+                    admin_client, environment, feature, segment
+                ),
+                "priority": priority,
+            }
+            for segment, priority in [
+                (system_segment, 0),
+                (segments[1], 1),
+                (segments[0], 2),
+            ]
+        ],
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert [
+        (override["segment"]["id"], override["priority"])
+        for override in _get_segment_overrides(
+            admin_client, environment_api_key, feature
+        )
+    ] == [(system_segment, 0), (segments[1], 1), (segments[0], 2)]
+
+
 def test_create_environment_feature_state__system_segment__responds_409(
     admin_client: APIClient,
     environment: int,
@@ -995,6 +1135,41 @@ def test_update_feature_state__system_segment_override_scheduled__responds_409(
     assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
         overrides
     )
+
+
+def test_update_priorities__priorities_as_they_are__responds_200(
+    admin_client: APIClient,
+    environment: int,
+    feature: int,
+    system_segment: int,
+) -> None:
+    # Given
+    feature_segment_id = _get_feature_segment_id(
+        admin_client, environment, feature, system_segment
+    )
+
+    # When
+    response = admin_client.post(
+        "/api/v1/features/feature-segments/update-priorities/",
+        [{"id": feature_segment_id, "priority": 0}],
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "id": feature_segment_id,
+            "uuid": mock.ANY,
+            "segment": system_segment,
+            "priority": 0,
+            "environment": environment,
+            "segment_name": "feature_1-depends-on-feature_2",
+            "is_feature_specific": True,
+            "is_system_segment": True,
+            "segment_managed_by": "dependency",
+        },
+    ]
 
 
 def test_update_draft_version_feature_state__to_system_segment__responds_409(
