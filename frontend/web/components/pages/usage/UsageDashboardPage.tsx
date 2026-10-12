@@ -126,7 +126,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   // One line: over the limit outranks the projection, which outranks the share.
   const meterNote =
     [
-      exceeded && overLimitNote(exceeded),
+      exceeded && overLimitNote(exceeded, limitStatus?.kind),
       projection && period && projectionNote(projection, period.ends_at),
       contribution,
     ].find(Boolean) || undefined

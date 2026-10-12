@@ -2,7 +2,8 @@ import { Res } from 'common/types/responses'
 import { PlanLimit } from 'components/shared/UsageBar/utils'
 import Format from 'common/utils/format'
 import { cumulativeTotals, dailyTotals } from './components/UsageOverTime/utils'
-import { apiCallsWord } from './usageText'
+import { LimitStatusKind } from './limitStatus'
+import { apiCallsWord, joinSentences } from './usageText'
 
 export type OverLimit = {
   limit: number
@@ -31,7 +32,18 @@ export const overLimitOf = (
     ? { crossedOn: limitCrossedOn(data, limit), limit, overBy: total - limit }
     : undefined
 
-export const overLimitNote = (over: OverLimit): string =>
-  `${Format.shortenNumber(over.overBy)} ${apiCallsWord(
-    over.overBy,
-  )} over your ${Format.shortenNumber(over.limit)} limit.`
+const OVERAGE_NOTE: Partial<Record<LimitStatusKind, string>> = {
+  'overage-charged': 'Charged at the overage rate.',
+  'overage-covered': 'Covered as your first overage.',
+}
+
+export const overLimitNote = (
+  over: OverLimit,
+  status?: LimitStatusKind,
+): string =>
+  joinSentences(
+    `${Format.shortenNumber(over.overBy)} ${apiCallsWord(
+      over.overBy,
+    )} over your ${Format.shortenNumber(over.limit)} limit.`,
+    status && OVERAGE_NOTE[status],
+  )
