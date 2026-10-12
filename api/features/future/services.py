@@ -102,47 +102,58 @@ def _get_overrides_by_segment_id(
     }
 
 
-def validate_variant_weights(
-    feature_state: FeatureState | None, variants: Sequence[Variant]
-) -> None:
-    """Refuse weighting variants past 100%, counting the weights of those not given,
-    which writing them keeps."""
-    given_ids = {variant["id"] for variant in variants}
-    total_weight = sum(variant["weight"] for variant in variants) + sum(
-        multivariate_value.percentage_allocation
-        for multivariate_value in (
-            feature_state.multivariate_feature_state_values.all()
-            if feature_state
-            else []
-        )
-        if multivariate_value.multivariate_feature_option_id not in given_ids
-    )
-    if total_weight > 100:
-        raise ValidationError(f"Total weight must not exceed 100, got {total_weight}.")
+class _VariantWeights(NamedTuple):
+    """Variant weights to write to a feature state, if it exists already."""
+
+    feature_state: FeatureState | None
+    variants: Sequence[Variant] | None
 
 
-def _validate_variant_weights_of_changes(
+def _validate_variant_weights(
     feature_states: Sequence[FeatureState], changes: UpdateFlagRequest
 ) -> None:
+    """Refuse weighting variants past 100%, counting the weights of those not
+    given, which writing them keeps."""
+    environment_default = next(
+        feature_state
+        for feature_state in feature_states
+        if feature_state.feature_segment_id is None
+    )
     overrides = _get_overrides_by_segment_id(feature_states)
-    if (variants := changes.get("environment_default", {}).get("variants")) is not None:
-        validate_variant_weights(
-            next(
-                feature_state
-                for feature_state in feature_states
-                if feature_state.feature_segment_id is None
-            ),
-            variants,
-        )
-    for change in changes.get("segment_overrides", []):
-        if (variants := change.get("variants")) is not None:
-            validate_variant_weights(overrides.get(change["segment"]["id"]), variants)
+    for feature_state, variants in [
+        _VariantWeights(
+            environment_default,
+            changes.get("environment_default", {}).get("variants"),
+        ),
+        *(
+            _VariantWeights(
+                overrides.get(change["segment"]["id"]), change.get("variants")
+            )
+            for change in changes.get("segment_overrides", [])
+        ),
+    ]:
+        if variants is None:
+            continue
+        weights = {
+            multivariate_value.multivariate_feature_option_id: (
+                multivariate_value.percentage_allocation
+            )
+            for multivariate_value in (
+                feature_state.multivariate_feature_state_values.all()
+                if feature_state
+                else []
+            )
+        } | {variant["id"]: variant["weight"] for variant in variants}
+        if (total_weight := sum(weights.values())) > 100:
+            raise ValidationError(
+                f"Total weight must not exceed 100, got {total_weight}."
+            )
 
 
-def write_variants(feature_state: FeatureState, variants: Sequence[Variant]) -> None:
+def _write_variants(feature_state: FeatureState, variants: Sequence[Variant]) -> None:
     """Weight the given variants of a feature state, keeping the others as they are.
 
-    Validate them first, with `validate_variant_weights`.
+    Validate them first, with `_validate_variant_weights`.
     """
     weighted = {
         multivariate_value.multivariate_feature_option_id: multivariate_value
@@ -185,7 +196,7 @@ def _write_environment_default(
         _clear_value(feature_state_value)
 
     if (variants := changes.get("variants")) is not None:
-        write_variants(feature_state, variants)
+        _write_variants(feature_state, variants)
 
 
 def _write_segment_override(
@@ -218,9 +229,9 @@ def _write_segment_override(
         feature_state_value.copy_from(environment_default.feature_state_value)
 
     if (variants := changes.get("variants")) is not None:
-        write_variants(feature_state, variants)
+        _write_variants(feature_state, variants)
     elif replace:
-        write_variants(feature_state, map_variants(environment_default))
+        _write_variants(feature_state, map_variants(environment_default))
 
 
 def _create_segment_override(
@@ -424,7 +435,7 @@ def update_flag(
     with transaction.atomic():
         version = _create_draft_version(environment, feature)
         feature_states = _get_feature_states_to_write(environment, feature, version)
-        _validate_variant_weights_of_changes(feature_states, changes)
+        _validate_variant_weights(feature_states, changes)
         environment_default = next(
             feature_state
             for feature_state in feature_states
