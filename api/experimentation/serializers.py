@@ -9,7 +9,6 @@ from environments.models import Environment
 from experimentation.constants import MAX_AUDIENCE_SEGMENTS
 from experimentation.dataclasses import (
     AudienceSpec,
-    MultivariateValueChangeSet,
     RolloutSpec,
     WarehouseEventStats,
 )
@@ -40,6 +39,7 @@ from features.feature_states.serializers import (
     MultivariateValueSerializer,
 )
 from features.feature_types import MULTIVARIATE
+from features.future.types import Variant
 from features.models import Feature
 from features.multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
@@ -264,10 +264,10 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
             rollout_percentage=data["rollout_percentage"],
             feature_state_value=value["value"],
             value_type=value["type"],
-            multivariate_values=[
-                MultivariateValueChangeSet(
-                    multivariate_feature_option_id=mv["multivariate_feature_option"],
-                    percentage_allocation=mv["percentage_allocation"],
+            variants=[
+                Variant(
+                    id=mv["multivariate_feature_option"],
+                    weight=mv["percentage_allocation"],
                 )
                 for mv in data.get("multivariate_feature_state_values", [])
             ],

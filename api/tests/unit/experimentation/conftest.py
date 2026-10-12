@@ -10,7 +10,6 @@ from core.dataclasses import AuthorData
 from environments.models import Environment
 from experimentation.dataclasses import (
     AudienceSpec,
-    MultivariateValueChangeSet,
     RolloutSpec,
 )
 from experimentation.models import (
@@ -23,6 +22,7 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.services import apply_experiment_rollout
+from features.future.types import Variant
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
 from projects.models import Project
@@ -36,7 +36,7 @@ class RolloutSpecFactory(Protocol):
         *,
         rollout_percentage: float = ...,
         enabled: bool = ...,
-        multivariate_values: list[MultivariateValueChangeSet] | None = ...,
+        variants: list[Variant] | None = ...,
         audience: AudienceSpec | None = ...,
     ) -> RolloutSpec: ...
 
@@ -98,9 +98,9 @@ def experiment_with_rollout(
             rollout_percentage=20.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -176,7 +176,7 @@ def rollout_spec(admin_user: FFAdminUser) -> RolloutSpecFactory:
         *,
         rollout_percentage: float = 100.0,
         enabled: bool = True,
-        multivariate_values: list[MultivariateValueChangeSet] | None = None,
+        variants: list[Variant] | None = None,
         audience: AudienceSpec | None = None,
     ) -> RolloutSpec:
         return RolloutSpec(
@@ -184,7 +184,7 @@ def rollout_spec(admin_user: FFAdminUser) -> RolloutSpecFactory:
             rollout_percentage=rollout_percentage,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=multivariate_values or [],
+            variants=variants or [],
             author=AuthorData(user=admin_user),
             audience=audience,
         )

@@ -777,7 +777,7 @@ def _validate_audience_change(experiment: Experiment, audience: AudienceSpec) ->
 
 
 def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
-    option_ids = [v.multivariate_feature_option_id for v in spec.multivariate_values]
+    option_ids = [variant["id"] for variant in spec.variants]
     if len(option_ids) != len(set(option_ids)):
         raise ValidationError("Multivariate options must be unique")
     valid_option_ids = set(
@@ -787,7 +787,7 @@ def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
         raise ValidationError(
             f"Multivariate options {sorted(invalid)} do not belong to the feature"
         )
-    total = sum(v.percentage_allocation for v in spec.multivariate_values)
+    total = sum(variant["weight"] for variant in spec.variants)
     if total > 100:
         raise ValidationError(
             f"Multivariate allocations must not exceed 100%, got {total}%."
@@ -826,10 +826,7 @@ def _is_noop_rollout(
     return {
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
-    } == {
-        mv.multivariate_feature_option_id: mv.percentage_allocation
-        for mv in spec.multivariate_values
-    }
+    } == {variant["id"]: variant["weight"] for variant in spec.variants}
 
 
 def _create_rollout_segment(
@@ -991,13 +988,7 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
                 "segment": {"id": segment.id},
                 "enabled": spec.enabled,
                 "value": {"type": spec.value_type, "value": spec.feature_state_value},
-                "variants": [
-                    {
-                        "id": value.multivariate_feature_option_id,
-                        "weight": value.percentage_allocation,
-                    }
-                    for value in spec.multivariate_values
-                ],
+                "variants": spec.variants,
             },
             spec.author,
         )
