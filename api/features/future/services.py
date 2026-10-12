@@ -121,6 +121,15 @@ def _write_variants(feature_state: FeatureState, variants: Sequence[Variant]) ->
         multivariate_value.multivariate_feature_option_id: multivariate_value
         for multivariate_value in feature_state.multivariate_feature_state_values.all()
     }
+    # Variants not given keep their weights.
+    given_ids = {variant["id"] for variant in variants}
+    total_weight = sum(variant["weight"] for variant in variants) + sum(
+        multivariate_value.percentage_allocation
+        for option_id, multivariate_value in weighted.items()
+        if option_id not in given_ids
+    )
+    if total_weight > 100:
+        raise ValidationError(f"Total weight must not exceed 100, got {total_weight}.")
     for variant in variants:
         if multivariate_value := weighted.get(variant["id"]):
             multivariate_value.percentage_allocation = variant["weight"]

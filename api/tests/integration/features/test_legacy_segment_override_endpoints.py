@@ -10,6 +10,7 @@ import pytest
 from rest_framework.test import APIClient
 
 from features.versioning.tasks import enable_v2_versioning
+from tests.integration.helpers import create_mv_option_with_api
 
 SYSTEM_SEGMENT_MODIFICATION_ERROR = {
     "code": "system_segment_modification",
@@ -1246,6 +1247,46 @@ def test_update_feature_state__system_segment_override_value_cleared__responds_4
     # Then
     assert response.status_code == 409
     assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
+        overrides
+    )
+
+
+def test_update_feature_state__variant_weights_exceed_100__responds_400(
+    admin_client: APIClient,
+    create_segment_override: Any,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    project: int,
+    segment: int,
+) -> None:
+    # Given
+    option_a = create_mv_option_with_api(admin_client, project, feature, 50, "a")
+    create_mv_option_with_api(admin_client, project, feature, 30, "b")
+    create_segment_override(environment_api_key, feature, segment)
+    overrides = _get_segment_overrides(admin_client, environment_api_key, feature)
+    feature_state_id = _get_segment_override_id(
+        admin_client, environment, feature, segment
+    )
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/features/featurestates/{feature_state_id}/",
+        {
+            "feature": feature,
+            "environment": environment,
+            "enabled": True,
+            "multivariate_feature_state_values": [
+                {"multivariate_feature_option": option_a, "percentage_allocation": 80}
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == ["Total weight must not exceed 100, got 110.0."]
     assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
         overrides
     )
