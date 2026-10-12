@@ -41,7 +41,7 @@ from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import get_environment_flags_list
 from segments.exceptions import SystemSegmentModificationError
-from segments.models import Segment
+from segments.models import Segment, SegmentManagedBy
 from util.db import with_delete_hooks
 
 logger = structlog.get_logger("features")
@@ -260,13 +260,16 @@ def _check_priorities(
         raise DuplicatePriorityError(f"Duplicate priority: {duplicate}.")
 
 
-def _get_system_segments_managed_by(segment_ids: Collection[int]) -> dict[int, str]:
+def _get_system_segments_managed_by(
+    segment_ids: Collection[int],
+) -> dict[int, SegmentManagedBy]:
     """Get which features manage the system segments among some, by segment ID."""
-    return dict(
-        Segment.objects.filter(id__in=segment_ids, is_system_segment=True).values_list(
-            "id", "managed_by"
-        )
-    )
+    return {
+        segment_id: SegmentManagedBy(managed_by)
+        for segment_id, managed_by in Segment.objects.filter(
+            id__in=segment_ids, is_system_segment=True
+        ).values_list("id", "managed_by")
+    }
 
 
 def _write_segment_overrides(

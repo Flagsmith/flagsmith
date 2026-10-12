@@ -12,14 +12,6 @@ from rest_framework.test import APIClient
 from features.versioning.tasks import enable_v2_versioning
 from tests.integration.helpers import create_mv_option_with_api
 
-SYSTEM_SEGMENT_MODIFICATION_ERROR = {
-    "code": "system_segment_modification",
-    "message": (
-        "System segments and their overrides can't be changed directly. "
-        "Change this one through its flag dependency instead."
-    ),
-}
-
 
 def _get_segment_overrides(
     admin_client: APIClient, environment_api_key: str, feature: int
@@ -274,7 +266,13 @@ def test_create_segment_override__system_segment__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
     assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
         overrides
     )
@@ -686,7 +684,13 @@ def test_update_feature_state__system_segment_override_changed__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
     assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
         overrides
     )
@@ -714,7 +718,13 @@ def test_create_environment_feature_state__system_segment__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
 
 
 @pytest.mark.parametrize(
@@ -762,7 +772,13 @@ def test_create_version__system_segment_override_changed__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
     assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
         overrides
     )
@@ -795,7 +811,13 @@ def test_create_version__new_system_segment_override__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
     assert (
         _get_segment_overrides(admin_client, other_environment["api_key"], feature)
         == []
@@ -837,7 +859,13 @@ def test_write_draft_version_feature_state__system_segment__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
 
 
 def test_create_draft_version_feature_state__system_segment__responds_409(
@@ -869,7 +897,13 @@ def test_create_draft_version_feature_state__system_segment__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
 
 
 def test_create_segment_override__no_feature_segment__responds_400(
@@ -994,7 +1028,13 @@ def test_update_feature_state__system_segment_override_scheduled__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
     assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
         overrides
     )
@@ -1044,7 +1084,13 @@ def test_update_draft_version_feature_state__to_system_segment__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
 
 
 def test_update_feature_state__system_segment_override_value_cleared__responds_409(
@@ -1074,7 +1120,13 @@ def test_update_feature_state__system_segment_override_value_cleared__responds_4
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
     assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
         overrides
     )

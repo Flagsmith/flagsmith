@@ -35,7 +35,7 @@ def test_create_segment__version_of_system_segment__responds_409(
         "code": "system_segment_modification",
         "message": (
             "System segments and their overrides can't be changed directly. "
-            "Change this one through its flag dependency instead."
+            "Change this one through flag dependency instead."
         ),
     }
 
