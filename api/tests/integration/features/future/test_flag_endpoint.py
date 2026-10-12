@@ -2486,7 +2486,6 @@ def test_update_flag__put_flag_as_read__responds_409(
     feature: int,
     system_segment: int,
 ) -> None:
-    """Flags can be updated partially with PATCH, leaving system segment overrides."""
     # Given
     url = f"/api/__future__/environments/{environment_api_key}/features/{feature}/"
     flag = admin_client_new.get(url).json()
