@@ -2,7 +2,6 @@ import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import Accordion from 'components/base/Accordion'
-import Chip from 'components/base/Chip'
 import Table, { TableBody, TableCell, TableRow } from 'components/base/Table'
 
 const meta: Meta<typeof Accordion> = {
@@ -40,13 +39,6 @@ export const WithDescription: Story = {
 // A page section: the header sits in an h3, so it shows up in heading navigation.
 export const AsHeading: Story = {
   args: { headingLevel: 3 },
-}
-
-export const WithMeta: Story = {
-  args: {
-    meta: <Chip size='xs'>Awaiting approval</Chip>,
-    title: '#3433 Enable new search',
-  },
 }
 
 export const Flush: Story = {

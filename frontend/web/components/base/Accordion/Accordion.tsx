@@ -12,9 +12,6 @@ export type AccordionProps = {
   title: ReactNode
   // Shown under the title once open, as in the spec.
   description?: ReactNode
-  // Read with the title, so keep it to text: a status, a count or a spinner.
-  // It sits inside the toggle, so a control here would be nested in a button.
-  meta?: ReactNode
   children: ReactNode
   // Wraps the header in a heading, for an accordion that is a page section.
   headingLevel?: AccordionHeadingLevel
@@ -34,7 +31,6 @@ const Accordion: FC<AccordionProps> = ({
   description,
   flush = false,
   headingLevel,
-  meta,
   onOpenChange,
   open: controlledOpen,
   title,
@@ -47,21 +43,13 @@ const Accordion: FC<AccordionProps> = ({
   const wrapInHeading = (header: ReactNode) => {
     if (!headingLevel) return header
     const Heading = `h${headingLevel}` as const
-    return <Heading className='ds-accordion__level'>{header}</Heading>
+    return <Heading className='ds-accordion__heading'>{header}</Heading>
   }
 
   const toggle = () => {
-    setUncontrolledOpen(!open)
+    if (controlledOpen === undefined) setUncontrolledOpen(!open)
     onOpenChange?.(!open)
   }
-
-  // Named by the title alone; the description and status are read after it.
-  const describedBy = [
-    open && description && `${id}-description`,
-    meta && `${id}-meta`,
-  ]
-    .filter(Boolean)
-    .join(' ')
 
   return (
     <div
@@ -80,20 +68,18 @@ const Accordion: FC<AccordionProps> = ({
           aria-expanded={open}
           aria-controls={`${id}-body`}
           aria-labelledby={`${id}-title`}
-          aria-describedby={describedBy || undefined}
+          // Named by the title alone; the description is read after it.
+          aria-describedby={
+            open && description ? `${id}-description` : undefined
+          }
           onClick={toggle}
         >
-          <span className='ds-accordion__heading d-flex flex-grow-1 gap-1'>
+          <span className='ds-accordion__label d-flex flex-grow-1 gap-1'>
             <span id={`${id}-title`}>{title}</span>
             {open && !!description && (
               <span id={`${id}-description`}>{description}</span>
             )}
           </span>
-          {!!meta && (
-            <span id={`${id}-meta`} className='flex-shrink-0'>
-              {meta}
-            </span>
-          )}
           <Icon
             name='chevron-down'
             width={24}

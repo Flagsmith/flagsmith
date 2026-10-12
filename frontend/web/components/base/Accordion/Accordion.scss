@@ -7,7 +7,7 @@
 }
 
 // A heading for structure only: it takes the accordion's type, not the h3's.
-.ds-accordion__level {
+.ds-accordion__heading {
   margin: 0;
   font: inherit;
 }
@@ -21,7 +21,7 @@
 }
 
 // Not the .flex-column utility: this project's version adds side margins.
-.ds-accordion__heading {
+.ds-accordion__label {
   flex-direction: column;
   min-width: 0;
   font-size: 0.8125rem;
