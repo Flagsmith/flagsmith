@@ -2338,15 +2338,6 @@ def test_delete_segment_override__environment_permission__gates_override(
     )
 
 
-SYSTEM_SEGMENT_MODIFICATION_ERROR = {
-    "code": "system_segment_modification",
-    "message": (
-        "System segments and their overrides can't be changed directly. "
-        "Change this one through its flag dependency instead."
-    ),
-}
-
-
 @pytest.fixture()
 def system_segment(
     admin_client: APIClient,
@@ -2406,7 +2397,13 @@ def test_update_flag__system_segment_override_changed__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
     assert admin_client_new.get(url).json() == flag
 
 
@@ -2471,7 +2468,13 @@ def test_update_flag__system_segment_override_for_other_feature__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
     assert admin_client_new.get(url).json() == flag
 
 
@@ -2493,7 +2496,13 @@ def test_update_flag__put_flag_as_read__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
 
 
 def test_delete_segment_override__system_segment__responds_409(
@@ -2511,5 +2520,11 @@ def test_delete_segment_override__system_segment__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
     assert admin_client_new.get(url).json() == flag
