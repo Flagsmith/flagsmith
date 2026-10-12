@@ -45,6 +45,7 @@ from experimentation.warehouses.exceptions import (
     MissingEventsTableError,
 )
 from experimentation.warehouses.queries import (
+    QueryResult,
     QueryRunner,
     build_event_names,
     build_event_stats,
@@ -183,9 +184,7 @@ RESULTS_QUERY_SETTINGS = {
 
 
 def _customer_query_runner(client: "Client") -> QueryRunner:
-    def run_query(
-        query: str, params: dict[str, object]
-    ) -> "tuple[Sequence[Sequence[Any]], list[str]]":
+    def run_query(query: str, params: dict[str, object]) -> QueryResult:
         # "aware" keeps UTC on bucket datetimes so charts serialise with an offset.
         result = client.query(
             query,
@@ -193,7 +192,7 @@ def _customer_query_runner(client: "Client") -> QueryRunner:
             settings=RESULTS_QUERY_SETTINGS,
             tz_mode="aware",
         )
-        return result.result_rows, list(result.column_names)
+        return QueryResult(result.result_rows, list(result.column_names))
 
     return run_query
 

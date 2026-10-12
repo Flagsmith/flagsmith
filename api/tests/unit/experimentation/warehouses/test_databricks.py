@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 import requests
+from freezegun.api import FrozenDateTimeFactory
 from pytest_mock import MockerFixture
 from requests_mock import Mocker as RequestsMockerFixture
 
@@ -31,22 +32,15 @@ VALID_CONFIG = {
 }
 
 
-class FakeClock:
-    def __init__(self) -> None:
-        self.now = 1000.0
-
-    def monotonic(self) -> float:
-        return self.now
-
-    def sleep(self, seconds: float) -> None:
-        self.now += seconds
+pytestmark = pytest.mark.freeze_time("2026-01-01")
 
 
 @pytest.fixture(autouse=True)
-def clock(mocker: MockerFixture) -> FakeClock:
-    fake = FakeClock()
-    mocker.patch.object(databricks, "time", fake)
-    return fake
+def sleep(freezer: FrozenDateTimeFactory, mocker: MockerFixture) -> MagicMock:
+    mock: MagicMock = mocker.patch(
+        "experimentation.warehouses.databricks.time.sleep", side_effect=freezer.tick
+    )
+    return mock
 
 
 @pytest.fixture(autouse=True)
@@ -135,14 +129,14 @@ def test_databricks_session__internal_host__raises_config_error(
 def test_run__budget__bounds_wait_timeout(
     databricks_connection: WarehouseConnection,
     requests_mock: RequestsMockerFixture,
-    clock: FakeClock,
+    freezer: FrozenDateTimeFactory,
     budget_seconds: int,
     token_seconds: float,
     expected_wait: str,
 ) -> None:
     # Given
     def slow_token(request: Any, context: Any) -> dict[str, str]:
-        clock.sleep(token_seconds)
+        freezer.tick(token_seconds)
         return {"access_token": "t0k3n"}
 
     requests_mock.post(TOKEN_URL, json=slow_token)
@@ -162,7 +156,7 @@ def test_run__pending_then_succeeded__polls_until_done(
     databricks_connection: WarehouseConnection,
     requests_mock: RequestsMockerFixture,
     token: Any,
-    clock: FakeClock,
+    sleep: MagicMock,
 ) -> None:
     # Given
     requests_mock.post(STATEMENTS_URL, json=_state("PENDING"))
@@ -184,7 +178,7 @@ def test_run__pending_then_succeeded__polls_until_done(
     assert result == ([[42]], ["n"])
     assert poll.call_count == 2
     assert poll.request_history[-1].headers["Authorization"] == "Bearer t0k3n"
-    assert clock.now == 1002.0
+    assert sleep.call_count == 2
 
 
 @pytest.mark.parametrize(
@@ -227,14 +221,20 @@ def test_run__deadline_reached__cancels_and_raises(
     assert cancel.request_history[-1].headers["Authorization"] == "Bearer t0k3n"
 
 
-def test_run__poll_held_open_while_starting__raises_starting(
+@pytest.mark.parametrize(
+    "poll_error",
+    [requests.ReadTimeout, requests.ConnectionError],
+    ids=["held-open", "connection-dropped"],
+)
+def test_run__poll_fails_while_starting__retries_then_raises_starting(
     databricks_connection: WarehouseConnection,
     requests_mock: RequestsMockerFixture,
     token: Any,
+    poll_error: type[Exception],
 ) -> None:
     # Given
     requests_mock.post(STATEMENTS_URL, json=_state("PENDING"))
-    poll = requests_mock.get(f"{STATEMENTS_URL}/st-1", exc=requests.ReadTimeout)
+    poll = requests_mock.get(f"{STATEMENTS_URL}/st-1", exc=poll_error)
     cancel = requests_mock.post(f"{STATEMENTS_URL}/st-1/cancel", json={})
 
     # When
