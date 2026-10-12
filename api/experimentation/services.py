@@ -69,11 +69,7 @@ from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.registry import get_warehouse
 from features.feature_segments.services import get_next_segment_override_priority
 from features.feature_states.models import API_VALUE_TYPES
-from features.future.services import (
-    update_flag,
-    validate_variant_weights,
-    write_variants,
-)
+from features.future.services import update_flag
 from features.future.types import SegmentOverrideRequest
 from features.models import FeatureState
 from features.value_types import BOOLEAN, STRING
@@ -878,42 +874,11 @@ def _get_live_rollout_override(experiment: Experiment) -> FeatureState | None:
     return flags[0] if flags else None
 
 
-def _update_live_feature_state(
-    feature_state: FeatureState, override: SegmentOverrideRequest
-) -> None:
-    variants = override.get("variants")
-    if variants is not None:
-        validate_variant_weights(feature_state, variants)
-    feature_state.enabled = override["enabled"]
-    feature_state.save()
-    if value := override.get("value"):
-        feature_state.feature_state_value.set_value(value["value"], value["type"])
-        feature_state.feature_state_value.save()
-    if variants is not None:
-        write_variants(feature_state, variants)
-
-
-def _update_rollout_in_place(
+def _write_rollout_override(
     experiment: Experiment, override: SegmentOverrideRequest, author: AuthorData
 ) -> None:
-    """Write the rollout-segment override, keeping variant assignment stable.
-
-    Under v2 versioning, ``update_flag`` clones the override into a fresh feature
-    state on every call. Since the multivariate split is salted on the feature
-    state id, that would re-randomise control/variant for already-enrolled
-    identities on each rollout update. Once the override exists, mutate it in
-    place instead (no version is published). Creating the override, and v1
-    versioning, still go through ``update_flag``, which already reuses the
-    feature state.
-
-    This is a temporary solution until we find a permanent fix for the
-    underlying salting issue: https://github.com/Flagsmith/flagsmith/issues/7913
-    """
-    live_override = _get_live_rollout_override(experiment)
-    if experiment.environment.use_v2_feature_versioning and live_override:
-        _update_live_feature_state(live_override, override)
-        return
-    if not live_override:
+    """Write the rollout segment's override, after the others if it's new."""
+    if not _get_live_rollout_override(experiment):
         override = {
             **override,
             "priority": get_next_segment_override_priority(
@@ -987,7 +952,7 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
         segment = _sync_rollout_segment(experiment, rollout_rules)
         if is_first_rollout:
             _reset_default_allocations_to_control(experiment, spec.author)
-        _update_rollout_in_place(
+        _write_rollout_override(
             experiment,
             {
                 "segment": {"id": segment.id},
@@ -1110,7 +1075,7 @@ def enable_experiment_rollout(experiment: Experiment, author: AuthorData) -> Non
     ):
         return
 
-    _update_rollout_in_place(
+    _write_rollout_override(
         experiment,
         {
             "segment": {"id": rollout_segment_id},
