@@ -4,9 +4,33 @@ import {
   colorChart3,
   colorChart4,
 } from 'common/theme/tokens'
+import { UsageGroupBy } from 'common/types/requests'
 import { Res, UsageEventsList } from 'common/types/responses'
 
-export type BreakdownDimension = 'request-type' | 'sdk'
+export type BreakdownDimension =
+  | 'request-type'
+  | 'project'
+  | 'environment'
+  | 'sdk'
+
+// Project and environment need their own grouped request; request type and
+// SDK come from the rows the page already holds.
+export const isGroupedDimension = (
+  dimension: BreakdownDimension,
+): dimension is UsageGroupBy =>
+  dimension === 'project' || dimension === 'environment'
+
+export type BreakdownStatus = 'ready' | 'loading' | 'error' | 'needs-project'
+
+export const groupByOf = (
+  dimension: BreakdownDimension,
+  projectId: number | undefined,
+): UsageGroupBy | undefined => {
+  if (!isGroupedDimension(dimension)) return undefined
+  // Environments are only ranked within one project.
+  if (dimension === 'environment' && !projectId) return undefined
+  return dimension
+}
 
 export type BreakdownRow = {
   key: string
@@ -20,6 +44,8 @@ export const BREAKDOWN_DIMENSIONS: {
   value: BreakdownDimension
 }[] = [
   { label: 'By request type', value: 'request-type' },
+  { label: 'By project', value: 'project' },
+  { label: 'By environment', value: 'environment' },
   { label: 'By SDK', value: 'sdk' },
 ]
 
@@ -81,6 +107,35 @@ export const bySdk = (
       value,
     })),
   )
+}
+
+type ScopeKey = 'project_id' | 'environment_id'
+
+// Usage outlives the project or environment that made it, so an id can be
+// missing from the names. Those all share one row.
+export const byScope = (
+  data: Res['organisationUsage'] | undefined,
+  key: ScopeKey,
+  names: Map<number, string>,
+  deletedLabel: string,
+): BreakdownRow[] => {
+  const deletedKey = `${key}-deleted`
+  const rows = new Map<string, BreakdownRow>()
+
+  for (const event of data?.events_list ?? []) {
+    const id = event[key]
+    if (id === null || id === undefined) continue
+    const name = names.get(id)
+    const rowKey = name === undefined ? deletedKey : `${key}-${id}`
+    const row = rows.get(rowKey) ?? {
+      key: rowKey,
+      label: name ?? deletedLabel,
+      value: 0,
+    }
+    rows.set(rowKey, { ...row, value: row.value + totalOf(event) })
+  }
+
+  return ranked([...rows.values()])
 }
 
 export const sharesOf = (values: number[]): number[] => {
