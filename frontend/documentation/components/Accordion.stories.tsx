@@ -16,7 +16,7 @@ const meta: Meta<typeof Accordion> = {
     docs: {
       description: {
         component:
-          'A section that expands and collapses to show or hide its content. Use it to break long content into self-contained sections that are read one at a time. Avoid it where sections need comparing side by side, where hidden content is critical, or nested inside another accordion. Figma: Flagsmith DEV-Ready, Accordion (151:7090).',
+          'A section that expands and collapses to show or hide its content. Use it to break long content into self-contained sections that are read one at a time. Avoid it where sections need comparing side by side, where hidden content is critical, or nested inside another accordion.',
       },
     },
     layout: 'padded',
