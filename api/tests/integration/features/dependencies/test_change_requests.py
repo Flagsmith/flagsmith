@@ -531,12 +531,81 @@ def test_list_feature_dependencies__point_to_committed_change_request__responds_
 # Feature versioning v1
 
 
-def test_add_feature_dependency__feature_versioning_v1__responds_409() -> None:
-    raise NotImplementedError
+def test_add_feature_dependency__feature_versioning_v1__responds_409(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    environment: int,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    _enable_change_requests(environment)
+    change_request = ChangeRequest.objects.create(
+        environment_id=environment, title="Pending", user=admin_user
+    )
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        response = admin_client.post(
+            f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+        )
+
+    # Then
+    assert response.status_code == 409
+    assert response.json() == {
+        "code": "feature_versioning_disabled",
+        "message": "Enable Feature Versioning to change dependencies in change requests.",
+    }
+    assert not Segment.objects.filter(feature=feature).exists()
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
+    ).json() == {"results": []}
+    assert list(audit_logs) == []
+    assert not log.has("dependencies.created")
 
 
-def test_delete_feature_dependency__feature_versioning_v1__responds_409() -> None:
-    raise NotImplementedError
+def test_delete_feature_dependency__feature_versioning_v1__responds_409(
+    add_feature_prerequisite: AddFeaturePrerequisiteFixture,
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    environment: int,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    live_dependency = add_feature_prerequisite(
+        environment_api_key, feature.id, prerequisite.id
+    )
+    _enable_change_requests(environment)
+    change_request = ChangeRequest.objects.create(
+        environment_id=environment, title="Pending", user=admin_user
+    )
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        response = admin_client.delete(
+            f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+        )
+
+    # Then
+    assert response.status_code == 409
+    assert response.json() == {
+        "code": "feature_versioning_disabled",
+        "message": "Enable Feature Versioning to change dependencies in change requests.",
+    }
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
+    ).json() == {"results": [live_dependency]}
+    assert list(audit_logs) == []
+    assert not log.has("dependencies.deleted")
 
 
 # Lacking permission
