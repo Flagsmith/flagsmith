@@ -135,7 +135,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       <hr className='my-4' />
       <WarehouseStats
         errored={connection.status === 'errored'}
-        lastEventReceived='-'
+        lastEventReceivedAt={connection.last_event_received_at}
         loading={isLoadingStats}
         totalEventsReceived={connection.total_events_received}
         uniqueEventsCount={connection.unique_events_count}

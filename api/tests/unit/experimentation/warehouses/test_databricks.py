@@ -49,7 +49,8 @@ EVENT_NAMES_SQL = (
     "GROUP BY event ORDER BY max(timestamp) DESC LIMIT :limit"
 )
 EVENT_STATS_SQL = (
-    "SELECT count(*) AS total, count(DISTINCT event) AS unique "
+    "SELECT count(*) AS total, count(DISTINCT event) AS unique, "
+    "max(timestamp) AS last_event_at "
     "FROM events WHERE environment_key = :environment_key"
 )
 
@@ -1052,13 +1053,26 @@ def test_describe_databricks_error__error__returns_user_facing_detail(
         ),
         (
             "get_event_stats",
-            _succeeded([("total", "BIGINT"), ("unique", "BIGINT")], [["10", "2"]]),
+            _succeeded(
+                [
+                    ("total", "BIGINT"),
+                    ("unique", "BIGINT"),
+                    ("last_event_at", "TIMESTAMP"),
+                ],
+                [["10", "2", "2026-10-12T13:23:52.625Z"]],
+            ),
             _body(
                 EVENT_STATS_SQL,
                 [{"name": "environment_key", "value": "env-key", "type": "STRING"}],
                 "5s",
             ),
-            WarehouseEventStats(total_events_received=10, unique_events_count=2),
+            WarehouseEventStats(
+                total_events_received=10,
+                unique_events_count=2,
+                last_event_at=datetime(
+                    2026, 10, 12, 13, 23, 52, 625000, tzinfo=timezone.utc
+                ),
+            ),
         ),
     ],
 )

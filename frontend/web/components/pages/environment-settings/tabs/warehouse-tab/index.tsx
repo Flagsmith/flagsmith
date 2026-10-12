@@ -51,6 +51,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     return statsConnection
       ? {
           ...baseConnection,
+          last_event_received_at: statsConnection.last_event_received_at,
           total_events_received: statsConnection.total_events_received,
           unique_events_count: statsConnection.unique_events_count,
         }

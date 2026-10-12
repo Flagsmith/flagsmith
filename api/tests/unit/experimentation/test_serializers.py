@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import pytest
 
 from environments.models import Environment
@@ -143,6 +145,7 @@ def test_warehouse_serializer__event_stats_attached__serializes_counts() -> None
     connection.event_stats = WarehouseEventStats(
         total_events_received=7,
         unique_events_count=2,
+        last_event_at=datetime(2026, 10, 12, 13, 23, 52, tzinfo=timezone.utc),
     )
 
     # When
@@ -151,6 +154,9 @@ def test_warehouse_serializer__event_stats_attached__serializes_counts() -> None
     # Then
     assert data["total_events_received"] == 7
     assert data["unique_events_count"] == 2
+    assert data["last_event_received_at"] == datetime(
+        2026, 10, 12, 13, 23, 52, tzinfo=timezone.utc
+    )
 
 
 def test_create__databricks_without_environment_context__raises_validation_error() -> (
