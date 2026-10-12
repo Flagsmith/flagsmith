@@ -6,7 +6,11 @@ import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscription
 import OverLimitBanner from './components/OverLimitBanner'
 import BillingStrip from './components/BillingStrip'
 import SectionHeading from './components/SectionHeading'
-import UsageBreakdown, { useUsageBreakdown } from './components/UsageBreakdown'
+import UsageBreakdown, {
+  BreakdownDimension,
+  breakdownViewOf,
+  useGroupedBreakdown,
+} from './components/UsageBreakdown'
 import UsageFilters from './components/UsageFilters'
 import UsageMeter from './components/UsageMeter'
 import UsageOverTime from './components/UsageOverTime'
@@ -89,9 +93,14 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
 
   const periods = periodsFor(planIsBilled)
 
-  const { setDimension, ...breakdown } = useUsageBreakdown({
-    data: usage.scoped,
+  const [dimension, setDimension] = useState<BreakdownDimension>('request-type')
+  const grouped = useGroupedBreakdown({
+    billingPeriod,
+    dimension,
+    organisationId: organisation?.id,
+    projectId: selectedProjectId,
   })
+  const breakdown = breakdownViewOf(dimension, usage.scoped, grouped)
 
   const selectedPeriod = periodLabel(periods, billingPeriod)
 
@@ -196,7 +205,10 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
           />
 
           <UsageBreakdown
-            {...breakdown}
+            dimension={dimension}
+            rows={breakdown.rows}
+            status={breakdown.status}
+            onRetry={breakdown.onRetry}
             onChangeDimension={setDimension}
             scope={scope}
           />

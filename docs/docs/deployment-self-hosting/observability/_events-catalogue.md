@@ -240,7 +240,7 @@ Attributes:
 ### `experimentation.rollout.applied`
 
 Logged at `info` from:
- - `api/experimentation/services.py:963`
+ - `api/experimentation/services.py:1023`
 
 Attributes:
  - `audience.match`
@@ -322,7 +322,7 @@ Attributes:
 ### `features.dependencies.delete_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:480`
+ - `api/features/dependencies/services.py:479`
 
 Attributes:
  - `environment.key`
@@ -359,8 +359,8 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:492`
- - `api/features/future/services.py:552`
+ - `api/features/future/services.py:355`
+ - `api/features/future/services.py:406`
 
 Attributes:
  - `environment.id`
@@ -747,7 +747,7 @@ Attributes:
 ### `segments.serializers.segment_revision_created`
 
 Logged at `info` from:
- - `api/segments/serializers.py:244`
+ - `api/segments/serializers.py:239`
 
 Attributes:
  - `revision_id`
@@ -895,7 +895,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1137`
+ - `api/experimentation/services.py:1195`
 
 Attributes:
  - `environment.id`
@@ -924,7 +924,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1080`
+ - `api/experimentation/services.py:1138`
 
 Attributes:
  - `environment.id`
@@ -933,7 +933,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1112`
+ - `api/experimentation/services.py:1170`
 
 Attributes:
  - `environment.id`
@@ -943,7 +943,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1122`
+ - `api/experimentation/services.py:1180`
 
 Attributes:
  - `environment.id`
@@ -952,7 +952,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:396`
+ - `api/experimentation/services.py:407`
 
 Attributes:
  - `environment.id`
@@ -962,7 +962,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:382`
+ - `api/experimentation/services.py:393`
 
 Attributes:
  - `environment.id`
