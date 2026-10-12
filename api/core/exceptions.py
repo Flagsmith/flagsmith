@@ -6,12 +6,11 @@ class APIError(APIException):
     """Refuses a request with an `APIErrorDetail` body, telling clients what went
     wrong by code."""
 
-    def __init__(self, message: str | None = None, **details: str) -> None:
+    def __init__(self, message: str | None = None) -> None:
         super().__init__(
             {
                 "code": str(self.default_code),
                 "message": message or str(self.default_detail),
-                **details,
             }
         )
 

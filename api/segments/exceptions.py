@@ -11,5 +11,10 @@ class SystemSegmentModificationError(APIError):
     default_detail = "System segments and their overrides can't be changed directly."
 
     def __init__(self, managed_by: str = "") -> None:
-        # Names the feature managing the segment, if any, e.g. "dependency".
-        super().__init__(**({"managed_by": managed_by} if managed_by else {}))
+        from segments.models import SegmentManagedBy  # It imports this module.
+
+        message = self.default_detail
+        if managed_by:
+            owner = SegmentManagedBy(managed_by).label.lower()
+            message += f" Change this one through its {owner} instead."
+        super().__init__(message)

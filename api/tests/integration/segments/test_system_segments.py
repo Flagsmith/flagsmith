@@ -33,8 +33,10 @@ def test_create_segment__version_of_system_segment__responds_409(
     assert response.status_code == 409
     assert response.json() == {
         "code": "system_segment_modification",
-        "message": "System segments and their overrides can't be changed directly.",
-        "managed_by": "dependency",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through its flag dependency instead."
+        ),
     }
 
 
