@@ -25,7 +25,7 @@ export const changeRequestService = service
             ...rest,
             // The modal hands back users and groups in one list.
             approvals: approvals.filter((approval) => !!approval.user),
-            // Required even when the changes are in change sets.
+            // Required, even when empty.
             feature_states: [],
             group_assignments: approvals.filter((approval) => !!approval.group),
           },

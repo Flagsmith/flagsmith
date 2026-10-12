@@ -109,6 +109,5 @@ export async function updateFeatureState(
 export const {
   useGetAllEnvironmentFeatureStatesQuery,
   useGetFeatureStatesQuery,
-  useLazyGetFeatureStatesQuery,
   useUpdateFeatureStateMutation,
 } = featureStateService
