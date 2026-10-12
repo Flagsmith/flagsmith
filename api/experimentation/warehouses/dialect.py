@@ -153,3 +153,65 @@ class DatabricksDialect:
 
 
 DATABRICKS_DIALECT = DatabricksDialect()
+
+# Bounded digits keep the cast in double range, so outsized values read as zero.
+_POSTGRES_NUMERIC_PATTERN = (
+    r"^[-+]?(\d{1,30}(\.\d{0,30})?|\.\d{1,30})([eE][-+]?\d{1,2})?$"
+)
+
+
+class PostgresDialect:
+    """Expects ``timestamptz`` columns, so buckets stay UTC whatever the session
+    TimeZone. ``float_or_zero`` reads 'inf', 'nan' and out-of-range values as zero."""
+
+    def param(self, name: str) -> str:
+        return f"%({name})s"
+
+    def in_list(self, expr: str, name: str, size: int) -> str:
+        return f"{expr} = ANY({self.param(name)})"
+
+    def list_params(self, name: str, values: Sequence[str]) -> dict[str, object]:
+        return {name: list(values)}
+
+    def count_all(self) -> str:
+        return "count(*)"
+
+    def count_if(self, cond: str) -> str:
+        return f"count(*) FILTER (WHERE {cond})"
+
+    def count_distinct(self, expr: str) -> str:
+        return f"count(DISTINCT {expr})"
+
+    def any_value(self, expr: str) -> str:
+        # any_value() needs PostgreSQL 16.
+        return f"min({expr})"
+
+    def time_bucket(self, expr: str, granularity: ExposureGranularity) -> str:
+        return (
+            f"date_trunc('{granularity}', {expr} AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'"
+        )
+
+    def float_or_zero(self, expr: str) -> str:
+        return (
+            f"CASE WHEN {expr} ~ '{_POSTGRES_NUMERIC_PATTERN}' "
+            f"THEN ({expr})::double precision ELSE 0 END"
+        )
+
+    def sum_if(self, expr: str, cond: str) -> str:
+        return f"coalesce(sum({expr}) FILTER (WHERE {cond}), 0)"
+
+    def avg_if(self, expr: str, cond: str) -> str:
+        return f"coalesce(avg({expr}) FILTER (WHERE {cond}), 0)"
+
+    def min_if(self, expr: str, cond: str) -> str:
+        return f"min({expr}) FILTER (WHERE {cond})"
+
+    def bool_to_number(self, expr: str) -> str:
+        return f"({expr})::int"
+
+    def zip_unnest(self, arrays: Mapping[str, Sequence[str]]) -> str:
+        zipped = ", ".join(f"ARRAY[{', '.join(values)}]" for values in arrays.values())
+        return f"CROSS JOIN LATERAL unnest({zipped}) AS zipped({', '.join(arrays)})"
+
+
+POSTGRES_DIALECT = PostgresDialect()

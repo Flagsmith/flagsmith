@@ -57,8 +57,8 @@ EXPOSURES_CTE_SQL = """
 WITH exposures AS (
     SELECT
         identifier,
-        if(count(DISTINCT value) > 1, '', any_value(value)) AS variant,
-        CAST(count(DISTINCT value) > 1 AS INT) AS quarantined,
+        CASE WHEN count(DISTINCT coalesce(value, '')) > 1 THEN '' ELSE any_value(coalesce(value, '')) END AS variant,
+        CAST(count(DISTINCT coalesce(value, '')) > 1 AS INT) AS quarantined,
         min(timestamp) AS first_exposure
     FROM events
     WHERE environment_key = :environment_key
