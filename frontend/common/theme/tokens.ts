@@ -183,7 +183,7 @@ export const colorSurfaceActionTint =
   'var(--color-surface-action-tint, rgba(104, 55, 252, 0.12))'
 export const colorSurfaceActive =
   'var(--color-surface-active, rgba(8, 12, 23, 0.16))'
-export const colorSurfaceDanger = 'var(--color-surface-danger, #ffeddb)'
+export const colorSurfaceDanger = 'var(--color-surface-danger, #ffe9d4)'
 export const colorSurfaceDefault = 'var(--color-surface-default, #ffffff)'
 export const colorSurfaceEmphasis = 'var(--color-surface-emphasis, #e1e2eb)'
 export const colorSurfaceHover =
@@ -251,7 +251,7 @@ export const neutral600 = 'var(--neutral-600, #1a2634)'
 export const neutral900 = 'var(--neutral-900, #0e1629)'
 
 // State
-export const danger100 = 'var(--danger-100, #ffeddb)'
+export const danger100 = 'var(--danger-100, #ffe9d4)'
 export const danger500 = 'var(--danger-500, #e61b26)'
 export const danger900 = 'var(--danger-900, #7a0e18)'
 export const info100 = 'var(--info-100, #dff3ff)'

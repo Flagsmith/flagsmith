@@ -127,7 +127,7 @@ export const AllTokens: StoryObj = {
               <code>--color-surface-danger</code>
             </td>
             <td>
-              <code>var(--red-100)</code>
+              <code>var(--orange-100)</code>
             </td>
           </tr>
           <tr>
@@ -628,7 +628,7 @@ export const AllTokens: StoryObj = {
               <code>--danger-100</code>
             </td>
             <td>
-              <code>var(--red-100)</code>
+              <code>var(--orange-100)</code>
             </td>
           </tr>
           <tr>
