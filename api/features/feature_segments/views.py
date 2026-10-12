@@ -6,10 +6,12 @@ from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.dependencies.services import validate_segment_flag_dependencies
 from features.feature_segments.serializers import (
@@ -18,16 +20,27 @@ from features.feature_segments.serializers import (
     FeatureSegmentListSerializer,
     FeatureSegmentQuerySerializer,
 )
+from features.feature_segments.services import (
+    get_next_segment_override_priority,
+    get_segment_override,
+    is_live_segment_override,
+)
+from features.future.services import (
+    delete_segment_override,
+    update_flag,
+)
 from features.models import FeatureSegment
 from features.versioning.versioning_service import (
     get_current_live_environment_feature_version,
 )
+from segments.services import check_segment_is_not_system
 
 from .permissions import FeatureSegmentPermissions
 
 logger = logging.getLogger(__name__)
 
 
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
 @method_decorator(
     name="list",
     decorator=extend_schema(
@@ -82,10 +95,65 @@ class FeatureSegmentViewSet(
 
         return queryset
 
-    @transaction.atomic
     def perform_create(self, serializer: BaseSerializer[FeatureSegment]) -> None:
+        environment = serializer.validated_data["environment"]
+        feature = serializer.validated_data["feature"]
+        segment = serializer.validated_data["segment"]
+        if environment.use_v2_feature_versioning:
+            # Overrides of v2 environments are drafted for their feature states
+            # to be added to versions, rather than going live.
+            check_segment_is_not_system(segment)
+            with transaction.atomic():
+                feature_segment = serializer.save()
+                validate_segment_flag_dependencies(feature_segment.segment)
+            return
+        if get_segment_override(
+            environment=environment, feature=feature, segment_id=segment.id
+        ):
+            raise ValidationError("The flag is already overridden for this segment.")
+        # Serves the environment default until the override's state is set.
+        update_flag(
+            environment=environment,
+            feature=feature,
+            changes={
+                "segment_overrides": [
+                    {
+                        "segment": {"id": segment.id},
+                        "priority": get_next_segment_override_priority(
+                            environment=environment, feature=feature
+                        ),
+                    }
+                ]
+            },
+            replace=False,
+            author=AuthorData.from_request(self.request),
+            system=False,
+        )
+        override = get_segment_override(
+            environment=environment, feature=feature, segment_id=segment.id
+        )
+        serializer.instance = override.feature_segment  # type: ignore[union-attr]
+
+    @transaction.atomic
+    def perform_update(self, serializer: BaseSerializer[FeatureSegment]) -> None:
+        check_segment_is_not_system(serializer.instance.segment)  # type: ignore[union-attr]
+        if segment := serializer.validated_data.get("segment"):
+            check_segment_is_not_system(segment)
         feature_segment = serializer.save()
         validate_segment_flag_dependencies(feature_segment.segment)
+
+    def perform_destroy(self, instance: FeatureSegment) -> None:
+        if is_live_segment_override(instance):
+            delete_segment_override(
+                environment=instance.environment,
+                feature=instance.feature,
+                segment_id=instance.segment_id,
+                author=AuthorData.from_request(self.request),
+                system=False,
+            )
+            return
+        check_segment_is_not_system(instance.segment)
+        instance.delete()
 
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action in ["create", "update", "partial_update"]:

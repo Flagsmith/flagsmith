@@ -62,6 +62,20 @@ def _get_segment_override_id(
     return int(segment_override_id)
 
 
+def _create_segment(admin_client: APIClient, project: int, name: str) -> int:
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        {
+            "name": name,
+            "project": project,
+            "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        },
+        format="json",
+    )
+    assert response.status_code == 201
+    return int(response.json()["id"])
+
+
 @pytest.fixture()
 def system_segment(
     admin_client: APIClient,
@@ -253,6 +267,294 @@ def test_create_segment_override__system_segment__responds_409(
             "feature_state_value": {"type": "unicode", "string_value": "foo"},
         },
         format="json",
+    )
+
+    # Then
+    assert response.status_code == 409
+    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
+        overrides
+    )
+
+
+def test_create_feature_segment_then_feature_state__new_segment__creates_override(
+    admin_client: APIClient,
+    default_feature_value: str,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+) -> None:
+    """The flow of the Flagsmith Go API client, and Terraform provider."""
+    # Given / When
+    feature_segment_response = admin_client.post(
+        "/api/v1/features/feature-segments/",
+        {"feature": feature, "segment": segment, "environment": environment},
+        format="json",
+    )
+    feature_segment_overrides = _get_segment_overrides(
+        admin_client, environment_api_key, feature
+    )
+    feature_state_response = admin_client.post(
+        "/api/v1/features/featurestates/",
+        {
+            "feature": feature,
+            "environment": environment,
+            "feature_segment": feature_segment_response.json()["id"],
+            "enabled": True,
+            "feature_state_value": {"type": "unicode", "string_value": "foo"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert feature_segment_response.status_code == 201
+    assert feature_segment_response.json() == {
+        "id": mock.ANY,
+        "uuid": mock.ANY,
+        "feature": feature,
+        "segment": segment,
+        "environment": environment,
+        "priority": 0,
+    }
+    assert feature_segment_overrides == [
+        {
+            "segment": {"id": segment},
+            "priority": 0,
+            "enabled": False,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [],
+        },
+    ]
+    assert feature_state_response.status_code == 201
+    assert feature_state_response.json() == {
+        "id": _get_segment_override_id(admin_client, environment, feature, segment),
+        "uuid": mock.ANY,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "foo",
+            "integer_value": None,
+            "boolean_value": None,
+        },
+        "multivariate_feature_state_values": [],
+        "enabled": True,
+        "deleted_at": None,
+        "created_at": mock.ANY,
+        "updated_at": mock.ANY,
+        "live_from": mock.ANY,
+        "version": 1,
+        "feature": feature,
+        "environment": environment,
+        "identity": None,
+        "feature_segment": feature_segment_response.json()["id"],
+        "change_request": None,
+        "environment_feature_version": None,
+    }
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == [
+        {
+            "segment": {"id": segment},
+            "priority": 0,
+            "enabled": True,
+            "value": {"type": "string", "value": "foo"},
+            "variants": [],
+        },
+    ]
+
+
+def test_create_feature_segment__v2_versioning__leaves_flag_as_is(
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+) -> None:
+    """Feature segments are drafted for feature states of new versions."""
+    # Given
+    enable_v2_versioning(environment_id=environment)
+
+    # When
+    response = admin_client.post(
+        "/api/v1/features/feature-segments/",
+        {"feature": feature, "segment": segment, "environment": environment},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 201
+    assert response.json() == {
+        "id": mock.ANY,
+        "uuid": mock.ANY,
+        "feature": feature,
+        "segment": segment,
+        "environment": environment,
+        "priority": 0,
+    }
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == []
+
+
+def test_create_feature_segment__existing_override__responds_400(
+    admin_client: APIClient,
+    environment: int,
+    feature: int,
+    system_segment: int,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        "/api/v1/features/feature-segments/",
+        {"feature": feature, "segment": system_segment, "environment": environment},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == ["The flag is already overridden for this segment."]
+
+
+@pytest.mark.parametrize("v2_versioning", [False, True])
+def test_create_feature_segment__system_segment__responds_409(
+    admin_client: APIClient,
+    feature: int,
+    other_environment: dict[str, Any],
+    system_segment: int,
+    v2_versioning: bool,
+) -> None:
+    # Given
+    if v2_versioning:
+        enable_v2_versioning(environment_id=other_environment["id"])
+
+    # When
+    response = admin_client.post(
+        "/api/v1/features/feature-segments/",
+        {
+            "feature": feature,
+            "segment": system_segment,
+            "environment": other_environment["id"],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 409
+    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert (
+        _get_segment_overrides(admin_client, other_environment["api_key"], feature)
+        == []
+    )
+
+
+def test_update_feature_segment__other_segment__moves_override(
+    admin_client: APIClient,
+    create_segment_override: Any,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    project: int,
+    segment: int,
+) -> None:
+    # Given
+    create_segment_override(environment_api_key, feature, segment)
+    other_segment = _create_segment(admin_client, project, "other segment")
+    feature_segment_id = _get_feature_segment_id(
+        admin_client, environment, feature, segment
+    )
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/features/feature-segments/{feature_segment_id}/",
+        {"feature": feature, "segment": other_segment, "environment": environment},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": feature_segment_id,
+        "uuid": mock.ANY,
+        "feature": feature,
+        "segment": other_segment,
+        "environment": environment,
+        "priority": 0,
+    }
+    assert [
+        override["segment"]["id"]
+        for override in _get_segment_overrides(
+            admin_client, environment_api_key, feature
+        )
+    ] == [other_segment]
+
+
+def test_update_feature_segment__system_segment__responds_409(
+    admin_client: APIClient,
+    environment: int,
+    feature: int,
+    segment: int,
+    system_segment: int,
+) -> None:
+    # Given
+    feature_segment_id = _get_feature_segment_id(
+        admin_client, environment, feature, system_segment
+    )
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/features/feature-segments/{feature_segment_id}/",
+        {"feature": feature, "segment": segment, "environment": environment},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 409
+    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+
+
+@pytest.mark.parametrize("v2_versioning", [False, True])
+def test_delete_feature_segment__live_override__removes_override(
+    admin_client: APIClient,
+    create_segment_override: Any,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    v2_versioning: bool,
+) -> None:
+    # Given
+    if v2_versioning:
+        enable_v2_versioning(environment_id=environment)
+    create_segment_override(environment_api_key, feature, segment)
+    feature_segment_id = _get_feature_segment_id(
+        admin_client, environment, feature, segment
+    )
+
+    # When
+    response = admin_client.delete(
+        f"/api/v1/features/feature-segments/{feature_segment_id}/"
+    )
+
+    # Then
+    assert response.status_code == 204
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == []
+
+
+@pytest.mark.parametrize("v2_versioning", [False, True])
+def test_delete_feature_segment__system_segment__responds_409(
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    system_segment: int,
+    v2_versioning: bool,
+) -> None:
+    # Given
+    if v2_versioning:
+        enable_v2_versioning(environment_id=environment)
+    overrides = _get_segment_overrides(admin_client, environment_api_key, feature)
+    feature_segment_id = _get_feature_segment_id(
+        admin_client, environment, feature, system_segment
+    )
+
+    # When
+    response = admin_client.delete(
+        f"/api/v1/features/feature-segments/{feature_segment_id}/"
     )
 
     # Then
@@ -587,6 +889,40 @@ def test_create_segment_override__no_feature_segment__responds_400(
     # Then
     assert response.status_code == 400
     assert response.json() == {"feature_segment": ["This field is required."]}
+
+
+def test_update_feature_segment__to_system_segment__responds_409(
+    admin_client: APIClient,
+    feature: int,
+    other_environment: dict[str, Any],
+    segment: int,
+    system_segment: int,
+) -> None:
+    # Given
+    feature_segment_id = admin_client.post(
+        "/api/v1/features/feature-segments/",
+        {
+            "feature": feature,
+            "segment": segment,
+            "environment": other_environment["id"],
+        },
+        format="json",
+    ).json()["id"]
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/features/feature-segments/{feature_segment_id}/",
+        {
+            "feature": feature,
+            "segment": system_segment,
+            "environment": other_environment["id"],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 409
+    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
 
 
 def test_update_feature_state__value_cleared__clears_override_value(
