@@ -1,6 +1,4 @@
 import {
-  ChangeSet,
-  MultivariateFeatureStateValue,
   Account,
   ExternalResource,
   FeatureState,
@@ -910,18 +908,6 @@ export type Req = {
     description: string
     live_from?: string
     approvals: Approval[]
-    change_sets?: (Omit<ChangeSet, 'feature_states_to_update'> & {
-      // New states, so no ids, theirs or their variations'.
-      feature_states_to_update: (Omit<
-        FeatureState,
-        'id' | 'multivariate_feature_state_values'
-      > & {
-        multivariate_feature_state_values?: Omit<
-          MultivariateFeatureStateValue,
-          'id'
-        >[]
-      })[]
-    })[]
   }
   deleteChangeRequest: { id: number }
   getChangeRequestIdsStaging: { featureId: number }
