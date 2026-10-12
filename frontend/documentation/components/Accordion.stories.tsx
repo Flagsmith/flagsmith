@@ -63,10 +63,6 @@ export const Flush: Story = {
   },
 }
 
-export const Loading: Story = {
-  args: { isLoading: true },
-}
-
 export const Group: Story = {
   render: () => (
     <div className='d-flex flex-column gap-2'>
