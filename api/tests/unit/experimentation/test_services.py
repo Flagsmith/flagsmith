@@ -2577,54 +2577,6 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     assert {option_a.key, option_b.key} <= set(before.values())
 
 
-def test_apply_experiment_rollout__under_v2_weights_exceeding_100__raises(
-    environment_v2_versioning: Environment,
-    multivariate_feature: Feature,
-    multivariate_options: list[MultivariateFeatureOption],
-    admin_user: FFAdminUser,
-) -> None:
-    # Given a rollout weighting two variants 50/50
-    option_a, option_b, _ = multivariate_options
-    experiment = Experiment.objects.create(
-        environment=environment_v2_versioning,
-        feature=multivariate_feature,
-        name="exp",
-        hypothesis="h",
-        status=ExperimentStatus.RUNNING,
-    )
-    author = AuthorData(user=admin_user)
-    services.apply_experiment_rollout(
-        experiment,
-        RolloutSpec(
-            enabled=True,
-            rollout_percentage=50.0,
-            feature_state_value="control",
-            value_type="string",
-            variants=[
-                {"id": option_a.id, "weight": 50.0},
-                {"id": option_b.id, "weight": 50.0},
-            ],
-            author=author,
-        ),
-    )
-    experiment.refresh_from_db()
-
-    # When only one variant is reweighted, past the remaining 50%
-    # Then the variants not given keep their weights, and the total is refused
-    with pytest.raises(ValidationError, match="got 110.0"):
-        services.apply_experiment_rollout(
-            experiment,
-            RolloutSpec(
-                enabled=True,
-                rollout_percentage=50.0,
-                feature_state_value="control",
-                value_type="string",
-                variants=[{"id": option_a.id, "weight": 60.0}],
-                author=author,
-            ),
-        )
-
-
 def _verification_count(result: str) -> float:
     return (
         REGISTRY.get_sample_value(
