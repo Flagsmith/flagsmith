@@ -339,9 +339,6 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             )
 
 
-# Refuses users' changes to system segment overrides. Change sets publish
-# through the parent class, as they can stage changes to system segment
-# overrides made by their owners.
 # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
 @extend_schema_serializer(component_name="EnvironmentFeatureVersionCreate")
 class EnvironmentFeatureVersionCreateRequestSerializer(
