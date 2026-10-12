@@ -68,7 +68,7 @@ const FeaturePipelineStatus = ({
 
   return (
     <Accordion title='Release Pipeline'>
-      <Row className='flex mt-4 align-items-start justify-content-between'>
+      <Row className='flex align-items-start justify-content-between'>
         {stages?.map((stage) => (
           <StageStatus
             key={stage.id}

@@ -46,7 +46,7 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
           </span>
         }
       >
-        <div className='flex gap-2 mt-4'>
+        <div className='flex gap-2'>
           <div
             className='metrics-grid'
             style={{
