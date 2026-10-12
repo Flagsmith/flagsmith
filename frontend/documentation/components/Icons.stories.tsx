@@ -43,6 +43,7 @@ const CATEGORIES: IconCategory[] = [
       'more-vertical',
       'options-2',
       'plus',
+      'minus',
       'refresh',
       'search',
       'trash-2',

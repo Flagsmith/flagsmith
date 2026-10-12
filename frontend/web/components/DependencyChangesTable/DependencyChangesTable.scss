@@ -1,4 +1,8 @@
-// Wide enough for the longer of the two chips, so the names line up.
+// Fixed widths so the names line up across tables.
 .dependency-changes__change {
-  width: 104px;
+  width: 128px;
+}
+
+.dependency-changes__state {
+  width: 120px;
 }
