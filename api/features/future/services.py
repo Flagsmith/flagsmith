@@ -35,6 +35,7 @@ from features.models import Feature, FeatureSegment, FeatureState, FeatureStateV
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import get_environment_flags_list
+from segments.exceptions import SystemSegmentModificationError
 from segments.models import Segment
 
 logger = structlog.get_logger("features")
@@ -239,6 +240,14 @@ def _check_priorities(
         raise DuplicatePriorityError(f"Duplicate priority: {duplicate}.")
 
 
+def _get_system_segment_ids(segment_ids: Collection[int]) -> set[int]:
+    return set(
+        Segment.objects.filter(id__in=segment_ids, is_system_segment=True).values_list(
+            "id", flat=True
+        )
+    )
+
+
 def _write_segment_overrides(
     *,
     environment: Environment,
@@ -248,12 +257,22 @@ def _write_segment_overrides(
     overrides: dict[int, FeatureState],
     changes: Sequence[SegmentOverrideRequest],
     replace: bool,
+    system: bool,
 ) -> _OverriddenSegments:
     segments = _OverriddenSegments([], [], [])
+    changed_segment_ids = {change["segment"]["id"] for change in changes}
+
+    # Only the features owning system segments can change their overrides.
+    # Replacing the others leaves them as they are.
+    system_segment_ids = (
+        set() if system else _get_system_segment_ids({*overrides, *changed_segment_ids})
+    )
+    if system_segment_ids & changed_segment_ids:
+        raise SystemSegmentModificationError()
 
     if replace:
         segments.deleted.extend(
-            sorted(overrides.keys() - {change["segment"]["id"] for change in changes})
+            sorted(overrides.keys() - changed_segment_ids - system_segment_ids)
         )
         _delete_segment_overrides(
             environment=environment,
@@ -308,8 +327,12 @@ def update_flag(
     changes: UpdateFlagRequest,
     replace: bool,
     author: AuthorData,
+    system: bool,
 ) -> UpdateFlagResponse:
-    """Write the given parts of a flag, whichever versioning the environment uses."""
+    """Write the given parts of a flag, whichever versioning the environment uses.
+
+    Overrides of system segments can only be changed by passing `system=True`.
+    """
     writes_nothing = not changes if replace else not any(changes.values())
     if writes_nothing:
         return get_flag(environment=environment, feature=feature)
@@ -339,6 +362,7 @@ def update_flag(
                 overrides=_get_overrides_by_segment_id(feature_states),
                 changes=override_changes,
                 replace=replace,
+                system=system,
             )
 
         if version is not None:
@@ -374,8 +398,15 @@ def delete_segment_override(
     feature: Feature,
     segment_id: int,
     author: AuthorData,
+    system: bool,
 ) -> UpdateFlagResponse:
-    """Remove a flag's override for one segment, leaving the rest of the flag alone."""
+    """Remove a flag's override for one segment, leaving the rest of the flag alone.
+
+    Overrides of system segments can only be removed by passing `system=True`.
+    """
+    if not system and _get_system_segment_ids([segment_id]):
+        raise SystemSegmentModificationError()
+
     with transaction.atomic():
         version = _create_draft_version(environment, feature)
         feature_states = _get_feature_states_to_write(environment, feature, version)

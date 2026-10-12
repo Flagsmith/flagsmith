@@ -1,11 +1,9 @@
-from rest_framework import status  # pragma: no cover
-from rest_framework.exceptions import APIException  # pragma: no cover
+from rest_framework import status
+
+from core.exceptions import APIError
 
 
-class SystemSegmentModificationError(APIException):  # pragma: no cover
-    # TODO: Not raised yet, hence the pragma. Remove it once the segment override
-    # and change request APIs refuse system segment changes.
-    # https://github.com/Flagsmith/flagsmith/issues/8608
+class SystemSegmentModificationError(APIError):
     """A user tried to change a system segment, or one of its overrides."""
 
     status_code = status.HTTP_409_CONFLICT

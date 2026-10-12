@@ -9,12 +9,19 @@ from django.utils import timezone
 from core.dataclasses import AuthorData
 from features.models import FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
+from segments.exceptions import SystemSegmentModificationError
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
 
 if typing.TYPE_CHECKING:
     from segments.models import Segment, SegmentRule
+
+
+def check_segment_is_not_system(segment: "Segment") -> None:
+    """Refuse to change a system segment, or its overrides, outside its owner."""
+    if segment.is_system_segment:
+        raise SystemSegmentModificationError()
 
 
 def get_live_overrides(
