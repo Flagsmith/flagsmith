@@ -20,8 +20,10 @@ if typing.TYPE_CHECKING:
 
 def check_segment_is_not_system(segment: "Segment") -> None:
     """Refuse to change a system segment, or its overrides, outside its owner."""
+    from segments.models import SegmentManagedBy  # It imports this module.
+
     if segment.is_system_segment:
-        raise SystemSegmentModificationError(segment.managed_by)
+        raise SystemSegmentModificationError(SegmentManagedBy(segment.managed_by))
 
 
 def get_live_overrides(
