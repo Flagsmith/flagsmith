@@ -9,6 +9,7 @@ from environments.models import Environment
 from experimentation.constants import MAX_AUDIENCE_SEGMENTS
 from experimentation.dataclasses import (
     AudienceSpec,
+    MultivariateValueChangeSet,
     RolloutSpec,
     WarehouseEventStats,
 )
@@ -41,7 +42,6 @@ from features.feature_states.serializers import (
 from features.feature_types import MULTIVARIATE
 from features.models import Feature
 from features.multivariate.serializers import NestedMultivariateFeatureOptionSerializer
-from features.versioning.dataclasses import MultivariateValueChangeSet
 
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]

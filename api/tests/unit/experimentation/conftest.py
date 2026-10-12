@@ -8,7 +8,11 @@ from pytest_mock import MockerFixture
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
-from experimentation.dataclasses import AudienceSpec, RolloutSpec
+from experimentation.dataclasses import (
+    AudienceSpec,
+    MultivariateValueChangeSet,
+    RolloutSpec,
+)
 from experimentation.models import (
     Experiment,
     ExperimentStatus,
@@ -21,7 +25,6 @@ from experimentation.models import (
 from experimentation.services import apply_experiment_rollout
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
-from features.versioning.dataclasses import MultivariateValueChangeSet
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser

@@ -35,6 +35,7 @@ from experimentation.dataclasses import (
     ExposuresTimeseries,
     ExposuresTimeseriesPoint,
     MetricSpec,
+    MultivariateValueChangeSet,
     ResultsAggregates,
     RolloutSpec,
     WarehouseEventNames,
@@ -67,7 +68,6 @@ from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
-from features.versioning.dataclasses import MultivariateValueChangeSet
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
@@ -1918,7 +1918,7 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
     assert allocations == {option_a.id: 60.0, option_b.id: 40.0}
 
 
-def test_apply_experiment_rollout__null_default_value__serialised_as_empty_string(
+def test_apply_experiment_rollout__null_default_value__leaves_default_value(
     experiment: Experiment,
     multivariate_options: list[MultivariateFeatureOption],
     admin_user: FFAdminUser,
@@ -1950,9 +1950,9 @@ def test_apply_experiment_rollout__null_default_value__serialised_as_empty_strin
         ),
     )
 
-    # Then the default value is not rewritten as the string "None"
+    # Then only the variant weights of the default are written
     default_state.refresh_from_db()
-    assert default_state.get_feature_state_value() == ""
+    assert default_state.get_feature_state_value() is None
 
 
 def test_apply_experiment_rollout__first_rollout__zeroes_default_allocations(

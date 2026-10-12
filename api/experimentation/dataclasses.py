@@ -5,7 +5,12 @@ from core.dataclasses import AuthorData
 from experimentation.stats import Inference, VariantStats
 from experimentation.types import ExposureGranularity
 from features.feature_states.models import FeatureValueType
-from features.versioning.dataclasses import MultivariateValueChangeSet
+
+
+@dataclass
+class MultivariateValueChangeSet:
+    multivariate_feature_option_id: int
+    percentage_allocation: float
 
 
 @dataclass(frozen=True)

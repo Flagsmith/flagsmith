@@ -108,7 +108,8 @@ def _get_overrides_by_segment_id(
     }
 
 
-def _write_variants(feature_state: FeatureState, variants: Sequence[Variant]) -> None:
+def write_variants(feature_state: FeatureState, variants: Sequence[Variant]) -> None:
+    """Weight the given variants of a feature state, keeping the others as they are."""
     weighted = {
         multivariate_value.multivariate_feature_option_id: multivariate_value
         for multivariate_value in feature_state.multivariate_feature_state_values.all()
@@ -159,7 +160,7 @@ def _write_environment_default(
         _clear_value(feature_state_value)
 
     if (variants := changes.get("variants")) is not None:
-        _write_variants(feature_state, variants)
+        write_variants(feature_state, variants)
 
 
 def _write_segment_override(
@@ -192,9 +193,9 @@ def _write_segment_override(
         feature_state_value.copy_from(environment_default.feature_state_value)
 
     if (variants := changes.get("variants")) is not None:
-        _write_variants(feature_state, variants)
+        write_variants(feature_state, variants)
     elif replace:
-        _write_variants(feature_state, map_variants(environment_default))
+        write_variants(feature_state, map_variants(environment_default))
 
 
 def _create_segment_override(
