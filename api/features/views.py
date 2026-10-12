@@ -50,6 +50,7 @@ from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from app_analytics.mappers import map_request_to_sdk_label
 from app_analytics.throttles import InfluxQueryThrottle
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
+from core.dataclasses import AuthorData
 from core.request_origin import RequestOrigin
 from edge_api.identities.edge_identity_service import (
     get_overridden_feature_ids_for_edge_identity,
@@ -1007,7 +1008,9 @@ class SimpleFeatureStateViewSet(
                 feature_state_data
             ) and is_live_segment_override(feature_segment):
                 feature_state = write_live_segment_override(
-                    feature_segment, feature_state_data, author=request.user
+                    feature_segment,
+                    feature_state_data,
+                    author=AuthorData.from_request(request),
                 )
                 return Response(
                     self.get_serializer(feature_state).data,
@@ -1047,7 +1050,9 @@ class SimpleFeatureStateViewSet(
                 ):
                     return Response(self.get_serializer(feature_state).data)
                 feature_state = write_live_segment_override(
-                    feature_segment, feature_state_data, author=request.user
+                    feature_segment,
+                    feature_state_data,
+                    author=AuthorData.from_request(request),
                 )
                 return Response(self.get_serializer(feature_state).data)
             check_segment_is_not_system(feature_segment.segment)
@@ -1346,7 +1351,7 @@ def create_segment_override(  # type: ignore[no-untyped-def]
         feature=feature,
         segment_id=segment.id,
         feature_state_data=feature_state_data,
-        author=request.user,  # type: ignore[arg-type]
+        author=AuthorData.from_request(request),
         priority=priority,
     )
     return Response(

@@ -1,7 +1,7 @@
 from django.db import transaction
 from django.utils import timezone
 
-from api_keys.user import APIKeyUser
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.dependencies.services import (
     get_prerequisite_feature_names_by_environment,
@@ -25,7 +25,6 @@ from integrations.github.github import call_github_task
 from integrations.gitlab.services import (
     post_gitlab_state_change_comment_for_feature_state,
 )
-from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType
 
 
@@ -109,7 +108,7 @@ def write_segment_override(
     feature: Feature,
     segment_id: int,
     feature_state_data: LegacyFeatureStateData,
-    author: FFAdminUser | APIKeyUser,
+    author: AuthorData,
     priority: int | None = None,
 ) -> FeatureState:
     """Write a live override through the flag API, from data validated by a
@@ -153,7 +152,7 @@ def write_live_segment_override(
     feature_segment: FeatureSegment,
     feature_state_data: LegacyFeatureStateData,
     *,
-    author: FFAdminUser | APIKeyUser,
+    author: AuthorData,
 ) -> FeatureState:
     """Write a live override through the flag API, from data validated by the
     legacy feature state API, notifying linked issues and pull requests.

@@ -8,7 +8,7 @@ from django.db import transaction
 from django.db.models import Count, Q
 from rest_framework.exceptions import ValidationError
 
-from api_keys.user import APIKeyUser
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.dependencies.models import SegmentFlagReference
 from features.dependencies.services import (
@@ -44,7 +44,6 @@ from features.versioning.versioning_service import (
 )
 from segments.exceptions import SystemSegmentModificationError
 from segments.models import Segment
-from users.models import FFAdminUser
 from util.db import with_delete_hooks
 
 logger = structlog.get_logger("features")
@@ -95,15 +94,8 @@ def _get_feature_states_to_write(
     )
 
 
-def _publish_version(
-    version: EnvironmentFeatureVersion, author: FFAdminUser | APIKeyUser
-) -> None:
-    # `UserABC.__subclasshook__` matches any user against `APIKeyUser`
-    published_by = author if isinstance(author, FFAdminUser) else None
-    version.publish(
-        published_by=published_by,
-        published_by_api_key=None if published_by else author.key,
-    )
+def _publish_version(version: EnvironmentFeatureVersion, author: AuthorData) -> None:
+    version.publish(published_by=author.user, published_by_api_key=author.api_key)
 
 
 def _get_overrides_by_segment_id(
@@ -378,7 +370,7 @@ def update_flag(
     feature: Feature,
     changes: UpdateFlagRequest,
     replace: bool,
-    author: FFAdminUser | APIKeyUser,
+    author: AuthorData,
     system: bool,
 ) -> UpdateFlagResponse:
     """Write the given parts of a flag, whichever versioning the environment uses.
@@ -449,7 +441,7 @@ def delete_segment_override(
     environment: Environment,
     feature: Feature,
     segment_id: int,
-    author: FFAdminUser | APIKeyUser,
+    author: AuthorData,
     system: bool,
 ) -> UpdateFlagResponse:
     """Remove a flag's override for one segment, leaving the rest of the flag alone.

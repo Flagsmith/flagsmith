@@ -11,6 +11,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.dependencies.services import validate_segment_flag_dependencies
 from features.feature_segments.serializers import (
@@ -128,7 +129,7 @@ class FeatureSegmentViewSet(
                 ]
             },
             replace=False,
-            author=self.request.user,  # type: ignore[arg-type]
+            author=AuthorData.from_request(self.request),
             system=False,
         )
         override = get_segment_override(
@@ -150,7 +151,7 @@ class FeatureSegmentViewSet(
                 environment=instance.environment,
                 feature=instance.feature,
                 segment_id=instance.segment_id,
-                author=self.request.user,  # type: ignore[arg-type]
+                author=AuthorData.from_request(self.request),
                 system=False,
             )
             return
@@ -239,7 +240,7 @@ class FeatureSegmentViewSet(
                 ]
             },
             replace=False,
-            author=request.user,
+            author=AuthorData.from_request(request),
             system=False,
         )
         create_priorities_changed_audit_log(

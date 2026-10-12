@@ -15,11 +15,15 @@ class AuthorData:
 
     @classmethod
     def from_request(cls, request: "Request") -> "AuthorData":
+        return cls.from_user(request.user)
+
+    @classmethod
+    def from_user(cls, user: object) -> "AuthorData":
         from users.models import FFAdminUser
 
-        if type(request.user) is FFAdminUser:
-            return cls(user=request.user)
-        elif hasattr(request.user, "key"):
-            return cls(api_key=request.user.key)
+        if type(user) is FFAdminUser:
+            return cls(user=user)
+        elif hasattr(user, "key"):
+            return cls(api_key=user.key)
         else:
-            raise ValueError("Request user must be FFAdminUser or have an API key")
+            raise ValueError("User must be FFAdminUser or have an API key")
