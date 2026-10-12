@@ -97,7 +97,7 @@ Example: adding a new radius value `--radius-3xl` (24px).
 "3xl": { "cssVar": "--radius-3xl", "value": "24px", "description": "Extra-large container corners." }
 ```
 
-2. Run `git commit`. The pre-commit hook automatically regenerates `tokens.ts`, `_tokens.scss`, `_token-utilities.scss`, and `TokenReference.generated.stories.tsx`, then stages them. No manual step needed. The new radius utility class (e.g. `.rounded-3xl`) is created automatically.
+2. Run `git commit`. The pre-commit hook automatically regenerates `tokens.ts`, `_tokens.scss`, `_primitives.scss`, `_token-utilities.scss`, and `TokenReference.generated.stories.tsx`, then stages them. No manual step needed. The new radius utility class (e.g. `.rounded-3xl`) is created automatically.
 
 **Note:** Spacing is handled by Bootstrap utility classes (`gap-2`, `p-3`, `m-4`, etc.) — there are no custom spacing tokens.
 
@@ -146,7 +146,7 @@ Example: adding `--color-text-link`.
   </thead>
   <tbody>
     <tr><td>1</td><td><code>scripts/generate-tokens.mjs</code> reads <code>tokens.json</code></td><td>Pre-commit hook (lint-staged) when <code>tokens.json</code> is staged</td></tr>
-    <tr><td>2</td><td>Generates <code>tokens.ts</code>, <code>_tokens.scss</code>, <code>_token-utilities.scss</code>, and <code>TokenReference.generated.stories.tsx</code></td><td>Automatic</td></tr>
+    <tr><td>2</td><td>Generates <code>tokens.ts</code>, <code>_tokens.scss</code>, <code>_primitives.scss</code>, <code>_token-utilities.scss</code>, and <code>TokenReference.generated.stories.tsx</code></td><td>Automatic</td></tr>
     <tr><td>3</td><td>Generated files are auto-staged and included in the commit</td><td>Automatic</td></tr>
     <tr><td>4</td><td>Chromatic deploys the updated Storybook. Storybook MCP serves the flat JSX — AI agents can read all token data.</td><td>CI (on PR)</td></tr>
   </tbody>
