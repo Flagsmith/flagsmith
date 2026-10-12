@@ -1,16 +1,16 @@
 import { CSSProperties, useEffect, useRef, useState } from 'react'
 import { durationNormal, easingStandard } from 'common/theme/tokens'
 
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 /**
  * Hook for animating height transitions (expand/collapse).
  *
  * Uses a double requestAnimationFrame on collapse to ensure the browser
  * paints the current scrollHeight before transitioning to 0.
  */
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-
 export default function useCollapsibleHeight(open: boolean) {
   const contentRef = useRef<HTMLDivElement>(null)
   const [height, setHeight] = useState<number | undefined>(open ? undefined : 0)

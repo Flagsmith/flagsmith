@@ -9,13 +9,12 @@ import './Accordion.scss'
 export type AccordionHeadingLevel = 2 | 3 | 4 | 5 | 6
 
 export type AccordionProps = {
-  // Text, a chip or a spinner. It sits inside the toggle, so no links or buttons.
+  // Sits inside the toggle, so no links or buttons.
   title: ReactNode
   children: ReactNode
-  // Wraps the header in a heading, for an accordion that is a page section.
+  // For an accordion that is a page section.
   headingLevel?: AccordionHeadingLevel
   defaultOpen?: boolean
-  // Pass with onOpenChange to control it from outside.
   open?: boolean
   onOpenChange?: (open: boolean) => void
   // For content with its own padding and type, like a table.
@@ -61,7 +60,7 @@ const Accordion: FC<AccordionProps> = ({
         <BareButton
           className={cn(
             'ds-accordion__header d-flex gap-2 w-100 px-3 pt-3 text-start text-default',
-            // Open, the spec tops the title and puts the content right under it.
+            // As in the spec: open content sits right under the title.
             open && !flush
               ? 'align-items-start pb-0'
               : 'align-items-center pb-3',
@@ -83,8 +82,7 @@ const Accordion: FC<AccordionProps> = ({
           />
         </BareButton>,
       )}
-      {/* Inert while closed, so its content leaves the tab order and the
-          accessibility tree, not just the screen. */}
+      {/* Inert while closed, so its content leaves the tab order. */}
       <div ref={contentRef} style={style} id={`${id}-body`} inert={!open}>
         <div className={cn({ 'ds-accordion__content px-3 pb-3': !flush })}>
           {children}

@@ -32,7 +32,7 @@ export const Open: Story = {
   args: { defaultOpen: true },
 }
 
-// A page section: the header sits in an h3, so it shows up in heading navigation.
+// For a page section: shows up in heading navigation.
 export const AsHeading: Story = {
   args: { headingLevel: 3 },
 }

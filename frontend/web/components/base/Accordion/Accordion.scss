@@ -1,11 +1,10 @@
-// Figma: Flagsmith DEV-Ready, Accordion (151:7090). The spec has no border; it
-// sits on a darker canvas there. Here it sits on surfaces of its own colour,
-// so the border keeps the container visible.
+// Figma: DEV-Ready, Accordion (151:7090). Not in the spec: the border keeps it
+// visible on surfaces of its own colour.
 .ds-accordion {
   border: 1px solid var(--color-border-default);
 }
 
-// A heading for structure only: it takes the accordion's type, not the h3's.
+// Structure only: keeps the accordion's type.
 .ds-accordion__heading {
   font: inherit;
 }
@@ -20,7 +19,7 @@
   }
 }
 
-// B2 in the spec, for the title and the content it reveals.
+// B2, as in the spec.
 .ds-accordion__label,
 .ds-accordion__content {
   font-size: 0.8125rem;
