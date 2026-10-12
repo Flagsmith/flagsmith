@@ -69,7 +69,11 @@ from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.registry import get_warehouse
 from features.feature_segments.services import get_next_segment_override_priority
 from features.feature_states.models import API_VALUE_TYPES
-from features.future.services import update_flag, write_variants
+from features.future.services import (
+    update_flag,
+    validate_variant_weights,
+    write_variants,
+)
 from features.future.types import SegmentOverrideRequest
 from features.models import FeatureState
 from features.value_types import BOOLEAN, STRING
@@ -877,12 +881,15 @@ def _get_live_rollout_override(experiment: Experiment) -> FeatureState | None:
 def _update_live_feature_state(
     feature_state: FeatureState, override: SegmentOverrideRequest
 ) -> None:
+    variants = override.get("variants")
+    if variants is not None:
+        validate_variant_weights(feature_state, variants)
     feature_state.enabled = override["enabled"]
     feature_state.save()
     if value := override.get("value"):
         feature_state.feature_state_value.set_value(value["value"], value["type"])
         feature_state.feature_state_value.save()
-    if (variants := override.get("variants")) is not None:
+    if variants is not None:
         write_variants(feature_state, variants)
 
 
