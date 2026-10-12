@@ -11,9 +11,14 @@ How to add, modify, or remove design tokens. Follow this process to keep the tok
 
 ## Primitives vs Semantic Tokens
 
-The token system has three layers. **Reach for a semantic token first.** The design system's own
-ramps are exported too, for building something quickly against the palette, but a colour you use
-twice is a role that wants a semantic token. Never reference a primitive directly.
+The token system has three layers. **Reach for a semantic token first.**
+
+1. **Semantic** (`--color-text-danger`): a UI role. Use these in components.
+2. **Ramps** (`--primary-*`, `--neutral-*`, `--state-*`, `--always-*`): the palette,
+   themed for light and dark. Fine in code when no semantic token fits yet.
+   A colour used twice is a role and wants a semantic token.
+3. **Primitives** (`--purple-600`): raw values, not themed. Never use them in code.
+   Only `tokens.json` and the generated Sass map (`primitive()`) read them.
 
 **Primitives** (`tokens.json`, under `primitives`) are raw colour definitions. They exist so a
 colour can change once and update everything referencing it. Do NOT use them in components:
@@ -77,7 +82,6 @@ import { colorTextDanger, colorSurfaceAction } from 'common/theme/tokens'
     <tr><td><code>web/styles/_token-utilities.scss</code></td><td><strong>Generated.</strong> Utility classes consuming tokens (e.g. <code>.bg-surface-subtle</code>, <code>.icon-secondary</code>).</td><td>Never — auto-generated.</td></tr>
     <tr><td><code>web/styles/_primitives.scss</code></td><td><strong>Generated.</strong> The primitives as a Sass map, read by legacy Sass through <code>primitive('slate-950')</code>. Sass colour functions need a real colour, which <code>var()</code> is not.</td><td>Never — auto-generated.</td></tr>
     <tr><td><code>documentation/TokenReference.generated.stories.tsx</code></td><td><strong>Generated.</strong> Flat JSX for Storybook MCP.</td><td>Never — auto-generated.</td></tr>
-    <tr><td><code>common/theme/tokens.json</code></td><td>The source of truth: raw colour scales (50-950) under <code>primitives</code>, and every semantic token beneath them.</td><td>Whenever a colour or token changes.</td></tr>
   </tbody>
 </table>
 
