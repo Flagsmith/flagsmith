@@ -9,7 +9,8 @@ import './Accordion.scss'
 export type AccordionHeadingLevel = 2 | 3 | 4 | 5 | 6
 
 export type AccordionProps = {
-  // Sits inside the toggle, so no links or buttons.
+  // Laid out as a row, so a chip or spinner can follow the text. It sits
+  // inside the toggle, so no links or buttons.
   title: ReactNode
   children: ReactNode
   // For an accordion that is a page section.
@@ -70,7 +71,10 @@ const Accordion: FC<AccordionProps> = ({
           aria-labelledby={`${id}-title`}
           onClick={toggle}
         >
-          <span id={`${id}-title`} className='ds-accordion__label flex-grow-1'>
+          <span
+            id={`${id}-title`}
+            className='ds-accordion__label d-flex align-items-center flex-grow-1 gap-2'
+          >
             {title}
           </span>
           <Icon

@@ -2,6 +2,7 @@ import React from 'react'
 import type { Meta, StoryObj } from 'storybook'
 
 import Accordion from 'components/base/Accordion'
+import Chip from 'components/base/Chip'
 import Table, { TableBody, TableCell, TableRow } from 'components/base/Table'
 
 const meta: Meta<typeof Accordion> = {
@@ -35,6 +36,20 @@ export const Open: Story = {
 // For a page section: shows up in heading navigation.
 export const AsHeading: Story = {
   args: { headingLevel: 3 },
+}
+
+// The title is a row, so a status can follow it; ms-auto pushes it to the end.
+export const WithStatus: Story = {
+  args: {
+    title: (
+      <>
+        #3433 Enable new search
+        <Chip className='ms-auto' size='xs'>
+          Awaiting approval
+        </Chip>
+      </>
+    ),
+  },
 }
 
 export const Flush: Story = {

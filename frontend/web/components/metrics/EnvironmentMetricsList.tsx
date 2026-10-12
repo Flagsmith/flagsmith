@@ -40,10 +40,10 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
     <div className='mb-3'>
       <Accordion
         title={
-          <span className='d-inline-flex align-items-center gap-1'>
+          <>
             Summary
             {isLoading && <Loader width='15px' height='15px' />}
-          </span>
+          </>
         }
       >
         <div className='flex gap-2'>
