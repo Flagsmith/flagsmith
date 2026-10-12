@@ -21,7 +21,7 @@ if typing.TYPE_CHECKING:
 def check_segment_is_not_system(segment: "Segment") -> None:
     """Refuse to change a system segment, or its overrides, outside its owner."""
     if segment.is_system_segment:
-        raise SystemSegmentModificationError()
+        raise SystemSegmentModificationError(segment.managed_by)
 
 
 def get_live_overrides(

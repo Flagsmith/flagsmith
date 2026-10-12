@@ -20,8 +20,8 @@ from integrations.github.github import call_github_task
 from integrations.gitlab.services import (
     post_gitlab_state_change_comment_for_feature_state,
 )
-from segments.exceptions import SystemSegmentModificationError
 from segments.models import Segment
+from segments.services import check_segment_is_not_system
 from users.models import FFAdminUser
 
 if typing.TYPE_CHECKING:
@@ -358,13 +358,11 @@ class EnvironmentFeatureVersionCreateRequestSerializer(
             for feature_state in feature_states
             if (feature_segment := feature_state.get("feature_segment"))
         ]
-        if any(segment.is_system_segment for segment in segments) or (
-            Segment.objects.filter(
-                id__in=attrs.get("segment_ids_to_delete_overrides") or [],
-                is_system_segment=True,
-            ).exists()
-        ):
-            raise SystemSegmentModificationError()
+        segments += Segment.objects.filter(
+            id__in=attrs.get("segment_ids_to_delete_overrides") or []
+        )
+        for segment in segments:
+            check_segment_is_not_system(segment)
         return attrs
 
 
