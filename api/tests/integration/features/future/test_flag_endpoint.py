@@ -2006,9 +2006,7 @@ def test_update_flag__variant_weights_over_100__responds_400(
 
     # Then
     assert response.status_code == 400
-    assert response.json() == {
-        "environment_default": {"variants": ["Total weight must not exceed 100."]},
-    }
+    assert response.json() == ["Total weight must not exceed 100, got 110.0."]
     environment_default = FeatureState.objects.get_live_feature_states(
         environment=versioned_environment,
         feature_id=mv_feature,
