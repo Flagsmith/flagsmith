@@ -800,7 +800,13 @@ def test_update_priorities__system_segment_override_moved__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
     assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
         overrides
     )
