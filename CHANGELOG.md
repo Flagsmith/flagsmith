@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.282.0](https://github.com/Flagsmith/flagsmith/compare/v2.281.0...v2.282.0) (2026-10-12)
+
+
+### Features
+
+* **traits:** add updated_at to Trait ([#8665](https://github.com/Flagsmith/flagsmith/issues/8665)) ([027ff84](https://github.com/Flagsmith/flagsmith/commit/027ff84c3a76dabe113ffe6554bd018d2287d1db))
+
+
+### Refactoring
+
+* **experimentation:** extract a SQL dialect from the results queries ([#8690](https://github.com/Flagsmith/flagsmith/issues/8690)) ([a47f91b](https://github.com/Flagsmith/flagsmith/commit/a47f91bfa86b924c80c3bbabd17f3ff348629c07))
+
 ## [2.281.0](https://github.com/Flagsmith/flagsmith/compare/v2.280.0...v2.281.0) (2026-10-11)
 
 
