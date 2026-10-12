@@ -12,6 +12,8 @@ class UsageData:
     identities: int = 0
     environment_document: int = 0
     labels: Labels | None = None
+    project_id: int | None = None
+    environment_id: int | None = None
 
 
 @dataclass

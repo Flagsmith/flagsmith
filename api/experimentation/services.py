@@ -78,7 +78,7 @@ from features.versioning.versioning_service import (
     update_multivariate_values,
 )
 from integrations.flagsmith.client import get_openfeature_client
-from segments.models import Condition, Segment, SegmentRule
+from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from segments.services import write_segment_rules
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
@@ -377,9 +377,6 @@ def _expected_variant_shares(experiment: "Experiment") -> dict[str, float]:
         .prefetch_related(
             "multivariate_feature_state_values__multivariate_feature_option"
         )
-        # Highest id is the current version, matching how Environment selects
-        # active feature states (Max("id")); the default ordering is ascending.
-        .order_by("-id")
         .first()
     )
     if feature_state is None:
@@ -852,6 +849,7 @@ def _create_rollout_segment(
         name=f"experiment-{experiment.id}-rollout",
         project=experiment.feature.project,
         is_system_segment=True,
+        managed_by=SegmentManagedBy.EXPERIMENT,
         rules_data=rules,
     )
     write_segment_rules(segment, rules)
@@ -1063,7 +1061,7 @@ def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | No
             feature_segment__segment_id=segment_id, identity__isnull=True
         ),
         feature_id=experiment.feature_id,
-    ).latest("id")
+    ).get()
 
     condition = Condition.objects.get(
         rule__segment_id=segment_id, operator=PERCENTAGE_SPLIT

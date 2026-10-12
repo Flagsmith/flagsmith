@@ -869,6 +869,18 @@ export type Req = {
     environmentKey: string
   }
   getFeatureSegment: { id: number }
+  getFeatureDependencies: { environmentId: string; featureId: number }
+  getFeatureDependents: { environmentId: string; featureId: number }
+  createFeatureDependency: {
+    environmentId: string
+    featureId: number
+    prerequisiteFeatureId: number
+  }
+  deleteFeatureDependency: {
+    environmentId: string
+    featureId: number
+    prerequisiteFeatureId: number
+  }
   getSamlConfiguration: { name: string }
   getSamlConfigurations: { organisation_id: number }
   getSamlConfigurationMetadata: { name: string }

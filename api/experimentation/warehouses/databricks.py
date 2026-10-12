@@ -40,6 +40,7 @@ from experimentation.warehouses.constants import (
 from experimentation.warehouses.dialect import DATABRICKS_DIALECT
 from experimentation.warehouses.exceptions import DeliveryConfigError
 from experimentation.warehouses.queries import (
+    QueryResult,
     build_event_names,
     build_event_stats,
     event_names_query,
@@ -121,12 +122,12 @@ class DatabricksRequestError(Exception):
         self.description = description
 
 
-def _error_class(error: dict[str, Any]) -> str | None:
+def _parse_error_class(error: dict[str, Any]) -> str | None:
     match = _ERROR_CLASS.search(str(error.get("message", "")))
     return match.group(1) if match else error.get("error_code")
 
 
-def _parameter(name: str, value: object) -> dict[str, str]:
+def _to_statement_parameter(name: str, value: object) -> dict[str, str]:
     if isinstance(value, datetime):
         if value.tzinfo is None:
             raise ValueError(f"Parameter {name} must be timezone-aware.")
@@ -144,9 +145,11 @@ def _parameter(name: str, value: object) -> dict[str, str]:
     raise TypeError(f"Unsupported parameter type for {name}: {type(value).__name__}")
 
 
-def _parameters(statement: str, params: Mapping[str, object]) -> list[dict[str, str]]:
+def _referenced_parameters(
+    statement: str, params: Mapping[str, object]
+) -> list[dict[str, str]]:
     return [
-        _parameter(name, value)
+        _to_statement_parameter(name, value)
         for name, value in params.items()
         if re.search(rf":{re.escape(name)}(?![A-Za-z0-9_])", statement)
     ]
@@ -173,9 +176,7 @@ _CONVERTERS: dict[str, Callable[[str], object]] = {
 }
 
 
-def _convert_rows(
-    payload: dict[str, Any],
-) -> tuple[list[list[object]], list[str]]:
+def _convert_rows(payload: dict[str, Any]) -> QueryResult:
     result = payload.get("result") or {}
     if result.get("next_chunk_index") is not None:
         raise DatabricksRequestError(None, "MULTI_CHUNK_RESULT")
@@ -188,7 +189,7 @@ def _convert_rows(
         ]
         for row in result.get("data_array") or []
     ]
-    return rows, [column["name"] for column in columns]
+    return QueryResult(rows, [column["name"] for column in columns])
 
 
 class _Session:
@@ -230,7 +231,7 @@ class _Session:
                 error = {}
             raise DatabricksRequestError(
                 response.status_code,
-                _error_class(error),
+                _parse_error_class(error),
                 error.get("error_description"),
             )
         self.org_id = response.headers.get(ORG_ID_HEADER) or self.org_id
@@ -255,9 +256,7 @@ class _Session:
         token: str = payload["access_token"]
         return token
 
-    def run(
-        self, statement: str, params: Mapping[str, object]
-    ) -> tuple[list[list[object]], list[str]]:
+    def run(self, statement: str, params: Mapping[str, object]) -> QueryResult:
         wait = min(math.ceil(self._remaining()), MAX_WAIT_TIMEOUT_SECONDS)
         if wait < MIN_WAIT_TIMEOUT_SECONDS:
             wait = 0
@@ -271,7 +270,7 @@ class _Session:
                 "catalog": self._config["catalog"],
                 "schema": self._config["schema"],
                 "statement": statement,
-                "parameters": _parameters(statement, params),
+                "parameters": _referenced_parameters(statement, params),
                 "wait_timeout": f"{wait}s",
                 "on_wait_timeout": "CONTINUE",
                 "disposition": "INLINE",
@@ -300,12 +299,12 @@ class _Session:
                     read_timeout=max(self._remaining(), 1),
                     headers=self._headers,
                 )
-            except requests.Timeout:
+            except (requests.Timeout, requests.ConnectionError):
                 continue
             state = payload["status"]["state"]
         if state != "SUCCEEDED":
             raise DatabricksRequestError(
-                None, _error_class(payload["status"].get("error") or {})
+                None, _parse_error_class(payload["status"].get("error") or {})
             )
         return _convert_rows(payload)
 

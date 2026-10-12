@@ -42,7 +42,7 @@ from features.dependencies.types import (
 )
 from features.models import Feature, FeatureSegment
 from projects.models import Project
-from segments.models import Segment
+from segments.models import Segment, SegmentManagedBy
 from segments.services import get_live_overrides, write_segment_rules
 from segments.types import SegmentCondition, SegmentRule
 from users.models import FFAdminUser
@@ -523,7 +523,7 @@ def _get_or_create_dependency_segment(
         is_system_segment=True,
         feature=feature,
         name=f"{feature.name}-depends-on-{prerequisite_feature.name}",
-        defaults={"rules_data": rules},
+        defaults={"managed_by": SegmentManagedBy.DEPENDENCY, "rules_data": rules},
     )
     if created:
         write_segment_rules(segment, rules)
