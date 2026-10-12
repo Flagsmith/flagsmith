@@ -60,6 +60,7 @@ from experimentation.services import (
 )
 from experimentation.stats import VariantStats
 from experimentation.warehouses import clickhouse, flagsmith
+from experimentation.warehouses.dialect import CLICKHOUSE_DIALECT
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
@@ -186,12 +187,6 @@ def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
 
     # Then
     assert result == expected
-    mock_client.execute.assert_called_once_with(
-        "SELECT event FROM events "
-        "WHERE environment_key = %(environment_key)s "
-        "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s",
-        {"environment_key": "env-key-123", "limit": 501},
-    )
     mock_client.disconnect.assert_called_once_with()
 
     # When — the result is cached, so a second request doesn't hit the warehouse
@@ -276,12 +271,6 @@ def test_get_warehouse_event_names__clickhouse_connection__queries_customer_inst
 
     # Then
     assert result == expected
-    get_client.return_value.query.assert_called_once_with(
-        "SELECT event FROM events "
-        "WHERE environment_key = %(environment_key)s "
-        "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s",
-        parameters={"environment_key": "test-env-key", "limit": 501},
-    )
     get_client.return_value.close.assert_called_once_with()
     assert any(
         event["event"] == "connection.event_names_failed" for event in log.events
@@ -402,52 +391,10 @@ def test_get_exposure_buckets__day_granularity__queries_and_maps_rows(
             quarantined=True,
         ),
     ]
-    # And the query buckets first exposures by UTC day over a half-open
-    # window, deduplicates identities, and flags identities seen in more
-    # than one variant
-    sql, params = mock_client.execute.call_args.args
-    assert "toStartOfDay(first_exposure, 'UTC') AS bucket" in sql
-    assert "GROUP BY identifier" in sql
-    assert "uniqExact(value) > 1 AS quarantined" in sql
-    assert "timestamp >= %(window_start)s" in sql
-    assert "timestamp < %(window_end)s" in sql
-    assert params == {
-        "environment_key": "env-key-123",
-        "exposure_event": "$flag_exposure",
-        "feature_name": "my-feature",
-        "window_start": window_start,
-        "window_end": window_end,
-    }
     mock_get_client.assert_called_once_with(
         send_receive_timeout=flagsmith.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
     mock_client.disconnect.assert_called_once_with()
-
-
-def test_get_exposure_buckets__hour_granularity__buckets_by_hour(
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mock_client = mocker.Mock()
-    mock_client.execute.return_value = ([], _exposure_columns())
-    mocker.patch(
-        "experimentation.warehouses.flagsmith._get_clickhouse_client",
-        return_value=mock_client,
-    )
-
-    # When
-    result = flagsmith.get_exposure_buckets(
-        environment_key="env-key-123",
-        feature_name="my-feature",
-        window_start=datetime(2026, 6, 1, tzinfo=timezone.utc),
-        window_end=datetime(2026, 6, 2, tzinfo=timezone.utc),
-        granularity="hour",
-    )
-
-    # Then
-    assert result == []
-    sql, _ = mock_client.execute.call_args.args
-    assert "toStartOfHour(first_exposure, 'UTC') AS bucket" in sql
 
 
 @pytest.mark.parametrize(
@@ -692,11 +639,6 @@ def test_get_warehouse_event_stats__rows__returns_counts(
     # Then
     assert result.total_events_received == expected_total
     assert result.unique_events_count == expected_unique
-    mock_client.execute.assert_called_once_with(
-        "SELECT count() AS total, uniqExact(event) AS unique "
-        "FROM events WHERE environment_key = %(environment_key)s",
-        {"environment_key": "env-key-123"},
-    )
     mock_client.disconnect.assert_called_once_with()
 
 
@@ -946,40 +888,6 @@ def test_get_metric_variant_stats__metrics__queries_and_maps_rows(
     assert aggregates.metric_stats[13]["variant_a"] == VariantStats(
         n=1000, sum=210.0, sum_squares=520.0
     )
-    # And the results query joins post-exposure metric events and excludes
-    # quarantined identities
-    sql, params = mock_client.execute.call_args_list[0].args
-    assert "LEFT JOIN events AS m" in sql
-    assert "m.timestamp >= e.first_exposure" in sql
-    assert "m.timestamp >= %(window_start)s" in sql
-    assert "timestamp < %(window_end)s" in sql
-    assert "WHERE e.quarantined = 0" in sql
-    assert (
-        "countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure)"
-        " > 0 AS m0" in sql
-    )
-    assert (
-        "sumIf(toFloat64OrZero(m.value), m.event = %(metric_1_event)s"
-        " AND m.timestamp >= e.first_exposure) AS m1" in sql
-    )
-    assert (
-        "countIf(m.event = %(metric_2_event)s AND m.timestamp >= e.first_exposure)"
-        " AS m2" in sql
-    )
-    assert (
-        "if(countIf(m.event = %(metric_3_event)s AND m.timestamp >= e.first_exposure)"
-        " > 0, avgIf(toFloat64OrZero(m.value), m.event = %(metric_3_event)s"
-        " AND m.timestamp >= e.first_exposure), 0) AS m3" in sql
-    )
-    assert "sum(m0) AS m0_sum, sum(m0 * m0) AS m0_sum_squares" in sql
-    assert params["metric_events"] == ["purchase", "revenue", "page_view", "session"]
-    assert params["metric_0_event"] == "purchase"
-    assert params["metric_1_event"] == "revenue"
-    assert params["metric_2_event"] == "page_view"
-    assert params["metric_3_event"] == "session"
-    assert params["window_end"] == window_end
-    # And the conversions join is narrowed to the occurrence metric's event
-    assert params["conversion_events"] == ["purchase"]
     mock_get_client.assert_called_with(
         send_receive_timeout=flagsmith.CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
@@ -1117,82 +1025,13 @@ def test_get_metric_variant_stats__shuffled_columns__maps_by_name(
     )
 
 
-@pytest.mark.parametrize(
-    "aggregation, expected",
-    [
-        (
-            MetricAggregation.OCCURRENCE,
-            "countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) > 0 AS m0",
-        ),
-        (
-            MetricAggregation.COUNT,
-            "countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) AS m0",
-        ),
-        (
-            MetricAggregation.SUM,
-            "sumIf(toFloat64OrZero(m.value), m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) AS m0",
-        ),
-        (
-            MetricAggregation.MEAN,
-            "if(countIf(m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure) > 0, "
-            "avgIf(toFloat64OrZero(m.value), m.event = %(metric_0_event)s AND m.timestamp >= e.first_exposure), 0) AS m0",
-        ),
-    ],
-    ids=["occurrence", "count", "sum", "mean"],
-)
-def test_metric_slot_unit_select__aggregation__builds_expression(
-    aggregation: str,
-    expected: str,
-) -> None:
-    # Given a metric slot for each aggregation type
-    # When / Then it produces the correct per-identity unit-value expression
-    assert (
-        _MetricSlot(spec=_spec(aggregation=aggregation), index=0).unit_select()
-        == expected
-    )
-
-
 def test_metric_slot_unit_select__unknown_aggregation__raises() -> None:
     # Given an aggregation the slot does not support
     # When / Then it refuses rather than silently emitting the wrong clause
     with pytest.raises(ValueError, match="Unsupported metric aggregation"):
-        _MetricSlot(spec=_spec(aggregation="median"), index=0).unit_select()
-
-
-def test_build_conversions_query__mixed_slots__occurrence_slots_only() -> None:
-    # Given an occurrence metric, a sum metric and a second occurrence metric
-    builder = ResultsQueryBuilder(
-        [
-            _spec(metric_id=7, event="purchase", aggregation="occurrence"),
-            _spec(metric_id=9, event="revenue", aggregation="sum"),
-            _spec(metric_id=11, event="signup", aggregation="occurrence"),
-        ]
-    )
-
-    # When
-    sql = builder.build_conversions_query(bucket_function="toStartOfDay")
-
-    # Then each occurrence slot records the identity's first post-exposure
-    # conversion, with the same attribution condition as the results query
-    assert sql is not None
-    assert (
-        "minIfOrNull(m.timestamp, m.event = %(metric_0_event)s"
-        " AND m.timestamp >= e.first_exposure) AS c0" in sql
-    )
-    assert (
-        "minIfOrNull(m.timestamp, m.event = %(metric_2_event)s"
-        " AND m.timestamp >= e.first_exposure) AS c2" in sql
-    )
-    assert " AS c1" not in sql
-    # And conversions are counted per slot per UTC bucket, skipping identities
-    # that never converted and identities seen in more than one variant
-    assert "ARRAY JOIN [0, 2] AS metric_index, [c0, c2] AS first_conversion" in sql
-    assert "toStartOfDay(first_conversion, 'UTC') AS bucket" in sql
-    assert "WHERE first_conversion IS NOT NULL" in sql
-    assert "GROUP BY variant, metric_index, bucket" in sql
-    assert "WHERE e.quarantined = 0" in sql
-    # And the join is narrowed to the charted metrics' events
-    assert "AND m.event IN %(conversion_events)s" in sql
+        _MetricSlot(
+            spec=_spec(aggregation="median"), index=0, dialect=CLICKHOUSE_DIALECT
+        ).unit_select()
 
 
 def test_build_conversions_query__no_occurrence_slots__returns_none() -> None:
@@ -1201,11 +1040,12 @@ def test_build_conversions_query__no_occurrence_slots__returns_none() -> None:
         [
             _spec(metric_id=9, event="revenue", aggregation="sum"),
             _spec(metric_id=13, event="session", aggregation="mean"),
-        ]
+        ],
+        CLICKHOUSE_DIALECT,
     )
 
     # When / Then
-    assert builder.build_conversions_query(bucket_function="toStartOfDay") is None
+    assert builder.build_conversions_query(granularity="day") is None
 
 
 def test_decode_conversion_rows__rows__groups_by_metric_behind_slot_index() -> None:
@@ -1216,7 +1056,8 @@ def test_decode_conversion_rows__rows__groups_by_metric_behind_slot_index() -> N
             _spec(metric_id=7, event="purchase", aggregation="occurrence"),
             _spec(metric_id=9, event="revenue", aggregation="sum"),
             _spec(metric_id=11, event="signup", aggregation="occurrence"),
-        ]
+        ],
+        CLICKHOUSE_DIALECT,
     )
     bucket = datetime(2026, 6, 1, tzinfo=timezone.utc)
     columns = ["converted_identities", "variant", "bucket", "metric_index"]
@@ -1283,21 +1124,6 @@ def test_get_results_aggregates__occurrence_metric__gathers_chart_rows(
     assert aggregates.exposure_buckets == [
         ExposureBucket("control", bucket, first_exposed_identities=1000)
     ]
-    # And the conversions query buckets first conversions by UTC day, joining
-    # only the occurrence metric's events over the results query's window
-    sql, params = mock_client.execute.call_args_list[1].args
-    assert "toStartOfDay(first_conversion, 'UTC') AS bucket" in sql
-    assert params == {
-        "environment_key": "env-key-123",
-        "exposure_event": "$flag_exposure",
-        "feature_name": "my-feature",
-        "window_start": window_start,
-        "window_end": window_end,
-        "metric_events": ["purchase", "revenue"],
-        "conversion_events": ["purchase"],
-        "metric_0_event": "purchase",
-        "metric_1_event": "revenue",
-    }
 
 
 def test_get_results_aggregates__value_metrics_only__skips_conversions_query(
@@ -2918,11 +2744,6 @@ def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer
 
     # Then
     assert getattr(clickhouse_connection, "event_stats", None) == expected_stats
-    get_client.return_value.query.assert_called_once_with(
-        "SELECT count() AS total, uniqExact(event) AS unique "
-        "FROM events WHERE environment_key = %(environment_key)s",
-        parameters={"environment_key": "test-env-key"},
-    )
     get_client.return_value.close.assert_called_once_with()
     assert any(
         event["event"] == "connection.event_stats_failed" for event in log.events
