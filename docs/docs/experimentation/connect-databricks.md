@@ -101,12 +101,15 @@ storage works; you don't need an external location.
 2. Fill in the details from step 1 and a name under **Name this warehouse**. Leave **Schema** as `flagsmith_exp`.
 3. Enter the **Client ID** and **Client secret** from step 2.
 4. Click **Test connection**. Once it succeeds, click **Save and continue**.
+
+![The Databricks connection form with server hostname, workspace ID, region, warehouse ID, catalog, schema and service principal fields](/img/experimentation/warehouse-databricks-form.png)
+
+If the test fails, you can save anyway and test again later, but events won't be delivered until it succeeds.
+
 5. On the connection card, click **Send your first event**. The status changes from **Pending Connection** to
    **Connected** once the event arrives.
 
-<!-- Screenshot: docs/static/img/experimentation/warehouse-databricks-form.png — the Databricks connection form, filled with dummy values -->
-
-If the test fails, you can save anyway and test again later, but events won't be delivered until it succeeds.
+![A connected Databricks warehouse card showing the last event received, total events and unique event names](/img/experimentation/warehouse-databricks-connected.png)
 
 The test doesn't check **Region**. A wrong region only shows up as an error on the connection card once events are
 delivered.
