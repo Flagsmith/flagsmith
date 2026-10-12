@@ -11,8 +11,6 @@ export type AccordionHeadingLevel = 2 | 3 | 4 | 5 | 6
 export type AccordionProps = {
   // Text, a chip or a spinner. It sits inside the toggle, so no links or buttons.
   title: ReactNode
-  // Shown under the title once open, as in the spec.
-  description?: ReactNode
   children: ReactNode
   // Wraps the header in a heading, for an accordion that is a page section.
   headingLevel?: AccordionHeadingLevel
@@ -29,7 +27,6 @@ const Accordion: FC<AccordionProps> = ({
   children,
   className,
   defaultOpen = false,
-  description,
   flush = false,
   headingLevel,
   onOpenChange,
@@ -63,23 +60,19 @@ const Accordion: FC<AccordionProps> = ({
       {wrapInHeading(
         <BareButton
           className={cn(
-            'ds-accordion__header d-flex gap-2 w-100 p-3 text-start text-default',
-            open ? 'align-items-start' : 'align-items-center',
+            'ds-accordion__header d-flex gap-2 w-100 px-3 pt-3 text-start text-default',
+            // Open, the spec tops the title and puts the content right under it.
+            open && !flush
+              ? 'align-items-start pb-0'
+              : 'align-items-center pb-3',
           )}
           aria-expanded={open}
           aria-controls={`${id}-body`}
           aria-labelledby={`${id}-title`}
-          // Named by the title alone; the description is read after it.
-          aria-describedby={
-            open && description ? `${id}-description` : undefined
-          }
           onClick={toggle}
         >
-          <span className='ds-accordion__label d-flex flex-grow-1 gap-1'>
-            <span id={`${id}-title`}>{title}</span>
-            {open && !!description && (
-              <span id={`${id}-description`}>{description}</span>
-            )}
+          <span id={`${id}-title`} className='ds-accordion__label flex-grow-1'>
+            {title}
           </span>
           <Icon
             name='chevron-down'
@@ -93,7 +86,9 @@ const Accordion: FC<AccordionProps> = ({
       {/* Inert while closed, so its content leaves the tab order and the
           accessibility tree, not just the screen. */}
       <div ref={contentRef} style={style} id={`${id}-body`} inert={!open}>
-        <div className={cn({ 'px-3 pb-3': !flush })}>{children}</div>
+        <div className={cn({ 'ds-accordion__content px-3 pb-3': !flush })}>
+          {children}
+        </div>
       </div>
     </div>
   )

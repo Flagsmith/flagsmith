@@ -11,6 +11,8 @@
 }
 
 .ds-accordion__header {
+  transition: padding-bottom var(--duration-normal) var(--easing-standard);
+
   &:focus-visible {
     outline: 2px solid var(--color-border-action);
     outline-offset: -2px;
@@ -18,12 +20,15 @@
   }
 }
 
-// Not the .flex-column utility: this project's version adds side margins.
-.ds-accordion__label {
-  flex-direction: column;
-  min-width: 0;
+// B2 in the spec, for the title and the content it reveals.
+.ds-accordion__label,
+.ds-accordion__content {
   font-size: 0.8125rem;
   line-height: 1.4;
+}
+
+.ds-accordion__label {
+  min-width: 0;
 }
 
 .ds-accordion__chevron {
@@ -35,6 +40,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ds-accordion__header,
   .ds-accordion__chevron {
     transition: none;
   }

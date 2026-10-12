@@ -6,7 +6,7 @@ import Table, { TableBody, TableCell, TableRow } from 'components/base/Table'
 
 const meta: Meta<typeof Accordion> = {
   args: {
-    children: <p className='mb-0'>Accordion content goes here.</p>,
+    children: 'Description text',
     title: 'Accordion title',
   },
   component: Accordion,
@@ -30,10 +30,6 @@ export const Default: Story = {}
 
 export const Open: Story = {
   args: { defaultOpen: true },
-}
-
-export const WithDescription: Story = {
-  args: { defaultOpen: true, description: 'Description text' },
 }
 
 // A page section: the header sits in an h3, so it shows up in heading navigation.
