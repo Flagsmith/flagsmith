@@ -176,6 +176,8 @@ export type ExperimentRolloutBody = {
   audience?: ExperimentAudienceBody
 }
 
+export type UsageGroupBy = 'project' | 'environment'
+
 export type Req = {
   getFeatureCodeReferences: {
     projectId: number
@@ -267,10 +269,14 @@ export type Req = {
   getEnvironments: {
     projectId: number
   }
+  getAllEnvironments: {
+    projectId: number
+  }
   getOrganisationUsage: {
     organisationId: number
     projectId?: number
     environmentId?: string
+    group_by?: UsageGroupBy
     billing_period?:
       | 'current_billing_period'
       | 'previous_billing_period'
