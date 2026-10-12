@@ -236,10 +236,11 @@ def _check_priorities(
         raise DuplicatePriorityError(f"Duplicate priority: {duplicate}.")
 
 
-def _get_system_segment_ids(segment_ids: Collection[int]) -> set[int]:
-    return set(
+def _get_system_segments_managed_by(segment_ids: Collection[int]) -> dict[int, str]:
+    """Get which features manage the system segments among some, by segment ID."""
+    return dict(
         Segment.objects.filter(id__in=segment_ids, is_system_segment=True).values_list(
-            "id", flat=True
+            "id", "managed_by"
         )
     )
 
@@ -258,17 +259,25 @@ def _write_segment_overrides(
     segments = _OverriddenSegments([], [], [])
     changed_segment_ids = {change["segment"]["id"] for change in changes}
 
-    # Only the features owning system segments can change their overrides.
-    # Replacing the others leaves them as they are.
-    system_segment_ids = (
-        set() if system else _get_system_segment_ids({*overrides, *changed_segment_ids})
+    system_segments_managed_by = (
+        {}
+        if system
+        else _get_system_segments_managed_by({*overrides, *changed_segment_ids})
     )
-    if system_segment_ids & changed_segment_ids:
-        raise SystemSegmentModificationError()
+    if changed_system_segment_ids := sorted(
+        system_segments_managed_by.keys() & changed_segment_ids
+    ):
+        raise SystemSegmentModificationError(
+            system_segments_managed_by[changed_system_segment_ids[0]]
+        )
 
     if replace:
         segments.deleted.extend(
-            sorted(overrides.keys() - changed_segment_ids - system_segment_ids)
+            sorted(
+                overrides.keys()
+                - changed_segment_ids
+                - system_segments_managed_by.keys()
+            )
         )
         _delete_segment_overrides(
             environment=environment,
@@ -402,8 +411,10 @@ def delete_segment_override(
 
     Overrides of system segments can only be removed by passing `system=True`.
     """
-    if not system and _get_system_segment_ids([segment_id]):
-        raise SystemSegmentModificationError()
+    if not system and (
+        system_segments_managed_by := _get_system_segments_managed_by([segment_id])
+    ):
+        raise SystemSegmentModificationError(system_segments_managed_by[segment_id])
 
     with transaction.atomic():
         version = _create_draft_version(environment, feature)

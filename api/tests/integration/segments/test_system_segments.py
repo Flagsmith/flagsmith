@@ -1,5 +1,7 @@
 from rest_framework.test import APIClient
 
+from segments.models import Segment
+
 
 def test_create_segment__version_of_system_segment__responds_409(
     admin_client: APIClient,
@@ -32,6 +34,7 @@ def test_create_segment__version_of_system_segment__responds_409(
     assert response.json() == {
         "code": "system_segment_modification",
         "message": "System segments and their overrides can't be changed directly.",
+        "managed_by": "dependency",
     }
 
 
@@ -56,3 +59,32 @@ def test_create_segment__version_of_segment__responds_201(
     # Then
     assert response.status_code == 201
     assert response.json()["version_of"] == segment
+
+
+def test_create_segment__version_of_unmanaged_system_segment__responds_409(
+    admin_client: APIClient,
+    project: int,
+) -> None:
+    # Given
+    system_segment = Segment.objects.create(
+        name="system", project_id=project, is_system_segment=True
+    )
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        {
+            "name": "Not a system segment",
+            "project": project,
+            "version_of": system_segment.id,
+            "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 409
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": "System segments and their overrides can't be changed directly.",
+    }
