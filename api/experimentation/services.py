@@ -774,24 +774,6 @@ def _validate_audience_change(experiment: Experiment, audience: AudienceSpec) ->
         )
 
 
-def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
-    option_ids = [variant["id"] for variant in spec.variants]
-    if len(option_ids) != len(set(option_ids)):
-        raise ValidationError("Multivariate options must be unique")
-    valid_option_ids = set(
-        experiment.feature.multivariate_options.values_list("id", flat=True)
-    )
-    if invalid := set(option_ids) - valid_option_ids:
-        raise ValidationError(
-            f"Multivariate options {sorted(invalid)} do not belong to the feature"
-        )
-    total = sum(variant["weight"] for variant in spec.variants)
-    if total > 100:
-        raise ValidationError(
-            f"Multivariate allocations must not exceed 100%, got {total}%."
-        )
-
-
 def _resolve_audience(
     experiment: Experiment,
     audience: AudienceSpec | None,
@@ -933,7 +915,6 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
             )
         # Validated under the lock, so a concurrent start cannot let an audience
         # change through the frozen-once-running check on a stale status.
-        validate_rollout_spec(experiment, spec)
         audience_rules, audience_segment_ids = _resolve_audience(
             experiment, spec.audience
         )
