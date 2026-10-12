@@ -20694,6 +20694,10 @@ components:
           type: string
           format: uuid
           readOnly: true
+        signup_anonymous_id:
+          type: string
+          maxLength: 64
+          writeOnly: true
         key:
           type:
             - string
