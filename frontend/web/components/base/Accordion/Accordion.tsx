@@ -16,7 +16,7 @@ export type AccordionProps = {
   // It sits inside the toggle, so a control here would be nested in a button.
   meta?: ReactNode
   children: ReactNode
-  // The header's heading level, so the sections show up in heading navigation.
+  // Wraps the header in a heading, for an accordion that is a page section.
   headingLevel?: AccordionHeadingLevel
   defaultOpen?: boolean
   // Pass with onOpenChange to control it from outside.
@@ -33,7 +33,7 @@ const Accordion: FC<AccordionProps> = ({
   defaultOpen = false,
   description,
   flush = false,
-  headingLevel = 3,
+  headingLevel,
   meta,
   onOpenChange,
   open: controlledOpen,
@@ -43,7 +43,12 @@ const Accordion: FC<AccordionProps> = ({
   const open = controlledOpen ?? uncontrolledOpen
   const { contentRef, style } = useCollapsibleHeight(open)
   const id = useId()
-  const Heading = `h${headingLevel}` as const
+
+  const wrapInHeading = (header: ReactNode) => {
+    if (!headingLevel) return header
+    const Heading = `h${headingLevel}` as const
+    return <Heading className='ds-accordion__level'>{header}</Heading>
+  }
 
   const toggle = () => {
     setUncontrolledOpen(!open)
@@ -66,7 +71,7 @@ const Accordion: FC<AccordionProps> = ({
         className,
       )}
     >
-      <Heading className='ds-accordion__level'>
+      {wrapInHeading(
         <BareButton
           className={cn(
             'ds-accordion__header d-flex gap-2 w-100 p-3 text-start text-default',
@@ -96,8 +101,8 @@ const Accordion: FC<AccordionProps> = ({
             className='ds-accordion__chevron flex-shrink-0'
             aria-hidden
           />
-        </BareButton>
-      </Heading>
+        </BareButton>,
+      )}
       {/* Inert while closed, so its content leaves the tab order and the
           accessibility tree, not just the screen. */}
       <div ref={contentRef} style={style} id={`${id}-body`} inert={!open}>

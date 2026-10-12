@@ -37,6 +37,11 @@ export const WithDescription: Story = {
   args: { defaultOpen: true, description: 'Description text' },
 }
 
+// A page section: the header sits in an h3, so it shows up in heading navigation.
+export const AsHeading: Story = {
+  args: { headingLevel: 3 },
+}
+
 export const WithMeta: Story = {
   args: {
     meta: <Chip size='xs'>Awaiting approval</Chip>,
