@@ -1,8 +1,9 @@
 import { DependencyEdge } from 'common/types/responses'
 import {
   discardChangeRequest,
-  getPendingByChangeRequest,
-  getPendingByFeature,
+  applyStagedChanges,
+  getChangeRequestIdsStaging,
+  getFeatureIdsStaged,
   getStagedDependencyChanges,
   stageAdd,
   stageRemove,
@@ -88,23 +89,19 @@ describe('stageRemove', () => {
   })
 })
 
-describe('pending changes', () => {
-  it('lists staged changes by feature and by change request', () => {
+describe('staged ids', () => {
+  it('lists change requests by feature, and features by change request', () => {
     stageAdd(args)
     stageRemove(14, 1, { id: 4, name: 'feature_4' })
     stageAdd({ ...args, featureId: 2 })
-    expect(getPendingByFeature(1).map((e) => e.changeRequestId)).toEqual([
-      12, 14,
-    ])
-    expect(getPendingByChangeRequest(12).map((e) => e.featureId)).toEqual([
-      1, 2,
-    ])
+    expect(getChangeRequestIdsStaging(1)).toEqual([12, 14])
+    expect(getFeatureIdsStaged(12)).toEqual([1, 2])
   })
 
   it('drops a change request emptied by its own removals', () => {
     stageAdd(args)
     stageRemove(12, 1, prerequisite)
-    expect(getPendingByFeature(1)).toEqual([])
+    expect(getChangeRequestIdsStaging(1)).toEqual([])
   })
 
   it('forgets every feature of a discarded change request', () => {
@@ -112,7 +109,24 @@ describe('pending changes', () => {
     stageAdd({ ...args, featureId: 2 })
     stageAdd({ ...args, changeRequestId: 120 })
     discardChangeRequest(12)
-    expect(getPendingByChangeRequest(12)).toEqual([])
-    expect(getPendingByChangeRequest(120)).toHaveLength(1)
+    expect(getFeatureIdsStaged(12)).toEqual([])
+    expect(getFeatureIdsStaged(120)).toHaveLength(1)
+  })
+})
+
+describe('applyStagedChanges', () => {
+  it('lists the dependencies as if the change request were live', () => {
+    stageAdd(args)
+    stageRemove(12, 1, { id: 4, name: 'feature_4' })
+    expect(
+      applyStagedChanges(12, 1, [edge(1, 4), edge(1, 5)]).map(
+        (e) => e.prerequisite.id,
+      ),
+    ).toEqual([5, 3])
+  })
+
+  it('leaves the live list alone for another change request', () => {
+    stageAdd(args)
+    expect(applyStagedChanges(99, 1, [edge(1, 5)])).toEqual([edge(1, 5)])
   })
 })

@@ -413,6 +413,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
             ) && (
               <DiffDependencies
                 changeRequestId={changeRequest.id}
+                environmentId={environmentId}
                 projectId={projectId}
               />
             )}

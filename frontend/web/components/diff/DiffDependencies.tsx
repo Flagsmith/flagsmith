@@ -1,18 +1,18 @@
 import { FC } from 'react'
-import { PendingDependencyChanges } from 'common/types/responses'
-import { useGetChangeRequestDependencyChangesQuery } from 'common/services/useFeatureDependency'
+import { useGetFeatureIdsStagedQuery } from 'common/services/useFeatureDependency'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
-import DependencyChangesTable from 'components/DependencyChangesTable'
+import ChangeRequestDependencyChanges from 'components/ChangeRequestDependencyChanges'
 import Panel from 'components/base/grid/Panel'
 
 type DiffDependenciesProps = {
   changeRequestId: number
+  environmentId: string
   projectId: string
 }
 
 const FeatureDependencyChanges: FC<
-  PendingDependencyChanges & { projectId: string }
-> = ({ changes, featureId, projectId }) => {
+  DiffDependenciesProps & { featureId: number }
+> = ({ changeRequestId, environmentId, featureId, projectId }) => {
   const { data: feature } = useGetProjectFlagQuery({
     id: featureId,
     project: Number(projectId),
@@ -26,26 +26,27 @@ const FeatureDependencyChanges: FC<
         Prerequisite changes in this request. Nothing changes until it is
         published.
       </p>
-      <DependencyChangesTable changes={changes} />
+      <ChangeRequestDependencyChanges
+        environmentId={environmentId}
+        featureId={featureId}
+        changeRequestId={changeRequestId}
+      />
     </Panel>
   )
 }
 
 // The prerequisite changes staged in a change request, per feature.
-const DiffDependencies: FC<DiffDependenciesProps> = ({
-  changeRequestId,
-  projectId,
-}) => {
-  const { data } = useGetChangeRequestDependencyChangesQuery({
-    changeRequestId,
+const DiffDependencies: FC<DiffDependenciesProps> = (props) => {
+  const { data: featureIds } = useGetFeatureIdsStagedQuery({
+    changeRequestId: props.changeRequestId,
   })
   return (
     <>
-      {(data ?? []).map((entry) => (
+      {(featureIds ?? []).map((featureId) => (
         <FeatureDependencyChanges
-          key={entry.featureId}
-          {...entry}
-          projectId={projectId}
+          key={featureId}
+          {...props}
+          featureId={featureId}
         />
       ))}
     </>

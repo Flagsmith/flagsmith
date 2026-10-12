@@ -871,7 +871,12 @@ export type Req = {
     environmentKey: string
   }
   getFeatureSegment: { id: number }
-  getFeatureDependencies: { environmentId: string; featureId: number }
+  getFeatureDependencies: {
+    environmentId: string
+    featureId: number
+    // Lists them as if this change request were live.
+    changeRequestId?: number
+  }
   getFeatureDependents: { environmentId: string; featureId: number }
   createFeatureDependency: {
     environmentId: string
@@ -909,8 +914,8 @@ export type Req = {
     })[]
   }
   deleteChangeRequest: { id: number }
-  getPendingDependencyChanges: { featureId: number }
-  getChangeRequestDependencyChanges: { changeRequestId: number }
+  getChangeRequestIdsStaging: { featureId: number }
+  getFeatureIdsStaged: { changeRequestId: number }
   getSamlConfiguration: { name: string }
   getSamlConfigurations: { organisation_id: number }
   getSamlConfigurationMetadata: { name: string }

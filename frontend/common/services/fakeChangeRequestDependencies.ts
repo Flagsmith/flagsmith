@@ -6,9 +6,9 @@ import {
   DependencyConflictCode,
   DependencyEdge,
   DependencyFeature,
-  PendingDependencyChanges,
   StagedDependencyChange,
 } from 'common/types/responses'
+import { stagedDependencyEdge } from 'common/utils/stagedDependencyEdge'
 
 type StagedChanges = Record<string, StagedDependencyChange[]>
 
@@ -110,19 +110,40 @@ export const stageRemove = (
   write(changes)
 }
 
-const entries = (): PendingDependencyChanges[] =>
+// As #8720 answers GET ?change_request: the list as if the change request
+// were live.
+export const applyStagedChanges = (
+  changeRequestId: number,
+  featureId: number,
+  liveEdges: DependencyEdge[],
+): DependencyEdge[] => {
+  const staged = getStagedDependencyChanges(changeRequestId, featureId)
+  const removed = (id: number) =>
+    staged.some((c) => c.action === 'remove' && c.prerequisite.id === id)
+  return [
+    ...liveEdges.filter((edge) => !removed(edge.prerequisite.id)),
+    ...staged
+      .filter((c) => c.action === 'add')
+      .map((c) => stagedDependencyEdge(featureId, c.prerequisite)),
+  ]
+}
+
+const stagedKeys = () =>
   Object.entries(read())
     .filter(([, changes]) => changes.length)
-    .map(([key, changes]) => {
-      const [changeRequestId, featureId] = key.split('-').map(Number)
-      return { changeRequestId, changes, featureId }
-    })
+    .map(([key]) => key.split('-').map(Number))
 
-export const getPendingByFeature = (featureId: number) =>
-  entries().filter((entry) => entry.featureId === featureId)
+// Stand in for listing change requests by feature, and a change request's
+// change sets, until real change sets carry the staged dependencies.
+export const getChangeRequestIdsStaging = (featureId: number) =>
+  stagedKeys()
+    .filter(([, id]) => id === featureId)
+    .map(([changeRequestId]) => changeRequestId)
 
-export const getPendingByChangeRequest = (changeRequestId: number) =>
-  entries().filter((entry) => entry.changeRequestId === changeRequestId)
+export const getFeatureIdsStaged = (changeRequestId: number) =>
+  stagedKeys()
+    .filter(([id]) => id === changeRequestId)
+    .map(([, featureId]) => featureId)
 
 // A deleted change request takes its staged changes with it.
 export const discardChangeRequest = (changeRequestId: number) => {

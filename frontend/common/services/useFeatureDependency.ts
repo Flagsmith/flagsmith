@@ -2,8 +2,9 @@ import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import { stagedDependencyEdge } from 'common/utils/stagedDependencyEdge'
 import {
-  getPendingByChangeRequest,
-  getPendingByFeature,
+  applyStagedChanges,
+  getChangeRequestIdsStaging,
+  getFeatureIdsStaged,
   stageAdd,
   stageRemove,
 } from './fakeChangeRequestDependencies'
@@ -152,26 +153,47 @@ export const featureDependencyService = service
           return { data: undefined }
         },
       }),
-      // Faked until #8449: the API will list a feature's change requests and
-      // read each one's staged dependencies with GET ?change_request.
-      getChangeRequestDependencyChanges: builder.query<
-        Res['pendingDependencyChanges'],
-        Req['getChangeRequestDependencyChanges']
+
+      // Faked until #8449: will be the change requests listed by feature.
+      getChangeRequestIdsStaging: builder.query<
+        Res['changeRequestIdsStaging'],
+        Req['getChangeRequestIdsStaging']
       >({
-        providesTags: [{ id: 'PENDING', type: 'FeatureDependency' }],
+        providesTags: (res, err, query) => pendingTags(query.featureId),
         queryFn: (query) => ({
-          data: getPendingByChangeRequest(query.changeRequestId),
+          data: getChangeRequestIdsStaging(query.featureId),
         }),
       }),
+
       getFeatureDependencies: builder.query<
         Res['featureDependencies'],
         Req['getFeatureDependencies']
       >({
-        providesTags: (res, err, query) => listTags(query),
-        query: (query: Req['getFeatureDependencies']) => ({
-          url: `environments/${query.environmentId}/features/${query.featureId}/dependencies/`,
-        }),
+        providesTags: (res, err, query) => [
+          ...listTags(query),
+          ...(query.changeRequestId ? pendingTags(query.featureId) : []),
+        ],
+        queryFn: async (query, _, _2, baseQuery) => {
+          const res = await baseQuery({
+            url: dependenciesUrl(query, query.featureId),
+          })
+          if (res.error) return { error: res.error }
+          const live = res.data as Res['featureDependencies']
+          // Faked until #8449: the API will apply ?change_request itself.
+          return {
+            data: query.changeRequestId
+              ? {
+                  results: applyStagedChanges(
+                    query.changeRequestId,
+                    query.featureId,
+                    live.results,
+                  ),
+                }
+              : live,
+          }
+        },
       }),
+
       getFeatureDependents: builder.query<
         Res['featureDependents'],
         Req['getFeatureDependents']
@@ -181,12 +203,17 @@ export const featureDependencyService = service
           url: `environments/${query.environmentId}/features/${query.featureId}/dependents/`,
         }),
       }),
-      getPendingDependencyChanges: builder.query<
-        Res['pendingDependencyChanges'],
-        Req['getPendingDependencyChanges']
+
+      // Faked until #8449: real change sets will say which features a change
+      // request stages dependencies for.
+      getFeatureIdsStaged: builder.query<
+        Res['featureIdsStaged'],
+        Req['getFeatureIdsStaged']
       >({
-        providesTags: (res, err, query) => pendingTags(query.featureId),
-        queryFn: (query) => ({ data: getPendingByFeature(query.featureId) }),
+        providesTags: [{ id: 'PENDING', type: 'FeatureDependency' }],
+        queryFn: (query) => ({
+          data: getFeatureIdsStaged(query.changeRequestId),
+        }),
       }),
       // END OF ENDPOINTS
     }),
@@ -253,10 +280,10 @@ export async function getFeatureDependents(
 export const {
   useCreateFeatureDependencyMutation,
   useDeleteFeatureDependencyMutation,
-  useGetChangeRequestDependencyChangesQuery,
+  useGetChangeRequestIdsStagingQuery,
   useGetFeatureDependenciesQuery,
   useGetFeatureDependentsQuery,
-  useGetPendingDependencyChangesQuery,
+  useGetFeatureIdsStagedQuery,
   // END OF EXPORTS
 } = featureDependencyService
 

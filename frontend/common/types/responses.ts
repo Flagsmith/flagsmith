@@ -191,12 +191,6 @@ export type StagedDependencyChange = {
   prerequisite: DependencyFeature
 }
 
-export type PendingDependencyChanges = {
-  changeRequestId: number
-  featureId: number
-  changes: StagedDependencyChange[]
-}
-
 export type DependencyConflictCode =
   | 'circular_dependency'
   | 'dependency_exists'
@@ -1615,7 +1609,8 @@ export type Res = {
   featureDependencies: { results: DependencyEdge[] }
   featureDependents: { results: DependencyEdge[] }
   featureDependency: DependencyEdge
-  pendingDependencyChanges: PendingDependencyChanges[]
+  changeRequestIdsStaging: number[]
+  featureIdsStaged: number[]
   featureVersions: PagedResponse<FeatureVersion>
   users: User[]
   enableFeatureVersioning: { id: string }

@@ -3,14 +3,14 @@ import cn from 'classnames'
 import moment from 'moment'
 import { ChangeRequestSummary } from 'common/types/responses'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
-import { useGetPendingDependencyChangesQuery } from 'common/services/useFeatureDependency'
+import { useGetChangeRequestIdsStagingQuery } from 'common/services/useFeatureDependency'
 import Accordion from 'components/base/Accordion'
 import ChangeRequestLink from 'components/modals/create-feature/tabs/FeatureDependenciesTab/ChangeRequestLink'
 import Chip from 'components/base/Chip'
 import Icon from 'components/icons/Icon'
 import { colorIconSecondary } from 'common/theme/tokens'
 import ErrorMessage from 'components/ErrorMessage'
-import DependencyChangesTable from 'components/DependencyChangesTable'
+import ChangeRequestDependencyChanges from 'components/ChangeRequestDependencyChanges'
 import './PendingChangeRequests.scss'
 
 type PendingChangeRequestsProps = {
@@ -33,7 +33,9 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
 }) => {
   const now = useRef(new Date().toISOString())
   const highlightRef = useRef<HTMLDivElement>(null)
-  const { data: pending } = useGetPendingDependencyChangesQuery({ featureId })
+  const { data: changeRequestIds } = useGetChangeRequestIdsStagingQuery({
+    featureId,
+  })
   const { data: open, isError: isOpenError } = useGetChangeRequestsQuery({
     committed: false,
     environmentId,
@@ -50,14 +52,11 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
   // A change request that was published or deleted has nothing pending.
   const groups = useMemo(() => {
     const live = [...(open?.results ?? []), ...(scheduled?.results ?? [])]
-    return (pending ?? []).flatMap(({ changeRequestId, changes }) => {
-      const changeRequest = live.find((cr) => cr.id === changeRequestId)
-      return changeRequest ? [{ changeRequest, changes }] : []
-    })
-  }, [pending, open, scheduled])
+    return live.filter((cr) => changeRequestIds?.includes(cr.id))
+  }, [changeRequestIds, open, scheduled])
 
   const hasHighlight = groups.some(
-    ({ changeRequest }) => changeRequest.id === highlightId,
+    (changeRequest) => changeRequest.id === highlightId,
   )
   useEffect(() => {
     if (!hasHighlight) return
@@ -72,7 +71,7 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
 
   // Without the change request lists, staged changes cannot be matched to
   // one, and hiding them would read as nothing pending.
-  if (pending?.length && (isOpenError || isScheduledError)) {
+  if (changeRequestIds?.length && (isOpenError || isScheduledError)) {
     return (
       <ErrorMessage error='Could not load the change requests waiting on this feature.' />
     )
@@ -87,7 +86,7 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
         Not live yet. These go live when their change request is published.
       </p>
       <div className='d-flex flex-column gap-3'>
-        {groups.map(({ changeRequest, changes }) => (
+        {groups.map((changeRequest) => (
           <div
             key={changeRequest.id}
             ref={changeRequest.id === highlightId ? highlightRef : undefined}
@@ -111,7 +110,12 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
               }
               meta={<StatusChip changeRequest={changeRequest} />}
             >
-              <DependencyChangesTable changes={changes} isEnabled={isEnabled} />
+              <ChangeRequestDependencyChanges
+                environmentId={environmentId}
+                featureId={featureId}
+                changeRequestId={changeRequest.id}
+                isEnabled={isEnabled}
+              />
               {/* In the body, as the header is the toggle and a link cannot
                   sit inside a button. */}
               <div className='px-3 py-2'>
