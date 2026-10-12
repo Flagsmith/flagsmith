@@ -67,15 +67,13 @@ from experimentation.stats import (
 from experimentation.warehouses import flagsmith
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.registry import get_warehouse
+from features.feature_segments.services import get_next_segment_override_priority
 from features.feature_states.models import API_VALUE_TYPES
+from features.future.services import update_flag, write_variants
+from features.future.types import SegmentOverrideRequest
 from features.models import FeatureState
 from features.value_types import BOOLEAN, STRING
-from features.versioning.dataclasses import FlagChangeSet, MultivariateValueChangeSet
-from features.versioning.versioning_service import (
-    get_environment_flags_list,
-    update_flag,
-    update_multivariate_values,
-)
+from features.versioning.versioning_service import get_environment_flags_list
 from integrations.flagsmith.client import get_openfeature_client
 from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from segments.services import write_segment_rules
@@ -777,7 +775,7 @@ def _validate_audience_change(experiment: Experiment, audience: AudienceSpec) ->
 
 
 def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
-    option_ids = [v.multivariate_feature_option_id for v in spec.multivariate_values]
+    option_ids = [variant["id"] for variant in spec.variants]
     if len(option_ids) != len(set(option_ids)):
         raise ValidationError("Multivariate options must be unique")
     valid_option_ids = set(
@@ -787,7 +785,7 @@ def validate_rollout_spec(experiment: Experiment, spec: RolloutSpec) -> None:
         raise ValidationError(
             f"Multivariate options {sorted(invalid)} do not belong to the feature"
         )
-    total = sum(v.percentage_allocation for v in spec.multivariate_values)
+    total = sum(variant["weight"] for variant in spec.variants)
     if total > 100:
         raise ValidationError(
             f"Multivariate allocations must not exceed 100%, got {total}%."
@@ -826,10 +824,7 @@ def _is_noop_rollout(
     return {
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
-    } == {
-        mv.multivariate_feature_option_id: mv.percentage_allocation
-        for mv in spec.multivariate_values
-    }
+    } == {variant["id"]: variant["weight"] for variant in spec.variants}
 
 
 def _create_rollout_segment(
@@ -880,18 +875,20 @@ def _get_live_rollout_override(experiment: Experiment) -> FeatureState | None:
 
 
 def _update_live_feature_state(
-    feature_state: FeatureState, change_set: FlagChangeSet
+    feature_state: FeatureState, override: SegmentOverrideRequest
 ) -> None:
-    feature_state.enabled = change_set.enabled
+    feature_state.enabled = override["enabled"]
     feature_state.save()
-    feature_state.feature_state_value.set_value(
-        change_set.feature_state_value, change_set.type_
-    )
-    feature_state.feature_state_value.save()
-    update_multivariate_values(feature_state, change_set.multivariate_values)
+    if value := override.get("value"):
+        feature_state.feature_state_value.set_value(value["value"], value["type"])
+        feature_state.feature_state_value.save()
+    if (variants := override.get("variants")) is not None:
+        write_variants(feature_state, variants)
 
 
-def _update_rollout_in_place(experiment: Experiment, change_set: FlagChangeSet) -> None:
+def _update_rollout_in_place(
+    experiment: Experiment, override: SegmentOverrideRequest, author: AuthorData
+) -> None:
     """Write the rollout-segment override, keeping variant assignment stable.
 
     Under v2 versioning, ``update_flag`` clones the override into a fresh feature
@@ -905,12 +902,25 @@ def _update_rollout_in_place(experiment: Experiment, change_set: FlagChangeSet) 
     This is a temporary solution until we find a permanent fix for the
     underlying salting issue: https://github.com/Flagsmith/flagsmith/issues/7913
     """
-    if experiment.environment.use_v2_feature_versioning and (
-        override := _get_live_rollout_override(experiment)
-    ):
-        _update_live_feature_state(override, change_set)
+    live_override = _get_live_rollout_override(experiment)
+    if experiment.environment.use_v2_feature_versioning and live_override:
+        _update_live_feature_state(live_override, override)
         return
-    update_flag(experiment.environment, experiment.feature, change_set)
+    if not live_override:
+        override = {
+            **override,
+            "priority": get_next_segment_override_priority(
+                environment=experiment.environment, feature=experiment.feature
+            ),
+        }
+    update_flag(
+        environment=experiment.environment,
+        feature=experiment.feature,
+        changes={"segment_overrides": [override]},
+        replace=False,
+        author=author,
+        system=True,
+    )
 
 
 def _reset_default_allocations_to_control(
@@ -922,35 +932,22 @@ def _reset_default_allocations_to_control(
     Run once, when the rollout segment is first created: identities outside the
     rollout cohort should all receive control while the experiment runs.
     """
-    (default_state,) = get_environment_flags_list(
-        environment=experiment.environment,
-        additional_filters=Q(
-            feature_id=experiment.feature_id,
-            feature_segment__isnull=True,
-            identity__isnull=True,
-        ),
-    )
-    str_value, value_type = _serialize_feature_state_value(
-        default_state.feature_state_value
-    )
     update_flag(
-        experiment.environment,
-        experiment.feature,
-        FlagChangeSet(
-            author=author,
-            enabled=default_state.enabled,
-            feature_state_value=str_value,
-            type_=value_type,
-            multivariate_values=[
-                MultivariateValueChangeSet(
-                    multivariate_feature_option_id=option_id,
-                    percentage_allocation=0,
-                )
-                for option_id in experiment.feature.multivariate_options.values_list(
-                    "id", flat=True
-                )
-            ],
-        ),
+        environment=experiment.environment,
+        feature=experiment.feature,
+        changes={
+            "environment_default": {
+                "variants": [
+                    {"id": option_id, "weight": 0}
+                    for option_id in experiment.feature.multivariate_options.values_list(
+                        "id", flat=True
+                    )
+                ]
+            }
+        },
+        replace=False,
+        author=author,
+        system=True,
     )
 
 
@@ -985,14 +982,13 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
             _reset_default_allocations_to_control(experiment, spec.author)
         _update_rollout_in_place(
             experiment,
-            FlagChangeSet(
-                author=spec.author,
-                enabled=spec.enabled,
-                feature_state_value=spec.feature_state_value,
-                type_=spec.value_type,
-                segment_id=segment.id,
-                multivariate_values=spec.multivariate_values,
-            ),
+            {
+                "segment": {"id": segment.id},
+                "enabled": spec.enabled,
+                "value": {"type": spec.value_type, "value": spec.feature_state_value},
+                "variants": spec.variants,
+            },
+            spec.author,
         )
         # Segment condition changes don't trigger a rebuild on their own.
         transaction.on_commit(
@@ -1032,7 +1028,7 @@ def _serialize_feature_state_value(
     value: FeatureStateValue,
 ) -> tuple[str, FeatureValueType]:
     """Render a stored feature state value as the (string, API type) pair that
-    a `FlagChangeSet` expects."""
+    the flag API expects."""
     if value.value is None:
         return "", "string"
     return (
@@ -1100,19 +1096,21 @@ def _get_experiment_audience(experiment: Experiment) -> dict[str, typing.Any]:
 
 def enable_experiment_rollout(experiment: Experiment, author: AuthorData) -> None:
     rollout = get_experiment_rollout(experiment)
-    if rollout is None or rollout["enabled"]:
+    if (
+        rollout is None
+        or rollout["enabled"]
+        or (rollout_segment_id := experiment.rollout_segment_id) is None
+    ):
         return
 
-    value = rollout["feature_state_value"]
     _update_rollout_in_place(
         experiment,
-        FlagChangeSet(
-            author=author,
-            enabled=True,
-            feature_state_value=value["value"],
-            type_=value["type"],
-            segment_id=experiment.rollout_segment_id,
-        ),
+        {
+            "segment": {"id": rollout_segment_id},
+            "enabled": True,
+            "value": rollout["feature_state_value"],
+        },
+        author,
     )
 
 
