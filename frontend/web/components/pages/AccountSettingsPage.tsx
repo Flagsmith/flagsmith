@@ -143,8 +143,18 @@ const AccountSettingsPage: FC = () => {
           <span className='text-default font-weight-medium'>
             log you out on all devices
           </span>
-          , including this one. You will need to log in again with your new
-          password.
+          , including this one.
+          <br />
+          <br />
+          It will also{' '}
+          <span className='text-default font-weight-medium'>
+            revoke your API token
+          </span>{' '}
+          in the API Keys tab, so anything using it will stop working.
+          <br />
+          <br />
+          Log in again with your new password, then copy your new token from the
+          API Keys tab.
         </div>
       ),
       onYes: () => {
