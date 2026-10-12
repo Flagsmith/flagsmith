@@ -359,7 +359,7 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:414`
+ - `api/features/future/services.py:412`
  - `api/features/future/services.py:470`
 
 Attributes:
