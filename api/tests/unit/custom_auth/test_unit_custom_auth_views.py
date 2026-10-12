@@ -282,13 +282,10 @@ def test_create_user__no_hubspot_cookie__does_not_create_hubspot_tracker(
             {"signup_anonymous_id": "1759651200000-0.123"},
             {"signup_anonymous_id": "1759651200000-0.123"},
         ),
-        ({"signup_anonymous_id": ""}, None),
-        ({"signup_anonymous_id": "a" * 65}, None),
-        ({"signup_anonymous_id": 123}, None),
         ({}, None),
     ],
 )
-def test_create_user__signup_anonymous_id__stores_only_bounded_string(
+def test_create_user__signup_anonymous_id__stores_in_onboarding_data(
     db: None,
     api_client: APIClient,
     signup_data: dict[str, Any],
@@ -309,6 +306,32 @@ def test_create_user__signup_anonymous_id__stores_only_bounded_string(
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
+    assert "signup_anonymous_id" not in response.json()
     user = FFAdminUser.objects.get(email="test@exemple.fr")
     onboarding_data = json.loads(user.onboarding_data) if user.onboarding_data else None
     assert onboarding_data == expected_onboarding_data
+
+
+@pytest.mark.parametrize("signup_anonymous_id", ["   ", "a" * 65])
+def test_create_user__invalid_signup_anonymous_id__returns_400(
+    db: None,
+    api_client: APIClient,
+    signup_anonymous_id: str,
+) -> None:
+    # Given
+    data = {
+        "first_name": "new",
+        "last_name": "user",
+        "email": "test@exemple.fr",
+        "password": "password123456!=&",
+        "signup_anonymous_id": signup_anonymous_id,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "signup_anonymous_id" in response.json()
+    assert not FFAdminUser.objects.filter(email="test@exemple.fr").exists()
