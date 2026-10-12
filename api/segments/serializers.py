@@ -362,8 +362,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     def _validate_project_segment_limit(self, project: Project) -> None:
         if not is_edge_enabled():
             return
-        segment_count = Segment.live_objects.filter(project=project).count()
-        if segment_count >= project.max_segments_allowed:
+        if project.live_segment_count() >= project.max_segments_allowed:
             raise ValidationError(
                 {
                     "project": "The project has reached the maximum allowed segments limit."
