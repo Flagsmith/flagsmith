@@ -13,8 +13,12 @@ const prefersReducedMotion = () =>
 export default function useCollapsibleHeight(open: boolean) {
   const contentRef = useRef<HTMLDivElement>(null)
   const [height, setHeight] = useState<number | undefined>(open ? undefined : 0)
+  const lastOpen = useRef(open)
 
   useEffect(() => {
+    // Only animate a change; measuring on mount would flash a closed body open.
+    if (lastOpen.current === open) return
+    lastOpen.current = open
     if (!contentRef.current) return
     if (open) {
       setHeight(contentRef.current.scrollHeight)

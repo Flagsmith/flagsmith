@@ -1,2 +1,2 @@
 export { default } from './Accordion'
-export type { AccordionProps } from './Accordion'
+export type { AccordionHeadingLevel, AccordionProps } from './Accordion'
