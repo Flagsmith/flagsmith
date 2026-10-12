@@ -700,6 +700,8 @@ const Constants = {
       'Environments are versions of your projects, environments within a project all share the same features but can be individually turned on/off or have different values.',
     ENVIRONMENT_OVERRIDE_DESCRIPTION: (name: string) =>
       `Features are created once per project<br/>but their <strong>value</strong> and <strong>enabled state</strong> are set per environment.<br/>Saving this feature will override the <strong>${name}</strong> environment.`,
+    FEATURE_DEPENDENCIES_DESCRIPTION:
+      'Gate this feature behind other features. A dependency applies to this environment only. It beats segment overrides, and an identity override beats it.',
     FEATURE_FLAG_DESCRIPTION:
       'A feature that you can turn on or off per environment or user, e.g. instant messaging for a mobile app or an endpoint for an API.',
     HIDE_FROM_SDKS_DESCRIPTION:

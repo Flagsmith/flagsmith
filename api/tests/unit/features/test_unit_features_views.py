@@ -4001,7 +4001,7 @@ def test_list_features__without_rbac__no_n_plus_1(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=17,
+        num_queries=16,
     )
 
 
@@ -4026,7 +4026,7 @@ def test_list_features__with_rbac__no_n_plus_1(
         with_project_permissions,
         django_assert_num_queries,
         environment,
-        num_queries=18,
+        num_queries=17,
     )
 
 
@@ -4660,7 +4660,7 @@ def test_list_features__last_modified_without_rbac__returns_expected(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=19,
+        num_queries=18,
     )
 
 
@@ -4688,7 +4688,7 @@ def test_list_features__last_modified_with_rbac__returns_expected(
         feature,
         with_project_permissions,
         django_assert_num_queries,
-        num_queries=20,
+        num_queries=19,
     )
 
 

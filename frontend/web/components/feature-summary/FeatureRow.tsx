@@ -1,7 +1,8 @@
-import React, { FC, useCallback, useEffect, useMemo } from 'react'
+import React, { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateFlagModal from 'components/modals/create-feature'
+import IconButton from 'components/base/IconButton'
 import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
@@ -32,6 +33,9 @@ import FeatureTags from './FeatureTags'
 import { useFeatureRowState } from 'components/pages/features/hooks/useFeatureRowState'
 
 interface FeatureRowProps {
+  // Only the page that owns `?feature=` sets this: Compare renders one row per
+  // environment for the same flag, so every row would match.
+  openFromUrl?: boolean
   disableControls?: boolean
   environmentFlags: FeatureListProviderData['environmentFlags']
   environmentId: string
@@ -74,6 +78,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     index,
     isCompact = false,
     onCloseEditModal,
+    openFromUrl = false,
     permission,
     projectFlag,
     projectId,
@@ -107,18 +112,26 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   )
   const enforceFeatureOwners = !!projectData?.enforce_feature_owners
 
-  useEffect(() => {
-    const { feature } = Utils.fromParam()
-    const { id } = projectFlag
+  // Read during render, so a push to ?feature=<id> from elsewhere in the app
+  // opens the modal on the feature it names. Without it the effect only ran
+  // when the flag data changed, so following a dependency link did nothing.
+  const { feature: featureParam } = Utils.fromParam()
 
-    const isModalOpen = !!document?.getElementsByClassName(
-      'create-feature-modal',
-    )?.length
-    if (`${id}` === feature && !isModalOpen) {
+  // Which feature this row last opened the modal for. The modal lives in its
+  // own React root behind a fade, so checking whether one is in the DOM says
+  // nothing about which feature it is showing.
+  const openedFor = useRef<string | undefined>(undefined)
+
+  useEffect(() => {
+    if (
+      openFromUrl &&
+      `${projectFlag.id}` === featureParam &&
+      openedFor.current !== featureParam
+    ) {
       editFeature()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [environmentFlags, projectFlag])
+  }, [openFromUrl, environmentFlags, projectFlag, featureParam])
 
   const featureUnhealthyEvents = useMemo(
     () =>
@@ -192,12 +205,9 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
     }
 
     API.trackEvent(Constants.events.VIEW_FEATURE)
+    openedFor.current = `${projectFlag.id}`
     const tabValue = tab || Utils.fromParam().tab || 'value'
-
-    history.replace({
-      pathname: document.location.pathname,
-      search: `?feature=${projectFlag.id}&tab=${tabValue}`,
-    })
+    const cameFrom = Utils.fromParam().from
 
     const modalProps = {
       environmentFlag,
@@ -227,6 +237,17 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
 
     openModal(
       <Row className='align-items-center'>
+        {!!cameFrom && (
+          <IconButton
+            size='medium'
+            variant='ghost'
+            className='me-2'
+            onClick={() => history.goBack()}
+            aria-label='Back to the previous flag'
+          >
+            <Icon name='arrow-left' width={20} />
+          </IconButton>
+        )}
         <span>
           {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
         </span>
@@ -256,6 +277,8 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       <CreateFlagModal {...modalProps} />,
       'side-modal create-feature-modal',
       () => {
+        openedFor.current = undefined
+
         if (onCloseEditModal) {
           return onCloseEditModal()
         }
@@ -266,6 +289,17 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         })
       },
     )
+
+    // After openModal, not before: replacing a modal fires the outgoing one's
+    // close callback, and that clears the query string. Written first, the tab
+    // would be gone before the new modal's Tabs reads it.
+    history.replace({
+      pathname: document.location.pathname,
+      // `from` is kept, or the arrow goes as soon as it arrives.
+      search: `?feature=${projectFlag.id}&tab=${tabValue}${
+        cameFrom ? `&from=${cameFrom}` : ''
+      }`,
+    })
   }
 
   const isReadOnly = readOnly || Utils.getFlagsmithHasFeature('read_only_mode')

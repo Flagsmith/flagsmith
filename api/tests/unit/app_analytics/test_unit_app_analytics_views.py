@@ -162,6 +162,8 @@ def test_get_usage_data__no_period__returns_usage_data(  # type: ignore[no-untyp
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "project_id": None,
+            "environment_id": None,
             "labels": None,
         },
         {
@@ -170,10 +172,14 @@ def test_get_usage_data__no_period__returns_usage_data(  # type: ignore[no-untyp
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "project_id": None,
+            "environment_id": None,
             "labels": None,
         },
     ]
-    mocked_get_usage_data.assert_called_once_with(organisation, period=None)
+    mocked_get_usage_data.assert_called_once_with(
+        organisation, period=None, group_by=None
+    )
 
 
 @pytest.mark.freeze_time("2024-04-30T09:09:47.325132+00:00")
@@ -225,6 +231,8 @@ def test_get_usage_data__current_billing_period__returns_expected(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "project_id": None,
+            "environment_id": None,
             "labels": None,
         },
         {
@@ -233,6 +241,8 @@ def test_get_usage_data__current_billing_period__returns_expected(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "project_id": None,
+            "environment_id": None,
             "labels": {
                 "client_application_name": "test-app",
                 "client_application_version": None,
@@ -248,6 +258,7 @@ def test_get_usage_data__current_billing_period__returns_expected(
         date_start=four_weeks_ago,
         date_stop=now,
         labels_filter=None,
+        group_by=None,
     )
 
 
@@ -297,6 +308,8 @@ def test_get_usage_data__previous_billing_period__returns_expected(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "project_id": None,
+            "environment_id": None,
             "labels": None,
         },
         {
@@ -305,6 +318,8 @@ def test_get_usage_data__previous_billing_period__returns_expected(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "project_id": None,
+            "environment_id": None,
             "labels": None,
         },
     ]
@@ -316,6 +331,7 @@ def test_get_usage_data__previous_billing_period__returns_expected(
         date_start=target_start_at,
         date_stop=four_weeks_ago,
         labels_filter=None,
+        group_by=None,
     )
 
 
@@ -365,6 +381,8 @@ def test_get_usage_data__90_day_period__returns_expected(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "project_id": None,
+            "environment_id": None,
             "labels": None,
         },
         {
@@ -373,6 +391,8 @@ def test_get_usage_data__90_day_period__returns_expected(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "project_id": None,
+            "environment_id": None,
             "labels": None,
         },
     ]
@@ -384,6 +404,7 @@ def test_get_usage_data__90_day_period__returns_expected(
         date_start=ninety_days_ago,
         date_stop=now,
         labels_filter=None,
+        group_by=None,
     )
 
 
@@ -422,6 +443,8 @@ def test_get_usage_data__labels_filter__returns_expected(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "project_id": None,
+            "environment_id": None,
             "labels": {
                 "client_application_name": "test-app",
                 "client_application_version": None,
@@ -434,7 +457,52 @@ def test_get_usage_data__labels_filter__returns_expected(
         organisation=organisation,
         period=None,
         labels_filter={"client_application_name": "test-app"},
+        group_by=None,
     )
+
+
+def test_get_usage_data__group_by__returns_ids_per_row(
+    mocker: MockerFixture,
+    admin_client_new: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    today = date.today()
+    url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
+    mocked_get_usage_data = mocker.patch(
+        "app_analytics.views.get_usage_data",
+        autospec=True,
+        return_value=[
+            UsageData(flags=10, day=today, project_id=1, environment_id=2),
+        ],
+    )
+
+    # When
+    response = admin_client_new.get(url, {"group_by": "environment"})
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    row = response.json()[0]
+    assert row["project_id"] == 1
+    assert row["environment_id"] == 2
+    mocked_get_usage_data.assert_called_once_with(
+        organisation, period=None, group_by="environment"
+    )
+
+
+def test_get_usage_data__invalid_group_by__returns_400(
+    admin_client_new: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
+
+    # When
+    response = admin_client_new.get(url, {"group_by": "feature"})
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "group_by" in response.json()
 
 
 def test_get_usage_data__non_admin_user__returns_403(

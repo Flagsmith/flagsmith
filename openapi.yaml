@@ -13662,6 +13662,19 @@ paths:
           in: query
           schema:
             type: integer
+        - name: group_by
+          in: query
+          description: |-
+            * `project` - project
+            * `environment` - environment
+          schema:
+            type:
+              - string
+              - 'null'
+            enum:
+              - project
+              - environment
+              - null
         - name: organisation_pk
           in: path
           required: true
@@ -19823,7 +19836,7 @@ components:
           readOnly: true
         managed_by:
           oneOf:
-            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/SegmentManagedByEnum'
             - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
         cohort:
@@ -22742,6 +22755,23 @@ components:
         is_feature_specific:
           type: boolean
           readOnly: true
+        is_system_segment:
+          description: System segment overrides can't be changed directly.
+          type: boolean
+          readOnly: true
+        segment_managed_by:
+          description: |-
+            The feature managing the segment, if any.
+
+            * `` - Unmanaged
+            * `cohort` - Cohort
+            * `dependency` - Flag dependency
+            * `experiment` - Experiment
+            * `release_pipeline` - Gradual rollout
+          oneOf:
+            - $ref: '#/components/schemas/SegmentManagedByEnum'
+            - $ref: '#/components/schemas/BlankEnum'
+          readOnly: true
     FeatureStateSerializerBasic:
       description: Adds nested create feature
       type: object
@@ -23729,13 +23759,6 @@ components:
           $ref: '#/components/schemas/UserList'
       required:
         - user
-    ManagedByEnum:
-      description: |-
-        * `` - Unmanaged
-        * `cohort` - Cohort
-      type: string
-      enum:
-        - cohort
     MasterAPIKey:
       type: object
       properties:
@@ -24323,6 +24346,19 @@ components:
           readOnly: true
         block_access_to_admin:
           description: Enable this to block all the access to admin interface for the organisation
+          type: boolean
+          readOnly: true
+        stop_serving_flags:
+          description: Enable this to cease serving flags for this organisation.
+          type: boolean
+          readOnly: true
+        api_limit_restriction_enabled:
+          type: boolean
+          readOnly: true
+        api_limit_grace_period_used:
+          type: boolean
+          readOnly: true
+        overage_billing_eligible:
           type: boolean
           readOnly: true
         restrict_project_create_to_admin:
@@ -26324,6 +26360,19 @@ components:
           description: Enable this to block all the access to admin interface for the organisation
           type: boolean
           readOnly: true
+        stop_serving_flags:
+          description: Enable this to cease serving flags for this organisation.
+          type: boolean
+          readOnly: true
+        api_limit_restriction_enabled:
+          type: boolean
+          readOnly: true
+        api_limit_grace_period_used:
+          type: boolean
+          readOnly: true
+        overage_billing_eligible:
+          type: boolean
+          readOnly: true
         restrict_project_create_to_admin:
           type: boolean
         force_2fa:
@@ -26798,7 +26847,7 @@ components:
           readOnly: true
         managed_by:
           oneOf:
-            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/SegmentManagedByEnum'
             - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
         cohort:
@@ -28581,7 +28630,7 @@ components:
           readOnly: true
         managed_by:
           oneOf:
-            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/SegmentManagedByEnum'
             - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
         cohort:
@@ -28632,6 +28681,19 @@ components:
           type: integer
       required:
         - id
+    SegmentManagedByEnum:
+      description: |-
+        * `` - Unmanaged
+        * `cohort` - Cohort
+        * `dependency` - Flag dependency
+        * `experiment` - Experiment
+        * `release_pipeline` - Gradual rollout
+      type: string
+      enum:
+        - cohort
+        - dependency
+        - experiment
+        - release_pipeline
     SegmentMember:
       type: object
       properties:
@@ -29776,11 +29838,21 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Labels'
             - type: 'null'
+        project_id:
+          type:
+            - integer
+            - 'null'
+        environment_id:
+          type:
+            - integer
+            - 'null'
       required:
         - day
         - environment_document
+        - environment_id
         - flags
         - identities
+        - project_id
         - traits
     UsageTotalCount:
       type: object

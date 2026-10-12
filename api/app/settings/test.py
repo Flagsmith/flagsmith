@@ -47,6 +47,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "user": "100000/day",
     "master_api_key": "100000/day",
     "influx_query": "50/min",
+    "usage_data": "50/min",
     "warehouse_connection_write": "1000/min",
     "warehouse_connection_read": "1000/min",
 }
