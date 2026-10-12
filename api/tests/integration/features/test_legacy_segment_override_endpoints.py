@@ -436,7 +436,13 @@ def test_create_feature_segment__system_segment__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
     assert (
         _get_segment_overrides(admin_client, other_environment["api_key"], feature)
         == []
@@ -505,7 +511,13 @@ def test_update_feature_segment__system_segment__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
 
 
 @pytest.mark.parametrize("v2_versioning", [False, True])
@@ -560,7 +572,13 @@ def test_delete_feature_segment__system_segment__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
     assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
         overrides
     )
@@ -959,7 +977,13 @@ def test_update_feature_segment__to_system_segment__responds_409(
 
     # Then
     assert response.status_code == 409
-    assert response.json() == SYSTEM_SEGMENT_MODIFICATION_ERROR
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
 
 
 def test_update_feature_state__value_cleared__clears_override_value(
