@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, ReactNode, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import { WarehouseType } from 'common/types/responses'
@@ -27,6 +27,53 @@ type WarehouseSetupProps = {
 
 type WarehouseTypeOption = WarehouseType | 'bigquery'
 
+type WarehouseTypeCard = {
+  description: string
+  icon: ReactNode
+  title: string
+  type: WarehouseTypeOption
+}
+
+const WAREHOUSE_TYPE_CARDS: WarehouseTypeCard[] = [
+  {
+    description: 'Managed warehouse',
+    icon: (
+      <img
+        src='/static/images/nav-logo.png'
+        alt='Flagsmith'
+        width={20}
+        height={20}
+      />
+    ),
+    title: 'Flagsmith',
+    type: 'flagsmith',
+  },
+  {
+    description: 'Open-source OLAP database',
+    icon: <Icon name='layers' width={20} />,
+    title: 'ClickHouse',
+    type: 'clickhouse',
+  },
+  {
+    description: 'Cloud data warehouse',
+    icon: <Icon name='flash' width={20} />,
+    title: 'Snowflake',
+    type: 'snowflake',
+  },
+  {
+    description: 'Google Cloud data warehouse',
+    icon: <Icon name='layers' width={20} />,
+    title: 'BigQuery',
+    type: 'bigquery',
+  },
+  {
+    description: 'Unified analytics platform',
+    icon: <Icon name='layers' width={20} />,
+    title: 'Databricks',
+    type: 'databricks',
+  },
+]
+
 const WarehouseSetup: FC<WarehouseSetupProps> = ({
   environmentId,
   isCreating,
@@ -44,84 +91,37 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
     ...(clickhouseEnabled ? (['clickhouse'] as const) : []),
     ...(databricksEnabled ? (['databricks'] as const) : []),
   ]
+  const isEnabled = (type: WarehouseTypeOption) =>
+    configurableTypes.includes(type)
+  const typeCards = [...WAREHOUSE_TYPE_CARDS].sort(
+    (a, b) => Number(isEnabled(b.type)) - Number(isEnabled(a.type)),
+  )
 
   return (
     <div className='warehouse-setup'>
       <div>
         <h5 className='mb-2'>Warehouse Type</h5>
         <div className='warehouse-setup__type-row'>
-          <div className='warehouse-setup__type-card'>
-            <SelectableCard
-              icon={
-                <img
-                  src='/static/images/nav-logo.png'
-                  alt='Flagsmith'
-                  width={20}
-                  height={20}
+          {typeCards.map(({ description, icon, title, type }) => {
+            const enabled = isEnabled(type)
+            return (
+              <div key={type} className='warehouse-setup__type-card'>
+                <SelectableCard
+                  icon={icon}
+                  title={title}
+                  description={description}
+                  selected={selectedType === type}
+                  onClick={() => enabled && setSelectedType(type)}
+                  disabled={!enabled}
                 />
-              }
-              title='Flagsmith'
-              description='Managed warehouse'
-              selected={selectedType === 'flagsmith'}
-              onClick={() => setSelectedType('flagsmith')}
-            />
-          </div>
-          <div className='warehouse-setup__type-card'>
-            <SelectableCard
-              icon={<Icon name='layers' width={20} />}
-              title='ClickHouse'
-              description='Open-source OLAP database'
-              selected={selectedType === 'clickhouse'}
-              onClick={() => clickhouseEnabled && setSelectedType('clickhouse')}
-              disabled={!clickhouseEnabled}
-            />
-            {!clickhouseEnabled && (
-              <span className='warehouse-setup__coming-soon fs-captionXSmall'>
-                Coming Soon
-              </span>
-            )}
-          </div>
-          <div className='warehouse-setup__type-card'>
-            <SelectableCard
-              icon={<Icon name='flash' width={20} />}
-              title='Snowflake'
-              description='Cloud data warehouse'
-              selected={false}
-              onClick={() => {}}
-              disabled
-            />
-            <span className='warehouse-setup__coming-soon fs-captionXSmall'>
-              Coming Soon
-            </span>
-          </div>
-          <div className='warehouse-setup__type-card'>
-            <SelectableCard
-              icon={<Icon name='layers' width={20} />}
-              title='BigQuery'
-              description='Google Cloud data warehouse'
-              selected={false}
-              onClick={() => {}}
-              disabled
-            />
-            <span className='warehouse-setup__coming-soon fs-captionXSmall'>
-              Coming Soon
-            </span>
-          </div>
-          <div className='warehouse-setup__type-card'>
-            <SelectableCard
-              icon={<Icon name='layers' width={20} />}
-              title='Databricks'
-              description='Unified analytics platform'
-              selected={selectedType === 'databricks'}
-              onClick={() => databricksEnabled && setSelectedType('databricks')}
-              disabled={!databricksEnabled}
-            />
-            {!databricksEnabled && (
-              <span className='warehouse-setup__coming-soon fs-captionXSmall'>
-                Coming Soon
-              </span>
-            )}
-          </div>
+                {!enabled && (
+                  <span className='warehouse-setup__coming-soon fs-captionXSmall'>
+                    Coming Soon
+                  </span>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
 
