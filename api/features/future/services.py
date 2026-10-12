@@ -85,10 +85,6 @@ def _get_feature_states_to_write(
     )
 
 
-def _publish_version(version: EnvironmentFeatureVersion, author: AuthorData) -> None:
-    version.publish(published_by=author.user, published_by_api_key=author.api_key)
-
-
 def _get_overrides_by_segment_id(
     feature_states: Sequence[FeatureState],
 ) -> dict[int, FeatureState]:
@@ -342,7 +338,9 @@ def update_flag(
             )
 
         if version is not None:
-            _publish_version(version, author)
+            version.publish(
+                published_by=author.user, published_by_api_key=author.api_key
+            )
 
         for segment in Segment.objects.filter(id__in=segments.created):
             validate_segment_flag_dependencies(segment)
@@ -391,7 +389,9 @@ def delete_segment_override(
         )
 
         if version is not None:
-            _publish_version(version, author)
+            version.publish(
+                published_by=author.user, published_by_api_key=author.api_key
+            )
 
         _, deleted = _get_prerequisite_feature_names(
             _OverriddenSegments([], [], [segment_id])
