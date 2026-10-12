@@ -70,8 +70,6 @@ class FlagStateSerializer(serializers.Serializer[dict[str, object]]):
             raise serializers.ValidationError("Variant not found.")
         if known_ids - given_ids:
             raise serializers.ValidationError("Must include all feature's variants.")
-        if sum(variant["weight"] for variant in variants) > 100:
-            raise serializers.ValidationError("Total weight must not exceed 100.")
         return variants
 
 
