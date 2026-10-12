@@ -16,10 +16,7 @@ export default meta
 export const AllTokens: StoryObj = {
   name: 'All tokens (MCP reference)',
   render: () => (
-    <DocPage
-      title='Token Reference'
-      description='Complete token catalogue generated from common/theme/tokens.json. All data is inlined for Storybook MCP.'
-    >
+    <DocPage title='Token Reference'>
       <h3>Colour: surface</h3>
       <table className='docs-table'>
         <thead>
@@ -1066,7 +1063,8 @@ export const AllTokens: StoryObj = {
             </td>
             <td>
               Default for most transitions. Smooth deceleration. Use for
-              elements moving within the page.
+              elements moving within the page. Pair with a duration: transition:
+              all var(--duration-normal) var(--easing-standard).
             </td>
           </tr>
           <tr>
@@ -1145,20 +1143,6 @@ export const AllTokens: StoryObj = {
           </tr>
         </tbody>
       </table>
-
-      <h3>Dark mode shadows</h3>
-      <p>
-        Dark mode overrides use stronger opacity (0.20-0.40 vs 0.05-0.20).
-        Higher elevation surfaces should use lighter backgrounds
-        (--color-surface-emphasis) rather than relying solely on shadows.
-      </p>
-
-      <h3>Motion pairing</h3>
-      <p>
-        Combine a duration with an easing: transition: all
-        var(--duration-normal) var(--easing-standard). Use --easing-entrance for
-        elements appearing, --easing-exit for elements leaving.
-      </p>
     </DocPage>
   ),
 }

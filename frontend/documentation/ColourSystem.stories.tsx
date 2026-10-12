@@ -29,8 +29,7 @@ const toSwatch = ([step, entry]: [string, Entry]): Swatch => ({
 
 const byStep = (a: Swatch, b: Swatch) => Number(a.step) - Number(b.step)
 
-const ramp = (name: string, description: string): Scale => ({
-  description,
+const ramp = (name: string): Scale => ({
   name: name[0].toUpperCase() + name.slice(1),
   swatches: Object.entries(group(name)).map(toSwatch).sort(byStep),
 })
@@ -50,8 +49,6 @@ const surfaces = tokens.color.surface as Record<string, Entry>
 
 const surface: Scale = {
   compact: true,
-  description:
-    'The grounds a page is built on, plus the two colours that stay put whatever the theme.',
   name: 'Surface',
   swatches: [
     ...['default', 'subtle', 'muted', 'emphasis']
@@ -64,14 +61,8 @@ const surface: Scale = {
 }
 
 const scales: Scale[] = [
-  ramp(
-    'primary',
-    'Purple is the primary colour: primary actions, buttons, text links.',
-  ),
-  ramp(
-    'neutral',
-    'Structure and clarity. Layout, text and UI elements that support the content rather than compete with it.',
-  ),
+  ramp('primary'),
+  ramp('neutral'),
   surface,
   stateHue('info', 'Informational'),
   stateHue('success', 'Success'),
@@ -80,17 +71,7 @@ const scales: Scale[] = [
 ]
 
 const ColourSystemPage: React.FC = () => (
-  <DocPage
-    title='Colour System'
-    description={
-      <>
-        The design system&rsquo;s own ramps, read from{' '}
-        <code>common/theme/tokens.json</code>, so this page cannot drift from
-        what ships. Swatches show the light value; where a token differs between
-        themes the dark value follows it, and several of these ramps invert.
-      </>
-    }
-  >
+  <DocPage title='Colour System'>
     {scales.map((scale) => (
       <ScaleRow key={scale.name} scale={scale} />
     ))}

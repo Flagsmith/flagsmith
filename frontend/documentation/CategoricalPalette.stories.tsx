@@ -63,18 +63,7 @@ export default meta
 export const TagColours: StoryObj = {
   name: 'Tag colours',
   render: () => (
-    <DocPage
-      title='Tag colours'
-      description={
-        <>
-          20 decorative colours users pick from when creating tags, in{' '}
-          <code>constants.ts</code> today and moving into{' '}
-          <code>tokens.json</code> beside the chart palette. These are NOT
-          semantic tokens &mdash; they are categorical identifiers that need to
-          be visually distinct from each other.
-        </>
-      }
-    >
+    <DocPage title='Tag colours'>
       <div className='cat-grid'>
         {TAG_COLOURS.map(({ hex, name }) => (
           <Swatch key={hex} colour={hex} label={`${name}\n${hex}`} />
@@ -90,17 +79,7 @@ export const TagColours: StoryObj = {
 export const ProjectColours: StoryObj = {
   name: 'Project colours',
   render: () => (
-    <DocPage
-      title='Project colours'
-      description={
-        <>
-          6 colours assigned by index for project avatar badges, in{' '}
-          <code>constants.ts</code> today and moving into{' '}
-          <code>tokens.json</code>. Decorative &mdash; not tied to any UI role
-          or theme.
-        </>
-      }
-    >
+    <DocPage title='Project colours'>
       <div className='cat-grid'>
         {PROJECT_COLOURS.map((colour: string, i: number) => (
           <Swatch key={colour} colour={colour} label={`[${i}] ${colour}`} />
@@ -113,35 +92,18 @@ export const ProjectColours: StoryObj = {
 export const FeatureHealthColours: StoryObj = {
   name: 'Feature health colours',
   render: () => (
-    <DocPage
-      title='Feature health colours'
-      description={
-        <>
-          Status colours for feature health indicators. Currently hardcoded in{' '}
-          <code>common/constants.ts</code> as{' '}
-          <code>Constants.featureHealth</code>. These should migrate to semantic
-          feedback tokens: <code>var(--color-success-default)</code> and{' '}
-          <code>var(--color-warning-default)</code>.
-        </>
-      }
-    >
+    <DocPage title='Feature health colours'>
       <div className='cat-health-row'>
         <div className='cat-health-item'>
           <Swatch colour={FEATURE_HEALTH.healthyColor} size={32} />
           <div>
             <strong>Healthy</strong>
-            <div className='cat-health-item__migration'>
-              Should use <code>var(--color-success-default)</code>
-            </div>
           </div>
         </div>
         <div className='cat-health-item'>
           <Swatch colour={FEATURE_HEALTH.unhealthyColor} size={32} />
           <div>
             <strong>Unhealthy</strong>
-            <div className='cat-health-item__migration'>
-              Should use <code>var(--color-warning-default)</code>
-            </div>
           </div>
         </div>
       </div>

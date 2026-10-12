@@ -187,15 +187,6 @@
   gap: 8px;
 }
 
-.cat-health-item__migration {
-  color: var(--color-text-secondary, #656d7b);
-  font-size: var(--font-caption-size, 12px);
-
-  code {
-    color: var(--color-text-default, #1a2634);
-  }
-}
-
 .cat-note {
   color: var(--color-text-secondary, #656d7b);
   margin-top: 16px;
@@ -278,7 +269,7 @@
 }
 
 // ---------------------------------------------------------------------------
-// Documentation table (Decision Framework, etc.)
+// Documentation table
 // ---------------------------------------------------------------------------
 
 .docs-table {
@@ -306,10 +297,3 @@
   }
 }
 
-
-.scale-row__description {
-  color: var(--color-text-secondary, #656d7b);
-  font-size: 13px;
-  margin-bottom: 12px;
-  max-width: 70ch;
-}

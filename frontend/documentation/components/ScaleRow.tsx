@@ -7,7 +7,6 @@ type Swatch = { step: string; hex: string; variable: string; dark?: string }
 // three would otherwise take the same room as one of fourteen.
 type Scale = {
   name: string
-  description?: string
   compact?: boolean
   swatches: Swatch[]
 }
@@ -38,9 +37,6 @@ const SwatchCard: React.FC<{ swatch: Swatch }> = ({ swatch }) => {
 const ScaleRow: React.FC<{ scale: Scale }> = ({ scale }) => (
   <div className='scale-row'>
     <h3 className='scale-row__title'>{scale.name}</h3>
-    {scale.description && (
-      <p className='scale-row__description'>{scale.description}</p>
-    )}
     <div
       className={`scale-row__swatches${
         scale.compact ? ' scale-row__swatches--compact' : ''

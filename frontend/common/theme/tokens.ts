@@ -101,7 +101,7 @@ export const easing: Record<string, TokenEntry> = {
   },
   'standard': {
     description:
-      'Default for most transitions. Smooth deceleration. Use for elements moving within the page.',
+      'Default for most transitions. Smooth deceleration. Use for elements moving within the page. Pair with a duration: transition: all var(--duration-normal) var(--easing-standard).',
     value: 'var(--easing-standard)',
   },
 }

@@ -45,16 +45,7 @@ function buildScales(): Scale[] {
 }
 
 const PalettePage: React.FC = () => (
-  <DocPage
-    title='Primitive Colour Palette'
-    description={
-      <>
-        Generated from <code>common/theme/tokens.json</code>, the same source
-        the CSS custom properties are built from, so this page cannot drift from
-        what ships.
-      </>
-    }
-  >
+  <DocPage title='Primitive Colour Palette'>
     {buildScales().map((scale) => (
       <ScaleRow key={scale.name} scale={scale} />
     ))}
