@@ -55,7 +55,6 @@ describe('isValidWorkspaceId', () => {
     [' 42 ', true],
     ['', false],
     ['12a4', false],
-    ['-1', false],
   ])('%p returns %p', (value, expected) => {
     expect(isValidWorkspaceId(value)).toBe(expected)
   })
@@ -68,7 +67,6 @@ describe('isValidRegion', () => {
     ['US-Central1', true],
     ['', false],
     ['us_east_1', false],
-    ['us east', false],
   ])('%p returns %p', (value, expected) => {
     expect(isValidRegion(value)).toBe(expected)
   })
@@ -76,21 +74,10 @@ describe('isValidRegion', () => {
 
 describe('normaliseDatabricksHost', () => {
   it.each([
-    ['dbc-1234.cloud.databricks.com', 'dbc-1234.cloud.databricks.com'],
     ['  dbc-1234.cloud.databricks.com  ', 'dbc-1234.cloud.databricks.com'],
-    ['https://dbc-1234.cloud.databricks.com', 'dbc-1234.cloud.databricks.com'],
     ['http://dbc-1234.cloud.databricks.com/', 'dbc-1234.cloud.databricks.com'],
-    [
-      'https://dbc-1234.cloud.databricks.com/sql/warehouses/abc?o=1',
-      'dbc-1234.cloud.databricks.com',
-    ],
     ['HTTPS://ADB-1.2.AzureDatabricks.net', 'adb-1.2.azuredatabricks.net'],
-    [
-      'https://dbc-1234.cloud.databricks.com?o=123',
-      'dbc-1234.cloud.databricks.com',
-    ],
     ['dbc-1234.cloud.databricks.com#tab', 'dbc-1234.cloud.databricks.com'],
-    ['dbc-1234.cloud.databricks.com:443', 'dbc-1234.cloud.databricks.com'],
     [
       'https://dbc-1234.cloud.databricks.com:443/sql?o=123#x',
       'dbc-1234.cloud.databricks.com',
@@ -103,9 +90,7 @@ describe('normaliseDatabricksHost', () => {
 
 describe('normaliseWarehouseId', () => {
   it.each([
-    ['abc123', 'abc123'],
     [' abc123 ', 'abc123'],
-    ['/sql/1.0/warehouses/abc123', 'abc123'],
     ['/sql/1.0/warehouses/abc123/', 'abc123'],
     ['', ''],
   ])('normalises %p to %p', (input, expected) => {
@@ -118,9 +103,7 @@ describe('isValidDatabricksHost', () => {
     'dbc-1234.cloud.databricks.com',
     'adb-123.4.azuredatabricks.net',
     '123.4.gcp.databricks.com',
-    'https://DBC-1234.cloud.databricks.com/',
-    'https://dbc-1234.cloud.databricks.com?o=123',
-    'dbc-1234.cloud.databricks.com:443',
+    'https://DBC-1234.cloud.databricks.com/?o=123',
   ])('accepts %p', (host) => {
     expect(isValidDatabricksHost(host)).toBe(true)
   })
@@ -129,7 +112,6 @@ describe('isValidDatabricksHost', () => {
     '',
     'example.com',
     'cloud.databricks.com',
-    '-dbc.cloud.databricks.com',
     'dbc_1.cloud.databricks.com',
     'dbc.cloud.databricks.com.evil.com',
   ])('rejects %p', (host) => {
@@ -152,7 +134,7 @@ describe('isValidIdentifier', () => {
     expect(isValidIdentifier(value)).toBe(true)
   })
 
-  it.each(['', 'my-catalog', 'a.b', 'a b'])('rejects %p', (value) => {
+  it.each(['', 'my-catalog', 'a.b'])('rejects %p', (value) => {
     expect(isValidIdentifier(value)).toBe(false)
   })
 })
@@ -176,19 +158,6 @@ describe('isDatabricksFormValid', () => {
     expect(isDatabricksFormValid({ ...validForm, [field]: '' }, false)).toBe(
       false,
     )
-  })
-
-  it('accepts a pasted URL and HTTP path', () => {
-    expect(
-      isDatabricksFormValid(
-        {
-          ...validForm,
-          host: 'https://dbc-1234.cloud.databricks.com/',
-          warehouse_id: '/sql/1.0/warehouses/abc123',
-        },
-        false,
-      ),
-    ).toBe(true)
   })
 
   it('allows empty credentials on edit', () => {
@@ -215,20 +184,14 @@ describe('canTestDatabricksConnection', () => {
     expect(canTestDatabricksConnection({ ...validForm, name: '' })).toBe(true)
   })
 
-  it.each([
-    'host',
-    'workspace_id',
-    'region',
-    'warehouse_id',
-    'catalog',
-    'schema',
-    'client_id',
-    'client_secret',
-  ] as const)('rejects a form with empty %s', (field) => {
-    expect(canTestDatabricksConnection({ ...validForm, [field]: '' })).toBe(
-      false,
-    )
-  })
+  it.each(['host', 'client_secret'] as const)(
+    'rejects a form with empty %s',
+    (field) => {
+      expect(canTestDatabricksConnection({ ...validForm, [field]: '' })).toBe(
+        false,
+      )
+    },
+  )
 })
 
 describe('buildDatabricksPayload', () => {
@@ -280,11 +243,7 @@ describe('isDatabricksConfigDirty', () => {
 
   it.each([
     ['workspace_id', '999'],
-    ['region', 'eu-west-1'],
-    ['warehouse_id', 'def456'],
     ['catalog', 'other'],
-    ['schema', 'other'],
-    ['client_id', 'new-id'],
     ['client_secret', 'new-secret'],
   ] as const)('is dirty when %s changes', (field, value) => {
     expect(

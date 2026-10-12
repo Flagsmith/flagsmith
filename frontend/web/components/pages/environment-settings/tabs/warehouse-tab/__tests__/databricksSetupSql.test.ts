@@ -13,6 +13,9 @@ describe('getDatabricksSetupSql', () => {
     expect(sql).toContain(
       'GRANT USE CATALOG ON CATALOG <CATALOG> TO `<CLIENT_ID>`;',
     )
+    expect(sql).toContain(
+      'CLUSTER BY (environment_key, event, feature_name, timestamp);',
+    )
     expect(sql).not.toContain('<SCHEMA>')
   })
 
@@ -42,12 +45,6 @@ describe('getDatabricksSetupSql', () => {
 
     expect(sql).toContain(
       'GRANT SELECT, MODIFY ON TABLE <CATALOG>.flagsmith_exp.events TO `<CLIENT_ID>`;',
-    )
-  })
-
-  it('clusters the events table', () => {
-    expect(getDatabricksSetupSql()).toContain(
-      'CLUSTER BY (environment_key, event, feature_name, timestamp);',
     )
   })
 })
