@@ -1,11 +1,10 @@
 import { Organisation } from 'common/types/responses'
 import { OverLimit } from './overLimit'
 
-/** Where an organisation stands against its plan limit. */
 export type LimitStatus =
   | {
       kind: 'restricted'
-      /** Absent while restricted but back under the limit. */
+      // Undefined once back under the limit.
       over: OverLimit | undefined
       flagsPaused: boolean
     }
@@ -27,7 +26,6 @@ export type LimitOrganisation = Pick<
   | 'stop_serving_flags'
 >
 
-/** An organisation with none of the limit fields set. */
 export const NO_LIMIT_FLAGS: LimitOrganisation = {
   api_limit_grace_period_used: false,
   api_limit_restriction_enabled: false,
@@ -36,8 +34,7 @@ export const NO_LIMIT_FLAGS: LimitOrganisation = {
   stop_serving_flags: false,
 }
 
-// Overage billing is paid only and restriction is free only, so at most one
-// of them applies to an organisation.
+// Overage billing is paid only and restriction free only, so one applies at most.
 export const limitStatusOf = (
   organisation: LimitOrganisation | undefined,
   over: OverLimit | undefined,
@@ -55,8 +52,8 @@ export const limitStatusOf = (
     return undefined
   }
 
-  // Mirrors charge_for_api_call_count_overages: the first overage is forgiven
-  // once, unless usage reaches twice the limit.
+  // Mirrors charge_for_api_call_count_overages: the first overage is free
+  // unless usage reaches twice the limit.
   if (organisation?.overage_billing_eligible) {
     const charged =
       organisation.api_limit_grace_period_used || over.overBy >= over.limit

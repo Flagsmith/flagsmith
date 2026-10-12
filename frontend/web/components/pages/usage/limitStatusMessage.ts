@@ -1,15 +1,12 @@
 import Format from 'common/utils/format'
-import { OverLimit } from './overLimit'
+import { OverLimit, overLimitNote } from './overLimit'
 import { LimitStatusKind, LimitStatus } from './limitStatus'
 import { apiCallsWord, joinSentences } from './usageText'
 import { allowanceWindowLabel, UsageBasis } from './utils'
 
 export type LimitStatusMessage = { title: string; body: string }
 
-// Only the overage is evidence the limit was reached. block_access_to_admin
-// says an organisation is blocked, not why, and support can set it by hand.
-// Names no window: the same sentence serves a limit measured over a billing
-// period and one measured over the last 30 days.
+// Names no window, so it serves a billing period and the last 30 days alike.
 const limitReached = (over: OverLimit): string =>
   `You reached your plan limit of ${Format.shortenNumber(
     over.limit,
@@ -25,22 +22,19 @@ const FLAGS_PAUSED = 'Flags are not being served for your organisation.'
 const RECOVERY =
   'Upgrading restores access straight away. Otherwise access returns once' +
   ' your usage has stayed under the limit for 30 days.'
-// Neither route works for a block support set by hand: the plan-change hook
-// and the unrestricting task both skip organisations with no
-// APILimitAccessBlock, so this is all we can offer without evidence.
+// A block set by hand has no APILimitAccessBlock, so neither upgrading nor
+// waiting lifts it.
 const ASK_SUPPORT = 'Contact support to restore access.'
 
 type OverLimitKind = Exclude<LimitStatusKind, 'restricted'>
 
-/** What each over-limit banner adds between the overage and the footer. */
 const OVER_LIMIT_MESSAGE: Record<
   OverLimitKind,
   (over: OverLimit, window: string) => string | undefined
 > = {
   'over-limit': () => undefined,
   'overage-charged': (_, window) => `Overage charges will apply for ${window}.`,
-  // The charge is settled at the end of the period, so this states what
-  // holds now and what would change it.
+  // Settled at the end of the period, so say what would change it.
   'overage-covered': (over, window) =>
     `Your first overage is covered for ${window}, unless usage reaches ${Format.shortenNumber(
       2 * over.limit,
@@ -78,3 +72,14 @@ export const limitStatusMessage = (
     title: OVER_LIMIT_TITLE,
   }
 }
+
+const OVERAGE_NOTE: Partial<Record<LimitStatusKind, string>> = {
+  'overage-charged': 'Charged at the overage rate.',
+  'overage-covered': 'Covered as your first overage.',
+}
+
+// The line under the meter.
+export const limitStatusNote = (
+  over: OverLimit,
+  kind: LimitStatusKind | undefined,
+): string => joinSentences(overLimitNote(over), kind && OVERAGE_NOTE[kind])

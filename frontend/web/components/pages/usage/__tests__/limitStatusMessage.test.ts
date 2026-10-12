@@ -1,4 +1,7 @@
-import { limitStatusMessage } from 'components/pages/usage/limitStatusMessage'
+import {
+  limitStatusMessage,
+  limitStatusNote,
+} from 'components/pages/usage/limitStatusMessage'
 import { LimitStatus } from 'components/pages/usage/limitStatus'
 import { OverLimit, overLimitOf } from 'components/pages/usage/overLimit'
 import { UsageBasis } from 'components/pages/usage/utils'
@@ -98,9 +101,21 @@ describe('limitStatusMessage', () => {
       billed,
     )
 
-    // block_access_to_admin can be set by hand, and neither recovery route
-    // works for such a block, so with no overage in evidence we promise
-    // nothing.
+    // A block set by hand may have no overage, so promise nothing.
     expect(body).toBe('Contact support to restore access.')
+  })
+
+  describe('limitStatusNote', () => {
+    it.each`
+      kind                         | expected
+      ${'overage-covered'}         | ${'10K calls over your 50K limit. Covered as your first overage.'}
+      ${'overage-charged'}         | ${'10K calls over your 50K limit. Charged at the overage rate.'}
+      ${'restriction-after-grace'} | ${'10K calls over your 50K limit.'}
+      ${undefined}                 | ${'10K calls over your 50K limit.'}
+    `('says whether a $kind overage is charged', ({ expected, kind }) => {
+      const over = overLimitOf(60000, 50000, days([60000])) as OverLimit
+
+      expect(limitStatusNote(over, kind)).toBe(expected)
+    })
   })
 })

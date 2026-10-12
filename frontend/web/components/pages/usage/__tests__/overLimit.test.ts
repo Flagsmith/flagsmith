@@ -72,17 +72,5 @@ describe('overLimit', () => {
       // shortenNumber leaves small counts alone, so one is reachable.
       expect(note(50001, 50000)).toBe('1 call over your 50K limit.')
     })
-
-    it.each`
-      status                       | expected
-      ${'overage-covered'}         | ${'10K calls over your 50K limit. Covered as your first overage.'}
-      ${'overage-charged'}         | ${'10K calls over your 50K limit. Charged at the overage rate.'}
-      ${'restriction-after-grace'} | ${'10K calls over your 50K limit.'}
-      ${undefined}                 | ${'10K calls over your 50K limit.'}
-    `('says whether a $status overage is charged', ({ expected, status }) => {
-      const over = overLimitOf(60000, 50000, days([60000])) as OverLimit
-
-      expect(overLimitNote(over, status)).toBe(expected)
-    })
   })
 })

@@ -19,8 +19,9 @@ import { useUsageData } from './useUsageData'
 import { contributionNote, showsContribution } from './contribution'
 import { planHeading } from './planHeading'
 import { projectionNote, projectUsage } from './projection'
-import { overLimitNote, overLimitOf } from './overLimit'
+import { overLimitOf } from './overLimit'
 import { limitStatusOf } from './limitStatus'
+import { limitStatusNote } from './limitStatusMessage'
 import {
   isBilledOnAPeriod,
   isBillingPeriodSelected,
@@ -126,7 +127,7 @@ const UsageDashboardPage: FC<UsageDashboardPageProps> = ({
   // One line: over the limit outranks the projection, which outranks the share.
   const meterNote =
     [
-      exceeded && overLimitNote(exceeded, limitStatus?.kind),
+      exceeded && limitStatusNote(exceeded, limitStatus?.kind),
       projection && period && projectionNote(projection, period.ends_at),
       contribution,
     ].find(Boolean) || undefined
