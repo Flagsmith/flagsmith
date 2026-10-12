@@ -13,15 +13,12 @@ import {
   useCreateFeatureDependencyMutation,
   useDeleteFeatureDependencyMutation,
 } from 'common/services/useFeatureDependency'
-import { useLazyGetFeatureStatesQuery } from 'common/services/useFeatureState'
-import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import ChangeRequestModal from 'components/modals/ChangeRequestModal'
 import {
   StagingError,
   describeApiError,
   toStagingError,
 } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/stagingError'
-import { unchangedChangeSet } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/unchangedChangeSet'
 
 export type StagedChange = {
   action: 'add' | 'remove'
@@ -56,8 +53,6 @@ export const useStagedPrerequisites = ({
   const [deleteChangeRequest] = useDeleteChangeRequestMutation()
   const [createDependency] = useCreateFeatureDependencyMutation()
   const [deleteDependency] = useDeleteFeatureDependencyMutation()
-  const [getFeatureStates] = useLazyGetFeatureStatesQuery()
-  const { getEnvironmentIdFromKey } = useProjectEnvironments(projectId)
 
   const drop = (prerequisiteId: number) =>
     setStaged((prev) =>
@@ -115,21 +110,8 @@ export const useStagedPrerequisites = ({
     setError(null)
     let changeRequestId: number | undefined
     try {
-      const featureStates = await getFeatureStates({
-        environment: getEnvironmentIdFromKey(environmentId),
-        feature: projectFlag.id,
-      }).unwrap()
-      const changeSet = unchangedChangeSet(
-        projectFlag.id,
-        featureStates.results,
-        fields.live_from,
-      )
       changeRequestId = (
-        await createChangeRequest({
-          environmentId,
-          ...fields,
-          change_sets: changeSet ? [changeSet] : undefined,
-        }).unwrap()
+        await createChangeRequest({ environmentId, ...fields }).unwrap()
       ).id
       await stage(changeRequestId)
       setStaged([])
