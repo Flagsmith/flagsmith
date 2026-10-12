@@ -32,11 +32,6 @@ from evaluation.types import EvaluatedFeatureState
 from experimentation.feature_state_metadata import (
     get_feature_state_metadata_builder,
 )
-from integrations.github.constants import GitHubEventType
-from integrations.github.github import call_github_task
-from integrations.gitlab.services import (
-    post_gitlab_state_change_comment_for_feature_state,
-)
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.code_references.serializers import (
     FeatureFlagCodeReferencesRepositoryCountSerializer,
@@ -64,6 +59,7 @@ from .feature_segments.serializers import (
 from .feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE
 from .models import Feature, FeatureState
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
+from .services import notify_code_references_of_feature_state
 
 
 class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -707,26 +703,8 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
     def save(self, **kwargs):  # type: ignore[no-untyped-def]
         try:
             response = super().save(**kwargs)  # type: ignore[no-untyped-call]
-
-            feature_state = self.instance
-            if (
-                not feature_state.identity_id  # type: ignore[union-attr]
-                and feature_state.feature.external_resources.exists()  # type: ignore[union-attr]
-                and feature_state.environment.project.github_project.exists()  # type: ignore[union-attr]
-                and feature_state.environment.project.organisation.github_config.exists()  # type: ignore[union-attr]
-            ):
-                call_github_task(
-                    organisation_id=feature_state.feature.project.organisation_id,  # type: ignore[union-attr]
-                    type=GitHubEventType.FLAG_UPDATED.value,
-                    feature=feature_state.feature,  # type: ignore[union-attr]
-                    segment_name=None,
-                    url=None,
-                    feature_states=[feature_state],
-                )
-
-            if isinstance(feature_state, FeatureState):
-                post_gitlab_state_change_comment_for_feature_state(feature_state)
-
+            if isinstance(feature_state := self.instance, FeatureState):
+                notify_code_references_of_feature_state(feature_state)
             return response
 
         except django.core.exceptions.ValidationError as e:

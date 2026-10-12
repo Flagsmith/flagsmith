@@ -172,7 +172,7 @@ def test_feature_state_serializer_basic__save__dispatches_gitlab_state_change(
 ) -> None:
     # Given
     mock_dispatch = mocker.patch(
-        "features.serializers.post_gitlab_state_change_comment_for_feature_state",
+        "features.services.post_gitlab_state_change_comment_for_feature_state",
     )
     feature_state = FeatureState.objects.get(
         feature=feature,
