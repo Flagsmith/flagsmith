@@ -3,12 +3,10 @@
 // so the border keeps the container visible.
 .ds-accordion {
   border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-lg);
 }
 
 // A heading for structure only: it takes the accordion's type, not the h3's.
 .ds-accordion__heading {
-  margin: 0;
   font: inherit;
 }
 

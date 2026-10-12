@@ -9,6 +9,7 @@ import './Accordion.scss'
 export type AccordionHeadingLevel = 2 | 3 | 4 | 5 | 6
 
 export type AccordionProps = {
+  // Text, a chip or a spinner. It sits inside the toggle, so no links or buttons.
   title: ReactNode
   // Shown under the title once open, as in the spec.
   description?: ReactNode
@@ -43,7 +44,7 @@ const Accordion: FC<AccordionProps> = ({
   const wrapInHeading = (header: ReactNode) => {
     if (!headingLevel) return header
     const Heading = `h${headingLevel}` as const
-    return <Heading className='ds-accordion__heading'>{header}</Heading>
+    return <Heading className='ds-accordion__heading m-0'>{header}</Heading>
   }
 
   const toggle = () => {
@@ -54,7 +55,7 @@ const Accordion: FC<AccordionProps> = ({
   return (
     <div
       className={cn(
-        'ds-accordion bg-surface-default overflow-hidden',
+        'ds-accordion bg-surface-default rounded-lg overflow-hidden',
         { 'ds-accordion--open': open },
         className,
       )}
