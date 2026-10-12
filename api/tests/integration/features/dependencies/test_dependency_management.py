@@ -13,6 +13,7 @@ from features.dependencies.models import SegmentFlagReference
 from features.dependencies.services import index_segment_flag_references
 from features.dependencies.types import DependencyEdge
 from features.models import Feature
+from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation
 from segments.models import Segment
 from segments.types import SegmentCondition, SegmentRule
@@ -1830,3 +1831,32 @@ def test_list_feature_segments__dependency_override__responds_with_system_segmen
             },
         ],
     }
+
+
+def test_add_feature_dependency__master_api_key__responds_201_publishing_as_key(
+    admin_master_api_key_client: APIClient,
+    admin_master_api_key: dict[str, str],
+    environment_api_key: str,
+    project: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+
+    # When
+    response = admin_master_api_key_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 201
+    assert list(
+        EnvironmentFeatureVersion.objects.filter(
+            feature=feature, published_by_api_key__isnull=False
+        ).values_list("published_by_api_key__name", flat=True)
+    ) == (
+        [admin_master_api_key["name"]]
+        if versioned_environment.use_v2_feature_versioning
+        else []
+    )
