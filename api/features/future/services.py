@@ -109,11 +109,15 @@ class _VariantWeights(NamedTuple):
     variants: Sequence[Variant] | None
 
 
-def _validate_variant_weights(
-    feature_states: Sequence[FeatureState], changes: UpdateFlagRequest
+def _validate_variants(
+    feature: Feature,
+    feature_states: Sequence[FeatureState],
+    changes: UpdateFlagRequest,
 ) -> None:
-    """Refuse weighting variants past 100%, counting the weights of those not
-    given, which writing them keeps."""
+    """Refuse duplicate variants, variants of other features, and weighting
+    variants past 100%, counting the weights of those not given, which writing
+    them keeps."""
+    feature_variant_ids: set[int] | None = None
     environment_default = next(
         feature_state
         for feature_state in feature_states
@@ -134,6 +138,17 @@ def _validate_variant_weights(
     ]:
         if variants is None:
             continue
+        given_ids = [variant["id"] for variant in variants]
+        if duplicate_ids := sorted(
+            {id_ for id_ in given_ids if given_ids.count(id_) > 1}
+        ):
+            raise ValidationError(f"Duplicate variant: {duplicate_ids[0]}.")
+        if feature_variant_ids is None:
+            feature_variant_ids = set(
+                feature.multivariate_options.values_list("id", flat=True)
+            )
+        if unknown_ids := sorted(set(given_ids) - feature_variant_ids):
+            raise ValidationError(f"Variant not found: {unknown_ids[0]}.")
         weights = {
             multivariate_value.multivariate_feature_option_id: (
                 multivariate_value.percentage_allocation
@@ -153,7 +168,7 @@ def _validate_variant_weights(
 def _write_variants(feature_state: FeatureState, variants: Sequence[Variant]) -> None:
     """Weight the given variants of a feature state, keeping the others as they are.
 
-    Validate them first, with `_validate_variant_weights`.
+    Validate them first, with `_validate_variants`.
     """
     weighted = {
         multivariate_value.multivariate_feature_option_id: multivariate_value
@@ -435,7 +450,7 @@ def update_flag(
     with transaction.atomic():
         version = _create_draft_version(environment, feature)
         feature_states = _get_feature_states_to_write(environment, feature, version)
-        _validate_variant_weights(feature_states, changes)
+        _validate_variants(feature, feature_states, changes)
         environment_default = next(
             feature_state
             for feature_state in feature_states
