@@ -151,3 +151,37 @@ def test_warehouse_serializer__event_stats_attached__serializes_counts() -> None
     # Then
     assert data["total_events_received"] == 7
     assert data["unique_events_count"] == 2
+
+
+def test_create__databricks_without_environment_context__raises_validation_error() -> (
+    None
+):
+    # Given
+    serializer = WarehouseConnectionSerializer(
+        data={"warehouse_type": "databricks"},
+    )
+
+    # When
+    is_valid = serializer.is_valid()
+
+    # Then
+    assert not is_valid
+    assert serializer.errors == {
+        "warehouse_type": ["Databricks connections are not available yet."]
+    }
+
+
+def test_create__flagsmith_with_credentials__raises_type_neutral_error() -> None:
+    # Given
+    serializer = WarehouseConnectionSerializer(
+        data={"warehouse_type": "flagsmith", "credentials": {"password": "x"}},
+    )
+
+    # When
+    is_valid = serializer.is_valid()
+
+    # Then
+    assert not is_valid
+    assert serializer.errors == {
+        "credentials": ["This warehouse type does not accept credentials."]
+    }

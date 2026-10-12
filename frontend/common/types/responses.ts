@@ -1497,6 +1497,7 @@ export type Res = {
   projects: ProjectSummary[]
   project: Project
   environments: PagedResponse<Environment>
+  allEnvironments: Environment[]
   webhook: Webhook
   webhooks: Webhook[]
   organisationUsage: {

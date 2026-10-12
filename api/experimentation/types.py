@@ -77,6 +77,16 @@ class DatabricksConfig(TypedDict):
     schema: str
 
 
+DATABRICKS_DEFAULTS: DatabricksConfig = {
+    "host": "",
+    "workspace_id": "",
+    "region": "",
+    "warehouse_id": "",
+    "catalog": "",
+    "schema": "flagsmith_exp",
+}
+
+
 class DatabricksCredentials(TypedDict):
     client_id: str
     client_secret: str
