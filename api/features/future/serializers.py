@@ -66,8 +66,6 @@ class FlagStateSerializer(serializers.Serializer[dict[str, object]]):
             raise serializers.ValidationError("Feature is not multivariate.")
         known_ids = set(feature.multivariate_options.values_list("id", flat=True))
         given_ids = {variant["id"] for variant in variants}
-        if given_ids - known_ids:
-            raise serializers.ValidationError("Variant not found.")
         if known_ids - given_ids:
             raise serializers.ValidationError("Must include all feature's variants.")
         return variants

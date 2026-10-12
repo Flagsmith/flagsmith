@@ -2132,7 +2132,7 @@ def test_post__rollout_mv_option_not_on_feature__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "do not belong to the feature" in str(response.json())
+    assert response.json() == ["Variant not found: 999999."]
 
 
 def test_action_rollout__valid__updates_percentage(
@@ -2283,7 +2283,7 @@ def test_action_rollout__mv_option_not_on_feature__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "do not belong to the feature" in str(response.json())
+    assert response.json() == ["Variant not found: 999999."]
 
 
 def test_patch__experiment_rollout_on_update__returns_400(
