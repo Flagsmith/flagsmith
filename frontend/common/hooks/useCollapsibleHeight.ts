@@ -1,4 +1,5 @@
 import { CSSProperties, useEffect, useRef, useState } from 'react'
+import { durationNormal, easingStandard } from 'common/theme/tokens'
 
 /**
  * Hook for animating height transitions (expand/collapse).
@@ -42,7 +43,9 @@ export default function useCollapsibleHeight(open: boolean) {
   const style: CSSProperties = {
     height: height !== undefined ? `${height}px` : 'auto',
     overflow: height === undefined ? 'visible' : 'hidden',
-    transition: prefersReducedMotion() ? 'none' : 'height 0.3s ease',
+    transition: prefersReducedMotion()
+      ? 'none'
+      : `height ${durationNormal} ${easingStandard}`,
   }
 
   return { contentRef, style }

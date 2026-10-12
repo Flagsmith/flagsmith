@@ -18,7 +18,7 @@ export type AccordionProps = {
   // Pass with onOpenChange to control it from outside.
   open?: boolean
   onOpenChange?: (open: boolean) => void
-  // Drops the body's padding, for content with its own, like a table.
+  // For content with its own padding and type, like a table.
   flush?: boolean
   className?: string
 }
