@@ -14,7 +14,10 @@ from tests.integration.helpers import create_mv_option_with_api
 
 SYSTEM_SEGMENT_MODIFICATION_ERROR = {
     "code": "system_segment_modification",
-    "message": "System segments and their overrides can't be changed directly.",
+    "message": (
+        "System segments and their overrides can't be changed directly. "
+        "Change this one through its flag dependency instead."
+    ),
 }
 
 
