@@ -15,17 +15,14 @@ export default meta
 
 type Entry = { cssVar: string; dark: string; light: string }
 
-const primitives = tokens.primitives as Record<string, string>
+// The JSON import types each group by its exact keys; read them by name.
+const groups = tokens as unknown as Record<string, Record<string, Entry>>
 
-const group = (name: string): Record<string, Entry> =>
-  (tokens as unknown as Record<string, Record<string, Entry>>)[name] ?? {}
-
-/** Resolve a stored value that may name a primitive rather than hold a hex. */
-const hex = (value: string) => primitives[value] ?? value
+const group = (name: string): Record<string, Entry> => groups[name] ?? {}
 
 const toSwatch = ([step, entry]: [string, Entry]): Swatch => ({
-  dark: hex(entry.dark),
-  hex: hex(entry.light),
+  dark: entry.dark,
+  hex: entry.light,
   step,
   variable: entry.cssVar,
 })
@@ -49,7 +46,7 @@ const stateHue = (hue: string, name: string): Scale => ({
     .sort(byStep),
 })
 
-const surfaces = tokens.color.surface as unknown as Record<string, Entry>
+const surfaces = tokens.color.surface as Record<string, Entry>
 
 const surface: Scale = {
   compact: true,
