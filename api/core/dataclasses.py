@@ -29,7 +29,6 @@ class AuthorData:
     def from_user(cls, user: "FFAdminUser | APIKeyUser") -> "AuthorData":
         from users.models import FFAdminUser
 
-        # `UserABC.__subclasshook__` matches any user against `APIKeyUser`.
         if isinstance(user, FFAdminUser):
             return cls(user=user)
         return cls(api_key=user.key)
