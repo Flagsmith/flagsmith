@@ -94,21 +94,23 @@ function hidePylon() {
 }
 
 // The HubSpot script is added in libs.js with loadImmediately: false, so the
-// widget only appears once we call load().
-function showHubSpot() {
-  const load = () => {
-    const widget = window.HubSpotConversations?.widget
-    // Re-checked: the org may have changed before the API became ready.
-    if (widget && getChatProvider() === 'hubspot' && !widget.status().loaded) {
-      widget.load()
-    }
+// widget only appears once we call load(). Module-level so that repeated calls
+// before the API is ready queue it only once.
+const loadHubSpotWidget = () => {
+  const widget = window.HubSpotConversations?.widget
+  // Re-checked: the org may have changed before the API became ready.
+  if (widget && getChatProvider() === 'hubspot' && !widget.status().loaded) {
+    widget.load()
   }
+}
+
+function showHubSpot() {
   if (window.HubSpotConversations) {
-    load()
-  } else {
+    loadHubSpotWidget()
+  } else if (!window.hsConversationsOnReady?.includes(loadHubSpotWidget)) {
     window.hsConversationsOnReady = [
       ...(window.hsConversationsOnReady || []),
-      load,
+      loadHubSpotWidget,
     ]
   }
 }

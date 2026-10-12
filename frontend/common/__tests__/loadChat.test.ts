@@ -177,6 +177,18 @@ describe('identifyChatUser', () => {
     expect(widget.load).toHaveBeenCalledWith()
   })
 
+  it('queues the HubSpot load only once while the API is not ready', () => {
+    // Given
+    setFlags(['hubspot_chat'])
+
+    // When
+    identifyChatUser()
+    identifyChatUser()
+
+    // Then
+    expect(window.hsConversationsOnReady).toHaveLength(1)
+  })
+
   it('removes HubSpot when the org moves to the free plan', () => {
     // Given
     setFlags(['hubspot_chat'])
