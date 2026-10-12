@@ -102,21 +102,52 @@ def _get_overrides_by_segment_id(
     }
 
 
+def validate_variant_weights(
+    feature_state: FeatureState | None, variants: Sequence[Variant]
+) -> None:
+    """Refuse weighting variants past 100%, counting the weights of those not given,
+    which writing them keeps."""
+    given_ids = {variant["id"] for variant in variants}
+    total_weight = sum(variant["weight"] for variant in variants) + sum(
+        multivariate_value.percentage_allocation
+        for multivariate_value in (
+            feature_state.multivariate_feature_state_values.all()
+            if feature_state
+            else []
+        )
+        if multivariate_value.multivariate_feature_option_id not in given_ids
+    )
+    if total_weight > 100:
+        raise ValidationError(f"Total weight must not exceed 100, got {total_weight}.")
+
+
+def _validate_variant_weights_of_changes(
+    feature_states: Sequence[FeatureState], changes: UpdateFlagRequest
+) -> None:
+    overrides = _get_overrides_by_segment_id(feature_states)
+    if (variants := changes.get("environment_default", {}).get("variants")) is not None:
+        validate_variant_weights(
+            next(
+                feature_state
+                for feature_state in feature_states
+                if feature_state.feature_segment_id is None
+            ),
+            variants,
+        )
+    for change in changes.get("segment_overrides", []):
+        if (variants := change.get("variants")) is not None:
+            validate_variant_weights(overrides.get(change["segment"]["id"]), variants)
+
+
 def write_variants(feature_state: FeatureState, variants: Sequence[Variant]) -> None:
-    """Weight the given variants of a feature state, keeping the others as they are."""
+    """Weight the given variants of a feature state, keeping the others as they are.
+
+    Validate them first, with `validate_variant_weights`.
+    """
     weighted = {
         multivariate_value.multivariate_feature_option_id: multivariate_value
         for multivariate_value in feature_state.multivariate_feature_state_values.all()
     }
-    # Variants not given keep their weights.
-    given_ids = {variant["id"] for variant in variants}
-    total_weight = sum(variant["weight"] for variant in variants) + sum(
-        multivariate_value.percentage_allocation
-        for option_id, multivariate_value in weighted.items()
-        if option_id not in given_ids
-    )
-    if total_weight > 100:
-        raise ValidationError(f"Total weight must not exceed 100, got {total_weight}.")
     for variant in variants:
         if multivariate_value := weighted.get(variant["id"]):
             multivariate_value.percentage_allocation = variant["weight"]
@@ -393,6 +424,7 @@ def update_flag(
     with transaction.atomic():
         version = _create_draft_version(environment, feature)
         feature_states = _get_feature_states_to_write(environment, feature, version)
+        _validate_variant_weights_of_changes(feature_states, changes)
         environment_default = next(
             feature_state
             for feature_state in feature_states
