@@ -73,9 +73,7 @@ from features.future.services import update_flag, write_variants
 from features.future.types import SegmentOverrideRequest
 from features.models import FeatureState
 from features.value_types import BOOLEAN, STRING
-from features.versioning.versioning_service import (
-    get_environment_flags_list,
-)
+from features.versioning.versioning_service import get_environment_flags_list
 from integrations.flagsmith.client import get_openfeature_client
 from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from segments.services import write_segment_rules

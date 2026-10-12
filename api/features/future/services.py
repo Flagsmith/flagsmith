@@ -39,9 +39,7 @@ from features.future.types import (
 from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
-from features.versioning.versioning_service import (
-    get_environment_flags_list,
-)
+from features.versioning.versioning_service import get_environment_flags_list
 from segments.exceptions import SystemSegmentModificationError
 from segments.models import Segment
 from util.db import with_delete_hooks
