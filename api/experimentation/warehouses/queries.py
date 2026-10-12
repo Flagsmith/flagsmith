@@ -1,6 +1,6 @@
 import typing
 from collections.abc import Callable
-from typing import Any
+from typing import Any, NamedTuple
 
 from experimentation.dataclasses import (
     ConversionBucket,
@@ -24,9 +24,13 @@ if typing.TYPE_CHECKING:
     from experimentation.types import ExposureGranularity
     from experimentation.warehouses.dialect import Dialect
 
-QueryRunner = Callable[
-    [str, dict[str, object]], tuple["Sequence[Sequence[Any]]", list[str]]
-]
+
+class QueryResult(NamedTuple):
+    rows: "Sequence[Sequence[Any]]"
+    columns: list[str]
+
+
+QueryRunner = Callable[[str, dict[str, object]], QueryResult]
 
 
 def event_names_query(dialect: "Dialect") -> str:

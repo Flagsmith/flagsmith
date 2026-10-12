@@ -18,6 +18,7 @@ from experimentation.models import (
 )
 from experimentation.stats import VariantStats
 from experimentation.warehouses import clickhouse
+from experimentation.warehouses.constants import BACKGROUND_QUERY_TIMEOUT_SECONDS
 from experimentation.warehouses.exceptions import (
     DeliveryConfigError,
     MissingEventsTableError,
@@ -285,7 +286,7 @@ def test_clickhouse_warehouse__get_exposure_buckets__reads_customer_store(
     # And the read uses the background timeout
     assert (
         get_client.call_args.kwargs["send_receive_timeout"]
-        == clickhouse.BACKGROUND_QUERY_TIMEOUT_SECONDS
+        == BACKGROUND_QUERY_TIMEOUT_SECONDS
     )
     client.close.assert_called_once_with()
 

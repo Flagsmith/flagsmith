@@ -126,6 +126,23 @@ def clickhouse_connection(
 
 
 @pytest.fixture()
+def databricks_connection() -> WarehouseConnection:
+    connection = WarehouseConnection(
+        warehouse_type="databricks",
+        config={
+            "host": "acme.cloud.databricks.com",
+            "workspace_id": "1234567890",
+            "region": "us-east-1",
+            "warehouse_id": "abc123",
+            "catalog": "main",
+            "schema": "flagsmith_exp",
+        },
+    )
+    connection.credentials = {"client_id": "sp-id", "client_secret": "sp-secret"}
+    return connection
+
+
+@pytest.fixture()
 def failing_delivery_status(
     clickhouse_connection: WarehouseConnection,
 ) -> WarehouseDeliveryStatus:

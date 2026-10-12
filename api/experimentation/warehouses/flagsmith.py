@@ -19,6 +19,7 @@ from experimentation.warehouses.constants import EVENT_NAMES_CACHE_SECONDS
 from experimentation.warehouses.dialect import CLICKHOUSE_DIALECT
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.queries import (
+    QueryResult,
     QueryRunner,
     build_event_names,
     build_event_stats,
@@ -83,11 +84,9 @@ def _background_query_runner() -> Iterator[QueryRunner]:
         send_receive_timeout=CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
     )
 
-    def run_query(
-        query: str, params: dict[str, object]
-    ) -> tuple[Sequence[Sequence[Any]], list[str]]:
+    def run_query(query: str, params: dict[str, object]) -> QueryResult:
         rows, columns = client.execute(query, params, with_column_types=True)
-        return rows, [name for name, _type in columns]
+        return QueryResult(rows, [name for name, _type in columns])
 
     try:
         yield run_query

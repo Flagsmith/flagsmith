@@ -31,9 +31,13 @@ from experimentation.warehouses.cache import (
     customer_cache_key,
 )
 from experimentation.warehouses.constants import (
+    BACKGROUND_QUERY_TIMEOUT_SECONDS,
     CUSTOMER_EVENT_NAMES_FAILURE_CACHE_SECONDS,
     CUSTOMER_EVENT_STATS_CACHE_SECONDS,
     EVENT_NAMES_CACHE_SECONDS,
+    EVENT_NAMES_TIMEOUT_SECONDS,
+    MISSING_EVENTS_TABLE_DETAIL,
+    VERIFY_TIMEOUT_SECONDS,
 )
 from experimentation.warehouses.dialect import CLICKHOUSE_DIALECT
 from experimentation.warehouses.exceptions import (
@@ -41,6 +45,7 @@ from experimentation.warehouses.exceptions import (
     MissingEventsTableError,
 )
 from experimentation.warehouses.queries import (
+    QueryResult,
     QueryRunner,
     build_event_names,
     build_event_stats,
@@ -87,11 +92,6 @@ def _get_pool_manager() -> PoolManager:
     # Shared across delivery clients, as clickhouse-connect's own default pool
     # is: the manager pools connections per host and is thread-safe.
     return _NoRedirectPoolManager(**httputil.get_pool_manager_options())
-
-
-MISSING_EVENTS_TABLE_DETAIL = (
-    "Events table not found in the configured database. Run the setup SQL to create it."
-)
 
 
 def describe_warehouse_error(error: Exception) -> str:
@@ -176,10 +176,6 @@ def check_events_table_exists(client: "Client") -> None:
 
 logger = structlog.get_logger("warehouse")
 
-VERIFY_TIMEOUT_SECONDS = 5
-EVENT_NAMES_TIMEOUT_SECONDS = 15
-BACKGROUND_QUERY_TIMEOUT_SECONDS = 120
-
 # Pinned so a customer's settings profile cannot change what results compute.
 RESULTS_QUERY_SETTINGS = {
     "join_use_nulls": 0,
@@ -188,9 +184,7 @@ RESULTS_QUERY_SETTINGS = {
 
 
 def _customer_query_runner(client: "Client") -> QueryRunner:
-    def run_query(
-        query: str, params: dict[str, object]
-    ) -> "tuple[Sequence[Sequence[Any]], list[str]]":
+    def run_query(query: str, params: dict[str, object]) -> QueryResult:
         # "aware" keeps UTC on bucket datetimes so charts serialise with an offset.
         result = client.query(
             query,
@@ -198,7 +192,7 @@ def _customer_query_runner(client: "Client") -> QueryRunner:
             settings=RESULTS_QUERY_SETTINGS,
             tz_mode="aware",
         )
-        return result.result_rows, list(result.column_names)
+        return QueryResult(result.result_rows, list(result.column_names))
 
     return run_query
 
