@@ -25,6 +25,7 @@ from experimentation.warehouses.databricks import (
     DatabricksTimeout,
     DatabricksWarehouse,
     DatabricksWarehouseStarting,
+    DatabricksWorkspaceMismatch,
 )
 from experimentation.warehouses.exceptions import DeliveryConfigError
 
@@ -759,6 +760,26 @@ def test_run__unusable_result__raises_error_class(
 
     # Then
     assert exc_info.value.error_class == expected_error_class
+
+
+def test_run__response_from_other_workspace__raises_mismatch(
+    databricks_connection: WarehouseConnection,
+    requests_mock: RequestsMockerFixture,
+    token: Any,
+) -> None:
+    # Given
+    requests_mock.post(
+        STATEMENTS_URL,
+        json=_succeeded(),
+        headers={"x-databricks-org-id": "999"},
+    )
+
+    # When / Then
+    with pytest.raises(DatabricksWorkspaceMismatch):
+        with databricks.databricks_session(
+            databricks_connection, budget_seconds=5
+        ) as session:
+            session.run("SELECT 1", {})
 
 
 def test_run__redirect__is_not_followed(

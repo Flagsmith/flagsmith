@@ -204,12 +204,7 @@ class _Session:
         self._config = config
         self._base_url = f"https://{config['host']}"
         self._deadline = deadline
-        self.org_id: str | None = None
         self._headers = {"Authorization": f"Bearer {self._fetch_token(credentials)}"}
-
-    def check_workspace(self) -> None:
-        if self.org_id and self.org_id != self._config["workspace_id"]:
-            raise DatabricksWorkspaceMismatch()
 
     def _remaining(self) -> float:
         return self._deadline - time.monotonic()
@@ -234,7 +229,9 @@ class _Session:
                 _parse_error_class(error),
                 error.get("error_description"),
             )
-        self.org_id = response.headers.get(ORG_ID_HEADER) or self.org_id
+        org_id = response.headers.get(ORG_ID_HEADER)
+        if org_id and org_id != self._config["workspace_id"]:
+            raise DatabricksWorkspaceMismatch()
         payload: dict[str, Any] = response.json()
         return payload
 
@@ -471,7 +468,6 @@ class DatabricksWarehouse:
         with databricks_session(
             connection, budget_seconds=VERIFY_TIMEOUT_SECONDS
         ) as session:
-            session.check_workspace()
             session.run(VERIFY_QUERY, {})
 
     def describe_error(self, error: Exception) -> str:
