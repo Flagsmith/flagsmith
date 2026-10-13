@@ -51,6 +51,20 @@ describe('watchScript', () => {
     expect(scripts).toHaveLength(1)
   })
 
+  it('keeps the result when every caller left before the script loaded', () => {
+    // Given
+    const stop = watchScript(SCRIPT_URL, jest.fn())
+    stop()
+    scripts[0].dispatchEvent(new Event('load'))
+    const onResult = jest.fn()
+
+    // When
+    watchScript(SCRIPT_URL, onResult)
+
+    // Then
+    expect(onResult).toHaveBeenCalledWith('loaded')
+  })
+
   it('reports a script that failed to load', () => {
     // Given
     watchScript(SCRIPT_URL, jest.fn())

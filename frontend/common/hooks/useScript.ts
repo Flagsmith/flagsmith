@@ -26,23 +26,24 @@ export const watchScript = (
   }
 
   const script = existing ?? document.createElement('script')
-  const onLoad = () => {
-    script.dataset.status = 'loaded'
-    onResult('loaded')
-  }
-  const onError = () => {
-    script.dataset.status = 'error'
-    onResult('error')
-  }
-  script.addEventListener('load', onLoad)
-  script.addEventListener('error', onError)
-
   if (!existing) {
+    // Never removed, so the status is recorded even if every caller has gone
+    // by the time the script finishes loading.
+    const setStatus = (result: ScriptResult) => () => {
+      script.dataset.status = result
+    }
+    script.addEventListener('load', setStatus('loaded'), { once: true })
+    script.addEventListener('error', setStatus('error'), { once: true })
     script.src = url
     script.async = true
     script.dataset.status = 'loading'
     document.head.appendChild(script)
   }
+
+  const onLoad = () => onResult('loaded')
+  const onError = () => onResult('error')
+  script.addEventListener('load', onLoad)
+  script.addEventListener('error', onError)
 
   return () => {
     script.removeEventListener('load', onLoad)
