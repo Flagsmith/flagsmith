@@ -1,4 +1,5 @@
 import pytest
+from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from django.utils import timezone
 from pytest_structlog import StructuredLogCapture
 from rest_framework.test import APIClient
@@ -7,9 +8,10 @@ from environments.models import Environment
 from features.dependencies.types import DependencyEdge
 from features.models import Feature
 from features.workflows.core.models import ChangeRequest, ChangeRequestApproval
+from organisations.models import Organisation
 from segments.models import Segment
 from tests.integration.types import AddFeaturePrerequisiteFixture, GetFeatureFixture
-from tests.types import CaptureAuditLogsFixture
+from tests.types import CaptureAuditLogsFixture, WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
 
 
@@ -611,12 +613,94 @@ def test_delete_feature_dependency__feature_versioning_v1__responds_409(
 # Lacking permission
 
 
-def test__add_feature_dependency__lacking_permission__responds_403() -> None:
-    raise NotImplementedError
+@pytest.mark.usefixtures("environment_v2_versioning")
+def test_add_feature_dependency__lacking_permission__responds_403(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    environment: int,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    _enable_change_requests(environment)
+    change_request = ChangeRequest.objects.create(
+        environment_id=environment, title="Pending", user=admin_user
+    )
+    staff_user.add_organisation(Organisation.objects.get(id=organisation))
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES], environment, False)
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        response = staff_client.post(
+            f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+        )
+
+    # Then
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": "permission_denied",
+        "message": 'The permission "Create change request" is necessary to change dependencies in change requests.',
+    }
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/?change_request={change_request.id}",
+    ).json() == {"results": []}
+    assert list(audit_logs) == []
+    assert not log.has("dependencies.created")
 
 
-def test__delete_feature_dependency__lacking_permission__responds_403() -> None:
-    raise NotImplementedError
+@pytest.mark.usefixtures("environment_v2_versioning")
+def test_delete_feature_dependency__lacking_permission__responds_403(
+    add_feature_prerequisite: AddFeaturePrerequisiteFixture,
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    environment: int,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    live_dependency = add_feature_prerequisite(
+        environment_api_key, feature.id, prerequisite.id
+    )
+    _enable_change_requests(environment)
+    change_request = ChangeRequest.objects.create(
+        environment_id=environment, title="Pending", user=admin_user
+    )
+    staff_user.add_organisation(Organisation.objects.get(id=organisation))
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES], environment, False)
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        response = staff_client.delete(
+            f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+        )
+
+    # Then
+    assert response.status_code == 403
+    assert response.json() == {
+        "code": "permission_denied",
+        "message": 'The permission "Create change request" is necessary to change dependencies in change requests.',
+    }
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/?change_request={change_request.id}",
+    ).json() == {"results": [live_dependency]}
+    assert list(audit_logs) == []
+    assert not log.has("dependencies.deleted")
 
 
 # Stage hygiene
