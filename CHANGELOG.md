@@ -1,5 +1,88 @@
 # Changelog
 
+## [2.284.0](https://github.com/Flagsmith/flagsmith/compare/v2.283.0...v2.284.0) (2026-10-13)
+
+
+### Features
+
+* **experimentation:** add the Databricks warehouse connection form ([#8725](https://github.com/Flagsmith/flagsmith/issues/8725)) ([caa24ed](https://github.com/Flagsmith/flagsmith/commit/caa24ed757c6f8c97749db81ae2691a5cc9427e6))
+* **experimentation:** hide experimentation UI when the experimentation infra isn't deployed ([#8749](https://github.com/Flagsmith/flagsmith/issues/8749)) ([bb9cd36](https://github.com/Flagsmith/flagsmith/commit/bb9cd36271bcc7fdeac85e1d8430382cfed7a213))
+* **Signup:** Track signup experiment conversion on activation ([#8674](https://github.com/Flagsmith/flagsmith/issues/8674)) ([09f3764](https://github.com/Flagsmith/flagsmith/commit/09f3764ad711d17565f428c00ed34325a37a7ed1))
+
+
+### Bug Fixes
+
+* **experimentation:** order ClickHouse setup SQL and show experiment snippets for all supported SDKs ([#8737](https://github.com/Flagsmith/flagsmith/issues/8737)) ([d5147f4](https://github.com/Flagsmith/flagsmith/commit/d5147f4a84e86d4c8503d22fc6bca49fd7dfb394))
+
+## [2.283.0](https://github.com/Flagsmith/flagsmith/compare/v2.282.0...v2.283.0) (2026-10-13)
+
+
+### Features
+
+* **experimentation:** add a Databricks statement client ([#8700](https://github.com/Flagsmith/flagsmith/issues/8700)) ([a1ace4a](https://github.com/Flagsmith/flagsmith/commit/a1ace4a9b639f3371bdb4b3becf0757ed6cb82d8))
+* **experimentation:** add the Databricks warehouse provider ([#8703](https://github.com/Flagsmith/flagsmith/issues/8703)) ([c3cff21](https://github.com/Flagsmith/flagsmith/commit/c3cff21c8560514417ad2620ca02706ac63a4c3b))
+* **experimentation:** gate experimentation on `EXPERIMENTATION_ENABLED` ([#8747](https://github.com/Flagsmith/flagsmith/issues/8747)) ([6337405](https://github.com/Flagsmith/flagsmith/commit/6337405cb7f89eba6dcffc3b828507647097b26e))
+* **usage:** break usage down by project and environment ([#8654](https://github.com/Flagsmith/flagsmith/issues/8654)) ([8ccdded](https://github.com/Flagsmith/flagsmith/commit/8ccdded4b0e79e74e9f1e11fb5df60c03020e47c))
+
+
+### Refactoring
+
+* **API:** Render APIErrorDetail bodies from a common APIError base class ([#8726](https://github.com/Flagsmith/flagsmith/issues/8726)) ([c121827](https://github.com/Flagsmith/flagsmith/commit/c1218279629498569be6b2b7b0bf897c9c79830f))
+* **Flags:** Write flags through the flag API with AuthorData ([#8727](https://github.com/Flagsmith/flagsmith/issues/8727)) ([c092cd6](https://github.com/Flagsmith/flagsmith/commit/c092cd693bcc19e0f0f5b583ed4362d646ab07a5))
+
+## [2.282.0](https://github.com/Flagsmith/flagsmith/compare/v2.281.0...v2.282.0) (2026-10-12)
+
+
+### Features
+
+* **traits:** add updated_at to Trait ([#8665](https://github.com/Flagsmith/flagsmith/issues/8665)) ([027ff84](https://github.com/Flagsmith/flagsmith/commit/027ff84c3a76dabe113ffe6554bd018d2287d1db))
+
+
+### Refactoring
+
+* **experimentation:** extract a SQL dialect from the results queries ([#8690](https://github.com/Flagsmith/flagsmith/issues/8690)) ([a47f91b](https://github.com/Flagsmith/flagsmith/commit/a47f91bfa86b924c80c3bbabd17f3ff348629c07))
+
+## [2.281.0](https://github.com/Flagsmith/flagsmith/compare/v2.280.0...v2.281.0) (2026-10-11)
+
+
+### Features
+
+* **dependencies:** add the Dependencies tab ([#8637](https://github.com/Flagsmith/flagsmith/issues/8637)) ([7ca6598](https://github.com/Flagsmith/flagsmith/commit/7ca6598c8abf041c7d32f164227a664df5863f31))
+* **experimentation:** read experiment results and exposures through the environment's warehouse ([#8683](https://github.com/Flagsmith/flagsmith/issues/8683)) ([fa52035](https://github.com/Flagsmith/flagsmith/commit/fa5203540d55312651751e17034ea109c2d501bc))
+* **Flag Dependency:** Remove a feature's prerequisite ([#8650](https://github.com/Flagsmith/flagsmith/issues/8650)) ([e588efa](https://github.com/Flagsmith/flagsmith/commit/e588efa444f2111f320677e4977f448c8f343901))
+* **Segments:** Expose managed feature segments ([#8699](https://github.com/Flagsmith/flagsmith/issues/8699)) ([1419461](https://github.com/Flagsmith/flagsmith/commit/1419461b2a4d93a51ae99d5509291ea7a4dd6fb9))
+* **usage:** expose API limit restriction, grace period and overage billing state ([#8641](https://github.com/Flagsmith/flagsmith/issues/8641)) ([fa8a60c](https://github.com/Flagsmith/flagsmith/commit/fa8a60cca02517cf696c525b4e23e0c67d27383d))
+* **usage:** group usage data by project or environment ([#8645](https://github.com/Flagsmith/flagsmith/issues/8645)) ([76c4802](https://github.com/Flagsmith/flagsmith/commit/76c480252978b3a90b90fd18c513bcfa10093589))
+
+
+### Bug Fixes
+
+* **Change Requests:** Scheduled feature changes inconsistent with actual state ([#8680](https://github.com/Flagsmith/flagsmith/issues/8680)) ([618f0fb](https://github.com/Flagsmith/flagsmith/commit/618f0fbccfeec065e3a80b09b3b55f10666ba5d3))
+* **Feature Lifecycle:** Release for public use ([#8694](https://github.com/Flagsmith/flagsmith/issues/8694)) ([6b0a8d1](https://github.com/Flagsmith/flagsmith/commit/6b0a8d1e71f2df5f14f82181f0b6b3ed4080dade))
+* **features:** lock the initial state and value when defaults are prevented ([#8664](https://github.com/Flagsmith/flagsmith/issues/8664)) ([da773ed](https://github.com/Flagsmith/flagsmith/commit/da773ed8c4183771961e8df9572bc292a1bb76cd))
+
+
+### Dependency Updates
+
+* **docs:** Bump serialize-javascript to 7.1.2 [security] ([#8672](https://github.com/Flagsmith/flagsmith/issues/8672)) ([a21c612](https://github.com/Flagsmith/flagsmith/commit/a21c61204b50ea9b3862752278ee6e9abbf68ea1))
+* update dependency flagsmith-common to v3.15.1 ([#8239](https://github.com/Flagsmith/flagsmith/issues/8239)) ([3166780](https://github.com/Flagsmith/flagsmith/commit/3166780af837923f5ed864cb1a1efb48d2092b8a))
+
+
+### CI
+
+* **frontend-deploy:** name what is being deployed ([#8431](https://github.com/Flagsmith/flagsmith/issues/8431)) ([68ce670](https://github.com/Flagsmith/flagsmith/commit/68ce670f43e5556aff31f4b9414c193555fed3dc))
+
+
+### Docs
+
+* **scim:** Document that Entra's `aadOptscim062020` flag is not supported ([#8621](https://github.com/Flagsmith/flagsmith/issues/8621)) ([a1522da](https://github.com/Flagsmith/flagsmith/commit/a1522dab03fce929c472da5e1834d325b1a4eaa6))
+
+
+### Refactoring
+
+* **experimentation:** introduce warehouse providers and port ClickHouse ([#8661](https://github.com/Flagsmith/flagsmith/issues/8661)) ([edfb91d](https://github.com/Flagsmith/flagsmith/commit/edfb91d1b5e41e5b047c3db8e609c0fa60536e0c))
+* **experimentation:** move managed warehouse reads into the Flagsmith provider ([#8677](https://github.com/Flagsmith/flagsmith/issues/8677)) ([7dfcd9a](https://github.com/Flagsmith/flagsmith/commit/7dfcd9acf1984820db8ea92d5f475e0b2d92c6ea))
+
 ## [2.280.0](https://github.com/Flagsmith/flagsmith/compare/v2.279.0...v2.280.0) (2026-10-05)
 
 

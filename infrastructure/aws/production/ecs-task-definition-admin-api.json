@@ -33,6 +33,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "EXPERIMENTATION_ENABLED",
+                    "value": "true"
+                },
+                {
                     "name": "LOG_LEVEL",
                     "value": "INFO"
                 },
@@ -171,6 +175,10 @@
                 {
                     "name": "API_USAGE_CACHE_SECONDS",
                     "value": "300"
+                },
+                {
+                    "name": "ENABLE_API_USAGE_ALERTING",
+                    "value": "True"
                 },
                 {
                     "name": "EDGE_RELEASE_DATETIME",

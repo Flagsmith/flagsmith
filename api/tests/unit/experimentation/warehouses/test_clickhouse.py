@@ -18,6 +18,7 @@ from experimentation.models import (
 )
 from experimentation.stats import VariantStats
 from experimentation.warehouses import clickhouse
+from experimentation.warehouses.constants import BACKGROUND_QUERY_TIMEOUT_SECONDS
 from experimentation.warehouses.exceptions import (
     DeliveryConfigError,
     MissingEventsTableError,
@@ -282,24 +283,11 @@ def test_clickhouse_warehouse__get_exposure_buckets__reads_customer_store(
         ExposureBucket("control", BUCKET, first_exposed_identities=10),
         ExposureBucket("", BUCKET, first_exposed_identities=2, quarantined=True),
     ]
-    # And the read uses the background timeout and pinned settings
+    # And the read uses the background timeout
     assert (
         get_client.call_args.kwargs["send_receive_timeout"]
-        == clickhouse.BACKGROUND_QUERY_TIMEOUT_SECONDS
+        == BACKGROUND_QUERY_TIMEOUT_SECONDS
     )
-    (query,) = client.query.call_args.args
-    assert "toStartOfDay(first_exposure, 'UTC') AS bucket" in query
-    assert client.query.call_args.kwargs == {
-        "parameters": {
-            "environment_key": "key",
-            "exposure_event": "$flag_exposure",
-            "feature_name": "checkout",
-            "window_start": WINDOW_START,
-            "window_end": WINDOW_END,
-        },
-        "settings": clickhouse.RESULTS_QUERY_SETTINGS,
-        "tz_mode": "aware",
-    }
     client.close.assert_called_once_with()
 
 

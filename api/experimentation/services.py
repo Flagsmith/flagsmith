@@ -5,6 +5,7 @@ import typing
 from dataclasses import replace
 
 import structlog
+from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -19,6 +20,7 @@ from core.dataclasses import AuthorData
 from environments.tasks import rebuild_environment_document
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
+    DATABRICKS_WAREHOUSE_FLAG,
     EXPERIMENT_FLAG,
     EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
     MAX_AUDIENCE_SEGMENTS,
@@ -110,18 +112,32 @@ class _ExposureReadKwargs(typing.TypedDict):
 
 
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
+    return (
+        settings.EXPERIMENTATION_ENABLED
+        and get_openfeature_client().get_boolean_value(
+            WAREHOUSE_CONNECTION_FLAG,
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        )
+    )
+
+
+def is_databricks_warehouse_enabled(organisation: Organisation) -> bool:
     return get_openfeature_client().get_boolean_value(
-        WAREHOUSE_CONNECTION_FLAG,
+        DATABRICKS_WAREHOUSE_FLAG,
         default_value=False,
         evaluation_context=organisation.openfeature_evaluation_context,
     )
 
 
 def is_experiment_feature_enabled(organisation: Organisation) -> bool:
-    return get_openfeature_client().get_boolean_value(
-        EXPERIMENT_FLAG,
-        default_value=False,
-        evaluation_context=organisation.openfeature_evaluation_context,
+    return (
+        settings.EXPERIMENTATION_ENABLED
+        and get_openfeature_client().get_boolean_value(
+            EXPERIMENT_FLAG,
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        )
     )
 
 

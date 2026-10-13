@@ -15,6 +15,7 @@ from audit.constants import (
 )
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.dependencies.exceptions import (
     CircularDependencyError,
@@ -421,7 +422,7 @@ def create_flag_dependency(
                 ]
             },
             replace=False,
-            author=author,
+            author=AuthorData.from_user(author),
         )
         overrides.get(segment=segment).to(0)
         _create_dependency_audit_log(
@@ -485,7 +486,7 @@ def delete_flag_dependency(
             environment=environment,
             feature=feature,
             segment_id=edge["segment"]["id"],
-            author=author,
+            author=AuthorData.from_user(author),
         )
         _create_dependency_audit_log(
             environment=environment,

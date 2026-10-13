@@ -35,7 +35,7 @@ pytestmark = pytest.mark.usefixtures("versioned_environment")
     ],
 )
 def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependency(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
     organisation: int,
@@ -48,7 +48,7 @@ def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependenc
     prerequisite = Feature.objects.create(name=prerequisite_name, project_id=project)
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
     )
 
@@ -92,7 +92,7 @@ def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependenc
             "condition_json_path": "$[0].conditions[0]",
         }
     ]
-    flag_response = admin_client.get(
+    flag_response = admin_client_new.get(
         f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
     )
     assert flag_response.json()["segment_overrides"] == [
@@ -844,7 +844,7 @@ def test_add_feature_dependency__missing_environment_permission__responds_403_wi
 
 
 def test_delete_feature_dependency__dependency_exists__responds_204_removing_override(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
     organisation: int,
@@ -854,15 +854,15 @@ def test_delete_feature_dependency__dependency_exists__responds_204_removing_ove
     feature = Feature.objects.create(name="checkout", project_id=project)
     prerequisite = Feature.objects.create(name="payments", project_id=project)
     other_prerequisite = Feature.objects.create(name="inventory", project_id=project)
-    segment_id = admin_client.post(
+    segment_id = admin_client_new.post(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
     ).json()["segment"]["id"]
-    other_segment_id = admin_client.post(
+    other_segment_id = admin_client_new.post(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{other_prerequisite.id}/",
     ).json()["segment"]["id"]
 
     # When
-    response = admin_client.delete(
+    response = admin_client_new.delete(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
     )
 
@@ -879,7 +879,7 @@ def test_delete_feature_dependency__dependency_exists__responds_204_removing_ove
         {"segment": segment_id, "prerequisite_feature": prerequisite.id},
         {"segment": other_segment_id, "prerequisite_feature": other_prerequisite.id},
     ]
-    flag_response = admin_client.get(
+    flag_response = admin_client_new.get(
         f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
     )
     assert flag_response.json()["segment_overrides"] == [
@@ -891,7 +891,7 @@ def test_delete_feature_dependency__dependency_exists__responds_204_removing_ove
             "variants": [],
         }
     ]
-    dependencies_response = admin_client.get(
+    dependencies_response = admin_client_new.get(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
     )
     assert [

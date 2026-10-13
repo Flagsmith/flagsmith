@@ -29,6 +29,7 @@ import './MetricsPage.scss'
 
 const WAREHOUSE_TYPE_LABEL: Record<WarehouseType, string> = {
   clickhouse: 'ClickHouse',
+  databricks: 'Databricks',
   flagsmith: 'Flagsmith',
   snowflake: 'Snowflake',
 }
