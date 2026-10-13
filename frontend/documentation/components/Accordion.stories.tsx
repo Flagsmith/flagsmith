@@ -38,11 +38,6 @@ export const Disabled: Story = {
   args: { defaultOpen: true, disabled: true },
 }
 
-// For a page section: shows up in heading navigation.
-export const AsHeading: Story = {
-  args: { headingLevel: 3 },
-}
-
 // The title is a row, so a status can follow it; ms-auto pushes it to the end.
 export const WithStatus: Story = {
   args: {

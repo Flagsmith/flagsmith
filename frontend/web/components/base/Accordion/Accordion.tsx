@@ -6,18 +6,12 @@ import BareButton from 'components/base/forms/BareButton'
 import Icon from 'components/icons/Icon'
 import './Accordion.scss'
 
-export type AccordionHeadingLevel = 2 | 3 | 4 | 5 | 6
-
 export type AccordionProps = {
   // Laid out as a row, so a chip or spinner can follow the text. It sits
   // inside the toggle, so no links or buttons.
   title: ReactNode
   children: ReactNode
-  // For an accordion that is a page section.
-  headingLevel?: AccordionHeadingLevel
   defaultOpen?: boolean
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
   // For content with its own padding and type, like a table.
   flush?: boolean
   // Blocks toggling, e.g. while the content loads; keeps the open state.
@@ -31,26 +25,11 @@ const Accordion: FC<AccordionProps> = ({
   defaultOpen = false,
   disabled = false,
   flush = false,
-  headingLevel,
-  onOpenChange,
-  open: controlledOpen,
   title,
 }) => {
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen)
-  const open = controlledOpen ?? uncontrolledOpen
+  const [open, setOpen] = useState(defaultOpen)
   const { contentRef, style } = useCollapsibleHeight(open)
   const id = useId()
-
-  const wrapInHeading = (header: ReactNode) => {
-    if (!headingLevel) return header
-    const Heading = `h${headingLevel}` as const
-    return <Heading className='ds-accordion__heading m-0'>{header}</Heading>
-  }
-
-  const toggle = () => {
-    if (controlledOpen === undefined) setUncontrolledOpen(!open)
-    onOpenChange?.(!open)
-  }
 
   return (
     <div
@@ -60,36 +39,28 @@ const Accordion: FC<AccordionProps> = ({
         className,
       )}
     >
-      {wrapInHeading(
-        <BareButton
-          className={cn(
-            'ds-accordion__header d-flex gap-2 w-100 px-3 pt-3 text-start text-default',
-            // As in the spec: open content sits right under the title.
-            open && !flush
-              ? 'align-items-start pb-0'
-              : 'align-items-center pb-3',
-          )}
-          aria-expanded={open}
-          aria-controls={`${id}-body`}
-          aria-labelledby={`${id}-title`}
-          disabled={disabled}
-          onClick={toggle}
-        >
-          <span
-            id={`${id}-title`}
-            className='ds-accordion__label d-flex align-items-center flex-grow-1 gap-2'
-          >
-            {title}
-          </span>
-          <Icon
-            name='chevron-down'
-            width={24}
-            fill={colorIconSecondary}
-            className='ds-accordion__chevron flex-shrink-0'
-            aria-hidden
-          />
-        </BareButton>,
-      )}
+      <BareButton
+        className={cn(
+          'ds-accordion__header d-flex gap-2 w-100 px-3 pt-3 text-start text-default',
+          // As in the spec: open content sits right under the title.
+          open && !flush ? 'align-items-start pb-0' : 'align-items-center pb-3',
+        )}
+        aria-expanded={open}
+        aria-controls={`${id}-body`}
+        disabled={disabled}
+        onClick={() => setOpen(!open)}
+      >
+        <span className='ds-accordion__label d-flex align-items-center flex-grow-1 gap-2'>
+          {title}
+        </span>
+        <Icon
+          name='chevron-down'
+          width={24}
+          fill={colorIconSecondary}
+          className='ds-accordion__chevron flex-shrink-0'
+          aria-hidden
+        />
+      </BareButton>
       {/* Inert while closed, so its content leaves the tab order. */}
       <div ref={contentRef} style={style} id={`${id}-body`} inert={!open}>
         <div className={cn({ 'ds-accordion__content px-3 pb-3': !flush })}>
