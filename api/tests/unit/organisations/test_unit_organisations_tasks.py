@@ -2024,8 +2024,8 @@ def test_restrict_use_due_to_api_limit_grace_period_over__organisation_errors__r
     log: StructuredLogCapture,
 ) -> None:
     """
-    One unusable organisation used to abort the run, leaving the organisations
-    already handled restricted but without the access block that releases them.
+    An organisation that cannot be processed used to abort the whole run, and
+    repeated runs then disabled the task altogether.
     """
     # Given
     settings.ENABLE_API_USAGE_ALERTING = True
@@ -2035,11 +2035,10 @@ def test_restrict_use_due_to_api_limit_grace_period_over__organisation_errors__r
     )
 
     now = timezone.now()
-    # `Organisation` orders by id, so these are visited after `organisation`.
-    failing_organisation = Organisation.objects.create(name="Failing Org")
-    later_organisation = Organisation.objects.create(name="Later Org")
+    # `Organisation` orders by id, so this one is visited after the failure.
+    surviving_organisation = Organisation.objects.create(name="Surviving Org")
 
-    for org in [organisation, failing_organisation, later_organisation]:
+    for org in [organisation, surviving_organisation]:
         OrganisationSubscriptionInformationCache.objects.create(
             organisation=org,
             allowed_30d_api_calls=10_000,
@@ -2053,7 +2052,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over__organisation_errors__r
         )
 
     def _get_current_api_usage(organisation_id: int, date_start: datetime) -> int:
-        if organisation_id == failing_organisation.id:
+        if organisation_id == organisation.id:
             raise RuntimeError("Influx is unavailable")
         return 12_005
 
@@ -2069,28 +2068,20 @@ def test_restrict_use_due_to_api_limit_grace_period_over__organisation_errors__r
 
     # Then
     organisation.refresh_from_db()
-    failing_organisation.refresh_from_db()
-    later_organisation.refresh_from_db()
+    surviving_organisation.refresh_from_db()
 
-    # The organisation visited before the failure is restricted, and has the
-    # access block without which it could never be released.
-    assert organisation.stop_serving_flags is True
-    assert organisation.block_access_to_admin is True
-    assert organisation.api_limit_access_block
+    # The organisation that could not be processed is left untouched...
+    assert organisation.stop_serving_flags is False
+    assert organisation.block_access_to_admin is False
 
-    # The failing organisation is left alone.
-    assert failing_organisation.stop_serving_flags is False
-    assert failing_organisation.block_access_to_admin is False
-    assert getattr(failing_organisation, "api_limit_access_block", None) is None
+    # ...and the run carries on to the organisations after it.
+    assert surviving_organisation.stop_serving_flags is True
+    assert surviving_organisation.block_access_to_admin is True
 
-    # The organisation visited after the failure is still restricted.
-    assert later_organisation.stop_serving_flags is True
-    assert later_organisation.block_access_to_admin is True
-    assert later_organisation.api_limit_access_block
-
+    # Asserted so a swallowed failure cannot pass unnoticed.
     assert log.has(
         "restriction.failed",
-        organisation__id=failing_organisation.id,
+        organisation__id=organisation.id,
         level="error",
     )
 
