@@ -44,6 +44,5 @@ export const usePendingChangeRequests = ({
     isError:
       staging.isError ||
       (!!staging.data?.length && (open.isError || scheduled.isError)),
-    isLoading: staging.isLoading || open.isLoading || scheduled.isLoading,
   }
 }
