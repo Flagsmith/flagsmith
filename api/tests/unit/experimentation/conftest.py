@@ -90,7 +90,7 @@ def experiment_with_rollout(
     multivariate_options: list[MultivariateFeatureOption],
     admin_user: FFAdminUser,
 ) -> Experiment:
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     apply_experiment_rollout(
         experiment,
         RolloutSpec(
@@ -101,6 +101,7 @@ def experiment_with_rollout(
             variants=[
                 {"id": option_a.id, "weight": 50.0},
                 {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -188,7 +189,7 @@ def rollout_spec(admin_user: FFAdminUser) -> RolloutSpecFactory:
             rollout_percentage=rollout_percentage,
             feature_state_value="control",
             value_type="string",
-            variants=variants or [],
+            variants=variants,
             author=AuthorData(user=admin_user),
             audience=audience,
         )

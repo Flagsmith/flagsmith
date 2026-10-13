@@ -1909,8 +1909,7 @@ def test_update_flag__unknown_variant__responds_400(
                 "environment_default": {
                     "variants": [
                         {"id": variant_a, "weight": 10},
-                        {"id": variant_b, "weight": 20},
-                        {"id": unknown_variant, "weight": 30},
+                        {"id": unknown_variant, "weight": 20},
                     ],
                 },
             }
@@ -1920,7 +1919,11 @@ def test_update_flag__unknown_variant__responds_400(
 
     # Then
     assert response.status_code == 400
-    assert response.json() == [f"Variant not found: {unknown_variant}."]
+    assert response.json() == {
+        "environment_default": {
+            "variants": [f"Variant not found: {unknown_variant}."],
+        },
+    }
     environment_default = FeatureState.objects.get_live_feature_states(
         environment=versioned_environment,
         feature_id=mv_feature,
@@ -1964,7 +1967,9 @@ def test_update_flag__duplicate_variant__responds_400(
 
     # Then
     assert response.status_code == 400
-    assert response.json() == [f"Duplicate variant: {variant_a}."]
+    assert response.json() == {
+        "environment_default": {"variants": [f"Duplicate variant: {variant_a}."]},
+    }
     environment_default = FeatureState.objects.get_live_feature_states(
         environment=versioned_environment,
         feature_id=mv_feature,
@@ -2086,7 +2091,11 @@ def test_update_flag__variant_weights_over_100__responds_400(
 
     # Then
     assert response.status_code == 400
-    assert response.json() == ["Total weight must not exceed 100, got 110.0."]
+    assert response.json() == {
+        "environment_default": {
+            "variants": ["Total weight must not exceed 100, got 110.0."]
+        },
+    }
     environment_default = FeatureState.objects.get_live_feature_states(
         environment=versioned_environment,
         feature_id=mv_feature,
