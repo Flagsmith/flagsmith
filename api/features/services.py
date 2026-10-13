@@ -20,11 +20,7 @@ from features.future.services import update_flag
 from features.models import Feature, FeatureSegment, FeatureState
 from features.tasks import trigger_feature_state_change_webhooks
 from features.types import LegacyFeatureStateData
-from integrations.github.constants import GitHubEventType
-from integrations.github.github import call_github_task
-from integrations.gitlab.services import (
-    post_gitlab_state_change_comment_for_feature_state,
-)
+from integrations.vcs.services import dispatch_vcs_on_feature_state_changed
 from webhooks.webhooks import WebhookEventType
 
 
@@ -67,25 +63,6 @@ def _trigger_environment_defaults_deleted_webhooks(feature: Feature) -> None:
         trigger_feature_state_change_webhooks(
             feature_state, WebhookEventType.FLAG_DELETED
         )
-
-
-def notify_code_references_of_feature_state(feature_state: FeatureState) -> None:
-    """Comment on the issues and pull requests linked to the feature."""
-    if (
-        not feature_state.identity_id
-        and feature_state.feature.external_resources.exists()
-        and feature_state.environment.project.github_project.exists()  # type: ignore[union-attr]
-        and feature_state.environment.project.organisation.github_config.exists()  # type: ignore[union-attr]
-    ):
-        call_github_task(
-            organisation_id=feature_state.feature.project.organisation_id,
-            type=GitHubEventType.FLAG_UPDATED.value,
-            feature=feature_state.feature,
-            segment_name=None,
-            url=None,
-            feature_states=[feature_state],
-        )
-    post_gitlab_state_change_comment_for_feature_state(feature_state)
 
 
 def writes_live_segment_override(feature_state_data: LegacyFeatureStateData) -> bool:
@@ -166,7 +143,7 @@ def write_live_segment_override(
         feature_state_data=feature_state_data,
         author=author,
     )
-    notify_code_references_of_feature_state(feature_state)
+    dispatch_vcs_on_feature_state_changed(feature_state)
     return feature_state
 
 
