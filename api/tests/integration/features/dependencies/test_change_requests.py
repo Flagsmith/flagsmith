@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from django.conf import settings
@@ -782,17 +784,98 @@ def test_add_feature_dependency__previously_staged__responds_400_leaving_one_sta
 
 
 @pytest.mark.usefixtures("environment_v2_versioning")
-def test_add_feature_dependency__prerequisite_has_live_prerequisite__responds_400() -> (
-    None
-):
-    raise NotImplementedError
+def test_add_feature_dependency__prerequisite_has_live_prerequisite__responds_400(
+    add_feature_prerequisite: AddFeaturePrerequisiteFixture,
+    admin_client: APIClient,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
+    environment: int,
+    environment_api_key: str,
+    environment_name: str,
+    log: StructuredLogCapture,
+    project: int,
+) -> None:
+    # Given
+    checkout = Feature.objects.create(name="checkout", project_id=project)
+    payments = Feature.objects.create(name="payments", project_id=project)
+    inventory = Feature.objects.create(name="inventory", project_id=project)
+    live_inventory_dependency = add_feature_prerequisite(
+        environment_api_key, payments.id, inventory.id
+    )
+    _enable_change_requests(environment)
+    change_request = create_change_request(checkout.id, title="Pending")
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        response = admin_client.post(
+            f"/api/v1/environments/{environment_api_key}/features/{checkout.id}/dependencies/{payments.id}/?change_request={change_request.id}",
+        )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "code": "prerequisite_has_prerequisite",
+        "message": 'The prerequisite "payments" already has a prerequisite "inventory".',
+        "environment": {"key": environment_api_key, "name": environment_name},
+        "path": [live_inventory_dependency],
+    }
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{checkout.id}/dependencies/?change_request={change_request.id}",
+    ).json() == {"results": []}
+    assert list(audit_logs) == []
+    assert not log.has("dependencies.created", feature__name="checkout")
 
 
 @pytest.mark.usefixtures("environment_v2_versioning")
-def test_add_feature_dependency__prerequisite_has_scheduled_prerequisite__responds_400() -> (
-    None
-):
-    raise NotImplementedError
+def test_add_feature_dependency__prerequisite_has_scheduled_prerequisite__responds_400(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
+    environment: int,
+    environment_api_key: str,
+    environment_name: str,
+    log: StructuredLogCapture,
+    project: int,
+) -> None:
+    # Given
+    checkout = Feature.objects.create(name="checkout", project_id=project)
+    payments = Feature.objects.create(name="payments", project_id=project)
+    inventory = Feature.objects.create(name="inventory", project_id=project)
+    _enable_change_requests(environment)
+    scheduled_change_request = create_change_request(
+        payments.id, title="Scheduled", live_from=timezone.now() + timedelta(days=1)
+    )
+    scheduled_inventory_dependency = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{payments.id}/dependencies/{inventory.id}/?change_request={scheduled_change_request.id}",
+    ).json()
+    ChangeRequestApproval.objects.create(
+        change_request=scheduled_change_request,
+        user=admin_user,
+        approved_at=timezone.now(),
+    )
+    scheduled_change_request.commit(committed_by=admin_user)
+    change_request = create_change_request(checkout.id, title="Pending")
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        response = admin_client.post(
+            f"/api/v1/environments/{environment_api_key}/features/{checkout.id}/dependencies/{payments.id}/?change_request={change_request.id}",
+        )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "code": "prerequisite_has_prerequisite",
+        "message": 'The prerequisite "payments" already has a prerequisite "inventory".',
+        "environment": {"key": environment_api_key, "name": environment_name},
+        "path": [scheduled_inventory_dependency],
+    }
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{checkout.id}/dependencies/?change_request={change_request.id}",
+    ).json() == {"results": []}
+    assert list(audit_logs) == []
+    assert not log.has("dependencies.created")
 
 
 # Audit logs
