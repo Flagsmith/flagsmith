@@ -1,0 +1,7 @@
+// Pinned to the bottom of the tab, so the way out stays in view however long
+// the table gets. No z-index utility on Bootstrap 5.2, and the token border
+// utilities lose to Bootstrap's border colour.
+.change-request-footer {
+  z-index: 1;
+  border-top: 1px solid var(--color-border-default);
+}
