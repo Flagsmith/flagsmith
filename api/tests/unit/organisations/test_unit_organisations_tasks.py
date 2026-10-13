@@ -1,5 +1,5 @@
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock, call
 
 import pytest
@@ -2012,6 +2012,174 @@ def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__doe
     assert caplog.messages == [
         f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
     ]
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over__organisation_errors__restricts_the_others(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    """
+    One unusable organisation used to abort the run, leaving the organisations
+    already handled restricted but without the access block that releases them.
+    """
+    # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
+
+    now = timezone.now()
+    # `Organisation` orders by id, so these are visited after `organisation`.
+    failing_organisation = Organisation.objects.create(name="Failing Org")
+    later_organisation = Organisation.objects.create(name="Later Org")
+
+    for org in [organisation, failing_organisation, later_organisation]:
+        OrganisationSubscriptionInformationCache.objects.create(
+            organisation=org,
+            allowed_30d_api_calls=10_000,
+        )
+        org.subscription.plan = FREE_PLAN_ID
+        org.subscription.save()
+        OrganisationAPIUsageNotification.objects.create(
+            notified_at=now,
+            organisation=org,
+            percent_usage=120,
+        )
+
+    def _get_current_api_usage(organisation_id: int, date_start: datetime) -> int:
+        if organisation_id == failing_organisation.id:
+            raise RuntimeError("Influx is unavailable")
+        return 12_005
+
+    mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+        side_effect=_get_current_api_usage,
+    )
+
+    freezer.move_to(now + timedelta(days=API_USAGE_GRACE_PERIOD + 1))
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    organisation.refresh_from_db()
+    failing_organisation.refresh_from_db()
+    later_organisation.refresh_from_db()
+
+    # The organisation visited before the failure is restricted, and has the
+    # access block without which it could never be released.
+    assert organisation.stop_serving_flags is True
+    assert organisation.block_access_to_admin is True
+    assert organisation.api_limit_access_block
+
+    # The failing organisation is left alone.
+    assert failing_organisation.stop_serving_flags is False
+    assert failing_organisation.block_access_to_admin is False
+    assert getattr(failing_organisation, "api_limit_access_block", None) is None
+
+    # The organisation visited after the failure is still restricted.
+    assert later_organisation.stop_serving_flags is True
+    assert later_organisation.block_access_to_admin is True
+    assert later_organisation.api_limit_access_block
+
+    assert log.has(
+        "restriction.failed",
+        organisation__id=failing_organisation.id,
+        level="error",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over__zero_allowed_api_calls__blocks_organisation(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
+
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=0,
+    )
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=120,
+    )
+    mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+        return_value=MAX_API_CALLS_IN_FREE_PLAN + 1,
+    )
+
+    freezer.move_to(now + timedelta(days=API_USAGE_GRACE_PERIOD + 1))
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    # A zero allowance falls back to the free plan maximum rather than raising.
+    organisation.refresh_from_db()
+    assert organisation.stop_serving_flags is True
+    assert organisation.block_access_to_admin is True
+    assert organisation.api_limit_access_block
+
+
+def test_handle_api_usage_notification_for_organisation__email_fails__still_records_notification(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    log: StructuredLogCapture,
+) -> None:
+    """
+    An unsendable email used to prevent the notification being recorded, so the
+    organisation never became eligible for restriction.
+    """
+    # Given
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.max_api_calls = 100
+    organisation.subscription.save()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=100,
+    )
+    mocker.patch(
+        "organisations.task_helpers.get_current_api_usage",
+        return_value=200,
+    )
+    mocker.patch.object(
+        EmailMultiAlternatives,
+        "send",
+        side_effect=RuntimeError("provider rejected the message"),
+    )
+
+    # When
+    handle_api_usage_notification_for_organisation(organisation)
+
+    # Then
+    assert OrganisationAPIUsageNotification.objects.filter(
+        organisation=organisation,
+        percent_usage=200,
+    ).exists()
+    assert log.has(
+        "email.send_failed",
+        organisation__id=organisation.id,
+        level="error",
+    )
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")

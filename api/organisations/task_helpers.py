@@ -24,6 +24,25 @@ from .constants import API_USAGE_ALERT_THRESHOLDS
 logger = structlog.get_logger("api_usage")
 
 
+def _send_email(msg: EmailMultiAlternatives, organisation: Organisation) -> None:
+    """
+    Send an email, logging rather than raising when the provider rejects it.
+
+    `fail_silently` is not enough on its own: the SendGrid backend only catches
+    `urllib.error.HTTPError`, so errors raised by its own client propagate. A
+    single undeliverable address must not stop an organisation being restricted,
+    or its usage notification being recorded.
+    """
+    try:
+        msg.send(fail_silently=True)
+    except Exception:
+        logger.exception(
+            "email.send_failed",
+            organisation__id=organisation.id,
+            email__subject=msg.subject,
+        )
+
+
 def send_api_flags_blocked_notification(organisation: Organisation) -> None:
     recipient_list = FFAdminUser.objects.filter(
         userorganisation__organisation=organisation,
@@ -48,7 +67,7 @@ def send_api_flags_blocked_notification(organisation: Organisation) -> None:
         cc=settings.API_USAGE_ALERT_CC_RECIPIENT_LIST,
     )
     msg.attach_alternative(render_to_string(html_message, context), "text/html")
-    msg.send(fail_silently=True)
+    _send_email(msg, organisation)
 
 
 def _send_api_usage_notification(
@@ -94,7 +113,7 @@ def _send_api_usage_notification(
         cc=settings.API_USAGE_ALERT_CC_RECIPIENT_LIST,
     )
     msg.attach_alternative(render_to_string(html_message, context), "text/html")
-    msg.send(fail_silently=True)
+    _send_email(msg, organisation)
 
     OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
