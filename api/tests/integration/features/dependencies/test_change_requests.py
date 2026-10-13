@@ -1,23 +1,28 @@
-from datetime import timedelta
-
 import pytest
 from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
+from django.conf import settings
 from django.utils import timezone
-from freezegun import freeze_time
 from pytest_structlog import StructuredLogCapture
 from rest_framework.test import APIClient
 
 from environments.models import Environment
 from features.dependencies.types import DependencyEdge
 from features.models import Feature
-from features.versioning.models import VersionChangeSet
-from features.versioning.tasks import publish_version_change_set
 from features.workflows.core.models import ChangeRequest, ChangeRequestApproval
 from organisations.models import Organisation
 from segments.models import Segment
-from tests.integration.types import AddFeaturePrerequisiteFixture, GetFeatureFixture
+from tests.integration.types import (
+    AddFeaturePrerequisiteFixture,
+    CreateChangeRequestFixture,
+    GetFeatureFixture,
+)
 from tests.types import CaptureAuditLogsFixture, WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
+
+pytestmark = pytest.mark.skipif(
+    not settings.WORKFLOWS_LOGIC_INSTALLED,
+    reason="workflows_logic module not installed (private package extra)",
+)
 
 
 def _enable_change_requests(environment: int) -> None:
@@ -102,8 +107,8 @@ def test_delete_feature_dependency__bare_but_change_requests_enabled__responds_4
 @pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__point_to_open_change_request__responds_201(
     admin_client: APIClient,
-    admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -113,9 +118,7 @@ def test_add_feature_dependency__point_to_open_change_request__responds_201(
     feature = Feature.objects.create(name="checkout", project_id=project)
     prerequisite = Feature.objects.create(name="payments", project_id=project)
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment, title="Pending", user=admin_user
-    )
+    change_request = create_change_request(feature.id, title="Pending")
 
     # When
     with capture_audit_logs() as audit_logs:
@@ -167,8 +170,8 @@ def test_add_feature_dependency__point_to_open_change_request__responds_201(
 def test_delete_feature_dependency__point_to_open_change_request__responds_204(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
-    admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -181,9 +184,7 @@ def test_delete_feature_dependency__point_to_open_change_request__responds_204(
         environment_api_key, feature.id, prerequisite.id
     )
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment, title="Pending", user=admin_user
-    )
+    change_request = create_change_request(feature.id, title="Pending")
 
     # When
     with capture_audit_logs() as audit_logs:
@@ -207,8 +208,8 @@ def test_delete_feature_dependency__point_to_open_change_request__responds_204(
 def test_list_feature_dependencies__point_to_open_change_request__responds_200(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
-    admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     project: int,
@@ -225,9 +226,7 @@ def test_list_feature_dependencies__point_to_open_change_request__responds_200(
         environment_api_key, feature.id, inventory.id
     )
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment, title="Pending", user=admin_user
-    )
+    change_request = create_change_request(feature.id, title="Pending")
     staged_shipping_dependency = admin_client.post(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{shipping.id}/?change_request={change_request.id}",
     ).json()
@@ -260,6 +259,7 @@ def test_add_feature_dependency__point_to_approved_change_request__responds_400(
     admin_client: APIClient,
     admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -269,9 +269,7 @@ def test_add_feature_dependency__point_to_approved_change_request__responds_400(
     feature = Feature.objects.create(name="checkout", project_id=project)
     prerequisite = Feature.objects.create(name="payments", project_id=project)
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment, title="Approved", user=admin_user
-    )
+    change_request = create_change_request(feature.id, title="Approved")
     ChangeRequestApproval.objects.create(
         change_request=change_request, user=admin_user, approved_at=timezone.now()
     )
@@ -304,6 +302,7 @@ def test_delete_feature_dependency__point_to_approved_change_request__responds_4
     admin_client: APIClient,
     admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -316,9 +315,7 @@ def test_delete_feature_dependency__point_to_approved_change_request__responds_4
         environment_api_key, feature.id, prerequisite.id
     )
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment, title="Approved", user=admin_user
-    )
+    change_request = create_change_request(feature.id, title="Approved")
     ChangeRequestApproval.objects.create(
         change_request=change_request, user=admin_user, approved_at=timezone.now()
     )
@@ -351,6 +348,7 @@ def test_list_feature_dependencies__point_to_approved_change_request__responds_2
     admin_client: APIClient,
     admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     project: int,
@@ -367,9 +365,7 @@ def test_list_feature_dependencies__point_to_approved_change_request__responds_2
         environment_api_key, feature.id, inventory.id
     )
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment, title="Approved", user=admin_user
-    )
+    change_request = create_change_request(feature.id, title="Approved")
     staged_shipping_dependency = admin_client.post(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{shipping.id}/?change_request={change_request.id}",
     ).json()
@@ -405,6 +401,7 @@ def test_add_feature_dependency__point_to_committed_change_request__responds_400
     admin_client: APIClient,
     admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -414,12 +411,8 @@ def test_add_feature_dependency__point_to_committed_change_request__responds_400
     feature = Feature.objects.create(name="checkout", project_id=project)
     prerequisite = Feature.objects.create(name="payments", project_id=project)
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment,
-        title="Committed",
-        user=admin_user,
-        committed_at=timezone.now(),
-    )
+    change_request = create_change_request(feature.id, title="Committed")
+    change_request.commit(committed_by=admin_user)
 
     # When
     with capture_audit_logs() as audit_logs:
@@ -446,6 +439,7 @@ def test_delete_feature_dependency__point_to_committed_change_request__responds_
     admin_client: APIClient,
     admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -458,12 +452,8 @@ def test_delete_feature_dependency__point_to_committed_change_request__responds_
         environment_api_key, feature.id, prerequisite.id
     )
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment,
-        title="Committed",
-        user=admin_user,
-        committed_at=timezone.now(),
-    )
+    change_request = create_change_request(feature.id, title="Committed")
+    change_request.commit(committed_by=admin_user)
 
     # When
     with capture_audit_logs() as audit_logs:
@@ -490,6 +480,7 @@ def test_list_feature_dependencies__point_to_committed_change_request__responds_
     admin_client: APIClient,
     admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     project: int,
@@ -504,9 +495,7 @@ def test_list_feature_dependencies__point_to_committed_change_request__responds_
     )
     add_feature_prerequisite(environment_api_key, feature.id, inventory.id)
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment, title="Committed", user=admin_user
-    )
+    change_request = create_change_request(feature.id, title="Committed")
     staged_shipping_dependency = admin_client.post(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{shipping.id}/?change_request={change_request.id}",
     ).json()
@@ -621,8 +610,8 @@ def test_delete_feature_dependency__feature_versioning_v1__responds_409(
 @pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__lacking_permission__responds_403(
     admin_client: APIClient,
-    admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -636,9 +625,7 @@ def test_add_feature_dependency__lacking_permission__responds_403(
     feature = Feature.objects.create(name="checkout", project_id=project)
     prerequisite = Feature.objects.create(name="payments", project_id=project)
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment, title="Pending", user=admin_user
-    )
+    change_request = create_change_request(feature.id, title="Pending")
     staff_user.add_organisation(Organisation.objects.get(id=organisation))
     with_environment_permissions([MANAGE_SEGMENT_OVERRIDES], environment, False)
 
@@ -665,8 +652,8 @@ def test_add_feature_dependency__lacking_permission__responds_403(
 def test_delete_feature_dependency__lacking_permission__responds_403(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
-    admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -683,9 +670,7 @@ def test_delete_feature_dependency__lacking_permission__responds_403(
         environment_api_key, feature.id, prerequisite.id
     )
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment, title="Pending", user=admin_user
-    )
+    change_request = create_change_request(feature.id, title="Pending")
     staff_user.add_organisation(Organisation.objects.get(id=organisation))
     with_environment_permissions([MANAGE_SEGMENT_OVERRIDES], environment, False)
 
@@ -714,8 +699,8 @@ def test_delete_feature_dependency__lacking_permission__responds_403(
 @pytest.mark.usefixtures("environment_v2_versioning")
 def test_delete_feature_dependency__previously_staged__responds_204_undoing_staged(
     admin_client: APIClient,
-    admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     log: StructuredLogCapture,
@@ -725,9 +710,7 @@ def test_delete_feature_dependency__previously_staged__responds_204_undoing_stag
     feature = Feature.objects.create(name="checkout", project_id=project)
     prerequisite = Feature.objects.create(name="payments", project_id=project)
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment, title="Pending", user=admin_user
-    )
+    change_request = create_change_request(feature.id, title="Pending")
     admin_client.post(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
     )
@@ -754,8 +737,8 @@ def test_delete_feature_dependency__previously_staged__responds_204_undoing_stag
 @pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__previously_staged__responds_400_leaving_one_staged(
     admin_client: APIClient,
-    admin_user: FFAdminUser,
     capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
     environment_name: str,
@@ -766,9 +749,7 @@ def test_add_feature_dependency__previously_staged__responds_400_leaving_one_sta
     feature = Feature.objects.create(name="checkout", project_id=project)
     prerequisite = Feature.objects.create(name="payments", project_id=project)
     _enable_change_requests(environment)
-    change_request = ChangeRequest.objects.create(
-        environment_id=environment, title="Pending", user=admin_user
-    )
+    change_request = create_change_request(feature.id, title="Pending")
     staged_dependency = admin_client.post(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
     ).json()
@@ -797,14 +778,18 @@ def test_add_feature_dependency__previously_staged__responds_400_leaving_one_sta
     assert not log.has("dependencies.created")
 
 
-# Cycle prevention
+# Prerequisite depth
 
 
-def test__add_feature_dependency__cycle_on_live_dependencies__responds_400() -> None:
+@pytest.mark.usefixtures("environment_v2_versioning")
+def test_add_feature_dependency__prerequisite_has_live_prerequisite__responds_400() -> (
+    None
+):
     raise NotImplementedError
 
 
-def test__add_feature_dependency__cycle_on_scheduled_dependencies__responds_400() -> (
+@pytest.mark.usefixtures("environment_v2_versioning")
+def test_add_feature_dependency__prerequisite_has_scheduled_prerequisite__responds_400() -> (
     None
 ):
     raise NotImplementedError
