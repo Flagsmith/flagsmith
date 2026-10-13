@@ -88,7 +88,6 @@ export const useStagedPrerequisites = ({
         environmentId,
         featureId: projectFlag.id,
         prerequisiteFeatureId: prerequisite.id,
-        prerequisiteName: prerequisite.name,
       }
       try {
         await (action === 'add'
