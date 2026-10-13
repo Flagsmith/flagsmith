@@ -118,6 +118,26 @@ def two_segment_overrides(
     assert response.status_code == 200
 
 
+@pytest.fixture()
+def system_segment(
+    admin_client: APIClient,
+    environment_api_key: str,
+    feature: int,
+    project: int,
+) -> int:
+    """A system segment the feature is overridden for, by depending on another."""
+    prerequisite = admin_client.post(
+        f"/api/v1/projects/{project}/features/",
+        data={"name": "prerequisite", "project": project},
+    ).json()["id"]
+    response = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature}"
+        f"/dependencies/{prerequisite}/",
+    )
+    assert response.status_code == 201
+    return int(response.json()["segment"]["id"])
+
+
 @pytest.mark.parametrize(
     "changes",
     [
@@ -2336,26 +2356,6 @@ def test_delete_segment_override__environment_permission__gates_override(
     ).filter(feature_segment__segment_id=segment).exists() is (
         expected_status_code != 200
     )
-
-
-@pytest.fixture()
-def system_segment(
-    admin_client: APIClient,
-    environment_api_key: str,
-    feature: int,
-    project: int,
-) -> int:
-    """A system segment the feature is overridden for, by depending on another."""
-    prerequisite = admin_client.post(
-        f"/api/v1/projects/{project}/features/",
-        data={"name": "prerequisite", "project": project},
-    ).json()["id"]
-    response = admin_client.post(
-        f"/api/v1/environments/{environment_api_key}/features/{feature}"
-        f"/dependencies/{prerequisite}/",
-    )
-    assert response.status_code == 201
-    return int(response.json()["segment"]["id"])
 
 
 @pytest.mark.parametrize(
