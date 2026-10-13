@@ -15,7 +15,8 @@ import {
   showsContribution,
 } from 'components/pages/usage/contribution'
 import { planHeading } from 'components/pages/usage/planHeading'
-import { overLimitNote, overLimitOf } from 'components/pages/usage/overLimit'
+import { overLimitOf } from 'components/pages/usage/overLimit'
+import { limitStatusNote } from 'components/pages/usage/limitStatusMessage'
 import {
   limitStatusOf,
   NO_LIMIT_FLAGS,
@@ -213,7 +214,9 @@ const UsagePage: FC<HarnessProps> = ({
       <UsageMeter
         total={allowanceTotal}
         limit={limit}
-        note={exceeded ? overLimitNote(exceeded) : contribution}
+        note={
+          exceeded ? limitStatusNote(exceeded, limitStatus?.kind) : contribution
+        }
       />
 
       <SectionHeading
