@@ -1,8 +1,10 @@
 import { FC } from 'react'
 import { useGetFeatureIdsStagedQuery } from 'common/services/useFeatureDependency'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
+import { useFeatureStates } from 'common/hooks/useFeatureStates'
 import ChangeRequestDependencyChanges from './ChangeRequestDependencyChanges'
 import Panel from 'components/base/grid/Panel'
+import ErrorMessage from 'components/ErrorMessage'
 
 type DiffDependenciesProps = {
   changeRequestId: number
@@ -17,6 +19,12 @@ const FeatureDependencyChanges: FC<
     id: featureId,
     project: Number(projectId),
   })
+  // Whether each prerequisite is on now, so a reviewer can see an added one
+  // that would hold this feature off.
+  const states = useFeatureStates({
+    environmentId,
+    projectId: Number(projectId),
+  })
   return (
     <Panel
       title={`Dependencies${feature ? `: ${feature.name}` : ''}`}
@@ -30,6 +38,10 @@ const FeatureDependencyChanges: FC<
         environmentId={environmentId}
         featureId={featureId}
         changeRequestId={changeRequestId}
+        // Until the states are known, no column rather than every row "No".
+        isEnabled={
+          states.isLoading || states.isError ? undefined : states.isEnabled
+        }
       />
     </Panel>
   )
@@ -37,12 +49,20 @@ const FeatureDependencyChanges: FC<
 
 // The prerequisite changes staged in a change request, per feature.
 const DiffDependencies: FC<DiffDependenciesProps> = (props) => {
-  const { data: featureIds } = useGetFeatureIdsStagedQuery({
+  const { data: featureIds, isError } = useGetFeatureIdsStagedQuery({
     changeRequestId: props.changeRequestId,
   })
+  // Otherwise a failed list reads as no dependency changes.
+  if (isError) {
+    return (
+      <div className='mt-4'>
+        <ErrorMessage error='Could not load the dependency changes in this change request.' />
+      </div>
+    )
+  }
   return (
     <>
-      {(featureIds ?? []).map((featureId) => (
+      {featureIds?.map((featureId) => (
         <FeatureDependencyChanges
           key={featureId}
           {...props}
