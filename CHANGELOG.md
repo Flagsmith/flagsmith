@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.283.0](https://github.com/Flagsmith/flagsmith/compare/v2.282.0...v2.283.0) (2026-10-13)
+
+
+### Features
+
+* **experimentation:** add a Databricks statement client ([#8700](https://github.com/Flagsmith/flagsmith/issues/8700)) ([a1ace4a](https://github.com/Flagsmith/flagsmith/commit/a1ace4a9b639f3371bdb4b3becf0757ed6cb82d8))
+* **experimentation:** add the Databricks warehouse provider ([#8703](https://github.com/Flagsmith/flagsmith/issues/8703)) ([c3cff21](https://github.com/Flagsmith/flagsmith/commit/c3cff21c8560514417ad2620ca02706ac63a4c3b))
+* **experimentation:** gate experimentation on `EXPERIMENTATION_ENABLED` ([#8747](https://github.com/Flagsmith/flagsmith/issues/8747)) ([6337405](https://github.com/Flagsmith/flagsmith/commit/6337405cb7f89eba6dcffc3b828507647097b26e))
+* **usage:** break usage down by project and environment ([#8654](https://github.com/Flagsmith/flagsmith/issues/8654)) ([8ccdded](https://github.com/Flagsmith/flagsmith/commit/8ccdded4b0e79e74e9f1e11fb5df60c03020e47c))
+
+
+### Refactoring
+
+* **API:** Render APIErrorDetail bodies from a common APIError base class ([#8726](https://github.com/Flagsmith/flagsmith/issues/8726)) ([c121827](https://github.com/Flagsmith/flagsmith/commit/c1218279629498569be6b2b7b0bf897c9c79830f))
+* **Flags:** Write flags through the flag API with AuthorData ([#8727](https://github.com/Flagsmith/flagsmith/issues/8727)) ([c092cd6](https://github.com/Flagsmith/flagsmith/commit/c092cd693bcc19e0f0f5b583ed4362d646ab07a5))
+
 ## [2.282.0](https://github.com/Flagsmith/flagsmith/compare/v2.281.0...v2.282.0) (2026-10-12)
 
 
