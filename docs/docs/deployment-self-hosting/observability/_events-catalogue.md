@@ -42,7 +42,7 @@ Attributes:
 ### `api_usage.restriction.applied`
 
 Logged at `info` from:
- - `api/organisations/tasks.py:428`
+ - `api/organisations/tasks.py:419`
 
 Attributes:
  - `allowed_30d_api_calls`
@@ -54,7 +54,7 @@ Attributes:
 ### `api_usage.restriction.failed`
 
 Logged at `exception` from:
- - `api/organisations/tasks.py:358`
+ - `api/organisations/tasks.py:356`
 
 Attributes:
  - `organisation.id`
