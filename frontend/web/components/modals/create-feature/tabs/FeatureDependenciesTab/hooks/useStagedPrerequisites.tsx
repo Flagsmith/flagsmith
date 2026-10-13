@@ -86,12 +86,10 @@ export const useStagedPrerequisites = ({
           ? createDependency(query).unwrap()
           : deleteDependency(query).unwrap())
       } catch (e) {
-        const error: StagingError = {
-          message:
-            describeApiError(e) ?? `Could not stage ${prerequisite.name}.`,
-          prerequisiteId: prerequisite.id,
-        }
-        throw error
+        throw new StagingError(
+          describeApiError(e) ?? `Could not stage ${prerequisite.name}.`,
+          prerequisite.id,
+        )
       }
     }
   }
@@ -124,10 +122,12 @@ export const useStagedPrerequisites = ({
         await deleteChangeRequest({ id: changeRequestId }).unwrap()
         setError(error)
       } catch {
-        setError({
-          ...error,
-          message: `${error.message} Change request #${changeRequestId} is incomplete and could not be deleted, so delete it from the change requests page.`,
-        })
+        setError(
+          new StagingError(
+            `${error.message} Change request #${changeRequestId} is incomplete and could not be deleted, so delete it from the change requests page.`,
+            error.prerequisiteId,
+          ),
+        )
       }
     } finally {
       setIsSubmitting(false)

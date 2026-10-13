@@ -1,9 +1,12 @@
-export type StagingError = { message: string; prerequisiteId?: number }
+// Why staging stopped, with the row it refers to when there is one.
+export class StagingError extends Error {
+  prerequisiteId?: number
 
-const isStagingError = (e: unknown): e is StagingError =>
-  typeof e === 'object' &&
-  e !== null &&
-  typeof (e as StagingError).message === 'string'
+  constructor(message: string, prerequisiteId?: number) {
+    super(message)
+    this.prerequisiteId = prerequisiteId
+  }
+}
 
 // The API answers with { message }, { detail } or { field: [messages] }.
 export const describeApiError = (e: unknown): string | undefined => {
@@ -18,4 +21,6 @@ export const describeApiError = (e: unknown): string | undefined => {
 }
 
 export const toStagingError = (e: unknown, fallback: string): StagingError =>
-  isStagingError(e) ? e : { message: describeApiError(e) ?? fallback }
+  e instanceof StagingError
+    ? e
+    : new StagingError(describeApiError(e) ?? fallback)
