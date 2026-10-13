@@ -663,7 +663,7 @@ def test_action__start__enables_disabled_rollout(
 ) -> None:
     # Given an experiment whose rollout override is disabled
     enable_features(EXPERIMENT_FLAG)
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     admin_client_new.patch(
         _action_url(environment, experiment_with_rollout, "rollout"),
         data={
@@ -678,6 +678,10 @@ def test_action__start__enables_disabled_rollout(
                 {
                     "multivariate_feature_option": option_b.id,
                     "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_c.id,
+                    "percentage_allocation": 0.0,
                 },
             ],
         },
@@ -1893,7 +1897,7 @@ def test_post__with_experiment_rollout__creates_rollout(
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     response = admin_client_new.post(
@@ -1914,6 +1918,10 @@ def test_post__with_experiment_rollout__creates_rollout(
                     {
                         "multivariate_feature_option": option_b.id,
                         "percentage_allocation": 40,
+                    },
+                    {
+                        "multivariate_feature_option": option_c.id,
+                        "percentage_allocation": 0.0,
                     },
                 ],
             },
@@ -1959,6 +1967,10 @@ def test_post__with_experiment_rollout__zeroes_default_allocations(
                         "multivariate_feature_option": option_b.id,
                         "percentage_allocation": 40,
                     },
+                    {
+                        "multivariate_feature_option": option_c.id,
+                        "percentage_allocation": 0.0,
+                    },
                 ],
             },
         },
@@ -1990,7 +2002,11 @@ def test_post__with_experiment_rollout__zeroes_default_allocations(
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
     }
-    assert override_allocations == {option_a.id: 60.0, option_b.id: 40.0}
+    assert override_allocations == {
+        option_a.id: 60.0,
+        option_b.id: 40.0,
+        option_c.id: 0.0,
+    }
 
 
 def test_post__with_experiment_rollout_v2_versioning__zeroes_default_allocations(
@@ -2024,6 +2040,10 @@ def test_post__with_experiment_rollout_v2_versioning__zeroes_default_allocations
                         "multivariate_feature_option": option_b.id,
                         "percentage_allocation": 40,
                     },
+                    {
+                        "multivariate_feature_option": option_c.id,
+                        "percentage_allocation": 0.0,
+                    },
                 ],
             },
         },
@@ -2054,7 +2074,11 @@ def test_post__with_experiment_rollout_v2_versioning__zeroes_default_allocations
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
     }
-    assert override_allocations == {option_a.id: 60.0, option_b.id: 40.0}
+    assert override_allocations == {
+        option_a.id: 60.0,
+        option_b.id: 40.0,
+        option_c.id: 0.0,
+    }
 
 
 def test_post__rollout_allocations_exceed_100__returns_400(
@@ -2066,7 +2090,7 @@ def test_post__rollout_allocations_exceed_100__returns_400(
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When the allocations sum to more than 100%
     response = admin_client_new.post(
@@ -2087,6 +2111,10 @@ def test_post__rollout_allocations_exceed_100__returns_400(
                     {
                         "multivariate_feature_option": option_b.id,
                         "percentage_allocation": 60,
+                    },
+                    {
+                        "multivariate_feature_option": option_c.id,
+                        "percentage_allocation": 0.0,
                     },
                 ],
             },
@@ -2144,7 +2172,7 @@ def test_action_rollout__valid__updates_percentage(
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     response = admin_client_new.patch(
@@ -2161,6 +2189,10 @@ def test_action_rollout__valid__updates_percentage(
                 {
                     "multivariate_feature_option": option_b.id,
                     "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_c.id,
+                    "percentage_allocation": 0.0,
                 },
             ],
         },
@@ -2186,7 +2218,7 @@ def test_action_rollout__running_experiment__updates_percentage(
     enable_features(EXPERIMENT_FLAG)
     experiment_with_rollout.status = ExperimentStatus.RUNNING
     experiment_with_rollout.save()
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     response = admin_client_new.patch(
@@ -2203,6 +2235,10 @@ def test_action_rollout__running_experiment__updates_percentage(
                 {
                     "multivariate_feature_option": option_b.id,
                     "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_c.id,
+                    "percentage_allocation": 0.0,
                 },
             ],
         },
@@ -2228,7 +2264,7 @@ def test_action_rollout__completed_experiment__returns_400(
     enable_features(EXPERIMENT_FLAG)
     experiment_with_rollout.status = ExperimentStatus.COMPLETED
     experiment_with_rollout.save()
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     response = admin_client_new.patch(
@@ -2245,6 +2281,10 @@ def test_action_rollout__completed_experiment__returns_400(
                 {
                     "multivariate_feature_option": option_b.id,
                     "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_c.id,
+                    "percentage_allocation": 0.0,
                 },
             ],
         },
@@ -2322,7 +2362,7 @@ def test_get_detail__with_rollout__returns_rollout(
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     response = admin_client_new.get(_detail_url(environment, experiment_with_rollout))
@@ -2336,7 +2376,7 @@ def test_get_detail__with_rollout__returns_rollout(
     assert {
         (mv["multivariate_feature_option"], mv["percentage_allocation"])
         for mv in rollout["multivariate_feature_state_values"]
-    } == {(option_a.id, 50.0), (option_b.id, 50.0)}
+    } == {(option_a.id, 50.0), (option_b.id, 50.0), (option_c.id, 0.0)}
 
 
 def test_get_detail__without_rollout__returns_null(

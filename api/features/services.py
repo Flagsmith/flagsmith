@@ -123,7 +123,7 @@ def write_segment_override(
             changes={
                 "segment_overrides": [
                     map_feature_state_data_to_segment_override(
-                        segment_id, feature_state_data, priority=priority
+                        feature, segment_id, feature_state_data, priority=priority
                     )
                 ]
             },
@@ -180,7 +180,7 @@ def is_segment_override_unchanged(
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
     changes = map_feature_state_data_to_segment_override(
-        feature_segment.segment_id, feature_state_data
+        feature_segment.feature, feature_segment.segment_id, feature_state_data
     )
     value = map_flag_value(feature_state.feature_state_value)
     weights = {
@@ -198,7 +198,7 @@ def is_segment_override_unchanged(
         changes.get("enabled", feature_state.enabled) == feature_state.enabled
         and new_value == value
         and all(
-            weights.get(variant["id"]) == variant["weight"]
+            weights.get(variant["id"], 0) == variant["weight"]
             for variant in changes.get("variants", [])
         )
     )
