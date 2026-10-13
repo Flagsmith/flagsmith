@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import Button from 'components/base/forms/Button'
+import './ChangeRequestFooter.scss'
 
 type ChangeRequestFooterProps = {
   count: number
@@ -14,14 +15,14 @@ const ChangeRequestFooter: FC<ChangeRequestFooterProps> = ({
   onCreate,
   onDiscard,
 }) => (
-  <div className='d-flex align-items-center gap-2 mt-3'>
-    <span className='text-secondary me-auto'>
+  <div className='change-request-footer position-sticky bottom-0 d-flex align-items-center gap-2 mt-3 py-3 bg-surface-default'>
+    <span className='text-secondary me-auto' aria-live='polite'>
       {count} {count === 1 ? 'change' : 'changes'} staged
     </span>
     <Button theme='secondary' onClick={onDiscard} disabled={isSubmitting}>
       Discard changes
     </Button>
-    <Button onClick={onCreate} isLoading={isSubmitting} disabled={isSubmitting}>
+    <Button onClick={onCreate} isLoading={isSubmitting}>
       Create Change Request
     </Button>
   </div>
