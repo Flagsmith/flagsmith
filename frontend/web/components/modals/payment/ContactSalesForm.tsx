@@ -1,5 +1,6 @@
 import React, { FC, useEffect, useState } from 'react'
 import Loader from 'components/Loader'
+import Link from 'components/base/link'
 import { useScript } from 'common/hooks/useScript'
 import AccountStore from 'common/stores/account-store'
 import Project from 'common/project'
@@ -46,9 +47,9 @@ const prefill = (form: HTMLFormElement) => {
 const WebsiteLink: FC = () => (
   <div className='p-4'>
     We couldn't load the form here. Please{' '}
-    <a href={CONTACT_SALES_URL} target='_blank' rel='noreferrer'>
+    <Link href={CONTACT_SALES_URL} target='_blank'>
       contact us on our website
-    </a>
+    </Link>
     .
   </div>
 )
