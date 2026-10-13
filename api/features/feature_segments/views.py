@@ -241,7 +241,7 @@ class FeatureSegmentViewSet(
             },
             replace=False,
             author=AuthorData.from_request(request),
-            system=False,
+            overwrite_system_segment_overrides=False,
         )
         create_priorities_changed_audit_log(
             request,
