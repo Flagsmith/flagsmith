@@ -4,12 +4,14 @@ import pytest
 from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from django.conf import settings
 from django.utils import timezone
+from freezegun.api import FrozenDateTimeFactory
 from pytest_structlog import StructuredLogCapture
 from rest_framework.test import APIClient
 
 from environments.models import Environment
 from features.dependencies.types import DependencyEdge
 from features.models import Feature
+from features.versioning.tasks import publish_version_change_set
 from features.workflows.core.models import ChangeRequest, ChangeRequestApproval
 from organisations.models import Organisation
 from segments.models import Segment
@@ -881,37 +883,333 @@ def test_add_feature_dependency__prerequisite_has_scheduled_prerequisite__respon
 # Audit logs
 
 
-def test_commit_change_request__scheduled_dependency_addition__produces_no_audit_log() -> (
-    None
-):
-    raise NotImplementedError
+@pytest.mark.usefixtures("environment_v2_versioning")
+def test_commit_change_request__scheduled_dependency_addition__produces_no_audit_log(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
+    environment: int,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    _enable_change_requests(environment)
+    change_request = create_change_request(
+        feature.id, title="Scheduled", live_from=timezone.now() + timedelta(days=1)
+    )
+    admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+    )
+    ChangeRequestApproval.objects.create(
+        change_request=change_request, user=admin_user, approved_at=timezone.now()
+    )
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        change_request.commit(committed_by=admin_user)
+
+    # Then
+    assert list(audit_logs.values("related_object_type", "log")) == [
+        {
+            "related_object_type": "CHANGE_REQUEST",
+            "log": "Change Request: Scheduled committed",
+        },
+    ]
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
+    ).json() == {"results": []}
+    assert not log.has("dependencies.created")
 
 
-def test_commit_change_request__scheduled_dependency_deletion__produces_no_audit_log() -> (
-    None
-):
-    raise NotImplementedError
+@pytest.mark.usefixtures("environment_v2_versioning")
+def test_commit_change_request__scheduled_dependency_deletion__produces_no_audit_log(
+    add_feature_prerequisite: AddFeaturePrerequisiteFixture,
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
+    environment: int,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    live_dependency = add_feature_prerequisite(
+        environment_api_key, feature.id, prerequisite.id
+    )
+    _enable_change_requests(environment)
+    change_request = create_change_request(
+        feature.id, title="Scheduled", live_from=timezone.now() + timedelta(days=1)
+    )
+    admin_client.delete(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+    )
+    ChangeRequestApproval.objects.create(
+        change_request=change_request, user=admin_user, approved_at=timezone.now()
+    )
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        change_request.commit(committed_by=admin_user)
+
+    # Then
+    assert list(audit_logs.values("related_object_type", "log")) == [
+        {
+            "related_object_type": "CHANGE_REQUEST",
+            "log": "Change Request: Scheduled committed",
+        },
+    ]
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
+    ).json() == {"results": [live_dependency]}
+    assert not log.has("dependencies.deleted")
 
 
-def test_commit_change_request__dependency_addition_live_now__produces_audit_log() -> (
-    None
-):
-    raise NotImplementedError
+@pytest.mark.usefixtures("environment_v2_versioning")
+def test_commit_change_request__dependency_addition_live_now__produces_audit_log(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
+    environment: int,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    _enable_change_requests(environment)
+    change_request = create_change_request(feature.id, title="Live now")
+    staged_dependency = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+    ).json()
+    ChangeRequestApproval.objects.create(
+        change_request=change_request, user=admin_user, approved_at=timezone.now()
+    )
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        change_request.commit(committed_by=admin_user)
+
+    # Then
+    assert list(audit_logs.values("related_object_type", "log")) == [
+        {
+            "related_object_type": "CHANGE_REQUEST",
+            "log": "Change Request: Live now committed",
+        },
+        {
+            "related_object_type": "EF_VERSION",
+            "log": "New version published for feature: checkout",
+        },
+        {
+            "related_object_type": "FEATURE",
+            "log": "Feature 'payments' added as a dependency for feature 'checkout'.",
+        },
+    ]
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
+    ).json() == {"results": [staged_dependency]}
+    assert log.has(
+        "dependencies.created",
+        level="info",
+        organisation__id=organisation,
+        project__id=project,
+        environment__key=environment_api_key,
+        feature__name="checkout",
+        prerequisite_feature__name="payments",
+    )
 
 
-def test_commit_change_request__dependency_deletion_live_now__produces_audit_log() -> (
-    None
-):
-    raise NotImplementedError
+@pytest.mark.usefixtures("environment_v2_versioning")
+def test_commit_change_request__dependency_deletion_live_now__produces_audit_log(
+    add_feature_prerequisite: AddFeaturePrerequisiteFixture,
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
+    environment: int,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    add_feature_prerequisite(environment_api_key, feature.id, prerequisite.id)
+    _enable_change_requests(environment)
+    change_request = create_change_request(feature.id, title="Live now")
+    admin_client.delete(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+    )
+    ChangeRequestApproval.objects.create(
+        change_request=change_request, user=admin_user, approved_at=timezone.now()
+    )
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        change_request.commit(committed_by=admin_user)
+
+    # Then
+    assert list(audit_logs.values("related_object_type", "log")) == [
+        {
+            "related_object_type": "CHANGE_REQUEST",
+            "log": "Change Request: Live now committed",
+        },
+        {
+            "related_object_type": "EF_VERSION",
+            "log": "New version published for feature: checkout",
+        },
+        {
+            "related_object_type": "FEATURE",
+            "log": "Feature 'payments' removed as a dependency for feature 'checkout'.",
+        },
+    ]
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
+    ).json() == {"results": []}
+    assert log.has(
+        "dependencies.deleted",
+        level="info",
+        organisation__id=organisation,
+        project__id=project,
+        environment__key=environment_api_key,
+        feature__name="checkout",
+        prerequisite_feature__name="payments",
+    )
 
 
-def test_publish_change_request__dependency_addition_going_live__produces_audit_log() -> (
-    None
-):
-    raise NotImplementedError
+@pytest.mark.usefixtures("environment_v2_versioning")
+def test_publish_change_request__dependency_addition_going_live__produces_audit_log(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
+    environment: int,
+    environment_api_key: str,
+    freezer: FrozenDateTimeFactory,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    _enable_change_requests(environment)
+    live_from = timezone.now() + timedelta(days=1)
+    change_request = create_change_request(
+        feature.id, title="Scheduled", live_from=live_from
+    )
+    staged_dependency = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+    ).json()
+    ChangeRequestApproval.objects.create(
+        change_request=change_request, user=admin_user, approved_at=timezone.now()
+    )
+    change_request.commit(committed_by=admin_user)
+    freezer.move_to(live_from)
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        publish_version_change_set(
+            version_change_set_id=change_request.change_sets.get().id,
+            user_id=admin_user.id,
+            is_scheduled=True,
+        )
+
+    # Then
+    assert list(audit_logs.values("related_object_type", "log")) == [
+        {
+            "related_object_type": "EF_VERSION",
+            "log": "New version published for feature: checkout",
+        },
+        {
+            "related_object_type": "FEATURE",
+            "log": "Feature 'payments' added as a dependency for feature 'checkout'.",
+        },
+    ]
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
+    ).json() == {"results": [staged_dependency]}
+    assert log.has(
+        "dependencies.created",
+        level="info",
+        organisation__id=organisation,
+        project__id=project,
+        environment__key=environment_api_key,
+        feature__name="checkout",
+        prerequisite_feature__name="payments",
+    )
 
 
-def test_publish_change_request__dependency_deletion_going_live__produces_audit_log() -> (
-    None
-):
-    raise NotImplementedError
+@pytest.mark.usefixtures("environment_v2_versioning")
+def test_publish_change_request__dependency_deletion_going_live__produces_audit_log(
+    add_feature_prerequisite: AddFeaturePrerequisiteFixture,
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    create_change_request: CreateChangeRequestFixture,
+    environment: int,
+    environment_api_key: str,
+    freezer: FrozenDateTimeFactory,
+    log: StructuredLogCapture,
+    organisation: int,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    add_feature_prerequisite(environment_api_key, feature.id, prerequisite.id)
+    _enable_change_requests(environment)
+    live_from = timezone.now() + timedelta(days=1)
+    change_request = create_change_request(
+        feature.id, title="Scheduled", live_from=live_from
+    )
+    admin_client.delete(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+    )
+    ChangeRequestApproval.objects.create(
+        change_request=change_request, user=admin_user, approved_at=timezone.now()
+    )
+    change_request.commit(committed_by=admin_user)
+    freezer.move_to(live_from)
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        publish_version_change_set(
+            version_change_set_id=change_request.change_sets.get().id,
+            user_id=admin_user.id,
+            is_scheduled=True,
+        )
+
+    # Then
+    assert list(audit_logs.values("related_object_type", "log")) == [
+        {
+            "related_object_type": "EF_VERSION",
+            "log": "New version published for feature: checkout",
+        },
+        {
+            "related_object_type": "FEATURE",
+            "log": "Feature 'payments' removed as a dependency for feature 'checkout'.",
+        },
+    ]
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
+    ).json() == {"results": []}
+    assert log.has(
+        "dependencies.deleted",
+        level="info",
+        organisation__id=organisation,
+        project__id=project,
+        environment__key=environment_api_key,
+        feature__name="checkout",
+        prerequisite_feature__name="payments",
+    )
