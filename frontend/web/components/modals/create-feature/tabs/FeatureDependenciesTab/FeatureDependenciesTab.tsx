@@ -50,12 +50,13 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
       ? EnvironmentPermission.CREATE_CHANGE_REQUEST
       : EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
   })
-  const canManage = permission && mode !== 'readOnly'
   const staging = useStagedPrerequisites({
     environmentId,
     projectFlag,
     projectId,
   })
+  // Held while submitting, so a change can't miss the change request.
+  const canManage = permission && mode !== 'readOnly' && !staging.isSubmitting
 
   const {
     addingName,
@@ -138,7 +139,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
                     existingPrerequisiteIds={shownRows.map(
                       (row) => row.edge.prerequisite.id,
                     )}
-                    disabled={isCreating}
+                    disabled={isCreating || staging.isSubmitting}
                     onChange={handleAdd}
                   />
                 )
