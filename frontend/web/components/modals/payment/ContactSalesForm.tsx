@@ -1,17 +1,17 @@
 import React, { FC, useEffect } from 'react'
 import { useScript } from 'common/hooks/useScript'
 import AccountStore from 'common/stores/account-store'
+import Project from 'common/project'
 import { AccountModel } from 'common/types/responses'
-import {
-  CONTACT_SALES_FORM,
-  CONTACT_SALES_URL,
-  HUBSPOT_FORMS_SCRIPT_URL,
-} from './constants'
+import { CONTACT_SALES_URL, HUBSPOT_FORMS_SCRIPT_URL } from './constants'
+
+// Set in env/project_prod.js only, so other environments get the website link.
+type HubSpotFormConfig = { formId: string; portalId: string; region: string }
 
 // HubSpot passes a jQuery object when jQuery is on the page, as it is here.
 type HubSpotFormArg = HTMLFormElement | { jquery: string; 0: HTMLFormElement }
 
-type HubSpotFormOptions = typeof CONTACT_SALES_FORM & {
+type HubSpotFormOptions = HubSpotFormConfig & {
   target: string
   onFormReady: (form: HubSpotFormArg) => void
 }
@@ -43,30 +43,32 @@ const prefill = (arg: HubSpotFormArg) => {
   })
 }
 
-const ContactSalesForm: FC = () => {
+const WebsiteLink: FC = () => (
+  <div className='p-4'>
+    We couldn't load the form here. Please{' '}
+    <a href={CONTACT_SALES_URL} target='_blank' rel='noreferrer'>
+      contact us on our website
+    </a>
+    .
+  </div>
+)
+
+const HubSpotForm: FC<{ config: HubSpotFormConfig }> = ({ config }) => {
   const { error, ready } = useScript(HUBSPOT_FORMS_SCRIPT_URL)
 
   useEffect(() => {
     if (ready && window.hbspt) {
       window.hbspt.forms.create({
-        ...CONTACT_SALES_FORM,
+        ...config,
         onFormReady: prefill,
         target: `#${TARGET_ID}`,
       })
     }
-  }, [ready])
+  }, [ready, config])
 
   // Ad blockers commonly block HubSpot, so always leave a way through.
   if (error || (ready && !window.hbspt)) {
-    return (
-      <div className='p-4'>
-        We couldn't load the form here. Please{' '}
-        <a href={CONTACT_SALES_URL} target='_blank' rel='noreferrer'>
-          contact us on our website
-        </a>
-        .
-      </div>
-    )
+    return <WebsiteLink />
   }
 
   // HubSpot styles the form itself (dark labels), so it sits on a white
@@ -78,6 +80,11 @@ const ContactSalesForm: FC = () => {
       </div>
     </div>
   )
+}
+
+const ContactSalesForm: FC = () => {
+  const config: HubSpotFormConfig | undefined = Project.hubspotContactSalesForm
+  return config ? <HubSpotForm config={config} /> : <WebsiteLink />
 }
 
 export default ContactSalesForm
