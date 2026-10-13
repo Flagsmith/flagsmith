@@ -22,7 +22,8 @@
     display: block;
   }
 
-  .hs-input {
+  // :where keeps the specificity of .hs-input, so textarea.hs-input still wins.
+  .hs-input:where(:not([type='checkbox'], [type='radio'])) {
     width: 100%;
     height: $input-height;
     padding: $input-padding;
