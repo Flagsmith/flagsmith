@@ -1,16 +1,16 @@
-import { FC, useMemo, useRef } from 'react'
-import moment from 'moment'
-import { ChangeRequestSummary } from 'common/types/responses'
-import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
-import { useGetChangeRequestIdsStagingQuery } from 'common/services/useFeatureDependency'
+import { FC } from 'react'
 import Chip from 'components/base/Chip'
 import ErrorMessage from 'components/ErrorMessage'
 import ChangeRequestDependencyChanges from 'components/feature-dependencies/ChangeRequestDependencyChanges'
 import DependenciesPanel from './DependenciesPanel'
+import { describeStatus } from './pendingChangeRequestState'
+import { usePendingChangeRequests } from './hooks/usePendingChangeRequests'
 
 type PendingChangeRequestsProps = {
   environmentId: string
   featureId: number
+  // Each prerequisite's state in this environment.
+  isEnabled: (prerequisiteId: number) => boolean
   projectId: number
 }
 
@@ -19,34 +19,15 @@ type PendingChangeRequestsProps = {
 const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
   environmentId,
   featureId,
+  isEnabled,
   projectId,
 }) => {
-  const now = useRef(new Date().toISOString())
-  const { data: changeRequestIds } = useGetChangeRequestIdsStagingQuery({
+  const { changeRequests: groups, isError } = usePendingChangeRequests({
+    environmentId,
     featureId,
   })
-  const { data: open, isError: isOpenError } = useGetChangeRequestsQuery({
-    committed: false,
-    environmentId,
-    page_size: 100,
-  })
-  const { data: scheduled, isError: isScheduledError } =
-    useGetChangeRequestsQuery({
-      committed: true,
-      environmentId,
-      live_from_after: now.current,
-      page_size: 100,
-    })
 
-  // A change request that was published or deleted has nothing pending.
-  const groups = useMemo(() => {
-    const live = [...(open?.results ?? []), ...(scheduled?.results ?? [])]
-    return live.filter((cr) => changeRequestIds?.includes(cr.id))
-  }, [changeRequestIds, open, scheduled])
-
-  // Without the change request lists, staged changes cannot be matched to
-  // one, and hiding them would read as nothing pending.
-  if (changeRequestIds?.length && (isOpenError || isScheduledError)) {
+  if (isError) {
     return (
       <ErrorMessage error='Could not load the change requests waiting on this feature.' />
     )
@@ -76,6 +57,7 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
               environmentId={environmentId}
               featureId={featureId}
               changeRequestId={changeRequest.id}
+              isEnabled={isEnabled}
             />
           </DependenciesPanel>
         ))}
@@ -83,10 +65,5 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
     </div>
   )
 }
-
-const describeStatus = (changeRequest: ChangeRequestSummary) =>
-  changeRequest.committed_at && changeRequest.live_from
-    ? `Scheduled for ${moment(changeRequest.live_from).format('D MMM, HH:mm')}`
-    : 'Awaiting approval'
 
 export default PendingChangeRequests
