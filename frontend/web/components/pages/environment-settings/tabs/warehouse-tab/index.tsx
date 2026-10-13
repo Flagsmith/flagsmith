@@ -147,7 +147,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
       .unwrap()
       .then(() => toast('Warehouse connection created'))
 
-  const handleUpdateClickHouse = (data: ClickHouseFormData) => {
+  const handleUpdate = (data: ClickHouseFormData | DatabricksFormData) => {
     if (!connection) return Promise.reject()
     return updateConnection({
       environmentId,
@@ -169,20 +169,6 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     })
       .unwrap()
       .then(() => toast('Warehouse connection created'))
-
-  const handleUpdateDatabricks = (data: DatabricksFormData) => {
-    if (!connection) return Promise.reject()
-    return updateConnection({
-      environmentId,
-      id: connection.id,
-      ...data,
-    })
-      .unwrap()
-      .then(() => {
-        setEditing(false)
-        toast('Warehouse connection updated')
-      })
-  }
 
   const handleTestConnection = () => {
     if (!connection) return
@@ -280,7 +266,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
           environmentId={environmentId}
           initialConfig={connection.config as ClickHouseConfig}
           initialName={connection.name}
-          onSave={handleUpdateClickHouse}
+          onSave={handleUpdate}
           onCancel={() => setEditing(false)}
         />
       </div>
@@ -295,7 +281,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
           environmentId={environmentId}
           initialConfig={connection.config as DatabricksConfig}
           initialName={connection.name}
-          onSave={handleUpdateDatabricks}
+          onSave={handleUpdate}
           onCancel={() => setEditing(false)}
         />
       </div>

@@ -1,5 +1,6 @@
 import React, { FC, useState } from 'react'
 import Switch from 'components/Switch'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
 import WarehouseConfigField from './WarehouseConfigField'
 import WarehouseFormActions from './WarehouseFormActions'
@@ -158,10 +159,13 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
 
         <div className='wh-config-form__field'>
           <div className='d-flex flex-row align-items-center gap-2'>
-            <Switch checked={secure} disabled />
-            <label className='wh-config-form__label fs-caption text-secondary mb-0'>
+            <Switch id='warehouse-config-secure' checked={secure} disabled />
+            <FieldLabel
+              htmlFor='warehouse-config-secure'
+              className='wh-config-form__label fs-caption text-secondary mb-0'
+            >
               Secure connection (TLS)
-            </label>
+            </FieldLabel>
           </div>
         </div>
 

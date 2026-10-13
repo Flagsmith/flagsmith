@@ -1,6 +1,7 @@
 import React, { FC, ReactNode } from 'react'
 import Input from 'components/base/forms/Input'
 import FieldError from 'components/base/forms/FieldError'
+import FieldLabel from 'components/base/forms/FieldLabel'
 
 type WarehouseConfigFieldProps = {
   id: string
@@ -34,12 +35,12 @@ const WarehouseConfigField: FC<WarehouseConfigFieldProps> = ({
     .join(' ')
   return (
     <div className='wh-config-form__field'>
-      <label
-        className='wh-config-form__label fs-caption text-secondary'
+      <FieldLabel
         htmlFor={id}
+        className='wh-config-form__label fs-caption text-secondary'
       >
         {label}
-      </label>
+      </FieldLabel>
       <Input
         id={id}
         value={value}
