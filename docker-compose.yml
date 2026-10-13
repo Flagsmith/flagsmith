@@ -33,9 +33,9 @@ x-flagsmith-env: &flagsmith-env
   # EMAIL_PORT: 587 # optional
   # EMAIL_USE_TLS: 'true' # optional
 
-  # Experimentation needs the services in the `experimentation` profile. To enable it, run:
-  # EXPERIMENTATION_ENABLED=true docker compose --profile experimentation up -d
-  EXPERIMENTATION_ENABLED: ${EXPERIMENTATION_ENABLED:-false}
+  # To run without experimentation and its services, run:
+  # EXPERIMENTATION_ENABLED=false docker compose up -d
+  EXPERIMENTATION_ENABLED: ${EXPERIMENTATION_ENABLED:-true}
   EXPERIMENTATION_CLICKHOUSE_URL: clickhouse://flagsmith:password@clickhouse:9000/flagsmith_exp
 
 volumes:
@@ -95,10 +95,10 @@ services:
         condition: service_completed_successfully
     command: run-task-processor
 
-  # The services below run only with the `experimentation` profile.
+  # Experimentation services. Setting EXPERIMENTATION_ENABLED to any value (even 'true') skips them.
   kafka:
     image: apache/kafka:3.9.1
-    profiles: [experimentation]
+    profiles: ['${EXPERIMENTATION_ENABLED:-}']
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -119,7 +119,7 @@ services:
 
   kafka-init:
     image: apache/kafka:3.9.1
-    profiles: [experimentation]
+    profiles: ['${EXPERIMENTATION_ENABLED:-}']
     entrypoint: ['/bin/sh', '-c']
     command:
       - |
@@ -132,7 +132,7 @@ services:
 
   clickhouse:
     image: clickhouse/clickhouse-server:25.12
-    profiles: [experimentation]
+    profiles: ['${EXPERIMENTATION_ENABLED:-}']
     environment:
       CLICKHOUSE_USER: flagsmith
       CLICKHOUSE_PASSWORD: password
@@ -152,7 +152,7 @@ services:
   # ClickHouse consume events from Kafka into it.
   clickhouse-init:
     image: clickhouse/clickhouse-server:25.12
-    profiles: [experimentation]
+    profiles: ['${EXPERIMENTATION_ENABLED:-}']
     entrypoint: ['/bin/sh', '-c']
     command:
       - |
@@ -190,7 +190,7 @@ services:
 
   ingestion-server:
     image: flagsmith/events-ingestion-api:latest
-    profiles: [experimentation]
+    profiles: ['${EXPERIMENTATION_ENABLED:-}']
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_AUTH: none
@@ -207,7 +207,7 @@ services:
 
   warehouse-delivery:
     image: flagsmith/warehouse-delivery:latest
-    profiles: [experimentation]
+    profiles: ['${EXPERIMENTATION_ENABLED:-}']
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_AUTH: none
