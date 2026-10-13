@@ -17,7 +17,9 @@ import ChangeRequestNotice from './ChangeRequestNotice'
 import DependenciesHeader from './DependenciesHeader'
 import PrerequisitePicker from './PrerequisitePicker'
 import { getDependenciesMode } from './dependenciesMode'
-import { usePrerequisiteEditing } from './hooks/usePrerequisiteEditing'
+import { withStagedChanges } from './prerequisiteState'
+import { usePrerequisites } from './hooks/usePrerequisites'
+import { useStagedPrerequisites } from './hooks/useStagedPrerequisites'
 
 type FeatureDependenciesTabProps = {
   environmentId: string
@@ -48,10 +50,8 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
       ? EnvironmentPermission.CREATE_CHANGE_REQUEST
       : EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
   })
-  const { editing, prerequisites, staging } = usePrerequisiteEditing({
+  const staging = useStagedPrerequisites({
     environmentId,
-    environmentName,
-    isChangeRequest,
     projectFlag,
     projectId,
   })
@@ -61,14 +61,22 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
     dependentEdges,
     flashedId,
     isCreating,
+    isEnabled,
     isError,
     isLoading,
     isOpenForAdding,
     isPrerequisite,
+    onAdd,
     onAddingChange,
+    onRemove,
     removingId,
     rows,
-  } = prerequisites
+  } = usePrerequisites({
+    environmentId,
+    environmentName,
+    projectFlag,
+    projectId,
+  })
   // Held while submitting, so a change can't miss the change request.
   const canManage = permission && mode !== 'readOnly' && !staging.isSubmitting
 
@@ -82,6 +90,23 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   if (isError) {
     return <ErrorMessage error="Could not load this feature's dependencies." />
   }
+
+  // Where change requests are required, edits are held instead of written.
+  const editing = isChangeRequest
+    ? {
+        onAdd: (feature: ProjectFlag) => {
+          staging.add(feature)
+          onAddingChange(false)
+        },
+        onRemove: staging.remove,
+        rows: withStagedChanges(
+          rows,
+          staging.staged,
+          projectFlag.id,
+          isEnabled,
+        ),
+      }
+    : { onAdd, onRemove, rows }
 
   return (
     <div>
