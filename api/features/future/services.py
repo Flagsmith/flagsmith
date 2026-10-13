@@ -1,6 +1,7 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
 from collections.abc import Collection, Sequence
+from itertools import count, islice
 from typing import NamedTuple
 
 import structlog
@@ -284,6 +285,22 @@ def _write_segment_overrides(
             segment_ids=segments.deleted,
         )
 
+    # Overrides kept by replacing, i.e. system segment ones, hold their priorities.
+    held_priorities = {
+        feature_state.feature_segment.priority
+        for segment_id, feature_state in overrides.items()
+        if replace
+        and feature_state.feature_segment
+        and segment_id not in changed_segment_ids
+        and segment_id not in segments.deleted
+    }
+    default_priorities = list(
+        islice(
+            (priority for priority in count() if priority not in held_priorities),
+            len(changes),
+        )
+    )
+
     for position, change in enumerate(changes):
         segment_id = change["segment"]["id"]
         if feature_state := overrides.get(segment_id):
@@ -294,7 +311,7 @@ def _write_segment_overrides(
                 feature=feature,
                 version=version,
                 segment_id=segment_id,
-                priority=change.get("priority", position),
+                priority=change.get("priority", default_priorities[position]),
             )
             segments.created.append(segment_id)
         _write_segment_override(
