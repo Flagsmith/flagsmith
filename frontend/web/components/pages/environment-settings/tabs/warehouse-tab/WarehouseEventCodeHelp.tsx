@@ -13,26 +13,38 @@ final user = Identity(identifier: 'user_42');
 // Evaluates the flag and records an exposure
 final flag = await flagsmith.getExperimentFlag('checkout_button', user: user);
 
-// Records a conversion for the same identity
-flagsmith.trackEvent('purchase', user: user, value: 99.5);`,
+// Records a conversion. Only the event name is required.
+flagsmith.trackEvent(
+  'purchase',
+  user: user, // optional, defaults to the identified user
+  value: 99.5, // optional
+  traits: {'plan': 'premium'}, // optional
+  metadata: {'source': 'app'}, // optional
+);`,
   'Go': `import (
+    "context"
+
     flagsmith "github.com/Flagsmith/flagsmith-go-client/v5"
 )
 
+ctx := context.Background()
 client := flagsmith.NewClient("YOUR_ENVIRONMENT_KEY", flagsmith.WithEvents(ctx))
 ec := flagsmith.NewEvaluationContext("user_42", nil)
 
 // Evaluates the flag and records an exposure
 flag, err := client.GetExperimentFlag(ctx, "checkout_button", ec)
 
-// Records a conversion for the same identity
+// Records a conversion. Only the event name is required; opts may be nil.
 err = client.TrackEvent("purchase", &flagsmith.EventOptions{
-    Identifier: "user_42",
-    Value:      99.5,
+    Identifier: "user_42",                                 // optional, links the event to the exposure
+    Value:      99.5,                                      // optional
+    Traits:     map[string]interface{}{"plan": "premium"}, // optional
+    Metadata:   map[string]interface{}{"source": "api"},   // optional
 })`,
   'Java': `import com.flagsmith.FlagsmithClient;
 import com.flagsmith.config.FlagsmithConfig;
 import com.flagsmith.models.BaseFlag;
+import java.util.Map;
 
 FlagsmithClient flagsmith = FlagsmithClient
     .newBuilder()
@@ -43,8 +55,16 @@ FlagsmithClient flagsmith = FlagsmithClient
 // Evaluates the flag and records an exposure
 BaseFlag flag = flagsmith.getExperimentFlag("checkout_button", "user_42");
 
-// Records a conversion for the same identity
-flagsmith.trackEvent("purchase", "user_42", 99.5, null, null);`,
+// Records a conversion. Only the event name is required.
+// Overloads: trackEvent(event), trackEvent(event, identifier),
+// trackEvent(event, identifier, value, traits, metadata).
+flagsmith.trackEvent(
+    "purchase",
+    "user_42",                 // identifier, optional, links the event to the exposure
+    99.5,                      // value, optional (or null)
+    Map.of("plan", "premium"), // traits, optional (or null)
+    Map.of("source", "api")    // metadata, optional (or null)
+);`,
   'JavaScript': `import flagsmith from '@flagsmith/flagsmith';
 
 await flagsmith.init({
@@ -56,8 +76,13 @@ await flagsmith.identify('user_42');
 // Evaluates the flag and records an exposure
 const flag = flagsmith.getExperimentFlag('checkout_button');
 
-// Records a conversion for the same identity
-flagsmith.trackEvent('purchase', { value: 99.5 });`,
+// Records a conversion. Only the event name is required.
+flagsmith.trackEvent('purchase', {
+  identifier: 'user_42', // optional, defaults to the identified user
+  value: 99.5, // optional
+  traits: { plan: 'premium' }, // optional
+  metadata: { source: 'web' }, // optional
+});`,
   'Node JS': `import { Flagsmith } from '@flagsmith/nodejs';
 
 const flagsmith = new Flagsmith({
@@ -68,8 +93,13 @@ const flagsmith = new Flagsmith({
 // Evaluates the flag and records an exposure
 const flag = await flagsmith.getExperimentFlag('checkout_button', 'user_42');
 
-// Records a conversion for the same identity
-flagsmith.trackEvent('purchase', { identifier: 'user_42', value: 99.5 });`,
+// Records a conversion. Only the event name is required.
+flagsmith.trackEvent('purchase', {
+  identifier: 'user_42', // optional, links the event to the exposure
+  value: 99.5, // optional
+  traits: { plan: 'premium' }, // optional
+  metadata: { source: 'api' }, // optional
+});`,
   'Python': `from flagsmith import Flagsmith
 
 flagsmith = Flagsmith(
@@ -80,8 +110,14 @@ flagsmith = Flagsmith(
 # Evaluates the flag and records an exposure
 flag = flagsmith.get_experiment_flag("checkout_button", identifier="user_42")
 
-# Records a conversion for the same identity
-flagsmith.track_event("purchase", identifier="user_42", value=99.5)`,
+# Records a conversion. Only the event name is required.
+flagsmith.track_event(
+    "purchase",
+    identifier="user_42",  # optional, links the event to the exposure
+    value=99.5,  # optional
+    traits={"plan": "premium"},  # optional
+    metadata={"source": "api"},  # optional
+)`,
 }
 
 const WarehouseEventCodeHelp: FC = () => (
