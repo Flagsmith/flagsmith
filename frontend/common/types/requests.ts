@@ -892,15 +892,12 @@ export type Req = {
     prerequisiteFeatureId: number
     // Stages the change in this change request instead of publishing it.
     changeRequestId?: number
-    // Read only by the fake that stands in for #8449.
-    prerequisiteName?: string
   }
   deleteFeatureDependency: {
     environmentId: string
     featureId: number
     prerequisiteFeatureId: number
     changeRequestId?: number
-    prerequisiteName?: string
   }
   createEnvironmentChangeRequest: {
     environmentId: string
