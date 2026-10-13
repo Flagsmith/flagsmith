@@ -2451,6 +2451,37 @@ def test_update_flag__put_without_system_segment_override__keeps_system_segment_
     ]
 
 
+def test_update_flag__put_without_priorities__ranks_overrides_after_system_segment_override(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    segment_2: int,
+    system_segment: int,
+) -> None:
+    # Given / When
+    response = admin_client_new.put(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest(
+            {
+                "environment_default": {"enabled": False},
+                "segment_overrides": [
+                    {"segment": {"id": segment}, "enabled": True},
+                    {"segment": {"id": segment_2}, "enabled": True},
+                ],
+            }
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert [
+        (override["segment"]["id"], override["priority"])
+        for override in response.json()["segment_overrides"]
+    ] == [(system_segment, 0), (segment, 1), (segment_2, 2)]
+
+
 def test_update_flag__system_segment_override_for_other_feature__responds_409(
     admin_client_new: APIClient,
     environment_api_key: str,
