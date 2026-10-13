@@ -13,8 +13,8 @@ import Table, {
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import { PrerequisiteRow } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/prerequisiteState'
-import StateToggle from 'components/feature-dependencies/StateToggle'
-import Satisfies from 'components/feature-dependencies/Satisfies'
+import StateToggle from 'components/modals/create-feature/tabs/FeatureDependenciesTab/StateToggle'
+import Satisfies from 'components/modals/create-feature/tabs/FeatureDependenciesTab/Satisfies'
 import './PrerequisitesTable.scss'
 
 // The actions column only exists where the user can manage dependencies, so the
