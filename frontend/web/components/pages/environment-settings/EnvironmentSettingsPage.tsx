@@ -119,7 +119,7 @@ const EnvironmentSettingsPage: React.FC = () => {
 
   const has4EyesPermission = Utils.getPlansPermission('4_EYES')
   const metadataEnable = Utils.getPlansPermission('METADATA')
-  const warehouseEnabled = Utils.getFlagsmithHasFeature(
+  const warehouseEnabled = Utils.hasExperimentationFeature(
     'experimentation_warehouse_connection',
   )
   const cohortSyncEnabled = getSegmentSources().some(

@@ -81,7 +81,7 @@ const ExperimentsPage: FC = () => {
 
   if (!environmentId || !projectId) return null
 
-  const hasExperiments = Utils.getFlagsmithHasFeature('experimental_flags')
+  const hasExperiments = Utils.hasExperimentationFeature('experimental_flags')
   const hasFakeDoor = Utils.getFlagsmithHasFeature('experiments_fake_door')
 
   if (!Utils.isOrgOnFreePlan() && !hasExperiments && hasFakeDoor) {

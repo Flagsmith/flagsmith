@@ -1262,6 +1262,7 @@ export type Version = {
     ci_commit_sha: string
     image_tag: string
     has_email_provider: boolean
+    experimentation_enabled: boolean
     is_enterprise: boolean
     is_saas: boolean
     'self_hosted_data'?: {

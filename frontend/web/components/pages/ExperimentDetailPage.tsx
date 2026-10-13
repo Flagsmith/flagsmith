@@ -30,7 +30,7 @@ const ExperimentDetailPage: FC = () => {
     useParams<ExperimentDetailParams>()
   const history = useHistory()
   const numericId = Number(experimentId)
-  const hasFeature = Utils.getFlagsmithHasFeature('experimental_flags')
+  const hasFeature = Utils.hasExperimentationFeature('experimental_flags')
 
   const {
     data: experiment,

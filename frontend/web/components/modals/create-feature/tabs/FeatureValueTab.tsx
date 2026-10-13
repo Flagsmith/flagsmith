@@ -507,7 +507,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               <FieldLabel
                 className='mb-0'
                 tooltip={
-                  Utils.getFlagsmithHasFeature('experimental_flags')
+                  Utils.hasExperimentationFeature('experimental_flags')
                     ? 'To use this flag in an experiment, all the variants must have a label.'
                     : undefined
                 }

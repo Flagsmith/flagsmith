@@ -10,7 +10,7 @@ jest.mock('react', () => ({
 jest.mock('common/utils/utils', () => ({
   __esModule: true,
   default: {
-    getFlagsmithHasFeature: jest.fn(),
+    hasExperimentationFeature: jest.fn(),
   },
 }))
 
@@ -21,9 +21,9 @@ import { Experiment } from 'common/types/responses'
 
 const mockUseGetExperimentsQuery =
   useGetExperimentsQuery as jest.MockedFunction<typeof useGetExperimentsQuery>
-const mockGetFlagsmithHasFeature =
-  Utils.getFlagsmithHasFeature as jest.MockedFunction<
-    typeof Utils.getFlagsmithHasFeature
+const mockHasExperimentationFeature =
+  Utils.hasExperimentationFeature as jest.MockedFunction<
+    typeof Utils.hasExperimentationFeature
   >
 
 const makeExperiment = (
@@ -56,7 +56,7 @@ const withResults = (experiments: Experiment[]) =>
 describe('useFeatureExperimentFreeze', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockGetFlagsmithHasFeature.mockReturnValue(true)
+    mockHasExperimentationFeature.mockReturnValue(true)
   })
 
   it('returns isFrozen true when a running experiment exists for the feature', () => {
@@ -125,8 +125,8 @@ describe('useFeatureExperimentFreeze', () => {
     )
   })
 
-  it('skips query when experimental_flags feature is disabled', () => {
-    mockGetFlagsmithHasFeature.mockReturnValue(false)
+  it('skips query when experimentation is unavailable', () => {
+    mockHasExperimentationFeature.mockReturnValue(false)
     mockUseGetExperimentsQuery.mockReturnValue(empty)
 
     const result = useFeatureExperimentFreeze(42, 'env-123')

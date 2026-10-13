@@ -79,7 +79,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               >
                 Features
               </SidebarLink>
-              {Utils.getFlagsmithHasFeature('experimental_flags') ? (
+              {Utils.hasExperimentationFeature('experimental_flags') ? (
                 <SidebarLink
                   id={mobile ? undefined : 'experiments-link'}
                   icon='flask'
