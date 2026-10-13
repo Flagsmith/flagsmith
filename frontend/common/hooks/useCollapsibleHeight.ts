@@ -23,7 +23,12 @@ export default function useCollapsibleHeight(open: boolean) {
     if (!contentRef.current) return
     if (open) {
       setHeight(contentRef.current.scrollHeight)
-      const timer = setTimeout(() => setHeight(undefined), 300)
+      // Back to auto once the transition ends, so the content can grow.
+      const { transitionDuration } = getComputedStyle(contentRef.current)
+      const timer = setTimeout(
+        () => setHeight(undefined),
+        (parseFloat(transitionDuration) || 0) * 1000,
+      )
       return () => clearTimeout(timer)
     } else {
       setHeight(contentRef.current.scrollHeight)
