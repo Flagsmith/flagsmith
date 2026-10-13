@@ -102,7 +102,6 @@ export const featureDependencyService = service
           url: dependencyUrl(query),
         }),
       }),
-
       getFeatureDependencies: builder.query<
         Res['featureDependencies'],
         Req['getFeatureDependencies']
@@ -128,7 +127,6 @@ export const featureDependencyService = service
           url: `environments/${query.environmentId}/features/${query.featureId}/dependents/`,
         }),
       }),
-
       // END OF ENDPOINTS
     }),
   })
