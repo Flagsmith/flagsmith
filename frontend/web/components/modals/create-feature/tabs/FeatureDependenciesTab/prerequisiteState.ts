@@ -1,7 +1,8 @@
 import {
   DependencyEdge,
-  DependencyFeature,
   ProjectFlag,
+  StagedAction,
+  StagedDependencyChange,
 } from 'common/types/responses'
 import { stagedDependencyEdge } from 'common/utils/stagedDependencyEdge'
 
@@ -13,8 +14,6 @@ export type PrerequisiteRow = {
   // Held for a change request, not live yet.
   staged?: StagedAction
 }
-
-export type StagedAction = 'add' | 'remove'
 
 // A system edge always carries the hardcoded `enabled != true` condition from
 // _get_or_create_dependency_segment in api/features/dependencies/services.py,
@@ -47,7 +46,7 @@ export const toPrerequisiteRows = (
 // Live rows with their held removals marked, then the held adds.
 export const withStagedChanges = (
   rows: PrerequisiteRow[],
-  staged: { action: StagedAction; prerequisite: DependencyFeature }[],
+  staged: StagedDependencyChange[],
   featureId: number,
   isEnabled: (prerequisiteId: number) => boolean,
 ): PrerequisiteRow[] => [
