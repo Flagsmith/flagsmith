@@ -33,8 +33,14 @@ x-flagsmith-env: &flagsmith-env
   # EMAIL_PORT: 587 # optional
   # EMAIL_USE_TLS: 'true' # optional
 
+  # Experimentation needs the services in the `experimentation` profile. To enable it, run:
+  # EXPERIMENTATION_ENABLED=true docker compose --profile experimentation up -d
+  EXPERIMENTATION_ENABLED: ${EXPERIMENTATION_ENABLED:-false}
+  EXPERIMENTATION_CLICKHOUSE_URL: clickhouse://flagsmith:password@clickhouse:9000/flagsmith_exp
+
 volumes:
   pgdata:
+  clickhouse-data:
 
 services:
   postgres:
@@ -88,3 +94,127 @@ services:
       migrate-db:
         condition: service_completed_successfully
     command: run-task-processor
+
+  # The services below run only with the `experimentation` profile.
+  kafka:
+    image: apache/kafka:3.9.1
+    profiles: [experimentation]
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    healthcheck:
+      test: ['CMD-SHELL', '/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092']
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  kafka-init:
+    image: apache/kafka:3.9.1
+    profiles: [experimentation]
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        for topic in flagsmith_warehouse_events external_warehouse_events external_warehouse_events_retry; do
+          /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic $$topic
+        done
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.12
+    profiles: [experimentation]
+    environment:
+      CLICKHOUSE_USER: flagsmith
+      CLICKHOUSE_PASSWORD: password
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:8123/ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Creates the events table from experimentation/clickhouse/events.sql, and has
+  # ClickHouse consume events from Kafka into it.
+  clickhouse-init:
+    image: clickhouse/clickhouse-server:25.12
+    profiles: [experimentation]
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        set -e
+        client="clickhouse-client --host clickhouse --user flagsmith --password password --multiquery"
+        wget -qO- https://raw.githubusercontent.com/Flagsmith/flagsmith/main/experimentation/clickhouse/events.sql | $$client
+        $$client <<'SQL'
+        CREATE TABLE IF NOT EXISTS flagsmith_exp.events_queue (raw String)
+        ENGINE = Kafka
+        SETTINGS kafka_broker_list = 'kafka:9092',
+                 kafka_topic_list = 'flagsmith_warehouse_events',
+                 kafka_group_name = 'clickhouse',
+                 kafka_format = 'JSONAsString';
+
+        CREATE MATERIALIZED VIEW IF NOT EXISTS flagsmith_exp.events_mv TO flagsmith_exp.events AS
+        SELECT
+            JSONExtractString(raw, 'environment_key') AS environment_key,
+            JSONExtractString(raw, 'event') AS event,
+            JSONExtractString(raw, 'feature_name') AS feature_name,
+            fromUnixTimestamp64Milli(JSONExtract(raw, 'timestamp', 'Int64')) AS timestamp,
+            fromUnixTimestamp64Milli(JSONExtract(raw, 'collected_at', 'Int64')) AS collected_at,
+            JSONExtractString(raw, 'identifier') AS identifier,
+            if(JSONType(raw, 'value') = 'String', JSONExtractString(raw, 'value'), JSONExtractRaw(raw, 'value')) AS value,
+            JSONExtractString(raw, 'traits') AS traits,
+            JSONExtractString(raw, 'metadata') AS metadata,
+            JSONExtractString(raw, 'sdk_language') AS sdk_language,
+            JSONExtractString(raw, 'sdk_version') AS sdk_version
+        FROM flagsmith_exp.events_queue;
+        SQL
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+
+  ingestion-server:
+    image: flagsmith/events-ingestion-api:latest
+    profiles: [experimentation]
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_AUTH: none
+      KAFKA_TOPIC: flagsmith_warehouse_events
+      KAFKA_EXTERNAL_TOPIC: external_warehouse_events
+      DATABASE_URL: postgres://postgres:password@postgres:5432/flagsmith
+    ports:
+      - 8080:8080
+    depends_on:
+      migrate-db:
+        condition: service_completed_successfully
+      kafka-init:
+        condition: service_completed_successfully
+
+  warehouse-delivery:
+    image: flagsmith/warehouse-delivery:latest
+    profiles: [experimentation]
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_AUTH: none
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+      WAREHOUSE_CREDENTIALS_SECRET: secret # Must match the API's DJANGO_SECRET_KEY
+    depends_on:
+      migrate-db:
+        condition: service_completed_successfully
+      kafka-init:
+        condition: service_completed_successfully
