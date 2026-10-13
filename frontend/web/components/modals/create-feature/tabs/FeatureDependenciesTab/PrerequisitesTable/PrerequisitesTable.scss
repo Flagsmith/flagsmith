@@ -15,15 +15,6 @@
   background: var(--color-surface-muted);
 }
 
-// A button only shrinks below its text with a min width.
-.prerequisite-name > .btn {
-  min-width: 0;
-}
-
-.prerequisite-name__text {
-  min-width: 0;
-}
-
 // On the cell, as with the input row, so hover does not replace it.
 .prerequisite-row--refused td {
   background: var(--color-surface-danger);

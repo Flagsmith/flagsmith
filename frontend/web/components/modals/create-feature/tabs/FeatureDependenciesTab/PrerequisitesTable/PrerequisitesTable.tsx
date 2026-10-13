@@ -80,17 +80,17 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
           <TableCell className='font-weight-medium'>
             {/* The name gives way to the chip, so a long name cannot hide
                 what is about to happen to it. */}
-            <div className='prerequisite-name d-flex align-items-center gap-2'>
+            <div className='d-flex align-items-center gap-2'>
               <Button
                 theme='text'
-                className='justify-content-start'
+                className='justify-content-start overflow-hidden'
                 onClick={(e: MouseEvent) => {
                   e.stopPropagation()
                   onSelect(edge)
                 }}
               >
                 <span
-                  className={cn('prerequisite-name__text text-truncate', {
+                  className={cn('text-truncate', {
                     'text-secondary text-decoration-line-through':
                       staged === 'remove',
                   })}
