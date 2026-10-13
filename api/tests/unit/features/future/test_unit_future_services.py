@@ -39,7 +39,7 @@ def test_update_flag__v2_versioning_multivariate_weight_increase__keeps_enrolled
         },
         replace=False,
         author=author,
-        system=False,
+        overwrite_system_segment_overrides=False,
     )
     identities = [
         Identity.objects.create(
@@ -64,7 +64,7 @@ def test_update_flag__v2_versioning_multivariate_weight_increase__keeps_enrolled
         },
         replace=False,
         author=author,
-        system=False,
+        overwrite_system_segment_overrides=False,
     )
 
     # Then identities already in the grown variant stay in it, and the only
