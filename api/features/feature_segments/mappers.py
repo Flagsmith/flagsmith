@@ -5,7 +5,7 @@ from features.future.types import (
     SegmentReference,
     Variant,
 )
-from features.models import FeatureStateValue
+from features.models import Feature, FeatureStateValue
 from features.types import LegacyFeatureStateData
 
 
@@ -34,12 +34,15 @@ def clears_legacy_flag_value(feature_state_data: LegacyFeatureStateData) -> bool
 
 
 def map_feature_state_data_to_segment_override(
+    feature: Feature,
     segment_id: int,
     feature_state_data: LegacyFeatureStateData,
     *,
     priority: int | None = None,
 ) -> SegmentOverrideRequest:
     """Map the feature state data validated by a legacy endpoint to an override.
+
+    Legacy endpoints remove variants left out, so they're weighted 0.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
@@ -55,11 +58,19 @@ def map_feature_state_data_to_segment_override(
             "multivariate_feature_state_values"
         )
     ) is not None:
-        override["variants"] = [
+        variants = [
             Variant(
                 id=value["multivariate_feature_option"].id,
                 weight=value["percentage_allocation"],
             )
             for value in multivariate_values
         ]
+        given_ids = {variant["id"] for variant in variants}
+        variants += [
+            Variant(id=variant_id, weight=0)
+            for variant_id in feature.multivariate_options.values_list("id", flat=True)
+            if variant_id not in given_ids
+        ]
+        if variants:  # Standard features get sent none
+            override["variants"] = variants
     return override
