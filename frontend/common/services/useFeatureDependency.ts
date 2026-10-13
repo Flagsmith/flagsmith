@@ -1,13 +1,5 @@
 import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
-import { stagedDependencyEdge } from 'common/utils/stagedDependencyEdge'
-import {
-  applyStagedChanges,
-  getChangeRequestIdsStaging,
-  getFeatureIdsStaged,
-  stageAdd,
-  stageRemove,
-} from './fakeChangeRequestDependencies'
 import { service } from 'common/service'
 
 type DependencyTag = { id: string; type: 'FeatureDependency' }
@@ -33,15 +25,25 @@ const invalidateEnvironment = (query: {
   { id: `LIST-${query.environmentId}`, type: 'FeatureDependency' },
 ]
 
-const dependencyUrl = (query: {
-  environmentId: string
-  featureId: number
-  prerequisiteFeatureId: number
-}) =>
-  `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`
+// With a change request, the API stages the change in it, or lists the
+// dependencies as if it were live.
+const withChangeRequest = (url: string, changeRequestId?: number) =>
+  changeRequestId ? `${url}?change_request=${changeRequestId}` : url
 
-const dependenciesUrl = (query: { environmentId: string }, featureId: number) =>
-  `environments/${query.environmentId}/features/${featureId}/dependencies/`
+const dependencyUrl = (query: Req['deleteFeatureDependency']) =>
+  withChangeRequest(
+    `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`,
+    query.changeRequestId,
+  )
+
+// The API cannot list these yet, so the pending views report an error rather
+// than claim nothing is pending.
+const notListedYet = {
+  error: {
+    error: 'The API does not list staged dependencies yet.',
+    status: 'CUSTOM_ERROR' as const,
+  },
+}
 
 const pendingTags = (featureId: number): DependencyTag[] => [
   { id: `PENDING-${featureId}`, type: 'FeatureDependency' },
@@ -88,47 +90,10 @@ export const featureDependencyService = service
             ),
           )
         },
-        queryFn: async (query, _, _2, baseQuery) => {
-          if (!query.changeRequestId) {
-            const res = await baseQuery({
-              method: 'POST',
-              url: dependencyUrl(query),
-            })
-            return res.error
-              ? { error: res.error }
-              : { data: res.data as Res['featureDependency'] }
-          }
-          // Staged: checked against live data, then held by the fake.
-          const [liveRes, prerequisiteRes, dependentsRes] = await Promise.all([
-            baseQuery({ url: dependenciesUrl(query, query.featureId) }),
-            baseQuery({
-              url: dependenciesUrl(query, query.prerequisiteFeatureId),
-            }),
-            baseQuery({
-              url: `environments/${query.environmentId}/features/${query.featureId}/dependents/`,
-            }),
-          ])
-          const failed =
-            liveRes.error || prerequisiteRes.error || dependentsRes.error
-          if (failed) return { error: failed }
-          const prerequisite = {
-            id: query.prerequisiteFeatureId,
-            name: query.prerequisiteName ?? '',
-          }
-          const conflict = stageAdd({
-            changeRequestId: query.changeRequestId,
-            dependentEdges: (dependentsRes.data as Res['featureDependents'])
-              .results,
-            featureId: query.featureId,
-            liveEdges: (liveRes.data as Res['featureDependencies']).results,
-            prerequisite,
-            prerequisiteEdges: (
-              prerequisiteRes.data as Res['featureDependencies']
-            ).results,
-          })
-          if (conflict) return { error: { data: conflict, status: 400 } }
-          return { data: stagedDependencyEdge(query.featureId, prerequisite) }
-        },
+        query: (query: Req['createFeatureDependency']) => ({
+          method: 'POST',
+          url: dependencyUrl(query),
+        }),
       }),
       deleteFeatureDependency: builder.mutation<
         void,
@@ -138,31 +103,19 @@ export const featureDependencyService = service
           query.changeRequestId
             ? pendingTags(query.featureId)
             : invalidateEnvironment(query),
-        queryFn: async (query, _, _2, baseQuery) => {
-          if (!query.changeRequestId) {
-            const res = await baseQuery({
-              method: 'DELETE',
-              url: dependencyUrl(query),
-            })
-            return res.error ? { error: res.error } : { data: undefined }
-          }
-          stageRemove(query.changeRequestId, query.featureId, {
-            id: query.prerequisiteFeatureId,
-            name: query.prerequisiteName ?? '',
-          })
-          return { data: undefined }
-        },
+        query: (query: Req['deleteFeatureDependency']) => ({
+          method: 'DELETE',
+          url: dependencyUrl(query),
+        }),
       }),
 
-      // Faked until #8449: will be the change requests listed by feature.
+      // Will be the change requests listed by feature.
       getChangeRequestIdsStaging: builder.query<
         Res['changeRequestIdsStaging'],
         Req['getChangeRequestIdsStaging']
       >({
         providesTags: (res, err, query) => pendingTags(query.featureId),
-        queryFn: (query) => ({
-          data: getChangeRequestIdsStaging(query.featureId),
-        }),
+        queryFn: () => notListedYet,
       }),
 
       getFeatureDependencies: builder.query<
@@ -173,25 +126,12 @@ export const featureDependencyService = service
           ...listTags(query),
           ...(query.changeRequestId ? pendingTags(query.featureId) : []),
         ],
-        queryFn: async (query, _, _2, baseQuery) => {
-          const res = await baseQuery({
-            url: dependenciesUrl(query, query.featureId),
-          })
-          if (res.error) return { error: res.error }
-          const live = res.data as Res['featureDependencies']
-          // Faked until #8449: the API will apply ?change_request itself.
-          return {
-            data: query.changeRequestId
-              ? {
-                  results: applyStagedChanges(
-                    query.changeRequestId,
-                    query.featureId,
-                    live.results,
-                  ),
-                }
-              : live,
-          }
-        },
+        query: (query: Req['getFeatureDependencies']) => ({
+          url: withChangeRequest(
+            `environments/${query.environmentId}/features/${query.featureId}/dependencies/`,
+            query.changeRequestId,
+          ),
+        }),
       }),
 
       getFeatureDependents: builder.query<
@@ -204,16 +144,13 @@ export const featureDependencyService = service
         }),
       }),
 
-      // Faked until #8449: real change sets will say which features a change
-      // request stages dependencies for.
+      // Will be the features a change request stages dependencies for.
       getFeatureIdsStaged: builder.query<
         Res['featureIdsStaged'],
         Req['getFeatureIdsStaged']
       >({
         providesTags: [{ id: 'PENDING', type: 'FeatureDependency' }],
-        queryFn: (query) => ({
-          data: getFeatureIdsStaged(query.changeRequestId),
-        }),
+        queryFn: () => notListedYet,
       }),
       // END OF ENDPOINTS
     }),
