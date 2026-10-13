@@ -140,6 +140,25 @@ def system_segment(
     return int(response.json()["segment"]["id"])
 
 
+@pytest.fixture()
+def segment_override_limit_reached(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    feature: int,
+    project: int,
+    segment: int,
+    settings: SettingsWrapper,
+) -> None:
+    settings.EDGE_ENABLED = True
+    Project.objects.filter(id=project).update(max_segment_overrides_allowed=1)
+    response = admin_client_new.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        UpdateFlagRequest({"segment_overrides": [{"segment": {"id": segment}}]}),
+        format="json",
+    )
+    assert response.status_code == 200
+
+
 @pytest.mark.parametrize(
     "changes",
     [
@@ -2560,25 +2579,6 @@ def test_delete_segment_override__system_segment__responds_409(
         ),
     }
     assert admin_client_new.get(url).json() == flag
-
-
-@pytest.fixture()
-def segment_override_limit_reached(
-    admin_client_new: APIClient,
-    environment_api_key: str,
-    feature: int,
-    project: int,
-    segment: int,
-    settings: SettingsWrapper,
-) -> None:
-    settings.EDGE_ENABLED = True
-    Project.objects.filter(id=project).update(max_segment_overrides_allowed=1)
-    response = admin_client_new.patch(
-        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
-        UpdateFlagRequest({"segment_overrides": [{"segment": {"id": segment}}]}),
-        format="json",
-    )
-    assert response.status_code == 200
 
 
 @pytest.mark.usefixtures("segment_override_limit_reached")
