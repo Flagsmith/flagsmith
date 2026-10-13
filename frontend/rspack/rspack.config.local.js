@@ -10,8 +10,10 @@ module.exports = {
   ...base,
   devServer: {
     client: {
+      // An object here replaces the default overlay ({ errors: true,
+      // warnings: false }) and any key left out turns on, so errors and
+      // warnings restate the defaults. Only runtimeErrors changes.
       overlay: {
-        // Same as the dev server's defaults, which this object replaces.
         errors: true,
         // HubSpot's embedded forms resize their iframe from a ResizeObserver,
         // which browsers report as this benign error (Sentry drops it too).
