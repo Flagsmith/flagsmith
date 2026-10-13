@@ -882,7 +882,7 @@ def _write_rollout_override(
         changes={"segment_overrides": [override]},
         replace=False,
         author=author,
-        system=True,
+        overwrite_system_segment_overrides=True,
     )
 
 
@@ -910,7 +910,7 @@ def _reset_default_allocations_to_control(
         },
         replace=False,
         author=author,
-        system=True,
+        overwrite_system_segment_overrides=True,
     )
 
 
