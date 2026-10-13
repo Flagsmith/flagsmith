@@ -1,3 +1,4 @@
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import { service } from 'common/service'
@@ -38,10 +39,10 @@ const dependencyUrl = (query: Req['createFeatureDependency']) =>
 
 // The API cannot list these yet, so the pending views report an error rather
 // than claim nothing is pending.
-const notListedYet = {
+const notListedYet: { error: FetchBaseQueryError } = {
   error: {
     error: 'The API does not list staged dependencies yet.',
-    status: 'CUSTOM_ERROR' as const,
+    status: 'CUSTOM_ERROR',
   },
 }
 
