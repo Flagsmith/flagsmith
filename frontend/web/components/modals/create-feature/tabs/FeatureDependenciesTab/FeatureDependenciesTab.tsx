@@ -214,6 +214,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         <PendingChangeRequests
           environmentId={environmentId}
           featureId={projectFlag.id}
+          isEnabled={isEnabled}
           projectId={projectId}
         />
       )}
