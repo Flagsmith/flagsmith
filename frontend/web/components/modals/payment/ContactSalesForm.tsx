@@ -1,4 +1,5 @@
-import React, { FC, useEffect } from 'react'
+import React, { FC, useEffect, useState } from 'react'
+import Loader from 'components/Loader'
 import { useScript } from 'common/hooks/useScript'
 import AccountStore from 'common/stores/account-store'
 import Project from 'common/project'
@@ -26,10 +27,9 @@ const TARGET_ID = 'contact-sales-form'
 
 // The form renders in an iframe, so set values the way HubSpot documents:
 // assign, then fire an input event so the form registers them.
-const prefill = (arg: HubSpotFormArg) => {
-  const form = 'jquery' in arg ? arg[0] : arg
+const prefill = (form: HTMLFormElement) => {
   const user = AccountStore.getUser() as AccountModel | undefined
-  if (!form || !user) return
+  if (!user) return
   const values: Record<string, string | undefined> = {
     email: user.email,
     firstname: user.first_name,
@@ -55,12 +55,20 @@ const WebsiteLink: FC = () => (
 
 const HubSpotForm: FC<{ config: HubSpotFormConfig }> = ({ config }) => {
   const { error, ready } = useScript(HUBSPOT_FORMS_SCRIPT_URL)
+  const [form, setForm] = useState<HTMLFormElement | null>(null)
 
   useEffect(() => {
     if (ready && window.hbspt) {
       window.hbspt.forms.create({
         ...config,
-        onFormReady: prefill,
+        onFormReady: (arg) => {
+          const element = ('jquery' in arg ? arg[0] : arg) as
+            | HTMLFormElement
+            | undefined
+          if (!element) return
+          prefill(element)
+          setForm(element)
+        },
         target: `#${TARGET_ID}`,
       })
     }
@@ -76,6 +84,7 @@ const HubSpotForm: FC<{ config: HubSpotFormConfig }> = ({ config }) => {
   return (
     <div className='p-4'>
       <div className='bg-white rounded p-3'>
+        {!form && <Loader />}
         <div id={TARGET_ID} />
       </div>
     </div>
