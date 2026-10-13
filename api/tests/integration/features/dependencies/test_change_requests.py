@@ -1,12 +1,17 @@
+from datetime import timedelta
+
 import pytest
 from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from django.utils import timezone
+from freezegun import freeze_time
 from pytest_structlog import StructuredLogCapture
 from rest_framework.test import APIClient
 
 from environments.models import Environment
 from features.dependencies.types import DependencyEdge
 from features.models import Feature
+from features.versioning.models import VersionChangeSet
+from features.versioning.tasks import publish_version_change_set
 from features.workflows.core.models import ChangeRequest, ChangeRequestApproval
 from organisations.models import Organisation
 from segments.models import Segment
@@ -706,16 +711,90 @@ def test_delete_feature_dependency__lacking_permission__responds_403(
 # Stage hygiene
 
 
-def test__delete_feature_dependency__previously_staged__responds_204_undoing_staged() -> (
-    None
-):
-    raise NotImplementedError
+@pytest.mark.usefixtures("environment_v2_versioning")
+def test_delete_feature_dependency__previously_staged__responds_204_undoing_staged(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    environment: int,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    _enable_change_requests(environment)
+    change_request = ChangeRequest.objects.create(
+        environment_id=environment, title="Pending", user=admin_user
+    )
+    admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+    )
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        response = admin_client.delete(
+            f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+        )
+
+    # Then
+    assert response.status_code == 204
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/?change_request={change_request.id}",
+    ).json() == {"results": []}
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
+    ).json() == {"results": []}
+    assert list(audit_logs) == []
+    assert not log.has("dependencies.created")
+    assert not log.has("dependencies.deleted")
 
 
-def test__add_feature_dependency__previously_staged__responds_400_leaving_one_staged() -> (
-    None
-):
-    raise NotImplementedError
+@pytest.mark.usefixtures("environment_v2_versioning")
+def test_add_feature_dependency__previously_staged__responds_400_leaving_one_staged(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    capture_audit_logs: CaptureAuditLogsFixture,
+    environment: int,
+    environment_api_key: str,
+    environment_name: str,
+    log: StructuredLogCapture,
+    project: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    _enable_change_requests(environment)
+    change_request = ChangeRequest.objects.create(
+        environment_id=environment, title="Pending", user=admin_user
+    )
+    staged_dependency = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+    ).json()
+
+    # When
+    with capture_audit_logs() as audit_logs:
+        response = admin_client.post(
+            f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/?change_request={change_request.id}",
+        )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "code": "dependency_exists",
+        "message": 'The feature "checkout" already depends on the feature "payments".',
+        "environment": {"key": environment_api_key, "name": environment_name},
+        "path": [staged_dependency],
+    }
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/?change_request={change_request.id}",
+    ).json() == {"results": [staged_dependency]}
+    assert admin_client.get(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
+    ).json() == {"results": []}
+    assert list(audit_logs) == []
+    assert not log.has("dependencies.created")
 
 
 # Cycle prevention
