@@ -1,7 +1,6 @@
-import { useMemo, useRef } from 'react'
+import { useRef } from 'react'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import { useGetChangeRequestIdsStagingQuery } from 'common/services/useFeatureDependency'
-import { matchPendingChangeRequests } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/pendingChangeRequestState'
 
 type UsePendingChangeRequestsArgs = {
   environmentId: string
@@ -29,14 +28,11 @@ export const usePendingChangeRequests = ({
     page_size: 100,
   })
 
-  const changeRequests = useMemo(
-    () =>
-      matchPendingChangeRequests(staging.data ?? [], [
-        ...(open.data?.results ?? []),
-        ...(scheduled.data?.results ?? []),
-      ]),
-    [staging.data, open.data, scheduled.data],
-  )
+  // One that was published or deleted is in neither list, so it drops out.
+  const changeRequests = [
+    ...(open.data?.results ?? []),
+    ...(scheduled.data?.results ?? []),
+  ].filter((changeRequest) => staging.data?.includes(changeRequest.id))
 
   return {
     changeRequests,
