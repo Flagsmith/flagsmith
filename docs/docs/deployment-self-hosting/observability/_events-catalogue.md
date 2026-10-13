@@ -359,8 +359,8 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:425`
- - `api/features/future/services.py:486`
+ - `api/features/future/services.py:392`
+ - `api/features/future/services.py:453`
 
 Attributes:
  - `environment.id`
@@ -374,7 +374,7 @@ Attributes:
 ### `features.version.publish_rejected`
 
 Logged at `warning` from:
- - `api/features/versioning/views.py:60`
+ - `api/features/versioning/views.py:59`
 
 Attributes:
  - `environment.id`
