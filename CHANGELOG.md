@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.284.0](https://github.com/Flagsmith/flagsmith/compare/v2.283.0...v2.284.0) (2026-10-13)
+
+
+### Features
+
+* **experimentation:** add the Databricks warehouse connection form ([#8725](https://github.com/Flagsmith/flagsmith/issues/8725)) ([caa24ed](https://github.com/Flagsmith/flagsmith/commit/caa24ed757c6f8c97749db81ae2691a5cc9427e6))
+* **experimentation:** hide experimentation UI when the experimentation infra isn't deployed ([#8749](https://github.com/Flagsmith/flagsmith/issues/8749)) ([bb9cd36](https://github.com/Flagsmith/flagsmith/commit/bb9cd36271bcc7fdeac85e1d8430382cfed7a213))
+* **Signup:** Track signup experiment conversion on activation ([#8674](https://github.com/Flagsmith/flagsmith/issues/8674)) ([09f3764](https://github.com/Flagsmith/flagsmith/commit/09f3764ad711d17565f428c00ed34325a37a7ed1))
+
+
+### Bug Fixes
+
+* **experimentation:** order ClickHouse setup SQL and show experiment snippets for all supported SDKs ([#8737](https://github.com/Flagsmith/flagsmith/issues/8737)) ([d5147f4](https://github.com/Flagsmith/flagsmith/commit/d5147f4a84e86d4c8503d22fc6bca49fd7dfb394))
+
 ## [2.283.0](https://github.com/Flagsmith/flagsmith/compare/v2.282.0...v2.283.0) (2026-10-13)
 
 
