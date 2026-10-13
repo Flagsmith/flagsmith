@@ -4,6 +4,9 @@ import { service } from 'common/service'
 
 type DependencyTag = { id: string; type: 'FeatureDependency' }
 
+// Adding and removing a prerequisite take the same arguments.
+type DependencyQuery = Req['createFeatureDependency']
+
 const listTags = (query: {
   environmentId: string
   featureId: number
@@ -30,20 +33,11 @@ const invalidateEnvironment = (query: {
 const withChangeRequest = (url: string, changeRequestId?: number) =>
   changeRequestId ? `${url}?change_request=${changeRequestId}` : url
 
-const dependencyUrl = (query: Req['deleteFeatureDependency']) =>
+const dependencyUrl = (query: DependencyQuery) =>
   withChangeRequest(
     `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`,
     query.changeRequestId,
   )
-
-// The API cannot list these yet, so the pending views report an error rather
-// than claim nothing is pending.
-const notListedYet = {
-  error: {
-    error: 'The API does not list staged dependencies yet.',
-    status: 'CUSTOM_ERROR' as const,
-  },
-}
 
 const pendingTags = (featureId: number): DependencyTag[] => [
   { id: `PENDING-${featureId}`, type: 'FeatureDependency' },
@@ -109,15 +103,6 @@ export const featureDependencyService = service
         }),
       }),
 
-      // Will be the change requests listed by feature.
-      getChangeRequestIdsStaging: builder.query<
-        Res['changeRequestIdsStaging'],
-        Req['getChangeRequestIdsStaging']
-      >({
-        providesTags: (res, err, query) => pendingTags(query.featureId),
-        queryFn: () => notListedYet,
-      }),
-
       getFeatureDependencies: builder.query<
         Res['featureDependencies'],
         Req['getFeatureDependencies']
@@ -144,14 +129,6 @@ export const featureDependencyService = service
         }),
       }),
 
-      // Will be the features a change request stages dependencies for.
-      getFeatureIdsStaged: builder.query<
-        Res['featureIdsStaged'],
-        Req['getFeatureIdsStaged']
-      >({
-        providesTags: [{ id: 'PENDING', type: 'FeatureDependency' }],
-        queryFn: () => notListedYet,
-      }),
       // END OF ENDPOINTS
     }),
   })
@@ -217,10 +194,8 @@ export async function getFeatureDependents(
 export const {
   useCreateFeatureDependencyMutation,
   useDeleteFeatureDependencyMutation,
-  useGetChangeRequestIdsStagingQuery,
   useGetFeatureDependenciesQuery,
   useGetFeatureDependentsQuery,
-  useGetFeatureIdsStagedQuery,
   // END OF EXPORTS
 } = featureDependencyService
 

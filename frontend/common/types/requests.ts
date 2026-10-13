@@ -907,8 +907,6 @@ export type Req = {
     approvals: Approval[]
   }
   deleteChangeRequest: { id: number }
-  getChangeRequestIdsStaging: { featureId: number }
-  getFeatureIdsStaged: { changeRequestId: number }
   getSamlConfiguration: { name: string }
   getSamlConfigurations: { organisation_id: number }
   getSamlConfigurationMetadata: { name: string }
