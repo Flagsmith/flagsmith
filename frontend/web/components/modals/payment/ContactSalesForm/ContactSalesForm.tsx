@@ -5,7 +5,11 @@ import { useScript } from 'common/hooks/useScript'
 import AccountStore from 'common/stores/account-store'
 import Project from 'common/project'
 import { AccountModel } from 'common/types/responses'
-import { CONTACT_SALES_URL, HUBSPOT_FORMS_SCRIPT_URL } from './constants'
+import {
+  CONTACT_SALES_URL,
+  HUBSPOT_FORMS_SCRIPT_URL,
+} from 'components/modals/payment/constants'
+import './ContactSalesForm.scss'
 
 // Set in env/project_prod.js only, so other environments get the website link.
 type HubSpotFormConfig = { formId: string; portalId: string; region: string }
@@ -14,6 +18,7 @@ type HubSpotFormConfig = { formId: string; portalId: string; region: string }
 type HubSpotFormArg = HTMLFormElement | { jquery: string; 0: HTMLFormElement }
 
 type HubSpotFormOptions = HubSpotFormConfig & {
+  css: string
   target: string
   onFormReady: (form: HubSpotFormArg) => void
 }
@@ -26,8 +31,8 @@ declare global {
 
 const TARGET_ID = 'contact-sales-form'
 
-// The form renders in an iframe, so set values the way HubSpot documents:
-// assign, then fire an input event so the form registers them.
+// Set values the way HubSpot documents: assign, then fire an input event so
+// the form registers them.
 const prefill = (form: HTMLFormElement) => {
   const user = AccountStore.getUser() as AccountModel | undefined
   if (!user) return
@@ -62,6 +67,9 @@ const HubSpotForm: FC<{ config: HubSpotFormConfig }> = ({ config }) => {
     if (ready && window.hbspt) {
       window.hbspt.forms.create({
         ...config,
+        // An empty css renders the form in the page, not an iframe, so our
+        // stylesheet and tokens reach it.
+        css: '',
         onFormReady: (arg) => {
           const element = ('jquery' in arg ? arg[0] : arg) as
             | HTMLFormElement
@@ -80,14 +88,10 @@ const HubSpotForm: FC<{ config: HubSpotFormConfig }> = ({ config }) => {
     return <WebsiteLink />
   }
 
-  // HubSpot styles the form itself (dark labels), so it sits on a white
-  // card to stay readable in dark mode.
   return (
-    <div className='p-4'>
-      <div className='bg-white rounded p-3'>
-        {!form && <Loader />}
-        <div id={TARGET_ID} />
-      </div>
+    <div className='contact-sales-form p-4'>
+      {!form && <Loader />}
+      <div id={TARGET_ID} />
     </div>
   )
 }
