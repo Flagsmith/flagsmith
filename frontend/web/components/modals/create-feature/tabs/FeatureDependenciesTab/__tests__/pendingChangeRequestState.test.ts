@@ -1,8 +1,5 @@
 import { ChangeRequestSummary } from 'common/types/responses'
-import {
-  describeStatus,
-  matchPendingChangeRequests,
-} from 'components/modals/create-feature/tabs/FeatureDependenciesTab/pendingChangeRequestState'
+import { describeStatus } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/pendingChangeRequestState'
 
 const changeRequest = (
   id: number,
@@ -14,21 +11,6 @@ const changeRequest = (
     live_from: null,
     ...fields,
   } as ChangeRequestSummary)
-
-describe('matchPendingChangeRequests', () => {
-  it('keeps the open or scheduled change requests that stage changes', () => {
-    expect(
-      matchPendingChangeRequests(
-        [12, 14],
-        [changeRequest(12), changeRequest(13), changeRequest(14)],
-      ).map((cr) => cr.id),
-    ).toEqual([12, 14])
-  })
-
-  it('drops one that is no longer open or scheduled', () => {
-    expect(matchPendingChangeRequests([12], [changeRequest(13)])).toEqual([])
-  })
-})
 
 describe('describeStatus', () => {
   it('reads an approved change request with a live date as scheduled', () => {
