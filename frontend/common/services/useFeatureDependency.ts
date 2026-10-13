@@ -4,9 +4,6 @@ import { service } from 'common/service'
 
 type DependencyTag = { id: string; type: 'FeatureDependency' }
 
-// Adding and removing a prerequisite take the same arguments.
-type DependencyQuery = Req['createFeatureDependency']
-
 const listTags = (query: {
   environmentId: string
   featureId: number
@@ -33,7 +30,7 @@ const invalidateEnvironment = (query: {
 const withChangeRequest = (url: string, changeRequestId?: number) =>
   changeRequestId ? `${url}?change_request=${changeRequestId}` : url
 
-const dependencyUrl = (query: DependencyQuery) =>
+const dependencyUrl = (query: Req['createFeatureDependency']) =>
   withChangeRequest(
     `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`,
     query.changeRequestId,
