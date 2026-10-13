@@ -40,8 +40,8 @@ from features.models import Feature, FeatureSegment, FeatureState, FeatureStateV
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import get_environment_flags_list
-from segments.exceptions import SystemSegmentModificationError
-from segments.models import Segment, SegmentManagedBy
+from segments.models import Segment
+from segments.services import check_segment_is_not_system
 from util.db import with_delete_hooks
 
 logger = structlog.get_logger("features")
@@ -62,6 +62,7 @@ def _get_feature_states(
             feature_id=feature.id,
             identity__isnull=True,  # Identity overrides are unsupported
         ),
+        additional_select_related_args=["feature_segment__segment"],
         additional_prefetch_related_args=["multivariate_feature_state_values"],
     )
 
@@ -86,7 +87,7 @@ def _get_feature_states_to_write(
         return _get_feature_states(environment, feature)
     return list(
         version.feature_states.select_related(
-            "feature_segment",
+            "feature_segment__segment",
             "feature_state_value",
         ).prefetch_related("multivariate_feature_state_values")
     )
@@ -317,18 +318,6 @@ def _check_priorities(
         raise DuplicatePriorityError(f"Duplicate priority: {duplicate}.")
 
 
-def _get_system_segments_managed_by(
-    segment_ids: Collection[int],
-) -> dict[int, SegmentManagedBy]:
-    """Get which features manage the system segments among some, by segment ID."""
-    return {
-        segment_id: SegmentManagedBy(managed_by)
-        for segment_id, managed_by in Segment.objects.filter(
-            id__in=segment_ids, is_system_segment=True
-        ).values_list("id", "managed_by")
-    }
-
-
 def _write_segment_overrides(
     *,
     environment: Environment,
@@ -343,24 +332,30 @@ def _write_segment_overrides(
     segments = _OverriddenSegments([], [], [])
     changed_segment_ids = {change["segment"]["id"] for change in changes}
 
-    system_segments_managed_by = (
-        {}
-        if overwrite_system_segment_overrides
-        else _get_system_segments_managed_by({*overrides, *changed_segment_ids})
-    )
-    if changed_system_segment_ids := sorted(
-        system_segments_managed_by.keys() & changed_segment_ids
-    ):
-        raise SystemSegmentModificationError(
-            system_segments_managed_by[changed_system_segment_ids[0]]
-        )
+    overridden_segments = {
+        feature_segment.segment_id: feature_segment.segment
+        for feature_state in overrides.values()
+        if (feature_segment := feature_state.feature_segment)
+    }
+    if not overwrite_system_segment_overrides:
+        for segment in [
+            *(
+                overridden_segments[id_]
+                for id_ in changed_segment_ids & overrides.keys()
+            ),
+            *Segment.objects.filter(id__in=changed_segment_ids - overrides.keys()),
+        ]:
+            check_segment_is_not_system(segment)
 
     if replace:
         segments.deleted.extend(
             sorted(
-                overrides.keys()
-                - changed_segment_ids
-                - system_segments_managed_by.keys()
+                segment_id
+                for segment_id, segment in overridden_segments.items()
+                if segment_id not in changed_segment_ids
+                and (
+                    overwrite_system_segment_overrides or not segment.is_system_segment
+                )
             )
         )
 
@@ -517,17 +512,16 @@ def delete_segment_override(
     Overrides of system segments can only be removed by passing
     `overwrite_system_segment_overrides=True`.
     """
-    if not overwrite_system_segment_overrides and (
-        system_segments_managed_by := _get_system_segments_managed_by([segment_id])
-    ):
-        raise SystemSegmentModificationError(system_segments_managed_by[segment_id])
-
     with transaction.atomic():
         version = _create_draft_version(environment, feature)
         feature_states = _get_feature_states_to_write(environment, feature, version)
 
-        if segment_id not in _get_overrides_by_segment_id(feature_states):
+        if not (
+            override := _get_overrides_by_segment_id(feature_states).get(segment_id)
+        ):
             raise SegmentOverrideNotFoundError()
+        if not overwrite_system_segment_overrides and override.feature_segment:
+            check_segment_is_not_system(override.feature_segment.segment)
 
         _delete_segment_overrides(
             environment=environment,
