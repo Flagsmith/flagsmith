@@ -36,6 +36,15 @@ const dependencyUrl = (query: Req['createFeatureDependency']) =>
     query.changeRequestId,
   )
 
+// The API cannot list these yet, so the pending views report an error rather
+// than claim nothing is pending.
+const notListedYet = {
+  error: {
+    error: 'The API does not list staged dependencies yet.',
+    status: 'CUSTOM_ERROR' as const,
+  },
+}
+
 const pendingTags = (featureId: number): DependencyTag[] => [
   { id: `PENDING-${featureId}`, type: 'FeatureDependency' },
   { id: 'PENDING', type: 'FeatureDependency' },
@@ -99,6 +108,14 @@ export const featureDependencyService = service
           url: dependencyUrl(query),
         }),
       }),
+      // Will be the change requests listed by feature.
+      getChangeRequestIdsStaging: builder.query<
+        Res['changeRequestIdsStaging'],
+        Req['getChangeRequestIdsStaging']
+      >({
+        providesTags: (res, err, query) => pendingTags(query.featureId),
+        queryFn: () => notListedYet,
+      }),
       getFeatureDependencies: builder.query<
         Res['featureDependencies'],
         Req['getFeatureDependencies']
@@ -123,6 +140,14 @@ export const featureDependencyService = service
         query: (query: Req['getFeatureDependents']) => ({
           url: `environments/${query.environmentId}/features/${query.featureId}/dependents/`,
         }),
+      }),
+      // Will be the features a change request stages dependencies for.
+      getFeatureIdsStaged: builder.query<
+        Res['featureIdsStaged'],
+        Req['getFeatureIdsStaged']
+      >({
+        providesTags: [{ id: 'PENDING', type: 'FeatureDependency' }],
+        queryFn: () => notListedYet,
       }),
       // END OF ENDPOINTS
     }),
@@ -189,8 +214,10 @@ export async function getFeatureDependents(
 export const {
   useCreateFeatureDependencyMutation,
   useDeleteFeatureDependencyMutation,
+  useGetChangeRequestIdsStagingQuery,
   useGetFeatureDependenciesQuery,
   useGetFeatureDependentsQuery,
+  useGetFeatureIdsStagedQuery,
   // END OF EXPORTS
 } = featureDependencyService
 
