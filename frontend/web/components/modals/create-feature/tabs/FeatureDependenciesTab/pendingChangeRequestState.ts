@@ -1,16 +1,6 @@
 import moment from 'moment'
 import { ChangeRequestSummary } from 'common/types/responses'
 
-// The change requests staging this feature's dependencies that are still open
-// or scheduled. One that was published or deleted drops out.
-export const matchPendingChangeRequests = (
-  stagingIds: number[],
-  changeRequests: ChangeRequestSummary[],
-): ChangeRequestSummary[] =>
-  changeRequests.filter((changeRequest) =>
-    stagingIds.includes(changeRequest.id),
-  )
-
 // Approved, and waiting only for its live date.
 export const isScheduled = (changeRequest: ChangeRequestSummary) =>
   !!changeRequest.committed_at && !!changeRequest.live_from
