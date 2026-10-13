@@ -1,120 +1,134 @@
 import React, { FC } from 'react'
 import CodeHelp from 'components/CodeHelp'
 
-type SnippetEntry = {
-  code: string
-  enabled: boolean
-}
+const snippets: Record<string, string> = {
+  'Flutter': `import 'package:flagsmith/flagsmith.dart';
 
-const helloWorldSnippets: Record<string, SnippetEntry> = {
-  '.NET': {
-    code: `using Flagsmith;
+final flagsmith = await FlagsmithClient.init(
+  apiKey: 'YOUR_ENVIRONMENT_KEY',
+  config: const FlagsmithConfig(enableEvents: true),
+);
+final user = Identity(identifier: 'user_42');
 
-var client = new FlagsmithClient("YOUR_ENVIRONMENT_KEY");
-Console.WriteLine("Hello, Flagsmith Warehouse!");`,
-    enabled: false,
-  },
-  'Flutter': {
-    code: `import 'package:flagsmith/flagsmith.dart';
+// Evaluates the flag and records an exposure
+final flag = await flagsmith.getExperimentFlag('checkout_button', user: user);
 
-final flagsmith = FlagsmithClient(apiKey: 'YOUR_ENVIRONMENT_KEY');
-print('Hello, Flagsmith Warehouse!');`,
-    enabled: false,
-  },
-  'Go': {
-    code: `import (
+// Records a conversion. Only the event name is required.
+flagsmith.trackEvent(
+  'purchase',
+  user: user, // optional
+  value: 99.5, // optional
+  traits: {'plan': 'premium'}, // optional
+  metadata: {'source': 'app'}, // optional
+);`,
+  'Go': `import (
+    "context"
+    "time"
+
     flagsmith "github.com/Flagsmith/flagsmith-go-client/v5"
 )
 
-client := flagsmith.NewClient("YOUR_ENVIRONMENT_KEY")
-fmt.Println("Hello, Flagsmith Warehouse!")`,
-    enabled: false,
-  },
-  'Java': {
-    code: `import com.flagsmith.FlagsmithClient;
+ctx := context.Background()
+client := flagsmith.NewClient("YOUR_ENVIRONMENT_KEY", flagsmith.WithEvents(ctx))
+ec := flagsmith.NewEvaluationContext("user_42", nil)
 
-FlagsmithClient client = FlagsmithClient
+// Evaluates the flag and records an exposure
+flag, err := client.GetExperimentFlag(ctx, "checkout_button", ec)
+
+// Records a conversion. Only the event name is required.
+err = client.TrackEvent("purchase", &flagsmith.EventOptions{
+    Identifier: "user_42",                                 // optional
+    Value:      99.5,                                      // optional
+    Traits:     map[string]interface{}{"plan": "premium"}, // optional
+    Metadata:   map[string]interface{}{"source": "api"},   // optional
+})
+
+// Sends buffered events before your application exits
+flushCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+defer cancel()
+err = client.FlushEvents(flushCtx)`,
+  'Java': `import com.flagsmith.FlagsmithClient;
+import com.flagsmith.config.FlagsmithConfig;
+import com.flagsmith.models.BaseFlag;
+import java.util.Map;
+
+FlagsmithClient flagsmith = FlagsmithClient
     .newBuilder()
     .setApiKey("YOUR_ENVIRONMENT_KEY")
+    .withConfiguration(FlagsmithConfig.newBuilder().withEnableEvents(true).build())
     .build();
-System.out.println("Hello, Flagsmith Warehouse!");`,
-    enabled: false,
-  },
-  'JavaScript': {
-    code: `import flagsmith from '@flagsmith/flagsmith';
+
+// Evaluates the flag and records an exposure
+BaseFlag flag = flagsmith.getExperimentFlag("checkout_button", "user_42");
+
+// Records a conversion. Only the event name is required.
+flagsmith.trackEvent(
+    "purchase",
+    "user_42",                 // identifier, optional
+    99.5,                      // value, optional
+    Map.of("plan", "premium"), // traits, optional
+    Map.of("source", "api")    // metadata, optional
+);
+
+// Sends buffered events before your application exits
+flagsmith.close();`,
+  'JavaScript': `import flagsmith from '@flagsmith/flagsmith';
 
 await flagsmith.init({
   environmentID: 'YOUR_ENVIRONMENT_KEY',
   enableEvents: true,
 });
+await flagsmith.identify('user_42');
 
+// Evaluates the flag and records an exposure
+const flag = flagsmith.getExperimentFlag('checkout_button');
+
+// Records a conversion. Only the event name is required.
 flagsmith.trackEvent('purchase', {
-  identifier: 'user_42',
-  value: 99.5,
-  traits: { plan: 'premium' },
-  metadata: { source: 'web' },
+  identifier: 'user_42', // optional
+  value: 99.5, // optional
+  traits: { plan: 'premium' }, // optional
+  metadata: { source: 'web' }, // optional
 });`,
-    enabled: true,
-  },
-  'Node JS': {
-    code: `import Flagsmith from '@flagsmith/nodejs';
+  'Node JS': `import { Flagsmith } from '@flagsmith/nodejs';
 
-const flagsmith = new Flagsmith({ environmentKey: 'YOUR_ENVIRONMENT_KEY' });
-console.log('Hello, Flagsmith Warehouse!');`,
-    enabled: false,
-  },
-  'PHP': {
-    code: `use Flagsmith\\Flagsmith;
+const flagsmith = new Flagsmith({
+  environmentKey: 'YOUR_ENVIRONMENT_KEY',
+  enableEvents: true,
+});
 
-$flagsmith = new Flagsmith('YOUR_ENVIRONMENT_KEY');
-echo "Hello, Flagsmith Warehouse!";`,
-    enabled: false,
-  },
-  'Python': {
-    code: `from flagsmith import Flagsmith
+// Evaluates the flag and records an exposure
+const flag = await flagsmith.getExperimentFlag('checkout_button', 'user_42');
+
+// Records a conversion. Only the event name is required.
+flagsmith.trackEvent('purchase', {
+  identifier: 'user_42', // optional
+  value: 99.5, // optional
+  traits: { plan: 'premium' }, // optional
+  metadata: { source: 'api' }, // optional
+});
+
+// Sends buffered events before your application exits
+await flagsmith.close();`,
+  'Python': `from flagsmith import Flagsmith
 
 flagsmith = Flagsmith(
     environment_key="YOUR_ENVIRONMENT_KEY",
     enable_events=True,
 )
 
+# Evaluates the flag and records an exposure
+flag = flagsmith.get_experiment_flag("checkout_button", identifier="user_42")
+
+# Records a conversion. Only the event name is required.
 flagsmith.track_event(
     "purchase",
-    identifier="user_42",
-    value=99.5,
-    traits={"plan": "premium"},
-    metadata={"source": "web"},
+    identifier="user_42",  # optional
+    value=99.5,  # optional
+    traits={"plan": "premium"},  # optional
+    metadata={"source": "api"},  # optional
 )`,
-    enabled: true,
-  },
-  'Ruby': {
-    code: `require "flagsmith"
-
-flagsmith = Flagsmith::Client.new(environment_key: "YOUR_ENVIRONMENT_KEY")
-puts "Hello, Flagsmith Warehouse!"`,
-    enabled: false,
-  },
-  'Rust': {
-    code: `use flagsmith::Flagsmith;
-
-let flagsmith = Flagsmith::new("YOUR_ENVIRONMENT_KEY".to_string());
-println!("Hello, Flagsmith Warehouse!");`,
-    enabled: false,
-  },
-  'iOS': {
-    code: `import FlagsmithClient
-
-Flagsmith.shared.apiKey = "YOUR_ENVIRONMENT_KEY"
-print("Hello, Flagsmith Warehouse!")`,
-    enabled: false,
-  },
 }
-
-const enabledSnippets = Object.fromEntries(
-  Object.entries(helloWorldSnippets)
-    .filter(([, entry]) => entry.enabled)
-    .map(([name, entry]) => [name, entry.code]),
-)
 
 const WarehouseEventCodeHelp: FC = () => (
   <div>
@@ -123,7 +137,7 @@ const WarehouseEventCodeHelp: FC = () => (
     </p>
     <CodeHelp
       title='Send your first event'
-      snippets={enabledSnippets}
+      snippets={snippets}
       showInitially
       hideHeader
       hideDocs
