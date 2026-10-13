@@ -108,7 +108,7 @@ describe('limitStatusMessage', () => {
   describe('limitStatusNote', () => {
     it.each`
       kind                         | expected
-      ${'overage-covered'}         | ${'10K calls over your 50K limit. Covered as your first overage.'}
+      ${'overage-covered'}         | ${'10K calls over your 50K limit. Covered as your first overage unless usage reaches 2x the limit.'}
       ${'overage-charged'}         | ${'10K calls over your 50K limit. Charged at the overage rate.'}
       ${'restriction-after-grace'} | ${'10K calls over your 50K limit.'}
       ${undefined}                 | ${'10K calls over your 50K limit.'}

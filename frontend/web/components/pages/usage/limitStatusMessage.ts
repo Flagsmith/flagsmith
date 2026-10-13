@@ -75,7 +75,8 @@ export const limitStatusMessage = (
 
 const OVERAGE_NOTE: Partial<Record<LimitStatusKind, string>> = {
   'overage-charged': 'Charged at the overage rate.',
-  'overage-covered': 'Covered as your first overage.',
+  'overage-covered':
+    'Covered as your first overage unless usage reaches 2x the limit.',
 }
 
 // The line under the meter.
