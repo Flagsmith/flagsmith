@@ -297,7 +297,7 @@ def _write_segment_overrides(
             )
         )
 
-    if not system:
+    if not overwrite_system_segment_overrides:
         if exceeds_segment_override_limit(
             environment,
             segment_ids_to_create_overrides=[
