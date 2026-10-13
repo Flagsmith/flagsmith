@@ -3,10 +3,14 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
+from djoser import utils  # type: ignore[import-untyped]
 from freezegun import freeze_time
 from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from users.models import FFAdminUser, HubspotTracker
@@ -265,3 +269,60 @@ def test_create_user__no_hubspot_cookie__does_not_create_hubspot_tracker(
     assert user is not None
 
     mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))
+
+
+def test_set_password__token_auth__revokes_token_for_all_sessions(
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    staff_user.password = make_password("old-password")
+    staff_user.save()
+    token = Token.objects.create(user=staff_user)
+    current_client = APIClient()
+    current_client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+    other_client = APIClient()
+    other_client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+    url = reverse("api-v1:custom_auth:ffadminuser-set-password")
+
+    # When
+    response = current_client.post(
+        url,
+        data={
+            "current_password": "old-password",
+            "new_password": "new-password-123!",
+            "re_new_password": "new-password-123!",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not Token.objects.filter(user=staff_user).exists()
+    me_url = reverse("api-v1:custom_auth:ffadminuser-me")
+    assert other_client.get(me_url).status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_reset_password_confirm__token_auth__revokes_token(
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    token = Token.objects.create(user=staff_user)
+    authenticated_client = APIClient()
+    authenticated_client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+    url = reverse("api-v1:custom_auth:ffadminuser-reset-password-confirm")
+
+    # When
+    response = APIClient().post(
+        url,
+        data={
+            "uid": utils.encode_uid(staff_user.pk),
+            "token": default_token_generator.make_token(staff_user),
+            "new_password": "new-password-123!",
+            "re_new_password": "new-password-123!",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not Token.objects.filter(user=staff_user).exists()
+    me_url = reverse("api-v1:custom_auth:ffadminuser-me")
+    assert authenticated_client.get(me_url).status_code == status.HTTP_401_UNAUTHORIZED

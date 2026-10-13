@@ -3,6 +3,7 @@ import uuid
 import pytest
 from common.projects.permissions import VIEW_PROJECT
 from django.db.utils import IntegrityError
+from rest_framework.authtoken.models import Token
 
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
@@ -260,3 +261,16 @@ def test_email_domain__valid_email__returns_domain():  # type: ignore[no-untyped
     # Given / When
     # Then
     assert FFAdminUser(email="test@example.com").email_domain == "example.com"
+
+
+def test_set_password__existing_user_with_token__deletes_token(
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    Token.objects.create(user=staff_user)
+
+    # When
+    staff_user.set_password("new-password-123!")  # type: ignore[no-untyped-call]
+
+    # Then
+    assert not Token.objects.filter(user=staff_user).exists()
