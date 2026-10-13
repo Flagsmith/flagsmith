@@ -26,12 +26,11 @@ logger = structlog.get_logger("api_usage")
 
 def _send_email(msg: EmailMultiAlternatives, organisation: Organisation) -> None:
     """
-    Send an email, logging rather than raising when the provider rejects it.
+    This exists because `fail_silently` doesn't work properly.
+    Added here to avoid too many changes in a single PR, but the real solution is
+    to replace django-sendgrid.
 
-    `fail_silently` is not enough on its own: the SendGrid backend only catches
-    `urllib.error.HTTPError`, so errors raised by its own client propagate. A
-    single undeliverable address must not stop an organisation being restricted,
-    or its usage notification being recorded.
+    TODO: https://github.com/Flagsmith/flagsmith/issues/8754
     """
     try:
         msg.send(fail_silently=True)

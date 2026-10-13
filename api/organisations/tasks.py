@@ -55,8 +55,7 @@ from .task_helpers import (
 )
 
 logger = logging.getLogger(__name__)
-# Structured events for the API usage enforcement pipeline, shared with
-# `organisations.task_helpers`.
+
 api_usage_logger = structlog.get_logger("api_usage")
 
 
@@ -351,7 +350,7 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
 
     for organisation in organisations:
         try:
-            _restrict_organisation_use(organisation, now, openfeature_client)
+            _restrict_use_for_organisation(organisation, now, openfeature_client)
         except Exception:
             # A single organisation must not stop the rest being restricted.
             # The task processor disables a recurring task that fails on
@@ -362,7 +361,7 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
             )
 
 
-def _restrict_organisation_use(
+def _restrict_use_for_organisation(
     organisation: Organisation,
     now: datetime,
     openfeature_client: OpenFeatureClient,
@@ -411,9 +410,6 @@ def _restrict_organisation_use(
     organisation.stop_serving_flags = enforcement.stops_serving_flags
     organisation.block_access_to_admin = enforcement.blocks_access_to_admin
 
-    if enforcement.stops_serving_flags:
-        send_api_flags_blocked_notification(organisation)
-
     with transaction.atomic():
         # Save models individually to allow lifecycle hooks to fire.
         organisation.save()
@@ -421,6 +417,13 @@ def _restrict_organisation_use(
         # upgrade — key off this record, so an organisation restricted without
         # one can never be released.
         APILimitAccessBlock.objects.create(organisation=organisation)
+
+    # Only once the restriction is committed: the notification is not
+    # revocable, and a rolled back transaction leaves the organisation eligible
+    # again, so sending first announces a block that never happened on every
+    # subsequent run.
+    if enforcement.stops_serving_flags:
+        send_api_flags_blocked_notification(organisation)
 
     api_usage_logger.info(
         "restriction.applied",

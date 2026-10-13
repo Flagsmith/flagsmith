@@ -2096,6 +2096,63 @@ def test_restrict_use_due_to_api_limit_grace_period_over__organisation_errors__r
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over__restriction_fails_to_save__sends_no_notification(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMultiAlternatives],
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    """
+    The notification is not revocable, so it must follow the restriction it
+    announces rather than precede it.
+    """
+    # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
+
+    # The organisation fixture already has admin and staff members, so the
+    # notification would have recipients were it sent.
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=10_000,
+    )
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=120,
+    )
+    mocker.patch("organisations.tasks.get_current_api_usage", return_value=12_005)
+    mocker.patch.object(
+        Organisation,
+        "save",
+        side_effect=RuntimeError("the restriction could not be persisted"),
+    )
+
+    freezer.move_to(now + timedelta(days=API_USAGE_GRACE_PERIOD + 1))
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    assert mailoutbox == []
+    assert not APILimitAccessBlock.objects.filter(organisation=organisation).exists()
+    assert log.has(
+        "restriction.failed",
+        organisation__id=organisation.id,
+        level="error",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_restrict_use_due_to_api_limit_grace_period_over__zero_allowed_api_calls__blocks_organisation(
     mocker: MockerFixture,
     organisation: Organisation,
