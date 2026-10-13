@@ -14,11 +14,15 @@ import {
   useDeleteFeatureDependencyMutation,
 } from 'common/services/useFeatureDependency'
 import ChangeRequestModal from 'components/modals/ChangeRequestModal'
-import {
-  StagingError,
-  describeApiError,
-  toStagingError,
-} from 'components/modals/create-feature/tabs/FeatureDependenciesTab/stagingError'
+
+// Why the change request was not created, and the row that caused it.
+export type StagingFailure = { message: string; prerequisiteId?: number }
+
+// Dependency refusals answer { message }, other errors { detail }.
+const describeApiError = (e: unknown, fallback: string) => {
+  const data = (e as { data?: { message?: string; detail?: string } })?.data
+  return data?.message ?? data?.detail ?? fallback
+}
 
 type UseStagedPrerequisitesArgs = {
   environmentId: string
@@ -38,7 +42,7 @@ export const useStagedPrerequisites = ({
   projectId,
 }: UseStagedPrerequisitesArgs) => {
   const [staged, setStaged] = useState<StagedDependencyChange[]>([])
-  const [error, setError] = useState<StagingError | null>(null)
+  const [error, setError] = useState<StagingFailure | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [createChangeRequest] = useCreateEnvironmentChangeRequestMutation()
@@ -72,8 +76,10 @@ export const useStagedPrerequisites = ({
     ])
   }
 
-  const stage = async (changeRequestId: number) => {
-    // In order, so the first refusal names the change that caused it.
+  // In order, so the first refusal names the change that caused it.
+  const stage = async (
+    changeRequestId: number,
+  ): Promise<StagingFailure | null> => {
     for (const { action, prerequisite } of staged) {
       const query = {
         changeRequestId,
@@ -86,23 +92,31 @@ export const useStagedPrerequisites = ({
           ? createDependency(query).unwrap()
           : deleteDependency(query).unwrap())
       } catch (e) {
-        throw new StagingError(
-          describeApiError(e) ?? `Could not stage ${prerequisite.name}.`,
-          prerequisite.id,
-        )
+        return {
+          message: describeApiError(e, `Could not stage ${prerequisite.name}.`),
+          prerequisiteId: prerequisite.id,
+        }
       }
     }
+    return null
   }
 
-  const submitChangeRequest = async (fields: ChangeRequestFields) => {
-    setIsSubmitting(true)
-    setError(null)
-    let changeRequestId: number | undefined
+  // Null once every change is in the change request.
+  const createAndStage = async (
+    fields: ChangeRequestFields,
+  ): Promise<StagingFailure | null> => {
+    let changeRequestId: number
     try {
       changeRequestId = (
         await createChangeRequest({ environmentId, ...fields }).unwrap()
       ).id
-      await stage(changeRequestId)
+    } catch (e) {
+      return {
+        message: describeApiError(e, 'Could not create the change request.'),
+      }
+    }
+    const failure = await stage(changeRequestId)
+    if (!failure) {
       setStaged([])
       toast(
         <>
@@ -114,24 +128,25 @@ export const useStagedPrerequisites = ({
           </a>
         </>,
       )
-    } catch (e) {
-      const error = toStagingError(e, 'Could not create the change request.')
-      if (!changeRequestId) return setError(error)
-      // A change request missing some of the changes is worse than none.
-      try {
-        await deleteChangeRequest({ id: changeRequestId }).unwrap()
-        setError(error)
-      } catch {
-        setError(
-          new StagingError(
-            `${error.message} Change request #${changeRequestId} is incomplete and could not be deleted, so delete it from the change requests page.`,
-            error.prerequisiteId,
-          ),
-        )
-      }
-    } finally {
-      setIsSubmitting(false)
+      return null
     }
+    // A change request missing some of the changes is worse than none.
+    try {
+      await deleteChangeRequest({ id: changeRequestId }).unwrap()
+      return failure
+    } catch {
+      return {
+        ...failure,
+        message: `${failure.message} Change request #${changeRequestId} is incomplete and could not be deleted, so delete it from the change requests page.`,
+      }
+    }
+  }
+
+  const submitChangeRequest = async (fields: ChangeRequestFields) => {
+    setIsSubmitting(true)
+    setError(null)
+    setError(await createAndStage(fields))
+    setIsSubmitting(false)
   }
 
   const openChangeRequest = () =>
