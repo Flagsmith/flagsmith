@@ -4,13 +4,20 @@ import { describeStatus } from 'components/modals/create-feature/tabs/FeatureDep
 const changeRequest = (
   id: number,
   fields: Partial<ChangeRequestSummary> = {},
-) =>
-  ({
-    committed_at: null,
-    id,
-    live_from: null,
-    ...fields,
-  } as ChangeRequestSummary)
+): ChangeRequestSummary => ({
+  committed_at: null,
+  committed_by: null,
+  created_at: '2026-10-13T09:00:00Z',
+  deleted_at: null,
+  description: '',
+  id,
+  live_from: null,
+  readOnly: false,
+  title: 'Add prerequisites',
+  updated_at: '2026-10-13T09:00:00Z',
+  user: 1,
+  ...fields,
+})
 
 describe('describeStatus', () => {
   it('reads an approved change request with a live date as scheduled', () => {
