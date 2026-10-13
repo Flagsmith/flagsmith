@@ -50,23 +50,27 @@ export const withStagedChanges = (
   featureId: number,
   isEnabled: (prerequisiteId: number) => boolean,
 ): PrerequisiteRow[] => [
-  ...rows.map((row) =>
-    staged.some(
-      (c) =>
-        c.action === 'remove' && c.prerequisite.id === row.edge.prerequisite.id,
-    )
-      ? { ...row, staged: 'remove' as const }
-      : row,
+  ...rows.map(
+    (row): PrerequisiteRow =>
+      staged.some(
+        (c) =>
+          c.action === 'remove' &&
+          c.prerequisite.id === row.edge.prerequisite.id,
+      )
+        ? { ...row, staged: 'remove' }
+        : row,
   ),
   ...staged
     .filter((c) => c.action === 'add')
-    .map(({ prerequisite }) => ({
-      ...toPrerequisiteRow(
-        stagedDependencyEdge(featureId, prerequisite),
-        isEnabled(prerequisite.id),
-      ),
-      staged: 'add' as const,
-    })),
+    .map(
+      ({ prerequisite }): PrerequisiteRow => ({
+        ...toPrerequisiteRow(
+          stagedDependencyEdge(featureId, prerequisite),
+          isEnabled(prerequisite.id),
+        ),
+        staged: 'add',
+      }),
+    ),
 ]
 
 export const isBlocked = (rows: PrerequisiteRow[]): boolean =>
