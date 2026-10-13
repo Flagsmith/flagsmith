@@ -11,9 +11,19 @@ export const diffDependencies = (
   return [
     ...scoped
       .filter((edge) => !liveIds.has(edge.prerequisite.id))
-      .map(({ prerequisite }) => ({ action: 'add' as const, prerequisite })),
+      .map(
+        ({ prerequisite }): StagedDependencyChange => ({
+          action: 'add',
+          prerequisite,
+        }),
+      ),
     ...live
       .filter((edge) => !scopedIds.has(edge.prerequisite.id))
-      .map(({ prerequisite }) => ({ action: 'remove' as const, prerequisite })),
+      .map(
+        ({ prerequisite }): StagedDependencyChange => ({
+          action: 'remove',
+          prerequisite,
+        }),
+      ),
   ]
 }

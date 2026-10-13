@@ -1,11 +1,17 @@
 import { DependencyEdge } from 'common/types/responses'
 import { diffDependencies } from 'common/utils/diffDependencies'
 
-const edge = (prerequisiteId: number) =>
-  ({
-    feature: { id: 1, name: 'checkout' },
-    prerequisite: { id: prerequisiteId, name: `prereq_${prerequisiteId}` },
-  } as unknown as DependencyEdge)
+const edge = (prerequisiteId: number): DependencyEdge => ({
+  feature: { id: 1, name: 'checkout' },
+  prerequisite: { id: prerequisiteId, name: `prereq_${prerequisiteId}` },
+  segment: {
+    condition_json_path: '',
+    id: 1,
+    is_system: true,
+    name: 'checkout',
+    rules: [],
+  },
+})
 
 describe('diffDependencies', () => {
   it('reads a prerequisite only in the change request as an add', () => {
