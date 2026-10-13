@@ -126,9 +126,18 @@ export const useStagedPrerequisites = ({
         </>,
       )
     } catch (e) {
+      const error = toStagingError(e, 'Could not create the change request.')
+      if (!changeRequestId) return setError(error)
       // A change request missing some of the changes is worse than none.
-      if (changeRequestId) await deleteChangeRequest({ id: changeRequestId })
-      setError(toStagingError(e, 'Could not create the change request.'))
+      try {
+        await deleteChangeRequest({ id: changeRequestId }).unwrap()
+        setError(error)
+      } catch {
+        setError({
+          ...error,
+          message: `${error.message} Change request #${changeRequestId} is incomplete and could not be deleted, so delete it from the change requests page.`,
+        })
+      }
     } finally {
       setIsSubmitting(false)
     }
