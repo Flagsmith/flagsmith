@@ -91,7 +91,6 @@ from features.feature_segments.services import (
 from features.services import (
     delete_feature,
     is_segment_override_unchanged,
-    write_live_segment_override,
     write_segment_override,
     writes_live_segment_override,
 )
@@ -1007,9 +1006,11 @@ class SimpleFeatureStateViewSet(
             if writes_live_segment_override(
                 feature_state_data
             ) and is_live_segment_override(feature_segment):
-                feature_state = write_live_segment_override(
-                    feature_segment,
-                    feature_state_data,
+                feature_state = write_segment_override(
+                    environment=feature_segment.environment,
+                    feature=feature_segment.feature,
+                    segment_id=feature_segment.segment_id,
+                    feature_state_data=feature_state_data,
                     author=AuthorData.from_request(request),
                 )
                 return Response(
@@ -1049,9 +1050,11 @@ class SimpleFeatureStateViewSet(
                     )
                 ):
                     return Response(self.get_serializer(feature_state).data)
-                feature_state = write_live_segment_override(
-                    feature_segment,
-                    feature_state_data,
+                feature_state = write_segment_override(
+                    environment=feature_segment.environment,
+                    feature=feature_segment.feature,
+                    segment_id=feature_segment.segment_id,
+                    feature_state_data=feature_state_data,
                     author=AuthorData.from_request(request),
                 )
                 return Response(self.get_serializer(feature_state).data)

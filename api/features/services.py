@@ -89,7 +89,7 @@ def write_segment_override(
     priority: int | None = None,
 ) -> FeatureState:
     """Write a live override through the flag API, from data validated by a
-    legacy API.
+    legacy API, notifying linked issues and pull requests.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
@@ -122,27 +122,6 @@ def write_segment_override(
             feature_state_value.integer_value = None
             feature_state_value.boolean_value = None
             feature_state_value.save()
-    return feature_state
-
-
-def write_live_segment_override(
-    feature_segment: FeatureSegment,
-    feature_state_data: LegacyFeatureStateData,
-    *,
-    author: AuthorData,
-) -> FeatureState:
-    """Write a live override through the flag API, from data validated by the
-    legacy feature state API, notifying linked issues and pull requests.
-
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
-    """
-    feature_state = write_segment_override(
-        environment=feature_segment.environment,
-        feature=feature_segment.feature,
-        segment_id=feature_segment.segment_id,
-        feature_state_data=feature_state_data,
-        author=author,
-    )
     dispatch_vcs_on_feature_state_changed(feature_state)
     return feature_state
 
