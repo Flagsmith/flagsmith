@@ -13,7 +13,7 @@ export function useFeatureExperimentFreeze(
   featureId: number | undefined,
   environmentId: string,
 ): FeatureExperimentFreeze {
-  const { enabled: isExperimentEnabled } =
+  const { enabled: isExperimentEnabled, isLoading: isVersionLoading } =
     useHasExperimentationFeature('experimental_flags')
   const skip = !isExperimentEnabled || !featureId || !environmentId
   const { data, isLoading } = useGetExperimentsQuery(
@@ -29,6 +29,6 @@ export function useFeatureExperimentFreeze(
   return {
     experiment,
     isFrozen: experiment !== null,
-    isLoading,
+    isLoading: isVersionLoading || isLoading,
   }
 }

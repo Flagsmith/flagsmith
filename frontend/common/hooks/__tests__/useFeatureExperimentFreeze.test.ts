@@ -141,6 +141,18 @@ describe('useFeatureExperimentFreeze', () => {
     )
   })
 
+  it('returns isLoading true while the experimentation check is loading', () => {
+    mockUseHasExperimentationFeature.mockReturnValue({
+      enabled: false,
+      isLoading: true,
+    })
+    mockUseGetExperimentsQuery.mockReturnValue(empty)
+
+    const result = useFeatureExperimentFreeze(42, 'env-123')
+
+    expect(result.isLoading).toBe(true)
+  })
+
   it('queries only running experiments when feature is enabled', () => {
     mockUseGetExperimentsQuery.mockReturnValue(empty)
 
