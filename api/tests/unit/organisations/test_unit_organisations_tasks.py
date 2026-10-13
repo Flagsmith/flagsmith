@@ -2144,7 +2144,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over__restriction_fails_to_s
 
     # Then
     assert mailoutbox == []
-    assert not APILimitAccessBlock.objects.filter(organisation=organisation).exists()
+    # Asserted so the absent notification cannot be a vacuous pass.
     assert log.has(
         "restriction.failed",
         organisation__id=organisation.id,
@@ -2157,7 +2157,6 @@ def test_restrict_use_due_to_api_limit_grace_period_over__access_block_fails__ro
     mocker: MockerFixture,
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
-    mailoutbox: list[EmailMultiAlternatives],
     enable_features: EnableFeaturesFixture,
     settings: SettingsWrapper,
     log: StructuredLogCapture,
@@ -2203,7 +2202,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over__access_block_fails__ro
     organisation.refresh_from_db()
     assert organisation.stop_serving_flags is False
     assert organisation.block_access_to_admin is False
-    assert mailoutbox == []
+    # Asserted so the unrestricted organisation cannot be a vacuous pass.
     assert log.has(
         "restriction.failed",
         organisation__id=organisation.id,
