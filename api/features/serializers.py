@@ -32,6 +32,7 @@ from evaluation.types import EvaluatedFeatureState
 from experimentation.feature_state_metadata import (
     get_feature_state_metadata_builder,
 )
+from integrations.vcs.services import dispatch_vcs_on_feature_state_changed
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.code_references.serializers import (
     FeatureFlagCodeReferencesRepositoryCountSerializer,
@@ -59,7 +60,6 @@ from .feature_segments.serializers import (
 from .feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE
 from .models import Feature, FeatureState
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
-from .services import notify_code_references_of_feature_state
 
 
 class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -704,7 +704,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         try:
             response = super().save(**kwargs)  # type: ignore[no-untyped-call]
             if isinstance(feature_state := self.instance, FeatureState):
-                notify_code_references_of_feature_state(feature_state)
+                dispatch_vcs_on_feature_state_changed(feature_state)
             return response
 
         except django.core.exceptions.ValidationError as e:
