@@ -130,7 +130,7 @@ class FeatureSegmentViewSet(
             },
             replace=False,
             author=AuthorData.from_request(self.request),
-            system=False,
+            overwrite_system_segment_overrides=False,
         )
         override = get_segment_override(
             environment=environment, feature=feature, segment_id=segment.id
@@ -152,7 +152,7 @@ class FeatureSegmentViewSet(
                 feature=instance.feature,
                 segment_id=instance.segment_id,
                 author=AuthorData.from_request(self.request),
-                system=False,
+                overwrite_system_segment_overrides=False,
             )
             return
         check_segment_is_not_system(instance.segment)

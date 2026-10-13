@@ -114,7 +114,7 @@ class FlagAPIView(APIView):
                 changes=serializer.validated_data,
                 replace=replace,
                 author=AuthorData.from_request(request),
-                system=False,
+                overwrite_system_segment_overrides=False,
             )
         )
 
@@ -151,6 +151,6 @@ class SegmentOverrideAPIView(APIView):
                 feature=feature,
                 segment_id=segment_id,
                 author=AuthorData.from_request(request),
-                system=False,
+                overwrite_system_segment_overrides=False,
             )
         )

@@ -338,14 +338,14 @@ def _write_segment_overrides(
     overrides: dict[int, FeatureState],
     changes: Sequence[SegmentOverrideRequest],
     replace: bool,
-    system: bool,
+    overwrite_system_segment_overrides: bool,
 ) -> _OverriddenSegments:
     segments = _OverriddenSegments([], [], [])
     changed_segment_ids = {change["segment"]["id"] for change in changes}
 
     system_segments_managed_by = (
         {}
-        if system
+        if overwrite_system_segment_overrides
         else _get_system_segments_managed_by({*overrides, *changed_segment_ids})
     )
     if changed_system_segment_ids := sorted(
@@ -364,7 +364,7 @@ def _write_segment_overrides(
             )
         )
 
-    if not system:
+    if not overwrite_system_segment_overrides:
         if exceeds_segment_override_limit(
             environment,
             segment_ids_to_create_overrides=[
@@ -435,11 +435,12 @@ def update_flag(
     changes: UpdateFlagRequest,
     replace: bool,
     author: AuthorData,
-    system: bool,
+    overwrite_system_segment_overrides: bool,
 ) -> UpdateFlagResponse:
     """Write the given parts of a flag, whichever versioning the environment uses.
 
-    Overrides of system segments can only be changed by passing `system=True`.
+    Overrides of system segments can only be changed by passing
+    `overwrite_system_segment_overrides=True`.
     """
     writes_nothing = not changes if replace else not any(changes.values())
     if writes_nothing:
@@ -471,7 +472,7 @@ def update_flag(
                 overrides=_get_overrides_by_segment_id(feature_states),
                 changes=override_changes,
                 replace=replace,
-                system=system,
+                overwrite_system_segment_overrides=overwrite_system_segment_overrides,
             )
 
         if version is not None:
@@ -509,13 +510,14 @@ def delete_segment_override(
     feature: Feature,
     segment_id: int,
     author: AuthorData,
-    system: bool,
+    overwrite_system_segment_overrides: bool,
 ) -> UpdateFlagResponse:
     """Remove a flag's override for one segment, leaving the rest of the flag alone.
 
-    Overrides of system segments can only be removed by passing `system=True`.
+    Overrides of system segments can only be removed by passing
+    `overwrite_system_segment_overrides=True`.
     """
-    if not system and (
+    if not overwrite_system_segment_overrides and (
         system_segments_managed_by := _get_system_segments_managed_by([segment_id])
     ):
         raise SystemSegmentModificationError(system_segments_managed_by[segment_id])
