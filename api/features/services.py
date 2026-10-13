@@ -129,7 +129,7 @@ def write_segment_override(
             },
             replace=False,
             author=author,
-            system=False,
+            overwrite_system_segment_overrides=False,
         )
         feature_state = get_segment_override(
             environment=environment, feature=feature, segment_id=segment_id
