@@ -8,13 +8,14 @@ type ChangeRequestDependencyChangesProps = {
   environmentId: string
   featureId: number
   changeRequestId: number
+  isEnabled?: (prerequisiteId: number) => boolean
 }
 
 // A feature's prerequisite changes in one change request: its dependencies
 // as if the change request were live, against today's.
 const ChangeRequestDependencyChanges: FC<
   ChangeRequestDependencyChangesProps
-> = ({ changeRequestId, environmentId, featureId }) => {
+> = ({ changeRequestId, environmentId, featureId, isEnabled }) => {
   const live = useGetFeatureDependenciesQuery({ environmentId, featureId })
   const scoped = useGetFeatureDependenciesQuery({
     changeRequestId,
@@ -39,7 +40,7 @@ const ChangeRequestDependencyChanges: FC<
       <p className='text-secondary px-3 py-2 mb-0'>No prerequisite changes.</p>
     )
   }
-  return <DependencyChangesTable changes={changes} />
+  return <DependencyChangesTable changes={changes} isEnabled={isEnabled} />
 }
 
 export default ChangeRequestDependencyChanges
