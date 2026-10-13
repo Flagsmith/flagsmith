@@ -9,20 +9,6 @@ const base = require('../rspack.config')
 module.exports = {
   ...base,
   devServer: {
-    client: {
-      // An object here replaces the default overlay ({ errors: true,
-      // warnings: false }) and any key left out turns on, so errors and
-      // warnings restate the defaults. Only runtimeErrors changes.
-      overlay: {
-        errors: true,
-        // HubSpot's embedded forms resize their iframe from a ResizeObserver,
-        // which browsers report as this benign error (Sentry drops it too).
-        // Self-contained on purpose: the dev server rebuilds it in the browser.
-        runtimeErrors: (error) =>
-          !/ResizeObserver loop/.test(String(error && error.message)),
-        warnings: false,
-      },
-    },
     historyApiFallback: true,
     hot: true,
     liveReload: false,
