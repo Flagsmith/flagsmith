@@ -185,6 +185,14 @@ export type DependencyEdge = {
   segment: DependencyEdgeSegment
 }
 
+export type StagedAction = 'add' | 'remove'
+
+// A dependency held in a change request, not live until it is published.
+export type StagedDependencyChange = {
+  action: StagedAction
+  prerequisite: DependencyFeature
+}
+
 export type DependencyConflictCode =
   | 'circular_dependency'
   | 'dependency_exists'

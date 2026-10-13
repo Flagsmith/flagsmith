@@ -17,9 +17,7 @@ import ChangeRequestNotice from './ChangeRequestNotice'
 import DependenciesHeader from './DependenciesHeader'
 import PrerequisitePicker from './PrerequisitePicker'
 import { getDependenciesMode } from './dependenciesMode'
-import { withStagedChanges } from './prerequisiteState'
-import { usePrerequisites } from './hooks/usePrerequisites'
-import { useStagedPrerequisites } from './hooks/useStagedPrerequisites'
+import { usePrerequisiteEditing } from './hooks/usePrerequisiteEditing'
 
 type FeatureDependenciesTabProps = {
   environmentId: string
@@ -50,36 +48,29 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
       ? EnvironmentPermission.CREATE_CHANGE_REQUEST
       : EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
   })
-  const staging = useStagedPrerequisites({
+  const { editing, prerequisites, staging } = usePrerequisiteEditing({
     environmentId,
+    environmentName,
+    isChangeRequest,
     projectFlag,
     projectId,
   })
-  // Held while submitting, so a change can't miss the change request.
-  const canManage = permission && mode !== 'readOnly' && !staging.isSubmitting
-
   const {
     addingName,
     conflict,
     dependentEdges,
     flashedId,
     isCreating,
-    isEnabled,
     isError,
     isLoading,
     isOpenForAdding,
     isPrerequisite,
-    onAdd,
     onAddingChange,
-    onRemove,
     removingId,
     rows,
-  } = usePrerequisites({
-    environmentId,
-    environmentName,
-    projectFlag,
-    projectId,
-  })
+  } = prerequisites
+  // Held while submitting, so a change can't miss the change request.
+  const canManage = permission && mode !== 'readOnly' && !staging.isSubmitting
 
   // Without the permission, canManage is false, so the add button and every
   // bin would appear a moment after the rows.
@@ -91,16 +82,6 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   if (isError) {
     return <ErrorMessage error="Could not load this feature's dependencies." />
   }
-
-  const shownRows = isChangeRequest
-    ? withStagedChanges(rows, staging.staged, projectFlag.id, isEnabled)
-    : rows
-  const handleAdd = isChangeRequest
-    ? (feature: ProjectFlag) => {
-        staging.add(feature)
-        onAddingChange(false)
-      }
-    : onAdd
 
   return (
     <div>
@@ -116,18 +97,18 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
 
       {/* addingName too: on a first add the picker has closed and no row has
           arrived yet, and the empty state would take the pending row's place. */}
-      {shownRows.length || isOpenForAdding || addingName ? (
+      {editing.rows.length || isOpenForAdding || addingName ? (
         <>
           <BlockedBanner environmentName={environmentName} rows={rows} />
           <DependenciesPanel>
             <PrerequisitesTable
-              rows={shownRows}
+              rows={editing.rows}
               canManage={canManage}
               flashedId={flashedId}
               addingName={addingName}
               isRemoving={removingId}
               refusedId={staging.error?.prerequisiteId}
-              onRemove={isChangeRequest ? staging.remove : onRemove}
+              onRemove={editing.onRemove}
               onUndo={(edge) => staging.undo(edge.prerequisite.id)}
               onSelect={(edge) => onSelectFeature(edge.prerequisite.id)}
               addControl={
@@ -136,11 +117,11 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
                     projectId={projectId}
                     environmentId={environmentId}
                     featureId={projectFlag.id}
-                    existingPrerequisiteIds={shownRows.map(
+                    existingPrerequisiteIds={editing.rows.map(
                       (row) => row.edge.prerequisite.id,
                     )}
                     disabled={isCreating || staging.isSubmitting}
-                    onChange={handleAdd}
+                    onChange={editing.onAdd}
                   />
                 )
               }
@@ -169,7 +150,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         <Banner
           type='error'
           className='mt-3'
-          title='The change request was not created'
+          title='Could not stage the changes'
         >
           {staging.error.message}
         </Banner>
@@ -186,7 +167,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         </Button>
       )}
 
-      {isChangeRequest && !!staging.staged.length && (
+      {!!staging.staged.length && (
         <ChangeRequestFooter
           count={staging.staged.length}
           isSubmitting={staging.isSubmitting}
