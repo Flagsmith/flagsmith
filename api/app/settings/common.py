@@ -1545,8 +1545,7 @@ CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
 
 CLICKHOUSE_CONNECTION_CLIENT_NAME = "flagsmith-core-api"
 
-# Whether the experimentation pipeline infrastructure (ingestion server, Kafka,
-# warehouse) is deployed alongside this API.
+# Whether the experimentation infra is deployed alongside this API.
 EXPERIMENTATION_ENABLED = env.bool("EXPERIMENTATION_ENABLED", default=False)
 
 # DSN for the ClickHouse instance holding ingested experimentation events.
