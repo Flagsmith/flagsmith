@@ -1,7 +1,8 @@
 """VCS dispatcher: entrypoints for fanning feature-external-resource
-lifecycle events out to the per-provider integration side-effects
-(currently only GitLab; GitHub and any future provider will land here
-too — see #7315).
+lifecycle events and feature state changes out to the per-provider
+integration side-effects (GitHub for feature state changes only so far;
+the rest of GitHub and any future provider will land here too — see
+#7315).
 """
 
 import structlog
@@ -10,6 +11,9 @@ from features.feature_external_resources.models import (
     GITLAB_RESOURCE_TYPES,
     FeatureExternalResource,
 )
+from features.models import FeatureState
+from integrations.github.constants import GitHubEventType
+from integrations.github.github import call_github_task
 from integrations.gitlab import services as gitlab
 from integrations.gitlab import tasks as gitlab_tasks
 
@@ -74,3 +78,22 @@ def dispatch_vcs_on_resource_destroy(resource: FeatureExternalResource) -> None:
             feature__id=resource.feature.id,
             resource__type=resource.type.lower(),
         )
+
+
+def dispatch_vcs_on_feature_state_changed(feature_state: FeatureState) -> None:
+    """Dispatch integration side-effects after a feature state changes."""
+    if (
+        not feature_state.identity_id
+        and feature_state.feature.external_resources.exists()
+        and feature_state.environment.project.github_project.exists()  # type: ignore[union-attr]
+        and feature_state.environment.project.organisation.github_config.exists()  # type: ignore[union-attr]
+    ):
+        call_github_task(
+            organisation_id=feature_state.feature.project.organisation_id,  # type: ignore[arg-type]
+            type=GitHubEventType.FLAG_UPDATED.value,
+            feature=feature_state.feature,
+            segment_name=None,
+            url=None,
+            feature_states=[feature_state],
+        )
+    gitlab.post_gitlab_state_change_comment_for_feature_state(feature_state)

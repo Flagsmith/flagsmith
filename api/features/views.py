@@ -82,6 +82,7 @@ from features.feature_lifecycle.services import (
 )
 from features.services import delete_feature
 from features.value_types import BOOLEAN, INTEGER, STRING
+from integrations.vcs.services import dispatch_vcs_on_feature_state_changed
 from projects.code_references.services import (
     annotate_feature_queryset_with_code_references_summary,
 )
@@ -1254,4 +1255,5 @@ def create_segment_override(  # type: ignore[no-untyped-def]
         feature_state = serializer.save(environment=environment, feature=feature)  # type: ignore[no-untyped-call]
         if feature_segment := feature_state.feature_segment:
             validate_segment_flag_dependencies(feature_segment.segment)
+    dispatch_vcs_on_feature_state_changed(feature_state)
     return Response(serializer.data, status=201)
