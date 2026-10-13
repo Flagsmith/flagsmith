@@ -668,14 +668,6 @@ const Utils = Object.assign({}, BaseUtils, {
       (permission) => permission.permission_key === key,
     )
   },
-  hasExperimentationFeature(key: string) {
-    // Experimentation features need both their flag and the experimentation infra.
-    return (
-      Utils.getFlagsmithHasFeature(key) &&
-      !!selectBuildVersion(getStore().getState())?.backend
-        ?.experimentation_enabled
-    )
-  },
   hasIntegration(key: string) {
     const data = Utils.getIntegrationData() as
       | Record<string, unknown>

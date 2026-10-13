@@ -7,23 +7,20 @@ jest.mock('react', () => ({
   useMemo: (fn: () => any) => fn(),
 }))
 
-jest.mock('common/utils/utils', () => ({
-  __esModule: true,
-  default: {
-    hasExperimentationFeature: jest.fn(),
-  },
+jest.mock('common/hooks/useHasExperimentationFeature', () => ({
+  useHasExperimentationFeature: jest.fn(),
 }))
 
 import { useFeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import { useGetExperimentsQuery } from 'common/services/useExperiment'
-import Utils from 'common/utils/utils'
+import { useHasExperimentationFeature } from 'common/hooks/useHasExperimentationFeature'
 import { Experiment } from 'common/types/responses'
 
 const mockUseGetExperimentsQuery =
   useGetExperimentsQuery as jest.MockedFunction<typeof useGetExperimentsQuery>
-const mockHasExperimentationFeature =
-  Utils.hasExperimentationFeature as jest.MockedFunction<
-    typeof Utils.hasExperimentationFeature
+const mockUseHasExperimentationFeature =
+  useHasExperimentationFeature as jest.MockedFunction<
+    typeof useHasExperimentationFeature
   >
 
 const makeExperiment = (
@@ -56,7 +53,10 @@ const withResults = (experiments: Experiment[]) =>
 describe('useFeatureExperimentFreeze', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockHasExperimentationFeature.mockReturnValue(true)
+    mockUseHasExperimentationFeature.mockReturnValue({
+      enabled: true,
+      isLoading: false,
+    })
   })
 
   it('returns isFrozen true when a running experiment exists for the feature', () => {
@@ -126,7 +126,10 @@ describe('useFeatureExperimentFreeze', () => {
   })
 
   it('skips query when experimentation is unavailable', () => {
-    mockHasExperimentationFeature.mockReturnValue(false)
+    mockUseHasExperimentationFeature.mockReturnValue({
+      enabled: false,
+      isLoading: false,
+    })
     mockUseGetExperimentsQuery.mockReturnValue(empty)
 
     const result = useFeatureExperimentFreeze(42, 'env-123')

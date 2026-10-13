@@ -6,6 +6,7 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import BetaFlag from 'components/BetaFlag'
 import SidebarLink from 'components/navigation/SidebarLink'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
+import { useHasExperimentationFeature } from 'common/hooks/useHasExperimentationFeature'
 
 type EnvironmentNavType = {
   projectId: number
@@ -53,6 +54,8 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
       changeRequestsData?.count) ||
     0
   const scheduled = scheduledData?.count || 0
+  const { enabled: hasExperiments } =
+    useHasExperimentationFeature('experimental_flags')
   const inner = (
     <div
       className={classNames(
@@ -79,7 +82,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               >
                 Features
               </SidebarLink>
-              {Utils.hasExperimentationFeature('experimental_flags') ? (
+              {hasExperiments ? (
                 <SidebarLink
                   id={mobile ? undefined : 'experiments-link'}
                   icon='flask'

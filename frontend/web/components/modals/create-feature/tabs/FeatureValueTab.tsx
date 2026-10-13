@@ -31,6 +31,7 @@ import {
   VARIATION_WEIGHT_FIELD,
 } from 'common/utils/multivariate'
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
+import { useHasExperimentationFeature } from 'common/hooks/useHasExperimentationFeature'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { useHasPermission } from 'common/providers/Permission'
 import { ProjectPermission } from 'common/types/permissions.types'
@@ -120,6 +121,8 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     level: 'project',
     permission: ProjectPermission.CREATE_FEATURE,
   })
+  const { enabled: hasExperiments } =
+    useHasExperimentationFeature('experimental_flags')
 
   const default_enabled = featureState.enabled ?? false
   const initial_value = featureState.feature_state_value
@@ -507,7 +510,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               <FieldLabel
                 className='mb-0'
                 tooltip={
-                  Utils.hasExperimentationFeature('experimental_flags')
+                  hasExperiments
                     ? 'To use this flag in an experiment, all the variants must have a label.'
                     : undefined
                 }
