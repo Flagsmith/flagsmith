@@ -2153,6 +2153,65 @@ def test_restrict_use_due_to_api_limit_grace_period_over__restriction_fails_to_s
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_restrict_use_due_to_api_limit_grace_period_over__access_block_fails__rolls_back_restriction(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMultiAlternatives],
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+    log: StructuredLogCapture,
+) -> None:
+    """
+    A restriction without its access block can never be lifted, by either the
+    unrestrict task or a plan upgrade, so the two must be written together.
+    """
+    # Given
+    settings.ENABLE_API_USAGE_ALERTING = True
+    enable_features(
+        "api_limiting_stop_serving_flags",
+        "api_limiting_block_access_to_admin",
+    )
+
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=10_000,
+    )
+    organisation.subscription.plan = FREE_PLAN_ID
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation,
+        percent_usage=120,
+    )
+    mocker.patch("organisations.tasks.get_current_api_usage", return_value=12_005)
+    mocker.patch.object(
+        APILimitAccessBlock.objects,
+        "create",
+        side_effect=RuntimeError("the access block could not be created"),
+    )
+
+    freezer.move_to(now + timedelta(days=API_USAGE_GRACE_PERIOD + 1))
+
+    # When
+    restrict_use_due_to_api_limit_grace_period_over()
+
+    # Then
+    # The restriction is rolled back with the access block, leaving the
+    # organisation eligible to be restricted again on the next run.
+    organisation.refresh_from_db()
+    assert organisation.stop_serving_flags is False
+    assert organisation.block_access_to_admin is False
+    assert mailoutbox == []
+    assert log.has(
+        "restriction.failed",
+        organisation__id=organisation.id,
+        level="error",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_restrict_use_due_to_api_limit_grace_period_over__zero_allowed_api_calls__blocks_organisation(
     mocker: MockerFixture,
     organisation: Organisation,
