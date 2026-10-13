@@ -39,6 +39,7 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
   return (
     <div className='mb-3'>
       <Accordion
+        disabled={isLoading}
         title={
           <>
             Summary

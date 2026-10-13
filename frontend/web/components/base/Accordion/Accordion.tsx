@@ -20,6 +20,8 @@ export type AccordionProps = {
   onOpenChange?: (open: boolean) => void
   // For content with its own padding and type, like a table.
   flush?: boolean
+  // Blocks toggling, e.g. while the content loads; keeps the open state.
+  disabled?: boolean
   className?: string
 }
 
@@ -27,6 +29,7 @@ const Accordion: FC<AccordionProps> = ({
   children,
   className,
   defaultOpen = false,
+  disabled = false,
   flush = false,
   headingLevel,
   onOpenChange,
@@ -69,6 +72,7 @@ const Accordion: FC<AccordionProps> = ({
           aria-expanded={open}
           aria-controls={`${id}-body`}
           aria-labelledby={`${id}-title`}
+          disabled={disabled}
           onClick={toggle}
         >
           <span

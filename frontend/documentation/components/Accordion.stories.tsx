@@ -33,6 +33,11 @@ export const Open: Story = {
   args: { defaultOpen: true },
 }
 
+// While its content loads: the header doesn't toggle.
+export const Disabled: Story = {
+  args: { defaultOpen: true, disabled: true },
+}
+
 // For a page section: shows up in heading navigation.
 export const AsHeading: Story = {
   args: { headingLevel: 3 },
