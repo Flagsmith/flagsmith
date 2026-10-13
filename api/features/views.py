@@ -87,13 +87,11 @@ from features.feature_segments.services import (
     get_next_segment_override_priority,
     get_segment_override,
     is_live_segment_override,
-)
-from features.services import (
-    delete_feature,
     is_segment_override_unchanged,
     write_segment_override,
     writes_live_segment_override,
 )
+from features.services import delete_feature
 from features.types import LegacyFeatureStateData
 from features.value_types import BOOLEAN, INTEGER, STRING
 from projects.code_references.services import (
