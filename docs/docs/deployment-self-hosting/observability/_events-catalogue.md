@@ -240,7 +240,7 @@ Attributes:
 ### `experimentation.rollout.applied`
 
 Logged at `info` from:
- - `api/experimentation/services.py:970`
+ - `api/experimentation/services.py:972`
 
 Attributes:
  - `audience.match`
@@ -895,7 +895,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1144`
+ - `api/experimentation/services.py:1146`
 
 Attributes:
  - `environment.id`
@@ -924,7 +924,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1087`
+ - `api/experimentation/services.py:1089`
 
 Attributes:
  - `environment.id`
@@ -933,7 +933,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1119`
+ - `api/experimentation/services.py:1121`
 
 Attributes:
  - `environment.id`
@@ -943,7 +943,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1129`
+ - `api/experimentation/services.py:1131`
 
 Attributes:
  - `environment.id`
