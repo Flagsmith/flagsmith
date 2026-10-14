@@ -5,6 +5,9 @@ import { defineConfig } from '@playwright/test'
  * No global setup, no web server, no browser — just PNG comparison.
  */
 export default defineConfig({
+  // Kept apart from the HTML report folder, which Playwright refuses to share.
+  outputDir: './e2e/visual-regression-results',
+
   reporter: [
     [
       'html',
@@ -16,6 +19,8 @@ export default defineConfig({
       },
     ],
     ['list'],
+    // Read by the visual-check action to build the PR check.
+    ['json', { outputFile: './e2e/visual-regression-results/report.json' }],
   ],
   snapshotPathTemplate: './e2e/visual-regression-snapshots/{arg}{ext}',
   testDir: './e2e',

@@ -1,0 +1,25 @@
+name: Visual check cleanup
+
+# Drops images of closed pull requests from the visual-check-images branch and
+# squashes its history, so the branch only ever holds open PRs' images.
+on:
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  prune:
+    name: Prune visual check images
+    runs-on: depot-ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/visual-check
+
+      - uses: ./.github/actions/visual-check
+        with:
+          mode: cleanup

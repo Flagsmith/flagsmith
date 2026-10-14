@@ -56,7 +56,9 @@ jobs:
     runs-on: ${{ inputs.runs-on }}
 
     permissions:
-      contents: read
+      # write: the visual check commits its images to the visual-check-images branch
+      contents: write
+      checks: write
       packages: read
       id-token: write
       pull-requests: write
@@ -269,30 +271,14 @@ jobs:
           path: frontend/e2e/visual-regression-report/
           retention-days: 30
 
-      - name: Generate visual regression summary
-        if: always() && inputs.visual-regression && !inputs.visual-regression-update && github.event_name == 'pull_request'
-        id: visual-regression-summary
-        shell: bash
-        run: |
-          if [ "${{ steps.download-baseline.outcome }}" != "success" ]; then
-            echo "message=No baseline found — first run. Baselines will be generated after merge to main." >> $GITHUB_OUTPUT
-          else
-            SCREENSHOT_COUNT=$(find frontend/e2e/visual-regression-screenshots -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
-            REPORT_EXISTS=$(test -d frontend/e2e/visual-regression-report && echo "true" || echo "false")
-            if [ "$REPORT_EXISTS" = "true" ]; then
-              echo "message=$SCREENSHOT_COUNT screenshots compared. See report for details." >> $GITHUB_OUTPUT
-            else
-              echo "message=$SCREENSHOT_COUNT screenshots captured but comparison did not run." >> $GITHUB_OUTPUT
-            fi
-          fi
-
-      - name: Comment PR with visual regression results
-        if: always() && inputs.visual-regression && !inputs.visual-regression-update && github.event_name == 'pull_request' && steps.visual-regression-summary.outputs.message
+      # Skipped without a baseline, otherwise every screenshot shows up as new.
+      - name: Report visual regression check
+        if: always() && inputs.visual-regression && !inputs.visual-regression-update && github.event_name == 'pull_request' && steps.download-baseline.outcome == 'success'
         continue-on-error: true
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: ./.github/actions/visual-check
         with:
-          header: visual-regression-results
-          message: |
-            ## Visual Regression
-            ${{ steps.visual-regression-summary.outputs.message }}
-            [View full report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts)
+          report: frontend/e2e/visual-regression-results/report.json
+          # The comparison runs in the E2E container, whose Playwright rootDir
+          # (/srv/flagsmith/e2e) maps to this checkout's frontend/e2e.
+          root-dir: frontend/e2e
+          report-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}#artifacts

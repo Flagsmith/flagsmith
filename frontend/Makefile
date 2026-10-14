@@ -41,6 +41,7 @@ test:
 	docker cp e2e-test-run:/srv/flagsmith/e2e/playwright-report ./e2e/playwright-report 2>/dev/null || echo "No HTML report to copy"; \
 	docker cp e2e-test-run:/srv/flagsmith/e2e/visual-regression-screenshots ./e2e/visual-regression-screenshots 2>/dev/null || echo "No visual regression screenshots to copy"; \
 	docker cp e2e-test-run:/srv/flagsmith/e2e/visual-regression-report ./e2e/visual-regression-report 2>/dev/null || echo "No visual regression report to copy"; \
+	docker cp e2e-test-run:/srv/flagsmith/e2e/visual-regression-results ./e2e/visual-regression-results 2>/dev/null || echo "No visual regression results to copy"; \
 	docker rm e2e-test-run 2>/dev/null || true; \
 	if [ "$$TEST_FAILED" = "1" ]; then \
 		echo "\n=== API logs ===" && docker compose logs flagsmith-api && \

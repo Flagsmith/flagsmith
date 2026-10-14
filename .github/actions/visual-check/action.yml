@@ -1,0 +1,68 @@
+name: Visual check
+description: >
+  Turn Playwright snapshot comparisons into a GitHub check with
+  Before / After / Diff images for every changed screenshot.
+
+inputs:
+  mode:
+    description: '`report` posts the check for a Playwright run; `cleanup` prunes images of closed pull requests.'
+    required: false
+    default: report
+  report:
+    description: Path to the Playwright JSON report of the comparison run.
+    required: false
+  root-dir:
+    description: >
+      Local directory matching the report's `rootDir`. Only needed when
+      Playwright ran elsewhere (e.g. in a container) and attachment paths
+      must be rebased.
+    required: false
+  report-url:
+    description: Link to the full report, shown in the check and used as its details URL.
+    required: false
+  check-name:
+    description: Name of the check run.
+    required: false
+    default: Visual regression
+  images-branch:
+    description: Branch the images are committed to so the check can render them.
+    required: false
+    default: visual-check-images
+  head-sha:
+    description: Commit the check is attached to.
+    required: false
+    default: ${{ github.event.pull_request.head.sha || github.sha }}
+  github-token:
+    description: Token with `checks:write` and `contents:write`.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  changed:
+    description: Number of screenshots that differ from their baseline.
+    value: ${{ steps.run.outputs.changed }}
+  added:
+    description: Number of screenshots with no baseline yet.
+    value: ${{ steps.run.outputs.added }}
+  total:
+    description: Number of screenshots compared.
+    value: ${{ steps.run.outputs.total }}
+  check-url:
+    description: URL of the check run.
+    value: ${{ steps.run.outputs.check-url }}
+
+runs:
+  using: composite
+  steps:
+    - id: run
+      shell: bash
+      run: node "$GITHUB_ACTION_PATH/src/main.mjs"
+      env:
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_REPORT: ${{ inputs.report }}
+        INPUT_ROOT_DIR: ${{ inputs.root-dir }}
+        INPUT_REPORT_URL: ${{ inputs.report-url }}
+        INPUT_CHECK_NAME: ${{ inputs.check-name }}
+        INPUT_IMAGES_BRANCH: ${{ inputs.images-branch }}
+        INPUT_HEAD_SHA: ${{ inputs.head-sha }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
