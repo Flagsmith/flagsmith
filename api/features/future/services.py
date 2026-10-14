@@ -106,8 +106,8 @@ def _get_overrides_by_segment_id(
 
 
 def check_variants(feature: Feature, variant_sets: Iterable[Sequence[Variant]]) -> None:
-    """Refuse weighting anything but each of a feature's variants, exactly once,
-    up to 100 in total."""
+    """Refuse weighting anything but each of a feature's variants, once, up to
+    100 in total."""
     feature_variant_ids: set[int] | None = None
     for variants in variant_sets:
         if feature.type != MULTIVARIATE:
