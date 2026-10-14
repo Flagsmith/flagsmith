@@ -240,7 +240,7 @@ Attributes:
 ### `experimentation.rollout.applied`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1082`
+ - `api/experimentation/services.py:1032`
 
 Attributes:
  - `audience.match`
@@ -256,7 +256,7 @@ Attributes:
 ### `experimentation.rollout.superseded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:622`
+ - `api/experimentation/services.py:623`
 
 Attributes:
  - `environment.id`
@@ -370,8 +370,8 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:438`
- - `api/features/future/services.py:498`
+ - `api/features/future/services.py:477`
+ - `api/features/future/services.py:537`
 
 Attributes:
  - `environment.id`
@@ -906,7 +906,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1256`
+ - `api/experimentation/services.py:1208`
 
 Attributes:
  - `environment.id`
@@ -935,7 +935,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1199`
+ - `api/experimentation/services.py:1151`
 
 Attributes:
  - `environment.id`
@@ -944,7 +944,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1231`
+ - `api/experimentation/services.py:1183`
 
 Attributes:
  - `environment.id`
@@ -954,7 +954,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1241`
+ - `api/experimentation/services.py:1193`
 
 Attributes:
  - `environment.id`
@@ -963,7 +963,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:415`
+ - `api/experimentation/services.py:412`
 
 Attributes:
  - `environment.id`
@@ -973,7 +973,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:401`
+ - `api/experimentation/services.py:398`
 
 Attributes:
  - `environment.id`

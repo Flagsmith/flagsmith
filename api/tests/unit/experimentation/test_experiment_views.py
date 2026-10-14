@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from datetime import timezone as dt_timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 import pytest
 from django.db import IntegrityError
@@ -50,11 +50,16 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.django_db
 
 
-_ROLLOUT = {
-    "enabled": True,
-    "rollout_percentage": 100,
-    "feature_state_value": {"type": "string", "value": "control"},
-}
+def _rollout(feature: Feature) -> dict[str, object]:
+    return {
+        "enabled": True,
+        "rollout_percentage": 100,
+        "feature_state_value": {"type": "string", "value": "control"},
+        "multivariate_feature_state_values": [
+            {"multivariate_feature_option": option.id, "percentage_allocation": 0}
+            for option in feature.multivariate_options.all()
+        ],
+    }
 
 
 def _list_url(environment: Environment) -> str:
@@ -92,7 +97,7 @@ def test_post__valid_multivariate_feature__returns_201(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
-            "experiment_rollout": _ROLLOUT,
+            "experiment_rollout": _rollout(multivariate_feature),
             "name": "My experiment",
             "hypothesis": "It will work",
         },
@@ -149,7 +154,7 @@ def test_post__non_multivariate_feature__returns_400(
         _list_url(environment),
         data={
             "feature": feature.id,
-            "experiment_rollout": _ROLLOUT,
+            "experiment_rollout": _rollout(feature),
             "name": "Bad experiment",
             "hypothesis": "Nope",
         },
@@ -180,7 +185,7 @@ def test_post__feature_from_different_project__returns_400(
         _list_url(environment),
         data={
             "feature": other_feature.id,
-            "experiment_rollout": _ROLLOUT,
+            "experiment_rollout": _rollout(other_feature),
             "name": "Wrong project",
             "hypothesis": "Nope",
         },
@@ -206,7 +211,7 @@ def test_post__active_experiment_exists__returns_409(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
-            "experiment_rollout": _ROLLOUT,
+            "experiment_rollout": _rollout(multivariate_feature),
             "name": "Duplicate",
             "hypothesis": "Should fail",
         },
@@ -234,7 +239,7 @@ def test_post__completed_experiment_exists__returns_201(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
-            "experiment_rollout": _ROLLOUT,
+            "experiment_rollout": _rollout(multivariate_feature),
             "name": "New experiment",
             "hypothesis": "Should work",
         },
@@ -703,7 +708,7 @@ def test_action__start__enables_disabled_rollout(
 ) -> None:
     # Given an experiment whose rollout override is disabled
     enable_features(EXPERIMENT_FLAG)
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     admin_client_new.patch(
         _action_url(environment, experiment_with_rollout, "rollout"),
         data={
@@ -718,6 +723,10 @@ def test_action__start__enables_disabled_rollout(
                 {
                     "multivariate_feature_option": option_b.id,
                     "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_c.id,
+                    "percentage_allocation": 0.0,
                 },
             ],
         },
@@ -1153,7 +1162,7 @@ def test_post__valid_create__creates_audit_log(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
-            "experiment_rollout": _ROLLOUT,
+            "experiment_rollout": _rollout(multivariate_feature),
             "name": "Audit test",
             "hypothesis": "Check audit",
         },
@@ -1367,7 +1376,7 @@ def test_post__inline_metric__creates_experiment_metric(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
-            "experiment_rollout": _ROLLOUT,
+            "experiment_rollout": _rollout(multivariate_feature),
             "name": "With metric",
             "hypothesis": "It will work",
             "metrics": [
@@ -1407,7 +1416,7 @@ def test_post__metric_from_other_environment__returns_400(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
-            "experiment_rollout": _ROLLOUT,
+            "experiment_rollout": _rollout(multivariate_feature),
             "name": "Foreign metric",
             "hypothesis": "Should fail",
             "metrics": [
@@ -1437,7 +1446,7 @@ def test_post__duplicate_metrics__returns_400(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
-            "experiment_rollout": _ROLLOUT,
+            "experiment_rollout": _rollout(multivariate_feature),
             "name": "Duplicate metrics",
             "hypothesis": "Should fail",
             "metrics": [
@@ -1468,7 +1477,7 @@ def test_post__invalid_expected_direction__returns_400(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
-            "experiment_rollout": _ROLLOUT,
+            "experiment_rollout": _rollout(multivariate_feature),
             "name": "Bad direction",
             "hypothesis": "Should fail",
             "metrics": [
@@ -1579,7 +1588,7 @@ def test_post__concurrent_create_race__returns_409(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
-            "experiment_rollout": _ROLLOUT,
+            "experiment_rollout": _rollout(multivariate_feature),
             "name": "Race",
             "hypothesis": "Should 409",
         },
@@ -1971,7 +1980,7 @@ def test_post__with_experiment_rollout__creates_rollout(
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     response = admin_client_new.post(
@@ -1992,6 +2001,10 @@ def test_post__with_experiment_rollout__creates_rollout(
                     {
                         "multivariate_feature_option": option_b.id,
                         "percentage_allocation": 40,
+                    },
+                    {
+                        "multivariate_feature_option": option_c.id,
+                        "percentage_allocation": 0.0,
                     },
                 ],
             },
@@ -2037,6 +2050,10 @@ def test_post__with_experiment_rollout__zeroes_default_allocations(
                         "multivariate_feature_option": option_b.id,
                         "percentage_allocation": 40,
                     },
+                    {
+                        "multivariate_feature_option": option_c.id,
+                        "percentage_allocation": 0.0,
+                    },
                 ],
             },
         },
@@ -2068,7 +2085,11 @@ def test_post__with_experiment_rollout__zeroes_default_allocations(
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
     }
-    assert override_allocations == {option_a.id: 60.0, option_b.id: 40.0}
+    assert override_allocations == {
+        option_a.id: 60.0,
+        option_b.id: 40.0,
+        option_c.id: 0.0,
+    }
 
 
 def test_post__with_experiment_rollout_v2_versioning__zeroes_default_allocations(
@@ -2102,6 +2123,10 @@ def test_post__with_experiment_rollout_v2_versioning__zeroes_default_allocations
                         "multivariate_feature_option": option_b.id,
                         "percentage_allocation": 40,
                     },
+                    {
+                        "multivariate_feature_option": option_c.id,
+                        "percentage_allocation": 0.0,
+                    },
                 ],
             },
         },
@@ -2132,7 +2157,11 @@ def test_post__with_experiment_rollout_v2_versioning__zeroes_default_allocations
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
     }
-    assert override_allocations == {option_a.id: 60.0, option_b.id: 40.0}
+    assert override_allocations == {
+        option_a.id: 60.0,
+        option_b.id: 40.0,
+        option_c.id: 0.0,
+    }
 
 
 def test_post__rollout_allocations_exceed_100__returns_400(
@@ -2144,7 +2173,7 @@ def test_post__rollout_allocations_exceed_100__returns_400(
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When the allocations sum to more than 100%
     response = admin_client_new.post(
@@ -2166,6 +2195,10 @@ def test_post__rollout_allocations_exceed_100__returns_400(
                         "multivariate_feature_option": option_b.id,
                         "percentage_allocation": 60,
                     },
+                    {
+                        "multivariate_feature_option": option_c.id,
+                        "percentage_allocation": 0.0,
+                    },
                 ],
             },
         },
@@ -2185,6 +2218,7 @@ def test_post__rollout_mv_option_not_on_feature__returns_400(
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
+    unknown_option_id = 999999
 
     # When
     response = admin_client_new.post(
@@ -2199,7 +2233,7 @@ def test_post__rollout_mv_option_not_on_feature__returns_400(
                 "feature_state_value": {"type": "string", "value": "control"},
                 "multivariate_feature_state_values": [
                     {
-                        "multivariate_feature_option": 999999,
+                        "multivariate_feature_option": unknown_option_id,
                         "percentage_allocation": 100,
                     },
                 ],
@@ -2210,7 +2244,7 @@ def test_post__rollout_mv_option_not_on_feature__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "do not belong to the feature" in str(response.json())
+    assert response.json() == [f"Variant not found: {unknown_option_id}."]
 
 
 def test_action_rollout__valid__updates_percentage(
@@ -2222,7 +2256,7 @@ def test_action_rollout__valid__updates_percentage(
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     response = admin_client_new.patch(
@@ -2239,6 +2273,10 @@ def test_action_rollout__valid__updates_percentage(
                 {
                     "multivariate_feature_option": option_b.id,
                     "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_c.id,
+                    "percentage_allocation": 0.0,
                 },
             ],
         },
@@ -2264,7 +2302,7 @@ def test_action_rollout__running_experiment__updates_percentage(
     enable_features(EXPERIMENT_FLAG)
     experiment_with_rollout.status = ExperimentStatus.RUNNING
     experiment_with_rollout.save()
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     response = admin_client_new.patch(
@@ -2281,6 +2319,10 @@ def test_action_rollout__running_experiment__updates_percentage(
                 {
                     "multivariate_feature_option": option_b.id,
                     "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_c.id,
+                    "percentage_allocation": 0.0,
                 },
             ],
         },
@@ -2306,7 +2348,7 @@ def test_action_rollout__completed_experiment__returns_400(
     enable_features(EXPERIMENT_FLAG)
     experiment_with_rollout.status = ExperimentStatus.COMPLETED
     experiment_with_rollout.save()
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     response = admin_client_new.patch(
@@ -2323,6 +2365,10 @@ def test_action_rollout__completed_experiment__returns_400(
                 {
                     "multivariate_feature_option": option_b.id,
                     "percentage_allocation": 50,
+                },
+                {
+                    "multivariate_feature_option": option_c.id,
+                    "percentage_allocation": 0.0,
                 },
             ],
         },
@@ -2341,6 +2387,7 @@ def test_action_rollout__mv_option_not_on_feature__returns_400(
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
+    unknown_option_id = 999999
 
     # When
     response = admin_client_new.patch(
@@ -2351,7 +2398,7 @@ def test_action_rollout__mv_option_not_on_feature__returns_400(
             "feature_state_value": {"type": "string", "value": "control"},
             "multivariate_feature_state_values": [
                 {
-                    "multivariate_feature_option": 999999,
+                    "multivariate_feature_option": unknown_option_id,
                     "percentage_allocation": 100,
                 },
             ],
@@ -2361,7 +2408,34 @@ def test_action_rollout__mv_option_not_on_feature__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "do not belong to the feature" in str(response.json())
+    assert response.json() == [f"Variant not found: {unknown_option_id}."]
+
+
+def test_action_rollout__without_variants__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data={
+            "enabled": True,
+            "rollout_percentage": 75,
+            "feature_state_value": {"type": "string", "value": "control"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "multivariate_feature_state_values": ["This field is required."]
+    }
 
 
 def test_patch__experiment_rollout_on_update__returns_400(
@@ -2400,7 +2474,7 @@ def test_get_detail__with_rollout__returns_rollout(
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     response = admin_client_new.get(_detail_url(environment, experiment_with_rollout))
@@ -2414,7 +2488,7 @@ def test_get_detail__with_rollout__returns_rollout(
     assert {
         (mv["multivariate_feature_option"], mv["percentage_allocation"])
         for mv in rollout["multivariate_feature_state_values"]
-    } == {(option_a.id, 50.0), (option_b.id, 50.0)}
+    } == {(option_a.id, 50.0), (option_b.id, 50.0), (option_c.id, 0.0)}
 
 
 def test_get_detail__without_rollout__returns_null(
@@ -2434,16 +2508,33 @@ def test_get_detail__without_rollout__returns_null(
     assert response.json()["experiment_rollout"] is None
 
 
-def _rollout_payload(**overrides: object) -> dict[str, object]:
-    return {
-        "enabled": True,
-        "rollout_percentage": 30,
-        "feature_state_value": {"type": "string", "value": "control"},
-        **overrides,
-    }
+class RolloutPayloadFactory(Protocol):
+    def __call__(self, **overrides: object) -> dict[str, object]: ...
+
+
+@pytest.fixture()
+def rollout_payload(
+    multivariate_options: list[MultivariateFeatureOption],
+) -> RolloutPayloadFactory:
+    """Make rollout request bodies, with every variant weighted 0 unless given."""
+
+    def _make(**overrides: object) -> dict[str, object]:
+        return {
+            "enabled": True,
+            "rollout_percentage": 30,
+            "feature_state_value": {"type": "string", "value": "control"},
+            "multivariate_feature_state_values": [
+                {"multivariate_feature_option": option.id, "percentage_allocation": 0}
+                for option in multivariate_options
+            ],
+            **overrides,
+        }
+
+    return _make
 
 
 def test_post__with_audience__creates_rollout_and_returns_audience(
+    rollout_payload: RolloutPayloadFactory,
     admin_client_new: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
@@ -2460,7 +2551,7 @@ def test_post__with_audience__creates_rollout_and_returns_audience(
             "feature": multivariate_feature.id,
             "name": "Rollout experiment",
             "hypothesis": "It will work",
-            "experiment_rollout": _rollout_payload(
+            "experiment_rollout": rollout_payload(
                 audience={"match": "all", "segment_ids": [audience_segment.id]}
             ),
         },
@@ -2486,6 +2577,7 @@ def test_post__with_audience__creates_rollout_and_returns_audience(
 
 
 def test_action_rollout__audience_while_not_serving__updates_audience(
+    rollout_payload: RolloutPayloadFactory,
     admin_client_new: APIClient,
     environment: Environment,
     experiment_with_rollout: Experiment,
@@ -2497,7 +2589,7 @@ def test_action_rollout__audience_while_not_serving__updates_audience(
     enable_features(EXPERIMENT_FLAG)
     disable = admin_client_new.patch(
         _action_url(environment, experiment_with_rollout, "rollout"),
-        data=_rollout_payload(enabled=False),
+        data=rollout_payload(enabled=False),
         format="json",
     )
     assert disable.status_code == status.HTTP_200_OK
@@ -2505,7 +2597,7 @@ def test_action_rollout__audience_while_not_serving__updates_audience(
     # When
     response = admin_client_new.patch(
         _action_url(environment, experiment_with_rollout, "rollout"),
-        data=_rollout_payload(
+        data=rollout_payload(
             enabled=False,
             audience={"match": "any", "segment_ids": [audience_segment.id]},
         ),
@@ -2530,6 +2622,7 @@ def test_action_rollout__audience_while_not_serving__updates_audience(
 
 
 def test_action_rollout__more_segments_than_the_cap__returns_400(
+    rollout_payload: RolloutPayloadFactory,
     admin_client_new: APIClient,
     environment: Environment,
     experiment_with_rollout: Experiment,
@@ -2542,7 +2635,7 @@ def test_action_rollout__more_segments_than_the_cap__returns_400(
     # When
     response = admin_client_new.patch(
         _action_url(environment, experiment_with_rollout, "rollout"),
-        data=_rollout_payload(
+        data=rollout_payload(
             audience={
                 "match": "any",
                 "segment_ids": [audience_segment.id] * (MAX_AUDIENCE_SEGMENTS + 1),

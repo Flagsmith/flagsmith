@@ -1921,8 +1921,54 @@ def test_update_flag__unknown_variant__responds_400(
     assert response.status_code == 400
     assert response.json() == {
         "environment_default": {
-            "variants": ["Variant not found."],
+            "variants": [f"Variant not found: {unknown_variant}."],
         },
+    }
+    environment_default = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=mv_feature,
+        feature_segment=None,
+    ).get()
+    assert dict(
+        environment_default.multivariate_feature_state_values.values_list(
+            "multivariate_feature_option_id", "percentage_allocation"
+        )
+    ) == {variant_a: 10, variant_b: 20}
+    assert log.events == []
+
+
+def test_update_flag__duplicate_variant__responds_400(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    log: StructuredLogCapture,
+    mv_feature: int,
+    mv_feature_variants: list[int],
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    variant_a, variant_b = mv_feature_variants
+
+    # When
+    response = admin_client_new.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/",
+        UpdateFlagRequest(
+            {
+                "environment_default": {
+                    "variants": [
+                        {"id": variant_a, "weight": 30},
+                        {"id": variant_a, "weight": 40},
+                        {"id": variant_b, "weight": 20},
+                    ],
+                },
+            }
+        ),
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "environment_default": {"variants": [f"Duplicate variant: {variant_a}."]},
     }
     environment_default = FeatureState.objects.get_live_feature_states(
         environment=versioned_environment,
@@ -2046,7 +2092,9 @@ def test_update_flag__variant_weights_over_100__responds_400(
     # Then
     assert response.status_code == 400
     assert response.json() == {
-        "environment_default": {"variants": ["Total weight must not exceed 100."]},
+        "environment_default": {
+            "variants": ["Total weight must not exceed 100, got 110.0."]
+        },
     }
     environment_default = FeatureState.objects.get_live_feature_states(
         environment=versioned_environment,
