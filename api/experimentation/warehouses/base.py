@@ -4,6 +4,10 @@ import typing
 from collections.abc import Mapping
 from typing import Any, Protocol
 
+from common.core.utils import is_saas
+
+from core.network import is_internal_address
+
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
     from datetime import datetime
@@ -17,6 +21,11 @@ if typing.TYPE_CHECKING:
     )
     from experimentation.models import WarehouseConnection
     from experimentation.types import ExposureGranularity
+
+
+def is_disallowed_host(host: str) -> bool:
+    # Without this, SaaS customers could point a connection at our internal network.
+    return is_saas() and is_internal_address(host, include_shared=True)
 
 
 class Warehouse(Protocol):
