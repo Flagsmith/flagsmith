@@ -257,7 +257,7 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
     )
     feature_state_value = FeatureValueSerializer(required=True)
     multivariate_feature_state_values = MultivariateValueSerializer(
-        many=True, required=False
+        many=True, required=True
     )
     # Omitted leaves the stored audience unchanged; an empty segment_ids list
     # targets every identity in the environment.
@@ -266,24 +266,19 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
     @staticmethod
     def to_spec(data: dict[str, Any], request: Any) -> RolloutSpec:
         value = data["feature_state_value"]
-        multivariate_values = data.get("multivariate_feature_state_values")
         audience = data.get("audience")
         return RolloutSpec(
             enabled=data["enabled"],
             rollout_percentage=data["rollout_percentage"],
             feature_state_value=value["value"],
             value_type=value["type"],
-            variants=(
-                [
-                    Variant(
-                        id=mv["multivariate_feature_option"],
-                        weight=mv["percentage_allocation"],
-                    )
-                    for mv in multivariate_values
-                ]
-                if multivariate_values is not None
-                else None
-            ),
+            variants=[
+                Variant(
+                    id=mv["multivariate_feature_option"],
+                    weight=mv["percentage_allocation"],
+                )
+                for mv in data["multivariate_feature_state_values"]
+            ],
             author=AuthorData.from_request(request),
             audience=(
                 AudienceSpec(

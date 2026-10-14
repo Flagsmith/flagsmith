@@ -20,7 +20,7 @@ class RolloutSpec:
     rollout_percentage: float
     feature_state_value: str
     value_type: FeatureValueType
-    variants: list[Variant] | None
+    variants: list[Variant]
     author: AuthorData
     audience: AudienceSpec | None = None
 

@@ -812,7 +812,7 @@ def _is_noop_rollout(
         spec.value_type,
     ):
         return False
-    return spec.variants is None or {
+    return {
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
     } == {variant["id"]: variant["weight"] for variant in spec.variants}
@@ -942,14 +942,16 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
         segment = _sync_rollout_segment(experiment, rollout_rules)
         if is_first_rollout:
             _reset_default_allocations_to_control(experiment, spec.author)
-        override: SegmentOverrideRequest = {
-            "segment": {"id": segment.id},
-            "enabled": spec.enabled,
-            "value": {"type": spec.value_type, "value": spec.feature_state_value},
-        }
-        if spec.variants is not None:
-            override["variants"] = spec.variants
-        _write_rollout_override(experiment, override, spec.author)
+        _write_rollout_override(
+            experiment,
+            {
+                "segment": {"id": segment.id},
+                "enabled": spec.enabled,
+                "value": {"type": spec.value_type, "value": spec.feature_state_value},
+                "variants": spec.variants,
+            },
+            spec.author,
+        )
         # Segment condition changes don't trigger a rebuild on their own.
         transaction.on_commit(
             lambda: rebuild_environment_document.delay(
