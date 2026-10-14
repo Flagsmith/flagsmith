@@ -49,8 +49,8 @@ The current status is shown on the warehouse card in **Environment Settings > Wa
 - **Created**: the connection exists but no events have been received yet.
 - **Pending Connection**: waiting for the first event to arrive.
 - **Connected**: events have been received; you are ready to run experiments.
-- **Errored**: the card shows the reason. For your own warehouse, see its troubleshooting section; otherwise
-  [contact support](/support/).
+- **Errored**: the card shows the reason. For Databricks, see
+  [Troubleshooting](/experimentation/connect-databricks#troubleshooting); otherwise [contact support](/support/).
 
 ## Bring your own ClickHouse
 

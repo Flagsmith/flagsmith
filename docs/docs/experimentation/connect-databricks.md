@@ -11,21 +11,18 @@ Experimentation is in beta.
 
 :::
 
-:::info Early access
-
-Databricks connections are in early access. [Get in touch](https://www.flagsmith.com/contact-us) to enable them for your
-organisation.
-
-:::
-
 Flagsmith writes experiment events to a table in your Databricks workspace and computes experiment results by querying
 it there. Each environment has one [warehouse connection](/experimentation/connect-a-warehouse).
 
 ## Before you start
 
 - A workspace with Unity Catalog enabled.
-- A workspace region where Databricks supports Zerobus Ingest, which Flagsmith uses to write events. See
-  [Databricks' region support](https://docs.databricks.com/aws/en/resources/feature-region-support#ingestion).
+- A workspace region where Databricks supports Zerobus Ingest, which Flagsmith uses to write events. See Databricks'
+  region support for [AWS](https://docs.databricks.com/aws/en/resources/feature-region-support#ingestion),
+  [Azure](https://learn.microsoft.com/en-us/azure/databricks/resources/feature-region-support#ingestion) or
+  [Google Cloud](https://docs.databricks.com/gcp/en/resources/feature-region-support#ingestion).
+- A workspace reachable over the public internet. Workspaces restricted to Private Link or by IP access lists aren't
+  currently supported.
 - A serverless SQL warehouse.
 - Workspace admin access, to create a service principal.
 - A catalog where you can create schemas.
@@ -46,8 +43,10 @@ Databricks Free Edition is not supported.
 
 1. Go to **Settings › Identity and access › Service principals**.
 2. Click **Add service principal › Add new** and name it `flagsmith`.
-3. Open **Secrets**, click **Generate secret**, and add the `sql` scope only.
-4. Copy the client ID and secret. The secret is shown only once.
+3. Select the **Workspace access** and **Databricks SQL access** entitlements, when creating it or later under its
+   **Configurations** tab.
+4. Open **Secrets**, click **Generate secret**, and add the `sql` scope only.
+5. Copy the client ID and secret. The secret is shown only once.
 
 :::important
 
@@ -133,18 +132,18 @@ The server hostname can't be changed. Disconnect and create a new connection.
 Errors show as the result of **Test connection**, or on the connection card with status **Errored** when event delivery
 fails.
 
-| Message                                                                                          | Where      | What to do                                                                                                                           |
-| ------------------------------------------------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Authentication failed.                                                                           | Test, card | Check the client ID and secret, or generate a new secret if it expired. On the card, also check **Workspace ID**.                    |
-| The service principal secret must allow the sql scope. Generate a new secret with the sql scope. | Test, card | Generate a new secret with the `sql` scope ([step 2](#2-create-a-service-principal)) and update the connection.                      |
-| The workspace ID does not match this workspace.                                                  | Test       | Use the number after `?o=` from the same workspace as the server hostname.                                                           |
-| SQL warehouse not found.                                                                         | Test       | Check **Warehouse ID**, and that the service principal has **Can use** on the warehouse ([step 3](#3-let-it-use-the-sql-warehouse)). |
-| Database does not exist.                                                                         | Test       | Check **Catalog** and **Schema**, and that you ran the script in [step 4](#4-create-the-events-table).                               |
-| Events table not found in the configured database. Run the setup SQL to create it.               | Test, card | Run the setup SQL that Flagsmith shows, which has your catalog, schema and client ID filled in.                                      |
-| The Databricks workspace rejected the request.                                                   | Test, card | Check that the service principal has **Can use** on the warehouse, and that you ran the step 4 script with its client ID.            |
-| The SQL warehouse is starting. Test the connection again in a few minutes.                       | Test       | Wait for the warehouse to start, then test again.                                                                                    |
-| Could not connect to the host.                                                                   | Test, card | Check **Server hostname**. On the card, also check **Region**, and that Zerobus Ingest is available there.                           |
-| The events table is missing or the service principal lacks access to it. Run the setup SQL.      | Card       | Run the step 4 script again with the right catalog, schema and client ID.                                                            |
-| Permission denied on the events table.                                                           | Card       | Run the `GRANT` statements in step 4 again.                                                                                          |
-| The warehouse rejected the events. Check that the events table matches the expected schema.      | Card       | Make the table's columns and types match the step 4 script exactly, as a managed table.                                              |
-| Connection failed.                                                                               | Test       | [Contact support](/support/).                                                                                                        |
+| Message                                                                                          | Where      | What to do                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authentication failed.                                                                           | Test, card | Check the client ID and secret, or generate a new secret if it expired. On the card, also check **Workspace ID**.                                                                                                                           |
+| The service principal secret must allow the sql scope. Generate a new secret with the sql scope. | Test, card | Generate a new secret with the `sql` scope ([step 2](#2-create-a-service-principal)) and update the connection.                                                                                                                             |
+| The workspace ID does not match this workspace.                                                  | Test       | Use the number after `?o=` from the same workspace as the server hostname.                                                                                                                                                                  |
+| SQL warehouse not found.                                                                         | Test       | Check **Warehouse ID**, and that the service principal has **Can use** on the warehouse ([step 3](#3-let-it-use-the-sql-warehouse)).                                                                                                        |
+| Database does not exist.                                                                         | Test       | Check **Catalog** and **Schema**, and that you ran the script in [step 4](#4-create-the-events-table).                                                                                                                                      |
+| Events table not found in the configured database. Run the setup SQL to create it.               | Test, card | Run the setup SQL that Flagsmith shows, which has your catalog, schema and client ID filled in.                                                                                                                                             |
+| The Databricks workspace rejected the request.                                                   | Test, card | Check that the service principal has the **Workspace access** and **Databricks SQL access** entitlements ([step 2](#2-create-a-service-principal)) and **Can use** on the warehouse, and that you ran the step 4 script with its client ID. |
+| The SQL warehouse is starting. Test the connection again in a few minutes.                       | Test       | Wait for the warehouse to start, then test again.                                                                                                                                                                                           |
+| Could not connect to the host.                                                                   | Test, card | Check **Server hostname**. On the card, also check **Region**, and that Zerobus Ingest is available there.                                                                                                                                  |
+| The events table is missing or the service principal lacks access to it. Run the setup SQL.      | Card       | Run the step 4 script again with the right catalog, schema and client ID.                                                                                                                                                                   |
+| Permission denied on the events table.                                                           | Card       | Check that the service principal has the **Workspace access** and **Databricks SQL access** entitlements ([step 2](#2-create-a-service-principal)), then run the `GRANT` statements in step 4 again.                                        |
+| The warehouse rejected the events. Check that the events table matches the expected schema.      | Card       | Make the table's columns and types match the step 4 script exactly, as a managed table.                                                                                                                                                     |
+| Connection failed.                                                                               | Test       | [Contact support](/support/).                                                                                                                                                                                                               |
