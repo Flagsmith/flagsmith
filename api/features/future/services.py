@@ -194,7 +194,8 @@ def _write_segment_override(
         feature_segment.priority = priority
         feature_segment.save(update_fields=["priority"])
 
-    # New overrides are created enabled or not, so their audit log shows it.
+    # New overrides get their enabled value on creation, so the audit log
+    # records a creation rather than a change from the environment default.
     if not created and (replace or "enabled" in changes):
         feature_state.enabled = changes.get("enabled", environment_default.enabled)
         feature_state.save(update_fields=["enabled"])
