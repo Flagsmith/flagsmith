@@ -12,7 +12,7 @@ from features.types import LegacyFeatureStateData
 def map_legacy_flag_value(
     feature_state_data: LegacyFeatureStateData,
 ) -> FlagValue | None:
-    """Map the value of feature state data validated by a legacy API, if any.
+    """Map a legacy feature state value to the flag API representation.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
