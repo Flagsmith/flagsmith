@@ -1419,7 +1419,11 @@ export type WarehouseConnectionStatus =
   | 'connected'
   | 'errored'
 
-export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
+export type WarehouseType =
+  | 'flagsmith'
+  | 'snowflake'
+  | 'clickhouse'
+  | 'databricks'
 
 export type SnowflakeConfig = {
   account_identifier: string
@@ -1438,9 +1442,19 @@ export type ClickHouseConfig = {
   secure: boolean
 }
 
+export type DatabricksConfig = {
+  host: string
+  workspace_id: string
+  region: string
+  warehouse_id: string
+  catalog: string
+  schema: string
+}
+
 export type WarehouseConfigResponse =
   | SnowflakeConfig
   | ClickHouseConfig
+  | DatabricksConfig
   | Record<string, never>
 
 export type WarehouseConnectionTestResult = {

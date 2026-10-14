@@ -39,6 +39,14 @@ describe('getClickHouseOnboardingSql', () => {
     expect(sql).toContain(getClickHouseSetupSql('flagsmith_exp'))
   })
 
+  it('creates the events table before the user and grants that reference it', () => {
+    const sql = getClickHouseOnboardingSql()
+    const createTable = sql.indexOf('CREATE TABLE')
+
+    expect(createTable).toBeLessThan(sql.indexOf('CREATE USER'))
+    expect(createTable).toBeLessThan(sql.indexOf('GRANT'))
+  })
+
   it('matches the copy of the script in the documentation', () => {
     const doc = fs.readFileSync(
       path.join(

@@ -1,3 +1,6 @@
+export const CLICKHOUSE_SETUP_SQL_LABEL =
+  'Run once against your ClickHouse instance to create the events table'
+
 export const getClickHouseSetupSql = (
   database: string,
 ): string => `CREATE DATABASE IF NOT EXISTS ${database};
@@ -27,7 +30,10 @@ PARTITION BY toYYYYMMDD(timestamp)
 ORDER BY (environment_key, event, feature_name, timestamp, identifier);`
 
 export const getClickHouseOnboardingSql =
-  (): string => `-- Create a dedicated user for Flagsmith
+  (): string => `-- Create the database and events table
+${getClickHouseSetupSql('flagsmith_exp')}
+
+-- Create a dedicated user for Flagsmith
 CREATE USER IF NOT EXISTS <USER>
     IDENTIFIED WITH sha256_password BY '<CHANGE_ME_PASSWORD>';
 
@@ -35,7 +41,4 @@ CREATE USER IF NOT EXISTS <USER>
 GRANT SELECT, INSERT ON flagsmith_exp.events TO <USER>;
 
 -- Allow it to check the events table exists
-GRANT SHOW TABLES, SHOW COLUMNS ON flagsmith_exp.* TO <USER>;
-
--- Create the database and events table
-${getClickHouseSetupSql('flagsmith_exp')}`
+GRANT SHOW TABLES, SHOW COLUMNS ON flagsmith_exp.* TO <USER>;`
