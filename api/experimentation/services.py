@@ -5,6 +5,7 @@ import typing
 from dataclasses import replace
 
 import structlog
+from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -109,10 +110,13 @@ class _ExposureReadKwargs(typing.TypedDict):
 
 
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
-    return get_openfeature_client().get_boolean_value(
-        WAREHOUSE_CONNECTION_FLAG,
-        default_value=False,
-        evaluation_context=organisation.openfeature_evaluation_context,
+    return (
+        settings.EXPERIMENTATION_ENABLED
+        and get_openfeature_client().get_boolean_value(
+            WAREHOUSE_CONNECTION_FLAG,
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        )
     )
 
 
@@ -125,10 +129,13 @@ def is_databricks_warehouse_enabled(organisation: Organisation) -> bool:
 
 
 def is_experiment_feature_enabled(organisation: Organisation) -> bool:
-    return get_openfeature_client().get_boolean_value(
-        EXPERIMENT_FLAG,
-        default_value=False,
-        evaluation_context=organisation.openfeature_evaluation_context,
+    return (
+        settings.EXPERIMENTATION_ENABLED
+        and get_openfeature_client().get_boolean_value(
+            EXPERIMENT_FLAG,
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        )
     )
 
 

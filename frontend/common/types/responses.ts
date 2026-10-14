@@ -1262,6 +1262,7 @@ export type Version = {
     ci_commit_sha: string
     image_tag: string
     has_email_provider: boolean
+    experimentation_enabled: boolean
     is_enterprise: boolean
     is_saas: boolean
     'self_hosted_data'?: {
@@ -1418,7 +1419,11 @@ export type WarehouseConnectionStatus =
   | 'connected'
   | 'errored'
 
-export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
+export type WarehouseType =
+  | 'flagsmith'
+  | 'snowflake'
+  | 'clickhouse'
+  | 'databricks'
 
 export type SnowflakeConfig = {
   account_identifier: string
@@ -1437,9 +1442,19 @@ export type ClickHouseConfig = {
   secure: boolean
 }
 
+export type DatabricksConfig = {
+  host: string
+  workspace_id: string
+  region: string
+  warehouse_id: string
+  catalog: string
+  schema: string
+}
+
 export type WarehouseConfigResponse =
   | SnowflakeConfig
   | ClickHouseConfig
+  | DatabricksConfig
   | Record<string, never>
 
 export type WarehouseConnectionTestResult = {

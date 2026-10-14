@@ -1,4 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { CSSProperties, useEffect, useRef, useState } from 'react'
+import { durationNormal, easingStandard } from 'common/theme/tokens'
+
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 /**
  * Hook for animating height transitions (expand/collapse).
@@ -9,12 +14,21 @@ import { useEffect, useRef, useState } from 'react'
 export default function useCollapsibleHeight(open: boolean) {
   const contentRef = useRef<HTMLDivElement>(null)
   const [height, setHeight] = useState<number | undefined>(open ? undefined : 0)
+  const lastOpen = useRef(open)
 
   useEffect(() => {
+    // Only animate a change; measuring on mount would flash a closed body open.
+    if (lastOpen.current === open) return
+    lastOpen.current = open
     if (!contentRef.current) return
     if (open) {
       setHeight(contentRef.current.scrollHeight)
-      const timer = setTimeout(() => setHeight(undefined), 300)
+      // Back to auto once the transition ends, so the content can grow.
+      const { transitionDuration } = getComputedStyle(contentRef.current)
+      const timer = setTimeout(
+        () => setHeight(undefined),
+        (parseFloat(transitionDuration) || 0) * 1000,
+      )
       return () => clearTimeout(timer)
     } else {
       setHeight(contentRef.current.scrollHeight)
@@ -31,10 +45,12 @@ export default function useCollapsibleHeight(open: boolean) {
     }
   }, [open])
 
-  const style = {
+  const style: CSSProperties = {
     height: height !== undefined ? `${height}px` : 'auto',
-    overflow: (height === undefined ? 'visible' : 'hidden') as const,
-    transition: 'height 0.3s ease',
+    overflow: height === undefined ? 'visible' : 'hidden',
+    transition: prefersReducedMotion()
+      ? 'none'
+      : `height ${durationNormal} ${easingStandard}`,
   }
 
   return { contentRef, style }
