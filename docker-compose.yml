@@ -36,7 +36,6 @@ x-flagsmith-env: &flagsmith-env
   # To run without experimentation and its services, run:
   # EXPERIMENTATION_ENABLED=false docker compose up -d flagsmith flagsmith-task-processor
   EXPERIMENTATION_ENABLED: ${EXPERIMENTATION_ENABLED:-true}
-  EXPERIMENTATION_CLICKHOUSE_URL: clickhouse://flagsmith:password@clickhouse:9000/flagsmith_exp
 
 volumes:
   pgdata:
@@ -128,6 +127,8 @@ services:
       kafka:
         condition: service_healthy
 
+  # Connect it from Environment Settings > Warehouse > ClickHouse: host `clickhouse`, port 8123,
+  # TLS off, database `flagsmith_exp`, username `flagsmith`, password `password`.
   clickhouse:
     image: clickhouse/clickhouse-server:25.12
     environment:
@@ -145,45 +146,18 @@ services:
       timeout: 3s
       retries: 20
 
-  # Creates the events table from experimentation/clickhouse/events.sql, and has
-  # ClickHouse consume events from Kafka into it.
+  # Creates the events table from experimentation/clickhouse/events.sql.
   clickhouse-init:
     image: clickhouse/clickhouse-server:25.12
     entrypoint: ['/bin/sh', '-c']
     command:
       - |
         set -e
-        client="clickhouse-client --host clickhouse --user flagsmith --password password --multiquery"
         wget -qO /tmp/events.sql https://raw.githubusercontent.com/Flagsmith/flagsmith/main/experimentation/clickhouse/events.sql
-        $$client < /tmp/events.sql
-        $$client <<'SQL'
-        CREATE TABLE IF NOT EXISTS flagsmith_exp.events_queue (raw String)
-        ENGINE = Kafka
-        SETTINGS kafka_broker_list = 'kafka:9092',
-                 kafka_topic_list = 'flagsmith_warehouse_events',
-                 kafka_group_name = 'clickhouse',
-                 kafka_format = 'JSONAsString';
-
-        CREATE MATERIALIZED VIEW IF NOT EXISTS flagsmith_exp.events_mv TO flagsmith_exp.events AS
-        SELECT
-            JSONExtractString(raw, 'environment_key') AS environment_key,
-            JSONExtractString(raw, 'event') AS event,
-            JSONExtractString(raw, 'feature_name') AS feature_name,
-            fromUnixTimestamp64Milli(JSONExtract(raw, 'timestamp', 'Int64')) AS timestamp,
-            fromUnixTimestamp64Milli(JSONExtract(raw, 'collected_at', 'Int64')) AS collected_at,
-            JSONExtractString(raw, 'identifier') AS identifier,
-            if(JSONType(raw, 'value') = 'String', JSONExtractString(raw, 'value'), JSONExtractRaw(raw, 'value')) AS value,
-            JSONExtractString(raw, 'traits') AS traits,
-            JSONExtractString(raw, 'metadata') AS metadata,
-            JSONExtractString(raw, 'sdk_language') AS sdk_language,
-            JSONExtractString(raw, 'sdk_version') AS sdk_version
-        FROM flagsmith_exp.events_queue;
-        SQL
+        clickhouse-client --host clickhouse --user flagsmith --password password --multiquery < /tmp/events.sql
     depends_on:
       clickhouse:
         condition: service_healthy
-      kafka-init:
-        condition: service_completed_successfully
 
   ingestion-server:
     image: flagsmith/events-ingestion-api:latest
@@ -212,4 +186,6 @@ services:
       migrate-db:
         condition: service_completed_successfully
       kafka-init:
+        condition: service_completed_successfully
+      clickhouse-init:
         condition: service_completed_successfully
