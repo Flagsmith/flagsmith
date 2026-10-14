@@ -1545,6 +1545,9 @@ CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
 
 CLICKHOUSE_CONNECTION_CLIENT_NAME = "flagsmith-core-api"
 
+# Whether the experimentation infra is deployed.
+EXPERIMENTATION_ENABLED = env.bool("EXPERIMENTATION_ENABLED", default=False)
+
 # DSN for the ClickHouse instance holding ingested experimentation events.
 # TODO: consolidate connection management across the two CH use cases
 #  https://github.com/Flagsmith/flagsmith/issues/8033

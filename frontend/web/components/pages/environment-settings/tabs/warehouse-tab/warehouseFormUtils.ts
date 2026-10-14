@@ -11,6 +11,11 @@ export const getWarehouseErrorMessage = (isEdit: boolean): string =>
 export const isMissingEventsTableDetail = (detail: string | null): boolean =>
   !!detail?.startsWith('Events table not found')
 
+export const STARTING_SAVE_ANYWAY = 'You can save anyway and test again later.'
+
+export const isWarehouseStartingDetail = (detail: string | null): boolean =>
+  !!detail?.startsWith('The SQL warehouse is starting.')
+
 const punctuate = (detail: string): string =>
   `${detail}${/[.!?]$/.test(detail) ? '' : '.'}`
 
