@@ -48,9 +48,13 @@ const FeatureDependencyChanges: FC<
 }
 
 // The prerequisite changes staged in a change request, per feature.
-const DiffDependencies: FC<DiffDependenciesProps> = (props) => {
+const DiffDependencies: FC<DiffDependenciesProps> = ({
+  changeRequestId,
+  environmentId,
+  projectId,
+}) => {
   const { data: featureIds, isError } = useGetFeatureIdsStagedQuery({
-    changeRequestId: props.changeRequestId,
+    changeRequestId,
   })
   // Otherwise a failed list reads as no dependency changes.
   if (isError) {
@@ -65,8 +69,10 @@ const DiffDependencies: FC<DiffDependenciesProps> = (props) => {
       {featureIds?.map((featureId) => (
         <FeatureDependencyChanges
           key={featureId}
-          {...props}
+          changeRequestId={changeRequestId}
+          environmentId={environmentId}
           featureId={featureId}
+          projectId={projectId}
         />
       ))}
     </>
