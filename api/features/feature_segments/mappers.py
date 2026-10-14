@@ -72,6 +72,6 @@ def map_feature_state_data_to_segment_override(
             for variant_id in feature.multivariate_options.values_list("id", flat=True)
             if variant_id not in given_ids
         ]
-        if variants:  # Standard features get sent none
+        if variants:  # Legacy clients may send an empty list for standard features.
             override["variants"] = variants
     return override
