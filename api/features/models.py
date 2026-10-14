@@ -236,16 +236,6 @@ class Feature(  # type: ignore[django-manager-missing]
         return self.project
 
 
-def get_next_segment_priority(feature):  # type: ignore[no-untyped-def]
-    feature_segments = FeatureSegment.objects.filter(feature=feature).order_by(
-        "-priority"
-    )
-    if feature_segments.count() == 0:
-        return 1
-    else:
-        return feature_segments.first().priority + 1
-
-
 class FeatureSegment(
     LifecycleModelMixin,  # type: ignore[misc]
     AbstractBaseExportableModel,
@@ -378,9 +368,11 @@ class FeatureSegment(
 
         id_priority_dict = dict(new_feature_segment_id_priorities)
 
-        for fs in feature_segments:
-            new_priority = id_priority_dict[fs.id]
-            fs.to(new_priority)
+        # Moving them in their new order, each from where earlier moves left it,
+        # puts each where it's asked to go.
+        for fs in sorted(feature_segments, key=lambda fs: id_priority_dict[fs.id]):
+            fs.refresh_from_db(fields=["priority"])
+            fs.to(id_priority_dict[fs.id])
 
         request = getattr(HistoricalRecords.thread, "request", None)
         if request:

@@ -1336,7 +1336,6 @@ def create_segment_override(  # type: ignore[no-untyped-def]
     if not get_segment_override(
         environment=environment, feature=feature, segment_id=segment.id
     ):
-        # Create overrides as the serializer would.
         feature_state_data.setdefault("enabled", False)
         if exceeds_segment_override_limit(environment):
             raise ValidationError(

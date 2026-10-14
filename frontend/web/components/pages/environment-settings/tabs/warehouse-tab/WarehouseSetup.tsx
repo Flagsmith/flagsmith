@@ -1,16 +1,23 @@
-import { FC, useState } from 'react'
+import { FC, ReactNode, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
-import BareButton from 'components/base/forms/BareButton'
-import { WarehouseType } from 'common/types/responses'
+import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import { ConfigFormData } from './ConfigForm'
 import SelectableCard from 'components/base/SelectableCard'
 import ConfigForm from './ConfigForm'
 import Utils from 'common/utils/utils'
 import ClickHouseConfigForm from './ClickHouseConfigForm'
 import WarehouseSqlSnippet from './WarehouseSqlSnippet'
+import WarehouseSetupSteps from './WarehouseSetupSteps'
 import { getClickHouseOnboardingSql } from './clickhouseSetupSql'
 import { ClickHouseFormData } from './clickhouseConfig'
+import DatabricksConfigForm from './DatabricksConfigForm'
+import { getDatabricksSetupSql } from './databricksSetupSql'
+import { DatabricksFormData } from './databricksConfig'
+import {
+  getConfigurableWarehouseTypes,
+  WarehouseTypeOption,
+} from './warehouseTypes'
 import './WarehouseSetup.scss'
 
 type WarehouseSetupProps = {
@@ -18,93 +25,105 @@ type WarehouseSetupProps = {
   onEnableFlagsmith: () => void
   onCreateSnowflake: (data: ConfigFormData) => Promise<unknown>
   onCreateClickHouse: (data: ClickHouseFormData) => Promise<unknown>
+  onCreateDatabricks: (data: DatabricksFormData) => Promise<unknown>
   isCreating: boolean
 }
 
-type WarehouseTypeOption = WarehouseType | 'bigquery' | 'databricks'
+type WarehouseTypeCard = {
+  description: string
+  icon: ReactNode
+  title: string
+  type: WarehouseTypeOption
+}
+
+const WAREHOUSE_TYPE_CARDS: WarehouseTypeCard[] = [
+  {
+    description: 'Managed warehouse',
+    icon: (
+      <img
+        src='/static/images/nav-logo.png'
+        alt='Flagsmith'
+        width={20}
+        height={20}
+      />
+    ),
+    title: 'Flagsmith',
+    type: 'flagsmith',
+  },
+  {
+    description: 'Open-source OLAP database',
+    icon: <Icon name='layers' width={20} />,
+    title: 'ClickHouse',
+    type: 'clickhouse',
+  },
+  {
+    description: 'Cloud data warehouse',
+    icon: <Icon name='flash' width={20} />,
+    title: 'Snowflake',
+    type: 'snowflake',
+  },
+  {
+    description: 'Google Cloud data warehouse',
+    icon: <Icon name='layers' width={20} />,
+    title: 'BigQuery',
+    type: 'bigquery',
+  },
+  {
+    description: 'Unified analytics platform',
+    icon: <Icon name='layers' width={20} />,
+    title: 'Databricks',
+    type: 'databricks',
+  },
+]
 
 const WarehouseSetup: FC<WarehouseSetupProps> = ({
   environmentId,
   isCreating,
   onCreateClickHouse,
+  onCreateDatabricks,
   onCreateSnowflake,
   onEnableFlagsmith,
 }) => {
-  const [selectedType, setSelectedType] =
-    useState<WarehouseTypeOption>('flagsmith')
-  const [sqlExpanded, setSqlExpanded] = useState(true)
-  const clickhouseEnabled = Utils.getFlagsmithHasFeature('clickhouse_warehouse')
-  const configurableTypes: WarehouseTypeOption[] = clickhouseEnabled
-    ? ['flagsmith', 'clickhouse']
-    : ['flagsmith']
+  const { data: version } = useGetBuildVersionQuery({})
+  const configurableTypes = getConfigurableWarehouseTypes({
+    clickhouseEnabled: Utils.getFlagsmithHasFeature('clickhouse_warehouse'),
+    databricksEnabled: Utils.getFlagsmithHasFeature('databricks_warehouse'),
+    isSaas: !!version?.backend?.is_saas,
+  })
+  const [chosenType, setSelectedType] = useState<WarehouseTypeOption>()
+  const selectedType = chosenType ?? configurableTypes[0]
+  const isEnabled = (type: WarehouseTypeOption) =>
+    configurableTypes.includes(type)
+  // Other unavailable types still show, as "Coming Soon".
+  const typeCards = WAREHOUSE_TYPE_CARDS.filter(
+    ({ type }) => type !== 'flagsmith' || isEnabled(type),
+  ).sort((a, b) => Number(isEnabled(b.type)) - Number(isEnabled(a.type)))
 
   return (
     <div className='warehouse-setup'>
       <div>
         <h5 className='mb-2'>Warehouse Type</h5>
         <div className='warehouse-setup__type-row'>
-          <div className='warehouse-setup__type-card'>
-            <SelectableCard
-              icon={
-                <img
-                  src='/static/images/nav-logo.png'
-                  alt='Flagsmith'
-                  width={20}
-                  height={20}
+          {typeCards.map(({ description, icon, title, type }) => {
+            const enabled = isEnabled(type)
+            return (
+              <div key={type} className='warehouse-setup__type-card'>
+                <SelectableCard
+                  icon={icon}
+                  title={title}
+                  description={description}
+                  selected={selectedType === type}
+                  onClick={() => enabled && setSelectedType(type)}
+                  disabled={!enabled}
                 />
-              }
-              title='Flagsmith'
-              description='Managed warehouse'
-              selected={selectedType === 'flagsmith'}
-              onClick={() => setSelectedType('flagsmith')}
-            />
-          </div>
-          <div className='warehouse-setup__type-card'>
-            <SelectableCard
-              icon={<Icon name='layers' width={20} />}
-              title='ClickHouse'
-              description='Open-source OLAP database'
-              selected={selectedType === 'clickhouse'}
-              onClick={() => clickhouseEnabled && setSelectedType('clickhouse')}
-              disabled={!clickhouseEnabled}
-            />
-            {!clickhouseEnabled && (
-              <span className='warehouse-setup__coming-soon'>Coming Soon</span>
-            )}
-          </div>
-          <div className='warehouse-setup__type-card'>
-            <SelectableCard
-              icon={<Icon name='flash' width={20} />}
-              title='Snowflake'
-              description='Cloud data warehouse'
-              selected={false}
-              onClick={() => {}}
-              disabled
-            />
-            <span className='warehouse-setup__coming-soon'>Coming Soon</span>
-          </div>
-          <div className='warehouse-setup__type-card'>
-            <SelectableCard
-              icon={<Icon name='layers' width={20} />}
-              title='BigQuery'
-              description='Google Cloud data warehouse'
-              selected={false}
-              onClick={() => {}}
-              disabled
-            />
-            <span className='warehouse-setup__coming-soon'>Coming Soon</span>
-          </div>
-          <div className='warehouse-setup__type-card'>
-            <SelectableCard
-              icon={<Icon name='layers' width={20} />}
-              title='Databricks'
-              description='Unified analytics platform'
-              selected={false}
-              onClick={() => {}}
-              disabled
-            />
-            <span className='warehouse-setup__coming-soon'>Coming Soon</span>
-          </div>
+                {!enabled && (
+                  <span className='warehouse-setup__coming-soon fs-captionXSmall'>
+                    Coming Soon
+                  </span>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -131,60 +150,76 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
       {selectedType === 'snowflake' && (
         <ConfigForm
           onSave={onCreateSnowflake}
-          onCancel={() => setSelectedType('flagsmith')}
+          onCancel={() => setSelectedType(undefined)}
         />
       )}
 
       {selectedType === 'clickhouse' && (
-        <div className='warehouse-setup__steps'>
-          <div className='warehouse-setup__step'>
-            <div className='warehouse-setup__step-rail'>
-              <div className='warehouse-setup__step-marker'>1</div>
-              <div className='warehouse-setup__step-connector' />
-            </div>
-            <div className='warehouse-setup__step-content'>
-              <BareButton
-                className='warehouse-setup__step-toggle mb-2'
-                aria-expanded={sqlExpanded}
-                onClick={() => setSqlExpanded(!sqlExpanded)}
-              >
-                <h6 className='mb-0'>
-                  Configure your warehouse for experimentation
-                </h6>
-                <Icon
-                  name={sqlExpanded ? 'chevron-up' : 'chevron-down'}
-                  width={22}
-                  fill='#656D7B'
-                />
-              </BareButton>
-              {sqlExpanded && (
-                <>
-                  <p className='text-muted mb-3'>
-                    Run this once against your ClickHouse instance using an
-                    administrative user. Replace {'<USER>'} and{' '}
-                    {'<CHANGE_ME_PASSWORD>'} with your own values.
-                  </p>
-                  <WarehouseSqlSnippet sql={getClickHouseOnboardingSql()} />
-                </>
-              )}
-            </div>
-          </div>
-          <div className='warehouse-setup__step'>
-            <div className='warehouse-setup__step-rail'>
-              <div className='warehouse-setup__step-marker'>2</div>
-            </div>
-            <div className='warehouse-setup__step-content'>
-              <h6 className='mb-2'>Connect your warehouse</h6>
+        <WarehouseSetupSteps
+          configure={
+            <>
               <p className='text-muted mb-3'>
-                Enter the connection details for the user you created in step 1.
+                Run this once against your ClickHouse instance using an
+                administrative user. Replace {'<USER>'} and{' '}
+                {'<CHANGE_ME_PASSWORD>'} with your own values.
               </p>
-              <ClickHouseConfigForm
-                environmentId={environmentId}
-                onSave={onCreateClickHouse}
-              />
-            </div>
-          </div>
-        </div>
+              <WarehouseSqlSnippet sql={getClickHouseOnboardingSql()} />
+            </>
+          }
+          connectDescription='Enter the connection details for the user you created in step 1.'
+        >
+          <ClickHouseConfigForm
+            environmentId={environmentId}
+            onSave={onCreateClickHouse}
+          />
+        </WarehouseSetupSteps>
+      )}
+
+      {selectedType === 'databricks' && (
+        <WarehouseSetupSteps
+          configure={
+            <>
+              <ol className='text-muted mb-3'>
+                <li>
+                  Use a SQL warehouse. Serverless is recommended: it starts in
+                  seconds and costs nothing while idle. All-purpose clusters are
+                  not supported.
+                </li>
+                <li>
+                  Note the Server hostname and the Warehouse ID (the last part
+                  of the HTTP path) from SQL Warehouses › your warehouse ›
+                  Connection details.
+                </li>
+                <li>
+                  Create a service principal (Settings › Identity and access ›
+                  Service principals › Add new), then generate a secret with the
+                  sql scope and copy the client ID and secret. The secret is
+                  shown only once.
+                </li>
+                <li>
+                  On the SQL warehouse, open Permissions and give the service
+                  principal Can use.
+                </li>
+              </ol>
+              <p className='text-muted mb-3'>
+                Run this script in the SQL editor as an admin. It is safe to run
+                more than once. Replace {'<CATALOG>'} and {'<CLIENT_ID>'} with
+                your own values.
+              </p>
+              <WarehouseSqlSnippet sql={getDatabricksSetupSql()} />
+              <p className='text-muted mb-0'>
+                Service principal secrets expire. When you rotate the secret in
+                Databricks, update it here too.
+              </p>
+            </>
+          }
+          connectDescription='Enter the connection details and the service principal you created in step 1.'
+        >
+          <DatabricksConfigForm
+            environmentId={environmentId}
+            onSave={onCreateDatabricks}
+          />
+        </WarehouseSetupSteps>
       )}
 
       {!configurableTypes.includes(selectedType) && (

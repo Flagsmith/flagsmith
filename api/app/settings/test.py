@@ -59,6 +59,9 @@ RETRY_WEBHOOKS = True
 
 INFLUXDB_BUCKET = "test_bucket"
 
+# Lets experimentation tests exercise the feature flags alone.
+EXPERIMENTATION_ENABLED = True
+
 SUBSCRIPTION_LICENCE_PRIVATE_KEY = """
 -----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC0o6Q+J6ArJZ2x

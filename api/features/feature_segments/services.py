@@ -1,13 +1,10 @@
 from django.db import transaction
-from django.db.models import Max, Q
+from django.db.models import F, Max, Q, QuerySet
 from django.utils import timezone
-from rest_framework.request import Request
 
-from audit.tasks import create_segment_priorities_changed_audit_log
 from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.feature_segments.mappers import (
-    clears_legacy_flag_value,
     map_feature_state_data_to_segment_override,
 )
 from features.future.mappers import map_flag_value
@@ -19,64 +16,6 @@ from features.versioning.versioning_service import (
     get_environment_flags_list,
 )
 from integrations.vcs.services import dispatch_vcs_on_feature_state_changed
-
-
-def get_reordered_priorities(
-    feature_segments: list[FeatureSegment],
-    new_priorities: dict[int, int],
-) -> dict[int, int]:
-    """Get the priorities `FeatureSegment.update_priorities` would leave the
-    feature segments with, by feature segment ID.
-
-    Moving a feature segment to a priority moves the ones in between out of
-    its way, as the requested moves are made in the order of their priorities.
-
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
-    """
-    priorities = {
-        feature_segment.id: feature_segment.priority
-        for feature_segment in feature_segments
-    }
-    # Each move reads its feature segment's priority as it was at first.
-    initial_priorities = priorities.copy()
-    for feature_segment_id in sorted(
-        new_priorities, key=lambda id_: (initial_priorities[id_], id_)
-    ):
-        old_priority = initial_priorities[feature_segment_id]
-        new_priority = new_priorities[feature_segment_id]
-        if old_priority == new_priority:
-            continue
-        for other_id, priority in priorities.items():
-            if new_priority <= priority < old_priority:
-                priorities[other_id] = priority + 1
-            elif old_priority < priority <= new_priority:
-                priorities[other_id] = priority - 1
-        priorities[feature_segment_id] = new_priority
-    return priorities
-
-
-def create_priorities_changed_audit_log(
-    request: Request,
-    previous_priorities: list[tuple[int, int]],
-    feature_segment_ids: list[int],
-) -> None:
-    """Audit a reordering of segment overrides, as `update_priorities` does.
-
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
-    """
-    create_segment_priorities_changed_audit_log.delay(
-        kwargs={
-            "previous_id_priority_pairs": previous_priorities,
-            "feature_segment_ids": feature_segment_ids,
-            "user_id": getattr(request.user, "id", None),
-            "master_api_key_id": (
-                request.master_api_key.id
-                if hasattr(request, "master_api_key")
-                else None
-            ),
-            "changed_at": timezone.now().isoformat(),
-        }
-    )
 
 
 def get_segment_overrides(
@@ -95,7 +34,6 @@ def get_segment_overrides(
                 feature_segment__isnull=False,
                 identity__isnull=True,
             ),
-            additional_prefetch_related_args=["multivariate_feature_state_values"],
         )
         if feature_state.feature_segment
     }
@@ -108,13 +46,20 @@ def get_segment_override(
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
-    return get_segment_overrides(environment=environment, feature=feature).get(
-        segment_id
+    overrides = get_environment_flags_list(
+        environment,
+        additional_filters=Q(
+            feature_id=feature.id,
+            feature_segment__segment_id=segment_id,
+            identity__isnull=True,
+        ),
+        additional_prefetch_related_args=["multivariate_feature_state_values"],
     )
+    return overrides[0] if overrides else None
 
 
 def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
-    """Whether a feature segment is the one the flag serves its segment from.
+    """Whether a feature segment is the one the flag serves its segment override from.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
@@ -126,20 +71,59 @@ def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
     return override is not None and override.feature_segment_id == feature_segment.id
 
 
-def get_next_segment_override_priority(
-    *, environment: Environment, feature: Feature
-) -> int:
+def _get_feature_segments(
+    environment: Environment, feature: Feature
+) -> QuerySet[FeatureSegment]:
     version = (
         get_current_live_environment_feature_version(environment.id, feature.id)
         if environment.use_v2_feature_versioning
         else None
     )
-    highest_priority: int | None = FeatureSegment.objects.filter(
+    feature_segments: QuerySet[FeatureSegment] = FeatureSegment.objects.filter(
         environment=environment,
         feature=feature,
         environment_feature_version=version,
+    )
+    return feature_segments
+
+
+def get_next_segment_override_priority(
+    *, environment: Environment, feature: Feature
+) -> int:
+    highest_priority: int | None = _get_feature_segments(
+        environment, feature
     ).aggregate(highest_priority=Max("priority"))["highest_priority"]
     return 0 if highest_priority is None else highest_priority + 1
+
+
+def renumber_tied_segment_overrides(
+    feature_segments: QuerySet[FeatureSegment],
+) -> None:
+    """Renumber overrides from 0, keeping their order, if any share a priority.
+
+    Legacy APIs used to leave overrides sharing priorities, which the flag API
+    refuses to write.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
+    ordered = list(feature_segments.order_by("priority", "id"))
+    if len({feature_segment.priority for feature_segment in ordered}) == len(ordered):
+        return
+    for priority, feature_segment in enumerate(ordered):
+        feature_segment.priority = priority
+    FeatureSegment.objects.bulk_update(ordered, ["priority"])
+
+
+def _make_room_for_segment_override(
+    *, environment: Environment, feature: Feature, segment_id: int, priority: int
+) -> None:
+    """Move the flag's other overrides from a priority on down, if it's taken.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
+    others = _get_feature_segments(environment, feature).exclude(segment_id=segment_id)
+    if others.filter(priority=priority).exists():
+        others.filter(priority__gte=priority).update(priority=F("priority") + 1)
 
 
 def writes_live_segment_override(feature_state_data: LegacyFeatureStateData) -> bool:
@@ -148,11 +132,11 @@ def writes_live_segment_override(feature_state_data: LegacyFeatureStateData) -> 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
     live_from = feature_state_data.get("live_from")
-    return not (
-        feature_state_data.get("identity")
-        or feature_state_data.get("environment_feature_version")
-        or feature_state_data.get("change_request")
-        or (live_from and live_from > timezone.now())
+    return (
+        feature_state_data.get("identity") is None
+        and feature_state_data.get("environment_feature_version") is None
+        and feature_state_data.get("change_request") is None
+        and (live_from is None or live_from <= timezone.now())
     )
 
 
@@ -166,11 +150,19 @@ def write_segment_override(
     priority: int | None = None,
 ) -> FeatureState:
     """Write a live override through the flag API, from data validated by a
-    legacy API, notifying linked issues and pull requests.
+    legacy API, notifying VCS integrations.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
     with transaction.atomic():
+        renumber_tied_segment_overrides(_get_feature_segments(environment, feature))
+        if priority is not None:
+            _make_room_for_segment_override(
+                environment=environment,
+                feature=feature,
+                segment_id=segment_id,
+                priority=priority,
+            )
         update_flag(
             environment=environment,
             feature=feature,
@@ -189,16 +181,6 @@ def write_segment_override(
             environment=environment, feature=feature, segment_id=segment_id
         )
         assert feature_state is not None
-        feature_state_value = feature_state.feature_state_value
-        if clears_legacy_flag_value(feature_state_data) and (
-            map_flag_value(feature_state_value) is not None
-        ):
-            # Legacy APIs write overrides directly only without v2 feature
-            # versioning, so clearing values in place doesn't bypass it.
-            feature_state_value.string_value = None
-            feature_state_value.integer_value = None
-            feature_state_value.boolean_value = None
-            feature_state_value.save()
     dispatch_vcs_on_feature_state_changed(feature_state)
     return feature_state
 
@@ -222,14 +204,9 @@ def is_segment_override_unchanged(
         )
         for multivariate_value in feature_state.multivariate_feature_state_values.all()
     }
-    new_value = (
-        None
-        if clears_legacy_flag_value(feature_state_data)
-        else changes.get("value", value)
-    )
     return (
         changes.get("enabled", feature_state.enabled) == feature_state.enabled
-        and new_value == value
+        and changes.get("value", value) == value
         and all(
             weights.get(variant["id"], 0) == variant["weight"]
             for variant in changes.get("variants", [])

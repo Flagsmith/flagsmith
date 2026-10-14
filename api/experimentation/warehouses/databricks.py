@@ -12,7 +12,6 @@ import structlog
 from django.core.cache import cache
 from rest_framework import serializers
 
-from core.network import is_internal_address
 from experimentation.dataclasses import (
     ExposureBucket,
     ResultsAggregates,
@@ -24,6 +23,7 @@ from experimentation.types import (
     DatabricksConfig,
     DatabricksCredentials,
 )
+from experimentation.warehouses.base import is_disallowed_host
 from experimentation.warehouses.cache import (
     CUSTOMER_EVENT_UNAVAILABLE,
     customer_cache_key,
@@ -318,7 +318,7 @@ def databricks_session(
         and DatabricksCredentials.__required_keys__ <= credentials.keys()
     ):
         raise DeliveryConfigError("Stored connection details are incomplete.")
-    if is_internal_address(config["host"], include_shared=True):
+    if is_disallowed_host(config["host"]):
         raise DeliveryConfigError(
             "Host must not target internal or private network addresses."
         )
@@ -408,7 +408,7 @@ def _validate_host(host: object) -> None:
         raise serializers.ValidationError(
             {"config": {"host": "Enter a Databricks workspace hostname."}}
         )
-    if is_internal_address(host, include_shared=True):
+    if is_disallowed_host(host):
         raise serializers.ValidationError(
             {
                 "config": {

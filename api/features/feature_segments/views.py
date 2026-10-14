@@ -21,9 +21,7 @@ from features.feature_segments.serializers import (
     FeatureSegmentQuerySerializer,
 )
 from features.feature_segments.services import (
-    create_priorities_changed_audit_log,
     get_next_segment_override_priority,
-    get_reordered_priorities,
     get_segment_override,
     get_segment_overrides,
     is_live_segment_override,
@@ -185,18 +183,10 @@ class FeatureSegmentViewSet(
         )
         environment = reordered[0].environment
         feature = reordered[0].feature
-        feature_segments = list(
-            FeatureSegment.objects.filter(
-                environment=environment,
-                feature=feature,
-                environment_feature_version=reordered[0].environment_feature_version,
-            ).select_related("segment")
-        )
-        priorities = get_reordered_priorities(feature_segments, new_priorities)
         moved = [
             feature_segment
-            for feature_segment in feature_segments
-            if priorities[feature_segment.id] != feature_segment.priority
+            for feature_segment in reordered
+            if new_priorities[feature_segment.id] != feature_segment.priority
         ]
         if not moved:
             return Response(
@@ -209,23 +199,20 @@ class FeatureSegmentViewSet(
                 environment=environment, feature=feature
             ).values()
         }
-        if any(
-            feature_segment.id not in live_feature_segment_ids
-            for feature_segment in feature_segments
-        ):
-            # Not live, i.e. in a change request or a scheduled version, which
-            # `update_flag` can't target yet.
-            # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/8738
+        all_feature_segment_ids = FeatureSegment.objects.filter(
+            environment=environment,
+            feature=feature,
+            environment_feature_version=reordered[0].environment_feature_version,
+        ).values_list("id", flat=True)
+        if any(id_ not in live_feature_segment_ids for id_ in all_feature_segment_ids):
+            # TODO: Remove the non-live fallback after
+            # https://github.com/Flagsmith/flagsmith/issues/8738
             for feature_segment in moved:
                 check_segment_is_not_system(feature_segment.segment)
             return Response(
                 FeatureSegmentListSerializer(instance=serializer.save(), many=True).data
             )
 
-        previous_priorities = [
-            (feature_segment.id, feature_segment.priority)
-            for feature_segment in reordered
-        ]
         update_flag(
             environment=environment,
             feature=feature,
@@ -233,7 +220,7 @@ class FeatureSegmentViewSet(
                 "segment_overrides": [
                     {
                         "segment": {"id": feature_segment.segment_id},
-                        "priority": priorities[feature_segment.id],
+                        "priority": new_priorities[feature_segment.id],
                     }
                     for feature_segment in moved
                 ]
@@ -241,11 +228,7 @@ class FeatureSegmentViewSet(
             replace=False,
             author=AuthorData.from_request(request),
             overwrite_system_segment_overrides=False,
-        )
-        create_priorities_changed_audit_log(
-            request,
-            previous_priorities=previous_priorities,
-            feature_segment_ids=list(new_priorities),
+            shift_segment_override_priorities=True,
         )
         # Overrides of v2 environments are now in a new version.
         overrides = get_segment_overrides(environment=environment, feature=feature)

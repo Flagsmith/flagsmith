@@ -403,6 +403,33 @@ def test_update_flag__patch_environment_default_value__updates_value(
     )
 
 
+def test_update_flag__patch_environment_default_value_null__clears_value(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    feature: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given / When
+    response = admin_client_new.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        {"environment_default": {"value": None}},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "environment_default": {"enabled": False, "value": None, "variants": []},
+        "segment_overrides": [],
+    }
+    environment_default = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+        feature_segment=None,
+    ).get()
+    assert environment_default.get_feature_state_value() is None
+
+
 def test_update_flag__patch_environment_default_variants__reweights_variants(
     admin_client_new: APIClient,
     default_feature_value: str,
@@ -591,6 +618,71 @@ def test_update_flag__patch_segment_override_value__overrides_value(
         segment_overrides__created__segment__ids=[segment],
         segment_overrides__updated__segment__ids=[],
         segment_overrides__deleted__segment__ids=[],
+    )
+
+
+def test_update_flag__patch_segment_override_value_null__clears_value(
+    admin_client_new: APIClient,
+    default_feature_value: str,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    url = f"/api/__future__/environments/{environment_api_key}/features/{feature}/"
+    response = admin_client_new.patch(
+        url,
+        {
+            "segment_overrides": [
+                {
+                    "segment": {"id": segment},
+                    "value": {"type": "string", "value": "enterprise"},
+                },
+            ],
+        },
+        format="json",
+    )
+    assert response.status_code == 200
+
+    # When
+    response = admin_client_new.patch(
+        url,
+        {"segment_overrides": [{"segment": {"id": segment}, "value": None}]},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "environment_default": {
+            "enabled": False,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [],
+        },
+        "segment_overrides": [
+            {
+                "segment": {"id": segment},
+                "priority": 0,
+                "enabled": False,
+                "value": None,
+                "variants": [],
+            },
+        ],
+    }
+    live_feature_states = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+    )
+    assert (
+        live_feature_states.get(
+            feature_segment__segment_id=segment
+        ).get_feature_state_value()
+        is None
+    )
+    assert (
+        live_feature_states.get(feature_segment=None).get_feature_state_value()
+        == default_feature_value
     )
 
 

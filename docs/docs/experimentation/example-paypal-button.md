@@ -5,9 +5,9 @@ sidebar_position: 8
 description: An end-to-end walkthrough of a real experiment, from flag to rollout.
 ---
 
-:::info Enterprise beta
+:::info Beta
 
-Experimentation is in beta on **Enterprise** plans. [Get in touch](https://www.flagsmith.com/contact-us) to join.
+Experimentation is in beta.
 
 :::
 
