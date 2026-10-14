@@ -14,6 +14,7 @@ from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
     exceeds_segment_override_limit,
 )
+from features.feature_segments.services import renumber_tied_segment_overrides
 from features.models import FeatureSegment
 from segments.models import SegmentManagedBy
 
@@ -180,6 +181,17 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer): 
         return validated_attrs
 
     def create(self, validated_data):  # type: ignore[no-untyped-def]
+        if validated_data:
+            feature_segment = FeatureSegment.objects.get(id=validated_data[0]["id"])
+            renumber_tied_segment_overrides(
+                FeatureSegment.objects.filter(
+                    feature_id=feature_segment.feature_id,
+                    environment_id=feature_segment.environment_id,
+                    environment_feature_version_id=(
+                        feature_segment.environment_feature_version_id
+                    ),
+                )
+            )
         id_priority_pairs = FeatureSegment.to_id_priority_tuple_pairs(validated_data)
         return FeatureSegment.update_priorities(id_priority_pairs)
 

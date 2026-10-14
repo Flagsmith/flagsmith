@@ -75,6 +75,24 @@ def get_next_segment_override_priority(
     return 0 if highest_priority is None else highest_priority + 1
 
 
+def renumber_tied_segment_overrides(
+    feature_segments: QuerySet[FeatureSegment],
+) -> None:
+    """Renumber overrides from 0, keeping their order, if any share a priority.
+
+    Legacy APIs used to leave overrides sharing priorities, which the flag API
+    refuses to write.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
+    ordered = list(feature_segments.order_by("priority", "id"))
+    if len({feature_segment.priority for feature_segment in ordered}) == len(ordered):
+        return
+    for priority, feature_segment in enumerate(ordered):
+        feature_segment.priority = priority
+    FeatureSegment.objects.bulk_update(ordered, ["priority"])
+
+
 def _make_room_for_segment_override(
     *, environment: Environment, feature: Feature, segment_id: int, priority: int
 ) -> None:
@@ -116,6 +134,7 @@ def write_segment_override(
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
     with transaction.atomic():
+        renumber_tied_segment_overrides(_get_feature_segments(environment, feature))
         if priority is not None:
             _make_room_for_segment_override(
                 environment=environment,
