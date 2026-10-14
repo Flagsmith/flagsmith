@@ -922,8 +922,8 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
             raise ValidationError(
                 f"Cannot change the rollout of a {experiment.status} experiment."
             )
-        # Validated under the lock, so a concurrent start cannot let an audience
-        # change through the frozen-once-running check on a stale status.
+        # Audience changes are validated under the lock, so a concurrent start
+        # cannot let one through the frozen-once-running check on a stale status.
         audience_rules, audience_segment_ids = _resolve_audience(
             experiment, spec.audience
         )
