@@ -18,8 +18,30 @@ The most important components in Flagsmith's architecture are:
 - **SDKs**: Client libraries (available for many languages and platforms) that connect your applications and services to Flagsmith, enabling real-time feature flag evaluation and remote configuration.
 - **Integrations**: Optional connectors to third-party tools and services (e.g., analytics, notifications, monitoring). These can be configured via the dashboard or API.
 - **Database**: Stores all persistent data, such as organisations, projects, features, and audit logs. Managed by Flagsmith in SaaS, but by your team in self-hosted/on-prem deployments.
+- **Ingestion server and Kafka**: Receive experiment events from SDKs and hold them until they are delivered to a warehouse.
+- **Warehouse**: Stores experiment events and serves the queries behind experiment results.
 
 The architecture is REST-based, with both SDK clients and the dashboard interacting with the Core API. The platform is designed to be cloud-native, supporting containerisation and orchestration for scalability and reliability.
+
+## Experimentation Architecture
+
+[Experiments](/experimentation) need exposure and conversion events from your application. These travel through a separate event pipeline into a data warehouse, where the Core API queries them to compute experiment results.
+
+![Experimentation Architecture](/img/experimentation-architecture.svg)
+
+*The diagram above shows how experiment events flow from your application to the warehouse, and how the Core API reads results back.*
+
+| Component | Role |
+| --- | --- |
+| Ingestion server | Checks each event batch's environment key, validates the events, and writes them to Kafka. |
+| Kafka | Holds events between ingestion and delivery, so a slow or unavailable warehouse does not lose events. |
+| Warehouse delivery | Inserts events into each environment's warehouse, retries failed inserts, and records delivery status. |
+| Warehouse | Stores events. The Core API queries it for experiment results. |
+
+How this differs by deployment model:
+
+- **SaaS**: Flagsmith runs the whole pipeline, including a managed ClickHouse warehouse that reads events directly from Kafka. You can also connect your own warehouse.
+- **Self-hosted**: You run the ingestion server, Kafka and warehouse delivery, and connect each environment to a warehouse you run. See [Connect a Warehouse](/experimentation/connect-a-warehouse) for supported warehouses.
 
 ## Deployment Models
 
