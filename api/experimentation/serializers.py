@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 from django.db import transaction
@@ -55,6 +56,7 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
     )
     total_events_received = serializers.SerializerMethodField()
     unique_events_count = serializers.SerializerMethodField()
+    last_event_received_at = serializers.SerializerMethodField()
 
     class Meta:
         model = WarehouseConnection
@@ -69,6 +71,7 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             "created_at",
             "total_events_received",
             "unique_events_count",
+            "last_event_received_at",
         )
         read_only_fields = ("id", "status", "status_detail", "created_at")
 
@@ -130,6 +133,10 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
     def get_unique_events_count(self, obj: WarehouseConnection) -> int | None:
         stats: WarehouseEventStats | None = obj.event_stats
         return stats.unique_events_count if stats else None
+
+    def get_last_event_received_at(self, obj: WarehouseConnection) -> datetime | None:
+        stats: WarehouseEventStats | None = obj.event_stats
+        return stats.last_event_at if stats else None
 
     @staticmethod
     def _generate_name(warehouse_type: str, environment: Environment) -> str:
