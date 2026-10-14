@@ -4,7 +4,7 @@ from common.projects.permissions import VIEW_PROJECT
 from django.db import transaction
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
@@ -59,7 +59,11 @@ logger = logging.getLogger(__name__)
     ),
 )
 class FeatureSegmentViewSet(
-    viewsets.ModelViewSet,  # type: ignore[type-arg]
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet[FeatureSegment],
 ):
     permission_classes = [FeatureSegmentPermissions]
 
@@ -134,14 +138,6 @@ class FeatureSegmentViewSet(
         )
         serializer.instance = override.feature_segment  # type: ignore[union-attr]
 
-    @transaction.atomic
-    def perform_update(self, serializer: BaseSerializer[FeatureSegment]) -> None:
-        check_segment_is_not_system(serializer.instance.segment)  # type: ignore[union-attr]
-        if segment := serializer.validated_data.get("segment"):
-            check_segment_is_not_system(segment)
-        feature_segment = serializer.save()
-        validate_segment_flag_dependencies(feature_segment.segment)
-
     def perform_destroy(self, instance: FeatureSegment) -> None:
         if is_live_segment_override(instance):
             delete_segment_override(
@@ -156,7 +152,7 @@ class FeatureSegmentViewSet(
         instance.delete()
 
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
-        if self.action in ["create", "update", "partial_update"]:
+        if self.action == "create":
             return FeatureSegmentCreateSerializer
 
         if self.action == "update_priorities":
