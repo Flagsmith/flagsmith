@@ -7,10 +7,8 @@ from typing import NamedTuple
 import structlog
 from django.db import transaction
 from django.db.models import Count, Q
-from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from audit.tasks import create_segment_priorities_changed_audit_log
 from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.dependencies.models import SegmentFlagReference
@@ -108,16 +106,6 @@ def _get_overrides_by_segment_id(
     }
 
 
-def _get_feature_segment_priorities(
-    overrides: dict[int, FeatureState],
-) -> dict[int, int]:
-    return {
-        feature_state.feature_segment.id: feature_state.feature_segment.priority
-        for feature_state in overrides.values()
-        if feature_state.feature_segment is not None
-    }
-
-
 def check_variants(feature: Feature, variant_sets: Iterable[Sequence[Variant]]) -> None:
     """Refuse weighting anything but each of a feature's variants, exactly once,
     up to 100 in total."""
@@ -199,21 +187,6 @@ def _write_environment_default(
         _write_variants(feature_state, variants)
 
 
-def _check_shifted_system_segments(
-    feature_segment: FeatureSegment, priority: int, *, enabled: bool
-) -> None:
-    if enabled:
-        for shifted in (
-            feature_segment.get_ordering_queryset()
-            .filter(
-                priority__gte=min(feature_segment.priority, priority),
-                priority__lte=max(feature_segment.priority, priority),
-            )
-            .select_related("segment")
-        ):
-            check_segment_is_not_system(shifted.segment)
-
-
 def _write_segment_override(
     feature_state: FeatureState,
     changes: SegmentOverrideRequest,
@@ -221,8 +194,6 @@ def _write_segment_override(
     replace: bool,
     environment_default: FeatureState,
     created: bool,
-    shift_priority: bool,
-    protect_shifted_system_segments: bool,
 ) -> None:
     """Write an override, inheriting from the environment default what it omits."""
     feature_segment = feature_state.feature_segment
@@ -230,16 +201,8 @@ def _write_segment_override(
         raise ValueError("Feature state is not a segment override.")
 
     if (priority := changes.get("priority")) is not None:
-        if shift_priority:
-            _check_shifted_system_segments(
-                feature_segment,
-                priority,
-                enabled=protect_shifted_system_segments,
-            )
-            feature_segment.to(priority)
-        else:
-            feature_segment.priority = priority
-            feature_segment.save(update_fields=["priority"])
+        feature_segment.priority = priority
+        feature_segment.save(update_fields=["priority"])
 
     # New overrides get their enabled value on creation, so the audit log
     # records a creation rather than a change from the environment default.
@@ -337,7 +300,6 @@ def _write_segment_overrides(
     changes: Sequence[SegmentOverrideRequest],
     replace: bool,
     overwrite_system_segment_overrides: bool,
-    shift_priorities: bool,
 ) -> _OverriddenSegments:
     segments = _OverriddenSegments([], [], [])
     changed_segment_ids = {change["segment"]["id"] for change in changes}
@@ -428,10 +390,6 @@ def _write_segment_overrides(
             replace=replace or segment_id in segments.created,
             environment_default=environment_default,
             created=segment_id in segments.created,
-            shift_priority=shift_priorities,
-            protect_shifted_system_segments=(
-                shift_priorities and not overwrite_system_segment_overrides
-            ),
         )
 
     _check_priorities(environment, feature, version)
@@ -461,14 +419,11 @@ def update_flag(
     replace: bool,
     author: AuthorData,
     overwrite_system_segment_overrides: bool,
-    shift_segment_override_priorities: bool = False,
 ) -> UpdateFlagResponse:
     """Write the given parts of a flag, whichever versioning the environment uses.
 
     Overrides of system segments can only be changed by passing
-    `overwrite_system_segment_overrides=True`. By default, segment override
-    priorities are absolute; `shift_segment_override_priorities=True` moves
-    other overrides out of the way instead.
+    `overwrite_system_segment_overrides=True`.
     """
     writes_nothing = not changes if replace else not any(changes.values())
     if writes_nothing:
@@ -486,8 +441,6 @@ def update_flag(
     )
 
     segments = _OverriddenSegments([], [], [])
-    previous_priorities: dict[int, int] = {}
-    priorities_changed = False
 
     with transaction.atomic():
         version = _create_draft_version(environment, feature)
@@ -504,22 +457,15 @@ def update_flag(
             )
 
         if (override_changes := changes.get("segment_overrides")) is not None:
-            overrides = _get_overrides_by_segment_id(feature_states)
-            previous_priorities = _get_feature_segment_priorities(overrides)
             segments = _write_segment_overrides(
                 environment=environment,
                 feature=feature,
                 version=version,
                 environment_default=environment_default,
-                overrides=overrides,
+                overrides=_get_overrides_by_segment_id(feature_states),
                 changes=override_changes,
                 replace=replace,
                 overwrite_system_segment_overrides=overwrite_system_segment_overrides,
-                shift_priorities=shift_segment_override_priorities,
-            )
-            # Versioned environments audit reorders through their version history.
-            priorities_changed = version is None and previous_priorities != (
-                _get_feature_segment_priorities(overrides)
             )
 
         if version is not None:
@@ -535,17 +481,6 @@ def update_flag(
             feature=feature,
             created=created,
             deleted=deleted,
-        )
-
-    if priorities_changed:
-        create_segment_priorities_changed_audit_log.delay(
-            kwargs={
-                "previous_id_priority_pairs": list(previous_priorities.items()),
-                "feature_segment_ids": list(previous_priorities),
-                "user_id": author.user.id if author.user else None,
-                "master_api_key_id": author.api_key.id if author.api_key else None,
-                "changed_at": timezone.now().isoformat(),
-            }
         )
 
     logger.info(

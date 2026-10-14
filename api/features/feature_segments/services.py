@@ -18,27 +18,6 @@ from features.versioning.versioning_service import (
 from integrations.vcs.services import dispatch_vcs_on_feature_state_changed
 
 
-def get_segment_overrides(
-    *, environment: Environment, feature: Feature
-) -> dict[int, FeatureState]:
-    """Get the flag's live overrides, by segment ID.
-
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
-    """
-    return {
-        feature_state.feature_segment.segment_id: feature_state
-        for feature_state in get_environment_flags_list(
-            environment,
-            additional_filters=Q(
-                feature_id=feature.id,
-                feature_segment__isnull=False,
-                identity__isnull=True,
-            ),
-        )
-        if feature_state.feature_segment
-    }
-
-
 def get_segment_override(
     *, environment: Environment, feature: Feature, segment_id: int
 ) -> FeatureState | None:
