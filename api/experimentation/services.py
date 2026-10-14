@@ -74,6 +74,7 @@ from features.models import FeatureState
 from features.value_types import BOOLEAN, STRING
 from features.versioning.dataclasses import FlagChangeSet, MultivariateValueChangeSet
 from features.versioning.versioning_service import (
+    delete_segment_override,
     get_environment_flags_list,
     update_flag,
     update_multivariate_values,
@@ -568,14 +569,62 @@ def transition_experiment_status(
 
     experiment.status = target_status
 
-    if target_status == ExperimentStatus.RUNNING and not experiment.started_at:
-        experiment.started_at = timezone.now()
-    elif target_status == ExperimentStatus.COMPLETED:
-        experiment.ended_at = timezone.now()
+    with transaction.atomic():
+        if target_status == ExperimentStatus.RUNNING and not experiment.started_at:
+            experiment.started_at = timezone.now()
+            _remove_completed_experiment_rollouts(
+                experiment, AuthorData.from_user(user)
+            )
+        elif target_status == ExperimentStatus.COMPLETED:
+            experiment.ended_at = timezone.now()
 
-    experiment.save()
-    create_experiment_audit_log(experiment, user, action=target_status)
+        experiment.save()
+        create_experiment_audit_log(experiment, user, action=target_status)
     return experiment
+
+
+def _remove_completed_experiment_rollouts(
+    experiment: Experiment, author: AuthorData
+) -> None:
+    """Stop completed experiments' rollout overrides shadowing this one's."""
+    completed_experiment_ids = dict(
+        Experiment.objects.filter(
+            feature_id=experiment.feature_id,
+            environment_id=experiment.environment_id,
+            status=ExperimentStatus.COMPLETED,
+            rollout_segment__is_system_segment=True,
+        ).values_list("rollout_segment_id", "id")
+    )
+    if not completed_experiment_ids:
+        return
+    live_segment_ids = {
+        feature_segment.segment_id
+        for override in get_environment_flags_list(
+            environment=experiment.environment,
+            additional_filters=Q(
+                feature_id=experiment.feature_id,
+                feature_segment__segment_id__in=completed_experiment_ids,
+                identity__isnull=True,
+            ),
+        )
+        if (feature_segment := override.feature_segment)
+    }
+    for segment_id in sorted(live_segment_ids):
+        delete_segment_override(
+            experiment.environment, experiment.feature, segment_id, author
+        )
+
+    def _log_superseded() -> None:
+        for segment_id in sorted(live_segment_ids):
+            experimentation_logger.info(
+                "rollout.superseded",
+                experiment__id=experiment.id,
+                superseded_experiment__id=completed_experiment_ids[segment_id],
+                environment__id=experiment.environment_id,
+                feature__id=experiment.feature_id,
+            )
+
+    transaction.on_commit(_log_superseded)
 
 
 def _copy_segment_rule(rule: SegmentRule) -> SegmentRuleType:
@@ -1068,7 +1117,9 @@ def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | No
             feature_segment__segment_id=segment_id, identity__isnull=True
         ),
         feature_id=experiment.feature_id,
-    ).get()
+    ).first()
+    if feature_state is None:
+        return None
 
     condition = Condition.objects.get(
         rule__segment_id=segment_id, operator=PERCENTAGE_SPLIT
