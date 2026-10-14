@@ -28,6 +28,9 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 )
 from ordered_model.models import OrderedModelBase  # type: ignore[import-untyped]
 from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
+from simple_history.utils import (  # type: ignore[import-untyped]
+    bulk_update_with_history,
+)
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
@@ -389,7 +392,7 @@ class FeatureSegment(
             if fs.priority != priority:
                 fs.priority = priority
                 changed.append(fs)
-        cls.objects.bulk_update(changed, ["priority"])
+        bulk_update_with_history(changed, cls, ["priority"])
         for fs in feature_segments:
             fs.priority = id_priority_dict[fs.id]
 
