@@ -1,7 +1,7 @@
 import { FC, ReactNode, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
-import { WarehouseType } from 'common/types/responses'
+import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import { ConfigFormData } from './ConfigForm'
 import SelectableCard from 'components/base/SelectableCard'
 import ConfigForm from './ConfigForm'
@@ -14,6 +14,10 @@ import { ClickHouseFormData } from './clickhouseConfig'
 import DatabricksConfigForm from './DatabricksConfigForm'
 import { getDatabricksSetupSql } from './databricksSetupSql'
 import { DatabricksFormData } from './databricksConfig'
+import {
+  getConfigurableWarehouseTypes,
+  WarehouseTypeOption,
+} from './warehouseTypes'
 import './WarehouseSetup.scss'
 
 type WarehouseSetupProps = {
@@ -24,8 +28,6 @@ type WarehouseSetupProps = {
   onCreateDatabricks: (data: DatabricksFormData) => Promise<unknown>
   isCreating: boolean
 }
-
-type WarehouseTypeOption = WarehouseType | 'bigquery'
 
 type WarehouseTypeCard = {
   description: string
@@ -82,20 +84,20 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
   onCreateSnowflake,
   onEnableFlagsmith,
 }) => {
-  const [selectedType, setSelectedType] =
-    useState<WarehouseTypeOption>('flagsmith')
-  const clickhouseEnabled = Utils.getFlagsmithHasFeature('clickhouse_warehouse')
-  const databricksEnabled = Utils.getFlagsmithHasFeature('databricks_warehouse')
-  const configurableTypes: WarehouseTypeOption[] = [
-    'flagsmith',
-    ...(clickhouseEnabled ? (['clickhouse'] as const) : []),
-    ...(databricksEnabled ? (['databricks'] as const) : []),
-  ]
+  const { data: version } = useGetBuildVersionQuery({})
+  const isSaas = !!version?.backend?.is_saas
+  const configurableTypes = getConfigurableWarehouseTypes({
+    clickhouseEnabled: Utils.getFlagsmithHasFeature('clickhouse_warehouse'),
+    databricksEnabled: Utils.getFlagsmithHasFeature('databricks_warehouse'),
+    isSaas,
+  })
+  const [chosenType, setSelectedType] = useState<WarehouseTypeOption>()
+  const selectedType = chosenType ?? configurableTypes[0]
   const isEnabled = (type: WarehouseTypeOption) =>
     configurableTypes.includes(type)
-  const typeCards = [...WAREHOUSE_TYPE_CARDS].sort(
-    (a, b) => Number(isEnabled(b.type)) - Number(isEnabled(a.type)),
-  )
+  const typeCards = WAREHOUSE_TYPE_CARDS.filter(
+    ({ type }) => isSaas || type !== 'flagsmith',
+  ).sort((a, b) => Number(isEnabled(b.type)) - Number(isEnabled(a.type)))
 
   return (
     <div className='warehouse-setup'>
@@ -148,7 +150,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
       {selectedType === 'snowflake' && (
         <ConfigForm
           onSave={onCreateSnowflake}
-          onCancel={() => setSelectedType('flagsmith')}
+          onCancel={() => setSelectedType(undefined)}
         />
       )}
 
