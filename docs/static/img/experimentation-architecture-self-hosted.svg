@@ -9,7 +9,7 @@
 
   <!-- Flagsmith event infrastructure group -->
   <rect x="200" y="30" width="500" height="140" rx="6" fill="#fafafa" stroke="#999" stroke-dasharray="6 4"/>
-  <text x="214" y="50" font-weight="bold" fill="#555">Flagsmith event infrastructure</text>
+  <text x="214" y="50" font-weight="bold" fill="#555">Event pipeline, run by your team</text>
 
   <!-- Boxes: top row -->
   <rect x="20" y="70" width="140" height="60" rx="4" fill="#dae8fc" stroke="#6c8ebf"/>
@@ -29,9 +29,8 @@
   <text x="605" y="114" text-anchor="middle" font-size="11">inserts and retries</text>
 
   <rect x="760" y="50" width="230" height="100" rx="4" fill="#e1d5e7" stroke="#9673a6"/>
-  <text x="875" y="82" text-anchor="middle" font-weight="bold">Warehouse</text>
-  <text x="875" y="106" text-anchor="middle" font-size="11">SaaS: Flagsmith-managed ClickHouse</text>
-  <text x="875" y="124" text-anchor="middle" font-size="11">Self-hosted: your own warehouse</text>
+  <text x="875" y="92" text-anchor="middle" font-weight="bold">Your warehouse</text>
+  <text x="875" y="114" text-anchor="middle" font-size="11">connected per environment</text>
 
   <!-- Boxes: bottom rows -->
   <rect x="380" y="230" width="120" height="60" rx="4" fill="#f5f5f5" stroke="#666"/>
@@ -50,7 +49,6 @@
     <path d="M350 100H388"/>
     <path d="M490 100H528"/>
     <path d="M680 100H758"/>
-    <path d="M440 70V20H875V48" stroke-dasharray="6 4"/>
     <path d="M285 130V260H378"/>
     <path d="M605 130V260H502"/>
     <path d="M160 355H218"/>
@@ -61,7 +59,6 @@
   <g font-size="11" fill="#555">
     <text x="180" y="92" text-anchor="middle">events</text>
     <text x="719" y="92" text-anchor="middle">insert</text>
-    <text x="658" y="14" text-anchor="middle">managed warehouse reads Kafka directly (SaaS)</text>
     <text x="293" y="200">environment-key</text>
     <text x="293" y="214">lookup</text>
     <text x="613" y="200">warehouse connections,</text>

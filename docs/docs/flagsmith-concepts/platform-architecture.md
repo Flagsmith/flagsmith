@@ -18,30 +18,12 @@ The most important components in Flagsmith's architecture are:
 - **SDKs**: Client libraries (available for many languages and platforms) that connect your applications and services to Flagsmith, enabling real-time feature flag evaluation and remote configuration.
 - **Integrations**: Optional connectors to third-party tools and services (e.g., analytics, notifications, monitoring). These can be configured via the dashboard or API.
 - **Database**: Stores all persistent data, such as organisations, projects, features, and audit logs. Managed by Flagsmith in SaaS, but by your team in self-hosted/on-prem deployments.
-- **Ingestion server and Kafka**: Receive experiment events from SDKs and hold them until they are delivered to a warehouse.
-- **Warehouse**: Stores experiment events and serves the queries behind experiment results.
+- **Ingestion server**: Receives [experiment](/experimentation) events (exposures and conversions) from SDKs, checks each batch's environment key, validates the events, and writes them to Kafka.
+- **Kafka**: Holds experiment events between ingestion and delivery, so a slow or unavailable warehouse does not lose events.
+- **Warehouse delivery**: Inserts experiment events into each environment's warehouse, retries failed inserts, and records delivery status.
+- **Warehouse**: Stores experiment events. The Core API queries it to compute experiment results.
 
 The architecture is REST-based, with both SDK clients and the dashboard interacting with the Core API. The platform is designed to be cloud-native, supporting containerisation and orchestration for scalability and reliability.
-
-## Experimentation Architecture
-
-[Experiments](/experimentation) need exposure and conversion events from your application. These travel through a separate event pipeline into a data warehouse, where the Core API queries them to compute experiment results.
-
-![Experimentation Architecture](/img/experimentation-architecture.svg)
-
-*The diagram above shows how experiment events flow from your application to the warehouse, and how the Core API reads results back.*
-
-| Component | Role |
-| --- | --- |
-| Ingestion server | Checks each event batch's environment key, validates the events, and writes them to Kafka. |
-| Kafka | Holds events between ingestion and delivery, so a slow or unavailable warehouse does not lose events. |
-| Warehouse delivery | Inserts events into each environment's warehouse, retries failed inserts, and records delivery status. |
-| Warehouse | Stores events. The Core API queries it for experiment results. |
-
-How this differs by deployment model:
-
-- **SaaS**: Flagsmith runs the whole pipeline, including a managed ClickHouse warehouse that reads events directly from Kafka. You can also connect your own warehouse.
-- **Self-hosted**: You run the ingestion server, Kafka and warehouse delivery, and connect each environment to a warehouse you run. See [Connect a Warehouse](/experimentation/connect-a-warehouse) for supported warehouses.
 
 ## Deployment Models
 
@@ -57,6 +39,14 @@ Flagsmith can be deployed in three main ways, each with conceptual differences i
 ![SaaS Architecture](/img/saas-architecture.svg)
 
 *The diagram above shows the SaaS deployment model, where all infrastructure is managed by Flagsmith and the Edge API ensures global low-latency delivery.*
+
+#### Experimentation on SaaS
+
+Flagsmith runs the whole experimentation pipeline. By default, experiment events are stored in a Flagsmith-managed ClickHouse warehouse, which reads them directly from Kafka. Environments can instead connect their own warehouse, in which case warehouse delivery inserts their events into it.
+
+![SaaS Experimentation Architecture](/img/experimentation-architecture-saas.svg)
+
+*The diagram above shows how experiment events flow on SaaS, to the managed warehouse or to your own.*
 
 ### 2. Self-Hosted (Cloud or Private Cloud)
 
@@ -75,6 +65,14 @@ Flagsmith can be deployed in three main ways, each with conceptual differences i
 ![Self-Hosted / On-Prem Architecture](/img/architecture.svg)
 
 *The diagram above illustrates the Self-Hosted and On-Premises deployment models, where your team manages the infrastructure and has full control over security, compliance, and integrations.*
+
+#### Experimentation on Self-Hosted and On-Premises
+
+Your team runs the ingestion server, Kafka and warehouse delivery alongside the Core API. There is no managed warehouse: each environment connects to a warehouse you run, and warehouse delivery inserts its events into it. See [Connect a Warehouse](/experimentation/connect-a-warehouse) for supported warehouses.
+
+![Self-Hosted Experimentation Architecture](/img/experimentation-architecture-self-hosted.svg)
+
+*The diagram above shows how experiment events flow on Self-Hosted and On-Premises deployments, where every component, including the warehouse, is run by your team.*
 
 ## What's next
 - [Deployment Options](/deployment-self-hosting)
