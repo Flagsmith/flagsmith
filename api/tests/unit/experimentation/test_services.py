@@ -2127,6 +2127,7 @@ def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enab
 
 
 def test_apply_experiment_rollout__completed__raises(
+    multivariate_options: list[MultivariateFeatureOption],
     experiment_with_rollout: Experiment,
     admin_user: FFAdminUser,
 ) -> None:
@@ -2144,7 +2145,9 @@ def test_apply_experiment_rollout__completed__raises(
                 rollout_percentage=50.0,
                 feature_state_value="control",
                 value_type="string",
-                variants=None,
+                variants=[
+                    {"id": option.id, "weight": 0.0} for option in multivariate_options
+                ],
                 author=AuthorData(user=admin_user),
             ),
         )
@@ -2155,6 +2158,7 @@ def test_apply_experiment_rollout__completed__raises(
     [ExperimentStatus.RUNNING, ExperimentStatus.PAUSED],
 )
 def test_apply_experiment_rollout__running_or_paused__updates_rollout(
+    multivariate_options: list[MultivariateFeatureOption],
     status: ExperimentStatus,
     experiment_with_rollout: Experiment,
     admin_user: FFAdminUser,
@@ -2172,7 +2176,9 @@ def test_apply_experiment_rollout__running_or_paused__updates_rollout(
             rollout_percentage=50.0,
             feature_state_value="control",
             value_type="string",
-            variants=None,
+            variants=[
+                {"id": option.id, "weight": 0.0} for option in multivariate_options
+            ],
             author=AuthorData(user=admin_user),
         ),
     )
@@ -2211,6 +2217,7 @@ def test_apply_experiment_rollout__duplicate_options__raises(
 
 
 def test_apply_experiment_rollout__update_flag_fails__rolls_back(
+    multivariate_options: list[MultivariateFeatureOption],
     experiment_with_rollout: Experiment,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -2231,7 +2238,9 @@ def test_apply_experiment_rollout__update_flag_fails__rolls_back(
                 rollout_percentage=80.0,
                 feature_state_value="control",
                 value_type="string",
-                variants=None,
+                variants=[
+                    {"id": option.id, "weight": 0.0} for option in multivariate_options
+                ],
                 author=AuthorData(user=admin_user),
             ),
         )
@@ -2440,6 +2449,7 @@ def test_get_experiment_rollout__v2_versioning__returns_representation(
 
 
 def test_get_experiment_rollout__boolean_value__returns_lowercase_string(
+    multivariate_options: list[MultivariateFeatureOption],
     experiment: Experiment,
     admin_user: FFAdminUser,
 ) -> None:
@@ -2451,7 +2461,9 @@ def test_get_experiment_rollout__boolean_value__returns_lowercase_string(
             rollout_percentage=20.0,
             feature_state_value="true",
             value_type="boolean",
-            variants=None,
+            variants=[
+                {"id": option.id, "weight": 0.0} for option in multivariate_options
+            ],
             author=AuthorData(user=admin_user),
         ),
     )
@@ -3718,7 +3730,9 @@ def test_apply_experiment_rollout__master_api_key_author__attributes_audit_log(
             rollout_percentage=30.0,
             feature_state_value="control",
             value_type="string",
-            variants=None,
+            variants=[
+                {"id": option.id, "weight": 0.0} for option in multivariate_options
+            ],
             author=AuthorData(api_key=master_api_key),
         ),
     )

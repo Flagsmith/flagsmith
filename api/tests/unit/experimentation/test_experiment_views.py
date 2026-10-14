@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from datetime import timezone as dt_timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 import pytest
 from django.db import IntegrityError
@@ -2326,6 +2326,33 @@ def test_action_rollout__mv_option_not_on_feature__returns_400(
     assert response.json() == ["Variant not found: 999999."]
 
 
+def test_action_rollout__without_variants__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    experiment_with_rollout: Experiment,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.patch(
+        _action_url(environment, experiment_with_rollout, "rollout"),
+        data={
+            "enabled": True,
+            "rollout_percentage": 75,
+            "feature_state_value": {"type": "string", "value": "control"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "multivariate_feature_state_values": ["This field is required."]
+    }
+
+
 def test_patch__experiment_rollout_on_update__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
@@ -2396,16 +2423,33 @@ def test_get_detail__without_rollout__returns_null(
     assert response.json()["experiment_rollout"] is None
 
 
-def _rollout_payload(**overrides: object) -> dict[str, object]:
-    return {
-        "enabled": True,
-        "rollout_percentage": 30,
-        "feature_state_value": {"type": "string", "value": "control"},
-        **overrides,
-    }
+class RolloutPayloadFactory(Protocol):
+    def __call__(self, **overrides: object) -> dict[str, object]: ...
+
+
+@pytest.fixture()
+def rollout_payload(
+    multivariate_options: list[MultivariateFeatureOption],
+) -> RolloutPayloadFactory:
+    """Make rollout request bodies, with every variant weighted 0 unless given."""
+
+    def _make(**overrides: object) -> dict[str, object]:
+        return {
+            "enabled": True,
+            "rollout_percentage": 30,
+            "feature_state_value": {"type": "string", "value": "control"},
+            "multivariate_feature_state_values": [
+                {"multivariate_feature_option": option.id, "percentage_allocation": 0}
+                for option in multivariate_options
+            ],
+            **overrides,
+        }
+
+    return _make
 
 
 def test_post__with_audience__creates_rollout_and_returns_audience(
+    rollout_payload: RolloutPayloadFactory,
     admin_client_new: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
@@ -2422,7 +2466,7 @@ def test_post__with_audience__creates_rollout_and_returns_audience(
             "feature": multivariate_feature.id,
             "name": "Rollout experiment",
             "hypothesis": "It will work",
-            "experiment_rollout": _rollout_payload(
+            "experiment_rollout": rollout_payload(
                 audience={"match": "all", "segment_ids": [audience_segment.id]}
             ),
         },
@@ -2448,6 +2492,7 @@ def test_post__with_audience__creates_rollout_and_returns_audience(
 
 
 def test_action_rollout__audience_while_not_serving__updates_audience(
+    rollout_payload: RolloutPayloadFactory,
     admin_client_new: APIClient,
     environment: Environment,
     experiment_with_rollout: Experiment,
@@ -2459,7 +2504,7 @@ def test_action_rollout__audience_while_not_serving__updates_audience(
     enable_features(EXPERIMENT_FLAG)
     disable = admin_client_new.patch(
         _action_url(environment, experiment_with_rollout, "rollout"),
-        data=_rollout_payload(enabled=False),
+        data=rollout_payload(enabled=False),
         format="json",
     )
     assert disable.status_code == status.HTTP_200_OK
@@ -2467,7 +2512,7 @@ def test_action_rollout__audience_while_not_serving__updates_audience(
     # When
     response = admin_client_new.patch(
         _action_url(environment, experiment_with_rollout, "rollout"),
-        data=_rollout_payload(
+        data=rollout_payload(
             enabled=False,
             audience={"match": "any", "segment_ids": [audience_segment.id]},
         ),
@@ -2492,6 +2537,7 @@ def test_action_rollout__audience_while_not_serving__updates_audience(
 
 
 def test_action_rollout__more_segments_than_the_cap__returns_400(
+    rollout_payload: RolloutPayloadFactory,
     admin_client_new: APIClient,
     environment: Environment,
     experiment_with_rollout: Experiment,
@@ -2504,7 +2550,7 @@ def test_action_rollout__more_segments_than_the_cap__returns_400(
     # When
     response = admin_client_new.patch(
         _action_url(environment, experiment_with_rollout, "rollout"),
-        data=_rollout_payload(
+        data=rollout_payload(
             audience={
                 "match": "any",
                 "segment_ids": [audience_segment.id] * (MAX_AUDIENCE_SEGMENTS + 1),
