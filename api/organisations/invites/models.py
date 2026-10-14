@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
@@ -52,6 +54,13 @@ class InviteLink(
     def validate_invite_links_are_enabled(self):  # type: ignore[no-untyped-def]
         if settings.DISABLE_INVITE_LINKS:
             raise InviteLinksDisabledError()
+
+    @hook(BEFORE_CREATE)
+    def set_default_expiry(self) -> None:
+        if self.expires_at is None and settings.INVITE_LINK_EXPIRY_DAYS is not None:
+            self.expires_at = timezone.now() + timedelta(
+                days=settings.INVITE_LINK_EXPIRY_DAYS
+            )
 
 
 class Invite(LifecycleModelMixin, AbstractBaseInviteModel):  # type: ignore[misc]
