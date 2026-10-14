@@ -7,6 +7,7 @@ from typing import NamedTuple
 import structlog
 from django.db import transaction
 from django.db.models import Count, Q
+from rest_framework.exceptions import ValidationError
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
@@ -16,6 +17,10 @@ from features.dependencies.services import (
     validate_segment_flag_dependencies,
 )
 from features.dependencies.types import FeatureName
+from features.feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+    exceeds_segment_override_limit,
+)
 from features.future.exceptions import (
     DuplicatePriorityError,
     SegmentOverrideNotFoundError,
@@ -38,6 +43,7 @@ from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import get_environment_flags_list
 from segments.models import Segment
 from segments.services import check_segment_is_not_system
+from util.db import with_delete_hooks
 
 logger = structlog.get_logger("features")
 
@@ -149,6 +155,7 @@ def _write_segment_override(
     *,
     replace: bool,
     environment_default: FeatureState,
+    created: bool,
 ) -> None:
     """Write an override, inheriting from the environment default what it omits."""
     feature_segment = feature_state.feature_segment
@@ -159,7 +166,9 @@ def _write_segment_override(
         feature_segment.priority = priority
         feature_segment.save(update_fields=["priority"])
 
-    if replace or "enabled" in changes:
+    # New overrides get their enabled value on creation, so the audit log
+    # records a creation rather than a change from the environment default.
+    if not created and (replace or "enabled" in changes):
         feature_state.enabled = changes.get("enabled", environment_default.enabled)
         feature_state.save(update_fields=["enabled"])
 
@@ -183,6 +192,7 @@ def _create_segment_override(
     version: EnvironmentFeatureVersion | None,
     segment_id: int,
     priority: int,
+    enabled: bool,
 ) -> FeatureState:
     feature_segment = FeatureSegment.objects.create(
         feature=feature,
@@ -196,6 +206,7 @@ def _create_segment_override(
         environment=environment,
         environment_feature_version=version,
         feature_segment=feature_segment,
+        enabled=enabled,
     )
 
 
@@ -211,8 +222,12 @@ def _delete_segment_overrides(
         if version is None
         else version.feature_segments.all()
     )
-    # Deleting a `FeatureSegment` instance decrements every greater priority.
-    feature_segments.filter(segment_id__in=segment_ids).delete()
+    # Deleting the queryset, rather than each instance, leaves the other
+    # priorities as they are.
+    with with_delete_hooks(
+        feature_segments.filter(segment_id__in=segment_ids)
+    ) as deleted_feature_segments:
+        deleted_feature_segments.delete()
 
 
 def _check_priorities(
@@ -278,6 +293,23 @@ def _write_segment_overrides(
                 )
             )
         )
+
+    if not overwrite_system_segment_overrides:
+        if exceeds_segment_override_limit(
+            environment,
+            segment_ids_to_create_overrides=[
+                change["segment"]["id"]
+                for change in changes
+                if change["segment"]["id"] not in overrides
+            ],
+            segment_ids_to_delete_overrides=segments.deleted,
+            exclusive=True,
+        ):
+            raise ValidationError(
+                {"segment_overrides": [SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE]}
+            )
+
+    if replace:
         _delete_segment_overrides(
             environment=environment,
             feature=feature,
@@ -312,6 +344,7 @@ def _write_segment_overrides(
                 version=version,
                 segment_id=segment_id,
                 priority=change.get("priority", default_priorities[position]),
+                enabled=change.get("enabled", environment_default.enabled),
             )
             segments.created.append(segment_id)
         _write_segment_override(
@@ -319,6 +352,7 @@ def _write_segment_overrides(
             change,
             replace=replace or segment_id in segments.created,
             environment_default=environment_default,
+            created=segment_id in segments.created,
         )
 
     _check_priorities(environment, feature, version)
