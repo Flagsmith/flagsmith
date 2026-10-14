@@ -121,6 +121,20 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
       !isValidPercentage(draftRollout) ||
       draftSplit.some((s) => !isValidPercentage(s.percentage_allocation)))
 
+  if (experiment.rollout_superseded) {
+    return (
+      <ContentCard
+        compact
+        className='experiment-config-rollout'
+        title='Rollout configuration'
+      >
+        <span className='text-muted'>
+          This rollout was replaced by a newer experiment on this feature.
+        </span>
+      </ContentCard>
+    )
+  }
+
   return (
     <ContentCard
       compact
