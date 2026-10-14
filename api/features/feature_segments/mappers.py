@@ -22,9 +22,10 @@ def map_legacy_flag_value(
 
 
 def clears_legacy_flag_value(feature_state_data: LegacyFeatureStateData) -> bool:
-    """Whether feature state data validated by a legacy API clears the value.
+    """Whether a legacy payload explicitly sets the feature value to null.
 
-    The flag API can't clear values, but the dashboard sends empty ones as null.
+    Omitting feature_state_value leaves the existing value unchanged, while
+    providing a typed null value clears it.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
