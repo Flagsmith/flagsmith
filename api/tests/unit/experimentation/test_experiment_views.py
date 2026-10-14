@@ -33,6 +33,7 @@ from experimentation.models import (
     Metric,
 )
 from experimentation.serializers import ExperimentFeatureSerializer
+from experimentation.services import apply_experiment_rollout
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
 from features.multivariate.models import (
@@ -41,6 +42,7 @@ from features.multivariate.models import (
 )
 from segments.models import Condition, Segment
 from tests.types import EnableFeaturesFixture
+from tests.unit.experimentation.conftest import RolloutSpecFactory
 
 if TYPE_CHECKING:
     from projects.models import Project
@@ -693,6 +695,41 @@ def test_action__start__enables_disabled_rollout(
     assert response.status_code == status.HTTP_200_OK
     detail = admin_client_new.get(_detail_url(environment, experiment_with_rollout))
     assert detail.json()["experiment_rollout"]["enabled"] is True
+
+
+def test_action__start__superseded_predecessor__flags_rollout_superseded(
+    admin_client_new: APIClient,
+    environment_v2_versioning: Environment,
+    multivariate_feature: Feature,
+    rollout_spec: RolloutSpecFactory,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+    environment = environment_v2_versioning
+    predecessor = Experiment.objects.create(
+        environment=environment, feature=multivariate_feature, name="Old"
+    )
+    apply_experiment_rollout(predecessor, rollout_spec())
+    Experiment.objects.filter(pk=predecessor.pk).update(
+        status=ExperimentStatus.COMPLETED
+    )
+    experiment = Experiment.objects.create(
+        environment=environment, feature=multivariate_feature, name="New"
+    )
+    apply_experiment_rollout(experiment, rollout_spec(enabled=False))
+
+    # When
+    response = admin_client_new.post(_action_url(environment, experiment, "start"))
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    new_detail = admin_client_new.get(_detail_url(environment, experiment)).json()
+    assert new_detail["experiment_rollout"]["enabled"] is True
+    assert new_detail["rollout_superseded"] is False
+    old_detail = admin_client_new.get(_detail_url(environment, predecessor)).json()
+    assert old_detail["experiment_rollout"] is None
+    assert old_detail["rollout_superseded"] is True
 
 
 def test_action__start_rollout_enable_fails__rolls_back_transition(

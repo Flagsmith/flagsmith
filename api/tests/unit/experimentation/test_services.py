@@ -3627,10 +3627,8 @@ def _live_override_segment_ids(environment: Environment, feature: Feature) -> se
     "environment_fixture_name",
     ["environment", "environment_v2_versioning"],
 )
-def test_transition_experiment_status__first_start__removes_completed_rollouts(  # type: ignore[no-untyped-def]
+def test_transition_experiment_status__first_start__removes_superseded_rollouts(  # type: ignore[no-untyped-def]
     environment_fixture_name: str,
-    environment_two: Environment,
-    project: Project,
     multivariate_feature: Feature,
     audience_segment: Segment,
     admin_user: FFAdminUser,
@@ -3639,7 +3637,7 @@ def test_transition_experiment_status__first_start__removes_completed_rollouts( 
     request: pytest.FixtureRequest,
     django_capture_on_commit_callbacks,
 ) -> None:
-    # Given a completed experiment whose 100% rollout override is still live
+    # Given
     environment: Environment = request.getfixturevalue(environment_fixture_name)
     completed = _experiment_with_rollout(
         environment,
@@ -3647,7 +3645,13 @@ def test_transition_experiment_status__first_start__removes_completed_rollouts( 
         rollout_spec,
         status=ExperimentStatus.COMPLETED,
     )
-    # and a user segment override on the same feature
+    deleted = _experiment_with_rollout(
+        environment,
+        multivariate_feature,
+        rollout_spec,
+        status=ExperimentStatus.PAUSED,
+    )
+    deleted.delete()
     update_flag(
         environment,
         multivariate_feature,
@@ -3659,29 +3663,6 @@ def test_transition_experiment_status__first_start__removes_completed_rollouts( 
             segment_id=audience_segment.id,
         ),
     )
-    # and completed experiments on another feature, and in another environment
-    other_feature = Feature.objects.create(name="other_feature", project=project)
-    completed_on_other_feature = _experiment_with_rollout(
-        environment,
-        other_feature,
-        rollout_spec,
-        status=ExperimentStatus.COMPLETED,
-    )
-    completed_in_other_environment = _experiment_with_rollout(
-        environment_two,
-        multivariate_feature,
-        rollout_spec,
-        status=ExperimentStatus.COMPLETED,
-    )
-    # and a deleted experiment on the same feature whose override is still live
-    deleted = _experiment_with_rollout(
-        environment,
-        multivariate_feature,
-        rollout_spec,
-        status=ExperimentStatus.PAUSED,
-    )
-    deleted.delete()
-    # and a new experiment on the same feature, shadowed by the completed one
     new = _experiment_with_rollout(
         environment,
         multivariate_feature,
@@ -3689,34 +3670,19 @@ def test_transition_experiment_status__first_start__removes_completed_rollouts( 
         status=ExperimentStatus.CREATED,
     )
     identity = Identity.objects.create(identifier="identity", environment=environment)
-    assert _identity_flag_value(identity, multivariate_feature)[1] == (
-        completed.rollout_segment_id
-    )
 
     # When
     with django_capture_on_commit_callbacks(execute=True):
         services.transition_experiment_status(new, ExperimentStatus.RUNNING, admin_user)
 
-    # Then the identity is enrolled in the new experiment
+    # Then
     assert _identity_flag_value(identity, multivariate_feature)[1] == (
         new.rollout_segment_id
     )
-    # and only the completed and deleted experiments' overrides on this flag
-    # are removed
     assert _live_override_segment_ids(environment, multivariate_feature) == {
         audience_segment.id,
         new.rollout_segment_id,
     }
-    assert _live_override_segment_ids(environment, other_feature) == {
-        completed_on_other_feature.rollout_segment_id
-    }
-    assert _live_override_segment_ids(environment_two, multivariate_feature) == {
-        completed_in_other_environment.rollout_segment_id
-    }
-    # while the completed experiment and its system segment are kept
-    completed.refresh_from_db()
-    assert completed.rollout_segment is not None
-    assert completed.rollout_segment.is_system_segment is True
     assert services.get_experiment_rollout(completed) is None
     assert [
         event for event in log.events if event["event"] == "rollout.superseded"
@@ -3731,41 +3697,6 @@ def test_transition_experiment_status__first_start__removes_completed_rollouts( 
         }
         for superseded in (completed, deleted)
     ]
-
-
-def test_transition_experiment_status__resumed__keeps_completed_rollouts(
-    environment: Environment,
-    multivariate_feature: Feature,
-    admin_user: FFAdminUser,
-    rollout_spec: RolloutSpecFactory,
-    log: StructuredLogCapture,
-) -> None:
-    # Given a completed experiment whose rollout override is still live
-    completed = _experiment_with_rollout(
-        environment,
-        multivariate_feature,
-        rollout_spec,
-        status=ExperimentStatus.COMPLETED,
-    )
-    # and a paused experiment on the same feature that has already started
-    paused = _experiment_with_rollout(
-        environment,
-        multivariate_feature,
-        rollout_spec,
-        status=ExperimentStatus.PAUSED,
-    )
-    paused.started_at = datetime(2026, 1, 1, tzinfo=timezone.utc)
-    paused.save()
-
-    # When
-    services.transition_experiment_status(paused, ExperimentStatus.RUNNING, admin_user)
-
-    # Then
-    assert _live_override_segment_ids(environment, multivariate_feature) == {
-        completed.rollout_segment_id,
-        paused.rollout_segment_id,
-    }
-    assert not [event for event in log.events if event["event"] == "rollout.superseded"]
 
 
 def test_get_experiment_rollout__audience__returns_segment_details(

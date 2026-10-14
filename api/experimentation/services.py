@@ -561,15 +561,15 @@ def transition_experiment_status(
     target_status: str,
     user: FFAdminUser,
 ) -> Experiment:
-    valid_targets = VALID_STATUS_TRANSITIONS.get(experiment.status, set())
-    if target_status not in valid_targets:
-        raise ValueError(
-            f"Cannot transition from '{experiment.status}' to '{target_status}'."
-        )
-
-    experiment.status = target_status
-
     with transaction.atomic():
+        experiment.refresh_from_db(from_queryset=Experiment.objects.select_for_update())
+        valid_targets = VALID_STATUS_TRANSITIONS.get(experiment.status, set())
+        if target_status not in valid_targets:
+            raise ValueError(
+                f"Cannot transition from '{experiment.status}' to '{target_status}'."
+            )
+
+        experiment.status = target_status
         if target_status == ExperimentStatus.RUNNING and not experiment.started_at:
             experiment.started_at = timezone.now()
             _remove_superseded_experiment_rollouts(
@@ -586,8 +586,7 @@ def transition_experiment_status(
 def _remove_superseded_experiment_rollouts(
     experiment: Experiment, author: AuthorData
 ) -> None:
-    """Stop completed or deleted experiments' rollout overrides shadowing this
-    one's."""
+    """Stop completed or deleted experiments' rollouts shadowing this one's."""
     superseded_experiment_ids = dict(
         Experiment.objects.all_with_deleted()
         .filter(
