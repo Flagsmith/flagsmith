@@ -13,6 +13,20 @@ from features.versioning.tasks import enable_v2_versioning
 from tests.integration.helpers import create_mv_option_with_api
 
 
+def _create_segment(admin_client: APIClient, project: int, name: str) -> int:
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        {
+            "name": name,
+            "project": project,
+            "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        },
+        format="json",
+    )
+    assert response.status_code == 201
+    return int(response.json()["id"])
+
+
 def _get_segment_overrides(
     admin_client: APIClient, environment_api_key: str, feature: int
 ) -> list[dict[str, Any]]:
