@@ -2715,7 +2715,8 @@ def test_verify_warehouse_connection__failure__sets_errored_with_detail(
     )
 
 
-def test_verify_warehouse_connection__internal_host__sets_errored_without_connecting(
+@pytest.mark.usefixtures("saas_mode")
+def test_verify_warehouse_connection__internal_host_on_saas__sets_errored_without_connecting(
     clickhouse_connection: WarehouseConnection,
     mocker: MockerFixture,
 ) -> None:
