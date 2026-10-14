@@ -22187,6 +22187,7 @@ components:
       required:
         - enabled
         - feature_state_value
+        - multivariate_feature_state_values
         - rollout_percentage
     ExperimentStatistics:
       description: Serializer for statistical analysis results.
