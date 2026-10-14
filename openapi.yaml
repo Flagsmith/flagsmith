@@ -20681,6 +20681,10 @@ components:
           type: string
           format: uuid
           readOnly: true
+        signup_anonymous_id:
+          type: string
+          maxLength: 64
+          writeOnly: true
         key:
           type:
             - string
@@ -29556,7 +29560,9 @@ components:
           type: boolean
           title: Enabled
         value:
-          $ref: '#/components/schemas/UpdateFlagRequestFlagValue'
+          anyOf:
+            - $ref: '#/components/schemas/UpdateFlagRequestFlagValue'
+            - type: 'null'
         variants:
           type: array
           items:
@@ -29589,7 +29595,9 @@ components:
           type: integer
           title: Priority
         value:
-          $ref: '#/components/schemas/UpdateFlagRequestFlagValue'
+          anyOf:
+            - $ref: '#/components/schemas/UpdateFlagRequestFlagValue'
+            - type: 'null'
         variants:
           type: array
           items:

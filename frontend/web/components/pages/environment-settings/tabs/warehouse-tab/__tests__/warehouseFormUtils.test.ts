@@ -1,4 +1,39 @@
-import { getTestFailureWarning } from 'components/pages/environment-settings/tabs/warehouse-tab/warehouseFormUtils'
+import {
+  getTestFailureWarning,
+  isMissingEventsTableDetail,
+  isWarehouseStartingDetail,
+} from 'components/pages/environment-settings/tabs/warehouse-tab/warehouseFormUtils'
+
+const MISSING_TABLE =
+  'Events table not found in the configured database. Run the setup SQL to create it.'
+const STARTING =
+  'The SQL warehouse is starting. Test the connection again in a few minutes.'
+const STARTING_PREVIOUS =
+  'The SQL warehouse is starting. Test the connection again in a minute.'
+
+describe('isMissingEventsTableDetail', () => {
+  it.each([
+    [MISSING_TABLE, true],
+    [STARTING, false],
+    ['Authentication failed.', false],
+    [null, false],
+  ])('%p returns %p', (detail, expected) => {
+    expect(isMissingEventsTableDetail(detail)).toBe(expected)
+  })
+})
+
+describe('isWarehouseStartingDetail', () => {
+  it.each([
+    [STARTING, true],
+    [STARTING_PREVIOUS, true],
+    [MISSING_TABLE, false],
+    ['SQL warehouse not found.', false],
+    ['The SQL warehouse is starting', false],
+    [null, false],
+  ])('%p returns %p', (detail, expected) => {
+    expect(isWarehouseStartingDetail(detail)).toBe(expected)
+  })
+})
 
 describe('getTestFailureWarning', () => {
   it.each([

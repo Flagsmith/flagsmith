@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
 import ProjectStore from 'common/stores/project-store'
+import { useHasExperimentationFeature } from 'common/hooks/useHasExperimentationFeature'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import CreateWebhookModal from 'components/modals/CreateWebhook'
 import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
@@ -119,7 +120,7 @@ const EnvironmentSettingsPage: React.FC = () => {
 
   const has4EyesPermission = Utils.getPlansPermission('4_EYES')
   const metadataEnable = Utils.getPlansPermission('METADATA')
-  const warehouseEnabled = Utils.getFlagsmithHasFeature(
+  const { enabled: warehouseEnabled } = useHasExperimentationFeature(
     'experimentation_warehouse_connection',
   )
   const cohortSyncEnabled = getSegmentSources().some(

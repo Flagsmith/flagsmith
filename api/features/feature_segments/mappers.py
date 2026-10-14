@@ -12,7 +12,7 @@ from features.types import LegacyFeatureStateData
 def map_legacy_flag_value(
     feature_state_data: LegacyFeatureStateData,
 ) -> FlagValue | None:
-    """Map the value of feature state data validated by a legacy API, if any.
+    """Map a legacy feature state value to the flag API representation.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
@@ -22,9 +22,10 @@ def map_legacy_flag_value(
 
 
 def clears_legacy_flag_value(feature_state_data: LegacyFeatureStateData) -> bool:
-    """Whether feature state data validated by a legacy API clears the value.
+    """Whether a legacy payload explicitly sets the feature value to null.
 
-    The flag API can't clear values, but the dashboard sends empty ones as null.
+    Omitting feature_state_value leaves the existing value unchanged, while
+    providing a typed null value clears it.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
@@ -51,7 +52,9 @@ def map_feature_state_data_to_segment_override(
         override["priority"] = priority
     if "enabled" in feature_state_data:
         override["enabled"] = feature_state_data["enabled"]
-    if value := map_legacy_flag_value(feature_state_data):
+    if clears_legacy_flag_value(feature_state_data):
+        override["value"] = None
+    elif value := map_legacy_flag_value(feature_state_data):
         override["value"] = value
     if (
         multivariate_values := feature_state_data.get(
@@ -71,6 +74,6 @@ def map_feature_state_data_to_segment_override(
             for variant_id in feature.multivariate_options.values_list("id", flat=True)
             if variant_id not in given_ids
         ]
-        if variants:  # Standard features get sent none
+        if variants:  # Legacy clients may send an empty list for standard features.
             override["variants"] = variants
     return override

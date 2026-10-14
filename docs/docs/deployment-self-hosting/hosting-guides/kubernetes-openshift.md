@@ -148,9 +148,11 @@ The chart supports [Gateway API](https://gateway-api.sigs.k8s.io/) HTTPRoutes as
 Install these independently before enabling HTTPRoutes:
 
 1. **Gateway API CRDs**:
+
    ```bash
    kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/latest/download/standard-install.yaml
    ```
+
 2. **A Gateway controller** (e.g., [Envoy Gateway](https://gateway.envoyproxy.io/), Cilium, Istio)
 3. **A GatewayClass and Gateway resource** in your cluster. For example, using Envoy Gateway:
 
@@ -303,15 +305,15 @@ api:
 
 By default, no resource limits or requests are set.
 
-Our recommended limits are 1vCPU and 2GB RAM for all of our pods, but this might vary depending on your usage pattern 
-and hosting environment. 
+Our recommended limits are 1vCPU and 2GB RAM for all of our pods, but this might vary depending on your usage pattern
+and hosting environment.
 
 ### Replicas
 
-By default, 1 replica of each of the frontend, API, and task processor is used. We recommend tailoring these to your 
-requirements based on expected load, and your hosting environment. As the API will be the most heavily used service, we 
-would recommend adding more replicas to your API than the other services. A standard configuration, with some built in 
-fault tolerance, might look something like: 
+By default, 1 replica of each of the frontend, API, and task processor is used. We recommend tailoring these to your
+requirements based on expected load, and your hosting environment. As the API will be the most heavily used service, we
+would recommend adding more replicas to your API than the other services. A standard configuration, with some built in
+fault tolerance, might look something like:
 
 ```yaml
 frontend:
@@ -388,6 +390,84 @@ By default, Flagsmith uses PostgreSQL to store time series data. You can alterna
 ### Task Processor
 
 The task processor itself is documented [here](/deployment-self-hosting/scaling-and-performance/asynchronous-task-processor). See the table below for the values to set to configure the task processor using the Helm chart.
+
+### Experimentation
+
+The chart can run [experimentation](/experimentation). You bring your own Kafka and ClickHouse. The chart then:
+
+- Runs the event ingestion service, which receives SDK events and writes them to Kafka.
+- Runs a job after each install and upgrade. The job creates the Kafka topic and the ClickHouse tables that copy events from Kafka.
+- Gives the API the ClickHouse URL.
+
+Requirements:
+
+- Flagsmith API 2.280.0 or later.
+- Kafka with at least 3 brokers, for the default replication factor of 3.
+- ClickHouse that can connect to Kafka.
+
+```yaml
+experimentation:
+ enabled: true
+ clickhouse:
+  url: clickhouses://flagsmith:<password>@clickhouse.example.com:9440/flagsmith_exp
+ kafka:
+  bootstrapServers: kafka-1:9096,kafka-2:9096,kafka-3:9096
+  auth: scram
+  username: flagsmith
+  password: <password>
+ warehouseDelivery:
+  enabled: true # optional: send events to your own ClickHouse
+
+ingress:
+ ingestion:
+  enabled: true
+  hosts:
+   - host: events.flagsmith.example.com
+     paths:
+      - /
+```
+
+Each value with a password also has a `…FromExistingSecret` form. Use it in production.
+
+The logins need these permissions:
+
+| Login                                     | Permissions                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------------------------ |
+| Kafka (`experimentation.kafka`)           | Write to the topic. Read the topic and the consumer group `clickhouse-events`. |
+| ClickHouse (`experimentation.clickhouse`) | `CREATE DATABASE`, `CREATE TABLE`, `CREATE VIEW`, and `SELECT` on `events`.    |
+
+To keep schema changes away from the runtime logins, give the job its own admin logins with
+`jobs.experimentationInit.clickhouseUrl` and `jobs.experimentationInit.kafka`.
+
+The ingestion service uses the API's database user by default. To give it a user that can only read environment keys,
+create the user and pass its URL with `experimentation.ingestion.databaseUrlFromExistingSecret`:
+
+```sql
+CREATE ROLE ingestion_server WITH LOGIN PASSWORD '<password>';
+GRANT CONNECT ON DATABASE <database> TO ingestion_server;
+GRANT USAGE ON SCHEMA public TO ingestion_server;
+GRANT SELECT ON experimentation_environment_keys TO ingestion_server;
+```
+
+To send events to an environment's own ClickHouse, set `experimentation.warehouseDelivery.enabled: true`. The Kafka
+login then also needs these permissions:
+
+- Read and write the topics `external_warehouse_events` and `external_warehouse_events_retry`.
+- Read the consumer groups `warehouse-delivery` and `warehouse-delivery-retry`.
+
+If your Kafka has `auto.create.topics.enable=true`, create these two topics with the same partition count before you
+turn on warehouse delivery. Otherwise, Kafka can create them first with its default partition count.
+
+Warehouse delivery also uses the API's database user by default. To give it its own user, create the user and pass its
+URL with `experimentation.warehouseDelivery.databaseUrlFromExistingSecret`:
+
+```sql
+CREATE ROLE warehouse_delivery WITH LOGIN PASSWORD '<password>';
+GRANT CONNECT ON DATABASE <database> TO warehouse_delivery;
+GRANT USAGE ON SCHEMA public TO warehouse_delivery;
+GRANT SELECT ON experimentation_delivery_connections TO warehouse_delivery;
+GRANT SELECT, INSERT, UPDATE ON experimentation_warehousedeliverystatus TO warehouse_delivery;
+```
 
 ## Chart Values
 
@@ -623,4 +703,4 @@ To build chart package run:
 
 ```bash
 helm package ./flagsmith
-``` 
+```
