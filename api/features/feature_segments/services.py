@@ -69,7 +69,6 @@ def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
 def get_next_segment_override_priority(
     *, environment: Environment, feature: Feature
 ) -> int:
-    """Get the priority of an override added after the flag's other overrides."""
     version = (
         get_current_live_environment_feature_version(environment.id, feature.id)
         if environment.use_v2_feature_versioning

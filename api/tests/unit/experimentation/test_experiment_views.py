@@ -2135,6 +2135,7 @@ def test_post__rollout_mv_option_not_on_feature__returns_400(
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
+    unknown_option_id = 999999
 
     # When
     response = admin_client_new.post(
@@ -2149,7 +2150,7 @@ def test_post__rollout_mv_option_not_on_feature__returns_400(
                 "feature_state_value": {"type": "string", "value": "control"},
                 "multivariate_feature_state_values": [
                     {
-                        "multivariate_feature_option": 999999,
+                        "multivariate_feature_option": unknown_option_id,
                         "percentage_allocation": 100,
                     },
                 ],
@@ -2160,7 +2161,7 @@ def test_post__rollout_mv_option_not_on_feature__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == ["Variant not found: 999999."]
+    assert response.json() == [f"Variant not found: {unknown_option_id}."]
 
 
 def test_action_rollout__valid__updates_percentage(
@@ -2303,6 +2304,7 @@ def test_action_rollout__mv_option_not_on_feature__returns_400(
 ) -> None:
     # Given
     enable_features(EXPERIMENT_FLAG)
+    unknown_option_id = 999999
 
     # When
     response = admin_client_new.patch(
@@ -2313,7 +2315,7 @@ def test_action_rollout__mv_option_not_on_feature__returns_400(
             "feature_state_value": {"type": "string", "value": "control"},
             "multivariate_feature_state_values": [
                 {
-                    "multivariate_feature_option": 999999,
+                    "multivariate_feature_option": unknown_option_id,
                     "percentage_allocation": 100,
                 },
             ],
@@ -2323,7 +2325,7 @@ def test_action_rollout__mv_option_not_on_feature__returns_400(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == ["Variant not found: 999999."]
+    assert response.json() == [f"Variant not found: {unknown_option_id}."]
 
 
 def test_action_rollout__without_variants__returns_400(
