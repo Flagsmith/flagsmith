@@ -14,7 +14,7 @@ from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
     exceeds_segment_override_limit,
 )
-from features.feature_segments.services import renumber_tied_segment_overrides
+from features.future.exceptions import DuplicatePriorityError
 from features.models import FeatureSegment
 from segments.models import SegmentManagedBy
 
@@ -143,6 +143,10 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer): 
         if len(validated_attrs) == 0:
             return validated_attrs
 
+        priorities = [item["priority"] for item in validated_attrs]
+        if duplicates := sorted({p for p in priorities if priorities.count(p) > 1}):
+            raise DuplicatePriorityError(f"Duplicate priority: {duplicates[0]}.")
+
         feature_segments = list(
             FeatureSegment.objects.filter(
                 id__in=[item["id"] for item in validated_attrs]
@@ -181,17 +185,6 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer): 
         return validated_attrs
 
     def create(self, validated_data):  # type: ignore[no-untyped-def]
-        if validated_data:
-            feature_segment = FeatureSegment.objects.get(id=validated_data[0]["id"])
-            renumber_tied_segment_overrides(
-                FeatureSegment.objects.filter(
-                    feature_id=feature_segment.feature_id,
-                    environment_id=feature_segment.environment_id,
-                    environment_feature_version_id=(
-                        feature_segment.environment_feature_version_id
-                    ),
-                )
-            )
         id_priority_pairs = FeatureSegment.to_id_priority_tuple_pairs(validated_data)
         return FeatureSegment.update_priorities(id_priority_pairs)
 
