@@ -17,3 +17,15 @@ lint:
 	$(MAKE) -C api lint
 	$(MAKE) -C docs lint
 	$(MAKE) -C frontend lint
+
+.PHONY: docker-up
+docker-up:
+	docker compose up -d
+
+.PHONY: docker-up-flags-only
+docker-up-flags-only:
+	EXPERIMENTATION_ENABLED=false docker compose up -d flagsmith flagsmith-task-processor
+
+.PHONY: docker-down
+docker-down:
+	docker compose down
