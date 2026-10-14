@@ -91,6 +91,63 @@ def segment_2(admin_client: APIClient, project: int) -> int:
 
 
 @pytest.fixture()
+def segment_3(admin_client: APIClient, project: int) -> int:
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        {
+            "name": "Test Segment 3",
+            "project": project,
+            "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        },
+        format="json",
+    )
+    assert response.status_code == 201
+    return int(response.json()["id"])
+
+
+def _update_priorities(
+    admin_client: APIClient, environment: int, feature: int, segments: list[int]
+) -> Any:
+    return admin_client.post(
+        "/api/v1/features/feature-segments/update-priorities/",
+        [
+            {
+                "id": _get_feature_segment_id(admin_client, environment, feature, s),
+                "priority": priority,
+            }
+            for priority, s in enumerate(segments)
+        ],
+        format="json",
+    )
+
+
+def _feature_segment(
+    environment: int, segment: int, name: str, priority: int
+) -> dict[str, Any]:
+    return {
+        "id": mock.ANY,
+        "uuid": mock.ANY,
+        "segment": segment,
+        "priority": priority,
+        "environment": environment,
+        "segment_name": name,
+        "is_feature_specific": False,
+        "is_system_segment": False,
+        "segment_managed_by": "",
+    }
+
+
+def _override(segment: int, priority: int, value: str) -> dict[str, Any]:
+    return {
+        "segment": {"id": segment},
+        "priority": priority,
+        "enabled": True,
+        "value": {"type": "string", "value": value},
+        "variants": [],
+    }
+
+
+@pytest.fixture()
 def other_environment(admin_client: APIClient, project: int) -> dict[str, Any]:
     response = admin_client.post(
         "/api/v1/environments/",
@@ -564,7 +621,84 @@ def test_delete_feature_segment__system_segment__responds_409(
     )
 
 
-def test_update_feature_state__override_sharing_priority__updates_override(
+def test_update_priorities__reordered_twice__moves_overrides_where_asked(
+    admin_client: APIClient,
+    create_segment_override: Any,
+    default_feature_value: str,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    segment_2: int,
+    segment_3: int,
+    segment_name: str,
+) -> None:
+    # Given
+    create_segment_override(environment_api_key, feature, segment)
+    create_segment_override(environment_api_key, feature, segment_2, priority=1)
+    create_segment_override(environment_api_key, feature, segment_3, priority=2)
+    response = _update_priorities(
+        admin_client, environment, feature, [segment_2, segment, segment_3]
+    )
+    assert response.status_code == 200
+
+    # When
+    response = _update_priorities(
+        admin_client, environment, feature, [segment_3, segment_2, segment]
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == [
+        _feature_segment(environment, segment_2, "Test Segment 2", 1),
+        _feature_segment(environment, segment, segment_name, 2),
+        _feature_segment(environment, segment_3, "Test Segment 3", 0),
+    ]
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == [
+        _override(segment_3, 0, default_feature_value),
+        _override(segment_2, 1, default_feature_value),
+        _override(segment, 2, default_feature_value),
+    ]
+
+
+def test_update_priorities__overrides_sharing_priority__moves_overrides_where_asked(
+    admin_client: APIClient,
+    create_segment_override: Any,
+    default_feature_value: str,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    segment_2: int,
+    segment_3: int,
+    segment_name: str,
+) -> None:
+    # Given overrides sharing a priority, as legacy reordering used to leave them
+    create_segment_override(environment_api_key, feature, segment)
+    create_segment_override(environment_api_key, feature, segment_2, priority=1)
+    create_segment_override(environment_api_key, feature, segment_3, priority=2)
+    FeatureSegment.objects.filter(feature_id=feature).update(priority=0)
+
+    # When
+    response = _update_priorities(
+        admin_client, environment, feature, [segment_3, segment_2, segment]
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == [
+        _feature_segment(environment, segment, segment_name, 2),
+        _feature_segment(environment, segment_2, "Test Segment 2", 1),
+        _feature_segment(environment, segment_3, "Test Segment 3", 0),
+    ]
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == [
+        _override(segment_3, 0, default_feature_value),
+        _override(segment_2, 1, default_feature_value),
+        _override(segment, 2, default_feature_value),
+    ]
+
+
+def test_update_feature_state__overrides_sharing_priority__renumbers_overrides(
     admin_client: APIClient,
     create_segment_override: Any,
     default_feature_value: str,
@@ -574,12 +708,12 @@ def test_update_feature_state__override_sharing_priority__updates_override(
     segment: int,
     segment_2: int,
 ) -> None:
-    # Given overrides sharing a priority, as legacy reordering could leave them
+    # Given overrides sharing a priority, as legacy reordering used to leave them
     create_segment_override(environment_api_key, feature, segment)
     create_segment_override(environment_api_key, feature, segment_2, priority=1)
     FeatureSegment.objects.filter(feature_id=feature).update(priority=0)
     feature_state_id = _get_segment_override_id(
-        admin_client, environment, feature, segment
+        admin_client, environment, feature, segment_2
     )
 
     # When
@@ -588,7 +722,7 @@ def test_update_feature_state__override_sharing_priority__updates_override(
         {
             "feature": feature,
             "environment": environment,
-            "enabled": False,
+            "enabled": True,
             "feature_state_value": {"type": "unicode", "string_value": "foo"},
         },
         format="json",
@@ -596,24 +730,9 @@ def test_update_feature_state__override_sharing_priority__updates_override(
 
     # Then
     assert response.status_code == 200
-    assert sorted(
-        _get_segment_overrides(admin_client, environment_api_key, feature),
-        key=lambda override: override["segment"]["id"],
-    ) == [
-        {
-            "segment": {"id": segment},
-            "priority": 0,
-            "enabled": False,
-            "value": {"type": "string", "value": "foo"},
-            "variants": [],
-        },
-        {
-            "segment": {"id": segment_2},
-            "priority": 0,
-            "enabled": True,
-            "value": {"type": "string", "value": default_feature_value},
-            "variants": [],
-        },
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == [
+        _override(segment, 0, default_feature_value),
+        _override(segment_2, 1, "foo"),
     ]
 
 

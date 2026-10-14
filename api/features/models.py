@@ -368,9 +368,11 @@ class FeatureSegment(
 
         id_priority_dict = dict(new_feature_segment_id_priorities)
 
-        for fs in feature_segments:
-            new_priority = id_priority_dict[fs.id]
-            fs.to(new_priority)
+        # Moving them in their new order, each from where earlier moves left it,
+        # puts each where it's asked to go.
+        for fs in sorted(feature_segments, key=lambda fs: id_priority_dict[fs.id]):
+            fs.refresh_from_db(fields=["priority"])
+            fs.to(id_priority_dict[fs.id])
 
         request = getattr(HistoricalRecords.thread, "request", None)
         if request:

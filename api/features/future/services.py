@@ -271,19 +271,13 @@ def _check_priorities(
     environment: Environment,
     feature: Feature,
     version: EnvironmentFeatureVersion | None,
-    priorities: set[int],
 ) -> None:
-    """Precedence between two segment overrides sharing a priority is undefined.
-
-    Only the given priorities are checked, so overrides already sharing one,
-    e.g. since legacy APIs reordered them, can still be written.
-    """
+    """Precedence between two segment overrides sharing a priority is undefined."""
     duplicate = (
         FeatureSegment.objects.filter(
             environment=environment,
             feature=feature,
             environment_feature_version=version,
-            priority__in=priorities,
         )
         .values("priority")
         .annotate(count=Count("priority"))
@@ -376,22 +370,17 @@ def _write_segment_overrides(
         )
     )
 
-    written_priorities: set[int] = set()
     for position, change in enumerate(changes):
         segment_id = change["segment"]["id"]
-        if (priority := change.get("priority")) is not None:
-            written_priorities.add(priority)
         if feature_state := overrides.get(segment_id):
             segments.updated.append(segment_id)
         else:
-            priority = change.get("priority", default_priorities[position])
-            written_priorities.add(priority)
             feature_state = _create_segment_override(
                 environment=environment,
                 feature=feature,
                 version=version,
                 segment_id=segment_id,
-                priority=priority,
+                priority=change.get("priority", default_priorities[position]),
                 enabled=change.get("enabled", environment_default.enabled),
             )
             segments.created.append(segment_id)
@@ -403,7 +392,7 @@ def _write_segment_overrides(
             created=segment_id in segments.created,
         )
 
-    _check_priorities(environment, feature, version, written_priorities)
+    _check_priorities(environment, feature, version)
 
     return segments
 

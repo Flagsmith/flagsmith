@@ -11,7 +11,7 @@ from rest_framework.test import APIClient
 
 from environments.models import Environment
 from features.future.types import UpdateFlagRequest
-from features.models import FeatureSegment, FeatureState
+from features.models import FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation
 from projects.models import Project
@@ -971,66 +971,6 @@ def test_update_flag__patch_segment_override_priority_in_use__responds_400(
         .values_list("feature_segment__segment_id", "feature_segment__priority")
     ) == {segment: 0, segment_2: 1}
     assert log.events == []
-
-
-def test_update_flag__patch_segment_override_sharing_priority__updates_override(
-    admin_client_new: APIClient,
-    default_feature_value: str,
-    environment_api_key: str,
-    feature: int,
-    segment: int,
-    segment_2: int,
-) -> None:
-    # Given overrides sharing a priority, as legacy reordering could leave them
-    setup_response = admin_client_new.patch(
-        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
-        UpdateFlagRequest(
-            {
-                "segment_overrides": [
-                    {"segment": {"id": segment}, "enabled": True},
-                    {"segment": {"id": segment_2}, "enabled": True},
-                ],
-            }
-        ),
-        format="json",
-    )
-    assert setup_response.status_code == 200
-    FeatureSegment.objects.filter(feature_id=feature).update(priority=0)
-
-    # When
-    response = admin_client_new.patch(
-        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
-        UpdateFlagRequest(
-            {"segment_overrides": [{"segment": {"id": segment}, "enabled": False}]}
-        ),
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == 200
-    assert response.json()["environment_default"] == {
-        "enabled": False,
-        "value": {"type": "string", "value": default_feature_value},
-        "variants": [],
-    }
-    assert sorted(
-        response.json()["segment_overrides"], key=lambda o: o["segment"]["id"]
-    ) == [
-        {
-            "segment": {"id": segment},
-            "priority": 0,
-            "enabled": False,
-            "value": {"type": "string", "value": default_feature_value},
-            "variants": [],
-        },
-        {
-            "segment": {"id": segment_2},
-            "priority": 0,
-            "enabled": True,
-            "value": {"type": "string", "value": default_feature_value},
-            "variants": [],
-        },
-    ]
 
 
 def test_update_flag__patch_second_segment_override_without_priority__responds_400(
