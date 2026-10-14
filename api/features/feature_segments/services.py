@@ -5,7 +5,6 @@ from django.utils import timezone
 from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.feature_segments.mappers import (
-    clears_legacy_flag_value,
     map_feature_state_data_to_segment_override,
 )
 from features.future.mappers import map_flag_value
@@ -114,16 +113,6 @@ def write_segment_override(
             environment=environment, feature=feature, segment_id=segment_id
         )
         assert feature_state is not None
-        feature_state_value = feature_state.feature_state_value
-        if clears_legacy_flag_value(feature_state_data) and (
-            map_flag_value(feature_state_value) is not None
-        ):
-            # Legacy APIs write overrides directly only without v2 feature
-            # versioning, so clearing values in place doesn't bypass it.
-            feature_state_value.string_value = None
-            feature_state_value.integer_value = None
-            feature_state_value.boolean_value = None
-            feature_state_value.save()
     dispatch_vcs_on_feature_state_changed(feature_state)
     return feature_state
 
@@ -147,14 +136,9 @@ def is_segment_override_unchanged(
         )
         for multivariate_value in feature_state.multivariate_feature_state_values.all()
     }
-    new_value = (
-        None
-        if clears_legacy_flag_value(feature_state_data)
-        else changes.get("value", value)
-    )
     return (
         changes.get("enabled", feature_state.enabled) == feature_state.enabled
-        and new_value == value
+        and changes.get("value", value) == value
         and all(
             weights.get(variant["id"], 0) == variant["weight"]
             for variant in changes.get("variants", [])

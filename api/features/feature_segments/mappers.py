@@ -52,7 +52,9 @@ def map_feature_state_data_to_segment_override(
         override["priority"] = priority
     if "enabled" in feature_state_data:
         override["enabled"] = feature_state_data["enabled"]
-    if value := map_legacy_flag_value(feature_state_data):
+    if clears_legacy_flag_value(feature_state_data):
+        override["value"] = None
+    elif value := map_legacy_flag_value(feature_state_data):
         override["value"] = value
     if (
         multivariate_values := feature_state_data.get(
