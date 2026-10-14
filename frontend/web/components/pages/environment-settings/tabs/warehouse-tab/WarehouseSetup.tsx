@@ -85,18 +85,18 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
   onEnableFlagsmith,
 }) => {
   const { data: version } = useGetBuildVersionQuery({})
-  const isSaas = !!version?.backend?.is_saas
   const configurableTypes = getConfigurableWarehouseTypes({
     clickhouseEnabled: Utils.getFlagsmithHasFeature('clickhouse_warehouse'),
     databricksEnabled: Utils.getFlagsmithHasFeature('databricks_warehouse'),
-    isSaas,
+    isSaas: !!version?.backend?.is_saas,
   })
   const [chosenType, setSelectedType] = useState<WarehouseTypeOption>()
   const selectedType = chosenType ?? configurableTypes[0]
   const isEnabled = (type: WarehouseTypeOption) =>
     configurableTypes.includes(type)
+  // Other unavailable types still show, as "Coming Soon".
   const typeCards = WAREHOUSE_TYPE_CARDS.filter(
-    ({ type }) => isSaas || type !== 'flagsmith',
+    ({ type }) => type !== 'flagsmith' || isEnabled(type),
   ).sort((a, b) => Number(isEnabled(b.type)) - Number(isEnabled(a.type)))
 
   return (
