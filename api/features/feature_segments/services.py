@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Max, Q
+from django.db.models import F, Max, Q, QuerySet
 from django.utils import timezone
 
 from core.dataclasses import AuthorData
@@ -50,20 +50,41 @@ def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
     return override is not None and override.feature_segment_id == feature_segment.id
 
 
-def get_next_segment_override_priority(
-    *, environment: Environment, feature: Feature
-) -> int:
+def _get_feature_segments(
+    environment: Environment, feature: Feature
+) -> QuerySet[FeatureSegment]:
     version = (
         get_current_live_environment_feature_version(environment.id, feature.id)
         if environment.use_v2_feature_versioning
         else None
     )
-    highest_priority: int | None = FeatureSegment.objects.filter(
+    feature_segments: QuerySet[FeatureSegment] = FeatureSegment.objects.filter(
         environment=environment,
         feature=feature,
         environment_feature_version=version,
+    )
+    return feature_segments
+
+
+def get_next_segment_override_priority(
+    *, environment: Environment, feature: Feature
+) -> int:
+    highest_priority: int | None = _get_feature_segments(
+        environment, feature
     ).aggregate(highest_priority=Max("priority"))["highest_priority"]
     return 0 if highest_priority is None else highest_priority + 1
+
+
+def _make_room_for_segment_override(
+    *, environment: Environment, feature: Feature, segment_id: int, priority: int
+) -> None:
+    """Move the flag's other overrides from a priority on down, if it's taken.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
+    others = _get_feature_segments(environment, feature).exclude(segment_id=segment_id)
+    if others.filter(priority=priority).exists():
+        others.filter(priority__gte=priority).update(priority=F("priority") + 1)
 
 
 def writes_live_segment_override(feature_state_data: LegacyFeatureStateData) -> bool:
@@ -95,6 +116,13 @@ def write_segment_override(
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
     with transaction.atomic():
+        if priority is not None:
+            _make_room_for_segment_override(
+                environment=environment,
+                feature=feature,
+                segment_id=segment_id,
+                priority=priority,
+            )
         update_flag(
             environment=environment,
             feature=feature,

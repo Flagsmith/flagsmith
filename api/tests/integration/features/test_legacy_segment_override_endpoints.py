@@ -75,6 +75,21 @@ def system_segment(
 
 
 @pytest.fixture()
+def segment_2(admin_client: APIClient, project: int) -> int:
+    response = admin_client.post(
+        f"/api/v1/projects/{project}/segments/",
+        {
+            "name": "Test Segment 2",
+            "project": project,
+            "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        },
+        format="json",
+    )
+    assert response.status_code == 201
+    return int(response.json()["id"])
+
+
+@pytest.fixture()
 def other_environment(admin_client: APIClient, project: int) -> dict[str, Any]:
     response = admin_client.post(
         "/api/v1/environments/",
@@ -199,15 +214,19 @@ def test_create_segment_override__existing_override__updates_override(
     ]
 
 
-def test_create_segment_override__priority_in_use__responds_400(
+def test_create_segment_override__priority_in_use__moves_overrides_down(
     admin_client: APIClient,
+    create_segment_override: Any,
+    default_feature_value: str,
+    environment: int,
     environment_api_key: str,
     feature: int,
     segment: int,
+    segment_2: int,
     system_segment: int,
 ) -> None:
     # Given
-    overrides = _get_segment_overrides(admin_client, environment_api_key, feature)
+    create_segment_override(environment_api_key, feature, segment_2, priority=1)
 
     # When
     response = admin_client.post(
@@ -222,11 +241,56 @@ def test_create_segment_override__priority_in_use__responds_400(
     )
 
     # Then
-    assert response.status_code == 400
-    assert response.json() == {"detail": "Duplicate priority: 0."}
-    assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
-        overrides
-    )
+    assert response.status_code == 201
+    assert response.json() == {
+        "id": _get_segment_override_id(admin_client, environment, feature, segment),
+        "uuid": mock.ANY,
+        "feature_segment": {
+            "id": _get_feature_segment_id(admin_client, environment, feature, segment),
+            "uuid": mock.ANY,
+            "segment": segment,
+            "priority": 0,
+        },
+        "enabled": True,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "foo",
+            "integer_value": None,
+            "boolean_value": None,
+        },
+        "multivariate_feature_state_values": [],
+        "deleted_at": None,
+        "created_at": mock.ANY,
+        "updated_at": mock.ANY,
+        "live_from": mock.ANY,
+        "environment": environment,
+        "feature": feature,
+        "identity": None,
+        "change_request": None,
+    }
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == [
+        {
+            "segment": {"id": segment},
+            "priority": 0,
+            "enabled": True,
+            "value": {"type": "string", "value": "foo"},
+            "variants": [],
+        },
+        {
+            "segment": {"id": system_segment},
+            "priority": 1,
+            "enabled": False,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [],
+        },
+        {
+            "segment": {"id": segment_2},
+            "priority": 2,
+            "enabled": True,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [],
+        },
+    ]
 
 
 def test_create_segment_override__system_segment__responds_409(
