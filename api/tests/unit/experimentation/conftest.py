@@ -176,7 +176,12 @@ def successful_delivery_status(
 
 
 @pytest.fixture()
-def rollout_spec(admin_user: FFAdminUser) -> RolloutSpecFactory:
+def rollout_spec(
+    admin_user: FFAdminUser,
+    multivariate_options: list[MultivariateFeatureOption],
+) -> RolloutSpecFactory:
+    """Make rollout specs, with every variant weighted 0 unless given."""
+
     def _make(
         *,
         rollout_percentage: float = 100.0,
@@ -189,7 +194,11 @@ def rollout_spec(admin_user: FFAdminUser) -> RolloutSpecFactory:
             rollout_percentage=rollout_percentage,
             feature_state_value="control",
             value_type="string",
-            variants=variants,
+            variants=(
+                [{"id": option.id, "weight": 0.0} for option in multivariate_options]
+                if variants is None
+                else variants
+            ),
             author=AuthorData(user=admin_user),
             audience=audience,
         )
