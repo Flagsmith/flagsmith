@@ -8,7 +8,10 @@ from pytest_mock import MockerFixture
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
-from experimentation.dataclasses import AudienceSpec, RolloutSpec
+from experimentation.dataclasses import (
+    AudienceSpec,
+    RolloutSpec,
+)
 from experimentation.models import (
     Experiment,
     ExperimentStatus,
@@ -19,9 +22,9 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.services import apply_experiment_rollout
+from features.future.types import Variant
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
-from features.versioning.dataclasses import MultivariateValueChangeSet
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
@@ -33,7 +36,7 @@ class RolloutSpecFactory(Protocol):
         *,
         rollout_percentage: float = ...,
         enabled: bool = ...,
-        multivariate_values: list[MultivariateValueChangeSet] | None = ...,
+        variants: list[Variant] | None = ...,
         audience: AudienceSpec | None = ...,
     ) -> RolloutSpec: ...
 
@@ -87,7 +90,7 @@ def experiment_with_rollout(
     multivariate_options: list[MultivariateFeatureOption],
     admin_user: FFAdminUser,
 ) -> Experiment:
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     apply_experiment_rollout(
         experiment,
         RolloutSpec(
@@ -95,9 +98,10 @@ def experiment_with_rollout(
             rollout_percentage=20.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -172,12 +176,17 @@ def successful_delivery_status(
 
 
 @pytest.fixture()
-def rollout_spec(admin_user: FFAdminUser) -> RolloutSpecFactory:
+def rollout_spec(
+    admin_user: FFAdminUser,
+    multivariate_options: list[MultivariateFeatureOption],
+) -> RolloutSpecFactory:
+    """Make rollout specs, with every variant weighted 0 unless given."""
+
     def _make(
         *,
         rollout_percentage: float = 100.0,
         enabled: bool = True,
-        multivariate_values: list[MultivariateValueChangeSet] | None = None,
+        variants: list[Variant] | None = None,
         audience: AudienceSpec | None = None,
     ) -> RolloutSpec:
         return RolloutSpec(
@@ -185,7 +194,11 @@ def rollout_spec(admin_user: FFAdminUser) -> RolloutSpecFactory:
             rollout_percentage=rollout_percentage,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=multivariate_values or [],
+            variants=(
+                [{"id": option.id, "weight": 0.0} for option in multivariate_options]
+                if variants is None
+                else variants
+            ),
             author=AuthorData(user=admin_user),
             audience=audience,
         )
