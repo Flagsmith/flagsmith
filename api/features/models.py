@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import datetime
+import itertools
 import logging
 import typing
 import uuid
@@ -368,11 +369,29 @@ class FeatureSegment(
 
         id_priority_dict = dict(new_feature_segment_id_priorities)
 
-        # Moving them in their new order, each from where earlier moves left it,
-        # puts each where it's asked to go.
-        for fs in sorted(feature_segments, key=lambda fs: id_priority_dict[fs.id]):
-            fs.refresh_from_db(fields=["priority"])
-            fs.to(id_priority_dict[fs.id])
+        # The given priorities are kept as they are, and the others fill the
+        # lowest free priorities in their current order.
+        reference = feature_segments[0]
+        free_priorities = (
+            priority
+            for priority in itertools.count()
+            if priority not in id_priority_dict.values()
+        )
+        changed = []
+        for fs in cls.objects.filter(
+            feature_id=reference.feature_id,
+            environment_id=reference.environment_id,
+            environment_feature_version_id=reference.environment_feature_version_id,
+        ).order_by("priority", "id"):
+            priority = id_priority_dict.get(fs.id)
+            if priority is None:
+                priority = next(free_priorities)
+            if fs.priority != priority:
+                fs.priority = priority
+                changed.append(fs)
+        cls.objects.bulk_update(changed, ["priority"])
+        for fs in feature_segments:
+            fs.priority = id_priority_dict[fs.id]
 
         request = getattr(HistoricalRecords.thread, "request", None)
         if request:
