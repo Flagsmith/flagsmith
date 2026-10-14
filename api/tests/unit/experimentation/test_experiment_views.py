@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -18,7 +19,6 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
 from experimentation.constants import (
-    EXPERIMENT_FLAG,
     EXPOSURES_REFRESH_MIN_INTERVAL,
     MAX_AUDIENCE_SEGMENTS,
     RESULTS_REFRESH_MIN_INTERVAL,
@@ -40,7 +40,6 @@ from features.multivariate.models import (
     MultivariateFeatureStateValue,
 )
 from segments.models import Condition, Segment
-from tests.types import EnableFeaturesFixture
 
 if TYPE_CHECKING:
     from projects.models import Project
@@ -73,12 +72,8 @@ def test_post__valid_multivariate_feature__returns_201(
     admin_client_new: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.post(
         _list_url(environment),
         data={
@@ -103,12 +98,8 @@ def test_post__non_multivariate_feature__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     feature: Feature,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.post(
         _list_url(environment),
         data={
@@ -126,11 +117,9 @@ def test_post__non_multivariate_feature__returns_400(
 def test_post__feature_from_different_project__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     organisation_one_project_one: Project,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     other_feature = Feature.objects.create(
         project=organisation_one_project_one,
         name="other_mv_feature",
@@ -158,12 +147,8 @@ def test_post__active_experiment_exists__returns_409(
     environment: Environment,
     experiment: Experiment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.post(
         _list_url(environment),
         data={
@@ -183,10 +168,8 @@ def test_post__completed_experiment_exists__returns_201(
     environment: Environment,
     experiment: Experiment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.COMPLETED
     experiment.save()
 
@@ -205,16 +188,12 @@ def test_post__completed_experiment_exists__returns_201(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_post__staff_user_with_flag__returns_403(
+def test_post__staff_user__returns_403(
     staff_client: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = staff_client.post(
         _list_url(environment),
         data={
@@ -229,12 +208,14 @@ def test_post__staff_user_with_flag__returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_post__admin_without_flag__returns_403(
+def test_post__experimentation_not_deployed__returns_403(
     admin_client_new: APIClient,
+    settings: SettingsWrapper,
     environment: Environment,
     multivariate_feature: Feature,
 ) -> None:
-    # Given — feature flag not enabled
+    # Given
+    settings.EXPERIMENTATION_ENABLED = False
 
     # When
     response = admin_client_new.post(
@@ -253,10 +234,8 @@ def test_post__admin_without_flag__returns_403(
 
 def test_post__nonexistent_environment__returns_403(
     admin_client_new: APIClient,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     url = reverse(
         "api-v1:environments:experiments:experiments-list",
         args=["bad_api_key"],
@@ -281,12 +260,8 @@ def test_get_list__with_experiments__returns_all(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_list_url(environment))
 
     # Then
@@ -301,12 +276,8 @@ def test_get_list__with_experiments__returns_nested_feature(
     environment: Environment,
     experiment: Experiment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_list_url(environment))
 
     # Then
@@ -327,12 +298,8 @@ def test_get_detail__exists__returns_nested_feature(
     environment: Environment,
     experiment: Experiment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_detail_url(environment, experiment))
 
     # Then
@@ -346,12 +313,8 @@ def test_get_detail__exists__returns_nested_feature(
 def test_get_list__empty__returns_200(
     admin_client_new: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_list_url(environment))
 
     # Then
@@ -372,14 +335,10 @@ def test_get_list__filter_by_status__returns_filtered(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     filter_status: str,
     expected_count: int,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_list_url(environment), {"status": filter_status})
 
     # Then
@@ -391,12 +350,8 @@ def test_get_list__search_by_experiment_name__returns_matching(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_list_url(environment), {"q": experiment.name[:4]})
 
     # Then
@@ -411,12 +366,8 @@ def test_get_list__search_by_feature_name__returns_matching(
     environment: Environment,
     experiment: Experiment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(
         _list_url(environment), {"q": multivariate_feature.name}
     )
@@ -432,12 +383,8 @@ def test_get_list__search_no_match__returns_empty(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_list_url(environment), {"q": "nonexistent"})
 
     # Then
@@ -450,11 +397,9 @@ def test_get_list__with_experiments__returns_status_counts(
     environment: Environment,
     experiment: Experiment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
     project: Project,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     second_feature = Feature.objects.create(
         project=project,
         name="second_mv_feature",
@@ -491,12 +436,8 @@ def test_get_list__filtered__status_counts_reflect_all(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_list_url(environment), {"status": "running"})
 
     # Then
@@ -511,12 +452,8 @@ def test_get_list__searched__status_counts_reflect_search(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_list_url(environment), {"q": "nonexistent"})
 
     # Then
@@ -531,12 +468,8 @@ def test_get_detail__exists__returns_200(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_detail_url(environment, experiment))
 
     # Then
@@ -555,14 +488,10 @@ def test_patch__update_field__returns_200(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     field: str,
     value: str,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.patch(
         _detail_url(environment, experiment),
         data={field: value},
@@ -579,10 +508,8 @@ def test_patch__change_feature__returns_400(
     environment: Environment,
     experiment: Experiment,
     project: Project,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     other_feature = Feature.objects.create(
         project=project,
         name="other_mv_feature",
@@ -620,13 +547,11 @@ def test_action__status_transition__returns_expected(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     from_status: str,
     action_name: str,
     expected_status_code: int,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = from_status
     experiment.save()
 
@@ -641,12 +566,8 @@ def test_action__start__sets_started_at(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.post(_action_url(environment, experiment, "start"))
 
     # Then
@@ -659,10 +580,8 @@ def test_action__start__enables_disabled_rollout(
     environment: Environment,
     experiment_with_rollout: Experiment,
     multivariate_options: list[MultivariateFeatureOption],
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given an experiment whose rollout override is disabled
-    enable_features(EXPERIMENT_FLAG)
     option_a, option_b, _ = multivariate_options
     admin_client_new.patch(
         _action_url(environment, experiment_with_rollout, "rollout"),
@@ -699,11 +618,9 @@ def test_action__start_rollout_enable_fails__rolls_back_transition(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given enabling the rollout will fail while starting
-    enable_features(EXPERIMENT_FLAG)
     mocker.patch(
         "experimentation.views.enable_experiment_rollout",
         side_effect=RuntimeError("boom"),
@@ -723,10 +640,8 @@ def test_action__complete__sets_ended_at(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.RUNNING
     experiment.save()
 
@@ -742,10 +657,8 @@ def test_exposures__computed_row__returns_row(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given a previously computed exposures row
-    enable_features(EXPERIMENT_FLAG)
     payload = {
         "excluded_identities": 4,
         "timeseries": {
@@ -784,12 +697,8 @@ def test_exposures__never_computed__returns_null(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_action_url(environment, experiment, "exposures"))
 
     # Then
@@ -801,10 +710,8 @@ def test_exposures__failed_refresh__returns_error_marker_with_last_payload(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given a row whose last refresh failed after an earlier success
-    enable_features(EXPERIMENT_FLAG)
     payload = {
         "excluded_identities": 0,
         "timeseries": {"granularity": "hour", "points": []},
@@ -832,12 +739,14 @@ def test_exposures__failed_refresh__returns_error_marker_with_last_payload(
     }
 
 
-def test_exposures__admin_without_flag__returns_403(
+def test_exposures__experimentation_not_deployed__returns_403(
     admin_client_new: APIClient,
+    settings: SettingsWrapper,
     environment: Environment,
     experiment: Experiment,
 ) -> None:
-    # Given — feature flag not enabled
+    # Given
+    settings.EXPERIMENTATION_ENABLED = False
 
     # When
     response = admin_client_new.get(_action_url(environment, experiment, "exposures"))
@@ -846,16 +755,12 @@ def test_exposures__admin_without_flag__returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_exposures__staff_user_with_flag__returns_403(
+def test_exposures__staff_user__returns_403(
     staff_client: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = staff_client.get(_action_url(environment, experiment, "exposures"))
 
     # Then
@@ -866,11 +771,9 @@ def test_refresh_exposures__started_experiment__enqueues_compute(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.RUNNING
     experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
     experiment.save()
@@ -895,11 +798,9 @@ def test_refresh_exposures__requested_recently__returns_429_with_retry_after(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given a refresh was requested a minute ago
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.RUNNING
     experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
     experiment.save()
@@ -924,11 +825,9 @@ def test_refresh_exposures__last_request_beyond_interval__enqueues_compute(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given the last refresh request is older than the minimum interval
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.RUNNING
     experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
     experiment.save()
@@ -952,11 +851,9 @@ def test_refresh_exposures__completed_with_final_row__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given a completed experiment whose row already covers the full window
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.COMPLETED
     experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
     experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
@@ -983,11 +880,9 @@ def test_refresh_exposures__completed_with_stale_row__enqueues_compute(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given a completed experiment last computed before it ended
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.COMPLETED
     experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
     experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
@@ -1013,11 +908,9 @@ def test_refresh_exposures__not_started_experiment__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given a created experiment that has never started
-    enable_features(EXPERIMENT_FLAG)
     mock_compute = mocker.patch("experimentation.views.compute_experiment_exposures")
 
     # When
@@ -1030,16 +923,12 @@ def test_refresh_exposures__not_started_experiment__returns_400(
     mock_compute.delay.assert_not_called()
 
 
-def test_refresh_exposures__staff_user_with_flag__returns_403(
+def test_refresh_exposures__staff_user__returns_403(
     staff_client: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = staff_client.post(
         _action_url(environment, experiment, "refresh-exposures")
     )
@@ -1052,12 +941,8 @@ def test_delete__exists__returns_204_and_soft_deletes(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.delete(_detail_url(environment, experiment))
 
     # Then
@@ -1070,12 +955,8 @@ def test_post__valid_create__creates_audit_log(
     admin_client_new: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     admin_client_new.post(
         _list_url(environment),
         data={
@@ -1098,12 +979,8 @@ def test_patch__valid_update__creates_audit_log(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     admin_client_new.patch(
         _detail_url(environment, experiment),
         data={"name": "Renamed"},
@@ -1122,12 +999,8 @@ def test_action__start__creates_audit_log(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     admin_client_new.post(_action_url(environment, experiment, "start"))
 
     # Then
@@ -1142,12 +1015,8 @@ def test_delete__valid_delete__creates_audit_log(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     admin_client_new.delete(_detail_url(environment, experiment))
 
     # Then
@@ -1163,10 +1032,8 @@ def test_get_list__filter_by_multiple_statuses__returns_matching(
     environment: Environment,
     experiment: Experiment,
     project: "Project",
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     second_feature = Feature.objects.create(
         name="mv_feature_2",
         project=project,
@@ -1203,12 +1070,8 @@ def test_get_list__filter_by_multiple_statuses__returns_matching(
 def test_get_list__invalid_status__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_list_url(environment), {"status": "garbage"})
 
     # Then
@@ -1218,12 +1081,8 @@ def test_get_list__invalid_status__returns_400(
 def test_get_list__mixed_valid_and_invalid_status__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(
         _list_url(environment),
         {"status": ["running", "garbage"]},
@@ -1237,10 +1096,8 @@ def test_delete__running_experiment__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.RUNNING
     experiment.save()
 
@@ -1256,10 +1113,8 @@ def test_patch__no_change__skips_audit_log(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     audit_count_before = AuditLog.objects.filter(
         related_object_type=RelatedObjectType.EXPERIMENT.name
     ).count()
@@ -1284,12 +1139,8 @@ def test_post__inline_metric__creates_experiment_metric(
     environment: Environment,
     multivariate_feature: Feature,
     metric: Metric,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.post(
         _list_url(environment),
         data={
@@ -1316,11 +1167,9 @@ def test_post__metric_from_other_environment__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
     project: Project,
 ) -> None:
     # Given a metric defined in a sibling environment
-    enable_features(EXPERIMENT_FLAG)
     other_env = Environment.objects.create(name="Other", project=project)
     foreign = Metric.objects.create(
         environment=other_env,
@@ -1352,12 +1201,8 @@ def test_post__duplicate_metrics__returns_400(
     environment: Environment,
     multivariate_feature: Feature,
     metric: Metric,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.post(
         _list_url(environment),
         data={
@@ -1382,12 +1227,8 @@ def test_post__invalid_expected_direction__returns_400(
     environment: Environment,
     multivariate_feature: Feature,
     metric: Metric,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.post(
         _list_url(environment),
         data={
@@ -1410,12 +1251,8 @@ def test_patch__metrics__returns_400(
     environment: Environment,
     experiment: Experiment,
     metric: Metric,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.patch(
         _detail_url(environment, experiment),
         data={
@@ -1436,10 +1273,8 @@ def test_get_list__with_attached_metric__returns_metrics(
     environment: Environment,
     experiment: Experiment,
     metric: Metric,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     ExperimentMetric.objects.create(
         experiment=experiment,
         metric=metric,
@@ -1463,10 +1298,8 @@ def test_get_detail__with_attached_metric__returns_metrics(
     environment: Environment,
     experiment: Experiment,
     metric: Metric,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     ExperimentMetric.objects.create(
         experiment=experiment,
         metric=metric,
@@ -1487,11 +1320,9 @@ def test_post__concurrent_create_race__returns_409(
     admin_client_new: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     mocker.patch(
         "experimentation.views.ExperimentViewSet.perform_create",
         side_effect=IntegrityError(),
@@ -1516,10 +1347,8 @@ def test_results__computed_row__returns_row(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given a previously computed results row
-    enable_features(EXPERIMENT_FLAG)
     payload = {
         "srm_p_value": 0.42,
         "metrics": [
@@ -1558,12 +1387,8 @@ def test_results__never_computed__returns_null(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_action_url(environment, experiment, "results"))
 
     # Then
@@ -1575,10 +1400,8 @@ def test_results__failed_refresh__returns_error_marker_with_last_payload(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given a row whose last refresh failed after an earlier success
-    enable_features(EXPERIMENT_FLAG)
     payload: dict[str, object] = {"srm_p_value": None, "metrics": []}
     ExperimentResults.objects.create(
         experiment=experiment,
@@ -1603,12 +1426,14 @@ def test_results__failed_refresh__returns_error_marker_with_last_payload(
     }
 
 
-def test_results__admin_without_flag__returns_403(
+def test_results__experimentation_not_deployed__returns_403(
     admin_client_new: APIClient,
+    settings: SettingsWrapper,
     environment: Environment,
     experiment: Experiment,
 ) -> None:
-    # Given — feature flag not enabled
+    # Given
+    settings.EXPERIMENTATION_ENABLED = False
 
     # When
     response = admin_client_new.get(_action_url(environment, experiment, "results"))
@@ -1617,16 +1442,12 @@ def test_results__admin_without_flag__returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_results__staff_user_with_flag__returns_403(
+def test_results__staff_user__returns_403(
     staff_client: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = staff_client.get(_action_url(environment, experiment, "results"))
 
     # Then
@@ -1637,11 +1458,9 @@ def test_refresh_results__started_experiment__enqueues_compute(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.RUNNING
     experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
     experiment.save()
@@ -1666,11 +1485,9 @@ def test_refresh_results__requested_recently__returns_429_with_retry_after(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given a refresh was requested a minute ago
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.RUNNING
     experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
     experiment.save()
@@ -1695,11 +1512,9 @@ def test_refresh_results__last_request_beyond_interval__enqueues_compute(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given the last refresh request is older than the minimum interval
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.RUNNING
     experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
     experiment.save()
@@ -1723,11 +1538,9 @@ def test_refresh_results__completed_with_final_row__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given a completed experiment whose row already covers the full window
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.COMPLETED
     experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
     experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
@@ -1753,11 +1566,9 @@ def test_refresh_results__completed_with_stale_row__enqueues_compute(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given a completed experiment last computed before it ended
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.COMPLETED
     experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
     experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
@@ -1783,11 +1594,9 @@ def test_refresh_results__not_started_experiment__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given a created experiment that has never started
-    enable_features(EXPERIMENT_FLAG)
     mock_compute = mocker.patch("experimentation.views.compute_experiment_results")
 
     # When
@@ -1800,16 +1609,12 @@ def test_refresh_results__not_started_experiment__returns_400(
     mock_compute.delay.assert_not_called()
 
 
-def test_refresh_results__staff_user_with_flag__returns_403(
+def test_refresh_results__staff_user__returns_403(
     staff_client: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = staff_client.post(
         _action_url(environment, experiment, "refresh-results")
     )
@@ -1823,10 +1628,8 @@ def test_get_detail__env_level_allocations__returns_environment_percentages(
     environment: Environment,
     experiment: Experiment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     env_fs = FeatureState.objects.get(
         feature=multivariate_feature,
         environment=environment,
@@ -1889,10 +1692,8 @@ def test_post__with_experiment_rollout__creates_rollout(
     environment: Environment,
     multivariate_feature: Feature,
     multivariate_options: list[MultivariateFeatureOption],
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     option_a, option_b, _ = multivariate_options
 
     # When
@@ -1933,10 +1734,8 @@ def test_post__with_experiment_rollout__zeroes_default_allocations(
     environment: Environment,
     multivariate_feature: Feature,
     multivariate_options: list[MultivariateFeatureOption],
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     option_a, option_b, option_c = multivariate_options
 
     # When
@@ -1998,10 +1797,8 @@ def test_post__with_experiment_rollout_v2_versioning__zeroes_default_allocations
     environment_v2_versioning: Environment,
     multivariate_feature: Feature,
     multivariate_options: list[MultivariateFeatureOption],
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     option_a, option_b, option_c = multivariate_options
 
     # When
@@ -2062,10 +1859,8 @@ def test_post__rollout_allocations_exceed_100__returns_400(
     environment: Environment,
     multivariate_feature: Feature,
     multivariate_options: list[MultivariateFeatureOption],
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     option_a, option_b, _ = multivariate_options
 
     # When the allocations sum to more than 100%
@@ -2103,12 +1898,8 @@ def test_post__rollout_mv_option_not_on_feature__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     multivariate_feature: Feature,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.post(
         _list_url(environment),
         data={
@@ -2140,10 +1931,8 @@ def test_action_rollout__valid__updates_percentage(
     environment: Environment,
     experiment_with_rollout: Experiment,
     multivariate_options: list[MultivariateFeatureOption],
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     option_a, option_b, _ = multivariate_options
 
     # When
@@ -2180,10 +1969,8 @@ def test_action_rollout__running_experiment__updates_percentage(
     environment: Environment,
     experiment_with_rollout: Experiment,
     multivariate_options: list[MultivariateFeatureOption],
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     experiment_with_rollout.status = ExperimentStatus.RUNNING
     experiment_with_rollout.save()
     option_a, option_b, _ = multivariate_options
@@ -2222,10 +2009,8 @@ def test_action_rollout__completed_experiment__returns_400(
     environment: Environment,
     experiment_with_rollout: Experiment,
     multivariate_options: list[MultivariateFeatureOption],
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     experiment_with_rollout.status = ExperimentStatus.COMPLETED
     experiment_with_rollout.save()
     option_a, option_b, _ = multivariate_options
@@ -2259,12 +2044,8 @@ def test_action_rollout__mv_option_not_on_feature__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     experiment_with_rollout: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.patch(
         _action_url(environment, experiment_with_rollout, "rollout"),
         data={
@@ -2290,12 +2071,8 @@ def test_patch__experiment_rollout_on_update__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.patch(
         _detail_url(environment, experiment),
         data={
@@ -2318,10 +2095,8 @@ def test_get_detail__with_rollout__returns_rollout(
     environment: Environment,
     experiment_with_rollout: Experiment,
     multivariate_options: list[MultivariateFeatureOption],
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     option_a, option_b, _ = multivariate_options
 
     # When
@@ -2343,12 +2118,8 @@ def test_get_detail__without_rollout__returns_null(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.get(_detail_url(environment, experiment))
 
     # Then
@@ -2370,12 +2141,8 @@ def test_post__with_audience__creates_rollout_and_returns_audience(
     environment: Environment,
     multivariate_feature: Feature,
     audience_segment: Segment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.post(
         _list_url(environment),
         data={
@@ -2412,11 +2179,9 @@ def test_action_rollout__audience_while_not_serving__updates_audience(
     environment: Environment,
     experiment_with_rollout: Experiment,
     audience_segment: Segment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given a rollout taken out of service, since an enabled one freezes the
     # audience it enrolled identities by
-    enable_features(EXPERIMENT_FLAG)
     disable = admin_client_new.patch(
         _action_url(environment, experiment_with_rollout, "rollout"),
         data=_rollout_payload(enabled=False),
@@ -2456,12 +2221,8 @@ def test_action_rollout__more_segments_than_the_cap__returns_400(
     environment: Environment,
     experiment_with_rollout: Experiment,
     audience_segment: Segment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.patch(
         _action_url(environment, experiment_with_rollout, "rollout"),
         data=_rollout_payload(
