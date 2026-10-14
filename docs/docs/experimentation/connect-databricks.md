@@ -5,9 +5,9 @@ sidebar_position: 2.5
 description: Store and query experiment events in your own Databricks workspace.
 ---
 
-:::info Enterprise beta
+:::info Beta
 
-Experimentation is in beta on **Enterprise** plans. [Get in touch](https://www.flagsmith.com/contact-us) to join.
+Experimentation is in beta.
 
 :::
 
