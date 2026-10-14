@@ -50,6 +50,13 @@ if TYPE_CHECKING:
 pytestmark = pytest.mark.django_db
 
 
+_ROLLOUT = {
+    "enabled": True,
+    "rollout_percentage": 100,
+    "feature_state_value": {"type": "string", "value": "control"},
+}
+
+
 def _list_url(environment: Environment) -> str:
     return reverse(
         "api-v1:environments:experiments:experiments-list",
@@ -85,6 +92,7 @@ def test_post__valid_multivariate_feature__returns_201(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
+            "experiment_rollout": _ROLLOUT,
             "name": "My experiment",
             "hypothesis": "It will work",
         },
@@ -101,6 +109,32 @@ def test_post__valid_multivariate_feature__returns_201(
     assert data["ended_at"] is None
 
 
+def test_post__no_experiment_rollout__returns_400(
+    admin_client_new: APIClient,
+    environment: Environment,
+    multivariate_feature: Feature,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features(EXPERIMENT_FLAG)
+
+    # When
+    response = admin_client_new.post(
+        _list_url(environment),
+        data={
+            "feature": multivariate_feature.id,
+            "name": "No rollout",
+            "hypothesis": "h",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"experiment_rollout": ["This field is required."]}
+    assert not Experiment.objects.filter(name="No rollout").exists()
+
+
 def test_post__non_multivariate_feature__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
@@ -115,6 +149,7 @@ def test_post__non_multivariate_feature__returns_400(
         _list_url(environment),
         data={
             "feature": feature.id,
+            "experiment_rollout": _ROLLOUT,
             "name": "Bad experiment",
             "hypothesis": "Nope",
         },
@@ -145,6 +180,7 @@ def test_post__feature_from_different_project__returns_400(
         _list_url(environment),
         data={
             "feature": other_feature.id,
+            "experiment_rollout": _ROLLOUT,
             "name": "Wrong project",
             "hypothesis": "Nope",
         },
@@ -170,6 +206,7 @@ def test_post__active_experiment_exists__returns_409(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
+            "experiment_rollout": _ROLLOUT,
             "name": "Duplicate",
             "hypothesis": "Should fail",
         },
@@ -197,6 +234,7 @@ def test_post__completed_experiment_exists__returns_201(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
+            "experiment_rollout": _ROLLOUT,
             "name": "New experiment",
             "hypothesis": "Should work",
         },
@@ -1115,6 +1153,7 @@ def test_post__valid_create__creates_audit_log(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
+            "experiment_rollout": _ROLLOUT,
             "name": "Audit test",
             "hypothesis": "Check audit",
         },
@@ -1122,11 +1161,10 @@ def test_post__valid_create__creates_audit_log(
     )
 
     # Then
-    audit = AuditLog.objects.filter(
-        related_object_type=RelatedObjectType.EXPERIMENT.name
-    ).last()
-    assert audit is not None
-    assert "created" in audit.log
+    assert AuditLog.objects.filter(
+        related_object_type=RelatedObjectType.EXPERIMENT.name,
+        log__contains="created",
+    ).exists()
 
 
 def test_patch__valid_update__creates_audit_log(
@@ -1329,6 +1367,7 @@ def test_post__inline_metric__creates_experiment_metric(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
+            "experiment_rollout": _ROLLOUT,
             "name": "With metric",
             "hypothesis": "It will work",
             "metrics": [
@@ -1368,6 +1407,7 @@ def test_post__metric_from_other_environment__returns_400(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
+            "experiment_rollout": _ROLLOUT,
             "name": "Foreign metric",
             "hypothesis": "Should fail",
             "metrics": [
@@ -1397,6 +1437,7 @@ def test_post__duplicate_metrics__returns_400(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
+            "experiment_rollout": _ROLLOUT,
             "name": "Duplicate metrics",
             "hypothesis": "Should fail",
             "metrics": [
@@ -1427,6 +1468,7 @@ def test_post__invalid_expected_direction__returns_400(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
+            "experiment_rollout": _ROLLOUT,
             "name": "Bad direction",
             "hypothesis": "Should fail",
             "metrics": [
@@ -1537,6 +1579,7 @@ def test_post__concurrent_create_race__returns_409(
         _list_url(environment),
         data={
             "feature": multivariate_feature.id,
+            "experiment_rollout": _ROLLOUT,
             "name": "Race",
             "hypothesis": "Should 409",
         },
