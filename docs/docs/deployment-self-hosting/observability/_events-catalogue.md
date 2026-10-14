@@ -359,8 +359,8 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:476`
- - `api/features/future/services.py:536`
+ - `api/features/future/services.py:477`
+ - `api/features/future/services.py:537`
 
 Attributes:
  - `environment.id`
