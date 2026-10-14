@@ -91,7 +91,7 @@ def write_segment_override(
     priority: int | None = None,
 ) -> FeatureState:
     """Write a live override through the flag API, from data validated by a
-    legacy API, notifying linked issues and pull requests.
+    legacy API, notifying VCS integrations.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
