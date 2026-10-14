@@ -281,8 +281,8 @@ conversion events your applications send, then pick the matching tier.
 
 | Component          | Small (< 100 events/s)                 | Medium (< 1,000 events/s)                     | Large (< 10,000 events/s)                                       |
 | ------------------ | -------------------------------------- | --------------------------------------------- | --------------------------------------------------------------- |
-| Ingestion server   | 2 instances at 0.25 vCPU / 512 MB      | 2 instances at 1 vCPU / 2 GB                  | 2–4 instances at 1 vCPU / 2 GB · Autoscale on CPU               |
-| Warehouse delivery | 1 instance at 0.25 vCPU / 1 GB         | 1 instance at 1 vCPU / 2 GB                   | 2–4 instances at 1 vCPU / 2 GB, up to the topic partition count |
+| Ingestion server   | 2 instances at 1 vCPU / 2 GB           | 2–4 instances at 1 vCPU / 2 GB                | 4–8 instances at 1 vCPU / 2 GB · Autoscale on CPU               |
+| Warehouse delivery | 1 instance at 1 vCPU / 2 GB            | 1 instance at 1 vCPU / 2 GB                   | 2–4 instances at 1 vCPU / 2 GB, up to the topic partition count |
 | Kafka              | 1 broker at 2 vCPU / 4 GB · 50 GB disk | 3 brokers at 2 vCPU / 8 GB · 150 GB disk each | 3+ brokers at 4 vCPU / 16 GB · 1 TB disk each · 24 partitions   |
 | ClickHouse         | 2 vCPU / 8 GB · 40 GB storage          | 4 vCPU / 16 GB · 400 GB storage               | 8–16 vCPU / 32–64 GB · 4 TB storage                             |
 
