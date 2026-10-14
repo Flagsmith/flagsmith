@@ -1,6 +1,6 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Iterable, Sequence
 from itertools import count, islice
 from typing import NamedTuple
 
@@ -21,6 +21,7 @@ from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
     exceeds_segment_override_limit,
 )
+from features.feature_types import MULTIVARIATE
 from features.future.exceptions import (
     DuplicatePriorityError,
     SegmentOverrideNotFoundError,
@@ -104,7 +105,34 @@ def _get_overrides_by_segment_id(
     }
 
 
+def check_variants(feature: Feature, variant_sets: Iterable[Sequence[Variant]]) -> None:
+    """Refuse weighting anything but each of a feature's variants, exactly once,
+    up to 100 in total."""
+    feature_variant_ids: set[int] | None = None
+    for variants in variant_sets:
+        if feature.type != MULTIVARIATE:
+            raise ValidationError("Feature is not multivariate.")
+        given_ids = [variant["id"] for variant in variants]
+        if duplicate_ids := sorted(
+            {id_ for id_ in given_ids if given_ids.count(id_) > 1}
+        ):
+            raise ValidationError(f"Duplicate variant: {duplicate_ids[0]}.")
+        if feature_variant_ids is None:
+            feature_variant_ids = set(
+                feature.multivariate_options.values_list("id", flat=True)
+            )
+        if unknown_ids := sorted(set(given_ids) - feature_variant_ids):
+            raise ValidationError(f"Variant not found: {unknown_ids[0]}.")
+        if feature_variant_ids - set(given_ids):
+            raise ValidationError("Must include all feature's variants.")
+        if (total_weight := sum(variant["weight"] for variant in variants)) > 100:
+            raise ValidationError(
+                f"Total weight must not exceed 100, got {total_weight}."
+            )
+
+
 def _write_variants(feature_state: FeatureState, variants: Sequence[Variant]) -> None:
+    """Weight a feature state's variants, checked first with `check_variants`."""
     weighted = {
         multivariate_value.multivariate_feature_option_id: multivariate_value
         for multivariate_value in feature_state.multivariate_feature_state_values.all()
@@ -391,6 +419,17 @@ def update_flag(
     writes_nothing = not changes if replace else not any(changes.values())
     if writes_nothing:
         return get_flag(environment=environment, feature=feature)
+    check_variants(
+        feature,
+        [
+            variants
+            for flag_state in [
+                changes.get("environment_default", {}),
+                *changes.get("segment_overrides", []),
+            ]
+            if (variants := flag_state.get("variants")) is not None
+        ],
+    )
 
     segments = _OverriddenSegments([], [], [])
 
