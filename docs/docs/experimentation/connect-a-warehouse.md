@@ -16,8 +16,7 @@ warehouse connection, and it must be in place before you can create experiments.
 
 ## Connect the Flagsmith warehouse
 
-The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing to provision or configure, and there is
-no additional cost.
+The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing to provision or configure.
 
 1. Go to **Environment Settings > Warehouse**.
 2. Select **Flagsmith** and click **Enable**, then confirm.
