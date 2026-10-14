@@ -24,7 +24,7 @@ if typing.TYPE_CHECKING:
 
 
 def is_disallowed_host(host: str) -> bool:
-    # Without this, SaaS customers could point a connection at our internal network.
+    # Without this, SaaS customers could point a connection at Flagsmith's internal network.
     return is_saas() and is_internal_address(host, include_shared=True)
 
 
