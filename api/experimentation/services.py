@@ -572,7 +572,7 @@ def transition_experiment_status(
     with transaction.atomic():
         if target_status == ExperimentStatus.RUNNING and not experiment.started_at:
             experiment.started_at = timezone.now()
-            _remove_completed_experiment_rollouts(
+            _remove_superseded_experiment_rollouts(
                 experiment, AuthorData.from_user(user)
             )
         elif target_status == ExperimentStatus.COMPLETED:
@@ -583,19 +583,23 @@ def transition_experiment_status(
     return experiment
 
 
-def _remove_completed_experiment_rollouts(
+def _remove_superseded_experiment_rollouts(
     experiment: Experiment, author: AuthorData
 ) -> None:
-    """Stop completed experiments' rollout overrides shadowing this one's."""
-    completed_experiment_ids = dict(
-        Experiment.objects.filter(
+    """Stop completed or deleted experiments' rollout overrides shadowing this
+    one's."""
+    superseded_experiment_ids = dict(
+        Experiment.objects.all_with_deleted()
+        .filter(
+            Q(status=ExperimentStatus.COMPLETED) | Q(deleted_at__isnull=False),
             feature_id=experiment.feature_id,
             environment_id=experiment.environment_id,
-            status=ExperimentStatus.COMPLETED,
             rollout_segment__is_system_segment=True,
-        ).values_list("rollout_segment_id", "id")
+        )
+        .exclude(id=experiment.id)
+        .values_list("rollout_segment_id", "id")
     )
-    if not completed_experiment_ids:
+    if not superseded_experiment_ids:
         return
     live_segment_ids = {
         feature_segment.segment_id
@@ -603,7 +607,7 @@ def _remove_completed_experiment_rollouts(
             environment=experiment.environment,
             additional_filters=Q(
                 feature_id=experiment.feature_id,
-                feature_segment__segment_id__in=completed_experiment_ids,
+                feature_segment__segment_id__in=superseded_experiment_ids,
                 identity__isnull=True,
             ),
         )
@@ -619,7 +623,7 @@ def _remove_completed_experiment_rollouts(
             experimentation_logger.info(
                 "rollout.superseded",
                 experiment__id=experiment.id,
-                superseded_experiment__id=completed_experiment_ids[segment_id],
+                superseded_experiment__id=superseded_experiment_ids[segment_id],
                 environment__id=experiment.environment_id,
                 feature__id=experiment.feature_id,
             )

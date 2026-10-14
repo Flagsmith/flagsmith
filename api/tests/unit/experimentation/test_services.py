@@ -3673,6 +3673,14 @@ def test_transition_experiment_status__first_start__removes_completed_rollouts( 
         rollout_spec,
         status=ExperimentStatus.COMPLETED,
     )
+    # and a deleted experiment on the same feature whose override is still live
+    deleted = _experiment_with_rollout(
+        environment,
+        multivariate_feature,
+        rollout_spec,
+        status=ExperimentStatus.PAUSED,
+    )
+    deleted.delete()
     # and a new experiment on the same feature, shadowed by the completed one
     new = _experiment_with_rollout(
         environment,
@@ -3693,7 +3701,8 @@ def test_transition_experiment_status__first_start__removes_completed_rollouts( 
     assert _identity_flag_value(identity, multivariate_feature)[1] == (
         new.rollout_segment_id
     )
-    # and only the completed experiment's override on this flag is removed
+    # and only the completed and deleted experiments' overrides on this flag
+    # are removed
     assert _live_override_segment_ids(environment, multivariate_feature) == {
         audience_segment.id,
         new.rollout_segment_id,
@@ -3716,10 +3725,11 @@ def test_transition_experiment_status__first_start__removes_completed_rollouts( 
             "level": "info",
             "event": "rollout.superseded",
             "experiment__id": new.id,
-            "superseded_experiment__id": completed.id,
+            "superseded_experiment__id": superseded.id,
             "environment__id": environment.id,
             "feature__id": multivariate_feature.id,
         }
+        for superseded in (completed, deleted)
     ]
 
 
