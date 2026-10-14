@@ -5,6 +5,7 @@ import typing
 from dataclasses import replace
 
 import structlog
+from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -109,10 +110,13 @@ class _ExposureReadKwargs(typing.TypedDict):
 
 
 def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
-    return get_openfeature_client().get_boolean_value(
-        WAREHOUSE_CONNECTION_FLAG,
-        default_value=False,
-        evaluation_context=organisation.openfeature_evaluation_context,
+    return (
+        settings.EXPERIMENTATION_ENABLED
+        and get_openfeature_client().get_boolean_value(
+            WAREHOUSE_CONNECTION_FLAG,
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        )
     )
 
 
@@ -125,10 +129,13 @@ def is_databricks_warehouse_enabled(organisation: Organisation) -> bool:
 
 
 def is_experiment_feature_enabled(organisation: Organisation) -> bool:
-    return get_openfeature_client().get_boolean_value(
-        EXPERIMENT_FLAG,
-        default_value=False,
-        evaluation_context=organisation.openfeature_evaluation_context,
+    return (
+        settings.EXPERIMENTATION_ENABLED
+        and get_openfeature_client().get_boolean_value(
+            EXPERIMENT_FLAG,
+            default_value=False,
+            evaluation_context=organisation.openfeature_evaluation_context,
+        )
     )
 
 
@@ -922,8 +929,6 @@ def apply_experiment_rollout(experiment: Experiment, spec: RolloutSpec) -> None:
             raise ValidationError(
                 f"Cannot change the rollout of a {experiment.status} experiment."
             )
-        # Validated under the lock, so a concurrent start cannot let an audience
-        # change through the frozen-once-running check on a stale status.
         audience_rules, audience_segment_ids = _resolve_audience(
             experiment, spec.audience
         )

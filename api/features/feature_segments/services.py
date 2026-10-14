@@ -1,11 +1,10 @@
 from django.db import transaction
-from django.db.models import Max, Q
+from django.db.models import F, Max, Q, QuerySet
 from django.utils import timezone
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.feature_segments.mappers import (
-    clears_legacy_flag_value,
     map_feature_state_data_to_segment_override,
 )
 from features.future.mappers import map_flag_value
@@ -19,28 +18,6 @@ from features.versioning.versioning_service import (
 from integrations.vcs.services import dispatch_vcs_on_feature_state_changed
 
 
-def get_segment_overrides(
-    *, environment: Environment, feature: Feature
-) -> dict[int, FeatureState]:
-    """Get the flag's live overrides, by segment ID.
-
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
-    """
-    return {
-        feature_state.feature_segment.segment_id: feature_state
-        for feature_state in get_environment_flags_list(
-            environment,
-            additional_filters=Q(
-                feature_id=feature.id,
-                feature_segment__isnull=False,
-                identity__isnull=True,
-            ),
-            additional_prefetch_related_args=["multivariate_feature_state_values"],
-        )
-        if feature_state.feature_segment
-    }
-
-
 def get_segment_override(
     *, environment: Environment, feature: Feature, segment_id: int
 ) -> FeatureState | None:
@@ -48,13 +25,20 @@ def get_segment_override(
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
-    return get_segment_overrides(environment=environment, feature=feature).get(
-        segment_id
+    overrides = get_environment_flags_list(
+        environment,
+        additional_filters=Q(
+            feature_id=feature.id,
+            feature_segment__segment_id=segment_id,
+            identity__isnull=True,
+        ),
+        additional_prefetch_related_args=["multivariate_feature_state_values"],
     )
+    return overrides[0] if overrides else None
 
 
 def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
-    """Whether a feature segment is the one the flag serves its segment from.
+    """Whether a feature segment is the one the flag serves its segment override from.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
@@ -66,20 +50,41 @@ def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
     return override is not None and override.feature_segment_id == feature_segment.id
 
 
-def get_next_segment_override_priority(
-    *, environment: Environment, feature: Feature
-) -> int:
+def _get_feature_segments(
+    environment: Environment, feature: Feature
+) -> QuerySet[FeatureSegment]:
     version = (
         get_current_live_environment_feature_version(environment.id, feature.id)
         if environment.use_v2_feature_versioning
         else None
     )
-    highest_priority: int | None = FeatureSegment.objects.filter(
+    feature_segments: QuerySet[FeatureSegment] = FeatureSegment.objects.filter(
         environment=environment,
         feature=feature,
         environment_feature_version=version,
+    )
+    return feature_segments
+
+
+def get_next_segment_override_priority(
+    *, environment: Environment, feature: Feature
+) -> int:
+    highest_priority: int | None = _get_feature_segments(
+        environment, feature
     ).aggregate(highest_priority=Max("priority"))["highest_priority"]
     return 0 if highest_priority is None else highest_priority + 1
+
+
+def _make_room_for_segment_override(
+    *, environment: Environment, feature: Feature, segment_id: int, priority: int
+) -> None:
+    """Move the flag's other overrides from a priority on down, if it's taken.
+
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    """
+    others = _get_feature_segments(environment, feature).exclude(segment_id=segment_id)
+    if others.filter(priority=priority).exists():
+        others.filter(priority__gte=priority).update(priority=F("priority") + 1)
 
 
 def writes_live_segment_override(feature_state_data: LegacyFeatureStateData) -> bool:
@@ -88,11 +93,11 @@ def writes_live_segment_override(feature_state_data: LegacyFeatureStateData) -> 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
     live_from = feature_state_data.get("live_from")
-    return not (
-        feature_state_data.get("identity")
-        or feature_state_data.get("environment_feature_version")
-        or feature_state_data.get("change_request")
-        or (live_from and live_from > timezone.now())
+    return (
+        feature_state_data.get("identity") is None
+        and feature_state_data.get("environment_feature_version") is None
+        and feature_state_data.get("change_request") is None
+        and (live_from is None or live_from <= timezone.now())
     )
 
 
@@ -106,11 +111,18 @@ def write_segment_override(
     priority: int | None = None,
 ) -> FeatureState:
     """Write a live override through the flag API, from data validated by a
-    legacy API, notifying linked issues and pull requests.
+    legacy API, notifying VCS integrations.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
     with transaction.atomic():
+        if priority is not None:
+            _make_room_for_segment_override(
+                environment=environment,
+                feature=feature,
+                segment_id=segment_id,
+                priority=priority,
+            )
         update_flag(
             environment=environment,
             feature=feature,
@@ -129,16 +141,6 @@ def write_segment_override(
             environment=environment, feature=feature, segment_id=segment_id
         )
         assert feature_state is not None
-        feature_state_value = feature_state.feature_state_value
-        if clears_legacy_flag_value(feature_state_data) and (
-            map_flag_value(feature_state_value) is not None
-        ):
-            # Legacy APIs write overrides directly only without v2 feature
-            # versioning, so clearing values in place doesn't bypass it.
-            feature_state_value.string_value = None
-            feature_state_value.integer_value = None
-            feature_state_value.boolean_value = None
-            feature_state_value.save()
     dispatch_vcs_on_feature_state_changed(feature_state)
     return feature_state
 
@@ -162,14 +164,9 @@ def is_segment_override_unchanged(
         )
         for multivariate_value in feature_state.multivariate_feature_state_values.all()
     }
-    new_value = (
-        None
-        if clears_legacy_flag_value(feature_state_data)
-        else changes.get("value", value)
-    )
     return (
         changes.get("enabled", feature_state.enabled) == feature_state.enabled
-        and new_value == value
+        and changes.get("value", value) == value
         and all(
             weights.get(variant["id"], 0) == variant["weight"]
             for variant in changes.get("variants", [])

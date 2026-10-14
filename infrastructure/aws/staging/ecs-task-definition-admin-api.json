@@ -38,6 +38,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "EXPERIMENTATION_ENABLED",
+                    "value": "true"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },

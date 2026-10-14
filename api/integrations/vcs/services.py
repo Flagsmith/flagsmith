@@ -1,8 +1,7 @@
 """VCS dispatcher: entrypoints for fanning feature-external-resource
 lifecycle events and feature state changes out to the per-provider
-integration side-effects (GitHub for feature state changes only so far;
-the rest of GitHub and any future provider will land here too — see
-#7315).
+integration side-effects. Not all of them go through here yet — see
+https://github.com/Flagsmith/flagsmith/issues/7315.
 """
 
 import structlog

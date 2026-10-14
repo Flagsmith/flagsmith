@@ -5,9 +5,9 @@ sidebar_position: 2
 description: Enable the managed Flagsmith warehouse to store and query experiment events.
 ---
 
-:::info Enterprise beta
+:::info Beta
 
-Experimentation is in beta on **Enterprise** plans. [Get in touch](https://www.flagsmith.com/contact-us) to join.
+Experimentation is in beta.
 
 :::
 
@@ -16,8 +16,7 @@ warehouse connection, and it must be in place before you can create experiments.
 
 ## Connect the Flagsmith warehouse
 
-The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing to provision or configure, and there is
-no additional cost — it is included in your Enterprise plan.
+The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing to provision or configure.
 
 1. Go to **Environment Settings > Warehouse**.
 2. Select **Flagsmith** and click **Enable**, then confirm.
@@ -59,16 +58,6 @@ Instead of the managed Flagsmith warehouse, you can store experiment events in y
    with your own values. This is a one-off setup step; the same SQL is available to copy from the Flagsmith dashboard.
 
    ```sql
-   -- Create a dedicated user for Flagsmith
-   CREATE USER IF NOT EXISTS <USER>
-       IDENTIFIED WITH sha256_password BY '<CHANGE_ME_PASSWORD>';
-
-   -- Allow it to write and read experiment events
-   GRANT SELECT, INSERT ON flagsmith_exp.events TO <USER>;
-
-   -- Allow it to check the events table exists
-   GRANT SHOW TABLES, SHOW COLUMNS ON flagsmith_exp.* TO <USER>;
-
    -- Create the database and events table
    CREATE DATABASE IF NOT EXISTS flagsmith_exp;
 
@@ -95,6 +84,16 @@ Instead of the managed Flagsmith warehouse, you can store experiment events in y
    ENGINE = MergeTree
    PARTITION BY toYYYYMMDD(timestamp)
    ORDER BY (environment_key, event, feature_name, timestamp, identifier);
+
+   -- Create a dedicated user for Flagsmith
+   CREATE USER IF NOT EXISTS <USER>
+       IDENTIFIED WITH sha256_password BY '<CHANGE_ME_PASSWORD>';
+
+   -- Allow it to write and read experiment events
+   GRANT SELECT, INSERT ON flagsmith_exp.events TO <USER>;
+
+   -- Allow it to check the events table exists
+   GRANT SHOW TABLES, SHOW COLUMNS ON flagsmith_exp.* TO <USER>;
    ```
 
 2. Go to **Environment Settings > Warehouse**, select **ClickHouse** and enter your connection details: host, HTTPS port
