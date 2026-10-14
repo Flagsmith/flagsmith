@@ -1,8 +1,8 @@
 import { FC } from 'react'
 import { StagedDependencyChange } from 'common/types/responses'
 import cn from 'classnames'
-import StateToggle from 'components/modals/create-feature/tabs/FeatureDependenciesTab/StateToggle'
-import Satisfies from 'components/modals/create-feature/tabs/FeatureDependenciesTab/Satisfies'
+import StateToggle from 'components/feature-dependencies/StateToggle'
+import Satisfies from 'components/feature-dependencies/Satisfies'
 import 'components/diff/DiffRow/DiffRow.scss'
 import './DependencyChangesTable.scss'
 import Table, {
