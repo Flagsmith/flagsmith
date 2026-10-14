@@ -2,14 +2,9 @@ import { FC } from 'react'
 import { ProjectFlag } from 'common/types/responses'
 import { EnvironmentPermission } from 'common/types/permissions.types'
 import { useHasPermission } from 'common/providers/Permission'
-import Constants from 'common/constants'
 import Banner from 'components/base/Banner'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
-import FeatureSelect from 'components/FeatureSelect'
-import Icon from 'components/icons/Icon'
-import Link from 'components/base/link'
-import Tooltip from 'components/Tooltip'
 import ModalHR from 'components/modals/ModalHR'
 import BlockedBanner from './BlockedBanner'
 import DependenciesPanel from './DependenciesPanel'
@@ -17,12 +12,9 @@ import DependentFeatures from './DependentFeatures'
 import FeatureDependenciesSkeleton from './FeatureDependenciesSkeleton'
 import PrerequisitesTable from './PrerequisitesTable'
 import { PrerequisitesEmptyState } from './DependenciesEmptyStates'
+import DependenciesIntro from './DependenciesIntro'
+import PrerequisitePicker from './PrerequisitePicker'
 import { usePrerequisites } from './hooks/usePrerequisites'
-
-// Flag dependencies have no docs page of their own yet, so this points at the
-// nearest one that exists.
-export const DEPENDENCIES_DOCS_URL =
-  'https://docs.flagsmith.com/basic-features/managing-features'
 
 type FeatureDependenciesTabProps = {
   environmentId: string
@@ -82,30 +74,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
 
   return (
     <div>
-      <div className='d-flex align-items-center gap-1 mb-2'>
-        <Tooltip
-          title={
-            <h5 className='mb-0'>
-              Flag dependencies <Icon name='info-outlined' />
-            </h5>
-          }
-          place='top'
-        >
-          {Constants.strings.FEATURE_DEPENDENCIES_DESCRIPTION}
-        </Tooltip>
-      </div>
-
-      {/* The rule cannot apply to a flag that cannot have prerequisites, so
-          the empty state explains that case instead. */}
-      {!isPrerequisite && (
-        <div className='text-muted mb-3'>
-          This flag only serves its own value when every prerequisite below is
-          on.{' '}
-          <Link href={DEPENDENCIES_DOCS_URL} target='_blank'>
-            Learn more
-          </Link>
-        </div>
-      )}
+      <DependenciesIntro isPrerequisite={isPrerequisite} />
 
       {/* addingName too: on a first add the picker has closed and no row has
           arrived yet, and the empty state would take the pending row's place. */}
@@ -123,17 +92,14 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
               onSelect={(edge) => onSelectFeature(edge.prerequisite.id)}
               addControl={
                 isOpenForAdding && (
-                  <FeatureSelect
+                  <PrerequisitePicker
                     projectId={projectId}
                     environmentId={environmentId}
+                    featureId={projectFlag.id}
+                    prerequisiteIds={rows.map(
+                      (row) => row.edge.prerequisite.id,
+                    )}
                     disabled={isCreating}
-                    placeholder='Add a prerequisite flag...'
-                    // The API refuses both of these, so keep them out of the
-                    // list.
-                    ignore={[
-                      projectFlag.id,
-                      ...rows.map((row) => row.edge.prerequisite.id),
-                    ]}
                     onChange={onAdd}
                   />
                 )
