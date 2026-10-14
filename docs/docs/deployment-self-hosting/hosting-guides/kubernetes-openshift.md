@@ -148,9 +148,11 @@ The chart supports [Gateway API](https://gateway-api.sigs.k8s.io/) HTTPRoutes as
 Install these independently before enabling HTTPRoutes:
 
 1. **Gateway API CRDs**:
+
    ```bash
    kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/latest/download/standard-install.yaml
    ```
+
 2. **A Gateway controller** (e.g., [Envoy Gateway](https://gateway.envoyproxy.io/), Cilium, Istio)
 3. **A GatewayClass and Gateway resource** in your cluster. For example, using Envoy Gateway:
 
@@ -303,15 +305,15 @@ api:
 
 By default, no resource limits or requests are set.
 
-Our recommended limits are 1vCPU and 2GB RAM for all of our pods, but this might vary depending on your usage pattern 
-and hosting environment. 
+Our recommended limits are 1vCPU and 2GB RAM for all of our pods, but this might vary depending on your usage pattern
+and hosting environment.
 
 ### Replicas
 
-By default, 1 replica of each of the frontend, API, and task processor is used. We recommend tailoring these to your 
-requirements based on expected load, and your hosting environment. As the API will be the most heavily used service, we 
-would recommend adding more replicas to your API than the other services. A standard configuration, with some built in 
-fault tolerance, might look something like: 
+By default, 1 replica of each of the frontend, API, and task processor is used. We recommend tailoring these to your
+requirements based on expected load, and your hosting environment. As the API will be the most heavily used service, we
+would recommend adding more replicas to your API than the other services. A standard configuration, with some built in
+fault tolerance, might look something like:
 
 ```yaml
 frontend:
@@ -466,14 +468,6 @@ GRANT USAGE ON SCHEMA public TO warehouse_delivery;
 GRANT SELECT ON experimentation_delivery_connections TO warehouse_delivery;
 GRANT SELECT, INSERT, UPDATE ON experimentation_warehousedeliverystatus TO warehouse_delivery;
 ```
-
-To turn experimentation on:
-
-1. Set up [Flagsmith on Flagsmith](/deployment-self-hosting/core-configuration/running-flagsmith-on-flagsmith).
-2. In that project, create the flags `experimental_flags` (value `{}`) and `experimentation_warehouse_connection`.
-   Enable both.
-3. In each environment that runs experiments, go to **Environment Settings > Warehouse** and select **Flagsmith**. With
-   warehouse delivery, you can also select **ClickHouse**.
 
 ## Chart Values
 
@@ -709,4 +703,4 @@ To build chart package run:
 
 ```bash
 helm package ./flagsmith
-``` 
+```
