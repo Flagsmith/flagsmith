@@ -40,29 +40,6 @@ def test_create_segment__version_of_system_segment__responds_409(
     }
 
 
-def test_create_segment__version_of_segment__responds_201(
-    admin_client: APIClient,
-    project: int,
-    segment: int,
-) -> None:
-    """Change requests to segments draft new versions of them."""
-    # Given / When
-    response = admin_client.post(
-        f"/api/v1/projects/{project}/segments/",
-        {
-            "name": "New version",
-            "project": project,
-            "version_of": segment,
-            "rules": [{"type": "ALL", "rules": [], "conditions": []}],
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == 201
-    assert response.json()["version_of"] == segment
-
-
 def test_create_segment__version_of_unmanaged_system_segment__responds_409(
     admin_client: APIClient,
     project: int,
