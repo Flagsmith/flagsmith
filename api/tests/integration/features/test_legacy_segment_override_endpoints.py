@@ -652,9 +652,13 @@ def test_update_priorities__one_override_moved_up__moves_others_down(
     feature: int,
     project: int,
     v2_versioning: bool,
+    mocker: Any,
 ) -> None:
     """The Flagsmith Go API client, and Terraform provider, move one at a time."""
     # Given
+    audit_task = mocker.patch(
+        "features.future.services.create_segment_priorities_changed_audit_log"
+    )
     if v2_versioning:
         enable_v2_versioning(environment_id=environment)
     segments = [
@@ -698,6 +702,10 @@ def test_update_priorities__one_override_moved_up__moves_others_down(
             admin_client, environment_api_key, feature
         )
     ] == [(segments[2], 0), (segments[0], 1), (segments[1], 2)]
+    if v2_versioning:
+        audit_task.delay.assert_not_called()
+    else:
+        audit_task.delay.assert_called_once()
 
 
 def test_update_priorities__system_segment_override_moved__responds_409(
