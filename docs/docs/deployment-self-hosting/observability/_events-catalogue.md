@@ -491,7 +491,7 @@ Attributes:
 ### `gitlab.resource.linked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:39`
+ - `api/integrations/vcs/services.py:38`
 
 Attributes:
  - `feature.id`
@@ -502,7 +502,7 @@ Attributes:
 ### `gitlab.resource.unlinked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:74`
+ - `api/integrations/vcs/services.py:73`
 
 Attributes:
  - `feature.id`
