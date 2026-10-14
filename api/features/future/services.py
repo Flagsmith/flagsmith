@@ -192,17 +192,16 @@ def _write_environment_default(
 def _check_shifted_system_segments(
     feature_segment: FeatureSegment, priority: int, *, enabled: bool
 ) -> None:
-    if not enabled:
-        return
-    for shifted in (
-        feature_segment.get_ordering_queryset()
-        .filter(
-            priority__gte=min(feature_segment.priority, priority),
-            priority__lte=max(feature_segment.priority, priority),
-        )
-        .select_related("segment")
-    ):
-        check_segment_is_not_system(shifted.segment)
+    if enabled:
+        for shifted in (
+            feature_segment.get_ordering_queryset()
+            .filter(
+                priority__gte=min(feature_segment.priority, priority),
+                priority__lte=max(feature_segment.priority, priority),
+            )
+            .select_related("segment")
+        ):
+            check_segment_is_not_system(shifted.segment)
 
 
 def _write_segment_override(
