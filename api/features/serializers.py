@@ -62,7 +62,7 @@ from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
 from .feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE
-from .models import Feature, FeatureState
+from .models import Feature, FeatureSegment, FeatureState
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
 
@@ -747,6 +747,19 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
                 "Cannot change the environment of a feature state"
             )
         return environment
+
+    def validate_feature_segment(
+        self, feature_segment: FeatureSegment | None
+    ) -> FeatureSegment | None:
+        feature_segment_id = feature_segment.id if feature_segment else None
+        if (
+            isinstance(self.instance, FeatureState)
+            and self.instance.feature_segment_id != feature_segment_id
+        ):
+            raise serializers.ValidationError(
+                "Cannot change the feature segment of a feature state"
+            )
+        return feature_segment
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         environment = attrs.get("environment") or self.context["environment"]
