@@ -542,7 +542,7 @@ function generateUtilities() {
       const lineHeight = json['line-height'][s.lineHeight].cssVar
       const weight = json['font-weight'][s.weight].cssVar
       lines.push(
-        `.type-${key} { font-size: var(${size}); line-height: var(${lineHeight}); font-weight: var(${weight}); }`,
+        `.font-${key} { font-size: var(${size}); line-height: var(${lineHeight}); font-weight: var(${weight}); }`,
       )
     }
     lines.push('')
