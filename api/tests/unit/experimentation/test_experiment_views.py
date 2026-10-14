@@ -697,7 +697,7 @@ def test_action__start__enables_disabled_rollout(
     assert detail.json()["experiment_rollout"]["enabled"] is True
 
 
-def test_action__start__superseded_predecessor__flags_rollout_superseded(
+def test_action_start__superseded_predecessor__flags_rollout_superseded(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     multivariate_feature: Feature,
