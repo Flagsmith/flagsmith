@@ -221,14 +221,17 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         self,
         environment_id: int,
         document_key: str,
-        identity_uuid: str,
+        featurestate_uuid: str,
     ) -> bool:
         """
         Delete a single identity override document, unless it has been rewritten.
 
         The condition guards against removing an override that was recreated
         between a caller deciding it was stale and this delete landing — without
-        it, a repair would carry the same race as the bug it repairs.
+        it, a repair would carry the same race as the bug it repairs. An override
+        recreated for the same identity keeps the document key and identity uuid
+        but gets a new feature state, so only `featurestate_uuid` distinguishes
+        the instance the caller classified from its replacement.
 
         :return: whether the document was deleted.
         """
@@ -238,7 +241,9 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
                     ENVIRONMENTS_V2_PARTITION_KEY: str(environment_id),
                     ENVIRONMENTS_V2_SORT_KEY: document_key,
                 },
-                ConditionExpression=Attr("identity_uuid").eq(identity_uuid),
+                ConditionExpression=Attr("feature_state.featurestate_uuid").eq(
+                    featurestate_uuid
+                ),
             )
         except ClientError as exc:
             if exc.response["Error"]["Code"] == "ConditionalCheckFailedException":

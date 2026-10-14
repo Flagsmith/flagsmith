@@ -2,6 +2,8 @@ import logging
 import typing
 from contextlib import suppress
 from decimal import Decimal
+from random import uniform
+from time import sleep
 from typing import Generator, Iterable
 
 from boto3.dynamodb.conditions import Attr, Key
@@ -12,11 +14,14 @@ from rest_framework.exceptions import NotFound
 
 from edge_api.identities.search import EdgeIdentitySearchData
 from environments.dynamodb.constants import (
+    BATCH_GET_ITEM_BACKOFF_SECONDS,
+    BATCH_GET_ITEM_MAX_ATTEMPTS,
     DYNAMODB_MAX_BATCH_GET_ITEM_COUNT,
     IDENTITIES_PAGINATION_LIMIT,
     SYSTEM_TRAIT_WRITE_MAX_ATTEMPTS,
 )
 from environments.dynamodb.wrappers.exceptions import (
+    BatchGetItemAttemptsExhausted,
     CapacityBudgetExceeded,
     SystemTraitWriteRaceError,
 )
@@ -32,7 +37,7 @@ from util.mappers import (
     map_engine_identity_to_identity_document,
     map_identity_to_identity_document,
 )
-from util.util import iter_chunks
+from util.util import batched
 
 from .base import BaseDynamoWrapper
 
@@ -94,30 +99,37 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         self,
         composite_keys: Iterable[str],
         projection_expression: str | None = None,
+        consistent_read: bool = False,
     ) -> Generator[dict[str, typing.Any], None, None]:
         """
         Read identity documents in batches, yielding only those that exist.
 
         Keys with no document are silently absent from the results — callers that
-        care about the difference should compare against the keys they asked for.
+        care about the difference should compare against the keys they asked for,
+        and should set `consistent_read` if they act on a document's absence.
         """
         table_name = self.get_table_name()
         assert table_name is not None
-        for chunk in iter_chunks(
-            composite_keys, chunk_size=DYNAMODB_MAX_BATCH_GET_ITEM_COUNT
-        ):
+        for chunk in batched(composite_keys, size=DYNAMODB_MAX_BATCH_GET_ITEM_COUNT):
             keys_and_attributes: "KeysAndAttributesServiceResourceTypeDef" = {
-                "Keys": [{"composite_key": composite_key} for composite_key in chunk]
+                "Keys": [{"composite_key": composite_key} for composite_key in chunk],
+                "ConsistentRead": consistent_read,
             }
             if projection_expression:
                 keys_and_attributes["ProjectionExpression"] = projection_expression
             request_items = {table_name: keys_and_attributes}
-            while request_items:
+            for attempt in range(BATCH_GET_ITEM_MAX_ATTEMPTS):
                 response = self.resource.batch_get_item(RequestItems=request_items)
                 yield from response["Responses"].get(table_name, [])
-                # DynamoDB returns keys it declined to read — e.g. when the
-                # response would exceed 16MB — and expects them to be retried.
-                request_items = response.get("UnprocessedKeys")  # type: ignore[assignment]
+                # DynamoDB returns keys it declined to read — e.g. under
+                # throttling, or when the response would exceed 16MB — and
+                # expects them to be retried with backoff. boto3 retries
+                # throttled calls but not this partial success.
+                if not (request_items := response.get("UnprocessedKeys")):  # type: ignore[assignment]
+                    break
+                sleep(uniform(0, 2**attempt * BATCH_GET_ITEM_BACKOFF_SECONDS))
+            else:
+                raise BatchGetItemAttemptsExhausted(table_name)
 
     def set_system_trait(
         self,

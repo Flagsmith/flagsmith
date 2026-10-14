@@ -15,7 +15,7 @@ from environments.dynamodb.types import (
     IdentityOverrideV2,
 )
 from util.engine_models.identities.models import IdentityModel
-from util.util import iter_chunks
+from util.util import batched
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -74,6 +74,7 @@ def iter_orphaned_identity_overrides(
                 "identifier",
                 "identity_uuid",
                 "feature_state.feature",
+                "feature_state.featurestate_uuid",
             ],
         )
     )
@@ -83,9 +84,9 @@ def iter_orphaned_identity_overrides(
             override_document
         )
 
-    for identifiers in iter_chunks(
+    for identifiers in batched(
         documents_by_identifier,
-        chunk_size=DYNAMODB_MAX_BATCH_GET_ITEM_COUNT,
+        size=DYNAMODB_MAX_BATCH_GET_ITEM_COUNT,
     ):
         identifiers_by_composite_key = {
             IdentityModel.generate_composite_key(
@@ -98,6 +99,9 @@ def iter_orphaned_identity_overrides(
             for identity_document in EdgeIdentity.dynamo_wrapper.iter_items_by_composite_keys(
                 identifiers_by_composite_key,
                 projection_expression="composite_key,identity_uuid,identity_features",
+                # An identity missing from an eventually consistent read would
+                # be classified as deleted, and its live overrides removed.
+                consistent_read=True,
             )
         }
         for composite_key, identifier in identifiers_by_composite_key.items():
@@ -112,6 +116,9 @@ def iter_orphaned_identity_overrides(
                         document_key=override_document["document_key"],
                         identifier=identifier,
                         identity_uuid=override_document["identity_uuid"],
+                        featurestate_uuid=override_document["feature_state"][
+                            "featurestate_uuid"
+                        ],
                         feature_id=int(feature["id"]),
                         feature_name=feature["name"],
                         reason=reason,
@@ -130,7 +137,7 @@ def delete_orphaned_identity_override(
     return ddb_environment_v2_wrapper.delete_identity_override_if_unchanged(
         environment_id=environment_id,
         document_key=orphaned_identity_override.document_key,
-        identity_uuid=orphaned_identity_override.identity_uuid,
+        featurestate_uuid=orphaned_identity_override.featurestate_uuid,
     )
 
 

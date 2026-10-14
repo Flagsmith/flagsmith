@@ -1,4 +1,5 @@
 import uuid
+from typing import Any, cast
 
 import pytest
 from django.core.management import CommandError, call_command
@@ -80,6 +81,15 @@ def _put_identity(
             )
         )
     table.put_item(Item=map_engine_identity_to_identity_document(identity))
+
+
+def _get_featurestate_uuid(
+    table: Table, environment: Environment, document_key: str
+) -> str:
+    item = table.get_item(
+        Key={"environment_id": str(environment.id), "document_key": document_key}
+    )["Item"]
+    return str(cast(dict[str, Any], item["feature_state"])["featurestate_uuid"])
 
 
 def _get_document_keys(table: Table, environment: Environment) -> set[str]:
@@ -245,7 +255,7 @@ def test_delete_orphaned_identity_overrides__no_such_environment__raises_expecte
         call_command(COMMAND, environment_id=environment_id)
 
 
-def test_delete_orphaned_identity_overrides__override_rewritten__skips_deletion(
+def test_delete_orphaned_identity_overrides__override_recreated__skips_deletion(
     flagsmith_environments_v2_table: Table,
     flagsmith_identities_table: Table,
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
@@ -255,8 +265,9 @@ def test_delete_orphaned_identity_overrides__override_rewritten__skips_deletion(
     feature: Feature,
 ) -> None:
     """
-    An override recreated between being read and being deleted must survive —
-    otherwise the repair carries the same race as the bug it repairs.
+    An override recreated for the same identity between being classified and
+    being deleted keeps its document key and identity uuid, so only the feature
+    state uuid distinguishes it from the instance the caller meant to remove.
     """
     # Given
     identity_uuid = str(uuid.uuid4())
@@ -264,21 +275,26 @@ def test_delete_orphaned_identity_overrides__override_rewritten__skips_deletion(
         flagsmith_environments_v2_table,
         environment,
         feature,
-        "rewritten",
+        "recreated",
         identity_uuid,
     )
+    classified_featurestate_uuid = _get_featurestate_uuid(
+        flagsmith_environments_v2_table, environment, document_key
+    )
 
-    # When - the document is rewritten against a different identity, so the
-    # delete's condition no longer holds
-    flagsmith_environments_v2_table.update_item(
-        Key={"environment_id": str(environment.id), "document_key": document_key},
-        UpdateExpression="SET identity_uuid = :uuid",
-        ExpressionAttributeValues={":uuid": str(uuid.uuid4())},
+    # When - the identity re-adds the override, which writes a new feature state
+    # to the same document
+    _put_identity_override(
+        flagsmith_environments_v2_table,
+        environment,
+        feature,
+        "recreated",
+        identity_uuid,
     )
     deleted = dynamodb_wrapper_v2.delete_identity_override_if_unchanged(
         environment_id=environment.id,
         document_key=document_key,
-        identity_uuid=identity_uuid,
+        featurestate_uuid=classified_featurestate_uuid,
     )
 
     # Then

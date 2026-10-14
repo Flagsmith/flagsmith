@@ -21,6 +21,7 @@ class OrphanedIdentityOverride:
     document_key: str
     identifier: str
     identity_uuid: str
+    featurestate_uuid: str
     feature_id: int
     feature_name: str
     reason: OrphanedIdentityOverrideReason
