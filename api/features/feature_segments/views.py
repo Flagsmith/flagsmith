@@ -213,6 +213,9 @@ class FeatureSegmentViewSet(
             feature_segment.id not in live_feature_segment_ids
             for feature_segment in feature_segments
         ):
+            # Not live, i.e. in a change request or a scheduled version, which
+            # `update_flag` can't target yet.
+            # TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/8738
             for feature_segment in moved:
                 check_segment_is_not_system(feature_segment.segment)
             return Response(
