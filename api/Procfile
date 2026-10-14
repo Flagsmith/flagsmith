@@ -1,2 +1,2 @@
 release: python manage.py migrate
-web: gunicorn --bind 0.0.0.0:${PORT:-8000} -w ${GUNICORN_WORKERS:-3} -w ${GUNICORN_THREADS:-2} app.wsgi
+web: gunicorn --bind 0.0.0.0:${PORT:-8000} -w ${GUNICORN_WORKERS:-3} -w ${GUNICORN_THREADS:-2} --keep-alive ${GUNICORN_KEEP_ALIVE:-2} app.wsgi
