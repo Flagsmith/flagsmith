@@ -121,7 +121,7 @@ const ExperimentRolloutCard: FC<ExperimentRolloutCardProps> = ({
       !isValidPercentage(draftRollout) ||
       draftSplit.some((s) => !isValidPercentage(s.percentage_allocation)))
 
-  if (experiment.rollout_superseded) {
+  if (experiment.status === 'completed' && !rollout) {
     return (
       <ContentCard
         compact

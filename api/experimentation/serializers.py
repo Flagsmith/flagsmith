@@ -458,14 +458,6 @@ class ExperimentDetailSerializer(ExperimentListSerializer):
     def get_experiment_rollout(self, experiment: Experiment) -> dict[str, Any] | None:
         return get_experiment_rollout(experiment)
 
-    def to_representation(self, experiment: Experiment) -> dict[str, Any]:
-        data: dict[str, Any] = super().to_representation(experiment)
-        data["rollout_superseded"] = (
-            experiment.rollout_segment_id is not None
-            and data["experiment_rollout"] is None
-        )
-        return data
-
 
 class ExperimentExposuresSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     is_final = serializers.BooleanField(read_only=True)

@@ -697,7 +697,7 @@ def test_action__start__enables_disabled_rollout(
     assert detail.json()["experiment_rollout"]["enabled"] is True
 
 
-def test_action_start__superseded_predecessor__flags_rollout_superseded(
+def test_action_start__superseded_predecessor__enables_rollout(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
     multivariate_feature: Feature,
@@ -726,10 +726,8 @@ def test_action_start__superseded_predecessor__flags_rollout_superseded(
     assert response.status_code == status.HTTP_200_OK
     new_detail = admin_client_new.get(_detail_url(environment, experiment)).json()
     assert new_detail["experiment_rollout"]["enabled"] is True
-    assert new_detail["rollout_superseded"] is False
     old_detail = admin_client_new.get(_detail_url(environment, predecessor)).json()
     assert old_detail["experiment_rollout"] is None
-    assert old_detail["rollout_superseded"] is True
 
 
 def test_action__start_rollout_enable_fails__rolls_back_transition(

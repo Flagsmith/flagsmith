@@ -730,7 +730,6 @@ export type Experiment = {
   started_at: string | null
   ended_at: string | null
   experiment_rollout?: ExperimentRollout
-  rollout_superseded?: boolean
 }
 
 export type ExperimentAudienceMatch = 'any' | 'all'
