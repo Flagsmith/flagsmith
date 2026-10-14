@@ -57,7 +57,6 @@ export type PaidFeature =
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
   | 'RELEASE_PIPELINES'
-  | 'WAREHOUSE'
 
 export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
 
@@ -532,29 +531,6 @@ const Utils = Object.assign({}, BaseUtils, {
         plan = 'enterprise'
         break
       }
-      case 'WAREHOUSE': {
-        const remoteValue = Utils.getFlagsmithJSONValue(
-          'experimentation_warehouse_connection',
-          [],
-        )
-        let remotePlans: string[] = []
-        if (Array.isArray(remoteValue)) {
-          remotePlans = remoteValue
-        } else if (Array.isArray(remoteValue?.allowed_plans)) {
-          remotePlans = remoteValue.allowed_plans
-        }
-        const allowedPlans = [...remotePlans, 'enterprise']
-        const planHierarchy: Plan[] = [
-          'free',
-          'start-up',
-          'scale-up',
-          'enterprise',
-        ]
-        plan =
-          planHierarchy.find((p) => allowedPlans.includes(p)) || 'enterprise'
-        break
-      }
-
       case 'SCHEDULE_FLAGS':
       case 'CREATE_ADDITIONAL_PROJECT':
       case '2FA':

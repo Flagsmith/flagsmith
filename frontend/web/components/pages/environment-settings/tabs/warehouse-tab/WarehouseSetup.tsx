@@ -5,7 +5,6 @@ import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import { ConfigFormData } from './ConfigForm'
 import SelectableCard from 'components/base/SelectableCard'
 import ConfigForm from './ConfigForm'
-import Utils from 'common/utils/utils'
 import ClickHouseConfigForm from './ClickHouseConfigForm'
 import WarehouseSqlSnippet from './WarehouseSqlSnippet'
 import WarehouseSetupSteps from './WarehouseSetupSteps'
@@ -85,11 +84,9 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
   onEnableFlagsmith,
 }) => {
   const { data: version } = useGetBuildVersionQuery({})
-  const configurableTypes = getConfigurableWarehouseTypes({
-    clickhouseEnabled: Utils.getFlagsmithHasFeature('clickhouse_warehouse'),
-    databricksEnabled: Utils.getFlagsmithHasFeature('databricks_warehouse'),
-    isSaas: !!version?.backend?.is_saas,
-  })
+  const configurableTypes = getConfigurableWarehouseTypes(
+    !!version?.backend?.is_saas,
+  )
   const [chosenType, setSelectedType] = useState<WarehouseTypeOption>()
   const selectedType = chosenType ?? configurableTypes[0]
   const isEnabled = (type: WarehouseTypeOption) =>
