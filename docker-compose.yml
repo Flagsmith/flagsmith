@@ -154,7 +154,8 @@ services:
       - |
         set -e
         client="clickhouse-client --host clickhouse --user flagsmith --password password --multiquery"
-        wget -qO- https://raw.githubusercontent.com/Flagsmith/flagsmith/main/experimentation/clickhouse/events.sql | $$client
+        wget -qO /tmp/events.sql https://raw.githubusercontent.com/Flagsmith/flagsmith/main/experimentation/clickhouse/events.sql
+        $$client < /tmp/events.sql
         $$client <<'SQL'
         CREATE TABLE IF NOT EXISTS flagsmith_exp.events_queue (raw String)
         ENGINE = Kafka
