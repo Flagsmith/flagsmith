@@ -39,7 +39,7 @@ def get_segment_override(
 
 
 def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
-    """Whether a feature segment is the one the flag serves its segment from.
+    """Whether a feature segment is the one the flag serves its segment override from.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
