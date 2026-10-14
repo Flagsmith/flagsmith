@@ -2862,8 +2862,20 @@ def test_is_warehouse_type_available__saas__compares_plan_to_minimum(
         (True, {}),
         (True, {"auto_connect_flagsmith": False}),
         (False, {"auto_connect_flagsmith": True}),
+        (
+            True,
+            {
+                "auto_connect_flagsmith": True,
+                "minimum_plans": {"flagsmith": "scale-up"},
+            },
+        ),
     ],
-    ids=["flag-missing", "auto-connect-off", "experimentation-not-deployed"],
+    ids=[
+        "flag-missing",
+        "auto-connect-off",
+        "experimentation-not-deployed",
+        "below-minimum-plan",
+    ],
 )
 @pytest.mark.usefixtures("saas_mode")
 def test_ensure_flagsmith_warehouse_connection__auto_connect_disabled__returns_none(

@@ -145,8 +145,10 @@ def ensure_flagsmith_warehouse_connection(
 ) -> WarehouseConnection | None:
     if not (settings.EXPERIMENTATION_ENABLED and is_saas()):
         return None
-    config = get_warehouses_flag_config(environment.project.organisation)
-    if not config.get("auto_connect_flagsmith"):
+    organisation = environment.project.organisation
+    if not get_warehouses_flag_config(organisation).get("auto_connect_flagsmith"):
+        return None
+    if not is_warehouse_type_available(organisation, WarehouseType.FLAGSMITH):
         return None
 
     if WarehouseConnection.objects.filter(
