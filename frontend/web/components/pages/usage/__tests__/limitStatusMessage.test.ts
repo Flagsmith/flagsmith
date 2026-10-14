@@ -80,8 +80,8 @@ describe('limitStatusMessage', () => {
     expect(title).toBe('Your organisation is restricted')
     expect(body).toBe(
       'You reached your plan limit of 50K API calls on 2 Aug.' +
-        ' Upgrading restores access straight away. Otherwise access returns' +
-        ' once your usage has stayed under the limit for 30 days.',
+        ' If this is due to API usage, access returns after 30 days under' +
+        ' the limit or on upgrade. Otherwise, contact support.',
     )
   })
 
@@ -101,8 +101,10 @@ describe('limitStatusMessage', () => {
       billed,
     )
 
-    // A block set by hand may have no overage, so promise nothing.
-    expect(body).toBe('Contact support to restore access.')
+    expect(body).toBe(
+      'If this is due to API usage, access returns after 30 days under the' +
+        ' limit or on upgrade. Otherwise, contact support.',
+    )
   })
 
   describe('limitStatusNote', () => {
