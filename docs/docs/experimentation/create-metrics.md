@@ -5,9 +5,9 @@ sidebar_position: 3
 description: Define the outcomes your experiments measure, computed from the events your application sends.
 ---
 
-:::info Enterprise beta
+:::info Beta
 
-Experimentation is in beta on **Enterprise** plans. [Get in touch](https://www.flagsmith.com/contact-us) to join.
+Experimentation is in beta.
 
 :::
 
