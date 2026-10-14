@@ -67,7 +67,6 @@ from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
-from features.versioning.dataclasses import MultivariateValueChangeSet
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
@@ -1895,7 +1894,7 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
     admin_user: FFAdminUser,
 ) -> None:
     # Given
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     services.apply_experiment_rollout(
@@ -1905,9 +1904,10 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
             rollout_percentage=42.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 60.0),
-                MultivariateValueChangeSet(option_b.id, 40.0),
+            variants=[
+                {"id": option_a.id, "weight": 60.0},
+                {"id": option_b.id, "weight": 40.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -1947,16 +1947,16 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
     }
-    assert allocations == {option_a.id: 60.0, option_b.id: 40.0}
+    assert allocations == {option_a.id: 60.0, option_b.id: 40.0, option_c.id: 0.0}
 
 
-def test_apply_experiment_rollout__null_default_value__serialised_as_empty_string(
+def test_apply_experiment_rollout__null_default_value__leaves_default_value(
     experiment: Experiment,
     multivariate_options: list[MultivariateFeatureOption],
     admin_user: FFAdminUser,
 ) -> None:
     # Given the environment default has no value stored
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     default_state = FeatureState.objects.get(
         environment=experiment.environment,
         feature=experiment.feature,
@@ -1974,17 +1974,18 @@ def test_apply_experiment_rollout__null_default_value__serialised_as_empty_strin
             rollout_percentage=42.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 60.0),
-                MultivariateValueChangeSet(option_b.id, 40.0),
+            variants=[
+                {"id": option_a.id, "weight": 60.0},
+                {"id": option_b.id, "weight": 40.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
     )
 
-    # Then the default value is not rewritten as the string "None"
+    # Then only the variant weights of the default are written
     default_state.refresh_from_db()
-    assert default_state.get_feature_state_value() == ""
+    assert default_state.get_feature_state_value() is None
 
 
 def test_apply_experiment_rollout__first_rollout__zeroes_default_allocations(
@@ -2003,9 +2004,10 @@ def test_apply_experiment_rollout__first_rollout__zeroes_default_allocations(
             rollout_percentage=42.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 60.0),
-                MultivariateValueChangeSet(option_b.id, 40.0),
+            variants=[
+                {"id": option_a.id, "weight": 60.0},
+                {"id": option_b.id, "weight": 40.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -2035,7 +2037,11 @@ def test_apply_experiment_rollout__first_rollout__zeroes_default_allocations(
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
     }
-    assert override_allocations == {option_a.id: 60.0, option_b.id: 40.0}
+    assert override_allocations == {
+        option_a.id: 60.0,
+        option_b.id: 40.0,
+        option_c.id: 0.0,
+    }
 
 
 def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
@@ -2045,7 +2051,7 @@ def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
 ) -> None:
     # Given
     experiment = experiment_with_rollout
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     default_state = FeatureState.objects.get(
         environment=experiment.environment,
         feature=experiment.feature,
@@ -2065,9 +2071,10 @@ def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
             rollout_percentage=80.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -2091,7 +2098,11 @@ def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
     }
-    assert override_allocations == {option_a.id: 50.0, option_b.id: 50.0}
+    assert override_allocations == {
+        option_a.id: 50.0,
+        option_b.id: 50.0,
+        option_c.id: 0.0,
+    }
 
 
 def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enabled(
@@ -2101,7 +2112,7 @@ def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enab
 ) -> None:
     # Given
     experiment = experiment_with_rollout
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     services.apply_experiment_rollout(
@@ -2111,9 +2122,10 @@ def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enab
             rollout_percentage=80.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -2147,6 +2159,7 @@ def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enab
 
 
 def test_apply_experiment_rollout__completed__raises(
+    multivariate_options: list[MultivariateFeatureOption],
     experiment_with_rollout: Experiment,
     admin_user: FFAdminUser,
 ) -> None:
@@ -2164,7 +2177,9 @@ def test_apply_experiment_rollout__completed__raises(
                 rollout_percentage=50.0,
                 feature_state_value="control",
                 value_type="string",
-                multivariate_values=[],
+                variants=[
+                    {"id": option.id, "weight": 0.0} for option in multivariate_options
+                ],
                 author=AuthorData(user=admin_user),
             ),
         )
@@ -2175,6 +2190,7 @@ def test_apply_experiment_rollout__completed__raises(
     [ExperimentStatus.RUNNING, ExperimentStatus.PAUSED],
 )
 def test_apply_experiment_rollout__running_or_paused__updates_rollout(
+    multivariate_options: list[MultivariateFeatureOption],
     status: ExperimentStatus,
     experiment_with_rollout: Experiment,
     admin_user: FFAdminUser,
@@ -2192,7 +2208,9 @@ def test_apply_experiment_rollout__running_or_paused__updates_rollout(
             rollout_percentage=50.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[],
+            variants=[
+                {"id": option.id, "weight": 0.0} for option in multivariate_options
+            ],
             author=AuthorData(user=admin_user),
         ),
     )
@@ -2208,7 +2226,7 @@ def test_apply_experiment_rollout__duplicate_options__raises(
     admin_user: FFAdminUser,
 ) -> None:
     # Given
-    option_a, _, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When / Then
     with pytest.raises(ValidationError):
@@ -2219,9 +2237,11 @@ def test_apply_experiment_rollout__duplicate_options__raises(
                 rollout_percentage=20.0,
                 feature_state_value="control",
                 value_type="string",
-                multivariate_values=[
-                    MultivariateValueChangeSet(option_a.id, 40.0),
-                    MultivariateValueChangeSet(option_a.id, 60.0),
+                variants=[
+                    {"id": option_a.id, "weight": 40.0},
+                    {"id": option_a.id, "weight": 60.0},
+                    {"id": option_b.id, "weight": 0.0},
+                    {"id": option_c.id, "weight": 0.0},
                 ],
                 author=AuthorData(user=admin_user),
             ),
@@ -2229,6 +2249,7 @@ def test_apply_experiment_rollout__duplicate_options__raises(
 
 
 def test_apply_experiment_rollout__update_flag_fails__rolls_back(
+    multivariate_options: list[MultivariateFeatureOption],
     experiment_with_rollout: Experiment,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -2249,7 +2270,9 @@ def test_apply_experiment_rollout__update_flag_fails__rolls_back(
                 rollout_percentage=80.0,
                 feature_state_value="control",
                 value_type="string",
-                multivariate_values=[],
+                variants=[
+                    {"id": option.id, "weight": 0.0} for option in multivariate_options
+                ],
                 author=AuthorData(user=admin_user),
             ),
         )
@@ -2296,8 +2319,7 @@ def test_apply_experiment_rollout__update_under_v2__rebuilds_environment_documen
     environment = environment_v2_versioning
     environment.project.enable_dynamo_db = True
     environment.project.save()
-
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     experiment = Experiment.objects.create(
         environment=environment,
         feature=multivariate_feature,
@@ -2312,9 +2334,10 @@ def test_apply_experiment_rollout__update_under_v2__rebuilds_environment_documen
             rollout_percentage=rollout_percentage,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         )
@@ -2347,8 +2370,7 @@ def test_apply_experiment_rollout__update_under_v1__rebuilds_environment_documen
     mock_dynamo_env_wrapper = mocker.patch("environments.models.environment_wrapper")
     environment.project.enable_dynamo_db = True
     environment.project.save()
-
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     experiment = Experiment.objects.create(
         environment=environment,
         feature=multivariate_feature,
@@ -2363,9 +2385,10 @@ def test_apply_experiment_rollout__update_under_v1__rebuilds_environment_documen
             rollout_percentage=rollout_percentage,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         )
@@ -2389,7 +2412,7 @@ def test_get_experiment_rollout__rollout_exists__returns_representation(
     multivariate_options: list[MultivariateFeatureOption],
 ) -> None:
     # Given a rollout (20%, options split 50/50, value "control") from the fixture
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     rollout = services.get_experiment_rollout(experiment_with_rollout)
@@ -2402,7 +2425,7 @@ def test_get_experiment_rollout__rollout_exists__returns_representation(
     assert {
         (mv["multivariate_feature_option"], mv["percentage_allocation"])
         for mv in rollout["multivariate_feature_state_values"]
-    } == {(option_a.id, 50.0), (option_b.id, 50.0)}
+    } == {(option_a.id, 50.0), (option_b.id, 50.0), (option_c.id, 0.0)}
 
 
 def test_get_experiment_rollout__no_rollout__returns_none(
@@ -2420,7 +2443,7 @@ def test_get_experiment_rollout__v2_versioning__returns_representation(
     admin_user: FFAdminUser,
 ) -> None:
     # Given a rollout on a v2 environment
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     experiment = Experiment.objects.create(
         environment=environment_v2_versioning,
         feature=multivariate_feature,
@@ -2435,9 +2458,10 @@ def test_get_experiment_rollout__v2_versioning__returns_representation(
             rollout_percentage=30.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 60.0),
-                MultivariateValueChangeSet(option_b.id, 40.0),
+            variants=[
+                {"id": option_a.id, "weight": 60.0},
+                {"id": option_b.id, "weight": 40.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -2452,11 +2476,12 @@ def test_get_experiment_rollout__v2_versioning__returns_representation(
     assert {
         (mv["multivariate_feature_option"], mv["percentage_allocation"])
         for mv in rollout["multivariate_feature_state_values"]
-    } == {(option_a.id, 60.0), (option_b.id, 40.0)}
+    } == {(option_a.id, 60.0), (option_b.id, 40.0), (option_c.id, 0.0)}
     assert rollout["audience"] == {"match": "any", "segments": []}
 
 
 def test_get_experiment_rollout__boolean_value__returns_lowercase_string(
+    multivariate_options: list[MultivariateFeatureOption],
     experiment: Experiment,
     admin_user: FFAdminUser,
 ) -> None:
@@ -2468,7 +2493,9 @@ def test_get_experiment_rollout__boolean_value__returns_lowercase_string(
             rollout_percentage=20.0,
             feature_state_value="true",
             value_type="boolean",
-            multivariate_values=[],
+            variants=[
+                {"id": option.id, "weight": 0.0} for option in multivariate_options
+            ],
             author=AuthorData(user=admin_user),
         ),
     )
@@ -2487,7 +2514,7 @@ def test_enable_experiment_rollout__disabled_rollout__enables_and_preserves_allo
     admin_user: FFAdminUser,
 ) -> None:
     # Given a disabled rollout with a 50/50 multivariate split
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     services.apply_experiment_rollout(
         experiment,
         RolloutSpec(
@@ -2495,9 +2522,10 @@ def test_enable_experiment_rollout__disabled_rollout__enables_and_preserves_allo
             rollout_percentage=20.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -2513,7 +2541,7 @@ def test_enable_experiment_rollout__disabled_rollout__enables_and_preserves_allo
     assert {
         (mv["multivariate_feature_option"], mv["percentage_allocation"])
         for mv in rollout["multivariate_feature_state_values"]
-    } == {(option_a.id, 50.0), (option_b.id, 50.0)}
+    } == {(option_a.id, 50.0), (option_b.id, 50.0), (option_c.id, 0.0)}
 
 
 def test_enable_experiment_rollout__already_enabled__no_op(
@@ -2556,7 +2584,7 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     variant_assignment: VariantAssignmentFixture,
 ) -> None:
     # Given a running experiment whose rollout splits two variants 50/50
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     # The fixture derives an option's value from its percentage, so two of them
     # share a value. Key them so a variant identifies which option won.
     for index, option in enumerate(multivariate_options):
@@ -2574,9 +2602,10 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
         rollout_percentage=50.0,
         feature_state_value="control",
         value_type="string",
-        multivariate_values=[
-            MultivariateValueChangeSet(option_a.id, 50.0),
-            MultivariateValueChangeSet(option_b.id, 50.0),
+        variants=[
+            {"id": option_a.id, "weight": 50.0},
+            {"id": option_b.id, "weight": 50.0},
+            {"id": option_c.id, "weight": 0.0},
         ],
         author=AuthorData(user=admin_user),
     )
@@ -2715,7 +2744,8 @@ def test_verify_warehouse_connection__failure__sets_errored_with_detail(
     )
 
 
-def test_verify_warehouse_connection__internal_host__sets_errored_without_connecting(
+@pytest.mark.usefixtures("saas_mode")
+def test_verify_warehouse_connection__internal_host_on_saas__sets_errored_without_connecting(
     clickhouse_connection: WarehouseConnection,
     mocker: MockerFixture,
 ) -> None:
@@ -3505,14 +3535,18 @@ def experiment_with_audience_rollout(
 ) -> Callable[[str, list[int]], Experiment]:
     """Roll the experiment out to every identity in the given audience, serving
     them all the first variant."""
-    option_a, _, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     def _apply(match: str, segment_ids: list[int]) -> Experiment:
         services.apply_experiment_rollout(
             experiment,
             rollout_spec(
                 rollout_percentage=100.0,
-                multivariate_values=[MultivariateValueChangeSet(option_a.id, 100.0)],
+                variants=[
+                    {"id": option_a.id, "weight": 100.0},
+                    {"id": option_b.id, "weight": 0.0},
+                    {"id": option_c.id, "weight": 0.0},
+                ],
                 audience=AudienceSpec(match=match, segment_ids=segment_ids),
             ),
         )
@@ -3729,7 +3763,9 @@ def test_apply_experiment_rollout__master_api_key_author__attributes_audit_log(
             rollout_percentage=30.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[],
+            variants=[
+                {"id": option.id, "weight": 0.0} for option in multivariate_options
+            ],
             author=AuthorData(api_key=master_api_key),
         ),
     )
@@ -3752,12 +3788,16 @@ def test_apply_experiment_rollout__resubmitted__records_history_only_on_change( 
     django_capture_on_commit_callbacks,
 ) -> None:
     # Given
-    option_a, _, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     def _spec() -> RolloutSpec:
         return rollout_spec(
             rollout_percentage=40.0,
-            multivariate_values=[MultivariateValueChangeSet(option_a.id, 100.0)],
+            variants=[
+                {"id": option_a.id, "weight": 100.0},
+                {"id": option_b.id, "weight": 0.0},
+                {"id": option_c.id, "weight": 0.0},
+            ],
             audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
         )
 

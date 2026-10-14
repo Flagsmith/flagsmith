@@ -14,7 +14,6 @@ from django.core.cache import cache
 from rest_framework import serializers
 from urllib3 import PoolManager
 
-from core.network import is_internal_address
 from experimentation.dataclasses import (
     ExposureBucket,
     ResultsAggregates,
@@ -26,6 +25,7 @@ from experimentation.types import (
     ClickHouseConfig,
     ClickHouseCredentials,
 )
+from experimentation.warehouses.base import is_disallowed_host
 from experimentation.warehouses.cache import (
     CUSTOMER_EVENT_UNAVAILABLE,
     customer_cache_key,
@@ -144,7 +144,7 @@ def delivery_client(
 
     # Re-checked immediately before connecting: DNS may resolve differently
     # than it did at validation time.
-    if is_internal_address(host, include_shared=True):
+    if is_disallowed_host(host):
         raise DeliveryConfigError(
             "Host must not target internal or private network addresses."
         )
@@ -216,7 +216,7 @@ class ClickHouseWarehouse:
             raise serializers.ValidationError(
                 {"config": {"host": "This field is required."}}
             )
-        if is_internal_address(merged["host"], include_shared=True):
+        if is_disallowed_host(merged["host"]):
             raise serializers.ValidationError(
                 {
                     "config": {

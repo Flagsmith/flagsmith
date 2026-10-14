@@ -707,6 +707,40 @@ def test_create_github_comment__segment_override_deleted__posts_deletion_comment
     )
 
 
+def test_create_github_comment__segment_override_deleted_through_flag_api__posts_deletion_comment(
+    segment_override_for_feature_with_value: FeatureState,
+    feature_with_value: Feature,
+    segment: Segment,
+    environment: Environment,
+    github_configuration: GithubConfiguration,
+    github_repository: GitHubRepository,
+    post_request_mock: MagicMock,
+    admin_client_new: APIClient,
+    feature_with_value_external_resource: FeatureExternalResource,
+    mock_github_client_generate_token: MagicMock,
+) -> None:
+    # Given / When
+    response = admin_client_new.delete(
+        f"/api/__future__/environments/{environment.api_key}"
+        f"/features/{feature_with_value.id}/segment-overrides/{segment.id}/"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    post_request_mock.assert_called_with(
+        "https://api.github.com/repos/repositoryownertest/repositorynametest/issues/11/comments",
+        json={
+            "body": "**The Segment Override `segment` for Feature Flag `feature_with_value` was deleted**"
+        },
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )
+
+
 def test_create_github_comment__v2_versioning_segment_override__posts_comment(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,
