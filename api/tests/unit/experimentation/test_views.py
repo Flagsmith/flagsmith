@@ -1269,33 +1269,6 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
         pytest.param(
             {
                 "warehouse_type": "clickhouse",
-                "config": {"host": "127.0.0.1"},
-                "credentials": {"password": "hunter2"},
-            },
-            ("config", "host"),
-            id="loopback_host",
-        ),
-        pytest.param(
-            {
-                "warehouse_type": "clickhouse",
-                "config": {"host": "10.0.0.1"},
-                "credentials": {"password": "hunter2"},
-            },
-            ("config", "host"),
-            id="private_host",
-        ),
-        pytest.param(
-            {
-                "warehouse_type": "clickhouse",
-                "config": {"host": "169.254.169.254"},
-                "credentials": {"password": "hunter2"},
-            },
-            ("config", "host"),
-            id="link_local_host",
-        ),
-        pytest.param(
-            {
-                "warehouse_type": "clickhouse",
                 "config": {"host": "ch.example.com", "port": 0},
                 "credentials": {"password": "hunter2"},
             },
@@ -1419,15 +1392,6 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
             ("config", "warehouse"),
             id="snowflake_non_string_value",
         ),
-        pytest.param(
-            {
-                "warehouse_type": "clickhouse",
-                "config": {"host": "100.64.0.1"},
-                "credentials": {"password": "hunter2"},
-            },
-            ("config", "host"),
-            id="shared_address_space_host",
-        ),
     ],
 )
 def test_post__invalid_payload__returns_400(
@@ -1451,7 +1415,67 @@ def test_post__invalid_payload__returns_400(
     assert error_path[-1] in errors
 
 
-def test_post__clickhouse_hostname_resolves_to_internal_ip__returns_400(
+@pytest.mark.parametrize(
+    "host",
+    [
+        pytest.param("127.0.0.1", id="loopback_host"),
+        pytest.param("10.0.0.1", id="private_host"),
+        pytest.param("169.254.169.254", id="link_local_host"),
+        pytest.param("100.64.0.1", id="shared_address_space_host"),
+    ],
+)
+@pytest.mark.usefixtures("saas_mode")
+def test_post__internal_clickhouse_host_on_saas__returns_400(
+    admin_client: APIClient,
+    enable_features: EnableFeaturesFixture,
+    host: str,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": host},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "host" in response.json()["config"]
+
+
+def test_post__internal_clickhouse_host_on_self_hosted__returns_201(
+    admin_client: APIClient,
+    enable_features: EnableFeaturesFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "10.0.0.1", "port": 8123, "secure": False},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["config"]["host"] == "10.0.0.1"
+
+
+@pytest.mark.usefixtures("saas_mode")
+def test_post__clickhouse_hostname_resolves_to_internal_ip_on_saas__returns_400(
     admin_client: APIClient,
     enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
@@ -1974,13 +1998,8 @@ DATABRICKS_UNAVAILABLE = {
 
 @pytest.fixture()
 def databricks_workspace(
-    mocker: MockerFixture,
     requests_mock: RequestsMockerFixture,
 ) -> RequestsMockerFixture:
-    mocker.patch(
-        "experimentation.warehouses.databricks.is_internal_address",
-        return_value=False,
-    )
     requests_mock.post(
         f"{DATABRICKS_HOST}/oidc/v1/token", json={"access_token": "t0k3n"}
     )

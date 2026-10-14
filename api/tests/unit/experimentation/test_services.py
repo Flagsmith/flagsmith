@@ -71,10 +71,42 @@ from features.versioning.dataclasses import MultivariateValueChangeSet
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
-from tests.types import VariantAssignmentFixture
+from tests.types import EnableFeaturesFixture, VariantAssignmentFixture
 from tests.unit.experimentation.conftest import RolloutSpecFactory
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
+
+
+def test_is_experiment_feature_enabled__experimentation_not_deployed__returns_false(
+    organisation: Organisation,
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    enable_features("experimental_flags")
+    settings.EXPERIMENTATION_ENABLED = False
+
+    # When
+    result = services.is_experiment_feature_enabled(organisation)
+
+    # Then
+    assert result is False
+
+
+def test_is_warehouse_feature_enabled__experimentation_not_deployed__returns_false(
+    organisation: Organisation,
+    enable_features: EnableFeaturesFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    enable_features("experimentation_warehouse_connection")
+    settings.EXPERIMENTATION_ENABLED = False
+
+    # When
+    result = services.is_warehouse_feature_enabled(organisation)
+
+    # Then
+    assert result is False
 
 
 def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
@@ -2683,7 +2715,8 @@ def test_verify_warehouse_connection__failure__sets_errored_with_detail(
     )
 
 
-def test_verify_warehouse_connection__internal_host__sets_errored_without_connecting(
+@pytest.mark.usefixtures("saas_mode")
+def test_verify_warehouse_connection__internal_host_on_saas__sets_errored_without_connecting(
     clickhouse_connection: WarehouseConnection,
     mocker: MockerFixture,
 ) -> None:
