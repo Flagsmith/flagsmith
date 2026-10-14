@@ -9,6 +9,7 @@ from unittest import mock
 import pytest
 from rest_framework.test import APIClient
 
+from features.models import FeatureSegment
 from features.versioning.tasks import enable_v2_versioning
 from tests.integration.helpers import create_mv_option_with_api
 
@@ -561,6 +562,59 @@ def test_delete_feature_segment__system_segment__responds_409(
     assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
         overrides
     )
+
+
+def test_update_feature_state__override_sharing_priority__updates_override(
+    admin_client: APIClient,
+    create_segment_override: Any,
+    default_feature_value: str,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    segment_2: int,
+) -> None:
+    # Given overrides sharing a priority, as legacy reordering could leave them
+    create_segment_override(environment_api_key, feature, segment)
+    create_segment_override(environment_api_key, feature, segment_2, priority=1)
+    FeatureSegment.objects.filter(feature_id=feature).update(priority=0)
+    feature_state_id = _get_segment_override_id(
+        admin_client, environment, feature, segment
+    )
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/features/featurestates/{feature_state_id}/",
+        {
+            "feature": feature,
+            "environment": environment,
+            "enabled": False,
+            "feature_state_value": {"type": "unicode", "string_value": "foo"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert sorted(
+        _get_segment_overrides(admin_client, environment_api_key, feature),
+        key=lambda override: override["segment"]["id"],
+    ) == [
+        {
+            "segment": {"id": segment},
+            "priority": 0,
+            "enabled": False,
+            "value": {"type": "string", "value": "foo"},
+            "variants": [],
+        },
+        {
+            "segment": {"id": segment_2},
+            "priority": 0,
+            "enabled": True,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [],
+        },
+    ]
 
 
 def test_update_feature_state__live_override__updates_override(
