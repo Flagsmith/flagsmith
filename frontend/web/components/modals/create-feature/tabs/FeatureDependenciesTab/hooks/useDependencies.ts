@@ -38,7 +38,7 @@ export const useDependencies = ({
 
   // The edges carry only the prerequisite's name and id, so its current state
   // in this environment comes from the feature list.
-  const featureStates = useFeatureStates(projectId, environmentId)
+  const featureStates = useFeatureStates({ environmentId, projectId })
 
   const rows = useMemo(
     () =>

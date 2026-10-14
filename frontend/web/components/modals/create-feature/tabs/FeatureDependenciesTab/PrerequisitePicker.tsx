@@ -6,8 +6,7 @@ type PrerequisitePickerProps = {
   disabled: boolean
   environmentId: string
   featureId: number
-  // Already prerequisites.
-  prerequisiteIds: number[]
+  existingPrerequisiteIds: number[]
   projectId: number
   onChange: (feature: ProjectFlag) => void
 }
@@ -15,9 +14,9 @@ type PrerequisitePickerProps = {
 const PrerequisitePicker: FC<PrerequisitePickerProps> = ({
   disabled,
   environmentId,
+  existingPrerequisiteIds,
   featureId,
   onChange,
-  prerequisiteIds,
   projectId,
 }) => (
   <FeatureSelect
@@ -26,7 +25,7 @@ const PrerequisitePicker: FC<PrerequisitePickerProps> = ({
     disabled={disabled}
     placeholder='Add a prerequisite flag...'
     // The API refuses both of these, so keep them out of the list.
-    ignore={[featureId, ...prerequisiteIds]}
+    ignore={[featureId, ...existingPrerequisiteIds]}
     onChange={onChange}
   />
 )

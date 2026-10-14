@@ -12,7 +12,7 @@ import DependentFeatures from './DependentFeatures'
 import FeatureDependenciesSkeleton from './FeatureDependenciesSkeleton'
 import PrerequisitesTable from './PrerequisitesTable'
 import { PrerequisitesEmptyState } from './DependenciesEmptyStates'
-import DependenciesIntro from './DependenciesIntro'
+import DependenciesHeader from './DependenciesHeader'
 import PrerequisitePicker from './PrerequisitePicker'
 import { usePrerequisites } from './hooks/usePrerequisites'
 
@@ -74,7 +74,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
 
   return (
     <div>
-      <DependenciesIntro isPrerequisite={isPrerequisite} />
+      <DependenciesHeader isPrerequisite={isPrerequisite} />
 
       {/* addingName too: on a first add the picker has closed and no row has
           arrived yet, and the empty state would take the pending row's place. */}
@@ -96,7 +96,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
                     projectId={projectId}
                     environmentId={environmentId}
                     featureId={projectFlag.id}
-                    prerequisiteIds={rows.map(
+                    existingPrerequisiteIds={rows.map(
                       (row) => row.edge.prerequisite.id,
                     )}
                     disabled={isCreating}

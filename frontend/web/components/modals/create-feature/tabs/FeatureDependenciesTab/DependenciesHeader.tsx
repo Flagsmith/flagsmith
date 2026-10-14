@@ -9,13 +9,15 @@ import Tooltip from 'components/Tooltip'
 const DEPENDENCIES_DOCS_URL =
   'https://docs.flagsmith.com/basic-features/managing-features'
 
-type DependenciesIntroProps = {
+type DependenciesHeaderProps = {
   isPrerequisite: boolean
 }
 
-const DependenciesIntro: FC<DependenciesIntroProps> = ({ isPrerequisite }) => (
+const DependenciesHeader: FC<DependenciesHeaderProps> = ({
+  isPrerequisite,
+}) => (
   <>
-    <div className='d-flex align-items-center gap-1 mb-2'>
+    <div className='d-flex mb-2'>
       <Tooltip
         title={
           <h5 className='mb-0'>
@@ -41,4 +43,4 @@ const DependenciesIntro: FC<DependenciesIntroProps> = ({ isPrerequisite }) => (
   </>
 )
 
-export default DependenciesIntro
+export default DependenciesHeader

@@ -5,15 +5,24 @@ import { ProjectFlag } from 'common/types/responses'
 // Stable, so a memo over the list doesn't rerun while it loads.
 const NO_FEATURES: ProjectFlag[] = []
 
+type UseFeatureStatesArgs = {
+  // The api key, as everywhere else in the UI.
+  environmentId: string
+  projectId: number
+}
+
 // Whether each of a project's features is on in one environment, from the
 // feature list. getFeatureList takes the numeric environment id, not the key.
-export const useFeatureStates = (projectId: number, environmentKey: string) => {
+export const useFeatureStates = ({
+  environmentId,
+  projectId,
+}: UseFeatureStatesArgs) => {
   const {
     error: environmentsError,
     getEnvironmentIdFromKey,
     isLoading: isLoadingEnvironments,
   } = useProjectEnvironments(projectId)
-  const numericEnvId = getEnvironmentIdFromKey(environmentKey)
+  const numericEnvId = getEnvironmentIdFromKey(environmentId)
   const {
     data,
     isError: isFeatureListError,
