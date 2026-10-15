@@ -15,7 +15,7 @@ const ChangeRequestFooter: FC<ChangeRequestFooterProps> = ({
   onCreate,
   onDiscard,
 }) => (
-  <div className='change-request-footer position-sticky bottom-0 d-flex align-items-center gap-2 mt-3 py-3 bg-surface-default'>
+  <div className='change-request-footer position-sticky bottom-0 d-flex align-items-center gap-2 mt-3 p-3 bg-surface-default'>
     <span className='text-secondary me-auto' aria-live='polite'>
       {count} {count === 1 ? 'change' : 'changes'} staged
     </span>
