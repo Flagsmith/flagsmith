@@ -16,6 +16,13 @@ docker-compose -f docker-compose.yml up
 
 Wait for the images to download and run, then visit `http://localhost:8000/`. As a first step, you will need to create a new account at [http://localhost:8000/signup](http://localhost:8000/signup)
 
+To run Flagsmith without [experimentation](#experimentation), use the flags-only file instead:
+
+```bash
+curl -o docker-compose.yml https://raw.githubusercontent.com/Flagsmith/flagsmith/main/docker-compose.flags-only.yml
+docker-compose -f docker-compose.yml up
+```
+
 ## Environment Variables
 
 As well as the Environment Variables specified in the [API](/deployment-self-hosting/core-configuration/environment-variables#api-environment-variables) and [Frontend](/deployment-self-hosting/core-configuration/environment-variables#frontend-environment-variables), you can also specify the following:
@@ -59,6 +66,16 @@ You can then access the admin dashboard at [http://localhost:8000/admin/](http:/
 ### PostgreSQL Database
 
 The REST API stores all its data within a PostgreSQL database. Schema changes will be carried out automatically when upgrading using Django Migrations.
+
+### Experimentation
+
+These containers run [experimentation](/experimentation/connect-a-warehouse):
+
+- **Ingestion server (port 8080)**: receives exposure and conversion events from the SDKs.
+- **Kafka**: queues events between the ingestion server and warehouse delivery.
+- **Warehouse delivery**: writes events to each environment's connected warehouse.
+- **ClickHouse**: a warehouse you can connect from **Environment Settings > Warehouse**, using host `clickhouse`, port
+  `8123`, TLS off, database `flagsmith_exp`, username `flagsmith` and password `password`.
 
 ## Access Flagsmith Remotely
 

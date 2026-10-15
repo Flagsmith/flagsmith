@@ -24,7 +24,7 @@ docker-up:
 
 .PHONY: docker-up-flags-only
 docker-up-flags-only:
-	EXPERIMENTATION_ENABLED=false docker compose up -d flagsmith flagsmith-task-processor
+	docker compose -f docker-compose.flags-only.yml up -d
 
 .PHONY: docker-down
 docker-down:

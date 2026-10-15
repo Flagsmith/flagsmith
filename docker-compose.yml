@@ -33,9 +33,8 @@ x-flagsmith-env: &flagsmith-env
   # EMAIL_PORT: 587 # optional
   # EMAIL_USE_TLS: 'true' # optional
 
-  # To run without experimentation and its services, run:
-  # EXPERIMENTATION_ENABLED=false docker compose up -d flagsmith flagsmith-task-processor
-  EXPERIMENTATION_ENABLED: ${EXPERIMENTATION_ENABLED:-true}
+  # To run without experimentation, use docker-compose.flags-only.yml instead.
+  EXPERIMENTATION_ENABLED: 'true'
 
 volumes:
   pgdata:
