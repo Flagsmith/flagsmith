@@ -1,4 +1,3 @@
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import { service } from 'common/service'
@@ -36,15 +35,6 @@ const dependencyUrl = (query: Req['createFeatureDependency']) =>
     `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`,
     query.changeRequestId,
   )
-
-// The API cannot list these yet, so the pending section reports an error
-// rather than claim nothing is pending.
-const notListedYet: { error: FetchBaseQueryError } = {
-  error: {
-    error: 'The API does not list staged dependencies yet.',
-    status: 'CUSTOM_ERROR',
-  },
-}
 
 const pendingTags = (featureId: number): DependencyTag[] => [
   { id: `PENDING-${featureId}`, type: 'FeatureDependency' },
@@ -109,14 +99,6 @@ export const featureDependencyService = service
           url: dependencyUrl(query),
         }),
       }),
-      // Will be the change requests listed by feature.
-      getChangeRequestIdsStaging: builder.query<
-        Res['changeRequestIdsStaging'],
-        Req['getChangeRequestIdsStaging']
-      >({
-        providesTags: (res, err, query) => pendingTags(query.featureId),
-        queryFn: () => notListedYet,
-      }),
       getFeatureDependencies: builder.query<
         Res['featureDependencies'],
         Req['getFeatureDependencies']
@@ -141,6 +123,34 @@ export const featureDependencyService = service
         query: (query: Req['getFeatureDependents']) => ({
           url: `environments/${query.environmentId}/features/${query.featureId}/dependents/`,
         }),
+      }),
+      // Each change request's dependencies as if it were live, in one query so
+      // the caller can drop those that change none.
+      getPendingFeatureDependencies: builder.query<
+        Res['pendingFeatureDependencies'],
+        Req['getPendingFeatureDependencies']
+      >({
+        providesTags: (res, err, query) => pendingTags(query.featureId),
+        queryFn: async (query, _, _2, baseQuery) => {
+          const responses = await Promise.all(
+            query.changeRequestIds.map((changeRequestId) =>
+              baseQuery({
+                url: withChangeRequest(
+                  `environments/${query.environmentId}/features/${query.featureId}/dependencies/`,
+                  changeRequestId,
+                ),
+              }),
+            ),
+          )
+          const failed = responses.find((response) => response.error)
+          if (failed?.error) return { error: failed.error }
+          return {
+            data: responses.map((response, index) => ({
+              changeRequestId: query.changeRequestIds[index],
+              results: (response.data as Res['featureDependencies']).results,
+            })),
+          }
+        },
       }),
       // END OF ENDPOINTS
     }),
@@ -207,9 +217,9 @@ export async function getFeatureDependents(
 export const {
   useCreateFeatureDependencyMutation,
   useDeleteFeatureDependencyMutation,
-  useGetChangeRequestIdsStagingQuery,
   useGetFeatureDependenciesQuery,
   useGetFeatureDependentsQuery,
+  useGetPendingFeatureDependenciesQuery,
   // END OF EXPORTS
 } = featureDependencyService
 
