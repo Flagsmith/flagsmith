@@ -2,7 +2,8 @@
 title: Connect a Warehouse
 sidebar_label: Connect a Warehouse
 sidebar_position: 2
-description: Choose where experiment events are stored, the managed Flagsmith warehouse or your own.
+description:
+ Choose where experiment events are stored, the managed Flagsmith warehouse or your own ClickHouse or Databricks.
 ---
 
 :::info Beta
@@ -19,6 +20,13 @@ warehouse connection, and it must be in place before you can create experiments.
 The managed Flagsmith warehouse is only available on Flagsmith Cloud. When self-hosting, connect your own warehouse as
 described below, and deploy event ingestion and warehouse delivery, for example with the
 [Helm chart](/deployment-self-hosting/hosting-guides/kubernetes-openshift#experimentation).
+
+:::
+
+:::note Plans
+
+On Flagsmith Cloud, connecting your own ClickHouse or Databricks requires a
+[Scale-Up or Enterprise subscription](https://www.flagsmith.com/pricing). Self-hosted Flagsmith has no plan restriction.
 
 :::
 
@@ -55,7 +63,8 @@ The current status is shown on the warehouse card in **Environment Settings > Wa
 - **Created**: the connection exists but no events have been received yet.
 - **Pending Connection**: waiting for the first event to arrive.
 - **Connected**: events have been received; you are ready to run experiments.
-- **Errored**: something went wrong; [contact support](/support/).
+- **Errored**: the card shows the reason. For Databricks, see
+  [Troubleshooting](/experimentation/connect-databricks#troubleshooting); otherwise [contact support](/support/).
 
 ## Bring your own ClickHouse
 
@@ -117,7 +126,11 @@ Connections use the ClickHouse HTTP(S) interface, with TLS enabled by default.
 
 Experiment results and exposures are computed from your ClickHouse instance.
 
+## Bring your own Databricks
+
+You can also store experiment events in your own **Databricks** workspace, and Flagsmith computes results there. See
+[Connect Databricks](/experimentation/connect-databricks) for setup and troubleshooting.
+
 ## Coming soon
 
-Bring your own warehouse: connections for **Snowflake**, **BigQuery** and **Databricks**, so experiment results are
-computed directly in your own data platform.
+Bring your own warehouse: connections for **Snowflake** and **BigQuery**.
