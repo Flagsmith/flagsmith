@@ -37,7 +37,6 @@ import UserSelect from 'components/UserSelect'
 import MyGroupsSelect from 'components/MyGroupsSelect'
 import Panel from 'components/base/grid/Panel'
 import DiffChangeRequest from 'components/diff/DiffChangeRequest'
-import DiffDependencies from 'components/feature-dependencies/DiffDependencies'
 import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -408,15 +407,6 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
                 projectId={projectId}
               />
             ) : null}
-            {Utils.getFlagsmithHasFeature(
-              'flag_dependencies_change_requests',
-            ) && (
-              <DiffDependencies
-                changeRequest={changeRequest}
-                environmentId={environmentId}
-                projectId={projectId}
-              />
-            )}
           </div>
         }
       />

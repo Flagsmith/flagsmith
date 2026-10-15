@@ -2,6 +2,7 @@ import React, { FC, useEffect, useState } from 'react'
 import {
   FeatureConflict,
   FeatureStateWithConflict,
+  StagedDependencyChange,
 } from 'common/types/responses'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
@@ -20,6 +21,8 @@ import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/icons/Icon'
 import WarningMessage from 'components/WarningMessage'
 import { Link } from 'react-router-dom'
+import Banner from 'components/base/Banner'
+import DependencyChangesTable from 'components/feature-dependencies/DependencyChangesTable'
 
 type FeatureDiffType = {
   oldState: FeatureStateWithConflict[]
@@ -33,10 +36,17 @@ type FeatureDiffType = {
   disableSegments?: boolean
   oldEnvName?: string
   newEnvName?: string
+  // A change request's prerequisite changes, shown in their own tab.
+  dependencies?: {
+    changes?: StagedDependencyChange[]
+    isError: boolean
+    isEnabled?: (prerequisiteId: number) => boolean
+  }
 }
 type ViewMode = 'combined' | 'new' | 'old'
 const DiffFeature: FC<FeatureDiffType> = ({
   conflicts,
+  dependencies,
   disableSegments,
   environmentId,
   featureId,
@@ -77,11 +87,20 @@ const DiffFeature: FC<FeatureDiffType> = ({
   const variationDiffs = getVariationDiff(oldEnv, newEnv)
   const totalSegmentChanges = segmentDiffs?.totalChanges
   const totalVariationChanges = variationDiffs?.totalChanges
+  const totalDependencyChanges = dependencies?.changes?.length ?? 0
   useEffect(() => {
-    if (!totalChanges && (totalSegmentChanges || totalVariationChanges)) {
+    if (
+      !totalChanges &&
+      (totalSegmentChanges || totalVariationChanges || totalDependencyChanges)
+    ) {
       setValue(1)
     }
-  }, [totalSegmentChanges, totalVariationChanges, totalChanges])
+  }, [
+    totalSegmentChanges,
+    totalVariationChanges,
+    totalDependencyChanges,
+    totalChanges,
+  ])
   const hideValue =
     !totalChanges && (diff.newValue === null || diff.newValue === undefined)
   const viewOptions = [
@@ -243,6 +262,31 @@ const DiffFeature: FC<FeatureDiffType> = ({
                   environmentId={environmentId}
                   projectFlag={projectFlag}
                 />
+              </TabItem>
+            )}
+            {(!!totalDependencyChanges || dependencies?.isError) && (
+              <TabItem
+                className={'p-0'}
+                tabLabel={
+                  <div className='d-flex justify-content-center gap-1 align-items-center'>
+                    Dependencies
+                    {!!totalDependencyChanges && (
+                      <span className='unread'>{totalDependencyChanges}</span>
+                    )}
+                  </div>
+                }
+              >
+                {dependencies?.isError ? (
+                  <Banner type='error' className='mt-4'>
+                    Could not load the dependency changes in this change
+                    request.
+                  </Banner>
+                ) : (
+                  <DependencyChangesTable
+                    changes={dependencies?.changes ?? []}
+                    isEnabled={dependencies?.isEnabled}
+                  />
+                )}
               </TabItem>
             )}
           </Tabs>
