@@ -8809,71 +8809,6 @@ paths:
         - Master API Key: []
       tags:
         - Features
-    put:
-      operationId: api_v1_features_feature_segments_update
-      parameters:
-        - name: id
-          in: path
-          description: A unique integer value identifying this feature segment.
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FeatureSegmentCreate'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/FeatureSegmentCreate'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/FeatureSegmentCreate'
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeatureSegmentCreate'
-      security:
-        - tokenAuth: []
-        - Master API Key: []
-      tags:
-        - Features
-    patch:
-      operationId: api_v1_features_feature_segments_partial_update
-      parameters:
-        - name: id
-          in: path
-          description: A unique integer value identifying this feature segment.
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedFeatureSegmentCreate'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedFeatureSegmentCreate'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedFeatureSegmentCreate'
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeatureSegmentCreate'
-      security:
-        - tokenAuth: []
-        - Master API Key: []
-      tags:
-        - Features
     delete:
       operationId: delete_feature_segment
       description: 'Deletes a segment override. Applies to environments without v2 feature versioning (use_v2_feature_versioning: false).'
@@ -25943,25 +25878,6 @@ components:
             - type: 'null'
         feature:
           type: integer
-    PatchedFeatureSegmentCreate:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        uuid:
-          type: string
-          format: uuid
-          readOnly: true
-        feature:
-          type: integer
-        segment:
-          type: integer
-        environment:
-          type: integer
-        priority:
-          type: integer
-          readOnly: true
     PatchedFeatureStateSerializerCreate:
       type: object
       properties:
