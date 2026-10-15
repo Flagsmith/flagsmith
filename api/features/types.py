@@ -34,7 +34,7 @@ class FeatureEngineMetadata(TypedDict):
 class LegacyFeatureStateValueData(TypedDict, total=False):
     """A feature state value, as validated by the legacy feature state APIs.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
 
     type: str
@@ -46,7 +46,7 @@ class LegacyFeatureStateValueData(TypedDict, total=False):
 class LegacyMultivariateFeatureStateValueData(TypedDict):
     """A variant weight, as validated by the legacy feature state APIs.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
 
     multivariate_feature_option: "MultivariateFeatureOption"
@@ -56,7 +56,7 @@ class LegacyMultivariateFeatureStateValueData(TypedDict):
 class LegacyFeatureStateData(TypedDict, total=False):
     """A feature state, as validated by the legacy feature state APIs.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
 
     enabled: bool
