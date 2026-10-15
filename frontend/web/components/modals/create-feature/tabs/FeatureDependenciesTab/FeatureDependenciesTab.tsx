@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import { ProjectFlag } from 'common/types/responses'
 import { EnvironmentPermission } from 'common/types/permissions.types'
 import { useHasPermission } from 'common/providers/Permission'
@@ -28,6 +28,8 @@ type FeatureDependenciesTabProps = {
   projectFlag: ProjectFlag
   requiresChangeRequests: boolean
   isVersioned: boolean
+  // Held changes are lost when the modal closes, so the modal needs to know.
+  onDirtyChange?: (isDirty: boolean) => void
   // Opens another feature's modal on this tab.
   onSelectFeature: (featureId: number) => void
 }
@@ -36,6 +38,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   environmentId,
   environmentName,
   isVersioned,
+  onDirtyChange,
   onSelectFeature,
   projectFlag,
   projectId,
@@ -79,6 +82,11 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   })
   // Held while submitting, so a change can't miss the change request.
   const canManage = permission && mode !== 'readOnly' && !staging.isSubmitting
+  const isDirty = !!staging.staged.length
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+    return () => onDirtyChange?.(false)
+  }, [isDirty, onDirtyChange])
 
   // Without the permission, canManage is false, so the add button and every
   // bin would appear a moment after the rows.
