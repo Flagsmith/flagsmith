@@ -1,7 +1,9 @@
 import { FC, ReactNode, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
-import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
+import AccountStore from 'common/stores/account-store'
+import Utils from 'common/utils/utils'
+import PlanBasedBanner from 'components/PlanBasedAccess'
 import { ConfigFormData } from './ConfigForm'
 import SelectableCard from 'components/base/SelectableCard'
 import ConfigForm from './ConfigForm'
@@ -14,8 +16,13 @@ import DatabricksConfigForm from './DatabricksConfigForm'
 import { getDatabricksSetupSql } from './databricksSetupSql'
 import { DatabricksFormData } from './databricksConfig'
 import {
-  getConfigurableWarehouseTypes,
+  getMinimumPlans,
+  getPlanAvailabilityMessage,
+  getWarehouseMinimumPlan,
+  getWarehouseTypeStatus,
+  WAREHOUSES_FLAG,
   WarehouseTypeOption,
+  WarehouseTypeStatus,
 } from './warehouseTypes'
 import './WarehouseSetup.scss'
 
@@ -75,6 +82,12 @@ const WAREHOUSE_TYPE_CARDS: WarehouseTypeCard[] = [
   },
 ]
 
+const STATUS_ORDER: Record<WarehouseTypeStatus, number> = {
+  'available': 0,
+  'coming-soon': 2,
+  'plan-gated': 1,
+}
+
 const WarehouseSetup: FC<WarehouseSetupProps> = ({
   environmentId,
   isCreating,
@@ -83,18 +96,31 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
   onCreateSnowflake,
   onEnableFlagsmith,
 }) => {
-  const { data: version } = useGetBuildVersionQuery({})
-  const configurableTypes = getConfigurableWarehouseTypes(
-    !!version?.backend?.is_saas,
+  const isSaas = !!Utils.isSaas()
+  const minimumPlans = getMinimumPlans({
+    enabled: Utils.getFlagsmithHasFeature(WAREHOUSES_FLAG),
+    value: Utils.getFlagsmithValue(WAREHOUSES_FLAG),
+  })
+  const gate = {
+    isSaas,
+    minimumPlans,
+    planId: AccountStore.getActiveOrgPlan(),
+  }
+  const statusOf = (type: WarehouseTypeOption) =>
+    getWarehouseTypeStatus(type, gate)
+  const typeCards = WAREHOUSE_TYPE_CARDS.filter(
+    ({ type }) => type !== 'flagsmith' || isSaas,
+  ).sort(
+    (a, b) => STATUS_ORDER[statusOf(a.type)] - STATUS_ORDER[statusOf(b.type)],
   )
   const [chosenType, setSelectedType] = useState<WarehouseTypeOption>()
-  const selectedType = chosenType ?? configurableTypes[0]
-  const isEnabled = (type: WarehouseTypeOption) =>
-    configurableTypes.includes(type)
-  // Other unavailable types still show, as "Coming Soon".
-  const typeCards = WAREHOUSE_TYPE_CARDS.filter(
-    ({ type }) => type !== 'flagsmith' || isEnabled(type),
-  ).sort((a, b) => Number(isEnabled(b.type)) - Number(isEnabled(a.type)))
+  const selectedType = chosenType ?? typeCards[0].type
+  const selectedStatus = statusOf(selectedType)
+  const selectedMinimumPlan = getWarehouseMinimumPlan(
+    selectedType,
+    minimumPlans,
+  )
+  const activeType = selectedStatus === 'available' ? selectedType : undefined
 
   return (
     <div className='warehouse-setup'>
@@ -102,7 +128,8 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
         <h5 className='mb-2'>Warehouse Type</h5>
         <div className='warehouse-setup__type-row'>
           {typeCards.map(({ description, icon, title, type }) => {
-            const enabled = isEnabled(type)
+            const status = statusOf(type)
+            const comingSoon = status === 'coming-soon'
             return (
               <div key={type} className='warehouse-setup__type-card'>
                 <SelectableCard
@@ -110,13 +137,23 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
                   title={title}
                   description={description}
                   selected={selectedType === type}
-                  onClick={() => enabled && setSelectedType(type)}
-                  disabled={!enabled}
+                  onClick={() => !comingSoon && setSelectedType(type)}
+                  disabled={comingSoon}
                 />
-                {!enabled && (
-                  <span className='warehouse-setup__coming-soon fs-captionXSmall'>
+                {comingSoon && (
+                  <span className='warehouse-setup__type-badge warehouse-setup__coming-soon fs-captionXSmall'>
                     Coming Soon
                   </span>
+                )}
+                {status === 'plan-gated' && (
+                  <div className='warehouse-setup__type-badge pe-none'>
+                    <PlanBasedBanner
+                      feature='WAREHOUSE'
+                      theme='badge'
+                      requiredPlan={getWarehouseMinimumPlan(type, minimumPlans)}
+                      badgeAsLink={false}
+                    />
+                  </div>
                 )}
               </div>
             )
@@ -124,7 +161,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
         </div>
       </div>
 
-      {selectedType === 'flagsmith' && (
+      {activeType === 'flagsmith' && (
         <div className='warehouse-setup__flagsmith-card'>
           <p className='warehouse-setup__flagsmith-description'>
             Flagsmith manages and hosts the data warehouse for your environment,
@@ -144,14 +181,14 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
         </div>
       )}
 
-      {selectedType === 'snowflake' && (
+      {activeType === 'snowflake' && (
         <ConfigForm
           onSave={onCreateSnowflake}
           onCancel={() => setSelectedType(undefined)}
         />
       )}
 
-      {selectedType === 'clickhouse' && (
+      {activeType === 'clickhouse' && (
         <WarehouseSetupSteps
           configure={
             <>
@@ -172,7 +209,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
         </WarehouseSetupSteps>
       )}
 
-      {selectedType === 'databricks' && (
+      {activeType === 'databricks' && (
         <WarehouseSetupSteps
           configure={
             <>
@@ -219,7 +256,16 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
         </WarehouseSetupSteps>
       )}
 
-      {!configurableTypes.includes(selectedType) && (
+      {selectedStatus === 'plan-gated' && (
+        <PlanBasedBanner
+          feature='WAREHOUSE'
+          theme='description'
+          requiredPlan={selectedMinimumPlan}
+          title={`${getPlanAvailabilityMessage(selectedMinimumPlan)}.`}
+        />
+      )}
+
+      {selectedStatus === 'coming-soon' && (
         <div className='warehouse-setup__flagsmith-card'>
           <p className='warehouse-setup__flagsmith-description'>
             Coming soon. This warehouse type is not yet available.

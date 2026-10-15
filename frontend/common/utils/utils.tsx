@@ -57,18 +57,13 @@ export type PaidFeature =
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
   | 'RELEASE_PIPELINES'
+  | 'WAREHOUSE'
 
 export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
 
-// Define a type for plan categories
-type Plan = 'free' | 'start-up' | 'scale-up' | 'enterprise' | null
-
-export const planNames = {
-  enterprise: 'Enterprise',
-  free: 'Free',
-  scaleUp: 'Scale-Up',
-  startup: 'Startup',
-}
+export { planNames } from './plans'
+export type { Plan } from './plans'
+import { Plan, planNames } from './plans'
 import BaseUtils from './base/_utils'
 import { copyToClipboard } from './copyToClipboard'
 const Utils = Object.assign({}, BaseUtils, {
