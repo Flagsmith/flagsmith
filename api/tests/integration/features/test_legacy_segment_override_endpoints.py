@@ -385,7 +385,6 @@ def test_create_segment_override__system_segment__responds_409(
 
 def test_create_feature_segment_then_feature_state__new_segment__creates_override(
     admin_client: APIClient,
-    default_feature_value: str,
     environment: int,
     environment_api_key: str,
     feature: int,
@@ -423,15 +422,7 @@ def test_create_feature_segment_then_feature_state__new_segment__creates_overrid
         "environment": environment,
         "priority": 0,
     }
-    assert feature_segment_overrides == [
-        {
-            "segment": {"id": segment},
-            "priority": 0,
-            "enabled": False,
-            "value": {"type": "string", "value": default_feature_value},
-            "variants": [],
-        },
-    ]
+    assert feature_segment_overrides == []
     assert feature_state_response.status_code == 201
     assert feature_state_response.json() == {
         "id": _get_segment_override_id(admin_client, environment, feature, segment),
@@ -500,20 +491,29 @@ def test_create_feature_segment__v2_versioning__leaves_flag_as_is(
 
 def test_create_feature_segment__existing_override__responds_400(
     admin_client: APIClient,
+    create_segment_override: Any,
     environment: int,
+    environment_api_key: str,
     feature: int,
-    system_segment: int,
+    segment: int,
 ) -> None:
-    # Given / When
+    # Given
+    create_segment_override(environment_api_key, feature, segment)
+    overrides = _get_segment_overrides(admin_client, environment_api_key, feature)
+
+    # When
     response = admin_client.post(
         "/api/v1/features/feature-segments/",
-        {"feature": feature, "segment": system_segment, "environment": environment},
+        {"feature": feature, "segment": segment, "environment": environment},
         format="json",
     )
 
     # Then
     assert response.status_code == 400
     assert response.json() == ["The flag is already overridden for this segment."]
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
+        overrides
+    )
 
 
 @pytest.mark.parametrize("v2_versioning", [False, True])
