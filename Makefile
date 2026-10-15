@@ -17,15 +17,3 @@ lint:
 	$(MAKE) -C api lint
 	$(MAKE) -C docs lint
 	$(MAKE) -C frontend lint
-
-.PHONY: docker-up
-docker-up:
-	docker compose up -d
-
-.PHONY: docker-up-flags-only
-docker-up-flags-only:
-	docker compose -f docker-compose.flags-only.yml up -d
-
-.PHONY: docker-down
-docker-down:
-	docker compose down
