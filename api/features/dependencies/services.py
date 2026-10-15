@@ -363,7 +363,9 @@ def _get_dependency_edges_to_validate(
     edges = _get_dependency_edges(
         get_live_overrides(include_scheduled=True).filter(environment=environment)
     )
-    _apply_change_sets(edges, _get_scheduled_change_sets(environment))
+    _apply_change_sets(  # Scheduled deletions leave edges live until they publish.
+        edges, _get_scheduled_change_sets(environment), include_deletions=False
+    )
     if change_request is not None:
         _apply_change_sets(edges, change_request.change_sets.all())
     return edges
@@ -382,11 +384,15 @@ def _get_live_dependency_edges(
 def _apply_change_sets(
     edges: dict[FeatureName, list[DependencyEdge]],
     change_sets: "QuerySet[VersionChangeSet]",
+    *,
+    include_deletions: bool = True,
 ) -> None:
     for change_set in change_sets.select_related("feature").order_by("live_from", "id"):
         feature = change_set.feature
-        deleted_segment_ids = set(
-            change_set.get_parsed_segment_ids_to_delete_overrides()
+        deleted_segment_ids = (
+            set(change_set.get_parsed_segment_ids_to_delete_overrides())
+            if include_deletions
+            else set()
         )
         feature_edges = [
             edge
