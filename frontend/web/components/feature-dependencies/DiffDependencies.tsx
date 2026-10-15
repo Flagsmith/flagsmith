@@ -1,20 +1,36 @@
 import { FC } from 'react'
-import { useGetFeatureIdsStagedQuery } from 'common/services/useFeatureDependency'
+import { ChangeRequest } from 'common/types/responses'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import { useFeatureStates } from 'common/hooks/useFeatureStates'
-import ChangeRequestDependencyChanges from './ChangeRequestDependencyChanges'
+import DependencyChangesTable from './DependencyChangesTable'
+import { useDependencyChanges } from './useDependencyChanges'
 import Panel from 'components/base/grid/Panel'
 import ErrorMessage from 'components/ErrorMessage'
 
 type DiffDependenciesProps = {
-  changeRequestId: number
+  changeRequest: ChangeRequest
   environmentId: string
   projectId: string
 }
 
-const FeatureDependencyChanges: FC<
-  DiffDependenciesProps & { featureId: number }
-> = ({ changeRequestId, environmentId, featureId, projectId }) => {
+type FeatureDependencyChangesProps = {
+  changeRequestId: number
+  environmentId: string
+  featureId: number
+  projectId: string
+}
+
+const FeatureDependencyChanges: FC<FeatureDependencyChangesProps> = ({
+  changeRequestId,
+  environmentId,
+  featureId,
+  projectId,
+}) => {
+  const { changes, isError } = useDependencyChanges({
+    changeRequestId,
+    environmentId,
+    featureId,
+  })
   const { data: feature } = useGetProjectFlagQuery({
     id: featureId,
     project: Number(projectId),
@@ -25,6 +41,16 @@ const FeatureDependencyChanges: FC<
     environmentId,
     projectId: Number(projectId),
   })
+
+  if (isError) {
+    return (
+      <div className='mt-4'>
+        <ErrorMessage error='Could not load the dependency changes in this change request.' />
+      </div>
+    )
+  }
+  // Most change sets only touch values or overrides, so no panel for those.
+  if (!changes?.length) return null
   return (
     <Panel
       title={`Dependencies${feature ? `: ${feature.name}` : ''}`}
@@ -34,10 +60,8 @@ const FeatureDependencyChanges: FC<
         Prerequisite changes in this request. Nothing changes until it is
         published.
       </p>
-      <ChangeRequestDependencyChanges
-        environmentId={environmentId}
-        featureId={featureId}
-        changeRequestId={changeRequestId}
+      <DependencyChangesTable
+        changes={changes}
         // Until the states are known, no column rather than every row "No".
         isEnabled={
           states.isLoading || states.isError ? undefined : states.isEnabled
@@ -47,29 +71,22 @@ const FeatureDependencyChanges: FC<
   )
 }
 
-// The prerequisite changes staged in a change request, per feature.
+// The prerequisite changes staged in a change request, per feature it
+// changes.
 const DiffDependencies: FC<DiffDependenciesProps> = ({
-  changeRequestId,
+  changeRequest,
   environmentId,
   projectId,
 }) => {
-  const { data: featureIds, isError } = useGetFeatureIdsStagedQuery({
-    changeRequestId,
-  })
-  // Otherwise a failed list reads as no dependency changes.
-  if (isError) {
-    return (
-      <div className='mt-4'>
-        <ErrorMessage error='Could not load the dependency changes in this change request.' />
-      </div>
-    )
-  }
+  const featureIds = [
+    ...new Set(changeRequest.change_sets?.map(({ feature }) => feature)),
+  ]
   return (
     <>
-      {featureIds?.map((featureId) => (
+      {featureIds.map((featureId) => (
         <FeatureDependencyChanges
           key={featureId}
-          changeRequestId={changeRequestId}
+          changeRequestId={changeRequest.id}
           environmentId={environmentId}
           featureId={featureId}
           projectId={projectId}
