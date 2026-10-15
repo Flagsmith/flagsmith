@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 from django.conf import settings
 from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema
 from rest_framework import status
@@ -38,7 +36,6 @@ def _ensure_change_request_is_open(change_request: ChangeRequest) -> None:
         raise ChangeRequestApprovedError()
 
 
-@lru_cache(maxsize=1)
 def _get_change_request(
     request: AuthenticatedRequest, environment_api_key: str
 ) -> ChangeRequest | None:
