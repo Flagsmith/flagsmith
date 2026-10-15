@@ -56,6 +56,7 @@ def map_feature_state_data_to_segment_override(
         override["value"] = None
     elif value := map_legacy_flag_value(feature_state_data):
         override["value"] = value
+    # An empty list, unlike none, leaves out every variant of the feature.
     if (
         multivariate_values := feature_state_data.get(
             "multivariate_feature_state_values"
@@ -74,6 +75,6 @@ def map_feature_state_data_to_segment_override(
             for variant_id in feature.multivariate_options.values_list("id", flat=True)
             if variant_id not in given_ids
         ]
-        if variants:  # Legacy clients may send an empty list for standard features.
+        if variants:  # Standard features have none.
             override["variants"] = variants
     return override

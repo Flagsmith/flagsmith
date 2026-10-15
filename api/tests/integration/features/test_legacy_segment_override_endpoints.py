@@ -1228,6 +1228,56 @@ def test_update_feature_state__variant_left_out__weights_it_0(
     ] == [[{"id": option_a, "weight": 80.0}, {"id": option_b, "weight": 0.0}]]
 
 
+def test_update_feature_state__all_variants_left_out__weights_them_0(
+    admin_client: APIClient,
+    create_segment_override: Any,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    project: int,
+    segment: int,
+) -> None:
+    # Given
+    option_a = create_mv_option_with_api(admin_client, project, feature, 50, "a")
+    option_b = create_mv_option_with_api(admin_client, project, feature, 30, "b")
+    create_segment_override(environment_api_key, feature, segment)
+    feature_state_id = _get_segment_override_id(
+        admin_client, environment, feature, segment
+    )
+    admin_client.put(
+        f"/api/v1/features/featurestates/{feature_state_id}/",
+        {
+            "feature": feature,
+            "environment": environment,
+            "multivariate_feature_state_values": [
+                {"multivariate_feature_option": option_a, "percentage_allocation": 50},
+                {"multivariate_feature_option": option_b, "percentage_allocation": 30},
+            ],
+        },
+        format="json",
+    )
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/features/featurestates/{feature_state_id}/",
+        {
+            "feature": feature,
+            "environment": environment,
+            "multivariate_feature_state_values": [],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert [
+        override["variants"]
+        for override in _get_segment_overrides(
+            admin_client, environment_api_key, feature
+        )
+    ] == [[{"id": option_a, "weight": 0.0}, {"id": option_b, "weight": 0.0}]]
+
+
 def test_create_feature_state__live_override__updates_override(
     admin_client: APIClient,
     create_segment_override: Any,
