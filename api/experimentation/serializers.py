@@ -42,9 +42,9 @@ from features.feature_states.serializers import (
     MultivariateValueSerializer,
 )
 from features.feature_types import MULTIVARIATE
+from features.future.types import Variant
 from features.models import Feature
 from features.multivariate.serializers import NestedMultivariateFeatureOptionSerializer
-from features.versioning.dataclasses import MultivariateValueChangeSet
 
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -257,7 +257,7 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
     )
     feature_state_value = FeatureValueSerializer(required=True)
     multivariate_feature_state_values = MultivariateValueSerializer(
-        many=True, required=False
+        many=True, required=True
     )
     # Omitted leaves the stored audience unchanged; an empty segment_ids list
     # targets every identity in the environment.
@@ -272,12 +272,12 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
             rollout_percentage=data["rollout_percentage"],
             feature_state_value=value["value"],
             value_type=value["type"],
-            multivariate_values=[
-                MultivariateValueChangeSet(
-                    multivariate_feature_option_id=mv["multivariate_feature_option"],
-                    percentage_allocation=mv["percentage_allocation"],
+            variants=[
+                Variant(
+                    id=mv["multivariate_feature_option"],
+                    weight=mv["percentage_allocation"],
                 )
-                for mv in data.get("multivariate_feature_state_values", [])
+                for mv in data["multivariate_feature_state_values"]
             ],
             author=AuthorData.from_request(request),
             audience=(

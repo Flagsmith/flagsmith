@@ -7,9 +7,9 @@ description: Enable the managed Flagsmith warehouse to store and query experimen
 
 import CodeBlock from '@theme/CodeBlock'; import eventsSql from '../../../experimentation/clickhouse/events.sql?raw';
 
-:::info Enterprise beta
+:::info Beta
 
-Experimentation is in beta on **Enterprise** plans. [Get in touch](https://www.flagsmith.com/contact-us) to join.
+Experimentation is in beta.
 
 :::
 
@@ -18,8 +18,7 @@ warehouse connection, and it must be in place before you can create experiments.
 
 ## Connect the Flagsmith warehouse
 
-The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing to provision or configure, and there is
-no additional cost — it is included in your Enterprise plan.
+The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing to provision or configure.
 
 1. Go to **Environment Settings > Warehouse**.
 2. Select **Flagsmith** and click **Enable**, then confirm.

@@ -2,6 +2,7 @@ import typing
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
 from api_keys.user import APIKeyUser
@@ -20,6 +21,7 @@ from integrations.gitlab.services import (
     post_gitlab_state_change_comment_for_feature_state,
 )
 from segments.models import Segment
+from segments.services import check_segment_is_not_system
 from users.models import FFAdminUser
 
 if typing.TYPE_CHECKING:
@@ -335,6 +337,30 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             raise serializers.ValidationError(
                 {"environment": "Environment must use v2 feature versioning."}
             )
+
+
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+@extend_schema_serializer(component_name="EnvironmentFeatureVersionCreate")
+class EnvironmentFeatureVersionCreateRequestSerializer(
+    EnvironmentFeatureVersionCreateSerializer
+):
+    def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        attrs = super().validate(attrs)
+        feature_states = [
+            *(attrs.get("feature_states_to_create") or []),
+            *(attrs.get("feature_states_to_update") or []),
+        ]
+        segments = [
+            feature_segment["segment"]
+            for feature_state in feature_states
+            if (feature_segment := feature_state.get("feature_segment"))
+        ]
+        segments += Segment.objects.filter(
+            id__in=attrs.get("segment_ids_to_delete_overrides") or []
+        )
+        for segment in segments:
+            check_segment_is_not_system(segment)
+        return attrs
 
 
 class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):  # type: ignore[type-arg]
