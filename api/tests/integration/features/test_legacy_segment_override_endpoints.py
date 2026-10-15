@@ -226,7 +226,7 @@ def test_create_segment_override__new_segment__appends_override(
     ]
 
 
-def test_create_segment_override__existing_override__updates_override(
+def test_create_segment_override__existing_override__responds_400(
     admin_client: APIClient,
     environment: int,
     environment_api_key: str,
@@ -238,7 +238,7 @@ def test_create_segment_override__existing_override__updates_override(
         f"/api/v1/environments/{environment_api_key}/features/{feature}"
         "/create-segment-override/"
     )
-    admin_client.post(
+    response = admin_client.post(
         url,
         {
             "feature_segment": {"segment": segment},
@@ -247,6 +247,8 @@ def test_create_segment_override__existing_override__updates_override(
         },
         format="json",
     )
+    assert response.status_code == 201
+    overrides = _get_segment_overrides(admin_client, environment_api_key, feature)
 
     # When
     response = admin_client.post(
@@ -260,16 +262,11 @@ def test_create_segment_override__existing_override__updates_override(
     )
 
     # Then
-    assert response.status_code == 201
-    assert _get_segment_overrides(admin_client, environment_api_key, feature) == [
-        {
-            "segment": {"id": segment},
-            "priority": 0,
-            "enabled": True,
-            "value": {"type": "string", "value": "bar"},
-            "variants": [],
-        },
-    ]
+    assert response.status_code == 400
+    assert response.json() == ["The flag is already overridden for this segment."]
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
+        overrides
+    )
 
 
 def test_create_segment_override__priority_in_use__moves_overrides_down(

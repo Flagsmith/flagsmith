@@ -1333,18 +1333,18 @@ def create_segment_override(  # type: ignore[no-untyped-def]
     feature_state_data = typing.cast(
         LegacyFeatureStateData, dict(serializer.validated_data)
     )
-    if not get_segment_override(
+    check_segment_is_not_system(segment)
+    if get_segment_override(
         environment=environment, feature=feature, segment_id=segment.id
     ):
-        feature_state_data.setdefault("enabled", False)
-        if exceeds_segment_override_limit(environment):
-            raise ValidationError(
-                {"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE}
-            )
-        if priority is None:
-            priority = get_next_segment_override_priority(
-                environment=environment, feature=feature
-            )
+        raise ValidationError("The flag is already overridden for this segment.")
+    feature_state_data.setdefault("enabled", False)
+    if exceeds_segment_override_limit(environment):
+        raise ValidationError({"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE})
+    if priority is None:
+        priority = get_next_segment_override_priority(
+            environment=environment, feature=feature
+        )
 
     feature_state = write_segment_override(
         environment=environment,
