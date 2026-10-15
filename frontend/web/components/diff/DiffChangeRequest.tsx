@@ -3,6 +3,8 @@ import { ChangeRequest } from 'common/types/responses'
 import { useGetFeatureStatesQuery } from 'common/services/useFeatureState'
 import DiffFeature from './DiffFeature'
 import { mergeChangeSets } from 'common/services/useChangeRequest'
+import { useFeatureStates } from 'common/hooks/useFeatureStates'
+import { useDependencyChanges } from 'components/feature-dependencies/useDependencyChanges'
 
 type DiffChangeRequestType = {
   changeRequest: ChangeRequest | null
@@ -38,6 +40,23 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
     return mergeChangeSets(changeSets, data?.results, changeRequest?.conflicts)
   }, [changeRequest, feature, data])
 
+  const dependencies = useDependencyChanges({
+    changeRequestId: changeRequest?.id ?? 0,
+    environmentId,
+    featureId: feature,
+    // The API refuses to list a published change request's dependencies.
+    skip:
+      !changeRequest ||
+      changeRequest.is_committed ||
+      !Utils.getFlagsmithHasFeature('flag_dependencies_change_requests'),
+  })
+  // Whether each prerequisite is on now, so a reviewer can see an added one
+  // that would hold this feature off.
+  const states = useFeatureStates({
+    environmentId,
+    projectId: Number(projectId),
+  })
+
   if (!changeRequest) {
     return null
   }
@@ -52,6 +71,12 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
   return (
     <DiffFeature
       conflicts={changeRequest.conflicts}
+      dependencies={{
+        ...dependencies,
+        // Until the states are known, no column rather than every row "No".
+        isEnabled:
+          states.isLoading || states.isError ? undefined : states.isEnabled,
+      }}
       environmentId={environmentId}
       featureId={feature}
       disableSegments={!isVersioned}
