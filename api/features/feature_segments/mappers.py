@@ -14,7 +14,7 @@ def map_legacy_flag_value(
 ) -> FlagValue | None:
     """Map a legacy feature state value to the flag API representation.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
     if value_data := feature_state_data.get("feature_state_value"):
         return map_flag_value(FeatureStateValue(**value_data))
@@ -27,7 +27,7 @@ def clears_legacy_flag_value(feature_state_data: LegacyFeatureStateData) -> bool
     Omitting feature_state_value leaves the existing value unchanged, while
     providing a typed null value clears it.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
     return bool(feature_state_data.get("feature_state_value")) and (
         map_legacy_flag_value(feature_state_data) is None
@@ -45,7 +45,7 @@ def map_feature_state_data_to_segment_override(
 
     Legacy endpoints remove variants left out, so they're weighted 0.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
     override = SegmentOverrideRequest(segment=SegmentReference(id=segment_id))
     if priority is not None:

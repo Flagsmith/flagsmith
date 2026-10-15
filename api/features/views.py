@@ -953,7 +953,7 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         return self.all(request, *args, **kwargs)  # type: ignore[no-any-return]
 
 
-# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
 @method_decorator(
     name="list",
     decorator=extend_schema(

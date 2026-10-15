@@ -23,7 +23,7 @@ def get_segment_override(
 ) -> FeatureState | None:
     """Get the flag's live override for a segment, if any.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
     overrides = get_environment_flags_list(
         environment,
@@ -40,7 +40,7 @@ def get_segment_override(
 def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
     """Whether a feature segment is the one the flag serves its segment override from.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
     override = get_segment_override(
         environment=feature_segment.environment,
@@ -83,7 +83,7 @@ def renumber_tied_segment_overrides(
     Legacy APIs used to leave overrides sharing priorities, which the flag API
     refuses to write.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
     ordered = list(feature_segments.order_by("priority", "id"))
     if len({feature_segment.priority for feature_segment in ordered}) == len(ordered):
@@ -98,7 +98,7 @@ def _make_room_for_segment_override(
 ) -> None:
     """Move the flag's other overrides from a priority on down, if it's taken.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
     others = feature_segments.exclude(segment_id=segment_id)
     if others.filter(priority=priority).exists():
@@ -108,7 +108,7 @@ def _make_room_for_segment_override(
 def writes_live_segment_override(feature_state_data: LegacyFeatureStateData) -> bool:
     """Whether feature state data, validated by a legacy API, is for a live override.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
     live_from = feature_state_data.get("live_from")
     return (
@@ -131,7 +131,7 @@ def write_segment_override(
     """Write a live override through the flag API, from data validated by a
     legacy API, notifying VCS integrations.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
     with transaction.atomic():
         feature_segments = _get_feature_segments(environment, feature)
@@ -171,7 +171,7 @@ def is_segment_override_unchanged(
 ) -> bool:
     """Whether writing data, validated by a legacy API, leaves an override as it is.
 
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
     changes = map_feature_state_data_to_segment_override(
         feature_segment.feature, feature_segment.segment_id, feature_state_data
