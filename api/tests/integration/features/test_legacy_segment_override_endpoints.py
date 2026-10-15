@@ -1002,6 +1002,46 @@ def test_update_feature_state__value_cleared__clears_override_value(
     ]
 
 
+def test_create_feature_state__system_segment_override_scheduled__responds_409(
+    admin_client: APIClient,
+    environment: int,
+    feature: int,
+    system_segment: int,
+) -> None:
+    # Given
+    feature_states_url = "/api/v1/features/featurestates/"
+    query = {"environment": environment, "feature": feature}
+    feature_states = admin_client.get(feature_states_url, query).json()["results"]
+
+    # When
+    response = admin_client.post(
+        feature_states_url,
+        {
+            "feature": feature,
+            "environment": environment,
+            "feature_segment": _get_feature_segment_id(
+                admin_client, environment, feature, system_segment
+            ),
+            "enabled": True,
+            "live_from": "2099-01-01T00:00:00Z",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 409
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
+    assert admin_client.get(feature_states_url, query).json()["results"] == (
+        feature_states
+    )
+
+
 def test_update_feature_state__system_segment_override_scheduled__responds_409(
     admin_client: APIClient,
     environment: int,
