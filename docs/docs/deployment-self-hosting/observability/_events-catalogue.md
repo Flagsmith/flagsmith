@@ -306,10 +306,10 @@ Attributes:
 
 Logged at `info` from:
  - `api/features/dependencies/services.py:171`
- - `api/features/dependencies/services.py:372`
- - `api/features/dependencies/services.py:388`
- - `api/features/dependencies/services.py:393`
- - `api/features/dependencies/services.py:403`
+ - `api/features/dependencies/services.py:371`
+ - `api/features/dependencies/services.py:387`
+ - `api/features/dependencies/services.py:392`
+ - `api/features/dependencies/services.py:402`
 
 Attributes:
  - `environment.key`
@@ -333,7 +333,7 @@ Attributes:
 ### `features.dependencies.delete_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:483`
+ - `api/features/dependencies/services.py:482`
 
 Attributes:
  - `environment.key`

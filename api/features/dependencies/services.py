@@ -355,7 +355,6 @@ def create_flag_dependency(
     author: FFAdminUser | APIKeyUser,
 ) -> DependencyEdge:
     """Disable the feature in the environment unless the prerequisite is enabled."""
-    # These import this module.
     from features.feature_segments.services import (
         get_next_segment_override_priority,
     )
