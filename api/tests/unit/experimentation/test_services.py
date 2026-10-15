@@ -70,42 +70,13 @@ from features.value_types import STRING
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
-from tests.types import EnableFeaturesFixture, VariantAssignmentFixture
-from tests.unit.experimentation.conftest import RolloutSpecFactory
+from tests.types import VariantAssignmentFixture
+from tests.unit.experimentation.conftest import (
+    RolloutSpecFactory,
+    SetWarehousesFlagFixture,
+)
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
-
-
-def test_is_experiment_feature_enabled__experimentation_not_deployed__returns_false(
-    organisation: Organisation,
-    enable_features: EnableFeaturesFixture,
-    settings: SettingsWrapper,
-) -> None:
-    # Given
-    enable_features("experimental_flags")
-    settings.EXPERIMENTATION_ENABLED = False
-
-    # When
-    result = services.is_experiment_feature_enabled(organisation)
-
-    # Then
-    assert result is False
-
-
-def test_is_warehouse_feature_enabled__experimentation_not_deployed__returns_false(
-    organisation: Organisation,
-    enable_features: EnableFeaturesFixture,
-    settings: SettingsWrapper,
-) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-    settings.EXPERIMENTATION_ENABLED = False
-
-    # When
-    result = services.is_warehouse_feature_enabled(organisation)
-
-    # Then
-    assert result is False
 
 
 def test_get_clickhouse_client__configured_url__builds_client_with_timeouts(
@@ -2821,123 +2792,162 @@ def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer
     assert getattr(fresh_connection, "event_stats", None) == expected_stats
 
 
-def test_get_experiment_flag_config__flag_disabled__returns_empty(
+@pytest.mark.parametrize(
+    "flag_value, expected",
+    [
+        (None, {}),
+        ("not-json", {}),
+        ("", {}),
+        ('["free"]', {}),
+        ('{"auto_connect_flagsmith": true}', {"auto_connect_flagsmith": True}),
+    ],
+    ids=["missing", "invalid-json", "empty-string", "non-dict", "valid"],
+)
+def test_get_warehouses_flag_config__flag_value__returns_parsed_dict(
     organisation: Organisation,
-    mocker: MockerFixture,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    flag_value: str | None,
+    expected: dict[str, object],
 ) -> None:
     # Given
-    mock_client = MagicMock()
-    mock_client.get_boolean_value.return_value = False
-    mocker.patch(
-        "experimentation.services.get_openfeature_client",
-        return_value=mock_client,
-    )
+    if flag_value is not None:
+        set_warehouses_flag(flag_value)
 
     # When
-    result = services.get_experiment_flag_config(organisation)
+    result = services.get_warehouses_flag_config(organisation)
 
     # Then
-    assert result == {}
-    mock_client.get_string_value.assert_not_called()
+    assert result == expected
 
 
-def test_get_experiment_flag_config__flag_enabled_with_valid_json__returns_parsed(
+def test_is_warehouse_type_available__self_hosted__ignores_flag(
     organisation: Organisation,
-    mocker: MockerFixture,
+    set_warehouses_flag: SetWarehousesFlagFixture,
 ) -> None:
     # Given
-    mock_client = MagicMock()
-    mock_client.get_boolean_value.return_value = True
-    mock_client.get_string_value.return_value = '{"auto_connect_warehouse": true}'
-    mocker.patch(
-        "experimentation.services.get_openfeature_client",
-        return_value=mock_client,
-    )
+    set_warehouses_flag({"minimum_plans": {"databricks": "enterprise"}})
 
     # When
-    result = services.get_experiment_flag_config(organisation)
+    result = services.is_warehouse_type_available(
+        organisation, WarehouseType.DATABRICKS
+    )
 
     # Then
-    assert result == {"auto_connect_warehouse": True}
+    assert result is True
 
 
 @pytest.mark.parametrize(
-    "raw_value",
-    ["not-json", "", None],
-    ids=["invalid-json", "empty-string", "none"],
+    "flag_value, plan, expected",
+    [
+        ({}, "free", True),
+        ({"minimum_plans": ["databricks"]}, "free", True),
+        ({"minimum_plans": {"databricks": None}}, "free", True),
+        ({"minimum_plans": {"databricks": "free"}}, "free", True),
+        ({"minimum_plans": {"databricks": "typo"}}, "free", True),
+        ({"minimum_plans": {"clickhouse": "scale-up"}}, "free", True),
+        ({"minimum_plans": {"databricks": "scale-up"}}, "free", False),
+        ({"minimum_plans": {"databricks": "scale-up"}}, "start-up-v2", False),
+        ({"minimum_plans": {"databricks": "scale-up"}}, "scale-up-v2", True),
+        ({"minimum_plans": {"databricks": "scale-up"}}, "enterprise", True),
+    ],
+    ids=[
+        "no-minimum-plans",
+        "minimum-plans-not-a-dict",
+        "null-plan",
+        "free-plan",
+        "unknown-plan",
+        "other-type-gated",
+        "free-below-scale-up",
+        "start-up-below-scale-up",
+        "scale-up-meets-scale-up",
+        "enterprise-above-scale-up",
+    ],
 )
-def test_get_experiment_flag_config__flag_enabled_with_bad_value__returns_empty(
+@pytest.mark.usefixtures("saas_mode")
+def test_is_warehouse_type_available__saas__compares_plan_to_minimum(
     organisation: Organisation,
-    mocker: MockerFixture,
-    raw_value: str | None,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    flag_value: dict[str, object],
+    plan: str,
+    expected: bool,
 ) -> None:
     # Given
-    mock_client = MagicMock()
-    mock_client.get_boolean_value.return_value = True
-    mock_client.get_string_value.return_value = raw_value
-    mocker.patch(
-        "experimentation.services.get_openfeature_client",
-        return_value=mock_client,
-    )
+    set_warehouses_flag(flag_value)
+    organisation.subscription.plan = plan
+    organisation.subscription.save()
 
     # When
-    result = services.get_experiment_flag_config(organisation)
-
-    # Then
-    assert result == {}
-
-
-def test_get_experiment_flag_config__flag_enabled_with_non_dict_json__returns_empty(
-    organisation: Organisation,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mock_client = MagicMock()
-    mock_client.get_boolean_value.return_value = True
-    mock_client.get_string_value.return_value = '["free"]'
-    mocker.patch(
-        "experimentation.services.get_openfeature_client",
-        return_value=mock_client,
+    result = services.is_warehouse_type_available(
+        organisation, WarehouseType.DATABRICKS
     )
 
-    # When
-    result = services.get_experiment_flag_config(organisation)
-
     # Then
-    assert result == {}
+    assert result is expected
 
 
-@pytest.mark.django_db()
+@pytest.mark.parametrize(
+    "experimentation_enabled, flag_value",
+    [
+        (True, {}),
+        (True, {"auto_connect_flagsmith": False}),
+        (False, {"auto_connect_flagsmith": True}),
+        (
+            True,
+            {
+                "auto_connect_flagsmith": True,
+                "minimum_plans": {"flagsmith": "scale-up"},
+            },
+        ),
+    ],
+    ids=[
+        "flag-missing",
+        "auto-connect-off",
+        "experimentation-not-deployed",
+        "below-minimum-plan",
+    ],
+)
+@pytest.mark.usefixtures("saas_mode")
 def test_ensure_flagsmith_warehouse_connection__auto_connect_disabled__returns_none(
     environment: Environment,
-    mocker: MockerFixture,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    settings: SettingsWrapper,
+    experimentation_enabled: bool,
+    flag_value: dict[str, object],
 ) -> None:
     # Given
-    mocker.patch(
-        "experimentation.services.get_experiment_flag_config",
-        return_value={},
-    )
+    settings.EXPERIMENTATION_ENABLED = experimentation_enabled
+    set_warehouses_flag(flag_value)
 
     # When
     result = services.ensure_flagsmith_warehouse_connection(environment)
 
     # Then
     assert result is None
-    assert not WarehouseConnection.objects.filter(
-        environment=environment,
-    ).exists()
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
 
 
-@pytest.mark.django_db()
-def test_ensure_flagsmith_warehouse_connection__auto_connect_enabled__creates_connection(
+def test_ensure_flagsmith_warehouse_connection__self_hosted__returns_none(
     environment: Environment,
-    mocker: MockerFixture,
+    set_warehouses_flag: SetWarehousesFlagFixture,
 ) -> None:
     # Given
-    mocker.patch(
-        "experimentation.services.get_experiment_flag_config",
-        return_value={"auto_connect_warehouse": True},
-    )
+    set_warehouses_flag({"auto_connect_flagsmith": True})
+
+    # When
+    result = services.ensure_flagsmith_warehouse_connection(environment)
+
+    # Then
+    assert result is None
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+@pytest.mark.usefixtures("saas_mode")
+def test_ensure_flagsmith_warehouse_connection__auto_connect_enabled__creates_connection(
+    environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+) -> None:
+    # Given
+    set_warehouses_flag({"auto_connect_flagsmith": True})
 
     # When
     result = services.ensure_flagsmith_warehouse_connection(environment)
@@ -2949,17 +2959,14 @@ def test_ensure_flagsmith_warehouse_connection__auto_connect_enabled__creates_co
     assert result.environment == environment
 
 
-@pytest.mark.django_db()
+@pytest.mark.usefixtures("saas_mode")
 def test_ensure_flagsmith_warehouse_connection__connection_already_exists__returns_none(
     environment: Environment,
     warehouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
+    set_warehouses_flag: SetWarehousesFlagFixture,
 ) -> None:
     # Given
-    mocker.patch(
-        "experimentation.services.get_experiment_flag_config",
-        return_value={"auto_connect_warehouse": True},
-    )
+    set_warehouses_flag({"auto_connect_flagsmith": True})
 
     # When
     result = services.ensure_flagsmith_warehouse_connection(environment)
@@ -2975,15 +2982,14 @@ def test_ensure_flagsmith_warehouse_connection__connection_already_exists__retur
     )
 
 
+@pytest.mark.usefixtures("saas_mode")
 def test_ensure_flagsmith_warehouse_connection__race_condition__handles_integrity_error(
     environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mocker.patch(
-        "experimentation.services.get_experiment_flag_config",
-        return_value={"auto_connect_warehouse": True},
-    )
+    set_warehouses_flag({"auto_connect_flagsmith": True})
     mocker.patch.object(
         WarehouseConnection.objects,
         "filter",

@@ -1,13 +1,17 @@
+import json
 from typing import Protocol
 
+import openfeature.api as openfeature_api
 import pytest
 from django.urls import reverse
 from django.utils import timezone
 from flag_engine.segments.constants import EQUAL
+from openfeature.provider.in_memory_provider import InMemoryFlag, InMemoryProvider
 from pytest_mock import MockerFixture
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
+from experimentation.constants import WAREHOUSES_FLAG
 from experimentation.dataclasses import (
     AudienceSpec,
     RolloutSpec,
@@ -25,6 +29,7 @@ from experimentation.services import apply_experiment_rollout
 from features.future.types import Variant
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
+from integrations.flagsmith.client import DEFAULT_OPENFEATURE_DOMAIN
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
@@ -39,6 +44,23 @@ class RolloutSpecFactory(Protocol):
         variants: list[Variant] | None = ...,
         audience: AudienceSpec | None = ...,
     ) -> RolloutSpec: ...
+
+
+class SetWarehousesFlagFixture(Protocol):
+    def __call__(self, value: dict[str, object] | str) -> None: ...
+
+
+@pytest.fixture()
+def set_warehouses_flag() -> SetWarehousesFlagFixture:
+    def _set_warehouses_flag(value: dict[str, object] | str) -> None:
+        raw = value if isinstance(value, str) else json.dumps(value)
+        flag = InMemoryFlag(variants={"value": raw}, default_variant="value")
+        openfeature_api.set_provider(
+            InMemoryProvider({WAREHOUSES_FLAG: flag}),
+            domain=DEFAULT_OPENFEATURE_DOMAIN,
+        )
+
+    return _set_warehouses_flag
 
 
 @pytest.fixture()
