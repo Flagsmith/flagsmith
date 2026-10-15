@@ -48,6 +48,8 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
     skip:
       !changeRequest ||
       changeRequest.is_committed ||
+      // The same flags as the feature modal's Dependencies tab.
+      !Utils.getFlagsmithHasFeature('flag_dependencies') ||
       !Utils.getFlagsmithHasFeature('flag_dependencies_change_requests'),
   })
   // Whether each prerequisite is on now, so a reviewer can see an added one
