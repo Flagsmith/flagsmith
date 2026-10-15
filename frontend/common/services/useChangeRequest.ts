@@ -20,11 +20,28 @@ export const changeRequestService = service
         Req['createEnvironmentChangeRequest']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'ChangeRequest' }],
-        query: ({ approvals, environmentId, ...rest }) => ({
+        query: ({
+          approvals,
+          environmentId,
+          featureId,
+          live_from,
+          ...rest
+        }) => ({
           body: {
             ...rest,
             // The modal hands back users and groups in one list.
             approvals: approvals.filter((approval) => !!approval.user),
+            // The API reads the schedule from the change set, not the change
+            // request, and stages dependency changes into it.
+            change_sets: [
+              {
+                feature: featureId,
+                feature_states_to_create: [],
+                feature_states_to_update: [],
+                live_from: live_from || new Date().toISOString(),
+                segment_ids_to_delete_overrides: [],
+              },
+            ],
             // Required, even when empty.
             feature_states: [],
             group_assignments: approvals.filter((approval) => !!approval.group),

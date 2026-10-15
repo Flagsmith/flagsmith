@@ -901,6 +901,7 @@ export type Req = {
   }
   createEnvironmentChangeRequest: {
     environmentId: string
+    featureId: number
     title: string
     description: string
     live_from?: string
