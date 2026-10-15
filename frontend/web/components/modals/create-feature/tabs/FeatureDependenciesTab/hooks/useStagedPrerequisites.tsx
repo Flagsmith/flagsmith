@@ -32,7 +32,7 @@ type UseStagedPrerequisitesArgs = {
 
 type ChangeRequestFields = Omit<
   Req['createEnvironmentChangeRequest'],
-  'environmentId'
+  'environmentId' | 'featureId'
 >
 
 // Holds dependency changes until the change request exists, then stages them.
@@ -108,7 +108,11 @@ export const useStagedPrerequisites = ({
     let changeRequestId: number
     try {
       changeRequestId = (
-        await createChangeRequest({ environmentId, ...fields }).unwrap()
+        await createChangeRequest({
+          environmentId,
+          featureId: projectFlag.id,
+          ...fields,
+        }).unwrap()
       ).id
     } catch (e) {
       return {
