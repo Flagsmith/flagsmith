@@ -88,19 +88,21 @@ const DiffFeature: FC<FeatureDiffType> = ({
   const totalSegmentChanges = segmentDiffs?.totalChanges
   const totalVariationChanges = variationDiffs?.totalChanges
   const totalDependencyChanges = dependencies?.changes?.length ?? 0
-  useEffect(() => {
-    if (
-      !totalChanges &&
-      (totalSegmentChanges || totalVariationChanges || totalDependencyChanges)
-    ) {
-      setValue(1)
-    }
-  }, [
-    totalSegmentChanges,
-    totalVariationChanges,
-    totalDependencyChanges,
+  const showDependencies = !!totalDependencyChanges || !!dependencies?.isError
+  // Each tab's change count, in the order the tabs render.
+  const tabChanges = [
     totalChanges,
-  ])
+    ...(variationDiffs?.diffs?.length ? [totalVariationChanges] : []),
+    ...(segmentDiffs?.diffs.length ? [totalSegmentChanges] : []),
+    ...(showDependencies ? [totalDependencyChanges] : []),
+  ]
+  // Opens on the first tab that changes, as one listed can change nothing.
+  const firstChangedTab = tabChanges.findIndex((changes) => !!changes)
+  useEffect(() => {
+    if (firstChangedTab > 0) {
+      setValue(firstChangedTab)
+    }
+  }, [firstChangedTab])
   const hideValue =
     !totalChanges && (diff.newValue === null || diff.newValue === undefined)
   const viewOptions = [
@@ -264,7 +266,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
                 />
               </TabItem>
             )}
-            {(!!totalDependencyChanges || dependencies?.isError) && (
+            {showDependencies && (
               <TabItem
                 className={'p-0'}
                 tabLabel={
