@@ -29,7 +29,8 @@ passing the `enableEvents` / `enable_events` option when you initialise the clie
 
 Events go to Flagsmith Cloud unless you point them at your own event ingestion service. This is separate from the API
 URL: in JavaScript, pass `eventProcessorConfig: { eventsApiUrl: 'https://events.example.com/' }`; in Python, pass
-`event_processor_config=EventProcessorConfig(events_api_url="https://events.example.com/")`.
+`event_processor_config=EventProcessorConfig(events_api_url="https://events.example.com/")`, importing it with
+`from flagsmith import EventProcessorConfig`.
 
 :::
 
