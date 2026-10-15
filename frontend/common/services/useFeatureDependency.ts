@@ -109,14 +109,6 @@ export const featureDependencyService = service
           url: dependencyUrl(query),
         }),
       }),
-      // Will be the change requests listed by feature.
-      getChangeRequestIdsStaging: builder.query<
-        Res['changeRequestIdsStaging'],
-        Req['getChangeRequestIdsStaging']
-      >({
-        providesTags: (res, err, query) => pendingTags(query.featureId),
-        queryFn: () => notListedYet,
-      }),
       getFeatureDependencies: builder.query<
         Res['featureDependencies'],
         Req['getFeatureDependencies']
@@ -215,7 +207,6 @@ export async function getFeatureDependents(
 export const {
   useCreateFeatureDependencyMutation,
   useDeleteFeatureDependencyMutation,
-  useGetChangeRequestIdsStagingQuery,
   useGetFeatureDependenciesQuery,
   useGetFeatureDependentsQuery,
   useGetFeatureIdsStagedQuery,
