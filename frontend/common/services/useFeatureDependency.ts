@@ -1,3 +1,4 @@
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
 import { service } from 'common/service'
@@ -35,6 +36,15 @@ const dependencyUrl = (query: Req['createFeatureDependency']) =>
     `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`,
     query.changeRequestId,
   )
+
+// The API cannot list these yet, so the pending section reports an error
+// rather than claim nothing is pending.
+const notListedYet: { error: FetchBaseQueryError } = {
+  error: {
+    error: 'The API does not list staged dependencies yet.',
+    status: 'CUSTOM_ERROR',
+  },
+}
 
 const pendingTags = (featureId: number): DependencyTag[] => [
   { id: `PENDING-${featureId}`, type: 'FeatureDependency' },
@@ -98,6 +108,14 @@ export const featureDependencyService = service
           method: 'DELETE',
           url: dependencyUrl(query),
         }),
+      }),
+      // Will be the change requests listed by feature.
+      getChangeRequestIdsStaging: builder.query<
+        Res['changeRequestIdsStaging'],
+        Req['getChangeRequestIdsStaging']
+      >({
+        providesTags: (res, err, query) => pendingTags(query.featureId),
+        queryFn: () => notListedYet,
       }),
       getFeatureDependencies: builder.query<
         Res['featureDependencies'],
@@ -189,6 +207,7 @@ export async function getFeatureDependents(
 export const {
   useCreateFeatureDependencyMutation,
   useDeleteFeatureDependencyMutation,
+  useGetChangeRequestIdsStagingQuery,
   useGetFeatureDependenciesQuery,
   useGetFeatureDependentsQuery,
   // END OF EXPORTS
