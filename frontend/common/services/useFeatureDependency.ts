@@ -226,7 +226,12 @@ export const pendingFeatureDependencyService =
               ),
             ),
           )
-          if (lists.some((list) => list.isError)) {
+          // Published or deleted since it was listed, so nothing is pending.
+          const isGone = (list: (typeof lists)[number]) =>
+            !!list.error &&
+            'status' in list.error &&
+            (list.error.status === 400 || list.error.status === 404)
+          if (lists.some((list) => list.isError && !isGone(list))) {
             return {
               error: {
                 error: "Could not load a change request's dependencies.",
