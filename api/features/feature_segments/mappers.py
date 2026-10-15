@@ -56,7 +56,8 @@ def map_feature_state_data_to_segment_override(
         override["value"] = None
     elif value := map_legacy_flag_value(feature_state_data):
         override["value"] = value
-    # An empty list, unlike none, leaves out every variant of the feature.
+    # Leaving the variants out keeps them as they are, whereas an empty list
+    # weights each of the feature's variants 0, serving the control value.
     if (
         multivariate_values := feature_state_data.get(
             "multivariate_feature_state_values"
