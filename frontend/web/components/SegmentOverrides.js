@@ -32,6 +32,7 @@ import {
   moveSegmentOverride,
 } from 'common/utils/segmentOverridePriorities'
 import SystemSegmentOverrideLabel from './segments/SystemSegmentOverrideLabel'
+import SystemSegmentOverrideLink from './segments/SystemSegmentOverrideLink'
 
 const getSegmentId = (segment) =>
   typeof segment === 'object' && segment !== null ? segment.id : segment
@@ -192,9 +193,6 @@ const SegmentOverrideInner = class Override extends React.Component {
                 {isSystemSegment && (
                   <SystemSegmentOverrideLabel
                     managedBy={v.segment_managed_by}
-                    projectId={this.props.projectId}
-                    environmentId={environmentId}
-                    onViewDependencies={onViewDependencies}
                   />
                 )}
                 {changed && <div className='chip chip--xs ml-2'>Unsaved</div>}
@@ -203,6 +201,14 @@ const SegmentOverrideInner = class Override extends React.Component {
           </div>
           <div>
             <Row className='gap-3'>
+              {isSystemSegment && (
+                <SystemSegmentOverrideLink
+                  managedBy={v.segment_managed_by}
+                  projectId={this.props.projectId}
+                  environmentId={environmentId}
+                  onViewDependencies={onViewDependencies}
+                />
+              )}
               {/* Input to adjust order without drag for E2E */}
               {E2E && (
                 <input
