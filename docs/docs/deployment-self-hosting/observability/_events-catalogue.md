@@ -294,11 +294,12 @@ Attributes:
 ### `features.dependencies.create_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:172`
- - `api/features/dependencies/services.py:371`
- - `api/features/dependencies/services.py:387`
- - `api/features/dependencies/services.py:392`
- - `api/features/dependencies/services.py:402`
+ - `api/features/dependencies/services.py:214`
+ - `api/features/dependencies/services.py:494`
+ - `api/features/dependencies/services.py:499`
+ - `api/features/dependencies/services.py:509`
+ - `api/features/dependencies/services.py:565`
+ - `api/features/dependencies/services.py:568`
 
 Attributes:
  - `environment.key`
@@ -310,7 +311,7 @@ Attributes:
 ### `features.dependencies.created`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:135`
+ - `api/features/dependencies/services.py:140`
 
 Attributes:
  - `environment.key`
@@ -322,7 +323,8 @@ Attributes:
 ### `features.dependencies.delete_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:480`
+ - `api/features/dependencies/services.py:640`
+ - `api/features/dependencies/services.py:654`
 
 Attributes:
  - `environment.key`
@@ -334,8 +336,8 @@ Attributes:
 ### `features.dependencies.deleted`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:107`
- - `api/features/dependencies/services.py:133`
+ - `api/features/dependencies/services.py:112`
+ - `api/features/dependencies/services.py:138`
 
 Attributes:
  - `environment.key`
@@ -343,6 +345,20 @@ Attributes:
  - `organisation.id`
  - `prerequisite_feature.name`
  - `project.id`
+
+### `features.flag.staged`
+
+Logged at `info` from:
+ - `api/features/future/services.py:454`
+
+Attributes:
+ - `change_request.id`
+ - `environment.id`
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `segment_overrides.created.segment.ids`
+ - `segment_overrides.deleted.segment.ids`
 
 ### `features.flag.update_rejected`
 
@@ -359,8 +375,8 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:477`
- - `api/features/future/services.py:537`
+ - `api/features/future/services.py:550`
+ - `api/features/future/services.py:619`
 
 Attributes:
  - `environment.id`
@@ -972,7 +988,7 @@ Attributes:
 ### `workflows.change_request.committed`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:45`
+ - `api/core/workflows_services.py:49`
 
 Attributes:
  - `environment.id`
@@ -982,7 +998,7 @@ Attributes:
 ### `workflows.missing_live_segment`
 
 Logged at `warning` from:
- - `api/core/workflows_services.py:130`
+ - `api/core/workflows_services.py:133`
 
 Attributes:
  - `draft_segment`
@@ -990,7 +1006,7 @@ Attributes:
 ### `workflows.segment_revision_created`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:135`
+ - `api/core/workflows_services.py:138`
 
 Attributes:
  - `revision_id`
