@@ -1,6 +1,6 @@
 import abc
 import typing
-from typing import Any, Iterable
+from typing import Any, Generator, Iterable
 
 import structlog
 from boto3.dynamodb.conditions import Attr, ConditionBase, Key
@@ -138,6 +138,26 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         feature_id: int | None = None,
         projection_expression_attributes: list[str] | None = None,
     ) -> list[dict[str, Any]]:
+        return list(
+            self.iter_identity_overrides_by_environment_id(
+                environment_id=environment_id,
+                feature_id=feature_id,
+                projection_expression_attributes=projection_expression_attributes,
+            )
+        )
+
+    def iter_identity_overrides_by_environment_id(
+        self,
+        environment_id: int,
+        feature_id: int | None = None,
+        projection_expression_attributes: list[str] | None = None,
+    ) -> Generator[dict[str, Any], None, None]:
+        """
+        Yield an environment's identity override documents as they are read.
+
+        An environment's overrides are unbounded, so callers that process them
+        in bounded groups should prefer this to the list form.
+        """
         key_condition_expression = self.get_identity_overrides_key_condition_expression(
             environment_id=environment_id,
             feature_id=feature_id,
@@ -151,7 +171,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
             )
 
         try:
-            return list(self.query_iter_all_items(**query_kwargs))
+            yield from self.query_iter_all_items(**query_kwargs)
         except KeyError as e:
             raise ObjectDoesNotExist() from e
 

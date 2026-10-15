@@ -302,3 +302,46 @@ def test_delete_orphaned_identity_overrides__override_recreated__skips_deletion(
     assert _get_document_keys(flagsmith_environments_v2_table, environment) == {
         document_key
     }
+
+
+def test_delete_orphaned_identity_overrides__overrides_span_groups__deletes_all(
+    flagsmith_environments_v2_table: Table,
+    flagsmith_identities_table: Table,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    dynamo_enabled_project: Project,
+    environment: Environment,
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    """
+    Overrides are keyed by feature then identity, so one identity's overrides
+    can fall into different groups and be looked up more than once.
+    """
+    # Given - an identity with overrides on two features, and one override read
+    # per group, so the two land in separate groups
+    mocker.patch(
+        "edge_api.identities.edge_identity_service.ORPHANED_OVERRIDE_GROUP_SIZE", 1
+    )
+    other_feature = Feature.objects.create(
+        name="other_feature", project=dynamo_enabled_project
+    )
+    identity_uuid = str(uuid.uuid4())
+    for override_feature in (feature, other_feature):
+        _put_identity_override(
+            flagsmith_environments_v2_table,
+            environment,
+            override_feature,
+            "spans-groups",
+            identity_uuid,
+        )
+    # The identity exists, but overrides neither feature
+    _put_identity(
+        flagsmith_identities_table, environment, None, "spans-groups", identity_uuid
+    )
+
+    # When
+    call_command(COMMAND, environment_id=environment.id)
+
+    # Then
+    assert _get_document_keys(flagsmith_environments_v2_table, environment) == set()

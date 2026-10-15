@@ -10,7 +10,6 @@ from edge_api.identities.dataclasses import (
 )
 from edge_api.identities.models import EdgeIdentity
 from environments.dynamodb import DynamoEnvironmentV2Wrapper
-from environments.dynamodb.constants import DYNAMODB_MAX_BATCH_GET_ITEM_COUNT
 from environments.dynamodb.types import (
     IdentityOverrideV2,
 )
@@ -21,6 +20,11 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
 
 ddb_environment_v2_wrapper = DynamoEnvironmentV2Wrapper()
+
+# Override documents read per identity lookup round. Overrides are keyed by
+# feature then identity, so an identity overriding several features is looked up
+# once per group it appears in — a read cost traded for bounded memory.
+ORPHANED_OVERRIDE_GROUP_SIZE = 500
 
 
 def get_edge_identity_overrides(
@@ -67,7 +71,7 @@ def iter_orphaned_identity_overrides(
     and listed on the feature's identity overrides tab.
     """
     override_documents = (
-        ddb_environment_v2_wrapper.get_identity_overrides_by_environment_id(
+        ddb_environment_v2_wrapper.iter_identity_overrides_by_environment_id(
             environment_id=environment.id,
             projection_expression_attributes=[
                 "document_key",
@@ -78,21 +82,22 @@ def iter_orphaned_identity_overrides(
             ],
         )
     )
-    documents_by_identifier: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    for override_document in override_documents:
-        documents_by_identifier[override_document["identifier"]].append(
-            override_document
-        )
-
-    for identifiers in batched(
-        documents_by_identifier,
-        size=DYNAMODB_MAX_BATCH_GET_ITEM_COUNT,
+    # Overrides are read in bounded groups: an environment's are unbounded, and
+    # holding them all would scale this command's memory with the environment.
+    for override_document_group in batched(
+        override_documents,
+        size=ORPHANED_OVERRIDE_GROUP_SIZE,
     ):
+        documents_by_identifier: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for override_document in override_document_group:
+            documents_by_identifier[override_document["identifier"]].append(
+                override_document
+            )
         identifiers_by_composite_key = {
             IdentityModel.generate_composite_key(
                 environment.api_key, identifier
             ): identifier
-            for identifier in identifiers
+            for identifier in documents_by_identifier
         }
         identity_documents = {
             identity_document["composite_key"]: identity_document

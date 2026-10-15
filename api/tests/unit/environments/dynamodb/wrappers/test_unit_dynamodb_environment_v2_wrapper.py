@@ -5,6 +5,7 @@ import pytest
 from boto3.dynamodb.types import Binary
 from botocore.exceptions import ClientError
 from common.test_tools import AssertMetricFixture
+from django.core.exceptions import ObjectDoesNotExist
 from freezegun import freeze_time
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django.fixtures import SettingsWrapper
@@ -393,3 +394,23 @@ def test_delete_identity_override_if_unchanged__unexpected_client_error__reraise
 
     # Then
     assert exc_info.value.response["Error"]["Code"] == "ValidationException"
+
+
+def test_iter_identity_overrides_by_environment_id__malformed_response__raises_expected(
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch.object(
+        dynamodb_wrapper_v2,
+        "query_iter_all_items",
+        side_effect=KeyError("Items"),
+    )
+
+    # When / Then
+    with pytest.raises(ObjectDoesNotExist):
+        list(
+            dynamodb_wrapper_v2.iter_identity_overrides_by_environment_id(
+                environment_id=1
+            )
+        )
