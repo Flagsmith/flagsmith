@@ -5,6 +5,7 @@ import typing
 from dataclasses import replace
 
 import structlog
+from common.core.utils import is_saas
 from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.db.models import Q
@@ -20,14 +21,12 @@ from core.dataclasses import AuthorData
 from environments.tasks import rebuild_environment_document
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
-    DATABRICKS_WAREHOUSE_FLAG,
-    EXPERIMENT_FLAG,
     EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
     MAX_AUDIENCE_SEGMENTS,
     RESULTS_MIN_CONVERSIONS_PER_VARIANT,
     RESULTS_MIN_IDENTITIES_PER_VARIANT,
     SRM_MIN_TOTAL_IDENTITIES,
-    WAREHOUSE_CONNECTION_FLAG,
+    WAREHOUSES_FLAG,
 )
 from experimentation.dataclasses import (
     AudienceSpec,
@@ -77,6 +76,7 @@ from features.models import FeatureState
 from features.value_types import BOOLEAN, STRING
 from features.versioning.versioning_service import get_environment_flags_list
 from integrations.flagsmith.client import get_openfeature_client
+from organisations.subscriptions.constants import PLAN_RANK, SubscriptionPlanFamily
 from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from segments.services import write_segment_rules
 
@@ -109,43 +109,9 @@ class _ExposureReadKwargs(typing.TypedDict):
     granularity: ExposureGranularity
 
 
-def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
-    return (
-        settings.EXPERIMENTATION_ENABLED
-        and get_openfeature_client().get_boolean_value(
-            WAREHOUSE_CONNECTION_FLAG,
-            default_value=False,
-            evaluation_context=organisation.openfeature_evaluation_context,
-        )
-    )
-
-
-def is_databricks_warehouse_enabled(organisation: Organisation) -> bool:
-    return get_openfeature_client().get_boolean_value(
-        DATABRICKS_WAREHOUSE_FLAG,
-        default_value=False,
-        evaluation_context=organisation.openfeature_evaluation_context,
-    )
-
-
-def is_experiment_feature_enabled(organisation: Organisation) -> bool:
-    return (
-        settings.EXPERIMENTATION_ENABLED
-        and get_openfeature_client().get_boolean_value(
-            EXPERIMENT_FLAG,
-            default_value=False,
-            evaluation_context=organisation.openfeature_evaluation_context,
-        )
-    )
-
-
-def get_experiment_flag_config(
-    organisation: Organisation,
-) -> dict[str, object]:
-    if not is_experiment_feature_enabled(organisation):
-        return {}
+def get_warehouses_flag_config(organisation: Organisation) -> dict[str, object]:
     raw = get_openfeature_client().get_string_value(
-        EXPERIMENT_FLAG,
+        WAREHOUSES_FLAG,
         default_value="{}",
         evaluation_context=organisation.openfeature_evaluation_context,
     )
@@ -156,11 +122,31 @@ def get_experiment_flag_config(
     return parsed if isinstance(parsed, dict) else {}
 
 
+def is_warehouse_type_available(
+    organisation: Organisation, warehouse_type: str
+) -> bool:
+    if not is_saas():
+        return True
+    minimum_plans = get_warehouses_flag_config(organisation).get("minimum_plans")
+    if not isinstance(minimum_plans, dict):
+        return True
+    # Unknown or empty plan IDs resolve to FREE, i.e. available on every plan.
+    minimum = SubscriptionPlanFamily.get_by_plan_id(
+        str(minimum_plans.get(warehouse_type) or "")
+    )
+    current = organisation.subscription.subscription_plan_family
+    return PLAN_RANK[current] >= PLAN_RANK[minimum]
+
+
 def ensure_flagsmith_warehouse_connection(
     environment: Environment,
 ) -> WarehouseConnection | None:
-    config = get_experiment_flag_config(environment.project.organisation)
-    if not config.get("auto_connect_warehouse"):
+    if not (settings.EXPERIMENTATION_ENABLED and is_saas()):
+        return None
+    organisation = environment.project.organisation
+    if not get_warehouses_flag_config(organisation).get("auto_connect_flagsmith"):
+        return None
+    if not is_warehouse_type_available(organisation, WarehouseType.FLAGSMITH):
         return None
 
     if WarehouseConnection.objects.filter(
