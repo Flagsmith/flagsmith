@@ -1,8 +1,11 @@
 import uuid
 from typing import Any
 
+import pytest
 from boto3.dynamodb.types import Binary
+from botocore.exceptions import ClientError
 from common.test_tools import AssertMetricFixture
+from django.core.exceptions import ObjectDoesNotExist
 from freezegun import freeze_time
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django.fixtures import SettingsWrapper
@@ -366,3 +369,48 @@ def test_environment_v2_wrapper__delete_environment__deletes_related_data_from_d
             feature_id=1,
         ),
     }
+
+
+def test_delete_identity_override_if_unchanged__unexpected_client_error__reraises(
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch.object(
+        dynamodb_wrapper_v2.table,
+        "delete_item",
+        side_effect=ClientError(
+            {"Error": {"Code": "ValidationException"}}, "DeleteItem"
+        ),
+    )
+
+    # When
+    with pytest.raises(ClientError) as exc_info:
+        dynamodb_wrapper_v2.delete_identity_override_if_unchanged(
+            environment_id=1,
+            document_key="identity_override:1:some-uuid",
+            featurestate_uuid="some-featurestate-uuid",
+        )
+
+    # Then
+    assert exc_info.value.response["Error"]["Code"] == "ValidationException"
+
+
+def test_iter_identity_overrides_by_environment_id__malformed_response__raises_expected(
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocker.patch.object(
+        dynamodb_wrapper_v2,
+        "query_iter_all_items",
+        side_effect=KeyError("Items"),
+    )
+
+    # When / Then
+    with pytest.raises(ObjectDoesNotExist):
+        list(
+            dynamodb_wrapper_v2.iter_identity_overrides_by_environment_id(
+                environment_id=1
+            )
+        )

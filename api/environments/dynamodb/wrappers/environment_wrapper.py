@@ -1,9 +1,10 @@
 import abc
 import typing
-from typing import Any, Iterable
+from typing import Any, Generator, Iterable
 
 import structlog
-from boto3.dynamodb.conditions import ConditionBase, Key
+from boto3.dynamodb.conditions import Attr, ConditionBase, Key
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import prefetch_related_objects
@@ -137,6 +138,26 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         feature_id: int | None = None,
         projection_expression_attributes: list[str] | None = None,
     ) -> list[dict[str, Any]]:
+        return list(
+            self.iter_identity_overrides_by_environment_id(
+                environment_id=environment_id,
+                feature_id=feature_id,
+                projection_expression_attributes=projection_expression_attributes,
+            )
+        )
+
+    def iter_identity_overrides_by_environment_id(
+        self,
+        environment_id: int,
+        feature_id: int | None = None,
+        projection_expression_attributes: list[str] | None = None,
+    ) -> Generator[dict[str, Any], None, None]:
+        """
+        Yield an environment's identity override documents as they are read.
+
+        An environment's overrides are unbounded, so callers that process them
+        in bounded groups should prefer this to the list form.
+        """
         key_condition_expression = self.get_identity_overrides_key_condition_expression(
             environment_id=environment_id,
             feature_id=feature_id,
@@ -150,7 +171,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
             )
 
         try:
-            return list(self.query_iter_all_items(**query_kwargs))
+            yield from self.query_iter_all_items(**query_kwargs)
         except KeyError as e:
             raise ObjectDoesNotExist() from e
 
@@ -215,6 +236,40 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
                         ENVIRONMENTS_V2_SORT_KEY: item["document_key"],
                     },
                 )
+
+    def delete_identity_override_if_unchanged(
+        self,
+        environment_id: int,
+        document_key: str,
+        featurestate_uuid: str,
+    ) -> bool:
+        """
+        Delete a single identity override document, unless it has been rewritten.
+
+        The condition guards against removing an override that was recreated
+        between a caller deciding it was stale and this delete landing — without
+        it, a repair would carry the same race as the bug it repairs. An override
+        recreated for the same identity keeps the document key and identity uuid
+        but gets a new feature state, so only `featurestate_uuid` distinguishes
+        the instance the caller classified from its replacement.
+
+        :return: whether the document was deleted.
+        """
+        try:
+            self.table.delete_item(  # type: ignore[union-attr]
+                Key={
+                    ENVIRONMENTS_V2_PARTITION_KEY: str(environment_id),
+                    ENVIRONMENTS_V2_SORT_KEY: document_key,
+                },
+                ConditionExpression=Attr("feature_state.featurestate_uuid").eq(
+                    featurestate_uuid
+                ),
+            )
+        except ClientError as exc:
+            if exc.response["Error"]["Code"] == "ConditionalCheckFailedException":
+                return False
+            raise
+        return True
 
     def delete_identity_overrides(self, environment_id: int, feature_id: int) -> None:
         filter_expression = self.get_identity_overrides_key_condition_expression(
