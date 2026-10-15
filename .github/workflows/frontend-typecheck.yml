@@ -20,6 +20,12 @@ on:
 permissions:
   contents: read
 
+# A newer push to a pull request replaces its older report. Main's counts are
+# never cancelled, since pull requests compare against them.
+concurrency:
+  group: frontend-typecheck-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   typescript-errors:
     name: TypeScript errors
@@ -32,6 +38,9 @@ jobs:
     defaults:
       run:
         working-directory: frontend
+
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
     steps:
       - uses: actions/checkout@v5
@@ -47,7 +56,7 @@ jobs:
         run: npm ci
 
       - name: Count errors
-        run: node scripts/typecheck-report.mjs count typecheck-counts.json
+        run: node scripts/typecheck-report/index.mjs count "$GITHUB_SHA" typecheck-counts.json
 
       - name: Keep main's count
         if: github.event_name == 'push'
@@ -57,23 +66,11 @@ jobs:
           path: frontend/typecheck-counts.json
           retention-days: 90
 
-      # The pull request is checked out merged into main at base.sha, so that
-      # commit's count is the right comparison.
-      - name: Download main's count for the base commit
-        if: github.event_name == 'pull_request'
-        continue-on-error: true
-        uses: dawidd6/action-download-artifact@v6
-        with:
-          workflow: frontend-typecheck.yml
-          commit: ${{ github.event.pull_request.base.sha }}
-          name: typecheck-counts
-          path: frontend/base
-          if_no_artifact_found: ignore
-
-      # Main only runs this when frontend files change, so the base commit
-      # often has no count of its own. The latest one matches it then.
+      # Main only runs this when frontend files change, so its latest count
+      # usually belongs to an older commit than the base. The next step checks
+      # that the frontend is the same in both.
       - name: Download main's latest count
-        if: github.event_name == 'pull_request' && hashFiles('frontend/base/typecheck-counts.json') == ''
+        if: github.event_name == 'pull_request'
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v6
         with:
@@ -83,30 +80,38 @@ jobs:
           path: frontend/base
           if_no_artifact_found: warn
 
+      - name: Check the count matches the base
+        if: github.event_name == 'pull_request'
+        id: base
+        run: |
+          if [ ! -f base/typecheck-counts.json ]; then
+            echo "state=missing" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          count_sha=$(node -p "require('./base/typecheck-counts.json').sha")
+          state=current
+          if [ "$count_sha" != "$BASE_SHA" ]; then
+            git fetch --no-tags --depth=1 origin "$count_sha" "$BASE_SHA"
+            git diff --quiet "$count_sha" "$BASE_SHA" -- . || state=stale
+          fi
+          echo "state=$state" >> "$GITHUB_OUTPUT"
+
       - name: Compare with main
         if: github.event_name == 'pull_request'
         id: compare
         run: |
-          delta=$(node scripts/typecheck-report.mjs compare base/typecheck-counts.json typecheck-counts.json report.md)
-          echo "delta=$delta" >> "$GITHUB_OUTPUT"
+          action=$(node scripts/typecheck-report/index.mjs compare base/typecheck-counts.json typecheck-counts.json "${{ steps.base.outputs.state }}" report.md)
+          echo "action=$action" >> "$GITHUB_OUTPUT"
           cat report.md >> "$GITHUB_STEP_SUMMARY"
 
-      # Comments only when the total moves; an existing comment is still
-      # updated when it stops moving, so it never shows a stale result.
+      # Comments when the total moves or any file gains errors. Otherwise it
+      # only refreshes an existing comment, so quiet pull requests get none.
       # Fork pull requests can't comment; the job summary still has the report.
-      - name: Comment on the pull request
-        if: github.event_name == 'pull_request' && steps.compare.outputs.delta != '0' && steps.compare.outputs.delta != 'none'
+      - name: Report on the pull request
+        if: github.event_name == 'pull_request'
         continue-on-error: true
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: typescript-errors
           path: frontend/report.md
-
-      - name: Update the existing comment
-        if: github.event_name == 'pull_request' && (steps.compare.outputs.delta == '0' || steps.compare.outputs.delta == 'none')
-        continue-on-error: true
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: typescript-errors
-          path: frontend/report.md
-          only_update: true
+          only_update: ${{ steps.compare.outputs.action == 'update' }}
