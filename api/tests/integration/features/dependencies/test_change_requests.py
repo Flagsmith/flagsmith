@@ -1,7 +1,10 @@
 from datetime import timedelta
 
 import pytest
-from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
+from common.environments.permissions import (
+    MANAGE_SEGMENT_OVERRIDES,
+    VIEW_ENVIRONMENT,
+)
 from django.conf import settings
 from django.utils import timezone
 from freezegun.api import FrozenDateTimeFactory
@@ -225,13 +228,19 @@ def test_list_feature_dependencies__point_to_open_change_request__responds_200(
     create_change_request: CreateChangeRequestFixture,
     environment: int,
     environment_api_key: str,
+    organisation: int,
     project: int,
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given
     feature = Feature.objects.create(name="checkout", project_id=project)
     payments = Feature.objects.create(name="payments", project_id=project)
     inventory = Feature.objects.create(name="inventory", project_id=project)
     shipping = Feature.objects.create(name="shipping", project_id=project)
+    staff_user.add_organisation(Organisation.objects.get(id=organisation))
+    with_environment_permissions([VIEW_ENVIRONMENT], environment, False)
     live_payments_dependency = add_feature_prerequisite(
         environment_api_key, feature.id, payments.id
     )
@@ -249,7 +258,7 @@ def test_list_feature_dependencies__point_to_open_change_request__responds_200(
 
     # When
     with capture_audit_logs() as audit_logs:
-        response = admin_client.get(
+        response = staff_client.get(
             f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/?change_request={change_request.id}",
         )
 
