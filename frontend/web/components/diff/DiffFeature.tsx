@@ -81,9 +81,13 @@ const DiffFeature: FC<FeatureDiffType> = ({
     projectId,
   })
 
+  // Where dependencies have their own tab, their segments stay out of this one.
+  const overrideSegments = dependencies
+    ? segments?.results.filter((segment) => segment.managed_by !== 'dependency')
+    : segments?.results
   const segmentDiffs = disableSegments
     ? { diffs: [], totalChanges: 0 }
-    : getSegmentOverrideDiff(oldState, newState, segments?.results, conflicts)
+    : getSegmentOverrideDiff(oldState, newState, overrideSegments, conflicts)
   const variationDiffs = getVariationDiff(oldEnv, newEnv)
   const totalSegmentChanges = segmentDiffs?.totalChanges
   const totalVariationChanges = variationDiffs?.totalChanges
