@@ -6,7 +6,6 @@ import structlog
 from django.db import transaction
 from django.db.models import QuerySet
 from flag_engine.segments import constants
-from ordered_model.models import OrderedModelQuerySet  # type: ignore[import-untyped]
 
 from api_keys.user import APIKeyUser
 from audit.constants import (
@@ -356,9 +355,10 @@ def create_flag_dependency(
     author: FFAdminUser | APIKeyUser,
 ) -> DependencyEdge:
     """Disable the feature in the environment unless the prerequisite is enabled."""
-    from features.future.services import (  # It imports this module.
-        update_flag,
+    from features.feature_segments.services import (
+        get_next_segment_override_priority,
     )
+    from features.future.services import update_flag
 
     log = logger.bind(
         organisation__id=environment.project.organisation_id,
@@ -406,9 +406,9 @@ def create_flag_dependency(
         segment = _get_or_create_dependency_segment(
             feature=feature, prerequisite_feature=prerequisite_feature
         )
-        overrides: OrderedModelQuerySet = get_live_overrides(
-            include_scheduled=True
-        ).filter(environment=environment, feature=feature)
+        overrides = get_live_overrides(include_scheduled=True).filter(
+            environment=environment, feature=feature
+        )
         update_flag(
             environment=environment,
             feature=feature,
@@ -417,7 +417,9 @@ def create_flag_dependency(
                     {
                         "segment": {"id": segment.id},
                         "enabled": False,
-                        "priority": overrides.get_next_order(),
+                        "priority": get_next_segment_override_priority(
+                            environment=environment, feature=feature
+                        ),
                     }
                 ]
             },
