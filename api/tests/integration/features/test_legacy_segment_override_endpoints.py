@@ -1322,7 +1322,7 @@ def test_update_feature_state__all_variants_left_out__weights_them_0(
     ] == [[{"id": option_a, "weight": 0.0}, {"id": option_b, "weight": 0.0}]]
 
 
-def test_create_feature_state__live_override__updates_override(
+def test_create_feature_state__live_override__responds_400(
     admin_client: APIClient,
     create_segment_override: Any,
     environment: int,
@@ -1332,9 +1332,7 @@ def test_create_feature_state__live_override__updates_override(
 ) -> None:
     # Given
     create_segment_override(environment_api_key, feature, segment)
-    feature_segment_id = _get_feature_segment_id(
-        admin_client, environment, feature, segment
-    )
+    overrides = _get_segment_overrides(admin_client, environment_api_key, feature)
 
     # When
     response = admin_client.post(
@@ -1342,24 +1340,21 @@ def test_create_feature_state__live_override__updates_override(
         {
             "feature": feature,
             "environment": environment,
-            "feature_segment": feature_segment_id,
-            "enabled": True,
+            "feature_segment": _get_feature_segment_id(
+                admin_client, environment, feature, segment
+            ),
+            "enabled": False,
             "feature_state_value": {"type": "unicode", "string_value": "foo"},
         },
         format="json",
     )
 
     # Then
-    assert response.status_code == 201
-    assert response.json()["id"] == _get_segment_override_id(
-        admin_client, environment, feature, segment
-    )
-    assert _get_segment_overrides(admin_client, environment_api_key, feature) == [
-        {
-            "segment": {"id": segment},
-            "priority": 0,
-            "enabled": True,
-            "value": {"type": "string", "value": "foo"},
-            "variants": [],
-        },
+    assert response.status_code == 400
+    assert response.json() == [
+        "['Feature state already exists for this environment, feature, version, "
+        "segment & identity combination']"
     ]
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
+        overrides
+    )

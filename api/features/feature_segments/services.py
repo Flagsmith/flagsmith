@@ -37,19 +37,6 @@ def get_segment_override(
     return overrides[0] if overrides else None
 
 
-def is_live_segment_override(feature_segment: FeatureSegment) -> bool:
-    """Whether a feature segment is the one the flag serves its segment override from.
-
-    TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
-    """
-    override = get_segment_override(
-        environment=feature_segment.environment,
-        feature=feature_segment.feature,
-        segment_id=feature_segment.segment_id,
-    )
-    return override is not None and override.feature_segment_id == feature_segment.id
-
-
 def _get_feature_segments(
     environment: Environment, feature: Feature
 ) -> QuerySet[FeatureSegment]:
