@@ -6,7 +6,6 @@ import classNames from 'classnames'
 import { DragDropProvider } from '@dnd-kit/react'
 import { useSortable, isSortable } from '@dnd-kit/react/sortable'
 import { RestrictToVerticalAxis } from '@dnd-kit/abstract/modifiers'
-import { arrayMove } from '@dnd-kit/helpers'
 import ProjectStore from 'common/stores/project-store'
 import ValueEditor from './ValueEditor'
 import ControlWeightChip from './mv/ControlWeightChip'
@@ -27,6 +26,12 @@ import SegmentOverrideActions from './SegmentOverrideActions'
 import CompareSegmentOverride from './diff/CompareSegmentOverride'
 import Button from './base/forms/Button'
 import { EnvironmentPermission } from 'common/types/permissions.types'
+import {
+  canMoveSegmentOverride,
+  getNextSegmentOverridePriority,
+  moveSegmentOverride,
+} from 'common/utils/segmentOverridePriorities'
+import SystemSegmentOverrideLabel from './segments/SystemSegmentOverrideLabel'
 
 const getSegmentId = (segment) =>
   typeof segment === 'object' && segment !== null ? segment.id : segment
@@ -57,8 +62,9 @@ const SegmentOverrideInner = class Override extends React.Component {
       multivariateOptions,
       name,
       onSortEnd,
+      onViewDependencies,
       projectFlag,
-      readOnly,
+      readOnly: readOnlyProp,
       setCompare,
       setSegmentEditId,
       setShowCreateSegment,
@@ -67,6 +73,9 @@ const SegmentOverrideInner = class Override extends React.Component {
       toggle,
       value: v,
     } = this.props
+    // System segment overrides are managed by what owns them.
+    const isSystemSegment = !!v?.is_system_segment
+    const readOnly = readOnlyProp || isSystemSegment
 
     const mvOptions =
       multivariateOptions &&
@@ -129,7 +138,7 @@ const SegmentOverrideInner = class Override extends React.Component {
           <div
             ref={dragHandleRef}
             className={classNames('flex flex-1 text-start', {
-              'drag-handle': dragHandleRef,
+              'drag-handle': dragHandleRef && !isSystemSegment,
             })}
           >
             {this.props.id ? (
@@ -180,6 +189,14 @@ const SegmentOverrideInner = class Override extends React.Component {
                 {v.is_feature_specific && (
                   <div className='chip chip--xs ml-2'>Feature-Specific</div>
                 )}
+                {isSystemSegment && (
+                  <SystemSegmentOverrideLabel
+                    managedBy={v.segment_managed_by}
+                    projectId={this.props.projectId}
+                    environmentId={environmentId}
+                    onViewDependencies={onViewDependencies}
+                  />
+                )}
                 {changed && <div className='chip chip--xs ml-2'>Unsaved</div>}
               </Row>
             )}
@@ -221,6 +238,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                       }}
                       canCopyValue={
                         permission &&
+                        !readOnly &&
                         !!controlValue &&
                         (!multivariateOptions || !multivariateOptions.length)
                       }
@@ -237,7 +255,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                           )
                         }
                       }}
-                      canEdit={permission}
+                      canEdit={permission && !isSystemSegment}
                     />
                   )}
                 </Permission>
@@ -262,7 +280,7 @@ const SegmentOverrideInner = class Override extends React.Component {
             <Switch
               className='mt-4'
               data-test={`segment-override-toggle-${index}`}
-              disabled={disabled}
+              disabled={disabled || isSystemSegment}
               checked={v.enabled}
               onChange={(v) => {
                 if (!readOnly) {
@@ -358,6 +376,7 @@ const SegmentOverrideInner = class Override extends React.Component {
 
 const SortableSegmentOverride = (props) => {
   const { handleRef, ref } = useSortable({
+    disabled: !!props.value?.is_system_segment,
     id: props.sortId,
     index: props.index,
     modifiers: [RestrictToVerticalAxis],
@@ -383,6 +402,7 @@ const SegmentOverrideListInner = ({
   multivariateOptions,
   name,
   onSortEnd,
+  onViewDependencies,
   projectFlag,
   projectId,
   readOnly,
@@ -411,6 +431,7 @@ const SegmentOverrideListInner = ({
                 hideViewSegment={hideViewSegment}
                 highlightSegmentId={highlightSegmentId}
                 onSortEnd={onSortEnd}
+                onViewDependencies={onViewDependencies}
                 disabled={disabled}
                 showEditSegment={showEditSegment}
                 environmentId={environmentId}
@@ -461,6 +482,7 @@ const SegmentOverrideListInner = ({
               hideViewSegment={hideViewSegment}
               highlightSegmentId={highlightSegmentId}
               onSortEnd={onSortEnd}
+              onViewDependencies={onViewDependencies}
               disabled={disabled}
               showEditSegment={showEditSegment}
               environmentId={environmentId}
@@ -509,6 +531,19 @@ const SortableSegmentOverrideList = ({
   onSortEnd: handleSortEnd,
   ...rest
 }) => {
+  // Overrides can't move past system segment overrides, so stop sorting
+  // before it would.
+  const handleDragOver = (event) => {
+    const { source, target } = event.operation
+    if (
+      isSortable(source) &&
+      isSortable(target) &&
+      !canMoveSegmentOverride(items, source.initialIndex, target.index)
+    ) {
+      event.preventDefault()
+    }
+  }
+
   const handleDragEnd = (event) => {
     if (event.canceled) return
     const { source } = event.operation
@@ -521,7 +556,7 @@ const SortableSegmentOverrideList = ({
   }
 
   return (
-    <DragDropProvider onDragEnd={handleDragEnd}>
+    <DragDropProvider onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
       <SegmentOverrideListInner
         items={items}
         onSortEnd={handleSortEnd}
@@ -622,7 +657,7 @@ class TheComponent extends Component {
           `${this.props.controlValue || ''}`,
         ),
       },
-      priority: value.length,
+      priority: getNextSegmentOverridePriority(value),
       segment: this.state.selectedSegment.value,
       segment_name: this.state.selectedSegment.label,
       value: `${this.props.controlValue || ''}`,
@@ -639,12 +674,7 @@ class TheComponent extends Component {
 
   confirmRemove = (i) => {
     if (!this.props.value[i].id) {
-      this.props.onChange(
-        filter(this.props.value, (v, index) => index !== i).map((v, i) => ({
-          ...v,
-          priority: i,
-        })),
-      )
+      this.props.onChange(filter(this.props.value, (v, index) => index !== i))
       if (this.props.onRemove) {
         this.props.onRemove()
       }
@@ -693,11 +723,11 @@ class TheComponent extends Component {
   }
 
   onSortEnd = ({ newIndex, oldIndex }) => {
+    if (!canMoveSegmentOverride(this.props.value, oldIndex, newIndex)) {
+      return
+    }
     this.props.onChange(
-      arrayMove(this.props.value, oldIndex, newIndex).map((v, i) => ({
-        ...v,
-        priority: i,
-      })),
+      moveSegmentOverride(this.props.value, oldIndex, newIndex),
     )
   }
 
@@ -878,6 +908,7 @@ class TheComponent extends Component {
                       }))}
                       setSegmentEditId={this.setSegmentEditId}
                       onSortEnd={this.onSortEnd}
+                      onViewDependencies={this.props.onViewDependencies}
                       projectFlag={this.props.projectFlag}
                       hideViewSegment={this.props.hideViewSegment}
                       highlightSegmentId={this.props.highlightSegmentId}

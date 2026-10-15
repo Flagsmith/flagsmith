@@ -1,5 +1,6 @@
 import { test, expect } from '../test-setup'
 import {
+  byId,
   createHelpers,
   getFlagsmith,
   log,
@@ -84,6 +85,16 @@ test.describe('Flag Dependencies', () => {
     await expect(row.getByText('Yes', { exact: true })).toBeVisible()
     await expect(page.getByText(/Serving off in/)).toBeHidden()
     await visualSnapshot(page, 'dependencies-satisfied', testInfo)
+
+    log('The dependency manages its segment override')
+    await page.getByRole('button', { name: 'Segment Overrides' }).click()
+    await expect(
+      page.locator(byId('system-segment-override-label')),
+    ).toHaveText('Managed by a flag dependency')
+    await expect(page.locator(byId('segment-override-toggle-0'))).toBeDisabled()
+    await page.getByRole('button', { name: 'View dependencies' }).click()
+    await expect(page).toHaveURL(/tab=dependencies/)
+    await expect(row).toBeVisible()
 
     log('The prerequisite names its dependent and cannot take one of its own')
     await closeModal()
