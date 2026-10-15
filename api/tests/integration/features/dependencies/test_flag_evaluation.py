@@ -26,7 +26,7 @@ def test_get_flags__dependent_flag_default_value_changed__serves_current_value(
     sdk_client: APIClient,
 ) -> None:
     # Given
-    admin_client.patch(
+    response = admin_client.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{egg}/",
         UpdateFlagRequest(
             {
@@ -38,6 +38,7 @@ def test_get_flags__dependent_flag_default_value_changed__serves_current_value(
         ),
         format="json",
     )
+    assert response.status_code == 200
 
     # When
     response = sdk_client.get("/api/v1/flags/")
@@ -62,16 +63,18 @@ def test_get_identity_flags__dependent_flag_default_variants_changed__serves_cur
     )
     chicken = Feature.objects.create(name="chicken", project_id=project)
     farm = create_mv_option_with_api(admin_client, project, egg.id, 0, "farm")
-    admin_client.post(
+    response = admin_client.post(
         f"/api/v1/environments/{environment_api_key}/features/{egg.id}/dependencies/{chicken.id}/",
     )
-    admin_client.patch(
+    assert response.status_code == 201
+    response = admin_client.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{egg.id}/",
         UpdateFlagRequest(
             {"environment_default": {"variants": [{"id": farm, "weight": 100}]}}
         ),
         format="json",
     )
+    assert response.status_code == 200
 
     # When
     response = sdk_client.get("/api/v1/identities/", {"identifier": "hen"})
@@ -91,7 +94,7 @@ def test_get_environment_document__dependent_flag_default_value_changed__serves_
     server_side_sdk_client: APIClient,
 ) -> None:
     # Given
-    admin_client.patch(
+    response = admin_client.patch(
         f"/api/__future__/environments/{environment_api_key}/features/{egg}/",
         UpdateFlagRequest(
             {
@@ -103,6 +106,7 @@ def test_get_environment_document__dependent_flag_default_value_changed__serves_
         ),
         format="json",
     )
+    assert response.status_code == 200
 
     # When
     response = server_side_sdk_client.get("/api/v1/environment-document/")
