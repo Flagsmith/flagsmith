@@ -24,10 +24,13 @@ from tests.integration.types import (
 from tests.types import CaptureAuditLogsFixture, WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
 
-pytestmark = pytest.mark.skipif(
-    not settings.WORKFLOWS_LOGIC_INSTALLED,
-    reason="workflows_logic module not installed (private package extra)",
-)
+pytestmark = [
+    pytest.mark.skipif(
+        not settings.WORKFLOWS_LOGIC_INSTALLED,
+        reason="workflows_logic module not installed (private package extra)",
+    ),
+    pytest.mark.usefixtures("environment_v2_versioning"),
+]
 
 
 def _enable_change_requests(environment: int) -> None:
@@ -39,7 +42,6 @@ def _enable_change_requests(environment: int) -> None:
 # Direct dependency changes but change requests are enabled
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__bare_but_change_requests_enabled__responds_409(
     admin_client: APIClient,
     capture_audit_logs: CaptureAuditLogsFixture,
@@ -72,7 +74,6 @@ def test_add_feature_dependency__bare_but_change_requests_enabled__responds_409(
     assert not log.has("dependencies.created")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_delete_feature_dependency__bare_but_change_requests_enabled__responds_409(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -109,7 +110,6 @@ def test_delete_feature_dependency__bare_but_change_requests_enabled__responds_4
 # Open change requests
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__point_to_open_change_request__responds_201(
     admin_client: APIClient,
     capture_audit_logs: CaptureAuditLogsFixture,
@@ -171,7 +171,6 @@ def test_add_feature_dependency__point_to_open_change_request__responds_201(
     assert not log.has("dependencies.created")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_delete_feature_dependency__point_to_open_change_request__responds_204(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -209,7 +208,6 @@ def test_delete_feature_dependency__point_to_open_change_request__responds_204(
     assert not log.has("dependencies.deleted")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_list_feature_dependencies__point_to_open_change_request__responds_200(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -259,7 +257,6 @@ def test_list_feature_dependencies__point_to_open_change_request__responds_200(
 # Approved change requests
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__point_to_approved_change_request__responds_400(
     admin_client: APIClient,
     admin_user: FFAdminUser,
@@ -301,7 +298,6 @@ def test_add_feature_dependency__point_to_approved_change_request__responds_400(
     assert not log.has("dependencies.created")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_delete_feature_dependency__point_to_approved_change_request__responds_400(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -347,7 +343,6 @@ def test_delete_feature_dependency__point_to_approved_change_request__responds_4
     assert not log.has("dependencies.deleted")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_list_feature_dependencies__point_to_approved_change_request__responds_200(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -401,7 +396,6 @@ def test_list_feature_dependencies__point_to_approved_change_request__responds_2
 # Committed change requests
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__point_to_committed_change_request__responds_400(
     admin_client: APIClient,
     admin_user: FFAdminUser,
@@ -441,7 +435,6 @@ def test_add_feature_dependency__point_to_committed_change_request__responds_400
     assert not log.has("dependencies.created")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_delete_feature_dependency__point_to_committed_change_request__responds_400(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -485,7 +478,6 @@ def test_delete_feature_dependency__point_to_committed_change_request__responds_
     assert not log.has("dependencies.deleted")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_list_feature_dependencies__point_to_committed_change_request__responds_400(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -539,7 +531,6 @@ def test_list_feature_dependencies__point_to_committed_change_request__responds_
 # Unusable change requests
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_list_feature_dependencies__point_to_unknown_change_request__responds_404(
     admin_client: APIClient,
     environment: int,
@@ -563,7 +554,6 @@ def test_list_feature_dependencies__point_to_unknown_change_request__responds_40
     }
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__change_requests_disabled__responds_409(
     admin_client: APIClient,
     admin_user: FFAdminUser,
@@ -602,6 +592,7 @@ def test_add_feature_dependency__change_requests_disabled__responds_409(
 # Feature versioning v1
 
 
+@pytest.mark.parametrize("environment_v2_versioning", [None])
 def test_add_feature_dependency__feature_versioning_v1__responds_409(
     admin_client: APIClient,
     admin_user: FFAdminUser,
@@ -639,6 +630,7 @@ def test_add_feature_dependency__feature_versioning_v1__responds_409(
     assert not log.has("dependencies.created")
 
 
+@pytest.mark.parametrize("environment_v2_versioning", [None])
 def test_delete_feature_dependency__feature_versioning_v1__responds_409(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -682,7 +674,6 @@ def test_delete_feature_dependency__feature_versioning_v1__responds_409(
 # Lacking permission
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__lacking_permission__responds_403(
     admin_client: APIClient,
     capture_audit_logs: CaptureAuditLogsFixture,
@@ -723,7 +714,6 @@ def test_add_feature_dependency__lacking_permission__responds_403(
     assert not log.has("dependencies.created")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_delete_feature_dependency__lacking_permission__responds_403(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -768,7 +758,6 @@ def test_delete_feature_dependency__lacking_permission__responds_403(
     assert not log.has("dependencies.deleted")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__unrelated_to_environment__responds_404(
     admin_client: APIClient,
     capture_audit_logs: CaptureAuditLogsFixture,
@@ -807,7 +796,6 @@ def test_add_feature_dependency__unrelated_to_environment__responds_404(
 # Stage hygiene
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_delete_feature_dependency__previously_staged__responds_204_undoing_staged(
     admin_client: APIClient,
     capture_audit_logs: CaptureAuditLogsFixture,
@@ -845,7 +833,6 @@ def test_delete_feature_dependency__previously_staged__responds_204_undoing_stag
     assert not log.has("dependencies.deleted")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__previously_staged_for_deletion__responds_201_keeping_live(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -887,7 +874,6 @@ def test_add_feature_dependency__previously_staged_for_deletion__responds_201_ke
     assert not log.has("dependencies.deleted")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__previously_staged__responds_400_leaving_one_staged(
     admin_client: APIClient,
     capture_audit_logs: CaptureAuditLogsFixture,
@@ -934,7 +920,6 @@ def test_add_feature_dependency__previously_staged__responds_400_leaving_one_sta
 # Prerequisite depth
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__prerequisite_has_live_prerequisite__responds_400(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -977,7 +962,6 @@ def test_add_feature_dependency__prerequisite_has_live_prerequisite__responds_40
     assert not log.has("dependencies.created", feature__name="checkout")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_add_feature_dependency__prerequisite_has_scheduled_prerequisite__responds_400(
     admin_client: APIClient,
     admin_user: FFAdminUser,
@@ -1029,7 +1013,6 @@ def test_add_feature_dependency__prerequisite_has_scheduled_prerequisite__respon
     assert not log.has("dependencies.created")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_commit_change_request__prerequisite_gained_prerequisite_since_staged__raises_and_publishes_nothing(
     admin_client: APIClient,
     admin_user: FFAdminUser,
@@ -1086,7 +1069,6 @@ def test_commit_change_request__prerequisite_gained_prerequisite_since_staged__r
 # Audit logs
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_commit_change_request__scheduled_dependency_addition__produces_no_audit_log(
     admin_client: APIClient,
     admin_user: FFAdminUser,
@@ -1128,7 +1110,6 @@ def test_commit_change_request__scheduled_dependency_addition__produces_no_audit
     assert not log.has("dependencies.created")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_commit_change_request__scheduled_dependency_deletion__produces_no_audit_log(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -1174,7 +1155,6 @@ def test_commit_change_request__scheduled_dependency_deletion__produces_no_audit
     assert not log.has("dependencies.deleted")
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_commit_change_request__dependency_addition_live_now__produces_audit_log(
     admin_client: APIClient,
     admin_user: FFAdminUser,
@@ -1231,7 +1211,6 @@ def test_commit_change_request__dependency_addition_live_now__produces_audit_log
     )
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_commit_change_request__dependency_deletion_live_now__produces_audit_log(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
@@ -1290,7 +1269,6 @@ def test_commit_change_request__dependency_deletion_live_now__produces_audit_log
     )
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_publish_change_request__dependency_addition_going_live__produces_audit_log(
     admin_client: APIClient,
     admin_user: FFAdminUser,
@@ -1353,7 +1331,6 @@ def test_publish_change_request__dependency_addition_going_live__produces_audit_
     )
 
 
-@pytest.mark.usefixtures("environment_v2_versioning")
 def test_publish_change_request__dependency_deletion_going_live__produces_audit_log(
     add_feature_prerequisite: AddFeaturePrerequisiteFixture,
     admin_client: APIClient,
