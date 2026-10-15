@@ -47,6 +47,7 @@ import SegmentOverridesTab, {
 } from './tabs/SegmentOverridesTab'
 import UsageTab from './tabs/UsageTab'
 import FeatureDependenciesTab from './tabs/FeatureDependenciesTab'
+import { useStagedPrerequisites } from './tabs/FeatureDependenciesTab/hooks/useStagedPrerequisites'
 import FeatureLimitAlert from './components/FeatureLimitAlert'
 import FeatureUpdateSummary from './components/FeatureUpdateSummary'
 import FeatureNameInput from './components/FeatureNameInput'
@@ -145,7 +146,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const [valueChanged, setValueChanged] = useState(false)
   const [settingsChanged, setSettingsChanged] = useState(false)
   const [segmentsChanged, setSegmentsChanged] = useState(false)
-  const [dependenciesChanged, setDependenciesChanged] = useState(false)
   const [hasMetadataRequired, setHasMetadataRequired] = useState(false)
   const [featureLimitAlert, setFeatureLimitAlert] = useState({
     percentage: 0,
@@ -156,6 +156,13 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const [, setTabKey] = useState(0)
 
   const isEdit = !!props.projectFlag
+  // Held here rather than in the tab, so the change request any tab creates
+  // takes them along.
+  const dependencyChanges = useStagedPrerequisites({
+    environmentId,
+    projectFlag,
+  })
+  const dependenciesChanged = !!dependencyChanges.staged.length
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const close = useCallback(() => {
@@ -501,7 +508,11 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           setValueChanged(true)
         }
       }}
-      onSave={() => {
+      onSave={(data?: { updatedChangeRequest?: { id: number } }) => {
+        const changeRequestId = data?.updatedChangeRequest?.id
+        if (changeRequestId && dependenciesChanged) {
+          dependencyChanges.stageInto(changeRequestId)
+        }
         if (identity) {
           close()
         }
@@ -594,14 +605,16 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
         const saveFeatureValue = saveFeatureWithValidation(
           (schedule?: boolean) => {
             if ((is4Eyes || schedule) && !identity) {
-              const approvable = hasApprovableChanges({
-                editedEnabled: environmentFlag.enabled,
-                editedValue: environmentFlag.feature_state_value,
-                segmentOverridesChanged: segmentsChanged,
-                storedEnabled: props.environmentFlag?.enabled,
-                storedValue: props.environmentFlag?.feature_state_value,
-                weightsChanged: variationChanges.weights,
-              })
+              const approvable =
+                dependenciesChanged ||
+                hasApprovableChanges({
+                  editedEnabled: environmentFlag.enabled,
+                  editedValue: environmentFlag.feature_state_value,
+                  segmentOverridesChanged: segmentsChanged,
+                  storedEnabled: props.environmentFlag?.enabled,
+                  storedValue: props.environmentFlag?.feature_state_value,
+                  weightsChanged: variationChanges.weights,
+                })
 
               if (!approvable) {
                 const what = schedule
@@ -669,7 +682,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
               openModal2(
                 getModalTitle(),
                 <ChangeRequestModal
-                  showIgnoreConflicts={true}
+                  // Its "no changes" check only sees the feature states, so it
+                  // would flag a change request that only changes dependencies.
+                  showIgnoreConflicts={!dependenciesChanged}
                   showAssignees={is4Eyes}
                   isScheduledChange={schedule}
                   changeRequest={existingChangeRequest}
@@ -851,7 +866,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         projectFlag={projectFlag}
                         requiresChangeRequests={is4Eyes}
                         isVersioned={isVersioned}
-                        onDirtyChange={setDependenciesChanged}
+                        staging={dependencyChanges}
+                        onCreateChangeRequest={() => saveFeatureValue()}
                         onSelectFeature={async (featureId) => {
                           // Opening another feature replaces this modal
                           // without closing it, so ask here.
