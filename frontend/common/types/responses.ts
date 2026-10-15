@@ -1627,7 +1627,10 @@ export type Res = {
   featureDependencies: { results: DependencyEdge[] }
   featureDependents: { results: DependencyEdge[] }
   featureDependency: DependencyEdge
-  changeRequestIdsStaging: number[]
+  pendingFeatureDependencies: {
+    changeRequestId: number
+    results: DependencyEdge[]
+  }[]
   featureVersions: PagedResponse<FeatureVersion>
   users: User[]
   enableFeatureVersioning: { id: string }

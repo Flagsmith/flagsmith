@@ -1,16 +1,11 @@
 import { FC } from 'react'
-import { ChangeRequestSummary } from 'common/types/responses'
 import Accordion from 'components/base/Accordion'
 import ChangeRequestLink from 'components/modals/create-feature/tabs/FeatureDependenciesTab/ChangeRequestLink'
 import Chip from 'components/base/Chip'
 import Icon from 'components/icons/Icon'
 import { colorIconSecondary } from 'common/theme/tokens'
 import ErrorMessage from 'components/ErrorMessage'
-import ChangeRequestDependencyChanges from 'components/feature-dependencies/ChangeRequestDependencyChanges'
-import {
-  describeStatus,
-  isScheduled,
-} from 'components/modals/create-feature/tabs/FeatureDependenciesTab/pendingChangeRequestState'
+import DependencyChangesTable from 'components/feature-dependencies/DependencyChangesTable'
 import { usePendingChangeRequests } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/hooks/usePendingChangeRequests'
 
 type PendingChangeRequestsProps = {
@@ -20,8 +15,8 @@ type PendingChangeRequestsProps = {
   isEnabled: (prerequisiteId: number) => boolean
 }
 
-// Changes to this feature's prerequisites that are waiting in open or
-// scheduled change requests, one group per change request.
+// Changes to this feature's prerequisites that are waiting in open change
+// requests, one group per change request.
 const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
   environmentId,
   featureId,
@@ -48,7 +43,7 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
         Not live yet. These go live when their change request is published.
       </p>
       <div className='d-flex flex-column gap-3'>
-        {groups.map((changeRequest) => (
+        {groups.map(({ changeRequest, changes }) => (
           <Accordion
             key={changeRequest.id}
             defaultOpen
@@ -62,19 +57,17 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
                   aria-hidden
                 />
                 #{changeRequest.id} {changeRequest.title}
-                <StatusChip
+                <Chip
                   className='ms-auto flex-shrink-0'
-                  changeRequest={changeRequest}
-                />
+                  size='xs'
+                  variant='warning'
+                >
+                  Awaiting approval
+                </Chip>
               </>
             }
           >
-            <ChangeRequestDependencyChanges
-              environmentId={environmentId}
-              featureId={featureId}
-              changeRequestId={changeRequest.id}
-              isEnabled={isEnabled}
-            />
+            <DependencyChangesTable changes={changes} isEnabled={isEnabled} />
             {/* In the body, as the header is the toggle and a link cannot
                 sit inside a button. */}
             <div className='px-3 py-2'>
@@ -92,19 +85,5 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
     </div>
   )
 }
-
-// Waiting on people reads as a warning; a scheduled change only needs time.
-const StatusChip: FC<{
-  changeRequest: ChangeRequestSummary
-  className?: string
-}> = ({ changeRequest, className }) => (
-  <Chip
-    className={className}
-    size='xs'
-    variant={isScheduled(changeRequest) ? undefined : 'warning'}
-  >
-    {describeStatus(changeRequest)}
-  </Chip>
-)
 
 export default PendingChangeRequests
