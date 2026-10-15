@@ -9,6 +9,7 @@ type UseFeatureStatesArgs = {
   // The api key, as everywhere else in the UI.
   environmentId: string
   projectId: number
+  skip?: boolean
 }
 
 // Whether each of a project's features is on in one environment, from the
@@ -16,6 +17,7 @@ type UseFeatureStatesArgs = {
 export const useFeatureStates = ({
   environmentId,
   projectId,
+  skip,
 }: UseFeatureStatesArgs) => {
   const {
     error: environmentsError,
@@ -35,7 +37,7 @@ export const useFeatureStates = ({
       page_size: 999,
       projectId,
     },
-    { skip: !numericEnvId },
+    { skip: skip || !numericEnvId },
   )
 
   const features = data?.results ?? NO_FEATURES
