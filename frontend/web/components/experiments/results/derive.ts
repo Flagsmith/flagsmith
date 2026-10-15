@@ -1,6 +1,9 @@
 import moment from 'moment'
 import { ChartDataPoint, buildChartColorMap } from 'components/charts'
 import {
+  colorIconDanger,
+  colorIconSecondary,
+  colorIconSuccess,
   colorTextDanger,
   colorTextSecondary,
   colorTextSuccess,
@@ -133,13 +136,25 @@ export const isLiftFavourable = (
   direction: MetricDirection,
 ): boolean => (direction === 'down' ? lift < 0 : lift > 0)
 
-export const getLiftColour = (
+export const getLiftTone = (
   lift: number,
   direction: MetricDirection,
-): string => {
-  if (direction === 'informational') return colorTextSecondary
-  return isLiftFavourable(lift, direction) ? colorTextSuccess : colorTextDanger
+): LiftTone => {
+  if (direction === 'informational') return 'neutral'
+  return isLiftFavourable(lift, direction) ? 'success' : 'danger'
 }
+
+// Text tokens are for words; bars and dots need the icon tokens.
+const LIFT_COLOURS: Record<LiftTone, LiftColours> = {
+  danger: { fill: colorIconDanger, text: colorTextDanger },
+  neutral: { fill: colorIconSecondary, text: colorTextSecondary },
+  success: { fill: colorIconSuccess, text: colorTextSuccess },
+}
+
+export const getLiftColours = (
+  lift: number,
+  direction: MetricDirection,
+): LiftColours => LIFT_COLOURS[getLiftTone(lift, direction)]
 
 // Extreme rounded probabilities would read as certainties — hedge them.
 export const formatChancePct = (chance: number): string => {
@@ -232,6 +247,8 @@ export const getWinningVariant = (
 
 export type LiftTone = 'success' | 'danger' | 'neutral'
 
+export type LiftColours = { fill: string; text: string }
+
 export type SummaryStats = {
   winnerName: string
   winnerColour: string
@@ -269,10 +286,8 @@ export const deriveSummary = (
     lift = bestTreatment?.inference ? -bestTreatment.inference.lift : null
   }
 
-  let liftTone: LiftTone = 'neutral'
-  if (lift !== null && direction !== 'informational') {
-    liftTone = isLiftFavourable(lift, direction) ? 'success' : 'danger'
-  }
+  const liftTone: LiftTone =
+    lift === null ? 'neutral' : getLiftTone(lift, direction)
 
   return {
     chanceToBest: formatChancePct(winner.chanceToWin),
