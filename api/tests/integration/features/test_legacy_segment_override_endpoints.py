@@ -1,6 +1,6 @@
 """Segment override endpoints superseded by the flag API, but still in use.
 
-TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
 """
 
 from typing import Any
@@ -226,7 +226,7 @@ def test_create_segment_override__new_segment__appends_override(
     ]
 
 
-def test_create_segment_override__existing_override__updates_override(
+def test_create_segment_override__existing_override__responds_400(
     admin_client: APIClient,
     environment: int,
     environment_api_key: str,
@@ -238,7 +238,7 @@ def test_create_segment_override__existing_override__updates_override(
         f"/api/v1/environments/{environment_api_key}/features/{feature}"
         "/create-segment-override/"
     )
-    admin_client.post(
+    response = admin_client.post(
         url,
         {
             "feature_segment": {"segment": segment},
@@ -247,6 +247,8 @@ def test_create_segment_override__existing_override__updates_override(
         },
         format="json",
     )
+    assert response.status_code == 201
+    overrides = _get_segment_overrides(admin_client, environment_api_key, feature)
 
     # When
     response = admin_client.post(
@@ -260,16 +262,11 @@ def test_create_segment_override__existing_override__updates_override(
     )
 
     # Then
-    assert response.status_code == 201
-    assert _get_segment_overrides(admin_client, environment_api_key, feature) == [
-        {
-            "segment": {"id": segment},
-            "priority": 0,
-            "enabled": True,
-            "value": {"type": "string", "value": "bar"},
-            "variants": [],
-        },
-    ]
+    assert response.status_code == 400
+    assert response.json() == ["The flag is already overridden for this segment."]
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
+        overrides
+    )
 
 
 def test_create_segment_override__priority_in_use__moves_overrides_down(
@@ -910,7 +907,11 @@ def test_update_feature_state__system_segment_override_as_read__responds_200(
     feature: int,
     system_segment: int,
 ) -> None:
-    """The dashboard writes every override of flags it saves."""
+    """
+    Explicit regression test of the dashboard behaviour.
+    On clicking 'Update Segment Overrides', the dashboard PUTs back all segment overrides
+    that were provided in the original GET.
+    """
     # Given
     overrides = _get_segment_overrides(admin_client, environment_api_key, feature)
     url = (
@@ -1240,6 +1241,46 @@ def test_update_feature_state__value_cleared__clears_override_value(
     ]
 
 
+def test_create_feature_state__system_segment_override_scheduled__responds_409(
+    admin_client: APIClient,
+    environment: int,
+    feature: int,
+    system_segment: int,
+) -> None:
+    # Given
+    feature_states_url = "/api/v1/features/featurestates/"
+    query = {"environment": environment, "feature": feature}
+    feature_states = admin_client.get(feature_states_url, query).json()["results"]
+
+    # When
+    response = admin_client.post(
+        feature_states_url,
+        {
+            "feature": feature,
+            "environment": environment,
+            "feature_segment": _get_feature_segment_id(
+                admin_client, environment, feature, system_segment
+            ),
+            "enabled": True,
+            "live_from": "2099-01-01T00:00:00Z",
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 409
+    assert response.json() == {
+        "code": "system_segment_modification",
+        "message": (
+            "System segments and their overrides can't be changed directly. "
+            "Change this one through flag dependency instead."
+        ),
+    }
+    assert admin_client.get(feature_states_url, query).json()["results"] == (
+        feature_states
+    )
+
+
 def test_update_feature_state__system_segment_override_scheduled__responds_409(
     admin_client: APIClient,
     environment: int,
@@ -1466,7 +1507,57 @@ def test_update_feature_state__variant_left_out__weights_it_0(
     ] == [[{"id": option_a, "weight": 80.0}, {"id": option_b, "weight": 0.0}]]
 
 
-def test_create_feature_state__live_override__updates_override(
+def test_update_feature_state__all_variants_left_out__weights_them_0(
+    admin_client: APIClient,
+    create_segment_override: Any,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    project: int,
+    segment: int,
+) -> None:
+    # Given
+    option_a = create_mv_option_with_api(admin_client, project, feature, 50, "a")
+    option_b = create_mv_option_with_api(admin_client, project, feature, 30, "b")
+    create_segment_override(environment_api_key, feature, segment)
+    feature_state_id = _get_segment_override_id(
+        admin_client, environment, feature, segment
+    )
+    admin_client.put(
+        f"/api/v1/features/featurestates/{feature_state_id}/",
+        {
+            "feature": feature,
+            "environment": environment,
+            "multivariate_feature_state_values": [
+                {"multivariate_feature_option": option_a, "percentage_allocation": 50},
+                {"multivariate_feature_option": option_b, "percentage_allocation": 30},
+            ],
+        },
+        format="json",
+    )
+
+    # When
+    response = admin_client.put(
+        f"/api/v1/features/featurestates/{feature_state_id}/",
+        {
+            "feature": feature,
+            "environment": environment,
+            "multivariate_feature_state_values": [],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert [
+        override["variants"]
+        for override in _get_segment_overrides(
+            admin_client, environment_api_key, feature
+        )
+    ] == [[{"id": option_a, "weight": 0.0}, {"id": option_b, "weight": 0.0}]]
+
+
+def test_create_feature_state__live_override__responds_400(
     admin_client: APIClient,
     create_segment_override: Any,
     environment: int,
@@ -1476,9 +1567,7 @@ def test_create_feature_state__live_override__updates_override(
 ) -> None:
     # Given
     create_segment_override(environment_api_key, feature, segment)
-    feature_segment_id = _get_feature_segment_id(
-        admin_client, environment, feature, segment
-    )
+    overrides = _get_segment_overrides(admin_client, environment_api_key, feature)
 
     # When
     response = admin_client.post(
@@ -1486,24 +1575,21 @@ def test_create_feature_state__live_override__updates_override(
         {
             "feature": feature,
             "environment": environment,
-            "feature_segment": feature_segment_id,
-            "enabled": True,
+            "feature_segment": _get_feature_segment_id(
+                admin_client, environment, feature, segment
+            ),
+            "enabled": False,
             "feature_state_value": {"type": "unicode", "string_value": "foo"},
         },
         format="json",
     )
 
     # Then
-    assert response.status_code == 201
-    assert response.json()["id"] == _get_segment_override_id(
-        admin_client, environment, feature, segment
-    )
-    assert _get_segment_overrides(admin_client, environment_api_key, feature) == [
-        {
-            "segment": {"id": segment},
-            "priority": 0,
-            "enabled": True,
-            "value": {"type": "string", "value": "foo"},
-            "variants": [],
-        },
+    assert response.status_code == 400
+    assert response.json() == [
+        "['Feature state already exists for this environment, feature, version, "
+        "segment & identity combination']"
     ]
+    assert _get_segment_overrides(admin_client, environment_api_key, feature) == (
+        overrides
+    )

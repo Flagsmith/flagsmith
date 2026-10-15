@@ -86,7 +86,6 @@ from features.feature_segments.limits import (
 from features.feature_segments.services import (
     get_next_segment_override_priority,
     get_segment_override,
-    is_live_segment_override,
     is_segment_override_unchanged,
     write_segment_override,
     writes_live_segment_override,
@@ -953,7 +952,7 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         return self.all(request, *args, **kwargs)  # type: ignore[no-any-return]
 
 
-# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
 @method_decorator(
     name="list",
     decorator=extend_schema(
@@ -997,24 +996,7 @@ class SimpleFeatureStateViewSet(
             )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        feature_state_data = typing.cast(
-            LegacyFeatureStateData, serializer.validated_data
-        )
         if feature_segment := serializer.validated_data.get("feature_segment"):
-            if writes_live_segment_override(
-                feature_state_data
-            ) and is_live_segment_override(feature_segment):
-                feature_state = write_segment_override(
-                    environment=feature_segment.environment,
-                    feature=feature_segment.feature,
-                    segment_id=feature_segment.segment_id,
-                    feature_state_data=feature_state_data,
-                    author=AuthorData.from_request(request),
-                )
-                return Response(
-                    self.get_serializer(feature_state).data,
-                    status=status.HTTP_201_CREATED,
-                )
             check_segment_is_not_system(feature_segment.segment)
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -1333,18 +1315,18 @@ def create_segment_override(  # type: ignore[no-untyped-def]
     feature_state_data = typing.cast(
         LegacyFeatureStateData, dict(serializer.validated_data)
     )
-    if not get_segment_override(
+    check_segment_is_not_system(segment)
+    if get_segment_override(
         environment=environment, feature=feature, segment_id=segment.id
     ):
-        feature_state_data.setdefault("enabled", False)
-        if exceeds_segment_override_limit(environment):
-            raise ValidationError(
-                {"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE}
-            )
-        if priority is None:
-            priority = get_next_segment_override_priority(
-                environment=environment, feature=feature
-            )
+        raise ValidationError("The flag is already overridden for this segment.")
+    feature_state_data.setdefault("enabled", False)
+    if exceeds_segment_override_limit(environment):
+        raise ValidationError({"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE})
+    if priority is None:
+        priority = get_next_segment_override_priority(
+            environment=environment, feature=feature
+        )
 
     feature_state = write_segment_override(
         environment=environment,

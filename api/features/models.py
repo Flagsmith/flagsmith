@@ -372,8 +372,10 @@ class FeatureSegment(
 
         id_priority_dict = dict(new_feature_segment_id_priorities)
 
-        # The given priorities are kept as they are, and the others fill the
-        # lowest free priorities in their current order.
+        # Since this method doesn't enforce that the caller sends an exhaustive list
+        # covering all FeatureSegments that currently exist, we ensure that the
+        # given priorities are respected, and adjust any existing priorities that
+        # might create duplicates.
         reference = feature_segments[0]
         free_priorities = (
             priority
