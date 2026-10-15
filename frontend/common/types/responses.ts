@@ -247,7 +247,10 @@ export type Segment = {
   metadata: Metadata[] | []
   membership_counts?: SegmentMembership[]
   cohort?: SegmentCohort | null
+  managed_by?: SegmentManagedBy
 }
+// What creates and edits the segment, empty where users do.
+export type SegmentManagedBy = '' | 'cohort' | 'dependency' | 'experiment'
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
   | 'environment_feature_versions'
