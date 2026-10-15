@@ -1,5 +1,7 @@
 import React, { FC, ReactNode } from 'react'
 import Utils, { PaidFeature } from 'common/utils/utils'
+import { isPlanAtLeast, PlanFamily } from 'common/utils/plans'
+import AccountStore from 'common/stores/account-store'
 import Button from './base/forms/Button'
 import Constants from 'common/constants'
 import { IonIcon } from '@ionic/react'
@@ -14,6 +16,8 @@ type PlanBasedBannerType = {
   children?: ReactNode
   title?: ReactNode
   force?: boolean
+  requiredPlan?: PlanFamily
+  badgeAsLink?: boolean
 }
 
 export const featureDescriptions: Record<PaidFeature, any> = {
@@ -110,16 +114,29 @@ export const featureDescriptions: Record<PaidFeature, any> = {
   },
   'WAREHOUSE': {
     description:
-      'Connect a data warehouse to collect experimentation and analytics data from your environments.',
+      'Connect your own data warehouse to collect experimentation data.',
+    docs: 'https://docs.flagsmith.com/experimentation/connect-a-warehouse',
     title: 'Warehouse Connections',
   },
 }
 
 const PlanBasedBanner: FC<PlanBasedBannerType> = ({ children, ...props }) => {
-  const { className, feature, force, theme, title } = props
+  const {
+    badgeAsLink = true,
+    className,
+    feature,
+    force,
+    requiredPlan,
+    theme,
+    title,
+  } = props
   const trackFeature = () =>
     API.trackEvent(Constants.events.VIEW_LOCKED_FEATURE(feature))
-  const hasPlan = !force && Utils.getPlansPermission(feature)
+  const hasPlan =
+    !force &&
+    (requiredPlan
+      ? isPlanAtLeast(AccountStore.getActiveOrgPlan(), requiredPlan)
+      : Utils.getPlansPermission(feature))
   const planUrl = Constants.getUpgradeUrl(feature)
   const rawDocs = featureDescriptions[feature]?.docs
   const docs = rawDocs ? `${rawDocs}?utm_source=plan_based_access` : null
@@ -171,19 +188,30 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({ children, ...props }) => {
     if (hasPlan) {
       return null
     }
+    const badgeClassName =
+      'chip chip--xs d-flex align-items-center font-weight-medium text-white bg-primary900'
+    const badgeContent = (
+      <>
+        <IonIcon className='me-1' icon={lockClosed} />
+        {force
+          ? Utils.getNextPlan()
+          : Utils.getPlanName(requiredPlan ?? Utils.getRequiredPlan(feature))}
+      </>
+    )
     return (
       <div>
-        <a
-          href={planUrl}
-          target={Utils.isSaas() ? undefined : '_blank'}
-          className='chip cursor-pointer chip--xs d-flex align-items-center font-weight-medium text-white bg-primary900'
-          rel='noreferrer'
-        >
-          {<IonIcon className='me-1' icon={lockClosed} />}
-          {force
-            ? Utils.getNextPlan()
-            : Utils.getPlanName(Utils.getRequiredPlan(feature))}
-        </a>
+        {badgeAsLink ? (
+          <a
+            href={planUrl}
+            target={Utils.isSaas() ? undefined : '_blank'}
+            className={classNames(badgeClassName, 'cursor-pointer')}
+            rel='noreferrer'
+          >
+            {badgeContent}
+          </a>
+        ) : (
+          <span className={badgeClassName}>{badgeContent}</span>
+        )}
       </div>
     )
   } else if (theme === 'description') {

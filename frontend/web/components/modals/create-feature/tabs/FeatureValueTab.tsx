@@ -31,7 +31,7 @@ import {
   VARIATION_WEIGHT_FIELD,
 } from 'common/utils/multivariate'
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
-import { useHasExperimentationFeature } from 'common/hooks/useHasExperimentationFeature'
+import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { useHasPermission } from 'common/providers/Permission'
 import { ProjectPermission } from 'common/types/permissions.types'
@@ -121,8 +121,7 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
     level: 'project',
     permission: ProjectPermission.CREATE_FEATURE,
   })
-  const { enabled: hasExperiments } =
-    useHasExperimentationFeature('experimental_flags')
+  const { enabled: hasExperiments } = useExperimentationEnabled()
 
   const default_enabled = featureState.enabled ?? false
   const initial_value = featureState.feature_state_value

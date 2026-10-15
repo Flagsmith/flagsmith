@@ -21,7 +21,9 @@ it there. Each environment has one [warehouse connection](/experimentation/conne
   region support for [AWS](https://docs.databricks.com/aws/en/resources/feature-region-support#ingestion),
   [Azure](https://learn.microsoft.com/en-us/azure/databricks/resources/feature-region-support#ingestion) or
   [Google Cloud](https://docs.databricks.com/gcp/en/resources/feature-region-support#ingestion).
-- A workspace reachable over the public internet. Workspaces restricted to Private Link or by IP access lists aren't
+- On Flagsmith Cloud, a [Scale-Up or Enterprise subscription](https://www.flagsmith.com/pricing).
+- A workspace reachable from Flagsmith: on Flagsmith Cloud, over the internet; when self-hosting, from your Flagsmith
+  API and warehouse delivery. On Flagsmith Cloud, workspaces restricted to Private Link or by IP access lists aren't
   currently supported.
 - A serverless SQL warehouse.
 - Workspace admin access, to create a service principal.

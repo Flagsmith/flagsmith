@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useGetExperimentsQuery } from 'common/services/useExperiment'
 import type { Experiment } from 'common/types/responses'
-import { useHasExperimentationFeature } from './useHasExperimentationFeature'
+import { useExperimentationEnabled } from './useExperimentationEnabled'
 
 export type FeatureExperimentFreeze = {
   isFrozen: boolean
@@ -14,7 +14,7 @@ export function useFeatureExperimentFreeze(
   environmentId: string,
 ): FeatureExperimentFreeze {
   const { enabled: isExperimentEnabled, isLoading: isVersionLoading } =
-    useHasExperimentationFeature('experimental_flags')
+    useExperimentationEnabled()
   const skip = !isExperimentEnabled || !featureId || !environmentId
   const { data, isLoading } = useGetExperimentsQuery(
     { environmentId, status: 'running' },

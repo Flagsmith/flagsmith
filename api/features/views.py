@@ -86,6 +86,7 @@ from projects.code_references.services import (
     annotate_feature_queryset_with_code_references_summary,
 )
 from projects.models import Project
+from segments.services import check_segment_is_not_system
 from users.models import FFAdminUser, UserPermissionGroup
 
 from .constants import INTERSECTION, UNION
@@ -779,6 +780,8 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = self.get_serializer(data=data)
 
         if serializer.is_valid(raise_exception=True):
+            if feature_segment := serializer.validated_data.get("feature_segment"):
+                check_segment_is_not_system(feature_segment.segment)
             feature_state = serializer.save()
             headers = self.get_success_headers(serializer.data)
 

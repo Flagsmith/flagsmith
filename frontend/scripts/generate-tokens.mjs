@@ -42,6 +42,21 @@ const NON_COLOUR = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 const DESCRIBED = ['radius', 'shadow', 'duration', 'easing', 'font-weight']
 // Chart colours are like colour tokens (light/dark) but not under "color"
 const CHART_CATEGORY = 'chart'
+const PRIMARY_CATEGORY = 'primary'
+const NEUTRAL_CATEGORY = 'neutral'
+const STATE_CATEGORY = 'state'
+const ALWAYS_CATEGORY = 'always'
+
+// The design system's own ramps, between the primitives and the semantic
+// tokens. Custom properties and TypeScript exports, but no utilities: a
+// .bg-primary-500 in a component would bypass the semantic layer. Reach for a
+// `color.*` token first.
+const RAMPS = [
+  PRIMARY_CATEGORY,
+  NEUTRAL_CATEGORY,
+  STATE_CATEGORY,
+  ALWAYS_CATEGORY,
+]
 
 // Build reverse lookups for primitives
 const hexToPrimitive = new Map()
@@ -130,6 +145,18 @@ function buildScssLines() {
   for (const [category, entries] of Object.entries(json.color)) {
     rootLines.push(`  // ${cap(category)}`)
     for (const [, e] of sorted(entries)) {
+      rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
+      if (e.dark && e.dark !== e.light) {
+        darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
+      }
+    }
+    rootLines.push('')
+  }
+
+  for (const cat of RAMPS) {
+    if (!json[cat]) continue
+    rootLines.push(`  // ${cap(cat)}`)
+    for (const [, e] of sorted(json[cat])) {
       rootLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.light)};`)
       if (e.dark && e.dark !== e.light) {
         darkLines.push(`  ${e.cssVar}: ${toPrimitiveRef(e.dark)};`)
@@ -264,6 +291,17 @@ function buildFlatConstants() {
     lines.push('')
   }
 
+  for (const cat of RAMPS) {
+    if (!json[cat]) continue
+    lines.push(`// ${cap(cat)}`)
+    for (const [, e] of sorted(json[cat])) {
+      const constName = cssVarToConstName(e.cssVar)
+      const fallback = lightVal(e)
+      lines.push(`export const ${constName} = 'var(${e.cssVar}, ${fallback})'`)
+    }
+    lines.push('')
+  }
+
   // Non-colour tokens — radius, shadow, duration, easing
   for (const cat of NON_COLOUR) {
     if (!json[cat]) continue
@@ -365,6 +403,15 @@ function generateMcpStory() {
     tables.push(...buildTableRows(`Colour: ${cat}`, data))
   }
 
+  for (const cat of RAMPS) {
+    if (!json[cat]) continue
+    const data = Object.values(json[cat]).map((e) => ({
+      cssVar: e.cssVar,
+      value: toPrimitiveRef(e.light),
+    }))
+    tables.push(...buildTableRows(`Ramp: ${cat}`, data))
+  }
+
   // Chart colours
   if (json[CHART_CATEGORY]) {
     const chartData = Object.values(json[CHART_CATEGORY]).map((e) => ({
@@ -408,22 +455,8 @@ function generateMcpStory() {
     '  render: () => (',
     '    <DocPage',
     "      title='Token Reference'",
-    "      description='Complete token catalogue generated from common/theme/tokens.json. All data is inlined for Storybook MCP.'",
     '    >',
     ...tables,
-    '',
-    '      <h3>Dark mode shadows</h3>',
-    '      <p>',
-    '        Dark mode overrides use stronger opacity (0.20-0.40 vs 0.05-0.20).',
-    '        Higher elevation surfaces should use lighter backgrounds',
-    '        (--color-surface-emphasis) rather than relying solely on shadows.',
-    '      </p>',
-    '',
-    '      <h3>Motion pairing</h3>',
-    '      <p>',
-    '        Combine a duration with an easing: transition: all var(--duration-normal) var(--easing-standard).',
-    '        Use --easing-entrance for elements appearing, --easing-exit for elements leaving.',
-    '      </p>',
     '    </DocPage>',
     '  ),',
     '}',
@@ -503,11 +536,38 @@ function generateUtilities() {
   return lines.join('\n')
 }
 
+// Sass colour functions (lighten, mix, Bootstrap's theme maps) need a real
+// colour at build time, which var() is not. Legacy Sass reads primitives here.
+function generatePrimitivesScss() {
+  const entries = sorted(json.primitives).map(
+    ([name, hex]) => `  '${name}': ${hex},`,
+  )
+  return [
+    '// =============================================================================',
+    '// Primitives for Sass — AUTO-GENERATED from common/theme/tokens.json',
+    '// Do not edit manually. Run: npm run generate:tokens',
+    '// =============================================================================',
+    '',
+    '$primitives: (',
+    ...entries,
+    ');',
+    '',
+    '@function primitive($name) {',
+    '  @if not map-has-key($primitives, $name) {',
+    "    @error 'Unknown primitive `#{$name}`. See common/theme/tokens.json.';",
+    '  }',
+    '  @return map-get($primitives, $name);',
+    '}',
+    '',
+  ].join('\n')
+}
+
 // ---------------------------------------------------------------------------
 // Write and format
 // ---------------------------------------------------------------------------
 
 const scssPath = resolve(ROOT, 'web/styles/_tokens.scss')
+const primitivesPath = resolve(ROOT, 'web/styles/_primitives.scss')
 const utilitiesPath = resolve(ROOT, 'web/styles/_token-utilities.scss')
 const tsPath = resolve(ROOT, 'common/theme/tokens.ts')
 const storyPath = resolve(
@@ -516,6 +576,7 @@ const storyPath = resolve(
 )
 
 writeFileSync(scssPath, generateScss(), 'utf-8')
+writeFileSync(primitivesPath, generatePrimitivesScss(), 'utf-8')
 writeFileSync(utilitiesPath, generateUtilities(), 'utf-8')
 writeFileSync(tsPath, generateTs(), 'utf-8')
 writeFileSync(storyPath, generateMcpStory(), 'utf-8')
@@ -539,6 +600,7 @@ const nonColorCount = NON_COLOUR.reduce(
 )
 console.log('Generated from tokens.json:')
 console.log(`  ${scssPath}`)
+console.log(`  ${primitivesPath}`)
 console.log(`  ${utilitiesPath}`)
 console.log(`  ${tsPath}`)
 console.log(`  ${storyPath}`)
