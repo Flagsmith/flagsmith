@@ -21,7 +21,8 @@ import {
   formatChancePct,
   formatLiftPct,
   getControlChanceToWin,
-  getLiftColours,
+  getLiftFillColour,
+  getLiftTextColour,
   liftToPercent,
 } from './derive'
 
@@ -56,7 +57,8 @@ const renderLift = (
   if (!inference) {
     return <span className='text-secondary fs-caption'>Collecting data…</span>
   }
-  const colours = getLiftColours(inference.lift, direction)
+  const fill = getLiftFillColour(inference.lift, direction)
+  const text = getLiftTextColour(inference.lift, direction)
   const left = liftToPercent(inference.ci_low, liftRange)
   const right = liftToPercent(inference.ci_high, liftRange)
   const dotPos = liftToPercent(inference.lift, liftRange)
@@ -68,20 +70,17 @@ const renderLift = (
         <div
           className='experiment-results__lift-fill'
           style={{
-            background: colours.fill,
+            background: fill,
             left: `${left}%`,
             width: `${right - left}%`,
           }}
         />
         <div
           className='experiment-results__lift-dot'
-          style={{ background: colours.fill, left: `${dotPos}%` }}
+          style={{ background: fill, left: `${dotPos}%` }}
         />
       </div>
-      <span
-        className='experiment-results__lift-value'
-        style={{ color: colours.text }}
-      >
+      <span className='experiment-results__lift-value' style={{ color: text }}>
         {formatLiftPct(inference.lift)}
       </span>
     </div>

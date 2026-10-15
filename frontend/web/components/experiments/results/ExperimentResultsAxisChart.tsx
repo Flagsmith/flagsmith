@@ -6,7 +6,8 @@ import {
   VariantIdentity,
   buildTicks,
   formatLiftPct,
-  getLiftColours,
+  getLiftFillColour,
+  getLiftTextColour,
   valueToPercent,
 } from './derive'
 
@@ -95,7 +96,8 @@ const ExperimentResultsAxisChart: FC<ExperimentResultsAxisChartProps> = ({
               )
             }
             if (!inf) return null
-            const colours = getLiftColours(inf.lift, direction)
+            const fill = getLiftFillColour(inf.lift, direction)
+            const text = getLiftTextColour(inf.lift, direction)
             const ciLeft = valueToPercent(inf.ci_low, range)
             const ciRight = valueToPercent(inf.ci_high, range)
             const dotPos = valueToPercent(inf.lift, range)
@@ -118,18 +120,18 @@ const ExperimentResultsAxisChart: FC<ExperimentResultsAxisChartProps> = ({
                   <div
                     className='experiment-results__axis-bar'
                     style={{
-                      background: colours.fill,
+                      background: fill,
                       left: `${ciLeft}%`,
                       width: `${ciRight - ciLeft}%`,
                     }}
                   />
                   <div
                     className='experiment-results__axis-dot'
-                    style={{ background: colours.fill, left: `${dotPos}%` }}
+                    style={{ background: fill, left: `${dotPos}%` }}
                   />
                   <span
                     className='experiment-results__axis-dot-label'
-                    style={{ color: colours.text, left: `${dotPos}%` }}
+                    style={{ color: text, left: `${dotPos}%` }}
                   >
                     {formatLiftPct(inf.lift)}
                   </span>
