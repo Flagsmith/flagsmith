@@ -404,9 +404,8 @@ Requirements:
 
 - Flagsmith API 2.285.0 or later.
 - Kafka with at least 3 brokers, for the default replication factor of 3.
-- A warehouse for each environment that runs experiments. Set up ClickHouse with
-  [Bring your own ClickHouse](/experimentation/connect-a-warehouse#bring-your-own-clickhouse). Both warehouse delivery
-  and the API must be able to reach it.
+- A warehouse for each environment that runs experiments. See [Connect a warehouse](/experimentation/connect-a-warehouse).
+  Both warehouse delivery and the API must be able to reach it.
 
 ```yaml
 experimentation:
