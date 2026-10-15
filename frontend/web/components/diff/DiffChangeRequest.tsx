@@ -5,6 +5,8 @@ import DiffFeature from './DiffFeature'
 import { mergeChangeSets } from 'common/services/useChangeRequest'
 import { useFeatureStates } from 'common/hooks/useFeatureStates'
 import { useDependencyChanges } from 'components/feature-dependencies/useDependencyChanges'
+import { useHasPermission } from 'common/providers/Permission'
+import { EnvironmentPermission } from 'common/types/permissions.types'
 
 type DiffChangeRequestType = {
   changeRequest: ChangeRequest | null
@@ -40,23 +42,34 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
     return mergeChangeSets(changeSets, data?.results, changeRequest?.conflicts)
   }, [changeRequest, feature, data])
 
+  // The API lists a change request's dependencies only to those who can
+  // create change requests.
+  const { permission: canCreateChangeRequest } = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: EnvironmentPermission.CREATE_CHANGE_REQUEST,
+  })
+  const skipDependencies =
+    !changeRequest ||
+    // Refused once published, and without versioning.
+    changeRequest.is_committed ||
+    !isVersioned ||
+    !canCreateChangeRequest ||
+    // The same flags as the feature modal's Dependencies tab.
+    !Utils.getFlagsmithHasFeature('flag_dependencies') ||
+    !Utils.getFlagsmithHasFeature('flag_dependencies_change_requests')
   const dependencies = useDependencyChanges({
     changeRequestId: changeRequest?.id ?? 0,
     environmentId,
     featureId: feature,
-    // The API refuses to list a published change request's dependencies.
-    skip:
-      !changeRequest ||
-      changeRequest.is_committed ||
-      // The same flags as the feature modal's Dependencies tab.
-      !Utils.getFlagsmithHasFeature('flag_dependencies') ||
-      !Utils.getFlagsmithHasFeature('flag_dependencies_change_requests'),
+    skip: skipDependencies,
   })
   // Whether each prerequisite is on now, so a reviewer can see an added one
   // that would hold this feature off.
   const states = useFeatureStates({
     environmentId,
     projectId: Number(projectId),
+    skip: skipDependencies,
   })
 
   if (!changeRequest) {
