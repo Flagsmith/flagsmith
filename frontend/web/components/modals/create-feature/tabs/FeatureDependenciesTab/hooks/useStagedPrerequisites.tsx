@@ -4,18 +4,12 @@ import {
   ProjectFlag,
   StagedDependencyChange,
 } from 'common/types/responses'
-import { Req } from 'common/types/requests'
-import {
-  useCreateEnvironmentChangeRequestMutation,
-  useDeleteChangeRequestMutation,
-} from 'common/services/useChangeRequest'
 import {
   useCreateFeatureDependencyMutation,
   useDeleteFeatureDependencyMutation,
 } from 'common/services/useFeatureDependency'
-import ChangeRequestModal from 'components/modals/ChangeRequestModal'
 
-// Why the change request was not created, and the row that caused it.
+// Why a change could not be staged, and the row it belongs to.
 export type StagingFailure = { message: string; prerequisiteId?: number }
 
 // Dependency refusals answer { message }, other errors { detail }.
@@ -26,27 +20,19 @@ const describeApiError = (e: unknown, fallback: string) => {
 
 type UseStagedPrerequisitesArgs = {
   environmentId: string
-  projectId: number
   projectFlag: ProjectFlag
 }
 
-type ChangeRequestFields = Omit<
-  Req['createEnvironmentChangeRequest'],
-  'environmentId' | 'featureId'
->
-
-// Holds dependency changes until the change request exists, then stages them.
+// Holds dependency changes until the modal creates a change request, then
+// stages them into it.
 export const useStagedPrerequisites = ({
   environmentId,
   projectFlag,
-  projectId,
 }: UseStagedPrerequisitesArgs) => {
   const [staged, setStaged] = useState<StagedDependencyChange[]>([])
   const [error, setError] = useState<StagingFailure | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const [createChangeRequest] = useCreateEnvironmentChangeRequestMutation()
-  const [deleteChangeRequest] = useDeleteChangeRequestMutation()
   const [createDependency] = useCreateFeatureDependencyMutation()
   const [deleteDependency] = useDeleteFeatureDependencyMutation()
 
@@ -101,69 +87,27 @@ export const useStagedPrerequisites = ({
     return null
   }
 
-  // Null once every change is in the change request.
-  const createAndStage = async (
-    fields: ChangeRequestFields,
-  ): Promise<StagingFailure | null> => {
-    let changeRequestId: number
-    try {
-      changeRequestId = (
-        await createChangeRequest({
-          environmentId,
-          featureId: projectFlag.id,
-          ...fields,
-        }).unwrap()
-      ).id
-    } catch (e) {
-      return {
-        message: describeApiError(e, 'Could not create the change request.'),
-      }
-    }
-    const failure = await stage(changeRequestId)
-    if (!failure) {
-      setStaged([])
-      toast(
-        <>
-          Change request created.{' '}
-          <a
-            href={`/project/${projectId}/environment/${environmentId}/change-requests/${changeRequestId}`}
-          >
-            View it
-          </a>
-        </>,
-      )
-      return null
-    }
-    // A change request missing some of the changes is worse than none.
-    try {
-      await deleteChangeRequest({ id: changeRequestId }).unwrap()
-      return failure
-    } catch {
-      return {
-        ...failure,
-        message: `${failure.message} Change request #${changeRequestId} is incomplete and could not be deleted, so delete it from the change requests page.`,
-      }
-    }
-  }
-
-  const submitChangeRequest = async (fields: ChangeRequestFields) => {
+  // Into the change request the modal created with the value and segment
+  // overrides. Those that made it in leave the held list, so the rest can be
+  // tried again.
+  const stageInto = async (changeRequestId: number) => {
     setIsSubmitting(true)
     setError(null)
-    setError(await createAndStage(fields))
+    const failure = await stage(changeRequestId)
+    if (failure) {
+      const failedAt = staged.findIndex(
+        (change) => change.prerequisite.id === failure.prerequisiteId,
+      )
+      setStaged(staged.slice(failedAt))
+      setError({
+        ...failure,
+        message: `Change request #${changeRequestId} was created without some dependency changes. ${failure.message}`,
+      })
+    } else {
+      setStaged([])
+    }
     setIsSubmitting(false)
   }
-
-  const openChangeRequest = () =>
-    openModal2(
-      'New Change Request',
-      <ChangeRequestModal
-        showAssignees
-        onSave={({ approvals, description, live_from, title }) => {
-          closeModal2()
-          submitChangeRequest({ approvals, description, live_from, title })
-        }}
-      />,
-    )
 
   return {
     add,
@@ -173,8 +117,8 @@ export const useStagedPrerequisites = ({
     },
     error,
     isSubmitting,
-    openChangeRequest,
     remove,
+    stageInto,
     staged,
     // The refusal was about the held changes, so it goes with them.
     undo: (prerequisiteId: number) => {
@@ -183,3 +127,5 @@ export const useStagedPrerequisites = ({
     },
   }
 }
+
+export type StagedPrerequisites = ReturnType<typeof useStagedPrerequisites>

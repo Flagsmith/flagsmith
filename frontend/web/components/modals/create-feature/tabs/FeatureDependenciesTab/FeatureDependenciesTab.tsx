@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react'
+import { FC } from 'react'
 import { ProjectFlag } from 'common/types/responses'
 import { EnvironmentPermission } from 'common/types/permissions.types'
 import { useHasPermission } from 'common/providers/Permission'
@@ -19,7 +19,7 @@ import PrerequisitePicker from './PrerequisitePicker'
 import { getDependenciesMode } from './dependenciesMode'
 import { withStagedChanges } from './prerequisiteState'
 import { usePrerequisites } from './hooks/usePrerequisites'
-import { useStagedPrerequisites } from './hooks/useStagedPrerequisites'
+import { StagedPrerequisites } from './hooks/useStagedPrerequisites'
 
 type FeatureDependenciesTabProps = {
   environmentId: string
@@ -28,8 +28,9 @@ type FeatureDependenciesTabProps = {
   projectFlag: ProjectFlag
   requiresChangeRequests: boolean
   isVersioned: boolean
-  // Held changes are lost when the modal closes, so the modal needs to know.
-  onDirtyChange?: (isDirty: boolean) => void
+  // Held by the modal, so any tab's change request takes them along.
+  staging: StagedPrerequisites
+  onCreateChangeRequest: () => void
   // Opens another feature's modal on this tab.
   onSelectFeature: (featureId: number) => void
 }
@@ -38,11 +39,12 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   environmentId,
   environmentName,
   isVersioned,
-  onDirtyChange,
+  onCreateChangeRequest,
   onSelectFeature,
   projectFlag,
   projectId,
   requiresChangeRequests,
+  staging,
 }) => {
   const mode = getDependenciesMode(requiresChangeRequests, isVersioned)
   const isChangeRequest = mode === 'changeRequest'
@@ -52,11 +54,6 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
     permission: isChangeRequest
       ? EnvironmentPermission.CREATE_CHANGE_REQUEST
       : EnvironmentPermission.MANAGE_SEGMENT_OVERRIDES,
-  })
-  const staging = useStagedPrerequisites({
-    environmentId,
-    projectFlag,
-    projectId,
   })
   const {
     addingName,
@@ -82,11 +79,6 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   })
   // Held while submitting, so a change can't miss the change request.
   const canManage = permission && mode !== 'readOnly' && !staging.isSubmitting
-  const isDirty = !!staging.staged.length
-  useEffect(() => {
-    onDirtyChange?.(isDirty)
-    return () => onDirtyChange?.(false)
-  }, [isDirty, onDirtyChange])
 
   // Without the permission, canManage is false, so the add button and every
   // bin would appear a moment after the rows.
@@ -204,7 +196,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         <ChangeRequestFooter
           count={staging.staged.length}
           isSubmitting={staging.isSubmitting}
-          onCreate={staging.openChangeRequest}
+          onCreate={onCreateChangeRequest}
           onDiscard={staging.discard}
         />
       )}
