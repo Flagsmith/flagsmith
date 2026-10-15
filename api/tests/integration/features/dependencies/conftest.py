@@ -56,6 +56,6 @@ def create_change_request(
             },
             format="json",
         )
-        return ChangeRequest.objects.get(id=response.json()["id"])
+        return ChangeRequest.objects.get(id=response.json()["id"])  # type: ignore[no-any-return]
 
     return _create_change_request

@@ -1,22 +1,22 @@
 """https://docs.flagsmith.com/managing-flags/updating-flags"""
 
+import json
 from collections.abc import Collection, Iterable, Sequence
 from itertools import count, islice
 from typing import NamedTuple
 
 import structlog
+from common.features.serializers import FeatureStateValueSerializer
 from django.db import transaction
 from django.db.models import Count, Q
 from rest_framework.exceptions import ValidationError
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
-from features.dependencies.models import SegmentFlagReference
 from features.dependencies.services import (
-    report_flag_dependencies,
+    report_flag_dependency_changes,
     validate_segment_flag_dependencies,
 )
-from features.dependencies.types import FeatureName
 from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
     exceeds_segment_override_limit,
@@ -40,8 +40,9 @@ from features.future.types import (
 )
 from features.models import Feature, FeatureSegment, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureStateValue
-from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.models import EnvironmentFeatureVersion, VersionChangeSet
 from features.versioning.versioning_service import get_environment_flags_list
+from features.workflows.core.models import ChangeRequest
 from segments.models import Segment
 from segments.services import check_segment_is_not_system
 from util.db import with_delete_hooks
@@ -388,18 +389,78 @@ def _write_segment_overrides(
     return segments
 
 
-def _get_prerequisite_feature_names(
-    segments: _OverriddenSegments,
-) -> tuple[set[FeatureName], set[FeatureName]]:
-    """Return the prerequisite feature names the flag gains and loses."""
-    created: set[FeatureName] = set()
-    deleted: set[FeatureName] = set()
-    for segment_id, feature_name in SegmentFlagReference.objects.filter(
-        segment_id__in=[*segments.created, *segments.deleted]
-    ).values_list("segment_id", "prerequisite_feature__name"):
-        names = created if segment_id in segments.created else deleted
-        names.add(feature_name)
-    return created, deleted
+def _stage_segment_overrides(
+    *,
+    environment: Environment,
+    feature: Feature,
+    change_request: ChangeRequest,
+    created: Sequence[SegmentOverrideRequest],
+    deleted_segment_ids: Collection[int],
+) -> None:
+    created_segment_ids = [override["segment"]["id"] for override in created]
+    environment_default = next(
+        feature_state
+        for feature_state in _get_feature_states(environment, feature)
+        if feature_state.feature_segment_id is None
+    )
+
+    with transaction.atomic():
+        change_set, _ = VersionChangeSet.objects.select_for_update().get_or_create(
+            change_request=change_request,
+            feature=feature,
+            defaults={"live_from": change_request.live_from},
+        )
+        feature_states_to_create = change_set.get_parsed_feature_states_to_create()
+        segment_ids_to_delete = change_set.get_parsed_segment_ids_to_delete_overrides()
+
+        for override in created:
+            segment_id = override["segment"]["id"]
+            if segment_id in segment_ids_to_delete:
+                segment_ids_to_delete.remove(segment_id)
+                continue
+            feature_states_to_create.append(
+                {
+                    "feature_segment": {
+                        "segment": segment_id,
+                        "priority": override["priority"],
+                    },
+                    "enabled": override["enabled"],
+                    "feature_state_value": FeatureStateValueSerializer(
+                        environment_default.feature_state_value
+                    ).data,
+                }
+            )
+
+        for segment_id in deleted_segment_ids:
+            staged = [
+                feature_state
+                for feature_state in feature_states_to_create
+                if feature_state["feature_segment"]["segment"] == segment_id
+            ]
+            if not staged:
+                segment_ids_to_delete.append(segment_id)
+            for feature_state in staged:
+                feature_states_to_create.remove(feature_state)
+
+        change_set.feature_states_to_create = json.dumps(feature_states_to_create)
+        change_set.segment_ids_to_delete_overrides = json.dumps(segment_ids_to_delete)
+        change_set.save(
+            update_fields=[
+                "feature_states_to_create",
+                "segment_ids_to_delete_overrides",
+            ]
+        )
+
+    logger.info(
+        "flag.staged",
+        organisation__id=environment.project.organisation_id,
+        project__id=environment.project_id,
+        environment__id=environment.id,
+        feature__id=feature.id,
+        change_request__id=change_request.id,
+        segment_overrides__created__segment__ids=created_segment_ids,
+        segment_overrides__deleted__segment__ids=list(deleted_segment_ids),
+    )
 
 
 def update_flag(
@@ -409,6 +470,7 @@ def update_flag(
     changes: UpdateFlagRequest,
     replace: bool,
     author: AuthorData,
+    change_request: ChangeRequest | None = None,
     overwrite_system_segment_overrides: bool,
 ) -> UpdateFlagResponse:
     """Write the given parts of a flag, whichever versioning the environment uses.
@@ -430,6 +492,17 @@ def update_flag(
             if (variants := flag_state.get("variants")) is not None
         ],
     )
+
+    # TODO: Support all changes as per https://github.com/Flagsmith/flagsmith/issues/8738
+    if change_request is not None:
+        _stage_segment_overrides(
+            environment=environment,
+            feature=feature,
+            change_request=change_request,
+            created=changes.get("segment_overrides", []),
+            deleted_segment_ids=[],
+        )
+        return get_flag(environment=environment, feature=feature)
 
     segments = _OverriddenSegments([], [], [])
 
@@ -466,12 +539,12 @@ def update_flag(
 
         for segment in Segment.objects.filter(id__in=segments.created):
             validate_segment_flag_dependencies(segment)
-        created, deleted = _get_prerequisite_feature_names(segments)
-        report_flag_dependencies(
+        report_flag_dependency_changes(
             environment=environment,
             feature=feature,
-            created=created,
-            deleted=deleted,
+            created_segment_ids=segments.created,
+            deleted_segment_ids=segments.deleted,
+            author=author,
         )
 
     logger.info(
@@ -494,6 +567,7 @@ def delete_segment_override(
     feature: Feature,
     segment_id: int,
     author: AuthorData,
+    change_request: ChangeRequest | None = None,
     overwrite_system_segment_overrides: bool,
 ) -> UpdateFlagResponse:
     """Remove a flag's override for one segment, leaving the rest of the flag alone.
@@ -501,6 +575,16 @@ def delete_segment_override(
     Overrides of system segments can only be removed by passing
     `overwrite_system_segment_overrides=True`.
     """
+    if change_request is not None:
+        _stage_segment_overrides(
+            environment=environment,
+            feature=feature,
+            change_request=change_request,
+            created=[],
+            deleted_segment_ids=[segment_id],
+        )
+        return get_flag(environment=environment, feature=feature)
+
     with transaction.atomic():
         version = _create_draft_version(environment, feature)
         feature_states = _get_feature_states_to_write(environment, feature, version)
@@ -524,14 +608,12 @@ def delete_segment_override(
                 published_by=author.user, published_by_api_key=author.api_key
             )
 
-        _, deleted = _get_prerequisite_feature_names(
-            _OverriddenSegments([], [], [segment_id])
-        )
-        report_flag_dependencies(
+        report_flag_dependency_changes(
             environment=environment,
             feature=feature,
-            created=[],
-            deleted=deleted,
+            created_segment_ids=[],
+            deleted_segment_ids=[segment_id],
+            author=author,
         )
 
     logger.info(
