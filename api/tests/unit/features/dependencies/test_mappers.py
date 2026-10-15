@@ -45,71 +45,56 @@ def test_map_rules_to_prerequisite_feature_names__invalid_prerequisite_jsonpath_
     assert feature_names_by_json_path == {}
 
 
-def test_map_override_to_value_source__dependency_override__returns_environment_default() -> (
-    None
-):
-    # Given
-    override = FeatureState(id=2, feature_id=1)
-    environment_default = FeatureState(id=1, feature_id=1)
-
-    # When
-    value_source = map_override_to_value_source(
-        override,
-        segment=Segment(feature_id=1, managed_by=SegmentManagedBy.DEPENDENCY),
-        environment_defaults={1: environment_default},
-    )
-
-    # Then
-    assert value_source is environment_default
+_OVERRIDE = FeatureState(id=2, feature_id=1)
+_ENVIRONMENT_DEFAULT = FeatureState(id=1, feature_id=1)
 
 
 @pytest.mark.parametrize(
-    "segment",
+    "segment, environment_defaults, expected_value_source",
     [
-        pytest.param(Segment(feature_id=None), id="user_segment"),
+        pytest.param(
+            Segment(feature_id=1, managed_by=SegmentManagedBy.DEPENDENCY),
+            {1: _ENVIRONMENT_DEFAULT},
+            _ENVIRONMENT_DEFAULT,
+            id="dependency_segment__environment_default",
+        ),
+        pytest.param(
+            Segment(feature_id=1, managed_by=SegmentManagedBy.DEPENDENCY),
+            {},
+            _OVERRIDE,
+            id="dependency_segment_without_environment_default__override",
+        ),
+        pytest.param(
+            Segment(feature_id=None),
+            {1: _ENVIRONMENT_DEFAULT},
+            _OVERRIDE,
+            id="user_segment__override",
+        ),
         pytest.param(
             Segment(feature_id=1, managed_by=SegmentManagedBy.EXPERIMENT),
-            id="experiment",
+            {1: _ENVIRONMENT_DEFAULT},
+            _OVERRIDE,
+            id="experiment_segment__override",
         ),
         pytest.param(
             Segment(feature_id=1, managed_by=SegmentManagedBy.RELEASE_PIPELINE),
-            id="release_pipeline",
-        ),
-        pytest.param(
-            Segment(feature_id=3, managed_by=SegmentManagedBy.DEPENDENCY),
-            id="another_feature_dependency",
+            {1: _ENVIRONMENT_DEFAULT},
+            _OVERRIDE,
+            id="release_pipeline_segment__override",
         ),
     ],
 )
-def test_map_override_to_value_source__not_dependency_override__returns_override(
+def test_map_override_to_value_source__segment_override__returns_expected_value_source(
     segment: Segment,
+    environment_defaults: dict[int, FeatureState],
+    expected_value_source: FeatureState,
 ) -> None:
-    # Given
-    override = FeatureState(id=2, feature_id=1)
-
-    # When
+    # Given / When
     value_source = map_override_to_value_source(
-        override,
+        _OVERRIDE,
         segment=segment,
-        environment_defaults={1: FeatureState(id=1, feature_id=1)},
+        environment_defaults=environment_defaults,
     )
 
     # Then
-    assert value_source is override
-
-
-def test_map_override_to_value_source__environment_default_missing__returns_override() -> (
-    None
-):
-    # Given
-    override = FeatureState(id=2, feature_id=1)
-
-    # When
-    value_source = map_override_to_value_source(
-        override,
-        segment=Segment(feature_id=1, managed_by=SegmentManagedBy.DEPENDENCY),
-        environment_defaults={},
-    )
-
-    # Then
-    assert value_source is override
+    assert value_source is expected_value_source
