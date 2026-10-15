@@ -22,8 +22,26 @@ jobs:
 
 ## Instrument your application
 
-Event collection is currently available in the **JavaScript** and **Python** SDKs, with more to follow. Enable it by
-passing the `enableEvents` / `enable_events` option when you initialise the client.
+Event collection is available in these SDKs, with more to follow:
+
+| SDK                                                | Package                | Minimum version |
+| -------------------------------------------------- | ---------------------- | --------------- |
+| JavaScript (browser, React, server-side rendering) | `@flagsmith/flagsmith` | 12.4.0          |
+| Python                                             | `flagsmith`            | 6.3.0           |
+
+:::note Node.js
+
+The Node.js SDK (`flagsmith-nodejs`) does not support events yet. For server-side rendering, use the JavaScript SDK's
+`@flagsmith/flagsmith/isomorphic` build and call `flushEvents()` before the response ends.
+
+:::
+
+Enable event collection by passing the `enableEvents` / `enable_events` option when you initialise the client. Keep the
+environment key you already use for flags: events accept the client-side key and server-side keys.
+
+When self-hosting, also point the SDK at your Flagsmith API and your event ingestion server, as in the commented lines
+below. Without them, the SDK sends events to Flagsmith Cloud. To deploy the ingestion server, see
+[Experimentation in the Helm chart](/deployment-self-hosting/hosting-guides/kubernetes-openshift#experimentation).
 
 Users must be [identified](/flagsmith-concepts/identities). Exposures and conversion events are joined per identity, so
 use the same identifier for flags and events.
@@ -37,6 +55,9 @@ import flagsmith from '@flagsmith/flagsmith';
 await flagsmith.init({
     environmentID: 'YOUR_CLIENT_SIDE_ENVIRONMENT_KEY',
     enableEvents: true,
+    // Self-hosted only:
+    // api: 'https://flagsmith.example.com/api/v1/',
+    // eventProcessorConfig: { eventsApiUrl: 'https://events.flagsmith.example.com/' },
 });
 await flagsmith.identify('user_42');
 
@@ -48,21 +69,57 @@ const flag = flagsmith.getExperimentFlag('checkout_button');
 flagsmith.trackEvent('purchase', { value: 99.5 });
 ```
 
-In React, the `useExperiment` hook resolves the flag and records the exposure:
+`eventProcessorConfig` requires `enableEvents: true`; `init` throws without it.
 
-```javascript
-const flag = useExperiment('checkout_button');
+In React, pass the same options to `FlagsmithProvider`. The `useExperiment` hook resolves the flag and records the
+exposure:
+
+```jsx
+import flagsmith from '@flagsmith/flagsmith';
+import { FlagsmithProvider, useExperiment, useFlagsmith } from '@flagsmith/flagsmith/react';
+
+export function App() {
+    return (
+        <FlagsmithProvider
+            flagsmith={flagsmith}
+            options={{
+                environmentID: 'YOUR_CLIENT_SIDE_ENVIRONMENT_KEY',
+                identity: 'user_42',
+                enableEvents: true,
+                // Self-hosted only: add api and eventProcessorConfig as above
+            }}
+        >
+            <CheckoutButton />
+        </FlagsmithProvider>
+    );
+}
+
+function CheckoutButton() {
+    const flagsmith = useFlagsmith();
+    const flag = useExperiment('checkout_button'); // null until flags load
+
+    return (
+        <button onClick={() => flagsmith.trackEvent('purchase', { value: 99.5 })}>
+            {flag?.value === 'buy_now' ? 'Buy now' : 'Checkout'}
+        </button>
+    );
+}
 ```
 
 </TabItem>
 <TabItem value="py" label="Python">
 
 ```python
-from flagsmith import Flagsmith
+from flagsmith import EventProcessorConfig, Flagsmith
 
 flagsmith = Flagsmith(
     environment_key="YOUR_ENVIRONMENT_KEY",
     enable_events=True,
+    # Self-hosted only:
+    # api_url="https://flagsmith.example.com/api/v1/",
+    # event_processor_config=EventProcessorConfig(
+    #     events_api_url="https://events.flagsmith.example.com/",
+    # ),
 )
 
 # Evaluate the flag and record an exposure in one call
@@ -71,6 +128,13 @@ flag = flagsmith.get_experiment_flag("checkout_button", identifier="user_42")
 # Record a conversion event; the name must match your metric's event name
 flagsmith.track_event("purchase", identifier="user_42", value=99.5)
 ```
+
+:::caution Local evaluation
+
+`get_experiment_flag` does not record exposures with local evaluation (`enable_local_evaluation=True`) yet. Use remote
+evaluation for experiment flags.
+
+:::
 
 </TabItem>
 </Tabs>
@@ -92,6 +156,22 @@ exposure more than once is safe.
 
 The event name is **case-sensitive** and must exactly match the metric's configured event name. Unmatched events are
 silently ignored. Conversions are attributed post-exposure: an identity's events only count after its first exposure.
+
+### Troubleshooting
+
+The SDKs skip events silently rather than throw. If the **Exposures** panel stays empty, check that:
+
+-   The environment has a [connected warehouse](/experimentation/connect-a-warehouse). The ingestion server rejects
+    events for environments without one.
+-   The user is identified. Exposures without an identity are skipped.
+-   Every variation of the flag has a label. Exposures are attributed by label, so a variation without one, for example
+    one created through the API without a `key`, is not counted.
+-   The identity is inside the experiment's rollout. Identities outside it are not enrolled and record no exposure.
+-   In Python, the client uses remote evaluation.
+-   Event names match your metrics exactly, including case.
+
+To see why an event was skipped, turn on SDK logging: `enableLogs: true` in JavaScript, or the `flagsmith` logger at
+`DEBUG` level in Python.
 
 ## While it runs
 
