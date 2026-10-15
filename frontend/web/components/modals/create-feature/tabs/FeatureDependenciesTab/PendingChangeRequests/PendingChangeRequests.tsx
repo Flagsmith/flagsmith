@@ -4,7 +4,7 @@ import ChangeRequestLink from 'components/modals/create-feature/tabs/FeatureDepe
 import Chip from 'components/base/Chip'
 import Icon from 'components/icons/Icon'
 import { colorIconSecondary } from 'common/theme/tokens'
-import ErrorMessage from 'components/ErrorMessage'
+import Banner from 'components/base/Banner'
 import DependencyChangesTable from 'components/feature-dependencies/DependencyChangesTable'
 import { usePendingChangeRequests } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/hooks/usePendingChangeRequests'
 
@@ -30,7 +30,9 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
 
   if (isError) {
     return (
-      <ErrorMessage error='Could not load the change requests waiting on this feature.' />
+      <Banner type='error' className='mt-4'>
+        Could not load the change requests waiting on this feature.
+      </Banner>
     )
   }
 
