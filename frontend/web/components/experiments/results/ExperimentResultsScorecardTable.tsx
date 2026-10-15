@@ -21,8 +21,7 @@ import {
   formatChancePct,
   formatLiftPct,
   getControlChanceToWin,
-  getLiftFillColour,
-  getLiftTextColour,
+  getLiftColour,
   liftToPercent,
 } from './derive'
 
@@ -57,8 +56,8 @@ const renderLift = (
   if (!inference) {
     return <span className='text-secondary fs-caption'>Collecting data…</span>
   }
-  const fill = getLiftFillColour(inference.lift, direction)
-  const text = getLiftTextColour(inference.lift, direction)
+  const fill = getLiftColour(inference.lift, direction, 'fill')
+  const text = getLiftColour(inference.lift, direction, 'text')
   const left = liftToPercent(inference.ci_low, liftRange)
   const right = liftToPercent(inference.ci_high, liftRange)
   const dotPos = liftToPercent(inference.lift, liftRange)

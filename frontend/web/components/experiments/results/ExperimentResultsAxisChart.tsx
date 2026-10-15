@@ -6,8 +6,7 @@ import {
   VariantIdentity,
   buildTicks,
   formatLiftPct,
-  getLiftFillColour,
-  getLiftTextColour,
+  getLiftColour,
   valueToPercent,
 } from './derive'
 
@@ -96,8 +95,8 @@ const ExperimentResultsAxisChart: FC<ExperimentResultsAxisChartProps> = ({
               )
             }
             if (!inf) return null
-            const fill = getLiftFillColour(inf.lift, direction)
-            const text = getLiftTextColour(inf.lift, direction)
+            const fill = getLiftColour(inf.lift, direction, 'fill')
+            const text = getLiftColour(inf.lift, direction, 'text')
             const ciLeft = valueToPercent(inf.ci_low, range)
             const ciRight = valueToPercent(inf.ci_high, range)
             const dotPos = valueToPercent(inf.lift, range)
