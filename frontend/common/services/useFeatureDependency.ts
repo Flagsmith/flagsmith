@@ -124,34 +124,6 @@ export const featureDependencyService = service
           url: `environments/${query.environmentId}/features/${query.featureId}/dependents/`,
         }),
       }),
-      // Each change request's dependencies as if it were live, in one query so
-      // the caller can drop those that change none.
-      getPendingFeatureDependencies: builder.query<
-        Res['pendingFeatureDependencies'],
-        Req['getPendingFeatureDependencies']
-      >({
-        providesTags: (res, err, query) => pendingTags(query.featureId),
-        queryFn: async (query, _, _2, baseQuery) => {
-          const responses = await Promise.all(
-            query.changeRequestIds.map((changeRequestId) =>
-              baseQuery({
-                url: withChangeRequest(
-                  `environments/${query.environmentId}/features/${query.featureId}/dependencies/`,
-                  changeRequestId,
-                ),
-              }),
-            ),
-          )
-          const failed = responses.find((response) => response.error)
-          if (failed?.error) return { error: failed.error }
-          return {
-            data: responses.map((response, index) => ({
-              changeRequestId: query.changeRequestIds[index],
-              results: (response.data as Res['featureDependencies']).results,
-            })),
-          }
-        },
-      }),
       // END OF ENDPOINTS
     }),
   })
@@ -219,7 +191,6 @@ export const {
   useDeleteFeatureDependencyMutation,
   useGetFeatureDependenciesQuery,
   useGetFeatureDependentsQuery,
-  useGetPendingFeatureDependenciesQuery,
   // END OF EXPORTS
 } = featureDependencyService
 
@@ -228,3 +199,57 @@ const { data, isLoading } = useGetFeatureDependenciesQuery({ environmentId: 'abc
 const [createFeatureDependency, { isLoading, data, isSuccess }] = useCreateFeatureDependencyMutation() //create hook
 featureDependencyService.endpoints.getFeatureDependencies.select({ environmentId: 'abc', featureId: 2 })(store.getState()) //access data from any function
 */
+
+// Each change request's dependencies as if it were live, in one query so the
+// caller can drop those that change none. Injected apart, so it can read the
+// typed list query above rather than cast raw responses.
+export const pendingFeatureDependencyService =
+  featureDependencyService.injectEndpoints({
+    endpoints: (builder) => ({
+      getPendingFeatureDependencies: builder.query<
+        Res['pendingFeatureDependencies'],
+        Req['getPendingFeatureDependencies']
+      >({
+        providesTags: (res, err, query) => pendingTags(query.featureId),
+        queryFn: async (query, { dispatch }) => {
+          const lists = await Promise.all(
+            query.changeRequestIds.map((changeRequestId) =>
+              dispatch(
+                featureDependencyService.endpoints.getFeatureDependencies.initiate(
+                  {
+                    changeRequestId,
+                    environmentId: query.environmentId,
+                    featureId: query.featureId,
+                  },
+                  { subscribe: false },
+                ),
+              ),
+            ),
+          )
+          if (lists.some((list) => list.isError)) {
+            return {
+              error: {
+                error: "Could not load a change request's dependencies.",
+                status: 'CUSTOM_ERROR',
+              },
+            }
+          }
+          return {
+            data: lists.flatMap((list, index) =>
+              list.data
+                ? [
+                    {
+                      changeRequestId: query.changeRequestIds[index],
+                      results: list.data.results,
+                    },
+                  ]
+                : [],
+            ),
+          }
+        },
+      }),
+    }),
+  })
+
+export const { useGetPendingFeatureDependenciesQuery } =
+  pendingFeatureDependencyService
