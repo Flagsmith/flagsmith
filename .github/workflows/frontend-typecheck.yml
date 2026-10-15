@@ -61,7 +61,6 @@ jobs:
       # commit's count is the right comparison.
       - name: Download main's count for the base commit
         if: github.event_name == 'pull_request'
-        id: base-commit
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v6
         with:
@@ -69,12 +68,12 @@ jobs:
           commit: ${{ github.event.pull_request.base.sha }}
           name: typecheck-counts
           path: frontend/base
-          if_no_artifact_found: fail
+          if_no_artifact_found: ignore
 
       # Main only runs this when frontend files change, so the base commit
       # often has no count of its own. The latest one matches it then.
       - name: Download main's latest count
-        if: github.event_name == 'pull_request' && steps.base-commit.outcome != 'success'
+        if: github.event_name == 'pull_request' && hashFiles('frontend/base/typecheck-counts.json') == ''
         continue-on-error: true
         uses: dawidd6/action-download-artifact@v6
         with:
