@@ -354,7 +354,7 @@ class FeatureSegment(
         """
         feature_segments = cls.objects.filter(
             id__in=[pair[0] for pair in new_feature_segment_id_priorities]
-        )
+        ).order_by("priority", "id")
 
         existing_feature_segment_id_priority_pairs = cls.to_id_priority_tuple_pairs(
             feature_segments

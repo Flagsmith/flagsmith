@@ -2,7 +2,7 @@
 title: Connect a Warehouse
 sidebar_label: Connect a Warehouse
 sidebar_position: 2
-description: Enable the managed Flagsmith warehouse to store and query experiment events.
+description: Choose where experiment events are stored, the managed Flagsmith warehouse or your own.
 ---
 
 :::info Beta
@@ -13,6 +13,14 @@ Experimentation is in beta.
 
 Experiment data (exposures and conversion events) is stored and queried in a data warehouse. Each environment has one
 warehouse connection, and it must be in place before you can create experiments.
+
+:::note Self-hosted
+
+The managed Flagsmith warehouse is only available on Flagsmith Cloud. When self-hosting, connect your own warehouse as
+described below, and deploy event ingestion and warehouse delivery, for example with the
+[Helm chart](/deployment-self-hosting/hosting-guides/kubernetes-openshift#experimentation).
+
+:::
 
 ## Connect the Flagsmith warehouse
 
@@ -51,7 +59,9 @@ The current status is shown on the warehouse card in **Environment Settings > Wa
 
 ## Bring your own ClickHouse
 
-Instead of the managed Flagsmith warehouse, you can store experiment events in your own **ClickHouse** instance.
+Instead of the managed Flagsmith warehouse, you can store experiment events in your own **ClickHouse** instance. It must
+be reachable from Flagsmith: on Flagsmith Cloud, over the internet; when self-hosting, from your Flagsmith API and
+warehouse delivery.
 
 1. Configure your instance by running the following against it, using an administrative user (the statements require
    `CREATE USER`, `GRANT`, `CREATE DATABASE` and `CREATE TABLE` privileges). Replace `<USER>` and `<CHANGE_ME_PASSWORD>`
@@ -105,8 +115,7 @@ Instead of the managed Flagsmith warehouse, you can store experiment events in y
 
 Connections use the ClickHouse HTTP(S) interface, with TLS enabled by default.
 
-Experiment results and exposure queries are currently computed from the managed Flagsmith warehouse; serving results
-directly from your own ClickHouse instance is not supported yet.
+Experiment results and exposures are computed from your ClickHouse instance.
 
 ## Coming soon
 
