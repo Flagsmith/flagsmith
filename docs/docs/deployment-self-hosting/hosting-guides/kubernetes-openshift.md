@@ -425,6 +425,8 @@ ingress:
       - /
 ```
 
+Point your SDKs' events URL at the ingestion host. See [Run an Experiment](/experimentation/run-an-experiment).
+
 The Kafka password also has a `passwordFromExistingSecret` form. Use it in production.
 
 The topics are `flagsmith_warehouse_events` and `flagsmith_warehouse_events_retry`. Change them with

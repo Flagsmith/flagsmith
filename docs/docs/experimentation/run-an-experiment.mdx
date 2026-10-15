@@ -25,6 +25,14 @@ jobs:
 Event collection is currently available in the **JavaScript** and **Python** SDKs, with more to follow. Enable it by
 passing the `enableEvents` / `enable_events` option when you initialise the client.
 
+:::note Self-hosted
+
+Events go to Flagsmith Cloud unless you point them at your own event ingestion service. This is separate from the API
+URL: in JavaScript, pass `eventProcessorConfig: { eventsApiUrl: 'https://events.example.com/' }`; in Python, pass
+`event_processor_config=EventProcessorConfig(events_api_url="https://events.example.com/")`.
+
+:::
+
 Users must be [identified](/flagsmith-concepts/identities). Exposures and conversion events are joined per identity, so
 use the same identifier for flags and events.
 
