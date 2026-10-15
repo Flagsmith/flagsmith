@@ -19,10 +19,7 @@ const SystemSegmentOverrideLabel: FC<SystemSegmentOverrideLabelProps> = ({
 }) => (
   <Tooltip
     title={
-      <div
-        data-test='system-segment-override-label'
-        className='chip chip--xs ml-2'
-      >
+      <div data-test='system-segment-override-label' className='chip chip--xs'>
         Managed by {MANAGED_BY_LABELS[managedBy]}
       </div>
     }

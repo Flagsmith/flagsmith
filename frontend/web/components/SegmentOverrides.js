@@ -178,22 +178,26 @@ const SegmentOverrideInner = class Override extends React.Component {
               </>
             ) : (
               <Row className='fs-small'>
-                <SegmentsIcon
-                  className='opacity-50'
-                  fill='#9DA4AE'
-                  width={16}
-                  height={16}
-                />
-                <span className='ms-2 fw-bold text-default mb-0'>
-                  {name || v.segment_name}
-                </span>
-                {v.is_feature_specific && (
-                  <div className='chip chip--xs ml-2'>Feature-Specific</div>
-                )}
-                {isSystemSegment && (
+                {/* System segments are named after what manages them. */}
+                {isSystemSegment ? (
                   <SystemSegmentOverrideLabel
                     managedBy={v.segment_managed_by}
                   />
+                ) : (
+                  <>
+                    <SegmentsIcon
+                      className='opacity-50'
+                      fill='#9DA4AE'
+                      width={16}
+                      height={16}
+                    />
+                    <span className='ms-2 fw-bold text-default mb-0'>
+                      {name || v.segment_name}
+                    </span>
+                    {v.is_feature_specific && (
+                      <div className='chip chip--xs ml-2'>Feature-Specific</div>
+                    )}
+                  </>
                 )}
                 {changed && <div className='chip chip--xs ml-2'>Unsaved</div>}
               </Row>
