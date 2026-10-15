@@ -70,7 +70,7 @@ from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.registry import get_warehouse
 from features.feature_segments.services import get_next_segment_override_priority
 from features.feature_states.models import API_VALUE_TYPES
-from features.future.services import update_flag
+from features.future.services import delete_segment_override, update_flag
 from features.future.types import SegmentOverrideRequest
 from features.models import FeatureState
 from features.value_types import BOOLEAN, STRING
@@ -544,22 +544,77 @@ def transition_experiment_status(
     target_status: str,
     user: FFAdminUser,
 ) -> Experiment:
-    valid_targets = VALID_STATUS_TRANSITIONS.get(experiment.status, set())
-    if target_status not in valid_targets:
-        raise ValueError(
-            f"Cannot transition from '{experiment.status}' to '{target_status}'."
+    with transaction.atomic():
+        experiment.refresh_from_db(from_queryset=Experiment.objects.select_for_update())
+        valid_targets = VALID_STATUS_TRANSITIONS.get(experiment.status, set())
+        if target_status not in valid_targets:
+            raise ValueError(
+                f"Cannot transition from '{experiment.status}' to '{target_status}'."
+            )
+
+        experiment.status = target_status
+        if target_status == ExperimentStatus.RUNNING and not experiment.started_at:
+            experiment.started_at = timezone.now()
+            _remove_superseded_experiment_rollouts(
+                experiment, AuthorData.from_user(user)
+            )
+        elif target_status == ExperimentStatus.COMPLETED:
+            experiment.ended_at = timezone.now()
+
+        experiment.save()
+        create_experiment_audit_log(experiment, user, action=target_status)
+    return experiment
+
+
+def _remove_superseded_experiment_rollouts(
+    experiment: Experiment, author: AuthorData
+) -> None:
+    """Stop completed or deleted experiments' rollouts shadowing this one's."""
+    superseded_experiment_ids = dict(
+        Experiment.objects.all_with_deleted()
+        .filter(
+            Q(status=ExperimentStatus.COMPLETED) | Q(deleted_at__isnull=False),
+            feature_id=experiment.feature_id,
+            environment_id=experiment.environment_id,
+            rollout_segment__is_system_segment=True,
+        )
+        .exclude(id=experiment.id)
+        .values_list("rollout_segment_id", "id")
+    )
+    if not superseded_experiment_ids:
+        return
+    live_segment_ids = {
+        feature_segment.segment_id
+        for override in get_environment_flags_list(
+            environment=experiment.environment,
+            additional_filters=Q(
+                feature_id=experiment.feature_id,
+                feature_segment__segment_id__in=superseded_experiment_ids,
+                identity__isnull=True,
+            ),
+        )
+        if (feature_segment := override.feature_segment)
+    }
+    for segment_id in sorted(live_segment_ids):
+        delete_segment_override(
+            environment=experiment.environment,
+            feature=experiment.feature,
+            segment_id=segment_id,
+            author=author,
+            overwrite_system_segment_overrides=True,
         )
 
-    experiment.status = target_status
+    def _log_superseded() -> None:
+        for segment_id in sorted(live_segment_ids):
+            experimentation_logger.info(
+                "rollout.superseded",
+                experiment__id=experiment.id,
+                superseded_experiment__id=superseded_experiment_ids[segment_id],
+                environment__id=experiment.environment_id,
+                feature__id=experiment.feature_id,
+            )
 
-    if target_status == ExperimentStatus.RUNNING and not experiment.started_at:
-        experiment.started_at = timezone.now()
-    elif target_status == ExperimentStatus.COMPLETED:
-        experiment.ended_at = timezone.now()
-
-    experiment.save()
-    create_experiment_audit_log(experiment, user, action=target_status)
-    return experiment
+    transaction.on_commit(_log_superseded)
 
 
 def _copy_segment_rule(rule: SegmentRule) -> SegmentRuleType:
@@ -1001,7 +1056,9 @@ def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | No
             feature_segment__segment_id=segment_id, identity__isnull=True
         ),
         feature_id=experiment.feature_id,
-    ).get()
+    ).first()
+    if feature_state is None:
+        return None
 
     condition = Condition.objects.get(
         rule__segment_id=segment_id, operator=PERCENTAGE_SPLIT
