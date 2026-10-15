@@ -76,6 +76,8 @@ def map_feature_state_data_to_segment_override(
             for variant_id in feature.multivariate_options.values_list("id", flat=True)
             if variant_id not in given_ids
         ]
-        if variants:  # Standard features have none.
+        # Mostly redundant final safety check for any clients sending
+        # mv values `[]` for standard features.
+        if variants:
             override["variants"] = variants
     return override
