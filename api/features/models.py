@@ -372,8 +372,10 @@ class FeatureSegment(
 
         id_priority_dict = dict(new_feature_segment_id_priorities)
 
-        # Callers needn't list all of the flag's feature segments, so keep the
-        # given priorities, and renumber the others around them in their order.
+        # Since this method doesn't enforce that the caller sends an exhaustive list
+        # covering all FeatureSegments that currently exist, we ensure that the
+        # given priorities are respected, and adjust any existing priorities that
+        # might create duplicates.
         reference = feature_segments[0]
         free_priorities = (
             priority
