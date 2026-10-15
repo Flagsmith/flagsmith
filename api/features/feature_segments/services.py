@@ -111,11 +111,12 @@ def writes_live_segment_override(feature_state_data: LegacyFeatureStateData) -> 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
     """
     live_from = feature_state_data.get("live_from")
+    is_scheduled = live_from is not None and live_from > timezone.now()
     return (
         feature_state_data.get("identity") is None
         and feature_state_data.get("environment_feature_version") is None
         and feature_state_data.get("change_request") is None
-        and (live_from is None or live_from <= timezone.now())
+        and not is_scheduled
     )
 
 
