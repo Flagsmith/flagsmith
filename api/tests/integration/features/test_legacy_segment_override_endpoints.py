@@ -672,7 +672,11 @@ def test_update_feature_state__system_segment_override_as_read__responds_200(
     feature: int,
     system_segment: int,
 ) -> None:
-    """The dashboard writes every override of flags it saves."""
+    """
+    Explicit regression test of the dashboard behaviour.
+    On clicking 'Update Segment Overrides', the dashboard PUTs back all segment overrides
+    that were provided in the original GET.
+    """
     # Given
     overrides = _get_segment_overrides(admin_client, environment_api_key, feature)
     url = (
