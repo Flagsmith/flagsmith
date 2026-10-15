@@ -210,7 +210,8 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
         />
       )}
 
-      {isChangeRequest && (
+      {/* The API lists them only to those who can create change requests. */}
+      {isChangeRequest && permission && (
         <PendingChangeRequests
           environmentId={environmentId}
           featureId={projectFlag.id}
