@@ -198,13 +198,17 @@ doubt.
 
 ### What's running in a Flagsmith deployment
 
-| Component          | What it does                                                                                                                                                                         |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **API**            | Stateless Python web service. Serves SDK and dashboard requests. Each worker is a pod (Kubernetes) or task (ECS). Scaled horizontally with an autoscaler.                            |
-| **Frontend**       | Static admin dashboard. Stateless; not in the SDK hot path. Light load even at large deployments; one or two replicas behind a load balancer is enough. No sticky sessions required. |
-| **Database**       | PostgreSQL. Stores flags, segments, environments, identities, and audit data. Scaled vertically. Add a read replica at Large (see [Database replicas](#database-replicas)).          |
-| **Task processor** | Separate worker that runs background jobs (webhook delivery, audit log writes, scheduled tasks). Same image as the API, run with a different command. Sized similarly at every tier. |
-| **SSE** (optional) | Server-Sent Events service, pushes real-time flag updates to connected SDKs. Only deployed if you use Flagsmith's real-time updates feature.                                         |
+| Component                         | What it does                                                                                                                                                                              |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **API**                           | Stateless Python web service. Serves SDK and dashboard requests. Each worker is a pod (Kubernetes) or task (ECS). Scaled horizontally with an autoscaler.                                 |
+| **Frontend**                      | Static admin dashboard. Stateless; not in the SDK hot path. Light load even at large deployments; one or two replicas behind a load balancer is enough. No sticky sessions required.      |
+| **Database**                      | PostgreSQL. Stores flags, segments, environments, identities, and audit data. Scaled vertically. Add a read replica at Large (see [Database replicas](#database-replicas)).               |
+| **Task processor**                | Separate worker that runs background jobs (webhook delivery, audit log writes, scheduled tasks). Same image as the API, run with a different command. Sized similarly at every tier.      |
+| **SSE** (optional)                | Server-Sent Events service, pushes real-time flag updates to connected SDKs. Only deployed if you use Flagsmith's real-time updates feature.                                              |
+| **Ingestion server** (optional)   | Web service that receives events from SDKs and writes them to Kafka. Only deployed if you use [experimentation](/experimentation). See [Sizing experimentation](#sizing-experimentation). |
+| **Kafka** (optional)              | Message bus used to reliably deliver events to the warehouse. Only deployed if you use experimentation.                                                                                   |
+| **Warehouse delivery** (optional) | Inserts events into each environment's warehouse and retries failed inserts. Only deployed if you use experimentation.                                                                    |
+| **ClickHouse** (optional)         | Analytical database that stores events and runs the aggregations the API requests. Only deployed if you use experimentation.                                                              |
 
 ### Small
 
@@ -268,6 +272,23 @@ Apply on top of the tier you've chosen. These are the safety margins that absorb
 -   **Database CPU: target ≤ 50% peak.** Leaves room for autovacuum, ad-hoc admin queries, and unexpected bursts.
 -   **IOPS: provision ≥ 2× your peak read+write IOPS.** IOPS ceilings throttle silently, better to overshoot.
 -   **Autoscale max: 4× the starting worker count is enough for most cases.** Wider range if you expect spikes.
+
+## Sizing experimentation
+
+[Experimentation](/experimentation) adds an event pipeline whose load depends on event volume, not on flag requests, so
+it is sized separately from the tiers above. Estimate your sustained events per second from the number of exposures and
+conversion events your applications send, then pick the matching tier.
+
+| Component          | Small (< 100 events/s)                       | Medium (< 1,000 events/s)                     | Large (< 10,000 events/s)                                       |
+| ------------------ | -------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------- |
+| Ingestion server   | 2 instances at 1 vCPU / 2 GB                 | 2–4 instances at 1 vCPU / 2 GB                | 4–8 instances at 1 vCPU / 2 GB · Autoscale on CPU               |
+| Warehouse delivery | 1 instance at 1 vCPU / 2 GB                  | 1 instance at 1 vCPU / 2 GB                   | 2–4 instances at 1 vCPU / 2 GB, up to the topic partition count |
+| Kafka              | 3 brokers at 2 vCPU / 4 GB · 20 GB disk each | 3 brokers at 2 vCPU / 8 GB · 150 GB disk each | 3+ brokers at 4 vCPU / 16 GB · 1 TB disk each · 24 partitions   |
+| ClickHouse         | 2 vCPU / 8 GB · 40 GB storage                | 4 vCPU / 16 GB · 400 GB storage               | 8–16 vCPU / 32–64 GB · 4 TB storage                             |
+
+All figures are estimates. Disk and storage figures assume events average 500 bytes, Kafka keeps 7 days of events with
+zstd compression and a replication factor of 3, and ClickHouse keeps 90 days of events. Scale them linearly with your
+event size and retention.
 
 ## Cache configuration
 
