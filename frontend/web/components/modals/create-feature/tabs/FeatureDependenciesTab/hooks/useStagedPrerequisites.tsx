@@ -176,6 +176,10 @@ export const useStagedPrerequisites = ({
     openChangeRequest,
     remove,
     staged,
-    undo: drop,
+    // The refusal was about the held changes, so it goes with them.
+    undo: (prerequisiteId: number) => {
+      setError(null)
+      drop(prerequisiteId)
+    },
   }
 }
