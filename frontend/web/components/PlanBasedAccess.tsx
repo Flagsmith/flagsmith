@@ -16,9 +16,7 @@ type PlanBasedBannerType = {
   children?: ReactNode
   title?: ReactNode
   force?: boolean
-  // Overrides the feature's required plan, e.g. when a flag sets it.
   requiredPlan?: PlanFamily
-  // Renders the badge without a link, e.g. on a card that is itself clickable.
   badgeAsLink?: boolean
 }
 

@@ -8,7 +8,6 @@ export const planNames = {
   startup: 'Startup',
 }
 
-// Ordered by rank, mirroring PLAN_RANK in the API.
 export const PLAN_FAMILIES: PlanFamily[] = [
   'free',
   'start-up',
@@ -23,7 +22,6 @@ export const planFamilyNames: Record<PlanFamily, string> = {
   'start-up': planNames.startup,
 }
 
-// Mirrors SubscriptionPlanFamily.get_by_plan_id.
 export const getPlanFamily = (
   planId: string | null | undefined,
 ): PlanFamily => {

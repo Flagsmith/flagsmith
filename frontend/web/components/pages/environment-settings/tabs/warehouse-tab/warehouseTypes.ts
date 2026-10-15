@@ -27,7 +27,6 @@ const asObject = (value: unknown): Record<string, unknown> | undefined =>
     ? (value as Record<string, unknown>)
     : undefined
 
-// Mirrors get_warehouses_flag_config: a disabled flag falls back to "{}".
 export const getMinimumPlans = (flag: {
   enabled: boolean
   value: unknown
@@ -56,7 +55,6 @@ export type WarehouseGate = {
 
 export type WarehouseTypeStatus = 'available' | 'plan-gated' | 'coming-soon'
 
-// Mirrors is_warehouse_type_available in the API.
 const isWarehouseTypeAvailable = (
   type: WarehouseTypeOption,
   { isSaas, minimumPlans, planId }: WarehouseGate,
