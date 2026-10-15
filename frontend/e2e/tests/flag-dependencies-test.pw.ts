@@ -92,6 +92,7 @@ test.describe('Flag Dependencies', () => {
       page.locator(byId('system-segment-override-label')),
     ).toHaveText('Managed by a flag dependency')
     await expect(page.locator(byId('segment-override-toggle-0'))).toBeDisabled()
+    await visualSnapshot(page, 'dependencies-segment-override', testInfo)
     await page.getByRole('button', { name: 'View dependencies' }).click()
     await expect(page).toHaveURL(/tab=dependencies/)
     await expect(row).toBeVisible()
