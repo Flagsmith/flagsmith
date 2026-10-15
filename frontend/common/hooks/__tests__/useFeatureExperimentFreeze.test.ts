@@ -7,20 +7,20 @@ jest.mock('react', () => ({
   useMemo: (fn: () => any) => fn(),
 }))
 
-jest.mock('common/hooks/useHasExperimentationFeature', () => ({
-  useHasExperimentationFeature: jest.fn(),
+jest.mock('common/hooks/useExperimentationEnabled', () => ({
+  useExperimentationEnabled: jest.fn(),
 }))
 
 import { useFeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import { useGetExperimentsQuery } from 'common/services/useExperiment'
-import { useHasExperimentationFeature } from 'common/hooks/useHasExperimentationFeature'
+import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 import { Experiment } from 'common/types/responses'
 
 const mockUseGetExperimentsQuery =
   useGetExperimentsQuery as jest.MockedFunction<typeof useGetExperimentsQuery>
-const mockUseHasExperimentationFeature =
-  useHasExperimentationFeature as jest.MockedFunction<
-    typeof useHasExperimentationFeature
+const mockUseExperimentationEnabled =
+  useExperimentationEnabled as jest.MockedFunction<
+    typeof useExperimentationEnabled
   >
 
 const makeExperiment = (
@@ -53,7 +53,7 @@ const withResults = (experiments: Experiment[]) =>
 describe('useFeatureExperimentFreeze', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockUseHasExperimentationFeature.mockReturnValue({
+    mockUseExperimentationEnabled.mockReturnValue({
       enabled: true,
       isLoading: false,
     })
@@ -126,7 +126,7 @@ describe('useFeatureExperimentFreeze', () => {
   })
 
   it('skips query when experimentation is unavailable', () => {
-    mockUseHasExperimentationFeature.mockReturnValue({
+    mockUseExperimentationEnabled.mockReturnValue({
       enabled: false,
       isLoading: false,
     })
@@ -142,7 +142,7 @@ describe('useFeatureExperimentFreeze', () => {
   })
 
   it('returns isLoading true while the experimentation check is loading', () => {
-    mockUseHasExperimentationFeature.mockReturnValue({
+    mockUseExperimentationEnabled.mockReturnValue({
       enabled: false,
       isLoading: true,
     })

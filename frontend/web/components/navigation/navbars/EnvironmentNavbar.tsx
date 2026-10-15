@@ -3,10 +3,9 @@ import Utils from 'common/utils/utils'
 import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import BetaFlag from 'components/BetaFlag'
 import SidebarLink from 'components/navigation/SidebarLink'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
-import { useHasExperimentationFeature } from 'common/hooks/useHasExperimentationFeature'
+import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 
 type EnvironmentNavType = {
   projectId: number
@@ -54,8 +53,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
       changeRequestsData?.count) ||
     0
   const scheduled = scheduledData?.count || 0
-  const { enabled: hasExperiments } =
-    useHasExperimentationFeature('experimental_flags')
+  const { enabled: hasExperiments } = useExperimentationEnabled()
   const inner = (
     <div
       className={classNames(
@@ -82,34 +80,23 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
               >
                 Features
               </SidebarLink>
-              {hasExperiments ? (
-                <SidebarLink
-                  id={mobile ? undefined : 'experiments-link'}
-                  icon='flask'
-                  to={`/project/${projectId}/environment/${environmentId}/experiments`}
-                >
-                  Experiments
-                </SidebarLink>
-              ) : (
-                !Utils.isOrgOnFreePlan() &&
-                Utils.getFlagsmithHasFeature('experiments_fake_door') && (
+              {hasExperiments && (
+                <>
                   <SidebarLink
                     id={mobile ? undefined : 'experiments-link'}
                     icon='flask'
                     to={`/project/${projectId}/environment/${environmentId}/experiments`}
                   >
-                    <BetaFlag title='Coming soon'>Experiments</BetaFlag>
+                    Experiments
                   </SidebarLink>
-                )
-              )}
-              {Utils.getFlagsmithHasFeature('experiment_metrics') && (
-                <SidebarLink
-                  id={mobile ? undefined : 'metrics-link'}
-                  icon='bar-chart'
-                  to={`/project/${projectId}/environment/${environmentId}/metrics`}
-                >
-                  Metrics
-                </SidebarLink>
+                  <SidebarLink
+                    id={mobile ? undefined : 'metrics-link'}
+                    icon='bar-chart'
+                    to={`/project/${projectId}/environment/${environmentId}/metrics`}
+                  >
+                    Metrics
+                  </SidebarLink>
+                </>
               )}
               <SidebarLink
                 id='scheduled-link'

@@ -348,6 +348,10 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
             raise serializers.ValidationError(
                 {"metrics": "Cannot change the metrics of an existing experiment."}
             )
+        if self.instance is None and "experiment_rollout" not in attrs:
+            raise serializers.ValidationError(
+                {"experiment_rollout": "This field is required."}
+            )
         if self.instance is not None and "experiment_rollout" in attrs:
             raise serializers.ValidationError(
                 {
@@ -369,7 +373,7 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
 
     def create(self, validated_data: dict[str, Any]) -> Experiment:
         metrics: list[dict[str, Any]] = validated_data.pop("metrics", [])
-        rollout: dict[str, Any] | None = validated_data.pop("experiment_rollout", None)
+        rollout: dict[str, Any] = validated_data.pop("experiment_rollout")
         with transaction.atomic():
             experiment: Experiment = super().create(validated_data)
             ExperimentMetric.objects.bulk_create(
@@ -380,13 +384,10 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
                 )
                 for entry in metrics
             )
-            if rollout is not None:
-                apply_experiment_rollout(
-                    experiment,
-                    ExperimentRolloutSerializer.to_spec(
-                        rollout, self.context["request"]
-                    ),
-                )
+            apply_experiment_rollout(
+                experiment,
+                ExperimentRolloutSerializer.to_spec(rollout, self.context["request"]),
+            )
         return experiment
 
 

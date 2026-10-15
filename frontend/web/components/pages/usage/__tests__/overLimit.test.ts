@@ -1,4 +1,9 @@
-import { limitCrossedOn, overLimitOf } from 'components/pages/usage/overLimit'
+import {
+  limitCrossedOn,
+  OverLimit,
+  overLimitNote,
+  overLimitOf,
+} from 'components/pages/usage/overLimit'
 import { usageEvent, usageResponse } from './fixtures'
 
 const days = (perDay: number[]) =>
@@ -55,6 +60,17 @@ describe('overLimit', () => {
     it('says nothing when the days never reach the limit', () => {
       expect(limitCrossedOn(days([10, 10]), 100)).toBeUndefined()
       expect(limitCrossedOn(undefined, 100)).toBeUndefined()
+    })
+  })
+
+  describe('overLimitNote', () => {
+    it('says how far over in the note under the meter', () => {
+      const note = (total: number, limit: number) =>
+        overLimitNote(overLimitOf(total, limit, days([total])) as OverLimit)
+
+      expect(note(60000, 50000)).toBe('10K calls over your 50K limit.')
+      // shortenNumber leaves small counts alone, so one is reachable.
+      expect(note(50001, 50000)).toBe('1 call over your 50K limit.')
     })
   })
 })
