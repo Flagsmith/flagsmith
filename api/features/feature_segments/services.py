@@ -94,13 +94,13 @@ def renumber_tied_segment_overrides(
 
 
 def _make_room_for_segment_override(
-    *, environment: Environment, feature: Feature, segment_id: int, priority: int
+    *, feature_segments: QuerySet[FeatureSegment], segment_id: int, priority: int
 ) -> None:
     """Move the flag's other overrides from a priority on down, if it's taken.
 
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
-    others = _get_feature_segments(environment, feature).exclude(segment_id=segment_id)
+    others = feature_segments.exclude(segment_id=segment_id)
     if others.filter(priority=priority).exists():
         others.filter(priority__gte=priority).update(priority=F("priority") + 1)
 
@@ -134,11 +134,11 @@ def write_segment_override(
     TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
     """
     with transaction.atomic():
-        renumber_tied_segment_overrides(_get_feature_segments(environment, feature))
+        feature_segments = _get_feature_segments(environment, feature)
+        renumber_tied_segment_overrides(feature_segments)
         if priority is not None:
             _make_room_for_segment_override(
-                environment=environment,
-                feature=feature,
+                feature_segments=feature_segments,
                 segment_id=segment_id,
                 priority=priority,
             )
