@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.286.0](https://github.com/Flagsmith/flagsmith/compare/v2.285.0...v2.286.0) (2026-10-15)
+
+
+### Features
+
+* **experimentation:** drop experimentation flag reads from the dashboard ([#8772](https://github.com/Flagsmith/flagsmith/issues/8772)) ([4a92f99](https://github.com/Flagsmith/flagsmith/commit/4a92f99f9de092102117f05251c35362079462c1))
+* **experimentation:** plan-gate bring-your-own warehouses ([#8779](https://github.com/Flagsmith/flagsmith/issues/8779)) ([03fba58](https://github.com/Flagsmith/flagsmith/commit/03fba5821d4271531abaf58e4a914be3573a4dc1))
+
+
+### Bug Fixes
+
+* **GitHub:** "Add to organisation" opens a 404 page on self-hosted ([#8782](https://github.com/Flagsmith/flagsmith/issues/8782)) ([59523a6](https://github.com/Flagsmith/flagsmith/commit/59523a60b6352592cd07979cb8c2fd1c43daa02b))
+
+
+### Docs
+
+* **experimentation:** add Databricks bring-your-own-warehouse guide ([#8708](https://github.com/Flagsmith/flagsmith/issues/8708)) ([19ff3fe](https://github.com/Flagsmith/flagsmith/commit/19ff3fee826db77da3de0bc19fc786431854d5dc))
+* **experimentation:** add experimentation sizing to self-hosting sizing guide ([#8765](https://github.com/Flagsmith/flagsmith/issues/8765)) ([11cf3f0](https://github.com/Flagsmith/flagsmith/commit/11cf3f0795e68e0993ed8fbe685c52776c60276b))
+* **experimentation:** Cover self-hosted warehouses ([#8780](https://github.com/Flagsmith/flagsmith/issues/8780)) ([77082ff](https://github.com/Flagsmith/flagsmith/commit/77082ff1a6e0c94dfcb65d59c444d0aff61c8634))
+* **experimentation:** Update the Helm chart docs for warehouse delivery ([#8777](https://github.com/Flagsmith/flagsmith/issues/8777)) ([4700912](https://github.com/Flagsmith/flagsmith/commit/4700912aca01c293f6d381bd01922383531ee24d))
+
 ## [2.285.0](https://github.com/Flagsmith/flagsmith/compare/v2.284.0...v2.285.0) (2026-10-15)
 
 
