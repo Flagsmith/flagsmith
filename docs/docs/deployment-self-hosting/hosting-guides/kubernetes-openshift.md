@@ -393,30 +393,29 @@ The task processor itself is documented [here](/deployment-self-hosting/scaling-
 
 ### Experimentation
 
-The chart can run [experimentation](/experimentation). You bring your own Kafka and ClickHouse. The chart then:
+The chart can run [experimentation](/experimentation). You bring your own Kafka, and each environment sends its events
+to its own warehouse. The chart then:
 
-- Runs the event ingestion service, which receives SDK events and writes them to Kafka.
-- Runs a job after each install and upgrade. The job creates the Kafka topic and the ClickHouse tables that copy events from Kafka.
-- Gives the API the ClickHouse URL.
+- Runs the event ingestion service, which receives SDK events and writes them to a Kafka topic.
+- Runs warehouse delivery, which reads that topic and inserts each environment's events into its warehouse.
+- Runs a job after each install and upgrade. The job creates the events topic and a retry topic for failed deliveries.
 
 Requirements:
 
-- Flagsmith API 2.280.0 or later.
+- Flagsmith API 2.285.0 or later.
 - Kafka with at least 3 brokers, for the default replication factor of 3.
-- ClickHouse that can connect to Kafka.
+- A warehouse for each environment that runs experiments. Set up ClickHouse with
+  [Bring your own ClickHouse](/experimentation/connect-a-warehouse#bring-your-own-clickhouse). Both warehouse delivery
+  and the API must be able to reach it.
 
 ```yaml
 experimentation:
  enabled: true
- clickhouse:
-  url: clickhouses://flagsmith:<password>@clickhouse.example.com:9440/flagsmith_exp
  kafka:
   bootstrapServers: kafka-1:9096,kafka-2:9096,kafka-3:9096
   auth: scram
   username: flagsmith
   password: <password>
- warehouseDelivery:
-  enabled: true # optional: send events to your own ClickHouse
 
 ingress:
  ingestion:
@@ -427,17 +426,19 @@ ingress:
       - /
 ```
 
-Each value with a password also has a `…FromExistingSecret` form. Use it in production.
+The Kafka password also has a `passwordFromExistingSecret` form. Use it in production.
 
-The logins need these permissions:
+The topics are `flagsmith_warehouse_events` and `flagsmith_warehouse_events_retry`. Change them with
+`experimentation.kafka.topic` and `experimentation.kafka.retryTopic`. The Kafka login needs these permissions:
 
-| Login                                     | Permissions                                                                    |
-| ----------------------------------------- | ------------------------------------------------------------------------------ |
-| Kafka (`experimentation.kafka`)           | Write to the topic. Read the topic and the consumer group `clickhouse-events`. |
-| ClickHouse (`experimentation.clickhouse`) | `CREATE DATABASE`, `CREATE TABLE`, `CREATE VIEW`, and `SELECT` on `events`.    |
+- Read and write both topics.
+- Read the consumer groups `warehouse-delivery` and `warehouse-delivery-retry`.
 
-To keep schema changes away from the runtime logins, give the job its own admin logins with
-`jobs.experimentationInit.clickhouseUrl` and `jobs.experimentationInit.kafka`.
+To keep topic creation away from the runtime login, give the job its own admin login with
+`jobs.experimentationInit.kafka`.
+
+If your Kafka has `auto.create.topics.enable=true`, create both topics with the same partition count before you turn on
+experimentation. Otherwise, Kafka can create them first with its default partition count.
 
 The ingestion service uses the API's database user by default. To give it a user that can only read environment keys,
 create the user and pass its URL with `experimentation.ingestion.databaseUrlFromExistingSecret`:
@@ -448,15 +449,6 @@ GRANT CONNECT ON DATABASE <database> TO ingestion_server;
 GRANT USAGE ON SCHEMA public TO ingestion_server;
 GRANT SELECT ON experimentation_environment_keys TO ingestion_server;
 ```
-
-To send events to an environment's own ClickHouse, set `experimentation.warehouseDelivery.enabled: true`. The Kafka
-login then also needs these permissions:
-
-- Read and write the topics `external_warehouse_events` and `external_warehouse_events_retry`.
-- Read the consumer groups `warehouse-delivery` and `warehouse-delivery-retry`.
-
-If your Kafka has `auto.create.topics.enable=true`, create these two topics with the same partition count before you
-turn on warehouse delivery. Otherwise, Kafka can create them first with its default partition count.
 
 Warehouse delivery also uses the API's database user by default. To give it its own user, create the user and pass its
 URL with `experimentation.warehouseDelivery.databaseUrlFromExistingSecret`:

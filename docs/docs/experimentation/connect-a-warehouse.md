@@ -105,8 +105,7 @@ Instead of the managed Flagsmith warehouse, you can store experiment events in y
 
 Connections use the ClickHouse HTTP(S) interface, with TLS enabled by default.
 
-Experiment results and exposure queries are currently computed from the managed Flagsmith warehouse; serving results
-directly from your own ClickHouse instance is not supported yet.
+Experiment results and exposures are computed from your ClickHouse instance.
 
 ## Coming soon
 
