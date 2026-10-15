@@ -33,6 +33,7 @@ from features.future.mappers import (
 )
 from features.future.types import (
     EnvironmentDefaultRequest,
+    FlagValue,
     SegmentOverrideRequest,
     UpdateFlagRequest,
     UpdateFlagResponse,
@@ -157,6 +158,16 @@ def _clear_value(feature_state_value: FeatureStateValue) -> None:
     feature_state_value.save(update_fields=value_fields)
 
 
+def _write_value(
+    feature_state_value: FeatureStateValue, value: FlagValue | None
+) -> None:
+    if value is None:
+        _clear_value(feature_state_value)
+        return
+    feature_state_value.set_value(value["value"], value["type"])
+    feature_state_value.save()
+
+
 def _write_environment_default(
     feature_state: FeatureState,
     changes: EnvironmentDefaultRequest,
@@ -168,9 +179,8 @@ def _write_environment_default(
         feature_state.save(update_fields=["enabled"])
 
     feature_state_value = feature_state.feature_state_value
-    if (value := changes.get("value")) is not None:
-        feature_state_value.set_value(value["value"], value["type"])
-        feature_state_value.save()
+    if "value" in changes:
+        _write_value(feature_state_value, changes["value"])
     elif replace:
         _clear_value(feature_state_value)
 
@@ -202,9 +212,8 @@ def _write_segment_override(
         feature_state.save(update_fields=["enabled"])
 
     feature_state_value = feature_state.feature_state_value
-    if (value := changes.get("value")) is not None:
-        feature_state_value.set_value(value["value"], value["type"])
-        feature_state_value.save()
+    if "value" in changes:
+        _write_value(feature_state_value, changes["value"])
     elif replace:
         feature_state_value.copy_from(environment_default.feature_state_value)
 

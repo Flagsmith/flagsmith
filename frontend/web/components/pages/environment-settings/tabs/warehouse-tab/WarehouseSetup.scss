@@ -15,10 +15,13 @@
     width: 180px;
   }
 
-  &__coming-soon {
+  &__type-badge {
     position: absolute;
     top: 12px;
     right: 12px;
+  }
+
+  &__coming-soon {
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-warning);
     background: var(--color-surface-warning);

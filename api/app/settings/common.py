@@ -1335,7 +1335,7 @@ FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID = env.int(
 )
 
 # The URL used to install the GitHub integration
-GITHUB_APP_URL = env.int(
+GITHUB_APP_URL = env.str(
     "GITHUB_APP_URL",
     default=None,
 )

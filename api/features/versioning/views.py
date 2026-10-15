@@ -231,7 +231,7 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
         return EnvironmentFeatureVersion.objects.all()
 
 
-# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
 @method_decorator(
     name="list",
     decorator=extend_schema(

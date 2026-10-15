@@ -7,7 +7,6 @@ from django.db import transaction
 from django.db.models import QuerySet
 from django.utils import timezone
 from flag_engine.segments import constants
-from ordered_model.models import OrderedModelQuerySet  # type: ignore[import-untyped]
 
 from api_keys.user import APIKeyUser
 from audit.constants import (
@@ -43,7 +42,6 @@ from features.dependencies.types import (
     FeatureName,
     ReferencingEnvironment,
 )
-from features.feature_segments.services import get_next_segment_override_priority
 from features.models import Feature, FeatureSegment
 from features.versioning.models import VersionChangeSet
 from features.workflows.core.models import ChangeRequest
@@ -552,6 +550,7 @@ def create_flag_dependency(
     change_request: ChangeRequest | None = None,
 ) -> DependencyEdge:
     """Disable the feature in the environment unless the prerequisite is enabled."""
+    from features.feature_segments.services import get_next_segment_override_priority
     from features.future.services import update_flag
 
     log = logger.bind(
@@ -578,9 +577,9 @@ def create_flag_dependency(
         segment = _get_or_create_dependency_segment(
             feature=feature, prerequisite_feature=prerequisite_feature
         )
-        overrides: OrderedModelQuerySet = get_live_overrides(
-            include_scheduled=True
-        ).filter(environment=environment, feature=feature)
+        overrides = get_live_overrides(include_scheduled=True).filter(
+            environment=environment, feature=feature
+        )
         update_flag(
             environment=environment,
             feature=feature,

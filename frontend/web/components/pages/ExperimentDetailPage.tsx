@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
-import { useHasExperimentationFeature } from 'common/hooks/useHasExperimentationFeature'
+import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 import {
   useGetExperimentBayesianResultsQuery,
   useGetExperimentExposuresQuery,
@@ -31,7 +31,7 @@ const ExperimentDetailPage: FC = () => {
   const history = useHistory()
   const numericId = Number(experimentId)
   const { enabled: hasFeature, isLoading: isLoadingFeature } =
-    useHasExperimentationFeature('experimental_flags')
+    useExperimentationEnabled()
 
   const {
     data: experiment,
