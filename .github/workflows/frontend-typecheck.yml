@@ -1,0 +1,113 @@
+name: Frontend Type Check
+
+# Reports how a pull request changes the number of TypeScript errors.
+# Main keeps its own count as an artifact; pull requests compare against it.
+# Not a required check: it calls attention to new errors without blocking.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - frontend/**
+      - .github/workflows/frontend-typecheck.yml
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - frontend/**
+      - .github/workflows/frontend-typecheck.yml
+
+permissions:
+  contents: read
+
+jobs:
+  typescript-errors:
+    name: TypeScript errors
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read # download main's count
+      pull-requests: write # post the report
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Count errors
+        run: node scripts/typecheck-report.mjs count typecheck-counts.json
+
+      - name: Keep main's count
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-counts
+          path: frontend/typecheck-counts.json
+          retention-days: 90
+
+      # The pull request is checked out merged into main at base.sha, so that
+      # commit's count is the right comparison.
+      - name: Download main's count for the base commit
+        if: github.event_name == 'pull_request'
+        id: base-commit
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: frontend-typecheck.yml
+          commit: ${{ github.event.pull_request.base.sha }}
+          name: typecheck-counts
+          path: frontend/base
+          if_no_artifact_found: fail
+
+      # Main only runs this when frontend files change, so the base commit
+      # often has no count of its own. The latest one matches it then.
+      - name: Download main's latest count
+        if: github.event_name == 'pull_request' && steps.base-commit.outcome != 'success'
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: frontend-typecheck.yml
+          branch: main
+          name: typecheck-counts
+          path: frontend/base
+          if_no_artifact_found: warn
+
+      - name: Compare with main
+        if: github.event_name == 'pull_request'
+        id: compare
+        run: |
+          delta=$(node scripts/typecheck-report.mjs compare base/typecheck-counts.json typecheck-counts.json report.md)
+          echo "delta=$delta" >> "$GITHUB_OUTPUT"
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+      # Comments only when the total moves; an existing comment is still
+      # updated when it stops moving, so it never shows a stale result.
+      # Fork pull requests can't comment; the job summary still has the report.
+      - name: Comment on the pull request
+        if: github.event_name == 'pull_request' && steps.compare.outputs.delta != '0' && steps.compare.outputs.delta != 'none'
+        continue-on-error: true
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: typescript-errors
+          path: frontend/report.md
+
+      - name: Update the existing comment
+        if: github.event_name == 'pull_request' && (steps.compare.outputs.delta == '0' || steps.compare.outputs.delta == 'none')
+        continue-on-error: true
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: typescript-errors
+          path: frontend/report.md
+          only_update: true
