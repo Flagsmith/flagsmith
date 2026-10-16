@@ -479,8 +479,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     controlValue < 0
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
-  // Where change requests are enforced, the tab waits on its own flag until the
-  // API can stage dependencies (#8449).
+  // Where change requests are enforced, the tab also needs its own flag, so the
+  // change request flow can roll out separately.
   const isDependenciesTabEnabled =
     Utils.getFlagsmithHasFeature('flag_dependencies') &&
     !existingChangeRequest &&
