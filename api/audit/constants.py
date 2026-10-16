@@ -87,3 +87,6 @@ EXPERIMENT_ROLLOUT_APPLIED_MESSAGE = "Experiment '%s' rollout set to %s%% of %s"
 FEATURE_DEPENDENCY_CREATED_MESSAGE = (
     "Feature '%s' added as a dependency for feature '%s'."
 )
+FEATURE_DEPENDENCY_DELETED_MESSAGE = (
+    "Feature '%s' removed as a dependency for feature '%s'."
+)

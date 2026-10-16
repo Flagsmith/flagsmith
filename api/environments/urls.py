@@ -10,8 +10,8 @@ from edge_api.identities.views import (
 )
 from features.dependencies.views import (
     FeatureDependenciesAPIView,
-    FeatureDependencyAPIView,
     FeatureDependentsAPIView,
+    FeaturePrerequisiteAPIView,
 )
 from features.views import (
     EnvironmentFeatureStateViewSet,
@@ -171,7 +171,7 @@ urlpatterns = [
     path(
         "<str:environment_api_key>/features/<int:feature_id>"
         "/dependencies/<int:prerequisite_feature_id>/",
-        FeatureDependencyAPIView.as_view(),
+        FeaturePrerequisiteAPIView.as_view(),
         name="feature-dependency",
     ),
     path(

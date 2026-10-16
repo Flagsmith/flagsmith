@@ -80,7 +80,9 @@ const ConfigForm: FC<ConfigFormProps> = ({
     <form onSubmit={handleSubmit} className='wh-config-form'>
       <div className='wh-config-form__card'>
         <div className='wh-config-form__field'>
-          <label className='wh-config-form__label'>Account Identifier</label>
+          <label className='wh-config-form__label fs-caption text-secondary'>
+            Account Identifier
+          </label>
           <Input
             value={accountIdentifier}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -89,7 +91,7 @@ const ConfigForm: FC<ConfigFormProps> = ({
             placeholder='xy12345.us-east-1'
             disabled={isEdit}
           />
-          <span className='wh-config-form__hint'>
+          <span className='fs-captionXSmall text-tertiary'>
             {isEdit
               ? "Identifier can't be changed. To use a different Snowflake account, disconnect and create a new connection."
               : 'The Snowflake account identifier — the part of your Snowflake URL before .snowflakecomputing.com.'}
@@ -97,7 +99,9 @@ const ConfigForm: FC<ConfigFormProps> = ({
         </div>
 
         <div className='wh-config-form__field'>
-          <label className='wh-config-form__label'>Name</label>
+          <label className='wh-config-form__label fs-caption text-secondary'>
+            Name
+          </label>
           <Input
             value={name}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -109,7 +113,9 @@ const ConfigForm: FC<ConfigFormProps> = ({
 
         <div className='wh-config-form__row'>
           <div className='wh-config-form__field'>
-            <label className='wh-config-form__label'>Warehouse</label>
+            <label className='wh-config-form__label fs-caption text-secondary'>
+              Warehouse
+            </label>
             <Input
               value={warehouse}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -119,7 +125,9 @@ const ConfigForm: FC<ConfigFormProps> = ({
             />
           </div>
           <div className='wh-config-form__field'>
-            <label className='wh-config-form__label'>Database</label>
+            <label className='wh-config-form__label fs-caption text-secondary'>
+              Database
+            </label>
             <Input
               value={database}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -132,7 +140,9 @@ const ConfigForm: FC<ConfigFormProps> = ({
 
         <div className='wh-config-form__row'>
           <div className='wh-config-form__field'>
-            <label className='wh-config-form__label'>Schema</label>
+            <label className='wh-config-form__label fs-caption text-secondary'>
+              Schema
+            </label>
             <Input
               value={schema}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -142,7 +152,9 @@ const ConfigForm: FC<ConfigFormProps> = ({
             />
           </div>
           <div className='wh-config-form__field'>
-            <label className='wh-config-form__label'>Role</label>
+            <label className='wh-config-form__label fs-caption text-secondary'>
+              Role
+            </label>
             <Input
               value={role}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -154,7 +166,9 @@ const ConfigForm: FC<ConfigFormProps> = ({
         </div>
 
         <div className='wh-config-form__field'>
-          <label className='wh-config-form__label'>User</label>
+          <label className='wh-config-form__label fs-caption text-secondary'>
+            User
+          </label>
           <Input
             value={user}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -165,7 +179,7 @@ const ConfigForm: FC<ConfigFormProps> = ({
         </div>
 
         {!isEdit && (
-          <div className='wh-config-form__note'>
+          <div className='wh-config-form__note fs-caption text-secondary'>
             Flagsmith generates an RSA key pair on save &mdash; no passwords or
             private keys to type. You&apos;ll get a setup script to run in
             Snowflake after saving.

@@ -47,6 +47,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "user": "100000/day",
     "master_api_key": "100000/day",
     "influx_query": "50/min",
+    "usage_data": "50/min",
     "warehouse_connection_write": "1000/min",
     "warehouse_connection_read": "1000/min",
 }
@@ -57,6 +58,9 @@ USE_CACHE_FOR_USAGE_DATA = False
 RETRY_WEBHOOKS = True
 
 INFLUXDB_BUCKET = "test_bucket"
+
+# Lets experimentation tests exercise the feature flags alone.
+EXPERIMENTATION_ENABLED = True
 
 SUBSCRIPTION_LICENCE_PRIVATE_KEY = """
 -----BEGIN PRIVATE KEY-----

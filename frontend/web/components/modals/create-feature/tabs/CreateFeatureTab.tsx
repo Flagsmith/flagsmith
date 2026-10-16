@@ -72,10 +72,11 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
       {!!projectFlag && (
         <>
           {preventFlagDefaults && (
-            <InfoMessage collapseId='create-flag'>
-              This will create the feature for <strong>all environments</strong>
-              , you can edit the feature's enabled state and value per
-              environment once the feature is created.
+            <InfoMessage collapseId='prevent-flag-defaults'>
+              This project <strong>prevents flag defaults</strong>, so the
+              feature starts disabled with no value in{' '}
+              <strong>all environments</strong>. Set its enabled state and value
+              per environment once it is created.
             </InfoMessage>
           )}
           <FeatureValueTab
@@ -83,6 +84,7 @@ const CreateFeatureTab: FC<CreateFeatureTabProps> = ({
             projectId={projectId}
             identity={identity}
             noPermissions={noPermissions}
+            preventFlagDefaults={preventFlagDefaults}
             projectFlag={projectFlag}
             featureState={overrideFeatureState || featureState}
             storedFeatureState={storedFeatureState}

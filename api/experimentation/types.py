@@ -66,3 +66,27 @@ CLICKHOUSE_DEFAULTS: ClickHouseConfig = {
 
 class ClickHouseCredentials(TypedDict):
     password: str
+
+
+class DatabricksConfig(TypedDict):
+    host: str
+    workspace_id: str
+    region: str
+    warehouse_id: str
+    catalog: str
+    schema: str
+
+
+DATABRICKS_DEFAULTS: DatabricksConfig = {
+    "host": "",
+    "workspace_id": "",
+    "region": "",
+    "warehouse_id": "",
+    "catalog": "",
+    "schema": "flagsmith_exp",
+}
+
+
+class DatabricksCredentials(TypedDict):
+    client_id: str
+    client_secret: str

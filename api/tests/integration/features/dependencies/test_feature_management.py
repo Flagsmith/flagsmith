@@ -232,13 +232,11 @@ def test_delete_feature__feature_is_prerequisite_in_another_environment__deletio
     assert Feature.objects.filter(id=prerequisite.id).exists()
 
 
-@pytest.mark.xfail(reason="TODO: https://github.com/Flagsmith/flagsmith/issues/8426")
 def test_delete_feature__feature_removed_as_prerequisite__deletion_goes_through(
     admin_client: APIClient,
     environment_api_key: str,
     project: int,
 ) -> None:
-    """
     # Given
     feature = Feature.objects.create(name="checkout", project_id=project)
     prerequisite = Feature.objects.create(name="payments", project_id=project)
@@ -258,5 +256,3 @@ def test_delete_feature__feature_removed_as_prerequisite__deletion_goes_through(
     assert response.status_code == 204
     assert not Feature.objects.filter(id=prerequisite.id).exists()
     assert not SegmentFlagReference.objects.exists()
-    """
-    raise NotImplementedError

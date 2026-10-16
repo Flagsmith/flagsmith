@@ -37,10 +37,7 @@ const Step: FC<StepProps> = ({
 
   return (
     <Card
-      contentClassName={classNames({
-        'bg-light200': !(isActive || isComplete),
-        'bg-white': isActive || isComplete,
-      })}
+      contentClassName='bg-transparent'
       className={classNames(
         'rounded',
         'col-8',
@@ -50,15 +47,15 @@ const Step: FC<StepProps> = ({
         'border-1',
         'px-4',
         {
-          'bg-light200': !(isActive || isComplete),
-          'bg-white': isActive || isComplete,
+          'bg-surface-default': isActive || isComplete,
+          'bg-surface-subtle': !(isActive || isComplete),
         },
       )}
     >
       <div
         className={classNames(numberClassName, {
-          'bg-white bg-body text-action fw-semibold': !isComplete && isActive,
-          'bg-white bg-light200': !isComplete && !isActive,
+          'bg-surface-default text-action fw-semibold': !isComplete && isActive,
+          'bg-surface-subtle': !isComplete && !isActive,
         })}
         style={{
           ...numberStyle,

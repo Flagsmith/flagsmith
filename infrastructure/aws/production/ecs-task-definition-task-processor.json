@@ -35,6 +35,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "EXPERIMENTATION_ENABLED",
+                    "value": "true"
+                },
+                {
                     "name": "RUN_BY_PROCESSOR",
                     "value": "True"
                 },

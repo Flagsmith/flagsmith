@@ -105,7 +105,11 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         if getattr(self, "swagger_fake_view", False):
             return Organisation.objects.none()
 
-        return self.request.user.get_active_organisations()  # type: ignore[union-attr]
+        return self.request.user.get_active_organisations().select_related(  # type: ignore[union-attr]
+            "subscription",
+            "subscription_information_cache",
+            "breached_grace_period",
+        )
 
     def get_throttles(self):  # type: ignore[no-untyped-def]
         if self.action == "invite":

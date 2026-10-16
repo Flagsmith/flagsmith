@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
-import Utils from 'common/utils/utils'
+import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 import {
   useGetExperimentBayesianResultsQuery,
   useGetExperimentExposuresQuery,
@@ -30,7 +30,8 @@ const ExperimentDetailPage: FC = () => {
     useParams<ExperimentDetailParams>()
   const history = useHistory()
   const numericId = Number(experimentId)
-  const hasFeature = Utils.getFlagsmithHasFeature('experimental_flags')
+  const { enabled: hasFeature, isLoading: isLoadingFeature } =
+    useExperimentationEnabled()
 
   const {
     data: experiment,
@@ -53,14 +54,14 @@ const ExperimentDetailPage: FC = () => {
 
   const results = bayesianResults?.payload ?? undefined
 
-  if (!hasFeature) {
+  if (!isLoadingFeature && !hasFeature) {
     history.replace(
       `/project/${projectId}/environment/${environmentId}/features`,
     )
     return null
   }
 
-  if (isLoading) {
+  if (isLoadingFeature || isLoading) {
     return (
       <div className='app-container container'>
         <div className='text-center py-5'>

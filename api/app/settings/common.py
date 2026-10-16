@@ -383,6 +383,7 @@ REST_FRAMEWORK = {
         "invite": "10/min",
         "user": USER_THROTTLE_RATE,
         "influx_query": "5/min",
+        "usage_data": "30/min",
         "warehouse_connection_write": "10/min",
         "warehouse_connection_read": "60/min",
     },
@@ -617,6 +618,7 @@ SPECTACULAR_SETTINGS = {
         "WarehouseConnectionStatusEnum": (
             "experimentation.models.WarehouseConnectionStatus.choices"
         ),
+        "SegmentManagedByEnum": "segments.models.SegmentManagedBy.choices",
     },
     "COMPONENT_NO_READ_ONLY_REQUIRED": True,
 }
@@ -1333,7 +1335,7 @@ FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID = env.int(
 )
 
 # The URL used to install the GitHub integration
-GITHUB_APP_URL = env.int(
+GITHUB_APP_URL = env.str(
     "GITHUB_APP_URL",
     default=None,
 )
@@ -1542,6 +1544,9 @@ CLICKHOUSE_SECURE = env.bool("CLICKHOUSE_SECURE", default=None)
 CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
 
 CLICKHOUSE_CONNECTION_CLIENT_NAME = "flagsmith-core-api"
+
+# Whether the experimentation infra is deployed.
+EXPERIMENTATION_ENABLED = env.bool("EXPERIMENTATION_ENABLED", default=False)
 
 # DSN for the ClickHouse instance holding ingested experimentation events.
 # TODO: consolidate connection management across the two CH use cases

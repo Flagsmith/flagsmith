@@ -160,6 +160,48 @@ export type SegmentRule = {
   conditions: SegmentCondition[]
   version_of: number | undefined
 }
+// One feature's dependency on another, as served by the dependencies API.
+// Mirrors `DependencyEdge` in api/features/dependencies/types.py.
+export type DependencyFeature = {
+  id: number
+  name: string
+}
+
+export type DependencyEdgeSegment = {
+  id: number
+  name: string
+  rules: SegmentRule[]
+  condition_json_path: string
+  // False for edges a user wrote by hand in a segment; those cannot be
+  // removed through the dependencies API.
+  is_system: boolean
+}
+
+// A link between two flags, not a flag: `feature` is the gated one and
+// `prerequisite` the one gating it, so which end a screen shows is up to it.
+export type DependencyEdge = {
+  feature: DependencyFeature
+  prerequisite: DependencyFeature
+  segment: DependencyEdgeSegment
+}
+
+export type DependencyConflictCode =
+  | 'circular_dependency'
+  | 'dependency_exists'
+  | 'feature_is_prerequisite'
+  | 'prerequisite_has_prerequisite'
+  | 'prerequisite_is_self'
+
+export type DependencyConflictDetail = {
+  code: DependencyConflictCode
+  message: string
+  environment: {
+    key: string
+    name: string
+  }
+  path: DependencyEdge[]
+}
+
 export type SegmentMembership = {
   environment: number
   count: number
@@ -557,6 +599,10 @@ export type Organisation = {
   role: string
   persist_trait_data: boolean
   block_access_to_admin: boolean
+  stop_serving_flags: boolean
+  api_limit_restriction_enabled: boolean
+  api_limit_grace_period_used: boolean
+  overage_billing_eligible: boolean
   restrict_project_create_to_admin: boolean
 }
 export type Identity = {
@@ -1216,6 +1262,7 @@ export type Version = {
     ci_commit_sha: string
     image_tag: string
     has_email_provider: boolean
+    experimentation_enabled: boolean
     is_enterprise: boolean
     is_saas: boolean
     'self_hosted_data'?: {
@@ -1362,6 +1409,8 @@ export interface UsageEventsList extends AggregateUsageDataItem {
   labels: {
     user_agent: string | null
   }
+  project_id: number | null
+  environment_id: number | null
 }
 
 export type WarehouseConnectionStatus =
@@ -1370,7 +1419,11 @@ export type WarehouseConnectionStatus =
   | 'connected'
   | 'errored'
 
-export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
+export type WarehouseType =
+  | 'flagsmith'
+  | 'snowflake'
+  | 'clickhouse'
+  | 'databricks'
 
 export type SnowflakeConfig = {
   account_identifier: string
@@ -1389,9 +1442,19 @@ export type ClickHouseConfig = {
   secure: boolean
 }
 
+export type DatabricksConfig = {
+  host: string
+  workspace_id: string
+  region: string
+  warehouse_id: string
+  catalog: string
+  schema: string
+}
+
 export type WarehouseConfigResponse =
   | SnowflakeConfig
   | ClickHouseConfig
+  | DatabricksConfig
   | Record<string, never>
 
 export type WarehouseConnectionTestResult = {
@@ -1449,6 +1512,7 @@ export type Res = {
   projects: ProjectSummary[]
   project: Project
   environments: PagedResponse<Environment>
+  allEnvironments: Environment[]
   webhook: Webhook
   webhooks: Webhook[]
   organisationUsage: {
@@ -1551,6 +1615,9 @@ export type Res = {
   githubRepos: GithubPaginatedRepos<Repository>
   segmentPriorities: {}
   featureSegment: FeatureState['feature_segment']
+  featureDependencies: { results: DependencyEdge[] }
+  featureDependents: { results: DependencyEdge[] }
+  featureDependency: DependencyEdge
   featureVersions: PagedResponse<FeatureVersion>
   users: User[]
   enableFeatureVersioning: { id: string }

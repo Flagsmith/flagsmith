@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
 import ProjectStore from 'common/stores/project-store'
+import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import CreateWebhookModal from 'components/modals/CreateWebhook'
 import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
@@ -47,7 +48,6 @@ import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import { useRouteContext } from 'components/providers/RouteContext'
 import SettingTitle from 'components/SettingTitle'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
-import PlanBasedBanner from 'components/PlanBasedAccess'
 import { getSegmentSources } from 'components/modals/CreateSegmentSourcesModal'
 import CohortSyncTab from './tabs/cohort-sync-tab'
 import WarehouseTab from './tabs/warehouse-tab'
@@ -119,9 +119,7 @@ const EnvironmentSettingsPage: React.FC = () => {
 
   const has4EyesPermission = Utils.getPlansPermission('4_EYES')
   const metadataEnable = Utils.getPlansPermission('METADATA')
-  const warehouseEnabled = Utils.getFlagsmithHasFeature(
-    'experimentation_warehouse_connection',
-  )
+  const { enabled: warehouseEnabled } = useExperimentationEnabled()
   const cohortSyncEnabled = getSegmentSources().some(
     (source) =>
       (source.key === 'amplitude' || source.key === 'mixpanel') &&
@@ -914,17 +912,11 @@ const EnvironmentSettingsPage: React.FC = () => {
                   </TabItem>
                   {warehouseEnabled && (
                     <TabItem tabLabel='Warehouse'>
-                      <PlanBasedBanner
-                        className='mt-4'
-                        feature='WAREHOUSE'
-                        theme='page'
-                      >
-                        <div className='mt-4'>
-                          <WarehouseTab
-                            environmentId={match.params.environmentId}
-                          />
-                        </div>
-                      </PlanBasedBanner>
+                      <div className='mt-4'>
+                        <WarehouseTab
+                          environmentId={match.params.environmentId}
+                        />
+                      </div>
                     </TabItem>
                   )}
                   {cohortSyncEnabled && (

@@ -1,101 +1,102 @@
 @import '~bootstrap/scss/mixins';
 @import '~bootstrap/scss/functions';
 @import '~bootstrap/scss/variables';
+@import 'primitives';
+
+// Legacy names, read from the primitives in tokens.json until their last use
+// is gone. New code uses the tokens.
 
 // Colors
-$white-alpha-8: rgba(255, 255, 255, 0.08);
-$white-alpha-16: rgba(255, 255, 255, 0.16);
-$white-alpha-24: rgba(255, 255, 255, 0.24);
-$white-alpha-32: rgba(255, 255, 255, 0.32);
-$white-alpha-48: rgba(255, 255, 255, 0.48);
-$black-alpha-8: rgba(0, 0, 0, 0.08);
-$black-alpha-16: rgba(0, 0, 0, 0.16);
-$black-alpha-32: rgba(0, 0, 0, 0.32);
+$white-alpha-8: rgba(primitive('slate-0'), 0.08);
+$white-alpha-16: rgba(primitive('slate-0'), 0.16);
+$white-alpha-24: rgba(primitive('slate-0'), 0.24);
+$white-alpha-32: rgba(primitive('slate-0'), 0.32);
+$white-alpha-48: rgba(primitive('slate-0'), 0.48);
+$black-alpha-8: rgba(primitive('slate-1000'), 0.08);
+$black-alpha-16: rgba(primitive('slate-1000'), 0.16);
+$black-alpha-32: rgba(primitive('slate-1000'), 0.32);
 
 // Backgrounds
-$bg-dark500: #101628;
-$bg-dark400: #15192b;
-$bg-dark300: #161d30;
-$bg-dark200: #202839;
-$bg-dark100: #2d3443;
-$bg-light100: #ffffff;
-$bg-light200: #fafafb;
-$bg-light300: #eff1f4;
-$bg-light500: #e0e3e9;
+$bg-dark500: primitive('slate-950');
+$bg-dark400: primitive('slate-900');
+$bg-dark300: primitive('slate-850');
+$bg-dark200: primitive('slate-800');
+$bg-dark100: primitive('slate-700');
+$bg-light100: primitive('slate-0');
+$bg-light200: primitive('slate-50');
+$bg-light300: primitive('slate-100');
+$bg-light500: primitive('slate-200');
 
 // Body
-$dark-highlight-color: #e1e1e1;
+$dark-highlight-color: primitive('slate-200');
 $body-bg-dark: $bg-dark500;
 $body-color-dark: white;
-$body-color: #1a2634;
-$text-icon-light: #ffffff;
-$text-icon-grey: #656d7b;
-$text-icon-light-grey: rgba(157, 164, 174, 1);
+$body-color: primitive('slate-600');
+$text-icon-light: primitive('slate-0');
+$text-icon-grey: primitive('slate-500');
+$text-icon-light-grey: primitive('slate-300');
 $text-muted: var(--color-text-secondary);
 
 // Header
-$header-color: #1e0d26; // for headers and labels
 $header-color-dark: $text-icon-light;
 
 // Other colors
-$primary: #6837fc;
-$primary400: #906af6;
-$primary600: #4e25db;
-$primary700: #3919b7;
-$primary800: #2a2054;
-$primary900: #1E0D26;
+$primary: primitive('purple-600');
+$primary400: primitive('purple-400');
+$primary600: primitive('purple-700');
+$primary700: primitive('purple-800');
+$primary800: primitive('purple-900');
+$primary900: primitive('purple-950');
 
-$danger: #ef4d56;
-$danger400: #f57c78;
+$danger: primitive('red-500');
+$danger400: primitive('red-400');
 
-$success: #27ab95;
-$success400: #56ccad;
-$success600: #13787b;
+$success: primitive('green-500');
+$success400: primitive('green-400');
+$success600: primitive('green-600');
 
-$info: #0aaddf;
-$warning: #ff9f43;
+$info: primitive('blue-500');
+$warning: primitive('gold-600');
 
-$secondary400: #fae392;
-$secondary500: #F7D56E;
-$secondary600: #e5c55f;
-$secondary700: #d4b050;
-$secondary: #fae392;
+$secondary400: primitive('gold-300');
+$secondary500: primitive('gold-500');
+$secondary600: primitive('gold-600');
+$secondary700: primitive('gold-700');
+$secondary: primitive('gold-300');
 
 // Links and Anchors
 $link-color: $primary;
 $anchor-color: $primary900;
 $anchor-color-dark: $text-icon-light;
-$anchor-color-hover: lighten($header-color, 10);
 $anchor-color-dark: $dark-highlight-color;
 
 // Alerts
-$success-solid-alert: rgba(238, 248, 247);
-$info-solid-alert: rgba(236, 249, 252);
-$warning-solid-alert: rgba(255, 248, 240);
-$danger-solid-alert: rgba(254, 239, 241);
-$success-solid-dark-alert: rgba(17, 32, 46);
-$info-solid-dark-alert: rgba(15, 32, 52);
-$warning-solid-dark-alert: rgba(34, 31, 39);
-$danger-solid-dark-alert: rgba(34, 23, 40);
+$success-solid-alert: primitive('green-50');
+$info-solid-alert: primitive('blue-100');
+$warning-solid-alert: primitive('gold-100');
+$danger-solid-alert: primitive('orange-100');
+$success-solid-dark-alert: primitive('green-900');
+$info-solid-dark-alert: primitive('blue-900');
+$warning-solid-dark-alert: primitive('gold-950');
+$danger-solid-dark-alert: primitive('red-900');
 
 // Alphas
-$info-alfa-8: rgba(10, 173, 223, 0.08);
-$info-alfa-24: rgba(10, 173, 223, 0.24);
-$danger-alfa-8: rgba(239, 77, 86, 0.08);
-$danger-alfa-16: rgba(239, 77, 86, 0.16);
-$warning-alfa-8: rgba(255, 159, 67, 0.08);
-$primary-alfa-8: rgba(104, 55, 252, 0.08);
-$primary-alfa-16: rgba(104, 55, 252, 0.16);
-$primary-alfa-24: rgba(104, 55, 252, 0.24);
-$primary-alfa-32: rgba(104, 55, 252, 0.32);
-$basic-alpha-8: rgba(101, 109, 123, 0.08);
-$basic-alpha-16: rgba(101, 109, 123, 0.16);
-$basic-alpha-24: rgba(101, 109, 123, 0.24);
-$basic-alpha-32: rgba(101, 109, 123, 0.32);
-$basic-alpha-48: rgba(101, 109, 123, 0.48);
-$secondary-alfa-16: rgba(247, 213, 110, 0.16);
-$success-alfa-8: rgba(39, 171, 149, 0.08);
-$success-alfa-16: rgba(39, 171, 149, 0.16);
+$info-alfa-8: rgba(primitive('blue-500'), 0.08);
+$info-alfa-24: rgba(primitive('blue-500'), 0.24);
+$danger-alfa-8: rgba(primitive('red-500'), 0.08);
+$danger-alfa-16: rgba(primitive('red-500'), 0.16);
+$primary-alfa-8: rgba(primitive('purple-600'), 0.08);
+$primary-alfa-16: rgba(primitive('purple-600'), 0.16);
+$primary-alfa-24: rgba(primitive('purple-600'), 0.24);
+$primary-alfa-32: rgba(primitive('purple-600'), 0.32);
+$basic-alpha-8: rgba(primitive('slate-500'), 0.08);
+$basic-alpha-16: rgba(primitive('slate-500'), 0.16);
+$basic-alpha-24: rgba(primitive('slate-500'), 0.24);
+$basic-alpha-32: rgba(primitive('slate-500'), 0.32);
+$basic-alpha-48: rgba(primitive('slate-500'), 0.48);
+$secondary-alfa-16: rgba(primitive('gold-500'), 0.16);
+$success-alfa-8: rgba(primitive('green-500'), 0.08);
+$success-alfa-16: rgba(primitive('green-500'), 0.16);
 
 // Border radius
 $border-radius-sm: 4px;
@@ -143,8 +144,8 @@ $btn-outline-hover-bg: $primary-alfa-8;
 $btn-outline-hover-bg-dark: $basic-alpha-8;
 $btn-outline-focus-bg-dark: $primary-alfa-8;
 $btn-outline-active-bg: $primary-alfa-16;
-$btn-danger-hover: #cd384d;
-$btn-danger-active: #ac2646;
+$btn-danger-hover: primitive('red-600');
+$btn-danger-active: primitive('red-700');
 $btn-success: $success400;
 $btn-success-hover: $success;
 $btn-success-active: $success600;
@@ -168,7 +169,7 @@ $modal-lg: 900px;
 $modal-bg-dark: $bg-dark400;
 $modal-border-radius: 18px;
 $modal-footer-border-width: 0;
-$modal-backdrop-bg: rgba(0, 0, 0, 0.870588);
+$modal-backdrop-bg: rgba(primitive('slate-1000'), 0.870588);
 $modal-header-padding-x: $spacer * 1.5;
 $modal-header-padding-y: $spacer;
 $modal-header-border-width: 0;
@@ -229,9 +230,8 @@ $h6-font-size: 16px;
 $h6-line-height: 24px;
 
 //Input
-$input-bg: #fff;
+$input-bg: primitive('slate-0');
 $input-bg-dark: $bg-dark300;
-$input-bg-alt: #f7f7f7;
 $input-color-dark: $text-icon-light-grey;
 $input-border-radius: $border-radius;
 $input-height: 44px;
@@ -243,7 +243,6 @@ $input-line-height: 24px;
 $input-font-size: $font-size-base;
 $input-font-weight: 500;
 $input-border-color: $basic-alpha-16;
-$input-border-color-dark: $bg-dark400;
 $input-focus-border-color-dark: $primary;
 $input-hover-border-color-dark: $white-alpha-8;
 $input-padding: 12px 12px 12px 16px;
@@ -274,9 +273,9 @@ $switcher-dark-mode-width: 22px;
 
 //Checkbox
 $checkbox-width: 20px;
-$checkbox-border-color: rgba(101, 109, 123, 0.24);
-$checkbox-border-color-dark: rgba(255, 255, 255, 0.24);
-$checkbox-focus-bg: rgba(104, 55, 252, 0.08);
+$checkbox-border-color: rgba(primitive('slate-500'), 0.24);
+$checkbox-border-color-dark: rgba(primitive('slate-0'), 0.24);
+$checkbox-focus-bg: rgba(primitive('purple-600'), 0.08);
 $checkbox-focus-border-color: $primary400;
 $checkbox-hover-border-color: $primary;
 $checkbox-checked-hover-border-color: $primary600;
@@ -335,9 +334,7 @@ $panel-heading-color-dark: $header-color-dark;
 $panel-heading-border: 1px solid $primary900;
 
 // Code help e.g. installing the SDK
-$btn-code-button-color: $header-color;
 $btn-color: white;
-$btn-color-dark: #d9d9d9;
 
 $scrollbar-track: $white-alpha-16;
 $scrollbar-thumb: $bg-light300;
@@ -372,7 +369,7 @@ $theme-colors: (
   }
 }
 .bg-faint {
-  background-color: #fafafa;
+  background-color: primitive('slate-50');
 }
 
 .dark .bg-faint {

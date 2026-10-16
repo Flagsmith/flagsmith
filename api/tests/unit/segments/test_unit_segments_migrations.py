@@ -1,4 +1,5 @@
 import uuid
+from datetime import timedelta
 from importlib import import_module
 
 import pytest
@@ -429,3 +430,99 @@ def test_0032_add_segment_rules_data__backwards__nullify_segment_rules_data(
     blank_segment.refresh_from_db()
     assert backfilled_segment.rules_data is None
     assert blank_segment.rules_data is None
+
+
+def test_0033_add_system_segment_managed_by__forwards__backfills_system_segment_owners(
+    migrator: Migrator,
+) -> None:
+    # Given
+    state = migrator.apply_initial_migration(
+        [
+            ("segments", "0032_add_segment_rules_data"),
+            ("experimentation", "0016_add_delivery_connections_db_view_and_status"),
+            ("release_pipelines_core", "0003_add_created_at"),
+        ]
+    )
+
+    Organisation = state.apps.get_model("organisations", "Organisation")
+    Project = state.apps.get_model("projects", "Project")
+    Environment = state.apps.get_model("environments", "Environment")
+    Feature = state.apps.get_model("features", "Feature")
+    Segment = state.apps.get_model("segments", "Segment")
+    Experiment = state.apps.get_model("experimentation", "Experiment")
+    PhasedRolloutState = state.apps.get_model(
+        "release_pipelines_core", "PhasedRolloutState"
+    )
+
+    organisation = Organisation.objects.create(name="Test Org")
+    project = Project.objects.create(name="Test Project", organisation=organisation)
+    environment = Environment.objects.create(
+        name="Test Environment", project=project, api_key="abc123"
+    )
+    feature = Feature.objects.create(name="checkout", project=project)
+
+    experiment_segment = Segment.objects.create(
+        name="renamed by a change request", project=project, is_system_segment=True
+    )
+    Experiment.objects.create(
+        environment=environment,
+        feature=feature,
+        name="Experiment",
+        hypothesis="It works",
+        rollout_segment=experiment_segment,
+    )
+    orphaned_experiment_segment = Segment.objects.create(
+        name="experiment-42-rollout", project=project, is_system_segment=True
+    )
+    phased_rollout_segment = Segment.objects.create(
+        name="renamed by a change request",
+        project=project,
+        feature=feature,
+        is_system_segment=True,
+    )
+    PhasedRolloutState.objects.create(
+        initial_split=10,
+        increase_by=10,
+        increase_every=timedelta(days=1),
+        current_split=10,
+        rollout_segment=phased_rollout_segment,
+    )
+    orphaned_phased_rollout_segment = Segment.objects.create(
+        name="rollout_segment",
+        project=project,
+        feature=feature,
+        is_system_segment=True,
+    )
+    dependency_segment = Segment.objects.create(
+        name="checkout-depends-on-inventory",
+        project=project,
+        feature=feature,
+        is_system_segment=True,
+    )
+    unknown_system_segment = Segment.objects.create(
+        name="unknown", project=project, is_system_segment=True
+    )
+    user_segment = Segment.objects.create(
+        name="checkout-depends-on-inventory", project=project, feature=feature
+    )
+    cohort_segment = Segment.objects.create(
+        name="cohort", project=project, managed_by="cohort"
+    )
+
+    # When
+    new_state = migrator.apply_tested_migration(
+        ("segments", "0033_add_system_segment_managed_by")
+    )
+
+    # Then
+    NewSegment = new_state.apps.get_model("segments", "Segment")
+    assert dict(NewSegment.objects.values_list("id", "managed_by")) == {
+        experiment_segment.id: "experiment",
+        orphaned_experiment_segment.id: "experiment",
+        phased_rollout_segment.id: "release_pipeline",
+        orphaned_phased_rollout_segment.id: "release_pipeline",
+        dependency_segment.id: "dependency",
+        unknown_system_segment.id: "",
+        user_segment.id: "",
+        cohort_segment.id: "cohort",
+    }

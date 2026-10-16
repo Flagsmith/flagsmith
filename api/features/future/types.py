@@ -23,7 +23,7 @@ class SegmentReference(TypedDict):
 
 class EnvironmentDefaultRequest(TypedDict, total=False):
     enabled: bool
-    value: FlagValue
+    value: FlagValue | None
     variants: Sequence[Variant]
 
 
@@ -31,7 +31,7 @@ class SegmentOverrideRequest(TypedDict):
     segment: SegmentReference
     enabled: NotRequired[bool]
     priority: NotRequired[int]
-    value: NotRequired[FlagValue]
+    value: NotRequired[FlagValue | None]
     variants: NotRequired[Sequence[Variant]]
 
 

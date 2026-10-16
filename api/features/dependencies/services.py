@@ -5,17 +5,23 @@ from collections.abc import Collection
 import structlog
 from django.db import transaction
 from django.db.models import QuerySet
+from django.utils import timezone
 from flag_engine.segments import constants
-from ordered_model.models import OrderedModelQuerySet  # type: ignore[import-untyped]
 
 from api_keys.user import APIKeyUser
-from audit.constants import FEATURE_DEPENDENCY_CREATED_MESSAGE
+from audit.constants import (
+    FEATURE_DEPENDENCY_CREATED_MESSAGE,
+    FEATURE_DEPENDENCY_DELETED_MESSAGE,
+)
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.dependencies.exceptions import (
+    ChangeRequestRequiredError,
     CircularDependencyError,
     DependencyExistsError,
+    DependencyNotFoundError,
     FeatureHasDependentsError,
     FeatureIsPrerequisiteError,
     FeatureIsReferencedError,
@@ -37,8 +43,10 @@ from features.dependencies.types import (
     ReferencingEnvironment,
 )
 from features.models import Feature, FeatureSegment
+from features.versioning.models import VersionChangeSet
+from features.workflows.core.models import ChangeRequest
 from projects.models import Project
-from segments.models import Segment
+from segments.models import Segment, SegmentManagedBy
 from segments.services import get_live_overrides, write_segment_rules
 from segments.types import SegmentCondition, SegmentRule
 from users.models import FFAdminUser
@@ -130,6 +138,43 @@ def report_flag_dependencies(
         log.info("dependencies.created", prerequisite_feature__name=feature_name)
 
 
+def report_flag_dependency_changes(
+    *,
+    environment: Environment,
+    feature: Feature,
+    created_segment_ids: Collection[int],
+    deleted_segment_ids: Collection[int],
+    author: AuthorData,
+) -> None:
+    """Report and audit the prerequisites a feature gains and loses as its
+    segment overrides go live."""
+    created: set[FeatureName] = set()
+    deleted: set[FeatureName] = set()
+    for reference in SegmentFlagReference.objects.filter(
+        segment_id__in=[*created_segment_ids, *deleted_segment_ids]
+    ).select_related("segment", "prerequisite_feature"):
+        is_created = reference.segment_id in created_segment_ids
+        (created if is_created else deleted).add(reference.prerequisite_feature.name)
+        if reference.segment.managed_by == SegmentManagedBy.DEPENDENCY:
+            message = (
+                FEATURE_DEPENDENCY_CREATED_MESSAGE
+                if is_created
+                else FEATURE_DEPENDENCY_DELETED_MESSAGE
+            )
+            AuditLog.objects.create(
+                environment=environment,
+                project=environment.project,
+                related_object_type=RelatedObjectType.FEATURE.name,
+                related_object_id=feature.id,
+                author=author.user,
+                master_api_key=author.api_key,
+                log=message % (reference.prerequisite_feature.name, feature.name),
+            )
+    report_flag_dependencies(
+        environment=environment, feature=feature, created=created, deleted=deleted
+    )
+
+
 def validate_segment_flag_dependencies(segment: "Segment") -> None:
     """Raise if any feature the segment overrides ends up depending on itself.
 
@@ -184,7 +229,11 @@ def validate_segment_flag_dependencies(segment: "Segment") -> None:
 
 
 def validate_feature_is_not_prerequisite(feature: Feature) -> None:
-    """Raise if any segment condition names the feature as a prerequisite."""
+    """Raise if the feature is a prerequisite, or a user segment references it.
+
+    System segments outlive their dependencies, for reuse and version history,
+    so only their live or scheduled overrides make the feature a prerequisite.
+    """
     _lock_project_flag_dependencies(feature.project_id)
     references = list(
         SegmentFlagReference.objects.filter(
@@ -201,13 +250,19 @@ def validate_feature_is_not_prerequisite(feature: Feature) -> None:
         .first()
     )
     if dependent_override is None:
-        raise FeatureIsReferencedError(
-            feature_name=feature.name,
-            segments=[
-                map_reference_to_referencing_segment(reference)
-                for reference in references
-            ],
-        )
+        if user_segment_references := [
+            reference
+            for reference in references
+            if not reference.segment.is_system_segment
+        ]:
+            raise FeatureIsReferencedError(
+                feature_name=feature.name,
+                segments=[
+                    map_reference_to_referencing_segment(reference)
+                    for reference in user_segment_references
+                ],
+            )
+        return
     environment = dependent_override.environment
     edges = _get_dependency_edges(
         get_live_overrides(include_scheduled=True).filter(environment=environment)
@@ -254,16 +309,20 @@ def _get_dependency_edges(
         segment_rules,
         condition_json_path,
         is_system_segment,
-    ) in overrides.filter(segment__flag_references__isnull=False).values_list(
-        "feature__id",
-        "feature__name",
-        "segment__flag_references__prerequisite_feature__id",
-        "segment__flag_references__prerequisite_feature__name",
-        "segment__id",
-        "segment__name",
-        "segment__rules_data",
-        "segment__flag_references__condition_json_path",
-        "segment__is_system_segment",
+    ) in (
+        overrides.filter(segment__flag_references__isnull=False)
+        .order_by("id")
+        .values_list(
+            "feature__id",
+            "feature__name",
+            "segment__flag_references__prerequisite_feature__id",
+            "segment__flag_references__prerequisite_feature__name",
+            "segment__id",
+            "segment__name",
+            "segment__rules_data",
+            "segment__flag_references__condition_json_path",
+            "segment__is_system_segment",
+        )
     ):
         assert segment_rules is not None
         edges[feature_name].append(
@@ -285,13 +344,89 @@ def _get_dependency_edges(
     return edges
 
 
+def _get_scheduled_change_sets(
+    environment: Environment,
+) -> "QuerySet[VersionChangeSet]":
+    change_sets: "QuerySet[VersionChangeSet]" = VersionChangeSet.objects.filter(
+        environment=environment,
+        change_request__committed_at__isnull=False,
+        published_at__isnull=True,
+        live_from__gt=timezone.now(),
+    )
+    return change_sets
+
+
+def _get_dependency_edges_to_validate(
+    environment: Environment,
+    change_request: ChangeRequest | None,
+) -> dict[FeatureName, list[DependencyEdge]]:
+    edges = _get_dependency_edges(
+        get_live_overrides(include_scheduled=True).filter(environment=environment)
+    )
+    _apply_change_sets(  # Scheduled deletions leave edges live until they publish.
+        edges, _get_scheduled_change_sets(environment), include_deletions=False
+    )
+    if change_request is not None:
+        _apply_change_sets(edges, change_request.change_sets.all())
+    return edges
+
+
+def _get_live_dependency_edges(
+    environment: Environment,
+    change_request: ChangeRequest | None,
+) -> dict[FeatureName, list[DependencyEdge]]:
+    edges = _get_dependency_edges(get_live_overrides().filter(environment=environment))
+    if change_request is not None:
+        _apply_change_sets(edges, change_request.change_sets.all())
+    return edges
+
+
+def _apply_change_sets(
+    edges: dict[FeatureName, list[DependencyEdge]],
+    change_sets: "QuerySet[VersionChangeSet]",
+    *,
+    include_deletions: bool = True,
+) -> None:
+    for change_set in change_sets.select_related("feature").order_by("live_from", "id"):
+        feature = change_set.feature
+        deleted_segment_ids = (
+            set(change_set.get_parsed_segment_ids_to_delete_overrides())
+            if include_deletions
+            else set()
+        )
+        feature_edges = [
+            edge
+            for edge in edges[feature.name]
+            if edge["segment"]["id"] not in deleted_segment_ids
+        ]
+        created_references = (
+            SegmentFlagReference.objects.filter(
+                segment_id__in=change_set.get_parsed_segment_ids_to_create_overrides()
+            )
+            .exclude(segment_id__in=[edge["segment"]["id"] for edge in feature_edges])
+            .select_related("segment", "prerequisite_feature")
+            .order_by("id")
+        )
+        edges[feature.name] = [
+            *feature_edges,
+            *(
+                map_reference_to_dependency_edge(feature=feature, reference=reference)
+                for reference in created_references
+            ),
+        ]
+
+
 def list_flag_dependencies(
     *,
     environment: Environment,
     feature: Feature,
+    change_request: ChangeRequest | None = None,
 ) -> DependencyList:
-    """List the features the feature depends on in the environment."""
-    edges = _get_dependency_edges(get_live_overrides().filter(environment=environment))
+    """List the features the feature depends on in the environment.
+
+    Given an uncommitted change request, list them as if it were live.
+    """
+    edges = _get_live_dependency_edges(environment, change_request)
     return {"results": edges[feature.name]}
 
 
@@ -299,9 +434,13 @@ def list_flag_dependents(
     *,
     environment: Environment,
     feature: Feature,
+    change_request: ChangeRequest | None = None,
 ) -> DependencyList:
-    """List the features depending on the feature in the environment."""
-    edges = _get_dependency_edges(get_live_overrides().filter(environment=environment))
+    """List the features depending on the feature in the environment.
+
+    Given an uncommitted change request, list them as if it were live.
+    """
+    edges = _get_live_dependency_edges(environment, change_request)
     return {
         "results": [
             edge
@@ -333,16 +472,166 @@ def get_prerequisite_feature_names_by_environment(
     }
 
 
+def _check_dependency_is_allowed(
+    *,
+    environment: Environment,
+    edges: dict[FeatureName, list[DependencyEdge]],
+    feature: Feature,
+    prerequisite_feature: Feature,
+) -> None:
+    log = logger.bind(
+        organisation__id=environment.project.organisation_id,
+        project__id=environment.project_id,
+        environment__key=environment.api_key,
+        feature__name=feature.name,
+        prerequisite_feature__name=prerequisite_feature.name,
+    )
+    referencing_environment: ReferencingEnvironment = {
+        "key": environment.api_key,
+        "name": environment.name,
+    }
+    if existing_edges := [
+        edge
+        for edge in edges[feature.name]
+        if edge["prerequisite"]["id"] == prerequisite_feature.id
+    ]:
+        log.info("dependencies.create_failed")
+        raise DependencyExistsError(
+            environment=referencing_environment, path=existing_edges
+        )
+    if prerequisite_edges := edges[prerequisite_feature.name]:
+        log.info("dependencies.create_failed")
+        raise PrerequisiteHasPrerequisiteError(
+            environment=referencing_environment, path=prerequisite_edges
+        )
+    if dependent_edges := [
+        edge
+        for feature_edges in edges.values()
+        for edge in feature_edges
+        if edge["prerequisite"]["id"] == feature.id
+    ]:
+        log.info("dependencies.create_failed")
+        raise FeatureIsPrerequisiteError(
+            environment=referencing_environment, path=dependent_edges
+        )
+
+
+def validate_change_request_flag_dependencies(change_request: ChangeRequest) -> None:
+    """Raise if any dependency the change request stages is no longer allowed.
+
+    Must run before committing the change request, as other changes may have
+    gone live or been scheduled since the dependency was staged.
+    """
+    if (environment := change_request.environment) is None:
+        return
+    with transaction.atomic():
+        _lock_project_flag_dependencies(environment.project_id)
+        edges = _get_dependency_edges_to_validate(environment, change_request)
+        for change_set in change_request.change_sets.select_related("feature"):
+            feature = change_set.feature
+            for reference in SegmentFlagReference.objects.filter(
+                segment_id__in=change_set.get_parsed_segment_ids_to_create_overrides(),
+                segment__managed_by=SegmentManagedBy.DEPENDENCY,
+            ).select_related("prerequisite_feature"):
+                edges_without_staged = edges.copy()
+                edges_without_staged[feature.name] = [
+                    edge
+                    for edge in edges[feature.name]
+                    if edge["segment"]["id"] != reference.segment_id
+                ]
+                _check_dependency_is_allowed(
+                    environment=environment,
+                    edges=edges_without_staged,
+                    feature=feature,
+                    prerequisite_feature=reference.prerequisite_feature,
+                )
+
+
 def create_flag_dependency(
     *,
     environment: Environment,
     feature: Feature,
     prerequisite_feature: Feature,
     author: FFAdminUser | APIKeyUser,
+    change_request: ChangeRequest | None = None,
 ) -> DependencyEdge:
     """Disable the feature in the environment unless the prerequisite is enabled."""
+    from features.feature_segments.services import get_next_segment_override_priority
+    from features.future.services import update_flag
+
+    log = logger.bind(
+        organisation__id=environment.project.organisation_id,
+        project__id=environment.project_id,
+        environment__key=environment.api_key,
+        feature__name=feature.name,
+        prerequisite_feature__name=prerequisite_feature.name,
+    )
+    if change_request is None and environment.is_workflow_enabled:
+        log.info("dependencies.create_failed")
+        raise ChangeRequestRequiredError()
+    if feature.id == prerequisite_feature.id:
+        log.info("dependencies.create_failed")
+        raise PrerequisiteIsSelfError()
+    with transaction.atomic():
+        _lock_project_flag_dependencies(environment.project_id)
+        _check_dependency_is_allowed(
+            environment=environment,
+            edges=_get_dependency_edges_to_validate(environment, change_request),
+            feature=feature,
+            prerequisite_feature=prerequisite_feature,
+        )
+        segment = _get_or_create_dependency_segment(
+            feature=feature, prerequisite_feature=prerequisite_feature
+        )
+        overrides = get_live_overrides(include_scheduled=True).filter(
+            environment=environment, feature=feature
+        )
+        update_flag(
+            environment=environment,
+            feature=feature,
+            changes={
+                "segment_overrides": [
+                    {
+                        "segment": {"id": segment.id},
+                        "enabled": False,
+                        "priority": 0
+                        if change_request
+                        else get_next_segment_override_priority(
+                            environment=environment, feature=feature
+                        ),
+                    }
+                ]
+            },
+            replace=False,
+            author=AuthorData.from_user(author),
+            change_request=change_request,
+            overwrite_system_segment_overrides=True,
+        )
+        if change_request is None:
+            overrides.get(segment=segment).to(0)
+    return map_reference_to_dependency_edge(
+        feature=feature,
+        reference=SegmentFlagReference.objects.select_related(
+            "segment", "prerequisite_feature"
+        ).get(segment=segment, prerequisite_feature=prerequisite_feature),
+    )
+
+
+def delete_flag_dependency(
+    *,
+    environment: Environment,
+    feature: Feature,
+    prerequisite_feature: Feature,
+    author: FFAdminUser | APIKeyUser,
+    change_request: ChangeRequest | None = None,
+) -> None:
+    """Stop the feature depending on the prerequisite in the environment.
+
+    Only removes the feature's override for the dependency's system segment,
+    leaving the segment, shared across environments, as is.
+    """
     from features.future.services import (  # It imports this module.
-        update_flag,
+        delete_segment_override,
     )
 
     log = logger.bind(
@@ -352,76 +641,35 @@ def create_flag_dependency(
         feature__name=feature.name,
         prerequisite_feature__name=prerequisite_feature.name,
     )
-    if feature.id == prerequisite_feature.id:
-        log.info("dependencies.create_failed")
-        raise PrerequisiteIsSelfError()
-    referencing_environment: ReferencingEnvironment = {
-        "key": environment.api_key,
-        "name": environment.name,
-    }
+    if change_request is None and environment.is_workflow_enabled:
+        log.info("dependencies.delete_failed")
+        raise ChangeRequestRequiredError()
     with transaction.atomic():
         _lock_project_flag_dependencies(environment.project_id)
-        edges = _get_dependency_edges(
-            get_live_overrides(include_scheduled=True).filter(environment=environment)
-        )
-        if existing_edges := [
-            edge
-            for edge in edges[feature.name]
-            if edge["prerequisite"]["id"] == prerequisite_feature.id
-        ]:
-            log.info("dependencies.create_failed")
-            raise DependencyExistsError(
-                environment=referencing_environment, path=existing_edges
+        all_edges = _get_live_dependency_edges(environment, change_request)
+        feature_edges = all_edges[feature.name]
+        if not (
+            edges := [
+                edge
+                for edge in feature_edges
+                if edge["prerequisite"]["id"] == prerequisite_feature.id
+                and edge["segment"]["is_system"]
+            ]
+        ):
+            log.info("dependencies.delete_failed")
+            raise DependencyNotFoundError(
+                feature_name=feature.name,
+                prerequisite_feature_name=prerequisite_feature.name,
             )
-        if prerequisite_edges := edges[prerequisite_feature.name]:
-            log.info("dependencies.create_failed")
-            raise PrerequisiteHasPrerequisiteError(
-                environment=referencing_environment, path=prerequisite_edges
-            )
-        if dependent_edges := [
-            edge
-            for feature_edges in edges.values()
-            for edge in feature_edges
-            if edge["prerequisite"]["id"] == feature.id
-        ]:
-            log.info("dependencies.create_failed")
-            raise FeatureIsPrerequisiteError(
-                environment=referencing_environment, path=dependent_edges
-            )
-        segment = _get_or_create_dependency_segment(
-            feature=feature, prerequisite_feature=prerequisite_feature
-        )
-        overrides: OrderedModelQuerySet = get_live_overrides(
-            include_scheduled=True
-        ).filter(environment=environment, feature=feature)
-        update_flag(
+        [edge] = edges
+        delete_segment_override(
             environment=environment,
             feature=feature,
-            changes={
-                "segment_overrides": [
-                    {
-                        "segment": {"id": segment.id},
-                        "enabled": False,
-                        "priority": overrides.get_next_order(),
-                    }
-                ]
-            },
-            replace=False,
-            author=author,
+            segment_id=edge["segment"]["id"],
+            author=AuthorData.from_user(author),
+            change_request=change_request,
+            overwrite_system_segment_overrides=True,
         )
-        overrides.get(segment=segment).to(0)
-        _create_dependency_audit_log(
-            environment=environment,
-            feature=feature,
-            prerequisite_feature=prerequisite_feature,
-            author=author,
-        )
-    return map_reference_to_dependency_edge(
-        feature=feature,
-        reference=SegmentFlagReference.objects.select_related(
-            "segment", "prerequisite_feature"
-        ).get(segment=segment, prerequisite_feature=prerequisite_feature),
-    )
 
 
 def _get_or_create_dependency_segment(
@@ -451,29 +699,9 @@ def _get_or_create_dependency_segment(
         is_system_segment=True,
         feature=feature,
         name=f"{feature.name}-depends-on-{prerequisite_feature.name}",
-        defaults={"rules_data": rules},
+        defaults={"managed_by": SegmentManagedBy.DEPENDENCY, "rules_data": rules},
     )
     if created:
         write_segment_rules(segment, rules)
         index_segment_flag_references(segment)
     return segment
-
-
-def _create_dependency_audit_log(
-    *,
-    environment: Environment,
-    feature: Feature,
-    prerequisite_feature: Feature,
-    author: FFAdminUser | APIKeyUser,
-) -> None:
-    user = author if isinstance(author, FFAdminUser) else None
-    AuditLog.objects.create(
-        environment=environment,
-        project=environment.project,
-        related_object_type=RelatedObjectType.FEATURE.name,
-        related_object_id=feature.id,
-        author=user,
-        master_api_key=None if user else author.key,
-        log=FEATURE_DEPENDENCY_CREATED_MESSAGE
-        % (prerequisite_feature.name, feature.name),
-    )
