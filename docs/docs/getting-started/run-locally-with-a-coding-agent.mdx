@@ -22,11 +22,10 @@ commands, and it will bring up a complete Flagsmith instance on your machine wit
 
 ## Prerequisites
 
--   [Docker](https://docs.docker.com/get-docker/) with Docker Compose v2, and at least 4 GB of memory allocated to
-    Docker.
--   [Node.js](https://nodejs.org/) and npm, to install the Flagsmith CLI.
--   Ports 8000, 8001 and 8080 free on your machine.
--   Claude Code or another coding agent.
+- [Docker](https://docs.docker.com/get-docker/) with Docker Compose v2, and at least 4 GB of memory allocated to Docker.
+- [Node.js](https://nodejs.org/) and npm, to install the Flagsmith CLI.
+- Ports 8000, 8001 and 8080 free on your machine.
+- Claude Code or another coding agent.
 
 ## The prompt
 
@@ -75,18 +74,18 @@ verify that it worked. If something fails, stop and show me the exact error; don
    Then load the file and check that `flagsmith auth status` and `flagsmith project list` work.
 
 6. Finish with a summary: the dashboard URL (http://localhost:8000) with my email and password; the organisation,
-   project and environment names with each environment's key; the event ingestion URL for SDKs
+   project and environment names with each environment's key; the event ingestion service URL for SDKs
    (http://localhost:8080); how to load the CLI credentials (`source flagsmith/flagsmith.env`); and how to stop
    Flagsmith (`docker compose down`) or delete everything (`docker compose down -v`).
 ```
 
 ## What you get
 
-| Service             | URL                     |
-| ------------------- | ----------------------- |
-| Dashboard and API   | `http://localhost:8000` |
-| Task processor      | `http://localhost:8001` |
-| Event ingestion API | `http://localhost:8080` |
+| Service                 | URL                     |
+| ----------------------- | ----------------------- |
+| Dashboard and API       | `http://localhost:8000` |
+| Task processor          | `http://localhost:8001` |
+| Event ingestion service | `http://localhost:8080` |
 
 The instance stores its data in Docker volumes, so it survives restarts until you run `docker compose down -v`. Treat it
 as a local playground: the Compose file uses default secrets that you should change before exposing it anywhere. For

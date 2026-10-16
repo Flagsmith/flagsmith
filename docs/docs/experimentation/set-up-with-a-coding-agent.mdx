@@ -28,12 +28,14 @@ No application to hand? The agent can build a small demo page or script instead.
 
 ## Prerequisites
 
--   A Flagsmith instance with a [connected warehouse](/experimentation/connect-a-warehouse): either Flagsmith Cloud, or
-    a local instance set up with the [local setup prompt](/getting-started/run-locally-with-a-coding-agent).
--   An application using the JavaScript SDK (`@flagsmith/flagsmith` 12.1 or later, including React) or the Python SDK
-    (`flagsmith` 6.3 or later). Other SDKs, including the Node.js server SDK, can't send events yet.
--   [Node.js](https://nodejs.org/) and npm, to install the [Flagsmith CLI](/integrating-with-flagsmith/CLI).
--   Claude Code or another coding agent.
+- A Flagsmith instance with a [connected warehouse](/experimentation/connect-a-warehouse): either Flagsmith Cloud, or a
+  local instance set up with the [local setup prompt](/getting-started/run-locally-with-a-coding-agent).
+- An application using an SDK that supports experimentation: JavaScript or React (`@flagsmith/flagsmith` 12.4.0+),
+  Python (`flagsmith` 6.3.0+), Java (`com.flagsmith:flagsmith-java-client` 8.2.0+), Node.js (`@flagsmith/nodejs`
+  9.1.0+), Go (`flagsmith-go-client/v5` v5.3.0+) or Flutter (`flagsmith` 6.2.0+). See
+  [Run an Experiment](/experimentation/run-an-experiment).
+- [Node.js](https://nodejs.org/) and npm, to install the [Flagsmith CLI](/integrating-with-flagsmith/CLI).
+- Claude Code or another coding agent.
 
 ## The prompt
 
@@ -46,15 +48,18 @@ If something fails, stop and show me the exact error; don't guess or work around
      renders it.
    - What counts as success? (For example, "a completed purchase".) Find where that happens in the code; the
      conversion event goes there.
-   - Which Flagsmith are we using? Flagsmith Cloud, or a local instance (API http://localhost:8000, events
-     http://localhost:8080, CLI credentials in the `flagsmith.env` file written by the local setup)?
+   - Which Flagsmith are we using? Flagsmith Cloud, or a local instance (API http://localhost:8000, event ingestion
+     service http://localhost:8080, CLI credentials in the `flagsmith.env` file written by the local setup)?
    If there is no app to change, offer to build a tiny demo instead (a single HTML page or a script) that simulates
    users, so results show up within minutes.
 
-2. Check the stack. Events need the JavaScript SDK `@flagsmith/flagsmith` 12.1 or later (browser or React) or the
-   Python SDK `flagsmith` 6.3 or later. The Node.js server SDK (`flagsmith-nodejs`) and other SDKs can't send events
-   yet: if that's all the app uses, tell me and stop. Find how the app identifies users: exposures and conversions
-   are joined per identity, so both must use the same identifier.
+2. Check the stack. Read https://docs.flagsmith.com/experimentation/run-an-experiment and follow its tab for this
+   app's language from here on; it has the install, initialise, exposure and conversion code for each SDK. The SDKs
+   that can send events are JavaScript and React (`@flagsmith/flagsmith` 12.4.0+), Python (`flagsmith` 6.3.0+), Java
+   (`com.flagsmith:flagsmith-java-client` 8.2.0+), Node.js (`@flagsmith/nodejs` 9.1.0+; the older `flagsmith-nodejs`
+   package can't), Go (`flagsmith-go-client/v5` v5.3.0+) and Flutter (`flagsmith` 6.2.0+). If the app uses none of
+   them, tell me and stop. Find how the app identifies users: exposures and conversions are joined per identity, so
+   both must use the same identifier.
 
 3. Connect the Flagsmith CLI. Install it with `npm install -g @flagsmith/cli` (v2 or later). For Cloud, ask me to
    run `flagsmith login`; for a local instance, load `flagsmith.env`. Ask me which project and environment to use
@@ -84,24 +89,22 @@ If something fails, stop and show me the exact error; don't guess or work around
    `POST api/v1/environments/<environment key>/experiments/<id>/start/` and check its status is `running`.
 
 7. Plan the code changes and show them to me. Don't edit anything until I confirm. Then:
-   - Install or upgrade the SDK and initialise it with events on. JavaScript: `enableEvents: true`; for a local
-     instance also `api: 'http://localhost:8000/api/v1/'` and
-     `eventProcessorConfig: { eventsApiUrl: 'http://localhost:8080/' }`. Python: `enable_events=True` and a
-     server-side key (create one with `POST api/v1/environments/<environment key>/api-keys/` and `{"name"}`); for a
-     local instance also `api_url='http://localhost:8000/api/v1/'` and
-     `event_processor_config=EventProcessorConfig(events_api_url='http://localhost:8080/')`.
-   - Identify the user, then call `getExperimentFlag('<flag>')` (React: `useExperiment('<flag>')`; Python:
-     `get_experiment_flag('<flag>', identifier=...)`) where the user actually sees the variation, and render by its
-     value.
-   - Call `trackEvent('<event>')` (Python: `track_event('<event>', identifier=...)`) where success happens.
+   - Install or upgrade the SDK and initialise it with events enabled, using the environment key the app already
+     uses for flags. For a local instance, also set the page's two self-hosted options: the API URL
+     http://localhost:8000/api/v1/ and the event ingestion service URL http://localhost:8080/.
+   - Identify the user, then get the experiment flag (for example `getExperimentFlag`, or `useExperiment` in React)
+     where the user actually sees the variation, and render by its value.
+   - Track the conversion event where success happens.
+   - Send buffered events before the app exits, as the page shows for this SDK.
    Keep keys out of source control, following how the app already handles configuration.
 
-8. Offer to send test traffic with a short script that simulates a few hundred users. In Node.js, create one
-   instance per user with `createFlagsmithInstance()` from `@flagsmith/flagsmith/isomorphic`, pass `identity` and
-   `fetch: globalThis.fetch` to `init`, call `getExperimentFlag`, track the event for some users and await
-   `flushEvents()`. In Python, keep the process alive for longer than the 10-second flush interval before it exits.
-   About a minute later, call `POST api/v1/environments/<environment key>/experiments/<id>/results/refresh/`
-   (allowed once every 5 minutes) and read `GET .../experiments/<id>/results/`. Finish with a link to the experiment:
+8. Offer to send test traffic with a short script that simulates a few hundred users, each with its own identifier:
+   get the experiment flag for each one and track the event for some of them. The SDKs send events in batches, so
+   send what is left before the script exits: JavaScript `await flushEvents()`, Python
+   `EventProcessorConfig(max_buffer_items=1)`, Node.js `await close()`, Java `close()`, Go `FlushEvents(ctx)`,
+   Flutter `await flushEvents()`. About a minute later, call
+   `POST api/v1/environments/<environment key>/experiments/<id>/results/refresh/` (allowed once every 5 minutes) and
+   read `GET .../experiments/<id>/results/`. Finish with a link to the experiment:
    <dashboard>/project/<project id>/environment/<environment key>/experiments/<id>, where the dashboard is
    https://app.flagsmith.com on Cloud or http://localhost:8000 locally.
 ```
@@ -113,9 +116,11 @@ Open the experiment in the dashboard to watch exposures arrive and read the resu
 
 If the agent stops on an error, the most common causes are:
 
--   **No exposures recorded**: a variation has no key, the user isn't identified before `getExperimentFlag` is called,
-    or the flag is disabled in the environment.
--   **Conversions not counted**: the event name doesn't exactly match the metric's event, or the event was sent with a
-    different identifier from the exposure.
--   **Events not arriving on a local instance**: the SDK is still sending to Flagsmith Cloud. Set `eventsApiUrl` /
-    `events_api_url` to `http://localhost:8080/`.
+- **No exposures recorded**: a variation has no key, the user isn't identified before the experiment flag is requested,
+  or the process exited before buffered events were sent.
+- **Conversions not counted**: the event name doesn't exactly match the metric's event, or the event was sent with a
+  different identifier from the exposure.
+- **Events not arriving on a local instance**: the SDK is still sending to Flagsmith Cloud. Set the event ingestion
+  service URL to `http://localhost:8080/`.
+
+See [Troubleshooting](/experimentation/run-an-experiment#troubleshooting) for more checks.
