@@ -42,15 +42,31 @@ class EnvironmentPermissions(IsAuthenticated):
 
             try:
                 project = Project.objects.get(id=project_id)
-                return request.user.has_project_permission(CREATE_ENVIRONMENT, project)
             except Project.DoesNotExist:
                 return False
+
+            if (
+                project.environments.count() >= project.max_environments_allowed
+                and getattr(request, "is_e2e", False) is not True
+            ):
+                raise exceptions.ValidationError(
+                    "The project has reached the maximum number of allowed environments."
+                )
+
+            return request.user.has_project_permission(CREATE_ENVIRONMENT, project)
 
         # return true as all users can list and obj permissions will be handled later
         return True
 
     def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         if view.action == "clone":
+            if (
+                obj.project.environments.count() >= obj.project.max_environments_allowed
+                and getattr(request, "is_e2e", False) is not True
+            ):
+                raise exceptions.ValidationError(
+                    "The project has reached the maximum number of allowed environments."
+                )
             return request.user.has_project_permission(CREATE_ENVIRONMENT, obj.project)
         elif view.action in ("get_document", "retrieve", "trait_keys"):
             return request.user.has_environment_permission(VIEW_ENVIRONMENT, obj)
