@@ -23,7 +23,6 @@ commands, and it will bring up a complete Flagsmith instance on your machine wit
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) with Docker Compose v2, and at least 4 GB of memory allocated to Docker.
-- [Node.js](https://nodejs.org/) and npm, to install the Flagsmith CLI.
 - Ports 8000, 8001 and 8080 free on your machine.
 - Claude Code or another coding agent.
 
@@ -64,11 +63,13 @@ verify that it worked. If something fails, stop and show me the exact error; don
    `/api/v1/environments/<environment key>/warehouse-connections/test-warehouse-connection/`. If `/version/` reports
    `experimentation_enabled: false`, skip this step and tell me.
 
-5. Set up the Flagsmith CLI. Install it with `npm install -g @flagsmith/cli` (v2 or later). Authenticate it with an
-   organisation API key, not `flagsmith login`: create one with `POST /api/v1/organisations/<id>/master-api-keys/`
-   and `{"name": "Flagsmith CLI", "is_admin": true}`; its `key` is only returned once. Against a self-hosted
-   instance the CLI only reads host-scoped keys, so write these two lines to `flagsmith/flagsmith.env`, with file
-   permissions 600:
+5. Set up the Flagsmith CLI. If `flagsmith --version` doesn't report v2 or later, install it with
+   `curl -fsSL https://get.flagsmith.com | sh`, which puts it in `$HOME/.local/bin`, or with
+   `brew install Flagsmith/tap/flagsmith`; use `npm install -g @flagsmith/cli` only as a fallback. Check the version
+   again. Authenticate the CLI with an organisation API key, not `flagsmith login`: create one with
+   `POST /api/v1/organisations/<id>/master-api-keys/` and `{"name": "Flagsmith CLI", "is_admin": true}`; its `key`
+   is only returned once. Against a self-hosted instance the CLI only reads host-scoped keys, so write these two
+   lines to `flagsmith/flagsmith.env`, with file permissions 600:
    export FLAGSMITH_API_URL=http://localhost:8000
    export FLAGSMITH_API_KEY_localhost_8000=<key>
    Then load the file and check that `flagsmith auth status` and `flagsmith project list` work.
