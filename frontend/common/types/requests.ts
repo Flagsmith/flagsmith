@@ -879,18 +879,35 @@ export type Req = {
     environmentKey: string
   }
   getFeatureSegment: { id: number }
-  getFeatureDependencies: { environmentId: string; featureId: number }
+  getFeatureDependencies: {
+    environmentId: string
+    featureId: number
+    // Lists them as if this change request were live.
+    changeRequestId?: number
+  }
   getFeatureDependents: { environmentId: string; featureId: number }
   createFeatureDependency: {
     environmentId: string
     featureId: number
     prerequisiteFeatureId: number
+    // Stages the change in this change request instead of publishing it.
+    changeRequestId?: number
   }
   deleteFeatureDependency: {
     environmentId: string
     featureId: number
     prerequisiteFeatureId: number
+    changeRequestId?: number
   }
+  createEnvironmentChangeRequest: {
+    environmentId: string
+    featureId: number
+    title: string
+    description: string
+    live_from?: string
+    approvals: Approval[]
+  }
+  deleteChangeRequest: { id: number }
   getSamlConfiguration: { name: string }
   getSamlConfigurations: { organisation_id: number }
   getSamlConfigurationMetadata: { name: string }
