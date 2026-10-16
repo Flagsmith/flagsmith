@@ -4,8 +4,9 @@ description: "How to initialise the instance and create the first superuser."
 sidebar_position: 10
 ---
 
-A new Flagsmith instance has no users. The first account you create is a superuser: it can manage the instance and sign
-in to the Django Admin at `/admin/`. Pick one of the options below, depending on your installation.
+A new Flagsmith instance has no users. The first account you create is a superuser: it can manage the instance and, once
+[password login is enabled](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin#authentication),
+sign in to the Django Admin at `/admin/`. Pick one of the options below, depending on your installation.
 
 ## From the dashboard (recommended)
 

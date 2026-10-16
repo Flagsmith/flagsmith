@@ -49,7 +49,7 @@ The web user interface communicates via REST to the API that powers the applicat
 
 Once you have created an account and some flags, you can then start using the API with one of the [Flagsmith Client SDKs](https://github.com/Flagsmith?q=client&type=&language=). You will need to override the API endpoint for each SDK to point to [http://localhost:8000/api/v1/](http://localhost:8000/api/v1/).
 
-You can access the Django Admin console to get CRUD access to some of the core tables within the API. The admin account you created on first run already has access. To create another superuser, run:
+You can access the Django Admin console to get CRUD access to some of the core tables within the API. The admin account you created on first run is a superuser. To log in with its email and password, set `ENABLE_ADMIN_ACCESS_USER_PASS: 'true'` in the API's environment and restart; see [Using the Django Admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin#authentication). To create another superuser, run:
 
 ```bash
 docker compose exec flagsmith flagsmith createsuperuser
