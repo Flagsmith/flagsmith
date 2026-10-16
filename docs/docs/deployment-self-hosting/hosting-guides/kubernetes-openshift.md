@@ -393,29 +393,49 @@ The task processor itself is documented [here](/deployment-self-hosting/scaling-
 
 ### Experimentation
 
-The chart can run [experimentation](/experimentation). You bring your own Kafka, and each environment sends its events
-to its own warehouse. The chart then:
+The chart can run [experimentation](/experimentation). You bring your own Kafka and data warehouse, and each
+environment's events are delivered to the warehouse connected to it. The chart then:
 
 - Runs the event ingestion service, which receives SDK events and writes them to a Kafka topic.
 - Runs warehouse delivery, which reads that topic and inserts each environment's events into its warehouse.
 - Runs a job after each install and upgrade. The job creates the events topic and a retry topic for failed deliveries.
 
-Requirements:
+#### Prerequisites
 
 - Flagsmith API 2.285.0 or later.
-- Kafka with at least 3 brokers, for the default replication factor of 3.
-- A warehouse for each environment that runs experiments. See [Connect a warehouse](/experimentation/connect-a-warehouse).
-  Both warehouse delivery and the API must be able to reach it.
+- Kafka with at least 3 brokers, for the default replication factor of 3, and a login for Flagsmith with the
+  [permissions below](#kafka-topics-and-permissions).
+- A data warehouse that you host and run yourself, either ClickHouse or Databricks, reachable from both warehouse
+  delivery and the API.
+
+Experiment events are stored in the warehouse rather than in the Flagsmith database, and results are computed by
+querying it, so it is infrastructure you provision before enabling experimentation: the managed Flagsmith warehouse is
+available only on Flagsmith Cloud. Each environment that runs experiments needs a warehouse connection, created in the
+dashboard, but one warehouse can serve every environment, as events are scoped by environment. See
+[Connect a warehouse](/experimentation/connect-a-warehouse).
+
+#### Configuration
+
+Add the following to your values file. It turns the experimentation services on, points them at your Kafka, and
+publishes the ingestion service so that your applications can reach it:
 
 ```yaml
 experimentation:
+ # Runs the ingestion service, warehouse delivery, and the topic creation job
  enabled: true
+ # Optional: provide your own, or the chart generates one
+ warehouseCredentialsSecretFromExistingSecret:
+  enabled: true
+  name: flagsmith-warehouse-credentials
+  key: warehouse-credentials-secret
  kafka:
   bootstrapServers: kafka-1:9096,kafka-2:9096,kafka-3:9096
   auth: scram
   username: flagsmith
-  password: <password>
+  password: <password> # Use passwordFromExistingSecret in production
 
+# The ingestion service is the endpoint your SDKs send events to, so it has to be
+# reachable from wherever your applications run
 ingress:
  ingestion:
   enabled: true
@@ -425,45 +445,50 @@ ingress:
       - /
 ```
 
-The Kafka password also has a `passwordFromExistingSecret` form. Use it in production.
+#### Kafka topics and permissions
 
-The API encrypts warehouse connection credentials with a dedicated secret, and warehouse delivery decrypts them with it.
-The chart generates it on install. To provide your own, use
-`experimentation.warehouseCredentialsSecretFromExistingSecret`. Changing it makes saved credentials unreadable, so they
-must be entered again.
+The chart creates two topics, `flagsmith_warehouse_events` and `flagsmith_warehouse_events_retry`. Use
+`experimentation.kafka.topic` and `experimentation.kafka.retryTopic` respectively to optionally change their names.
 
-The topics are `flagsmith_warehouse_events` and `flagsmith_warehouse_events_retry`. Change them with
-`experimentation.kafka.topic` and `experimentation.kafka.retryTopic`. The Kafka login needs these permissions:
+The Kafka login needs these permissions:
 
 - Read and write both topics.
-- Read the consumer groups `warehouse-delivery` and `warehouse-delivery-retry`.
+- Read the consumer groups `warehouse-delivery` and `warehouse-delivery-retry`, which warehouse delivery consumes with.
 
-To keep topic creation away from the runtime login, give the job its own admin login with
+To keep topic creation away from the runtime login, give the topic creation job its own admin login with
 `jobs.experimentationInit.kafka`.
 
-If your Kafka has `auto.create.topics.enable=true`, create both topics with the same partition count before you turn on
-experimentation. Otherwise, Kafka can create them first with its default partition count.
+If your brokers have `auto.create.topics.enable=true`, create both topics yourself before enabling experimentation. The
+services connect before that job runs, so the brokers would otherwise create them with their default partition count.
 
-The ingestion service uses the API's database user by default. To give it a user that can only read environment keys,
-create the user and pass its URL with `experimentation.ingestion.databaseUrlFromExistingSecret`:
+#### Database users
+
+The ingestion service and warehouse delivery both connect to the Flagsmith database as the API's user by default. To
+limit what each one can reach, create a user of its own and grant it only what it needs.
+
+The ingestion service checks the SDK key on every event it receives, so it only needs to read the environment keys view:
 
 ```sql
 CREATE ROLE ingestion_server WITH LOGIN PASSWORD '<password>';
-GRANT CONNECT ON DATABASE <database> TO ingestion_server;
+GRANT CONNECT ON DATABASE flagsmith TO ingestion_server;
 GRANT USAGE ON SCHEMA public TO ingestion_server;
 GRANT SELECT ON experimentation_environment_keys TO ingestion_server;
 ```
 
-Warehouse delivery also uses the API's database user by default. To give it its own user, create the user and pass its
-URL with `experimentation.warehouseDelivery.databaseUrlFromExistingSecret`:
+Warehouse delivery reads each environment's warehouse connection, and records the delivery status that the dashboard
+shows:
 
 ```sql
 CREATE ROLE warehouse_delivery WITH LOGIN PASSWORD '<password>';
-GRANT CONNECT ON DATABASE <database> TO warehouse_delivery;
+GRANT CONNECT ON DATABASE flagsmith TO warehouse_delivery;
 GRANT USAGE ON SCHEMA public TO warehouse_delivery;
 GRANT SELECT ON experimentation_delivery_connections TO warehouse_delivery;
 GRANT SELECT, INSERT, UPDATE ON experimentation_warehousedeliverystatus TO warehouse_delivery;
 ```
+
+Store each user's connection URL in a Kubernetes secret, then point the service at it with
+`experimentation.ingestion.databaseUrlFromExistingSecret` or
+`experimentation.warehouseDelivery.databaseUrlFromExistingSecret`.
 
 ## Chart Values
 
