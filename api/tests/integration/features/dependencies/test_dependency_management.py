@@ -441,6 +441,67 @@ def test_add_feature_dependency__feature_has_another_override__responds_201_reor
     )
 
 
+def test_add_feature_dependency__feature_segment_without_override__responds_201_putting_dependency_first(
+    admin_client: APIClient,
+    create_segment_override: CreateSegmentOverrideFixture,
+    environment: int,
+    environment_api_key: str,
+    project: int,
+    segment: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=feature.id,
+        segment_id=segment,
+        enabled=True,
+        priority=0,
+    )
+    # The Terraform provider and Go client create feature segments first, and
+    # their overrides after.
+    other_segment = Segment.objects.create(name="other", project_id=project)
+    feature_segment_response = admin_client.post(
+        "/api/v1/features/feature-segments/",
+        {
+            "feature": feature.id,
+            "segment": other_segment.id,
+            "environment": environment,
+        },
+        format="json",
+    )
+    assert feature_segment_response.status_code == 201
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 201
+    system_segment = Segment.objects.get(feature=feature, is_system_segment=True)
+    flag_response = admin_client.get(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
+    )
+    assert flag_response.json()["segment_overrides"] == [
+        {
+            "segment": {"id": system_segment.id},
+            "priority": 0,
+            "enabled": False,
+            "value": None,
+            "variants": [],
+        },
+        {
+            "segment": {"id": segment},
+            "priority": 1,
+            "enabled": True,
+            "value": None,
+            "variants": [],
+        },
+    ]
+
+
 def test_add_feature_dependency__prerequisite_already_has_prerequisite__responds_400_with_error(
     admin_client: APIClient,
     environment_api_key: str,
