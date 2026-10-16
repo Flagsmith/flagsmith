@@ -2,6 +2,7 @@ import React, { FC, useEffect, useState } from 'react'
 import {
   FeatureConflict,
   FeatureStateWithConflict,
+  StagedDependencyChange,
 } from 'common/types/responses'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
@@ -20,6 +21,8 @@ import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/icons/Icon'
 import WarningMessage from 'components/WarningMessage'
 import { Link } from 'react-router-dom'
+import Banner from 'components/base/Banner'
+import DependencyChangesTable from 'components/feature-dependencies/DependencyChangesTable'
 
 type FeatureDiffType = {
   oldState: FeatureStateWithConflict[]
@@ -33,10 +36,17 @@ type FeatureDiffType = {
   disableSegments?: boolean
   oldEnvName?: string
   newEnvName?: string
+  // A change request's prerequisite changes, shown in their own tab.
+  dependencies?: {
+    changes?: StagedDependencyChange[]
+    isError: boolean
+    isEnabled?: (prerequisiteId: number) => boolean
+  }
 }
 type ViewMode = 'combined' | 'new' | 'old'
 const DiffFeature: FC<FeatureDiffType> = ({
   conflicts,
+  dependencies,
   disableSegments,
   environmentId,
   featureId,
@@ -71,17 +81,40 @@ const DiffFeature: FC<FeatureDiffType> = ({
     projectId,
   })
 
+  // Once the dependency changes load, they show in their own tab, so their
+  // segments stay out of this one. Until then, or where they don't load, they
+  // stay here.
+  const overrideSegments = dependencies?.changes
+    ? segments?.results.filter((segment) => segment.managed_by !== 'dependency')
+    : segments?.results
   const segmentDiffs = disableSegments
     ? { diffs: [], totalChanges: 0 }
-    : getSegmentOverrideDiff(oldState, newState, segments?.results, conflicts)
+    : getSegmentOverrideDiff(oldState, newState, overrideSegments, conflicts)
   const variationDiffs = getVariationDiff(oldEnv, newEnv)
   const totalSegmentChanges = segmentDiffs?.totalChanges
   const totalVariationChanges = variationDiffs?.totalChanges
+  const totalDependencyChanges = dependencies?.changes?.length ?? 0
+  const showDependencies = !!totalDependencyChanges || !!dependencies?.isError
+  // Each tab's change count, in the order the tabs render.
+  const tabChanges = [
+    totalChanges,
+    ...(variationDiffs?.diffs?.length ? [totalVariationChanges] : []),
+    ...(segmentDiffs?.diffs.length ? [totalSegmentChanges] : []),
+    ...(showDependencies ? [totalDependencyChanges] : []),
+  ]
+  // Opens on the first tab that changes, as one listed can change nothing.
+  const changedTab = tabChanges.findIndex((changes) => !!changes)
+  // With nothing else to show, open on a failed dependency load, or its error
+  // stays out of sight. Dependencies is the last tab.
+  const firstChangedTab =
+    changedTab === -1 && dependencies?.isError
+      ? tabChanges.length - 1
+      : changedTab
   useEffect(() => {
-    if (!totalChanges && (totalSegmentChanges || totalVariationChanges)) {
-      setValue(1)
+    if (firstChangedTab > 0) {
+      setValue(firstChangedTab)
     }
-  }, [totalSegmentChanges, totalVariationChanges, totalChanges])
+  }, [firstChangedTab])
   const hideValue =
     !totalChanges && (diff.newValue === null || diff.newValue === undefined)
   const viewOptions = [
@@ -243,6 +276,31 @@ const DiffFeature: FC<FeatureDiffType> = ({
                   environmentId={environmentId}
                   projectFlag={projectFlag}
                 />
+              </TabItem>
+            )}
+            {showDependencies && (
+              <TabItem
+                className={'p-0'}
+                tabLabel={
+                  <div className='d-flex justify-content-center gap-1 align-items-center'>
+                    Dependencies
+                    {!!totalDependencyChanges && (
+                      <span className='unread'>{totalDependencyChanges}</span>
+                    )}
+                  </div>
+                }
+              >
+                {dependencies?.isError ? (
+                  <Banner type='error' className='mt-4'>
+                    Could not load the dependency changes in this change
+                    request.
+                  </Banner>
+                ) : (
+                  <DependencyChangesTable
+                    changes={dependencies?.changes ?? []}
+                    isEnabled={dependencies?.isEnabled}
+                  />
+                )}
               </TabItem>
             )}
           </Tabs>
