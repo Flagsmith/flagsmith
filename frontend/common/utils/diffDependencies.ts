@@ -27,3 +27,18 @@ export const diffDependencies = (
       ),
   ]
 }
+
+// A change request's adds and removes, with the counts read out as words.
+export const countDependencyChanges = (changes: StagedDependencyChange[]) => {
+  const added = changes.filter(({ action }) => action === 'add').length
+  const removed = changes.length - added
+  const label = [added && `${added} added`, removed && `${removed} removed`]
+    .filter(Boolean)
+    .join(', ')
+  return { added, label, removed }
+}
+
+// The API answers a change request's dependencies with 400 once it is
+// committed, and 404 once it is deleted.
+export const isClosedChangeRequestStatus = (status?: number | string) =>
+  status === 400 || status === 404

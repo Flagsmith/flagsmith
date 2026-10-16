@@ -7,6 +7,7 @@ import Icon from 'components/icons/Icon'
 import Skeleton from 'components/Skeleton'
 import DependencyChangesTable from 'components/feature-dependencies/DependencyChangesTable'
 import { useDependencyChanges } from 'components/feature-dependencies/useDependencyChanges'
+import { countDependencyChanges } from 'common/utils/diffDependencies'
 import ChangeRequestLink from 'components/modals/create-feature/tabs/FeatureDependenciesTab/ChangeRequestLink'
 
 type PendingChangeRequestProps = {
@@ -47,14 +48,7 @@ const PendingChangeRequest: FC<PendingChangeRequestProps> = ({
   // Most change sets only touch values or overrides.
   if (!changes.length) return null
 
-  const added = changes.filter(({ action }) => action === 'add').length
-  const removed = changes.length - added
-  const countLabel = [
-    added && `${added} added`,
-    removed && `${removed} removed`,
-  ]
-    .filter(Boolean)
-    .join(', ')
+  const { added, label, removed } = countDependencyChanges(changes)
 
   return (
     <Accordion
@@ -75,7 +69,7 @@ const PendingChangeRequest: FC<PendingChangeRequestProps> = ({
           <span
             className='pending-change-requests__count d-flex flex-shrink-0 justify-content-end gap-2 ms-auto'
             role='img'
-            aria-label={countLabel}
+            aria-label={label}
           >
             {!!added && <span className='text-success'>+{added}</span>}
             {!!removed && <span className='text-danger'>−{removed}</span>}
