@@ -644,6 +644,8 @@ The following table lists the configurable parameters of the chart and their def
 | `ingress.api.hosts[].host`                         |                                                                           | `chart-example.local`          |
 | `ingress.api.hosts[].paths`                        |                                                                           | `[]`                           |
 | `ingress.api.tls`                                  |                                                                           | `[]`                           |
+| `ingress.ingestion.enabled`                        | Expose event ingestion with an Ingress                                    | `false`                        |
+| `ingress.ingestion.hosts`                          | Hosts for that Ingress                                                    | `[]`                           |
 | `api.statsd.enabled`                               | Enable statsd metric reporting from gunicorn.                             | `false`                        |
 | `api.statsd.host`                                  | Host URL to receive statsd metrics                                        | `null`                         |
 | `api.statsd.hostFromNodeIp`                        | Set as true to use the node IP as the statsd host instead                 | `false`                        |
@@ -680,14 +682,11 @@ The following table lists the configurable parameters of the chart and their def
 | `experimentation.warehouseDelivery.databaseUrlFromExistingSecret.name` | Name of that secret                                                       | `null`                         |
 | `experimentation.warehouseDelivery.databaseUrlFromExistingSecret.key` | Key of the database URL in that secret                                    | `null`                         |
 | `experimentation.warehouseDelivery.extraEnv`       | Extra environment variables for warehouse delivery, e.g. `BATCH_MAX_RECORDS` | `{}`                           |
-| `ingress.ingestion.enabled`                        | Expose event ingestion with an Ingress                                    | `false`                        |
-| `ingress.ingestion.hosts`                          | Hosts for that Ingress                                                    | `[]`                           |
-| `hpa.ingestion.enabled`                            | Autoscale event ingestion                                                 | `true`                         |
-| `pdb.ingestion.enabled`                            | PodDisruptionBudget for event ingestion                                   | `true`                         |
-| `pdb.warehouseDelivery.enabled`                    | PodDisruptionBudget for warehouse delivery                                | `true`                         |
 | `jobs.experimentationInit.kafkaImage`              | Image for the job that creates the Kafka topics                           | `apache/kafka:4.3.1`           |
 | `jobs.experimentationInit.kafka.username`          | Admin Kafka username for creating the topics; defaults to `experimentation.kafka.username` | `null`                         |
 | `jobs.experimentationInit.kafka.passwordFromExistingSecret.enabled` | Read that admin password from an existing k8s secret                      | `false`                        |
+| `jobs.experimentationInit.kafka.passwordFromExistingSecret.name` | Name of that secret                                                       | `null`                         |
+| `jobs.experimentationInit.kafka.passwordFromExistingSecret.key` | Key of the password in that secret                                        | `null`                         |
 
 ---
 
