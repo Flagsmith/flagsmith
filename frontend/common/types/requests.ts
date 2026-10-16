@@ -908,11 +908,6 @@ export type Req = {
     approvals: Approval[]
   }
   deleteChangeRequest: { id: number }
-  getPendingFeatureDependencies: {
-    changeRequestIds: number[]
-    environmentId: string
-    featureId: number
-  }
   getSamlConfiguration: { name: string }
   getSamlConfigurations: { organisation_id: number }
   getSamlConfigurationMetadata: { name: string }
