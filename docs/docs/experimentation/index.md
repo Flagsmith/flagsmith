@@ -36,8 +36,9 @@ Unfamiliar with a term? See the [Statistics Glossary](/experimentation/statistic
 
 :::note SDK availability
 
-Event collection is currently available in the **JavaScript** and **Python** SDKs, with more to follow. Check
-[Run an Experiment](/experimentation/run-an-experiment) for instrumentation details.
+Event collection is available in the **JavaScript**, **React**, **Python**, **Java**, **Node.js**, **Go** and
+**Flutter** SDKs. Check [Run an Experiment](/experimentation/run-an-experiment) for minimum versions and instrumentation
+details.
 
 :::
 
