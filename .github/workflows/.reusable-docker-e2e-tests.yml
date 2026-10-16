@@ -277,13 +277,11 @@ jobs:
           if [ "${{ steps.download-baseline.outcome }}" != "success" ]; then
             echo "message=No baseline found — first run. Baselines will be generated after merge to main." >> $GITHUB_OUTPUT
           else
-            SCREENSHOT_COUNT=$(find frontend/e2e/visual-regression-screenshots -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
-            REPORT_EXISTS=$(test -d frontend/e2e/visual-regression-report && echo "true" || echo "false")
-            if [ "$REPORT_EXISTS" = "true" ]; then
-              echo "message=$SCREENSHOT_COUNT screenshots compared. See report for details." >> $GITHUB_OUTPUT
-            else
-              echo "message=$SCREENSHOT_COUNT screenshots captured but comparison did not run." >> $GITHUB_OUTPUT
-            fi
+            {
+              echo "message<<VISUAL_SUMMARY_EOF"
+              (cd frontend && npx -y tsx e2e/visual-regression-summary.ts)
+              echo "VISUAL_SUMMARY_EOF"
+            } >> $GITHUB_OUTPUT
           fi
 
       - name: Comment PR with visual regression results

@@ -164,7 +164,7 @@ npm run test:visual:report
 
 ##### CI
 
-Visual diffs never fail CI — they are reported via PR comment and the Playwright HTML report.
+Visual diffs never fail CI. The PR comment lists each changed or new screenshot (from `e2e/visual-regression-summary.ts`), and the Playwright HTML report shows the diffs.
 
 Screenshots are saved to `e2e/visual-regression-screenshots/`, baselines to `e2e/visual-regression-snapshots/` (both git-ignored). In CI, the main branch uploads screenshots as baseline artifacts, and PRs download them for comparison.
 

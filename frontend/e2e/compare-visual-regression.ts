@@ -40,7 +40,8 @@ for (const png of screenshots) {
   const label = png
     .replace('.png', '')
     .replace(/^(.+?)--(.+)$/, (_, testFile, name) => {
-      const restored = testFile.replace(/-pw-ts$/, '.pw.ts').replace(/-/g, '.')
+      // Test files are kebab-case, so only the extension's dots need restoring.
+      const restored = testFile.replace(/-pw-ts$/, '.pw.ts')
       return `${restored} / ${name.replace(/-/g, ' ')}`
     })
   pairs.push({ file: png, label })

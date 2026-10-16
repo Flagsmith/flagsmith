@@ -16,6 +16,8 @@ export default defineConfig({
       },
     ],
     ['list'],
+    // Read by visual-regression-summary.ts to list the changes on the PR.
+    ['json', { outputFile: './e2e/visual-regression-results/report.json' }],
   ],
   snapshotPathTemplate: './e2e/visual-regression-snapshots/{arg}{ext}',
   testDir: './e2e',
