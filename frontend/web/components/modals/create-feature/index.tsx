@@ -867,6 +867,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         requiresChangeRequests={is4Eyes}
                         isVersioned={isVersioned}
                         staging={dependencyChanges}
+                        isSaving={isSaving}
                         onCreateChangeRequest={() => saveFeatureValue()}
                         onSelectFeature={async (featureId) => {
                           // Opening another feature replaces this modal
