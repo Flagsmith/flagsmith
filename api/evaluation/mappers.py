@@ -22,6 +22,7 @@ from evaluation.types import (
     IdentityContext,
     SegmentContext,
 )
+from features.dependencies.mappers import map_override_to_value_source
 from features.types import FeatureEngineMetadata
 from segments.types import SegmentEngineMetadata
 
@@ -137,19 +138,33 @@ def map_environment_to_evaluation_context(
         feature_state: "FeatureState",
         *,
         priority: float | None = None,
+        value_source: "FeatureState | None" = None,
     ) -> FeatureContext:
         return map_feature_state_to_feature_context(
             feature_state,
-            mv_fs_values=mv_fs_values_by_feature_state_id.get(feature_state.pk),
+            mv_fs_values=mv_fs_values_by_feature_state_id.get(
+                (value_source or feature_state).pk
+            ),
             priority=priority,
+            value_source=value_source,
         )
 
     if segments is not None:
+        environment_defaults = {
+            feature_state.feature_id: feature_state for feature_state in feature_states
+        }
         context["segments"] = {
             str(segment.pk): map_segment_to_segment_context(
                 segment,
                 overrides=[
-                    to_feature_context(feature_state)
+                    to_feature_context(
+                        feature_state,
+                        value_source=map_override_to_value_source(
+                            feature_state,
+                            segment=segment,
+                            environment_defaults=environment_defaults,
+                        ),
+                    )
                     for feature_state in segment_overrides.get(segment.pk) or ()
                 ],
             )
@@ -301,20 +316,27 @@ def map_feature_state_to_feature_context(
     *,
     mv_fs_values: "Iterable[MultivariateFeatureStateValue] | None" = None,
     priority: float | None = None,
+    value_source: "FeatureState | None" = None,
 ) -> FeatureContext:
-    """Map a Django ORM FeatureState to a flag-engine FeatureContext TypedDict."""
+    """Map a Django ORM FeatureState to a flag-engine FeatureContext TypedDict.
+
+    :param mv_fs_values: the variants of `value_source`, if given.
+    :param value_source: the feature state to serve the value and variants
+        from, if not `feature_state` itself.
+    """
     feature = feature_state.feature
+    value_source = value_source or feature_state
     feature_context: FeatureContext = {
         # The engine seeds multivariate variant allocation on the feature
         # context key, so it has to be the bucketing seed rather than the
         # feature state id, or recreating a feature state would move every
         # enrolled identity to a different variant. See issue #7913.
-        "key": str(feature_state.mv_hashing_seed),
+        "key": str(value_source.mv_hashing_seed),
         "name": feature.name,
         "enabled": feature_state.enabled,
         # Deliberately unparameterised by identity: picking a multivariate
         # value is the engine's job now.
-        "value": feature_state.get_feature_state_value(),
+        "value": value_source.get_feature_state_value(),
         "metadata": FeatureEngineMetadata(feature_state=feature_state),
     }
 
