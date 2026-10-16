@@ -30,6 +30,8 @@ type FeatureDependenciesTabProps = {
   isVersioned: boolean
   // Held by the modal, so any tab's change request takes them along.
   staging: StagedPrerequisites
+  // The modal is creating the change request the held changes go into.
+  isSaving?: boolean
   onCreateChangeRequest: () => void
   // Opens another feature's modal on this tab.
   onSelectFeature: (featureId: number) => void
@@ -38,6 +40,7 @@ type FeatureDependenciesTabProps = {
 const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
   environmentId,
   environmentName,
+  isSaving = false,
   isVersioned,
   onCreateChangeRequest,
   onSelectFeature,
@@ -78,7 +81,8 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
     projectId,
   })
   // Held while submitting, so a change can't miss the change request.
-  const canManage = permission && mode !== 'readOnly' && !staging.isSubmitting
+  const isSubmitting = isSaving || staging.isSubmitting
+  const canManage = permission && mode !== 'readOnly' && !isSubmitting
 
   // Without the permission, canManage is false, so the add button and every
   // bin would appear a moment after the rows.
@@ -145,7 +149,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
                     existingPrerequisiteIds={editing.rows.map(
                       (row) => row.edge.prerequisite.id,
                     )}
-                    disabled={isCreating || staging.isSubmitting}
+                    disabled={isCreating || isSubmitting}
                     onChange={editing.onAdd}
                   />
                 )
@@ -195,7 +199,7 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
       {!!staging.staged.length && (
         <ChangeRequestFooter
           count={staging.staged.length}
-          isSubmitting={staging.isSubmitting}
+          isSubmitting={isSubmitting}
           onCreate={onCreateChangeRequest}
           onDiscard={staging.discard}
         />
