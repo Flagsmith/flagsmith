@@ -15,6 +15,11 @@
   background: var(--color-surface-muted);
 }
 
+// On the cell, as with the input row, so hover does not replace it.
+.prerequisite-row--refused td {
+  background: var(--color-surface-danger);
+}
+
 // The select needs permission to shrink or it pushes the row past the panel.
 .prerequisite-add-control > :first-child {
   flex: 1 1 auto;
