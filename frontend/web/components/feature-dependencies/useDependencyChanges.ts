@@ -1,6 +1,9 @@
 import { skipToken } from '@reduxjs/toolkit/query'
 import { useGetFeatureDependenciesQuery } from 'common/services/useFeatureDependency'
-import { diffDependencies } from 'common/utils/diffDependencies'
+import {
+  diffDependencies,
+  isClosedChangeRequestStatus,
+} from 'common/utils/diffDependencies'
 
 type UseDependencyChangesArgs = {
   environmentId: string
@@ -24,7 +27,7 @@ export const useDependencyChanges = ({
   const status =
     scoped.error && 'status' in scoped.error ? scoped.error.status : undefined
   // Published or deleted since it was listed.
-  const isClosed = status === 400 || status === 404
+  const isClosed = isClosedChangeRequestStatus(status)
   const isError = live.isError || (scoped.isError && !isClosed)
   const changes =
     live.data && scoped.data
