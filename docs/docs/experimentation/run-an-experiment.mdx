@@ -22,31 +22,127 @@ jobs:
 
 ## Instrument your application
 
-Event collection is available in these SDKs, with more to follow:
-
-| SDK                                                | Package                | Minimum version |
-| -------------------------------------------------- | ---------------------- | --------------- |
-| JavaScript (browser, React, server-side rendering) | `@flagsmith/flagsmith` | 12.4.0          |
-| Python                                             | `flagsmith`            | 6.3.0           |
-
-:::note Node.js
-
-The Node.js SDK (`flagsmith-nodejs`) does not support events yet. For server-side rendering, use the JavaScript SDK's
-`@flagsmith/flagsmith/isomorphic` build and call `flushEvents()` before the response ends.
-
-:::
-
-Enable event collection by passing the `enableEvents` / `enable_events` option when you initialise the client. Keep the
-environment key you already use for flags: events accept the client-side key and server-side keys.
-
-When self-hosting, also point the SDK at your Flagsmith API and your event ingestion server, as in the commented lines
-below. Without them, the SDK sends events to Flagsmith Cloud. To deploy the ingestion server, see
-[Experimentation in the Helm chart](/deployment-self-hosting/hosting-guides/kubernetes-openshift#experimentation).
-
 Users must be [identified](/flagsmith-concepts/identities). Exposures and conversion events are joined per identity, so
 use the same identifier for flags and events.
 
-<Tabs groupId="language">
+### SDK overview
+
+<Tabs groupId="language" queryString>
+<TabItem value="js" label="JavaScript">
+
+- Experimentation support: **`@flagsmith/flagsmith` 12.4.0+**, for browser apps and server-side rendering
+- Source code: https://github.com/Flagsmith/flagsmith-js-client
+
+</TabItem>
+<TabItem value="react" label="React">
+
+- Experimentation support: **`@flagsmith/flagsmith` 12.4.0+**
+- Source code: https://github.com/Flagsmith/flagsmith-js-client
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+- Experimentation support: **`flagsmith` 6.3.0+**
+- Source code: https://github.com/Flagsmith/flagsmith-python-client
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+- Experimentation support: **`flagsmith-java-client` 8.2.0+**
+- Source code: https://github.com/Flagsmith/flagsmith-java-client
+
+</TabItem>
+<TabItem value="nodejs" label="Node.js">
+
+- Experimentation support: **`@flagsmith/nodejs` 9.1.0+**. The package was called `flagsmith-nodejs` before 9.0.0.
+- Source code: https://github.com/Flagsmith/flagsmith-nodejs-client
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+- Experimentation support: **`flagsmith-go-client/v5` 5.3.0+**
+- Source code: https://github.com/Flagsmith/flagsmith-go-client
+
+</TabItem>
+<TabItem value="flutter" label="Flutter">
+
+- Experimentation support: **`flagsmith` 6.2.0+**
+- Source code: https://github.com/Flagsmith/flagsmith-flutter-client
+
+</TabItem>
+</Tabs>
+
+### Install or upgrade
+
+<Tabs groupId="language" queryString>
+<TabItem value="js" label="JavaScript">
+
+```bash
+npm install @flagsmith/flagsmith@^12.4.0
+```
+
+</TabItem>
+<TabItem value="react" label="React">
+
+```bash
+npm install @flagsmith/flagsmith@^12.4.0
+```
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+```bash
+pip install "flagsmith>=6.3.0"
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```xml
+<dependency>
+    <groupId>com.flagsmith</groupId>
+    <artifactId>flagsmith-java-client</artifactId>
+    <version>8.2.0</version>
+</dependency>
+```
+
+</TabItem>
+<TabItem value="nodejs" label="Node.js">
+
+```bash
+npm install @flagsmith/nodejs@^9.1.0
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```bash
+go get github.com/Flagsmith/flagsmith-go-client/v5@v5.3.0
+```
+
+</TabItem>
+<TabItem value="flutter" label="Flutter">
+
+```bash
+flutter pub add flagsmith:^6.2.0
+```
+
+</TabItem>
+</Tabs>
+
+### Initialise
+
+Enable events when you create the client, with the environment key you already use for flags. Events accept the
+client-side key and server-side keys.
+
+When self-hosting, also point the SDK at your Flagsmith API and your event ingestion service, as in the commented lines
+below. Otherwise the SDK sends events to Flagsmith Cloud. To deploy the event ingestion service, see
+[Experimentation in the Helm chart](/deployment-self-hosting/hosting-guides/kubernetes-openshift#experimentation).
+
+The SDKs buffer events and send them in batches, by default every 10 seconds. Send what is left before your application
+exits, as shown in each tab.
+
+<Tabs groupId="language" queryString>
 <TabItem value="js" label="JavaScript">
 
 ```javascript
@@ -61,22 +157,18 @@ await flagsmith.init({
 });
 await flagsmith.identify('user_42');
 
-// Evaluate the flag and record an exposure in one call
-const flag = flagsmith.getExperimentFlag('checkout_button');
-// ...render based on flag.value
-
-// Record a conversion event; the name must match your metric's event name
-flagsmith.trackEvent('purchase', { value: 99.5 });
+// Before a server-side render responds, or before the page unloads
+await flagsmith.flushEvents();
 ```
 
 `eventProcessorConfig` requires `enableEvents: true`; `init` throws without it.
 
-In React, pass the same options to `FlagsmithProvider`. The `useExperiment` hook resolves the flag and records the
-exposure:
+</TabItem>
+<TabItem value="react" label="React">
 
 ```jsx
 import flagsmith from '@flagsmith/flagsmith';
-import { FlagsmithProvider, useExperiment, useFlagsmith } from '@flagsmith/flagsmith/react';
+import { FlagsmithProvider } from '@flagsmith/flagsmith/react';
 
 export function App() {
     return (
@@ -86,13 +178,133 @@ export function App() {
                 environmentID: 'YOUR_CLIENT_SIDE_ENVIRONMENT_KEY',
                 identity: 'user_42',
                 enableEvents: true,
-                // Self-hosted only: add api and eventProcessorConfig as above
+                // Self-hosted only:
+                // api: 'https://flagsmith.example.com/api/v1/',
+                // eventProcessorConfig: { eventsApiUrl: 'https://events.flagsmith.example.com/' },
             }}
         >
             <CheckoutButton />
         </FlagsmithProvider>
     );
 }
+```
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+```python
+from flagsmith import EventProcessorConfig, Flagsmith
+
+flagsmith = Flagsmith(
+    environment_key="YOUR_ENVIRONMENT_KEY",
+    enable_events=True,
+    # Self-hosted only:
+    # api_url="https://flagsmith.example.com/api/v1/",
+    # event_processor_config=EventProcessorConfig(
+    #     events_api_url="https://events.flagsmith.example.com/",
+    # ),
+)
+```
+
+Events still buffered when the interpreter exits are dropped. In short-lived scripts and jobs, pass `max_buffer_items=1`
+to `EventProcessorConfig` so each event is sent as it is tracked.
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+FlagsmithClient flagsmith = FlagsmithClient.newBuilder()
+    .setApiKey("YOUR_ENVIRONMENT_KEY")
+    .withConfiguration(FlagsmithConfig.newBuilder()
+        .withEnableEvents(true)
+        // Self-hosted only:
+        // .baseUri("https://flagsmith.example.com/api/v1/")
+        // .eventsUri("https://events.flagsmith.example.com/")
+        .build())
+    .build();
+
+// Before your application exits
+flagsmith.close();
+```
+
+</TabItem>
+<TabItem value="nodejs" label="Node.js">
+
+```javascript
+import { Flagsmith } from '@flagsmith/nodejs';
+
+const flagsmith = new Flagsmith({
+    environmentKey: 'YOUR_ENVIRONMENT_KEY',
+    enableEvents: true,
+    // Self-hosted only:
+    // apiUrl: 'https://flagsmith.example.com/api/v1/',
+    // eventProcessorConfig: { eventsApiUrl: 'https://events.flagsmith.example.com/' },
+});
+
+// Before your application exits
+await flagsmith.close();
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+eventsCtx, stopEvents := context.WithCancel(context.Background())
+
+client := flagsmith.NewClient("YOUR_ENVIRONMENT_KEY",
+    flagsmith.WithEvents(eventsCtx),
+    // Self-hosted only:
+    // flagsmith.WithBaseURL("https://flagsmith.example.com/api/v1/"),
+    // flagsmith.WithEventsBaseURL("https://events.flagsmith.example.com/"),
+)
+
+// Before your application exits
+flushCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+err := client.FlushEvents(flushCtx)
+stopEvents()
+```
+
+</TabItem>
+<TabItem value="flutter" label="Flutter">
+
+```dart
+final flagsmith = await FlagsmithClient.init(
+  apiKey: 'YOUR_CLIENT_SIDE_ENVIRONMENT_KEY',
+  config: const FlagsmithConfig(
+    enableEvents: true,
+    // Self-hosted only:
+    // baseURI: 'https://flagsmith.example.com/api/v1/',
+    // eventsURI: 'https://events.flagsmith.example.com/',
+  ),
+);
+final user = Identity(identifier: 'user_42');
+
+// Before the app closes, for example when it moves to the background
+await flagsmith.flushEvents();
+```
+
+</TabItem>
+</Tabs>
+
+### Record exposures
+
+An exposure is the moment an identity is served a variation; it is what enrols them in the results. Getting the
+experiment flag evaluates it and records the exposure in one call.
+
+<Tabs groupId="language" queryString>
+<TabItem value="js" label="JavaScript">
+
+```javascript
+const flag = flagsmith.getExperimentFlag('checkout_button');
+// ...render based on flag.value
+```
+
+</TabItem>
+<TabItem value="react" label="React">
+
+```jsx
+import { useExperiment, useFlagsmith } from '@flagsmith/flagsmith/react';
 
 function CheckoutButton() {
     const flagsmith = useFlagsmith();
@@ -107,52 +319,106 @@ function CheckoutButton() {
 ```
 
 </TabItem>
-<TabItem value="py" label="Python">
+<TabItem value="python" label="Python">
 
 ```python
-from flagsmith import EventProcessorConfig, Flagsmith
-
-flagsmith = Flagsmith(
-    environment_key="YOUR_ENVIRONMENT_KEY",
-    enable_events=True,
-    # Self-hosted only:
-    # api_url="https://flagsmith.example.com/api/v1/",
-    # event_processor_config=EventProcessorConfig(
-    #     events_api_url="https://events.flagsmith.example.com/",
-    # ),
-)
-
-# Evaluate the flag and record an exposure in one call
 flag = flagsmith.get_experiment_flag("checkout_button", identifier="user_42")
-
-# Record a conversion event; the name must match your metric's event name
-flagsmith.track_event("purchase", identifier="user_42", value=99.5)
 ```
 
-:::caution Local evaluation
+</TabItem>
+<TabItem value="java" label="Java">
 
-`get_experiment_flag` does not record exposures with local evaluation (`enable_local_evaluation=True`) yet. Use remote
-evaluation for experiment flags.
+```java
+BaseFlag flag = flagsmith.getExperimentFlag("checkout_button", "user_42");
+```
 
-:::
+</TabItem>
+<TabItem value="nodejs" label="Node.js">
+
+```javascript
+const flag = await flagsmith.getExperimentFlag('checkout_button', 'user_42');
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+ec := flagsmith.NewEvaluationContext("user_42", nil)
+flag, err := client.GetExperimentFlag(ctx, "checkout_button", ec)
+```
+
+</TabItem>
+<TabItem value="flutter" label="Flutter">
+
+```dart
+final flag = await flagsmith.getExperimentFlag('checkout_button', user: user);
+```
 
 </TabItem>
 </Tabs>
 
-### Exposures
-
-An exposure is the moment an identity is served a variation; it is what enrols them in the results. `getExperimentFlag`
-/ `get_experiment_flag` evaluates the flag and records the exposure in one call.
-
-Record the exposure where the user actually experiences the change; if you evaluate in one place and render in another,
-call `trackExposureEvent` / `track_exposure_event` at the point of display instead.
+Record the exposure where the user actually experiences the change. If you evaluate in one place and render in another,
+call the SDK's `trackExposureEvent` method (`track_exposure_event` in Python) at the point of display instead.
 
 Exposures are deduplicated per identity: each identity is counted once, in the variation it saw first, so recording an
 exposure more than once is safe.
 
-### Conversion events
+### Track conversions
 
-`trackEvent` / `track_event` sends a named event, optionally with a numeric `value`, traits and metadata.
+Send a named event, optionally with a numeric value, traits and metadata. The name must match your metric's event name.
+
+<Tabs groupId="language" queryString>
+<TabItem value="js" label="JavaScript">
+
+```javascript
+flagsmith.trackEvent('purchase', { value: 99.5 });
+```
+
+</TabItem>
+<TabItem value="react" label="React">
+
+```jsx
+const flagsmith = useFlagsmith();
+flagsmith.trackEvent('purchase', { value: 99.5 });
+```
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+```python
+flagsmith.track_event("purchase", identifier="user_42", value=99.5)
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+flagsmith.trackEvent("purchase", "user_42", 99.5, null, null);
+```
+
+</TabItem>
+<TabItem value="nodejs" label="Node.js">
+
+```javascript
+flagsmith.trackEvent('purchase', { identifier: 'user_42', value: 99.5 });
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+err = client.TrackEvent("purchase", &flagsmith.EventOptions{Identifier: "user_42", Value: 99.5})
+```
+
+</TabItem>
+<TabItem value="flutter" label="Flutter">
+
+```dart
+flagsmith.trackEvent('purchase', user: user, value: 99.5);
+```
+
+</TabItem>
+</Tabs>
 
 The event name is **case-sensitive** and must exactly match the metric's configured event name. Unmatched events are
 silently ignored. Conversions are attributed post-exposure: an identity's events only count after its first exposure.
@@ -161,17 +427,16 @@ silently ignored. Conversions are attributed post-exposure: an identity's events
 
 The SDKs skip events silently rather than throw. If the **Exposures** panel stays empty, check that:
 
-- The environment has a [connected warehouse](/experimentation/connect-a-warehouse). The ingestion server rejects events
-  for environments without one.
+- The environment has a [connected warehouse](/experimentation/connect-a-warehouse). The event ingestion service rejects
+  events for environments without one.
 - The user is identified. Exposures without an identity are skipped.
 - Every variation of the flag has a label. Exposures are attributed by label, so a variation without one, for example
   one created through the API without a `key`, is not counted.
 - The identity is inside the experiment's rollout. Identities outside it are not enrolled and record no exposure.
-- In Python, the client uses remote evaluation.
+- Buffered events were sent before your application exited. See [Initialise](#initialise).
 - Event names match your metrics exactly, including case.
 
-To see why an event was skipped, turn on SDK logging: `enableLogs: true` in JavaScript, or the `flagsmith` logger at
-`DEBUG` level in Python.
+To see why an event was skipped, turn on your SDK's debug logging.
 
 ## While it runs
 
