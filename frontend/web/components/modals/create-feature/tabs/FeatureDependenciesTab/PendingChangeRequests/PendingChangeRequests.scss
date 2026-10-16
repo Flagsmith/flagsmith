@@ -8,3 +8,14 @@
 .pending-change-requests__link {
   font-size: 0.8125rem;
 }
+
+// Lets a long title shrink and truncate beside the count.
+.pending-change-requests__title {
+  min-width: 0;
+}
+
+// Close to a fixed width, so the counts line up down the list.
+.pending-change-requests__count {
+  min-width: 4rem;
+  font-variant-numeric: tabular-nums;
+}

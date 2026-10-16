@@ -3,7 +3,6 @@ import { ChangeRequestSummary } from 'common/types/responses'
 import { colorIconSecondary } from 'common/theme/tokens'
 import Accordion from 'components/base/Accordion'
 import Banner from 'components/base/Banner'
-import Chip from 'components/base/Chip'
 import Icon from 'components/icons/Icon'
 import Skeleton from 'components/Skeleton'
 import DependencyChangesTable from 'components/feature-dependencies/DependencyChangesTable'
@@ -16,12 +15,14 @@ type PendingChangeRequestProps = {
   featureId: number
   projectId: number
   isEnabled: (prerequisiteId: number) => boolean
+  defaultOpen: boolean
 }
 
 // One open change request, shown only if it changes this feature's
 // prerequisites. Each loads its own, as the change request page does.
 const PendingChangeRequest: FC<PendingChangeRequestProps> = ({
   changeRequest,
+  defaultOpen,
   environmentId,
   featureId,
   isEnabled,
@@ -46,9 +47,18 @@ const PendingChangeRequest: FC<PendingChangeRequestProps> = ({
   // Most change sets only touch values or overrides.
   if (!changes.length) return null
 
+  const added = changes.filter(({ action }) => action === 'add').length
+  const removed = changes.length - added
+  const countLabel = [
+    added && `${added} added`,
+    removed && `${removed} removed`,
+  ]
+    .filter(Boolean)
+    .join(', ')
+
   return (
     <Accordion
-      defaultOpen
+      defaultOpen={defaultOpen}
       flush
       title={
         <>
@@ -58,10 +68,18 @@ const PendingChangeRequest: FC<PendingChangeRequestProps> = ({
             fill={colorIconSecondary}
             aria-hidden
           />
-          #{changeRequest.id} {changeRequest.title}
-          <Chip className='ms-auto flex-shrink-0' size='xs' variant='warning'>
-            Awaiting approval
-          </Chip>
+          <span className='pending-change-requests__title text-truncate'>
+            #{changeRequest.id} {changeRequest.title}
+          </span>
+          {/* Read out as words, as "+1 −2" means little to a screen reader. */}
+          <span
+            className='pending-change-requests__count d-flex flex-shrink-0 justify-content-end gap-2 ms-auto'
+            role='img'
+            aria-label={countLabel}
+          >
+            {!!added && <span className='text-success'>+{added}</span>}
+            {!!removed && <span className='text-danger'>−{removed}</span>}
+          </span>
         </>
       }
     >
