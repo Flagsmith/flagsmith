@@ -9,6 +9,7 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_structlog import StructuredLogCapture
 from rest_framework.test import APIClient
 
+from environments.identities.models import Identity
 from environments.models import Environment
 from features.future.types import UpdateFlagRequest
 from features.models import FeatureState
@@ -16,7 +17,7 @@ from features.versioning.models import EnvironmentFeatureVersion
 from organisations.models import Organisation
 from projects.models import Project
 from tests.integration.helpers import create_mv_option_with_api
-from tests.types import WithEnvironmentPermissionsCallable
+from tests.types import VariantAssignmentFixture, WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
 
 
@@ -403,6 +404,33 @@ def test_update_flag__patch_environment_default_value__updates_value(
     )
 
 
+def test_update_flag__patch_environment_default_value_null__clears_value(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    feature: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given / When
+    response = admin_client_new.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        {"environment_default": {"value": None}},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "environment_default": {"enabled": False, "value": None, "variants": []},
+        "segment_overrides": [],
+    }
+    environment_default = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+        feature_segment=None,
+    ).get()
+    assert environment_default.get_feature_state_value() is None
+
+
 def test_update_flag__patch_environment_default_variants__reweights_variants(
     admin_client_new: APIClient,
     default_feature_value: str,
@@ -465,6 +493,77 @@ def test_update_flag__patch_environment_default_variants__reweights_variants(
         segment_overrides__updated__segment__ids=[],
         segment_overrides__deleted__segment__ids=[],
     )
+
+
+def test_update_flag__patch_variant_weight_increased__keeps_identities_in_variant(
+    admin_client_new: APIClient,
+    environment_api_key: str,
+    mv_feature: int,
+    mv_feature_name: str,
+    project: int,
+    variant_assignment: VariantAssignmentFixture,
+    versioned_environment: Environment,
+) -> None:
+    # Given a flag split 50/50 between two variants, and the variant each of a
+    # range of identities is bucketed into
+    url = f"/api/__future__/environments/{environment_api_key}/features/{mv_feature}/"
+    variant_a, variant_b = (
+        create_mv_option_with_api(
+            admin_client_new, project, mv_feature, 0, value, key=f"variant-{value}"
+        )
+        for value in ["a", "b"]
+    )
+    response = admin_client_new.patch(
+        url,
+        UpdateFlagRequest(
+            {
+                "environment_default": {
+                    "enabled": True,
+                    "variants": [
+                        {"id": variant_a, "weight": 50},
+                        {"id": variant_b, "weight": 50},
+                    ],
+                },
+            }
+        ),
+        format="json",
+    )
+    assert response.status_code == 200
+    identities = [
+        Identity.objects.create(
+            identifier=f"identity-{i}", environment=versioned_environment
+        )
+        for i in range(100)
+    ]
+    original_assignment = variant_assignment(identities, mv_feature_name)
+
+    # When the first variant's weight is increased to 60/40
+    response = admin_client_new.patch(
+        url,
+        UpdateFlagRequest(
+            {
+                "environment_default": {
+                    "variants": [
+                        {"id": variant_a, "weight": 60},
+                        {"id": variant_b, "weight": 40},
+                    ],
+                },
+            }
+        ),
+        format="json",
+    )
+
+    # Then identities only move from the shrunk variant into the grown one
+    assert response.status_code == 200
+    new_assignment = variant_assignment(identities, mv_feature_name)
+    movers = {
+        identifier
+        for identifier, variant in original_assignment.items()
+        if new_assignment[identifier] != variant
+    }
+    assert movers
+    assert {original_assignment[identifier] for identifier in movers} == {"variant-b"}
+    assert {new_assignment[identifier] for identifier in movers} == {"variant-a"}
 
 
 def test_update_flag__patch_segment_override_enabled__creates_override(
@@ -591,6 +690,71 @@ def test_update_flag__patch_segment_override_value__overrides_value(
         segment_overrides__created__segment__ids=[segment],
         segment_overrides__updated__segment__ids=[],
         segment_overrides__deleted__segment__ids=[],
+    )
+
+
+def test_update_flag__patch_segment_override_value_null__clears_value(
+    admin_client_new: APIClient,
+    default_feature_value: str,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+    versioned_environment: Environment,
+) -> None:
+    # Given
+    url = f"/api/__future__/environments/{environment_api_key}/features/{feature}/"
+    response = admin_client_new.patch(
+        url,
+        {
+            "segment_overrides": [
+                {
+                    "segment": {"id": segment},
+                    "value": {"type": "string", "value": "enterprise"},
+                },
+            ],
+        },
+        format="json",
+    )
+    assert response.status_code == 200
+
+    # When
+    response = admin_client_new.patch(
+        url,
+        {"segment_overrides": [{"segment": {"id": segment}, "value": None}]},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "environment_default": {
+            "enabled": False,
+            "value": {"type": "string", "value": default_feature_value},
+            "variants": [],
+        },
+        "segment_overrides": [
+            {
+                "segment": {"id": segment},
+                "priority": 0,
+                "enabled": False,
+                "value": None,
+                "variants": [],
+            },
+        ],
+    }
+    live_feature_states = FeatureState.objects.get_live_feature_states(
+        environment=versioned_environment,
+        feature_id=feature,
+    )
+    assert (
+        live_feature_states.get(
+            feature_segment__segment_id=segment
+        ).get_feature_state_value()
+        is None
+    )
+    assert (
+        live_feature_states.get(feature_segment=None).get_feature_state_value()
+        == default_feature_value
     )
 
 
