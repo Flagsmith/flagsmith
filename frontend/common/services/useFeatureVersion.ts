@@ -116,6 +116,12 @@ export const featureVersionService = service
   })
   .injectEndpoints({
     endpoints: (builder) => ({
+      /**
+       * @deprecated Legacy update path for versioned environments. Eligible
+       * updates go through saveConsolidatedFeature in useFeatureState.ts
+       * (#7641); this remains for multivariate flags (until #7642), change
+       * requests, scheduled changes and null flag values.
+       */
       createAndSetFeatureVersion: builder.mutation<
         Res['featureVersion'],
         Req['createAndSetFeatureVersion']

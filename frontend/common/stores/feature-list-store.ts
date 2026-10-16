@@ -34,7 +34,10 @@ import flagsmith from '@flagsmith/flagsmith'
 import API from 'project/api'
 import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
-import { getFeatureStates } from 'common/services/useFeatureState'
+import {
+  getFeatureStates,
+  updateFeature,
+} from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
 import {
   changeRequestService,
@@ -85,6 +88,25 @@ const convertSegmentOverrideToFeatureState = (
     toRemove: override.toRemove,
   } as Partial<FeatureState>
 }
+// Updates the legacy store model's cached environment feature state for a
+// feature after a save
+function syncEnvironmentFeatureState(
+  featureId: number,
+  environmentFeatureState: any,
+  merge = true,
+) {
+  if (!store.model?.keyedEnvironmentFeatures || !environmentFeatureState) {
+    return
+  }
+  store.model.keyedEnvironmentFeatures[featureId] = {
+    ...(merge ? store.model.keyedEnvironmentFeatures[featureId] : {}),
+    ...environmentFeatureState,
+    feature_state_value: Utils.featureStateToValue(
+      environmentFeatureState.feature_state_value,
+    ),
+  }
+}
+
 const controller = {
   createFlag(projectId, environmentId, flag) {
     store.saving()
@@ -305,6 +327,70 @@ const controller = {
     API.trackEvent(Constants.events.EDIT_FEATURE)
     const env = ProjectStore.getEnvironment(environmentId)
 
+    // Try the consolidated update endpoint first (#7641) — it returns
+    // saved: false when the update is ineligible (multivariate flags until
+    // #7642, null values), in which case we fall through to the legacy
+    // paths below
+    if (environmentFlag && env) {
+      const typedValue = Utils.getTypedValue(
+        flag.initial_value,
+        undefined,
+        true,
+      )
+      const updateRes = await updateFeature(getStore(), {
+        environment: env as unknown as Environment,
+        environmentDefault:
+          mode === 'VALUE'
+            ? {
+                enabled: flag.default_enabled,
+                value: typedValue === '' ? null : typedValue,
+              }
+            : {
+                // The endpoint requires an environment default, so echo
+                // the current state when only saving segment overrides
+                enabled: environmentFlag.enabled,
+                value: environmentFlag.feature_state_value,
+              },
+        projectFlag,
+        removeSegmentIds: (segmentOverrides || [])
+          .filter((v: any) => v.toRemove && v.id)
+          .map((v: any) => v.segment),
+        segmentOverrides:
+          mode === 'SEGMENT'
+            ? (segmentOverrides || [])
+                .filter((v: any) => !v.toRemove)
+                .map((override: any, index: number) => ({
+                  enabled: !!override.enabled,
+                  priority: index,
+                  segmentId: override.segment,
+                  value: override.value,
+                }))
+            : undefined,
+      })
+      if (updateRes.error) {
+        API.ajaxHandler(store, updateRes.error)
+        return
+      }
+      if (updateRes.data?.saved) {
+        syncEnvironmentFeatureState(
+          projectFlag.id,
+          updateRes.data.environmentDefault,
+        )
+        getStore().dispatch(
+          projectFlagService.util.invalidateTags(['ProjectFlag']),
+        )
+        if (store.model) {
+          store.model.lastSaved = new Date().valueOf()
+        }
+        onComplete && onComplete()
+        store.saved({})
+        return
+      }
+    }
+
+    // Legacy paths below — still needed for multivariate flags (until #7642),
+    // null flag values, and flags with no environment state
+
     if (env.use_v2_feature_versioning) {
       controller.editVersionedFeatureState(
         projectId,
@@ -522,6 +608,8 @@ const controller = {
         API.ajaxHandler(store, e)
       })
   },
+  // Change requests always use the legacy endpoints — the consolidated
+  // update-flag endpoint (#7641) rejects workflow-enabled environments
   editFeatureStateChangeRequest: async (
     projectId: string,
     environmentId: string,
@@ -750,6 +838,12 @@ const controller = {
       API.ajaxHandler(store, e)
     }
   },
+  /**
+   * @deprecated Legacy save path for versioned environments — only reached
+   * when the consolidated update endpoint (#7641) cannot be used:
+   * multivariate flags (until #7642), null flag values, or no existing
+   * environment state.
+   */
   editVersionedFeatureState: (
     projectId,
     environmentId,
@@ -798,15 +892,7 @@ const controller = {
             const environmentFeatureState = res.data.find(
               (v) => !v.feature_segment,
             )
-            if (store.model?.keyedEnvironmentFeatures) {
-              store.model.keyedEnvironmentFeatures[projectFlag.id] = {
-                ...store.model.keyedEnvironmentFeatures[projectFlag.id],
-                ...environmentFeatureState,
-                feature_state_value: Utils.featureStateToValue(
-                  environmentFeatureState.feature_state_value,
-                ),
-              }
-            }
+            syncEnvironmentFeatureState(projectFlag.id, environmentFeatureState)
           })
         })
       })
@@ -859,14 +945,7 @@ const controller = {
                 throw version.error
               }
               const featureState = version.data.feature_states[0].data
-              if (store.model?.keyedEnvironmentFeatures) {
-                store.model.keyedEnvironmentFeatures[projectFlag.id] = {
-                  ...featureState,
-                  feature_state_value: Utils.featureStateToValue(
-                    featureState.feature_state_value,
-                  ),
-                }
-              }
+              syncEnvironmentFeatureState(projectFlag.id, featureState, false)
             })
           })
         })
