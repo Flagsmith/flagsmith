@@ -14,7 +14,9 @@ curl -o docker-compose.yml https://raw.githubusercontent.com/Flagsmith/flagsmith
 docker-compose -f docker-compose.yml up
 ```
 
-Wait for the images to download and run, then visit `http://localhost:8000/`. As a first step, you will need to create a new account at [http://localhost:8000/signup](http://localhost:8000/signup)
+Wait for the images to download and run, then visit [http://localhost:8000](http://localhost:8000). On a fresh install, the dashboard shows a **Welcome to Flagsmith** screen: select **Get Started** to create your admin account and your first organisation. Nothing is printed to the Compose logs for this step.
+
+This first account is a superuser. Once it exists, the dashboard shows the usual login and sign-up pages.
 
 ## Environment Variables
 
@@ -47,11 +49,10 @@ The web user interface communicates via REST to the API that powers the applicat
 
 Once you have created an account and some flags, you can then start using the API with one of the [Flagsmith Client SDKs](https://github.com/Flagsmith?q=client&type=&language=). You will need to override the API endpoint for each SDK to point to [http://localhost:8000/api/v1/](http://localhost:8000/api/v1/).
 
-You can access the Django Admin console to get CRUD access to some of the core tables within the API. You will need to create a superuser account first with the following command:
+You can access the Django Admin console to get CRUD access to some of the core tables within the API. The admin account you created on first run already has access. To create another superuser, run:
 
 ```bash
-# Make sure you are in the root directory of this repository
-docker-compose run --rm --entrypoint "python manage.py createsuperuser" api
+docker compose exec flagsmith flagsmith createsuperuser
 ```
 
 You can then access the admin dashboard at [http://localhost:8000/admin/](http://localhost:8000/admin/)

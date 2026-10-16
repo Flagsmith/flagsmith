@@ -33,7 +33,8 @@ relevant section below for more details.
   set, no logs will be stored. If set to `-`, the logs will be sent to `stdout`.
 - `DJANGO_SETTINGS_MODULE`: Python path to settings file for the given environment, e.g. "app.settings.develop"
 - `ALLOW_ADMIN_INITIATION_VIA_CLI`: Enables the `bootstrap` management command which creates default admin user,
-  organisation, and project.
+  organisation, and project. `bootstrap` runs on startup with `migrate-and-serve` only; see
+  [Initial Setup](/deployment-self-hosting/core-configuration/initial-setup#automatically-on-startup).
 - `ADMIN_EMAIL`: Email to use for the default superuser creation.
 - `ORGANISATION_NAME`: Organisation name to use for the default organisation.
 - `PROJECT_NAME`: Project name to use for the default project.
