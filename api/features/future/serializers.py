@@ -51,10 +51,16 @@ class FlagStateSerializer(serializers.Serializer[dict[str, object]]):
     """What a flag serves somewhere in an environment."""
 
     enabled = serializers.BooleanField(required=False)
-    value = FlagValueSerializer(required=False)
+    value = FlagValueSerializer(
+        required=False,
+        allow_null=True,
+        help_text="Null clears the value.",
+    )
     variants = VariantSerializer(many=True, required=False)
 
-    def validate_value(self, value: FlagValue) -> FlagValue:
+    def validate_value(self, value: FlagValue | None) -> FlagValue | None:
+        if value is None:
+            return None
         try:
             FeatureStateValue().set_value(value["value"], value["type"])
         except FeatureValueError as error:

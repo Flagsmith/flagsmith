@@ -240,7 +240,7 @@ Attributes:
 ### `experimentation.rollout.applied`
 
 Logged at `info` from:
- - `api/experimentation/services.py:977`
+ - `api/experimentation/services.py:1018`
 
 Attributes:
  - `audience.match`
@@ -252,6 +252,17 @@ Attributes:
  - `experiment.id`
  - `feature.id`
  - `rollout.percentage`
+
+### `experimentation.rollout.superseded`
+
+Logged at `info` from:
+ - `api/experimentation/services.py:609`
+
+Attributes:
+ - `environment.id`
+ - `experiment.id`
+ - `feature.id`
+ - `superseded_experiment.id`
 
 ### `feature_health.feature_health_event_dismissal_not_supported`
 
@@ -294,7 +305,7 @@ Attributes:
 ### `features.dependencies.create_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:172`
+ - `api/features/dependencies/services.py:171`
  - `api/features/dependencies/services.py:371`
  - `api/features/dependencies/services.py:387`
  - `api/features/dependencies/services.py:392`
@@ -310,7 +321,7 @@ Attributes:
 ### `features.dependencies.created`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:135`
+ - `api/features/dependencies/services.py:134`
 
 Attributes:
  - `environment.key`
@@ -322,7 +333,7 @@ Attributes:
 ### `features.dependencies.delete_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:480`
+ - `api/features/dependencies/services.py:482`
 
 Attributes:
  - `environment.key`
@@ -334,8 +345,8 @@ Attributes:
 ### `features.dependencies.deleted`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:107`
- - `api/features/dependencies/services.py:133`
+ - `api/features/dependencies/services.py:106`
+ - `api/features/dependencies/services.py:132`
 
 Attributes:
  - `environment.key`
@@ -359,8 +370,8 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:477`
- - `api/features/future/services.py:537`
+ - `api/features/future/services.py:486`
+ - `api/features/future/services.py:546`
 
 Attributes:
  - `environment.id`
@@ -491,7 +502,7 @@ Attributes:
 ### `gitlab.resource.linked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:35`
+ - `api/integrations/vcs/services.py:38`
 
 Attributes:
  - `feature.id`
@@ -502,7 +513,7 @@ Attributes:
 ### `gitlab.resource.unlinked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:70`
+ - `api/integrations/vcs/services.py:73`
 
 Attributes:
  - `feature.id`
@@ -895,7 +906,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1151`
+ - `api/experimentation/services.py:1194`
 
 Attributes:
  - `environment.id`
@@ -924,7 +935,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1094`
+ - `api/experimentation/services.py:1137`
 
 Attributes:
  - `environment.id`
@@ -933,7 +944,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1126`
+ - `api/experimentation/services.py:1169`
 
 Attributes:
  - `environment.id`
@@ -943,7 +954,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1136`
+ - `api/experimentation/services.py:1179`
 
 Attributes:
  - `environment.id`
@@ -952,7 +963,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:412`
+ - `api/experimentation/services.py:398`
 
 Attributes:
  - `environment.id`
@@ -962,7 +973,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:398`
+ - `api/experimentation/services.py:384`
 
 Attributes:
  - `environment.id`

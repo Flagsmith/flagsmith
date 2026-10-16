@@ -5,6 +5,7 @@ import typing
 from dataclasses import replace
 
 import structlog
+from common.core.utils import is_saas
 from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.db.models import Q
@@ -20,14 +21,12 @@ from core.dataclasses import AuthorData
 from environments.tasks import rebuild_environment_document
 from experimentation.constants import (
     CONTROL_VARIANT_KEY,
-    DATABRICKS_WAREHOUSE_FLAG,
-    EXPERIMENT_FLAG,
     EXPOSURE_HOURLY_BUCKET_MAX_WINDOW,
     MAX_AUDIENCE_SEGMENTS,
     RESULTS_MIN_CONVERSIONS_PER_VARIANT,
     RESULTS_MIN_IDENTITIES_PER_VARIANT,
     SRM_MIN_TOTAL_IDENTITIES,
-    WAREHOUSE_CONNECTION_FLAG,
+    WAREHOUSES_FLAG,
 )
 from experimentation.dataclasses import (
     AudienceSpec,
@@ -71,12 +70,13 @@ from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.registry import get_warehouse
 from features.feature_segments.services import get_next_segment_override_priority
 from features.feature_states.models import API_VALUE_TYPES
-from features.future.services import update_flag
+from features.future.services import delete_segment_override, update_flag
 from features.future.types import SegmentOverrideRequest
 from features.models import FeatureState
 from features.value_types import BOOLEAN, STRING
 from features.versioning.versioning_service import get_environment_flags_list
 from integrations.flagsmith.client import get_openfeature_client
+from organisations.subscriptions.constants import PLAN_RANK, SubscriptionPlanFamily
 from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from segments.services import write_segment_rules
 
@@ -109,43 +109,9 @@ class _ExposureReadKwargs(typing.TypedDict):
     granularity: ExposureGranularity
 
 
-def is_warehouse_feature_enabled(organisation: Organisation) -> bool:
-    return (
-        settings.EXPERIMENTATION_ENABLED
-        and get_openfeature_client().get_boolean_value(
-            WAREHOUSE_CONNECTION_FLAG,
-            default_value=False,
-            evaluation_context=organisation.openfeature_evaluation_context,
-        )
-    )
-
-
-def is_databricks_warehouse_enabled(organisation: Organisation) -> bool:
-    return get_openfeature_client().get_boolean_value(
-        DATABRICKS_WAREHOUSE_FLAG,
-        default_value=False,
-        evaluation_context=organisation.openfeature_evaluation_context,
-    )
-
-
-def is_experiment_feature_enabled(organisation: Organisation) -> bool:
-    return (
-        settings.EXPERIMENTATION_ENABLED
-        and get_openfeature_client().get_boolean_value(
-            EXPERIMENT_FLAG,
-            default_value=False,
-            evaluation_context=organisation.openfeature_evaluation_context,
-        )
-    )
-
-
-def get_experiment_flag_config(
-    organisation: Organisation,
-) -> dict[str, object]:
-    if not is_experiment_feature_enabled(organisation):
-        return {}
+def get_warehouses_flag_config(organisation: Organisation) -> dict[str, object]:
     raw = get_openfeature_client().get_string_value(
-        EXPERIMENT_FLAG,
+        WAREHOUSES_FLAG,
         default_value="{}",
         evaluation_context=organisation.openfeature_evaluation_context,
     )
@@ -156,11 +122,31 @@ def get_experiment_flag_config(
     return parsed if isinstance(parsed, dict) else {}
 
 
+def is_warehouse_type_available(
+    organisation: Organisation, warehouse_type: str
+) -> bool:
+    if not is_saas():
+        return True
+    minimum_plans = get_warehouses_flag_config(organisation).get("minimum_plans")
+    if not isinstance(minimum_plans, dict):
+        return True
+    # Unknown or empty plan IDs resolve to FREE, i.e. available on every plan.
+    minimum = SubscriptionPlanFamily.get_by_plan_id(
+        str(minimum_plans.get(warehouse_type) or "")
+    )
+    current = organisation.subscription.subscription_plan_family
+    return PLAN_RANK[current] >= PLAN_RANK[minimum]
+
+
 def ensure_flagsmith_warehouse_connection(
     environment: Environment,
 ) -> WarehouseConnection | None:
-    config = get_experiment_flag_config(environment.project.organisation)
-    if not config.get("auto_connect_warehouse"):
+    if not (settings.EXPERIMENTATION_ENABLED and is_saas()):
+        return None
+    organisation = environment.project.organisation
+    if not get_warehouses_flag_config(organisation).get("auto_connect_flagsmith"):
+        return None
+    if not is_warehouse_type_available(organisation, WarehouseType.FLAGSMITH):
         return None
 
     if WarehouseConnection.objects.filter(
@@ -558,22 +544,77 @@ def transition_experiment_status(
     target_status: str,
     user: FFAdminUser,
 ) -> Experiment:
-    valid_targets = VALID_STATUS_TRANSITIONS.get(experiment.status, set())
-    if target_status not in valid_targets:
-        raise ValueError(
-            f"Cannot transition from '{experiment.status}' to '{target_status}'."
+    with transaction.atomic():
+        experiment.refresh_from_db(from_queryset=Experiment.objects.select_for_update())
+        valid_targets = VALID_STATUS_TRANSITIONS.get(experiment.status, set())
+        if target_status not in valid_targets:
+            raise ValueError(
+                f"Cannot transition from '{experiment.status}' to '{target_status}'."
+            )
+
+        experiment.status = target_status
+        if target_status == ExperimentStatus.RUNNING and not experiment.started_at:
+            experiment.started_at = timezone.now()
+            _remove_superseded_experiment_rollouts(
+                experiment, AuthorData.from_user(user)
+            )
+        elif target_status == ExperimentStatus.COMPLETED:
+            experiment.ended_at = timezone.now()
+
+        experiment.save()
+        create_experiment_audit_log(experiment, user, action=target_status)
+    return experiment
+
+
+def _remove_superseded_experiment_rollouts(
+    experiment: Experiment, author: AuthorData
+) -> None:
+    """Stop completed or deleted experiments' rollouts shadowing this one's."""
+    superseded_experiment_ids = dict(
+        Experiment.objects.all_with_deleted()
+        .filter(
+            Q(status=ExperimentStatus.COMPLETED) | Q(deleted_at__isnull=False),
+            feature_id=experiment.feature_id,
+            environment_id=experiment.environment_id,
+            rollout_segment__is_system_segment=True,
+        )
+        .exclude(id=experiment.id)
+        .values_list("rollout_segment_id", "id")
+    )
+    if not superseded_experiment_ids:
+        return
+    live_segment_ids = {
+        feature_segment.segment_id
+        for override in get_environment_flags_list(
+            environment=experiment.environment,
+            additional_filters=Q(
+                feature_id=experiment.feature_id,
+                feature_segment__segment_id__in=superseded_experiment_ids,
+                identity__isnull=True,
+            ),
+        )
+        if (feature_segment := override.feature_segment)
+    }
+    for segment_id in sorted(live_segment_ids):
+        delete_segment_override(
+            environment=experiment.environment,
+            feature=experiment.feature,
+            segment_id=segment_id,
+            author=author,
+            overwrite_system_segment_overrides=True,
         )
 
-    experiment.status = target_status
+    def _log_superseded() -> None:
+        for segment_id in sorted(live_segment_ids):
+            experimentation_logger.info(
+                "rollout.superseded",
+                experiment__id=experiment.id,
+                superseded_experiment__id=superseded_experiment_ids[segment_id],
+                environment__id=experiment.environment_id,
+                feature__id=experiment.feature_id,
+            )
 
-    if target_status == ExperimentStatus.RUNNING and not experiment.started_at:
-        experiment.started_at = timezone.now()
-    elif target_status == ExperimentStatus.COMPLETED:
-        experiment.ended_at = timezone.now()
-
-    experiment.save()
-    create_experiment_audit_log(experiment, user, action=target_status)
-    return experiment
+    transaction.on_commit(_log_superseded)
 
 
 def _copy_segment_rule(rule: SegmentRule) -> SegmentRuleType:
@@ -1015,7 +1056,9 @@ def get_experiment_rollout(experiment: Experiment) -> dict[str, typing.Any] | No
             feature_segment__segment_id=segment_id, identity__isnull=True
         ),
         feature_id=experiment.feature_id,
-    ).get()
+    ).first()
+    if feature_state is None:
+        return None
 
     condition = Condition.objects.get(
         rule__segment_id=segment_id, operator=PERCENTAGE_SPLIT
