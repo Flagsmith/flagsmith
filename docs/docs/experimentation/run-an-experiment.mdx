@@ -75,6 +75,15 @@ flagsmith.track_event("purchase", identifier="user_42", value=99.5)
 </TabItem>
 </Tabs>
 
+:::note Self-hosted
+
+Events are sent to `https://events.api.flagsmith.com/` unless you say otherwise. If you host Flagsmith yourself, point
+the SDK at your own event ingestion service with `eventProcessorConfig.eventsApiUrl` in JavaScript, or
+`event_processor_config=EventProcessorConfig(events_api_url=...)` in Python. See
+[deploying experimentation](/deployment-self-hosting/hosting-guides/kubernetes-openshift#experimentation).
+
+:::
+
 ### Exposures
 
 An exposure is the moment an identity is served a variation; it is what enrols them in the results. `getExperimentFlag`
