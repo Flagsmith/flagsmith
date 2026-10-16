@@ -49,6 +49,9 @@ relevant section below for more details.
 - `INFLUXDB_ORG`: The organisation string for your InfluxDB API call.
 - `EXPERIMENTATION_ENABLED`: Set to `true` once the experimentation infra is deployed. Experiments and warehouse
   connections stay unavailable until it is. Defaults to `false`.
+- `WAREHOUSE_CREDENTIALS_SECRET`: Secret used to encrypt warehouse connection credentials. Warehouse delivery must use
+  the same value. Changing it makes saved credentials unreadable. Defaults to `DJANGO_SECRET_KEY`; set your own so the
+  Django secret key isn't shared with warehouse delivery.
 - `GA_TABLE_ID`: GA table ID (view) to query when looking for organisation usage.
 - `USER_CREATE_PERMISSIONS`: Set the permissions for creating new users, using a comma-separated list of djoser or
   rest_framework permissions. Use this to turn off public user creation for self-hosting. e.g.

@@ -427,6 +427,11 @@ ingress:
 
 The Kafka password also has a `passwordFromExistingSecret` form. Use it in production.
 
+The API encrypts warehouse connection credentials with a dedicated secret, and warehouse delivery decrypts them with it.
+The chart generates it on install. To provide your own, use
+`experimentation.warehouseCredentialsSecretFromExistingSecret`. Changing it makes saved credentials unreadable, so they
+must be entered again.
+
 The topics are `flagsmith_warehouse_events` and `flagsmith_warehouse_events_retry`. Change them with
 `experimentation.kafka.topic` and `experimentation.kafka.retryTopic`. The Kafka login needs these permissions:
 
