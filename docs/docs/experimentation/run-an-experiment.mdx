@@ -22,6 +22,12 @@ jobs:
 
 ## Instrument your application
 
+:::info Remote evaluation only
+
+Experiments currently work with remote evaluation only. Support for local evaluation is in progress.
+
+:::
+
 Users must be [identified](/flagsmith-concepts/identities). Exposures and conversion events are joined per identity, so
 use the same identifier for flags and events.
 
@@ -357,8 +363,98 @@ final flag = await flagsmith.getExperimentFlag('checkout_button', user: user);
 </TabItem>
 </Tabs>
 
-Record the exposure where the user actually experiences the change. If you evaluate in one place and render in another,
-call the SDK's `trackExposureEvent` method (`track_exposure_event` in Python) at the point of display instead.
+The experiment flag call records the exposure as soon as it evaluates the flag, so use it where the user actually
+experiences the change. If you evaluate in one place and display in another, don't use it. Evaluate with the SDK's
+normal flag call instead, which records nothing, then record the exposure yourself at the point of display. Only record
+it for identities enrolled in the experiment:
+
+<Tabs groupId="language" queryString>
+<TabItem value="js" label="JavaScript">
+
+```javascript
+// Evaluate without recording an exposure
+const flag = flagsmith.getAllFlags().checkout_button;
+
+// ...later, at the point of display
+if (flag?.experiment?.inExperiment) {
+    flagsmith.trackExposureEvent('checkout_button', { value: flag.variant });
+}
+```
+
+</TabItem>
+<TabItem value="react" label="React">
+
+`useExperiment` records the exposure when the component renders. To record it elsewhere, read the flag with `useFlags`
+and call `trackExposureEvent` from `useFlagsmith()`, as in the JavaScript tab.
+
+</TabItem>
+<TabItem value="python" label="Python">
+
+```python
+# Evaluate without recording an exposure
+flag = flagsmith.get_identity_flags("user_42").get_flag("checkout_button")
+
+# ...later, at the point of display
+if flag.experiment and flag.experiment.in_experiment:
+    flagsmith.track_exposure_event("checkout_button", identifier="user_42", value=flag.variant)
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+// Evaluate without recording an exposure
+Flag flag = (Flag) flagsmith.getIdentityFlags("user_42").getFlag("checkout_button");
+
+// ...later, at the point of display
+if (flag.getExperiment() != null && flag.getExperiment().getInExperiment()) {
+    flagsmith.trackExposureEvent("checkout_button", "user_42", flag.getVariant());
+}
+```
+
+</TabItem>
+<TabItem value="nodejs" label="Node.js">
+
+```javascript
+// Evaluate without recording an exposure
+const flag = (await flagsmith.getIdentityFlags('user_42')).getFlag('checkout_button');
+
+// ...later, at the point of display
+if (flag.experiment?.inExperiment) {
+    flagsmith.trackExposureEvent('checkout_button', { identifier: 'user_42', value: flag.variant });
+}
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+// Evaluate without recording an exposure
+flags, err := client.GetFlags(ctx, &ec)
+flag, err := flags.GetFlag("checkout_button")
+
+// ...later, at the point of display
+if flag.Experiment != nil && flag.Experiment.InExperiment {
+    err = client.TrackExposureEvent("checkout_button", "user_42", flag.Variant, nil)
+}
+```
+
+</TabItem>
+<TabItem value="flutter" label="Flutter">
+
+```dart
+// Evaluate without recording an exposure
+final flags = await flagsmith.getFeatureFlags(user: user);
+final flag = flags.firstWhere((f) => f.feature.name == 'checkout_button');
+
+// ...later, at the point of display
+if (flag.experiment?.inExperiment ?? false) {
+  flagsmith.trackExposureEvent('checkout_button', user: user, value: flag.variant);
+}
+```
+
+</TabItem>
+</Tabs>
 
 Exposures are deduplicated per identity: each identity is counted once, in the variation it saw first, so recording an
 exposure more than once is safe.
