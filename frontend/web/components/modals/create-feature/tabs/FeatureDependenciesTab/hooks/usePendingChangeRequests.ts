@@ -1,4 +1,5 @@
 import { skipToken } from '@reduxjs/toolkit/query'
+import { useRef } from 'react'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import {
   useGetFeatureDependenciesQuery,
@@ -43,8 +44,17 @@ export const usePendingChangeRequests = ({
     return changes.length ? [{ changeRequest, changes }] : []
   })
 
+  // These queries refetch independently on focus. Keep the last complete
+  // result visible rather than briefly rendering a mixture of old and new
+  // snapshots as each request settles.
+  const lastSettledChangeRequests = useRef(changeRequests)
+  const isFetching = open.isFetching || live.isFetching || pending.isFetching
+  if (!isFetching) lastSettledChangeRequests.current = changeRequests
+
   return {
-    changeRequests,
+    changeRequests: isFetching
+      ? lastSettledChangeRequests.current
+      : changeRequests,
     // A failed list would otherwise read as nothing pending.
     isError: open.isError || live.isError || pending.isError,
   }
