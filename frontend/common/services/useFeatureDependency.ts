@@ -211,27 +211,30 @@ export const pendingFeatureDependencyService =
         Req['getPendingFeatureDependencies']
       >({
         providesTags: (res, err, query) => pendingTags(query.featureId),
-        queryFn: async (query, { dispatch }) => {
+        queryFn: async (query, _api, _extraOptions, fetchWithBQ) => {
+          // Fetch these as part of this query rather than dispatching nested
+          // RTK queries. Unsubscribed child queries can be removed from the
+          // cache while a focus refetch is in flight, leaving this aggregate
+          // query with no data despite successful responses.
           const lists = await Promise.all(
-            query.changeRequestIds.map((changeRequestId) =>
-              dispatch(
-                featureDependencyService.endpoints.getFeatureDependencies.initiate(
-                  {
-                    changeRequestId,
-                    environmentId: query.environmentId,
-                    featureId: query.featureId,
-                  },
-                  { subscribe: false },
+            query.changeRequestIds.map(async (changeRequestId) => {
+              const response = await fetchWithBQ({
+                url: withChangeRequest(
+                  `environments/${query.environmentId}/features/${query.featureId}/dependencies/`,
+                  changeRequestId,
                 ),
-              ),
-            ),
+              })
+              return {
+                changeRequestId,
+                data: response.data as Res['featureDependencies'] | undefined,
+                error: response.error,
+              }
+            }),
           )
           // Published or deleted since it was listed, so nothing is pending.
           const isGone = (list: (typeof lists)[number]) =>
-            !!list.error &&
-            'status' in list.error &&
-            (list.error.status === 400 || list.error.status === 404)
-          if (lists.some((list) => list.isError && !isGone(list))) {
+            list.error?.status === 400 || list.error?.status === 404
+          if (lists.some((list) => list.error && !isGone(list))) {
             return {
               error: {
                 error: "Could not load a change request's dependencies.",
@@ -240,11 +243,11 @@ export const pendingFeatureDependencyService =
             }
           }
           return {
-            data: lists.flatMap((list, index) =>
+            data: lists.flatMap((list) =>
               list.data
                 ? [
                     {
-                      changeRequestId: query.changeRequestIds[index],
+                      changeRequestId: list.changeRequestId,
                       results: list.data.results,
                     },
                   ]

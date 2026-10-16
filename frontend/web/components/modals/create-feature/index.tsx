@@ -7,7 +7,6 @@ import React, {
   useState,
 } from 'react'
 import cloneDeep from 'lodash/cloneDeep'
-import moment from 'moment'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { useHasGithubIntegration } from 'common/hooks/useHasGithubIntegration'
 import { useHasGitLabIntegration } from 'common/hooks/useHasGitLabIntegration'
@@ -22,7 +21,6 @@ import ChangeRequestModal from 'components/modals/ChangeRequestModal'
 import classNames from 'classnames'
 import { useHasPermission } from 'common/providers/Permission'
 import { setInterceptClose } from 'components/modals/base/ModalDefault'
-import { getStore } from 'common/store'
 import ExternalResourcesTable from 'components/ExternalResourcesTable'
 import GitHubLinkSection from 'components/GitHubLinkSection'
 import GitLabLinkSection from 'components/GitLabLinkSection'
@@ -34,7 +32,6 @@ import {
 } from 'common/utils/multivariate'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import FeatureHistory from 'components/FeatureHistory'
-import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from 'components/feature-health/FeatureHealthTabContent'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import { History } from 'history'
@@ -139,10 +136,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     return sourceFlag ? cloneDeep(sourceFlag) : {}
   })
 
-  const [_changeRequests, setChangeRequests] = useState<any[]>([])
-  const [_scheduledChangeRequests, setScheduledChangeRequests] = useState<
-    any[]
-  >([])
   const [valueChanged, setValueChanged] = useState(false)
   const [settingsChanged, setSettingsChanged] = useState(false)
   const [segmentsChanged, setSegmentsChanged] = useState(false)
@@ -163,7 +156,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     projectFlag,
   })
   const dependenciesChanged = !!dependencyChanges.staged.length
-  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const close = useCallback(() => {
     closeModal()
@@ -200,63 +192,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     dependenciesChanged,
   ])
 
-  const fetchChangeRequests = useCallback(
-    (forceRefetch?: boolean) => {
-      if (!props.projectFlag?.id) return
-
-      getChangeRequests(
-        getStore(),
-        {
-          committed: false,
-          environmentId,
-          feature_id: props.projectFlag?.id,
-        },
-        { forceRefetch },
-      ).then((res: any) => {
-        setChangeRequests(res.data?.results)
-      })
-    },
-    [environmentId, props.projectFlag?.id],
-  )
-
-  const fetchScheduledChangeRequests = useCallback(
-    (forceRefetch?: boolean) => {
-      if (!props.projectFlag?.id) return
-
-      const date = moment().toISOString()
-
-      getChangeRequests(
-        getStore(),
-        {
-          environmentId,
-          feature_id: props.projectFlag.id,
-          live_from_after: date,
-        },
-        { forceRefetch },
-      ).then((res: any) => {
-        setScheduledChangeRequests(res.data?.results)
-      })
-    },
-    [environmentId, props.projectFlag?.id],
-  )
-
   // Mount effects
   useEffect(() => {
     setInterceptClose(onClosing)
   }, [onClosing])
-
-  useEffect(() => {
-    fetchChangeRequests()
-    fetchScheduledChangeRequests()
-
-    const timeout = focusTimeoutRef.current
-    return () => {
-      if (timeout) {
-        clearTimeout(timeout)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // Sync environmentFlag from props when updated_at changes
   useEffect(() => {
@@ -537,11 +476,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           )
         }
         AppActions.refreshFeatures(projectId, environmentId)
-
-        if (is4Eyes && !identity) {
-          fetchChangeRequests(true)
-          fetchScheduledChangeRequests(true)
-        }
 
         if (existingChangeRequest) {
           close()
