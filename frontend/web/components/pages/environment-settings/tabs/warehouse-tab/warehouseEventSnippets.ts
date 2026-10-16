@@ -44,6 +44,7 @@ await flagsmith.flushEvents();`,
     'Go': `// Requires flagsmith-go-client/v5 5.3.0+
 import (
     "context"
+    "log"
     "time"
 
     flagsmith "github.com/Flagsmith/flagsmith-go-client/v5"
@@ -64,6 +65,9 @@ ec := flagsmith.NewEvaluationContext("user_42", nil)
 
 // Evaluates the flag and records an exposure
 flag, err := client.GetExperimentFlag(ctx, "checkout_button", ec)
+if err != nil {
+    log.Print(err)
+}
 
 // Records a conversion. Only the event name is required.
 err = client.TrackEvent("purchase", &flagsmith.EventOptions{

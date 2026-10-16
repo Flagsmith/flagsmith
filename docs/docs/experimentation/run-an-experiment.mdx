@@ -176,7 +176,7 @@ await flagsmith.flushEvents();
 import flagsmith from '@flagsmith/flagsmith';
 import { FlagsmithProvider } from '@flagsmith/flagsmith/react';
 
-export function App() {
+export function App({ children }) {
     return (
         <FlagsmithProvider
             flagsmith={flagsmith}
@@ -189,7 +189,7 @@ export function App() {
                 // eventProcessorConfig: { eventsApiUrl: 'https://events.flagsmith.example.com/' },
             }}
         >
-            <CheckoutButton />
+            {children}
         </FlagsmithProvider>
     );
 }
@@ -219,6 +219,9 @@ to `EventProcessorConfig` so each event is sent as it is tracked.
 <TabItem value="java" label="Java">
 
 ```java
+import com.flagsmith.FlagsmithClient;
+import com.flagsmith.config.FlagsmithConfig;
+
 FlagsmithClient flagsmith = FlagsmithClient.newBuilder()
     .setApiKey("YOUR_ENVIRONMENT_KEY")
     .withConfiguration(FlagsmithConfig.newBuilder()
@@ -255,6 +258,14 @@ await flagsmith.close();
 <TabItem value="go" label="Go">
 
 ```go
+import (
+    "context"
+    "log"
+    "time"
+
+    flagsmith "github.com/Flagsmith/flagsmith-go-client/v5"
+)
+
 eventsCtx, stopEvents := context.WithCancel(context.Background())
 
 client := flagsmith.NewClient("YOUR_ENVIRONMENT_KEY",
@@ -267,7 +278,9 @@ client := flagsmith.NewClient("YOUR_ENVIRONMENT_KEY",
 // Before your application exits
 flushCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 defer cancel()
-err := client.FlushEvents(flushCtx)
+if err := client.FlushEvents(flushCtx); err != nil {
+    log.Print(err)
+}
 stopEvents()
 ```
 
@@ -275,6 +288,8 @@ stopEvents()
 <TabItem value="flutter" label="Flutter">
 
 ```dart
+import 'package:flagsmith/flagsmith.dart';
+
 final flagsmith = await FlagsmithClient.init(
   apiKey: 'YOUR_CLIENT_SIDE_ENVIRONMENT_KEY',
   config: const FlagsmithConfig(
@@ -284,7 +299,6 @@ final flagsmith = await FlagsmithClient.init(
     // eventsURI: 'https://events.flagsmith.example.com/',
   ),
 );
-final user = Identity(identifier: 'user_42');
 
 // Before the app closes, for example when it moves to the background
 await flagsmith.flushEvents();
@@ -302,6 +316,8 @@ experiment flag evaluates it and records the exposure in one call.
 <TabItem value="js" label="JavaScript">
 
 ```javascript
+import flagsmith from '@flagsmith/flagsmith'; // the client from Initialise
+
 const flag = flagsmith.getExperimentFlag('checkout_button');
 // ...render based on flag.value
 ```
@@ -328,6 +344,7 @@ function CheckoutButton() {
 <TabItem value="python" label="Python">
 
 ```python
+# flagsmith: the client from Initialise
 flag = flagsmith.get_experiment_flag("checkout_button", identifier="user_42")
 ```
 
@@ -335,6 +352,9 @@ flag = flagsmith.get_experiment_flag("checkout_button", identifier="user_42")
 <TabItem value="java" label="Java">
 
 ```java
+import com.flagsmith.models.BaseFlag;
+
+// flagsmith: the client from Initialise
 BaseFlag flag = flagsmith.getExperimentFlag("checkout_button", "user_42");
 ```
 
@@ -342,6 +362,7 @@ BaseFlag flag = flagsmith.getExperimentFlag("checkout_button", "user_42");
 <TabItem value="nodejs" label="Node.js">
 
 ```javascript
+// flagsmith: the client from Initialise
 const flag = await flagsmith.getExperimentFlag('checkout_button', 'user_42');
 ```
 
@@ -349,14 +370,25 @@ const flag = await flagsmith.getExperimentFlag('checkout_button', 'user_42');
 <TabItem value="go" label="Go">
 
 ```go
+// client: the client from Initialise, with the same imports
+ctx := context.Background()
 ec := flagsmith.NewEvaluationContext("user_42", nil)
+
 flag, err := client.GetExperimentFlag(ctx, "checkout_button", ec)
+if err != nil {
+    log.Print(err)
+}
+// ...render based on flag.Value
 ```
 
 </TabItem>
 <TabItem value="flutter" label="Flutter">
 
 ```dart
+import 'package:flagsmith/flagsmith.dart';
+
+// flagsmith: the client from Initialise
+final user = Identity(identifier: 'user_42');
 final flag = await flagsmith.getExperimentFlag('checkout_button', user: user);
 ```
 
@@ -372,6 +404,8 @@ it for identities enrolled in the experiment:
 <TabItem value="js" label="JavaScript">
 
 ```javascript
+import flagsmith from '@flagsmith/flagsmith'; // the client from Initialise
+
 // Evaluate without recording an exposure
 const flag = flagsmith.getAllFlags().checkout_button;
 
@@ -391,6 +425,7 @@ and call `trackExposureEvent` from `useFlagsmith()`, as in the JavaScript tab.
 <TabItem value="python" label="Python">
 
 ```python
+# flagsmith: the client from Initialise
 # Evaluate without recording an exposure
 flag = flagsmith.get_identity_flags("user_42").get_flag("checkout_button")
 
@@ -403,6 +438,9 @@ if flag.experiment and flag.experiment.in_experiment:
 <TabItem value="java" label="Java">
 
 ```java
+import com.flagsmith.models.Flag;
+
+// flagsmith: the client from Initialise
 // Evaluate without recording an exposure
 Flag flag = (Flag) flagsmith.getIdentityFlags("user_42").getFlag("checkout_button");
 
@@ -416,6 +454,7 @@ if (flag.getExperiment() != null && flag.getExperiment().getInExperiment()) {
 <TabItem value="nodejs" label="Node.js">
 
 ```javascript
+// flagsmith: the client from Initialise
 // Evaluate without recording an exposure
 const flag = (await flagsmith.getIdentityFlags('user_42')).getFlag('checkout_button');
 
@@ -429,8 +468,15 @@ if (flag.experiment?.inExperiment) {
 <TabItem value="go" label="Go">
 
 ```go
+// client: the client from Initialise, with the same imports
+ctx := context.Background()
+ec := flagsmith.NewEvaluationContext("user_42", nil)
+
 // Evaluate without recording an exposure
 flags, err := client.GetFlags(ctx, &ec)
+if err != nil {
+    log.Print(err)
+}
 flag, err := flags.GetFlag("checkout_button")
 
 // ...later, at the point of display
@@ -443,6 +489,11 @@ if flag.Experiment != nil && flag.Experiment.InExperiment {
 <TabItem value="flutter" label="Flutter">
 
 ```dart
+import 'package:flagsmith/flagsmith.dart';
+
+// flagsmith: the client from Initialise
+final user = Identity(identifier: 'user_42');
+
 // Evaluate without recording an exposure
 final flags = await flagsmith.getFeatureFlags(user: user);
 final flag = flags.firstWhere((f) => f.feature.name == 'checkout_button');
@@ -467,6 +518,8 @@ Send a named event, optionally with a numeric value, traits and metadata. The na
 <TabItem value="js" label="JavaScript">
 
 ```javascript
+import flagsmith from '@flagsmith/flagsmith'; // the client from Initialise
+
 flagsmith.trackEvent('purchase', { value: 99.5 });
 ```
 
@@ -474,14 +527,19 @@ flagsmith.trackEvent('purchase', { value: 99.5 });
 <TabItem value="react" label="React">
 
 ```jsx
-const flagsmith = useFlagsmith();
-flagsmith.trackEvent('purchase', { value: 99.5 });
+import { useFlagsmith } from '@flagsmith/flagsmith/react';
+
+function BuyButton() {
+    const flagsmith = useFlagsmith();
+    return <button onClick={() => flagsmith.trackEvent('purchase', { value: 99.5 })}>Buy</button>;
+}
 ```
 
 </TabItem>
 <TabItem value="python" label="Python">
 
 ```python
+# flagsmith: the client from Initialise
 flagsmith.track_event("purchase", identifier="user_42", value=99.5)
 ```
 
@@ -489,6 +547,7 @@ flagsmith.track_event("purchase", identifier="user_42", value=99.5)
 <TabItem value="java" label="Java">
 
 ```java
+// flagsmith: the client from Initialise
 flagsmith.trackEvent("purchase", "user_42", 99.5, null, null);
 ```
 
@@ -496,6 +555,7 @@ flagsmith.trackEvent("purchase", "user_42", 99.5, null, null);
 <TabItem value="nodejs" label="Node.js">
 
 ```javascript
+// flagsmith: the client from Initialise
 flagsmith.trackEvent('purchase', { identifier: 'user_42', value: 99.5 });
 ```
 
@@ -503,13 +563,21 @@ flagsmith.trackEvent('purchase', { identifier: 'user_42', value: 99.5 });
 <TabItem value="go" label="Go">
 
 ```go
-err = client.TrackEvent("purchase", &flagsmith.EventOptions{Identifier: "user_42", Value: 99.5})
+// client: the client from Initialise, with the same imports
+err := client.TrackEvent("purchase", &flagsmith.EventOptions{Identifier: "user_42", Value: 99.5})
+if err != nil {
+    log.Print(err)
+}
 ```
 
 </TabItem>
 <TabItem value="flutter" label="Flutter">
 
 ```dart
+import 'package:flagsmith/flagsmith.dart';
+
+// flagsmith: the client from Initialise
+final user = Identity(identifier: 'user_42');
 flagsmith.trackEvent('purchase', user: user, value: 99.5);
 ```
 
