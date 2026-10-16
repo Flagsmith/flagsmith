@@ -1,7 +1,6 @@
 import { FC } from 'react'
 import { Metric } from 'common/types/responses'
 import { useCreateMetricMutation } from 'common/services/useMetric'
-import Utils from 'common/utils/utils'
 import CreateMetricForm from './CreateMetricForm'
 import {
   buildMetricPayload,
@@ -21,14 +20,11 @@ const CreateMetricInModal: FC<CreateMetricInModalProps> = ({
   onCreated,
 }) => {
   const [createMetric, { isLoading: isSaving }] = useCreateMetricMutation()
-  const version =
-    Number(Utils.getFlagsmithValue('experiment_metrics')) ||
-    DEFAULT_METRIC_DEFINITION_VERSION
 
   const handleSubmit = async (state: MetricFormState) => {
     try {
       const metric = await createMetric({
-        body: buildMetricPayload(state, version),
+        body: buildMetricPayload(state, DEFAULT_METRIC_DEFINITION_VERSION),
         environmentId,
       }).unwrap()
       toast('Metric created successfully')

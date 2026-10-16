@@ -12,6 +12,7 @@ x-flagsmith-env: &flagsmith-env
   DJANGO_ALLOWED_HOSTS: '*' # Change this in production
   FLAGSMITH_DOMAIN: localhost:8000 # Change this in production
   DJANGO_SECRET_KEY: secret # Change this in production
+  WAREHOUSE_CREDENTIALS_SECRET: &warehouse-credentials-secret secret # Change this in production
   # PREVENT_SIGNUP: 'true' # Uncomment to prevent any additional signups
   # ALLOW_REGISTRATION_WITHOUT_INVITE: 'true' # Uncomment and set to false to only allow signups via invitations
 
@@ -33,8 +34,12 @@ x-flagsmith-env: &flagsmith-env
   # EMAIL_PORT: 587 # optional
   # EMAIL_USE_TLS: 'true' # optional
 
+  # To run without experimentation, use docker-compose.flags-only.yml instead.
+  EXPERIMENTATION_ENABLED: 'true'
+
 volumes:
   pgdata:
+  clickhouse-data:
 
 services:
   postgres:
@@ -88,3 +93,99 @@ services:
       migrate-db:
         condition: service_completed_successfully
     command: run-task-processor
+
+  # Experimentation services.
+  kafka:
+    image: apache/kafka:3.9.1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    healthcheck:
+      test: ['CMD-SHELL', '/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092']
+      interval: 5s
+      timeout: 10s
+      retries: 20
+
+  kafka-init:
+    image: apache/kafka:3.9.1
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        for topic in flagsmith_warehouse_events external_warehouse_events external_warehouse_events_retry; do
+          /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic $$topic
+        done
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  # Connect it from Environment Settings > Warehouse > ClickHouse: host `clickhouse`, port 8123,
+  # TLS off, database `flagsmith_exp`, username `flagsmith`, password `password`.
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.12
+    environment:
+      CLICKHOUSE_USER: flagsmith
+      CLICKHOUSE_PASSWORD: password
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:8123/ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Creates the events table from experimentation/clickhouse/events.sql.
+  clickhouse-init:
+    image: clickhouse/clickhouse-server:25.12
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - |
+        set -e
+        wget -qO /tmp/events.sql https://raw.githubusercontent.com/Flagsmith/flagsmith/main/experimentation/clickhouse/events.sql
+        clickhouse-client --host clickhouse --user flagsmith --password password --multiquery < /tmp/events.sql
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+
+  ingestion-server:
+    image: flagsmith/events-ingestion-api:latest
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_AUTH: none
+      KAFKA_TOPIC: flagsmith_warehouse_events
+      KAFKA_EXTERNAL_TOPIC: external_warehouse_events
+      DATABASE_URL: postgres://postgres:password@postgres:5432/flagsmith
+    ports:
+      - 8080:8080
+    depends_on:
+      migrate-db:
+        condition: service_completed_successfully
+      kafka-init:
+        condition: service_completed_successfully
+
+  warehouse-delivery:
+    image: flagsmith/warehouse-delivery:latest
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_AUTH: none
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
+      WAREHOUSE_CREDENTIALS_SECRET: *warehouse-credentials-secret
+    depends_on:
+      migrate-db:
+        condition: service_completed_successfully
+      kafka-init:
+        condition: service_completed_successfully
+      clickhouse-init:
+        condition: service_completed_successfully

@@ -2,22 +2,39 @@
 title: Connect a Warehouse
 sidebar_label: Connect a Warehouse
 sidebar_position: 2
-description: Enable the managed Flagsmith warehouse to store and query experiment events.
+description:
+ Choose where experiment events are stored, the managed Flagsmith warehouse or your own ClickHouse or Databricks.
 ---
 
-:::info Enterprise beta
+import CodeBlock from '@theme/CodeBlock'; import eventsSql from '../../../experimentation/clickhouse/events.sql?raw';
 
-Experimentation is in beta on **Enterprise** plans. [Get in touch](https://www.flagsmith.com/contact-us) to join.
+:::info Beta
+
+Experimentation is in beta.
 
 :::
 
 Experiment data (exposures and conversion events) is stored and queried in a data warehouse. Each environment has one
 warehouse connection, and it must be in place before you can create experiments.
 
+:::note Self-hosted
+
+The managed Flagsmith warehouse is only available on Flagsmith Cloud. When self-hosting, connect your own warehouse as
+described below, and deploy event ingestion and warehouse delivery, for example with the
+[Helm chart](/deployment-self-hosting/hosting-guides/kubernetes-openshift#experimentation).
+
+:::
+
+:::note Plans
+
+On Flagsmith Cloud, connecting your own ClickHouse or Databricks requires a
+[Scale-Up or Enterprise subscription](https://www.flagsmith.com/pricing). Self-hosted Flagsmith has no plan restriction.
+
+:::
+
 ## Connect the Flagsmith warehouse
 
-The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing to provision or configure, and there is
-no additional cost — it is included in your Enterprise plan.
+The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing to provision or configure.
 
 1. Go to **Environment Settings > Warehouse**.
 2. Select **Flagsmith** and click **Enable**, then confirm.
@@ -48,44 +65,22 @@ The current status is shown on the warehouse card in **Environment Settings > Wa
 - **Created**: the connection exists but no events have been received yet.
 - **Pending Connection**: waiting for the first event to arrive.
 - **Connected**: events have been received; you are ready to run experiments.
-- **Errored**: something went wrong; [contact support](/support/).
+- **Errored**: the card shows the reason. For Databricks, see
+  [Troubleshooting](/experimentation/connect-databricks#troubleshooting); otherwise [contact support](/support/).
 
 ## Bring your own ClickHouse
 
-Instead of the managed Flagsmith warehouse, you can store experiment events in your own **ClickHouse** instance.
+Instead of the managed Flagsmith warehouse, you can store experiment events in your own **ClickHouse** instance. It must
+be reachable from Flagsmith: on Flagsmith Cloud, over the internet; when self-hosting, from your Flagsmith API and
+warehouse delivery.
 
 1. Configure your instance by running the following against it, using an administrative user (the statements require
    `CREATE USER`, `GRANT`, `CREATE DATABASE` and `CREATE TABLE` privileges). Replace `<USER>` and `<CHANGE_ME_PASSWORD>`
    with your own values. This is a one-off setup step; the same SQL is available to copy from the Flagsmith dashboard.
 
+   <CodeBlock language="sql">{eventsSql}</CodeBlock>
+
    ```sql
-   -- Create the database and events table
-   CREATE DATABASE IF NOT EXISTS flagsmith_exp;
-
-   CREATE TABLE IF NOT EXISTS flagsmith_exp.events
-   (
-       environment_key      LowCardinality(String),
-       event                LowCardinality(String),
-       feature_name         LowCardinality(String),
-       timestamp            DateTime64(3),
-       collected_at         DateTime64(3),
-       identifier           String,
-       value                String                          CODEC(ZSTD(3)),
-       traits               String                          CODEC(ZSTD(3)),
-       metadata             String                          CODEC(ZSTD(3)),
-       sdk_language         LowCardinality(String),
-       sdk_version          LowCardinality(String),
-
-       INDEX idx_identity identifier TYPE bloom_filter GRANULARITY 4,
-
-       CONSTRAINT environment_key_not_empty CHECK environment_key != '',
-       CONSTRAINT event_not_empty           CHECK event != '',
-       CONSTRAINT timestamp_sane            CHECK timestamp > toDateTime64('2020-01-01 00:00:00', 3)
-   )
-   ENGINE = MergeTree
-   PARTITION BY toYYYYMMDD(timestamp)
-   ORDER BY (environment_key, event, feature_name, timestamp, identifier);
-
    -- Create a dedicated user for Flagsmith
    CREATE USER IF NOT EXISTS <USER>
        IDENTIFIED WITH sha256_password BY '<CHANGE_ME_PASSWORD>';
@@ -106,7 +101,13 @@ Instead of the managed Flagsmith warehouse, you can store experiment events in y
 
 Connections use the ClickHouse HTTP(S) interface, with TLS enabled by default.
 
+Experiment results and exposures are computed from your ClickHouse instance.
+
+## Bring your own Databricks
+
+You can also store experiment events in your own **Databricks** workspace, and Flagsmith computes results there. See
+[Connect Databricks](/experimentation/connect-databricks) for setup and troubleshooting.
+
 ## Coming soon
 
-Bring your own warehouse: connections for **Snowflake**, **BigQuery** and **Databricks**, so experiment results are
-computed directly in your own data platform.
+Bring your own warehouse: connections for **Snowflake** and **BigQuery**.

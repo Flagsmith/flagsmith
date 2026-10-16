@@ -1,7 +1,6 @@
 import { FC, MouseEvent, ReactNode } from 'react'
 import cn from 'classnames'
 import { DependencyEdge } from 'common/types/responses'
-import { colorSurfaceAction, colorSurfaceEmphasis } from 'common/theme/tokens'
 import Button from 'components/base/forms/Button'
 import Table, {
   TableBody,
@@ -12,8 +11,9 @@ import Table, {
 } from 'components/base/Table'
 import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
-import Tooltip from 'components/Tooltip'
 import { PrerequisiteRow } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/prerequisiteState'
+import StateToggle from 'components/feature-dependencies/StateToggle'
+import Satisfies from 'components/feature-dependencies/Satisfies'
 import './PrerequisitesTable.scss'
 
 // The actions column only exists where the user can manage dependencies, so the
@@ -32,49 +32,6 @@ type PrerequisitesTableProps = {
   addingName?: string
   addControl?: ReactNode
   onCancelAdd?: () => void
-}
-
-const StateToggle: FC<{ isEnabled: boolean }> = ({ isEnabled }) => (
-  <Icon
-    name={isEnabled ? 'toggle-on' : 'toggle-off'}
-    width={32}
-    fill={isEnabled ? colorSurfaceAction : colorSurfaceEmphasis}
-    role='img'
-    aria-label={isEnabled ? 'On' : 'Off'}
-  />
-)
-
-const Satisfies: FC<{ isMet?: boolean }> = ({ isMet }) => {
-  if (isMet === undefined) {
-    return (
-      <Tooltip
-        title={
-          <span
-            className='d-inline-flex align-items-center gap-1 text-secondary'
-            role='img'
-            aria-label='Unknown'
-          >
-            <Icon name='info-outlined' width={16} />
-          </span>
-        }
-        place='top'
-      >
-        This comes from a segment you wrote, so Flagsmith cannot tell which
-        state it expects.
-      </Tooltip>
-    )
-  }
-  return (
-    <span
-      className={cn(
-        'd-inline-flex align-items-center gap-1',
-        isMet ? 'text-success' : 'text-secondary',
-      )}
-    >
-      <Icon name={isMet ? 'checkmark-circle' : 'minus-circle'} width={16} />
-      {isMet ? 'Yes' : 'No'}
-    </span>
-  )
 }
 
 const PrerequisitesTable: FC<PrerequisitesTableProps> = ({

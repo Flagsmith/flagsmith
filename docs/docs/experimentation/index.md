@@ -5,22 +5,22 @@ description:
  statistics.'
 ---
 
-:::info Enterprise beta
+:::info Beta
 
-Experimentation is in beta on **Enterprise** plans. [Get in touch](https://www.flagsmith.com/contact-us) to join.
+Experimentation is in beta.
 
 :::
 
 Flagsmith Experimentation lets you run A/B tests end to end on the platform: serve variations of a feature with a
-[multivariate flag](/managing-flags/core-management), collect events from your application into a managed data
-warehouse, and read the results with a built-in Bayesian statistics engine.
+[multivariate flag](/managing-flags/core-management), collect events from your application into a data warehouse (the
+managed Flagsmith warehouse, or your own), and read the results with a built-in Bayesian statistics engine.
 
 Experiments are scoped to an [**environment**](/flagsmith-concepts/data-model#environments).
 
 ## Set up and run an experiment
 
-1. **[Connect a warehouse](/experimentation/connect-a-warehouse)**: enable the managed Flagsmith warehouse for your
-   environment. Done once, in a few clicks.
+1. **[Connect a warehouse](/experimentation/connect-a-warehouse)**: enable the managed Flagsmith warehouse, or connect
+   your own ClickHouse or Databricks. Self-hosted Flagsmith uses your own. Done once per environment.
 2. **[Create metrics](/experimentation/create-metrics)**: define the outcomes you measure, computed from the events your
    application sends.
 3. **[Create an experiment](/experimentation/create-an-experiment)**: pick a multivariate flag, decide how much traffic
