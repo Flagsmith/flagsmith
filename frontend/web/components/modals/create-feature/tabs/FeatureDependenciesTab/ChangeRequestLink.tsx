@@ -1,4 +1,5 @@
 import { FC, ReactNode } from 'react'
+import cn from 'classnames'
 import Icon from 'components/icons/Icon'
 
 type ChangeRequestLinkProps = {
@@ -6,6 +7,7 @@ type ChangeRequestLinkProps = {
   environmentId: string
   changeRequestId: number
   children: ReactNode
+  className?: string
 }
 
 // A new tab, as leaving the page would drop the modal and anything staged in
@@ -13,6 +15,7 @@ type ChangeRequestLinkProps = {
 const ChangeRequestLink: FC<ChangeRequestLinkProps> = ({
   changeRequestId,
   children,
+  className,
   environmentId,
   projectId,
 }) => (
@@ -20,7 +23,7 @@ const ChangeRequestLink: FC<ChangeRequestLinkProps> = ({
     href={`/project/${projectId}/environment/${environmentId}/change-requests/${changeRequestId}`}
     target='_blank'
     rel='noopener noreferrer'
-    className='d-inline-flex align-items-center gap-1'
+    className={cn('d-inline-flex align-items-center gap-1', className)}
   >
     {children}
     <Icon

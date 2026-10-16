@@ -3,3 +3,8 @@
 .pending-change-requests:not(:has(.pending-change-requests__list > *)) {
   display: none;
 }
+
+// B2, as the accordion's title, so it reads as secondary to the table.
+.pending-change-requests__link {
+  font-size: 0.8125rem;
+}
