@@ -1,0 +1,5 @@
+// Each change request hides itself when it changes no prerequisite, so the
+// heading goes too once none are left.
+.pending-change-requests:not(:has(.pending-change-requests__list > *)) {
+  display: none;
+}

@@ -23,10 +23,14 @@ export const useDependencyChanges = ({
   const scoped = useGetFeatureDependenciesQuery(
     skip ? skipToken : { changeRequestId, environmentId, featureId },
   )
-  const isError = live.isError || scoped.isError
+  const status =
+    scoped.error && 'status' in scoped.error ? scoped.error.status : undefined
+  // Published or deleted since it was listed.
+  const isClosed = status === 400 || status === 404
+  const isError = live.isError || (scoped.isError && !isClosed)
   const changes =
     live.data && scoped.data
       ? diffDependencies(live.data.results, scoped.data.results)
       : undefined
-  return { changes, isError }
+  return { changes, isClosed, isError }
 }

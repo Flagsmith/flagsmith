@@ -1,12 +1,8 @@
 import { FC } from 'react'
-import Accordion from 'components/base/Accordion'
-import ChangeRequestLink from 'components/modals/create-feature/tabs/FeatureDependenciesTab/ChangeRequestLink'
-import Chip from 'components/base/Chip'
-import Icon from 'components/icons/Icon'
-import { colorIconSecondary } from 'common/theme/tokens'
+import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import Banner from 'components/base/Banner'
-import DependencyChangesTable from 'components/feature-dependencies/DependencyChangesTable'
-import { usePendingChangeRequests } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/hooks/usePendingChangeRequests'
+import PendingChangeRequest from './PendingChangeRequest'
+import './PendingChangeRequests.scss'
 
 type PendingChangeRequestsProps = {
   environmentId: string
@@ -16,16 +12,20 @@ type PendingChangeRequestsProps = {
 }
 
 // Changes to this feature's prerequisites that are waiting in open change
-// requests, one group per change request.
+// requests, one group per change request. Scheduled ones are left out, as
+// the API refuses to list their dependencies.
 const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
   environmentId,
   featureId,
   isEnabled,
   projectId,
 }) => {
-  const { changeRequests: groups, isError } = usePendingChangeRequests({
+  // Matches any change request with a change set for this feature.
+  const { data, isError } = useGetChangeRequestsQuery({
+    committed: false,
     environmentId,
-    featureId,
+    feature_id: featureId,
+    page_size: 100,
   })
 
   if (isError) {
@@ -36,52 +36,24 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
     )
   }
 
-  if (!groups.length) return null
+  if (!data?.results.length) return null
 
   return (
-    <div className='mt-4'>
+    <div className='pending-change-requests mt-4'>
       <h6 className='mb-1'>Pending in change requests</h6>
       <p className='text-secondary mb-3'>
         Not live yet. These go live when their change request is published.
       </p>
-      <div className='d-flex flex-column gap-3'>
-        {groups.map(({ changeRequest, changes }) => (
-          <Accordion
+      <div className='pending-change-requests__list d-flex flex-column gap-3'>
+        {data.results.map((changeRequest) => (
+          <PendingChangeRequest
             key={changeRequest.id}
-            defaultOpen
-            flush
-            title={
-              <>
-                <Icon
-                  name='request'
-                  width={16}
-                  fill={colorIconSecondary}
-                  aria-hidden
-                />
-                #{changeRequest.id} {changeRequest.title}
-                <Chip
-                  className='ms-auto flex-shrink-0'
-                  size='xs'
-                  variant='warning'
-                >
-                  Awaiting approval
-                </Chip>
-              </>
-            }
-          >
-            <DependencyChangesTable changes={changes} isEnabled={isEnabled} />
-            {/* In the body, as the header is the toggle and a link cannot
-                sit inside a button. */}
-            <div className='px-3 py-2'>
-              <ChangeRequestLink
-                projectId={projectId}
-                environmentId={environmentId}
-                changeRequestId={changeRequest.id}
-              >
-                View change request
-              </ChangeRequestLink>
-            </div>
-          </Accordion>
+            changeRequest={changeRequest}
+            environmentId={environmentId}
+            featureId={featureId}
+            projectId={projectId}
+            isEnabled={isEnabled}
+          />
         ))}
       </div>
     </div>
