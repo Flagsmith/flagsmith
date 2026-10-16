@@ -68,13 +68,14 @@ const PendingChangeRequest: FC<PendingChangeRequestProps> = ({
       <DependencyChangesTable changes={changes} isEnabled={isEnabled} />
       {/* In the body, as the header is the toggle and a link cannot
           sit inside a button. */}
-      <div className='px-3 py-2'>
+      <div className='d-flex justify-content-end px-3 py-2'>
         <ChangeRequestLink
+          className='pending-change-requests__link text-action'
           projectId={projectId}
           environmentId={environmentId}
           changeRequestId={changeRequest.id}
         >
-          View change request
+          Open #{changeRequest.id}
         </ChangeRequestLink>
       </div>
     </Accordion>
