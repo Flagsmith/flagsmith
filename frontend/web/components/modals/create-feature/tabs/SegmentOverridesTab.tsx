@@ -39,6 +39,8 @@ type SegmentOverridesTabProps = {
   freeze?: FeatureExperimentFreeze
   disableCreate?: boolean
   highlightSegmentId?: number
+  // Shows the flag's dependencies, which manage some segment overrides.
+  onViewDependencies?: () => void
 }
 
 const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
@@ -54,6 +56,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
   isSaving,
   noPermissions,
   onSegmentsChange,
+  onViewDependencies,
   projectFlag,
   projectId,
   saveFeatureSegments,
@@ -237,6 +240,7 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                   updateSegments(v)
                 }}
                 highlightSegmentId={highlightSegmentId}
+                onViewDependencies={onViewDependencies}
               />
             </>
           ) : (

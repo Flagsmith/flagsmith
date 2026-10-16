@@ -895,6 +895,26 @@ export type IdentityOverride = FeatureState & {
   overridden_by?: string | null
 }
 
+export type SegmentManagedBy =
+  | ''
+  | 'cohort'
+  | 'dependency'
+  | 'experiment'
+  | 'release_pipeline'
+
+export type FeatureSegment = {
+  id: number
+  uuid: string
+  segment: number
+  priority: number
+  environment: number
+  segment_name: string
+  is_feature_specific: boolean
+  // System segments and their overrides are managed by what owns them.
+  is_system_segment: boolean
+  segment_managed_by: SegmentManagedBy
+}
+
 export type FeatureState = {
   change_request?: number
   created_at: string
