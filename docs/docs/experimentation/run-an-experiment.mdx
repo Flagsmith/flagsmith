@@ -161,21 +161,21 @@ silently ignored. Conversions are attributed post-exposure: an identity's events
 
 The SDKs skip events silently rather than throw. If the **Exposures** panel stays empty, check that:
 
--   The environment has a [connected warehouse](/experimentation/connect-a-warehouse). The ingestion server rejects
-    events for environments without one.
--   The user is identified. Exposures without an identity are skipped.
--   Every variation of the flag has a label. Exposures are attributed by label, so a variation without one, for example
-    one created through the API without a `key`, is not counted.
--   The identity is inside the experiment's rollout. Identities outside it are not enrolled and record no exposure.
--   In Python, the client uses remote evaluation.
--   Event names match your metrics exactly, including case.
+- The environment has a [connected warehouse](/experimentation/connect-a-warehouse). The ingestion server rejects events
+  for environments without one.
+- The user is identified. Exposures without an identity are skipped.
+- Every variation of the flag has a label. Exposures are attributed by label, so a variation without one, for example
+  one created through the API without a `key`, is not counted.
+- The identity is inside the experiment's rollout. Identities outside it are not enrolled and record no exposure.
+- In Python, the client uses remote evaluation.
+- Event names match your metrics exactly, including case.
 
 To see why an event was skipped, turn on SDK logging: `enableLogs: true` in JavaScript, or the `flagsmith` logger at
 `DEBUG` level in Python.
 
 ## While it runs
 
--   The flag is locked while the experiment is running.
--   Monitor enrolment on the experiment page's **Exposures** panel to confirm data is arriving.
--   You can edit the rollout from the experiment page, but changing it mid-experiment can affect the statistical
-    validity of your results.
+- The flag is locked while the experiment is running.
+- Monitor enrolment on the experiment page's **Exposures** panel to confirm data is arriving.
+- You can edit the rollout from the experiment page, but changing it mid-experiment can affect the statistical validity
+  of your results.
