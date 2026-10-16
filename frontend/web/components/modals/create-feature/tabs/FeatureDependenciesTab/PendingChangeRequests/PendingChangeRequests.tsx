@@ -53,6 +53,8 @@ const PendingChangeRequests: FC<PendingChangeRequestsProps> = ({
             featureId={featureId}
             projectId={projectId}
             isEnabled={isEnabled}
+            // One stays open; more are collapsed, and their counts lead.
+            defaultOpen={data.results.length === 1}
           />
         ))}
       </div>
