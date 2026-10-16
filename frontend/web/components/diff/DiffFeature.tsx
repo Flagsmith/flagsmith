@@ -81,8 +81,10 @@ const DiffFeature: FC<FeatureDiffType> = ({
     projectId,
   })
 
-  // Where dependencies have their own tab, their segments stay out of this one.
-  const overrideSegments = dependencies
+  // Once the dependency changes load, they show in their own tab, so their
+  // segments stay out of this one. Until then, or where they don't load, they
+  // stay here.
+  const overrideSegments = dependencies?.changes
     ? segments?.results.filter((segment) => segment.managed_by !== 'dependency')
     : segments?.results
   const segmentDiffs = disableSegments
@@ -101,7 +103,13 @@ const DiffFeature: FC<FeatureDiffType> = ({
     ...(showDependencies ? [totalDependencyChanges] : []),
   ]
   // Opens on the first tab that changes, as one listed can change nothing.
-  const firstChangedTab = tabChanges.findIndex((changes) => !!changes)
+  const changedTab = tabChanges.findIndex((changes) => !!changes)
+  // With nothing else to show, open on a failed dependency load, or its error
+  // stays out of sight. Dependencies is the last tab.
+  const firstChangedTab =
+    changedTab === -1 && dependencies?.isError
+      ? tabChanges.length - 1
+      : changedTab
   useEffect(() => {
     if (firstChangedTab > 0) {
       setValue(firstChangedTab)
