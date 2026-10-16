@@ -19,6 +19,13 @@ Experiments are scoped to an [**environment**](/flagsmith-concepts/data-model#en
 
 ## Set up and run an experiment
 
+:::tip
+
+Using Claude Code or another coding agent? [One prompt](/experimentation/set-up-with-a-coding-agent) creates the flag,
+metric and experiment, and instruments your application.
+
+:::
+
 1. **[Connect a warehouse](/experimentation/connect-a-warehouse)**: enable the managed Flagsmith warehouse, or connect
    your own ClickHouse or Databricks. Self-hosted Flagsmith uses your own. Done once per environment.
 2. **[Create metrics](/experimentation/create-metrics)**: define the outcomes you measure, computed from the events your
@@ -36,8 +43,9 @@ Unfamiliar with a term? See the [Statistics Glossary](/experimentation/statistic
 
 :::note SDK availability
 
-Event collection is currently available in the **JavaScript** and **Python** SDKs, with more to follow. Check
-[Run an Experiment](/experimentation/run-an-experiment) for instrumentation details.
+Event collection is available in the **JavaScript**, **React**, **Python**, **Java**, **Node.js**, **Go** and
+**Flutter** SDKs. Check [Run an Experiment](/experimentation/run-an-experiment) for minimum versions and instrumentation
+details.
 
 :::
 

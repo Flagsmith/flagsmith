@@ -669,6 +669,8 @@ The following table lists the configurable parameters of the chart and their def
 | `ingress.api.hosts[].host`                         |                                                                           | `chart-example.local`          |
 | `ingress.api.hosts[].paths`                        |                                                                           | `[]`                           |
 | `ingress.api.tls`                                  |                                                                           | `[]`                           |
+| `ingress.ingestion.enabled`                        | Expose event ingestion with an Ingress                                    | `false`                        |
+| `ingress.ingestion.hosts`                          | Hosts for that Ingress                                                    | `[]`                           |
 | `api.statsd.enabled`                               | Enable statsd metric reporting from gunicorn.                             | `false`                        |
 | `api.statsd.host`                                  | Host URL to receive statsd metrics                                        | `null`                         |
 | `api.statsd.hostFromNodeIp`                        | Set as true to use the node IP as the statsd host instead                 | `false`                        |
@@ -676,6 +678,40 @@ The following table lists the configurable parameters of the chart and their def
 | `api.statsd.prefix`                                | Prefix to add to metric IDs                                               | `flagsmith.api`                |
 | `common.labels`                                    | Labels to add to all resources                                            | `{}`                           |
 | `common.annotations`                               | Annotations to add to all resources                                       | `{}`                           |
+| `experimentation.enabled`                          | Run event ingestion and warehouse delivery, and turn experimentation on in the API | `false`                        |
+| `experimentation.kafka.bootstrapServers`           | Kafka brokers, e.g. `host1:9096,host2:9096`                               | `null`                         |
+| `experimentation.kafka.topic`                      | Topic for experiment events                                               | `flagsmith_warehouse_events`   |
+| `experimentation.kafka.retryTopic`                 | Topic for events warehouse delivery retries                               | `flagsmith_warehouse_events_retry` |
+| `experimentation.kafka.topicPartitions`            | Partitions for both topics                                                | `8`                            |
+| `experimentation.kafka.topicReplicationFactor`     | Replication factor for both topics                                        | `3`                            |
+| `experimentation.kafka.auth`                       | `scram` (SASL/SCRAM-SHA-512 over TLS) or `none`                           | `scram`                        |
+| `experimentation.kafka.username`                   | Kafka username for `scram`                                                | `null`                         |
+| `experimentation.kafka.password`                   | Kafka password for `scram`                                                | `null`                         |
+| `experimentation.kafka.passwordFromExistingSecret.enabled` | Read the Kafka password from an existing k8s secret                       | `false`                        |
+| `experimentation.kafka.passwordFromExistingSecret.name` | Name of that secret                                                       | `null`                         |
+| `experimentation.kafka.passwordFromExistingSecret.key` | Key of the password in that secret                                        | `null`                         |
+| `experimentation.warehouseCredentialsSecretFromExistingSecret.enabled` | Read the warehouse credentials secret from an existing k8s secret, instead of generating it | `false`                        |
+| `experimentation.warehouseCredentialsSecretFromExistingSecret.name` | Name of that secret                                                       | `""`                           |
+| `experimentation.warehouseCredentialsSecretFromExistingSecret.key` | Key of the value in that secret                                           | `warehouse-credentials-secret` |
+| `experimentation.ingestion.image.repository`       | Docker image repository for event ingestion                               | `flagsmith/events-ingestion-api` |
+| `experimentation.ingestion.image.tag`              | Docker image tag for event ingestion                                      | `0.5`                          |
+| `experimentation.ingestion.resources`              | Resources for event ingestion                                             | see `values.yaml`              |
+| `experimentation.ingestion.databaseUrlFromExistingSecret.enabled` | Connect event ingestion with its own database user, from an existing k8s secret | `false`                        |
+| `experimentation.ingestion.databaseUrlFromExistingSecret.name` | Name of that secret                                                       | `null`                         |
+| `experimentation.ingestion.databaseUrlFromExistingSecret.key` | Key of the database URL in that secret                                    | `null`                         |
+| `experimentation.warehouseDelivery.image.repository` | Docker image repository for warehouse delivery                            | `flagsmith/warehouse-delivery` |
+| `experimentation.warehouseDelivery.image.tag`      | Docker image tag for warehouse delivery                                   | `0.4.0`                        |
+| `experimentation.warehouseDelivery.replicaCount`   | Replicas for warehouse delivery; more than `topicPartitions` sit idle     | `1`                            |
+| `experimentation.warehouseDelivery.resources`      | Resources for warehouse delivery                                          | see `values.yaml`              |
+| `experimentation.warehouseDelivery.databaseUrlFromExistingSecret.enabled` | Connect warehouse delivery with its own database user, from an existing k8s secret | `false`                        |
+| `experimentation.warehouseDelivery.databaseUrlFromExistingSecret.name` | Name of that secret                                                       | `null`                         |
+| `experimentation.warehouseDelivery.databaseUrlFromExistingSecret.key` | Key of the database URL in that secret                                    | `null`                         |
+| `experimentation.warehouseDelivery.extraEnv`       | Extra environment variables for warehouse delivery, e.g. `BATCH_MAX_RECORDS` | `{}`                           |
+| `jobs.experimentationInit.kafkaImage`              | Image for the job that creates the Kafka topics                           | `apache/kafka:4.3.1`           |
+| `jobs.experimentationInit.kafka.username`          | Admin Kafka username for creating the topics; defaults to `experimentation.kafka.username` | `null`                         |
+| `jobs.experimentationInit.kafka.passwordFromExistingSecret.enabled` | Read that admin password from an existing k8s secret                      | `false`                        |
+| `jobs.experimentationInit.kafka.passwordFromExistingSecret.name` | Name of that secret                                                       | `null`                         |
+| `jobs.experimentationInit.kafka.passwordFromExistingSecret.key` | Key of the password in that secret                                        | `null`                         |
 
 ---
 
