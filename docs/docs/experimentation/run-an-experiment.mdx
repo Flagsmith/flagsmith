@@ -507,15 +507,6 @@ if (flag.experiment?.inExperiment ?? false) {
 </TabItem>
 </Tabs>
 
-:::note Self-hosted
-
-Events are sent to `https://events.api.flagsmith.com/` unless you say otherwise. If you host Flagsmith yourself, point
-the SDK at your own event ingestion service with `eventProcessorConfig.eventsApiUrl` in JavaScript, or
-`event_processor_config=EventProcessorConfig(events_api_url=...)` in Python. See
-[deploying experimentation](/deployment-self-hosting/hosting-guides/kubernetes-openshift#experimentation).
-
-:::
-
 Exposures are deduplicated per identity: each identity is counted once, in the variation it saw first, so recording an
 exposure more than once is safe.
 
