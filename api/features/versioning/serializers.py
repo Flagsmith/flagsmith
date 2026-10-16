@@ -339,7 +339,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             )
 
 
-# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/7641
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
 @extend_schema_serializer(component_name="EnvironmentFeatureVersionCreate")
 class EnvironmentFeatureVersionCreateRequestSerializer(
     EnvironmentFeatureVersionCreateSerializer

@@ -305,7 +305,7 @@ Attributes:
 ### `features.dependencies.create_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:172`
+ - `api/features/dependencies/services.py:171`
  - `api/features/dependencies/services.py:371`
  - `api/features/dependencies/services.py:387`
  - `api/features/dependencies/services.py:392`
@@ -321,7 +321,7 @@ Attributes:
 ### `features.dependencies.created`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:135`
+ - `api/features/dependencies/services.py:134`
 
 Attributes:
  - `environment.key`
@@ -333,7 +333,7 @@ Attributes:
 ### `features.dependencies.delete_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:480`
+ - `api/features/dependencies/services.py:482`
 
 Attributes:
  - `environment.key`
@@ -345,8 +345,8 @@ Attributes:
 ### `features.dependencies.deleted`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:107`
- - `api/features/dependencies/services.py:133`
+ - `api/features/dependencies/services.py:106`
+ - `api/features/dependencies/services.py:132`
 
 Attributes:
  - `environment.key`
@@ -370,8 +370,8 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:477`
- - `api/features/future/services.py:537`
+ - `api/features/future/services.py:486`
+ - `api/features/future/services.py:546`
 
 Attributes:
  - `environment.id`
@@ -502,7 +502,7 @@ Attributes:
 ### `gitlab.resource.linked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:35`
+ - `api/integrations/vcs/services.py:38`
 
 Attributes:
  - `feature.id`
@@ -513,7 +513,7 @@ Attributes:
 ### `gitlab.resource.unlinked`
 
 Logged at `info` from:
- - `api/integrations/vcs/services.py:70`
+ - `api/integrations/vcs/services.py:73`
 
 Attributes:
  - `feature.id`
