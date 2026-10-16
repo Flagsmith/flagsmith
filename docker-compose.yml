@@ -12,6 +12,7 @@ x-flagsmith-env: &flagsmith-env
   DJANGO_ALLOWED_HOSTS: '*' # Change this in production
   FLAGSMITH_DOMAIN: localhost:8000 # Change this in production
   DJANGO_SECRET_KEY: secret # Change this in production
+  WAREHOUSE_CREDENTIALS_SECRET: &warehouse-credentials-secret secret # Change this in production
   # PREVENT_SIGNUP: 'true' # Uncomment to prevent any additional signups
   # ALLOW_REGISTRATION_WITHOUT_INVITE: 'true' # Uncomment and set to false to only allow signups via invitations
 
@@ -180,7 +181,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_AUTH: none
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
-      WAREHOUSE_CREDENTIALS_SECRET: secret # Must match the API's DJANGO_SECRET_KEY
+      WAREHOUSE_CREDENTIALS_SECRET: *warehouse-credentials-secret
     depends_on:
       migrate-db:
         condition: service_completed_successfully
