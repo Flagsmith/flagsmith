@@ -1,6 +1,6 @@
 ---
-title: 'Initial Setup'
-description: 'How to initialise the instance and create the first superuser.'
+title: "Initial Setup"
+description: "How to initialise the instance and create the first superuser."
 sidebar_position: 10
 ---
 
