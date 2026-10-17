@@ -82,7 +82,7 @@ const ButtonDropdown: FC<ButtonDropdownType> = ({
       {isOpen && (
         <div
           ref={menuRef}
-          className={classNames('feature-action__list border', {
+          className={classNames('feature-action__list', {
             'placed-bottom': !isDropup,
             'placed-top': isDropup,
           })}

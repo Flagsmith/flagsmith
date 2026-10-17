@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import IconButton from 'components/base/IconButton'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import PanelSearch from 'components/PanelSearch'
@@ -97,9 +98,11 @@ const SamlSection: FC<SamlSectionProps> = ({ organisationId }) => {
                 <Switch checked={samlConf.allow_idp_initiated} />
               </div>
               <div className='table-column' style={{ width: 90 }}>
-                <Button
+                <IconButton
+                  variant='secondary'
+                  size='large'
+                  aria-label={`Delete SAML configuration ${samlConf.name}`}
                   id='delete-invite'
-                  type='button'
                   onClick={(e) => {
                     openModal(
                       'Delete SAML configuration',
@@ -136,10 +139,9 @@ const SamlSection: FC<SamlSectionProps> = ({ organisationId }) => {
                     e.stopPropagation()
                     e.preventDefault()
                   }}
-                  className='btn btn-with-icon'
                 >
                   <Icon name='trash-2' width={20} />
-                </Button>
+                </IconButton>
               </div>
             </Row>
           )}

@@ -1,7 +1,7 @@
 import { FC } from 'react'
+import IconButton from 'components/base/IconButton'
 import cn from 'classnames'
 import Chip from 'components/base/Chip'
-import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import SegmentsIcon from 'components/icons/SegmentsIcon'
 import { CohortSourceType } from 'common/types/responses'
@@ -70,15 +70,16 @@ const AudienceSegmentList: FC<AudienceSegmentListProps> = ({
           </span>
         )}
         {onRemove && (
-          <Button
-            className='btn btn-with-icon audience-segment-row__remove'
-            type='button'
+          <IconButton
+            variant='secondary'
+            size='large'
+            className='audience-segment-row__remove'
             aria-label={`Remove ${segment.name} from audience`}
             onClick={() => onRemove(segment.id)}
             data-test={`remove-audience-segment-${segment.id}`}
           >
-            <Icon name='trash-2' width={20} fill={colorIconSecondary} />
-          </Button>
+            <Icon width={20} name='trash-2' />
+          </IconButton>
         )}
       </div>
     ))}

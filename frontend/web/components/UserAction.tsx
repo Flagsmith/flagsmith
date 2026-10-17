@@ -2,11 +2,12 @@ import { FC, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import useOutsideClick from 'common/useOutsideClick'
-import Button from './base/forms/Button'
+import IconButton from './base/IconButton'
 import Icon from './icons/Icon'
 import ActionButton from './ActionButton'
 
 interface UserActionProps {
+  userName: string
   canRemove: boolean
   canInspectPermissions: boolean
   onRemove: () => void
@@ -116,6 +117,7 @@ const UserAction: FC<UserActionProps> = ({
   onEdit,
   onInspectPermissions,
   onRemove,
+  userName,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
 
@@ -144,21 +146,27 @@ const UserAction: FC<UserActionProps> = ({
 
   if (!canEdit && !!canRemove && !canInspectPermissions) {
     return (
-      <Button onClick={onRemove} size='small' className='btn-with-icon'>
-        <Icon name='trash-2' width={16} fill='#656D7B' />
-      </Button>
+      <IconButton
+        variant='secondary'
+        size='medium'
+        aria-label={`Remove ${userName}`}
+        onClick={onRemove}
+      >
+        <Icon name='trash-2' width={16} />
+      </IconButton>
     )
   }
 
   if (!!canEdit && !canRemove && !canInspectPermissions) {
     return (
-      <Button
+      <IconButton
+        variant='secondary'
+        size='medium'
+        aria-label={`Edit ${userName}`}
         onClick={() => handleActionClick('edit')}
-        size='small'
-        className='btn-with-icon'
       >
-        <Icon name='edit' width={16} fill='#656D7B' />
-      </Button>
+        <Icon name='edit' width={16} />
+      </IconButton>
     )
   }
 
@@ -169,7 +177,11 @@ const UserAction: FC<UserActionProps> = ({
   return (
     <div>
       <div ref={btnRef}>
-        <ActionButton size='small' onClick={() => setIsOpen(true)} />
+        <ActionButton
+          label={userName}
+          isOpen={isOpen}
+          onClick={() => setIsOpen(true)}
+        />
       </div>
       <ActionDropdown
         isOpen={isOpen}

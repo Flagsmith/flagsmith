@@ -1,7 +1,7 @@
 import { FC } from 'react'
+import IconButton from 'components/base/IconButton'
 import moment from 'moment'
 import { Metric } from 'common/types/responses'
-import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import {
   getMetricSubline,
@@ -49,24 +49,26 @@ const MetricsTable: FC<MetricsTableProps> = ({ metrics, onDelete, onEdit }) => {
               {moment(metric.updated_at).fromNow()}
             </td>
             <td className='metrics-table__actions'>
-              <Button
-                id={`metrics-table-edit-${metric.id}`}
-                type='button'
-                size='small'
-                className='btn btn-with-icon'
-                onClick={() => onEdit(metric)}
-              >
-                <Icon name='edit' width={16} fill='#656D7B' />
-              </Button>
-              <Button
-                id={`metrics-table-delete-${metric.id}`}
-                type='button'
-                size='small'
-                className='btn btn-with-icon'
-                onClick={() => onDelete(metric)}
-              >
-                <Icon name='trash-2' width={16} fill='#656D7B' />
-              </Button>
+              <div className='d-inline-flex gap-2'>
+                <IconButton
+                  variant='secondary'
+                  size='medium'
+                  aria-label={`Edit metric ${metric.name}`}
+                  id={`metrics-table-edit-${metric.id}`}
+                  onClick={() => onEdit(metric)}
+                >
+                  <Icon width={16} name='edit' />
+                </IconButton>
+                <IconButton
+                  variant='secondary'
+                  size='medium'
+                  aria-label={`Delete metric ${metric.name}`}
+                  id={`metrics-table-delete-${metric.id}`}
+                  onClick={() => onDelete(metric)}
+                >
+                  <Icon width={16} name='trash-2' />
+                </IconButton>
+              </div>
             </td>
           </tr>
         ))}

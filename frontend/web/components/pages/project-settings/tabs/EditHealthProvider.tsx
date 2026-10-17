@@ -1,4 +1,5 @@
 import React, { FC, useEffect } from 'react'
+import IconButton from 'components/base/IconButton'
 import { HealthProvider } from 'common/types/responses'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
@@ -205,32 +206,35 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
                           >
                             {webhook}
                           </div>
-                          <Button
+                          <IconButton
+                            variant='ghost'
+                            size='small'
+                            aria-label='Copy webhook URL'
                             onClick={() => {
                               Utils.copyToClipboard(webhook)
                             }}
-                            theme='icon'
                             className='ms-2'
                           >
-                            <Icon name='copy' />
-                          </Button>
+                            <Icon width={16} name='copy' />
+                          </IconButton>
                         </div>
                       </Flex>
                     )}
                     <div className='table-column'>
-                      <Button
+                      <IconButton
+                        variant='secondary'
+                        size='large'
+                        aria-label={`Delete provider ${name}`}
                         id='delete-provider'
                         data-test='delete-provider'
-                        type='button'
                         onClick={(e) => {
                           e.stopPropagation()
                           e.preventDefault()
                           deleteProvider({ name, projectId })
                         }}
-                        className='btn btn-with-icon'
                       >
-                        <Icon name='trash-2' width={20} fill='#656D7B' />
-                      </Button>
+                        <Icon width={20} name='trash-2' />
+                      </IconButton>
                     </div>
                   </Row>
                 )

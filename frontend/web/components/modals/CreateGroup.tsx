@@ -1,4 +1,5 @@
 import React, { FC, useCallback, useEffect, useState } from 'react'
+import IconButton from 'components/base/IconButton'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Switch from 'components/Switch'
@@ -405,18 +406,19 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                             className='table-column text-center'
                             style={{ width: widths[1] }}
                           >
-                            <Button
-                              type='button'
+                            <IconButton
+                              variant='secondary'
+                              size='large'
+                              aria-label={`Remove ${email} from group`}
                               disabled={!(isAdmin || email !== yourEmail)}
                               id='remove-feature'
                               onClick={() => {
                                 toggleUser(id, false, false)
                                 setEdited(true)
                               }}
-                              className='btn btn-with-icon'
                             >
-                              <Icon name='trash-2' width={20} fill='#656D7B' />
-                            </Button>
+                              <Icon width={20} name='trash-2' />
+                            </IconButton>
                           </div>
                         </Row>
                       )

@@ -1,4 +1,5 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import IconButton from 'components/base/IconButton'
 import sortBy from 'lodash/sortBy'
 import { useHistory } from 'react-router-dom'
 import EnvironmentSelect from 'components/EnvironmentSelect'
@@ -118,15 +119,17 @@ const CompareEnvironments: FC<CompareEnvironmentsProps> = ({
               <span className='text-muted ms-2'>({environmentName})</span>
             )}
           </span>
-          <Button
+          <IconButton
+            variant='ghost'
+            size='small'
+            aria-label='Copy feature name'
             onClick={() => {
               Utils.copyToClipboard(projectFlag.name)
             }}
-            theme='icon'
             className='ms-2'
           >
-            <Icon name='copy' />
-          </Button>
+            <Icon width={16} name='copy' />
+          </IconButton>
         </Row>,
         <CreateFlagModal
           environmentFlag={environmentFlag}

@@ -1,4 +1,5 @@
 import React, { FC, useState } from 'react'
+import IconButton from 'components/base/IconButton'
 import Constants from 'common/constants'
 import AppActions from 'common/dispatcher/app-actions'
 import FeatureListStore from 'common/stores/feature-list-store'
@@ -263,7 +264,10 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
                     >
                       <Icon name='edit' width={20} fill='#6837FC' /> Edit
                     </Button>
-                    <Button
+                    <IconButton
+                      variant='secondary'
+                      size='large'
+                      aria-label={`Remove override for ${identity.identifier}`}
                       onClick={(e: React.MouseEvent) => {
                         e.stopPropagation()
                         removeUserOverride({
@@ -279,10 +283,9 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
                           projectFlag,
                         })
                       }}
-                      className='btn btn-with-icon'
                     >
-                      <Icon name='trash-2' width={20} fill='#656D7B' />
-                    </Button>
+                      <Icon width={20} name='trash-2' />
+                    </IconButton>
                   </div>
                 </Row>
               </Row>

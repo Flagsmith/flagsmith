@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react'
+import IconButton from 'components/base/IconButton'
 
 import PanelSearch from 'components/PanelSearch'
-import Button from 'components/base/forms/Button'
 import Switch from 'components/Switch'
 import Icon from 'components/icons/Icon'
 
@@ -61,14 +61,16 @@ const ContentTypesMetadataRow: FC<ContentTypesMetadataRowType> = ({
         />
       </div>
       <div className='table-column text-center' style={{ width: '80px' }}>
-        <Button
+        <IconButton
+          variant='secondary'
+          size='large'
+          aria-label={`Remove ${item.label}`}
           onClick={() => {
             deleteRequied(item)
           }}
-          className='btn btn-with-icon'
         >
-          <Icon name='trash-2' width={20} fill='#656D7B' />
-        </Button>
+          <Icon width={20} name='trash-2' />
+        </IconButton>
       </div>
     </Row>
   )
