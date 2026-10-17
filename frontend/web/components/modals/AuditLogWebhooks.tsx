@@ -120,7 +120,6 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
                   size='medium'
                   aria-label='Delete webhook'
                   id='delete-invite'
-                  type='button'
                   onClick={(e) => {
                     e.stopPropagation()
                     e.preventDefault()

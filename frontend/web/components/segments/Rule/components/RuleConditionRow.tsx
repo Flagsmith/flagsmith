@@ -154,7 +154,6 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
             size='medium'
             aria-label='Remove condition'
             data-test={`${dataTest}-remove`}
-            type='button'
             id='remove-feature'
             onClick={() => removeRule(ruleIndex)}
           >

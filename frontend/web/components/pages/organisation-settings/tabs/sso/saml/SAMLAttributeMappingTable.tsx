@@ -84,7 +84,6 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
                 aria-label='Delete attribute mapping'
                 id='delete-attribute'
                 data-test='delete-attribute'
-                type='button'
                 onClick={(e) => {
                   openModal2(
                     'Delete SAML attribute',

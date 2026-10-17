@@ -258,7 +258,6 @@ const InviteUsers: FC = () => {
                         size='medium'
                         aria-label='Remove invite'
                         id='delete-invite'
-                        type='button'
                         onClick={() => deleteInvite(invite.temporaryId)}
                         className='mb-2'
                       >

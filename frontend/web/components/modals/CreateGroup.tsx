@@ -410,7 +410,6 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                               variant='ghost'
                               size='medium'
                               aria-label='Remove user from group'
-                              type='button'
                               disabled={!(isAdmin || email !== yourEmail)}
                               id='remove-feature'
                               onClick={() => {

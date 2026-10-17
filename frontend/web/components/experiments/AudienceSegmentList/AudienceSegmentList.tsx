@@ -74,7 +74,6 @@ const AudienceSegmentList: FC<AudienceSegmentListProps> = ({
             variant='ghost'
             size='medium'
             className='audience-segment-row__remove'
-            type='button'
             aria-label={`Remove ${segment.name} from audience`}
             onClick={() => onRemove(segment.id)}
             data-test={`remove-audience-segment-${segment.id}`}

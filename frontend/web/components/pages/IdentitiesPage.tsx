@@ -270,7 +270,6 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
                       size='medium'
                       aria-label='Delete identity'
                       id='remove-feature'
-                      type='button'
                       onClick={() => {
                         if (id) {
                           removeIdentity(id, identifier, environmentId)

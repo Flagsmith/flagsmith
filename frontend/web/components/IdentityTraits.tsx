@@ -190,7 +190,6 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
                   size='medium'
                   aria-label='Delete trait'
                   id='remove-feature'
-                  type='button'
                   disabled={!manageUserPermission}
                   onClick={() => removeTrait(id, trait_key)}
                   data-test={`delete-user-trait-${i}`}

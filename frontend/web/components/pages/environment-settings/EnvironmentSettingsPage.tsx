@@ -868,7 +868,6 @@ const EnvironmentSettingsPage: React.FC = () => {
                                   size='medium'
                                   aria-label='Delete webhook'
                                   id='delete-invite'
-                                  type='button'
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     e.preventDefault()

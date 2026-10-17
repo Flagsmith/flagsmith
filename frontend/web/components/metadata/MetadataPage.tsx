@@ -142,7 +142,6 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
               size='medium'
               aria-label='Delete custom field'
               id='delete-invite'
-              type='button'
               onClick={(e) => {
                 e.stopPropagation()
                 _deleteMetadata(`${metadata.id}`, metadata.name)

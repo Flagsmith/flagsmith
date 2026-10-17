@@ -227,7 +227,6 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
                         aria-label='Delete provider'
                         id='delete-provider'
                         data-test='delete-provider'
-                        type='button'
                         onClick={(e) => {
                           e.stopPropagation()
                           e.preventDefault()

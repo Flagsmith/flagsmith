@@ -55,7 +55,6 @@ const MetricsTable: FC<MetricsTableProps> = ({ metrics, onDelete, onEdit }) => {
                   size='medium'
                   aria-label='Edit metric'
                   id={`metrics-table-edit-${metric.id}`}
-                  type='button'
                   onClick={() => onEdit(metric)}
                 >
                   <Icon width={16} name='edit' />
@@ -65,7 +64,6 @@ const MetricsTable: FC<MetricsTableProps> = ({ metrics, onDelete, onEdit }) => {
                   size='medium'
                   aria-label='Delete metric'
                   id={`metrics-table-delete-${metric.id}`}
-                  type='button'
                   onClick={() => onDelete(metric)}
                 >
                   <Icon width={16} name='trash-2' />
