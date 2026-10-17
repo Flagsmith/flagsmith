@@ -160,7 +160,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
               className='table-column text-center'
             >
               <IconButton
-                variant='ghost'
+                variant='secondary'
                 size='medium'
                 aria-label={`Delete role ${role.name}`}
                 id='remove-role'

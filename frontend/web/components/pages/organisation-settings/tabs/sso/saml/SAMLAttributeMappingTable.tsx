@@ -79,7 +79,7 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
             </Flex>
             <div className='table-column'>
               <IconButton
-                variant='ghost'
+                variant='secondary'
                 size='medium'
                 aria-label={`Delete mapping ${attribute.idp_attribute_name}`}
                 id='delete-attribute'

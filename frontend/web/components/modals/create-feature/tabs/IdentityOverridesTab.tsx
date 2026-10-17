@@ -265,7 +265,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
                       <Icon name='edit' width={20} fill='#6837FC' /> Edit
                     </Button>
                     <IconButton
-                      variant='ghost'
+                      variant='secondary'
                       size='medium'
                       aria-label={`Remove override for ${identity.identifier}`}
                       onClick={(e: React.MouseEvent) => {

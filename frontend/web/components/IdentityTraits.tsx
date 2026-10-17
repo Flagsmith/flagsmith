@@ -186,7 +186,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
                   EnvironmentPermission.MANAGE_IDENTITIES,
                 ),
                 <IconButton
-                  variant='ghost'
+                  variant='secondary'
                   size='medium'
                   aria-label={`Delete trait ${trait_key}`}
                   id='remove-feature'

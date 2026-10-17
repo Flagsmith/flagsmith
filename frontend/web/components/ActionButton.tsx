@@ -17,7 +17,7 @@ const ActionButton: FC<ActionButtonType> = ({
 }) => {
   return (
     <IconButton
-      variant='ghost'
+      variant='secondary'
       size={size}
       aria-label='More actions'
       aria-haspopup='menu'

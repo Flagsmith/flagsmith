@@ -105,7 +105,7 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({
       <div className='table-column'>
         {canManage && (
           <IconButton
-            variant='ghost'
+            variant='secondary'
             size='medium'
             onClick={() => handleRevoke(syncKey)}
             aria-label={`Revoke ${syncKey.name}`}

@@ -254,7 +254,7 @@ const InviteUsers: FC = () => {
                   {invites.length > 1 ? (
                     <div className='ml-2'>
                       <IconButton
-                        variant='ghost'
+                        variant='secondary'
                         size='medium'
                         aria-label={`Remove invite ${index + 1}`}
                         id='delete-invite'

@@ -51,7 +51,7 @@ const MetricsTable: FC<MetricsTableProps> = ({ metrics, onDelete, onEdit }) => {
             <td className='metrics-table__actions'>
               <div className='d-inline-flex gap-2'>
                 <IconButton
-                  variant='ghost'
+                  variant='secondary'
                   size='medium'
                   aria-label={`Edit metric ${metric.name}`}
                   id={`metrics-table-edit-${metric.id}`}
@@ -60,7 +60,7 @@ const MetricsTable: FC<MetricsTableProps> = ({ metrics, onDelete, onEdit }) => {
                   <Icon width={16} name='edit' />
                 </IconButton>
                 <IconButton
-                  variant='ghost'
+                  variant='secondary'
                   size='medium'
                   aria-label={`Delete metric ${metric.name}`}
                   id={`metrics-table-delete-${metric.id}`}

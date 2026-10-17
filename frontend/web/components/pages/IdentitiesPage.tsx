@@ -266,7 +266,7 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
                   </Link>
                   <div className='table-column'>
                     <IconButton
-                      variant='ghost'
+                      variant='secondary'
                       size='medium'
                       aria-label={`Delete identity ${identifier}`}
                       id='remove-feature'

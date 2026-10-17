@@ -191,7 +191,7 @@ const TrustRelationshipModal: FC<TrustRelationshipModalProps> = ({
               />
             </Flex>
             <IconButton
-              variant='ghost'
+              variant='secondary'
               size='medium'
               onClick={() =>
                 setClaimRules((rules) => rules.filter((_, i) => i !== index))

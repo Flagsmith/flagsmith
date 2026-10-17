@@ -62,7 +62,7 @@ const ContentTypesMetadataRow: FC<ContentTypesMetadataRowType> = ({
       </div>
       <div className='table-column text-center' style={{ width: '80px' }}>
         <IconButton
-          variant='ghost'
+          variant='secondary'
           size='medium'
           aria-label={`Remove ${item.label}`}
           onClick={() => {

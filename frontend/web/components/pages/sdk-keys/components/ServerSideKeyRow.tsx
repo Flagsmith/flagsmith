@@ -31,7 +31,7 @@ const ServerSideKeyRow: FC<ServerSideKeyRowProps> = ({
         <Token style={{ width: 280 }} token={keyValue} />
       </div>
       <IconButton
-        variant='ghost'
+        variant='secondary'
         size='medium'
         aria-label={`Copy key ${name}`}
         onClick={() => {
@@ -43,7 +43,7 @@ const ServerSideKeyRow: FC<ServerSideKeyRowProps> = ({
       </IconButton>
       <div className='table-column'>
         <IconButton
-          variant='ghost'
+          variant='secondary'
           size='medium'
           aria-label={`Delete key ${name}`}
           onClick={() => onRemove(id, name)}

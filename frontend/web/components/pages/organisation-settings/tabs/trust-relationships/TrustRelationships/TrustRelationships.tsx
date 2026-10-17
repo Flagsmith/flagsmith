@@ -196,7 +196,7 @@ const TrustRelationships: FC<TrustRelationshipsProps> = ({
               </div>
               <div className={COLUMN.narrow}>
                 <IconButton
-                  variant='ghost'
+                  variant='secondary'
                   size='medium'
                   onClick={(e) => {
                     e.stopPropagation()

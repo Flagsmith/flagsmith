@@ -127,7 +127,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
         <div className='d-flex flex-row align-items-center gap-2'>
           {onEdit && (
             <IconButton
-              variant='ghost'
+              variant='secondary'
               size='small'
               aria-label='Edit connection'
               id='warehouse-connection-edit'
@@ -137,7 +137,7 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
             </IconButton>
           )}
           <IconButton
-            variant='ghost'
+            variant='secondary'
             size='small'
             aria-label='Delete connection'
             id='warehouse-connection-delete'

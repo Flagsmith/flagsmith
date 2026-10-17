@@ -145,7 +145,7 @@ const UserAction: FC<UserActionProps> = ({
   if (!canEdit && !!canRemove && !canInspectPermissions) {
     return (
       <IconButton
-        variant='ghost'
+        variant='secondary'
         size='medium'
         aria-label='Remove user'
         onClick={onRemove}
@@ -158,7 +158,7 @@ const UserAction: FC<UserActionProps> = ({
   if (!!canEdit && !canRemove && !canInspectPermissions) {
     return (
       <IconButton
-        variant='ghost'
+        variant='secondary'
         size='medium'
         aria-label='Edit user'
         onClick={() => handleActionClick('edit')}

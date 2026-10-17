@@ -106,7 +106,7 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
         <div style={{ width: '80px' }} className='table-column text-center'>
           {isAdmin && (
             <IconButton
-              variant='ghost'
+              variant='secondary'
               size='medium'
               aria-label={`Delete group ${name}`}
               id='remove-group'

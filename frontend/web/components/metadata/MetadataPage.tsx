@@ -138,7 +138,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         {!readOnly && (
           <div className='table-column' style={{ width: '86px' }}>
             <IconButton
-              variant='ghost'
+              variant='secondary'
               size='medium'
               aria-label={`Delete custom field ${metadata.name}`}
               id='delete-invite'
