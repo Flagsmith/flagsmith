@@ -20,7 +20,6 @@ const ActionButton: FC<ActionButtonType> = ({
       variant='secondary'
       size={size}
       aria-label={`More actions for ${label}`}
-      aria-haspopup='menu'
       aria-expanded={isOpen}
       onClick={(e) => {
         e.stopPropagation()
