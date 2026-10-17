@@ -6,6 +6,7 @@ import Icon from './icons/Icon'
 import ActionButton from './ActionButton'
 
 interface SegmentOverrideActionProps {
+  segmentName: string
   canRemove: boolean
   onRemove: () => void
   onEdit: () => void
@@ -38,6 +39,7 @@ const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
   onCopyValue,
   onEdit,
   onRemove,
+  segmentName,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
 
@@ -100,6 +102,7 @@ const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
     <div className='position-relative'>
       <div ref={btnRef}>
         <ActionButton
+          label={segmentName}
           isOpen={isOpen}
           onClick={() => {
             setIsOpen(true)

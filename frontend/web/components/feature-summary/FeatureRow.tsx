@@ -335,6 +335,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
   }
   const featureActionProps: Omit<FeatureActionProps, 'e2e'> = {
     featureIndex: index,
+    featureName: projectFlag.name,
     hideAudit: AccountStore.getOrganisationRole() !== 'ADMIN' || hideAudit,
     hideHistory: !environment?.use_v2_feature_versioning,
     hideRemove,

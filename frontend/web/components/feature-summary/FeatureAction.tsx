@@ -14,6 +14,7 @@ import { calculateListPosition } from 'common/utils/calculateListPosition'
 import { ProjectPermission } from 'common/types/permissions.types'
 
 export interface FeatureActionProps {
+  featureName: string
   projectId: string
   featureIndex: number
   readOnly: boolean
@@ -34,6 +35,7 @@ type ActionType = 'copy' | 'audit' | 'history' | 'remove'
 const FeatureAction: FC<FeatureActionProps> = ({
   disableE2E,
   featureIndex,
+  featureName,
   hideAudit,
   hideHistory,
   hideRemove,
@@ -92,9 +94,9 @@ const FeatureAction: FC<FeatureActionProps> = ({
     <div className='feature-action'>
       <div ref={btnRef}>
         <ActionButton
+          label={featureName}
           isOpen={isOpen}
           onClick={() => setIsOpen(true)}
-          data-test={!disableE2E ? `feature-action-${featureIndex}` : undefined}
         />
       </div>
 

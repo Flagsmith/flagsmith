@@ -7,6 +7,7 @@ import Icon from './icons/Icon'
 import ActionButton from './ActionButton'
 
 interface UserActionProps {
+  userName: string
   canRemove: boolean
   canInspectPermissions: boolean
   onRemove: () => void
@@ -116,6 +117,7 @@ const UserAction: FC<UserActionProps> = ({
   onEdit,
   onInspectPermissions,
   onRemove,
+  userName,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
 
@@ -147,7 +149,7 @@ const UserAction: FC<UserActionProps> = ({
       <IconButton
         variant='secondary'
         size='medium'
-        aria-label='Remove user'
+        aria-label={`Remove ${userName}`}
         onClick={onRemove}
       >
         <Icon name='trash-2' width={16} />
@@ -160,7 +162,7 @@ const UserAction: FC<UserActionProps> = ({
       <IconButton
         variant='secondary'
         size='medium'
-        aria-label='Edit user'
+        aria-label={`Edit ${userName}`}
         onClick={() => handleActionClick('edit')}
       >
         <Icon name='edit' width={16} />
@@ -175,7 +177,11 @@ const UserAction: FC<UserActionProps> = ({
   return (
     <div>
       <div ref={btnRef}>
-        <ActionButton isOpen={isOpen} onClick={() => setIsOpen(true)} />
+        <ActionButton
+          label={userName}
+          isOpen={isOpen}
+          onClick={() => setIsOpen(true)}
+        />
       </div>
       <ActionDropdown
         isOpen={isOpen}

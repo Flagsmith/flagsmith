@@ -5,24 +5,23 @@ import IconButton, { IconButtonProps } from './base/IconButton'
 type ActionButtonType = {
   onClick: () => void
   isOpen: boolean
-  'data-test'?: string
+  label: string
   size?: IconButtonProps['size']
 }
 
 const ActionButton: FC<ActionButtonType> = ({
   isOpen,
+  label,
   onClick,
   size = 'medium',
-  ...rest
 }) => {
   return (
     <IconButton
       variant='secondary'
       size={size}
-      aria-label='More actions'
+      aria-label={`More actions for ${label}`}
       aria-haspopup='menu'
       aria-expanded={isOpen}
-      data-test={rest['data-test']}
       onClick={(e) => {
         e.stopPropagation()
         onClick()

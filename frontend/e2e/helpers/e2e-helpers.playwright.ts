@@ -419,7 +419,7 @@ export class E2EHelpers {
   // Clone a segment
   async cloneSegment(name: string, clonedName: string) {
     const segmentRow = this.page.locator('.list-item').filter({ hasText: name }).first();
-    const actionButton = segmentRow.locator('[data-test^="segment-action-"]');
+    const actionButton = segmentRow.getByRole('button', { exact: true, name: `More actions for ${name}` });
     await actionButton.click();
     const cloneButton = segmentRow.locator('[data-test^="segment-clone-"]');
     await cloneButton.click();
@@ -431,7 +431,7 @@ export class E2EHelpers {
   // Delete a segment
   async deleteSegment(name: string) {
     const segmentRow = this.page.locator('.list-item').filter({ hasText: name }).first();
-    const actionButton = segmentRow.locator('[data-test^="segment-action-"]');
+    const actionButton = segmentRow.getByRole('button', { exact: true, name: `More actions for ${name}` });
     await actionButton.click();
     const removeButton = segmentRow.locator('[data-test^="segment-remove-"]');
     await removeButton.click();
@@ -874,13 +874,13 @@ export class E2EHelpers {
    * 3. If the dropdown doesn't appear, retrying the click (up to maxRetries times)
    */
   async clickFeatureAction(featureName: string, maxRetries: number = 3): Promise<void> {
-    const index = await this.getFeatureIndexByName(featureName);
-    const actionButtonSelector = byId(`feature-action-${index}`);
+    const actionButton = this.page.getByRole('button', { exact: true, name: `More actions for ${featureName}` });
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       logUsingLastSection(`Clicking feature action button (attempt ${attempt}/${maxRetries})`);
 
-      await this.click(actionButtonSelector);
+      await actionButton.scrollIntoViewIfNeeded();
+      await actionButton.click();
 
       try {
         // Use a shorter timeout for the dropdown check since we'll retry if it fails
