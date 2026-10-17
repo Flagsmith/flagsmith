@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
+import IconButton from 'components/base/IconButton'
 import cn from 'classnames'
-import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import Token from 'components/Token'
 import Utils from 'common/utils/utils'
@@ -30,22 +30,27 @@ const ServerSideKeyRow: FC<ServerSideKeyRowProps> = ({
       <div className='table-column'>
         <Token style={{ width: 280 }} token={keyValue} />
       </div>
-      <Button
+      <IconButton
+        variant='ghost'
+        size='medium'
+        aria-label='Copy key'
         onClick={() => {
           Utils.copyToClipboard(keyValue)
         }}
-        className='ml-2 btn-with-icon icon-default'
+        className='ml-2'
       >
-        <Icon name='copy' width={20} />
-      </Button>
+        <Icon width={20} name='copy' />
+      </IconButton>
       <div className='table-column'>
-        <Button
+        <IconButton
+          variant='ghost'
+          size='medium'
+          aria-label='Delete key'
           onClick={() => onRemove(id, name)}
           id='remove-sdk-key'
-          className='btn btn-with-icon icon-default'
         >
-          <Icon name='trash-2' width={20} />
-        </Button>
+          <Icon width={20} name='trash-2' />
+        </IconButton>
       </div>
     </Row>
   )

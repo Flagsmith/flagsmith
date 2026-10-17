@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
+import IconButton from './base/IconButton'
 import IdentitySelect, { IdentitySelectType } from './IdentitySelect'
 import Utils from 'common/utils/utils'
 import EnvironmentSelect from './EnvironmentSelect'
@@ -307,13 +308,15 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                           {description}
                         </Tooltip>
                       </span>
-                      <Button
+                      <IconButton
+                        variant='ghost'
+                        size='small'
+                        aria-label='Copy feature name'
                         onClick={() => Utils.copyToClipboard(name)}
-                        theme='icon'
                         className='ms-2 me-2'
                       >
-                        <Icon name='copy' />
-                      </Button>
+                        <Icon width={16} name='copy' />
+                      </IconButton>
                       <SegmentOverridesIcon
                         count={data.num_segment_overrides}
                       />

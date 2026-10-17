@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import IconButton from 'components/base/IconButton'
 import moment from 'moment'
 import Constants from 'common/constants'
 import { useHasPermission } from 'common/providers/Permission'
@@ -103,14 +104,15 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({
       </div>
       <div className='table-column'>
         {canManage && (
-          <Button
+          <IconButton
+            variant='ghost'
+            size='medium'
             type='button'
             onClick={() => handleRevoke(syncKey)}
-            className='btn btn-with-icon'
             aria-label={`Revoke ${syncKey.name}`}
           >
-            <Icon name='trash-2' width={20} fill='#656D7B' />
-          </Button>
+            <Icon width={20} name='trash-2' />
+          </IconButton>
         )}
       </div>
     </Row>

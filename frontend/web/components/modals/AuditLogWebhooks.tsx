@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import IconButton from 'components/base/IconButton'
 import JSONReference from 'components/JSONReference'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
@@ -114,7 +115,10 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
                 <Switch checked={webhook.enabled} />
               </div>
               <div className='table-column'>
-                <Button
+                <IconButton
+                  variant='ghost'
+                  size='medium'
+                  aria-label='Delete webhook'
                   id='delete-invite'
                   type='button'
                   onClick={(e) => {
@@ -122,10 +126,9 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
                     e.preventDefault()
                     deleteWebhook(webhook)
                   }}
-                  className='btn btn-with-icon'
                 >
-                  <Icon name='trash-2' width={20} fill='#656D7B' />
-                </Button>
+                  <Icon width={20} name='trash-2' />
+                </IconButton>
               </div>
             </Row>
           )}

@@ -1,4 +1,5 @@
 import React, { FC, useId, useMemo, useState } from 'react'
+import IconButton from 'components/base/IconButton'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
 import FieldLabel from 'components/base/forms/FieldLabel'
@@ -189,15 +190,16 @@ const TrustRelationshipModal: FC<TrustRelationshipModalProps> = ({
                 aria-describedby={valuesHintId}
               />
             </Flex>
-            <Button
-              className='btn btn-with-icon'
+            <IconButton
+              variant='ghost'
+              size='medium'
               onClick={() =>
                 setClaimRules((rules) => rules.filter((_, i) => i !== index))
               }
               aria-label={`Remove rule ${index + 1}`}
             >
-              <Icon name='trash-2' width={20} />
-            </Button>
+              <Icon width={20} name='trash-2' />
+            </IconButton>
           </Row>
         ))}
       </div>

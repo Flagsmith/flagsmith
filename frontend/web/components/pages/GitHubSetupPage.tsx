@@ -1,4 +1,5 @@
 import React, { FC, useState, useEffect } from 'react'
+import IconButton from 'components/base/IconButton'
 import OrganisationSelect from 'components/OrganisationSelect'
 import Input from 'components/base/forms/Input'
 import Icon from 'components/icons/Icon'
@@ -227,16 +228,18 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                   className='table-column  text-center'
                   style={{ width: '80px' }}
                 >
-                  <Button
+                  <IconButton
+                    variant='ghost'
+                    size='medium'
+                    aria-label='Remove repository'
                     onClick={() => {
                       setProjects(
                         projects.filter((p: ProjectType) => p.repo !== v.repo),
                       )
                     }}
-                    className='btn btn-with-icon'
                   >
-                    <Icon name='trash-2' width={20} fill='#656D7B' />
-                  </Button>
+                    <Icon width={20} name='trash-2' />
+                  </IconButton>
                 </div>
               </Row>
             )}

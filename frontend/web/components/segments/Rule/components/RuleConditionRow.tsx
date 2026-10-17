@@ -1,4 +1,5 @@
 import React from 'react'
+import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 import {
@@ -148,15 +149,17 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           ) : (
             <div style={{ width: 64 }} />
           )}
-          <button
+          <IconButton
+            variant='ghost'
+            size='medium'
+            aria-label='Remove condition'
             data-test={`${dataTest}-remove`}
             type='button'
             id='remove-feature'
             onClick={() => removeRule(ruleIndex)}
-            className='btn btn-with-icon'
           >
-            <Icon name='trash-2' width={20} fill={'#656D7B'} />
-          </button>
+            <Icon width={20} name='trash-2' />
+          </IconButton>
         </div>
       </div>
       {showDescription && (

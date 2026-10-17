@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import IconButton from 'components/base/IconButton'
 import { useGetSegmentQuery } from 'common/services/useSegment'
 import { useHistory, useRouteMatch } from 'react-router-dom'
 import CreateSegment from 'components/modals/CreateSegment'
@@ -6,7 +7,6 @@ import ProjectStore from 'common/stores/project-store'
 import { Environment } from 'common/types/responses'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import Breadcrumb from 'components/Breadcrumb'
-import Button from 'components/base/forms/Button'
 import { useHasPermission } from 'common/providers/Permission'
 import Icon from 'components/icons/Icon'
 import { handleRemoveSegment } from 'components/modals/ConfirmRemoveSegment'
@@ -73,15 +73,17 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
             {Utils.renderWithPermission(
               manageSegmentsPermission,
               'Manage Segments',
-              <Button
+              <IconButton
+                variant='ghost'
+                size='medium'
+                aria-label='Delete segment'
                 data-test='remove-segment-btn'
-                className='btn btn-with-icon'
                 type='button'
                 disabled={!manageSegmentsPermission}
                 onClick={onRemoveSegment}
               >
-                <Icon name='trash-2' width={20} fill='#656D7B' />
-              </Button>,
+                <Icon width={20} name='trash-2' />
+              </IconButton>,
             )}
           </div>
         }

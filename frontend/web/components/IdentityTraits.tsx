@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import IconButton from './base/IconButton'
 import PanelSearch from './PanelSearch'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
@@ -184,16 +185,18 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
                 Constants.environmentPermissions(
                   EnvironmentPermission.MANAGE_IDENTITIES,
                 ),
-                <Button
+                <IconButton
+                  variant='ghost'
+                  size='medium'
+                  aria-label='Delete trait'
                   id='remove-feature'
-                  className='btn btn-with-icon'
                   type='button'
                   disabled={!manageUserPermission}
                   onClick={() => removeTrait(id, trait_key)}
                   data-test={`delete-user-trait-${i}`}
                 >
-                  <Icon name='trash-2' width={20} fill='#656D7B' />
-                </Button>,
+                  <Icon width={20} name='trash-2' />
+                </IconButton>,
               )}
             </div>
           </Row>

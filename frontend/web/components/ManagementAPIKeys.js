@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react'
+import IconButton from './base/IconButton'
 import data from 'common/data/base/_data'
 import AppActions from 'common/dispatcher/app-actions'
 import OrganisationStore from 'common/stores/organisation-store'
@@ -555,15 +556,17 @@ export default class ManagementAPIKeys extends PureComponent {
                       className='table-column  text-center'
                       style={{ width: '80px' }}
                     >
-                      <Button
+                      <IconButton
+                        variant='ghost'
+                        size='medium'
+                        aria-label='Delete API key'
                         onClick={(e) => {
                           e.stopPropagation()
                           this.remove(v)
                         }}
-                        className='btn btn-with-icon'
                       >
-                        <Icon name='trash-2' width={20} fill='#656D7B' />
-                      </Button>
+                        <Icon width={20} name='trash-2' />
+                      </IconButton>
                     </div>
                   </Row>
                 )

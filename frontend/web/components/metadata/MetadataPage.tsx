@@ -1,4 +1,5 @@
 import React, { FC, useState } from 'react'
+import IconButton from 'components/base/IconButton'
 import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
 import Icon from 'components/icons/Icon'
@@ -136,17 +137,19 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         </Flex>
         {!readOnly && (
           <div className='table-column' style={{ width: '86px' }}>
-            <Button
+            <IconButton
+              variant='ghost'
+              size='medium'
+              aria-label='Delete custom field'
               id='delete-invite'
               type='button'
               onClick={(e) => {
                 e.stopPropagation()
                 _deleteMetadata(`${metadata.id}`, metadata.name)
               }}
-              className='btn btn-with-icon'
             >
-              <Icon name='trash-2' width={20} fill='#656D7B' />
-            </Button>
+              <Icon width={20} name='trash-2' />
+            </IconButton>
           </div>
         )}
       </Row>

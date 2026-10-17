@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import IconButton from 'components/base/IconButton'
 import {
   WarehouseConnection,
   WarehouseConnectionStatus,
@@ -125,23 +126,25 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
         </div>
         <div className='d-flex flex-row align-items-center gap-2'>
           {onEdit && (
-            <Button
+            <IconButton
+              variant='ghost'
+              size='small'
+              aria-label='Edit connection'
               id='warehouse-connection-edit'
-              size='xSmall'
-              className='btn btn-with-icon'
               onClick={onEdit}
             >
-              <Icon name='edit' width={16} fill='#656D7B' />
-            </Button>
+              <Icon width={16} name='edit' />
+            </IconButton>
           )}
-          <Button
+          <IconButton
+            variant='ghost'
+            size='small'
+            aria-label='Delete connection'
             id='warehouse-connection-delete'
-            size='xSmall'
-            className='btn btn-with-icon'
             onClick={handleDelete}
           >
-            <Icon name='trash-2' width={16} fill='#656D7B' />
-          </Button>
+            <Icon width={16} name='trash-2' />
+          </IconButton>
         </div>
       </div>
       <hr className='my-4' />

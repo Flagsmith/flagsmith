@@ -78,7 +78,7 @@ const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
 
   if (!canEdit && !!canRemove && !canCompare) {
     return (
-      <Button onClick={onRemove} size='small' className='btn-with-icon'>
+      <Button onClick={onRemove} size='small'>
         <span>Remove Override</span>
       </Button>
     )

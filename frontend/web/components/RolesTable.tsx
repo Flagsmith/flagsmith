@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import IconButton from './base/IconButton'
 import CreateRole from './modals/CreateRole'
 import { useGetRolesQuery } from 'common/services/useRole'
 import { User, Role } from 'common/types/responses'
@@ -158,16 +159,18 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
               }}
               className='table-column text-center'
             >
-              <Button
+              <IconButton
+                variant='ghost'
+                size='medium'
+                aria-label='Delete role'
                 id='remove-role'
                 type='button'
                 onClick={() => {
                   deleteRole(role)
                 }}
-                className='btn btn-with-icon'
               >
-                <Icon name='trash-2' width={20} fill='#656D7B' />
-              </Button>
+                <Icon width={20} name='trash-2' />
+              </IconButton>
             </div>
           </Row>
         )}

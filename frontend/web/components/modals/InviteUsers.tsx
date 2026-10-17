@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, FC } from 'react'
+import IconButton from 'components/base/IconButton'
 import Button from 'components/base/forms/Button'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
@@ -252,14 +253,17 @@ const InviteUsers: FC = () => {
                   </Flex>
                   {invites.length > 1 ? (
                     <div className='ml-2'>
-                      <Button
+                      <IconButton
+                        variant='ghost'
+                        size='medium'
+                        aria-label='Remove invite'
                         id='delete-invite'
                         type='button'
                         onClick={() => deleteInvite(invite.temporaryId)}
-                        className='btn btn-with-icon mb-2'
+                        className='mb-2'
                       >
-                        <Icon name='trash-2' width={20} />
-                      </Button>
+                        <Icon width={20} name='trash-2' />
+                      </IconButton>
                     </div>
                   ) : (
                     <div />
