@@ -16,10 +16,6 @@
     background: var(--color-surface-default);
     box-shadow: var(--shadow-lg);
 
-    &.border {
-      border-bottom: 0.5px solid;
-    }
-
     &.placed-top {
       margin-top: 0px;
       margin-bottom: 6px;
