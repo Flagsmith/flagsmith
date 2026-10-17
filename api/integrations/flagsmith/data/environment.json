@@ -19,7 +19,7 @@
     },
     {
       "django_id": 1493937,
-      "enabled": false,
+      "enabled": true,
       "feature": {
         "id": 185615,
         "name": "experimental_flags",
@@ -27,12 +27,12 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "36d8e915-cf70-429e-b4d5-9606f67f6a04",
+      "featurestate_uuid": "ac89fe22-bf96-4307-aea6-cfbfa0d7e928",
       "multivariate_feature_state_values": []
     },
     {
       "django_id": 1493943,
-      "enabled": false,
+      "enabled": true,
       "feature": {
         "id": 208348,
         "name": "experimentation_warehouse_connection",
@@ -40,7 +40,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "11bb3661-ecfa-4656-b9b8-800afa82961d",
+      "featurestate_uuid": "cac36412-4ab4-4a19-a41a-a73c47b2a379",
       "multivariate_feature_state_values": []
     },
     {
@@ -189,6 +189,19 @@
       "feature_segment": null,
       "feature_state_value": null,
       "featurestate_uuid": "c954677b-6f35-4711-bd5f-5eb12c117f74",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 1738316,
+      "enabled": true,
+      "feature": {
+        "id": 276609,
+        "name": "experimentation_warehouses",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "{\n  \"auto_connect_flagsmith\": true,\n  \"minimum_plans\": {\n    \"flagsmith\": null,\n    \"clickhouse\": null,\n    \"databricks\": null,\n    \"snowflake\": null\n  }\n}",
+      "featurestate_uuid": "8655f767-7e7a-4c82-9c5a-aa2c5627cdd5",
       "multivariate_feature_state_values": []
     }
   ],
