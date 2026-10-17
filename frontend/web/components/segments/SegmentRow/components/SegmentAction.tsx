@@ -41,6 +41,7 @@ const SegmentAction: FC<SegmentActionProps> = ({
     <div className='feature-action'>
       <div ref={btnRef}>
         <ActionButton
+          isOpen={isOpen}
           onClick={() => setIsOpen(true)}
           data-test={`segment-action-${index}`}
         />

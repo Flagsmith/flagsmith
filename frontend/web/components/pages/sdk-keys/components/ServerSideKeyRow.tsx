@@ -33,11 +33,11 @@ const ServerSideKeyRow: FC<ServerSideKeyRowProps> = ({
       <IconButton
         variant='ghost'
         size='medium'
-        aria-label='Copy key'
+        aria-label={`Copy key ${name}`}
         onClick={() => {
           Utils.copyToClipboard(keyValue)
         }}
-        className='ml-2'
+        className='ms-2'
       >
         <Icon width={20} name='copy' />
       </IconButton>
@@ -45,7 +45,7 @@ const ServerSideKeyRow: FC<ServerSideKeyRowProps> = ({
         <IconButton
           variant='ghost'
           size='medium'
-          aria-label='Delete key'
+          aria-label={`Delete key ${name}`}
           onClick={() => onRemove(id, name)}
           id='remove-sdk-key'
         >

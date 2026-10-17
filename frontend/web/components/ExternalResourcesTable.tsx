@@ -87,7 +87,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
         <IconButton
           variant='ghost'
           size='medium'
-          aria-label='Unlink resource'
+          aria-label={`Unlink ${externalResource?.url}`}
           onClick={() =>
             openModal2(
               'Unlink External Resources',

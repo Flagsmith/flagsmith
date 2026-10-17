@@ -78,7 +78,7 @@ const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
 
   if (!canEdit && !!canRemove && !canCompare) {
     return (
-      <Button onClick={onRemove} size='small'>
+      <Button onClick={onRemove} size='small' theme='secondary'>
         <span>Remove Override</span>
       </Button>
     )
@@ -100,6 +100,7 @@ const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
     <div className='position-relative'>
       <div ref={btnRef}>
         <ActionButton
+          isOpen={isOpen}
           onClick={() => {
             setIsOpen(true)
           }}

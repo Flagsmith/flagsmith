@@ -866,7 +866,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                                 <IconButton
                                   variant='ghost'
                                   size='medium'
-                                  aria-label='Delete webhook'
+                                  aria-label={`Delete webhook ${webhook.url}`}
                                   id='delete-invite'
                                   onClick={(e) => {
                                     e.stopPropagation()

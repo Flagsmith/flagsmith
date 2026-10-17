@@ -162,7 +162,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
               <IconButton
                 variant='ghost'
                 size='medium'
-                aria-label='Delete role'
+                aria-label={`Delete role ${role.name}`}
                 id='remove-role'
                 onClick={() => {
                   deleteRole(role)

@@ -256,7 +256,7 @@ const InviteUsers: FC = () => {
                       <IconButton
                         variant='ghost'
                         size='medium'
-                        aria-label='Remove invite'
+                        aria-label={`Remove invite ${index + 1}`}
                         id='delete-invite'
                         onClick={() => deleteInvite(invite.temporaryId)}
                         className='mb-2'

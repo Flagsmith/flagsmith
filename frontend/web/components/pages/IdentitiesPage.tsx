@@ -268,7 +268,7 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
                     <IconButton
                       variant='ghost'
                       size='medium'
-                      aria-label='Delete identity'
+                      aria-label={`Delete identity ${identifier}`}
                       id='remove-feature'
                       onClick={() => {
                         if (id) {

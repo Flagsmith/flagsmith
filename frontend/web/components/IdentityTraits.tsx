@@ -188,7 +188,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
                 <IconButton
                   variant='ghost'
                   size='medium'
-                  aria-label='Delete trait'
+                  aria-label={`Delete trait ${trait_key}`}
                   id='remove-feature'
                   disabled={!manageUserPermission}
                   onClick={() => removeTrait(id, trait_key)}

@@ -81,7 +81,7 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
               <IconButton
                 variant='ghost'
                 size='medium'
-                aria-label='Delete attribute mapping'
+                aria-label={`Delete mapping ${attribute.idp_attribute_name}`}
                 id='delete-attribute'
                 data-test='delete-attribute'
                 onClick={(e) => {

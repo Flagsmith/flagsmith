@@ -231,7 +231,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                   <IconButton
                     variant='ghost'
                     size='medium'
-                    aria-label='Remove repository'
+                    aria-label={`Remove repository ${v.repo}`}
                     onClick={() => {
                       setProjects(
                         projects.filter((p: ProjectType) => p.repo !== v.repo),

@@ -64,7 +64,7 @@ const ContentTypesMetadataRow: FC<ContentTypesMetadataRowType> = ({
         <IconButton
           variant='ghost'
           size='medium'
-          aria-label='Remove'
+          aria-label={`Remove ${item.label}`}
           onClick={() => {
             deleteRequied(item)
           }}

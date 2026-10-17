@@ -108,7 +108,7 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
             <IconButton
               variant='ghost'
               size='medium'
-              aria-label='Delete group'
+              aria-label={`Delete group ${name}`}
               id='remove-group'
               onClick={(e) => {
                 e.stopPropagation()

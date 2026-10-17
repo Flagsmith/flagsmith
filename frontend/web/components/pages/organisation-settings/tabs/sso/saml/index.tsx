@@ -101,7 +101,7 @@ const SamlSection: FC<SamlSectionProps> = ({ organisationId }) => {
                 <IconButton
                   variant='ghost'
                   size='medium'
-                  aria-label='Delete SAML configuration'
+                  aria-label={`Delete SAML configuration ${samlConf.name}`}
                   id='delete-invite'
                   onClick={(e) => {
                     openModal(

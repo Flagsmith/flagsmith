@@ -311,7 +311,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                       <IconButton
                         variant='ghost'
                         size='small'
-                        aria-label='Copy feature name'
+                        aria-label={`Copy feature name ${name}`}
                         onClick={() => Utils.copyToClipboard(name)}
                         className='ms-2 me-2'
                       >

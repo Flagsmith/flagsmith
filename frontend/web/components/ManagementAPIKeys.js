@@ -559,7 +559,7 @@ export default class ManagementAPIKeys extends PureComponent {
                       <IconButton
                         variant='ghost'
                         size='medium'
-                        aria-label='Delete API key'
+                        aria-label={`Delete API key ${v.name}`}
                         onClick={(e) => {
                           e.stopPropagation()
                           this.remove(v)

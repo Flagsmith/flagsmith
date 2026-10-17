@@ -224,7 +224,7 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
                       <IconButton
                         variant='ghost'
                         size='medium'
-                        aria-label='Delete provider'
+                        aria-label={`Delete provider ${name}`}
                         id='delete-provider'
                         data-test='delete-provider'
                         onClick={(e) => {

@@ -140,7 +140,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
             <IconButton
               variant='ghost'
               size='medium'
-              aria-label='Delete custom field'
+              aria-label={`Delete custom field ${metadata.name}`}
               id='delete-invite'
               onClick={(e) => {
                 e.stopPropagation()

@@ -92,6 +92,7 @@ const FeatureAction: FC<FeatureActionProps> = ({
     <div className='feature-action'>
       <div ref={btnRef}>
         <ActionButton
+          isOpen={isOpen}
           onClick={() => setIsOpen(true)}
           data-test={!disableE2E ? `feature-action-${featureIndex}` : undefined}
         />

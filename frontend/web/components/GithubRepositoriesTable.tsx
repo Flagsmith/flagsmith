@@ -110,7 +110,7 @@ const TableRow: FC<{
         <IconButton
           variant='ghost'
           size='medium'
-          aria-label='Unlink repository'
+          aria-label={`Unlink repository ${repo.repository_owner}/${repo.repository_name}`}
           onClick={() => {
             openConfirm({
               body: (
