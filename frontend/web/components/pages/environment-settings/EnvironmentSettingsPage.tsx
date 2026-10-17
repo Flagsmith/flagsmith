@@ -865,7 +865,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                               <div className='table-column'>
                                 <IconButton
                                   variant='secondary'
-                                  size='medium'
+                                  size='large'
                                   aria-label={`Delete webhook ${webhook.url}`}
                                   id='delete-invite'
                                   onClick={(e) => {

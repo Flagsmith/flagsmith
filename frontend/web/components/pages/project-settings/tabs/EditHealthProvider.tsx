@@ -223,7 +223,7 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
                     <div className='table-column'>
                       <IconButton
                         variant='secondary'
-                        size='medium'
+                        size='large'
                         aria-label={`Delete provider ${name}`}
                         id='delete-provider'
                         data-test='delete-provider'

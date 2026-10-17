@@ -72,7 +72,7 @@ const AudienceSegmentList: FC<AudienceSegmentListProps> = ({
         {onRemove && (
           <IconButton
             variant='secondary'
-            size='medium'
+            size='large'
             className='audience-segment-row__remove'
             aria-label={`Remove ${segment.name} from audience`}
             onClick={() => onRemove(segment.id)}

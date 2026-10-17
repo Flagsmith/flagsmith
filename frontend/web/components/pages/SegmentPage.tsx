@@ -75,7 +75,7 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
               'Manage Segments',
               <IconButton
                 variant='secondary'
-                size='medium'
+                size='large'
                 aria-label='Delete segment'
                 data-test='remove-segment-btn'
                 disabled={!manageSegmentsPermission}

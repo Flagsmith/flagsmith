@@ -107,7 +107,7 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
           {isAdmin && (
             <IconButton
               variant='secondary'
-              size='medium'
+              size='large'
               aria-label={`Delete group ${name}`}
               id='remove-group'
               onClick={(e) => {

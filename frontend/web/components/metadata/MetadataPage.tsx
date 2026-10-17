@@ -139,7 +139,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
           <div className='table-column' style={{ width: '86px' }}>
             <IconButton
               variant='secondary'
-              size='medium'
+              size='large'
               aria-label={`Delete custom field ${metadata.name}`}
               id='delete-invite'
               onClick={(e) => {

@@ -86,7 +86,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
       <div className='table-column text-center' style={{ width: '80px' }}>
         <IconButton
           variant='secondary'
-          size='medium'
+          size='large'
           aria-label={`Unlink ${externalResource?.url}`}
           onClick={() =>
             openModal2(

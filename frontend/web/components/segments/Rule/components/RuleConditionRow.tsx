@@ -151,7 +151,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           )}
           <IconButton
             variant='secondary'
-            size='medium'
+            size='large'
             aria-label={`Remove condition ${ruleIndex + 1}`}
             data-test={`${dataTest}-remove`}
             id='remove-feature'

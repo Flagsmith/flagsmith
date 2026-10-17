@@ -100,7 +100,7 @@ const SamlSection: FC<SamlSectionProps> = ({ organisationId }) => {
               <div className='table-column' style={{ width: 90 }}>
                 <IconButton
                   variant='secondary'
-                  size='medium'
+                  size='large'
                   aria-label={`Delete SAML configuration ${samlConf.name}`}
                   id='delete-invite'
                   onClick={(e) => {

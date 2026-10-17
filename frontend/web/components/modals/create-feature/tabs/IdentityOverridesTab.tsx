@@ -266,7 +266,7 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
                     </Button>
                     <IconButton
                       variant='secondary'
-                      size='medium'
+                      size='large'
                       aria-label={`Remove override for ${identity.identifier}`}
                       onClick={(e: React.MouseEvent) => {
                         e.stopPropagation()

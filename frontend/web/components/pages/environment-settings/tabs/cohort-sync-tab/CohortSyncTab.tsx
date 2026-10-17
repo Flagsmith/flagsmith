@@ -106,7 +106,7 @@ const CohortSyncTab: FC<CohortSyncTabProps> = ({
         {canManage && (
           <IconButton
             variant='secondary'
-            size='medium'
+            size='large'
             onClick={() => handleRevoke(syncKey)}
             aria-label={`Revoke ${syncKey.name}`}
           >

@@ -197,7 +197,7 @@ const TrustRelationships: FC<TrustRelationshipsProps> = ({
               <div className={COLUMN.narrow}>
                 <IconButton
                   variant='secondary'
-                  size='medium'
+                  size='large'
                   onClick={(e) => {
                     e.stopPropagation()
                     remove(trustRelationship)

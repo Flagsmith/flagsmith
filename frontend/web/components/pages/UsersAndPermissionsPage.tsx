@@ -518,7 +518,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                 >
                                   <IconButton
                                     variant='secondary'
-                                    size='medium'
+                                    size='large'
                                     aria-label={`Delete invite for ${
                                       email || link
                                     }`}

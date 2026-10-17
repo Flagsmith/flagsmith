@@ -408,7 +408,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                           >
                             <IconButton
                               variant='secondary'
-                              size='medium'
+                              size='large'
                               aria-label={`Remove ${email} from group`}
                               disabled={!(isAdmin || email !== yourEmail)}
                               id='remove-feature'
