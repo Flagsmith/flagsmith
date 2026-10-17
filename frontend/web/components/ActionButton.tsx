@@ -12,7 +12,7 @@ type ActionButtonType = {
 const ActionButton: FC<ActionButtonType> = ({
   isOpen,
   onClick,
-  size = 'small',
+  size = 'medium',
   ...rest
 }) => {
   return (

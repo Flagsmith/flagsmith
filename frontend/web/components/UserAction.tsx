@@ -175,11 +175,7 @@ const UserAction: FC<UserActionProps> = ({
   return (
     <div>
       <div ref={btnRef}>
-        <ActionButton
-          size='medium'
-          isOpen={isOpen}
-          onClick={() => setIsOpen(true)}
-        />
+        <ActionButton isOpen={isOpen} onClick={() => setIsOpen(true)} />
       </div>
       <ActionDropdown
         isOpen={isOpen}
