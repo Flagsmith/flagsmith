@@ -56,6 +56,34 @@ def test_gitlab_project_list__valid_config__returns_paginated_response(
     ]
 
 
+@pytest.mark.usefixtures("gitlab_config")
+def test_gitlab_project_list__with_search_text__forwards_search_to_gitlab(
+    admin_client: APIClient,
+    project: Project,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    mocked_fetch = mocker.patch(
+        "integrations.gitlab.views.browse_gitlab.fetch_gitlab_projects",
+        return_value={
+            "results": [],
+            "current_page": 1,
+            "total_pages": 1,
+            "total_count": 0,
+        },
+    )
+
+    # When
+    response = admin_client.get(
+        f"/api/v1/projects/{project.id}/gitlab/projects/",
+        {"page": "1", "page_size": "100", "search_text": "my-project"},
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert mocked_fetch.call_args.kwargs["search_text"] == "my-project"
+
+
 def test_gitlab_project_list__no_gitlab_config__returns_400(
     admin_client: APIClient,
     project: Project,
