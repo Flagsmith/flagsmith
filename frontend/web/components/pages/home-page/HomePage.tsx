@@ -600,7 +600,7 @@ const HomePage: React.FC = () => {
                                 <Link
                                   id='existing-member-btn'
                                   to={`/signup${redirect}`}
-                                  className='ml-1 fw-bold'
+                                  className='ms-1 fw-bold'
                                 >
                                   Sign up
                                 </Link>
@@ -800,7 +800,7 @@ const HomePage: React.FC = () => {
                         <Row className='justify-content-center'>
                           Have an account?{' '}
                           <Link
-                            className='ml-1 fw-bold'
+                            className='ms-1 fw-bold'
                             to={`/login${redirect}`}
                           >
                             Log in

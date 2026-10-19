@@ -56,7 +56,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
           <Link
             href={`${externalResource?.url}`}
             target='_blank'
-            className='ml-1 mt-1'
+            className='ms-1 mt-1'
           >
             <Tooltip
               title={
