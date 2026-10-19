@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import moment from 'moment/moment'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import { RouterChildContext } from 'react-router'
@@ -37,13 +37,10 @@ const ScheduledChangesPage: FC<ScheduledChangesPageType> = ({ match }) => {
   const organisation = OrganisationStore.model as any
   const users = organisation?.users as User[]
 
-  const live_from_after = useMemo(() => {
-    return new Date().toISOString()
-  }, [])
   const { data: dataScheduled, isLoading } = useGetChangeRequestsQuery({
     committed: true,
     environmentId,
-    live_from_after,
+    live_from_after: true,
     page,
     page_size: 50,
   })

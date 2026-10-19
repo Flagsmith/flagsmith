@@ -20,9 +20,16 @@ export const changeRequestService = service
         Req['getChangeRequests']
       >({
         providesTags: [{ id: 'LIST', type: 'ChangeRequest' }],
-        query: ({ environmentId, ...rest }) => ({
+        query: ({ environmentId, live_from_after, ...rest }) => ({
           url: `environments/${environmentId}/list-change-requests/?${Utils.toParam(
-            { ...rest },
+            {
+              ...rest,
+              ...(live_from_after === true
+                ? { live_from_after: new Date().toISOString() }
+                : live_from_after
+                ? { live_from_after }
+                : {}),
+            },
           )}`,
         }),
         transformResponse: (res, _, req) => transformCorePaging(req, res),
