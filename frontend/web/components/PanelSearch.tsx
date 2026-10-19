@@ -23,6 +23,7 @@ import Panel from './base/grid/Panel'
 import Utils from 'common/utils/utils'
 import { SortOrder } from 'common/types/requests'
 import BareButton from './base/forms/BareButton'
+import classNames from 'classnames'
 
 export type SortOption = {
   value: string
@@ -275,15 +276,12 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                   renderTitle={(toggle: () => void, isActive: boolean) => (
                     <BareButton
                       onClick={toggle}
-                      className='flex-row'
-                      style={{ color: isActive ? '#6837FC' : '#656d7b' }}
+                      className={classNames('flex-row gap-1', {
+                        'text-action': isActive,
+                        'text-secondary': !isActive,
+                      })}
                     >
-                      <span className='mr-1'>
-                        <Icon
-                          name='height'
-                          fill={isActive ? '#6837FC' : '#656d7b'}
-                        />
-                      </span>
+                      <Icon name='height' />
                       {currentSort ? currentSort.label : 'Unsorted'}
                     </BareButton>
                   )}
