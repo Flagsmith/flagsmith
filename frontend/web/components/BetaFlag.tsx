@@ -1,8 +1,7 @@
 import React, { FC } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
-import { IonIcon } from '@ionic/react'
-import { rocket } from 'ionicons/icons'
+import Icon from './icons/Icon'
 type BetaFlagType = {
   children: React.ReactNode
   flagName?: string
@@ -18,7 +17,7 @@ const BetaFlag: FC<BetaFlagType> = ({ children, flagName, title = 'Beta' }) => {
       {show && (
         <div>
           <span className='chip chip--xs d-flex align-items-center fw-semibold text-white bg-primary900'>
-            {<IonIcon className='me-1' icon={rocket} />}
+            <Icon name='rocket' width={12} className='me-1' />
             {title}
           </span>
         </div>
