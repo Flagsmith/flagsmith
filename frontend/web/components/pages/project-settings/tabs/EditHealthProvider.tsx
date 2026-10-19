@@ -1,4 +1,5 @@
 import React, { FC, useEffect } from 'react'
+import Link from 'components/base/link'
 import { HealthProvider } from 'common/types/responses'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
@@ -142,14 +143,12 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
       <p className='fs-small lh-sm col-md-8 mb-4'>
         Connect your monitoring tools to Flagsmith and get updates on the health
         of your features in the Flagsmith dashboard.{' '}
-        <Button
-          theme='text'
+        <Link
           href='https://docs.flagsmith.com/advanced-use/feature-health'
           target='_blank'
-          className='fw-normal'
         >
           Learn about Feature Health.
-        </Button>
+        </Link>
       </p>
       <FeatureHealthProviderDocumentationNote />
       <label>Provider Name</label>

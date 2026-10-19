@@ -1,4 +1,5 @@
 import React, { FC, useState } from 'react'
+import Link from 'components/base/link'
 import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
 import Icon from 'components/icons/Icon'
@@ -178,14 +179,12 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         <p className='fs-small lh-sm'>
           Manage project-level custom fields and view inherited organisation
           fields.{' '}
-          <Button
-            theme='text'
+          <Link
             target='_blank'
             href='https://docs.flagsmith.com/advanced-use/custom-fields/'
-            className='fw-normal'
           >
             Learn more
-          </Button>
+          </Link>
         </p>
 
         <FormGroup className='mt-4'>
@@ -252,14 +251,12 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
       </Row>
       <p className='fs-small lh-sm'>
         Add custom fields to features, segments, environments and projects.{' '}
-        <Button
-          theme='text'
+        <Link
           target='_blank'
           href='https://docs.flagsmith.com/advanced-use/custom-fields/'
-          className='fw-normal'
         >
           Learn more
-        </Button>
+        </Link>
       </p>
       <FormGroup className='mt-4'>
         <PanelSearch

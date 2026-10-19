@@ -1,4 +1,5 @@
 import React, { FC, useState } from 'react'
+import Link from 'components/base/link'
 import Button from 'components/base/forms/Button'
 import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
@@ -53,14 +54,9 @@ const MCPIntegration: FC = () => {
       <p className='mb-2'>
         Allow AI assistants and agents to interact with your feature flags,
         including managing flags, segments, and release workflows.{' '}
-        <Button
-          theme='text'
-          href={DOCS_URL}
-          target='_blank'
-          className='fw-normal'
-        >
+        <Link href={DOCS_URL} target='_blank'>
           View docs
-        </Button>
+        </Link>
       </p>
 
       <Tabs uncontrolled theme='pill' className='mx-0'>

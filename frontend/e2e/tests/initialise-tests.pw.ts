@@ -20,7 +20,7 @@ test.describe('Signup', () => {
     await page.goto('/');
 
     log('Create Organisation');
-    await click(byId('jsSignup'));
+    await page.getByRole('link', { exact: true, name: 'Sign up' }).click();
     // Wait for firstName field to be visible after modal opens
     await waitForElementVisible(byId('firstName'));
     await visualSnapshot(page, 'signup-form', testInfo)

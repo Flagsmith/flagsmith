@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import Link from 'components/base/link'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
 import ProjectStore from 'common/stores/project-store'
@@ -20,7 +21,7 @@ import PageTitle from 'components/PageTitle'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import AccountStore from 'common/stores/account-store'
-import { Link, useHistory, useRouteMatch } from 'react-router-dom'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
@@ -740,14 +741,12 @@ const EnvironmentSettingsPage: React.FC = () => {
                                 <br />
                                 For full information on the excluded fields see
                                 documentation{' '}
-                                <Button
-                                  theme='text'
+                                <Link
                                   href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
                                   target='_blank'
-                                  className='fw-normal'
                                 >
                                   here.
-                                </Button>
+                                </Link>
                                 <div className='text-danger'>
                                   Enabling this feature will change the response
                                   from the API and could break your existing
@@ -805,14 +804,12 @@ const EnvironmentSettingsPage: React.FC = () => {
                           Feature webhooks let you know when features have
                           changed. You can configure 1 or more Feature Webhooks
                           per Environment.{' '}
-                          <Button
-                            theme='text'
+                          <Link
                             href='https://docs.flagsmith.com/system-administration/webhooks#environment-web-hooks'
                             target='_blank'
-                            className='fw-normal'
                           >
                             Learn about Feature Webhooks.
-                          </Button>
+                          </Link>
                         </p>
                       </div>
                       <Button onClick={handleCreateWebhook}>

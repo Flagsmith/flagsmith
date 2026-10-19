@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
+import Link from './base/link'
 import _data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -19,7 +20,7 @@ import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
 import { close as closeIcon } from 'ionicons/icons'
 import Utils from 'common/utils/utils'
-import { Link, useHistory } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import each from 'lodash/each'
 import { useGetProjectQuery } from 'common/services/useProject'
 import API from 'project/api'
@@ -282,14 +283,9 @@ const Integration: FC<IntegrationProps> = (props) => {
           <div className='subtitle'>
             {description}{' '}
             {docs && (
-              <Button
-                theme='text'
-                href={docs}
-                target='_blank'
-                className='fw-normal'
-              >
+              <Link href={docs} target='_blank'>
                 View docs
-              </Button>
+              </Link>
             )}
           </div>
         </div>
@@ -303,11 +299,7 @@ const Integration: FC<IntegrationProps> = (props) => {
             {`Integration ${
               props.lastSaved.isCreate ? 'added to' : 'saved to'
             } ${lastSavedProject?.name ?? 'your project'}.\u00A0`}
-            <Link
-              to={`/project/${props.lastSaved.projectId}/integrations`}
-              data-test='view-project-integrations-link'
-              className='text-action'
-            >
+            <Link to={`/project/${props.lastSaved.projectId}/integrations`}>
               Manage in project integrations
             </Link>
           </span>

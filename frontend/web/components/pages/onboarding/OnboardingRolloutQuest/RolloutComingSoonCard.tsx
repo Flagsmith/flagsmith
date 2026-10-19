@@ -1,4 +1,5 @@
 import React, { FC, useState } from 'react'
+import Link from 'components/base/link'
 import flagsmith from '@flagsmith/flagsmith'
 import Button from 'components/base/forms/Button'
 import Chip from 'components/base/Chip'
@@ -56,9 +57,9 @@ const RolloutComingSoonCard: FC<RolloutComingSoonCardProps> = ({
           </Button>
         )}
         {/* No target: a mailto in a new tab leaves a blank tab behind. */}
-        <Button theme='text' href={ROLLOUT_FEEDBACK_URL} onClick={onFeedback}>
+        <Link href={ROLLOUT_FEEDBACK_URL} onClick={onFeedback}>
           Tell us what you need
-        </Button>
+        </Link>
       </div>
     </section>
   )

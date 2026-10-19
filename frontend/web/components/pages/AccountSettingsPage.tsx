@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
+import Link from 'components/base/link'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
 // @ts-ignore
@@ -313,14 +314,12 @@ const AccountSettingsPage: FC = () => {
                 <p>
                   You can use this token to securely integrate with the private
                   endpoints of our{' '}
-                  <Button
-                    theme='text'
+                  <Link
                     href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'
                     target='_blank'
-                    className='fw-normal'
                   >
                     RESTful API
-                  </Button>
+                  </Link>
                   .
                 </p>
                 <p>

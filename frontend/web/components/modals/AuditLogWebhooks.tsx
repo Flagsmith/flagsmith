@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import Link from 'components/base/link'
 import JSONReference from 'components/JSONReference'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
@@ -74,13 +75,9 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
             Audit webhooks let you know when audit logs occur. You can configure
             1 or more audit webhooks per organisation.
             <br />
-            <Button
-              theme='text'
-              href='https://docs.flagsmith.com/system-administration/webhooks'
-              className='fw-normal'
-            >
+            <Link href='https://docs.flagsmith.com/system-administration/webhooks'>
               Learn about Audit Webhooks.
-            </Button>
+            </Link>
           </p>
         </div>
 

@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react'
+import Link from './base/link'
 import data from 'common/data/base/_data'
 import AppActions from 'common/dispatcher/app-actions'
 import OrganisationStore from 'common/stores/organisation-store'
@@ -460,14 +461,12 @@ export default class ManagementAPIKeys extends PureComponent {
             }
           >
             {`API keys are used to authenticate with the Management API. `}
-            <Button
-              theme='text'
+            <Link
               href='https://docs.flagsmith.com/integrations/terraform#terraform-api-key'
               target='_blank'
-              className='fw-normal'
             >
               {`Learn about API Keys.`}
-            </Button>
+            </Link>
           </PageTitle>
         </div>
         {(this.state.isLoading || !OrganisationStore.model?.users) && (

@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import Link from 'components/base/link'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
 import RolloutComingSoonCard from './RolloutComingSoonCard'
@@ -47,15 +48,14 @@ const OnboardingRolloutQuest: FC<OnboardingRolloutQuestProps> = ({
         ))}
       </ol>
       <RolloutPrerequisite />
-      <Button
-        theme='text'
+      <Link
         href={ROLLOUT_GUIDE_URL}
         target='_blank'
         className='align-self-start'
       >
         <Icon name='file-text' width={14} />
         Read the gradual rollout guide
-      </Button>
+      </Link>
     </section>
 
     <RolloutComingSoonCard onNotifyMe={onNotifyMe} onFeedback={onFeedback} />

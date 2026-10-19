@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
+import Link from 'components/base/link'
 import CopyField from 'components/CopyField'
 import PageTitle from 'components/PageTitle'
-import Button from 'components/base/forms/Button'
 import { useRouteMatch } from 'react-router-dom'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { ServerSideSDKKeys } from './components'
@@ -33,13 +33,12 @@ const SDKKeysPage: FC = () => {
     >
       <PageTitle title='Client-side Environment Key'>
         Use this key to initialise{' '}
-        <Button
-          theme='text'
+        <Link
           href='https://docs.flagsmith.com/clients/overview#client-side-sdks'
           target='_blank'
         >
           Client-side
-        </Button>{' '}
+        </Link>{' '}
         SDKs.
       </PageTitle>
       <div className='col-md-6'>

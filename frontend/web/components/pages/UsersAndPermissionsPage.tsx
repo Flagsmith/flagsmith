@@ -1,4 +1,5 @@
 import React, { FC, useState } from 'react'
+import Link from 'components/base/link'
 import JSONReference from 'components/JSONReference'
 import Button from 'components/base/forms/Button'
 import Tabs from 'components/navigation/TabMenu/Tabs'
@@ -170,14 +171,12 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
             Flagsmith lets you manage fine-grained permissions for your projects
             and environments, invite members as a user or an administrator and
             then set permission in your Project and Environment settings.{' '}
-            <Button
-              theme='text'
+            <Link
               href='https://docs.flagsmith.com/system-administration/rbac'
               target='_blank'
-              className='fw-normal'
             >
               Learn about User Roles.
-            </Button>
+            </Link>
           </p>
         </div>
         <div>
@@ -402,14 +401,12 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                 Anyone with link can join as a standard user,
                                 once they have joined you can edit their role
                                 from the team members panel.{' '}
-                                <Button
-                                  theme='text'
+                                <Link
                                   target='_blank'
                                   href='https://docs.flagsmith.com/system-administration/rbac'
-                                  className='fw-normal'
                                 >
                                   Learn about User Roles.
-                                </Button>
+                                </Link>
                               </p>
                               <div className='text-right mt-2'>
                                 {error && <ErrorMessage error={error} />}

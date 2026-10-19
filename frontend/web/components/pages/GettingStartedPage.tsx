@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
+import Link from 'components/base/link'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import loadChat, { openChat } from 'common/loadChat'
@@ -167,7 +168,6 @@ const GettingStartedPage: FC = () => {
             theme='text'
             onClick={onChatClick}
             className='text-action gap-2'
-            href=''
           >
             let us know
           </Button>
@@ -192,10 +192,10 @@ const GettingStartedPage: FC = () => {
               <hr className='mt-0 py-0' />
               <div className='d-flex mb-3 flex-column align-items-start gap-2'>
                 {links.map((v) => (
-                  <Button key={v.href} theme='text' href={v.href}>
+                  <Link key={v.href} href={v.href}>
                     <Icon name='link' />
                     {v.title}
-                  </Button>
+                  </Link>
                 ))}
               </div>
               <hr className='mt-0 py-0' />

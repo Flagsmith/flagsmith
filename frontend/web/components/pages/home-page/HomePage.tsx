@@ -22,7 +22,7 @@ import InfoMessage from 'components/InfoMessage'
 import OnboardingPage from 'components/pages/OnboardingPage'
 import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 import InputGroup from 'components/base/forms/InputGroup'
-import { Link } from 'react-router-dom'
+import Link from 'components/base/link'
 import Project from 'common/project'
 import API from 'project/api'
 import Utils from 'common/utils/utils'
@@ -424,14 +424,13 @@ const HomePage: React.FC = () => {
                     <p className='mb-0'>
                       We have a 100% free for life plan for smaller projects.
                     </p>
-                    <Button
-                      theme='text'
+                    <Link
                       className='pt-3 fw-bold'
                       href='https://flagsmith.com/pricing'
                       target='_blank'
                     >
                       Check out our Pricing
-                    </Button>
+                    </Link>
                   </>
                 )}
               </div>
@@ -451,10 +450,12 @@ const HomePage: React.FC = () => {
                       To join an organisation please contact your administrator
                       for an invite link.
                       <div>
-                        <Link id='existing-member-btn' to={`/login${redirect}`}>
-                          <Button theme='text' className='mt-2 pb-3 pt-2'>
-                            Already a member?
-                          </Button>
+                        <Link
+                          id='existing-member-btn'
+                          to={`/login${redirect}`}
+                          className='mt-2 pb-3 pt-2'
+                        >
+                          Already a member?
                         </Link>
                       </div>
                     </Card>
@@ -552,15 +553,9 @@ const HomePage: React.FC = () => {
                                         tabIndex={-1}
                                         to={`/password-recovery${redirect}`}
                                         onClick={showForgotPassword}
+                                        className='fs-small'
                                       >
-                                        <Button
-                                          theme='text'
-                                          tabIndex={-1}
-                                          type='button'
-                                          className='fs-small'
-                                        >
-                                          Forgot password
-                                        </Button>
+                                        Forgot password
                                       </Link>
                                     </div>
                                   )}
@@ -605,14 +600,9 @@ const HomePage: React.FC = () => {
                                 <Link
                                   id='existing-member-btn'
                                   to={`/signup${redirect}`}
+                                  className='ml-1 fw-bold'
                                 >
-                                  <Button
-                                    theme='text'
-                                    data-test='jsSignup'
-                                    className='ml-1 fw-bold'
-                                  >
-                                    Sign up
-                                  </Button>
+                                  Sign up
                                 </Link>
                               </Row>
                             )}
@@ -809,13 +799,12 @@ const HomePage: React.FC = () => {
                         </Card>
                         <Row className='justify-content-center'>
                           Have an account?{' '}
-                          <Button
-                            theme='text'
+                          <Link
                             className='ml-1 fw-bold'
-                            href={`/login${redirect}`}
+                            to={`/login${redirect}`}
                           >
                             Log in
-                          </Button>
+                          </Link>
                         </Row>
                       </>
                     )}

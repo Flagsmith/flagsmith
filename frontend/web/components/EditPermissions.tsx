@@ -1,4 +1,5 @@
 import React, { FC, forwardRef, useCallback, useEffect, useState } from 'react'
+import Link from './base/link'
 import { find } from 'lodash'
 import Icon from './icons/Icon'
 import FieldLabel from './base/forms/FieldLabel'
@@ -1078,14 +1079,12 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
       <p className='fs-small lh-sm col-md-8 mb-4'>
         Flagsmith lets you manage fine-grained permissions for your projects and
         environments.{' '}
-        <Button
-          theme='text'
+        <Link
           href='https://docs.flagsmith.com/system-administration/rbac'
           target='_blank'
-          className='fw-normal'
         >
           Learn about User Roles.
-        </Button>
+        </Link>
       </p>
       <Tabs
         urlParam='type'

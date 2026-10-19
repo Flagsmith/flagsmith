@@ -62,7 +62,7 @@ test.describe('Onboarding', () => {
 
     log('Sign up');
     await page.goto('/');
-    await click(byId('jsSignup'));
+    await page.getByRole('link', { exact: true, name: 'Sign up' }).click();
     await waitForElementVisible(byId('firstName'));
     await setText(byId('firstName'), 'Bullet');
     await setText(byId('lastName'), 'Train');

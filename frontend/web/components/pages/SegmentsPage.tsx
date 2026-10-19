@@ -1,4 +1,5 @@
 import React, { FC, ReactNode, useEffect, useState } from 'react'
+import Link from 'components/base/link'
 import { useHistory, useRouteMatch } from 'react-router-dom'
 import { sortBy } from 'lodash'
 
@@ -201,23 +202,20 @@ const SegmentsPage: FC = () => {
         title={'Segments'}
       >
         Create and manage groups of identities with similar{' '}
-        <Button
-          theme='text'
+        <Link
           href='https://docs.flagsmith.com/basic-features/managing-identities#identity-traits'
           target='_blank'
         >
           traits
-        </Button>
+        </Link>
         . Segments can be used to override features within the features page for
         any environment.{' '}
-        <Button
-          theme='text'
+        <Link
           target='_blank'
           href='https://docs.flagsmith.com/basic-features/segments'
-          className='fw-normal'
         >
           Learn more.
-        </Button>
+        </Link>
       </PageTitle>
       <div className='segments-page'>
         {isLoading && !segments && !searchInput && (

@@ -1,4 +1,5 @@
 import React, { FC, useEffect } from 'react'
+import Link from './base/link'
 import PanelSearch from './PanelSearch'
 import Button from './base/forms/Button'
 import Icon from './icons/Icon'
@@ -52,11 +53,10 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
       </div>
       <Flex className='table-column'>
         <Row className='font-weight-medium'>
-          <Button
-            theme='text'
+          <Link
             href={`${externalResource?.url}`}
             target='_blank'
-            className='fw-normal ml-1 mt-1'
+            className='ml-1 mt-1'
           >
             <Tooltip
               title={
@@ -74,7 +74,7 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
             >
               {`${externalResource?.url}`}
             </Tooltip>
-          </Button>
+          </Link>
         </Row>
       </Flex>
       <div className='table-column text-center' style={{ width: '80px' }}>
