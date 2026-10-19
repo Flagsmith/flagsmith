@@ -1,13 +1,11 @@
 import React, { FC, useEffect, useState } from 'react'
 import cn from 'classnames'
-import { close } from 'ionicons/icons'
-import { IonIcon } from '@ionic/react'
 
 import Utils from 'common/utils/utils'
 import { colorIconWarning } from 'common/theme/tokens'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
-import BareButton from 'components/base/forms/BareButton'
+import IconButton from 'components/base/IconButton'
 
 type ThemeType = 'danger' | 'success' | 'warning'
 
@@ -118,11 +116,14 @@ const Message: FC<MessageProps> = ({
             </div>
           )}
         </div>
-        <BareButton aria-label='Dismiss' onClick={remove}>
-          <span className='icon'>
-            <IonIcon icon={close} style={{ fontSize: '16px' }} />
-          </span>
-        </BareButton>
+        <IconButton
+          variant='ghost'
+          size='small'
+          aria-label='Dismiss'
+          onClick={remove}
+        >
+          <Icon name='close' width={16} />
+        </IconButton>
       </div>
     </div>
   )
