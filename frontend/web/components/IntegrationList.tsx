@@ -17,8 +17,6 @@ import map from 'lodash/map'
 import Button from './base/forms/Button'
 import DropdownMenu from './base/DropdownMenu'
 import Icon from './icons/Icon'
-import { IonIcon } from '@ionic/react'
-import { close as closeIcon } from 'ionicons/icons'
 import Utils from 'common/utils/utils'
 import { useHistory } from 'react-router-dom'
 import each from 'lodash/each'
@@ -310,7 +308,7 @@ const Integration: FC<IntegrationProps> = (props) => {
               className='ms-auto text-white'
               aria-label='Dismiss'
             >
-              <IonIcon icon={closeIcon} />
+              <Icon name='close' width={16} />
             </BareButton>
           )}
         </div>
