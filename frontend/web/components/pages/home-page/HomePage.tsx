@@ -549,7 +549,6 @@ const HomePage: React.FC = () => {
                                   {!disableForgotPassword && (
                                     <div className='d-flex justify-content-end mb-2'>
                                       <Link
-                                        tabIndex={-1}
                                         to={`/password-recovery${redirect}`}
                                         onClick={showForgotPassword}
                                         className='fs-small'
