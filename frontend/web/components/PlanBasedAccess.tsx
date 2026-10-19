@@ -5,9 +5,10 @@ import AccountStore from 'common/stores/account-store'
 import Button from './base/forms/Button'
 import Constants from 'common/constants'
 import { IonIcon } from '@ionic/react'
-import { documents, lockClosed } from 'ionicons/icons'
+import { lockClosed } from 'ionicons/icons'
 import classNames from 'classnames'
 import API from 'project/api'
+import Icon from './icons/Icon'
 
 type PlanBasedBannerType = {
   className?: string
@@ -156,7 +157,7 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({ children, ...props }) => {
             }
             target='_blank'
           >
-            <IonIcon icon={documents} />
+            <Icon name='file-text' width={14} />
             View Docs
           </Button>
         ))}

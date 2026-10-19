@@ -7,7 +7,7 @@ import React, {
   useState,
 } from 'react'
 import { IonIcon } from '@ionic/react'
-import { checkmarkCircle, chevronDown, chevronUp } from 'ionicons/icons'
+import { chevronDown, chevronUp } from 'ionicons/icons'
 import InlineModal from './InlineModal'
 import Input from './base/forms/Input'
 import {
@@ -30,6 +30,7 @@ import CreateOrganisationModal from './modals/CreateOrganisation'
 import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
 import BareButton from './base/forms/BareButton'
+import Icon from './icons/Icon'
 
 type BreadcrumbSeparatorType = {
   hideDropdown?: boolean
@@ -133,7 +134,11 @@ const ItemList: FC<ItemListType> = ({
               </span>
             </div>
             {isActive && (
-              <IonIcon className='icon-action' icon={checkmarkCircle} />
+              <Icon
+                name='checkmark-circle'
+                width={16}
+                className='icon-action'
+              />
             )}
           </BareButton>
         )

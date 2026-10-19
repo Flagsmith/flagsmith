@@ -12,8 +12,6 @@ import { AutoSizer, List } from 'react-virtualized'
 import Popover from './base/Popover'
 import Input from './base/forms/Input'
 import Icon from './icons/Icon'
-import { IonIcon } from '@ionic/react'
-import { chevronDown, chevronUp } from 'ionicons/icons'
 import Button from './base/forms/Button'
 import Paging from './Paging'
 import lodashFilter from 'lodash/filter'
@@ -300,12 +298,13 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                           <Row space className='px-3 align-items-center py-2'>
                             <div>{sortOption.label}</div>
                             {currentSort?.value === sortOption.value && (
-                              <IonIcon
-                                icon={
+                              <Icon
+                                name={
                                   sortOrder === SortOrder.ASC
-                                    ? chevronUp
-                                    : chevronDown
+                                    ? 'chevron-up'
+                                    : 'chevron-down'
                                 }
+                                width={16}
                               />
                             )}
                           </Row>
