@@ -42,8 +42,9 @@ const RepoSectionHeader: React.FC<RepoSectionHeaderProps> = ({
             href={repositoryName}
             target='_blank'
             onClick={(e) => e.stopPropagation()}
+            aria-label='Open repository'
           >
-            <Icon name='open-external-link' width={12} fill='#6837fc' />
+            <Icon name='open-external-link' width={12} />
           </Link>
         </div>
       </Row>

@@ -66,7 +66,11 @@ const ExternalResourceRow: FC<ExternalResourceRowType> = ({
                     {`(#${externalResource?.url.replace(/\D/g, '')})`}
                   </span>
                   <div className='ml-2 mb-1'>
-                    <Icon name='open-external-link' width={14} fill='#6837fc' />
+                    <Icon
+                      name='open-external-link'
+                      width={14}
+                      className='icon-action'
+                    />
                   </div>
                 </Row>
               }

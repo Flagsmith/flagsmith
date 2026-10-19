@@ -368,8 +368,8 @@ const IntegrationAdoptionTable: FC<IntegrationAdoptionTableProps> = ({
                     className='fs-captionSmall'
                     target='_blank'
                   >
-                    Docs{' '}
-                    <Icon fill='#6837fc' name='open-external-link' width={12} />
+                    Docs
+                    <Icon name='open-external-link' width={12} />
                   </Link>
                 )}
               </div>
