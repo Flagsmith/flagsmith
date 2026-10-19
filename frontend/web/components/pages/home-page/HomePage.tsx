@@ -451,7 +451,6 @@ const HomePage: React.FC = () => {
                       for an invite link.
                       <div>
                         <Link
-                          id='existing-member-btn'
                           to={`/login${redirect}`}
                           className='mt-2 pb-3 pt-2'
                         >
@@ -598,7 +597,6 @@ const HomePage: React.FC = () => {
                               <Row className='justify-content-center'>
                                 Creating a new account is easy{' '}
                                 <Link
-                                  id='existing-member-btn'
                                   to={`/signup${redirect}`}
                                   className='ms-1 fw-bold'
                                 >
