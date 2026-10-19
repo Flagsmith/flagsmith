@@ -1,5 +1,5 @@
 import React, { FC, useMemo } from 'react'
-import { Link, useHistory, useLocation, useParams } from 'react-router-dom'
+import { useHistory, useLocation, useParams } from 'react-router-dom'
 import PageTitle from 'components/PageTitle'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
@@ -18,6 +18,7 @@ import {
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
 import CreateFlagModal from 'components/modals/create-feature'
+import Link from 'components/base/link'
 
 type RouteParams = {
   projectId: string
@@ -254,10 +255,8 @@ const FlagEnvironmentsPage: FC = () => {
                 : '',
             }}
           >
-            <Button theme='text' size='small'>
-              <Icon name='arrow-left' width={16} />
-              Back to Release Manager
-            </Button>
+            <Icon name='arrow-left' width={16} />
+            Back to Release Manager
           </Link>
         </div>
       )}

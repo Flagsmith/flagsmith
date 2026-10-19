@@ -12,7 +12,6 @@ import {
   User,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
-import { Link } from 'react-router-dom'
 import PageTitle from 'components/PageTitle'
 import PlanBasedAccess, {
   featureDescriptions,
@@ -22,6 +21,7 @@ import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ChangeRequestList from 'components/ChangeRequestsList'
+import Link from 'components/base/link'
 
 type ChangeRequestsPageType = {
   router: RouterChildContext['router']

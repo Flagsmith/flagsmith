@@ -3,6 +3,7 @@ import flagsmith from '@flagsmith/flagsmith'
 import Project from 'common/project'
 import FeatureAnalytics from 'components/feature-page/FeatureNavTab/FeatureAnalytics'
 import FeatureCodeReferencesContainer from 'components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer'
+import Link from 'components/base/link'
 
 type UsageTabProps = {
   projectId: number | string
@@ -42,10 +43,9 @@ const UsageTab: FC<UsageTabProps> = ({
         <div className='text-muted mb-2'>
           Code references allow you to track where feature flags are being used
           within your code.{' '}
-          <a
+          <Link
             target='_blank'
             href='https://docs.flagsmith.com/managing-flags/code-references'
-            rel='noreferrer'
             onClick={() => {
               flagsmith.trackEvent('code_references_click_docs', {
                 metadata: {
@@ -55,7 +55,7 @@ const UsageTab: FC<UsageTabProps> = ({
             }}
           >
             Learn more
-          </a>
+          </Link>
         </div>
         <FeatureCodeReferencesContainer
           featureId={featureId}

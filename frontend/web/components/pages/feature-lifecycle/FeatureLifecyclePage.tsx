@@ -29,6 +29,7 @@ import {
 } from './constants'
 import type { Section } from './types'
 import type { FilterState } from 'common/types/featureFilters'
+import BareButton from 'components/base/forms/BareButton'
 
 function useSectionParam(): Section {
   const { section } = useParams<{ section?: string }>()
@@ -196,13 +197,9 @@ const FeatureLifecyclePage: FC = () => {
                 {activeSection.monitorTooltip && (
                   <Tooltip
                     title={
-                      <a
-                        className='ms-1 d-inline-flex align-items-center gap-1'
-                        href='#'
-                        onClick={(e) => e.preventDefault()}
-                      >
+                      <BareButton className='ms-1 gap-1 text-action'>
                         Why am I seeing this?
-                      </a>
+                      </BareButton>
                     }
                   >
                     {MONITOR_TOOLTIP}

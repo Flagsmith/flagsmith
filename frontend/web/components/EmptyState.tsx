@@ -1,5 +1,6 @@
 import React, { FC, ReactNode } from 'react'
 import Icon, { IconName } from './icons/Icon'
+import Link from './base/link'
 
 type EmptyStateProps = {
   title: string
@@ -34,14 +35,9 @@ const EmptyState: FC<EmptyStateProps> = ({
         <div className='empty-state__description text-muted'>{description}</div>
       )}
       {docsUrl && (
-        <a
-          href={docsUrl}
-          target='_blank'
-          rel='noreferrer'
-          className='btn btn-link'
-        >
+        <Link href={docsUrl} target='_blank'>
           {docsLabel}
-        </a>
+        </Link>
       )}
       {action}
     </div>

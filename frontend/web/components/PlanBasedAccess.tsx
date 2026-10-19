@@ -145,31 +145,31 @@ const PlanBasedBanner: FC<PlanBasedBannerType> = ({ children, ...props }) => {
     <div className='d-flex gap-2 align-items-center text-nowrap'>
       {!Utils.isSaas() ||
         (docs && (
-          <a
+          <Button
+            theme='secondary'
+            size='xSmall'
+            className='text-white d-flex align-items-center gap-1'
             onClick={trackFeature}
-            className='btn text-white d-flex align-items-center gap-1 btn-xsm btn-secondary'
             href={
               docs ||
               'https://docs.flagsmith.com/deployment/configuration/enterprise-edition'
             }
-            target={'_blank'}
-            rel='noreferrer'
+            target='_blank'
           >
             <IonIcon icon={documents} />
             View Docs
-          </a>
+          </Button>
         ))}
       {Utils.isSaas() ? (
-        <a
+        <Button
+          theme='tertiary'
+          size='xSmall'
           onClick={trackFeature}
-          target='_blank'
           href={Constants.getUpgradeUrl(feature)}
-          rel='noreferrer'
+          target='_blank'
         >
-          <Button theme='tertiary' size='xSmall'>
-            Start Free Trial
-          </Button>
-        </a>
+          Start Free Trial
+        </Button>
       ) : (
         <Button
           onClick={trackFeature}

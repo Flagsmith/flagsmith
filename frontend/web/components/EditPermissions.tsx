@@ -918,16 +918,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                   explicit user permissions to view this {parentLevel}. If the
                   user does not belong to any groups with this permissions, you
                   may have to adjust their permissions in{' '}
-                  <a
-                    onClick={() => {
-                      if (parentSettingsLink) {
-                        history.push(parentSettingsLink)
-                      }
-                      closeModal()
-                    }}
-                  >
+                  {parentSettingsLink ? (
+                    <Link to={parentSettingsLink} onClick={() => closeModal()}>
+                      <strong>{parentLevel} settings</strong>
+                    </Link>
+                  ) : (
                     <strong>{parentLevel} settings</strong>
-                  </a>
+                  )}
                   .
                 </InfoMessage>
               </div>

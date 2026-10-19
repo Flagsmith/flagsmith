@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
-import { Link, useHistory, useRouteMatch } from 'react-router-dom'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 import keyBy from 'lodash/keyBy'
 
@@ -37,6 +37,7 @@ import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
 import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
 import { buildApiFilterParams } from 'common/utils/featureFilterParams'
 import { useFeatureFilters } from './features/hooks/useFeatureFilters'
+import Link from 'components/base/link'
 
 interface RouteParams {
   environmentId: string

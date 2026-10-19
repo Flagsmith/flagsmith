@@ -42,9 +42,9 @@ const MCPIntegration: FC = () => {
     ? `/organisation/${organisationId}/settings?tab=api-keys`
     : undefined
   const apiKeysLink = apiKeysHref ? (
-    <a href={apiKeysHref} target='_blank' rel='noreferrer'>
+    <Link to={apiKeysHref} target='_blank'>
       Organisation Settings
-    </a>
+    </Link>
   ) : (
     <>Organisation Settings</>
   )
@@ -111,13 +111,9 @@ const MCPIntegration: FC = () => {
                     </p>
                     <p className='text-muted mt-1 mb-0'>
                       See{' '}
-                      <a
-                        href={SELF_HOSTING_DOCS_URL}
-                        target='_blank'
-                        rel='noreferrer'
-                      >
+                      <Link href={SELF_HOSTING_DOCS_URL} target='_blank'>
                         Self-hosting the MCP Server
-                      </a>
+                      </Link>
                       .
                     </p>
                   </>

@@ -240,22 +240,22 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                       If you wish to invite any additional
                                       members, please{' '}
                                       {Utils.isSaas() ? (
-                                        <a
-                                          href='#'
+                                        <Button
+                                          theme='text'
                                           onClick={(e) => {
                                             e.stopPropagation()
                                             openChat()
                                           }}
                                         >
                                           contact us
-                                        </a>
+                                        </Button>
                                       ) : (
-                                        <a
+                                        <Link
                                           href='mailto:support@flagsmith.com'
                                           onClick={(e) => e.stopPropagation()}
                                         >
                                           contact us
-                                        </a>
+                                        </Link>
                                       )}
                                       .
                                     </strong>
@@ -264,16 +264,9 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                       If you wish to invite any additional
                                       members, please{' '}
                                       {
-                                        <a
-                                          href='#'
-                                          onClick={() => {
-                                            history.replace(
-                                              '/organisation-settings?tab=billing',
-                                            )
-                                          }}
-                                        >
+                                        <Link to='/organisation-settings?tab=billing'>
                                           Upgrade your plan
-                                        </a>
+                                        </Link>
                                       }
                                       .
                                     </div>

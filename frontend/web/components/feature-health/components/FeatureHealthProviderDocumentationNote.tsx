@@ -1,4 +1,5 @@
 import InfoMessage from 'components/InfoMessage'
+import Link from 'components/base/link'
 
 interface FeatureHealthProviderDocumentationNoteProps {
   defaultClosed?: boolean
@@ -18,18 +19,18 @@ const FeatureHealthProviderDocumentationNote: React.FC<
       <div>
         <span>
           Webhook provider:{' '}
-          <a href='https://docs.flagsmith.com/advanced-use/feature-health#webhook-provider'>
+          <Link href='https://docs.flagsmith.com/advanced-use/feature-health#webhook-provider'>
             https://docs.flagsmith.com/advanced-use/feature-health#webhook-provider
-          </a>
+          </Link>
         </span>
       </div>
       <div>
         <span>
           Grafana provider:{' '}
-          <a href='https://docs.flagsmith.com/integrations/apm/grafana/#in-grafana-1'>
+          <Link href='https://docs.flagsmith.com/integrations/apm/grafana/#in-grafana-1'>
             {' '}
             https://docs.flagsmith.com/integrations/apm/grafana/#in-grafana-1
-          </a>
+          </Link>
         </span>
       </div>
     </InfoMessage>

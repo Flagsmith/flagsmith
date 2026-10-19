@@ -22,6 +22,7 @@ import orderBy from 'lodash/orderBy'
 import Panel from './base/grid/Panel'
 import Utils from 'common/utils/utils'
 import { SortOrder } from 'common/types/requests'
+import BareButton from './base/forms/BareButton'
 
 export type SortOption = {
   value: string
@@ -128,7 +129,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
   }, [propSearch, internalSearch, exact, filter, filterRow, items, sortItems])
 
   const handleSort = useCallback(
-    (e: React.MouseEvent<HTMLAnchorElement>, sortOption: SortOption) => {
+    (e: React.MouseEvent<HTMLElement>, sortOption: SortOption) => {
       e.preventDefault()
       if (sortOption.value === sortBy) {
         const newSortOrder =
@@ -272,7 +273,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
               <Row className='mr-3 position-relative'>
                 <Popover
                   renderTitle={(toggle: () => void, isActive: boolean) => (
-                    <a
+                    <BareButton
                       onClick={toggle}
                       className='flex-row'
                       style={{ color: isActive ? '#6837FC' : '#656d7b' }}
@@ -284,16 +285,15 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                         />
                       </span>
                       {currentSort ? currentSort.label : 'Unsorted'}
-                    </a>
+                    </BareButton>
                   )}
                 >
                   {(toggle: () => void) => (
                     <div>
                       {sorting.map((sortOption, i) => (
-                        <a
+                        <BareButton
                           key={i}
-                          className='table-filter-item'
-                          href='#'
+                          className='table-filter-item w-100'
                           onClick={(e) => {
                             handleSort(e, sortOption)
                             toggle()
@@ -311,7 +311,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                               />
                             )}
                           </Row>
-                        </a>
+                        </BareButton>
                       ))}
                     </div>
                   )}

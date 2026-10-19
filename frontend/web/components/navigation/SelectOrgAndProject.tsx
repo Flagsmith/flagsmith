@@ -1,11 +1,12 @@
 import React, { FC } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import BreadcrumbSeparator from 'components/BreadcrumbSeparator'
 import classNames from 'classnames'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
 import useSelectedOrganisation from 'common/hooks/useSelectedOrganisation'
 import { appLevelPaths } from './constants'
+import Link from 'components/base/link'
 
 type SelectOrgAndProjectType = {
   activeProject: Project | undefined
@@ -21,7 +22,7 @@ const SelectOrgAndProject: FC<SelectOrgAndProjectType> = ({
 
   return (
     <Row className='gap-2'>
-      <Link data-test='home-link' to={'/organisations'}>
+      <Link aria-label='Organisations' to='/organisations'>
         <img
           style={{
             height: 24,

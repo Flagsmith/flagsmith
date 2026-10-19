@@ -15,6 +15,7 @@ import {
   useCreateAuditLogWebhooksMutation,
   useUpdateAuditLogWebhooksMutation,
 } from 'common/services/useAuditLogWebhook'
+import Link from 'components/base/link'
 
 type Props = {
   webhook?: Webhook
@@ -103,14 +104,12 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
           <div>
             <label>
               Secret (Optional) -{' '}
-              <a
-                className='text-action'
+              <Link
                 target='_blank'
                 href='https://docs.flagsmith.com/system-administration/webhooks#web-hook-signature'
-                rel='noreferrer'
               >
                 More info
-              </a>{' '}
+              </Link>{' '}
             </label>
           </div>
           <Input

@@ -810,25 +810,21 @@ const HomePage: React.FC = () => {
               </div>
               <div className='mt-4 text-center text-small text-muted'>
                 By signing up you agree to our{' '}
-                <a
-                  style={{ opacity: 0.8 }}
+                <Link
                   target='_blank'
-                  className='text-small'
+                  className='text-small opacity-75'
                   href='https://flagsmith.com/terms-of-service/'
-                  rel='noreferrer'
                 >
                   Terms of Service
-                </a>{' '}
+                </Link>{' '}
                 and{' '}
-                <a
-                  style={{ opacity: 0.8 }}
+                <Link
                   target='_blank'
-                  className='text-small'
+                  className='text-small opacity-75'
                   href='https://flagsmith.com/privacy-policy/'
-                  rel='noreferrer'
                 >
                   Privacy Policy
-                </a>
+                </Link>
               </div>
             </div>
           </div>

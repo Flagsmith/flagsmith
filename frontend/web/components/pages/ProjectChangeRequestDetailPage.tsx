@@ -19,6 +19,7 @@ import DiffSegment from 'components/diff/DiffSegment'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useHistory } from 'react-router-dom'
 import { ProjectPermission } from 'common/types/permissions.types'
+import Link from 'components/base/link'
 
 type ProjectChangeRequestPageType = {
   router: RouterChildContext['router']
@@ -251,18 +252,16 @@ const ProjectChangeRequestDetailPage: FC<ProjectChangeRequestPageType> = ({
               <div className='search-list change-request-list'>
                 <Row className='list-item change-request-item px-4'>
                   <div className='font-weight-medium mr-3'>Segment:</div>
-                  <a
+                  <Link
                     target='_blank'
-                    className='btn-link font-weight-medium'
-                    href={`/project/${
+                    to={`/project/${
                       segment.project
                     }/segments?featureSpecific=${!segment.feature}&id=${
                       segment.id
                     }`}
-                    rel='noreferrer'
                   >
                     {segment?.name}
-                  </a>
+                  </Link>
                 </Row>
               </div>
             </Panel>

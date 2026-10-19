@@ -3,6 +3,7 @@ import Icon from 'components/icons/Icon'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Button from 'components/base/forms/Button'
+import BareButton from 'components/base/forms/BareButton'
 
 interface SuccessMessageProps {
   url?: string
@@ -50,11 +51,15 @@ const SuccessMessage: React.FC<SuccessMessageProps> = ({
         </Button>
       )}
       {isClosable && (
-        <a onClick={close} className='mt-n2 mr-n2 pl-2'>
+        <BareButton
+          aria-label='Close'
+          onClick={close}
+          className='mt-n2 me-n2 ps-2'
+        >
           <span className={`icon ${infoMessageClass} close-btn`}>
             <IonIcon icon={closeIcon} />
           </span>
-        </a>
+        </BareButton>
       )}
     </div>
   )

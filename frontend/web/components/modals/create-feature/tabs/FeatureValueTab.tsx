@@ -35,6 +35,7 @@ import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnable
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { useHasPermission } from 'common/providers/Permission'
 import { ProjectPermission } from 'common/types/permissions.types'
+import Link from 'components/base/link'
 
 function isNegativeNumberString(str: any) {
   if (typeof Utils.getTypedValue(str) !== 'number') {
@@ -271,13 +272,12 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         , their weights are specific to this environment. Existing users will
         see the new variation value if it is changed. These values will only
         apply when you identify via the SDK.{' '}
-        <a
+        <Link
           target='_blank'
           href='https://docs.flagsmith.com/basic-features/managing-features#multi-variate-flags'
-          rel='noreferrer'
         >
           Check the Docs for more details
-        </a>
+        </Link>
         .
       </InfoMessage>
     </div>
@@ -448,9 +448,9 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
               <strong>"{featureState.feature_state_value}"</strong>. Saving this
               feature will convert its value from a string to a number. If you
               wish to preserve this value as a string, please save it using the{' '}
-              <a href='https://api.flagsmith.com/api/v1/docs/#/api/api_v1_environments_featurestates_update'>
+              <Link href='https://api.flagsmith.com/api/v1/docs/#/api/api_v1_environments_featurestates_update'>
                 API
-              </a>
+              </Link>
               .
             </div>
           }

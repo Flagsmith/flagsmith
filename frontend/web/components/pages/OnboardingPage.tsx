@@ -7,6 +7,7 @@ import OnboardingStep from 'components/onboarding/OnboardingStep'
 import OnboardingAccountForm from 'components/onboarding/OnboardingAccountForm'
 import OnboardingOrganisationForm from 'components/onboarding/OnboardingOrganisationForm'
 import Utils from 'common/utils/utils'
+import Link from 'components/base/link'
 
 type OnboardingPageProps = {
   onComplete?: () => void
@@ -119,23 +120,16 @@ const OnboardingPage: FC<OnboardingPageProps> = () => {
               Unsure about something?
               <br />
               View our{' '}
-              <a
-                className='text-action'
+              <Link
                 href='https://docs.flagsmith.com/deployment'
                 target={'_blank'}
-                rel='noreferrer'
               >
                 self hosting documentation
-              </a>{' '}
+              </Link>{' '}
               or{' '}
-              <a
-                className='text-action'
-                target='_blank'
-                href='https://www.flagsmith.com/contact-us'
-                rel='noreferrer'
-              >
+              <Link target='_blank' href='https://www.flagsmith.com/contact-us'>
                 get in touch
-              </a>
+              </Link>
               .
             </div>
           </div>

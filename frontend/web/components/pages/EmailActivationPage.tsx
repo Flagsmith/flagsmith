@@ -6,7 +6,7 @@ import React, {
   useEffect,
   useState,
 } from 'react'
-import { Link, useHistory, useParams } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
 import AccountStore from 'common/stores/account-store'
@@ -23,6 +23,7 @@ import {
   useActivateAccountMutation,
   useResendActivationEmailMutation,
 } from 'common/services/useEmailActivation'
+import Link from 'components/base/link'
 
 type ActivationParams = { uid: string; token: string }
 
@@ -88,7 +89,7 @@ const EmailActivationPage: FC = () => {
 
   const backToSignIn = (
     <Link id='login-btn' to='/login'>
-      <Button theme='text'>Back to sign in</Button>
+      Back to sign in
     </Link>
   )
 

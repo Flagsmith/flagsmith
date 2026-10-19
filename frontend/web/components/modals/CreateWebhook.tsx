@@ -7,6 +7,7 @@ import Highlight from 'components/Highlight'
 import TestWebhook from 'components/TestWebhook'
 import ViewDocs from 'components/ViewDocs'
 import { FC, useState, useRef, ChangeEvent } from 'react'
+import Link from 'components/base/link'
 
 interface CreateWebhookProps {
   environmentId: string
@@ -101,14 +102,12 @@ const CreateWebhook: FC<CreateWebhookProps> = ({
           <div>
             <label>
               Secret (Optional) -{' '}
-              <a
-                className='text-action'
+              <Link
                 target='_blank'
                 href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks'
-                rel='noreferrer'
               >
                 More info
-              </a>{' '}
+              </Link>{' '}
             </label>
           </div>
           <Input

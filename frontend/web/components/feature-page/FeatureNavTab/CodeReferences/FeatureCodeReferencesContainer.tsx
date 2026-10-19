@@ -5,6 +5,7 @@ import RepoCodeReferencesSection from './components/RepoCodeReferencesSection'
 import { FeatureCodeReferences } from 'common/types/responses'
 import { useHasGithubIntegration } from 'common/hooks/useHasGithubIntegration'
 import { useHasGitLabIntegration } from 'common/hooks/useHasGitLabIntegration'
+import Link from 'components/base/link'
 
 interface FeatureCodeReferencesContainerProps {
   featureId: number
@@ -72,9 +73,11 @@ const FeatureCodeReferencesContainer: React.FC<
       return (
         <div className='text-center text-muted'>
           Set up{' '}
-          <a href={`/organisation/${organisationId}/integrations`}>GitHub</a> or{' '}
-          <a href={`/project/${projectId}/integrations`}>GitLab</a> integration
-          to enable code references.
+          <Link to={`/organisation/${organisationId}/integrations`}>
+            GitHub
+          </Link>{' '}
+          or <Link to={`/project/${projectId}/integrations`}>GitLab</Link>{' '}
+          integration to enable code references.
         </div>
       )
     }

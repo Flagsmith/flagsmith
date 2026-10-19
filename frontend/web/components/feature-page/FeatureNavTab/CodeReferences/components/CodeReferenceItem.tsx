@@ -1,6 +1,7 @@
 import flagsmith from '@flagsmith/flagsmith'
 import Icon from 'components/icons/Icon'
 import { CodeReference, VCSProvider } from 'common/types/responses'
+import Link from 'components/base/link'
 
 interface CodeReferenceItemProps {
   codeReference: CodeReference
@@ -20,16 +21,10 @@ const CodeReferenceItem: React.FC<CodeReferenceItemProps> = ({
         className='w-4 h-4 transparent'
         style={{ visibility: 'hidden' }}
       />
-      <a
-        className='text-sm text-gray-500 mb-0'
-        style={{
-          fontStyle: 'italic',
-          fontWeight: 400,
-          textDecoration: 'underline',
-        }}
+      <Link
+        className='fst-italic'
         href={codeReference.permalink}
         target='_blank'
-        rel='noreferrer'
         onClick={() => {
           flagsmith.trackEvent('code_references_click_permalink', {
             metadata: {
@@ -40,7 +35,7 @@ const CodeReferenceItem: React.FC<CodeReferenceItemProps> = ({
         }}
       >
         {codeReference.file_path}:{codeReference.line_number}
-      </a>
+      </Link>
     </Row>
   )
 }

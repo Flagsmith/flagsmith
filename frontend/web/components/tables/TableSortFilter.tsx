@@ -3,6 +3,7 @@ import TableFilter from './TableFilter'
 import Icon from 'components/icons/Icon'
 import classNames from 'classnames'
 import { SortOrder } from 'common/types/requests'
+import BareButton from 'components/base/forms/BareButton'
 
 type SortType = {
   value: string
@@ -37,21 +38,18 @@ const TableSortFilter: FC<TableFilterType> = ({
         {options.map((sortOption, i) => {
           const isActive = sortOption?.value === value?.sortBy
           return (
-            <a
+            <BareButton
               key={i}
-              className='table-filter-item'
-              href='#'
-              onClick={(e) => {
-                e.preventDefault()
+              className='table-filter-item w-100'
+              onClick={() => {
                 if (isLoading) return
                 onChange({
                   label: sortOption.label,
                   sortBy: sortOption.value,
-                  sortOrder: isActive
-                    ? value.sortOrder === SortOrder.ASC
+                  sortOrder:
+                    isActive && value.sortOrder === SortOrder.ASC
                       ? SortOrder.DESC
-                      : SortOrder.ASC
-                    : SortOrder.ASC,
+                      : SortOrder.ASC,
                 })
               }}
             >
@@ -70,7 +68,7 @@ const TableSortFilter: FC<TableFilterType> = ({
                   />
                 </div>
               </Row>
-            </a>
+            </BareButton>
           )
         })}
       </TableFilter>

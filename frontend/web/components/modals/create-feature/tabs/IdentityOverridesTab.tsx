@@ -23,6 +23,7 @@ import {
   useCreateIdentityOverrideMutation,
   useGetIdentityOverridesQuery,
 } from 'common/services/useIdentityOverride'
+import Link from 'components/base/link'
 
 type IdentityOverridesTabProps = {
   environmentId: string
@@ -185,24 +186,22 @@ const IdentityOverridesTab: FC<IdentityOverridesTabProps> = ({
         </Row>
         <div className='text-muted mb-2'>
           Identity Overrides apply to all individual identities listed here.{' '}
-          <a
+          <Link
             target='_blank'
             href='https://docs.flagsmith.com/flagsmith-concepts/identities'
-            rel='noreferrer'
           >
             Learn more
-          </a>
+          </Link>
         </div>
         <InfoMessage>
           Identity Overrides are not subject to Change Requests and apply
           immediately.{' '}
-          <a
+          <Link
             target='_blank'
             href='https://docs.flagsmith.com/administration-and-security/governance-and-compliance/change-requests'
-            rel='noreferrer'
           >
             Learn more
-          </a>
+          </Link>
         </InfoMessage>
         <PanelSearch
           id='users-list'

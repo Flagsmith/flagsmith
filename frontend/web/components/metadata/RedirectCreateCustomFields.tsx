@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import Link from 'components/base/link'
 
 type RedirectCreateCustomFieldsProps = {
   organisationId: number
@@ -18,10 +19,7 @@ const RedirectCreateCustomFields: FC<RedirectCreateCustomFieldsProps> = ({
     return (
       <span>
         You can create Organisation Custom Fields in your{' '}
-        <a href={orgLink} rel='noreferrer'>
-          Organisation Settings
-        </a>
-        .
+        <Link to={orgLink}>Organisation Settings</Link>.
       </span>
     )
   }
@@ -29,14 +27,8 @@ const RedirectCreateCustomFields: FC<RedirectCreateCustomFieldsProps> = ({
   return (
     <span>
       You can create Custom Fields in your{' '}
-      <a href={orgLink} rel='noreferrer'>
-        Organisation Settings
-      </a>{' '}
-      or{' '}
-      <a href={projectLink} rel='noreferrer'>
-        Project Settings
-      </a>
-      .
+      <Link to={orgLink}>Organisation Settings</Link> or{' '}
+      <Link to={projectLink}>Project Settings</Link>.
     </span>
   )
 }

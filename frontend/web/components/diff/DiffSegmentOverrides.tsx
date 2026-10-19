@@ -7,9 +7,10 @@ import Tabs from 'components/navigation/TabMenu/Tabs'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
-import { Link, useHistory } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import DiffVariations from './DiffVariations'
 import { ProjectFlag } from 'common/types/responses'
+import Link from 'components/base/link'
 
 type DiffSegmentOverride = {
   diff: TDiffSegmentOverride

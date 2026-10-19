@@ -4,6 +4,7 @@ import { useGetProjectQuery } from 'common/services/useProject'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import UsageBar from 'components/shared/UsageBar'
 import EnvironmentOverrideUsage from './EnvironmentOverrideUsage'
+import Link from 'components/base/link'
 
 type ProjectUsageTabProps = {
   projectId: string
@@ -24,13 +25,12 @@ const ProjectUsageTab: FC<ProjectUsageTabProps> = ({ projectId }) => {
           <InfoMessage>
             In order to ensure consistent performance, Flagsmith has the
             following usage limits.{' '}
-            <a
+            <Link
               target='_blank'
               href='https://docs.flagsmith.com/system-administration/system-limits'
-              rel='noreferrer'
             >
               <strong>Check the Docs for more details.</strong>
-            </a>
+            </Link>
           </InfoMessage>
         </Row>
         <Row className='mb-2'>

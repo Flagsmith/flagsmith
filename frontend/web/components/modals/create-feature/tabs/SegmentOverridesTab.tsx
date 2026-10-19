@@ -15,6 +15,7 @@ import { ProjectFlag } from 'common/types/responses'
 import { FeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import ExperimentFreezeNotice from 'components/modals/create-feature/components/ExperimentFreezeNotice'
 import { EnvironmentPermission } from 'common/types/permissions.types'
+import Link from 'components/base/link'
 
 export type SegmentOverrideValue = {
   enabled?: boolean
@@ -205,13 +206,12 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
             </p>{' '}
             <p>
               Identity Overrides always override Segment Overrides.{' '}
-              <a
+              <Link
                 target='_blank'
                 href='https://docs.flagsmith.com/basic-features/segments'
-                rel='noreferrer'
               >
                 Learn more
-              </a>
+              </Link>
             </p>
           </div>
           {segmentOverrides ? (
@@ -262,13 +262,12 @@ const SegmentOverridesTab: FC<SegmentOverridesTabProps> = ({
                 <InfoMessage>
                   Enable Feature Versioning to gate segment overrides with
                   Feature Change Requests.{' '}
-                  <a
+                  <Link
                     href='https://docs.flagsmith.com/managing-flags/feature-versioning'
                     target='_blank'
-                    rel='noreferrer'
                   >
                     Learn more
-                  </a>
+                  </Link>
                   .
                 </InfoMessage>
               )}

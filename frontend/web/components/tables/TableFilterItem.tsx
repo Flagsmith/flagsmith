@@ -1,6 +1,7 @@
 import React, { FC, ReactNode } from 'react'
 import Icon from 'components/icons/Icon'
 import classNames from 'classnames'
+import BareButton from 'components/base/forms/BareButton'
 
 type TableFilterItemType = {
   isActive?: boolean
@@ -18,15 +19,7 @@ const TableFilterItem: FC<TableFilterItemType> = ({
   ...rest
 }) => {
   return (
-    <a
-      {...rest}
-      href={'#'}
-      onClick={(e) => {
-        e.preventDefault()
-        onClick()
-      }}
-      className='table-filter-item'
-    >
+    <BareButton {...rest} onClick={onClick} className='table-filter-item w-100'>
       <Row space className='px-3 no-wrap overflow-hidden py-2'>
         <div className={'overflow-ellipsis'}>
           {title}
@@ -39,7 +32,7 @@ const TableFilterItem: FC<TableFilterItemType> = ({
           />
         </div>
       </Row>
-    </a>
+    </BareButton>
   )
 }
 

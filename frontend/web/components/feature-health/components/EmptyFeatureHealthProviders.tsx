@@ -1,5 +1,6 @@
 import React from 'react'
 import AccountStore from 'common/stores/account-store'
+import Link from 'components/base/link'
 
 interface EmptyFeatureHealthProvidersProps {
   projectId: number
@@ -20,38 +21,32 @@ const EmptyFeatureHealthProviders: React.FC<
           {isAdmin ? (
             <p className='modal-caption fs-small lh-sm'>
               Configure a health provider in your{' '}
-              <a
+              <Link
                 target='_blank'
-                rel='noreferrer'
-                className='fw-normal btn-link'
-                href={`/project/${projectId}/settings?tab=feature-health`}
+                to={`/project/${projectId}/settings?tab=feature-health`}
               >
                 project settings
-              </a>{' '}
+              </Link>{' '}
               to start monitoring your feature health, or read about the
               functionality{' '}
-              <a
+              <Link
                 target='_blank'
-                rel='noreferrer'
-                className='fw-normal btn-link'
                 href='https://docs.flagsmith.com/advanced-use/feature-health'
               >
                 here
-              </a>
+              </Link>
               .
             </p>
           ) : (
             <p>
               Contact your Flagsmith administrators to configure a feature
               health provider, or read about the functionality{' '}
-              <a
+              <Link
                 target='_blank'
-                rel='noreferrer'
-                className='fw-normal btn-link'
                 href='https://docs.flagsmith.com/advanced-use/feature-health'
               >
                 here
-              </a>
+              </Link>
               .
             </p>
           )}

@@ -3,6 +3,7 @@ import Icon from 'components/icons/Icon'
 import { Project } from 'common/types/responses'
 import { useMigrateProjectMutation } from 'common/services/useProject'
 import Utils from 'common/utils/utils'
+import Link from 'components/base/link'
 
 type EdgeAPIMigrationProps = {
   project: Project
@@ -46,14 +47,12 @@ export const EdgeAPIMigration = ({ project }: EdgeAPIMigrationProps) => {
         Migrate your project onto our Global Edge API. Existing Core API
         endpoints will continue to work whilst the migration takes place. Find
         out more{' '}
-        <a
+        <Link
           target='_blank'
           href='https://docs.flagsmith.com/advanced-use/edge-api'
-          className='btn-link'
-          rel='noreferrer'
         >
           here
-        </a>
+        </Link>
         .
       </p>
     </FormGroup>

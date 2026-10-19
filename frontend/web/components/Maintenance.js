@@ -1,5 +1,6 @@
 import React from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import Link from './base/link'
 
 const HomePage = class extends React.Component {
   static displayName = 'HomePage'
@@ -19,13 +20,9 @@ const HomePage = class extends React.Component {
           <>
             {' '}
             Check{' '}
-            <a
-              target='_blank'
-              href='https://x.com/getflagsmith'
-              rel='noreferrer'
-            >
+            <Link target='_blank' href='https://x.com/getflagsmith'>
               @getflagsmith
-            </a>{' '}
+            </Link>{' '}
             for updates.
           </>
         }

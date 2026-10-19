@@ -7,7 +7,7 @@ import TabItem from './navigation/TabMenu/TabItem'
 import InfoMessage from './InfoMessage'
 import { useGetServersideEnvironmentKeysQuery } from 'common/services/useServersideEnvironmentKey'
 import { useHasPermission } from 'common/providers/Permission'
-import { Link } from 'react-router-dom'
+import Link from './base/link'
 type EnvironmentDocumentCodeHelpType = {
   environmentId: string
   projectId: number
@@ -56,14 +56,12 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
         <div className='mt-2'>
           <div className='mb-2'>
             Providing flag defaults is recommended for{' '}
-            <a
-              className='text-action'
+            <Link
               target='_blank'
               href='https://docs.flagsmith.com/guides-and-examples/defensive-coding'
-              rel='noreferrer'
             >
               defensive coding
-            </a>{' '}
+            </Link>{' '}
             and allowing offline capabilities.
           </div>
           <Tabs uncontrolled theme='pill' history={history}>
@@ -75,15 +73,14 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
                 >
                   <div>
                     This will not return any features marked as{' '}
-                    <a
+                    <Link
                       href={
                         'https://docs.flagsmith.com/advanced-use/flag-management#server-side-only-flags'
                       }
                       target={'_blank'}
-                      rel='noreferrer'
                     >
                       server-side only
-                    </a>
+                    </Link>
                     .
                   </div>
                 </InfoMessage>

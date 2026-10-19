@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Icon, { IconName } from './icons/Icon'
 import { FC } from 'react'
 import Button from './base/forms/Button'
+import BareButton from './base/forms/BareButton'
 
 type InfoMessageType = {
   buttonText?: string
@@ -93,11 +94,11 @@ const InfoMessage: FC<InfoMessageType> = ({
         </div>
       </div>
       {isClosable && (
-        <a onClick={close} className=' pl-2'>
+        <BareButton aria-label='Close' onClick={close} className='ps-2'>
           <span className={`icon close-btn`}>
             <Icon name='close' fill='currentColor' />
           </span>
-        </a>
+        </BareButton>
       )}
     </div>
   )

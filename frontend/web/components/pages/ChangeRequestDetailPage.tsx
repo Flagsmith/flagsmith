@@ -44,6 +44,7 @@ import { useHistory } from 'react-router-dom'
 import { openPublishChangeRequestConfirm } from 'components/PublishChangeRequestModal'
 import { getChangeRequestLiveDate } from 'common/utils/getChangeRequestLiveDate'
 import { EnvironmentPermission } from 'common/types/permissions.types'
+import Link from 'components/base/link'
 
 type ChangeRequestPageType = {
   match: {
@@ -373,16 +374,14 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
                   <Row className='list-item change-request-item px-4'>
                     <div className='font-weight-medium mr-3'>Feature:</div>
 
-                    <a
+                    <Link
                       target='_blank'
-                      className='btn-link font-weight-medium'
-                      href={`/project/${projectId}/environment/${environmentId}/features?feature=${
+                      to={`/project/${projectId}/environment/${environmentId}/features?feature=${
                         projectFlag && projectFlag.id
                       }`}
-                      rel='noreferrer'
                     >
                       {projectFlag?.name}
-                    </a>
+                    </Link>
                   </Row>
                 </div>
               ) : (

@@ -20,6 +20,7 @@ import {
 import { useScript } from 'common/hooks/useScript'
 import { usePaymentState } from './hooks'
 import { bindChargebeeButtons } from './chargebee'
+import Link from 'components/base/link'
 
 export type PaymentProps = {
   isDisableAccountText?: string
@@ -51,9 +52,9 @@ export const Payment: FC<PaymentProps> = ({
       <div className='col-md-8'>
         <InfoMessage collapseId='aws-marketplace'>
           Customers with AWS Marketplace subscriptions will need to{' '}
-          <a href={CONTACT_US_URL} target='_blank' rel='noreferrer'>
+          <Link href={CONTACT_US_URL} target='_blank'>
             contact us
-          </a>
+          </Link>
         </InfoMessage>
       </div>
     )
@@ -76,9 +77,9 @@ export const Payment: FC<PaymentProps> = ({
               <div>
                 <h4>
                   {isDisableAccountText}{' '}
-                  <a target='_blank' href={SUPPORT_EMAIL_URL} rel='noreferrer'>
+                  <Link target='_blank' href={SUPPORT_EMAIL_URL}>
                     {SUPPORT_EMAIL}
-                  </a>
+                  </Link>
                 </h4>
               </div>
               <div>
@@ -138,23 +139,21 @@ export const Payment: FC<PaymentProps> = ({
             headerContent={
               <>
                 Optional{' '}
-                <a
-                  className='text-action fw-bold'
+                <Link
+                  className='fw-bold'
                   target='_blank'
                   href={ON_PREMISE_HOSTING_URL}
-                  rel='noreferrer'
                 >
                   On Premise
-                </a>{' '}
+                </Link>{' '}
                 or{' '}
-                <a
-                  className='text-action fw-bold'
+                <Link
+                  className='fw-bold'
                   target='_blank'
                   href={ON_PREMISE_HOSTING_URL}
-                  rel='noreferrer'
                 >
                   Private Cloud
-                </a>{' '}
+                </Link>{' '}
                 Install
               </>
             }

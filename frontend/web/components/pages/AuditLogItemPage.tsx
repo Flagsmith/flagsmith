@@ -12,10 +12,10 @@ import DiffString from 'components/diff/DiffString'
 import DiffEnabled from 'components/diff/DiffEnabled'
 import Format from 'common/utils/format'
 import { Environment } from 'common/types/responses'
-import { Link, useRouteMatch } from 'react-router-dom'
-import Button from 'components/base/forms/Button'
+import { useRouteMatch } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+import Link from 'components/base/link'
 
 interface RouteParams {
   environmentId: string
@@ -118,7 +118,7 @@ const AuditLogItemPage: FC = () => {
                   <Link
                     to={`/project/${data.project.id}/environment/${data.environment.api_key}/history/${data.related_object_uuid}/`}
                   >
-                    <Button theme='text'>View version</Button>
+                    View version
                   </Link>
                 )}
             </>

@@ -25,6 +25,7 @@ import each from 'lodash/each'
 import { useGetProjectQuery } from 'common/services/useProject'
 import API from 'project/api'
 import Constants from 'common/constants'
+import BareButton from './base/forms/BareButton'
 
 type IntegrationAction = {
   label: string
@@ -304,14 +305,13 @@ const Integration: FC<IntegrationProps> = (props) => {
             </Link>
           </span>
           {props.onDismissLastSaved && (
-            <a
+            <BareButton
               onClick={props.onDismissLastSaved}
-              className='ml-auto text-white d-flex align-items-center'
-              style={{ cursor: 'pointer' }}
+              className='ms-auto text-white'
               aria-label='Dismiss'
             >
               <IonIcon icon={closeIcon} />
-            </a>
+            </BareButton>
           )}
         </div>
       )}

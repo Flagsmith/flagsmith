@@ -8,6 +8,7 @@ import { SortOrder } from 'common/types/requests'
 import PanelSearch from 'components/PanelSearch'
 import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
+import Link from 'components/base/link'
 
 type IntegrationScope = 'environment' | 'organisation' | 'project'
 
@@ -361,17 +362,15 @@ const IntegrationAdoptionTable: FC<IntegrationAdoptionTableProps> = ({
                 />
                 {row.title}
                 {row.docs && (
-                  <a
-                    className='fw-normal btn-link'
+                  <Link
                     href={row.docs}
                     onClick={(e) => e.stopPropagation()}
-                    rel='noopener noreferrer'
-                    style={{ fontSize: 12 }}
+                    className='fs-captionSmall'
                     target='_blank'
                   >
                     Docs{' '}
                     <Icon fill='#6837fc' name='open-external-link' width={12} />
-                  </a>
+                  </Link>
                 )}
               </div>
               <div

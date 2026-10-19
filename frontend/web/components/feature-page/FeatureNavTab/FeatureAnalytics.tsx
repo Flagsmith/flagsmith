@@ -8,6 +8,7 @@ import { useGetFeatureAnalyticsQuery } from 'common/services/useFeatureAnalytics
 import Utils from 'common/utils/utils'
 import { aggregateByLabels, hasLabelledData } from './utils'
 import { useEnvChartProps } from './useEnvChartProps'
+import Link from 'components/base/link'
 
 type FlagAnalyticsType = {
   projectId: number
@@ -154,13 +155,12 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
       <InfoMessage>
         The Flag Analytics data will be visible in the Dashboard between 30
         minutes and 1 hour after it has been collected.{' '}
-        <a
+        <Link
           target='_blank'
           href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-          rel='noreferrer'
         >
           View docs
-        </a>
+        </Link>
       </InfoMessage>
     </>
   )

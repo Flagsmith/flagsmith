@@ -5,6 +5,7 @@ import AccountProvider from 'common/providers/AccountProvider'
 import { Organisation } from 'common/types/responses'
 import Payment from './modals/payment'
 import BlockedOrgInfo from './BlockedOrgInfo'
+import Link from './base/link'
 
 const Blocked = () => (
   <div className='fullscreen-container maintenance fullscreen-container__grey justify-content-center dark'>
@@ -14,13 +15,9 @@ const Blocked = () => (
         <span className='h4'>
           Your organisation has been disabled. Please contact Flagsmith support
           at{' '}
-          <a
-            target='_blank'
-            href='mailto:support@flagsmith.com'
-            rel='noreferrer'
-          >
+          <Link target='_blank' href='mailto:support@flagsmith.com'>
             support@flagsmith.com
-          </a>
+          </Link>
           .
         </span>
         <BlockedOrgInfo />

@@ -1,5 +1,5 @@
 import React, { FC, ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import Link from './base/link'
 
 type BreadcrumbType = {
   items: { title: string; url: string }[]
@@ -16,7 +16,7 @@ const Breadcrumb: FC<BreadcrumbType> = ({
     <div className='d-flex align-items-center my-2 py-1'>
       {items?.map((item) => (
         <>
-          <Link className='text-action h6 mb-0' to={item.url}>
+          <Link className='h6 mb-0' to={item.url}>
             {item.title}
           </Link>
           <div className='text-muted mx-2 h6 mb-0'>/</div>

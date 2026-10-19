@@ -26,6 +26,7 @@ import {
   metricToFormState,
   MetricFormState,
 } from 'components/experiments/CreateMetricForm/utils'
+import Link from 'components/base/link'
 import './MetricsPage.scss'
 
 const WAREHOUSE_TYPE_LABEL: Record<WarehouseType, string> = {
@@ -244,12 +245,12 @@ const MetricsPage: FC = () => {
               </strong>{' '}
               warehouse.
             </span>
-            <a
-              className='metrics-page__banner-link flex-shrink-0 text-action'
-              onClick={() => history.push(settingsUrl)}
+            <Link
+              className='metrics-page__banner-link flex-shrink-0'
+              to={settingsUrl}
             >
               Manage connection
-            </a>
+            </Link>
           </div>
         )}
 

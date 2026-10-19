@@ -19,7 +19,7 @@ import './DiffFeature.scss'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/icons/Icon'
 import WarningMessage from 'components/WarningMessage'
-import { Link } from 'react-router-dom'
+import Link from 'components/base/link'
 
 type FeatureDiffType = {
   oldState: FeatureStateWithConflict[]

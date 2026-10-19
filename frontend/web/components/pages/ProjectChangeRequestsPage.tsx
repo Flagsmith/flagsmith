@@ -3,11 +3,11 @@ import { RouterChildContext } from 'react-router'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
 import Utils from 'common/utils/utils'
-import { Link } from 'react-router-dom'
 import InfoMessage from 'components/InfoMessage'
 import { ChangeRequestsInner } from './ChangeRequestsPage'
 import { useGetProjectChangeRequestsQuery } from 'common/services/useProjectChangeRequest'
 import { useGetProjectQuery } from 'common/services/useProject'
+import Link from 'components/base/link'
 
 type ProjectChangeRequestsPageType = {
   router: RouterChildContext['router']

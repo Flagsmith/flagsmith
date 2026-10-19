@@ -3,6 +3,7 @@ import VCSProviderTag from 'components/tags/VCSProviderTag'
 import { getDarkMode } from 'project/darkMode'
 import React from 'react'
 import { VCSProvider } from 'common/types/responses'
+import Link from 'components/base/link'
 interface RepoSectionHeaderProps {
   repositoryName: string
   provider: VCSProvider
@@ -37,14 +38,13 @@ const RepoSectionHeader: React.FC<RepoSectionHeaderProps> = ({
           {repositoryName}
         </p>
         <div className='ml-2'>
-          <a
+          <Link
             href={repositoryName}
             target='_blank'
-            rel='noreferrer'
             onClick={(e) => e.stopPropagation()}
           >
             <Icon name='open-external-link' width={12} fill='#6837fc' />
-          </a>
+          </Link>
         </div>
       </Row>
       <VCSProviderTag count={count} vcsProvider={provider} key={provider} />

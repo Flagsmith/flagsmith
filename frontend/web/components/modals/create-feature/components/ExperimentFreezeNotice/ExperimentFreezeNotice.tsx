@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import InfoMessage from 'components/InfoMessage'
+import Link from 'components/base/link'
 
 type FreezeExperiment = {
   id: number
@@ -23,9 +24,9 @@ const ExperimentFreezeNotice: FC<ExperimentFreezeNoticeProps> = ({
   return (
     <InfoMessage>
       This flag is part of the experiment{' '}
-      <a href={experimentUrl}>
+      <Link to={experimentUrl}>
         <strong>{experiment.name}</strong>
-      </a>{' '}
+      </Link>{' '}
       which is currently {experiment.status}. Editing is restricted to prevent
       skewing experiment results.
     </InfoMessage>

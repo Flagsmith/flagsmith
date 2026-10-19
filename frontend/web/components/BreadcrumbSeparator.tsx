@@ -29,6 +29,7 @@ import Button from './base/forms/Button'
 import CreateOrganisationModal from './modals/CreateOrganisation'
 import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
+import BareButton from './base/forms/BareButton'
 
 type BreadcrumbSeparatorType = {
   hideDropdown?: boolean
@@ -115,13 +116,13 @@ const ItemList: FC<ItemListType> = ({
         const isActive = `${v.id}` === `${value}`
         const isHovered = `${v.id}` === `${hoverValue}`
         return (
-          <a
+          <BareButton
             id={`${ref.current}-${i}`}
             onMouseEnter={() => onHover?.(v)}
             onClick={() => onClick(v)}
             key={v.id}
             className={classNames(
-              'breadcrumb-link py-2 d-flex align-items-center justify-content-between',
+              'breadcrumb-link py-2 w-100 justify-content-between',
               { active: isActive },
               { hovered: isHovered },
             )}
@@ -134,7 +135,7 @@ const ItemList: FC<ItemListType> = ({
             {isActive && (
               <IonIcon className='icon-action' icon={checkmarkCircle} />
             )}
-          </a>
+          </BareButton>
         )
       })}
       <div className='text-center my-2'>

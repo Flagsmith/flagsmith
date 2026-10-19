@@ -1,5 +1,4 @@
 import React, { useCallback, useMemo, useRef } from 'react'
-import { Link } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ProjectStore from 'common/stores/project-store'
 import ReactMarkdown from 'react-markdown'
@@ -9,6 +8,7 @@ import { Environment, FeatureImport, Res } from 'common/types/responses'
 import { useGetFeatureImportsQuery } from 'common/services/useFeatureImport'
 import AppActions from 'common/dispatcher/app-actions'
 import Constants from 'common/constants'
+import Link from './base/link'
 
 interface ButterBarProps {
   billingStatus?: string

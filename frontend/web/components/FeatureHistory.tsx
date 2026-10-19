@@ -14,6 +14,7 @@ import classNames from 'classnames'
 import PlanBasedBanner from './PlanBasedAccess'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+import Link from './base/link'
 
 const widths = [250, 150]
 type FeatureHistoryPageType = {
@@ -107,19 +108,12 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
                       </div>
                     </div>
                     <div className='table-column' style={{ width: widths[1] }}>
-                      <a
-                        href={`/project/${projectId}/environment/${environmentApiKey}/history/${v.uuid}/`}
+                      <Link
+                        to={`/project/${projectId}/environment/${environmentApiKey}/history/${v.uuid}/`}
                         target='_blank'
-                        rel='noreferrer'
                       >
-                        <Button
-                          theme='text'
-                          className='px-0 text-action'
-                          size='xSmall'
-                        >
-                          View Details
-                        </Button>
-                      </a>
+                        View Details
+                      </Link>
                     </div>
                     <div className='table-column' style={{ width: widths[1] }}>
                       {i + 1 !== data!.results.length && (

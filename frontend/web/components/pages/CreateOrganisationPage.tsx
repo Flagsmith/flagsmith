@@ -21,6 +21,7 @@ import OrganisationStore from 'common/stores/organisation-store'
 import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
 import { organisationService } from 'common/services/useOrganisation'
 import { getStore } from 'common/store'
+import Link from 'components/base/link'
 
 const CreateOrganisationPage: React.FC = () => {
   const [name, setName] = useState<string>('')
@@ -147,14 +148,12 @@ const CreateOrganisationPage: React.FC = () => {
             <div className='form-group'>
               <FieldLabel>
                 What is your company's desired hosting option?{' '}
-                <a
-                  className='text-action'
+                <Link
                   href='https://docs.flagsmith.com/version-comparison'
                   target='_blank'
-                  rel='noreferrer'
                 >
                   View Docs
-                </a>
+                </Link>
               </FieldLabel>
               <CheckboxGroup
                 onChange={setHosting}

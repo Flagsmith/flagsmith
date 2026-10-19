@@ -45,7 +45,7 @@ test.describe('Organisation Tests', () => {
 
     log('Test 2: Create and Delete Organisation, Verify Next Org in Nav')
     log('Navigate to create organisation')
-    await click(byId('home-link'))
+    await page.getByRole('link', { exact: true, name: 'Organisations' }).click()
     await waitForElementVisible(byId('create-organisation-btn'))
     await click(byId('create-organisation-btn'))
 
@@ -78,7 +78,7 @@ test.describe('Organisation Tests', () => {
 
     log('Test 3: Cancel Organisation Deletion')
     log('Create temporary organisation for cancel test')
-    await click(byId('home-link'))
+    await page.getByRole('link', { exact: true, name: 'Organisations' }).click()
     await waitForElementVisible(byId('create-organisation-btn'))
     await click(byId('create-organisation-btn'))
     await waitForElementVisible("[name='orgName']")

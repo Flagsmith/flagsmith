@@ -17,6 +17,7 @@ import Constants from 'common/constants'
 import { useHistory } from 'react-router-dom'
 import { ProjectPermission } from 'common/types/permissions.types'
 import { useHasPermission } from 'common/providers/Permission'
+import Link from 'components/base/link'
 
 type ImportPageType = {
   projectId: string
@@ -123,14 +124,13 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
       <InfoMessage>
         Import operations will overwrite existing environments and flags in your
         project.{' '}
-        <a
+        <Link
           target='_blank'
           href='https://docs.flagsmith.com/system-administration/importing-and-exporting/launchdarkly'
-          rel='noreferrer'
           onClick={(e) => e.stopPropagation()}
         >
           <strong>Visit the documentation for more details.</strong>
-        </a>
+        </Link>
       </InfoMessage>
       <h5>Import LaunchDarkly Projects</h5>
       <label>Set LaunchDarkly key</label>

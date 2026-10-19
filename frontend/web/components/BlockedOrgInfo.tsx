@@ -1,6 +1,7 @@
 import React from 'react'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
+import Link from './base/link'
 
 export default function BlockedOrgInfo() {
   return (
@@ -8,22 +9,22 @@ export default function BlockedOrgInfo() {
       <div>Organisation name: {AccountStore.getOrganisation().name}</div>
       <div>Organisation ID: {AccountStore.getOrganisation().id}</div>
       <div>
-        <a href={`/organisation/${AccountStore.getOrganisation().id}/usage`}>
+        <Link to={`/organisation/${AccountStore.getOrganisation().id}/usage`}>
           See your usage
-        </a>
+        </Link>
       </div>
       <div>
-        <a href='/organisations'>Switch to a different organisation</a>
+        <Link to='/organisations'>Switch to a different organisation</Link>
       </div>
       <div>
-        <a
+        <Link
           href='/login'
           onClick={() => {
             AppActions.logout()
           }}
         >
           Log out
-        </a>
+        </Link>
       </div>
     </div>
   )

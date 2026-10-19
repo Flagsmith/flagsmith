@@ -1,5 +1,6 @@
 import React from 'react'
 import InfoMessage from 'components/InfoMessage'
+import Link from 'components/base/link'
 
 const UsageAPIDefinitions: React.FC = () => {
   return (
@@ -16,13 +17,12 @@ const UsageAPIDefinitions: React.FC = () => {
           the SDK, this will count as an additional call.
         </p>
         <p>
-          <a
+          <Link
             href='https://docs.flagsmith.com/basic-features/managing-features'
             target='_blank'
-            rel='noreferrer'
           >
             Learn more.
-          </a>
+          </Link>
         </p>
         <h5>Identities</h5>
         <p>
@@ -35,13 +35,12 @@ const UsageAPIDefinitions: React.FC = () => {
           additional call.
         </p>
         <p>
-          <a
+          <Link
             href='https://docs.flagsmith.com/basic-features/managing-identities'
             target='_blank'
-            rel='noreferrer'
           >
             Learn more.
-          </a>
+          </Link>
         </p>
         <h5>Environment Document</h5>
         <p>
@@ -55,26 +54,24 @@ const UsageAPIDefinitions: React.FC = () => {
           call. These time periods are configurable.
         </p>
         <p>
-          <a
+          <Link
             href='https://docs.flagsmith.com/clients/overview#local-evaluation'
             target='_blank'
-            rel='noreferrer'
           >
             Learn more.
-          </a>
+          </Link>
         </p>
         <h5>Traits</h5>
         <p>
           This is the number of times Traits for an Identity have been written.
         </p>
         <p>
-          <a
+          <Link
             href='https://docs.flagsmith.com/basic-features/managing-identities'
             target='_blank'
-            rel='noreferrer'
           >
             Learn more.
-          </a>
+          </Link>
         </p>
         <h5>Total API calls</h5>
         <p>This is a sum of the above.</p>

@@ -7,6 +7,7 @@ import Utils from 'common/utils/utils'
 import { colorIconWarning } from 'common/theme/tokens'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
+import BareButton from 'components/base/forms/BareButton'
 
 type ThemeType = 'danger' | 'success' | 'warning'
 
@@ -117,11 +118,11 @@ const Message: FC<MessageProps> = ({
             </div>
           )}
         </div>
-        <a style={{ paddingTop: 2 }} onClick={remove}>
+        <BareButton aria-label='Dismiss' onClick={remove}>
           <span className='icon'>
             <IonIcon icon={close} style={{ fontSize: '16px' }} />
           </span>
-        </a>
+        </BareButton>
       </div>
     </div>
   )

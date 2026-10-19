@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
-import { Link } from 'react-router-dom'
 import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
+import Link from 'components/base/link'
 interface EnvironmentMetricProps {
   label: string
   value: string | number

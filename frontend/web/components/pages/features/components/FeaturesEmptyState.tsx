@@ -3,7 +3,7 @@ import { IonIcon } from '@ionic/react'
 import { rocket } from 'ionicons/icons'
 import Button from 'components/base/forms/Button'
 import Panel from 'components/base/grid/Panel'
-import { Link } from 'react-router-dom'
+import Link from 'components/base/link'
 
 type FeaturesEmptyStateProps = {
   environmentId: string
@@ -69,7 +69,6 @@ export const FeaturesEmptyState: FC<FeaturesEmptyStateProps> = ({
             Features. We've created an example user for you which you can see in
             the{' '}
             <Link
-              className='btn-link'
               to={`/project/${projectId}/environment/${environmentId}/identities`}
             >
               Identities page

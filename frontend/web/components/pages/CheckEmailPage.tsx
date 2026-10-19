@@ -1,5 +1,5 @@
 import React, { FC, useEffect } from 'react'
-import { Link, useHistory, useLocation } from 'react-router-dom'
+import { useHistory, useLocation } from 'react-router-dom'
 
 import AccountStore from 'common/stores/account-store'
 import Button from 'components/base/forms/Button'
@@ -10,6 +10,7 @@ import InfoMessage from 'components/InfoMessage'
 import NavIconSmall from 'components/icons/NavIconSmall'
 import API from 'project/api'
 import { useResendActivationEmailMutation } from 'common/services/useEmailActivation'
+import Link from 'components/base/link'
 
 type LocationState = { email?: string } | undefined
 
@@ -87,7 +88,7 @@ const CheckEmailPage: FC = () => {
                   {isLoading ? 'Sending...' : 'Resend email'}
                 </Button>
                 <Link id='login-btn' to='/login'>
-                  <Button theme='text'>Back to sign in</Button>
+                  Back to sign in
                 </Link>
               </div>
             </Card>

@@ -12,6 +12,7 @@ import JSONReference from 'components/JSONReference'
 import { Segment } from 'common/types/responses'
 import ChangeRequestModal from './ChangeRequestModal'
 import { ProjectPermission } from 'common/types/permissions.types'
+import Link from 'components/base/link'
 
 type DefaultSegmentType = Omit<Segment, 'id' | 'project' | 'uuid'> & {
   id?: number
@@ -196,9 +197,9 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
           <InfoMessage collapseId={'value-type-conversions'} className='mb-3'>
             Trait names are case sensitive. Learn more about rule and trait
             value type conversions{' '}
-            <a href='https://docs.flagsmith.com/basic-features/segments#rule-typing'>
+            <Link href='https://docs.flagsmith.com/basic-features/segments#rule-typing'>
               here
-            </a>
+            </Link>
             .
           </InfoMessage>
         )}
