@@ -10,12 +10,6 @@ Suppose you have a feature flag `coffee_machine`, but it needs another feature `
 
 ![`coffee_machine` requires `hamster_power_grid`](/img/flag-dependencies/overview.png)
 
-:::info Available in all plans
-
-Flag dependencies are free and included in all plans.
-
-:::
-
 When the prerequisite feature is disabled, the dependent feature is also evaluated as _disabled_. By default, a feature prerequisite takes priority over segment overrides, but you can move overrides in the _Segment Overrides_ tab to adjust if necessary. As usual, identity overrides always take precedence.
 
 ![`coffee_machine` serving is off since `hamster_power_grid` is disabled](/img/flag-dependencies/serving-off.png)
