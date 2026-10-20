@@ -114,7 +114,7 @@ const OrganisationUsersTableRow: React.FC<OrganisationUsersTableRowProps> = ({
         className='table-column d-flex justify-content-end'
       >
         <UserAction
-          userName={`${first_name} ${last_name}`}
+          userName={email}
           onRemove={onRemoveClick}
           onEdit={onEditClick}
           canRemove={AccountStore.isAdmin()}
