@@ -4,7 +4,12 @@ from typing import TYPE_CHECKING, Any
 
 import hubspot  # type: ignore[import-untyped]
 import requests
+import urllib3
 from django.conf import settings
+from hubspot.conversations.visitor_identification import (  # type: ignore[import-untyped]
+    ApiException,
+    IdentificationTokenGenerationRequest,
+)
 from hubspot.crm.companies import (  # type: ignore[import-untyped]
     PublicObjectSearchRequest,
     SimplePublicObjectInput,
@@ -18,6 +23,7 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_FORM_ID_SAAS,
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
+    HUBSPOT_VISITOR_IDENTIFICATION_TIMEOUT_SECONDS,
 )
 
 if TYPE_CHECKING:
@@ -53,6 +59,31 @@ class HubspotClient:
             )
 
         return results[0]  # type: ignore[no-any-return]
+
+    def create_visitor_identification_token(self, user: "FFAdminUser") -> str | None:
+        """
+        Create a token that identifies the user to the HubSpot chat widget.
+        HubSpot tokens are valid for 12 hours. Returns None if HubSpot fails.
+        """
+        request = IdentificationTokenGenerationRequest(
+            email=user.email,
+            first_name=user.first_name or None,
+            last_name=user.last_name or None,
+        )
+        generate_api = self.client.conversations.visitor_identification.generate_api
+        try:
+            response = generate_api.generate_token(
+                identification_token_generation_request=request,
+                _request_timeout=HUBSPOT_VISITOR_IDENTIFICATION_TIMEOUT_SECONDS,
+            )
+        except (ApiException, urllib3.exceptions.HTTPError):
+            logger.exception(
+                "Failed to create HubSpot visitor identification token for user %d",
+                user.id,
+            )
+            return None
+
+        return response.token  # type: ignore[no-any-return]
 
     def create_lead_form(
         self,
