@@ -74,8 +74,6 @@ type CreateFeatureModalProps = {
   highlightSegmentId?: number
   history?: History
   multivariate_options?: MultivariateFeatureStateValue[]
-  // From FeatureProvider: holds its save toast until the returned call.
-  holdSavedToast: () => (show: boolean) => void
 } & Partial<InjectedSegmentOverrideProps>
 
 type InjectedSegmentOverrideProps = {
@@ -303,9 +301,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     any[] | null
   >(null)
   const mvBaselineRefreshRef = useRef(false)
-  const releaseSavedToastRef = useRef<((show: boolean) => void) | undefined>(
-    undefined,
-  )
   const originalMultivariateOptions = useMemo(() => {
     if (savedMultivariateOptions) {
       return savedMultivariateOptions
@@ -501,29 +496,49 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   }
 
   const Provider = identity ? IdentityProvider : FeatureListProvider
+
+  const toastChangeRequestSaved = (changeRequestId: number) =>
+    toast(
+      `${existingChangeRequest ? 'Updated' : 'Created'} Change Request`,
+      'success',
+      undefined,
+      {
+        buttonText: 'Open',
+        onClick: () => {
+          closeModal()
+          props.history?.push(
+            `/project/${projectId}/environment/${environmentId}/change-requests/${changeRequestId}`,
+          )
+        },
+      },
+    )
   const environmentName = environment.name
 
   return (
     <Provider
       onError={() => {
-        releaseSavedToastRef.current?.(false)
-        releaseSavedToastRef.current = undefined
         if (mvBaselineRefreshRef.current) {
           // The value save failed — keep the unsaved indicators accurate.
           mvBaselineRefreshRef.current = false
           setValueChanged(true)
         }
       }}
-      onSave={(data?: { updatedChangeRequest?: { id: number } }) => {
-        const changeRequestId = data?.updatedChangeRequest?.id
-        const releaseSavedToast = releaseSavedToastRef.current
-        releaseSavedToastRef.current = undefined
-        if (changeRequestId && dependenciesChanged) {
-          dependencyChanges
-            .stageInto(changeRequestId)
-            .then((failure) => releaseSavedToast?.(!failure))
-        } else {
-          releaseSavedToast?.(true)
+      onSave={(data?: {
+        changeRequest?: boolean
+        updatedChangeRequest?: { id: number }
+      }) => {
+        const changeRequestId = data?.changeRequest
+          ? data.updatedChangeRequest?.id
+          : undefined
+        if (changeRequestId) {
+          const staging = dependenciesChanged
+            ? dependencyChanges.stageInto(changeRequestId)
+            : Promise.resolve(null)
+          // A change request missing some dependency changes gets the banner,
+          // not a success toast.
+          staging.then((failure) => {
+            if (!failure) toastChangeRequestSaved(changeRequestId)
+          })
         }
         if (identity) {
           close()
@@ -712,9 +727,6 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                     title,
                   }: any) => {
                     closeModal2()
-                    if (dependenciesChanged) {
-                      releaseSavedToastRef.current = props.holdSavedToast()
-                    }
                     save(
                       (
                         _projectId: any,

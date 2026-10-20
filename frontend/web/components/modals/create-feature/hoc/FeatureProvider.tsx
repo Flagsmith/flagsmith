@@ -3,13 +3,6 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import ES6Component from 'common/ES6Component'
 import { setModalTitle } from 'components/modals/base/ModalDefault'
 
-type SavedToast = {
-  changeRequest?: boolean
-  createdFlag?: string
-  isCreate?: boolean
-  updatedChangeRequest?: { id: number }
-}
-
 // TODO: Migrate to a custom hook once we move away from Flux stores.
 // This class component is necessary because it uses ES6Component/listenTo
 // to subscribe to FeatureListStore events, which requires class lifecycle methods.
@@ -30,13 +23,7 @@ export default function withFeatureProvider(
       this.listenTo(
         FeatureListStore,
         'saved',
-        ({
-          changeRequest,
-          createdFlag,
-          error,
-          isCreate,
-          updatedChangeRequest,
-        }: any = {}) => {
+        ({ changeRequest, createdFlag, error, isCreate }: any = {}) => {
           if (error?.data?.metadata) {
             error.data.metadata?.forEach((m: any) => {
               if (Object.keys(m).length > 0) {
@@ -46,18 +33,10 @@ export default function withFeatureProvider(
           } else if (error?.data) {
             toast('Error updating the Flag', 'danger')
             return
-          } else {
-            const saved = {
-              changeRequest,
-              createdFlag,
-              isCreate,
-              updatedChangeRequest,
-            }
-            if (this.heldToast) {
-              this.heldToast.saved = saved
-            } else {
-              this.showSavedToast(saved)
-            }
+          } else if (!changeRequest) {
+            // The modal toasts a change request once its dependencies are staged.
+            const operation = createdFlag || isCreate ? 'Created' : 'Updated'
+            toast(`${operation} Feature`, 'success')
           }
           const envFlags = FeatureListStore.getEnvironmentFlags()
 
@@ -104,53 +83,11 @@ export default function withFeatureProvider(
 
     listenTo: any
 
-    // Held while the modal stages dependency changes into the change request,
-    // so a partial save does not show as a success.
-    heldToast: { saved?: SavedToast } | null = null
-
-    holdSavedToast = () => {
-      const held: { saved?: SavedToast } = {}
-      this.heldToast = held
-      return (show: boolean) => {
-        if (this.heldToast === held) this.heldToast = null
-        if (show && held.saved) this.showSavedToast(held.saved)
-      }
-    }
-
-    showSavedToast = ({
-      changeRequest,
-      createdFlag,
-      isCreate,
-      updatedChangeRequest,
-    }: SavedToast) => {
-      const isEditingChangeRequest = this.props.changeRequest && changeRequest
-      const operation = createdFlag || isCreate ? 'Created' : 'Updated'
-      const type = changeRequest ? 'Change Request' : 'Feature'
-
-      const toastText = isEditingChangeRequest
-        ? `Updated ${type}`
-        : `${operation} ${type}`
-      const toastAction = changeRequest
-        ? {
-            buttonText: 'Open',
-            onClick: () => {
-              closeModal()
-              this.props.history.push(
-                `/project/${this.props.projectId}/environment/${this.props.environmentId}/change-requests/${updatedChangeRequest?.id}`,
-              )
-            },
-          }
-        : undefined
-
-      toast(toastText, 'success', undefined, toastAction)
-    }
-
     render() {
       return (
         <WrappedComponent
           key={this.state.projectFlag?.id || 'new'}
           {...this.state}
-          holdSavedToast={this.holdSavedToast}
         />
       )
     }
