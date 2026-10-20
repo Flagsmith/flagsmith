@@ -10,7 +10,11 @@ Suppose you have a feature flag `coffee_machine`, but it needs another feature `
 
 ![`coffee_machine` requires `hamster_power_grid`](/img/flag-dependencies/overview.png)
 
-When the prerequisite feature is disabled, the dependent feature is also evaluated as _disabled_. By default, a feature prerequisite takes priority over segment overrides, but you can move overrides in the _Segment Overrides_ tab to adjust if necessary. As usual, identity overrides always take precedence.
+When the prerequisite feature is disabled, the dependent feature is also evaluated as _disabled_. Flag value will be served from the environment default.
+
+Feature prerequisites take priority over segment overrides. Identity overrides still take absolute precedence. Prerequisite flags overridden by segment or identity overrides will satisfy dependent flags.
+
+Flag dependencies are configured per-environment.
 
 ![`coffee_machine` serving is off since `hamster_power_grid` is disabled](/img/flag-dependencies/serving-off.png)
 
