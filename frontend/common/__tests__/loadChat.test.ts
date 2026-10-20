@@ -1,3 +1,5 @@
+import AccountStore from 'common/stores/account-store'
+import data from 'common/data/base/_data'
 import Utils from 'common/utils/utils'
 import { getChatProvider, identifyChatUser, openChat } from 'common/loadChat'
 
@@ -7,9 +9,18 @@ jest.mock('common/utils/utils', () => ({
   isOrgOnFreePlan: jest.fn(),
 }))
 jest.mock('common/stores/account-store', () => ({ getUser: jest.fn() }))
-jest.mock('common/project', () => ({}))
+jest.mock('common/data/base/_data', () => ({ get: jest.fn() }))
+jest.mock('common/project', () => ({ api: 'https://api.test/api/v1/' }))
 
 const mockUtils = Utils as jest.Mocked<typeof Utils>
+const mockAccountStore = AccountStore as jest.Mocked<typeof AccountStore>
+const mockData = data as jest.Mocked<typeof data>
+
+const USER_EMAIL = 'user@example.com'
+const TOKEN_URL = 'https://api.test/api/v1/auth/users/me/hubspot-chat-token/'
+
+// The HubSpot load waits for the token request.
+const flushPromises = () => new Promise((resolve) => setImmediate(resolve))
 
 const setFlags = (enabled: string[], hubspotChatValue?: string) => {
   mockUtils.getFlagsmithHasFeature.mockImplementation((name: string) =>
@@ -29,8 +40,13 @@ const hubSpotWidget = (loaded: boolean) => ({
 beforeEach(() => {
   jest.resetAllMocks()
   mockUtils.isOrgOnFreePlan.mockReturnValue(false)
+  mockAccountStore.getUser.mockReturnValue({ email: USER_EMAIL } as any)
+  mockData.get.mockResolvedValue({ token: 'test-token' })
   // jest runs in node, so give the module a minimal window.
-  ;(global as any).window = { location: { href: '' } }
+  ;(global as any).window = {
+    hsConversationsSettings: { loadImmediately: false },
+    location: { href: '' },
+  }
 })
 
 describe('getChatProvider', () => {
@@ -111,7 +127,7 @@ describe('openChat', () => {
     expect(window.location.href).toBe('')
   })
 
-  it('loads the HubSpot widget open when it is not loaded yet', () => {
+  it('loads the HubSpot widget open when it is not loaded yet', async () => {
     // Given
     setFlags(['hubspot_chat'])
     const widget = hubSpotWidget(false)
@@ -119,6 +135,7 @@ describe('openChat', () => {
 
     // When
     openChat()
+    await flushPromises()
 
     // Then
     expect(widget.load).toHaveBeenCalledWith({ widgetOpen: true })
@@ -148,7 +165,7 @@ describe('openChat', () => {
 })
 
 describe('identifyChatUser', () => {
-  it('hides Pylon and loads HubSpot when hubspot_chat is on', () => {
+  it('hides Pylon and loads HubSpot when hubspot_chat is on', async () => {
     // Given
     setFlags(['hubspot_chat', 'pylon_chat'])
     const widget = hubSpotWidget(false)
@@ -157,13 +174,14 @@ describe('identifyChatUser', () => {
 
     // When
     identifyChatUser()
+    await flushPromises()
 
     // Then
     expect(window.Pylon).toHaveBeenCalledWith('hideChatBubble')
-    expect(widget.load).toHaveBeenCalledWith()
+    expect(widget.load).toHaveBeenCalledWith({ widgetOpen: false })
   })
 
-  it('queues the HubSpot load until the API is ready', () => {
+  it('queues the HubSpot load until the API is ready', async () => {
     // Given
     setFlags(['hubspot_chat'])
 
@@ -172,9 +190,10 @@ describe('identifyChatUser', () => {
     const widget = hubSpotWidget(false)
     window.HubSpotConversations = { widget }
     window.hsConversationsOnReady?.forEach((callback) => callback())
+    await flushPromises()
 
     // Then
-    expect(widget.load).toHaveBeenCalledWith()
+    expect(widget.load).toHaveBeenCalledWith({ widgetOpen: false })
   })
 
   it('queues the HubSpot load only once while the API is not ready', () => {
@@ -201,6 +220,112 @@ describe('identifyChatUser', () => {
 
     // Then
     expect(widget.remove).toHaveBeenCalled()
+    expect(widget.load).not.toHaveBeenCalled()
+  })
+})
+
+describe('HubSpot visitor identification', () => {
+  it('identifies the user before loading the widget', async () => {
+    // Given
+    setFlags(['hubspot_chat'])
+    const widget = hubSpotWidget(false)
+    let settingsAtLoad
+    widget.load.mockImplementation(() => {
+      settingsAtLoad = { ...window.hsConversationsSettings }
+    })
+    window.HubSpotConversations = { widget }
+
+    // When
+    identifyChatUser()
+    await flushPromises()
+
+    // Then
+    expect(mockData.get).toHaveBeenCalledWith(TOKEN_URL)
+    expect(settingsAtLoad).toEqual({
+      identificationEmail: USER_EMAIL,
+      identificationToken: 'test-token',
+      loadImmediately: false,
+    })
+  })
+
+  it('loads the widget anonymously when the token request fails', async () => {
+    // Given
+    setFlags(['hubspot_chat'])
+    mockData.get.mockRejectedValue(new Error('Not found'))
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+    const widget = hubSpotWidget(false)
+    window.HubSpotConversations = { widget }
+
+    // When
+    identifyChatUser()
+    await flushPromises()
+
+    // Then
+    expect(widget.load).toHaveBeenCalledWith({ widgetOpen: false })
+    expect(window.hsConversationsSettings).toEqual({ loadImmediately: false })
+  })
+
+  it("drops a previous user's identity when no new token comes back", async () => {
+    // Given
+    setFlags(['hubspot_chat'])
+    mockData.get.mockResolvedValue({})
+    window.hsConversationsSettings = {
+      identificationEmail: 'previous@example.com',
+      identificationToken: 'previous-token',
+      loadImmediately: false,
+    }
+    window.HubSpotConversations = { widget: hubSpotWidget(false) }
+
+    // When
+    identifyChatUser()
+    await flushPromises()
+
+    // Then
+    expect(window.hsConversationsSettings).toEqual({ loadImmediately: false })
+  })
+
+  it('fetches one token and loads once for overlapping calls', async () => {
+    // Given
+    setFlags(['hubspot_chat'])
+    const widget = hubSpotWidget(false)
+    window.HubSpotConversations = { widget }
+
+    // When
+    identifyChatUser()
+    openChat()
+    await flushPromises()
+
+    // Then
+    expect(mockData.get).toHaveBeenCalledTimes(1)
+    expect(widget.load).toHaveBeenCalledTimes(1)
+    expect(widget.load).toHaveBeenCalledWith({ widgetOpen: true })
+  })
+
+  it('does not fetch a token when the widget is already loaded', async () => {
+    // Given
+    setFlags(['hubspot_chat'])
+    window.HubSpotConversations = { widget: hubSpotWidget(true) }
+
+    // When
+    identifyChatUser()
+    await flushPromises()
+
+    // Then
+    expect(mockData.get).not.toHaveBeenCalled()
+  })
+
+  it('does not load the widget when the org changed during the fetch', async () => {
+    // Given
+    setFlags(['hubspot_chat'])
+    const widget = hubSpotWidget(false)
+    window.HubSpotConversations = { widget }
+
+    // When
+    identifyChatUser()
+    mockUtils.isOrgOnFreePlan.mockReturnValue(true)
+    await flushPromises()
+
+    // Then
     expect(widget.load).not.toHaveBeenCalled()
   })
 })

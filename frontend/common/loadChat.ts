@@ -2,7 +2,11 @@ declare global {
   interface Window {
     Pylon?: ((...args: unknown[]) => void) & { q?: unknown[][] }
     pylon?: { chat_settings: Record<string, string | undefined> }
-    hsConversationsSettings?: { loadImmediately?: boolean }
+    hsConversationsSettings?: {
+      loadImmediately?: boolean
+      identificationEmail?: string
+      identificationToken?: string
+    }
     hsConversationsOnReady?: (() => void)[]
     HubSpotConversations?: {
       widget: {
@@ -16,6 +20,7 @@ declare global {
 }
 
 import AccountStore from './stores/account-store'
+import data from './data/base/_data'
 import getUserDisplayName from './utils/getUserDisplayName'
 import Utils from './utils/utils'
 import { AccountModel } from './types/responses'
@@ -93,24 +98,78 @@ function hidePylon() {
   }
 }
 
-// The HubSpot script is added in libs.js with loadImmediately: false, so the
-// widget only appears once we call load(). Module-level so that repeated calls
-// before the API is ready queue it only once.
-const loadHubSpotWidget = () => {
+function canLoadHubSpot() {
   const widget = window.HubSpotConversations?.widget
-  // Re-checked: the org may have changed before the API became ready.
-  if (widget && getChatProvider() === 'hubspot' && !widget.status().loaded) {
-    widget.load()
+  return !!widget && getChatProvider() === 'hubspot' && !widget.status().loaded
+}
+
+// Tells HubSpot who is chatting, so their tickets get a contact instead of
+// "Unknown Visitor". HubSpot reads this when load() is called. Without a token
+// (an API without the endpoint, or HubSpot failing) the widget still loads,
+// just anonymously.
+async function identifyHubSpotVisitor() {
+  const settings = { ...window.hsConversationsSettings }
+  delete settings.identificationEmail
+  delete settings.identificationToken
+  window.hsConversationsSettings = settings
+
+  const user = AccountStore.getUser() as AccountModel | undefined
+  if (!user?.email) return
+  try {
+    const { token } = await data.get(
+      `${Project.api}auth/users/me/hubspot-chat-token/`,
+    )
+    if (token) {
+      window.hsConversationsSettings = {
+        ...settings,
+        identificationEmail: user.email,
+        identificationToken: token,
+      }
+    }
+  } catch (error) {
+    console.error('Failed to identify the HubSpot chat user:', error)
   }
+}
+
+let isLoadingHubSpot = false
+let openHubSpotOnLoad = false
+
+// The HubSpot script is added in libs.js with loadImmediately: false, so the
+// widget only appears once we call load(). Calls made while the token is being
+// fetched share that fetch and a single load().
+function loadHubSpotWidget(widgetOpen = false) {
+  if (!canLoadHubSpot()) return
+  openHubSpotOnLoad = openHubSpotOnLoad || widgetOpen
+  if (isLoadingHubSpot) return
+  isLoadingHubSpot = true
+  identifyHubSpotVisitor()
+    .then(() => {
+      // Re-checked: the org may have changed while the token was fetched.
+      if (canLoadHubSpot()) {
+        window.HubSpotConversations?.widget.load({
+          widgetOpen: openHubSpotOnLoad,
+        })
+      }
+    })
+    .finally(() => {
+      isLoadingHubSpot = false
+      openHubSpotOnLoad = false
+    })
+}
+
+// Module-level so that repeated calls before the API is ready queue it only
+// once.
+const onHubSpotReady = () => {
+  loadHubSpotWidget()
 }
 
 function showHubSpot() {
   if (window.HubSpotConversations) {
     loadHubSpotWidget()
-  } else if (!window.hsConversationsOnReady?.includes(loadHubSpotWidget)) {
+  } else if (!window.hsConversationsOnReady?.includes(onHubSpotReady)) {
     window.hsConversationsOnReady = [
       ...(window.hsConversationsOnReady || []),
-      loadHubSpotWidget,
+      onHubSpotReady,
     ]
   }
 }
@@ -147,7 +206,7 @@ export function openChat() {
     if (widget.status().loaded) {
       widget.open()
     } else {
-      widget.load({ widgetOpen: true })
+      loadHubSpotWidget(true)
     }
     return
   }
