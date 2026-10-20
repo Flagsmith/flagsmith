@@ -26,6 +26,14 @@ const Project = {
 
   hubspot: '//js-eu1.hs-scripts.com/143451822.js',
 
+  // The website's "Contact Enterprise Sales" form, opened by Contact Sales.
+  // Production only, so clicks on staging or locally can't create sales leads.
+  hubspotContactSalesForm: {
+    formId: 'd71fdd04-bb77-485e-af7f-bd9c4e1c3bf5',
+    portalId: '143451822',
+    region: 'eu1',
+  },
+
   linkedinConversionId: 16798338,
   // This is used for Sentry tracking
   maintenance: false,
