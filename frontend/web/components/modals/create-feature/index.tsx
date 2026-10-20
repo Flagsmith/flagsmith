@@ -156,8 +156,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const [, setTabKey] = useState(0)
 
   const isEdit = !!props.projectFlag
-  // Held here rather than in the tab, so the change request any tab creates
-  // takes them along.
+  // In the modal, so a change request from any tab includes them.
   const dependencyChanges = useStagedPrerequisites({
     environmentId,
     projectFlag,

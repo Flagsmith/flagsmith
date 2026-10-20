@@ -28,7 +28,6 @@ type FeatureDependenciesTabProps = {
   projectFlag: ProjectFlag
   requiresChangeRequests: boolean
   isVersioned: boolean
-  // Held by the modal, so any tab's change request takes them along.
   staging: StagedPrerequisites
   // The modal is creating the change request the held changes go into.
   isSaving?: boolean
@@ -95,7 +94,6 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
     return <ErrorMessage error="Could not load this feature's dependencies." />
   }
 
-  // Where change requests are required, edits are held instead of written.
   const editing = isChangeRequest
     ? {
         onAdd: (feature: ProjectFlag) => {

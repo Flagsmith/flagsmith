@@ -9,7 +9,6 @@ import {
   useDeleteFeatureDependencyMutation,
 } from 'common/services/useFeatureDependency'
 
-// Why a change could not be staged, and the row it belongs to.
 export type StagingFailure = { message: string; prerequisiteId?: number }
 
 // Dependency refusals answer { message }, other errors { detail }.
@@ -87,9 +86,7 @@ export const useStagedPrerequisites = ({
     return null
   }
 
-  // Into the change request the modal created with the value and segment
-  // overrides. Those that made it in leave the held list, so the rest can be
-  // tried again.
+  // Staged changes leave the list, so a retry sends only the rest.
   const stageInto = async (changeRequestId: number) => {
     setIsSubmitting(true)
     setError(null)
@@ -120,7 +117,7 @@ export const useStagedPrerequisites = ({
     remove,
     stageInto,
     staged,
-    // The refusal was about the held changes, so it goes with them.
+    // Undoing clears the error too.
     undo: (prerequisiteId: number) => {
       setError(null)
       drop(prerequisiteId)

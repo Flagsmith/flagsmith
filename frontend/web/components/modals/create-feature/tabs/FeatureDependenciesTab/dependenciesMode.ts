@@ -1,6 +1,6 @@
 // How dependency changes reach an environment: written directly, held for a
 // change request, or not at all where change requests run on v1 versioning,
-// which #8449 does not support.
+// which isn't supported.
 export type DependenciesMode = 'direct' | 'changeRequest' | 'readOnly'
 
 export const getDependenciesMode = (
