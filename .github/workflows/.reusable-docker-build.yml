@@ -121,7 +121,7 @@ jobs:
         with:
           context: .
           save: ${{ inputs.ephemeral }}
-          push: ${{ !inputs.ephemeral }}
+          outputs: ${{ !inputs.ephemeral && 'type=registry,oci-mediatypes=true' || '' }}
           platforms: linux/amd64,linux/arm64
           secrets: |
             ${{ secrets.secrets }}
