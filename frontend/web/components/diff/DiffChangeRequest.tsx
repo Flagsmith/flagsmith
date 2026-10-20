@@ -51,11 +51,10 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
   })
   const skipDependencies =
     !changeRequest ||
-    // Refused once published, and without versioning.
+    // The API rejects these.
     changeRequest.is_committed ||
     !isVersioned ||
     !canCreateChangeRequest ||
-    // The same flags as the feature modal's Dependencies tab.
     !Utils.getFlagsmithHasFeature('flag_dependencies') ||
     !Utils.getFlagsmithHasFeature('flag_dependencies_change_requests')
   const dependencies = useDependencyChanges({
@@ -64,8 +63,7 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
     featureId: feature,
     skip: skipDependencies,
   })
-  // Whether each prerequisite is on now, so a reviewer can see an added one
-  // that would hold this feature off.
+  // Shows if an added prerequisite is off.
   const states = useFeatureStates({
     environmentId,
     projectId: Number(projectId),

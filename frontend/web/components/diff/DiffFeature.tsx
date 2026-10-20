@@ -36,7 +36,6 @@ type FeatureDiffType = {
   disableSegments?: boolean
   oldEnvName?: string
   newEnvName?: string
-  // A change request's prerequisite changes, shown in their own tab.
   dependencies?: {
     changes?: StagedDependencyChange[]
     isError: boolean
@@ -81,9 +80,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
     projectId,
   })
 
-  // Once the dependency changes load, they show in their own tab, so their
-  // segments stay out of this one. Until then, or where they don't load, they
-  // stay here.
+  // Dependency segments get their own tab once loaded.
   const overrideSegments = dependencies?.changes
     ? segments?.results.filter((segment) => segment.managed_by !== 'dependency')
     : segments?.results
@@ -102,10 +99,8 @@ const DiffFeature: FC<FeatureDiffType> = ({
     ...(segmentDiffs?.diffs.length ? [totalSegmentChanges] : []),
     ...(showDependencies ? [totalDependencyChanges] : []),
   ]
-  // Opens on the first tab that changes, as one listed can change nothing.
   const changedTab = tabChanges.findIndex((changes) => !!changes)
-  // With nothing else to show, open on a failed dependency load, or its error
-  // stays out of sight. Dependencies is the last tab.
+  // With no other changes, open Dependencies (the last tab) to show its error.
   const firstChangedTab =
     changedTab === -1 && dependencies?.isError
       ? tabChanges.length - 1

@@ -19,7 +19,6 @@ type DependencyChangesTableProps = {
   isEnabled?: (prerequisiteId: number) => boolean
 }
 
-// What a change request does to a feature's prerequisites once published.
 const DependencyChangesTable: FC<DependencyChangesTableProps> = ({
   changes,
   isEnabled,
@@ -48,7 +47,6 @@ const DependencyChangesTable: FC<DependencyChangesTableProps> = ({
       {changes.map(({ action, prerequisite }) => {
         const isAdd = action === 'add'
         return (
-          // The change request diff's rows, so a change reads the same here.
           <TableRow
             key={prerequisite.id}
             className={cn(

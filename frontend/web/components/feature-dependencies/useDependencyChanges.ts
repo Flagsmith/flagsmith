@@ -9,8 +9,6 @@ type UseDependencyChangesArgs = {
   skip?: boolean
 }
 
-// A feature's prerequisite changes in one change request: its dependencies
-// as if the change request were live, against today's.
 export const useDependencyChanges = ({
   changeRequestId,
   environmentId,
