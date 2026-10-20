@@ -78,11 +78,9 @@ includes every identity whose `email` trait is an address at `example.com`:
 
 `email` `Matches regex` `^[^@]+@example\.com$`
 
-Regular expressions are not evaluated the same way everywhere. The Flagsmith API and the Python SDK only accept a match
-at the start of the trait value. The Node.js, Java, .NET, Go, Ruby, PHP and Rust SDKs accept a match anywhere in it when
-running in [local evaluation mode](/integrating-with-flagsmith/sdks/#local-evaluation). For example, `@example\.com$`
-matches `jane@example.com` in the Node.js SDK but not in the Flagsmith API. To get the same result everywhere, start the
-pattern with `^` and end it with `$`, so that it has to match the whole trait value.
+The pattern is matched from the start of the trait value, but it doesn't have to cover the whole value. For example,
+`prod` matches `production`, while `@example\.com$` does not match `jane@example.com` because the value doesn't start
+with `@`. To match the whole trait value, start the pattern with `^` and end it with `$`.
 
 Use syntax that every SDK supports: character classes, groups, alternation (`|`) and quantifiers. Lookarounds such as
 `(?=...)` and backreferences are not supported by the Go and Rust SDKs. Matching is case-sensitive, and inline flags
