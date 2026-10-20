@@ -104,6 +104,7 @@ export const useStagedPrerequisites = ({
       setStaged([])
     }
     setIsSubmitting(false)
+    return failure
   }
 
   return {
