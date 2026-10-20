@@ -11,7 +11,6 @@ export type PrerequisiteRow = {
   isEnabled: boolean
   // Undefined where the rule cannot be read. See toPrerequisiteRow.
   isMet?: boolean
-  // Held for a change request, not live yet.
   staged?: StagedAction
 }
 

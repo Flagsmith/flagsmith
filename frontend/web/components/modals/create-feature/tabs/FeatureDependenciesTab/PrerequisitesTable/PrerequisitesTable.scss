@@ -15,7 +15,7 @@
   background: var(--color-surface-muted);
 }
 
-// On the cell, as with the input row, so hover does not replace it.
+// On td, not tr, or the row hover covers it.
 .prerequisite-row--refused td {
   background: var(--color-surface-danger);
 }

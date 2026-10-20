@@ -27,9 +27,8 @@ type PrerequisitesTableProps = {
   flashedId?: number
   isRemoving?: number
   onRemove: (edge: DependencyEdge) => void
-  // Takes back a held removal.
   onUndo?: (edge: DependencyEdge) => void
-  // The row a change request refused, marked until the user acts.
+  // The held change the API rejected.
   refusedId?: number
   onSelect: (edge: DependencyEdge) => void
   // The prerequisite being added, shown as a row of its own until the POST
