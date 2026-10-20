@@ -28,7 +28,9 @@ Flag dependencies are configured per-environment.
 
 ![Adding a prerequisite feature](/img/flag-dependencies/add-prerequisite.png)
 
-For now, a prerequisite feature cannot have another prerequisite itself — dependencies only go one level deep. However, a feature can have as many prerequisites as necessary.
+A feature can have as many prerequisites as necessary. We do restrict:
+- Nesting levels - dependencies only go one level deep.
+- Cycles - circular dependencies are not allowed.
 
 ## Removing a prerequisite
 
