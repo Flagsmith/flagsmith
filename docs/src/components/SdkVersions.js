@@ -19,7 +19,7 @@ const Version = ({ sdk, spec = '*', options = {} }) => {
     return latest ?? 'x.y.z';
 };
 
-export const JavaVersion = ({ spec = '~7' }) => Version({ sdk: 'java', spec });
+export const JavaVersion = ({ spec = '~8' }) => Version({ sdk: 'java', spec });
 export const AndroidVersion = ({ spec = '~1' }) => Version({ sdk: 'android', spec });
 export const CocoapodsVersion = ({ spec = '~3' }) => Version({ sdk: 'cocoapods', spec });
 export const SwiftPMVersion = ({ spec = '~3' }) => Version({ sdk: 'swiftpm', spec });

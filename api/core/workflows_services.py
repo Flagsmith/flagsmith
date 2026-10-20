@@ -24,14 +24,18 @@ class ChangeRequestCommitService:
     def __init__(self, change_request: "ChangeRequest") -> None:
         self.change_request = change_request
 
+    @transaction.atomic
     def commit(self, committed_by: "FFAdminUser") -> None:
+        from features.dependencies.services import (
+            validate_change_request_flag_dependencies,
+        )
+
         if not self.change_request.is_approved():
             raise ChangeRequestNotApprovedError(
                 "Change request has not been approved by all required approvers."
             )
-        # Runs before anything publishes: commit is not atomic as a whole, so
-        # raising any later would leave the change request half-applied.
         self._validate_segments_are_not_cohort_managed()
+        validate_change_request_flag_dependencies(self.change_request)
 
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
@@ -122,7 +126,6 @@ class ChangeRequestCommitService:
                     "via a change request."
                 )
 
-    @transaction.atomic
     def _publish_segments(self) -> None:
         for draft_segment in self.change_request.segments.all():
             live_segment = draft_segment.version_of
