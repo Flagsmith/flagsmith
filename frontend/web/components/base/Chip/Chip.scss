@@ -13,6 +13,10 @@
     border-color: var(--color-border-action);
   }
 
+  &--danger {
+    border-color: var(--color-border-danger);
+  }
+
   // Sizes (default is the base above).
   &--sm {
     padding: 3px 8px;

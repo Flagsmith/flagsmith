@@ -2,7 +2,6 @@ import { FC, MouseEvent, ReactNode } from 'react'
 import cn from 'classnames'
 import { DependencyEdge } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
-import Chip from 'components/base/Chip'
 import Table, {
   TableBody,
   TableCell,
@@ -15,6 +14,7 @@ import Icon from 'components/icons/Icon'
 import { PrerequisiteRow } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/prerequisiteState'
 import StateToggle from 'components/feature-dependencies/StateToggle'
 import Satisfies from 'components/feature-dependencies/Satisfies'
+import StagedChip from './StagedChip'
 import './PrerequisitesTable.scss'
 
 // The actions column only exists where the user can manage dependencies, so the
@@ -71,7 +71,6 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
           key={edge.prerequisite.id}
           className={cn('cursor-pointer', {
             'prerequisite-row--flash': flashedId === edge.prerequisite.id,
-            'prerequisite-row--refused': refusedId === edge.prerequisite.id,
           })}
           onClick={() => onSelect(edge)}
           pending={isRemoving === edge.prerequisite.id}
@@ -98,13 +97,10 @@ const PrerequisitesTable: FC<PrerequisitesTableProps> = ({
                 </span>
               </Button>
               {!!staged && (
-                <Chip
-                  size='xs'
-                  variant={staged === 'add' ? 'accent' : 'neutral'}
-                  className='flex-shrink-0'
-                >
-                  {staged === 'add' ? 'Staged: add' : 'Staged: remove'}
-                </Chip>
+                <StagedChip
+                  action={staged}
+                  isRefused={refusedId === edge.prerequisite.id}
+                />
               )}
             </div>
           </TableCell>
