@@ -74,6 +74,8 @@ type CreateFeatureModalProps = {
   highlightSegmentId?: number
   history?: History
   multivariate_options?: MultivariateFeatureStateValue[]
+  // From FeatureProvider: holds its save toast until the returned call.
+  holdSavedToast: () => (show: boolean) => void
 } & Partial<InjectedSegmentOverrideProps>
 
 type InjectedSegmentOverrideProps = {
@@ -301,6 +303,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     any[] | null
   >(null)
   const mvBaselineRefreshRef = useRef(false)
+  const releaseSavedToastRef = useRef<((show: boolean) => void) | undefined>(
+    undefined,
+  )
   const originalMultivariateOptions = useMemo(() => {
     if (savedMultivariateOptions) {
       return savedMultivariateOptions
@@ -501,6 +506,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   return (
     <Provider
       onError={() => {
+        releaseSavedToastRef.current?.(false)
+        releaseSavedToastRef.current = undefined
         if (mvBaselineRefreshRef.current) {
           // The value save failed — keep the unsaved indicators accurate.
           mvBaselineRefreshRef.current = false
@@ -509,8 +516,14 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
       }}
       onSave={(data?: { updatedChangeRequest?: { id: number } }) => {
         const changeRequestId = data?.updatedChangeRequest?.id
+        const releaseSavedToast = releaseSavedToastRef.current
+        releaseSavedToastRef.current = undefined
         if (changeRequestId && dependenciesChanged) {
-          dependencyChanges.stageInto(changeRequestId)
+          dependencyChanges
+            .stageInto(changeRequestId)
+            .then((failure) => releaseSavedToast?.(!failure))
+        } else {
+          releaseSavedToast?.(true)
         }
         if (identity) {
           close()
@@ -699,6 +712,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                     title,
                   }: any) => {
                     closeModal2()
+                    if (dependenciesChanged) {
+                      releaseSavedToastRef.current = props.holdSavedToast()
+                    }
                     save(
                       (
                         _projectId: any,
