@@ -86,13 +86,18 @@ Then paste your API key into the code below:
 <script>
  flagsmith.init({
   environmentID: '<add your API key here!>',
+  // Only if you are self-hosting Flagsmith or using a private cloud, uncomment
+  // the line below and point it to your Flagsmith API. Leave it commented out
+  // when using Flagsmith SaaS.
+  // api: 'https://flagsmith.example.com/api/v1/',
   onChange: (oldFlags, params) => {},
  });
 </script>
 ```
 
 Now when the browser opens the web page, it will download the Javascript SDK and make a call to `edge.api.flagsmith.com`
-to get the flags for our Environment. You can see this in the browser network tab:
+(or your own Flagsmith API, if you set the `api` option) to get the flags for our Environment. You can see this in the
+browser network tab:
 
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_7.png"/></div>
 
