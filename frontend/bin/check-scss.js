@@ -18,7 +18,7 @@ const checks = [
   },
   {
     message: 'Use a token whose value already changes in dark mode.',
-    pattern: /\.dark\b/,
+    pattern: /\.dark(?![\w-])/,
   },
 ]
 

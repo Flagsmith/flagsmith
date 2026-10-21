@@ -14,7 +14,20 @@ const colourLiterals = [
   },
 ]
 
+// The project's own SVGs, through Icon, are the only icon set.
+const onlyIcon = 'Add the SVG to the project and render it through Icon.'
+const iconLibraries = {
+  paths: [
+    { importNames: ['IonIcon'], message: onlyIcon, name: '@ionic/react' },
+  ],
+  patterns: [{ group: ['ionicons', 'ionicons/*'], message: onlyIcon }],
+}
+
 const jsxPatterns = [
+  {
+    message: onlyIcon,
+    selector: "JSXOpeningElement[name.name='IonIcon']",
+  },
   {
     message:
       'Use a SCSS class with tokens. For a runtime value, set a CSS custom property.',
@@ -62,23 +75,16 @@ const e2eSelectors = [
   },
 ]
 
-const iconLibraries = {
-  paths: [
-    '@heroicons/react',
-    '@mui/icons-material',
-    '@phosphor-icons/react',
-    'lucide-react',
-    'react-icons',
-  ].map((name) => ({
-    message: 'Add the SVG to the project and render it through Icon.',
-    name,
-  })),
-}
 // A warning, not an error: some data is only in the stores until the RTK
 // migration, and touching a line that already reads one shouldn't fail CI.
 const fluxStores = {
   group: ['common/stores/*', '**/stores/*-store'],
   message: 'Read data through RTK Query services, not Flux stores.',
+}
+const fetchCalls = {
+  message: 'Add an RTK Query endpoint in common/services/ instead of fetch().',
+  selector:
+    "CallExpression[callee.object.name=/^(window|globalThis|self)$/][callee.property.name='fetch']",
 }
 const fetchGlobal = {
   message: 'Add an RTK Query endpoint in common/services/ instead of fetch().',
@@ -197,7 +203,7 @@ module.exports = {
         'web/components/icons/**',
       ],
       'rules': {
-        'no-restricted-syntax': ['error', ...jsxPatterns],
+        'no-restricted-syntax': ['error', ...jsxPatterns, fetchCalls],
       },
     },
     {
@@ -281,7 +287,12 @@ module.exports = {
     'no-nested-ternary': 'error',
     'no-restricted-globals': ['error', fetchGlobal],
     'no-restricted-imports': ['error', iconLibraries],
-    'no-restricted-syntax': ['error', ...colourLiterals, ...jsxPatterns],
+    'no-restricted-syntax': [
+      'error',
+      ...colourLiterals,
+      ...jsxPatterns,
+      fetchCalls,
+    ],
     'no-unused-vars': 'off',
     'no-var': 'error',
     'object-curly-spacing': ['error', 'always'],
