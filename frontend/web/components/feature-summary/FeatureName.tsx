@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import Button from 'components/base/forms/Button'
+import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import Utils from 'common/utils/utils'
 
@@ -21,9 +21,15 @@ const FeatureName: FC<FeatureNameType> = ({ name }) => {
       }}
     >
       <span>{name}</span>
-      <Button onClick={copyFeature} theme='icon' className='ms-2 me-2'>
-        <Icon name='copy' />
-      </Button>
+      <IconButton
+        variant='ghost'
+        size='small'
+        aria-label='Copy feature name'
+        onClick={copyFeature}
+        className='ms-2 me-2'
+      >
+        <Icon width={16} name='copy' />
+      </IconButton>
     </Row>
   )
 }

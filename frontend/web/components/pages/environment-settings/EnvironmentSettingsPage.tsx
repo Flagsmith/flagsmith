@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import IconButton from 'components/base/IconButton'
 import FieldLabel from 'components/base/forms/FieldLabel'
 import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
 import ProjectStore from 'common/stores/project-store'
@@ -862,22 +863,19 @@ const EnvironmentSettingsPage: React.FC = () => {
                                 <Switch checked={webhook.enabled} />
                               </div>
                               <div className='table-column'>
-                                <Button
+                                <IconButton
+                                  variant='secondary'
+                                  size='large'
+                                  aria-label={`Delete webhook ${webhook.url}`}
                                   id='delete-invite'
-                                  type='button'
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     e.preventDefault()
                                     handleDeleteWebhook(webhook)
                                   }}
-                                  className='btn btn-with-icon'
                                 >
-                                  <Icon
-                                    name='trash-2'
-                                    width={20}
-                                    fill='#656D7B'
-                                  />
-                                </Button>
+                                  <Icon width={20} name='trash-2' />
+                                </IconButton>
                               </div>
                             </Row>
                           )}

@@ -11,13 +11,10 @@
     margin-top: 6px;
     overflow: hidden;
 
-    border-radius: 8px;
-    background: #ffffff;
-    box-shadow: 0px 10px 12px 0px rgba(100, 116, 139, 0.15);
-
-    &.border {
-      border-bottom: 0.5px solid;
-    }
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border-default);
+    background: var(--color-surface-default);
+    box-shadow: var(--shadow-lg);
 
     &.placed-top {
       margin-top: 0px;
@@ -60,11 +57,6 @@
 }
 
 .dark {
-  .feature-action__list {
-    background: $input-bg-dark;
-    box-shadow: 0px 8px 12px 0px rgba(0, 0, 0, 0.12);
-  }
-
   .feature-action__item {
     color: white !important;
 
