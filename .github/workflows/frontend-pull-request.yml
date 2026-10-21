@@ -80,3 +80,16 @@ jobs:
           reporter: github-pr-check
           filter_mode: added
           fail_level: error
+
+      # Fails on type errors that aren't in .tsc-baseline.json, in the folders
+      # held at zero errors or in files this PR changed. After fixing errors,
+      # run `npm run typecheck:baseline` to shrink the baseline.
+      - name: Check for new type errors
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          {
+            git ls-files 'web/components/base/*.ts' 'web/components/base/*.tsx'
+            git diff --name-only --relative "$BASE_SHA"...HEAD -- '*.ts' '*.tsx'
+          } > "$RUNNER_TEMP/ts-check-files.txt"
+          npx tsc --noEmit --incremental false --pretty false | npx tsc-baseline check --changedFiles "$RUNNER_TEMP/ts-check-files.txt"
