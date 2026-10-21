@@ -258,7 +258,6 @@ test.describe('Change Request Tests', () => {
     await editChangeRequest()
     await setText(featureValueField(), 'second_value')
     await updateChangeRequest()
-    await expect(page.getByText(/Updated Change Request #\d+/)).toBeVisible()
 
     log('The change request now carries the edited value')
     await expect(page.getByText('second_value').first()).toBeVisible()
@@ -313,7 +312,6 @@ test.describe('Change Request Tests', () => {
     log('Its page shows it as a scheduled change')
     await gotoChangeRequests()
     await openChangeRequest(0)
-    await expect(page.getByText('Scheduled Change')).toBeVisible()
-    await expect(page.getByText(/1st Jan 2099/)).toBeVisible()
+    await expect(page.getByText(/go live at 1st Jan 2099/)).toBeVisible()
   })
 })

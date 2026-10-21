@@ -639,9 +639,12 @@ export class E2EHelpers {
   // segments in a shared project can't shift the selection
   async addSegmentOverrideConfigForSegment(segmentName: string, value: string) {
     await this.click(byId('segment_overrides'));
-    await this.click(byId('select-segment'));
-    await this.page.keyboard.type(segmentName);
-    await this.page.locator('.react-select__option').filter({ hasText: segmentName }).first().click();
+    // E2E builds render the select's options as plain links
+    await this.page
+      .locator('[data-test^="select-segment-option-"]')
+      .filter({ hasText: segmentName })
+      .first()
+      .click();
     await this.waitForElementVisible(this.segmentOverrideValueField(0));
     await this.setText(this.segmentOverrideValueField(0), value);
     await this.click(byId('segment-override-toggle-0'));
@@ -1208,7 +1211,11 @@ export class E2EHelpers {
     await updateButton.waitFor({ state: 'visible' });
     await this.waitForToastsToClear();
     await updateButton.click();
-    await this.waitForToast();
+    // Checked before it clears, as waitForToast waits for it to go
+    await expect(
+      this.page.locator('.toast-message').filter({ hasText: /Updated Change Request #\d+/ }),
+    ).toBeVisible({ timeout: LONG_TIMEOUT });
+    await this.waitForToastsToClear();
   }
 
   // Open the feature modal for an unapproved change request, from its page
