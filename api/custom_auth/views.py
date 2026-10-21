@@ -7,8 +7,8 @@ from django.contrib.auth import user_logged_out
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from djoser.views import TokenCreateView, UserViewSet  # type: ignore[import-untyped]
-from drf_spectacular.utils import extend_schema
-from rest_framework import status
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers, status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -31,6 +31,7 @@ from custom_auth.mfa.trench.responses import ErrorResponse
 from custom_auth.mfa.trench.serializers import CodeLoginSerializer
 from custom_auth.mfa.trench.utils import user_token_generator
 from custom_auth.serializers import CustomUserDelete
+from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.services import (
     register_hubspot_tracker_and_track_user,
 )
@@ -117,6 +118,7 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
     throttle_scopes_by_action = {
         "create": "signup",
         "resend_activation": "resend_activation",
+        "hubspot_chat_token": "hubspot_chat_token",
     }
 
     def perform_authentication(self, request: Request) -> None:
@@ -182,6 +184,39 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         user.save(update_fields=["onboarding_data"])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(
+        responses={
+            200: inline_serializer(
+                name="HubspotChatTokenResponse",
+                fields={"token": serializers.CharField()},
+            ),
+            404: None,
+            502: None,
+        },
+    )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="me/hubspot-chat-token",
+        permission_classes=[IsAuthenticated],
+    )
+    def hubspot_chat_token(
+        self, request: Request, *args: Any, **kwargs: Any
+    ) -> Response:
+        """
+        Return a token that identifies the user to the HubSpot chat widget.
+        """
+        if not settings.HUBSPOT_ACCESS_TOKEN:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        assert isinstance(user, FFAdminUser)
+        token = HubspotClient().create_visitor_identification_token(user)
+        if token is None:
+            return Response(status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response({"token": token})
 
     @action(["post"], detail=False)
     def reset_password(self, request: Request, *args: Any, **kwargs: Any) -> Response:

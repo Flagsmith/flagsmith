@@ -1250,6 +1250,26 @@ paths:
         - Master API Key: []
       tags:
         - Authentication
+  /api/v1/auth/users/me/hubspot-chat-token/:
+    get:
+      operationId: api_v1_auth_users_me_hubspot_chat_token_retrieve
+      description: Return a token that identifies the user to the HubSpot chat widget.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HubspotChatTokenResponse'
+        '404':
+          description: No response body
+        '502':
+          description: No response body
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Authentication
   /api/v1/auth/users/me/onboarding/:
     patch:
       operationId: api_v1_auth_users_me_onboarding_partial_update
@@ -22983,6 +23003,13 @@ components:
           maxLength: 200
       required:
         - api_key
+    HubspotChatTokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
     IdentifierOnlyIdentity:
       type: object
       properties:
