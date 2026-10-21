@@ -582,6 +582,36 @@ def test_get_current_api_usage__with_records__returns_total_value(
     assert result == 43
 
 
+@pytest.mark.parametrize(
+    "days, expected_bucket",
+    [
+        (2, "test_bucket_downsampled_15m"),
+        (30, "test_bucket_downsampled_1h"),
+    ],
+)
+def test_get_current_api_usage__date_range__queries_bucket_retaining_the_range(
+    mocker: MockerFixture,
+    days: int,
+    expected_bucket: str,
+) -> None:
+    """
+    The 15m bucket does not retain a full billing period, so a 30 day lookback
+    against it understates usage and under-reports organisations over their limit.
+    """
+    # Given
+    influx_mock = mocker.patch(
+        "app_analytics.influxdb_wrapper.InfluxDBWrapper.influx_query_manager",
+        return_value=[],
+    )
+    date_start = timezone.now() - timedelta(days=days)
+
+    # When
+    get_current_api_usage(organisation_id=1, date_start=date_start)
+
+    # Then
+    assert influx_mock.call_args.kwargs["bucket"] == expected_bucket
+
+
 def test_get_platform_usage_trends__empty_org_ids__returns_empty() -> None:
     # Given / When
     from app_analytics.influxdb_wrapper import get_platform_usage_trends
