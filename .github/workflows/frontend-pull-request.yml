@@ -36,7 +36,7 @@ jobs:
         run: npm run test:unit -- --passWithNoTests
 
   lint:
-    name: Lint changed files
+    name: Lint and type check changed files
     runs-on: ubuntu-latest
     permissions:
       contents: read
