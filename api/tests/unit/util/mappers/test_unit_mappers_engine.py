@@ -11,6 +11,7 @@ from environments.identities.traits.models import Trait
 from environments.models import Environment
 from experimentation.models import Experiment, ExperimentStatus
 from features.models import Feature, FeatureSegment, FeatureState
+from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from integrations.common.models import IntegrationsModel
@@ -18,7 +19,7 @@ from integrations.dynatrace.models import DynatraceConfiguration
 from integrations.mixpanel.models import MixpanelConfiguration
 from integrations.segment.models import SegmentConfiguration
 from integrations.webhook.models import WebhookConfiguration
-from segments.models import Segment, SegmentRule
+from segments.models import Segment, SegmentManagedBy, SegmentRule
 from users.models import FFAdminUser
 from util.engine_models.environments.integrations.models import IntegrationModel
 from util.engine_models.environments.models import (
@@ -911,4 +912,55 @@ def test_map_environment_to_engine__experiment_without_rollout_segment__no_enrol
         fs.metadata["experiment"]["in_experiment"]  # type: ignore[index]
         for segment in result.project.segments
         for fs in segment.feature_states
+    )
+
+
+def test_map_environment_to_engine__dependency_override__serves_environment_default(
+    environment: Environment,
+    multivariate_feature: "Feature",
+) -> None:
+    # Given
+    environment_default = FeatureState.objects.get(
+        environment=environment,
+        feature=multivariate_feature,
+        identity=None,
+        feature_segment=None,
+    )
+    environment_default.mv_hashing_salt = 999
+    environment_default.save()
+    segment = Segment.objects.create(
+        name="feature-depends-on-prerequisite",
+        project=multivariate_feature.project,
+        feature=multivariate_feature,
+        is_system_segment=True,
+        managed_by=SegmentManagedBy.DEPENDENCY,
+    )
+    override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        environment=environment,
+        enabled=False,
+        feature_segment=FeatureSegment.objects.create(
+            feature=multivariate_feature, segment=segment, environment=environment
+        ),
+    )
+    override.feature_state_value.string_value = "stale"
+    override.feature_state_value.save()
+    MultivariateFeatureStateValue.objects.filter(feature_state=override).update(
+        percentage_allocation=0
+    )
+
+    # When
+    result = engine.map_environment_to_engine(environment)
+
+    # Then
+    [environment_default_model] = result.feature_states
+    [segment_model] = result.project.segments
+    [override_model] = segment_model.feature_states
+    assert override_model.featurestate_uuid == override.uuid
+    assert override_model.enabled is False
+    assert override_model.django_id == 999
+    assert override_model.feature_state_value == "control"
+    assert (
+        override_model.multivariate_feature_state_values
+        == environment_default_model.multivariate_feature_state_values
     )
