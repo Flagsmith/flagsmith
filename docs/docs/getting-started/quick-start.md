@@ -80,12 +80,14 @@ We can now connect to the Flagsmith API and get our Flags. When you initialise t
 
 ![SDK Keys](/img/quickstart/demo_create_6.png)
 
-Then paste your API key into the code below:
+Then paste your API key into the code below. If you are self-hosting Flagsmith or using a private cloud instance, also uncomment the `api` option and set it to the URL of your Flagsmith API. You can leave it out if you are using Flagsmith SaaS.
 
 ```html
 <script>
  flagsmith.init({
   environmentID: '<add your API key here!>',
+  // Self-hosted or private cloud only: point the SDK at your own Flagsmith API
+  // api: 'https://flagsmith.example.com/api/v1/',
   onChange: (oldFlags, params) => {},
  });
 </script>
@@ -106,6 +108,8 @@ Let's hook this value up to our button, so that the value of the flag controls w
 <script>
  flagsmith.init({
   environmentID: '<add your API key here!>',
+  // Self-hosted or private cloud only: point the SDK at your own Flagsmith API
+  // api: 'https://flagsmith.example.com/api/v1/',
   onChange: (oldFlags, params) => {
    if (flagsmith.hasFeature('show_demo_button')) {
     var submit_button = document.getElementById('submit_button');
@@ -131,6 +135,8 @@ Our entire web page now reads like this:
   <script>
    flagsmith.init({
     environmentID: 'ZfmJTbLQZrhZVHkVhXbsNi',
+    // Self-hosted or private cloud only: point the SDK at your own Flagsmith API
+    // api: 'https://flagsmith.example.com/api/v1/',
     onChange: (oldFlags, params) => {
      if (flagsmith.hasFeature('show_demo_button')) {
       var submit_button = document.getElementById('submit_button');
