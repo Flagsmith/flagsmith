@@ -86,13 +86,21 @@ Then paste your API key into the code below:
 <script>
  flagsmith.init({
   environmentID: '<add your API key here!>',
+  // Only needed if you are self-hosting Flagsmith or using a private cloud.
+  // Leave this commented out if you are using app.flagsmith.com.
+  // api: 'https://flagsmith.example.com/api/v1/',
   onChange: (oldFlags, params) => {},
  });
 </script>
 ```
 
+If you are using the SaaS platform at [app.flagsmith.com](https://app.flagsmith.com/), you can leave the `api` option
+commented out, as the SDK connects to Flagsmith's SaaS API by default. If you are self-hosting Flagsmith or using a
+private cloud, uncomment it and replace the URL with your own Flagsmith API URL, including the `/api/v1/` suffix.
+
 Now when the browser opens the web page, it will download the Javascript SDK and make a call to `edge.api.flagsmith.com`
-to get the flags for our Environment. You can see this in the browser network tab:
+(or your own API URL, if you set `api`) to get the flags for our Environment. You can see this in the browser network
+tab:
 
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_7.png"/></div>
 
@@ -106,6 +114,7 @@ Let's hook this value up to our button, so that the value of the flag controls w
 <script>
  flagsmith.init({
   environmentID: '<add your API key here!>',
+  // api: 'https://flagsmith.example.com/api/v1/', // Self-hosted or private cloud only
   onChange: (oldFlags, params) => {
    if (flagsmith.hasFeature('show_demo_button')) {
     var submit_button = document.getElementById('submit_button');
@@ -131,6 +140,7 @@ Our entire web page now reads like this:
   <script>
    flagsmith.init({
     environmentID: 'ZfmJTbLQZrhZVHkVhXbsNi',
+    // api: 'https://flagsmith.example.com/api/v1/', // Self-hosted or private cloud only
     onChange: (oldFlags, params) => {
      if (flagsmith.hasFeature('show_demo_button')) {
       var submit_button = document.getElementById('submit_button');
