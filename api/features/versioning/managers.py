@@ -5,6 +5,8 @@ from django.db.models.query import QuerySet, RawQuerySet
 from django.utils import timezone
 from softdelete.models import SoftDeleteManager  # type: ignore[import-untyped]
 
+from core.models import UUIDNaturalKeyManagerMixin
+
 if typing.TYPE_CHECKING:
     from features.versioning.models import EnvironmentFeatureVersion
 
@@ -13,7 +15,7 @@ with open(Path(__file__).parent.resolve() / "sql/get_latest_versions.sql") as f:
     get_latest_versions_sql = f.read()
 
 
-class EnvironmentFeatureVersionManager(SoftDeleteManager):  # type: ignore[misc]
+class EnvironmentFeatureVersionManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):  # type: ignore[misc]
     def get_latest_versions_by_environment_id(self, environment_id: int) -> RawQuerySet:  # type: ignore[type-arg]
         """
         Get the latest EnvironmentFeatureVersion objects for a given environment.
