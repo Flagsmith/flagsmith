@@ -9,7 +9,7 @@ import React, {
 } from 'react'
 
 interface FocusMonitorProps {
-  children: ReactElement
+  children: ReactElement<{ ref?: React.Ref<HTMLElement> }>
   isHover?: boolean
   onFocusChanged: (hasFocus: boolean) => void
 }
