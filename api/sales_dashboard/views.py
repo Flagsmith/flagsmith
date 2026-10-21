@@ -1,5 +1,7 @@
 import json
+from collections.abc import Iterable, Iterator
 from datetime import timedelta
+from typing import Any
 
 import pytz
 import re2 as re  # type: ignore[import-untyped]
@@ -13,6 +15,7 @@ from django.http import (
     HttpResponse,
     HttpResponseBadRequest,
     HttpResponseRedirect,
+    StreamingHttpResponse,
 )
 from django.shortcuts import get_object_or_404
 from django.template import loader
@@ -343,14 +346,25 @@ class UsageReport(TemplateView):  # pragma: no cover
 
 @staff_member_required()  # type: ignore[misc]
 def download_org_data(request, organisation_id):  # type: ignore[no-untyped-def]
-    data = full_export(organisation_id)
-    response = HttpResponse(
-        json.dumps(data, cls=DjangoJSONEncoder), content_type="application/json"
+    response = StreamingHttpResponse(
+        _stream_json_array(full_export(organisation_id)),
+        content_type="application/json",
     )
     response.headers["Content-Disposition"] = (
         "attachment; filename=org-%d.json" % organisation_id
     )
     return response
+
+
+def _stream_json_array(
+    items: Iterable[dict[str, Any]],
+) -> Iterator[str]:
+    yield "["
+    for index, item in enumerate(items):
+        if index:
+            yield ","
+        yield json.dumps(item, cls=DjangoJSONEncoder)
+    yield "]"
 
 
 @staff_member_required()  # type: ignore[misc]
