@@ -499,7 +499,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
 
   const toastChangeRequestSaved = (changeRequestId: number) =>
     toast(
-      `${existingChangeRequest ? 'Updated' : 'Created'} Change Request`,
+      `${
+        existingChangeRequest ? 'Updated' : 'Created'
+      } Change Request #${changeRequestId}`,
       'success',
       undefined,
       {
