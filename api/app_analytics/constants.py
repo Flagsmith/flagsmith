@@ -128,6 +128,8 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
     "flagsmith-swift-ios-sdk": [
         "unknown",
         "3.10.0",
+        "3.10.1",
+    
     ],
 }
 
