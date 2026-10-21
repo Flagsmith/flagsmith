@@ -94,7 +94,7 @@ Then paste your API key into the code below:
 ```
 
 Now when the browser opens the web page, it will download the Javascript SDK and make a call to `edge.api.flagsmith.com`
-to get the flags for our Environment. You can see this in the browser network tab:
+(or the `api` URL, if you set one) to get the flags for our Environment. You can see this in the browser network tab:
 
 <div style={{textAlign: 'center'}}><img width="75%" src="/img/quickstart/demo_create_7.png"/></div>
 
