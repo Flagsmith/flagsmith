@@ -28,10 +28,6 @@ export const Accent: Story = {
   args: { children: '"hello"', variant: 'accent' },
 }
 
-export const Danger: Story = {
-  args: { children: 'Rejected', variant: 'danger' },
-}
-
 export const Sizes: Story = {
   render: () => (
     <div className='d-flex align-items-center gap-2'>

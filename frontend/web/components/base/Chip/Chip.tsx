@@ -5,7 +5,7 @@ import { colorIconSecondary } from 'common/theme/tokens'
 import './Chip.scss'
 
 export type ChipSize = 'default' | 'sm' | 'xs'
-export type ChipVariant = 'neutral' | 'accent' | 'danger'
+export type ChipVariant = 'neutral' | 'accent'
 
 export type ChipProps = {
   children: ReactNode
@@ -30,7 +30,6 @@ export type ChipProps = {
 // bg + text come from token utilities; the variant border lives in Chip.scss.
 const VARIANT_UTILITIES: Record<ChipVariant, string> = {
   accent: 'bg-surface-action-subtle text-action',
-  danger: 'bg-transparent text-danger',
   neutral: 'bg-surface-subtle text-default',
 }
 
@@ -64,7 +63,6 @@ const Chip = ({
         {
           'ds-chip--accent': variant === 'accent',
           'ds-chip--clickable': interactive,
-          'ds-chip--danger': variant === 'danger',
           [`ds-chip--${size}`]: size !== 'default',
           'ds-chip--truncate': truncate,
         },

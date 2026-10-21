@@ -9,7 +9,7 @@ import {
   useDeleteFeatureDependencyMutation,
 } from 'common/services/useFeatureDependency'
 
-export type StagingFailure = { message: string; prerequisiteId?: number }
+export type StagingFailure = { message: string }
 
 // Dependency refusals answer { message }, other errors { detail }.
 const describeApiError = (e: unknown, fallback: string) => {
@@ -79,29 +79,23 @@ export const useStagedPrerequisites = ({
       } catch (e) {
         return {
           message: describeApiError(e, `Could not stage ${prerequisite.name}.`),
-          prerequisiteId: prerequisite.id,
         }
       }
     }
     return null
   }
 
-  // Staged changes leave the list, so a retry sends only the rest.
+  // Always cleared, or a later save would put the rest in a second change
+  // request.
   const stageInto = async (changeRequestId: number) => {
     setIsSubmitting(true)
     setError(null)
     const failure = await stage(changeRequestId)
+    setStaged([])
     if (failure) {
-      const failedAt = staged.findIndex(
-        (change) => change.prerequisite.id === failure.prerequisiteId,
-      )
-      setStaged(staged.slice(failedAt))
       setError({
-        ...failure,
         message: `Change request #${changeRequestId} was created without some dependency changes. ${failure.message}`,
       })
-    } else {
-      setStaged([])
     }
     setIsSubmitting(false)
     return failure
