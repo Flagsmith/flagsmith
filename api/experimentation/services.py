@@ -355,14 +355,19 @@ def _experiment_metric_specs(experiment: "Experiment") -> list[MetricSpec]:
 
 def _expected_variant_shares(experiment: "Experiment") -> dict[str, float]:
     """The traffic split SRM tests against: each multivariate option's
-    environment allocation, with ``control`` taking the unallocated remainder.
-    Empty when the feature has no usable allocations, skipping the SRM check."""
-    # TODO: read the split from the percentage-split segment override feature
-    # state once that's implemented, rather than the environment default.
+    allocation on the rollout override, with ``control`` taking the unallocated
+    remainder. Only the rollout cohort records exposures, so the environment
+    default (zeroed once the rollout exists) doesn't count. Empty when there is
+    no usable split, skipping the SRM check."""
+    if experiment.rollout_segment_id is None:
+        return {}
     feature_state = (
         FeatureState.objects.get_live_feature_states(
             environment=experiment.environment,
-            additional_filters=Q(feature_segment__isnull=True, identity__isnull=True),
+            additional_filters=Q(
+                feature_segment__segment_id=experiment.rollout_segment_id,
+                identity__isnull=True,
+            ),
             feature_id=experiment.feature_id,
         )
         .prefetch_related(
@@ -388,8 +393,10 @@ def _expected_variant_shares(experiment: "Experiment") -> dict[str, float]:
                 feature__id=experiment.feature_id,
             )
             return {}
-        shares[key] = mv_value.percentage_allocation / 100
         allocated += mv_value.percentage_allocation
+        if mv_value.percentage_allocation > 0:
+            # A zero share has no expected traffic to test against.
+            shares[key] = mv_value.percentage_allocation / 100
     if not shares:
         return {}
     if allocated > 100:
@@ -402,7 +409,8 @@ def _expected_variant_shares(experiment: "Experiment") -> dict[str, float]:
             feature__id=experiment.feature_id,
         )
         return {}
-    shares[CONTROL_VARIANT_KEY] = (100 - allocated) / 100
+    if allocated < 100:
+        shares[CONTROL_VARIANT_KEY] = (100 - allocated) / 100
     return shares
 
 
