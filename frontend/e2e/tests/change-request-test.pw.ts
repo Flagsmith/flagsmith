@@ -138,4 +138,182 @@ test.describe('Change Request Tests', () => {
 
     log('Change request test completed successfully')
   })
+
+  test('A segment override change request in a versioned environment opens on its Segment Overrides diff @enterprise', async ({
+    page,
+  }) => {
+    const {
+      addSegmentOverrideConfigForSegment,
+      closeModal,
+      createChangeRequest,
+      createEnvironment,
+      createRemoteConfig,
+      createSegment,
+      enableChangeRequests,
+      enableFeatureVersioning,
+      gotoChangeRequests,
+      gotoFeature,
+      gotoFeatures,
+      gotoProject,
+      gotoSegments,
+      login,
+      openChangeRequest,
+    } = createHelpers(page)
+    const flagsmith = await getFlagsmith()
+    if (
+      !flagsmith.hasFeature('segment_change_requests') ||
+      !flagsmith.hasFeature('feature_versioning')
+    ) {
+      log('Skipping versioned change request test, feature not enabled.')
+      test.skip()
+      return
+    }
+
+    const segmentName = 'cr_versioned_segment'
+    const featureName = 'cr_versioned_feature'
+
+    log('Login as admin')
+    await login(E2E_USER, PASSWORD)
+    await gotoProject(E2E_TEST_PROJECT)
+
+    log('Create a versioned environment that requires change requests')
+    await page.click('text="Create Environment"')
+    await createEnvironment('CR_Versioned_Env')
+    await enableFeatureVersioning()
+    await enableChangeRequests(1)
+
+    log('Create the segment and feature')
+    await gotoSegments()
+    await createSegment(segmentName, [
+      { name: 'plan', operator: 'EQUAL', value: 'pro' },
+    ])
+    await createRemoteConfig({ name: featureName, value: 'initial_value' })
+
+    log('Create a change request that only overrides the segment')
+    await gotoFeatures()
+    await gotoFeature(featureName)
+    await addSegmentOverrideConfigForSegment(segmentName, 'pro_value')
+    await createChangeRequest('Override for pro plan', 'Segment override only', {
+      openWith: '#update-feature-segments-btn',
+    })
+    await closeModal()
+
+    log('The diff opens on Segment Overrides, the only tab with changes')
+    await gotoChangeRequests()
+    await openChangeRequest(0)
+    await expect(
+      page.getByRole('button', { name: /^Segment Overrides/ }),
+    ).toHaveClass(/tab-active/)
+  })
+
+  test('An open change request can be edited from its page @enterprise', async ({
+    page,
+  }) => {
+    const {
+      closeModal,
+      createChangeRequest,
+      createEnvironment,
+      createRemoteConfig,
+      editChangeRequest,
+      enableChangeRequests,
+      featureValueField,
+      gotoChangeRequests,
+      gotoFeature,
+      gotoFeatures,
+      gotoProject,
+      login,
+      openChangeRequest,
+      setText,
+      updateChangeRequest,
+    } = createHelpers(page)
+    const flagsmith = await getFlagsmith()
+    if (!flagsmith.hasFeature('segment_change_requests')) {
+      log('Skipping change request edit test, feature not enabled.')
+      test.skip()
+      return
+    }
+
+    const featureName = 'cr_edit_feature'
+
+    log('Login as admin')
+    await login(E2E_USER, PASSWORD)
+    await gotoProject(E2E_TEST_PROJECT)
+
+    log('Create an environment that requires change requests')
+    await page.click('text="Create Environment"')
+    await createEnvironment('CR_Edit_Env')
+    await enableChangeRequests(1)
+    await createRemoteConfig({ name: featureName, value: 'initial_value' })
+
+    log('Create a change request')
+    await gotoFeatures()
+    await gotoFeature(featureName)
+    await setText(featureValueField(), 'first_value')
+    await createChangeRequest('Change the value', 'First version')
+    await closeModal()
+
+    log('Edit it from its page')
+    await gotoChangeRequests()
+    await openChangeRequest(0)
+    await editChangeRequest()
+    await setText(featureValueField(), 'second_value')
+    await updateChangeRequest()
+    await expect(page.getByText(/Updated Change Request #\d+/)).toBeVisible()
+
+    log('The change request now carries the edited value')
+    await expect(page.getByText('second_value').first()).toBeVisible()
+  })
+
+  test('A change request scheduled for later shows as a scheduled change @enterprise', async ({
+    page,
+  }) => {
+    const {
+      closeModal,
+      createChangeRequest,
+      createEnvironment,
+      createRemoteConfig,
+      enableChangeRequests,
+      featureValueField,
+      gotoChangeRequests,
+      gotoFeature,
+      gotoFeatures,
+      gotoProject,
+      login,
+      openChangeRequest,
+      setText,
+    } = createHelpers(page)
+    const flagsmith = await getFlagsmith()
+    if (!flagsmith.hasFeature('segment_change_requests')) {
+      log('Skipping scheduled change request test, feature not enabled.')
+      test.skip()
+      return
+    }
+
+    const featureName = 'cr_schedule_feature'
+
+    log('Login as admin')
+    await login(E2E_USER, PASSWORD)
+    await gotoProject(E2E_TEST_PROJECT)
+
+    log('Create an environment that requires change requests')
+    await page.click('text="Create Environment"')
+    await createEnvironment('CR_Schedule_Env')
+    await enableChangeRequests(1)
+    await createRemoteConfig({ name: featureName, value: 'initial_value' })
+
+    log('Create a change request scheduled for 2099')
+    await gotoFeatures()
+    await gotoFeature(featureName)
+    await setText(featureValueField(), 'scheduled_value')
+    await createChangeRequest('Scheduled value', 'Goes live in 2099', {
+      scheduleFor: 'January 1, 2099 12:00 PM',
+    })
+    await closeModal()
+
+    log('Its page shows it as a scheduled change')
+    await gotoChangeRequests()
+    await openChangeRequest(0)
+    await expect(page.getByText('Scheduled Change')).toBeVisible()
+    await expect(page.getByText(/1st Jan 2099/)).toBeVisible()
+  })
 })
