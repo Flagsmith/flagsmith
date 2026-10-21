@@ -185,7 +185,7 @@
     "storybook": "^10.3.3",
     "stylelint": "16.10.0",
     "ts-jest": "^29.4.6",
-    "tsc-baseline": "^2.1.0",
+    "tsc-baseline": "2.1.0",
     "typescript": "5.9.3"
   },
   "lint-staged": {
