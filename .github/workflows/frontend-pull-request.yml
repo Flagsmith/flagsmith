@@ -64,3 +64,8 @@ jobs:
         env:
           ESLINT_PLUGIN_DIFF_COMMIT: ${{ github.event.pull_request.base.sha }}
         run: npm run lint
+
+      - name: Check changed SCSS lines
+        env:
+          SCSS_DIFF_BASE: ${{ github.event.pull_request.base.sha }}
+        run: npm run lint:scss

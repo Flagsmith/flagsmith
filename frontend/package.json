@@ -25,6 +25,7 @@
     "env": "node ./bin/env.js",
     "lint": "eslint .",
     "lint:fix": "npx eslint --fix .",
+    "lint:scss": "node bin/check-scss.js",
     "start": "cross-env NODE_ENV=production node ./api/index",
     "typecheck": "tsc",
     "dev": "cross-env npm run env && npx rspack serve -c ./rspack/rspack.config.local.js",
@@ -186,6 +187,7 @@
   },
   "lint-staged": {
     "*.{js,ts,tsx}": "eslint --fix",
+    "*.scss": "node bin/check-scss.js",
     "common/theme/tokens.json": "npm run generate:tokens && git add common/theme/tokens.ts web/styles/_tokens.scss web/styles/_primitives.scss web/styles/_token-utilities.scss documentation/TokenReference.generated.stories.tsx"
   },
   "optionalDependencies": {
