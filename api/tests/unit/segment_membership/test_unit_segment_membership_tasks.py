@@ -115,6 +115,28 @@ def test_seed_organisation_identities__flag_off__skips(
     ).exists()
 
 
+def test_seed_organisation_identities__flag_off_but_ignored__seeds(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    segment: Segment,
+    flagsmith_identities_table: Table,
+) -> None:
+    # Given the flag is off for the organisation
+    settings.CLICKHOUSE_ENABLED = True
+    spy = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    mocker.patch.object(tasks, "enqueue_membership_refresh")
+
+    # When
+    seed_organisation_identities(project.organisation_id, ignore_feature_flag=True)
+
+    # Then
+    spy.assert_called_once()
+    assert SegmentMembershipSeed.objects.filter(
+        organisation=project.organisation, seeded_at__isnull=False
+    ).exists()
+
+
 def test_seed_organisation_identities__insert_fails__logs_and_continues(
     mocker: MockerFixture,
     settings: SettingsWrapper,
