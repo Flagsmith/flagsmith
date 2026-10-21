@@ -93,10 +93,6 @@ Then paste your API key into the code below:
 </script>
 ```
 
-If you're using the SaaS platform, you can leave the `api` option commented out, and the SDK will connect to Flagsmith's
-hosted API by default. If you're self-hosting Flagsmith, uncomment it and replace the URL with the address of your own
-Flagsmith API, making sure it ends with `/api/v1/`.
-
 Now when the browser opens the web page, it will download the Javascript SDK and make a call to `edge.api.flagsmith.com`
 (or your self-hosted API) to get the flags for our Environment. You can see this in the browser network tab:
 
