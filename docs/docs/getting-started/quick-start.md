@@ -86,10 +86,17 @@ Then paste your API key into the code below:
 <script>
  flagsmith.init({
   environmentID: '<add your API key here!>',
+  // Only needed if you are self-hosting Flagsmith or using a private cloud instance.
+  // Point this at your own Flagsmith API URL:
+  // api: 'https://flagsmith.example.com/api/v1/',
   onChange: (oldFlags, params) => {},
  });
 </script>
 ```
+
+If you are using Flagsmith SaaS, you can leave the `api` option out and the SDK will connect to
+`edge.api.flagsmith.com`. If you are self-hosting Flagsmith or using a private cloud instance, uncomment the `api` line
+and set it to the URL of your Flagsmith API, including the `/api/v1/` path.
 
 Now when the browser opens the web page, it will download the Javascript SDK and make a call to `edge.api.flagsmith.com`
 to get the flags for our Environment. You can see this in the browser network tab:
