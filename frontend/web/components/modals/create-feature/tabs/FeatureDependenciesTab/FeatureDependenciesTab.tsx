@@ -134,7 +134,6 @@ const FeatureDependenciesTab: FC<FeatureDependenciesTabProps> = ({
               flashedId={flashedId}
               addingName={addingName}
               isRemoving={removingId}
-              refusedId={staging.error?.prerequisiteId}
               onRemove={editing.onRemove}
               onUndo={(edge) => staging.undo(edge.prerequisite.id)}
               onSelect={(edge) => onSelectFeature(edge.prerequisite.id)}
