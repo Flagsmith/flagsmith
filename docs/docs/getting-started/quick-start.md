@@ -86,7 +86,8 @@ Then paste your API key into the code below:
 <script>
  flagsmith.init({
   environmentID: '<add your API key here!>',
-  // api: 'https://flagsmith.example.com/api/v1/', // Only needed if self-hosting or using a private cloud instance
+  // Only needed if self-hosting or using a private cloud instance
+  // api: 'https://flagsmith.example.com/api/v1/',
   onChange: (oldFlags, params) => {},
  });
 </script>
