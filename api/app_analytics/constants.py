@@ -129,7 +129,6 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "unknown",
         "3.10.0",
         "3.10.1",
-    
     ],
 }
 
