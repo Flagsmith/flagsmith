@@ -75,7 +75,8 @@ jobs:
         uses: reviewdog/action-stylelint@v1.33.0
         with:
           workdir: frontend
-          stylelint_input: '**/*.scss'
+          # Quoted so Stylelint expands the glob, not the action's shell.
+          stylelint_input: "'**/*.scss'"
           reporter: github-pr-check
           filter_mode: added
           fail_level: error
