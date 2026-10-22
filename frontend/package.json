@@ -176,11 +176,13 @@
     "minimist": "^1.2.8",
     "nodemon": "^3.0.1",
     "playwright": "^1.58.2",
+    "postcss-scss": "4.0.9",
     "prettier": "^2.5.1",
     "raw-loader": "^4.0.2",
     "react-refresh": "^0.14.2",
     "ssgrtk": "^0.3.5",
     "storybook": "^10.3.3",
+    "stylelint": "16.10.0",
     "ts-jest": "^29.4.6",
     "typescript": "5.9.3"
   },
