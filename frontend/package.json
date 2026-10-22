@@ -25,7 +25,6 @@
     "env": "node ./bin/env.js",
     "lint": "eslint .",
     "lint:fix": "npx eslint --fix .",
-    "lint:scss": "node bin/check-scss.js",
     "start": "cross-env NODE_ENV=production node ./api/index",
     "typecheck": "tsc",
     "dev": "cross-env npm run env && npx rspack serve -c ./rspack/rspack.config.local.js",
@@ -177,17 +176,18 @@
     "minimist": "^1.2.8",
     "nodemon": "^3.0.1",
     "playwright": "^1.58.2",
+    "postcss-scss": "4.0.9",
     "prettier": "^2.5.1",
     "raw-loader": "^4.0.2",
     "react-refresh": "^0.14.2",
     "ssgrtk": "^0.3.5",
     "storybook": "^10.3.3",
+    "stylelint": "16.10.0",
     "ts-jest": "^29.4.6",
     "typescript": "5.9.3"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": "eslint --fix",
-    "*.scss": "node bin/check-scss.js",
     "common/theme/tokens.json": "npm run generate:tokens && git add common/theme/tokens.ts web/styles/_tokens.scss web/styles/_primitives.scss web/styles/_token-utilities.scss documentation/TokenReference.generated.stories.tsx"
   },
   "optionalDependencies": {
