@@ -15,16 +15,22 @@ describe('limitStatusOf', () => {
 
   // The block outlives the overage, so restriction wins even with none.
   it.each`
-    values                             | flagsPaused
-    ${{ block_access_to_admin: true }} | ${false}
-    ${{ stop_serving_flags: true }}    | ${true}
-  `('reports a restriction from $values', ({ flagsPaused, values }) => {
-    expect(limitStatusOf(organisation(values), undefined)).toEqual({
-      flagsPaused,
-      kind: 'restricted',
-      over: undefined,
-    })
-  })
+    values                                                             | flagsPaused | apiLimitAccessBlocked
+    ${{ block_access_to_admin: true }}                                 | ${false}    | ${false}
+    ${{ stop_serving_flags: true }}                                    | ${true}     | ${false}
+    ${{ api_limit_access_blocked: true }}                              | ${false}    | ${true}
+    ${{ block_access_to_admin: true, api_limit_access_blocked: true }} | ${false}    | ${true}
+  `(
+    'reports a restriction from $values',
+    ({ apiLimitAccessBlocked, flagsPaused, values }) => {
+      expect(limitStatusOf(organisation(values), undefined)).toEqual({
+        apiLimitAccessBlocked,
+        flagsPaused,
+        kind: 'restricted',
+        over: undefined,
+      })
+    },
+  )
 
   it.each`
     values                                                                        | overBy    | kind

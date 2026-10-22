@@ -7,6 +7,7 @@ export type LimitStatus =
       // Undefined once back under the limit.
       over: OverLimit | undefined
       flagsPaused: boolean
+      apiLimitAccessBlocked: boolean
     }
   | { kind: 'overage-covered'; over: OverLimit }
   | { kind: 'overage-charged'; over: OverLimit }
@@ -21,6 +22,7 @@ export type LimitOrganisation = Pick<
   Organisation,
   | 'api_limit_grace_period_used'
   | 'api_limit_restriction_enabled'
+  | 'api_limit_access_blocked'
   | 'block_access_to_admin'
   | 'overage_billing_eligible'
   | 'stop_serving_flags'
@@ -29,6 +31,7 @@ export type LimitOrganisation = Pick<
 export const NO_LIMIT_FLAGS: LimitOrganisation = {
   api_limit_grace_period_used: false,
   api_limit_restriction_enabled: false,
+  api_limit_access_blocked: false,
   block_access_to_admin: false,
   overage_billing_eligible: false,
   stop_serving_flags: false,
@@ -42,6 +45,7 @@ export const limitStatusOf = (
   // The block outlives going over the limit, so this cannot key off over.
   if (organisation?.block_access_to_admin || organisation?.stop_serving_flags) {
     return {
+      apiLimitAccessBlocked: organisation.api_limit_access_blocked,
       flagsPaused: organisation.stop_serving_flags,
       kind: 'restricted',
       over,
