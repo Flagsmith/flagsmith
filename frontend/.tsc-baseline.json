@@ -1,0 +1,3037 @@
+{
+  "meta": {
+    "baselineFileVersion": 1,
+    "exclude": [
+      "documentation/",
+      ".storybook/",
+      "**/*.stories.tsx"
+    ],
+    "ignoreMessages": false
+  },
+  "errors": {
+    "0c90b335d1d4f913543411dfc3d1e316ec9a6579": {
+      "file": "common/constants.ts",
+      "code": "TS2352",
+      "count": 1,
+      "message": "Conversion of type '{ All: string; Analytics: string; Authentication: string; 'CI/CD': string; 'Developer tools': string; Infrastructure: string; Messaging: string; Monitoring: string; Webhooks: string; }' to type 'Record<\"AI\" | \"Analytics\" | \"Authentication\" | \"CI/CD\" | \"Developer tools\" | \"Enterprise tools\" | \"Infrastructure\" | \"Messaging\" | \"Monitoring\" | \"Project Management\" | \"Webhooks\", string>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.\n  Type '{ All: string; Analytics: string; Authentication: string; 'CI/CD': string; 'Developer tools': string; Infrastructure: string; Messaging: string; Monitoring: string; Webhooks: string; }' is missing the following properties from type 'Record<\"AI\" | \"Analytics\" | \"Authentication\" | \"CI/CD\" | \"Developer tools\" | \"Enterprise tools\" | \"Infrastructure\" | \"Messaging\" | \"Monitoring\" | \"Project Management\" | \"Webhooks\", string>': AI, \"Enterprise tools\", \"Project Management\""
+    },
+    "1359965e931733a2cad8ee8d572d4c7cd5e4175d": {
+      "file": "common/hooks/__tests__/useHasFeatureStateChanges.test.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '({ enabled: boolean; feature: number; feature_segment: null; feature_state_value: string; id: number; multivariate_feature_state_values: never[]; } | { enabled: boolean; feature: number; feature_segment: { ...; }; feature_state_value: string; id: number; multivariate_feature_state_values: never[]; })[]' is not assignable to type 'FeatureState[]'.\n  Type '{ enabled: boolean; feature: number; feature_segment: null; feature_state_value: string; id: number; multivariate_feature_state_values: never[]; } | { enabled: boolean; feature: number; feature_segment: { ...; }; feature_state_value: string; id: number; multivariate_feature_state_values: never[]; }' is not assignable to type 'FeatureState'.\n    Type '{ enabled: boolean; feature: number; feature_segment: null; feature_state_value: string; id: number; multivariate_feature_state_values: never[]; }' is missing the following properties from type 'FeatureState': created_at, environment, environment_feature_version, updated_at, uuid"
+    },
+    "1bbdf0d547e36812378749c313899509537d1ef8": {
+      "file": "common/hooks/__tests__/useHasFeatureStateChanges.test.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '({ enabled: boolean; feature: number; feature_segment: null; feature_state_value: string; id: number; multivariate_feature_state_values: never[]; } | { toRemove: boolean; enabled: boolean; feature: number; feature_segment: { ...; }; feature_state_value: string; id: number; multivariate_feature_state_values: never[];...' is not assignable to type 'FeatureState[]'.\n  Type '{ enabled: boolean; feature: number; feature_segment: null; feature_state_value: string; id: number; multivariate_feature_state_values: never[]; } | { toRemove: boolean; enabled: boolean; feature: number; feature_segment: { ...; }; feature_state_value: string; id: number; multivariate_feature_state_values: never[]; }' is not assignable to type 'FeatureState'.\n    Type '{ enabled: boolean; feature: number; feature_segment: null; feature_state_value: string; id: number; multivariate_feature_state_values: never[]; }' is missing the following properties from type 'FeatureState': created_at, environment, environment_feature_version, updated_at, uuid"
+    },
+    "d9ec18a604cc0efe6b4c84f987336b183deb0d1d": {
+      "file": "common/hooks/__tests__/useHasFeatureStateChanges.test.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '({ enabled: boolean; feature: number; feature_segment: { environment: number; id: number; priority: number; segment: number; }; feature_state_value: string; id: number; multivariate_feature_state_values: never[]; } | { ...; })[]' is not assignable to type 'FeatureState[]'.\n  Type '{ enabled: boolean; feature: number; feature_segment: { environment: number; id: number; priority: number; segment: number; }; feature_state_value: string; id: number; multivariate_feature_state_values: never[]; } | { ...; }' is not assignable to type 'FeatureState'.\n    Type '{ enabled: boolean; feature: number; feature_segment: { environment: number; id: number; priority: number; segment: number; }; feature_state_value: string; id: number; multivariate_feature_state_values: never[]; }' is missing the following properties from type 'FeatureState': created_at, environment, environment_feature_version, updated_at, uuid"
+    },
+    "2b8a24b5c0dd59eab26d185528c900a047ecadb8": {
+      "file": "common/hooks/useFeatureListWithApiKey.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'unique symbol | Record<string, string | number | boolean>' is not assignable to parameter of type '{ projectId: number; environmentId: string; page?: number | undefined; page_size?: number | undefined; search?: string | null | undefined; tags?: string | undefined; is_archived?: boolean | undefined; ... 8 more ...; type?: FeatureType | undefined; } | unique symbol'.\n  Type 'Record<string, string | number | boolean>' is not assignable to type '{ projectId: number; environmentId: string; page?: number | undefined; page_size?: number | undefined; search?: string | null | undefined; tags?: string | undefined; is_archived?: boolean | undefined; ... 8 more ...; type?: FeatureType | undefined; } | unique symbol'.\n    Type 'Record<string, string | number | boolean>' is missing the following properties from type '{ projectId: number; environmentId: string; page?: number | undefined; page_size?: number | undefined; search?: string | null | undefined; tags?: string | undefined; is_archived?: boolean | undefined; ... 8 more ...; type?: FeatureType | undefined; }': projectId, environmentId"
+    },
+    "d6836d79622d42addf66e29a358e1d26a211bdc2": {
+      "file": "common/hooks/useHasFeatureStateChanges.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "8ce035d353e26f9209423e5b9866c109b2ad0642": {
+      "file": "common/hooks/useHasFeatureStateChanges.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'FeatureState[]' is not assignable to parameter of type 'TypedFeatureState[]'.\n  Type 'FeatureState' is not assignable to type 'TypedFeatureState'.\n    Type 'FeatureState' is not assignable to type '{ feature_state_value: FeatureStateValue; }'.\n      Types of property 'feature_state_value' are incompatible.\n        Type 'FlagsmithValue' is not assignable to type 'FeatureStateValue'.\n          Type 'null' is not assignable to type 'FeatureStateValue'."
+    },
+    "9a77b4177345e94e8219bc6adb6b73f90368bb8b": {
+      "file": "common/providers/OrganisationProvider.tsx",
+      "code": "TS2551",
+      "count": 1,
+      "message": "Property 'savedId' does not exist on type 'EventEmitter<any> & { _maxListeners: number; changed(): void; error: null; goneABitWest(): void; hasLoaded: boolean; id: string; isLoading: boolean; isSaving: boolean; loaded(): void; ... 6 more ...; trigger(eventName: any, data: any): void; } & { ...; }'. Did you mean 'saved'?"
+    },
+    "a5aa3985d349cc5f41f9acedf6ecebdf50ee7088": {
+      "file": "common/providers/ProjectProvider.tsx",
+      "code": "TS2367",
+      "count": 1,
+      "message": "This comparison appears to be unintentional because the types 'string' and 'number | undefined' have no overlap."
+    },
+    "49150206928644fd9c14934b3a380ad6301d3eda": {
+      "file": "common/services/useFeatureAnalytics.ts",
+      "code": "TS7022",
+      "count": 1,
+      "message": "'featureAnalyticsService' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer."
+    },
+    "d8ea2d7524fe46ce4c936e32272ac018f41fed2a": {
+      "file": "common/services/useFeatureAnalytics.ts",
+      "code": "TS7023",
+      "count": 1,
+      "message": "'endpoints' implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions."
+    },
+    "08bebe3e1bd3bf9355cee335bfb927733fc4d9db": {
+      "file": "common/services/useFeatureAnalytics.ts",
+      "code": "TS7023",
+      "count": 1,
+      "message": "'queryFn' implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions."
+    },
+    "7d1f363a05263fc9359d07ce7decf1dabe607e97": {
+      "file": "common/services/useFeatureAnalytics.ts",
+      "code": "TS7022",
+      "count": 1,
+      "message": "'responses' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer."
+    },
+    "c3e80081a0efd9020bd1abde0dd733d9af40c93a": {
+      "file": "common/services/useFeatureAnalytics.ts",
+      "code": "TS7024",
+      "count": 1,
+      "message": "Function implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions."
+    },
+    "4c76a27e4bf6b4e2e4504da6cc86390eec2a0e3e": {
+      "file": "common/services/useFeatureAnalytics.ts",
+      "code": "TS7022",
+      "count": 1,
+      "message": "'error' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer."
+    },
+    "0e4b194014a8e8ad3e9eb88308df91729a8a41fd": {
+      "file": "common/services/useFeatureAnalytics.ts",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'response' implicitly has an 'any' type."
+    },
+    "6e421c714784b54cebb291fce202a685bd19fa89": {
+      "file": "common/services/useFeatureAnalytics.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ day: string; }' is not assignable to type 'DayBucket'.\n  Type '{ day: string; }' is not assignable to type '{ [envId: string]: number; }'.\n    Property 'day' is incompatible with index signature.\n      Type 'string' is not assignable to type 'number'."
+    },
+    "befc8d80e96f13b36720d5e0d36160679a913b2e": {
+      "file": "common/services/useFeatureAnalytics.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'i' implicitly has an 'any' type."
+    },
+    "ebf577d2fe7311cb73fc0248bfaaeb97a3bfdea5": {
+      "file": "common/services/useFeatureAnalytics.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'entry' implicitly has an 'any' type."
+    },
+    "74db14a169fe9da4f4b418304735aae7292a9e2f": {
+      "file": "common/services/useFeatureState.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'v' implicitly has an 'any' type."
+    },
+    "39fd2fd54458f9ba25cd9083a380686b5e00e3eb": {
+      "file": "common/services/useFeatureVersion.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'Segment[] | null | undefined' is not assignable to parameter of type 'Segment[] | undefined'.\n  Type 'null' is not assignable to type 'Segment[] | undefined'."
+    },
+    "6c54456d744e6e484d8d7954cecb136f6e3a6a95": {
+      "file": "common/services/useFeatureVersion.ts",
+      "code": "TS2345",
+      "count": 2,
+      "message": "Argument of type 'TypedFeatureState' is not assignable to parameter of type 'FeatureState | undefined'.\n  Type 'TypedFeatureState' is not assignable to type 'FeatureState'.\n    Types of property 'feature_state_value' are incompatible.\n      Type 'FeatureStateValue' is not assignable to type 'FlagsmithValue'."
+    },
+    "997b2b41e0e40eedd0e9999c11dea0c6a06adfcb": {
+      "file": "common/services/useFeatureVersion.ts",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type '{ feature_state_value: FeatureStateValue; id: undefined; multivariate_feature_state_values: { id: undefined; multivariate_feature_option: number; percentage_allocation: number; }[]; ... 13 more ...; toRemove?: boolean | undefined; }[]' is not assignable to type 'Omit<FeatureState, \"id\">[]'.\n  Type '{ feature_state_value: FeatureStateValue; id: undefined; multivariate_feature_state_values: { id: undefined; multivariate_feature_option: number; percentage_allocation: number; }[]; ... 13 more ...; toRemove?: boolean | undefined; }' is not assignable to type 'Omit<FeatureState, \"id\">'.\n    Types of property 'feature_state_value' are incompatible.\n      Type 'FeatureStateValue' is not assignable to type 'FlagsmithValue'."
+    },
+    "3e1b05db8a5ed461b09e7b9a47aad0728ed9f802": {
+      "file": "common/services/useFeatureVersion.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type '{ feature_state_value: { boolean_value: boolean; integer_value: null; string_value: null; type: string; } | { boolean_value: null; integer_value: number; string_value: null; type: string; } | { ...; }; ... 15 more ...; toRemove?: boolean | undefined; }[]' is not assignable to parameter of type 'TypedFeatureState[]'.\n  Type '{ feature_state_value: { boolean_value: boolean; integer_value: null; string_value: null; type: string; } | { boolean_value: null; integer_value: number; string_value: null; type: string; } | { ...; }; ... 15 more ...; toRemove?: boolean; }' is not assignable to type 'TypedFeatureState'.\n    Type '{ feature_state_value: { boolean_value: boolean; integer_value: null; string_value: null; type: string; } | { boolean_value: null; integer_value: number; string_value: null; type: string; } | { ...; }; ... 15 more ...; toRemove?: boolean; }' is not assignable to type '{ feature_state_value: FeatureStateValue; }'.\n      Types of property 'feature_state_value' are incompatible.\n        Type '{ boolean_value: boolean; integer_value: null; string_value: null; type: string; } | { boolean_value: null; integer_value: number; string_value: null; type: string; } | { boolean_value: null; integer_value: null; string_value: string | null; type: string; }' is not assignable to type 'FeatureStateValue'.\n          Type '{ boolean_value: boolean; integer_value: null; string_value: null; type: string; }' is not assignable to type 'FeatureStateValue'.\n            Types of property 'string_value' are incompatible.\n              Type 'null' is not assignable to type 'string'."
+    },
+    "069f39d8d514539b916d0343286043bbce7179e2": {
+      "file": "common/services/useFeatureVersion.ts",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'error' does not exist on type 'FeatureState'."
+    },
+    "24728027b53d8f1c13705423aa0ca7c4997936ac": {
+      "file": "common/services/useGroup.ts",
+      "code": "TS7022",
+      "count": 1,
+      "message": "'groupService' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer."
+    },
+    "338ee7835f10edb2073bc890662badccae34544c": {
+      "file": "common/services/useGroup.ts",
+      "code": "TS7023",
+      "count": 1,
+      "message": "'endpoints' implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions."
+    },
+    "6c78359af6eaf7cb219ed3630104dd85f72715e5": {
+      "file": "common/services/useGroup.ts",
+      "code": "TS7023",
+      "count": 1,
+      "message": "'queryFn' implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions."
+    },
+    "417e90d1fabea4de4116e5a41689a8fe94d272d6": {
+      "file": "common/services/useGroup.ts",
+      "code": "TS7022",
+      "count": 1,
+      "message": "'adminResults' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer."
+    },
+    "ea7ca856be7dd5582a4ab7afecef96972eac5eb5": {
+      "file": "common/services/useGroup.ts",
+      "code": "TS7024",
+      "count": 1,
+      "message": "Function implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions."
+    },
+    "e0b49e109b5f82648f744c8ac8ba378c49f94eee": {
+      "file": "common/services/useGroup.ts",
+      "code": "TS7022",
+      "count": 1,
+      "message": "'adminError' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer."
+    },
+    "94a758342fa021ebc542b14055d6c27e68ec03af": {
+      "file": "common/services/useGroup.ts",
+      "code": "TS7023",
+      "count": 1,
+      "message": "'createGroupAdmin' implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions."
+    },
+    "e71b495a80776baa3e512f99f1992347e0fa4e51": {
+      "file": "common/services/useGroupWithRole.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(result: PagedResponse<Role> | undefined, error: any, group: { org_id: number; group_id: number; }) => { id: any; type: string; }[]' is not assignable to type 'ResultDescription<\"GroupWithRole\" | \"RolePermissionGroup\", PagedResponse<Role>, { org_id: number; group_id: number; }, any, any> | undefined'.\n  Type '(result: PagedResponse<Role> | undefined, error: any, group: { org_id: number; group_id: number; }) => { id: any; type: string; }[]' is not assignable to type 'GetResultDescriptionFn<\"GroupWithRole\" | \"RolePermissionGroup\", PagedResponse<Role>, { org_id: number; group_id: number; }, any, any>'.\n    Type '{ id: any; type: string; }[]' is not assignable to type 'TagDescriptionArray<\"GroupWithRole\" | \"RolePermissionGroup\">'.\n      Type '{ id: any; type: string; }' is not assignable to type 'TagDescription<\"GroupWithRole\" | \"RolePermissionGroup\"> | null | undefined'.\n        Type '{ id: any; type: string; }' is not assignable to type 'FullTagDescription<\"GroupWithRole\" | \"RolePermissionGroup\">'.\n          Types of property 'type' are incompatible.\n            Type 'string' is not assignable to type '\"GroupWithRole\" | \"RolePermissionGroup\"'."
+    },
+    "a07e757aa8689a40f7ee899ae7b5047175692119": {
+      "file": "common/services/useGroupWithRole.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'id' does not exist on type '{ org_id: number; group_id: number; }'."
+    },
+    "eff12bbdece6faeebdb3668fcb15bb13ed9b8be5": {
+      "file": "common/services/useIdentity.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(baseQueryReturnValue: EdgePagedResponse<Identity>, meta: any, req: PagedRequest<{ environmentId: string; pageType?: \"NEXT\" | \"PREVIOUS\" | undefined; dashboard_alias?: string | undefined; pages?: (string | undefined)[] | undefined; isEdge: boolean; }>) => { ...; } | { ...; }' is not assignable to type '(baseQueryReturnValue: any, meta: any, arg: PagedRequest<{ environmentId: string; pageType?: \"NEXT\" | \"PREVIOUS\" | undefined; dashboard_alias?: string | undefined; pages?: (string | undefined)[] | undefined; isEdge: boolean; }>) => EdgePagedResponse<...> | Promise<...>'.\n  Type '{ currentPage: any; pageSize: any; count?: number | undefined; next?: string | undefined; previous?: string | undefined; results: any[]; } | { results: { id: string | undefined; identifier: string; identity_uuid?: string | undefined; dashboard_alias?: string | undefined; }[]; ... 4 more ...; pages?: (string | undefi...' is not assignable to type 'EdgePagedResponse<Identity> | Promise<EdgePagedResponse<Identity>>'.\n    Type '{ results: { id: string | undefined; identifier: string; identity_uuid?: string; dashboard_alias?: string; }[]; count?: number; next?: string; previous?: string; last_evaluated_key?: string; pages?: (string | undefined)[]; }' is not assignable to type 'EdgePagedResponse<Identity> | Promise<EdgePagedResponse<Identity>>'.\n      Type '{ results: { id: string | undefined; identifier: string; identity_uuid?: string; dashboard_alias?: string; }[]; count?: number; next?: string; previous?: string; last_evaluated_key?: string; pages?: (string | undefined)[]; }' is not assignable to type 'EdgePagedResponse<Identity>'.\n        Type '{ results: { id: string | undefined; identifier: string; identity_uuid?: string; dashboard_alias?: string; }[]; count?: number; next?: string; previous?: string; last_evaluated_key?: string; pages?: (string | undefined)[]; }' is not assignable to type 'PagedResponse<Identity>'.\n          Types of property 'results' are incompatible.\n            Type '{ id: string | undefined; identifier: string; identity_uuid?: string | undefined; dashboard_alias?: string | undefined; }[]' is not assignable to type 'Identity[]'.\n              Type '{ id: string | undefined; identifier: string; identity_uuid?: string; dashboard_alias?: string; }' is not assignable to type 'Identity'.\n                Types of property 'id' are incompatible.\n                  Type 'string | undefined' is not assignable to type 'string'.\n                    Type 'undefined' is not assignable to type 'string'."
+    },
+    "c7eb35346c9e284ca762ea721dafa3e4e5e2846c": {
+      "file": "common/services/useIdentity.ts",
+      "code": "TS2554",
+      "count": 1,
+      "message": "Expected 1 arguments, but got 0."
+    },
+    "872ede32e8370a15d8a1039bfa4f5488be4b41cc": {
+      "file": "common/services/useIdentityFeatureState.ts",
+      "code": "TS2554",
+      "count": 4,
+      "message": "Expected 1 arguments, but got 0."
+    },
+    "cfe94677dea00791d6834731011b5c4e8c307ccb": {
+      "file": "common/services/useIdentityOverride.ts",
+      "code": "TS2554",
+      "count": 3,
+      "message": "Expected 1 arguments, but got 0."
+    },
+    "0eb4e9c66637917990652cf4764d4f2b17c0ce66": {
+      "file": "common/services/useIdentityOverride.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'PagedResponse<FeatureState>' is not assignable to type 'PagedResponse<IdentityOverride>'.\n  Type 'FeatureState' is not assignable to type 'IdentityOverride'.\n    Type 'FeatureState' is not assignable to type '{ identity: { id: string; identifier: string; }; segment?: null | undefined; overridden_by?: string | null | undefined; }'.\n      Types of property 'identity' are incompatible.\n        Type 'number | undefined' is not assignable to type '{ id: string; identifier: string; }'.\n          Type 'undefined' is not assignable to type '{ id: string; identifier: string; }'."
+    },
+    "a6d30ee480b3e1e03072d9f4aeece7c6f156544f": {
+      "file": "common/services/useIdentitySegment.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'id' does not exist on type 'PagedResponse<Segment>'."
+    },
+    "051983f4fea2c2e76e20481e13b484c67d407015": {
+      "file": "common/services/useIdentityTrait.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'v' implicitly has an 'any' type."
+    },
+    "dd63d61b9d2197a3f1bdd623ca9e6b97d25a3941": {
+      "file": "common/services/useMasterAPIKeyWithMasterAPIKeyRole.ts",
+      "code": "TS2339",
+      "count": 3,
+      "message": "Property 'updateMasterAPIKeyWithMasterAPIKeyRoles' does not exist on type 'Req'."
+    },
+    "13612b567b4a2b4e9fa3c994f9477613e83d2cef": {
+      "file": "common/services/useRoleMasterApiKey.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'prefix' does not exist on type '{ org_id: number; role_id: number; id: string; }'."
+    },
+    "e6c682d80a86d981ee3013e714e73c116a4901c9": {
+      "file": "common/services/useRoleMasterApiKey.ts",
+      "code": "TS2304",
+      "count": 1,
+      "message": "Cannot find name 'id'."
+    },
+    "5e4be3b182441fe206fc6a2e0259dbfd8f90d3b3": {
+      "file": "common/services/useSegmentPriority.ts",
+      "code": "TS2304",
+      "count": 1,
+      "message": "Cannot find name 'StoreType'."
+    },
+    "7e0a0a9bb7d802f42f645e52a3e613084004ac4f": {
+      "file": "common/services/useSubscriptionMetadata.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'id' does not exist on type 'SubscriptionMeta'."
+    },
+    "32fe538affd485d2323fde6ae275acecc5adc382": {
+      "file": "common/services/useUserEmail.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'id' does not exist on type '{}'."
+    },
+    "aba60bcd6198ff6d8396bbf3214f9c298c5e5853": {
+      "file": "common/services/useUserGroupPermission.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'id' does not exist on type 'GroupPermission[]'."
+    },
+    "f25a9c95cb035774052082ce273c34e5f69a522a": {
+      "file": "common/services/useVersionFeatureState.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ boolean_value: boolean; integer_value: null; string_value: null; type: string; } | { boolean_value: null; integer_value: number; string_value: null; type: string; } | { boolean_value: null; integer_value: null; string_value: string | null; type: string; }' is not assignable to type 'FeatureStateValue'.\n  Type '{ boolean_value: boolean; integer_value: null; string_value: null; type: string; }' is not assignable to type 'FeatureStateValue'.\n    Types of property 'string_value' are incompatible.\n      Type 'null' is not assignable to type 'string'."
+    },
+    "965ff3641f949c65c6520b935891387aa7b7bbe7": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 4,
+      "message": "Parameter 'override' implicitly has an 'any' type."
+    },
+    "6df958e99667d9f6eb9b88ec7fa3b8793c96f299": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'i' implicitly has an 'any' type."
+    },
+    "96c9009733b801968f8c4e34cfa41ad68937fbc1": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 11,
+      "message": "Parameter 'v' implicitly has an 'any' type."
+    },
+    "eb92a023bb1cfbda3d46dc34f953c9167b5ae20c": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 6,
+      "message": "Parameter 'projectId' implicitly has an 'any' type."
+    },
+    "67fa95c95cdd567967228f9cc8ecc46491d58a81": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 4,
+      "message": "Parameter 'environmentId' implicitly has an 'any' type."
+    },
+    "bf45f292a1fe5373d531c2c40958c69e31ea0f55": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 6,
+      "message": "Parameter 'flag' implicitly has an 'any' type."
+    },
+    "b00a9fbde44a95caa1de5571f20cd47ec5481587": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2304",
+      "count": 2,
+      "message": "Cannot find name 'AccountStore'."
+    },
+    "c19df52c9ea10448c8646b3315d41275f77a9d71": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 37,
+      "message": "Property 'model' does not exist on type 'EventEmitter<any> & { _maxListeners: number; changed(): void; error: null; goneABitWest(): void; hasLoaded: boolean; id: string; isLoading: boolean; isSaving: boolean; loaded(): void; ... 6 more ...; trigger(eventName: any, data: any): void; } & { ...; }'."
+    },
+    "209dc1349d119d487c9391e88359e1efde37444b": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'lintrk' does not exist on type 'Window & typeof globalThis'."
+    },
+    "a766c12935a47ce4645336dccdccb0a07e30be47": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 4,
+      "message": "Parameter 'onComplete' implicitly has an 'any' type."
+    },
+    "b624781e92e06135c65881e29448f847ca46e651": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'projectFlag' implicitly has an 'any' type."
+    },
+    "012b0d4295e7967858076abed331106f12489fae": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'environmentFlag' implicitly has an 'any' type."
+    },
+    "ba675c1242f93880b50fccb430455e683e3e679f": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'segmentOverrides' implicitly has an 'any' type."
+    },
+    "80035b4bf842e2ebe440ea0e58aecbc302cca4fc": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'mode' implicitly has an 'any' type."
+    },
+    "26ac3ca07923f2414c8b3ed83b458655ebdeb6c4": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS18047",
+      "count": 1,
+      "message": "'env' is possibly 'null'."
+    },
+    "c11b55f4c098e01c587f7f41332cb4a2a49b3987": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ boolean_value: boolean; integer_value: null; string_value: null; type: string; } | { boolean_value: null; integer_value: number; string_value: null; type: string; } | { boolean_value: null; integer_value: null; string_value: string | null; type: string; }' is not assignable to type 'FeatureStateValue'.\n  Type '{ boolean_value: boolean; integer_value: null; string_value: null; type: string; }' is not assignable to type 'FeatureStateValue'.\n    Types of property 'string_value' are incompatible.\n      Type 'null' is not assignable to type 'string'."
+    },
+    "fb234941e7d2c92144d5a62dbec5e26a8a55c459": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'promise' implicitly has an 'any' type."
+    },
+    "183f1d0ee15d1bb3fc71a8a1e8d68ab344737bf7": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'currPromise' implicitly has an 'any' type."
+    },
+    "6bcf7e936d9fc94ca2605cfeb21cbd45382a208b": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'val' implicitly has an 'any' type."
+    },
+    "d0e3c0b898da051b49af546d9430ecc90167e344": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'm' implicitly has an 'any' type."
+    },
+    "d3fca888c04c3189e858a79227d4d7ae8d4972ec": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'index' implicitly has an 'any' type."
+    },
+    "5512db4f23b90a405c53befb31c368a7fda0e12f": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'o' implicitly has an 'any' type."
+    },
+    "e857a221f27c501918ba97ea2e7023a793eb67c9": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'feature_segments' does not exist on type 'any[]'."
+    },
+    "b6bca4f19270fb54d6c044408dc619a353bceea3": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'e' implicitly has an 'any' type."
+    },
+    "349f9ec87f8943be70980f61aa46341ad9c7e1ce": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "81a701febb425f7f3d70946da871e089478d6771": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'live_from' does not exist on type 'ProjectFlag'."
+    },
+    "80881827dc1be557da1d246b7cfcf0a5a7601e48": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'featureStateId' does not exist on type '{ approvals: Approval[]; live_from: string | undefined; description: string; multivariate_options: MultivariateOption[]; title: string; } & { ignore_conflicts?: boolean | undefined; }'."
+    },
+    "e525da786abd005050d29217463b041e80b49c17": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 3,
+      "message": "Property 'id' does not exist on type '{ live_from: string | undefined; description: string; title: string; approvals: Approval[]; change_sets: { feature: number; feature_states_to_create: Omit<FeatureState, \"id\">[] | undefined; feature_states_to_update: Omit<...>[] | undefined; live_from: string; segment_ids_to_delete_overrides: number[] | undefined; }[...'."
+    },
+    "20599b2c25adfcec1a449abcc1501e214964a7db": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'multivariate_feature_option' does not exist on type 'MultivariateOption'."
+    },
+    "54a062ce23f1230603b16f29d25e066e2f904f4e": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'percentage_allocation' does not exist on type 'MultivariateOption'."
+    },
+    "2c180dae03342c9a8c6b72984b8e92e62a1d0fbb": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2304",
+      "count": 4,
+      "message": "Cannot find name 'AppActions'."
+    },
+    "204bef91ddfa39bcc1a1edc7d0e254b2c88d3b1a": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'id' does not exist on type '{ live_from: string | undefined; description: string; title: string; }'."
+    },
+    "a5e57bb8185f8e6032db463a144f18e18a83c21c": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'unknown' is not assignable to parameter of type 'string | Error | { data?: any; text?: (() => Promise<string>) | undefined; status?: number | undefined; }'."
+    },
+    "11299470867876e96ce8ad1533f2b0c03b37da4e": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'force' implicitly has an 'any' type."
+    },
+    "c24119de7185476675ca3c38ba9cd287e6747dce": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'page' implicitly has an 'any' type."
+    },
+    "24c9ee0771aba481d63168f3c6eeb0df3041a3d5": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'filter' implicitly has an 'any' type."
+    },
+    "7efa5a7349cf728314892bfa5fb668d6f2ab20db": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'pageSize' implicitly has an 'any' type."
+    },
+    "a754ac7d699816d460d0dd2296e4f72ad33b7542": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'envId' does not exist on type 'EventEmitter<any> & { _maxListeners: number; changed(): void; error: null; goneABitWest(): void; hasLoaded: boolean; id: string; isLoading: boolean; isSaving: boolean; loaded(): void; ... 6 more ...; trigger(eventName: any, data: any): void; } & { ...; }'."
+    },
+    "c2d1b1d659604ec48092e49c3aec8c840c745016": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 3,
+      "message": "Property 'projectId' does not exist on type 'EventEmitter<any> & { _maxListeners: number; changed(): void; error: null; goneABitWest(): void; hasLoaded: boolean; id: string; isLoading: boolean; isSaving: boolean; loaded(): void; ... 6 more ...; trigger(eventName: any, data: any): void; } & { ...; }'."
+    },
+    "138b0fbeb837d996599c5ead722bb06f7a5a351a": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 3,
+      "message": "Property 'environmentId' does not exist on type 'EventEmitter<any> & { _maxListeners: number; changed(): void; error: null; goneABitWest(): void; hasLoaded: boolean; id: string; isLoading: boolean; isSaving: boolean; loaded(): void; ... 6 more ...; trigger(eventName: any, data: any): void; } & { ...; }'."
+    },
+    "98695a7ab0bc194960c562307582904a349997d1": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'page' does not exist on type 'EventEmitter<any> & { _maxListeners: number; changed(): void; error: null; goneABitWest(): void; hasLoaded: boolean; id: string; isLoading: boolean; isSaving: boolean; loaded(): void; ... 6 more ...; trigger(eventName: any, data: any): void; } & { ...; }'."
+    },
+    "188535750be19fc5dba46a646677e2ec1048b5c7": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 5,
+      "message": "Property 'filter' does not exist on type 'EventEmitter<any> & { _maxListeners: number; changed(): void; error: null; goneABitWest(): void; hasLoaded: boolean; id: string; isLoading: boolean; isSaving: boolean; loaded(): void; ... 6 more ...; trigger(eventName: any, data: any): void; } & { ...; }'."
+    },
+    "237eece096f32d3489b496e5e5c18a2ca06cb1b4": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 3,
+      "message": "Property 'search' does not exist on type 'EventEmitter<any> & { _maxListeners: number; changed(): void; error: null; goneABitWest(): void; hasLoaded: boolean; id: string; isLoading: boolean; isSaving: boolean; loaded(): void; ... 6 more ...; trigger(eventName: any, data: any): void; } & { ...; }'."
+    },
+    "1fb37a41f25c2601d72210f9254f4a256a7fb6a3": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'next' does not exist on type '{}'."
+    },
+    "2bd6dc35c6e9b40cbc7716538c0f3a20ff886472": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'pageSize' does not exist on type '{}'."
+    },
+    "b7532a60b01636c81a022da9be81a84da7f9206c": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'count' does not exist on type '{}'."
+    },
+    "fd381b1913112b6c3e2812ae72f7c8f2d9c175d9": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'previous' does not exist on type '{}'."
+    },
+    "a9726cb4dad483bcd297dc2939b524649f89b290": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'currentPage' does not exist on type '{}'."
+    },
+    "6a7c15bca53ed25dc1f983d0b9eadb3bb877f90d": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'fs' implicitly has an 'any' type."
+    },
+    "a7ac317ea3c3ed7c900e59eab6166d33c3d5b35a": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'id' implicitly has an 'any' type."
+    },
+    "4da3c491ce1285a92b5183c731d2b5becd5b5d4e": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'environmentFlags' implicitly has an 'any' type."
+    },
+    "52d8743b48ecefd509afdc2270b358fabb97cf4b": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'dispatcherIndex' does not exist on type 'EventEmitter<any> & { _maxListeners: number; changed(): void; error: null; goneABitWest(): void; hasLoaded: boolean; id: string; isLoading: boolean; isSaving: boolean; loaded(): void; ... 6 more ...; trigger(eventName: any, data: any): void; } & { ...; }'."
+    },
+    "2fb45fd55aa164b569c971a24ad15b03f2515206": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'payload' implicitly has an 'any' type."
+    },
+    "e8d4d427631861b4b56e9a838d79ee59908475c2": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2554",
+      "count": 1,
+      "message": "Expected 6 arguments, but got 5."
+    },
+    "365866db33d108494c0447e69a7b8d5a4b671b82": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    "4450c9a3a3d99b30f505281a852ef54e2b437a37": {
+      "file": "common/stores/feature-list-store.ts",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'store' does not exist on type '{ createFlag(projectId: any, environmentId: any, flag: any): void; editFeature(projectId: any, flag: any, onComplete: any): void; editFeatureMv(projectId: any, flag: any, onComplete: any): void; ... 5 more ...; searchFeatures: DebouncedFuncLeading<...>; }'."
+    },
+    "8a30b107613b2ab9414d89c9cefea83be5fcd55b": {
+      "file": "common/useUTMs.tsx",
+      "code": "TS2554",
+      "count": 1,
+      "message": "Expected 0 arguments, but got 1."
+    },
+    "033dd028d501380c32cd03a390d2469db96d67b3": {
+      "file": "common/utils/__tests__/metadataValidation.test.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ id: number; name: string; type: string; description: string; organisation: number; project?: number | null | undefined; model_fields?: MetadataFieldModelField[] | undefined; ... 4 more ...; field_value: string; }' is not assignable to type 'CustomMetadataField'.\n  Type '{ id: number; name: string; type: string; description: string; organisation: number; project?: number | null | undefined; model_fields?: MetadataFieldModelField[] | undefined; ... 4 more ...; field_value: string; }' is not assignable to type 'MetadataField'.\n    Types of property 'project' are incompatible.\n      Type 'number | null | undefined' is not assignable to type 'number | null'.\n        Type 'undefined' is not assignable to type 'number | null'."
+    },
+    "24d274d5ded554a3aef9760a7d4d4826f4f2050b": {
+      "file": "common/utils/featureFilterParams.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | null' is not assignable to type 'string | undefined'.\n  Type 'null' is not assignable to type 'string | undefined'."
+    },
+    "233afc5e7546871f1170a4a222c475c13a972495": {
+      "file": "common/utils/useProtectedTags.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "295201fd1fb20cf8d1d04f3e7ad302121ffaeb5f": {
+      "file": "common/utils/utils.tsx",
+      "code": "TS18048",
+      "count": 1,
+      "message": "'total' is possibly 'undefined'."
+    },
+    "458b76286b1305c99edd770af85f506d96efabeb": {
+      "file": "common/utils/utils.tsx",
+      "code": "TS18048",
+      "count": 1,
+      "message": "'max' is possibly 'undefined'."
+    },
+    "c02eb05206f5a72d75cdb2d21c1911627642475b": {
+      "file": "common/utils/utils.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | null | undefined' is not assignable to parameter of type 'ColorParam | undefined'.\n  Type 'null' is not assignable to type 'ColorParam | undefined'."
+    },
+    "6710719bfeab4512b55c44c9d98392abc28d9aa4": {
+      "file": "common/utils/utils.tsx",
+      "code": "TS18048",
+      "count": 1,
+      "message": "'percentage' is possibly 'undefined'."
+    },
+    "755422a9f2c78143e5e27a6f35810df3168317ee": {
+      "file": "common/utils/utils.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ id: number | undefined; multivariate_feature_option: number; percentage_allocation: number; }[]' is not assignable to type 'MultivariateFeatureStateValue[]'.\n  Type '{ id: number | undefined; multivariate_feature_option: number; percentage_allocation: number; }' is not assignable to type 'MultivariateFeatureStateValue'.\n    Types of property 'id' are incompatible.\n      Type 'number | undefined' is not assignable to type 'number'.\n        Type 'undefined' is not assignable to type 'number'."
+    },
+    "5cdc5b9f72447f5daf5be35cc3322902e0605001": {
+      "file": "common/utils/utils.tsx",
+      "code": "TS2345",
+      "count": 2,
+      "message": "Argument of type 'string | number | boolean | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'."
+    },
+    "81e8d93066e123d72d126325da9bb19561401e51": {
+      "file": "common/utils/utils.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'type' does not exist on type 'SegmentCondition'."
+    },
+    "de3f60f663093ee28c5ba3089d9f851104da513c": {
+      "file": "common/utils/utils.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'toLowerCase' does not exist on type 'string | number | boolean'.\n  Property 'toLowerCase' does not exist on type 'number'."
+    },
+    "9c8e6e3b5feee295ae68ef919557db26c176a108": {
+      "file": "common/utils/utils.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'hideValue' does not exist on type 'SegmentCondition'."
+    },
+    "e4a3a7e4f7a24ac11fe29812c991ecd0d4641112": {
+      "file": "e2e/global-setup.playwright.ts",
+      "code": "TS7016",
+      "count": 1,
+      "message": "Could not find a declaration file for module 'node-fetch'. 'node_modules/node-fetch/lib/index.js' implicitly has an 'any' type.\n  Try `npm i --save-dev @types/node-fetch` if it exists or add a new declaration (.d.ts) file containing `declare module 'node-fetch';`"
+    },
+    "a5319c703f57af9bbcc31394e46872c7738b04c6": {
+      "file": "e2e/helpers/e2e-helpers.playwright.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'HTMLElement | null' is not assignable to type 'Element'.\n  Type 'null' is not assignable to type 'Element'."
+    },
+    "9c64ed4933e9c0175665a307c02303295784b69a": {
+      "file": "e2e/helpers/e2e-helpers.playwright.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'click' does not exist on type 'Element'."
+    },
+    "76349550a399569d1f7fc41384b35d4d30df8c70": {
+      "file": "e2e/helpers/utils.playwright.ts",
+      "code": "TS7016",
+      "count": 1,
+      "message": "Could not find a declaration file for module 'node-fetch'. 'node_modules/node-fetch/lib/index.js' implicitly has an 'any' type.\n  Try `npm i --save-dev @types/node-fetch` if it exists or add a new declaration (.d.ts) file containing `declare module 'node-fetch';`"
+    },
+    "798b6be861d417d8ca13fcad746cb43a3dc87221": {
+      "file": "e2e/run-with-retry.ts",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  Overload 1 of 4, '(command: string, options: ExecSyncOptionsWithStringEncoding): string', gave the following error.\n    Type 'boolean' is not assignable to type 'string'.\n  Overload 2 of 4, '(command: string, options: ExecSyncOptionsWithBufferEncoding): NonSharedBuffer', gave the following error.\n    Type 'boolean' is not assignable to type 'string'.\n  Overload 3 of 4, '(command: string, options?: ExecSyncOptions | undefined): string | NonSharedBuffer', gave the following error.\n    Type 'boolean' is not assignable to type 'string'."
+    },
+    "5430598ccb2c8bef934c5fdbbc95f4162300b401": {
+      "file": "e2e/teardown.ts",
+      "code": "TS7016",
+      "count": 1,
+      "message": "Could not find a declaration file for module 'node-fetch'. 'node_modules/node-fetch/lib/index.js' implicitly has an 'any' type.\n  Try `npm i --save-dev @types/node-fetch` if it exists or add a new declaration (.d.ts) file containing `declare module 'node-fetch';`"
+    },
+    "e9dcf25e1582d20d65dd00eb8c08cc1e14493c65": {
+      "file": "e2e/tests/flag-tests.pw.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'RegExp' is not assignable to parameter of type 'string'."
+    },
+    "0ae3aa30a5f24e3227c6d2cd7cc01d82962d6d97": {
+      "file": "node_modules/react-markdown/lib/complex-types.ts",
+      "code": "TS2344",
+      "count": 1,
+      "message": "Type 'TagName' does not satisfy the constraint 'ElementType<any, keyof IntrinsicElements>'.\n  Type '\"ion-tabs\"' is not assignable to type 'ElementType<any, keyof IntrinsicElements>'.\n    Type 'TagName' is not assignable to type 'FunctionComponent<any>'.\n      Type 'string' is not assignable to type 'FunctionComponent<any>'."
+    },
+    "bead2632e417622277f95f93030aa89aefe594b1": {
+      "file": "web/components/Announcement.tsx",
+      "code": "TS2352",
+      "count": 1,
+      "message": "Conversion of type 'string | number | boolean' to type 'AnnouncementValueType' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.\n  Type 'boolean' is not comparable to type 'AnnouncementValueType'."
+    },
+    "cf5c0206c84d1272870fd726262f93500eada77b": {
+      "file": "web/components/Announcement.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'id' does not exist on type 'string | number | true'.\n  Property 'id' does not exist on type 'string'."
+    },
+    "10fff09a1af23e0cb1da83a8be0232a0b3e57528": {
+      "file": "web/components/AnnouncementPerPage.tsx",
+      "code": "TS2352",
+      "count": 1,
+      "message": "Conversion of type 'string | number | boolean | null' to type 'AnnouncementPerPageValueType' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.\n  Type 'boolean' is not comparable to type 'AnnouncementPerPageValueType'.\n    Type 'boolean' is not comparable to type 'AnnouncementValueType'."
+    },
+    "ce6c11918d22cd8681f0e79de45fa8b272590c12": {
+      "file": "web/components/AnnouncementPerPage.tsx",
+      "code": "TS7053",
+      "count": 1,
+      "message": "Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ account: string; 'account-settings': string; activate: string; 'admin-dashboard': string; 'audit-log': string; 'audit-log-item': string; broken: string; 'change-request': string; 'change-request-project': string; ... 58 more ...; signup: string; }'.\n  No index signature with a parameter of type 'string' was found on type '{ account: string; 'account-settings': string; activate: string; 'admin-dashboard': string; 'audit-log': string; 'audit-log-item': string; broken: string; 'change-request': string; 'change-request-project': string; ... 58 more ...; signup: string; }'."
+    },
+    "770ec87b4e01c25d86a16659790d87314f7f89e3": {
+      "file": "web/components/AuditLog.tsx",
+      "code": "TS2345",
+      "count": 3,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'SetStateAction<string>'."
+    },
+    "5e7d3563ff6864ee1fef7528c7c2fe8c93bed4c3": {
+      "file": "web/components/AuditLog.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string' is not assignable to parameter of type 'number'."
+    },
+    "1e2ae916beb03ae9ab325662a1031c7aeb031cfc": {
+      "file": "web/components/AuditLog.tsx",
+      "code": "TS2322",
+      "count": 3,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "030be69a2d430df530a341bd45e7404562a01810": {
+      "file": "web/components/AuditLog.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'number | undefined' is not assignable to parameter of type 'number'.\n  Type 'undefined' is not assignable to type 'number'."
+    },
+    "981768562f1eac40a08a9187004cea77489beb7a": {
+      "file": "web/components/AuditLog.tsx",
+      "code": "TS2362",
+      "count": 1,
+      "message": "The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type."
+    },
+    "84482b5f18119d5873805a1c1ee2be1a43695669": {
+      "file": "web/components/base/select/multi-select/CustomMultiValue.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ children: string; style: { backgroundColor: \"transparent\"; border: string; color: \"white\"; cursor: \"pointer\"; fontSize: string; lineHeight: string; margin: number; padding: number; }; ref?: Ref<HTMLDivElement> | undefined; ... 290 more ...; onTransitionStartCapture?: TransitionEventHandler<...> | undefined; }' is not assignable to type 'DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>'.\n  Type '{ children: string; style: { backgroundColor: \"transparent\"; border: string; color: \"white\"; cursor: \"pointer\"; fontSize: string; lineHeight: string; margin: number; padding: number; }; ref?: Ref<HTMLDivElement> | undefined; ... 290 more ...; onTransitionStartCapture?: TransitionEventHandler<...> | undefined; }' is not assignable to type 'ClassAttributes<HTMLButtonElement>'.\n    Types of property 'ref' are incompatible.\n      Type 'Ref<HTMLDivElement> | undefined' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.\n        Type '(instance: HTMLDivElement | null) => void | (() => VoidOrUndefinedOnly)' is not assignable to type 'Ref<HTMLButtonElement> | undefined'.\n          Type '(instance: HTMLDivElement | null) => void | (() => VoidOrUndefinedOnly)' is not assignable to type '(instance: HTMLButtonElement | null) => void | (() => VoidOrUndefinedOnly)'.\n            Types of parameters 'instance' and 'instance' are incompatible.\n              Type 'HTMLButtonElement | null' is not assignable to type 'HTMLDivElement | null'.\n                Property 'align' is missing in type 'HTMLButtonElement' but required in type 'HTMLDivElement'."
+    },
+    "59c330fed06dcaa65638b9621e121b78deb95188": {
+      "file": "web/components/BetaFlag.tsx",
+      "code": "TS2554",
+      "count": 1,
+      "message": "Expected 2 arguments, but got 1."
+    },
+    "e4f8e834a5fab4442c6ad0a7d3d324372dd7c63d": {
+      "file": "web/components/BetaFlag.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'beta' does not exist on type '{}'."
+    },
+    "c8555fd2a45719f1d21d316101246725682a0aa4": {
+      "file": "web/components/BreadcrumbSeparator.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "61d22f260476f586f43ad79f5c3f5771555d8716": {
+      "file": "web/components/ButterBar.tsx",
+      "code": "TS2554",
+      "count": 1,
+      "message": "Expected 1 arguments, but got 0."
+    },
+    "cf3003ec1665a7b356a34cf646feebc82444c4ce": {
+      "file": "web/components/ButterBar.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "f1b52aa8484f2c721d4bbd9ecf461b475211ee4c": {
+      "file": "web/components/ButterBar.tsx",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(timeout: string | number | Timeout | undefined): void', gave the following error.\n    Argument of type 'Timer' is not assignable to parameter of type 'string | number | Timeout | undefined'.\n      Type 'Timer' is missing the following properties from type 'Timeout': close, _onTimeout, [Symbol.dispose]\n  Overload 2 of 2, '(id: number | undefined): void', gave the following error.\n    Argument of type 'Timer' is not assignable to parameter of type 'number'."
+    },
+    "48346b8a4e842000fb6c559ff35156bc2d9674e1": {
+      "file": "web/components/ButterBar.tsx",
+      "code": "TS2745",
+      "count": 1,
+      "message": "This JSX tag's 'children' prop expects type 'string' which requires multiple children, but only a single child was provided."
+    },
+    "3d880baaf2f0b7ab145bb62f110709512d0be45d": {
+      "file": "web/components/CompareIdentities.tsx",
+      "code": "TS2322",
+      "count": 3,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "41dc22798c43b653bace2e307f4346e42e37a270": {
+      "file": "web/components/CompareIdentities.tsx",
+      "code": "TS2554",
+      "count": 1,
+      "message": "Expected 1 arguments, but got 0."
+    },
+    "564ad05fa0e181e5cc9f4c9df27a044569c3c8ce": {
+      "file": "web/components/CompareIdentities.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<string>'."
+    },
+    "d70fb32ce20c9a5e388e3d9fe561a074a6bb6461": {
+      "file": "web/components/ConnectedGroupSelect.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "4e4e7737c48c82debb59b1c10b2f6718fe3eee60": {
+      "file": "web/components/DateList.tsx",
+      "code": "TS2694",
+      "count": 1,
+      "message": "Namespace 'global.JSX' has no exported member 'Element'."
+    },
+    "661dc500afd6dda1255c56ac9cd7945d7cf4a18d": {
+      "file": "web/components/DeleteGithubIntegration.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "c6ddc7e4c3ad7dbfcc08056b37233c7ab2591b9c": {
+      "file": "web/components/diff/diff-utils.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'FeatureStateWithConflict | undefined' is not assignable to parameter of type 'FeatureState | undefined'.\n  Type 'FeatureStateWithConflict' is not assignable to type 'FeatureState | undefined'.\n    Type 'FeatureStateWithConflict' is not assignable to type 'FeatureState'.\n      Types of property 'feature_state_value' are incompatible.\n        Type 'FeatureStateValue' is not assignable to type 'FlagsmithValue'."
+    },
+    "83fc464b8a3267a27de1baf3a9186b42e9462942": {
+      "file": "web/components/diff/diff-utils.ts",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(...items: ConcatArray<never>[]): never[]', gave the following error.\n    Argument of type 'MultivariateFeatureStateValue[]' is not assignable to parameter of type 'ConcatArray<never>'.\n      The types returned by 'slice(...)' are incompatible between these types.\n        Type 'MultivariateFeatureStateValue[]' is not assignable to type 'never[]'.\n          Type 'MultivariateFeatureStateValue' is not assignable to type 'never'.\n  Overload 2 of 2, '(...items: ConcatArray<never>[]): never[]', gave the following error.\n    Argument of type 'MultivariateFeatureStateValue[]' is not assignable to parameter of type 'ConcatArray<never>'.\n      The types returned by 'slice(...)' are incompatible between these types.\n        Type 'MultivariateFeatureStateValue[]' is not assignable to type 'never[]'.\n          Type 'MultivariateFeatureStateValue' is not assignable to type 'never'."
+    },
+    "79480fbaeca5e9d2deaa8289168b8394026780a7": {
+      "file": "web/components/diff/diff-utils.ts",
+      "code": "TS18047",
+      "count": 1,
+      "message": "'operators' is possibly 'null'."
+    },
+    "f80a0a64c6ad796ddb9dd2a344d823c2c425d65a": {
+      "file": "web/components/diff/diff-utils.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'find' does not exist on type 'string | number | boolean'.\n  Property 'find' does not exist on type 'string'."
+    },
+    "beccabc03077fc6693e7ef4567587a5703794fc1": {
+      "file": "web/components/diff/diff-utils.ts",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'o' implicitly has an 'any' type."
+    },
+    "4a99ecdcb643c858279e28d4c2c27133bfcf8cbe": {
+      "file": "web/components/diff/DiffChangeRequest.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'FeatureState[]' is not assignable to type 'FeatureStateWithConflict[]'.\n  Type 'FeatureState' is not assignable to type 'FeatureStateWithConflict'.\n    Type 'FeatureState' is not assignable to type '{ feature_state_value: FeatureStateValue; }'.\n      Types of property 'feature_state_value' are incompatible.\n        Type 'FlagsmithValue' is not assignable to type 'FeatureStateValue'.\n          Type 'null' is not assignable to type 'FeatureStateValue'."
+    },
+    "f076d4f9a19d98572b693892f60e1c09bf4dbc72": {
+      "file": "web/components/diff/DiffFeature.tsx",
+      "code": "TS2322",
+      "count": 4,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "e55b626628bdf16210e903e05945a9760fb7b8e7": {
+      "file": "web/components/diff/DiffFeature.tsx",
+      "code": "TS2345",
+      "count": 2,
+      "message": "Argument of type 'FeatureStateWithConflict | undefined' is not assignable to parameter of type 'FeatureState | undefined'.\n  Type 'FeatureStateWithConflict' is not assignable to type 'FeatureState | undefined'.\n    Type 'FeatureStateWithConflict' is not assignable to type 'FeatureState'.\n      Types of property 'feature_state_value' are incompatible.\n        Type 'FeatureStateValue' is not assignable to type 'FlagsmithValue'."
+    },
+    "d8c828dd4e60a921a228086491bba110409f31cd": {
+      "file": "web/components/diff/DiffFeature.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | undefined' is not assignable to type '\"tab\" | \"pill\" | undefined'.\n  Type 'string' is not assignable to type '\"tab\" | \"pill\" | undefined'."
+    },
+    "4e4387788c690568689da8fdf87555368b912218": {
+      "file": "web/components/diff/DiffFeature.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'option' implicitly has an 'any' type."
+    },
+    "3ee246f4777a9774ec2d70a1837377a8b5865eb7": {
+      "file": "web/components/diff/DiffFeature.tsx",
+      "code": "TS2339",
+      "count": 3,
+      "message": "Property 'totalConflicts' does not exist on type '{ diffs: TDiffSegmentOverride[]; totalChanges: number; totalConflicts: number; } | { diffs: never[]; totalChanges: number; }'.\n  Property 'totalConflicts' does not exist on type '{ diffs: never[]; totalChanges: number; }'."
+    },
+    "0652088d8e2603a99f9af480ef31c971945c5a8b": {
+      "file": "web/components/diff/DiffSegment.tsx",
+      "code": "TS2305",
+      "count": 1,
+      "message": "Module '\"./diff-utils\"' has no exported member 'TSegmentConditionDiff'."
+    },
+    "d2e83edea5edb8f492e98b4534d1c7f6b6b225a1": {
+      "file": "web/components/diff/DiffSegment.tsx",
+      "code": "TS2724",
+      "count": 1,
+      "message": "'\"./diff-utils\"' has no exported member named 'TSegmentRuleDiff'. Did you mean 'getSegmentDiff'?"
+    },
+    "197b073d665f4060082dc64ce71313743d675bbc": {
+      "file": "web/components/diff/DiffSegment.tsx",
+      "code": "TS2741",
+      "count": 1,
+      "message": "Property 'children' is missing in type '{ tabLabel: string; }' but required in type 'TabItemType'."
+    },
+    "a63fe8b2b240873639196d172dc2007a3e02b04f": {
+      "file": "web/components/diff/DiffSegment.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | number | boolean | null' is not assignable to type 'Operator[] | null'.\n  Type 'string' is not assignable to type 'Operator[]'."
+    },
+    "c02eb4599ee14ea6831dfb871dca101c239b41e4": {
+      "file": "web/components/diff/DiffSegment.tsx",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'v' implicitly has an 'any' type."
+    },
+    "16dc9e0f146e49bc584d039ad7e4e20e3e909dfb": {
+      "file": "web/components/diff/DiffSegment.tsx",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'i' implicitly has an 'any' type."
+    },
+    "f39cf134170dbd88e907f571b432c9084ec43868": {
+      "file": "web/components/EditPermissions.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '\"ADMIN\"' is not assignable to type 'EnvironmentPermission | OrganisationPermission | ProjectPermission'."
+    },
+    "d1a82e4d15ce7b0b2897b5da0e81eedeabfc54d4": {
+      "file": "web/components/EditPermissions.tsx",
+      "code": "TS2322",
+      "count": 8,
+      "message": "Type 'string | number' is not assignable to type 'number'.\n  Type 'string' is not assignable to type 'number'."
+    },
+    "f166d73bee913a87556322c82395774c24b62ff4": {
+      "file": "web/components/EditPermissions.tsx",
+      "code": "TS2345",
+      "count": 3,
+      "message": "Argument of type 'RolePermission[]' is not assignable to parameter of type '(UserPermission | GroupPermission)[]'.\n  Type 'RolePermission' is not assignable to type 'UserPermission | GroupPermission'.\n    Type 'RolePermission' is not assignable to type 'UserPermission'.\n      Types of property 'permissions' are incompatible.\n        Type '{ permission_key: string; tags: number[]; }[]' is not assignable to type 'string[]'.\n          Type '{ permission_key: string; tags: number[]; }' is not assignable to type 'string'."
+    },
+    "ff2c22c1b41e5888448c80153b12af86265947c8": {
+      "file": "web/components/EditPermissions.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'Promise<void | never[]>' is not assignable to type 'Promise<void>'.\n  Type 'void | never[]' is not assignable to type 'void'.\n    Type 'never[]' is not assignable to type 'void'."
+    },
+    "bc164fb0d73f6795da53d1841248a5fd395f4ebe": {
+      "file": "web/components/EditPermissions.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | number' is not assignable to type 'number | undefined'.\n  Type 'string' is not assignable to type 'number'."
+    },
+    "47ce85945d54524a36c5ecfb9ccb4bc93607c670": {
+      "file": "web/components/EditPermissions.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'Dispatch<SetStateAction<undefined>>' is not assignable to type '(index: number) => void'.\n  Types of parameters 'value' and 'index' are incompatible.\n    Type 'number' is not assignable to type 'SetStateAction<undefined>'."
+    },
+    "2fcf48232eb540e3d4c3b2f50c866ddaf5f637f5": {
+      "file": "web/components/EnvironmentDocumentCodeHelp.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '\"ADMIN\"' is not assignable to type 'EnvironmentPermission | OrganisationPermission | ProjectPermission'."
+    },
+    "dbe7ac51d332e7f4a49a05f677330b60ddc0ebba": {
+      "file": "web/components/EnvironmentDocumentCodeHelp.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ children: Element; collapseId: string; className: string; }' is not assignable to type 'IntrinsicAttributes & InfoMessageType'.\n  Property 'className' does not exist on type 'IntrinsicAttributes & InfoMessageType'."
+    },
+    "01ff31e400bc643968fa8bc34742d2bf2be6d9fa": {
+      "file": "web/components/EnvironmentSelect.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'data-test' does not exist on type 'EnvironmentSelectType'."
+    },
+    "b433a70a450fdb01da0f19446d0f98393e72a14a": {
+      "file": "web/components/EnvironmentSelect.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "3cafa9876f3266b274e7d2f21fd80f14c937d5dc": {
+      "file": "web/components/EnvironmentSelect.tsx",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(...items: ConcatArray<{ environment: null; label: string; value: string; }>[]): { environment: null; label: string; value: string; }[]', gave the following error.\n    Argument of type '{ environment: Environment; label: string; value: string; }[]' is not assignable to parameter of type 'ConcatArray<{ environment: null; label: string; value: string; }>'.\n      The types returned by 'slice(...)' are incompatible between these types.\n        Type '{ environment: Environment; label: string; value: string; }[]' is not assignable to type '{ environment: null; label: string; value: string; }[]'.\n          Type '{ environment: Environment; label: string; value: string; }' is not assignable to type '{ environment: null; label: string; value: string; }'.\n            Types of property 'environment' are incompatible.\n              Type 'Environment' is not assignable to type 'null'.\n  Overload 2 of 2, '(...items: ({ environment: null; label: string; value: string; } | ConcatArray<{ environment: null; label: string; value: string; }>)[]): { environment: null; label: string; value: string; }[]', gave the following error.\n    Argument of type '{ environment: Environment; label: string; value: string; }[]' is not assignable to parameter of type '{ environment: null; label: string; value: string; } | ConcatArray<{ environment: null; label: string; value: string; }>'.\n      Type '{ environment: Environment; label: string; value: string; }[]' is not assignable to type 'ConcatArray<{ environment: null; label: string; value: string; }>'.\n        The types returned by 'slice(...)' are incompatible between these types.\n          Type '{ environment: Environment; label: string; value: string; }[]' is not assignable to type '{ environment: null; label: string; value: string; }[]'.\n            Type '{ environment: Environment; label: string; value: string; }' is not assignable to type '{ environment: null; label: string; value: string; }'.\n              Types of property 'environment' are incompatible.\n                Type 'Environment' is not assignable to type 'null'."
+    },
+    "ca11a290826c342506e9f9aca06ba488182da38c": {
+      "file": "web/components/EnvironmentTagSelect.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "f98560a65d87e65965e04248a0d743008ec82c66": {
+      "file": "web/components/ExistingProjectChangeRequestAlert.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "7359dd373556cfb19fdd180d1209e44c54be9f8d": {
+      "file": "web/components/ExternalResourcesTable.tsx",
+      "code": "TS2322",
+      "count": 4,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "96166168b35726046e79620a1ceaf8cf6821c337": {
+      "file": "web/components/feature-override/FeatureOverrideRow.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'FeatureState | IdentityFeatureState | null | undefined' is not assignable to type 'FeatureState | undefined'.\n  Type 'null' is not assignable to type 'FeatureState | undefined'."
+    },
+    "bf51ae81b7d7bddf6fdb0da886109f9d5a18568c": {
+      "file": "web/components/feature-override/FeatureOverrideRow.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'feature_segment' does not exist on type 'FeatureState | IdentityFeatureState'.\n  Property 'feature_segment' does not exist on type 'IdentityFeatureState'."
+    },
+    "86e9cff70d2dec5ab923d1eadc1108c949debb57": {
+      "file": "web/components/feature-page/FeatureFilters.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '\"INTERSECTION\"' is not assignable to type 'TagStrategy'."
+    },
+    "97209fe978672807d3d37c64329f14d1ff5bcb7d": {
+      "file": "web/components/feature-page/FeatureFilters.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | number' is not assignable to type 'number'.\n  Type 'string' is not assignable to type 'number'."
+    },
+    "5f5de80aa5d678848663c0cee9c22e5b8c8ea214": {
+      "file": "web/components/feature-page/FeatureFilters.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number | undefined' is not assignable to type 'string | undefined'.\n  Type 'number' is not assignable to type 'string'."
+    },
+    "bbca048e23e8148370218faca6483333eafa0cb2": {
+      "file": "web/components/feature-page/FeatureNavTab/CodeReferences/FeatureCodeReferencesContainer.tsx",
+      "code": "TS2554",
+      "count": 1,
+      "message": "Expected 1 arguments, but got 0."
+    },
+    "0e7cb9245dc95d1fce2bf458928c3ff9de91cfa4": {
+      "file": "web/components/feature-page/FeatureNavTab/FeatureAnalytics.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'd' implicitly has an 'any' type."
+    },
+    "2fa52dea36fac5eaa811fa73e22171b2254cccfc": {
+      "file": "web/components/feature-page/FeatureNavTab/FeatureAnalytics.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'dayData' implicitly has an 'any' type."
+    },
+    "7fd583b397d89d3504e4c4e50894c8a9419b258f": {
+      "file": "web/components/feature-page/FeatureNavTab/utils.ts",
+      "code": "TS2365",
+      "count": 1,
+      "message": "Operator '+' cannot be applied to types 'string | number' and 'number'."
+    },
+    "aed4d2cd0f2ba0468a034e3931b4b836c0c33fcb": {
+      "file": "web/components/feature-summary/FeatureAction.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ e2edisableE2E: boolean | undefined; icon: Element; label: string; handleActionClick: () => void; entity: \"feature\"; index: number; action: \"history\"; }' is not assignable to type 'IntrinsicAttributes & ActionRowProps'.\n  Property 'e2edisableE2E' does not exist on type 'IntrinsicAttributes & ActionRowProps'. Did you mean 'disableE2E'?"
+    },
+    "0370225fb434552a564aeb5d00afa16f75093e04": {
+      "file": "web/components/feature-summary/FeatureTags.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "cc91a3e03ced5d07ab37c630940a22fb4d28fd28": {
+      "file": "web/components/feature-summary/StaleFlagWarning.tsx",
+      "code": "TS2365",
+      "count": 1,
+      "message": "Operator '>=' cannot be applied to types 'string | number' and 'number'."
+    },
+    "5c0c8c9993da6399daba316d41f30539a3fb014b": {
+      "file": "web/components/FeatureVersion.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "6f3fa809ae74be8d48cbcbf7cc96d9e7d7aee27c": {
+      "file": "web/components/FeatureVersion.tsx",
+      "code": "TS2353",
+      "count": 2,
+      "message": "Object literal may only specify known properties, and 'environmentId' does not exist in type '{ uuid: string; }'."
+    },
+    "88e7e05dbd789d5244ff8a75e541a84bd6ef53a4": {
+      "file": "web/components/FeatureVersion.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'FeatureState[]' is not assignable to type 'FeatureStateWithConflict[]'.\n  Type 'FeatureState' is not assignable to type 'FeatureStateWithConflict'.\n    Type 'FeatureState' is not assignable to type '{ feature_state_value: FeatureStateValue; }'.\n      Types of property 'feature_state_value' are incompatible.\n        Type 'FlagsmithValue' is not assignable to type 'FeatureStateValue'.\n          Type 'null' is not assignable to type 'FeatureStateValue'."
+    },
+    "baf2035eaa4746122239b62e896120fc612b1cc5": {
+      "file": "web/components/GitHubRepositoriesSelect.tsx",
+      "code": "TS2322",
+      "count": 3,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "a2dde6192b4beb21f13307a117dab068dc772f1e": {
+      "file": "web/components/GithubRepositoriesTable.tsx",
+      "code": "TS2322",
+      "count": 6,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "4f0a532d81c6aa61205881008f63676b407e40b9": {
+      "file": "web/components/GitHubResourcesSelect.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "34a2a5d3df8e62da16362aed81411cda5b5f4ca2": {
+      "file": "web/components/hooks/useFormNotSavedModal.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type '(transition: Location) => false' is not assignable to parameter of type 'string | boolean | TransitionPromptHook<unknown> | undefined'.\n  Type '(transition: Location) => false' is not assignable to type 'TransitionPromptHook<unknown>'.\n    Types of parameters 'transition' and 'location' are incompatible.\n      Type 'Location<unknown>' is missing the following properties from type 'Location': ancestorOrigins, host, hostname, href, and 6 more."
+    },
+    "97807ab8b6a45f45e73767a3bda22bf839faacf1": {
+      "file": "web/components/IdentityTraits.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ onSave: () => void; identity: string; identityName: string; environmentId: string; projectId: string | number; id: string | number; trait_key: string; trait_value: FlagsmithValue; isEdit: true; }' is not assignable to type 'CreateTraitProps'.\n  Types of property 'id' are incompatible.\n    Type 'string | number' is not assignable to type 'number | undefined'.\n      Type 'string' is not assignable to type 'number'."
+    },
+    "b5b3a9f1430ca861c3402b3a248b3360356aae5d": {
+      "file": "web/components/import-export/FeatureExport.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'api_key' does not exist on type 'never'."
+    },
+    "14b2238c94fb5f8388847c8a354c3f01e803cffa": {
+      "file": "web/components/import-export/FeatureExport.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type '\"UNION\"' is not assignable to parameter of type 'TagStrategy | (() => TagStrategy)'."
+    },
+    "93119fc911711b64fe4ea87133caea463962034b": {
+      "file": "web/components/import-export/FeatureExport.tsx",
+      "code": "TS2322",
+      "count": 3,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "9f41bf0b70a3b614316b849784010874bf1b82a8": {
+      "file": "web/components/import-export/FeatureExport.tsx",
+      "code": "TS18047",
+      "count": 1,
+      "message": "'env' is possibly 'null'."
+    },
+    "50ab43859dfa64ec1f807cf30f589b7566c033fb": {
+      "file": "web/components/import-export/FeatureExport.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(string | number)[]' is not assignable to type 'number[]'.\n  Type 'string | number' is not assignable to type 'number'.\n    Type 'string' is not assignable to type 'number'."
+    },
+    "3e4b28ef6bc2ad1a4fe471f132f649fb6ed049a4": {
+      "file": "web/components/import-export/FeatureExport.tsx",
+      "code": "TS2554",
+      "count": 1,
+      "message": "Expected 1 arguments, but got 0."
+    },
+    "ba18f86d7912412fb7d0a49d5e13911dbde1d783": {
+      "file": "web/components/import-export/FeatureExport.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'Dispatch<SetStateAction<string>>' is not assignable to type '((newValue: unknown, actionMeta: ActionMeta<unknown>) => void) & ((value: string, environment: Environment | null) => void)'.\n  Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(newValue: unknown, actionMeta: ActionMeta<unknown>) => void'.\n    Types of parameters 'value' and 'newValue' are incompatible.\n      Type 'unknown' is not assignable to type 'SetStateAction<string>'."
+    },
+    "8789fc3813071b69af20e40139af306158ee48f9": {
+      "file": "web/components/import-export/FeatureExport.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ hideTagStrategy: true; showClearAll: boolean; onClearAll: () => void; projectId: string; value: (string | number)[]; onChange: Dispatch<SetStateAction<(string | number)[]>>; }' is not assignable to type 'IntrinsicAttributes & TagFilterType'.\n  Property 'hideTagStrategy' does not exist on type 'IntrinsicAttributes & TagFilterType'. Did you mean 'tagStrategy'?"
+    },
+    "7c0335bbe42eb938b9c5cc25a3d57e71f92a2342": {
+      "file": "web/components/import-export/FeatureExport.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(e: InputEvent) => void' is not assignable to type '(value: string) => void'.\n  Types of parameters 'e' and 'value' are incompatible.\n    Type 'string' is not assignable to type 'InputEvent'."
+    },
+    "a3ff36f8279dc7010d9d06a36a82a6c1e269d33c": {
+      "file": "web/components/import-export/FeatureExportItem.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'findIndex' does not exist on type 'never'."
+    },
+    "82d08b1b44514ba1ff2a92d75f54cd4d80bdebf8": {
+      "file": "web/components/import-export/FeatureExportItem.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'env' implicitly has an 'any' type."
+    },
+    "3c602ae379f779260276ce0395c98fbc805cb71d": {
+      "file": "web/components/import-export/FeatureExportItem.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "a22882558d83448ec2ffecd84679fdad7ca866cc": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'api_key' does not exist on type 'never'."
+    },
+    "01babcba49bbb2ad968544c997cabdd089e2aab1": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS2322",
+      "count": 5,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "cb8430a50cbd6150d57db58c8ce7b3f501b18998": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type '\"UNION\"' is not assignable to parameter of type 'TagStrategy | (() => TagStrategy)'."
+    },
+    "057bf4d45cb113529e6460df321d99a7062929de": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS2339",
+      "count": 3,
+      "message": "Property 'id' does not exist on type 'never'."
+    },
+    "278ea34c70f4a398f6d0acbd789c51895508ea28": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'value' does not exist on type 'FeatureState'."
+    },
+    "75310e096c7fc97a073f889f498effc5332a8b76": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS18048",
+      "count": 2,
+      "message": "'existingFlags' is possibly 'undefined'."
+    },
+    "11d1b2b7b2ba210350a67ac69575724c78bf84c9": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'find' does not exist on type 'false | { created_date: string; default_enabled: boolean; id: number; initial_value: any; description?: string | undefined; environment_feature_state?: FeatureState | undefined; ... 16 more ...; lifecycle_stage?: LifecycleStage | ... 1 more ... | undefined; }[]'.\n  Property 'find' does not exist on type 'false'."
+    },
+    "6c8019bb093c8c02b1e329620c2c9c2e591cf3d8": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'flag' implicitly has an 'any' type."
+    },
+    "5fed1da9aecb00b536315b7ea75674b260702efc": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'concat' does not exist on type 'false | { created_date: string; default_enabled: boolean; id: number; initial_value: any; description?: string | undefined; environment_feature_state?: FeatureState | undefined; ... 16 more ...; lifecycle_stage?: LifecycleStage | ... 1 more ... | undefined; }[]'.\n  Property 'concat' does not exist on type 'false'."
+    },
+    "6f25fa8fff7135eed498f4536047a07d93c9029f": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'projectFlag' implicitly has an 'any' type."
+    },
+    "aad07d44a38231e49efb4f546290ccd8e30d22e9": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'i' implicitly has an 'any' type."
+    },
+    "9d357afba3e289a4f11828d41af6f119b1d3c3c2": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS2345",
+      "count": 3,
+      "message": "Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<string>'."
+    },
+    "5e577f2d8ab4a0414c4e76484f3d900105dd1f8f": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | Record<string, any>' is not assignable to parameter of type 'SetStateAction<FeatureImportItem[] | null>'.\n  Type 'string' is not assignable to type 'SetStateAction<FeatureImportItem[] | null>'."
+    },
+    "37bc0519a8b6742d7a41d6a996266b0341a125d4": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'v' implicitly has an 'any' type."
+    },
+    "4df1786f5a2474d3573bf24a8ebe483c7a44485f": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(viewMode: ViewMode) => Promise<void>' is not assignable to type '(value: string | string[]) => void | Promise<void>'.\n  Types of parameters 'viewMode' and 'value' are incompatible.\n    Type 'string | string[]' is not assignable to type 'ViewMode'.\n      Type 'string' is not assignable to type 'ViewMode'."
+    },
+    "4fe6e9624008b13c2ecbfcc34b7f6b7d2c5ccdaa": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'id' does not exist on type '{}'."
+    },
+    "c42980bc290db356ae27af13f668c32bf4e2a5d0": {
+      "file": "web/components/import-export/FeatureImport.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'unknown' is not assignable to type 'ProjectFlag'."
+    },
+    "e1b6f85151a012e6db54f34b491c0e3a5775777e": {
+      "file": "web/components/import-export/ImportPage.tsx",
+      "code": "TS2322",
+      "count": 3,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "7fe4f5e9728a0ee5285bb388a42c08391b280fee": {
+      "file": "web/components/inspect-permissions/Permissions.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'permissions' does not exist on type 'UserPermission[]'."
+    },
+    "1c58f13713a32abd0bafd320d5f3e8403554cb7f": {
+      "file": "web/components/inspect-permissions/Permissions.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'admin' does not exist on type 'UserPermission[]'."
+    },
+    "eae3b7f61e5cdd204613b38635770a54e3e40095": {
+      "file": "web/components/inspect-permissions/Permissions.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'is_directly_granted' does not exist on type 'UserPermission[]'."
+    },
+    "eb5c4e74884df5f986342d5723050d07e2f1aa6c": {
+      "file": "web/components/inspect-permissions/Permissions.tsx",
+      "code": "TS2339",
+      "count": 3,
+      "message": "Property 'derived_from' does not exist on type 'UserPermission[]'."
+    },
+    "458988a728d57cffdf32eb8169aa63b80184c0ba": {
+      "file": "web/components/inspect-permissions/Permissions.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'UserPermission[]' is not assignable to type 'UserPermissions | EntityPermissions'."
+    },
+    "9360eddade74a206a6a440615aee396e1fa7e893": {
+      "file": "web/components/IntegrationList.tsx",
+      "code": "TS18047",
+      "count": 1,
+      "message": "'integrationList' is possibly 'null'."
+    },
+    "3c0411fad689d0a4ee4a92d530619c7ce388f235": {
+      "file": "web/components/IntegrationList.tsx",
+      "code": "TS7053",
+      "count": 2,
+      "message": "Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'string | number | boolean'.\n  No index signature with a parameter of type 'string' was found on type 'string | number | boolean'."
+    },
+    "35411fbda61419331d623d43390a7b090b1c3f9d": {
+      "file": "web/components/IntegrationList.tsx",
+      "code": "TS2352",
+      "count": 1,
+      "message": "Conversion of type 'undefined' to type 'Environment | null' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first."
+    },
+    "1f9a968f0b4f313ad2cf5e3cc683e8f5bcf10422": {
+      "file": "web/components/IntegrationList.tsx",
+      "code": "TS7053",
+      "count": 2,
+      "message": "Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'string | number | true'.\n  No index signature with a parameter of type 'string' was found on type 'string | number | true'."
+    },
+    "c1134d94bb1c1585b1fd2389a3b7084ebe1a030c": {
+      "file": "web/components/IntegrationList.tsx",
+      "code": "TS2531",
+      "count": 1,
+      "message": "Object is possibly 'null'."
+    },
+    "913181ac26b433c70e41b28f1c09c78e1abce81c": {
+      "file": "web/components/IntegrationSelect.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | number | true' is not assignable to parameter of type 'string'.\n  Type 'number' is not assignable to type 'string'."
+    },
+    "12685fbb32e37aa2806da9e13ae3fab5066345dc": {
+      "file": "web/components/JSONUpload.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | ArrayBuffer | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'."
+    },
+    "208a67945518fb1c3ea7c81766f66d392e42be77": {
+      "file": "web/components/metadata/AddMetadataToEntity.tsx",
+      "code": "TS2740",
+      "count": 1,
+      "message": "Type '{ metadata: Metadata[]; name: string; project: number; }' is missing the following properties from type 'Environment': id, is_creating, api_key, minimum_change_request_approvals, and 8 more."
+    },
+    "a1eda2aa26489ce190fdec06cf68bb90bda9b131": {
+      "file": "web/components/metadata/AddMetadataToEntity.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | boolean' is not assignable to type 'string | number | readonly string[] | undefined'.\n  Type 'false' is not assignable to type 'string | number | readonly string[] | undefined'."
+    },
+    "23d6f34132c1db283d49098ae503f621126fe940": {
+      "file": "web/components/metadata/MetadataPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "31feec8c4b448d021a32e13b660a774708c50ac7": {
+      "file": "web/components/metrics/EnvironmentMetricsList.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "e088e4892bddb75cbdb63ccbde5ccfd78ae08320": {
+      "file": "web/components/metrics/EnvironmentMetricsList.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    "e04f18525b471600ff584e72b376a97442e4dece": {
+      "file": "web/components/modals/base/Modal.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'openConfirm' does not exist on type 'typeof globalThis'."
+    },
+    "dd09c29d9003adcd127f3ff222e5a1885e70dd12": {
+      "file": "web/components/modals/base/Modal.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'openModal' does not exist on type 'typeof globalThis'."
+    },
+    "9f100beb69f1fc4153b0955fc18ca0e608b1f75a": {
+      "file": "web/components/modals/base/Modal.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'openModal2' does not exist on type 'typeof globalThis'."
+    },
+    "831ea322aa71eb454622d566666aee6e81dcd6cd": {
+      "file": "web/components/modals/base/ModalConfirm.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'children' does not exist on type 'Confirm'."
+    },
+    "7a0a5cce46f9f08eaf45380fc5be3d4dded9af35": {
+      "file": "web/components/modals/base/ModalDefault.tsx",
+      "code": "TS7034",
+      "count": 1,
+      "message": "Variable 'cb' implicitly has type 'any' in some locations where its type cannot be determined."
+    },
+    "293b855a3aff7fc6de97abd8c4d6e3957ed2da3d": {
+      "file": "web/components/modals/base/ModalDefault.tsx",
+      "code": "TS7005",
+      "count": 1,
+      "message": "Variable 'cb' implicitly has an 'any' type."
+    },
+    "e69a891cf1bf0bba6c6a5d703915e60e56a22988": {
+      "file": "web/components/modals/base/ModalDefault.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'onClosed' does not exist on type 'ModalDefault'."
+    },
+    "57176157d83cacba336f88e9ec7053b3401f998b": {
+      "file": "web/components/modals/ChangeRequestModal.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '\"-sm\"' is not assignable to type '\"sm\"'."
+    },
+    "6efc8124d7d01f6db0bf9207fbf3f5f7ac9471e5": {
+      "file": "web/components/modals/ChangeRequestModal.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | number' is not assignable to type 'number'.\n  Type 'string' is not assignable to type 'number'."
+    },
+    "07d0c0e9a9c55bd09c25dfe633807b0eb2b202f6": {
+      "file": "web/components/modals/ChangeRequestModal.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'TypedFeatureState[]' is not assignable to type 'FeatureState[]'.\n  Type 'TypedFeatureState' is not assignable to type 'FeatureState'.\n    Types of property 'feature_state_value' are incompatible.\n      Type 'FeatureStateValue' is not assignable to type 'FlagsmithValue'."
+    },
+    "1f1d1365ee077da55c95058d1d0fbcd03b72c6e6": {
+      "file": "web/components/modals/ConfirmRemoveSegment.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "c1bff6437b44528892525a8c33f9461279c457d7": {
+      "file": "web/components/modals/ConfirmRemoveWebhook.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '({ project }: { project: Project; }) => React.JSX.Element' is not assignable to type '(props: { createEnv: CreateEnvType; deleteEnv: (env: any) => void; deleteProject: (id: any) => void; editEnv: (env: any) => void; editProject: (id: any, project: any) => void; error: any; isLoading: boolean; isSaving: boolean; project: Project | null; }) => ReactNode'.\n  Types of parameters '__0' and 'props' are incompatible.\n    Type '{ createEnv: CreateEnvType; deleteEnv: (env: any) => void; deleteProject: (id: any) => void; editEnv: (env: any) => void; editProject: (id: any, project: any) => void; error: any; isLoading: boolean; isSaving: boolean; project: Project | null; }' is not assignable to type '{ project: Project; }'.\n      Types of property 'project' are incompatible.\n        Type 'Project | null' is not assignable to type 'Project'.\n          Type 'null' is not assignable to type 'Project'."
+    },
+    "c3002888b48ea93c66fdb56f403f63d40fd85768": {
+      "file": "web/components/modals/ConfirmToggleFeature.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '({ project }: { project: Project; }) => React.JSX.Element' is not assignable to type '(props: { createEnv: CreateEnvType; deleteEnv: (env: any) => void; deleteProject: (id: any) => void; editEnv: (env: any) => void; editProject: (id: any, project: any) => void; error: any; isLoading: boolean; isSaving: boolean; project: Project | null; }) => ReactNode'.\n  Types of parameters '__0' and 'props' are incompatible.\n    Type '{ createEnv: CreateEnvType; deleteEnv: (env: any) => void; deleteProject: (id: any) => void; editEnv: (env: any) => void; editProject: (id: any, project: any) => void; error: any; isLoading: boolean; isSaving: boolean; project: Project | null; }' is not assignable to type '{ project: Project; }'.\n      Types of property 'project' are incompatible.\n        Type 'Project | null' is not assignable to type 'Project'.\n          Type 'null' is not assignable to type 'Project'."
+    },
+    "e023fe35e4f6aaa0fa49c4ba5b534616605c0301": {
+      "file": "web/components/modals/create-feature/components/FeatureLimitAlert.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'number | null | undefined' is not assignable to parameter of type 'number | undefined'.\n  Type 'null' is not assignable to type 'number | undefined'."
+    },
+    "3c517e89bd37d04df40d9f3801f4de1eb1acb6a1": {
+      "file": "web/components/modals/create-feature/components/FeatureLimitAlert.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type '{ percentage: number; }' is not assignable to parameter of type '{ percentage: number; limit: number; }'.\n  Property 'limit' is missing in type '{ percentage: number; }' but required in type '{ percentage: number; limit: number; }'."
+    },
+    "4e140080f39b580bcc13f64525cce1e3282edce2": {
+      "file": "web/components/modals/create-feature/components/FeatureLimitAlert.tsx",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'percentage' does not exist on type '0 | { percentage: number; }'.\n  Property 'percentage' does not exist on type '0'."
+    },
+    "5a412208ef5e75ea02880996ae1ac669997648d1": {
+      "file": "web/components/modals/create-feature/tabs/FeatureValueTab.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'MultivariateOption | { default_percentage_allocation: number; key: string; boolean_value: boolean; integer_value: null; string_value: null; type: string; } | { default_percentage_allocation: number; ... 4 more ...; type: string; } | { ...; }' is not assignable to type 'MultivariateOption'.\n  Type '{ default_percentage_allocation: number; key: string; boolean_value: boolean; integer_value: null; string_value: null; type: string; }' is missing the following properties from type 'MultivariateOption': id, uuid"
+    },
+    "6ee7a1244257f6de105a505ac40a85fd65b01ebb": {
+      "file": "web/components/modals/create-feature/tabs/FeatureValueTab.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ default_percentage_allocation: number; key: string; boolean_value: boolean; integer_value: null; string_value: null; type: string; } | { default_percentage_allocation: number; key: string; boolean_value: null; integer_value: number; string_value: null; type: string; } | { ...; }' is not assignable to type 'MultivariateOption'.\n  Type '{ default_percentage_allocation: number; key: string; boolean_value: boolean; integer_value: null; string_value: null; type: string; }' is missing the following properties from type 'MultivariateOption': id, uuid"
+    },
+    "060e99532a40058a5da3c7d8316bebf969c2491c": {
+      "file": "web/components/modals/create-feature/tabs/FeatureValueTab.tsx",
+      "code": "TS2741",
+      "count": 1,
+      "message": "Property 'group' is missing in type '{ enabled: boolean; label: string; value: FlagsmithValue; }' but required in type 'CompareTarget'."
+    },
+    "018df466cd7021562acf64afe14481eb7ad762e4": {
+      "file": "web/components/modals/create-feature/tabs/IdentityOverridesTab.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'Project | undefined' is not assignable to parameter of type 'Project'.\n  Type 'undefined' is not assignable to type 'Project'."
+    },
+    "286f731f268d64f695f2a4ce136e38e12c0a1f66": {
+      "file": "web/components/modals/CreateAuditLogWebhook.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "f2ca0628a3fd4e9f8ecb323bccb055ecebbcb9a7": {
+      "file": "web/components/modals/CreateEditIntegrationModal.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string | undefined' is not assignable to type 'string'.\n  Type 'undefined' is not assignable to type 'string'."
+    },
+    "f28580919ec949beff5e916d000d2e54c9f5ea36": {
+      "file": "web/components/modals/CreateEditIntegrationModal.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "c89443545a41a337aed8fa044f53fad75eec93e1": {
+      "file": "web/components/modals/CreateGroup.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'v' implicitly has an 'any' type."
+    },
+    "da50036a860f4133fc4a94f5cfbe442dae2295a2": {
+      "file": "web/components/modals/CreateGroup.tsx",
+      "code": "TS7006",
+      "count": 2,
+      "message": "Parameter 'data' implicitly has an 'any' type."
+    },
+    "9f343f88f4db977e1f4ec5ef7f6d3086c0784de8": {
+      "file": "web/components/modals/CreateMetadataField.tsx",
+      "code": "TS2322",
+      "count": 3,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "a8b6b2dce503d90cac2703a8d0b0a6ece0643cd6": {
+      "file": "web/components/modals/CreateMetadataField.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'ContentType | null | undefined' is not assignable to type 'ContentType'.\n  Type 'undefined' is not assignable to type 'ContentType'."
+    },
+    "db463351a5e9ca127380ab505330bdf55f33fe5a": {
+      "file": "web/components/modals/CreateMetadataField.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'Query' is not assignable to parameter of type '{ organisation_id: number; id: number; body: { content_type: number; field: number; is_required_for: { content_type: number; object_id: number; }[]; }; }'.\n  Types of property 'id' are incompatible.\n    Type 'number | undefined' is not assignable to type 'number'.\n      Type 'undefined' is not assignable to type 'number'."
+    },
+    "216c5446bd4d7cf01d6bb4020958c782f5437792": {
+      "file": "web/components/modals/CreateMetadataField.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'boolean | undefined' is not assignable to type 'isRequiredFor[]'.\n  Type 'undefined' is not assignable to type 'isRequiredFor[]'."
+    },
+    "904c168f53a273759ee761280eaef2e5b385a48b": {
+      "file": "web/components/modals/CreateMetadataField.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'isRequired' does not exist on type 'SelectContentTypesType[]'."
+    },
+    "d0da6a79fe99b1f433c8855334410b85db40a501": {
+      "file": "web/components/modals/CreateRole.tsx",
+      "code": "TS2739",
+      "count": 1,
+      "message": "Type '{ description: string; name: string; }' is missing the following properties from type 'Role': id, organisation"
+    },
+    "b8bed28a967b7f5f64575ad0c5f27d91d717d1c6": {
+      "file": "web/components/modals/CreateSegment.tsx",
+      "code": "TS2741",
+      "count": 1,
+      "message": "Property 'version_of' is missing in type '{ conditions: { id?: number; delete?: boolean; description?: string; operator: string; property: string; value: string | number | boolean | null; }[]; rules: never[]; type: \"ANY\"; }' but required in type 'SegmentRule'."
+    },
+    "e99977b697d039f6218ad666a7ac1686bdeef07e": {
+      "file": "web/components/modals/CreateSegment.tsx",
+      "code": "TS2322",
+      "count": 5,
+      "message": "Type 'string | number' is not assignable to type 'number'.\n  Type 'string' is not assignable to type 'number'."
+    },
+    "0e878f32b87cf1d57c5d470e08a25a6765c51e42": {
+      "file": "web/components/modals/CreateSegment.tsx",
+      "code": "TS2322",
+      "count": 5,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "bb4f8c37b9824f5e3f9bcb28ae1e45ea8fd99bd4": {
+      "file": "web/components/modals/CreateSegment.tsx",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(...items: ConcatArray<SegmentRule>[]): SegmentRule[]', gave the following error.\n    Object literal may only specify known properties, and 'conditions' does not exist in type 'ConcatArray<SegmentRule>'.\n  Overload 2 of 2, '(...items: (SegmentRule | ConcatArray<SegmentRule>)[]): SegmentRule[]', gave the following error.\n    Type 'string' is not assignable to type '\"ALL\" | \"ANY\" | \"NONE\"'."
+    },
+    "a372802d270b38221c9b046a27897f6455339d96": {
+      "file": "web/components/modals/CreateSegment.tsx",
+      "code": "TS2741",
+      "count": 1,
+      "message": "Property 'ignore_conflicts' is missing in type '{ approvals: never[]; committed_by: null; conflicts: never[]; description: string; group_assignments: never[]; is_approved: false; is_committed: false; segments: { description: string; feature: number | undefined; ... 4 more ...; version_of: number | undefined; }[]; title: string; }' but required in type 'WithoutId<ProjectChangeRequest>'."
+    },
+    "fb869fde0e9cef2298240eea10912ded4883a738": {
+      "file": "web/components/modals/CreateSegment.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'user' does not exist on type 'never'."
+    },
+    "3c218cd0717a2f05299a7dc1630fc4b084b27dab": {
+      "file": "web/components/modals/CreateSegment.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'group' does not exist on type 'never'."
+    },
+    "797ba8ff8967d8ec3849b843dd52a8e157f8c2a0": {
+      "file": "web/components/modals/CreateSegment.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | number | boolean | Operator[] | null' is not assignable to type 'Operator[] | null'.\n  Type 'string' is not assignable to type 'Operator[]'."
+    },
+    "54f152c9233ef119e44d306572c8d586321b692e": {
+      "file": "web/components/modals/CreateSegment.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ children: string; className: string; }' is not assignable to type 'IntrinsicAttributes & InfoMessageType'.\n  Property 'className' does not exist on type 'IntrinsicAttributes & InfoMessageType'."
+    },
+    "233a6679907a473c432fc06212df14184db92d3e": {
+      "file": "web/components/modals/CreateSegment.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number | undefined' is not assignable to type 'number'.\n  Type 'undefined' is not assignable to type 'number'."
+    },
+    "e332658950bebb77da88df6d5980594ece38d7ef": {
+      "file": "web/components/modals/CreateSegment.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | undefined' is not assignable to type 'string'.\n  Type 'undefined' is not assignable to type 'string'."
+    },
+    "bb2407aefc27080b127110c8aa322bc61b25bf7c": {
+      "file": "web/components/modals/CreateSegment.tsx",
+      "code": "TS2322",
+      "count": 3,
+      "message": "Type 'number | { percentage: number; }' is not assignable to type '{ percentage: number; }'.\n  Type 'number' is not assignable to type '{ percentage: number; }'."
+    },
+    "094309571b56f91eec04758f470247fd88f16272": {
+      "file": "web/components/modals/CreateSegmentRulesTabForm.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(changeRequestData: { approvals: []; description: string; title: string; }) => void' is not assignable to type '(data: Omit<{ approvals: Approval[]; live_from: string | undefined; description: string; multivariate_options: MultivariateOption[]; title: string; }, \"multivariate_options\"> & { ...; }) => void'.\n  Types of parameters 'changeRequestData' and 'data' are incompatible.\n    Type 'Omit<{ approvals: Approval[]; live_from: string | undefined; description: string; multivariate_options: MultivariateOption[]; title: string; }, \"multivariate_options\"> & { ...; }' is not assignable to type '{ approvals: []; description: string; title: string; }'.\n      Types of property 'approvals' are incompatible.\n        Type 'Approval[]' is not assignable to type '[]'.\n          Target allows only 0 element(s) but source may have more."
+    },
+    "aa46ede2b07453f781e45ee69353ed9d5896f1f9": {
+      "file": "web/components/modals/CreateSegmentRulesTabForm.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ children: (string | Element)[]; collapseId: string; className: string; }' is not assignable to type 'IntrinsicAttributes & InfoMessageType'.\n  Property 'className' does not exist on type 'IntrinsicAttributes & InfoMessageType'."
+    },
+    "40a72bf75042165c686983db6e693a607e224bf7": {
+      "file": "web/components/modals/CreateSegmentUsersTabContent.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "689a154aa1a02864e1e7a70d4d9d34a0261f806e": {
+      "file": "web/components/modals/CreateSegmentUsersTabContent.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(environmentId: string) => void' is not assignable to type '((newValue: unknown, actionMeta: ActionMeta<unknown>) => void) & ((value: string, environment: Environment | null) => void)'.\n  Type '(environmentId: string) => void' is not assignable to type '(newValue: unknown, actionMeta: ActionMeta<unknown>) => void'.\n    Types of parameters 'environmentId' and 'newValue' are incompatible.\n      Type 'unknown' is not assignable to type 'string'."
+    },
+    "3135a1f96210ea7e564e1b5f3d415c62cab32624": {
+      "file": "web/components/modals/CreateSegmentUsersTabContent.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '({ environment, label }: EnvironmentSelectOption) => React.JSX.Element' is not assignable to type '(data: unknown, formatOptionLabelMeta: FormatOptionLabelMeta<unknown>) => ReactNode'.\n  Types of parameters '__0' and 'data' are incompatible.\n    Type 'unknown' is not assignable to type 'EnvironmentSelectOption'."
+    },
+    "fea638faf5b44c7d26b08cc30b8a2a7042797d21": {
+      "file": "web/components/modals/CreateTrait.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number | undefined' is not assignable to type 'string | number'.\n  Type 'undefined' is not assignable to type 'string | number'."
+    },
+    "6fdc5754f369c6ca3e4b95ad6f816d34554c06c8": {
+      "file": "web/components/modals/CreateWebhook.tsx",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(props: { ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; isValid: boolean; type: string; inputClassName: string; placeholder: string; }): Component<...>', gave the following error.\n    Type 'RefObject<HTMLInputElement | null>' is not assignable to type '(Ref<Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; isValid: boolean; type: string; inputClassName: string; placeholder: string; }, {}, any>> | undefined) & RefObject<...>'.\n      Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; isValid: boolean; type: string; inputClassName: string; placeholder: string; }, {}, any> | null> & RefObject<...>'.\n        Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; isValid: boolean; type: string; inputClassName: string; placeholder: string; }, {}, any> | null>'.\n          Type 'HTMLInputElement | null' is not assignable to type 'Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; isValid: boolean; type: string; inputClassName: string; placeholder: string; }, {}, any> | null'.\n            Type 'HTMLInputElement' is missing the following properties from type 'Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; isValid: boolean; type: string; inputClassName: string; placeholder: string; }, {}, any>': context, setState, forceUpdate, render, and 2 more.\n  Overload 2 of 2, '(props: { ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; isValid: boolean; type: string; inputClassName: string; placeholder: string; }, context: any): Component<...>', gave the following error.\n    Type 'RefObject<HTMLInputElement | null>' is not assignable to type '(Ref<Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; isValid: boolean; type: string; inputClassName: string; placeholder: string; }, {}, any>> | undefined) & RefObject<...>'.\n      Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; isValid: boolean; type: string; inputClassName: string; placeholder: string; }, {}, any> | null> & RefObject<...>'.\n        Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; isValid: boolean; type: string; inputClassName: string; placeholder: string; }, {}, any> | null>'.\n          Type 'HTMLInputElement | null' is not assignable to type 'Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; isValid: boolean; type: string; inputClassName: string; placeholder: string; }, {}, any> | null'.\n            Type 'HTMLInputElement' is missing the following properties from type 'Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; isValid: boolean; type: string; inputClassName: string; placeholder: string; }, {}, any>': context, setState, forceUpdate, render, and 2 more."
+    },
+    "c28ebc03b2601b7384fbe26d1ff6834ecab55f44": {
+      "file": "web/components/modals/CreateWebhook.tsx",
+      "code": "TS2304",
+      "count": 1,
+      "message": "Cannot find name 'Switch'."
+    },
+    "4f8b0f5c74d785e58bd0a36a7d457e57298e1d9b": {
+      "file": "web/components/modals/CreateWebhook.tsx",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(props: { ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; type: string; className: string; placeholder: string; }): Component<...>', gave the following error.\n    Type 'RefObject<HTMLInputElement | null>' is not assignable to type '(Ref<Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; type: string; className: string; placeholder: string; }, {}, any>> | undefined) & RefObject<...>'.\n      Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; type: string; className: string; placeholder: string; }, {}, any> | null> & RefObject<...>'.\n        Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; type: string; className: string; placeholder: string; }, {}, any> | null>'.\n          Type 'HTMLInputElement | null' is not assignable to type 'Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; type: string; className: string; placeholder: string; }, {}, any> | null'.\n            Type 'HTMLInputElement' is missing the following properties from type 'Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; type: string; className: string; placeholder: string; }, {}, any>': context, setState, forceUpdate, render, and 2 more.\n  Overload 2 of 2, '(props: { ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; type: string; className: string; placeholder: string; }, context: any): Component<...>', gave the following error.\n    Type 'RefObject<HTMLInputElement | null>' is not assignable to type '(Ref<Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; type: string; className: string; placeholder: string; }, {}, any>> | undefined) & RefObject<...>'.\n      Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; type: string; className: string; placeholder: string; }, {}, any> | null> & RefObject<...>'.\n        Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; type: string; className: string; placeholder: string; }, {}, any> | null>'.\n          Type 'HTMLInputElement | null' is not assignable to type 'Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; type: string; className: string; placeholder: string; }, {}, any> | null'.\n            Type 'HTMLInputElement' is missing the following properties from type 'Component<{ ref: RefObject<HTMLInputElement | null>; value: string | undefined; onChange: (e: ChangeEvent<HTMLInputElement, Element>) => void; type: string; className: string; placeholder: string; }, {}, any>': context, setState, forceUpdate, render, and 2 more."
+    },
+    "fe3e4c89006819dee2e7e1c9778dc7aa00a4e358": {
+      "file": "web/components/modals/FlagValueFooter.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '\"ADMIN\"' is not assignable to type 'EnvironmentPermission | OrganisationPermission | ProjectPermission'."
+    },
+    "3451f4b532d6ff4acfe8dbd25a3f3444b41bb248": {
+      "file": "web/components/modals/FlagValueFooter.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ children: string; feature: string; theme: \"secondary\"; onClick: () => void; className: string; type: \"button\"; \"data-test\": string; id: string; disabled: boolean; }' is not assignable to type 'IntrinsicAttributes & ButtonHTMLAttributes<HTMLButtonElement> & { href?: string | undefined; target?: HTMLAttributeAnchorTarget | undefined; theme?: \"project\" | ... 8 more ... | undefined; size?: \"default\" | ... 4 more ... | undefined; isLoading?: boolean | undefined; } & RefAttributes<...>'.\n  Property 'feature' does not exist on type 'IntrinsicAttributes & ButtonHTMLAttributes<HTMLButtonElement> & { href?: string | undefined; target?: HTMLAttributeAnchorTarget | undefined; theme?: \"project\" | ... 8 more ... | undefined; size?: \"default\" | ... 4 more ... | undefined; isLoading?: boolean | undefined; } & RefAttributes<...>'."
+    },
+    "d34eca0c41d4afbdab4a827b795fbe51a17fa3b3": {
+      "file": "web/components/modals/InviteUsers.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'GroupOption' is not assignable to parameter of type 'MouseEvent<HTMLDivElement, MouseEvent>'.\n  Type 'GroupOption' is missing the following properties from type 'MouseEvent<HTMLDivElement, MouseEvent>': altKey, button, buttons, clientX, and 29 more."
+    },
+    "1b5594ebdd469293ba513c69c5410da0a54f07b2": {
+      "file": "web/components/modals/InviteUsers.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'group' implicitly has an 'any' type."
+    },
+    "287e5f3552daee998d679e5f9b8dd0671fa6f021": {
+      "file": "web/components/modals/InviteUsers.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '() => boolean' is not assignable to type 'InputGroupValidity | undefined'."
+    },
+    "b60ff0b85437957886deb3fb0fa14aba000a7571": {
+      "file": "web/components/modals/InviteUsers.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'role' implicitly has an 'any' type."
+    },
+    "a0e1804eb44fb01b4750396c6b16eaf615bc1245": {
+      "file": "web/components/modals/InviteUsers.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'g' implicitly has an 'any' type."
+    },
+    "beadf82ada428c64481eda71c0b8d03f7c6b7008": {
+      "file": "web/components/modals/payment/chargebee.ts",
+      "code": "TS2304",
+      "count": 2,
+      "message": "Cannot find name 'Project'."
+    },
+    "fa3de8f21fa9f44583170b7d048189532882fa4d": {
+      "file": "web/components/modals/payment/chargebee.ts",
+      "code": "TS2304",
+      "count": 1,
+      "message": "Cannot find name 'AppActions'."
+    },
+    "d98f1a7c9603f1d002ed8e5cc1bcbd2dc357c7d2": {
+      "file": "web/components/modals/payment/hooks/useChargebeeCheckout.ts",
+      "code": "TS2304",
+      "count": 1,
+      "message": "Cannot find name 'Project'."
+    },
+    "d92ff1a9564ebda26c7872b59e618a9031cdd90b": {
+      "file": "web/components/modals/payment/hooks/useChargebeeCheckout.ts",
+      "code": "TS2304",
+      "count": 1,
+      "message": "Cannot find name 'AppActions'."
+    },
+    "8bafddb145efd5c6bbb1849da5ab7041ddcaf965": {
+      "file": "web/components/modals/payment/onPaymentLoad.ts",
+      "code": "TS2304",
+      "count": 2,
+      "message": "Cannot find name 'Project'."
+    },
+    "b7685cde82334633eb7565e718c3386b71fe3210": {
+      "file": "web/components/modals/payment/onPaymentLoad.ts",
+      "code": "TS2304",
+      "count": 1,
+      "message": "Cannot find name 'AppActions'."
+    },
+    "22a5994eb65f8879663925fa5f976644a4fd2d85": {
+      "file": "web/components/modals/payment/Payment.tsx",
+      "code": "TS2304",
+      "count": 4,
+      "message": "Cannot find name 'Project'."
+    },
+    "d1fc956eb0930f9ae1d4d4275fef56945e66a7ec": {
+      "file": "web/components/mv/VariationValueInput/VariationValueInput.tsx",
+      "code": "TS7016",
+      "count": 1,
+      "message": "Could not find a declaration file for module 'fbjs/lib/shallowEqual'. 'node_modules/fbjs/lib/shallowEqual.js' implicitly has an 'any' type.\n  Try `npm i --save-dev @types/fbjs` if it exists or add a new declaration (.d.ts) file containing `declare module 'fbjs/lib/shallowEqual';`"
+    },
+    "2b15c3ba9f5df3301f5da052ca9e6e489d5b53c7": {
+      "file": "web/components/MyGitHubRepositoriesComponent.tsx",
+      "code": "TS2322",
+      "count": 3,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "8d7025bb6a81d0e3be8072c4b256447b5914f269": {
+      "file": "web/components/MyGroupsSelect.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "8da415220c301b3c3fcf4163627998531d33bb4e": {
+      "file": "web/components/MyRepositoriesSelect.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "dbb344bc355c15ea5ec30ae716d26d1ed22881d2": {
+      "file": "web/components/navigation/EnvironmentAside.tsx",
+      "code": "TS18046",
+      "count": 2,
+      "message": "'props.data' is of type 'unknown'."
+    },
+    "dc4f1c96fd876cf0774de0446189793877ac2a8a": {
+      "file": "web/components/navigation/EnvironmentAside.tsx",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  The last overload gave the following error.\n    Argument of type 'unknown' is not assignable to parameter of type '(substring: string, ...args: any[]) => string'."
+    },
+    "e06fcb3c14da1345f1375c6d55a0806d7ef0cf17": {
+      "file": "web/components/navigation/EnvironmentAside.tsx",
+      "code": "TS2741",
+      "count": 1,
+      "message": "Property 'className' is missing in type '{ mobile: true; environmentId: string; projectId: number; }' but required in type 'EnvironmentNavType'."
+    },
+    "033b303f1a22b5195b9d64945a863d7888217095": {
+      "file": "web/components/navigation/EnvironmentAside.tsx",
+      "code": "TS2741",
+      "count": 1,
+      "message": "Property 'className' is missing in type '{ environmentId: string; projectId: number; }' but required in type 'EnvironmentNavType'."
+    },
+    "9032d874515e2a73201f46e95be9f89a05f7011e": {
+      "file": "web/components/navigation/Nav.tsx",
+      "code": "TS7016",
+      "count": 1,
+      "message": "Could not find a declaration file for module 'polyfill-react-native'. 'node_modules/polyfill-react-native/index.js' implicitly has an 'any' type.\n  Try `npm i --save-dev @types/polyfill-react-native` if it exists or add a new declaration (.d.ts) file containing `declare module 'polyfill-react-native';`"
+    },
+    "277bb2595e066d325c85b429ad285ae5e425a00f": {
+      "file": "web/components/navigation/Nav.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'children' does not exist on type 'NavType'."
+    },
+    "79c470ca61349390c617482e49899ca65f6e5afd": {
+      "file": "web/components/navigation/navbars/EnvironmentNavbar.tsx",
+      "code": "TS2686",
+      "count": 1,
+      "message": "'moment' refers to a UMD global, but the current file is a module. Consider adding an import instead."
+    },
+    "0be53894f02c5746e7e2721cc71915e58fec529c": {
+      "file": "web/components/navigation/navbars/EnvironmentNavbar.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "4867bfb4c54298f1641136f82c111090e4d326ed": {
+      "file": "web/components/navigation/navbars/EnvironmentNavbar.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '\"ADMIN\"' is not assignable to type 'EnvironmentPermission | OrganisationPermission | ProjectPermission'."
+    },
+    "deeb6a9f523336bae617c02f9ef1ca42fe89ce4c": {
+      "file": "web/components/navigation/navbars/EnvironmentNavbar.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | undefined' is not assignable to type 'string | number'.\n  Type 'undefined' is not assignable to type 'string | number'."
+    },
+    "d01662e5ad9e6a4ac95f09727743b97b9d0967e9": {
+      "file": "web/components/navigation/navbars/ProjectNavbar.tsx",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(o: {}): string[]', gave the following error.\n    Argument of type 'string | number | boolean | null' is not assignable to parameter of type '{}'.\n      Type 'null' is not assignable to type '{}'.\n  Overload 2 of 2, '(o: object): string[]', gave the following error.\n    Argument of type 'string | number | boolean | null' is not assignable to parameter of type 'object'.\n      Type 'null' is not assignable to type 'object'."
+    },
+    "077bb447a8841206c0c8b023d64dd8966261560f": {
+      "file": "web/components/navigation/navbars/ProjectNavbar.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number | undefined' is not assignable to type 'string | number'.\n  Type 'undefined' is not assignable to type 'string | number'."
+    },
+    "edd790a4077cebb3a951521cd0deb2eb9bcc7b72": {
+      "file": "web/components/navigation/navbars/ProjectNavbar.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number | undefined' is not assignable to type 'string'.\n  Type 'undefined' is not assignable to type 'string'."
+    },
+    "6ab6b930d2bbdc776256d74e388fc0da253cb7bc": {
+      "file": "web/components/navigation/navbars/ProjectNavbar.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ children: string; icon: string; to: string; id: string; disabled: true; tooltip: string | number | true; }' is not assignable to type 'IntrinsicAttributes & LinkProps<unknown> & { icon: ReactNode; children: ReactNode; isActive?<Params extends { [K in keyof Params]?: string; }, S = unknown>(match: match<...> | null, location: Location<...>): boolean; }'.\n  Property 'disabled' does not exist on type 'IntrinsicAttributes & LinkProps<unknown> & { icon: ReactNode; children: ReactNode; isActive?<Params extends { [K in keyof Params]?: string; }, S = unknown>(match: match<...> | null, location: Location<...>): boolean; }'."
+    },
+    "5c1246632cc0d96715eb6dd29e16b984a21eb197": {
+      "file": "web/components/navigation/OverflowNav.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'children' does not exist on type '{}'."
+    },
+    "d7a78fb790e9250462ce062c569161b3b7d3e454": {
+      "file": "web/components/navigation/TabMenu/TabButton.tsx",
+      "code": "TS18046",
+      "count": 4,
+      "message": "'child.props' is of type 'unknown'."
+    },
+    "085f9813d8c029989c5c299b1acdbbed73036962": {
+      "file": "web/components/navigation/TabMenu/Tabs.tsx",
+      "code": "TS2339",
+      "count": 9,
+      "message": "Property 'props' does not exist on type 'string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<...>'.\n  Property 'props' does not exist on type 'string'."
+    },
+    "e72d343d1cf01814f3dd0184573a5ffaa3abed51": {
+      "file": "web/components/navigation/TabMenu/Tabs.tsx",
+      "code": "TS18049",
+      "count": 7,
+      "message": "'child' is possibly 'null' or 'undefined'."
+    },
+    "6213b185332ab5df4bfff371b3d4792f195a3768": {
+      "file": "web/components/navigation/TabMenu/Tabs.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'ReactNode' is not assignable to type 'ReactElement<unknown, string | JSXElementConstructor<any>>'.\n  Type 'undefined' is not assignable to type 'ReactElement<unknown, string | JSXElementConstructor<any>>'."
+    },
+    "5cced3c24669eb356184d0ec9dc808e797e00c17": {
+      "file": "web/components/onboarding/GettingStartedItem.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | undefined' is not assignable to type 'string'.\n  Type 'undefined' is not assignable to type 'string'."
+    },
+    "203e8b5da9ab456d5c7a8cdde7b864c1219c1c72": {
+      "file": "web/components/onboarding/OnboardingAccountForm.tsx",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'createOnboarding' does not exist on type 'Req'."
+    },
+    "3b10e6f10bda4a82d3352b310d629e65efb16d1c": {
+      "file": "web/components/onboarding/OnboardingStep.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ backgroundColor?: \"transparent\" | undefined; border?: string | undefined; alignItems: string; borderRadius: string; display: string; height: number; justifyContent: string; left: number; position: string; width: number; }' is not assignable to type 'Properties<string | number, string & {}>'.\n  Types of property 'position' are incompatible.\n    Type 'string' is not assignable to type 'Position | undefined'."
+    },
+    "72b333d68e45846f9bb02921f5da30e6613717ef": {
+      "file": "web/components/organisation-settings/usage/components/OrganisationUsageSideBar.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ children: string; key: string; id: string; icon: IconName; onClick: () => void; active: boolean; inactiveClassName: string; }' is not assignable to type 'IntrinsicAttributes & Partial<NavLinkProps<unknown>> & { icon?: IconName | undefined; children?: ReactNode; to?: string | undefined; active?: boolean | undefined; onClick?: (() => void) | undefined; }'.\n  Property 'inactiveClassName' does not exist on type 'IntrinsicAttributes & Partial<NavLinkProps<unknown>> & { icon?: IconName | undefined; children?: ReactNode; to?: string | undefined; active?: boolean | undefined; onClick?: (() => void) | undefined; }'. Did you mean 'activeClassName'?"
+    },
+    "28c3aaffc2eb343d1148f077138ecd942ce0a43b": {
+      "file": "web/components/organisation-settings/usage/components/SingleSDKLabelsChart.tsx",
+      "code": "TS2614",
+      "count": 1,
+      "message": "Module '\"components/charts/BarChart\"' has no exported member 'ChartDataPoint'. Did you mean to use 'import ChartDataPoint from \"components/charts/BarChart\"' instead?"
+    },
+    "9598ca5f161bf45243f2688712bd4141a96ccf91": {
+      "file": "web/components/organisation-settings/usage/components/UsageChartFilters.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "e681c2b51a3fd4dd847f8f509e91c02e24620e50": {
+      "file": "web/components/organisation-settings/usage/OrganisationUsage.container.tsx",
+      "code": "TS2614",
+      "count": 1,
+      "message": "Module '\"components/charts/BarChart\"' has no exported member 'ChartDataPoint'. Did you mean to use 'import ChartDataPoint from \"components/charts/BarChart\"' instead?"
+    },
+    "be7970a3700044839fe89f547daf696e2a75e100": {
+      "file": "web/components/organisation-settings/usage/OrganisationUsageMetrics.container.tsx",
+      "code": "TS2614",
+      "count": 1,
+      "message": "Module '\"components/charts/BarChart\"' has no exported member 'ChartDataPoint'. Did you mean to use 'import ChartDataPoint from \"components/charts/BarChart\"' instead?"
+    },
+    "0fb24bcef8748b330bdd42a5b3399fd7a8a4d914": {
+      "file": "web/components/OrganisationLimit.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type '{ organisationId: string; }' is not assignable to parameter of type '{ organisationId: number; projectId?: number | undefined; environmentId?: string | undefined; group_by?: UsageGroupBy | undefined; billing_period?: \"current_billing_period\" | \"previous_billing_period\" | \"90_day_period\" | undefined; } | unique symbol'.\n  Type '{ organisationId: string; }' is not assignable to type '{ organisationId: number; projectId?: number | undefined; environmentId?: string | undefined; group_by?: UsageGroupBy | undefined; billing_period?: \"current_billing_period\" | \"previous_billing_period\" | \"90_day_period\" | undefined; }'.\n    Types of property 'organisationId' are incompatible.\n      Type 'string' is not assignable to type 'number'."
+    },
+    "85055377c6100ace7449902fa631d56af412c9ff": {
+      "file": "web/components/OrganisationLimit.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "609f8fd427827ce273a528438bf13e4cd3762fd2": {
+      "file": "web/components/OrganisationLimit.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'number | null | undefined' is not assignable to parameter of type 'number | undefined'.\n  Type 'null' is not assignable to type 'number | undefined'."
+    },
+    "607ec5830daf464b79cd60e1ce8a9114a68ec8f0": {
+      "file": "web/components/OrganisationLimit.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'percentage' does not exist on type '0 | { percentage: number; }'.\n  Property 'percentage' does not exist on type '0'."
+    },
+    "d785ebd83e7b57f36fe3c6a16d5a86f04f385ca0": {
+      "file": "web/components/OrganisationLimit.tsx",
+      "code": "TS2551",
+      "count": 1,
+      "message": "Property 'upgradeURL' does not exist on type '{ archivedTag: { color: string; label: string; }; codeHelp: { CREATE_USER: (envId: string, userId?: string) => { '.NET': string; Flutter: string; Go: string; Java: string; JavaScript: string; 'Next.js': string; ... 8 more ...; iOS: string; }; ... 5 more ...; keys: { ...; }; }; ... 27 more ...; untaggedTag: { ...; }; }'. Did you mean 'getUpgradeUrl'?"
+    },
+    "07f59bac412f5dfc094ad911fb3be38d0df6419e": {
+      "file": "web/components/OrganisationLimit.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ warningMessage: string; warningMessageClass: string; enabledButton: true; }' is not assignable to type 'IntrinsicAttributes & WarningMessageType'.\n  Property 'enabledButton' does not exist on type 'IntrinsicAttributes & WarningMessageType'."
+    },
+    "d6f4f93a9a15738d77d1052ccb5514d5ef696470": {
+      "file": "web/components/pages/admin-dashboard/components/IntegrationAdoptionTable.tsx",
+      "code": "TS2352",
+      "count": 1,
+      "message": "Conversion of type 'string | number | boolean | null' to type 'Record<string, IntegrationData>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.\n  Type 'boolean' is not comparable to type 'Record<string, IntegrationData>'."
+    },
+    "3bf238c4d898755fbf21c03596336e7c153938bb": {
+      "file": "web/components/pages/AuditLogItemPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "4405a801c6fde7a02cbf78c7abc9420bed146536": {
+      "file": "web/components/pages/AuditLogItemPage.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'number | undefined' is not assignable to parameter of type 'number'.\n  Type 'undefined' is not assignable to type 'number'."
+    },
+    "da24886075a91a264590f7d9c8725960dfe12ea1": {
+      "file": "web/components/pages/AuditLogPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number | undefined' is not assignable to type 'string'.\n  Type 'undefined' is not assignable to type 'string'."
+    },
+    "99b4b63dccd50866d0d801a1f98fa0c9d9c36640": {
+      "file": "web/components/pages/AuditLogPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | string[] | undefined) => void'.\n  Types of parameters 'value' and 'value' are incompatible.\n    Type 'string | string[] | undefined' is not assignable to type 'SetStateAction<string>'.\n      Type 'undefined' is not assignable to type 'SetStateAction<string>'."
+    },
+    "b23171d6292b77337acfe5718006c0bb9f95d935": {
+      "file": "web/components/pages/ChangeRequestDetailPage.tsx",
+      "code": "TS2741",
+      "count": 1,
+      "message": "Property 'identity' is missing in type '{ environmentId: string; isVersioned: boolean; changeRequest: ChangeRequest; feature: number; projectId: string; }' but required in type 'DiffChangeRequestType'."
+    },
+    "b6180d7bb9a596308c3706cfefdc14f2540851ad": {
+      "file": "web/components/pages/ChangeRequestDetailPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "922034a27d7e200626f428695f7bd8af20a182e6": {
+      "file": "web/components/pages/ChangeRequestDetailPage.tsx",
+      "code": "TS2345",
+      "count": 2,
+      "message": "Argument of type 'boolean | undefined' is not assignable to parameter of type 'boolean'.\n  Type 'undefined' is not assignable to type 'boolean'."
+    },
+    "2f4d3562555ca0908ce7aa5788755ee56f149795": {
+      "file": "web/components/pages/CreateEnvironmentPage.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'ContentType | null' is not assignable to parameter of type 'SetStateAction<Record<string, any>>'.\n  Type 'null' is not assignable to type 'SetStateAction<Record<string, any>>'."
+    },
+    "c18d725abde4f183565a4a52e9acb2ace326fe83": {
+      "file": "web/components/pages/CreateEnvironmentPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number | undefined' is not assignable to type 'string | number'.\n  Type 'undefined' is not assignable to type 'string | number'."
+    },
+    "4d910dba933a1e79cc00c7639f927e7180cde429": {
+      "file": "web/components/pages/CreateEnvironmentPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number | undefined' is not assignable to type 'number'.\n  Type 'undefined' is not assignable to type 'number'."
+    },
+    "7f36d98ffb7ecdc94778abc03b2f2916ad8e1cc4": {
+      "file": "web/components/pages/CreateOrganisationPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string[]' is not assignable to type '(\"public_saas\" | \"private_saas\" | \"self_hosted\")[]'.\n  Type 'string' is not assignable to type '\"public_saas\" | \"private_saas\" | \"self_hosted\"'."
+    },
+    "c771bf853a83f08c00d44bb003af05ff146b334d": {
+      "file": "web/components/pages/environment-settings/EnvironmentSettingsPage.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'number | undefined' is not assignable to type 'string'.\n  Type 'undefined' is not assignable to type 'string'."
+    },
+    "9002115cd6e3bd11141a81b58d6a7c661d8532a4": {
+      "file": "web/components/pages/environment-settings/EnvironmentSettingsPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(webhook: Webhook) => MutationActionCreatorResult<MutationDefinition<{ environmentId: string; enabled: boolean; secret: string; url: string; }, any, \"Webhooks\", Webhook, \"service\", any>>' is not assignable to type '(webhook: Partial<Webhook>) => Promise<any>'.\n  Types of parameters 'webhook' and 'webhook' are incompatible.\n    Type 'Partial<Webhook>' is not assignable to type 'Webhook'.\n      Types of property 'id' are incompatible.\n        Type 'number | undefined' is not assignable to type 'number'.\n          Type 'undefined' is not assignable to type 'number'."
+    },
+    "e32c270ffaf811f313e92fb59aeb62d86ea17ac1": {
+      "file": "web/components/pages/environment-settings/EnvironmentSettingsPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(webhook: Webhook) => MutationActionCreatorResult<MutationDefinition<{ id: number; environmentId: string; enabled: boolean; secret: string; url: string; }, any, \"Webhooks\", Webhook, \"service\", any>>' is not assignable to type '(webhook: Partial<Webhook>) => Promise<any>'.\n  Types of parameters 'webhook' and 'webhook' are incompatible.\n    Type 'Partial<Webhook>' is not assignable to type 'Webhook'.\n      Types of property 'id' are incompatible.\n        Type 'number | undefined' is not assignable to type 'number'.\n          Type 'undefined' is not assignable to type 'number'."
+    },
+    "96486bcd891920e25a4dda07147465442140e013": {
+      "file": "web/components/pages/environment-settings/EnvironmentSettingsPage.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'number | undefined' is not assignable to type 'number'.\n  Type 'undefined' is not assignable to type 'number'."
+    },
+    "bb86d066ae5d93ba049a2aef18e7ad798033c80d": {
+      "file": "web/components/pages/environment-settings/EnvironmentSettingsPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number | null | undefined' is not assignable to type 'number | null'.\n  Type 'undefined' is not assignable to type 'number | null'."
+    },
+    "42696461ec59284e1484aa468fa030431fdfc7da": {
+      "file": "web/components/pages/environment-settings/EnvironmentSettingsPage.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    "e14c9b1f853bb1ce44c4e6b76e76fc2b13efa5a0": {
+      "file": "web/components/pages/environment-settings/EnvironmentSettingsPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number | undefined' is not assignable to type 'string | undefined'.\n  Type 'number' is not assignable to type 'string'."
+    },
+    "9cd0c44246026d019baeb208c6488c6c8f43f146": {
+      "file": "web/components/pages/environment-settings/EnvironmentSettingsPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "940112825683d7a40096e57e82c03fa6fab976da": {
+      "file": "web/components/pages/FeatureHistoryDetailPage.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "06fcec4814c0d6bbd3cb16fa9b253014769b0088": {
+      "file": "web/components/pages/FeatureHistoryDetailPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | undefined' is not assignable to type 'string'.\n  Type 'undefined' is not assignable to type 'string'."
+    },
+    "a3bf9981559e649b49d1559ecf308b1b52bfc920": {
+      "file": "web/components/pages/FeatureHistoryDetailPage.tsx",
+      "code": "TS2345",
+      "count": 2,
+      "message": "Argument of type 'number | undefined' is not assignable to parameter of type 'string'.\n  Type 'undefined' is not assignable to type 'string'."
+    },
+    "b65d2d2dde52e9e673f62a3b52acd7df2cce2226": {
+      "file": "web/components/pages/features/components/FeaturesEmptyState.tsx",
+      "code": "TS2769",
+      "count": 3,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(props: PanelProps): Panel', gave the following error.\n    Type '{ children: Element; icon: string; title: string; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<Panel> & Readonly<PanelProps>'.\n      Property 'icon' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<Panel> & Readonly<PanelProps>'.\n  Overload 2 of 2, '(props: PanelProps, context: any): Panel', gave the following error.\n    Type '{ children: Element; icon: string; title: string; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<Panel> & Readonly<PanelProps>'.\n      Property 'icon' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<Panel> & Readonly<PanelProps>'."
+    },
+    "a258052e6a0fa682ecb2f4a11d125bf3f14b2943": {
+      "file": "web/components/pages/FlagEnvironmentsPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '\"environment\"' is not assignable to type 'IconName'."
+    },
+    "83e8b821ffe5f6847763cf6c28d0be9e347f4a5a": {
+      "file": "web/components/pages/FlagEnvironmentsPage.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "114a2a747ea4d9c4f1aebaf90fd4872196c9b6a6": {
+      "file": "web/components/pages/FlagEnvironmentsPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '\"flag\"' is not assignable to type 'IconName'."
+    },
+    "7fad7474fade04d9b5d24cf0e20b27c9887cfdf4": {
+      "file": "web/components/pages/GettingStartedPage.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "4fa67670243a0620b6519743f9cc994072df7bc1": {
+      "file": "web/components/pages/GitHubSetupPage.tsx",
+      "code": "TS2322",
+      "count": 4,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "c39ffd74f67717f4f195ebf5642030cc70818653": {
+      "file": "web/components/pages/GitHubSetupPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ width: string; }' is not assignable to type 'string'."
+    },
+    "bf055d5851b768372d950a10143299847a9e4354": {
+      "file": "web/components/pages/home-page/HomePage.tsx",
+      "code": "TS2554",
+      "count": 1,
+      "message": "Expected 0 arguments, but got 1."
+    },
+    "02472011e35c099880946ef55e68cf7074f06730": {
+      "file": "web/components/pages/home-page/HomePage.tsx",
+      "code": "TS2345",
+      "count": 2,
+      "message": "Argument of type 'string | number | boolean | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'."
+    },
+    "4483d2573d66bcc91b78c12ef2b7aaaf82dd59f7": {
+      "file": "web/components/pages/home-page/HomePage.tsx",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'detail' does not exist on type 'never'."
+    },
+    "829fcbcb791d61a32e3a87302b55a615d828899f": {
+      "file": "web/components/pages/IdentitiesPage.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'match' does not exist on type '{ props: any; }'."
+    },
+    "3bbb1498c8e259769c35b710731acba4defc950e": {
+      "file": "web/components/pages/IdentityPage.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "9e6c7dc04c286d56a013e62ca0ea1eb25bcfc436": {
+      "file": "web/components/pages/IdentityPage.tsx",
+      "code": "TS2554",
+      "count": 2,
+      "message": "Expected 1 arguments, but got 0."
+    },
+    "950ac47389ae8b68a8c06c7fec266bb60cf1ae1a": {
+      "file": "web/components/pages/IdentityPage.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type '{ showArchived: boolean; search: string | null; page: number; tag_strategy: TagStrategy; tags: (number | string)[]; is_archived: boolean; value_search: string | null; is_enabled: boolean | null; owners: number[]; group_owners: number[]; sort: SortValue; }' is not assignable to parameter of type 'Partial<FilterState>'.\n  Types of property 'value_search' are incompatible.\n    Type 'string | null' is not assignable to type 'string | undefined'.\n      Type 'null' is not assignable to type 'string | undefined'."
+    },
+    "dae6bd5e25c403b7ef54ab8be90b6af6e7d95ffe": {
+      "file": "web/components/pages/IdentityPage.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'feature' does not exist on type '{}'."
+    },
+    "c2f31f23b7e1e9d4864a0fe80afbc75a287e0eff": {
+      "file": "web/components/pages/IdentityPage.tsx",
+      "code": "TS18048",
+      "count": 2,
+      "message": "'environmentFlags' is possibly 'undefined'."
+    },
+    "9088819379dc45293695eac4abf9fc27bd0fd3fc": {
+      "file": "web/components/pages/IdentityPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'FeatureState | { feature_state_value: FlagsmithValue | undefined; feature: { id: number; name: string; type: FeatureType; }; identity?: string | undefined; ... 4 more ...; multivariate_feature_state_values?: { ...; }[] | undefined; }' is not assignable to type 'FeatureState | IdentityFeatureState | null | undefined'.\n  Type '{ feature_state_value: FlagsmithValue | undefined; feature: { id: number; name: string; type: FeatureType; }; identity?: string; ... 4 more ...; multivariate_feature_state_values?: { multivariate_feature_option: { value: number; }; percentage_allocation: number; }[]; }' is not assignable to type 'FeatureState | IdentityFeatureState | null | undefined'.\n    Type '{ feature_state_value: FlagsmithValue | undefined; feature: { id: number; name: string; type: FeatureType; }; identity?: string; ... 4 more ...; multivariate_feature_state_values?: { multivariate_feature_option: { value: number; }; percentage_allocation: number; }[]; }' is not assignable to type 'IdentityFeatureState'.\n      Types of property 'feature_state_value' are incompatible.\n        Type 'FlagsmithValue | undefined' is not assignable to type 'FlagsmithValue'.\n          Type 'undefined' is not assignable to type 'FlagsmithValue'."
+    },
+    "4571179746e0b8e712ff8ed9244611ae41e1180f": {
+      "file": "web/components/pages/IntegrationsPage.tsx",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(o: {}): string[]', gave the following error.\n    Argument of type 'string | number | boolean | null' is not assignable to parameter of type '{}'.\n      Type 'null' is not assignable to type '{}'.\n  Overload 2 of 2, '(o: object): string[]', gave the following error.\n    Argument of type 'string | number | boolean | null' is not assignable to parameter of type 'object'.\n      Type 'null' is not assignable to type 'object'."
+    },
+    "e663f153e7d62ebd94139aeb475a34c639965a02": {
+      "file": "web/components/pages/IntegrationsPage.tsx",
+      "code": "TS18047",
+      "count": 2,
+      "message": "'integrationData' is possibly 'null'."
+    },
+    "7de5d7172b90d27b2fafe607ac2b7edba49c3423": {
+      "file": "web/components/pages/IntegrationsPage.tsx",
+      "code": "TS7053",
+      "count": 2,
+      "message": "Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'string | number | boolean'.\n  No index signature with a parameter of type 'string' was found on type 'string | number | boolean'."
+    },
+    "b9ebeaba22d85bf7283ae1ef9d3398685602ba8f": {
+      "file": "web/components/pages/IntegrationsPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '\"ADMIN\"' is not assignable to type 'EnvironmentPermission | OrganisationPermission | ProjectPermission'."
+    },
+    "81d5af83e1a7cff9d517f19920ec610f858bc4c2": {
+      "file": "web/components/pages/IntegrationsPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "800f1a0f3608075f9ac5a78666cf69c3990de67d": {
+      "file": "web/components/pages/OnboardingPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | boolean' is not assignable to type 'boolean'.\n  Type 'string' is not assignable to type 'boolean'."
+    },
+    "9e23ca35e76eb11e8a0ab941d2b5b28fbc13e048": {
+      "file": "web/components/pages/OnboardingPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(key: \"email\" | \"first_name\" | \"last_name\" | \"password\" | \"contact_consent_given\" | \"organisation_name\" | \"superuser\" | \"confirm_password\", value: any) => void' is not assignable to type '(key: string | number | symbol, value: any) => void'.\n  Types of parameters 'key' and 'key' are incompatible.\n    Type 'string | number | symbol' is not assignable to type '\"email\" | \"first_name\" | \"last_name\" | \"password\" | \"contact_consent_given\" | \"organisation_name\" | \"superuser\" | \"confirm_password\"'.\n      Type 'string' is not assignable to type '\"email\" | \"first_name\" | \"last_name\" | \"password\" | \"contact_consent_given\" | \"organisation_name\" | \"superuser\" | \"confirm_password\"'."
+    },
+    "166c57c733f84fcca1d6bc6c86ece9e6759514dd": {
+      "file": "web/components/pages/organisation-settings/OrganisationSettingsPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ component: Element; isVisible: boolean | undefined; key: string; label: string; }[]' is not assignable to type 'OrganisationSettingsTab[]'.\n  Type '{ component: JSX.Element; isVisible: boolean | undefined; key: string; label: string; }' is not assignable to type 'OrganisationSettingsTab'.\n    Types of property 'isVisible' are incompatible.\n      Type 'boolean | undefined' is not assignable to type 'boolean'.\n        Type 'undefined' is not assignable to type 'boolean'."
+    },
+    "049bfb7f6d6aecd741fb4eae740ef38bdbcf5d2a": {
+      "file": "web/components/pages/organisation-settings/tabs/BillingTab.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'."
+    },
+    "ffccf550c7c53e504c180509fc81f672c9e12f1c": {
+      "file": "web/components/pages/organisation-settings/tabs/general-tab/sections/admin-settings/Force2FASetting.tsx",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'force_2fa' does not exist on type 'Organisation'."
+    },
+    "2b226a6cf8bc517fa2ec441924e45ae8c7b59231": {
+      "file": "web/components/pages/organisation-settings/tabs/general-tab/sections/OrganisationInformation.tsx",
+      "code": "TS2304",
+      "count": 1,
+      "message": "Cannot find name 'InputGroup'."
+    },
+    "43d1448a9c0714fedab56593eae1993e6e3774af": {
+      "file": "web/components/pages/organisation-settings/tabs/sso/saml/modals/CreateSAML.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number | undefined' is not assignable to type 'number'.\n  Type 'undefined' is not assignable to type 'number'."
+    },
+    "dd5081a288b65435338afab54ebe54e9a11d7a62": {
+      "file": "web/components/pages/organisation-settings/tabs/trust-relationships/TrustRelationshipModal/TrustRelationshipModal.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type '(e: InputEvent) => void' is not assignable to type 'ChangeEventHandler<HTMLInputElement, HTMLInputElement>'.\n  Types of parameters 'e' and 'event' are incompatible.\n    Type 'ChangeEvent<HTMLInputElement, HTMLInputElement>' is missing the following properties from type 'InputEvent': data, dataTransfer, inputType, isComposing, and 16 more."
+    },
+    "0ac80a973931ad52759ab027b1b9f0662fce8e7b": {
+      "file": "web/components/pages/organisation-settings/tabs/WebhooksTab.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number' is not assignable to type 'string'."
+    },
+    "65526eb8d0885ad4c64b793d2fd6a2077aad6a83": {
+      "file": "web/components/pages/OrganisationIntegrationsPage.tsx",
+      "code": "TS7031",
+      "count": 1,
+      "message": "Binding element 'match' implicitly has an 'any' type."
+    },
+    "79cb542e0351fea9f234fe78d41514516254a0af": {
+      "file": "web/components/pages/OrganisationIntegrationsPage.tsx",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(o: {}): string[]', gave the following error.\n    Argument of type 'string | number | boolean | null' is not assignable to parameter of type '{}'.\n      Type 'null' is not assignable to type '{}'.\n  Overload 2 of 2, '(o: object): string[]', gave the following error.\n    Argument of type 'string | number | boolean | null' is not assignable to parameter of type 'object'.\n      Type 'null' is not assignable to type 'object'."
+    },
+    "69e720bb58ce3d22f45eef3e1f5cca6424139d1c": {
+      "file": "web/components/pages/OrganisationIntegrationsPage.tsx",
+      "code": "TS18047",
+      "count": 4,
+      "message": "'integrationData' is possibly 'null'."
+    },
+    "6a28b9af90133d29ce13447a4c8d49d71ca5111f": {
+      "file": "web/components/pages/OrganisationIntegrationsPage.tsx",
+      "code": "TS7053",
+      "count": 4,
+      "message": "Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'string | number | boolean'.\n  No index signature with a parameter of type 'string' was found on type 'string | number | boolean'."
+    },
+    "f946e7bf2133264cd02679ecb998c966b7725281": {
+      "file": "web/components/pages/OrganisationsPage.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    "21df215f4498319138930749db20945ee129d142": {
+      "file": "web/components/pages/OrganisationUsagePage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | undefined' is not assignable to type 'number | undefined'.\n  Type 'string' is not assignable to type 'number'."
+    },
+    "3909d0df337c26dc25b3fa3343d459b42938dc21": {
+      "file": "web/components/pages/project-settings/hooks/useUpdateProjectWithToast.ts",
+      "code": "TS2304",
+      "count": 1,
+      "message": "Cannot find name 'AppActions'."
+    },
+    "4628cc57d0ebdc1f8522e8bc74f41446de908796": {
+      "file": "web/components/pages/project-settings/ProjectSettingsPage.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string | number' is not assignable to type 'number'.\n  Type 'string' is not assignable to type 'number'."
+    },
+    "d1c27d25e81589cafeefe2561672eeef2a3f2ff6": {
+      "file": "web/components/pages/project-settings/ProjectSettingsPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "76d42fbb72b1a43231cbd7a5a0afc399e3a5cb9b": {
+      "file": "web/components/pages/project-settings/ProjectUsageTab.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "21a86d9c96d8b7a994074020c41cd1c427866f48": {
+      "file": "web/components/pages/project-settings/tabs/EditHealthProvider.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    "454ab5c7f64f290bf4c501ad8c6cfbfd7471d12f": {
+      "file": "web/components/pages/project-settings/tabs/general-tab/sections/additional-settings/FeatureNameValidation.tsx",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(props: { ref: RefObject<HTMLInputElement | null>; value: string; inputClassName: string; id: string; name: string; onClick: (e: KeyboardEvent<Element> | MouseEvent<...>) => void; ... 5 more ...; placeholder: string; }): Component<...>', gave the following error.\n    Type 'RefObject<HTMLInputElement | null>' is not assignable to type '(Ref<Component<{ ref: RefObject<HTMLInputElement | null>; value: string; inputClassName: string; id: string; name: string; onClick: (e: KeyboardEvent<Element> | MouseEvent<...>) => void; ... 5 more ...; placeholder: string; }, {}, any>> | undefined) & RefObject<...>'.\n      Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<Component<{ ref: RefObject<HTMLInputElement | null>; value: string; inputClassName: string; id: string; name: string; onClick: (e: KeyboardEvent<Element> | MouseEvent<...>) => void; ... 5 more ...; placeholder: string; }, {}, any> | null> & RefObject<...>'.\n        Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<Component<{ ref: RefObject<HTMLInputElement | null>; value: string; inputClassName: string; id: string; name: string; onClick: (e: KeyboardEvent<Element> | MouseEvent<...>) => void; ... 5 more ...; placeholder: string; }, {}, any> | null>'.\n          Type 'HTMLInputElement | null' is not assignable to type 'Component<{ ref: RefObject<HTMLInputElement | null>; value: string; inputClassName: string; id: string; name: string; onClick: (e: KeyboardEvent<Element> | MouseEvent<...>) => void; ... 5 more ...; placeholder: string; }, {}, any> | null'.\n            Type 'HTMLInputElement' is missing the following properties from type 'Component<{ ref: RefObject<HTMLInputElement | null>; value: string; inputClassName: string; id: string; name: string; onClick: (e: KeyboardEvent<Element> | MouseEvent<...>) => void; ... 5 more ...; placeholder: string; }, {}, any>': context, setState, forceUpdate, render, and 2 more.\n  Overload 2 of 2, '(props: { ref: RefObject<HTMLInputElement | null>; value: string; inputClassName: string; id: string; name: string; onClick: (e: KeyboardEvent<Element> | MouseEvent<...>) => void; ... 5 more ...; placeholder: string; }, context: any): Component<...>', gave the following error.\n    Type 'RefObject<HTMLInputElement | null>' is not assignable to type '(Ref<Component<{ ref: RefObject<HTMLInputElement | null>; value: string; inputClassName: string; id: string; name: string; onClick: (e: KeyboardEvent<Element> | MouseEvent<...>) => void; ... 5 more ...; placeholder: string; }, {}, any>> | undefined) & RefObject<...>'.\n      Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<Component<{ ref: RefObject<HTMLInputElement | null>; value: string; inputClassName: string; id: string; name: string; onClick: (e: KeyboardEvent<Element> | MouseEvent<...>) => void; ... 5 more ...; placeholder: string; }, {}, any> | null> & RefObject<...>'.\n        Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<Component<{ ref: RefObject<HTMLInputElement | null>; value: string; inputClassName: string; id: string; name: string; onClick: (e: KeyboardEvent<Element> | MouseEvent<...>) => void; ... 5 more ...; placeholder: string; }, {}, any> | null>'.\n          Type 'HTMLInputElement | null' is not assignable to type 'Component<{ ref: RefObject<HTMLInputElement | null>; value: string; inputClassName: string; id: string; name: string; onClick: (e: KeyboardEvent<Element> | MouseEvent<...>) => void; ... 5 more ...; placeholder: string; }, {}, any> | null'.\n            Type 'HTMLInputElement' is missing the following properties from type 'Component<{ ref: RefObject<HTMLInputElement | null>; value: string; inputClassName: string; id: string; name: string; onClick: (e: KeyboardEvent<Element> | MouseEvent<...>) => void; ... 5 more ...; placeholder: string; }, {}, any>': context, setState, forceUpdate, render, and 2 more."
+    },
+    "ec1e6d13a27f6c8b8e82caa64d527dc7dd55ad72": {
+      "file": "web/components/pages/project-settings/tabs/general-tab/sections/DeleteProject.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "6de357c911d0776b30f24ebafab621ee3a55c03a": {
+      "file": "web/components/pages/project-settings/tabs/general-tab/sections/EdgeAPIMigration.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "2634e97232bab709d7b1ccebb32501ec6b7a9c25": {
+      "file": "web/components/pages/project-settings/tabs/ImportTab.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number' is not assignable to type 'string'."
+    },
+    "322e1ae06478830045ca97ffb16da9e8eb6a0de4": {
+      "file": "web/components/pages/ProjectChangeRequestDetailPage.tsx",
+      "code": "TS2322",
+      "count": 6,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "4c12907c42543a896ba437e99a46ca23326b879d": {
+      "file": "web/components/pages/ProjectChangeRequestDetailPage.tsx",
+      "code": "TS2739",
+      "count": 1,
+      "message": "Type 'WithoutId<Segment> & { version_of?: number | undefined; }' is missing the following properties from type 'Segment': id, uuid"
+    },
+    "20638904ab9ef2beed194607665ce8d1284961d9": {
+      "file": "web/components/pages/ProjectChangeRequestsPage.tsx",
+      "code": "TS2322",
+      "count": 3,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "3cafdf942ff7c983c5ae05fb99cf6b91b9d37e4e": {
+      "file": "web/components/pages/ProjectRedirectPage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "b5f1d142e17186f0d526e52b4936a43c39a10d53": {
+      "file": "web/components/pages/sdk-keys/components/CreateServerSideKeyModal.tsx",
+      "code": "TS2304",
+      "count": 1,
+      "message": "Cannot find name 'InputGroup'."
+    },
+    "e3cf7e488a8c6eaef2253e4ff3adb7fd8a806030": {
+      "file": "web/components/pages/SegmentsPage.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'null' is not assignable to parameter of type 'number | undefined'."
+    },
+    "90cdb5d8f00b62946cdeb3150141340ed85b8e03": {
+      "file": "web/components/pages/SegmentsPage.tsx",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'percentage' does not exist on type '0 | { percentage: number; }'.\n  Property 'percentage' does not exist on type '0'."
+    },
+    "b79a8f6277b4dda09f22e73517cdbca3dc62a28b": {
+      "file": "web/components/pages/usage/__tests__/fixtures.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ labels: { user_agent: string | null; }; project_id?: number | null | undefined; environment_id?: number | null | undefined; day: string; environment_document: number | null; flags: number | null; identities: number | null; traits: number | null; }' is not assignable to type 'UsageEventsList'.\n  Types of property 'project_id' are incompatible.\n    Type 'number | null | undefined' is not assignable to type 'number | null'.\n      Type 'undefined' is not assignable to type 'number | null'."
+    },
+    "e1d3d99b7378a226c57d18a5c3142a77ac5e037f": {
+      "file": "web/components/PermissionControl.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'selectedOption' implicitly has an 'any' type."
+    },
+    "d3980d289ee0aa3dbd948629192ab48088a0e47b": {
+      "file": "web/components/PlanBasedAccess.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'."
+    },
+    "d4d0b0d408b9e913ca654cf1b06dded26a09fea2": {
+      "file": "web/components/ProjectChangeRequestsLink.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "e738c24f2f4702308718e373020f4fa32cafabeb": {
+      "file": "web/components/ProjectFilter.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "947a7f7116f13d7817c6e349f2d6825bbf2fea5a": {
+      "file": "web/components/ProjectManageWidget.tsx",
+      "code": "TS2345",
+      "count": 2,
+      "message": "Argument of type 'Organisation | undefined' is not assignable to parameter of type 'Organisation'.\n  Type 'undefined' is not assignable to type 'Organisation'."
+    },
+    "94180933546fb790385146e914a48587d12f8342": {
+      "file": "web/components/ProjectsPage.tsx",
+      "code": "TS7016",
+      "count": 1,
+      "message": "Could not find a declaration file for module 'react-async-script'. 'node_modules/react-async-script/lib/async-script-loader.js' implicitly has an 'any' type.\n  Try `npm i --save-dev @types/react-async-script` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-async-script';`"
+    },
+    "d721facff2e1536251a495a5863262a0cdad9c0e": {
+      "file": "web/components/ProjectsPage.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'props' implicitly has an 'any' type."
+    },
+    "975bb6306b6a10cb87c4f12530e4b35e6268ff5b": {
+      "file": "web/components/PublishChangeRequestModal.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'ChangeRequest | ProjectChangeRequest' is not assignable to type 'ChangeRequest'.\n  Type 'ProjectChangeRequest' is missing the following properties from type 'ChangeRequest': environment, feature_states, environment_feature_versions"
+    },
+    "c3ae4a4bd75b41c282f84625e0d50171c571fac7": {
+      "file": "web/components/release-pipelines/AddToReleasePipelineModal.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'number | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'."
+    },
+    "019ab0fcd51a5a98f16daabd79ca74c0fc0c8588": {
+      "file": "web/components/release-pipelines/CloneReleasePipelineModal.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'boolean' is not assignable to type 'string | string[] | undefined'."
+    },
+    "88d01308e654d163ff8017286553f9fe6449cffb": {
+      "file": "web/components/release-pipelines/CreatePipelineStage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "03f1855486dbb680214b2654f8f2d930ec3cd58f": {
+      "file": "web/components/release-pipelines/CreatePipelineStage.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'number' is not assignable to parameter of type 'string'."
+    },
+    "9614e959af1953bf433a73270bd4bffd38bb668a": {
+      "file": "web/components/release-pipelines/CreatePipelineStage.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'trigger_body' does not exist on type '{ amountOfTime: number; timeUnit: TimeUnit; }'."
+    },
+    "304d636c1abb4ed1aaa605394bcf34d2ab682ed8": {
+      "file": "web/components/release-pipelines/FlagActionDetail.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "ace98b4af8981779d277b3d9177c13b8a80dea74": {
+      "file": "web/components/release-pipelines/PhasedRolloutAction.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'boolean' is not assignable to type 'string | string[] | undefined'."
+    },
+    "fb1280c260b9645f75ce6bfcb6584c5529afea95": {
+      "file": "web/components/release-pipelines/PhasedRolloutAction.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'false' is not assignable to type 'string | string[] | undefined'."
+    },
+    "c1bbb09271b6b1de4bbd8f7b7a33a153e1a49f91": {
+      "file": "web/components/release-pipelines/PipelineStageActions.tsx",
+      "code": "TS2459",
+      "count": 1,
+      "message": "Module '\"common/types/requests\"' declares 'StageActionBody' locally, but it is not exported."
+    },
+    "69da11d9c30f8e14214ebd2fbeec07abfbec1e08": {
+      "file": "web/components/release-pipelines/ReleasePipelineDetail.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "5b27627527a8aae260d2c5aebfe9371898d4c936": {
+      "file": "web/components/release-pipelines/SinglePipelineStageAction.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | undefined' is not assignable to parameter of type 'string'.\n  Type 'undefined' is not assignable to type 'string'."
+    },
+    "679a54fcc6e4ca7ba6e93ac0d2d3dd3336d8e869": {
+      "file": "web/components/release-pipelines/SinglePipelineStageAction.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'number | undefined' is not assignable to parameter of type 'string'.\n  Type 'undefined' is not assignable to type 'string'."
+    },
+    "bdb4b218f9fb66908cddd4ac2ba9e808240da122": {
+      "file": "web/components/release-pipelines/StageFeatureDetail.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "1a80751445be8c12d4d6191462369e968e380806": {
+      "file": "web/components/release-pipelines/TimeInput.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'boolean' is not assignable to type 'string | string[] | undefined'."
+    },
+    "897ca41868ff946725a51c3af6c810c5dcc92b3a": {
+      "file": "web/components/RolesTable.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '\"ADMIN\"' is not assignable to type 'EnvironmentPermission | OrganisationPermission | ProjectPermission'."
+    },
+    "0c0f550b9f3fb2f7f12d23fc40491016ad5ca325": {
+      "file": "web/components/SegmentOverrideLimit.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'maxSegmentOverridesAllowed' does not exist on type 'SegmentOverrideLimitType'."
+    },
+    "efab5ce8c1996326f6126da16e13e7fe994b2427": {
+      "file": "web/components/SegmentOverrideLimit.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'percentage' does not exist on type '0 | { percentage: number; }'.\n  Property 'percentage' does not exist on type '0'."
+    },
+    "305e68d35dfc600da254227dbadd7270a354f611": {
+      "file": "web/components/segments/AssociatedSegmentOverrides.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "c487ba65ab44987f0fcdd6362d944909c9a113a7": {
+      "file": "web/components/segments/Rule/components/EnvironmentSelectDropdown.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "22d9cb846e94ff9f4e6573b54bf668445fccfa3b": {
+      "file": "web/components/segments/Rule/components/RuleConditionRow.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ readOnly: boolean | undefined; \"data-test\": string; value: string | number | true; placeholder: string; disabled: boolean | undefined; projectId: number; operator: OperatorValue; property: string; onChange: (value: string) => void; isValid: any; className: string; }' is not assignable to type 'IntrinsicAttributes & RuleConditionValueInputProps'.\n  Property 'isValid' does not exist on type 'IntrinsicAttributes & RuleConditionValueInputProps'."
+    },
+    "7ae25a77aaa33b7caa5bd05c11eb94982927a8ce": {
+      "file": "web/components/segments/Rule/components/RuleConditionValueInput.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "fd247c7c99fedc361c40a6bfbb970d26070984ae": {
+      "file": "web/components/segments/Rule/components/TextAreaModal.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | number | boolean' is not assignable to type 'string | number | readonly string[] | undefined'.\n  Type 'false' is not assignable to type 'string | number | readonly string[] | undefined'."
+    },
+    "e0a69ec0c6cfbdc8ab058ac5201ece5c243ec1ed": {
+      "file": "web/components/segments/Rule/components/TextAreaModal.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | number | boolean | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'."
+    },
+    "178e827697b0a0afafd1667e36bde069da04ed3b": {
+      "file": "web/components/segments/Rule/hooks/useRuleOperator.ts",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | number | boolean | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'."
+    },
+    "15137b81726c1a5310c32b5270c38550d758ee12": {
+      "file": "web/components/segments/Rule/hooks/useRuleOperator.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'append' does not exist on type 'SegmentCondition'."
+    },
+    "1e3981b1ccaffc8c010eece04b69802a5f3be55e": {
+      "file": "web/components/segments/Rule/hooks/useRuleOperator.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'hideValue' does not exist on type 'SegmentCondition'."
+    },
+    "cb5b6342080ba84b59dea1c3e5ff38a8b9e754a9": {
+      "file": "web/components/segments/Rule/hooks/useRuleOperator.ts",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'valuePlaceholder' does not exist on type 'SegmentCondition'."
+    },
+    "5287b7d61ba66c7b0930284530ce28fffbd80694": {
+      "file": "web/components/segments/Rule/hooks/useRuleOperator.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string | number | boolean | null | undefined' is not assignable to type 'OperatorValue'.\n  Type 'undefined' is not assignable to type 'OperatorValue'."
+    },
+    "8b1a1018196a89146cede403361d164bd0c905b8": {
+      "file": "web/components/segments/Rule/hooks/useRuleOperator.ts",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'SegmentCondition | undefined' is not assignable to type 'Operator'.\n  Type 'undefined' is not assignable to type 'Operator'."
+    },
+    "0bdfa13ebb3c4dd422901e262b772b964e1ded0f": {
+      "file": "web/components/segments/Rule/Rule.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | number | boolean | null' is not assignable to parameter of type 'string'.\n  Type 'null' is not assignable to type 'string'."
+    },
+    "4dc83d3259ad6a8cbe2cd082a19911b6fd0cc794": {
+      "file": "web/components/segments/Rule/Rule.tsx",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'append' does not exist on type 'SegmentCondition'."
+    },
+    "129c5846b13bcd7a87dbbfb2631d4c3ce383fe15": {
+      "file": "web/components/segments/Rule/Rule.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'hideValue' does not exist on type 'SegmentCondition'."
+    },
+    "c4e9f118a28872e23100bc00f59619b4450bbfe0": {
+      "file": "web/components/segments/SegmentRow/SegmentRow.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "069b39d22f831641352e5a664b69b39bd4887927": {
+      "file": "web/components/tables/TableFilterOptions.tsx",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'includes' does not exist on type 'string | number | (string | number)[]'.\n  Property 'includes' does not exist on type 'number'."
+    },
+    "13740aaa7a36b97230bc9fc81fc2c9e32899b628": {
+      "file": "web/components/tables/TableFilterOptions.tsx",
+      "code": "TS2769",
+      "count": 1,
+      "message": "No overload matches this call.\n  Overload 1 of 2, '(...items: ConcatArray<string>[]): string[]', gave the following error.\n    Type 'string | number' is not assignable to type 'string'.\n      Type 'number' is not assignable to type 'string'.\n  Overload 2 of 2, '(...items: (string | ConcatArray<string>)[]): string[]', gave the following error.\n    Type 'string | number' is not assignable to type 'string'.\n      Type 'number' is not assignable to type 'string'."
+    },
+    "078ea7b42ed0c1179d6380235d69cb18044e9ba7": {
+      "file": "web/components/tables/TableFilterOptions.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'string | number' is not assignable to parameter of type 'string | string[]'.\n  Type 'number' is not assignable to type 'string | string[]'."
+    },
+    "97725e8230831b1517c390d07294003f8c6e98cb": {
+      "file": "web/components/tables/TableGroupsFilter.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "ce22c46ccf26a9bdfb425410678fcf4ef75f7671": {
+      "file": "web/components/tables/TableOwnerFilter.tsx",
+      "code": "TS2339",
+      "count": 2,
+      "message": "Property 'model' does not exist on type 'EventEmitter<any> & { _maxListeners: number; changed(): void; error: null; goneABitWest(): void; hasLoaded: boolean; id: string; isLoading: boolean; isSaving: boolean; loaded(): void; ... 6 more ...; trigger(eventName: any, data: any): void; } & { ...; }'."
+    },
+    "794769f02f64c78c94ecc7ebf9947e7213e4773b": {
+      "file": "web/components/tables/TableTagFilter.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "a0bc1e1400130f6f7fc843c8271197f4a9de0c0b": {
+      "file": "web/components/tables/TableTagFilter.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'base' implicitly has an 'any' type."
+    },
+    "06094bb1fbd87644b36495544bcecadd4631754f": {
+      "file": "web/components/tables/TableTagFilter.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'v' implicitly has an 'any' type."
+    },
+    "0d15079624799677c738253ba0783e4100ff0133": {
+      "file": "web/components/tables/TableValueFilter.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'base' implicitly has an 'any' type."
+    },
+    "6a3695f6e53a757f60afc6ceea4c72b3de4633e5": {
+      "file": "web/components/tags/AddEditTags.tsx",
+      "code": "TS2322",
+      "count": 3,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "2b248f1ed81fed5fdd739e87f1c38326d6683112": {
+      "file": "web/components/tags/AddEditTags.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'number' is not assignable to type 'string'."
+    },
+    "2441b56cb3566f178cc1ba8ffa30c0bb11c064e7": {
+      "file": "web/components/tags/AddEditTags.tsx",
+      "code": "TS2353",
+      "count": 1,
+      "message": "Object literal may only specify known properties, and 'project' does not exist in type 'Omit<Tag, \"id\" | \"project\" | \"type\" | \"is_system_tag\" | \"is_permanent\">'."
+    },
+    "28431507cb709138f7ffcffb959002f16824cffd": {
+      "file": "web/components/tags/CreateEditTag.tsx",
+      "code": "TS2322",
+      "count": 3,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "94d3b0e1128cdfa23424fca627bcfe3739ab49f0": {
+      "file": "web/components/tags/CreateEditTag.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(e: InputEvent) => void' is not assignable to type '((checked: boolean) => void) & ((checked: boolean) => void)'.\n  Type '(e: InputEvent) => void' is not assignable to type '(checked: boolean) => void'.\n    Types of parameters 'e' and 'checked' are incompatible.\n      Type 'boolean' is not assignable to type 'InputEvent'."
+    },
+    "02a8096dd3d87a383845c5409ac9a9414f02895d": {
+      "file": "web/components/tags/Tag.tsx",
+      "code": "TS2345",
+      "count": 1,
+      "message": "Argument of type 'Partial<Tag>' is not assignable to parameter of type 'Tag'.\n  Types of property 'id' are incompatible.\n    Type 'number | undefined' is not assignable to type 'number'.\n      Type 'undefined' is not assignable to type 'number'."
+    },
+    "4c8c3d92c18f3e8b0c01d366e3ec8997029540b6": {
+      "file": "web/components/tags/Tag.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'Color<ColorParam>' is not assignable to type 'string'."
+    },
+    "6cba957c3996cccb9a7fd35a6236d49f4fa7180c": {
+      "file": "web/components/tags/TagContent.tsx",
+      "code": "TS2339",
+      "count": 1,
+      "message": "Property 'darken' does not exist on type 'string'."
+    },
+    "0a49f01f741e4802c555013c0a3adb95b7c48db9": {
+      "file": "web/components/tags/TagContent.tsx",
+      "code": "TS2345",
+      "count": 2,
+      "message": "Argument of type 'Partial<Tag>' is not assignable to parameter of type 'Tag'.\n  Types of property 'id' are incompatible.\n    Type 'number | undefined' is not assignable to type 'number'.\n      Type 'undefined' is not assignable to type 'number'."
+    },
+    "a89b9399fd496e97c1fa7da2a81b65c2ed7906bb": {
+      "file": "web/components/tags/TagContent.tsx",
+      "code": "TS2554",
+      "count": 1,
+      "message": "Expected 4 arguments, but got 3."
+    },
+    "d7b92fe3fadd380fcf2c7ca50e41c3a0b59fe700": {
+      "file": "web/components/tags/TagFilter.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "9bbbf414d86121d9e190af17ec2c648c7388540a": {
+      "file": "web/components/tags/TagFilter.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'base' implicitly has an 'any' type."
+    },
+    "48529250c155d4474318cdc528ba8955ea2f9ef8": {
+      "file": "web/components/tags/TagFilter.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'v' implicitly has an 'any' type."
+    },
+    "b9444db4310d5dd623c2eb0ceec1a1fa44d2fff1": {
+      "file": "web/components/tags/TagValues.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "21ef9956c7d9faf07fae7dc1bfc18cbf750024bd": {
+      "file": "web/components/TagUsage.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'string[]' is not assignable to type 'string'."
+    },
+    "324192c213477d79fdff24376ec893ef633aa42c": {
+      "file": "web/components/TestWebhook.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '{ type: \"organisation\" | \"environment\"; id: string; }' is not assignable to type '{ type: \"organisation\" | \"environment\"; id: number; }'.\n  Types of property 'id' are incompatible.\n    Type 'string' is not assignable to type 'number'."
+    },
+    "3a682199b59e6e6844c8aad36c2de66f08e01201": {
+      "file": "web/components/UserAction.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'RefObject<HTMLDivElement | null>' is not assignable to type 'RefObject<HTMLDivElement>'.\n  Type 'HTMLDivElement | null' is not assignable to type 'HTMLDivElement'.\n    Type 'null' is not assignable to type 'HTMLDivElement'."
+    },
+    "2995702a2354df16726edc5e50b42d6323f68214": {
+      "file": "web/components/UserGroupList.tsx",
+      "code": "TS2345",
+      "count": 2,
+      "message": "Argument of type 'UserGroup | GroupPermission' is not assignable to parameter of type 'UserGroup'.\n  Type 'GroupPermission' is not assignable to type 'UserGroup'.\n    Type 'GroupPermission' is missing the following properties from type 'UserGroupSummary': external_id, is_default, name"
+    },
+    "7b103b734862367aca66bee8b98c0c628fc5b335": {
+      "file": "web/components/UserGroupList.tsx",
+      "code": "TS2322",
+      "count": 2,
+      "message": "Type 'string' is not assignable to type 'number'."
+    },
+    "c3d7170c2d0780f00a17134255b95f49c9b7da09": {
+      "file": "web/components/UserGroupList.tsx",
+      "code": "TS2353",
+      "count": 1,
+      "message": "Object literal may only specify known properties, and 'tag_based_permissions' does not exist in type 'GroupPermission'."
+    },
+    "8fdbabcca6711f4b2b91959363e99eb1acc3fcf0": {
+      "file": "web/components/UserGroupList.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'UserGroupSummary' is not assignable to type 'UserGroup | GroupPermission'.\n  Type 'UserGroupSummary' is not assignable to type 'UserGroup'.\n    Property 'users' is missing in type 'UserGroupSummary' but required in type '{ users: GroupUser[]; }'."
+    },
+    "546af2fc9a3ed6e3a03c86b8497222eb687ed527": {
+      "file": "web/components/users-permissions/OrganisationUsersTable/components/OrganisationUsersTableRow.tsx",
+      "code": "TS7053",
+      "count": 2,
+      "message": "Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ ADMIN: string; USER: string; }'.\n  No index signature with a parameter of type 'string' was found on type '{ ADMIN: string; USER: string; }'."
+    },
+    "fe8f6fa30a521a4315ffc0172d80d9a2a3e550ff": {
+      "file": "web/components/users-permissions/OrganisationUsersTable/OrganisationUsersTable.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type 'User' is not assignable to type 'GroupUser'.\n  Property 'group_admin' is missing in type 'User' but required in type '{ group_admin: boolean; }'."
+    },
+    "c5f3d7c644c9b371603075fac7dc564118230523": {
+      "file": "web/components/UsersGroups.tsx",
+      "code": "TS2322",
+      "count": 1,
+      "message": "Type '(search: string) => React.JSX.Element' is not assignable to type '(search?: string | undefined) => ReactNode'.\n  Types of parameters 'search' and 'search' are incompatible.\n    Type 'string | undefined' is not assignable to type 'string'.\n      Type 'undefined' is not assignable to type 'string'."
+    },
+    "744f3290ea926184eabb742fd9c7dd21644ca93f": {
+      "file": "web/components/UsersGroups.tsx",
+      "code": "TS2339",
+      "count": 3,
+      "message": "Property 'users' does not exist on type 'UserGroupSummary'."
+    },
+    "a46688bac8f8cd95efb565991ec8590222b4cb85": {
+      "file": "web/components/UsersGroups.tsx",
+      "code": "TS7006",
+      "count": 1,
+      "message": "Parameter 'v' implicitly has an 'any' type."
+    },
+    "58747260ac5290509a2371c55b82be1545abea53": {
+      "file": "web/project/api.ts",
+      "code": "TS7016",
+      "count": 1,
+      "message": "Could not find a declaration file for module 'js-cookie'. 'node_modules/js-cookie/index.js' implicitly has an 'any' type.\n  Try `npm i --save-dev @types/js-cookie` if it exists or add a new declaration (.d.ts) file containing `declare module 'js-cookie';`"
+    }
+  }
+}

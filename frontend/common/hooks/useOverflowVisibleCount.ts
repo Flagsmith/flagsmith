@@ -4,8 +4,8 @@ import { useState, useLayoutEffect, RefObject } from 'react'
 const GAP_MULTIPLIER = 5
 
 type UseOverflowVisibleCountOptions = {
-  outerContainerRef: RefObject<HTMLDivElement>
-  itemsContainerRef: RefObject<HTMLDivElement>
+  outerContainerRef: RefObject<HTMLDivElement | null>
+  itemsContainerRef: RefObject<HTMLDivElement | null>
   itemCount: number
   gap: number
   extraWidth: number

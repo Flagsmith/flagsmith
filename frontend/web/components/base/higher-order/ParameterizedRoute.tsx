@@ -32,7 +32,9 @@ export const ParameterizedRoute = ({
   return (
     <Route
       {...props}
-      render={(componentProps: RouteComponentProps) => (
+      render={(
+        componentProps: RouteComponentProps<{ environmentId?: string }>,
+      ) => (
         <RouteProvider
           value={{
             environmentId: componentProps.match.params.environmentId,
@@ -40,14 +42,7 @@ export const ParameterizedRoute = ({
             projectId: parsedProjectId,
           }}
         >
-          <EnvironmentReadyChecker
-            match={{
-              ...componentProps.match,
-              params: {
-                environmentId: componentProps.match.params.environmentId,
-              },
-            }}
-          >
+          <EnvironmentReadyChecker>
             <Component
               {...componentProps}
               match={{

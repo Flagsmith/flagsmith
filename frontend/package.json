@@ -27,6 +27,7 @@
     "lint:fix": "npx eslint --fix .",
     "start": "cross-env NODE_ENV=production node ./api/index",
     "typecheck": "tsc",
+    "typecheck:baseline": "tsc --noEmit --incremental false --pretty false | tsc-baseline save --exclude documentation/ --exclude .storybook/ --exclude '**/*.stories.tsx'",
     "dev": "cross-env npm run env && npx rspack serve -c ./rspack/rspack.config.local.js",
     "dev:local": "ENV=local cross-env npm run env && npx rspack serve -c ./rspack/rspack.config.local.js",
     "bundle": "npx rspack build -c ./rspack/rspack.config.prod.js",
@@ -184,6 +185,7 @@
     "storybook": "^10.3.3",
     "stylelint": "16.10.0",
     "ts-jest": "^29.4.6",
+    "tsc-baseline": "2.1.0",
     "typescript": "5.9.3"
   },
   "lint-staged": {
