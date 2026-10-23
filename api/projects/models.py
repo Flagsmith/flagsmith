@@ -15,7 +15,8 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     LifecycleModelMixin,
     hook,
 )
-
+from task_processor.task_run_method import TaskRunMethod
+from task_processor.models import Task
 from core.models import SoftDeleteExportableModel
 from environments.dynamodb import DynamoProjectMetadata
 from organisations.models import Organisation
@@ -186,9 +187,12 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[d
     def clean_up_dynamo(self):  # type: ignore[no-untyped-def]
         DynamoProjectMetadata(self.id).delete()  # type: ignore[no-untyped-call]
 
-    @hook(AFTER_DELETE)  # type: ignore[misc]
+    @hook(AFTER_DELETE, on_commit=True)  # type: ignore[misc]
     def handle_cascade_delete(self) -> None:
-        handle_cascade_delete.delay(kwargs={"project_id": self.id})
+        Task.objects.create(
+            task_identifier="handle_cascade_delete",
+            kwargs=json.dumps({"project_id": self.id})
+        )
 
     @property
     def is_edge_project_by_default(self) -> bool:
