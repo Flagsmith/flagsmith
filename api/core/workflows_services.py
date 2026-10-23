@@ -25,9 +25,6 @@ class ChangeRequestCommitService:
 
     @transaction.atomic
     def commit(self, committed_by: "FFAdminUser") -> None:
-        from features.dependencies.services import (
-            validate_change_request_flag_dependencies,
-        )
 
         if not self.change_request.is_approved():
             raise ChangeRequestNotApprovedError(
