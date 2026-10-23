@@ -1,6 +1,6 @@
 import json
 from datetime import timedelta
-import unittest.mock as mock
+
 import pytest
 from common.projects.permissions import (
     CREATE_ENVIRONMENT,
@@ -883,6 +883,7 @@ def test_delete_project__existing_project__calls_cascade_delete(
 ) -> None:
     # Given
     from django.test import TestCase
+
     settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
 
     url = reverse("api-v1:projects:project-detail", args=[project.id])
@@ -899,8 +900,7 @@ def test_delete_project__existing_project__calls_cascade_delete(
     mocked_handle_cascade_delete.delay.assert_called_once_with(
         kwargs={"project_id": project.id}
     )
-    
-    
+
 
 def test_create_project__duplicate_name__returns_400(
     admin_client: APIClient,
