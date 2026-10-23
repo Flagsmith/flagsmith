@@ -33,6 +33,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "EXPERIMENTATION_ENABLED",
+                    "value": "true"
+                },
+                {
                     "name": "LOG_LEVEL",
                     "value": "INFO"
                 },
@@ -173,6 +177,10 @@
                     "value": "300"
                 },
                 {
+                    "name": "ENABLE_API_USAGE_ALERTING",
+                    "value": "True"
+                },
+                {
                     "name": "EDGE_RELEASE_DATETIME",
                     "value": "2022-06-07T10:00:00Z"
                 },
@@ -237,12 +245,8 @@
                     "value": "0"
                 },
                 {
-                    "name": "INGESTION_REDIS_URL",
-                    "value": "rediss://serverless-redis-cache-c4q8sw.serverless.euw2.cache.amazonaws.com:6379"
-                },
-                {
-                    "name": "INGESTION_FIREHOSE_DELIVERY_ROLE_ARN",
-                    "value": "arn:aws:iam::084060095745:role/experiment-events-firehose-delivery-external-warehouse"
+                    "name": "ENABLE_EMAIL_ACTIVATION",
+                    "value": "true"
                 }
             ],
             "secrets": [
@@ -260,7 +264,7 @@
                 },
                 {
                     "name": "WAREHOUSE_CREDENTIALS_SECRET",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:warehouse-credentials-secret-230b64b-NwRQAb"
                 },
                 {
                     "name": "E2E_TEST_AUTH_TOKEN",

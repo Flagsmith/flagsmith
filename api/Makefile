@@ -45,6 +45,10 @@ docker-up:
 	docker compose up --force-recreate --remove-orphans -d
 	docker compose ps
 
+.PHONY: docker-ready
+docker-ready:
+	@bash scripts/ensure-services.sh
+
 .PHONY: docker-down
 docker-down:
 	docker compose stop
@@ -66,9 +70,17 @@ wait-for-db:
 	uv run python manage.py waitfordb
 	uv run python manage.py waitfordb --database analytics
 
+# Disable auto xdist for tests invoked via `make test opts=...`
+# Put `-n auto` in `opts` to override.
+PYTEST_PARALLELISM = $(if $(strip $(opts)),,-n auto)
+
 .PHONY: test
-test: docker-up wait-for-db
-	uv run pytest $(opts)
+test: docker-ready
+	uv run pytest $(PYTEST_PARALLELISM) $(opts)
+
+.PHONY: test-coverage
+test-coverage: docker-ready
+	uv run pytest --cov . --cov-report $(or $(format),html) $(PYTEST_PARALLELISM) $(opts)
 
 .PHONY: django-make-migrations
 django-make-migrations: docker-up wait-for-db
@@ -208,6 +220,32 @@ generate-docs-private:
 add-known-sdk-version:
 	uv run python scripts/add-known-sdk-version.py $(opts)
 
+# Exported so the recipe can pass it to jq as a single argument. Do not inline this
+# into the recipe: line continuations inside single quotes are passed to jq verbatim.
+define MASK_ENVIRONMENT_DOCUMENT_JQ
+{
+  id: 0,
+  api_key: "masked",
+  name,
+  use_identity_composite_key_for_hashing,
+  feature_states: [.feature_states[] | select(.feature.id | IN($$ids[]))],
+  project: {
+    id: 0,
+    name: .project.name,
+    hide_disabled_flags: .project.hide_disabled_flags,
+    segments: [],
+    organisation: {
+      id: 0,
+      name: .project.organisation.name,
+      feature_analytics: .project.organisation.feature_analytics,
+      stop_serving_flags: .project.organisation.stop_serving_flags,
+      persist_trait_data: .project.organisation.persist_trait_data
+    }
+  }
+}
+endef
+export MASK_ENVIRONMENT_DOCUMENT_JQ
+
 .PHONY: update-flagsmith-environment
 update-flagsmith-environment:
 	project=$$(jq -er .project ../flagsmith.json) && \
@@ -215,23 +253,6 @@ update-flagsmith-environment:
 	  | jq -er '(if type == "array" then . else .results end) | map(select(.label == "api")) | .[0].id') && \
 	ids=$$(flagsmith api "/api/v1/projects/$$project/features/?tags=$$tag&page_size=1000" --no-input \
 	  | jq -ec '[.results[].id]') && \
-	flagsmith environment document --no-input | jq --argjson ids "$$ids" '{ \
-	  id: 0, \
-	  api_key: "masked", \
-	  name, \
-	  use_identity_composite_key_for_hashing, \
-	  feature_states: [.feature_states[] | select(.feature.id | IN($$ids[]))], \
-	  project: { \
-	    id: 0, \
-	    name: .project.name, \
-	    hide_disabled_flags: .project.hide_disabled_flags, \
-	    segments: [], \
-	    organisation: { \
-	      id: 0, \
-	      name: .project.organisation.name, \
-	      feature_analytics: .project.organisation.feature_analytics, \
-	      stop_serving_flags: .project.organisation.stop_serving_flags, \
-	      persist_trait_data: .project.organisation.persist_trait_data \
-	    } \
-	  } \
-	}' > $(FLAGSMITH_DOCUMENT_PATH)
+	flagsmith environment document --no-input \
+	  | jq --argjson ids "$$ids" "$$MASK_ENVIRONMENT_DOCUMENT_JQ" \
+	  > $(FLAGSMITH_DOCUMENT_PATH)

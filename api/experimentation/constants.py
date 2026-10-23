@@ -1,7 +1,6 @@
 from datetime import timedelta
 
-WAREHOUSE_CONNECTION_FLAG = "experimentation_warehouse_connection"
-EXPERIMENT_FLAG = "experimental_flags"
+WAREHOUSES_FLAG = "experimentation_warehouses"
 
 EXPOSURE_EVENT_NAME = "$flag_exposure"
 """Emitted by SDKs when an identity is served a variant; ``value`` is the
@@ -14,8 +13,9 @@ RESULTS_REFRESH_MIN_INTERVAL = timedelta(minutes=5)
 
 CONTROL_VARIANT_KEY = "control"
 
-DELIVERY_INTERVAL = timedelta(minutes=10)
-DELIVERY_LOG_RETENTION = timedelta(days=60)
+# Capped at one: the Java SDK ANDs sub-rules regardless of the rule type, so a
+# multi-segment `any` audience would evaluate as `all` under local evaluation.
+MAX_AUDIENCE_SEGMENTS = 1
 
 # Below these per-variant floors a metric shows "collecting data" rather than
 # inference; sample-ratio is only checked once there is enough traffic to judge.

@@ -37,8 +37,8 @@
     "generate:tokens": "node scripts/generate-tokens.mjs"
   },
   "engines": {
-    "node": "22.x",
-    "npm": "10.x"
+    "node": "24.x",
+    "npm": ">=11.10 <12"
   },
   "overrides": {
     "react": "$react",
@@ -129,7 +129,7 @@
     "sass-loader": "^17.0.0",
     "semver": "^7.5.2",
     "style-loader": "1.3.0",
-    "toml": "^3.0.0",
+    "toml": "^4.0.0",
     "webpack-bundle-analyzer": "^5.0.0",
     "whatwg-fetch": "3.0.0",
     "x-frame-options": "^1.0.0",
@@ -186,7 +186,7 @@
   },
   "lint-staged": {
     "*.{js,ts,tsx}": "eslint --fix",
-    "common/theme/tokens.json": "npm run generate:tokens && git add common/theme/tokens.ts web/styles/_tokens.scss web/styles/_token-utilities.scss documentation/TokenReference.generated.stories.tsx"
+    "common/theme/tokens.json": "npm run generate:tokens && git add common/theme/tokens.ts web/styles/_tokens.scss web/styles/_primitives.scss web/styles/_token-utilities.scss documentation/TokenReference.generated.stories.tsx"
   },
   "optionalDependencies": {
     "webpack": "^5.105.4"

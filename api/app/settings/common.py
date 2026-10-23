@@ -25,6 +25,7 @@ from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
+from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
 from task_processor.task_run_method import TaskRunMethod
 
 from app.utils import get_numbered_env_vars_with_prefix
@@ -115,6 +116,7 @@ INSTALLED_APPS = [
     "environments.identities",
     "environments.identities.traits",
     "features",
+    "features.dependencies",
     "features.feature_external_resources",
     "features.feature_health",
     "features.import_export",
@@ -204,6 +206,10 @@ if "DATABASE_URL" in os.environ:
             conn_health_checks=DJANGO_DB_CONN_HEALTH_CHECKS,
         ),
     }
+    if DATABASES["default"]["ENGINE"] == "django.db.backends.postgresql":
+        DATABASES["default"].setdefault("OPTIONS", {}).setdefault(
+            "isolation_level", ISOLATION_LEVEL_READ_COMMITTED
+        )
     FLAGSMITH_MIGRATE_DATABASES.append("default")
     FLAGSMITH_WAIT_FOR_MIGRATIONS_DATABASES.append("default")
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
@@ -277,6 +283,7 @@ elif "DJANGO_DB_NAME" in os.environ:
             "PORT": os.environ["DJANGO_DB_PORT"],
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
             "CONN_HEALTH_CHECKS": DJANGO_DB_CONN_HEALTH_CHECKS,
+            "OPTIONS": {"isolation_level": ISOLATION_LEVEL_READ_COMMITTED},
         },
     }
     FLAGSMITH_MIGRATE_DATABASES.append("default")
@@ -348,6 +355,7 @@ TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS = env.int(
     "TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS", default=3600
 )
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
+RESEND_ACTIVATION_THROTTLE_RATE = env("RESEND_ACTIVATION_THROTTLE_RATE", "5/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", default=None)
 MASTER_API_KEY_THROTTLE_RATE = env("MASTER_API_KEY_THROTTLE_RATE", default=None)
 DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", subcast=str, default=[])
@@ -369,11 +377,13 @@ REST_FRAMEWORK = {
         "dcr_register": DCR_THROTTLE_RATE,
         "oidc_token_exchange": OIDC_TOKEN_EXCHANGE_THROTTLE_RATE,
         "signup": SIGNUP_THROTTLE_RATE,
+        "resend_activation": RESEND_ACTIVATION_THROTTLE_RATE,
         "master_api_key": MASTER_API_KEY_THROTTLE_RATE,
         "mfa_code": "5/min",
         "invite": "10/min",
         "user": USER_THROTTLE_RATE,
         "influx_query": "5/min",
+        "usage_data": "30/min",
         "warehouse_connection_write": "10/min",
         "warehouse_connection_read": "60/min",
     },
@@ -555,11 +565,6 @@ PROJECT_NAME = env("PROJECT_NAME", default="Default Project")
 
 AUTH_USER_MODEL = "users.FFAdminUser"
 
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_VERIFICATION = "none"  # TODO: configure email verification
-
 # Set up Email
 SENDGRID_API_KEY = env("SENDGRID_API_KEY", default=None)
 
@@ -613,6 +618,7 @@ SPECTACULAR_SETTINGS = {
         "WarehouseConnectionStatusEnum": (
             "experimentation.models.WarehouseConnectionStatus.choices"
         ),
+        "SegmentManagedByEnum": "segments.models.SegmentManagedBy.choices",
     },
     "COMPONENT_NO_READ_ONLY_REQUIRED": True,
 }
@@ -821,14 +827,6 @@ REDIS_CLUSTER_READ_FROM_REPLICAS = env.bool(
     "REDIS_CLUSTER_READ_FROM_REPLICAS", default=True
 )
 
-# Redis Cluster URL used to communicate with the event ingestion server.
-INGESTION_REDIS_URL = env.str("INGESTION_REDIS_URL", default="")
-
-# ARN of the IAM role Firehose assumes to deliver experiment events to S3.
-INGESTION_FIREHOSE_DELIVERY_ROLE_ARN = env.str(
-    "INGESTION_FIREHOSE_DELIVERY_ROLE_ARN", default=""
-)
-
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
@@ -917,6 +915,12 @@ TRENCH_AUTH = {
     "SECRET_KEY_LENGTH": 32,
 }
 
+# Controls the app domain used in emails (currently invites and change requests).
+# If set, domain stored with `django.contrib.sites` is disregarded.
+DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
+# Used when no Django site is specified.
+DEFAULT_DOMAIN = "app.flagsmith.com"
+
 USER_CREATE_PERMISSIONS = env.list(
     "USER_CREATE_PERMISSIONS", default=["custom_auth.permissions.IsSignupAllowed"]
 )
@@ -928,6 +932,7 @@ DJOSER = {
     "PASSWORD_RESET_CONFIRM_URL": "password-reset/confirm/{uid}/{token}",
     # if True user required to click activation link in email to activate account
     "SEND_ACTIVATION_EMAIL": env.bool("ENABLE_EMAIL_ACTIVATION", default=False),
+    "EMAIL_FRONTEND_DOMAIN": DOMAIN_OVERRIDE,
     # FE uri to redirect user to from activation email
     "ACTIVATION_URL": "activate/{uid}/{token}",
     # register or activation endpoint will send confirmation email to user
@@ -935,6 +940,7 @@ DJOSER = {
     "SEND_CONFIRMATION_EMAIL": False,
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
+        "token_create": "custom_auth.serializers.CustomTokenCreateSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",
         "user_delete": "custom_auth.serializers.CustomUserDelete",
         "current_user": "users.serializers.CustomCurrentUserSerializer",
@@ -980,7 +986,7 @@ OAUTH2_PROVIDER = {
     "ALLOWED_CODE_CHALLENGE_METHODS": ["S256"],
     "SCOPES": {
         "mcp": "MCP access",
-        "admin-api": "Admin API access",
+        "admin-api": "Management API access",
     },
     "DEFAULT_SCOPES": ["mcp"],
     "SCOPES_BACKEND_CLASS": "oauth2_metadata.scopes.FlagsmithScopes",
@@ -988,6 +994,7 @@ OAUTH2_PROVIDER = {
         "authorization_code",
         "refresh_token",
     ],
+    "RESOURCE_SERVER_TOKEN_RESOURCE_VALIDATOR": None,
 }
 
 # Github OAuth credentials
@@ -1153,6 +1160,12 @@ if SCIM_INSTALLED:
         "USER_FILTER_PARSER": "scim.filters.UserFilterQuery",
     }
 
+EDGE_CONTROL_PLANE_INSTALLED = (
+    importlib.util.find_spec("edge_control_plane") is not None
+)
+if EDGE_CONTROL_PLANE_INSTALLED:
+    INSTALLED_APPS.append("edge_control_plane")
+
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Used to keep edge identities in sync by forwarding the http requests
@@ -1286,19 +1299,11 @@ ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
 # hubspot without a Flagsmith organisation.
 CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES = 30
 
-SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
-
 # prevent django-softdelete from performing whole table deletes!
 SOFTDELETE_CASCADE_ALLOW_DELETE_ALL = False
 
 # Used for serializing and deserializing GenericForeignKey(used in metadata) using the natural key of the object
 SERIALIZATION_MODULES = {"json": "import_export.json_serializers_with_metadata_support"}
-
-# Controls the app domain used in emails (currently invites and change requests).
-# If set, domain stored with `django.contrib.sites` is disregarded.
-DOMAIN_OVERRIDE = env.str("FLAGSMITH_DOMAIN", "")
-# Used when no Django site is specified.
-DEFAULT_DOMAIN = "app.flagsmith.com"
 
 # Define the cooldown duration, in seconds, for password reset emails
 PASSWORD_RESET_EMAIL_COOLDOWN = env.int("PASSWORD_RESET_EMAIL_COOLDOWN", 60 * 60 * 24)
@@ -1330,7 +1335,7 @@ FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID = env.int(
 )
 
 # The URL used to install the GitHub integration
-GITHUB_APP_URL = env.int(
+GITHUB_APP_URL = env.str(
     "GITHUB_APP_URL",
     default=None,
 )
@@ -1461,6 +1466,11 @@ WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 
 
 ENABLE_API_USAGE_ALERTING = env.bool("ENABLE_API_USAGE_ALERTING", default=False)
+API_USAGE_ALERT_CC_RECIPIENT_LIST = env.list(
+    "API_USAGE_ALERT_CC_RECIPIENT_LIST",
+    subcast=str,
+    default=[],
+)
 
 # See DomainAuthMethods in flagsmith-auth-controller repository with auth_controller.models module
 GLOBAL_DOMAIN_AUTH_METHODS = env.dict(
@@ -1535,6 +1545,9 @@ CLICKHOUSE_ENABLED = bool(CLICKHOUSE_URL or CLICKHOUSE_HOST)
 
 CLICKHOUSE_CONNECTION_CLIENT_NAME = "flagsmith-core-api"
 
+# Whether the experimentation infra is deployed.
+EXPERIMENTATION_ENABLED = env.bool("EXPERIMENTATION_ENABLED", default=False)
+
 # DSN for the ClickHouse instance holding ingested experimentation events.
 # TODO: consolidate connection management across the two CH use cases
 #  https://github.com/Flagsmith/flagsmith/issues/8033
@@ -1568,7 +1581,7 @@ DATABASE_ROUTERS.append("app.routers.ReplicaRouter")
 
 if CLICKHOUSE_ENABLED:
     _clickhouse_db: dict[str, Any] = {
-        "ENGINE": "core.db_backends.clickhouse",
+        "ENGINE": "clickhouse_backend.backend",
         "HOST": CLICKHOUSE_HOST,
         "PORT": CLICKHOUSE_PORT,
         "USER": CLICKHOUSE_USER,

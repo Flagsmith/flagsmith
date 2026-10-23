@@ -6,6 +6,8 @@ export interface DateSelectProps
   extends Pick<DatePickerProps, 'dateFormat' | 'selected'> {
   value?: DatePickerProps['value']
   className?: string
+  // Forwarded to the underlying input so a label's htmlFor can reach it.
+  id?: string
   isValid?: boolean
   onChange?: (
     date: Date | null,
@@ -16,6 +18,7 @@ export interface DateSelectProps
 const DateSelect: FC<DateSelectProps> = ({
   className,
   dateFormat,
+  id,
   isValid,
   onChange,
   selected,
@@ -29,6 +32,7 @@ const DateSelect: FC<DateSelectProps> = ({
   return (
     <Flex className='position-relative'>
       <DatePicker
+        id={id}
         className={`${className} ${!isValid && touched ? 'invalid' : ''}`}
         dateFormat={dateFormat}
         onFocus={() => setTouched(true)}

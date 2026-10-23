@@ -1,4 +1,5 @@
 import Dispatcher from 'common/dispatcher/dispatcher'
+import { sortMultivariateOptions } from 'common/utils/multivariate'
 import BaseStore from './base/_store'
 import data from 'common/data/base/_data'
 import { addFeatureSegmentsToFeatureStates } from 'common/services/useFeatureState'
@@ -70,7 +71,14 @@ const controller = {
           .then(([environmentFlag, projectFlag]) => {
             store.flags[id] = {
               environmentFlag: environmentFlag.results[0],
-              projectFlag,
+              // Every other read of a feature sorts these, so without it the
+              // change request lists the variations in a different order.
+              projectFlag: {
+                ...projectFlag,
+                multivariate_options:
+                  projectFlag.multivariate_options &&
+                  sortMultivariateOptions(projectFlag.multivariate_options),
+              },
             }
           })
           .finally(() => {

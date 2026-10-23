@@ -87,6 +87,9 @@ class SegmentManagedBy(models.TextChoices):
     # value every unmanaged segment carries.
     UNMANAGED = "", "Unmanaged"
     COHORT = "cohort", "Cohort"
+    DEPENDENCY = "dependency", "Flag dependency"
+    EXPERIMENT = "experiment", "Experiment"
+    RELEASE_PIPELINE = "release_pipeline", "Gradual rollout"
 
 
 class Segment(
@@ -111,7 +114,7 @@ class Segment(
     )
 
     rules_data: models.JSONField[
-        list[SegmentRuleType], list[SegmentRuleType] | None
+        list[SegmentRuleType] | None, list[SegmentRuleType] | None
     ] = models.JSONField(null=True)
 
     version = models.IntegerField(default=1, null=True)

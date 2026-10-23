@@ -1,5 +1,6 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import Tooltip from 'components/Tooltip'
 import { IonIcon } from '@ionic/react'
 import { informationCircle } from 'ionicons/icons'
@@ -96,20 +97,17 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
         given environment.
       </InfoMessage>
       <div className='mb-2'>
-        <Tooltip
-          title={
-            <>
-              <strong>Environment</strong>
-              <IonIcon icon={informationCircle} />
-            </>
-          }
+        <FieldLabel
+          htmlFor='export-environment'
+          tooltip='Select the environment to use for the export.'
         >
-          {'Select the environment to use for the export.'}
-        </Tooltip>
+          Environment
+        </FieldLabel>
       </div>
       <div className='row'>
         <div className='my-2 col-6 col-lg-4'>
           <EnvironmentSelect
+            inputId='export-environment'
             projectId={projectId}
             onChange={setEnvironment}
             value={environment}

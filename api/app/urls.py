@@ -1,6 +1,7 @@
 import importlib
 
 from common.core.urls import urlpatterns as core_urlpatterns
+from common.core.utils import is_saas
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
@@ -33,10 +34,6 @@ if not settings.TASK_PROCESSOR_MODE:
         ),
         re_path(r"^api/v1/", include("api.urls.v1", namespace="api-v1")),
         re_path(r"^api/v2/", include("api.urls.v2", namespace="api-v2")),
-        re_path(
-            r"^api/experiments/",
-            include("api.urls.experiments", namespace="api-experiments"),
-        ),
         re_path(
             r"^api/__future__/", include("api.urls.future", namespace="api-future")
         ),
@@ -122,6 +119,16 @@ if settings.SCIM_INSTALLED:  # pragma: no cover
             "api/v1/organisations/<int:organisation_pk>/scim/",
             include("scim.urls"),
         ),
+    ]
+
+# SaaS images ship the private wheel, so is_saas() is the gate, not module presence.
+if settings.EDGE_CONTROL_PLANE_INSTALLED and not is_saas():  # pragma: no cover
+    urlpatterns += [
+        path(
+            "api/v1/organisations/<int:organisation_pk>/edge-proxy/",
+            include("edge_control_plane.management_urls"),
+        ),
+        path("api/v1/proxy/", include("edge_control_plane.urls")),
     ]
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover

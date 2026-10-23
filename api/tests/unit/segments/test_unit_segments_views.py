@@ -2,6 +2,8 @@ import json
 import random
 from collections.abc import Callable
 from copy import deepcopy
+from datetime import timedelta
+from unittest.mock import MagicMock
 
 import freezegun
 import pytest
@@ -12,11 +14,13 @@ from common.projects.permissions import (
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
+from django.utils import timezone
 from flag_engine.segments.constants import EQUAL
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -28,6 +32,7 @@ from cohorts.models import Cohort
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
+from features.workflows.core.models import ChangeRequest
 from metadata.models import (
     Metadata,
     MetadataField,
@@ -47,6 +52,7 @@ from segments.models import (
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
 from tests.types import InvalidSegmentRulesCase, WithProjectPermissionsCallable
+from users.models import FFAdminUser
 from util.mappers import map_identity_to_identity_document
 
 User = get_user_model()
@@ -111,6 +117,8 @@ def test_create_segment__valid_rules__creates_segment_with_rules(
         "metadata": [],
         "membership_counts": [],
         "managed_by": "",
+        "cohort": None,
+        "has_overrides": False,
         "rules": [
             {
                 "id": mocker.ANY,
@@ -512,8 +520,8 @@ def test_list_segments__filter_by_edge_identity__returns_only_matching_segments(
     identity_uuid = identity_document["identity_uuid"]
     assert isinstance(identity_uuid, str)
 
-    edge_identity_dynamo_wrapper_mock.get_segment_ids.return_value = (
-        expected_segment_ids
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid.return_value = (
+        identity_document
     )
 
     base_url = reverse("api-v1:projects:project-segments-list", args=[project.id])
@@ -525,7 +533,32 @@ def test_list_segments__filter_by_edge_identity__returns_only_matching_segments(
     # Then
     assert response.json().get("count") == len(expected_segment_ids)
     assert response.json()["results"][0]["id"] == expected_segment_ids[0]
-    edge_identity_dynamo_wrapper_mock.get_segment_ids.assert_called_with(identity_uuid)
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid.assert_called_with(
+        identity_uuid
+    )
+
+
+def test_list_segments__filter_by_unknown_edge_identity__returns_no_segments(
+    project: Project,
+    environment: Environment,
+    identity_matching_segment: Segment,
+    edge_identity_dynamo_wrapper_mock: MagicMock,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    edge_identity_dynamo_wrapper_mock.get_item_from_uuid.side_effect = (
+        ObjectDoesNotExist
+    )
+    base_url = f"/api/v1/projects/{project.id}/segments/"
+
+    # When
+    response = admin_client.get(
+        f"{base_url}?identity=8ce1e2f8-0a0f-4f5c-9f4c-2b4f6f4f4f4f"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["count"] == 0
 
 
 @pytest.mark.parametrize(
@@ -675,8 +708,8 @@ def test_get_segment_by_uuid__existing_segment__returns_segment_data(  # type: i
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), 13),
-        (lazy_fixture("admin_client"), 15),
+        (lazy_fixture("admin_master_api_key_client"), 14),
+        (lazy_fixture("admin_client"), 16),
     ],
 )
 def test_list_segments__without_rbac__expected_num_queries(
@@ -732,8 +765,8 @@ def test_list_segments__system_segment_exists__excludes_system_segment(
 @pytest.mark.parametrize(
     "client, num_queries",
     [
-        (lazy_fixture("admin_master_api_key_client"), 13),
-        (lazy_fixture("admin_client"), 16),
+        (lazy_fixture("admin_master_api_key_client"), 14),
+        (lazy_fixture("admin_client"), 17),
     ],
 )
 def test_list_segments__with_rbac__expected_num_queries(
@@ -1103,6 +1136,8 @@ def test_update_segment__valid_rules__updates_segment_with_rules(
         "metadata": [],
         "membership_counts": [],
         "managed_by": "",
+        "cohort": None,
+        "has_overrides": False,
         "rules": [
             {
                 "id": mocker.ANY,
@@ -2040,6 +2075,8 @@ def test_update_segment__whitelisted_segment_exceeds_max_conditions__returns_200
         "metadata": [],
         "membership_counts": [],
         "managed_by": "",
+        "cohort": None,
+        "has_overrides": False,
         "rules": [
             {
                 "id": mocker.ANY,
@@ -2224,6 +2261,8 @@ def test_clone_segment__valid_name__returns_cloned_segment(
             "metadata": [],
             "membership_counts": [],
             "managed_by": "",
+            "cohort": None,
+            "has_overrides": False,
             "rules": [],  # TODO: Should contain rules as per https://github.com/Flagsmith/flagsmith/issues/7818
         }
     )
@@ -2400,3 +2439,387 @@ def test_clone_segment__cohort_managed__returns_403(
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert Segment.objects.count() == 1
+
+
+def test_list_segments__cohort_managed__returns_cohort_summary(
+    admin_client: APIClient,
+    project: Project,
+    segment: Segment,
+    environment: Environment,
+) -> None:
+    # Given
+    cohort = Cohort.objects.create(environment=environment, segment=segment)
+    plain_segment = Segment.objects.create(name="plain", project=project)
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    results = {result["id"]: result for result in response.json()["results"]}
+    assert results[segment.id]["cohort"] == {
+        "deletion_requested_at": None,
+        "environment": environment.id,
+        "environment_api_key": environment.api_key,
+        "environment_name": environment.name,
+        "id": cohort.id,
+        "source_type": "csv",
+        "version": 0,
+    }
+    assert results[plain_segment.id]["cohort"] is None
+
+
+@pytest.fixture()
+def project_with_change_requests(project: Project) -> Project:
+    project.minimum_change_request_approvals = 1
+    project.save()
+    return project
+
+
+def test_delete_segment__change_requests_disabled__deletes_segment(
+    admin_client: APIClient,
+    project: Project,
+    segment: Segment,
+    segment_featurestate: FeatureState,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not Segment.objects.filter(id=segment.id).exists()
+
+
+def test_delete_segment__no_overrides__deletes_segment(
+    admin_client: APIClient,
+    project_with_change_requests: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project_with_change_requests.id, segment.id],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not Segment.objects.filter(id=segment.id).exists()
+
+
+def test_delete_segment__live_override__returns_409(
+    admin_client: APIClient,
+    project_with_change_requests: Project,
+    segment: Segment,
+    segment_featurestate: FeatureState,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project_with_change_requests.id, segment.id],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_409_CONFLICT
+    assert response.json()["code"] == "change_requests_enabled"
+    assert Segment.objects.filter(id=segment.id).exists()
+
+
+def test_delete_segment__feature_specific_segment_with_live_override__returns_409(
+    admin_client: APIClient,
+    project_with_change_requests: Project,
+    feature: Feature,
+    environment: Environment,
+    feature_specific_segment: Segment,
+) -> None:
+    # Given
+    FeatureState.objects.create(
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature, segment=feature_specific_segment, environment=environment
+        ),
+        feature=feature,
+        environment=environment,
+    )
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project_with_change_requests.id, feature_specific_segment.id],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_409_CONFLICT
+
+
+def test_delete_segment__override_in_uncommitted_change_request__deletes_segment(
+    admin_client: APIClient,
+    project_with_change_requests: Project,
+    segment: Segment,
+    feature: Feature,
+    environment: Environment,
+    change_request: ChangeRequest,
+) -> None:
+    # Given
+    FeatureState.objects.create(
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature, segment=segment, environment=environment
+        ),
+        feature=feature,
+        environment=environment,
+        change_request=change_request,
+        version=None,
+    )
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project_with_change_requests.id, segment.id],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+def test_delete_segment__override_removed_in_later_version__deletes_segment(
+    admin_client: APIClient,
+    project_with_change_requests: Project,
+    segment: Segment,
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    with freezegun.freeze_time("2099-01-01"):
+        version_with_override = EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
+        )
+        FeatureState.objects.create(
+            feature_segment=FeatureSegment.objects.create(
+                feature=feature,
+                segment=segment,
+                environment=environment_v2_versioning,
+                environment_feature_version=version_with_override,
+            ),
+            feature=feature,
+            environment=environment_v2_versioning,
+            environment_feature_version=version_with_override,
+        )
+        version_with_override.publish(admin_user)
+
+    with freezegun.freeze_time("2099-01-02"):
+        # A later version drops the override. Creating a version carries the
+        # previous version's overrides forward, so remove it explicitly.
+        version_without_override = EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
+        )
+        FeatureSegment.objects.filter(
+            environment_feature_version=version_without_override, segment=segment
+        ).delete()
+        version_without_override.publish(admin_user)
+
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project_with_change_requests.id, segment.id],
+    )
+
+    # When
+    with freezegun.freeze_time("2099-01-03"):
+        response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+def test_delete_segment__override_scheduled_to_go_live__returns_409(
+    admin_client: APIClient,
+    project_with_change_requests: Project,
+    segment: Segment,
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.create(
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=version,
+        ),
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version,
+    )
+    version.publish(admin_user, live_from=timezone.now() + timedelta(days=1))
+
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project_with_change_requests.id, segment.id],
+    )
+
+    # When
+    response = admin_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_409_CONFLICT
+
+
+def test_update_segment__change_requests_enabled__returns_409(
+    admin_client: APIClient,
+    project_with_change_requests: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project_with_change_requests.id, segment.id],
+    )
+    data = {
+        "name": "New segment name",
+        "project": project_with_change_requests.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+    }
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_409_CONFLICT
+    assert response.json()["code"] == "change_requests_enabled"
+    segment.refresh_from_db()
+    assert segment.name != "New segment name"
+
+
+def test_partial_update_segment__change_requests_enabled__returns_409(
+    admin_client: APIClient,
+    project_with_change_requests: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project_with_change_requests.id, segment.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data=json.dumps({"description": "Just a description"}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_409_CONFLICT
+
+
+def test_update_segment__change_request_draft__updates_segment(
+    admin_client: APIClient,
+    project_with_change_requests: Project,
+    segment: Segment,
+    project_change_request: ChangeRequest,
+) -> None:
+    """Editing a draft held by a change request is the workflow, not a bypass."""
+    # Given
+    # `clone` leaves `version_of` pointing at the clone itself, which is the
+    # shape the change request API produces when `version_of` is omitted.
+    draft = segment.clone(name="Draft", change_request=project_change_request)
+    assert draft.version_of_id == draft.id
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project_with_change_requests.id, draft.id],
+    )
+    data = {
+        "name": "Edited draft",
+        "project": project_with_change_requests.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+    }
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    draft.refresh_from_db()
+    assert draft.name == "Edited draft"
+
+
+def test_update_segment__draft_of_live_segment__returns_404(
+    admin_client: APIClient,
+    project_with_change_requests: Project,
+    segment: Segment,
+    project_change_request: ChangeRequest,
+) -> None:
+    """A draft of a live segment is not served by this endpoint at all.
+
+    The dashboard sends `version_of`, so the draft is a version rather than a
+    canonical segment, and `Segment.live_objects` excludes it. Such drafts are
+    edited through the change request endpoints.
+    """
+    # Given
+    draft = segment.clone(
+        name="Draft", change_request=project_change_request, version_of=segment
+    )
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project_with_change_requests.id, draft.id],
+    )
+
+    # When
+    response = admin_client.put(
+        url,
+        data=json.dumps(
+            {
+                "name": "Edited draft",
+                "project": project_with_change_requests.id,
+                "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    draft.refresh_from_db()
+    assert draft.name == "Draft"
+
+
+def test_list_segments__mixed_overrides__returns_has_overrides(
+    admin_client: APIClient,
+    project: Project,
+    segment: Segment,
+    another_segment: Segment,
+    segment_featurestate: FeatureState,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    has_overrides_by_id = {
+        result["id"]: result["has_overrides"] for result in response.json()["results"]
+    }
+    assert has_overrides_by_id[segment.id] is True
+    assert has_overrides_by_id[another_segment.id] is False

@@ -10,6 +10,7 @@ import { E2E_USER, PASSWORD } from '../config';
 
 test('Versioning tests - Create, edit, and compare feature versions @oss', async ({ page }, testInfo) => {
     const {
+      variationValueField,
         assertNumberOfVersions,
         click,
         closeModal,
@@ -100,7 +101,7 @@ test('Versioning tests - Create, edit, and compare feature versions @oss', async
     await expect(page.locator(byId('featureVariationKey0'))).toHaveText('primary')
     await click(byId('add-variation'))
     await page.waitForTimeout(200)
-    await setText(byId('featureVariationValue2'), 'huge')
+    await setText(variationValueField(2), 'huge')
     await page.waitForTimeout(500)
     await click(byId('update-feature-btn'))
     await waitForToast()

@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
 import ProjectStore from 'common/stores/project-store'
+import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import CreateWebhookModal from 'components/modals/CreateWebhook'
 import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
@@ -46,7 +48,8 @@ import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import { useRouteContext } from 'components/providers/RouteContext'
 import SettingTitle from 'components/SettingTitle'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
-import PlanBasedBanner from 'components/PlanBasedAccess'
+import { getSegmentSources } from 'components/modals/CreateSegmentSourcesModal'
+import CohortSyncTab from './tabs/cohort-sync-tab'
 import WarehouseTab from './tabs/warehouse-tab'
 
 const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
@@ -116,8 +119,11 @@ const EnvironmentSettingsPage: React.FC = () => {
 
   const has4EyesPermission = Utils.getPlansPermission('4_EYES')
   const metadataEnable = Utils.getPlansPermission('METADATA')
-  const warehouseEnabled = Utils.getFlagsmithHasFeature(
-    'experimentation_warehouse_connection',
+  const { enabled: warehouseEnabled } = useExperimentationEnabled()
+  const cohortSyncEnabled = getSegmentSources().some(
+    (source) =>
+      (source.key === 'amplitude' || source.key === 'mixpanel') &&
+      source.active,
   )
 
   const getEnvironment = useCallback(async () => {
@@ -792,7 +798,6 @@ const EnvironmentSettingsPage: React.FC = () => {
                     </FormGroup>
                   </TabItem>
                   <TabItem tabLabel='Webhooks'>
-                    <hr className='py-0 my-4' />
                     <FormGroup className='mt-4'>
                       <div className='col-md-8'>
                         <h5 className='mb-2'>Feature Webhooks</h5>
@@ -907,44 +912,49 @@ const EnvironmentSettingsPage: React.FC = () => {
                   </TabItem>
                   {warehouseEnabled && (
                     <TabItem tabLabel='Warehouse'>
-                      <PlanBasedBanner
-                        className='mt-4'
-                        feature='WAREHOUSE'
-                        theme='page'
-                      >
-                        <div className='mt-4'>
-                          <WarehouseTab
-                            environmentId={match.params.environmentId}
-                          />
-                        </div>
-                      </PlanBasedBanner>
+                      <div className='mt-4'>
+                        <WarehouseTab
+                          environmentId={match.params.environmentId}
+                        />
+                      </div>
+                    </TabItem>
+                  )}
+                  {cohortSyncEnabled && (
+                    <TabItem tabLabel='Cohorts'>
+                      <div className='mt-4'>
+                        <CohortSyncTab
+                          environmentApiKey={match.params.environmentId}
+                          projectId={projectId ?? ''}
+                        />
+                      </div>
                     </TabItem>
                   )}
                   {metadataEnable && environmentContentType?.id && (
                     <TabItem tabLabel='Custom Fields'>
                       <FormGroup className='mt-5 setting'>
-                        <InputGroup
-                          title={'Custom fields'}
-                          tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
-                            'environments',
-                          )}`}
-                          tooltipPlace='right'
-                          component={
-                            <AddMetadataToEntity
-                              organisationId={AccountStore.getOrganisation().id}
-                              projectId={projectId}
-                              entityId={currentEnv?.api_key ?? ''}
-                              envName={currentEnv?.name}
-                              entityContentType={environmentContentType?.id}
-                              entity={environmentContentType.model}
-                              onMetadataSave={(metadata) => {
-                                setCurrentEnv((prev) =>
-                                  prev ? { ...prev, metadata } : null,
-                                )
-                              }}
-                            />
-                          }
-                        />
+                        <div className='form-group'>
+                          <FieldLabel
+                            tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
+                              'environments',
+                            )}`}
+                            tooltipPlace='right'
+                          >
+                            Custom fields
+                          </FieldLabel>
+                          <AddMetadataToEntity
+                            organisationId={AccountStore.getOrganisation().id}
+                            projectId={projectId}
+                            entityId={currentEnv?.api_key ?? ''}
+                            envName={currentEnv?.name}
+                            entityContentType={environmentContentType?.id}
+                            entity={environmentContentType.model}
+                            onMetadataSave={(metadata) => {
+                              setCurrentEnv((prev) =>
+                                prev ? { ...prev, metadata } : null,
+                              )
+                            }}
+                          />
+                        </div>
                       </FormGroup>
                     </TabItem>
                   )}

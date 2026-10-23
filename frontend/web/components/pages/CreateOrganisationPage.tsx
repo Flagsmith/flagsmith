@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import { useHistory } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
@@ -143,42 +144,37 @@ const CreateOrganisationPage: React.FC = () => {
             onChange={(e: InputEvent) => setName(Utils.safeParseEventValue(e))}
           />
           {showHostingPreferences && (
-            <InputGroup
-              inputProps={{ className: 'full-width', name: 'orgName' }}
-              title={
-                <div>
-                  What is your company's desired hosting option?{' '}
-                  <a
-                    className='text-action'
-                    href='https://docs.flagsmith.com/version-comparison'
-                    target='_blank'
-                    rel='noreferrer'
-                  >
-                    View Docs
-                  </a>
-                </div>
-              }
-              component={
-                <CheckboxGroup
-                  onChange={setHosting}
-                  selectedValues={hosting}
-                  items={[
-                    {
-                      label: 'Public SaaS (Multi Tenant)',
-                      value: 'public_saas',
-                    },
-                    {
-                      label: 'Private SaaS (Single Tenant)',
-                      value: 'private_saas',
-                    },
-                    {
-                      label: 'Self Hosted (in your own cloud)',
-                      value: 'self_hosted',
-                    },
-                  ]}
-                />
-              }
-            />
+            <div className='form-group'>
+              <FieldLabel>
+                What is your company's desired hosting option?{' '}
+                <a
+                  className='text-action'
+                  href='https://docs.flagsmith.com/version-comparison'
+                  target='_blank'
+                  rel='noreferrer'
+                >
+                  View Docs
+                </a>
+              </FieldLabel>
+              <CheckboxGroup
+                onChange={setHosting}
+                selectedValues={hosting}
+                items={[
+                  {
+                    label: 'Public SaaS (Multi Tenant)',
+                    value: 'public_saas',
+                  },
+                  {
+                    label: 'Private SaaS (Single Tenant)',
+                    value: 'private_saas',
+                  },
+                  {
+                    label: 'Self Hosted (in your own cloud)',
+                    value: 'self_hosted',
+                  },
+                ]}
+              />
+            </div>
           )}
 
           <div className='text-right'>

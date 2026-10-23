@@ -327,6 +327,44 @@ def test_create_trust_relationship__duplicate_issuer_and_audience__returns_400(
     ]
 
 
+def test_update_trust_relationship__duplicate_issuer_and_audience__returns_400(
+    admin_client: APIClient,
+    organisation: int,
+    trust_relationship: int,
+) -> None:
+    # Given
+    create_response = admin_client.post(
+        f"/api/v1/organisations/{organisation}/trust-relationships/",
+        data={
+            "name": "GitLab CI",
+            "issuer": "https://gitlab.com",
+            "audience": "https://gitlab.com/Flagsmith",
+            "is_admin": True,
+        },
+        format="json",
+    )
+    assert create_response.status_code == status.HTTP_201_CREATED
+    url = (
+        f"/api/v1/organisations/{organisation}"
+        f"/trust-relationships/{create_response.json()['id']}/"
+    )
+    data = {
+        "name": "GitLab CI",
+        "issuer": "https://token.actions.githubusercontent.com",
+        "audience": "https://github.com/Flagsmith",
+        "is_admin": True,
+    }
+
+    # When
+    response = admin_client.put(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["non_field_errors"] == [
+        "The fields issuer, audience must make a unique set."
+    ]
+
+
 def test_create_trust_relationship__same_issuer_and_audience_as_deleted__returns_201(
     admin_client: APIClient,
     organisation: int,

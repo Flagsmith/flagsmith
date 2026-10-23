@@ -66,7 +66,7 @@ Server Side SDKs can run in 2 different modes: Local Evaluation and Remote Evalu
 </TabItem>
 <TabItem value="go" label="Go">
 
-- Version Compatibility: **Go 1.18+**
+- Version Compatibility: **Go 1.25+**
 - Source Code: https://github.com/Flagsmith/flagsmith-go-client
 
 </TabItem>
@@ -150,6 +150,13 @@ pip install flagsmith
 ```bash
 npm install @flagsmith/nodejs
 ```
+
+:::warning
+
+The Node.js SDK moved from `flagsmith-nodejs` to `@flagsmith/nodejs` in version 9.0.0. The `flagsmith-nodejs` package is
+deprecated and no longer receives updates. Replace it in your `package.json` and update your imports.
+
+:::
 
 </TabItem>
 <TabItem value="ruby" label="Ruby">

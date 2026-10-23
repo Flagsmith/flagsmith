@@ -11,9 +11,13 @@ To install dev dependencies, run `make install opts='--extra dev'`. Only Flagsmi
 
 To run linters, run `make lint`.
 
-To run tests, run `make test`.
+To run tests, run `make test`. This runs tests in parallel across your cores via xdist.
 
-To run a subset of tests or an individual test, run `make test opts='<pytest args>'`. If the number of test is too low for xdist, consider adding `-n0` to pytest args.
+To run a subset of tests or an individual test, run `make test opts='<pytest args>'`. This disables xdist by default; add `-n auto` to pytest args to override.
+
+To measure coverage, run `make test-coverage`.
+
+Tests run against `test-db`, a separate PostgreSQL service that keeps its data in RAM. In general, you should not need `--reuse-db`, but it is supported.
 
 To prepare a dev database, run `make docker-up django-migrate`.
 
@@ -69,6 +73,7 @@ In your tests, verify your logs with the `caplog` fixture:
 ```python
 from pytest_structlog import StructuredLogCapture
 
+
 def test_my_view__success__logs_expected(
     log: StructuredLogCapture,
 ) -> None:
@@ -122,7 +127,7 @@ Add your feature as early as possible to the Flagsmith on Flagsmith project. You
 
 Self-hosted installations evaluate against the offline defaults in `integrations/flagsmith/data/environment.json`, so a flag that is missing from it falls back to the default value at its call site. That document holds only the flags tagged `api`, so tag yours or it will not reach self-hosted installations.
 
-To refresh it, run `make update-flagsmith-environment`. This needs the [Flagsmith CLI](https://docs.flagsmith.com/integrating-with-flagsmith/CLI) and an Admin API credential — a browser login via `flagsmith login` is enough. The `update-flagsmith-environment` workflow runs the same target daily and opens a pull request, so dispatching it is the alternative to running it yourself.
+To refresh it, run `make update-flagsmith-environment`. This needs the [Flagsmith CLI](https://docs.flagsmith.com/integrating-with-flagsmith/CLI) and a Management API credential — a browser login via `flagsmith login` is enough. The `update-flagsmith-environment` workflow runs the same target daily and opens a pull request, so dispatching it is the alternative to running it yourself.
 
 ### Code guidelines: migrations
 

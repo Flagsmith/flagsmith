@@ -1,0 +1,26 @@
+.csv-preview {
+  &__section-label {
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  &__table {
+    border: 1px solid var(--color-border-default);
+
+    table {
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 12px 16px;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-top: 1px solid var(--color-border-default);
+      color: var(--color-text-secondary);
+    }
+  }
+}

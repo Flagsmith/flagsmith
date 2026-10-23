@@ -1,0 +1,19 @@
+// Layout, spacing and radius come from utilities; this is what they cannot
+// express. `border-1` is not an option here: it uses a black alpha, so it all
+// but disappears in dark mode.
+.provider-card {
+  border: 1px solid var(--color-border-default);
+
+  &:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface-subtle);
+  }
+
+  &__body {
+    min-width: 0;
+  }
+
+  &__title {
+    font-weight: var(--font-weight-medium);
+  }
+}

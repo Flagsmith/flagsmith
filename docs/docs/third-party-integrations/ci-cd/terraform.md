@@ -15,7 +15,7 @@ your Infrastructure as Code tooling.
 You can find the latest Hashicorp docs for using the Flagsmith provider
 [here](https://registry.terraform.io/providers/Flagsmith/flagsmith/latest/docs).
 
-Some API actions require object UUIDs/IDs to be referenced. You can enable the [JSON View](/integrating-with-flagsmith/flagsmith-api-overview/admin-api)
+Some API actions require object UUIDs/IDs to be referenced. You can enable the [JSON View](/integrating-with-flagsmith/flagsmith-api-overview/management-api)
 from your account settings page which will help you access these variables.
 
 :::
@@ -25,7 +25,7 @@ from your account settings page which will help you access these variables.
 ### Organisation API Key
 
 In order to configure the Flagsmith Terraform provider we need an API key. To generate one, head over to the
-Organisation Settings page (click `Organisation` at the top of the page), then `API Keys`, then `Create API Key`.
+Organisation Settings page (click `Organisation` at the top of the page), then `API Access`, then `Create API Key`.
 
 :::info
 

@@ -1,15 +1,9 @@
 from datetime import timedelta
 
-import pytest
-from django.conf import settings as test_settings
 from django.utils import timezone
 from django_test_migrations.migrator import Migrator
 
 
-@pytest.mark.skipif(
-    test_settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
 def test_fix_scheduled_fs_migration__corrupted_feature_states__restores_data(
     migrator: Migrator,
 ) -> None:

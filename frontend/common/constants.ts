@@ -198,6 +198,8 @@ const Constants = {
       'React Native': 'javascript',
     },
   },
+  cohortSyncKeyPermissions:
+    'To manage cohort synchronisation keys you need the <i>Manage segment overrides</i> permission for this environment and the <i>Manage segments</i> permission for this project.<br/>Please contact an administrator.',
   colours: {
     primary: '#6837fc',
     white: '#ffffff',
@@ -283,6 +285,29 @@ const Constants = {
     'ONBOARDING_FLAG_TOGGLED': {
       'category': 'Onboarding',
       'event': 'Onboarding flag toggled',
+    },
+    'ONBOARDING_ROLLOUT_CONTINUED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout quest continued',
+    },
+    // Only "Maybe later". Closing the modal from its chrome is not tracked, so
+    // abandonment is viewed minus continued minus this.
+    'ONBOARDING_ROLLOUT_DISMISSED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout quest dismissed',
+    },
+    'ONBOARDING_ROLLOUT_FEEDBACK': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout feedback opened',
+    },
+    // The fake door's only real signal: demand for one-click rollouts.
+    'ONBOARDING_ROLLOUT_NOTIFY_ME': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout notify me',
+    },
+    'ONBOARDING_ROLLOUT_VIEWED': {
+      'category': 'Onboarding',
+      'event': 'Onboarding rollout quest viewed',
     },
     'ONBOARDING_SNIPPET_COPIED': {
       'category': 'Onboarding',
@@ -604,10 +629,12 @@ const Constants = {
   pages: {
     'ACCOUNT': 'Account Page',
     'AUDIT_LOG': 'Audit Log Page',
+    'CHECK_EMAIL': 'Check Email Page',
     'COMING_SOON': 'Coming Soon Page',
     'CREATE_ENVIRONMENT': 'Create Environment Page',
     'CREATE_ORGANISATION': 'Create Organisation Page',
     'DOCUMENTATION': 'Documentation Page',
+    'EMAIL_ACTIVATION': 'Email Activation Page',
     'ENVIRONMENT_SETTINGS': 'Environment Settings Page',
     'FEATURES': 'Features Page',
     'HOME': 'Home Page',
@@ -673,6 +700,8 @@ const Constants = {
       'Environments are versions of your projects, environments within a project all share the same features but can be individually turned on/off or have different values.',
     ENVIRONMENT_OVERRIDE_DESCRIPTION: (name: string) =>
       `Features are created once per project<br/>but their <strong>value</strong> and <strong>enabled state</strong> are set per environment.<br/>Saving this feature will override the <strong>${name}</strong> environment.`,
+    FEATURE_DEPENDENCIES_DESCRIPTION:
+      'Gate this feature behind other features. A dependency applies to this environment only. It beats segment overrides, and an identity override beats it.',
     FEATURE_FLAG_DESCRIPTION:
       'A feature that you can turn on or off per environment or user, e.g. instant messaging for a mobile app or an endpoint for an API.',
     HIDE_FROM_SDKS_DESCRIPTION:

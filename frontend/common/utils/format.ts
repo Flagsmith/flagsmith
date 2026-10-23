@@ -4,6 +4,8 @@ type Person = {
   email?: string
 }
 
+type NullableNumber = number | null | undefined
+
 const Format = {
   camelCase(val: string): string {
     // hello world > Hello world
@@ -39,9 +41,14 @@ const Format = {
 
   newLineDelimiter: '↵',
 
-  shortenNumber(number: number): string {
+  shortenNumber(number: NullableNumber): string {
     // Converts a float number into a short literal with suffix for the magnitude:
     // 1523125 > 1.5M
+    // Guarded because the maths below takes log10 of the value, so zero and
+    // anything missing come back as NaN.
+    if (!number || !Number.isFinite(number)) {
+      return '0'
+    }
     const suffixes = ['', 'K', 'M', 'B', 'T']
     const numDigits = Math.floor(Math.log10(number)) + 1
     const suffixIndex = Math.floor((numDigits - 1) / 3)

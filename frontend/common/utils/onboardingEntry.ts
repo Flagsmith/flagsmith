@@ -20,9 +20,13 @@ export type OnboardingEntryDecision = {
  * the logged-in user, and the routing it should have driven has happened.
  * Call `persistOnboardingEntry` with an accepted decision.
  */
-export async function decideOnboardingEntry(): Promise<OnboardingEntryDecision> {
+export async function decideOnboardingEntry(
+  email?: string,
+): Promise<OnboardingEntryDecision> {
+  // Only used to match segment overrides, not for bucketing. An override on
+  // another trait needs that trait passed here too.
   // @ts-expect-error transient is missing from the SDK's identify type
-  await flagsmith.identify('', {}, true)
+  await flagsmith.identify('', email ? { email } : {}, true)
   const flag = flagsmith.getExperimentFlag('onboarding_quickstart_flow')
   const identifier = flagsmith.getContext().identity?.identifier
   const variant: OnboardingVariant =

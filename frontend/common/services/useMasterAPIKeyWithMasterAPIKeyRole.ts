@@ -30,13 +30,13 @@ export const masterAPIKeyWithMasterAPIKeyRoleService = service
         }),
       }),
       getRolesMasterAPIKeyWithMasterAPIKeyRoles: builder.query<
-        Res['masterAPIKeyWithMasterAPIKeyRoles'],
-        Req['getMasterAPIKeyWithMasterAPIKeyRoles']
+        Res['rolesMasterAPIKeyWithMasterAPIKeyRoles'],
+        Req['getRolesMasterAPIKeyWithMasterAPIKeyRoles']
       >({
-        providesTags: (res) => [
-          { id: res?.id, type: 'MasterAPIKeyWithMasterAPIKeyRole' },
+        providesTags: (_res, _error, query) => [
+          { id: query.prefix, type: 'MasterAPIKeyWithMasterAPIKeyRole' },
         ],
-        query: (query: Req['getMasterAPIKeyWithMasterAPIKeyRoles']) => ({
+        query: (query: Req['getRolesMasterAPIKeyWithMasterAPIKeyRoles']) => ({
           url: `organisations/${query.org_id}/master-api-keys/${query.prefix}/roles/`,
         }),
       }),
@@ -87,7 +87,7 @@ export async function getRolesMasterAPIKeyWithMasterAPIKeyRoles(
 
 export async function deleteMasterAPIKeyWithMasterAPIKeyRoles(
   store: any,
-  data: Req['getMasterAPIKeyWithMasterAPIKeyRoles'],
+  data: Req['deleteMasterAPIKeyWithMasterAPIKeyRoles'],
   options?: Parameters<
     typeof masterAPIKeyWithMasterAPIKeyRoleService.endpoints.deleteMasterAPIKeyWithMasterAPIKeyRoles.initiate
   >[1],

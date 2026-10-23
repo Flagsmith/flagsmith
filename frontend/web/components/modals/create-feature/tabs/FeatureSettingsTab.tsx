@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
+import FieldLabel from 'components/base/forms/FieldLabel'
 import { ProjectFlag } from 'common/types/responses'
 import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
@@ -175,18 +176,17 @@ const FeatureSettingsTab: FC<FeatureSettingsTabProps> = ({
           )}
           {!identity && projectFlag?.tags && (
             <FormGroup className='mb-3 setting'>
-              <InputGroup
-                title={'Tags'}
-                tooltip={Constants.strings.TAGS_DESCRIPTION}
-                component={
-                  <AddEditTags
-                    readOnly={!!identity || !createFeature}
-                    projectId={`${projectId}`}
-                    value={projectFlag.tags}
-                    onChange={(tags) => onChange({ ...projectFlag, tags })}
-                  />
-                }
-              />
+              <div className='form-group'>
+                <FieldLabel tooltip={Constants.strings.TAGS_DESCRIPTION}>
+                  Tags
+                </FieldLabel>
+                <AddEditTags
+                  readOnly={!!identity || !createFeature}
+                  projectId={`${projectId}`}
+                  value={projectFlag.tags}
+                  onChange={(tags) => onChange({ ...projectFlag, tags })}
+                />
+              </div>
             </FormGroup>
           )}
           {metadataEnable && featureContentType?.id && !identity && (

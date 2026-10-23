@@ -23,7 +23,12 @@ class ChangeRequestCommitService:
     def __init__(self, change_request: "ChangeRequest") -> None:
         self.change_request = change_request
 
+    @transaction.atomic
     def commit(self, committed_by: "FFAdminUser") -> None:
+        from features.dependencies.services import (
+            validate_change_request_flag_dependencies,
+        )
+
         if not self.change_request.is_approved():
             raise ChangeRequestNotApprovedError(
                 "Change request has not been approved by all required approvers."
@@ -129,5 +134,6 @@ class ChangeRequestCommitService:
             live_segment.name = draft_segment.name
             live_segment.description = draft_segment.description
             live_segment.feature = draft_segment.feature
+            live_segment.rules_data = draft_segment.rules_data
             live_segment.save()
             live_segment.copy_rules_and_conditions_from(draft_segment)

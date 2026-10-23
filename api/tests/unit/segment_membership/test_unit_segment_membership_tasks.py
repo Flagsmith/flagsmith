@@ -151,6 +151,54 @@ def test_seed_organisation_identities__insert_fails__logs_and_continues(
     ]
 
 
+def test_seed_organisation_identities__traitless_identities__are_not_mirrored(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    flagsmith_identities_table: Table,
+    dynamo_identities: None,
+    enable_features: EnableFeaturesFixture,
+) -> None:
+    # Given
+    enable_features("segment_membership_inspection")
+    settings.CLICKHOUSE_ENABLED = True
+    mocker.patch.object(tasks, "_INSERT_BATCH_SIZE", 1)
+
+    cursor = MagicMock()
+    open_cursor = mocker.patch.object(tasks, "open_clickhouse_cursor")
+    open_cursor.return_value.__enter__.return_value = cursor
+    mocker.patch.object(tasks, "enqueue_membership_refresh")
+
+    for identifier, extra in (
+        ("dave", {}),
+        ("erin", {"system_traits": {"flagsmith_cohort_e2b1": True}}),
+    ):
+        flagsmith_identities_table.put_item(
+            Item={
+                "composite_key": f"{environment.api_key}_{identifier}",
+                "environment_api_key": environment.api_key,
+                "identifier": identifier,
+                "identity_uuid": f"f47ac10b-58cc-4372-a567-0e02b2c3d4{identifier[:2]}",
+                "identity_traits": [],
+                **extra,
+            }
+        )
+
+    # When
+    seed_organisation_identities(project.organisation_id)
+
+    # Then
+    insert_identity_payloads = [
+        call.args[1][0] for call in cursor.executemany.call_args_list
+    ]
+    inserted_identifiers = sorted(payload[1] for payload in insert_identity_payloads)
+
+    # 'dave' is not included in the list of inserted identities
+    assert inserted_identifiers == ["alice", "carol", "erin"]
+
+
 @pytest.mark.clickhouse
 def test_seed_organisation_identities__matching_identities__inserts_rows_versioned_at_scan_start(
     mocker: MockerFixture,

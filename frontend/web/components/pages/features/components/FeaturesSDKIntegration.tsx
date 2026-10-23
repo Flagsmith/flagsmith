@@ -9,11 +9,13 @@ import { openIntegrationModal } from 'components/integrations/openIntegrationMod
 type FeaturesSDKIntegrationProps = {
   projectId: number
   environmentId: string
+  totalFeatures?: number
 }
 
 export const FeaturesSDKIntegration: FC<FeaturesSDKIntegrationProps> = ({
   environmentId,
   projectId,
+  totalFeatures,
 }) => {
   const hasMcp = Utils.hasIntegration('mcp')
   return (
@@ -48,6 +50,7 @@ export const FeaturesSDKIntegration: FC<FeaturesSDKIntegrationProps> = ({
         <TryIt
           title='Test what values are being returned from the API on this environment'
           environmentId={environmentId}
+          totalFeatures={totalFeatures}
         />
       </FormGroup>
     </>

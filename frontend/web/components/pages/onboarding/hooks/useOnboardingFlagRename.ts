@@ -1,10 +1,10 @@
 import {
-  useCreateProjectFlagMutation,
   useGetProjectFlagsQuery,
   useRemoveProjectFlagMutation,
 } from 'common/services/useProjectFlag'
+import { getStore } from 'common/store'
 import { Environment } from 'common/types/responses'
-import { Req } from 'common/types/requests'
+import { createOnboardingFlag } from './createOnboardingFlag'
 
 type UseOnboardingFlagRenameArgs = {
   projectId: number | null
@@ -14,8 +14,9 @@ type UseOnboardingFlagRenameArgs = {
 
 // "Rename" the flag. Feature names are immutable (the API marks `name`
 // read-only), so this is a delete + recreate: create first (no name conflict),
-// then drop the old one, carrying over its tags/type/description so the
-// Onboarding badge survives. Resolves true on success.
+// then drop the old one, carrying over its tags/description so the Onboarding
+// badge survives. Recreated via createOnboardingFlag so it stays multivariate.
+// Resolves true on success.
 export const useOnboardingFlagRename = ({
   environment,
   featureName,
@@ -28,7 +29,6 @@ export const useOnboardingFlagRename = ({
     },
     { skip: !projectId || !environment },
   )
-  const [createProjectFlag] = useCreateProjectFlagMutation()
   const [removeProjectFlag] = useRemoveProjectFlagMutation()
 
   const flag = projectFlags?.results?.find((f) => f.name === featureName)
@@ -38,16 +38,12 @@ export const useOnboardingFlagRename = ({
       return false
     }
     try {
-      await createProjectFlag({
-        body: {
-          description: flag.description,
-          name,
-          project: projectId,
-          tags: flag.tags,
-          type: flag.type,
-        } as Req['createProjectFlag']['body'],
-        project_id: projectId,
-      }).unwrap()
+      await createOnboardingFlag(getStore(), {
+        description: flag.description,
+        name,
+        projectId,
+        tags: flag.tags,
+      })
       await removeProjectFlag({
         flag_id: flag.id,
         project_id: projectId,

@@ -14,7 +14,7 @@ import { sortBy } from 'lodash'
 import Project from 'common/project'
 import { getStore } from 'common/store'
 import { setSelectedOrganisationId } from 'common/selectedOrganisationSlice'
-import { hidePylon, identifyChatUser } from 'common/loadChat'
+import { hideChat, identifyChatUser } from 'common/loadChat'
 import { service } from 'common/service'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 import { createOnboardingSupportOptIn } from 'common/services/useOnboardingSupportOptIn'
@@ -200,7 +200,8 @@ const controller = {
         })
       })
       .catch((e) => API.ajaxHandler(store, e)),
-  login: ({ email, password }) => {
+  login: ({ email, isGettingStarted, password }) => {
+    store.lastLoginEmail = email
     store.loading()
     data
       .post(`${Project.api}auth/login/`, {
@@ -221,7 +222,7 @@ const controller = {
         }
 
         data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
-        return controller.onLogin()
+        return controller.onLogin(isGettingStarted)
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
@@ -277,37 +278,61 @@ const controller = {
     return controller.getOrganisations(isGettingStarted)
   },
   register: ({ contact_consent_given, organisation_name, ...user }) => {
+    store.pendingEmailVerification = null
     store.saving()
     return data
-      .post(`${Project.api}auth/users/`, {
-        ...user,
-        hubspotutk: API.getCookie('hubspotutk'),
-        invite_hash: API.getInvite() || undefined,
-        referrer: API.getReferrer() || '',
-        sign_up_type: API.getInviteType(),
-      })
+      .post(
+        `${Project.api}auth/users/`,
+        {
+          ...user,
+          hubspotutk: API.getCookie('hubspotutk'),
+          invite_hash: API.getInvite() || undefined,
+          referrer: API.getReferrer() || '',
+          sign_up_type: API.getInviteType(),
+        },
+        // Lets the API activate E2E signups inline - there is no mailbox to
+        // collect a verification link from.
+        E2E ? { 'X-E2E-Test-Auth-Token': Project.e2eToken } : {},
+      )
       .then(async (res) => {
+        const trackSignup = () => {
+          API.trackEvent(Constants.events.REGISTER)
+          const freeEmailDomain = isFreeEmailDomain(user.email)
+          try {
+            flagsmith.trackEvent('new_signup', {
+              metadata: {
+                ...(freeEmailDomain && { domain: user.email.split('@')[1] }),
+                free_email_domain: freeEmailDomain,
+                invite: !!API.getInvite(),
+                signup_method: 'email',
+                utm_source: user.utm_data?.utm_source,
+              },
+            })
+          } catch (e) {
+            // never let analytics break the signup flow
+          }
+          if (API.getReferrer()) {
+            API.trackEvent(
+              Constants.events.REFERRER_REGISTERED(
+                API.getReferrer().utm_source,
+              ),
+            )
+          }
+        }
+
+        // No session to establish: an inactive account 401s every
+        // authenticated request, which logs us straight back out.
+        if (!res.is_active) {
+          trackSignup()
+          // Only `loaded()` clears this, and we never reach it from here.
+          store.error = null
+          store.pendingEmailVerification = user.email
+          store.saved()
+          return
+        }
+
         data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
-        API.trackEvent(Constants.events.REGISTER)
-        const freeEmailDomain = isFreeEmailDomain(user.email)
-        try {
-          flagsmith.trackEvent('new_signup', {
-            metadata: {
-              ...(freeEmailDomain && { domain: user.email.split('@')[1] }),
-              free_email_domain: freeEmailDomain,
-              invite: !!API.getInvite(),
-              signup_method: 'email',
-              utm_source: user.utm_data?.utm_source,
-            },
-          })
-        } catch (e) {
-          // never let analytics break the signup flow
-        }
-        if (API.getReferrer()) {
-          API.trackEvent(
-            Constants.events.REFERRER_REGISTERED(API.getReferrer().utm_source),
-          )
-        }
+        trackSignup()
         if (organisation_name) {
           await controller.createOrganisation(organisation_name)
         }
@@ -350,6 +375,16 @@ const controller = {
     API.setCookie('organisation', `${id}`)
     store.organisation = find(store.model.organisations, { id })
     getStore().dispatch(setSelectedOrganisationId(id))
+    // Keep the org-scoped traits pointing at the organisation on screen, so
+    // org-scoped segments are evaluated against it. setTraits rather than
+    // identify: the identity is unchanged, so bucketing is undisturbed.
+    flagsmith
+      .setTraits({
+        'organisation.id': String(id),
+        'organisation.name': store.organisation?.name ?? '',
+        'subscription.plan': store.organisation?.subscription?.plan ?? '',
+      })
+      .catch(() => {})
     store.changed()
     identifyChatUser()
   },
@@ -369,6 +404,8 @@ const controller = {
       })
       user.organisations = sortedOrganisations
       store.model = user
+      store.pendingEmailVerification = null
+      store.lastLoginEmail = null
       if (user && user.organisations) {
         store.organisation = user.organisations[0]
         const cookiedID = API.getCookie('organisation')
@@ -412,7 +449,7 @@ const controller = {
       ).finally(() => {
         API.setCookie('t', '')
         data.setToken(null)
-        hidePylon()
+        hideChat()
         API.reset().finally(() => {
           store.model = user
           store.organisation = null
@@ -547,6 +584,8 @@ const store = Object.assign({}, BaseStore, {
   isSuper() {
     return store.model && store.model.is_superuser
   },
+  lastLoginEmail: null,
+  pendingEmailVerification: null,
   setToken(token) {
     data.token = token
   },

@@ -1,18 +1,36 @@
+import dj_database_url
+
 from app.settings.common import *  # noqa
 from app.settings.common import (
     DATABASES,
     INSTALLED_APPS,
     LDAP_INSTALLED,
     REST_FRAMEWORK,
+    env,
 )
 
-# TODO: remove once permissions are an enum --
+for alias, variable in (
+    ("default", "TEST_DATABASE_URL"),
+    ("analytics", "TEST_ANALYTICS_DATABASE_URL"),
+):
+    if alias in DATABASES and (url := env.str(variable, default="")):
+        DATABASES[alias] = {**DATABASES[alias], **dj_database_url.parse(url)}
+
+PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+# TODO: remove once permissions are an enum
 # https://github.com/Flagsmith/flagsmith/issues/7850
 DATABASES["default"]["ENGINE"] = "core.db_backends.postgresql"
+
 
 if LDAP_INSTALLED:
     INSTALLED_APPS = INSTALLED_APPS + ["flagsmith_ldap"]
     LDAP_DEFAULT_FLAGSMITH_ORGANISATION_ID = None
+
+# Otherwise rule and condition ordering is whatever the database returns.
+# Can cause issues downstream when using other database engines.
+SEGMENT_CONDITIONS_EXPLICIT_ORDERING_ENABLED = True
+SEGMENT_RULES_EXPLICIT_ORDERING_ENABLED = True
 
 # We dont want to track tests
 ENABLE_TELEMETRY = False
@@ -25,9 +43,11 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "mfa_code": "5/min",
     "invite": "10/min",
     "signup": "100/min",
+    "resend_activation": "100/min",
     "user": "100000/day",
     "master_api_key": "100000/day",
     "influx_query": "50/min",
+    "usage_data": "50/min",
     "warehouse_connection_write": "1000/min",
     "warehouse_connection_read": "1000/min",
 }
@@ -38,6 +58,9 @@ USE_CACHE_FOR_USAGE_DATA = False
 RETRY_WEBHOOKS = True
 
 INFLUXDB_BUCKET = "test_bucket"
+
+# Lets experimentation tests exercise the feature flags alone.
+EXPERIMENTATION_ENABLED = True
 
 SUBSCRIPTION_LICENCE_PRIVATE_KEY = """
 -----BEGIN PRIVATE KEY-----

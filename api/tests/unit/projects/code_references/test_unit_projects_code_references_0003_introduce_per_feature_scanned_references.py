@@ -1,14 +1,6 @@
 import freezegun
-import pytest
-from django.conf import settings as test_settings
 from django.utils import timezone
 from django_test_migrations.migrator import Migrator
-
-pytestmark = pytest.mark.skipif(
-    test_settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
-
 
 _INITIAL = ("code_references", "0002_add_project_repo_created_index")
 _TARGET = ("code_references", "0003_introduce_per_feature_scanned_references")

@@ -1,15 +1,15 @@
-import typing
+from functools import cached_property
+from typing import Any
 
-from django.db.models import Q
-from flag_engine.engine import get_evaluation_result
 from rest_framework import serializers
 
+from evaluation.results import get_split_weight
+from evaluation.types import EvaluatedFeatureState
 from features.serializers import FeatureStateSerializerFull
 from integrations.common.serializers import (
     BaseEnvironmentIntegrationModelSerializer,
 )
 from segments.models import Segment
-from util.mappers.engine import map_environment_to_evaluation_context
 
 from .models import WebhookConfiguration
 
@@ -27,34 +27,19 @@ class SegmentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
         model = Segment
         fields = ("id", "name", "member")
 
+    @cached_property
+    def _member_segment_ids(self) -> set[int]:
+        return {segment.pk for segment in self.context["identity"].get_segments()}
+
     def get_member(self, obj: Segment) -> bool:
-        identity = self.context["identity"]
-        context = map_environment_to_evaluation_context(
-            identity=identity,
-            environment=identity.environment,
-            segments=[obj],
-        )
-        result = get_evaluation_result(context)
-        return bool(result["segments"])
+        return obj.pk in self._member_segment_ids
 
 
 class IntegrationFeatureStateSerializer(FeatureStateSerializerFull):
-    def to_representation(self, instance):  # type: ignore[no-untyped-def]
-        return_value = super().to_representation(instance)
-        value = return_value["feature_state_value"]
-        if value:
-            return_value["percentage_allocation"] = self.get_percentage_allocation(
-                value, instance
+    def to_representation(self, instance: EvaluatedFeatureState) -> dict[str, Any]:
+        representation: dict[str, Any] = super().to_representation(instance)
+        if representation["feature_state_value"]:
+            representation["percentage_allocation"] = get_split_weight(
+                instance.evaluation_result
             )
-        return return_value
-
-    def get_percentage_allocation(self, value, instance) -> typing.Optional[float]:  # type: ignore[no-untyped-def,return]  # noqa: E501
-        value_filter = {
-            str: Q(multivariate_feature_option__string_value=value),
-            int: Q(multivariate_feature_option__integer_value=value),
-            bool: Q(multivariate_feature_option__boolean_value=value),
-        }.get(type(value))
-        mv_fs = instance.multivariate_feature_state_values.filter(value_filter).first()
-
-        if mv_fs:
-            return mv_fs.percentage_allocation  # type: ignore[no-any-return]
+        return representation

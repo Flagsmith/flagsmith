@@ -3,7 +3,7 @@ import pytest
 from botocore.exceptions import ClientError
 from django.conf import settings
 from moto import mock_s3  # type: ignore[import-untyped]
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock import MockerFixture
 
 from sse.dataclasses import SSEAccessLogs

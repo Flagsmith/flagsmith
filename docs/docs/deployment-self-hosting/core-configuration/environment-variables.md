@@ -33,17 +33,25 @@ relevant section below for more details.
   set, no logs will be stored. If set to `-`, the logs will be sent to `stdout`.
 - `DJANGO_SETTINGS_MODULE`: Python path to settings file for the given environment, e.g. "app.settings.develop"
 - `ALLOW_ADMIN_INITIATION_VIA_CLI`: Enables the `bootstrap` management command which creates default admin user,
-  organisation, and project.
+  organisation, and project. `bootstrap` runs on startup with `migrate-and-serve` only; see
+  [Initial Setup](/deployment-self-hosting/core-configuration/initial-setup#automatically-on-startup).
 - `ADMIN_EMAIL`: Email to use for the default superuser creation.
 - `ORGANISATION_NAME`: Organisation name to use for the default organisation.
 - `PROJECT_NAME`: Project name to use for the default project.
 - `ENABLE_GZIP_COMPRESSION`: If Django should gzip compress HTTP responses. Defaults to `False`.
+- `TRUST_RELATIONSHIP_ACCESS_TOKEN_LIFETIME_SECONDS`: Lifetime of access tokens minted by the OIDC trust relationship
+  token exchange. Defaults to `3600`.
+- `OIDC_TOKEN_EXCHANGE_THROTTLE_RATE`: Rate limit for the OIDC token exchange endpoint. Defaults to `60/min`.
 - `GOOGLE_ANALYTICS_KEY`: If Google Analytics is required, add your tracking code.
 - `GOOGLE_SERVICE_ACCOUNT`: Service account JSON for accessing the Google API, used for getting usage of an
   organisation - needs access to analytics.readonly scope.
 - `INFLUXDB_TOKEN`: If you want to send API events to InfluxDB, specify this write token.
 - `INFLUXDB_URL`: The URL for your InfluxDB database.
 - `INFLUXDB_ORG`: The organisation string for your InfluxDB API call.
+- `EXPERIMENTATION_ENABLED`: Set to `true` once the experimentation infra is deployed. Experiments and warehouse
+  connections stay unavailable until it is. Defaults to `false`.
+- `WAREHOUSE_CREDENTIALS_SECRET`: Secret used to encrypt warehouse connection credentials. Warehouse delivery must use
+  the same value. Changing it makes saved credentials unreadable.
 - `GA_TABLE_ID`: GA table ID (view) to query when looking for organisation usage.
 - `USER_CREATE_PERMISSIONS`: Set the permissions for creating new users, using a comma-separated list of djoser or
   rest_framework permissions. Use this to turn off public user creation for self-hosting. e.g.

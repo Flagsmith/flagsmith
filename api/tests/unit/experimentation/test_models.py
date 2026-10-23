@@ -7,7 +7,6 @@ from django.db import connection as django_db_connection
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
-from environments.models import Environment
 from experimentation.dataclasses import (
     ExposuresSummary,
     ExposuresTimeseries,
@@ -20,76 +19,52 @@ from experimentation.models import (
     ExperimentExposures,
     ExperimentResults,
     WarehouseConnection,
-    WarehouseType,
+    WarehouseConnectionStatus,
+    WarehouseDeliveryStatus,
 )
 from experimentation.stats import VariantStats
 
 
-def test_warehouse_connection__after_create__enqueues_ingestion_write_task(
-    environment: Environment,
-    mocker: MockerFixture,
+def test_warehouse_connection__credentials_changed__removes_delivery_status(
+    clickhouse_connection: WarehouseConnection,
 ) -> None:
-    # Given
-    mock_task = mocker.patch(
-        "experimentation.tasks.write_environment_ingestion_keys",
+    # Given a connection whose last delivery failed
+    WarehouseDeliveryStatus.objects.create(
+        connection=clickhouse_connection,
+        status=WarehouseConnectionStatus.ERRORED,
+        detail="Authentication failed",
+        updated_at=timezone.now(),
     )
 
     # When
-    WarehouseConnection.objects.create(
-        environment=environment,
-        warehouse_type=WarehouseType.FLAGSMITH,
-        name="warehouse",
-    )
+    clickhouse_connection.credentials = {"password": "rotated"}
+    clickhouse_connection.save()
 
     # Then
-    mock_task.delay.assert_called_once_with(
-        kwargs={"environment_id": environment.id},
-    )
+    assert not WarehouseDeliveryStatus.objects.filter(
+        connection=clickhouse_connection
+    ).exists()
 
 
-def test_warehouse_connection__after_create_external_type__enqueues_provision_task(
-    environment: Environment,
-    mocker: MockerFixture,
+def test_warehouse_connection__renamed__keeps_delivery_status(
+    clickhouse_connection: WarehouseConnection,
 ) -> None:
-    # Given
-    mock_provision = mocker.patch(
-        "experimentation.tasks.provision_external_warehouse_ingestion_infrastructure",
-    )
-    mock_write_keys = mocker.patch(
-        "experimentation.tasks.write_environment_ingestion_keys",
+    # Given a connection whose last delivery failed
+    WarehouseDeliveryStatus.objects.create(
+        connection=clickhouse_connection,
+        status=WarehouseConnectionStatus.ERRORED,
+        detail="Authentication failed",
+        updated_at=timezone.now(),
     )
 
     # When
-    WarehouseConnection.objects.create(
-        environment=environment,
-        warehouse_type=WarehouseType.CLICKHOUSE,
-        name="external warehouse",
-    )
-
-    # Then the per-org infrastructure is provisioned, which chains the key sync
-    mock_provision.delay.assert_called_once_with(
-        kwargs={"environment_id": environment.id},
-    )
-    mock_write_keys.delay.assert_not_called()
-
-
-def test_warehouse_connection__after_delete__enqueues_ingestion_remove_task(
-    warehouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mock_task = mocker.patch(
-        "experimentation.tasks.remove_environment_ingestion_keys",
-    )
-    environment_id = warehouse_connection.environment_id
-
-    # When
-    warehouse_connection.delete()
+    clickhouse_connection.name = "Renamed ClickHouse"
+    clickhouse_connection.save()
 
     # Then
-    mock_task.delay.assert_called_once_with(
-        kwargs={"environment_id": environment_id},
-    )
+    assert WarehouseDeliveryStatus.objects.filter(
+        connection=clickhouse_connection
+    ).exists()
 
 
 def _summary() -> ExposuresSummary:
@@ -169,8 +144,10 @@ def _results_summary() -> ResultsSummary:
                     "control": VariantStats(n=1000, sum=100.0, sum_squares=100.0)
                 },
                 inference={},
+                conversions_timeseries=None,
             )
         ],
+        exposures_timeseries=ExposuresTimeseries(granularity="day", points=[]),
     )
 
 
@@ -198,8 +175,10 @@ def test_experiment_results__record_refresh__stores_payload_and_clears_error(
                     "control": {"n": 1000, "sum": 100.0, "sum_squares": 100.0}
                 },
                 "inference": {},
+                "conversions_timeseries": None,
             }
         ],
+        "exposures_timeseries": {"granularity": "day", "points": []},
     }
     assert results.as_of == as_of
     assert results.last_error_at is None
@@ -268,6 +247,52 @@ def test_experiment_results__is_final__reflects_window_coverage(
     # When / Then the row is final only once it covers the experiment's end
     results = ExperimentResults(experiment=experiment, as_of=as_of)
     assert results.is_final is expected
+
+
+@pytest.mark.parametrize(
+    "field, value",
+    [
+        pytest.param("status", "running", id="resume"),
+        pytest.param("status", "paused", id="pause"),
+        pytest.param("name", "Renamed experiment", id="rename"),
+    ],
+)
+def test_experiment__wire_field_changed__rebuilds_environment_document(  # type: ignore[no-untyped-def]
+    experiment: Experiment,
+    mocker: MockerFixture,
+    django_capture_on_commit_callbacks,
+    field: str,
+    value: str,
+) -> None:
+    # Given
+    mock_task = mocker.patch("environments.tasks.rebuild_environment_document")
+    setattr(experiment, field, value)
+
+    # When
+    with django_capture_on_commit_callbacks(execute=True):
+        experiment.save()
+
+    # Then
+    mock_task.delay.assert_called_once_with(
+        kwargs={"environment_id": experiment.environment_id},
+    )
+
+
+def test_experiment__unrelated_field_changed__no_rebuild(  # type: ignore[no-untyped-def]
+    experiment: Experiment,
+    mocker: MockerFixture,
+    django_capture_on_commit_callbacks,
+) -> None:
+    # Given
+    mock_task = mocker.patch("environments.tasks.rebuild_environment_document")
+    experiment.hypothesis = "A different hypothesis"
+
+    # When
+    with django_capture_on_commit_callbacks(execute=True):
+        experiment.save()
+
+    # Then
+    mock_task.delay.assert_not_called()
 
 
 def test_warehouse_connection_credentials__saved__ciphertext_in_db_and_roundtrips(

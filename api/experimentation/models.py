@@ -2,17 +2,15 @@ from dataclasses import asdict
 from datetime import datetime
 from typing import TYPE_CHECKING, Generic, TypeVar
 
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Q
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
-    AFTER_CREATE,
-    AFTER_DELETE,
+    AFTER_UPDATE,
     LifecycleModelMixin,
     hook,
 )
 
-from core.fields import EncryptedJSONField
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
 from experimentation.dataclasses import (
@@ -20,6 +18,7 @@ from experimentation.dataclasses import (
     ResultsSummary,
     WarehouseEventStats,
 )
+from experimentation.fields import EncryptedJSONField
 from experimentation.types import MetricDefinition
 
 # A computation's payload is the serialised form of its summary dataclass; the
@@ -31,6 +30,7 @@ class WarehouseType(models.TextChoices):
     FLAGSMITH = "flagsmith", "Flagsmith"
     SNOWFLAKE = "snowflake", "Snowflake"
     CLICKHOUSE = "clickhouse", "ClickHouse"
+    DATABRICKS = "databricks", "Databricks"
 
 
 class WarehouseConnectionStatus(models.TextChoices):
@@ -76,82 +76,30 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
             ),
         ]
 
-    @hook(AFTER_CREATE)  # type: ignore[misc]
-    def sync_to_ingestion_on_create(self) -> None:
-        from experimentation.tasks import (
-            provision_external_warehouse_ingestion_infrastructure,
-            write_environment_ingestion_keys,
-        )
-
-        if self.warehouse_type == WarehouseType.FLAGSMITH:
-            write_environment_ingestion_keys.delay(
-                kwargs={"environment_id": self.environment_id},
-            )
-            return
-
-        provision_external_warehouse_ingestion_infrastructure.delay(
-            kwargs={"environment_id": self.environment_id},
-        )
-
-    @hook(AFTER_DELETE)  # type: ignore[misc]
-    def sync_to_ingestion_on_delete(self) -> None:
-        from experimentation.tasks import remove_environment_ingestion_keys
-
-        remove_environment_ingestion_keys.delay(
-            kwargs={"environment_id": self.environment_id},
-        )
+    @hook(  # type: ignore[misc]
+        AFTER_UPDATE,
+        when_any=["warehouse_type", "config", "credentials"],
+        has_changed=True,
+    )
+    def clear_delivery_status(self) -> None:
+        WarehouseDeliveryStatus.objects.filter(connection=self).delete()
 
 
-class IngestionInfrastructureStatus(models.TextChoices):
-    PENDING = "pending", "Pending"
-    CREATED = "created", "Created"
-    ERRORED = "errored", "Errored"
+class WarehouseDeliveryStatus(models.Model):
+    """Updated by the warehouse-delivery service after each delivery."""
 
-
-class OrganisationIngestionInfrastructure(models.Model):
-    organisation = models.OneToOneField(
-        "organisations.Organisation",
-        on_delete=models.DO_NOTHING,
-        related_name="ingestion_infrastructure",
+    connection = models.OneToOneField(
+        WarehouseConnection,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="delivery_status",
     )
     status = models.CharField(
         max_length=50,
-        choices=IngestionInfrastructureStatus.choices,
-        default=IngestionInfrastructureStatus.PENDING,
+        choices=WarehouseConnectionStatus.choices,
     )
-    bucket_name = models.CharField(max_length=255, null=True, blank=True)
-    stream_name = models.CharField(max_length=255, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-class WarehouseDeliveryOutcome(models.TextChoices):
-    DELIVERED = "delivered", "Delivered"
-    REJECTED = "rejected", "Rejected"
-
-
-class WarehouseDeliveryLog(models.Model):
-    connection = models.ForeignKey(
-        WarehouseConnection,
-        on_delete=models.CASCADE,
-        related_name="delivery_logs",
-    )
-    # S3's own key length limit.
-    s3_key = models.CharField(max_length=1024)
-    outcome = models.CharField(
-        max_length=50,
-        choices=WarehouseDeliveryOutcome.choices,
-    )
-    rows_count = models.PositiveIntegerField(null=True, blank=True)
-    error = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        indexes = [
-            models.Index(fields=["connection", "created_at"]),
-            # Serves the retention cleanup, which filters on created_at alone.
-            models.Index(fields=["created_at"]),
-        ]
+    detail = models.TextField(null=True, blank=True)
+    updated_at = models.DateTimeField()
 
 
 class ExperimentStatus(models.TextChoices):
@@ -159,6 +107,11 @@ class ExperimentStatus(models.TextChoices):
     RUNNING = "running", "Running"
     PAUSED = "paused", "Paused"
     COMPLETED = "completed", "Completed"
+
+
+class AudienceMatch(models.TextChoices):
+    ANY = "any", "Any"
+    ALL = "all", "All"
 
 
 VALID_STATUS_TRANSITIONS: dict[str, set[str]] = {
@@ -198,6 +151,12 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
         null=True,
         blank=True,
     )
+    # Their rules are copied into the rollout segment; empty targets everyone.
+    audience_segments = models.ManyToManyField(
+        "segments.Segment",
+        related_name="audience_experiments",
+        blank=True,
+    )
 
     class Meta:
         constraints = [
@@ -207,6 +166,17 @@ class Experiment(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignor
                 name="unique_active_experiment_per_feature_env",
             ),
         ]
+
+    @hook(AFTER_UPDATE, when_any=["status", "name"], has_changed=True)  # type: ignore[misc]
+    def rebuild_environment_document(self) -> None:
+        from environments.tasks import rebuild_environment_document
+
+        environment_id = self.environment_id
+        transaction.on_commit(
+            lambda: rebuild_environment_document.delay(
+                kwargs={"environment_id": environment_id},
+            )
+        )
 
 
 class ExperimentComputation(models.Model, Generic[SummaryT]):

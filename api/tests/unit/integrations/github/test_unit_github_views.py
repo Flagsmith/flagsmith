@@ -7,7 +7,7 @@ import pytest
 import requests
 import responses
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.response import Response
@@ -657,9 +657,10 @@ def test_fetch_repositories__valid_installation__returns_repositories(
         json={
             "repositories": [
                 {
-                    "full_name": "owner/repo-name",
+                    "full_name": "acme-inc/my-repo",
                     "id": 1,
-                    "name": "repo-name",
+                    "name": "my-repo",
+                    "owner": {"login": "acme-inc"},
                 },
             ],
             "total_count": 1,
@@ -677,8 +678,14 @@ def test_fetch_repositories__valid_installation__returns_repositories(
     # Then
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
-    assert "results" in response_json
-    assert len(response_json["results"]) == 1
+    assert response_json["results"] == [
+        {
+            "full_name": "acme-inc/my-repo",
+            "id": 1,
+            "name": "my-repo",
+            "owner": {"login": "acme-inc"},
+        }
+    ]
 
 
 @pytest.mark.parametrize(

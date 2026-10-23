@@ -35,6 +35,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "EXPERIMENTATION_ENABLED",
+                    "value": "true"
+                },
+                {
                     "name": "RUN_BY_PROCESSOR",
                     "value": "True"
                 },
@@ -199,12 +203,8 @@
                     "value": "json"
                 },
                 {
-                    "name": "INGESTION_REDIS_URL",
-                    "value": "rediss://serverless-redis-cache-c4q8sw.serverless.euw2.cache.amazonaws.com:6379"
-                },
-                {
-                    "name": "INGESTION_FIREHOSE_DELIVERY_ROLE_ARN",
-                    "value": "arn:aws:iam::084060095745:role/experiment-events-firehose-delivery-external-warehouse"
+                    "name": "API_USAGE_ALERT_CC_RECIPIENT_LIST",
+                    "value": "customersuccess@flagsmith.com"
                 }
             ],
             "secrets": [
@@ -222,7 +222,7 @@
                 },
                 {
                     "name": "WAREHOUSE_CREDENTIALS_SECRET",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:DJANGO_SECRET_KEY::"
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:warehouse-credentials-secret-230b64b-NwRQAb"
                 },
                 {
                     "name": "E2E_TEST_AUTH_TOKEN",

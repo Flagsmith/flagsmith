@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_lazy_fixtures import lf as lazy_fixture
 from rest_framework.request import Request
 
 from organisations.models import Organisation, Subscription

@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import structlog
 from common.environments.permissions import (
     VIEW_ENVIRONMENT,
 )
@@ -24,6 +25,7 @@ from rest_framework.serializers import Serializer
 from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
+from core.exceptions import ChangeRequestsEnabledError
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.serializers import (
@@ -38,13 +40,32 @@ from features.versioning.permissions import (
 )
 from features.versioning.serializers import (
     CustomEnvironmentFeatureVersionFeatureStateSerializer,
-    EnvironmentFeatureVersionCreateSerializer,
+    EnvironmentFeatureVersionCreateRequestSerializer,
     EnvironmentFeatureVersionPublishSerializer,
     EnvironmentFeatureVersionQuerySerializer,
     EnvironmentFeatureVersionRetrieveSerializer,
     EnvironmentFeatureVersionSerializer,
 )
+from segments.services import check_segment_is_not_system
 from users.models import FFAdminUser
+
+logger = structlog.get_logger("features")
+
+
+def _check_change_requests_disabled(environment: Environment, feature: Feature) -> None:
+    """Refuse to publish a version that can only go live through a change request."""
+    if not environment.is_workflow_enabled:
+        return
+    api_error = ChangeRequestsEnabledError()
+    logger.warning(
+        "version.publish_rejected",
+        organisation__id=environment.project.organisation_id,
+        project__id=environment.project_id,
+        environment__id=environment.id,
+        feature__id=feature.id,
+        reason=api_error.default_code,
+    )
+    raise api_error
 
 
 @method_decorator(
@@ -86,7 +107,7 @@ class EnvironmentFeatureVersionViewSet(
             case "retrieve":
                 return EnvironmentFeatureVersionRetrieveSerializer
             case "create":
-                return EnvironmentFeatureVersionCreateSerializer
+                return EnvironmentFeatureVersionCreateRequestSerializer
             case _:
                 return EnvironmentFeatureVersionSerializer
 
@@ -137,6 +158,8 @@ class EnvironmentFeatureVersionViewSet(
         return queryset
 
     def perform_create(self, serializer: Serializer) -> None:  # type: ignore[override,type-arg]
+        if serializer.validated_data.get("publish_immediately"):
+            _check_change_requests_disabled(self.environment, self.feature)  # type: ignore[arg-type]
         created_by = None
         if isinstance(self.request.user, FFAdminUser):
             created_by = self.request.user
@@ -158,6 +181,7 @@ class EnvironmentFeatureVersionViewSet(
     @action(detail=True, methods=["POST"])
     def publish(self, request: Request, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         ef_version = self.get_object()
+        _check_change_requests_disabled(self.environment, self.feature)  # type: ignore[arg-type]
         serializer = self.get_serializer(data=request.data, instance=ef_version)
         serializer.is_valid(raise_exception=True)
         serializer.save(published_by=request.user)
@@ -207,6 +231,7 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore
         return EnvironmentFeatureVersion.objects.all()
 
 
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
 @method_decorator(
     name="list",
     decorator=extend_schema(
@@ -292,6 +317,8 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         self,
         serializer: CustomCreateSegmentOverrideFeatureStateSerializer,  # type: ignore[override]
     ) -> None:
+        if feature_segment := serializer.validated_data.get("feature_segment"):
+            check_segment_is_not_system(feature_segment["segment"])
         serializer.save(
             feature=self.feature,
             environment=self.environment,
@@ -302,6 +329,12 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         self,
         serializer: CustomCreateSegmentOverrideFeatureStateSerializer,  # type: ignore[override]
     ) -> None:
+        if isinstance(feature_state := serializer.instance, FeatureState) and (
+            feature_segment := feature_state.feature_segment
+        ):
+            check_segment_is_not_system(feature_segment.segment)
+        if feature_segment_data := serializer.validated_data.get("feature_segment"):
+            check_segment_is_not_system(feature_segment_data["segment"])
         serializer.save(
             feature=self.feature,
             environment=self.environment,
@@ -313,4 +346,6 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
             raise FeatureVersionDeleteError(
                 "Cannot delete environment default feature state."
             )
+        if instance.feature_segment:
+            check_segment_is_not_system(instance.feature_segment.segment)
         super().perform_destroy(instance)

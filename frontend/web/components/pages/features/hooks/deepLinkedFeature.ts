@@ -1,3 +1,4 @@
+import { featureStateToValue } from 'common/utils/featureStateToValue'
 import type { FeatureState } from 'common/types/responses'
 
 /**
@@ -31,8 +32,14 @@ export function pickEnvironmentFlag(
   results: FeatureState[] | undefined,
   featureId: number,
 ): FeatureState | undefined {
-  return (
+  const match =
     results?.find((featureState) => featureState.feature === featureId) ??
     results?.[0]
-  )
+  if (!match) {
+    return undefined
+  }
+  return {
+    ...match,
+    feature_state_value: featureStateToValue(match.feature_state_value),
+  }
 }

@@ -66,11 +66,20 @@ class UserLoginSerializer(serializers.ModelSerializer):  # type: ignore[type-arg
 class UserListSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     role = serializers.SerializerMethodField(read_only=True)
     join_date = serializers.SerializerMethodField(read_only=True)
+    is_organisation_membership_active = serializers.SerializerMethodField(
+        read_only=True,
+        help_text=(
+            "Whether the user's membership in the organisation is active. "
+            "Inactive members cannot access the organisation, and do not "
+            "count towards its seat limit."
+        ),
+    )
 
     default_fields = ("id", "email", "first_name", "last_name", "last_login", "uuid")
     organisation_users_fields = (
         "role",
         "date_joined",
+        "is_organisation_membership_active",
     )
 
     class Meta:
@@ -87,6 +96,10 @@ class UserListSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
 
     def get_join_date(self, instance):  # type: ignore[no-untyped-def]
         return instance.get_organisation_join_date(self.context.get("organisation"))
+
+    def get_is_organisation_membership_active(self, instance: FFAdminUser) -> bool:
+        user_organisation = instance.get_user_organisation(self.context["organisation"])
+        return bool(user_organisation and user_organisation.is_active)
 
 
 class UserIdsSerializer(serializers.Serializer):  # type: ignore[type-arg]

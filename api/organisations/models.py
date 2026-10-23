@@ -1,8 +1,10 @@
 import re
-from datetime import timedelta
-from typing import Any
+from datetime import datetime, timedelta
+from typing import Any, NamedTuple
 
+import structlog
 from common.core.utils import is_enterprise, is_saas
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.cache import caches
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -10,7 +12,6 @@ from django.db import models
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
-    AFTER_DELETE,
     AFTER_SAVE,
     BEFORE_DELETE,
     LifecycleModelMixin,
@@ -57,7 +58,14 @@ from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from webhooks.models import AbstractBaseExportableWebhookModel
 
+logger = structlog.get_logger("organisations")
+
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
+
+
+class BillingPeriod(NamedTuple):
+    start: datetime
+    end: datetime
 
 
 class OrganisationRole(models.TextChoices):
@@ -109,7 +117,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
     @property
     def num_seats(self) -> int:
-        return self.users.count()
+        return self.userorganisation_set.filter(is_active=True).count()
 
     def has_paid_subscription(self) -> bool:
         # Includes subscriptions that are canceled.
@@ -164,19 +172,6 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         if self.has_paid_subscription():
             self.subscription.prepare_for_cancel()
 
-    @hook(AFTER_DELETE)
-    def teardown_ingestion_infrastructure(self):  # type: ignore[no-untyped-def]
-        if not hasattr(self, "ingestion_infrastructure"):
-            return
-
-        from experimentation.tasks import (
-            teardown_organisation_ingestion_infrastructure,
-        )
-
-        teardown_organisation_ingestion_infrastructure.delay(
-            kwargs={"organisation_id": self.id},
-        )
-
     @hook(AFTER_CREATE)
     def create_subscription(self):  # type: ignore[no-untyped-def]
         Subscription.objects.create(organisation=self)
@@ -209,21 +204,30 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         ).values_list("id", flat=True):
             rebuild_environment_document.delay(args=(environment_id,))
 
-    def cancel_users(self):  # type: ignore[no-untyped-def]
+    def cancel_users(self) -> None:
+        """
+        Reduce the organisation to the single seat the free plan allows.
+
+        The retained member must hold an active membership, otherwise the
+        organisation would be left with nobody able to access it.
+        """
+        active_memberships = UserOrganisation.objects.filter(
+            organisation=self,
+            is_active=True,
+        )
         remaining_seat_holder = (
-            UserOrganisation.objects.filter(
-                organisation=self,
-                role=OrganisationRole.ADMIN,
-            )
+            active_memberships.filter(role=OrganisationRole.ADMIN)
             .order_by("date_joined")
             .first()
+            or active_memberships.order_by("date_joined").first()
         )
+        if remaining_seat_holder is None:
+            # No seat is in use, so there is nothing to cancel down to.
+            return
 
         UserOrganisation.objects.filter(
             organisation=self,
-        ).exclude(
-            id=remaining_seat_holder.id  # type: ignore[union-attr]
-        ).delete()
+        ).exclude(id=remaining_seat_holder.id).delete()
 
 
 class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
@@ -231,6 +235,13 @@ class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     date_joined = models.DateTimeField(auto_now_add=True)
     role = models.CharField(max_length=50, choices=OrganisationRole.choices)
+    is_active = models.BooleanField(
+        default=True,
+        help_text=(
+            "Inactive members can still log in, but cannot access the "
+            "organisation, and do not count towards its seat limit."
+        ),
+    )
 
     class Meta:
         unique_together = (
@@ -304,6 +315,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             self.organisation.has_subscription_information_cache()
             and self.organisation.subscription_information_cache.has_active_billing_periods()
         )
+
+    def get_current_billing_period(self) -> BillingPeriod | None:
+        if not self.organisation.has_subscription_information_cache():
+            return None
+        return self.organisation.subscription_information_cache.get_current_billing_period()
 
     @property
     def is_free_plan(self) -> bool:
@@ -382,7 +398,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
         if cancellation_date <= timezone.now():
             # Since the date is immediate, wipe data right away.
-            self.organisation.cancel_users()  # type: ignore[no-untyped-call]
+            self.organisation.cancel_users()
             self.save_as_free_subscription()  # type: ignore[no-untyped-call]
             return
 
@@ -585,19 +601,32 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         }
 
     def has_active_billing_periods(self) -> bool:
-        """
-        Returns True if current date is within the billing term.
-        If either start or end date is None, returns False.
-        """
-        starts_at, ends_at = (
-            self.current_billing_term_starts_at,
-            self.current_billing_term_ends_at,
-        )
+        return self.get_current_billing_period() is not None
 
+    def get_current_billing_period(self) -> BillingPeriod | None:
+        starts_at = self.current_billing_term_starts_at
+        ends_at = self.current_billing_term_ends_at
         if starts_at is None or ends_at is None:
-            return False
+            return None
 
-        return starts_at <= timezone.now() <= ends_at
+        now = timezone.now()
+        if not starts_at <= now < ends_at:
+            logger.warning(
+                "billing_term.stale",
+                organisation__id=self.organisation_id,
+                billing_term__starts_at=starts_at.isoformat(),
+                billing_term__ends_at=ends_at.isoformat(),
+            )
+            return None
+
+        elapsed = relativedelta(now, starts_at)
+        months = elapsed.years * 12 + elapsed.months
+        # Both ends count from the term start; counting the end from the start
+        # of the window loses the original day when a month is too short for it.
+        return BillingPeriod(
+            start=starts_at + relativedelta(months=months),
+            end=starts_at + relativedelta(months=months + 1),
+        )
 
 
 class OrganisationAPIUsageNotification(models.Model):

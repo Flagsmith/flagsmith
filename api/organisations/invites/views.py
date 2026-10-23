@@ -101,7 +101,7 @@ class InviteLinkViewSet(
             raise SubscriptionDoesNotSupportSeatUpgrade()
 
         return InviteLink.objects.filter(
-            organisation__in=user.organisations.all()  # type: ignore[union-attr]
+            organisation__in=user.get_active_organisations()  # type: ignore[union-attr]
         ).filter(organisation__pk=organisation_pk)
 
     def perform_create(self, serializer):  # type: ignore[no-untyped-def]
@@ -144,9 +144,9 @@ class InviteViewSet(
         organisation_pk = self.kwargs.get("organisation_pk")
         user = self.request.user
 
-        return Invite.objects.filter(organisation__in=user.organisations.all()).filter(  # type: ignore[misc,union-attr]  # noqa: E501
-            organisation__id=organisation_pk
-        )
+        return Invite.objects.filter(  # type: ignore[misc]
+            organisation__in=user.get_active_organisations()  # type: ignore[union-attr]
+        ).filter(organisation__id=organisation_pk)
 
     def get_serializer_context(self) -> dict[str, Any]:
         context = super().get_serializer_context()

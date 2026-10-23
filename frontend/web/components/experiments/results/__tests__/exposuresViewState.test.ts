@@ -24,6 +24,13 @@ const loaded = exposures({
 })
 
 describe('deriveExposuresViewState', () => {
+  beforeAll(() => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-06-12T11:05:00Z'))
+  })
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
   it('is empty when there is no payload and nothing in flight', () => {
     expect(deriveExposuresViewState(exposures()).kind).toBe('empty')
   })
@@ -55,6 +62,14 @@ describe('deriveExposuresViewState', () => {
       refresh_requested_at: '2026-06-12T13:00:00Z',
     })
     expect(state.kind).toBe('refreshing')
+  })
+
+  it('ignores a refresh request older than the cutoff', () => {
+    const state = deriveExposuresViewState({
+      ...loaded,
+      refresh_requested_at: '2026-06-12T10:54:00Z',
+    })
+    expect(state.kind).toBe('loaded')
   })
 })
 

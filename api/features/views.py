@@ -22,7 +22,12 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    PolymorphicProxySerializer,
+    extend_schema,
+    extend_schema_view,
+)
 from flagsmith_schemas import api as api_schemas
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import (
@@ -45,6 +50,7 @@ from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from app_analytics.mappers import map_request_to_sdk_label
 from app_analytics.throttles import InfluxQueryThrottle
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
+from core.dataclasses import AuthorData
 from core.request_origin import RequestOrigin
 from edge_api.identities.edge_identity_service import (
     get_overridden_feature_ids_for_edge_identity,
@@ -62,17 +68,37 @@ from environments.permissions.permissions import (
     EnvironmentKeyPermissions,
     NestedEnvironmentPermissions,
 )
+from evaluation.services import (
+    get_environment_feature_states,
+    get_identity_feature_states,
+)
+from features.dependencies.exceptions import (
+    DependencyConflictDetail,
+    FeatureIsReferencedDetail,
+)
 from features.feature_lifecycle.services import (
     annotate_feature_queryset_with_lifecycle_stage,
-    is_feature_lifecycle_enabled,
 )
+from features.feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+    exceeds_segment_override_limit,
+)
+from features.feature_segments.services import (
+    get_next_segment_override_priority,
+    get_segment_override,
+    is_segment_override_unchanged,
+    write_segment_override,
+    writes_live_segment_override,
+)
+from features.services import delete_feature
+from features.types import LegacyFeatureStateData
 from features.value_types import BOOLEAN, INTEGER, STRING
 from projects.code_references.services import (
     annotate_feature_queryset_with_code_references_summary,
 )
 from projects.models import Project
+from segments.services import check_segment_is_not_system
 from users.models import FFAdminUser, UserPermissionGroup
-from webhooks.webhooks import WebhookEventType
 
 from .constants import INTERSECTION, UNION
 from .features_service import get_overrides_data
@@ -108,7 +134,6 @@ from .serializers import (  # type: ignore[attr-defined]
     UpdateFeatureSerializer,
     WritableNestedFeatureStateSerializer,
 )
-from .tasks import trigger_feature_state_change_webhooks
 from .versioning.models import EnvironmentFeatureVersion
 from .versioning.versioning_service import (
     get_environment_flags_list,
@@ -120,6 +145,12 @@ from .versioning.versioning_service import (
 logger = logging.getLogger(__name__)
 
 flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
+
+
+def _feature_name_matches(name: str, requested_name: str) -> bool:
+    # Feature names are unique per project regardless of case, and SDKs
+    # have historically relied on case-insensitive lookups.
+    return name.casefold() == requested_name.casefold()
 
 
 @extend_schema(responses={200: CreateFeatureSerializer()})
@@ -166,6 +197,18 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
         operation_id="update_feature",
         description="Updates feature flag properties such as name and description.",
     ),
+)
+@extend_schema_view(
+    destroy=extend_schema(
+        responses={
+            204: None,
+            400: PolymorphicProxySerializer(
+                component_name="FeatureDeletionRefusedDetail",
+                serializers=[DependencyConflictDetail, FeatureIsReferencedDetail],  # type: ignore[list-item]
+                resource_type_field_name=None,
+            ),
+        },
+    )
 )
 class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [FeaturePermissions]
@@ -274,12 +317,11 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         if environment_id:
             self.environment = Environment.objects.get(id=environment_id)
-            if is_feature_lifecycle_enabled(project.organisation):
-                queryset = annotate_feature_queryset_with_lifecycle_stage(
-                    queryset, self.environment
-                )
-                if lifecycle_stage := query_data.get("lifecycle_stage"):
-                    queryset = queryset.filter(lifecycle_stage=lifecycle_stage)
+            queryset = annotate_feature_queryset_with_lifecycle_stage(
+                queryset, self.environment
+            )
+            if lifecycle_stage := query_data.get("lifecycle_stage"):
+                queryset = queryset.filter(lifecycle_stage=lifecycle_stage)
             page = self.paginate_queryset(queryset)
             self.feature_ids = [feature.id for feature in page]
             feature_states_query = Q(
@@ -328,11 +370,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.save(project_id=self.kwargs.get("project_pk"))
 
     def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
-        feature_states = list(
-            instance.feature_states.filter(identity=None, feature_segment=None)
-        )
-        self._trigger_feature_state_change_webhooks(feature_states)
-        instance.delete()
+        delete_feature(instance)
 
     def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super().get_serializer_context()
@@ -448,8 +486,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer.is_valid(raise_exception=True)
         self._validate_owner_removal(
             feature,
-            owners_to_remove=0,
-            group_owners_to_remove=len(serializer.validated_data["group_ids"]),
+            group_ids_to_remove=serializer.validated_data["group_ids"],
         )
         serializer.remove_group_owners(feature)
         response = Response(self.get_serializer(instance=feature).data)
@@ -486,8 +523,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         feature = self.get_object()
         self._validate_owner_removal(
             feature,
-            owners_to_remove=len(serializer.validated_data["user_ids"]),
-            group_owners_to_remove=0,
+            user_ids_to_remove=serializer.validated_data["user_ids"],
         )
         serializer.remove_users(feature)
 
@@ -496,11 +532,15 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def _validate_owner_removal(
         self,
         feature: Feature,
-        owners_to_remove: int,
-        group_owners_to_remove: int,
+        user_ids_to_remove: typing.Iterable[int] = (),
+        group_ids_to_remove: typing.Iterable[int] = (),
     ) -> None:
         if not feature.project.enforce_feature_owners:
             return
+        owners_to_remove = feature.owners.filter(id__in=user_ids_to_remove).count()
+        group_owners_to_remove = feature.group_owners.filter(
+            id__in=group_ids_to_remove
+        ).count()
         remaining = (
             feature.owners.count()
             - owners_to_remove
@@ -563,14 +603,6 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = FeatureEvaluationDataSerializer(usage_data, many=True)
 
         return Response(serializer.data)
-
-    def _trigger_feature_state_change_webhooks(  # type: ignore[no-untyped-def]
-        self, feature_states: typing.List[FeatureState]
-    ):
-        for feature_state in feature_states:
-            trigger_feature_state_change_webhooks(
-                feature_state, WebhookEventType.FLAG_DELETED
-            )
 
     def filter_owners_and_group_owners(
         self,
@@ -759,6 +791,8 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = self.get_serializer(data=data)
 
         if serializer.is_valid(raise_exception=True):
+            if feature_segment := serializer.validated_data.get("feature_segment"):
+                check_segment_is_not_system(feature_segment.segment)
             feature_state = serializer.save()
             headers = self.get_success_headers(serializer.data)
 
@@ -880,16 +914,11 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
     @action(methods=["GET"], detail=False)
     def all(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         identity = get_object_or_404(Identity, pk=self.kwargs["identity_pk"])
-        feature_states = identity.get_all_feature_states()
 
         serializer = IdentityAllFeatureStatesSerializer(
-            instance=feature_states,
+            instance=get_identity_feature_states(identity),
             many=True,
-            context={
-                "request": request,
-                "identity": identity,
-                "environment_api_key": identity.environment.api_key,
-            },
+            context={"request": request},
         )
 
         return Response(serializer.data)
@@ -923,6 +952,7 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         return self.all(request, *args, **kwargs)  # type: ignore[no-any-return]
 
 
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
 @method_decorator(
     name="list",
     decorator=extend_schema(
@@ -949,7 +979,7 @@ class SimpleFeatureStateViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.ListModelMixin,
-    viewsets.GenericViewSet,  # type: ignore[type-arg]
+    viewsets.GenericViewSet[FeatureState],
 ):
     serializer_class = WritableNestedFeatureStateSerializer
     permission_classes = [FeatureStatePermissions]
@@ -964,10 +994,51 @@ class SimpleFeatureStateViewSet(
                 environment=environment,
                 is_identity_override=bool(request.data.get("identity")),
             )
-        return super().create(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if feature_segment := serializer.validated_data.get("feature_segment"):
+            check_segment_is_not_system(feature_segment.segment)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        require_direct_state_write_for_state(self.get_object())
+        feature_state = self.get_object()
+        require_direct_state_write_for_state(feature_state)
+        if feature_segment := feature_state.feature_segment:
+            serializer = self.get_serializer(
+                feature_state,
+                data=request.data,
+                partial=kwargs.get("partial", False),
+            )
+            serializer.is_valid(raise_exception=True)
+            feature_state_data = typing.cast(
+                LegacyFeatureStateData, serializer.validated_data
+            )
+            if (
+                writes_live_segment_override(feature_state_data)
+                and get_segment_override(
+                    environment=feature_segment.environment,
+                    feature=feature_segment.feature,
+                    segment_id=feature_segment.segment_id,
+                )
+                == feature_state
+            ):
+                # The dashboard writes every override of the flags it saves.
+                if feature_segment.segment.is_system_segment and (
+                    is_segment_override_unchanged(
+                        feature_segment, feature_state, feature_state_data
+                    )
+                ):
+                    return Response(self.get_serializer(feature_state).data)
+                feature_state = write_segment_override(
+                    environment=feature_segment.environment,
+                    feature=feature_segment.feature,
+                    segment_id=feature_segment.segment_id,
+                    feature_state_data=feature_state_data,
+                    author=AuthorData.from_request(request),
+                )
+                return Response(self.get_serializer(feature_state).data)
+            check_segment_is_not_system(feature_segment.segment)
         return super().update(request, *args, **kwargs)
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
@@ -1045,28 +1116,38 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         if identifier:
             return self._get_flags_response_with_identifier(request, identifier)
 
-        if "feature" in request.GET:
-            feature_states = get_environment_flags_list(
-                environment=request.environment,
-                feature_name=request.GET["feature"],
-                additional_filters=self._additional_filters,
-                from_replica=True,
+        if feature_name := request.GET.get("feature"):
+            # Filtered after evaluating, not before, because of dependent flags
+            evaluated_feature_state = next(
+                (
+                    evaluated_feature_state
+                    for evaluated_feature_state in get_environment_feature_states(
+                        request.environment,
+                        hide_server_key_only=self._hide_server_key_only,
+                        from_replica=True,
+                    )
+                    if _feature_name_matches(
+                        evaluated_feature_state.evaluation_result["name"],
+                        feature_name,
+                    )
+                ),
+                None,
             )
-            if not feature_states:
+            if evaluated_feature_state is None:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            return Response(self.get_serializer(feature_states[0]).data)
+            return Response(self.get_serializer(evaluated_feature_state).data)
 
         if settings.CACHE_FLAGS_SECONDS > 0:
-            data = self._get_flags_from_cache(request.environment, from_replica=True)
+            data = self._get_flags_from_cache(request.environment)
         else:
             data = self.get_serializer(
-                get_environment_flags_list(
-                    environment=request.environment,
-                    additional_filters=self._additional_filters,
+                get_environment_feature_states(
+                    request.environment,
+                    hide_server_key_only=self._hide_server_key_only,
                     from_replica=True,
                 ),
                 many=True,
@@ -1079,21 +1160,12 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         )
 
     @property
-    def _additional_filters(self) -> Q:
-        filters = Q(feature_segment=None, identity=None)
-
-        if self.request.environment.get_hide_disabled_flags() is True:
-            return filters & Q(enabled=True)
-
-        if self.request.originated_from is RequestOrigin.CLIENT:
-            return filters & Q(feature__is_server_key_only=False)
-
-        return filters
+    def _hide_server_key_only(self) -> bool:
+        return self.request.originated_from is RequestOrigin.CLIENT
 
     def _get_flags_from_cache(
         self,
         environment: Environment,
-        from_replica: bool = False,
     ) -> list[typing.Any]:
         data: list[typing.Any]
         # Include request origin in cache key to isolate client vs server requests
@@ -1101,10 +1173,10 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         data = flags_cache.get(cache_key)
         if not data:
             data = self.get_serializer(
-                get_environment_flags_list(
-                    environment=environment,
-                    additional_filters=self._additional_filters,
-                    from_replica=from_replica,
+                get_environment_feature_states(
+                    environment,
+                    hide_server_key_only=self._hide_server_key_only,
+                    from_replica=True,
                 ),
                 many=True,
             ).data
@@ -1128,20 +1200,33 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
             )
         replace_identity_environment(identity, request.environment)
 
+        evaluated_feature_states = get_identity_feature_states(identity)
+
         if feature_name := request.GET.get("feature"):
-            feature_states = identity.get_all_feature_states(feature_name=feature_name)
-            if not feature_states:
+            # Filtered after evaluation rather than before: a segment may
+            # depend on a flag other than the one asked for.
+            evaluated_feature_state = next(
+                (
+                    evaluated_feature_state
+                    for evaluated_feature_state in evaluated_feature_states
+                    if _feature_name_matches(
+                        evaluated_feature_state.evaluation_result["name"],
+                        feature_name,
+                    )
+                ),
+                None,
+            )
+            if evaluated_feature_state is None:
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
             return Response(
-                self.get_serializer(feature_states[0]).data,
+                self.get_serializer(evaluated_feature_state).data,
                 status=status.HTTP_200_OK,
             )
 
-        feature_states = identity.get_all_feature_states()
-        flags = self.get_serializer(feature_states, many=True)
+        flags = self.get_serializer(evaluated_feature_states, many=True)
         return Response(flags.data, status=status.HTTP_200_OK)
 
 
@@ -1221,5 +1306,37 @@ def create_segment_override(  # type: ignore[no-untyped-def]
         data=request.data, context={"environment": environment, "feature": feature}
     )
     serializer.is_valid(raise_exception=True)
-    serializer.save(environment=environment, feature=feature)  # type: ignore[no-untyped-call]
-    return Response(serializer.data, status=201)
+
+    if not (feature_segment_data := serializer.validated_data.get("feature_segment")):
+        raise ValidationError({"feature_segment": ["This field is required."]})
+
+    segment = feature_segment_data["segment"]
+    priority = feature_segment_data.get("priority")
+    feature_state_data = typing.cast(
+        LegacyFeatureStateData, dict(serializer.validated_data)
+    )
+    check_segment_is_not_system(segment)
+    if get_segment_override(
+        environment=environment, feature=feature, segment_id=segment.id
+    ):
+        raise ValidationError("The flag is already overridden for this segment.")
+    feature_state_data.setdefault("enabled", False)
+    if exceeds_segment_override_limit(environment):
+        raise ValidationError({"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE})
+    if priority is None:
+        priority = get_next_segment_override_priority(
+            environment=environment, feature=feature
+        )
+
+    feature_state = write_segment_override(
+        environment=environment,
+        feature=feature,
+        segment_id=segment.id,
+        feature_state_data=feature_state_data,
+        author=AuthorData.from_request(request),
+        priority=priority,
+    )
+    return Response(
+        CustomCreateSegmentOverrideFeatureStateSerializer(feature_state).data,
+        status=201,
+    )

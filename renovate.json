@@ -4,6 +4,14 @@
     "security:only-security-updates",
     ":semanticCommitTypeAll(deps)"
   ],
+  "gitIgnoredAuthors": ["flagsmith-engineering[bot]@users.noreply.github.com"],
+  "constraints": {
+    "npm": "^11.10.0"
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 9am on monday"]
+  },
   "packageRules": [
     {
       "matchManagers": ["pep621"],
@@ -40,6 +48,12 @@
       "matchPackageNames": ["flagsmith-common", "flagsmith-private"],
       "enabled": true,
       "rangeStrategy": "bump"
+    },
+    {
+      "description": "Re-enable lock file maintenance, which security:only-security-updates disables. Keep last with an empty scope to ensure commit scope is applied correctly.",
+      "matchUpdateTypes": ["lockFileMaintenance"],
+      "enabled": true,
+      "semanticCommitScope": ""
     }
   ],
   "semanticCommitScope": ""

@@ -4,7 +4,6 @@ import Project from 'common/project'
 import {
   ContentType,
   FeatureState,
-  FeatureStateValue,
   FlagsmithValue,
   MultivariateFeatureStateValue,
   MultivariateOption,
@@ -13,6 +12,7 @@ import {
   ProjectFlag,
   SegmentCondition,
   Tag,
+  TraitValue,
   UserPermissions,
 } from 'common/types/responses'
 import flagsmith from '@flagsmith/flagsmith'
@@ -22,6 +22,7 @@ import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 import { getDefaultVariantKey } from './multivariate'
+import { featureStateToValue } from './featureStateToValue'
 import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
@@ -60,16 +61,11 @@ export type PaidFeature =
 
 export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
 
-// Define a type for plan categories
-type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
-
-export const planNames = {
-  enterprise: 'Enterprise',
-  free: 'Free',
-  scaleUp: 'Scale-Up',
-  startup: 'Startup',
-}
+export { planNames } from './plans'
+export type { Plan } from './plans'
+import { Plan, planNames } from './plans'
 import BaseUtils from './base/_utils'
+import { copyToClipboard } from './copyToClipboard'
 const Utils = Object.assign({}, BaseUtils, {
   appendImage: (src: string) => {
     const img = document.createElement('img')
@@ -147,19 +143,7 @@ const Utils = Object.assign({}, BaseUtils, {
     return res
   },
 
-  copyToClipboard: async (
-    value: string,
-    successMessage?: string,
-    errorMessage?: string,
-  ) => {
-    try {
-      await navigator.clipboard.writeText(value)
-      toast(successMessage ?? 'Copied to clipboard')
-    } catch (error) {
-      toast(errorMessage ?? 'Failed to copy to clipboard')
-      throw error
-    }
-  },
+  copyToClipboard,
 
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
@@ -180,23 +164,7 @@ const Utils = Object.assign({}, BaseUtils, {
     }
     return null
   },
-  featureStateToValue(featureState: FeatureStateValue) {
-    if (!featureState) {
-      return null
-    }
-
-    //@ts-ignore value_type is the type key on core traits
-    switch (featureState.value_type || featureState.type) {
-      case 'bool':
-        return featureState.boolean_value
-      case 'float':
-        return featureState.float_value
-      case 'int':
-        return featureState.integer_value
-      default:
-        return featureState.string_value
-    }
-  },
+  featureStateToValue,
   findOperator(
     operator: SegmentCondition['operator'],
     value: string,
@@ -493,16 +461,19 @@ const Utils = Object.assign({}, BaseUtils, {
 
   getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
-    if (!plan || planName === planNames.free) {
-      return false
-    }
+    if (!plan) return false
+
+    const requiredPlan = Utils.getRequiredPlan(feature)
+    if (requiredPlan === 'free') return true
+
+    if (planName === planNames.free) return false
+
     const isScaleupOrGreater = planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
     if (feature === 'AUTO_SEATS') {
       return isScaleupOrGreater && !isEnterprise
     }
 
-    const requiredPlan = Utils.getRequiredPlan(feature)
     if (requiredPlan === 'enterprise') {
       return isEnterprise
     } else if (requiredPlan === 'scale-up') {
@@ -555,21 +526,6 @@ const Utils = Object.assign({}, BaseUtils, {
         plan = 'enterprise'
         break
       }
-      case 'WAREHOUSE': {
-        const remotePlansValue = Utils.getFlagsmithJSONValue(
-          'experimentation_warehouse_connection',
-          [],
-        )
-        const remotePlans: string[] = Array.isArray(remotePlansValue)
-          ? remotePlansValue
-          : []
-        const allowedPlans = [...remotePlans, 'enterprise']
-        const planHierarchy: Plan[] = ['start-up', 'scale-up', 'enterprise']
-        plan =
-          planHierarchy.find((p) => allowedPlans.includes(p)) || 'enterprise'
-        break
-      }
-
       case 'SCHEDULE_FLAGS':
       case 'CREATE_ADDITIONAL_PROJECT':
       case '2FA':
@@ -897,7 +853,7 @@ const Utils = Object.assign({}, BaseUtils, {
       type: 'unicode',
     }
   },
-  valueToTrait(value: FlagsmithValue) {
+  valueToTrait(value: FlagsmithValue): TraitValue {
     const val = Utils.getTypedValue(value)
 
     if (typeof val === 'boolean') {

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import datetime
+import itertools
 import logging
 import typing
 import uuid
@@ -25,9 +26,11 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     LifecycleModelMixin,
     hook,
 )
-from flag_engine.utils.hashing import get_hashed_percentage_for_object_ids
 from ordered_model.models import OrderedModelBase  # type: ignore[import-untyped]
 from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
+from simple_history.utils import (  # type: ignore[import-untyped]
+    bulk_update_with_history,
+)
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
@@ -85,6 +88,8 @@ from . import audit_helpers
 logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
+    from flagsmith_schemas.types import FeatureValue
+
     from environments.identities.models import Identity
     from environments.models import Environment
 
@@ -151,7 +156,7 @@ class Feature(  # type: ignore[django-manager-missing]
             and self.deleted_at
         ):
             call_github_task(
-                organisation_id=self.project.organisation_id,  # type: ignore[arg-type]
+                organisation_id=self.project.organisation_id,
                 type=GitHubEventType.FLAG_DELETED.value,
                 feature=self,
                 segment_name=None,
@@ -233,16 +238,6 @@ class Feature(  # type: ignore[django-manager-missing]
 
     def _get_project(self) -> typing.Optional["Project"]:
         return self.project
-
-
-def get_next_segment_priority(feature):  # type: ignore[no-untyped-def]
-    feature_segments = FeatureSegment.objects.filter(feature=feature).order_by(
-        "-priority"
-    )
-    if feature_segments.count() == 0:
-        return 1
-    else:
-        return feature_segments.first().priority + 1
 
 
 class FeatureSegment(
@@ -359,7 +354,7 @@ class FeatureSegment(
         """
         feature_segments = cls.objects.filter(
             id__in=[pair[0] for pair in new_feature_segment_id_priorities]
-        )
+        ).order_by("priority", "id")
 
         existing_feature_segment_id_priority_pairs = cls.to_id_priority_tuple_pairs(
             feature_segments
@@ -377,9 +372,31 @@ class FeatureSegment(
 
         id_priority_dict = dict(new_feature_segment_id_priorities)
 
+        # Since this method doesn't enforce that the caller sends an exhaustive list
+        # covering all FeatureSegments that currently exist, we ensure that the
+        # given priorities are respected, and adjust any existing priorities that
+        # might create duplicates.
+        reference = feature_segments[0]
+        free_priorities = (
+            priority
+            for priority in itertools.count()
+            if priority not in id_priority_dict.values()
+        )
+        changed = []
+        for fs in cls.objects.filter(
+            feature_id=reference.feature_id,
+            environment_id=reference.environment_id,
+            environment_feature_version_id=reference.environment_feature_version_id,
+        ).order_by("priority", "id"):
+            priority = id_priority_dict.get(fs.id)
+            if priority is None:
+                priority = next(free_priorities)
+            if fs.priority != priority:
+                fs.priority = priority
+                changed.append(fs)
+        bulk_update_with_history(changed, cls, ["priority"])
         for fs in feature_segments:
-            new_priority = id_priority_dict[fs.id]
-            fs.to(new_priority)
+            fs.priority = id_priority_dict[fs.id]
 
         request = getattr(HistoricalRecords.thread, "request", None)
         if request:
@@ -449,7 +466,7 @@ class FeatureSegment(
             and self.feature.project.organisation.github_config.exists()
         ):
             call_github_task(
-                self.feature.project.organisation_id,  # type: ignore[arg-type]
+                self.feature.project.organisation_id,
                 GitHubEventType.SEGMENT_OVERRIDE_DELETED.value,
                 self.feature,
                 self.segment.name,
@@ -726,30 +743,10 @@ class FeatureState(
             self.get_feature_state_key_name(fsv_type): value,
         }
 
-    def get_feature_state_value_by_hash_key(
-        self,
-        identity_hash_key: typing.Union[str, int] = None,  # type: ignore[assignment]
-    ) -> typing.Any:
-        feature_state_value = (
-            self.get_multivariate_feature_state_value(identity_hash_key)  # type: ignore[arg-type]
-            if self.feature.type == MULTIVARIATE and identity_hash_key
-            else getattr(self, "feature_state_value", None)
-        )
-
-        # return the value of the feature state value only if the feature state
-        # has a related feature state value. Note that we use getattr rather than
-        # hasattr as we want to return None if no feature state value exists.
+    def get_feature_state_value(self) -> "FeatureValue":
+        """This state's stored value, before any evaluation."""
+        feature_state_value = getattr(self, "feature_state_value", None)
         return feature_state_value and feature_state_value.value
-
-    def get_feature_state_value(self, identity: "Identity" = None) -> typing.Any:  # type: ignore[assignment]
-        identity_hash_key = (
-            identity.get_hash_key(
-                identity.environment.use_identity_composite_key_for_hashing
-            )
-            if identity
-            else None
-        )
-        return self.get_feature_state_value_by_hash_key(identity_hash_key)  # type: ignore[arg-type]
 
     def get_feature_state_value_defaults(self) -> dict[str, typing.Any]:
         if (
@@ -795,6 +792,7 @@ class FeatureState(
             FeatureState.objects.get_live_feature_states(
                 environment=self.environment,  # type: ignore[arg-type]
                 additional_filters=lineage_filter,
+                include_superseded=True,
                 feature_id=self.feature_id,
                 identity__isnull=True,
             )
@@ -804,36 +802,6 @@ class FeatureState(
             .first()
         )
         return superseded
-
-    def get_multivariate_feature_state_value(
-        self, identity_hash_key: str
-    ) -> AbstractBaseFeatureValueModel:
-        # the multivariate_feature_state_values should be prefetched at this point
-        # so we just convert them to a list and use python operations from here to
-        # avoid further queries to the DB
-        mv_options = list(self.multivariate_feature_state_values.all())
-
-        percentage_value = get_hashed_percentage_for_object_ids(
-            [self.mv_hashing_seed, identity_hash_key]
-        )
-
-        # Iterate over the mv options in order of id (so we get the same value each
-        # time) to determine the correct value to return to the identity based on
-        # the percentage allocations of the multivariate options. This gives us a
-        # way to ensure that the same value is returned every time we use the same
-        # percentage value.
-        start_percentage = 0
-        for mv_option in sorted(mv_options, key=lambda o: o.id):
-            limit = getattr(mv_option, "percentage_allocation", 0) + start_percentage
-            if start_percentage <= percentage_value < limit:
-                return mv_option.multivariate_feature_option
-
-            start_percentage = limit
-
-        # if none of the percentage allocations match the percentage value we got for
-        # the identity, then we just return the default feature state value (or None
-        # if there isn't one - although this should never happen)
-        return getattr(self, "feature_state_value", None)  # type: ignore[return-value]
 
     @hook(BEFORE_CREATE)
     @hook(BEFORE_SAVE, when="deleted", is_not=True)
@@ -1113,16 +1081,12 @@ class FeatureState(
 
     def get_environment_default(self) -> typing.Optional["FeatureState"]:
         if self.feature_segment_id or self.identity_id:
-            return (
-                self.__class__.objects.get_live_feature_states(
-                    environment=self.environment,  # type: ignore[arg-type]
-                    feature_id=self.feature_id,
-                    feature_segment_id__isnull=True,
-                    identity_id__isnull=True,
-                )
-                .order_by("-version", "-environment_feature_version__live_from")
-                .first()
-            )
+            return FeatureState.objects.get_live_feature_states(
+                environment=self.environment,  # type: ignore[arg-type]
+                feature_id=self.feature_id,
+                feature_segment_id__isnull=True,
+                identity_id__isnull=True,
+            ).first()
 
         return None
 

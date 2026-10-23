@@ -8,7 +8,6 @@ return v10's EvaluationContext TypedDict instead of the original return type.
 import typing
 
 from flag_engine.context.types import (
-    EvaluationContext,
     FeatureContext,
     SegmentContext,
     SegmentRule,
@@ -18,52 +17,7 @@ from util.engine_models.features.models import (
     FeatureStateModel,
     MultivariateFeatureStateValueModel,
 )
-from util.engine_models.identities.models import IdentityModel
-from util.engine_models.identities.traits.models import TraitModel
 from util.engine_models.segments.models import SegmentModel, SegmentRuleModel
-
-if typing.TYPE_CHECKING:
-    from environments.models import Environment
-
-
-def map_environment_identity_to_context(
-    environment: "Environment",
-    identity: IdentityModel,
-    override_traits: typing.Optional[typing.List[TraitModel]],
-) -> EvaluationContext:
-    """
-    Map an environment and IdentityModel to an EvaluationContext.
-
-    Vendored from flagsmith-flag-engine's fix/missing-export branch and adapted
-    to return v10's EvaluationContext TypedDict.
-
-    :param environment: An Environment object.
-    :param identity: The identity model object (Pydantic IdentityModel).
-    :param override_traits: A list of TraitModel objects, to be used in place of
-        `identity.identity_traits` if provided.
-    :return: An EvaluationContext containing the environment and identity.
-    """
-    traits = {
-        trait.trait_key: trait.trait_value
-        for trait in (
-            override_traits if override_traits is not None else identity.identity_traits
-        )
-    }
-    if identity.system_traits:
-        # System-owned traits are not user data: on a key clash, the system
-        # value wins.
-        traits.update(identity.system_traits)
-    return {
-        "environment": {
-            "key": environment.api_key,
-            "name": environment.name or "",
-        },
-        "identity": {
-            "identifier": identity.identifier,
-            "key": str(identity.django_id or identity.composite_key),
-            "traits": traits,
-        },
-    }
 
 
 def _map_feature_states_to_feature_contexts(
@@ -160,26 +114,3 @@ def map_segment_to_segment_context(segment: SegmentModel) -> SegmentContext:
             _map_feature_states_to_feature_contexts(segment_feature_states).values()
         )
     return segment_ctx
-
-
-# TODO: Migrate to get_evaluation_result - see #6669
-def is_context_in_segment(
-    context: EvaluationContext,
-    segment: SegmentModel,
-) -> bool:
-    """
-    Check if an evaluation context matches a segment.
-
-    This is a compatibility wrapper that bridges the Pydantic SegmentModel
-    with the v10 flag-engine's TypedDict-based evaluation API.
-
-    :param context: The EvaluationContext (TypedDict).
-    :param segment: The SegmentModel (Pydantic model).
-    :return: True if the context matches the segment rules.
-    """
-    from flag_engine.segments.evaluator import (
-        is_context_in_segment as v10_is_context_in_segment,
-    )
-
-    segment_context = map_segment_to_segment_context(segment)
-    return v10_is_context_in_segment(context, segment_context)

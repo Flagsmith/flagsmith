@@ -1,1 +1,2 @@
-export { default } from './CreateSegmentSourcesModal'
+export { default, getSegmentSources } from './CreateSegmentSourcesModal'
+export type { SegmentSource } from './CreateSegmentSourcesModal'

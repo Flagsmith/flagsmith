@@ -1,7 +1,13 @@
+from contextlib import AbstractContextManager
+from datetime import datetime
 from typing import Callable, Literal, Optional, Protocol
 
+from django.db.models import QuerySet
 from django_test_migrations.migrator import Migrator
 
+from audit.models import AuditLog
+from environments.identities.models import Identity
+from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.permissions.models import UserOrganisationPermission
 from projects.models import UserProjectPermission
@@ -44,3 +50,46 @@ class EnableFeaturesFixture(Protocol):
 
 class MigratorFactory(Protocol):
     def __call__(self, name: Optional[str] = None) -> Migrator: ...
+
+
+class VariantAssignmentFixture(Protocol):
+    def __call__(
+        self,
+        identities: "list[Identity]",
+        feature_name: str,
+    ) -> dict[str, str | None]: ...
+
+
+class SetMultivariateAllocationsFixture(Protocol):
+    def __call__(
+        self,
+        environment_api_key: str,
+        feature_state_id: int,
+        allocation_by_mv_option_id: dict[int, float],
+    ) -> None: ...
+
+
+class CreateSegmentOverrideFixture(Protocol):
+    def __call__(
+        self,
+        environment_api_key: str,
+        feature_id: int,
+        segment_id: int,
+        enabled: bool = True,
+        priority: int | None = None,
+    ) -> None: ...
+
+
+class CreateChangeRequestSegmentOverrideFixture(Protocol):
+    def __call__(
+        self,
+        environment: Environment,
+        feature_id: int,
+        segment_id: int,
+        committed: bool = False,
+        live_from: datetime | None = None,
+    ) -> None: ...
+
+
+class CaptureAuditLogsFixture(Protocol):
+    def __call__(self) -> AbstractContextManager[QuerySet[AuditLog]]: ...

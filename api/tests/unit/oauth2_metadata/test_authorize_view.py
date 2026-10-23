@@ -339,7 +339,7 @@ def test_get__flagsmith_cli_requests_admin_api__returns_application_info(
     data = response.json()
     assert data["application"]["client_id"] == FLAGSMITH_CLI_CLIENT_ID
     assert data["scopes"]["admin-api"] == {
-        "label": "Admin API access",
+        "label": "Management API access",
         "grants": list(SCOPE_GRANTS[SCOPE_ADMIN_API]),
     }
     assert data["is_verified"] is True

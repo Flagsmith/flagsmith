@@ -274,6 +274,13 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):  # type: ignore[m
             return json.loads(self.feature_states_to_update)  # type: ignore[no-any-return]
         return []
 
+    def get_parsed_segment_ids_to_create_overrides(self) -> list[int]:
+        return [
+            feature_state["feature_segment"]["segment"]
+            for feature_state in self.get_parsed_feature_states_to_create()
+            if feature_state.get("feature_segment")
+        ]
+
     def get_parsed_segment_ids_to_delete_overrides(self) -> list[int]:
         if self.segment_ids_to_delete_overrides:
             return json.loads(self.segment_ids_to_delete_overrides)  # type: ignore[no-any-return]

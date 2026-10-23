@@ -36,6 +36,8 @@ interface CreateSegmentRulesTabFormProps {
   setDescription: (description: string) => void
   identity?: boolean
   readOnly?: boolean
+  // Explains why editing is unavailable; defaults to the permission hint.
+  readOnlyMessage?: string
   showDescriptions: boolean
   setShowDescriptions: (show: boolean) => void
   allWarnings: string[]
@@ -64,6 +66,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
   onCancel,
   onCreateChangeRequest,
   readOnly,
+  readOnlyMessage,
   rulesEl,
   save,
   segment,
@@ -257,7 +260,8 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
             }
             place='left'
           >
-            {Constants.projectPermissions(ProjectPermission.ADMIN)}
+            {readOnlyMessage ||
+              Constants.projectPermissions(ProjectPermission.ADMIN)}
           </Tooltip>
         </div>
       ) : (

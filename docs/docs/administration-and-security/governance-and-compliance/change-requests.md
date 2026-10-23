@@ -25,6 +25,11 @@ Once an environment is configured with Feature Change Requests enabled, a Change
 an environment default for a feature flag, or when creating or updating a segment override. **Identity overrides are
 applied immediately**.
 
+In environments using [Feature Versioning](/managing-flags/feature-versioning), this applies to the API as well as the
+dashboard: publishing a feature version directly, either with `publish_immediately` or through the version's `publish`
+action, is rejected with a `409 Conflict` and a `change_requests_enabled` error code. Unpublished versions can still be
+created.
+
 When creating a Feature Change Request, you will need to provide it a **title** and, optionally, a **description**.
 
 ![A Feature Change Request](/img/change-requests/feature-change-request.png)
@@ -92,7 +97,15 @@ to a single environment.
 ### Create a Segment Change Request
 
 Once a project is configured with Segment Change Requests enabled, **editing an existing segment** will require a Change
-Request to be submitted.
+Request to be submitted. This applies to the API as well as the dashboard: requests that write to a segment directly are
+rejected with a `409 Conflict` and a `change_requests_enabled` error code.
+
+**Deleting a segment that has feature overrides** is also refused while Segment Change Requests are enabled.
+That includes live overrides, or scheduled to go live.
+
+To delete such a segment, remove its feature overrides first. Note that removing an override is governed by
+[Feature Change Requests](#feature-change-requests), which are enabled per environment and are separate from Segment
+Change Requests.
 
 While creating a new segment (including rules and conditions) is not gated, a segment only affects identities once
 feature overrides are added to it. Adding segment overrides to a feature can be gated by

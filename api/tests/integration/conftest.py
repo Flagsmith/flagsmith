@@ -1,9 +1,14 @@
 import json
 import uuid
+from contextlib import contextmanager
+from typing import Generator, cast
 
 import pytest
+import requests
+import responses
 from django.core.cache import BaseCache
 from django.core.cache.backends.locmem import LocMemCache
+from django.db.models import QuerySet
 from django.test import Client as DjangoClient
 from django.urls import reverse
 from influxdb_client import InfluxDBClient
@@ -14,15 +19,52 @@ from rest_framework.test import APIClient
 
 from app.utils import create_hash
 from app_analytics.influxdb_wrapper import InfluxDBWrapper
+from audit.models import AuditLog
 from environments.enums import EnvironmentDocumentCacheMode
+from features.future.types import (
+    SegmentOverrideRequest,
+    UpdateFlagRequest,
+    UpdateFlagResponse,
+)
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
+from tests.integration.types import GetFeatureFixture
+from tests.types import (
+    CaptureAuditLogsFixture,
+    CreateSegmentOverrideFixture,
+    SetMultivariateAllocationsFixture,
+)
 from users.models import FFAdminUser
 
 
 @pytest.fixture()
 def mv_option_value():  # type: ignore[no-untyped-def]
     return "test_mv_value"
+
+
+@pytest.fixture()
+def set_mv_allocations(admin_client: APIClient) -> SetMultivariateAllocationsFixture:
+    """Reallocate a multivariate feature state's variants, through the API."""
+
+    def _set_mv_allocations(
+        environment_api_key: str,
+        feature_state_id: int,
+        allocation_by_mv_option_id: dict[int, float],
+    ) -> None:
+        url = f"/api/v1/environments/{environment_api_key}/featurestates/{feature_state_id}/"
+        feature_state_data = admin_client.get(url).json()
+        for mv_value in feature_state_data["multivariate_feature_state_values"]:
+            mv_value["percentage_allocation"] = allocation_by_mv_option_id[
+                mv_value["multivariate_feature_option"]
+            ]
+        response = admin_client.put(
+            url,
+            data=json.dumps(feature_state_data),
+            content_type="application/json",
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    return _set_mv_allocations
 
 
 @pytest.fixture()
@@ -48,21 +90,24 @@ def influxdb(settings: SettingsWrapper) -> InfluxDBClient:
     settings.INFLUXDB_ORG = "flagsmith"
     settings.INFLUXDB_TOKEN = "admin-token"
 
-    # Matches api.app_analytics.influxdb_wrapper bucket definitions
-    client = InfluxDBWrapper.get_client()
-    bucket_api = client.buckets_api()
-    bucket_names = [
-        "api_usage_downsampled_15m",
-        "api_usage_downsampled_1h",
-    ]
-    for bucket_name in bucket_names:
-        if not bucket_api.find_bucket_by_name(bucket_name):  # type: ignore[no-untyped-call]
-            bucket_api.create_bucket(
-                org="flagsmith",
-                bucket_name=bucket_name,
-            )
+    InfluxDBWrapper.get_client.cache_clear()
 
-    return client
+    url = f"{settings.INFLUXDB_URL}/api/v2/buckets"
+    responses.add_passthru(url)
+    headers = {"Authorization": f"Token {settings.INFLUXDB_TOKEN}"}
+    buckets = requests.get(url, headers=headers, timeout=30).json()["buckets"]
+    organisation_id = buckets[0]["orgID"]
+    existing = {bucket["name"] for bucket in buckets}
+    for bucket_name in ("api_usage_downsampled_15m", "api_usage_downsampled_1h"):
+        if bucket_name not in existing:
+            requests.post(
+                url,
+                headers=headers,
+                json={"name": bucket_name, "orgID": organisation_id},
+                timeout=30,
+            ).raise_for_status()
+
+    return InfluxDBWrapper.get_client()
 
 
 @pytest.fixture()
@@ -383,6 +428,59 @@ def feature_segment(admin_client, segment, feature, environment):  # type: ignor
         url, data=json.dumps(data), content_type="application/json"
     )
     return response.json()["id"]
+
+
+@pytest.fixture
+def capture_audit_logs() -> CaptureAuditLogsFixture:
+    @contextmanager
+    def _capture_audit_logs() -> Generator[QuerySet[AuditLog], None, None]:
+        last_log_before = AuditLog.objects.only("id").order_by("-id").first()
+        yield (queryset := AuditLog.objects.none())
+        last_log_after = AuditLog.objects.only("id").order_by("-id").first()
+        queryset.query = AuditLog.objects.filter(  # Force context window
+            id__gt=last_log_before.id if last_log_before else 0,
+            id__lte=last_log_after.id if last_log_after else 0,
+        ).query
+
+    return _capture_audit_logs
+
+
+@pytest.fixture
+def get_feature(admin_client: APIClient) -> GetFeatureFixture:
+    def _get_feature(environment_api_key: str, feature_id: int) -> UpdateFlagResponse:
+        response = admin_client.get(
+            f"/api/__future__/environments/{environment_api_key}/features/{feature_id}/",
+        )
+        assert response.status_code == 200
+        return cast(UpdateFlagResponse, response.json())
+
+    return _get_feature
+
+
+@pytest.fixture()
+def create_segment_override(admin_client: APIClient) -> CreateSegmentOverrideFixture:
+    """Return a callable putting a segment override live, whichever versioning is in use."""
+
+    def _create_segment_override(
+        environment_api_key: str,
+        feature_id: int,
+        segment_id: int,
+        enabled: bool = True,
+        priority: int | None = None,
+    ) -> None:
+        segment_override = SegmentOverrideRequest(
+            {"segment": {"id": segment_id}, "enabled": enabled}
+        )
+        if priority is not None:
+            segment_override["priority"] = priority
+        response = admin_client.patch(
+            f"/api/__future__/environments/{environment_api_key}/features/{feature_id}/",
+            UpdateFlagRequest({"segment_overrides": [segment_override]}),
+            format="json",
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    return _create_segment_override
 
 
 @pytest.fixture()

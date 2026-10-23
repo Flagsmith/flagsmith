@@ -60,11 +60,11 @@ class IdentityModel(BaseModel):
         return f"{env_key}_{identifier}"
 
     def get_hash_key(self, use_identity_composite_key_for_hashing: bool) -> str:
-        return (
-            self.composite_key
-            if use_identity_composite_key_for_hashing
-            else self.identifier
-        )
+        if use_identity_composite_key_for_hashing:
+            return self.composite_key
+        if self.django_id is not None:
+            return str(self.django_id)
+        return self.identifier
 
     def update_traits(
         self, traits: typing.List[TraitModel]

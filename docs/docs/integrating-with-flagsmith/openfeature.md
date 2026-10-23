@@ -21,12 +21,14 @@ We currently offer [OpenFeature Providers](https://docs.openfeature.dev/docs/ref
 - [.Net](https://github.com/open-feature/dotnet-sdk-contrib/tree/main/src/OpenFeature.Contrib.Providers.Flagsmith)
 - [JavaScript/Web](https://github.com/open-feature/js-sdk-contrib/tree/main/libs/providers/flagsmith-client)
 - [JavaScript/Server](https://github.com/open-feature/js-sdk-contrib/tree/main/libs/providers/flagsmith)
+- [Kotlin](https://github.com/Flagsmith/flagsmith-openfeature-provider-kotlin)
 - [Python](https://github.com/Flagsmith/flagsmith-openfeature-provider-python)
+- [Ruby](https://github.com/open-feature/ruby-sdk-contrib/tree/main/providers/openfeature-flagsmith-provider)
+- [Rust](https://github.com/open-feature/rust-sdk-contrib/tree/main/crates/flagsmith)
+- [Swift](https://github.com/Flagsmith/flagsmith-openfeature-swift-provider)
 
 ### Planned Providers
 
 We plan on implementing providers for the following languages as soon as we can:
 
 - PHP
-- Kotlin
-- Swift

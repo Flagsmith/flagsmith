@@ -183,6 +183,68 @@ INSERTED_AT = datetime(2026, 5, 8, 12, 0, 0, tzinfo=timezone.utc)
             ),
             id="multiple traits flatten to a single dict",
         ),
+        pytest.param(
+            {
+                "identity_uuid": UUID_A,
+                "identifier": "alice",
+                "environment_api_key": "env-key",
+                "composite_key": "env_x_alice",
+                "created_date": "2026-05-08T00:00:00Z",
+                "identity_traits": [
+                    {"trait_key": "plan", "trait_value": "growth"},
+                    {"trait_key": "flagsmith_cohort_abc", "trait_value": "spoofed"},
+                ],
+                "system_traits": {
+                    "flagsmith_cohort_abc": True,
+                    "flagsmith_score": Decimal("1.5"),
+                },
+            },
+            (
+                "env-key",
+                "alice",
+                "env_x_alice",
+                {
+                    "plan": "growth",
+                    "flagsmith_cohort_abc": True,
+                    "flagsmith_score": 1.5,
+                },
+                INSERTED_AT,
+            ),
+            id="system traits merged over user traits, system wins on clash",
+        ),
+        pytest.param(
+            {
+                "identity_uuid": UUID_A,
+                "identifier": "alice",
+                "environment_api_key": "env-key",
+                "composite_key": "env_x_alice",
+                "created_date": "2026-05-08T00:00:00Z",
+                "system_traits": {"flagsmith_cohort_abc": True},
+            },
+            (
+                "env-key",
+                "alice",
+                "env_x_alice",
+                {"flagsmith_cohort_abc": True},
+                INSERTED_AT,
+            ),
+            id="system traits alone produce a traits dict",
+        ),
+        pytest.param(
+            {
+                "identity_uuid": UUID_A,
+                "identifier": "alice",
+                "environment_api_key": "env-key",
+                "composite_key": "env_x_alice",
+                "created_date": "2026-05-08T00:00:00Z",
+                "identity_traits": [
+                    {"trait_key": "plan", "trait_value": "growth"},
+                ],
+                "system_traits": None,
+            },
+            ("env-key", "alice", "env_x_alice", {"plan": "growth"}, INSERTED_AT),
+            id="NULL-stored system_traits counts as absent",
+        ),
     ],
 )
 def test_map_identity_document_to_clickhouse_row__cases__return_expected(

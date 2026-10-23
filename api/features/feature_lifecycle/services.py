@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from django.db.models.expressions import Case, Exists, OuterRef, Value, When
 from django.db.models.fields import BooleanField
-from django.db.models.functions import Cast
 from django.db.models.query import QuerySet
 from django.utils import timezone
 
@@ -10,18 +9,8 @@ from app_analytics.services import get_features_in_use
 from environments.models import Environment
 from features.feature_lifecycle.types import LifecycleStage
 from features.models import Feature
-from integrations.flagsmith.client import get_openfeature_client
-from organisations.models import Organisation
 from projects.code_references.services import get_feature_flags_in_latest_scan
 from projects.tags.models import Tag, TagType
-
-
-def is_feature_lifecycle_enabled(organisation: Organisation) -> bool:
-    return get_openfeature_client().get_boolean_value(
-        "feature_lifecycle",
-        default_value=False,
-        evaluation_context=organisation.openfeature_evaluation_context,
-    )
 
 
 def annotate_feature_queryset_with_lifecycle_stage(
@@ -42,7 +31,7 @@ def annotate_feature_queryset_with_lifecycle_stage(
         has_recent_usage=(
             Exists(features_in_use.filter(pk=OuterRef("pk")))
             if features_in_use is not None
-            else Cast(Value(None), output_field=BooleanField())
+            else Value(None, output_field=BooleanField())
         ),
         has_permanent_tag=Exists(
             Tag.objects.filter(feature=OuterRef("pk"), is_permanent=True),

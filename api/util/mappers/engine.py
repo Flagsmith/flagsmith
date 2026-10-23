@@ -3,13 +3,8 @@ from itertools import chain
 from typing import TYPE_CHECKING, Dict, List, Optional
 from uuid import UUID
 
-from flag_engine.context import types as engine_types
-from flag_engine.segments.types import ConditionOperator, RuleType
-from pydantic import TypeAdapter
-
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from features.versioning.models import EnvironmentFeatureVersion
-from segments.types import SegmentEngineMetadata
 from util.engine_models.environments.integrations.models import IntegrationModel
 from util.engine_models.environments.models import (
     EnvironmentAPIKeyModel,
@@ -48,20 +43,16 @@ if TYPE_CHECKING:  # pragma: no cover
     from integrations.webhook.models import WebhookConfiguration
     from organisations.models import Organisation
     from projects.models import Project
-    from segments.models import Condition, Segment, SegmentRule
+    from segments.models import Segment, SegmentRule
 
 
 __all__ = (
-    "map_condition_to_segment_condition",
     "map_environment_api_key_to_engine",
     "map_environment_to_engine",
     "map_feature_to_engine",
     "map_identity_to_engine",
-    "map_environment_to_evaluation_context",
     "map_mv_option_to_engine",
-    "map_rule_to_segment_rule",
     "map_segment_to_engine",
-    "map_segment_to_segment_context",
     "map_traits_to_engine",
 )
 
@@ -139,6 +130,7 @@ def map_feature_state_to_engine(
     feature_state: "FeatureState",
     *,
     mv_fs_values: Optional[Iterable["MultivariateFeatureStateValue"]] = None,
+    metadata: Optional[dict[str, object]] = None,
 ) -> FeatureStateModel:
     feature = feature_state.feature
     feature_segment: Optional["FeatureSegment"] = feature_state.feature_segment
@@ -151,6 +143,7 @@ def map_feature_state_to_engine(
         feature_segment_model = None
 
     return FeatureStateModel(
+        metadata=metadata,
         enabled=feature_state.enabled,
         # The engine and SDKs seed multivariate variant allocation on django_id,
         # so feeding it the bucketing seed keeps variant assignment stable when
@@ -208,10 +201,16 @@ def map_environment_to_engine(
     :param Environment environment: the environment to map
     :rtype EnvironmentModel
     """
+    from experimentation.feature_state_metadata import (  # avoid circular import
+        get_feature_state_metadata_builder,
+    )
+
     project: "Project" = environment.project
     organisation: "Organisation" = project.organisation
 
     # Read relationships - grab all the data needed from the ORM here.
+
+    get_feature_state_metadata = get_feature_state_metadata_builder(environment)
 
     project_segments = [
         ps for ps in project.segments.all() if ps.id == ps.version_of_id
@@ -295,6 +294,7 @@ def map_environment_to_engine(
                     mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
                         feature_state.pk,
                     ),
+                    metadata=get_feature_state_metadata(feature_state),
                 )
                 for feature_state in project_segment_feature_states_by_segment_id.pop(
                     segment.pk
@@ -322,6 +322,7 @@ def map_environment_to_engine(
             mv_fs_values=multivariate_feature_state_values_by_feature_state_id.pop(
                 feature_state.pk,
             ),
+            metadata=get_feature_state_metadata(feature_state),
         )
         for feature_state in environment_feature_states
     ]
@@ -438,78 +439,6 @@ def map_identity_to_engine(
         identity_features=identity_feature_state_models,  # type: ignore[arg-type]
         identity_traits=identity_trait_models,
     )
-
-
-_rule_type_adapter: TypeAdapter[RuleType] = TypeAdapter(RuleType)
-_condition_operator_adapter: TypeAdapter[ConditionOperator] = TypeAdapter(
-    ConditionOperator
-)
-
-
-def map_environment_to_evaluation_context(
-    *,
-    environment: "Environment",
-    identity: "Identity | None" = None,
-    traits: "Iterable[Trait] | None" = None,
-    segments: "Iterable[Segment] | None" = None,
-) -> "engine_types.EvaluationContext[SegmentEngineMetadata, object]":
-    """Map Django ORM Environment (and optionally Identity) to a flag-engine EvaluationContext."""
-    context: engine_types.EvaluationContext[SegmentEngineMetadata, object] = {
-        "environment": {
-            "key": environment.api_key,
-            "name": environment.name or "",
-        },
-    }
-    if identity is not None:
-        trait_items: "Iterable[Trait]" = (
-            traits if traits is not None else identity.identity_traits.all()
-        )
-        context["identity"] = {
-            "identifier": identity.identifier,
-            "key": identity.get_hash_key(
-                environment.use_identity_composite_key_for_hashing
-            ),
-            "traits": {trait.trait_key: trait.trait_value for trait in trait_items},
-        }
-    if segments is not None:
-        context["segments"] = {
-            str(segment.pk): map_segment_to_segment_context(segment)
-            for segment in segments
-        }
-    return context
-
-
-def map_segment_to_segment_context(
-    segment: "Segment",
-) -> "engine_types.SegmentContext[SegmentEngineMetadata, object]":
-    """Map a Django ORM Segment to a flag-engine SegmentContext TypedDict."""
-    return {
-        "key": str(segment.pk),
-        "name": segment.name,
-        "rules": [map_rule_to_segment_rule(rule) for rule in segment.rules.all()],
-        "metadata": SegmentEngineMetadata(pk=segment.pk),
-    }
-
-
-def map_rule_to_segment_rule(rule: "SegmentRule") -> engine_types.SegmentRule:
-    return {
-        "type": _rule_type_adapter.validate_python(rule.type),
-        "conditions": [
-            map_condition_to_segment_condition(condition)
-            for condition in rule.conditions.all()
-        ],
-        "rules": [map_rule_to_segment_rule(sub_rule) for sub_rule in rule.rules.all()],
-    }
-
-
-def map_condition_to_segment_condition(
-    condition: "Condition",
-) -> engine_types.StrValueSegmentCondition:
-    return {
-        "property": condition.property or "",
-        "operator": _condition_operator_adapter.validate_python(condition.operator),
-        "value": condition.value or "",
-    }
 
 
 def _get_prioritised_feature_states(

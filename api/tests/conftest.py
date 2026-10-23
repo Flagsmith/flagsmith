@@ -40,12 +40,9 @@ from common.environments.permissions import (
     VIEW_IDENTITIES,
 )
 from common.projects.permissions import CREATE_ENVIRONMENT, DELETE_FEATURE, VIEW_PROJECT
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
-from django.db import connections
-from django.db.backends.base.creation import TEST_DATABASE_PREFIX
-from django.test.utils import setup_databases
+from django.db import DEFAULT_DB_ALIAS, connections
 from django_test_migrations.migrator import Migrator
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb  # type: ignore[import-untyped]
@@ -54,13 +51,12 @@ from openfeature.provider.in_memory_provider import InMemoryFlag, InMemoryProvid
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest import FixtureRequest
 from pytest_django.fixtures import SettingsWrapper
-from pytest_django.plugin import blocking_manager_key
+from pytest_django.plugin import DjangoDbBlocker
 from pytest_mock import MockerFixture
 from rest_framework.test import APIClient
 from task_processor.task_run_method import TaskRunMethod
 from urllib3 import BaseHTTPResponse
 from urllib3.connectionpool import HTTPConnectionPool
-from xdist import get_xdist_worker_id  # type: ignore[import-untyped]
 
 from api_keys.models import MasterAPIKey
 from api_keys.user import APIKeyUser
@@ -81,6 +77,8 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
+from evaluation.services import evaluate_identity
+from experimentation.models import Experiment, ExperimentStatus
 from features.feature_external_resources.models import FeatureExternalResource
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
@@ -116,10 +114,17 @@ from segments.models import Condition, Segment, SegmentRule
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
+from tests.migration_snapshots import (
+    MigrationSnapshots,
+    SnapshotMigrator,
+    build_snapshots,
+    template_backed_test_databases,
+)
 from tests.types import (
     AdminClientAuthType,
     EnableFeaturesFixture,
     MigratorFactory,
+    VariantAssignmentFixture,
     WithEnvironmentPermissionsCallable,
     WithOrganisationPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -132,37 +137,20 @@ from util.mappers import (
     map_identity_override_to_identity_override_document,
 )
 
-trait_key = "key1"
-trait_value = "value1"
-
-
 # ---------------------------------------------------------------------------
 # Hooks
 # ---------------------------------------------------------------------------
 
 
-def pytest_addoption(parser: pytest.Parser) -> None:
-    parser.addoption(
-        "--ci",
-        action="store_true",
-        default=False,
-        help="Enable CI mode",
-    )
+@pytest.fixture(scope="session", autouse=True)
+def _template_backed_test_databases() -> typing.Generator[None, None, None]:
+    """Clone test databases from a migrated template rather than migrating.
 
-
-@pytest.hookimpl(trylast=True)  # type: ignore[misc]
-def pytest_configure(config: pytest.Config) -> None:
-    if (
-        config.option.ci
-        and config.option.dist != "no"
-        and not hasattr(config, "workerinput")
-    ):
-        with config.stash[blocking_manager_key].unblock():
-            setup_databases(
-                verbosity=config.option.verbose,
-                interactive=False,
-                parallel=config.option.numprocesses,
-            )
+    Autouse and session scoped so that it wraps `django_db_setup`, whichever
+    worker gets there first. See `tests.migration_snapshots`.
+    """
+    with template_backed_test_databases():
+        yield
 
 
 # ---------------------------------------------------------------------------
@@ -211,27 +199,6 @@ def fs(fs: FakeFilesystem) -> FakeFilesystem:
             paths_to_add.append(site_package_path)  # pragma: no cover
     fs.add_real_paths(paths_to_add)
     return fs
-
-
-@pytest.fixture(scope="session")
-def django_db_setup(request: pytest.FixtureRequest) -> None:
-    if (
-        request.config.option.ci
-        # xdist worker id is either `gw[0-9]+` or `master`
-        and (xdist_worker_id_suffix := get_xdist_worker_id(request)[2:]).isnumeric()
-    ):
-        # Django's test database clone indices start at 1,
-        # Pytest's worker indices are 0-based
-        test_db_suffix = str(int(xdist_worker_id_suffix) + 1)
-    else:
-        # Tests are run on main node, which assumes -n0
-        return request.getfixturevalue("django_db_setup")  # type: ignore[no-any-return] # pragma: no cover
-
-    from django.conf import settings
-
-    for db_settings in settings.DATABASES.values():
-        test_db_name = f"{TEST_DATABASE_PREFIX}{db_settings['NAME']}_{test_db_suffix}"
-        db_settings["NAME"] = test_db_name
 
 
 @pytest.fixture()
@@ -458,8 +425,7 @@ def segment_rules() -> list[SegmentRuleType]:
                             "description": "Jumping very high does not count!",
                         },
                     ],
-                    # Cleanup type-ignore as per https://github.com/Flagsmith/flagsmith/issues/8280
-                    "rules": [],  # type: ignore[typeddict-unknown-key]
+                    "rules": [],
                 },
             ],
         }
@@ -583,6 +549,29 @@ def environment_v2_versioning(environment: Environment) -> Environment:
 
 
 @pytest.fixture()
+def variant_assignment() -> VariantAssignmentFixture:
+    """Which variant each identity is currently bucketed into.
+
+    Goes through the same entry point the SDK endpoints do, so that a test
+    asserting an identity keeps its variant is asserting it of production
+    behaviour rather than of a probe written alongside it.
+    """
+
+    def _variant_assignment(
+        identities: list[Identity],
+        feature_name: str,
+    ) -> dict[str, str | None]:
+        return {
+            identity.identifier: evaluate_identity(identity).result["flags"][
+                feature_name
+            ]["variant"]
+            for identity in identities
+        }
+
+    return _variant_assignment
+
+
+@pytest.fixture()
 def identity(environment: Environment) -> Identity:
     return Identity.objects.create(identifier="test_identity", environment=environment)
 
@@ -595,7 +584,17 @@ def identity_featurestate(identity, feature):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def trait(identity):  # type: ignore[no-untyped-def]
+def trait_key() -> str:
+    return "key1"
+
+
+@pytest.fixture()
+def trait_value() -> str:
+    return "value1"
+
+
+@pytest.fixture()
+def trait(identity: Identity, trait_key: str, trait_value: str) -> Trait:
     return Trait.objects.create(
         identity=identity, trait_key=trait_key, string_value=trait_value
     )
@@ -668,6 +667,46 @@ def project_change_request(project: Project, admin_user: FFAdminUser) -> ChangeR
 @pytest.fixture()
 def feature_state(feature: Feature, environment: Environment) -> FeatureState:
     return FeatureState.objects.get(environment=environment, feature=feature)  # type: ignore[no-any-return]
+
+
+@pytest.fixture()
+def running_experiment(
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> Experiment:
+    """A running experiment on `feature`, rolled out to identities with trait `cohort=in`."""
+    rollout_segment = Segment.objects.create(
+        project=environment.project,
+        name="Experiment rollout",
+    )
+    Condition.objects.create(
+        rule=SegmentRule.objects.create(
+            segment=rollout_segment,
+            type=SegmentRule.ALL_RULE,
+        ),
+        property="cohort",
+        operator=EQUAL,
+        value="in",
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=rollout_segment,
+            environment=environment,
+        ),
+        enabled=True,
+    )
+    return Experiment.objects.create(  # type: ignore[no-any-return]
+        environment=environment,
+        feature=feature,
+        name="New checkout CTA",
+        hypothesis="Buy now converts better",
+        status=ExperimentStatus.RUNNING,
+        rollout_segment=rollout_segment,
+    )
 
 
 @pytest.fixture()
@@ -1413,10 +1452,14 @@ def clickhouse_db(
     """
     if "clickhouse" not in settings.DATABASES:  # pragma: no cover
         pytest.skip("No ClickHouse database configured, skipping")
-    request.applymarker(pytest.mark.django_db(databases=["default", "clickhouse"]))
-    request.getfixturevalue("db")  # Resolve `db` only after injecting the clickhouse db
-    yield
     connection = connections["clickhouse"]
+    connection.fake_transaction = True  # type: ignore[attr-defined]
+    try:
+        request.applymarker(pytest.mark.django_db(databases=["default", "clickhouse"]))
+        request.getfixturevalue("db")
+        yield
+    finally:
+        connection.fake_transaction = False  # type: ignore[attr-defined]
     with connection.cursor() as cursor:
         for table_name in connection.introspection.table_names(cursor):
             cursor.execute(f"TRUNCATE TABLE {connection.ops.quote_name(table_name)}")
@@ -1615,17 +1658,53 @@ def dynamo_environment_wrapper(
     return wrapper
 
 
+@pytest.fixture(scope="session")
+def migration_snapshots(
+    django_db_setup: None,
+    django_db_blocker: DjangoDbBlocker,
+) -> typing.Generator[dict[str, MigrationSnapshots], None, None]:
+    """Session-wide cache for migration snapshots."""
+    snapshots: dict[str, MigrationSnapshots] = {}
+    with django_db_blocker.unblock():
+        yield snapshots
+        for snapshot in snapshots.values():
+            snapshot.close()
+
+
+@pytest.fixture()
+def migrator_factory(
+    request: pytest.FixtureRequest,
+    transactional_db: None,
+    django_db_use_migrations: bool,
+    migration_snapshots: dict[str, MigrationSnapshots],
+) -> MigratorFactory:
+    """Override `django_test_migrations`' fixture of the same name.
+
+    Differences from the original fixture:
+    1. Uses the faster `SnapshotMigrator` to execute the migrations.
+    2. Relies on the `migration_snapshots` cache.
+    """
+    if not django_db_use_migrations:  # pragma: no cover
+        pytest.skip("--no-migrations was specified")
+
+    def factory(database_name: str | None = None) -> Migrator:
+        alias = database_name or DEFAULT_DB_ALIAS
+        if alias not in migration_snapshots:
+            migration_snapshots[alias] = build_snapshots(alias)
+        migrator = SnapshotMigrator(alias, migration_snapshots[alias])
+        request.addfinalizer(migrator.reset)
+        return migrator
+
+    return typing.cast(MigratorFactory, factory)
+
+
 @pytest.fixture()
 def migrator(migrator_factory: MigratorFactory) -> Migrator:
-    if settings.SKIP_MIGRATION_TESTS:  # pragma: no cover
-        pytest.skip("Skip migration tests to speed up tests where necessary")
     migrator: Migrator = migrator_factory()
     return migrator
 
 
 @pytest.fixture()
 def analytics_migrator(migrator_factory: MigratorFactory) -> Migrator:
-    if settings.SKIP_MIGRATION_TESTS:  # pragma: no cover
-        pytest.skip("Skip migration tests to speed up tests where necessary")
     migrator: Migrator = migrator_factory("analytics")
     return migrator

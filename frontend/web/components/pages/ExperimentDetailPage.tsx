@@ -1,6 +1,6 @@
 import { FC } from 'react'
 import { useHistory, useParams } from 'react-router-dom'
-import Utils from 'common/utils/utils'
+import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 import {
   useGetExperimentBayesianResultsQuery,
   useGetExperimentExposuresQuery,
@@ -17,6 +17,7 @@ import ExperimentSummaryScorecard from 'components/experiments/results/Experimen
 import ExperimentMetricScorecard from 'components/experiments/results/ExperimentMetricScorecard'
 import ExperimentExposuresPanel from 'components/experiments/results/ExperimentExposuresPanel'
 import ExperimentResultsRefreshControl from 'components/experiments/results/ExperimentResultsRefreshControl'
+import ExperimentConversionRateCard from 'components/experiments/results/ExperimentConversionRateCard'
 
 type ExperimentDetailParams = {
   projectId: string
@@ -29,7 +30,8 @@ const ExperimentDetailPage: FC = () => {
     useParams<ExperimentDetailParams>()
   const history = useHistory()
   const numericId = Number(experimentId)
-  const hasFeature = Utils.getFlagsmithHasFeature('experimental_flags')
+  const { enabled: hasFeature, isLoading: isLoadingFeature } =
+    useExperimentationEnabled()
 
   const {
     data: experiment,
@@ -52,14 +54,14 @@ const ExperimentDetailPage: FC = () => {
 
   const results = bayesianResults?.payload ?? undefined
 
-  if (!hasFeature) {
+  if (!isLoadingFeature && !hasFeature) {
     history.replace(
       `/project/${projectId}/environment/${environmentId}/features`,
     )
     return null
   }
 
-  if (isLoading) {
+  if (isLoadingFeature || isLoading) {
     return (
       <div className='app-container container'>
         <div className='text-center py-5'>
@@ -118,6 +120,11 @@ const ExperimentDetailPage: FC = () => {
 
           <h5 className='mb-3 mt-5'>Analysis</h5>
           <ExperimentMetricScorecard
+            experiment={experiment}
+            results={results}
+          />
+          <ExperimentConversionRateCard
+            asOf={bayesianResults?.as_of ?? null}
             experiment={experiment}
             results={results}
           />

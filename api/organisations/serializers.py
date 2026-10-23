@@ -11,6 +11,10 @@ from organisations.chargebee import (  # type: ignore[attr-defined]
     get_subscription_data_from_hosted_page,
 )
 from organisations.invites.models import Invite
+from organisations.services import (
+    get_api_limit_enforcement,
+    is_overage_billing_eligible,
+)
 from users.models import FFAdminUser, UserPermissionGroup
 
 from .models import (
@@ -25,8 +29,14 @@ from .subscriptions.constants import CHARGEBEE
 logger = logging.getLogger(__name__)
 
 
+class CurrentBillingPeriodSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    starts_at = serializers.DateTimeField(read_only=True)
+    ends_at = serializers.DateTimeField(read_only=True)
+
+
 class SubscriptionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     has_active_billing_periods = serializers.SerializerMethodField()
+    current_billing_period = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
@@ -36,10 +46,23 @@ class SubscriptionSerializer(serializers.ModelSerializer):  # type: ignore[type-
     def get_has_active_billing_periods(self, obj):  # type: ignore[no-untyped-def]
         return obj.has_active_billing_periods
 
+    @extend_schema_field(CurrentBillingPeriodSerializer(allow_null=True))
+    def get_current_billing_period(
+        self, obj: Subscription
+    ) -> dict[str, typing.Any] | None:
+        if (period := obj.get_current_billing_period()) is None:
+            return None
+        return CurrentBillingPeriodSerializer(
+            {"starts_at": period.start, "ends_at": period.end}
+        ).data
+
 
 class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
     subscription = SubscriptionSerializer(required=False)
     role = serializers.SerializerMethodField()
+    api_limit_restriction_enabled = serializers.SerializerMethodField()
+    api_limit_grace_period_used = serializers.SerializerMethodField()
+    overage_billing_eligible = serializers.SerializerMethodField()
 
     class Meta:
         model = Organisation
@@ -54,6 +77,10 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "role",
             "persist_trait_data",
             "block_access_to_admin",
+            "stop_serving_flags",
+            "api_limit_restriction_enabled",
+            "api_limit_grace_period_used",
+            "overage_billing_eligible",
             "restrict_project_create_to_admin",
             "force_2fa",
             "targeting_key",
@@ -65,6 +92,10 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "role",
             "persist_trait_data",
             "block_access_to_admin",
+            "stop_serving_flags",
+            "api_limit_restriction_enabled",
+            "api_limit_grace_period_used",
+            "overage_billing_eligible",
         )
         extra_kwargs = {
             "targeting_key": {"write_only": True},
@@ -86,6 +117,20 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             user = self.context["request"].user
             return user.get_organisation_role(instance)
 
+    @extend_schema_field({"type": "boolean"})
+    def get_api_limit_restriction_enabled(self, instance: Organisation) -> bool:
+        return get_api_limit_enforcement(instance).enabled
+
+    @extend_schema_field({"type": "boolean"})
+    def get_api_limit_grace_period_used(self, instance: Organisation) -> bool:
+        if not settings.ENABLE_API_USAGE_ALERTING:
+            return False
+        return hasattr(instance, "breached_grace_period")
+
+    @extend_schema_field({"type": "boolean"})
+    def get_overage_billing_eligible(self, instance: Organisation) -> bool:
+        return is_overage_billing_eligible(instance)
+
 
 class OrganisationSerializerBasic(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
@@ -98,7 +143,8 @@ class UserOrganisationSerializer(serializers.ModelSerializer):  # type: ignore[t
 
     class Meta:
         model = UserOrganisation
-        fields = ("role", "organisation")
+        fields = ("role", "organisation", "is_active")
+        read_only_fields = ("is_active",)
 
 
 class InviteSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]

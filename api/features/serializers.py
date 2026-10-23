@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Any
+from functools import cached_property
+from typing import Any, Callable
 from uuid import UUID
 
 import django.core.exceptions
@@ -12,6 +13,7 @@ from common.features.serializers import (
 )
 from common.projects.permissions import VIEW_PROJECT
 from django.db import models
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
@@ -25,11 +27,12 @@ from environments.identities.models import Identity
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
-from integrations.github.constants import GitHubEventType
-from integrations.github.github import call_github_task
-from integrations.gitlab.services import (
-    post_gitlab_state_change_comment_for_feature_state,
+from evaluation.results import get_split_weight
+from evaluation.types import EvaluatedFeatureState
+from experimentation.feature_state_metadata import (
+    get_feature_state_metadata_builder,
 )
+from integrations.vcs.services import dispatch_vcs_on_feature_state_changed
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.code_references.serializers import (
     FeatureFlagCodeReferencesRepositoryCountSerializer,
@@ -55,8 +58,7 @@ from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
 from .feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE
-from .models import Feature, FeatureState
-from .multivariate.models import MultivariateFeatureOption
+from .models import Feature, FeatureSegment, FeatureState
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
 
@@ -76,7 +78,7 @@ class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[
 
     @extend_schema_field({"type": ["string", "integer", "boolean"], "nullable": True})
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
-        return obj.get_feature_state_value(identity=self.context.get("identity"))
+        return obj.get_feature_state_value()
 
 
 class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -556,21 +558,20 @@ class SDKFeatureSerializer(HideSensitiveFieldsSerializerMixin, FeatureSerializer
     )
 
 
-class FeatureStateSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
-    feature = FeatureSerializer()
+class FeatureStateSerializerFull(serializers.Serializer):  # type: ignore[type-arg]
+    id = serializers.IntegerField(source="feature_state.id")
+    feature = FeatureSerializer(source="feature_state.feature")
     feature_state_value = serializers.SerializerMethodField()
-
-    class Meta:
-        model = FeatureState
-        fields = (
-            "id",
-            "feature",
-            "feature_state_value",
-            "environment",
-            "identity",
-            "feature_segment",
-            "enabled",
-        )
+    environment = serializers.IntegerField(
+        source="feature_state.environment_id", allow_null=True
+    )
+    identity = serializers.IntegerField(
+        source="feature_state.identity_id", allow_null=True
+    )
+    feature_segment = serializers.IntegerField(
+        source="feature_state.feature_segment_id", allow_null=True
+    )
+    enabled = serializers.BooleanField(source="evaluation_result.enabled")
 
     @extend_schema_field(
         {
@@ -583,8 +584,8 @@ class FeatureStateSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "nullable": True,
         }
     )
-    def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
-        return obj.get_feature_state_value(identity=self.context.get("identity"))
+    def get_feature_state_value(self, obj: EvaluatedFeatureState) -> Any:
+        return obj.evaluation_result["value"]
 
 
 class FeatureOwnerInputSerializer(UserIdsSerializer):
@@ -633,7 +634,7 @@ class ProjectFeatureSerializer(serializers.ModelSerializer):  # type: ignore[typ
 class SDKFeatureStateSerializer(
     HideSensitiveFieldsSerializerMixin, FeatureStateSerializerFull
 ):
-    feature = SDKFeatureSerializer()
+    feature = SDKFeatureSerializer(source="feature_state.feature")
     sensitive_fields = (
         "id",
         "environment",
@@ -644,23 +645,30 @@ class SDKFeatureStateSerializer(
 
 class SDKIdentityFeatureStateSerializer(SDKFeatureStateSerializer):
     variant = serializers.SerializerMethodField()
-
-    class Meta(SDKFeatureStateSerializer.Meta):
-        fields = SDKFeatureStateSerializer.Meta.fields + ("variant",)  # type: ignore[assignment]
+    metadata = serializers.SerializerMethodField()
 
     @extend_schema_field({"type": "string", "nullable": True})
-    def get_variant(self, obj: FeatureState) -> str | None:
-        if obj.feature.type != MULTIVARIATE:
+    def get_variant(self, obj: EvaluatedFeatureState) -> str | None:
+        if obj.feature_state.feature.type != MULTIVARIATE:
             return None
-        identity = self.context["identity"]
-        value_object = obj.get_multivariate_feature_state_value(
-            identity.get_hash_key(
-                identity.environment.use_identity_composite_key_for_hashing
-            )
-        )
-        if isinstance(value_object, MultivariateFeatureOption):
-            return value_object.key
-        return CONTROL_VARIANT_KEY
+        variant = obj.evaluation_result["variant"]
+        if variant is None and get_split_weight(obj.evaluation_result) is None:
+            return CONTROL_VARIANT_KEY
+        return variant
+
+    @cached_property
+    def _build_metadata(self) -> Callable[[FeatureState], dict[str, Any] | None]:
+        return get_feature_state_metadata_builder(self.context["environment"])
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_metadata(self, obj: EvaluatedFeatureState) -> dict[str, Any] | None:
+        return self._build_metadata(obj.feature_state)
+
+    def to_representation(self, instance: EvaluatedFeatureState) -> dict[str, Any]:
+        representation: dict[str, Any] = super().to_representation(instance)  # type: ignore[no-untyped-call]
+        if not representation.get("metadata"):
+            representation.pop("metadata", None)
+        return representation
 
 
 class FeatureStateSerializerBasic(WritableNestedModelSerializer):
@@ -690,31 +698,13 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
         }
     )
     def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
-        return obj.get_feature_state_value(identity=self.context.get("identity"))
+        return obj.get_feature_state_value()
 
     def save(self, **kwargs):  # type: ignore[no-untyped-def]
         try:
             response = super().save(**kwargs)  # type: ignore[no-untyped-call]
-
-            feature_state = self.instance
-            if (
-                not feature_state.identity_id  # type: ignore[union-attr]
-                and feature_state.feature.external_resources.exists()  # type: ignore[union-attr]
-                and feature_state.environment.project.github_project.exists()  # type: ignore[union-attr]
-                and feature_state.environment.project.organisation.github_config.exists()  # type: ignore[union-attr]
-            ):
-                call_github_task(
-                    organisation_id=feature_state.feature.project.organisation_id,  # type: ignore[union-attr]
-                    type=GitHubEventType.FLAG_UPDATED.value,
-                    feature=feature_state.feature,  # type: ignore[union-attr]
-                    segment_name=None,
-                    url=None,
-                    feature_states=[feature_state],
-                )
-
-            if isinstance(feature_state, FeatureState):
-                post_gitlab_state_change_comment_for_feature_state(feature_state)
-
+            if isinstance(feature_state := self.instance, FeatureState):
+                dispatch_vcs_on_feature_state_changed(feature_state)
             return response
 
         except django.core.exceptions.ValidationError as e:
@@ -735,6 +725,19 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
                 "Cannot change the environment of a feature state"
             )
         return environment
+
+    def validate_feature_segment(
+        self, feature_segment: FeatureSegment | None
+    ) -> FeatureSegment | None:
+        feature_segment_id = feature_segment.id if feature_segment else None
+        if (
+            isinstance(self.instance, FeatureState)
+            and self.instance.feature_segment_id != feature_segment_id
+        ):
+            raise serializers.ValidationError(
+                "Cannot change the feature segment of a feature state"
+            )
+        return feature_segment
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         environment = attrs.get("environment") or self.context["environment"]

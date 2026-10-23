@@ -4,6 +4,7 @@ import pytest
 
 from environments.identities.models import Identity
 from environments.models import Environment
+from evaluation.services import get_identity_feature_states
 from features.models import FeatureState
 from integrations.segment.models import SegmentConfiguration
 from integrations.segment.segment import SegmentWrapper
@@ -43,7 +44,7 @@ def test_segment_generate_user_data__correct_values__returns_expected_data(
 
     # When
     user_data = segment_wrapper.generate_user_data(
-        identity=identity, feature_states=[feature_state, feature_state_with_value]
+        identity=identity, feature_states=get_identity_feature_states(identity)
     )
 
     # Then

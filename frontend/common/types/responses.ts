@@ -160,6 +160,55 @@ export type SegmentRule = {
   conditions: SegmentCondition[]
   version_of: number | undefined
 }
+// One feature's dependency on another, as served by the dependencies API.
+// Mirrors `DependencyEdge` in api/features/dependencies/types.py.
+export type DependencyFeature = {
+  id: number
+  name: string
+}
+
+export type DependencyEdgeSegment = {
+  id: number
+  name: string
+  rules: SegmentRule[]
+  condition_json_path: string
+  // False for edges a user wrote by hand in a segment; those cannot be
+  // removed through the dependencies API.
+  is_system: boolean
+}
+
+// A link between two flags, not a flag: `feature` is the gated one and
+// `prerequisite` the one gating it, so which end a screen shows is up to it.
+export type DependencyEdge = {
+  feature: DependencyFeature
+  prerequisite: DependencyFeature
+  segment: DependencyEdgeSegment
+}
+
+export type StagedAction = 'add' | 'remove'
+
+export type StagedDependencyChange = {
+  action: StagedAction
+  prerequisite: DependencyFeature
+}
+
+export type DependencyConflictCode =
+  | 'circular_dependency'
+  | 'dependency_exists'
+  | 'feature_is_prerequisite'
+  | 'prerequisite_has_prerequisite'
+  | 'prerequisite_is_self'
+
+export type DependencyConflictDetail = {
+  code: DependencyConflictCode
+  message: string
+  environment: {
+    key: string
+    name: string
+  }
+  path: DependencyEdge[]
+}
+
 export type SegmentMembership = {
   environment: number
   count: number
@@ -174,6 +223,18 @@ export type SegmentMembersResponse = PagedResponse<SegmentMember> & {
   // Pass as `cursor` to fetch the next page; null when there are no more rows.
   next_cursor: string | null
 }
+export type CohortSourceType = 'csv' | 'amplitude' | 'mixpanel'
+
+export type SegmentCohort = {
+  id: number
+  environment: number
+  environment_api_key: string
+  environment_name: string
+  source_type: CohortSourceType
+  version: number
+  deletion_requested_at: string | null
+}
+
 export type Segment = {
   id: number
   rules: SegmentRule[]
@@ -184,7 +245,11 @@ export type Segment = {
   feature?: number
   metadata: Metadata[] | []
   membership_counts?: SegmentMembership[]
+  cohort?: SegmentCohort | null
+  managed_by?: SegmentManagedBy
 }
+// What creates and edits the segment, empty where users do.
+export type SegmentManagedBy = '' | 'cohort' | 'dependency' | 'experiment'
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
   | 'environment_feature_versions'
@@ -418,6 +483,8 @@ export type User = {
   isGettingStarted?: boolean
   // TODO: Use enum
   role: string
+  // Only returned when users are listed in the context of an organisation.
+  is_organisation_membership_active?: boolean
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean
@@ -502,6 +569,14 @@ export type AuditLogDetail = AuditLogItem & {
     new: FlagsmithValue
   }[]
 }
+export type PaymentMethod = 'CHARGEBEE' | 'XERO' | 'AWS_MARKETPLACE'
+
+/** The monthly allowance window, null outside an active billing term. */
+export type CurrentBillingPeriod = {
+  starts_at: string
+  ends_at: string
+}
+
 export type Subscription = {
   id: number
   uuid: string
@@ -512,8 +587,10 @@ export type Subscription = {
   max_api_calls: number
   cancellation_date: string | null
   customer_id: string
-  payment_method: string
+  payment_method: PaymentMethod | null
   notes: string | null
+  has_active_billing_periods: boolean
+  current_billing_period: CurrentBillingPeriod | null
 }
 
 export type OnboardingVariant = 'control' | 'single_page'
@@ -532,6 +609,10 @@ export type Organisation = {
   role: string
   persist_trait_data: boolean
   block_access_to_admin: boolean
+  stop_serving_flags: boolean
+  api_limit_restriction_enabled: boolean
+  api_limit_grace_period_used: boolean
+  overage_billing_eligible: boolean
   restrict_project_create_to_admin: boolean
 }
 export type Identity = {
@@ -578,9 +659,19 @@ export type MultivariateFeatureStateValue = {
 export type FeatureStateValue = {
   boolean_value: boolean | null
   float_value?: number | null
-  integer_value?: boolean | null
+  integer_value?: number | null
   string_value: string
   type: 'int' | 'unicode' | 'bool' | 'float'
+}
+
+// The trait shape from the core API, which keys its type as `value_type`
+// where feature states use `type`.
+export type TraitValue = {
+  boolean_value: boolean | null
+  float_value?: number | null
+  integer_value: number | null
+  string_value: string | null
+  value_type: 'int' | 'unicode' | 'bool' | 'float'
 }
 
 export type MultivariateOption = {
@@ -651,6 +742,23 @@ export type Experiment = {
   experiment_rollout?: ExperimentRollout
 }
 
+export type ExperimentAudienceMatch = 'any' | 'all'
+
+// Provenance only: the rules are a frozen copy on the rollout segment, so a
+// source segment can be deleted while the experiment keeps evaluating it.
+export type ExperimentAudienceSegment = {
+  id: number
+  name: string
+  is_cohort: boolean
+  cohort_source_type: CohortSourceType | null
+  deleted: boolean
+}
+
+export type ExperimentAudience = {
+  match: ExperimentAudienceMatch
+  segments: ExperimentAudienceSegment[]
+}
+
 export type ExperimentRollout = {
   enabled: boolean
   rollout_percentage: number
@@ -662,6 +770,7 @@ export type ExperimentRollout = {
     multivariate_feature_option: number
     percentage_allocation: number
   }[]
+  audience?: ExperimentAudience
 }
 
 export type ExpectedDirection =
@@ -701,6 +810,16 @@ export type ExposuresSummary = {
   timeseries: ExposuresTimeseries
 }
 
+export type ConversionsTimeseriesPoint = {
+  bucket: string
+  converted_identities: Record<string, number>
+}
+
+export type ConversionsTimeseries = {
+  granularity: ExposureGranularity
+  points: ConversionsTimeseriesPoint[]
+}
+
 export type ExperimentExposures = {
   as_of: string | null
   last_error_at: string | null
@@ -734,11 +853,19 @@ export type BayesianMetricResult = {
   metric_id: number
   variants: Record<string, VariantStats>
   inference: Record<string, Inference | null>
+  // Occurrence metrics only; null for value metrics. Absent from payloads
+  // stored before the backend shipped it (finalised experiments never gain it).
+  conversions_timeseries?: ConversionsTimeseries | null
 }
 
 export type BayesianResultsSummary = {
   srm_p_value: number | null
   metrics: BayesianMetricResult[]
+  // Denominator for the conversion-rate charts, same warehouse run as the
+  // metrics. Exposures bucket by first exposure and conversions by first
+  // conversion, so only running totals may be divided — a per-bucket division
+  // can exceed 100%. Absent from payloads stored before the backend shipped it.
+  exposures_timeseries?: ExposuresTimeseries
 }
 
 export enum TagStrategy {
@@ -794,6 +921,8 @@ export type FeatureState = {
   feature_state_value: FlagsmithValue
   id: number
   identity?: number
+  // Edge only. Core returns the numeric `identity` above instead.
+  identity_uuid?: string
   live_from?: string
   multivariate_feature_state_values: MultivariateFeatureStateValue[]
   updated_at: string
@@ -994,6 +1123,47 @@ export type Metadata = {
   field_value: string
 }
 
+export type CohortMembershipCounts = {
+  applied: number
+  pending_add: number
+  pending_remove: number
+}
+
+export type Cohort = {
+  id: number
+  uuid: string
+  name: string
+  description: string | null
+  segment: number
+  source_type: CohortSourceType
+  version: number
+  created_at: string
+  last_synced_at: string | null
+  membership_counts: CohortMembershipCounts
+}
+
+export type CohortSyncKey = {
+  prefix: string
+  name: string
+  created: string
+  key: string | null
+}
+
+// The plaintext key only exists in the create response.
+export type CohortSyncKeyCreated = CohortSyncKey & { key: string }
+
+export type CohortCsvSyncResult = {
+  version: number
+  added: number
+  removed: number
+  unchanged: number
+  ignored: {
+    empty: number
+    duplicates: number
+    too_long: number
+  }
+}
+
 export type MetadataFieldModelField = {
   id: number
   content_type: number
@@ -1102,6 +1272,7 @@ export type Version = {
     ci_commit_sha: string
     image_tag: string
     has_email_provider: boolean
+    experimentation_enabled: boolean
     is_enterprise: boolean
     is_saas: boolean
     'self_hosted_data'?: {
@@ -1248,6 +1419,8 @@ export interface UsageEventsList extends AggregateUsageDataItem {
   labels: {
     user_agent: string | null
   }
+  project_id: number | null
+  environment_id: number | null
 }
 
 export type WarehouseConnectionStatus =
@@ -1256,7 +1429,11 @@ export type WarehouseConnectionStatus =
   | 'connected'
   | 'errored'
 
-export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
+export type WarehouseType =
+  | 'flagsmith'
+  | 'snowflake'
+  | 'clickhouse'
+  | 'databricks'
 
 export type SnowflakeConfig = {
   account_identifier: string
@@ -1275,9 +1452,19 @@ export type ClickHouseConfig = {
   secure: boolean
 }
 
+export type DatabricksConfig = {
+  host: string
+  workspace_id: string
+  region: string
+  warehouse_id: string
+  catalog: string
+  schema: string
+}
+
 export type WarehouseConfigResponse =
   | SnowflakeConfig
   | ClickHouseConfig
+  | DatabricksConfig
   | Record<string, never>
 
 export type WarehouseConnectionTestResult = {
@@ -1302,9 +1489,31 @@ export type WarehouseConnection = {
   unique_events_count: number | null
 }
 
+export type TrustRelationshipClaimRule = {
+  claim: string
+  values: string[]
+}
+
+export type TrustRelationship = {
+  id: number
+  name: string
+  issuer: string
+  audience: string
+  claim_rules: TrustRelationshipClaimRule[]
+  is_admin: boolean
+  master_api_key_id: string
+  master_api_key_prefix: string
+  created_at: string
+  created_by: number | null
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
+  cohort: Cohort
+  cohortSyncKeys: CohortSyncKey[]
+  cohortSyncKeyCreated: CohortSyncKeyCreated
+  cohortCsvSync: CohortCsvSyncResult
   segmentMembers: SegmentMembersResponse
   auditLogs: PagedResponse<AuditLogItem>
   organisationLicence: {}
@@ -1313,6 +1522,7 @@ export type Res = {
   projects: ProjectSummary[]
   project: Project
   environments: PagedResponse<Environment>
+  allEnvironments: Environment[]
   webhook: Webhook
   webhooks: Webhook[]
   organisationUsage: {
@@ -1339,6 +1549,8 @@ export type Res = {
   healthProviders: HealthProvider[]
   account: Account
   userEmail: {}
+  activateAccount: null
+  resendActivationEmail: null
   groupAdmin: { id: string }
   groups: PagedResponse<UserGroup>
   group: UserGroup
@@ -1392,15 +1604,19 @@ export type Res = {
   launchDarklyProjectImport: LaunchDarklyProjectImport
   launchDarklyProjectsImport: LaunchDarklyProjectImport[]
   roleMasterApiKey: { id: number; master_api_key: string; role: number }
+  trustRelationship: TrustRelationship
+  trustRelationships: PagedResponse<TrustRelationship>
   masterAPIKeyWithMasterAPIKeyRoles: {
     id: string
     prefix: string
     roles: RolePermissionUser[]
   }
+  rolesMasterAPIKeyWithMasterAPIKeyRoles: PagedResponse<Role>
   userWithRoles: PagedResponse<Role>
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   updateChangeRequest: ChangeRequest
+  createEnvironmentChangeRequest: ChangeRequest
   groupSummaries: UserGroupSummary[]
   supportedContentType: ContentType[]
   externalResource: PagedResponse<ExternalResource>
@@ -1410,6 +1626,9 @@ export type Res = {
   githubRepos: GithubPaginatedRepos<Repository>
   segmentPriorities: {}
   featureSegment: FeatureState['feature_segment']
+  featureDependencies: { results: DependencyEdge[] }
+  featureDependents: { results: DependencyEdge[] }
+  featureDependency: DependencyEdge
   featureVersions: PagedResponse<FeatureVersion>
   users: User[]
   enableFeatureVersioning: { id: string }

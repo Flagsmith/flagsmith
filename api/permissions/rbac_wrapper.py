@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import Union
 
 from django.conf import settings
 from django.db.models import Q, QuerySet
@@ -61,7 +61,7 @@ def get_permitted_environments_for_master_api_key_using_roles(
     master_api_key: "MasterAPIKey",
     project: Project,
     permission_key: str,
-    tag_ids: List[int] = None,  # type: ignore[assignment]
+    tag_ids: list[int] | None = None,
 ) -> QuerySet[Environment]:
     if not settings.IS_RBAC_INSTALLED:
         return Environment.objects.none()  # type: ignore[no-any-return]

@@ -1,7 +1,6 @@
 import React, { FC, useState } from 'react'
 import Button from 'components/base/forms/Button'
 import CopyField from 'components/CopyField'
-import InputGroup from 'components/base/forms/InputGroup'
 import WarningMessage from 'components/WarningMessage'
 
 type ScimTokenModalProps = {
@@ -19,17 +18,14 @@ const ScimTokenModal: FC<ScimTokenModalProps> = ({ token }) => {
   return (
     <>
       <WarningMessage warningMessage='Copy this token now — it cannot be retrieved later. Store it somewhere secure before closing this dialogue.' />
-      <InputGroup
-        title='SCIM bearer token'
-        className='mt-3'
-        component={
-          <CopyField
-            value={token}
-            className='font-monospace'
-            data-test='scim-token-value'
-          />
-        }
-      />
+      <div className='form-group mt-3'>
+        <CopyField
+          title='SCIM bearer token'
+          value={token}
+          className='font-monospace'
+          data-test='scim-token-value'
+        />
+      </div>
       {isConfirming ? (
         <div className='mt-4 d-flex align-items-center justify-content-end gap-2'>
           <span className='me-auto text-muted'>

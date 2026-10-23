@@ -23,13 +23,7 @@ export default function withFeatureProvider(
       this.listenTo(
         FeatureListStore,
         'saved',
-        ({
-          changeRequest,
-          createdFlag,
-          error,
-          isCreate,
-          updatedChangeRequest,
-        }: any = {}) => {
+        ({ changeRequest, createdFlag, error, isCreate }: any = {}) => {
           if (error?.data?.metadata) {
             error.data.metadata?.forEach((m: any) => {
               if (Object.keys(m).length > 0) {
@@ -39,28 +33,10 @@ export default function withFeatureProvider(
           } else if (error?.data) {
             toast('Error updating the Flag', 'danger')
             return
-          } else {
-            const isEditingChangeRequest =
-              this.props.changeRequest && changeRequest
+          } else if (!changeRequest) {
+            // The modal toasts a change request once its dependencies are staged.
             const operation = createdFlag || isCreate ? 'Created' : 'Updated'
-            const type = changeRequest ? 'Change Request' : 'Feature'
-
-            const toastText = isEditingChangeRequest
-              ? `Updated ${type}`
-              : `${operation} ${type}`
-            const toastAction = changeRequest
-              ? {
-                  buttonText: 'Open',
-                  onClick: () => {
-                    closeModal()
-                    this.props.history.push(
-                      `/project/${this.props.projectId}/environment/${this.props.environmentId}/change-requests/${updatedChangeRequest?.id}`,
-                    )
-                  },
-                }
-              : undefined
-
-            toast(toastText, 'success', undefined, toastAction)
+            toast(`${operation} Feature`, 'success')
           }
           const envFlags = FeatureListStore.getEnvironmentFlags()
 

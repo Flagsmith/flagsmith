@@ -9,18 +9,13 @@ curl -o docker-compose.yml https://raw.githubusercontent.com/Flagsmith/flagsmith
 docker-compose -f docker-compose.yml up
 ```
 
-The application will bootstrap an admin user, organisation, and project for you. You'll find a link to set your password in your Compose logs:
-
-```txt
-Superuser "admin@example.com" created successfully.
-Please go to the following page and choose a password: http://localhost:8000/password-reset/confirm/.../...
-```
+Once the containers are up, open http://localhost:8000. On a fresh install, the dashboard walks you through creating your admin account and your first organisation.
 
 ### Local development
 
 The project assumes the following tools installed:
-- [Node.js](https://nodejs.org/) version 22.x
-- [npm](https://www.npmjs.com/) version 10.x
+- [Node.js](https://nodejs.org/) version 24.x
+- [npm](https://www.npmjs.com/) version 11.x (11.10 or later, as bundled with Node 24)
 
 To install dependencies, run `npm install`.
 

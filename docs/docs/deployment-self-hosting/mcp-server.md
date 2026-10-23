@@ -8,7 +8,7 @@ description: Run the Flagsmith MCP Server as part of your self-hosted deployment
 import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
 
 The [Flagsmith MCP Server](/integrating-with-flagsmith/mcp-server) gives AI assistants and agents access to the
-Flagsmith Admin API through the [Model Context Protocol](https://modelcontextprotocol.io). On Flagsmith SaaS it is
+Flagsmith Management API through the [Model Context Protocol](https://modelcontextprotocol.io). On Flagsmith SaaS it is
 hosted for you at `https://mcp.flagsmith.com`. When you self-host Flagsmith, you run the server yourself as an
 additional container alongside your API.
 
@@ -112,7 +112,7 @@ The server is configured entirely through environment variables.
 | `TRANSPORT`                   | `http`                      | MCP transport. Use `http` for a hosted server. `stdio` runs the server as a local subprocess and requires `FLAGSMITH_API_TOKEN`.                                          |
 | `FASTMCP_HOST`                | `0.0.0.0`                   | Host the HTTP transport binds to.                                                                                                                                         |
 | `FASTMCP_PORT`                | `8000`                      | Port the HTTP transport binds to.                                                                                                                                         |
-| `FLAGSMITH_API_TOKEN`         | _(unset)_                   | A static [API key](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication) the server uses for every request. See [Authentication](#authentication). |
+| `FLAGSMITH_API_TOKEN`         | _(unset)_                   | A static [API key](/integrating-with-flagsmith/flagsmith-api-overview/management-api/authentication) the server uses for every request. See [Authentication](#authentication). |
 | `METRICS_PORT`                | _(unset)_                   | Serve [Prometheus metrics](/deployment-self-hosting/observability/metrics) on this port. Disabled when unset.                                                             |
 | `LOG_LEVEL`                   | `INFO`                      | Log level for application loggers.                                                                                                                                        |
 | `LOG_FORMAT`                  | `generic`                   | Log output format. Set to `json` for structured logs.                                                                                                                     |
@@ -137,7 +137,7 @@ key instead.
 ### API key (non-interactive clients)
 
 Clients can authenticate per request by sending an
-[Organisation API key](/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication) in the
+[Organisation API key](/integrating-with-flagsmith/flagsmith-api-overview/management-api/authentication) in the
 `Authorization` header:
 
 ```

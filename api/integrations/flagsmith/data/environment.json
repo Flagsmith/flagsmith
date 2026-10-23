@@ -27,7 +27,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "ded4f142-aabc-4297-9752-115f0ef4065b",
+      "featurestate_uuid": "36d8e915-cf70-429e-b4d5-9606f67f6a04",
       "multivariate_feature_state_values": []
     },
     {
@@ -40,7 +40,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "fc3c0163-b8cd-458f-a1b8-8dff9e76e011",
+      "featurestate_uuid": "11bb3661-ecfa-4656-b9b8-800afa82961d",
       "multivariate_feature_state_values": []
     },
     {
@@ -52,17 +52,24 @@
         "type": "MULTIVARIATE"
       },
       "feature_segment": null,
-      "feature_state_value": null,
-      "featurestate_uuid": "b05bac5f-2172-42fc-85ec-841c045823c4",
+      "feature_state_value": "",
+      "featurestate_uuid": "e23e8e9f-f3a4-42db-85ee-1e0a099872fa",
+      "metadata": {
+        "experiment": {
+          "id": 134,
+          "in_experiment": false,
+          "name": "New onboarding Flow - v2"
+        }
+      },
       "multivariate_feature_state_values": [
         {
-          "id": 361128,
+          "id": 367626,
           "multivariate_feature_option": {
             "id": 30000,
             "key": "single_page",
             "value": ""
           },
-          "mv_fs_value_uuid": "c8e58a0d-d2b4-4d17-8a85-7ba2258a7812",
+          "mv_fs_value_uuid": "5748944c-39f9-4662-8cdb-66567a292e14",
           "percentage_allocation": 0
         }
       ]
@@ -187,7 +194,7 @@
   ],
   "project": {
     "id": 0,
-    "name": "Flagsmith Website",
+    "name": "Flagsmith",
     "hide_disabled_flags": false,
     "segments": [],
     "organisation": {

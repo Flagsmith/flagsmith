@@ -1,18 +1,26 @@
+import json
 from typing import Any
 
 from common.core.utils import is_saas
 from django.conf import settings
-from djoser.serializers import UserCreateSerializer  # type: ignore[import-untyped]
+from djoser.conf import settings as djoser_settings  # type: ignore[import-untyped]
+from djoser.serializers import (  # type: ignore[import-untyped]
+    TokenCreateSerializer,
+    UserCreateSerializer,
+)
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
+from e2etests.helpers import is_e2e_request
 from organisations.invites.models import Invite, InviteLink
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.models import FFAdminUser, SignUpType
 
 from .constants import (
+    EMAIL_NOT_VERIFIED_ERROR,
+    EMAIL_NOT_VERIFIED_ERROR_KEY,
     FIELD_BLANK_ERROR,
     INVALID_PASSWORD_ERROR,
     USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
@@ -23,6 +31,35 @@ class CustomTokenSerializer(serializers.ModelSerializer):  # type: ignore[type-a
     class Meta:
         model = Token
         fields = ("key",)
+
+
+class CustomTokenCreateSerializer(TokenCreateSerializer):  # type: ignore[misc]
+    """
+    Tells a user with correct credentials that their account is not yet
+    activated, instead of the generic invalid credentials error.
+
+    The password is verified first, so an address cannot be probed for its
+    activation state by anyone who does not already know the password.
+    """
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        try:
+            return super().validate(attrs)  # type: ignore[no-any-return]
+        except ValidationError:
+            self._raise_if_awaiting_activation(attrs)
+            raise
+
+    def _raise_if_awaiting_activation(self, attrs: dict[str, Any]) -> None:
+        email = attrs.get(djoser_settings.LOGIN_FIELD) or ""
+        user = FFAdminUser.objects.filter(email__iexact=email).first()
+        if (
+            user
+            and not user.is_active
+            and user.check_password(attrs.get("password") or "")
+        ):
+            raise ValidationError(
+                {EMAIL_NOT_VERIFIED_ERROR_KEY: [EMAIL_NOT_VERIFIED_ERROR]}
+            )
 
 
 class InviteLinkValidationMixin:
@@ -47,6 +84,10 @@ class InviteLinkValidationMixin:
 
 
 class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin):  # type: ignore[misc]
+    signup_anonymous_id = serializers.CharField(
+        write_only=True, required=False, max_length=64
+    )
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         if not settings.COOKIE_AUTH_ENABLED:
@@ -62,6 +103,7 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
             "is_active",
             "marketing_consent_given",
             "uuid",
+            "signup_anonymous_id",
         )
         read_only_fields = ("is_active", "uuid", "marketing_consent_given")
         write_only_fields = ("sign_up_type",)
@@ -72,6 +114,11 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         }
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
+        if signup_anonymous_id := attrs.pop("signup_anonymous_id", None):
+            attrs["onboarding_data"] = json.dumps(
+                {"signup_anonymous_id": signup_anonymous_id}
+            )
+
         email = attrs.get("email", "")
         self._validate_registration_invite(
             email=email, sign_up_type=attrs.get("sign_up_type")
@@ -107,6 +154,13 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         attrs["email"] = email.lower()
         return attrs
 
+    def perform_create(self, validated_data: dict[str, Any]) -> FFAdminUser:
+        user: FFAdminUser = super().perform_create(validated_data)
+        if not user.is_active and is_e2e_request(self.context.get("request")):
+            user.is_active = True
+            user.save(update_fields=["is_active"])
+        return user
+
     def save(self) -> FFAdminUser:
         instance = super().save()
         if "view" in self.context:
@@ -114,7 +168,10 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         return instance  # type: ignore[no-any-return]
 
     @staticmethod
-    def get_key(instance) -> str:  # type: ignore[no-untyped-def]
+    def get_key(instance: FFAdminUser) -> str | None:
+        # An inactive user's token authenticates nothing, so don't mint one.
+        if not instance.is_active:
+            return None
         token, _ = Token.objects.get_or_create(user=instance)
         return token.key  # type: ignore[no-any-return]
 

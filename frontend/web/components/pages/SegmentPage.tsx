@@ -23,7 +23,10 @@ const SegmentPage: FC<SegmentPageType> = ({}) => {
   const environmentId = (
     ProjectStore.getEnvironment() as unknown as Environment | undefined
   )?.api_key
-  const { data: segment } = useGetSegmentQuery({ id, projectId })
+  const { data: segment } = useGetSegmentQuery({
+    id: Number(id),
+    projectId: Number(projectId),
+  })
 
   const { permission: manageSegmentsPermission } = useHasPermission({
     id: projectId,

@@ -3759,6 +3759,21 @@
           "feature"
         ]
       },
+      "CurrentBillingPeriod": {
+        "type": "object",
+        "properties": {
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
       "CustomCreateSegmentOverrideFeatureSegment": {
         "type": "object",
         "properties": {
@@ -3964,6 +3979,261 @@
         "required": [
           "feature_state_value"
         ]
+      },
+      "DependencyConflictDetailSegmentCondition": {
+        "type": "object",
+        "properties": {
+          "property": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Property"
+          },
+          "operator": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Operator2a7Enum"
+              }
+            ],
+            "title": "Operator"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "required": [
+          "property",
+          "operator",
+          "value",
+          "description"
+        ],
+        "title": "SegmentCondition"
+      },
+      "DependencyConflictDetailSegmentRule": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TypeC8eEnum"
+              }
+            ],
+            "title": "Type"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DependencyConflictDetailSegmentCondition"
+            },
+            "title": "Conditions"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DependencyConflictDetailSegmentRule"
+            },
+            "title": "Rules"
+          }
+        },
+        "required": [
+          "type",
+          "conditions"
+        ],
+        "title": "SegmentRule"
+      },
+      "DependencyEdgeSegmentCondition": {
+        "type": "object",
+        "properties": {
+          "property": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Property"
+          },
+          "operator": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Operator2a7Enum"
+              }
+            ],
+            "title": "Operator"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "required": [
+          "property",
+          "operator",
+          "value",
+          "description"
+        ],
+        "title": "SegmentCondition"
+      },
+      "DependencyEdgeSegmentRule": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TypeC8eEnum"
+              }
+            ],
+            "title": "Type"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DependencyEdgeSegmentCondition"
+            },
+            "title": "Conditions"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DependencyEdgeSegmentRule"
+            },
+            "title": "Rules"
+          }
+        },
+        "required": [
+          "type",
+          "conditions"
+        ],
+        "title": "SegmentRule"
+      },
+      "DependencyListSegmentCondition": {
+        "type": "object",
+        "properties": {
+          "property": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Property"
+          },
+          "operator": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Operator2a7Enum"
+              }
+            ],
+            "title": "Operator"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "required": [
+          "property",
+          "operator",
+          "value",
+          "description"
+        ],
+        "title": "SegmentCondition"
+      },
+      "DependencyListSegmentRule": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TypeC8eEnum"
+              }
+            ],
+            "title": "Type"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DependencyListSegmentCondition"
+            },
+            "title": "Conditions"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DependencyListSegmentRule"
+            },
+            "title": "Rules"
+          }
+        },
+        "required": [
+          "type",
+          "conditions"
+        ],
+        "title": "SegmentRule"
       },
       "DirectionEnum": {
         "description": "* `up` - Higher is better\n* `down` - Lower is better\n* `informational` - Informational only",
@@ -4329,6 +4599,29 @@
           "name"
         ]
       },
+      "ExperimentAudience": {
+        "type": "object",
+        "properties": {
+          "match": {
+            "default": "any",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MatchEnum"
+              }
+            ]
+          },
+          "segment_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 1
+          }
+        },
+        "required": [
+          "segment_ids"
+        ]
+      },
       "ExperimentDetail": {
         "type": "object",
         "properties": {
@@ -4592,11 +4885,15 @@
             "items": {
               "$ref": "#/components/schemas/MultivariateValue"
             }
+          },
+          "audience": {
+            "$ref": "#/components/schemas/ExperimentAudience"
           }
         },
         "required": [
           "enabled",
           "feature_state_value",
+          "multivariate_feature_state_values",
           "rollout_percentage"
         ]
       },
@@ -4848,6 +5145,91 @@
           "HEALTHY"
         ]
       },
+      "FeatureIsReferencedDetailSegmentCondition": {
+        "type": "object",
+        "properties": {
+          "property": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Property"
+          },
+          "operator": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Operator2a7Enum"
+              }
+            ],
+            "title": "Operator"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "required": [
+          "property",
+          "operator",
+          "value",
+          "description"
+        ],
+        "title": "SegmentCondition"
+      },
+      "FeatureIsReferencedDetailSegmentRule": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TypeC8eEnum"
+              }
+            ],
+            "title": "Type"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeatureIsReferencedDetailSegmentCondition"
+            },
+            "title": "Conditions"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeatureIsReferencedDetailSegmentRule"
+            },
+            "title": "Rules"
+          }
+        },
+        "required": [
+          "type",
+          "conditions"
+        ],
+        "title": "SegmentRule"
+      },
       "FeatureLifecycleCounts": {
         "description": "Number of features in each lifecycle stage for an environment",
         "type": "object",
@@ -4910,6 +5292,23 @@
           },
           "is_feature_specific": {
             "type": "boolean",
+            "readOnly": true
+          },
+          "is_system_segment": {
+            "description": "System segment overrides can't be changed directly.",
+            "type": "boolean",
+            "readOnly": true
+          },
+          "segment_managed_by": {
+            "description": "The feature managing the segment, if any.\n\n* `` - Unmanaged\n* `cohort` - Cohort\n* `dependency` - Flag dependency\n* `experiment` - Experiment\n* `release_pipeline` - Gradual rollout",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SegmentManagedByEnum"
+              },
+              {
+                "$ref": "#/components/schemas/BlankEnum"
+              }
+            ],
             "readOnly": true
           }
         }
@@ -5460,11 +5859,12 @@
           "last_name"
         ]
       },
-      "ManagedByEnum": {
-        "description": "* `` - Unmanaged\n* `cohort` - Cohort",
+      "MatchEnum": {
+        "description": "* `any` - Any\n* `all` - All",
         "type": "string",
         "enum": [
-          "cohort"
+          "any",
+          "all"
         ]
       },
       "Metadata": {
@@ -5721,6 +6121,25 @@
       "NullEnum": {
         "type": "null"
       },
+      "Operator2a7Enum": {
+        "type": "string",
+        "enum": [
+          "EQUAL",
+          "GREATER_THAN",
+          "LESS_THAN",
+          "LESS_THAN_INCLUSIVE",
+          "CONTAINS",
+          "GREATER_THAN_INCLUSIVE",
+          "NOT_CONTAINS",
+          "NOT_EQUAL",
+          "REGEX",
+          "PERCENTAGE_SPLIT",
+          "MODULO",
+          "IS_SET",
+          "IS_NOT_SET",
+          "IN"
+        ]
+      },
       "OrganisationSerializerFull": {
         "type": "object",
         "properties": {
@@ -5772,6 +6191,23 @@
           },
           "block_access_to_admin": {
             "description": "Enable this to block all the access to admin interface for the organisation",
+            "type": "boolean",
+            "readOnly": true
+          },
+          "stop_serving_flags": {
+            "description": "Enable this to cease serving flags for this organisation.",
+            "type": "boolean",
+            "readOnly": true
+          },
+          "api_limit_restriction_enabled": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "api_limit_grace_period_used": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "overage_billing_eligible": {
             "type": "boolean",
             "readOnly": true
           },
@@ -6918,18 +7354,44 @@
           "managed_by": {
             "oneOf": [
               {
-                "$ref": "#/components/schemas/ManagedByEnum"
+                "$ref": "#/components/schemas/SegmentManagedByEnum"
               },
               {
                 "$ref": "#/components/schemas/BlankEnum"
               }
             ],
             "readOnly": true
+          },
+          "cohort": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/_SegmentCohort"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true
+          },
+          "has_overrides": {
+            "description": "Whether any feature override points at this segment, counting overrides that are live now or scheduled to go live.",
+            "type": "boolean",
+            "readOnly": true
           }
         },
         "required": [
           "name",
           "rules"
+        ]
+      },
+      "SegmentManagedByEnum": {
+        "description": "* `` - Unmanaged\n* `cohort` - Cohort\n* `dependency` - Flag dependency\n* `experiment` - Experiment\n* `release_pipeline` - Gradual rollout",
+        "type": "string",
+        "enum": [
+          "cohort",
+          "dependency",
+          "experiment",
+          "release_pipeline"
         ]
       },
       "SegmentMembershipCount": {
@@ -6991,6 +7453,15 @@
           "NONE"
         ]
       },
+      "SourceTypeEnum": {
+        "description": "* `csv` - CSV\n* `amplitude` - Amplitude\n* `mixpanel` - Mixpanel",
+        "type": "string",
+        "enum": [
+          "csv",
+          "amplitude",
+          "mixpanel"
+        ]
+      },
       "StageAction": {
         "type": "object",
         "properties": {
@@ -7050,6 +7521,17 @@
           },
           "has_active_billing_periods": {
             "type": "boolean",
+            "readOnly": true
+          },
+          "current_billing_period": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CurrentBillingPeriod"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "readOnly": true
           },
           "deleted_at": {
@@ -7161,6 +7643,14 @@
           "int",
           "unicode",
           "bool"
+        ]
+      },
+      "TypeC8eEnum": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "NONE"
         ]
       },
       "TypeD77Enum": {
@@ -7385,7 +7875,7 @@
           "operator": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/V1EnvironmentDocumentResponseSegmentConditionOperatorEnum"
+                "$ref": "#/components/schemas/Operator2a7Enum"
               }
             ],
             "title": "Operator"
@@ -7406,25 +7896,6 @@
         ],
         "title": "SegmentCondition"
       },
-      "V1EnvironmentDocumentResponseSegmentConditionOperatorEnum": {
-        "type": "string",
-        "enum": [
-          "EQUAL",
-          "GREATER_THAN",
-          "LESS_THAN",
-          "LESS_THAN_INCLUSIVE",
-          "CONTAINS",
-          "GREATER_THAN_INCLUSIVE",
-          "NOT_CONTAINS",
-          "NOT_EQUAL",
-          "REGEX",
-          "PERCENTAGE_SPLIT",
-          "MODULO",
-          "IS_SET",
-          "IS_NOT_SET",
-          "IN"
-        ]
-      },
       "V1EnvironmentDocumentResponseSegmentRule": {
         "description": "Represents a rule within a segment used by Flagsmith engine. Root rules usually contain nested rules.",
         "type": "object",
@@ -7432,7 +7903,7 @@
           "type": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/V1EnvironmentDocumentResponseSegmentRuleTypeEnum"
+                "$ref": "#/components/schemas/TypeC8eEnum"
               }
             ],
             "title": "Type"
@@ -7458,14 +7929,6 @@
           "conditions"
         ],
         "title": "SegmentRule"
-      },
-      "V1EnvironmentDocumentResponseSegmentRuleTypeEnum": {
-        "type": "string",
-        "enum": [
-          "ALL",
-          "ANY",
-          "NONE"
-        ]
       },
       "VcsProviderEnum": {
         "description": "* `github` - GitHub",
@@ -7753,9 +8216,57 @@
         "required": [
           "type"
         ]
+      },
+      "_SegmentCohort": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "environment": {
+            "type": "integer"
+          },
+          "environment_api_key": {
+            "type": "string",
+            "readOnly": true
+          },
+          "environment_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "source_type": {
+            "$ref": "#/components/schemas/SourceTypeEnum"
+          },
+          "version": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 0
+          },
+          "deletion_requested_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "environment"
+        ]
       }
     },
     "securitySchemes": {
+      "Cohort Sync Key": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "For cohort sync endpoints called by an external cohort source, such as Amplitude."
+      },
+      "Cohort Sync Key (Basic)": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "For cohort sync endpoints called by an external cohort source that can only send Basic credentials, such as Mixpanel. The key is the password; the username is ignored."
+      },
       "Environment API Key": {
         "type": "apiKey",
         "in": "header",
@@ -7766,7 +8277,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "Authorization",
-        "description": "For Admin API endpoints. <a href='https://docs.flagsmith.com/clients/rest#private-api-endpoints'>Find out more</a>."
+        "description": "For Management API endpoints. <a href='https://docs.flagsmith.com/integrating-with-flagsmith/flagsmith-api-overview/management-api'>Find out more</a>."
       },
       "basicAuth": {
         "type": "http",

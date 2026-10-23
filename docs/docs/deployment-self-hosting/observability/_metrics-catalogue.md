@@ -9,6 +9,22 @@ Labels:
  - `ci_commit_sha`
  - `version`
 
+### `flagsmith_cohorts_csv_sync_identifiers`
+
+Histogram.
+
+Number of unique identifiers extracted per accepted cohort CSV synchronisation.
+
+Labels:
+
+### `flagsmith_cohorts_csv_syncs`
+
+Counter.
+
+Total number of accepted cohort CSV synchronisations, i.e. uploads that yielded at least one valid identifier and enqueued a membership sync.
+
+Labels:
+
 ### `flagsmith_cohorts_membership_deltas_applied`
 
 Counter.
@@ -51,24 +67,6 @@ Labels:
 Counter.
 
 Outcomes of connection verification attempts against customers&#x27; own data warehouses. `result` label is either `success` or `failure`.
-
-Labels:
- - `result`
-
-### `flagsmith_experimentation_warehouse_delivery_objects`
-
-Counter.
-
-Buffered S3 event objects processed by delivery to customers&#x27; own data warehouses. `result` label is `delivered` for objects inserted and archived, or `rejected` for objects the warehouse refused, which are moved aside and never retried.
-
-Labels:
- - `result`
-
-### `flagsmith_experimentation_warehouse_delivery_runs`
-
-Counter.
-
-Outcomes of per-connection runs delivering buffered event objects to customers&#x27; own data warehouses. `result` label is either `success` or `failure`; a failed run delivers nothing and is retried on the next tick.
 
 Labels:
  - `result`

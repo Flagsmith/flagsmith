@@ -1,12 +1,6 @@
-import pytest
-from django.conf import settings as test_settings
 from django_test_migrations.migrator import Migrator
 
 
-@pytest.mark.skipif(
-    test_settings.SKIP_MIGRATION_TESTS is True,
-    reason="Skip migration tests to speed up tests where necessary",
-)
 def test_unique_system_tags__duplicate_system_tags__deduplicated_and_features_repointed(
     migrator: Migrator,
 ) -> None:

@@ -707,6 +707,98 @@ def test_create_github_comment__segment_override_deleted__posts_deletion_comment
     )
 
 
+def test_create_github_comment__segment_override_deleted_through_flag_api__posts_deletion_comment(
+    segment_override_for_feature_with_value: FeatureState,
+    feature_with_value: Feature,
+    segment: Segment,
+    environment: Environment,
+    github_configuration: GithubConfiguration,
+    github_repository: GitHubRepository,
+    post_request_mock: MagicMock,
+    admin_client_new: APIClient,
+    feature_with_value_external_resource: FeatureExternalResource,
+    mock_github_client_generate_token: MagicMock,
+) -> None:
+    # Given / When
+    response = admin_client_new.delete(
+        f"/api/__future__/environments/{environment.api_key}"
+        f"/features/{feature_with_value.id}/segment-overrides/{segment.id}/"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    post_request_mock.assert_called_with(
+        "https://api.github.com/repos/repositoryownertest/repositorynametest/issues/11/comments",
+        json={
+            "body": "**The Segment Override `segment` for Feature Flag `feature_with_value` was deleted**"
+        },
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )
+
+
+def test_create_github_comment__segment_override_created__posts_comment(
+    admin_client_new: APIClient,
+    segment: Segment,
+    feature: Feature,
+    environment: Environment,
+    project: Project,
+    github_configuration: GithubConfiguration,
+    github_repository: GitHubRepository,
+    feature_external_resource: FeatureExternalResource,
+    post_request_mock: MagicMock,
+    mock_github_client_generate_token: MagicMock,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment.api_key, feature.id],
+    )
+    data = {
+        "feature_segment": {"segment": segment.id},
+        "enabled": True,
+        "feature_state_value": {"string_value": "segment value!"},
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    formatted_updated_at = datetime.strptime(
+        response.json()["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ"
+    ).strftime(get_format("DATETIME_INPUT_FORMATS")[0])
+    post_request_mock.assert_called_with(
+        "https://api.github.com/repos/repositoryownertest/repositorynametest/issues/11/comments",
+        json={
+            "body": (
+                "**Flagsmith Feature `Test Feature1` has been updated:**\n"
+                + "\n"
+                + expected_segment_comment_body(
+                    project.id,  # type: ignore[arg-type]
+                    environment.api_key,
+                    feature.id,  # type: ignore[arg-type]
+                    formatted_updated_at,
+                    "✅ Enabled",
+                    "`segment value!`",
+                )
+            )
+        },
+        headers={
+            "Accept": "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version": GITHUB_API_VERSION,
+            "Authorization": "Bearer mocked_token",
+        },
+        timeout=10,
+    )
+
+
 def test_create_github_comment__v2_versioning_segment_override__posts_comment(
     admin_client_new: APIClient,
     environment_v2_versioning: Environment,

@@ -1,12 +1,19 @@
+import pytest
+from pytest_django import DjangoAssertNumQueries
+
 from core.constants import STRING
+from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import TraitSerializerBasic
-from features.models import Feature, FeatureState
+from evaluation.services import get_identity_feature_states
+from features.models import Feature
+from integrations.webhook.models import WebhookConfiguration
 from integrations.webhook.serializers import (
     IntegrationFeatureStateSerializer,
     SegmentSerializer,
 )
 from integrations.webhook.webhook import WebhookWrapper
+from projects.models import Project
 from segments.models import Segment
 
 
@@ -20,9 +27,9 @@ def test_webhook_generate_user_data__with_identity_and_features__returns_correct
         value_type=STRING,
         string_value="trait_value",
     )
-    feature = Feature.objects.create(name="Test Feature", project=project)
+    Feature.objects.create(name="Test Feature", project=project)
 
-    feature_states = FeatureState.objects.filter(feature=feature)
+    feature_states = get_identity_feature_states(identity)
     expected_flags = IntegrationFeatureStateSerializer(
         feature_states, many=True, context={"identity": identity}
     ).data
@@ -76,3 +83,21 @@ def test_webhook_generate_user_data__trait_models_provided__uses_trait_models_ar
 
     # Then
     assert expected_data == user_data
+
+
+@pytest.mark.parametrize("segment_count", [1, 10])
+def test_webhook_generate_user_data__any_number_of_segments__evaluates_membership_once(
+    segment_count: int,
+    identity: Identity,
+    project: Project,
+    integration_webhook_config: WebhookConfiguration,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    for i in range(segment_count):
+        Segment.objects.create(name=f"segment_{i}", project=project)
+    webhook_wrapper = WebhookWrapper(integration_webhook_config)
+
+    # When / Then
+    with django_assert_num_queries(7):
+        webhook_wrapper.generate_user_data(identity=identity, feature_states=[])

@@ -45,7 +45,7 @@ default) to fetch the flags for the current environment and all users in one API
 
 The following requests are not billable:
 
-- [Admin API](/integrating-with-flagsmith/flagsmith-api-overview/admin-api) requests.
+- [Management API](/integrating-with-flagsmith/flagsmith-api-overview/management-api) requests.
 - Requests made by Flagsmith SDKs to track [Flag Analytics](/managing-flags/flag-analytics).
 - Connecting to a [real-time flag updates](/performance/real-time-flags) stream.
 

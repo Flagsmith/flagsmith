@@ -156,6 +156,16 @@ test.describe('Onboarding', () => {
     ).toBeVisible();
 
     await page.getByRole('button', { name: /Gradual rollout/ }).click();
+    // Gated on onboarding_rollout_quest: on, the quest modal opens first and
+    // "Create a rollout segment" lands on the tab the card used to link to.
+    if (flagsmith.hasFeature('onboarding_rollout_quest')) {
+      await expect(
+        page.getByRole('heading', { name: 'How to roll out gradually today' }),
+      ).toBeVisible();
+      await page
+        .getByRole('button', { name: 'Create a rollout segment' })
+        .click();
+    }
     await expect(page).toHaveURL(
       /\/features\?feature=\d+&tab=segment-overrides/,
     );

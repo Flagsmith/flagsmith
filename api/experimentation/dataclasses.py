@@ -5,7 +5,13 @@ from core.dataclasses import AuthorData
 from experimentation.stats import Inference, VariantStats
 from experimentation.types import ExposureGranularity
 from features.feature_states.models import FeatureValueType
-from features.versioning.dataclasses import MultivariateValueChangeSet
+from features.future.types import Variant
+
+
+@dataclass(frozen=True)
+class AudienceSpec:
+    match: str
+    segment_ids: list[int]
 
 
 @dataclass(frozen=True)
@@ -14,8 +20,9 @@ class RolloutSpec:
     rollout_percentage: float
     feature_state_value: str
     value_type: FeatureValueType
-    multivariate_values: list[MultivariateValueChangeSet]
+    variants: list[Variant]
     author: AuthorData
+    audience: AudienceSpec | None = None
 
 
 @dataclass(frozen=True)
@@ -57,6 +64,25 @@ class ExposuresSummary:
 
 
 @dataclass(frozen=True)
+class ConversionBucket:
+    variant: str
+    bucket: datetime
+    converted_identities: int
+
+
+@dataclass(frozen=True)
+class ConversionsTimeseriesPoint:
+    bucket: str
+    converted_identities: dict[str, int]
+
+
+@dataclass(frozen=True)
+class ConversionsTimeseries:
+    granularity: ExposureGranularity
+    points: list[ConversionsTimeseriesPoint]
+
+
+@dataclass(frozen=True)
 class MetricSpec:
     metric_id: int
     event: str
@@ -66,13 +92,18 @@ class MetricSpec:
 
 @dataclass(frozen=True)
 class ResultsAggregates:
-    """Sufficient statistics gathered from the warehouse for one experiment:
-    the specs they were computed from, per-variant identity counts, and per
-    metric the per-variant ``VariantStats``. Bundled so the keys can't drift."""
+    """Everything one results refresh reads from the warehouse: the specs it
+    was computed from, per-variant identity counts, per metric the per-variant
+    ``VariantStats``, and the time-bucketed rows behind the over-time charts.
+    Bundled so the keys can't drift."""
 
     specs: list[MetricSpec]
     exposure_counts: dict[str, int]
     metric_stats: dict[int, dict[str, VariantStats]]
+    granularity: ExposureGranularity
+    exposure_buckets: list[ExposureBucket]
+    # Keyed by metric id, one entry per charted metric.
+    conversion_buckets: dict[int, list[ConversionBucket]]
 
 
 @dataclass(frozen=True)
@@ -80,15 +111,17 @@ class MetricResult:
     metric_id: int
     variants: dict[str, VariantStats]
     inference: dict[str, Inference | None]
+    # Only occurrence metrics chart a conversion rate; None for the rest.
+    conversions_timeseries: ConversionsTimeseries | None
 
 
 @dataclass(frozen=True)
 class ResultsSummary:
     srm_p_value: float | None
     metrics: list[MetricResult]
-
-
-@dataclass(frozen=True)
-class IngestionInfrastructure:
-    bucket_name: str
-    stream_name: str
+    # Denominator for the conversion charts, computed in the same run as the
+    # metrics so both sides of the rate share one as_of. Exposures are bucketed
+    # by first exposure and conversions by first conversion, so only running
+    # totals divide: a bucket's own conversions over its own new identities
+    # compares different people and can exceed 100%.
+    exposures_timeseries: ExposuresTimeseries

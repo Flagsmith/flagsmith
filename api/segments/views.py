@@ -1,8 +1,11 @@
-import logging
 from typing import TYPE_CHECKING, Any
 
+import structlog
 from common.environments.permissions import VIEW_IDENTITIES
 from common.projects.permissions import VIEW_PROJECT
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
+from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
@@ -13,10 +16,13 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
+from cohorts.models import Cohort
 from core.dataclasses import AuthorData
+from core.exceptions import ChangeRequestsEnabledError
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
+from evaluation.services import get_edge_identity_segments
 from features.models import FeatureState
 from features.serializers import (
     AssociatedFeaturesQuerySerializer,
@@ -42,12 +48,12 @@ from .serializers import (
     SegmentMembersResponseSerializer,
     SegmentSerializer,
 )
-from .services import delete_segment
+from .services import delete_segment, get_live_overrides
 
 if TYPE_CHECKING:
     from users.models import FFAdminUser
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("segments")
 
 
 @method_decorator(
@@ -98,12 +104,23 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             return Segment.objects.none()
 
         project = self.get_project()
-        queryset = Segment.live_objects.filter(project=project, is_system_segment=False)
+        queryset = Segment.live_objects.filter(
+            project=project, is_system_segment=False
+        ).annotate(
+            has_overrides=models.Exists(
+                get_live_overrides(include_scheduled=True).filter(
+                    segment_id=models.OuterRef("pk")
+                )
+            )
+        )
 
         if self.action == "list":
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
             #  we shouldn't return all of the rules and conditions in the list view.
             queryset = queryset.prefetch_related(
+                Prefetch(
+                    "cohorts", queryset=Cohort.objects.select_related("environment")
+                ),
                 "membership_counts",
                 "rules",
                 "rules__conditions",
@@ -118,12 +135,23 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         identity_pk = query_serializer.validated_data.get("identity")
         if identity_pk:
+            segments: list[Segment] = []
             if identity_pk.isdigit():
-                identity = Identity.objects.get(pk=identity_pk)
-                segment_ids = [segment.id for segment in identity.get_segments()]
+                segments = Identity.objects.get(pk=identity_pk).get_segments()
             else:
-                segment_ids = EdgeIdentity.dynamo_wrapper.get_segment_ids(identity_pk)
-            queryset = queryset.filter(id__in=segment_ids)
+                try:
+                    identity_document = EdgeIdentity.dynamo_wrapper.get_item_from_uuid(
+                        identity_pk
+                    )
+                except ObjectDoesNotExist:
+                    # An identity the environment has never seen belongs to no
+                    # segments, rather than being an error.
+                    pass
+                else:
+                    segments = get_edge_identity_segments(
+                        EdgeIdentity.from_identity_document(identity_document)
+                    )
+            queryset = queryset.filter(id__in=[segment.id for segment in segments])
 
         search_term = query_serializer.validated_data.get("q")
         if search_term:
@@ -224,9 +252,59 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 "This segment is managed by a cohort and cannot be edited "
                 "or cloned directly."
             )
+        if self.action in ("update", "partial_update"):
+            self._check_change_requests_disabled(obj)
+
+    def _check_change_requests_disabled(self, segment: Segment) -> None:
+        """Refuse to edit a segment that can only be changed by a change request."""
+        if not segment.project.is_workflow_enabled:
+            return
+        if segment.change_request_id is not None:
+            # A draft held by a change request; editing it *is* the workflow.
+            return
+        api_error = ChangeRequestsEnabledError(
+            "Cannot update segments in a project with change requests enabled."
+        )
+        logger.warning(
+            "update_rejected",
+            organisation__id=segment.project.organisation_id,
+            project__id=segment.project_id,
+            segment__id=segment.id,
+            reason=api_error.default_code,
+        )
+        raise api_error
+
+    def _check_segment_is_deletable(self, segment: Segment) -> None:
+        """
+        Refuse to delete an overridden segment where change requests are enabled.
+
+        Deleting a segment deletes the overrides pointing at it, which changes
+        what the SDKs serve without anyone reviewing the change.
+        """
+        if not segment.project.is_workflow_enabled:
+            return
+        if (
+            not get_live_overrides(include_scheduled=True)
+            .filter(segment=segment)
+            .exists()
+        ):
+            return
+        api_error = ChangeRequestsEnabledError(
+            "Cannot delete a segment with feature overrides in a project with "
+            "change requests enabled. Remove the overrides first."
+        )
+        logger.warning(
+            "delete_rejected",
+            organisation__id=segment.project.organisation_id,
+            project__id=segment.project_id,
+            segment__id=segment.id,
+            reason=api_error.default_code,
+        )
+        raise api_error
 
     def destroy(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         segment = self.get_object()
+        self._check_segment_is_deletable(segment)
         author = AuthorData.from_request(request)
         delete_segment(segment, author=author)
         return Response(status=status.HTTP_204_NO_CONTENT)

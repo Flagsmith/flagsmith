@@ -5,6 +5,7 @@ from clickhouse_connect.driver.exceptions import OperationalError
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from requests_mock import Mocker as RequestsMockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework.throttling import ScopedRateThrottle
@@ -12,15 +13,18 @@ from rest_framework.throttling import ScopedRateThrottle
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
-from experimentation import services
-from experimentation.dataclasses import WarehouseEventNames, WarehouseEventStats
+from experimentation.dataclasses import (
+    WarehouseEventNames,
+    WarehouseEventStats,
+)
 from experimentation.models import (
     WarehouseConnection,
     WarehouseConnectionStatus,
+    WarehouseDeliveryStatus,
     WarehouseType,
 )
 from experimentation.views import WarehouseConnectionViewSet
-from tests.types import EnableFeaturesFixture
+from tests.unit.experimentation.conftest import SetWarehousesFlagFixture
 
 pytestmark = pytest.mark.django_db
 
@@ -31,14 +35,13 @@ def mock_clickhouse_stats(
     settings: SettingsWrapper,
 ) -> object:
     """Default every view test to a configured, empty warehouse. Tests that need
-    events re-patch experimentation.services.get_warehouse_event_stats; tests for the
+    events re-patch experimentation.warehouses.flagsmith.get_warehouse_event_stats; tests for the
     unconfigured/erroring paths override the setting / raise."""
     settings.EXPERIMENTATION_CLICKHOUSE_URL = "clickhouse://localhost:9000/test"
-    services._get_clickhouse_client.cache_clear()
     mock_client = mocker.Mock()
     mock_client.execute.return_value = [(0, 0)]
     return mocker.patch(
-        "experimentation.services._get_clickhouse_client",
+        "experimentation.warehouses.flagsmith._get_clickhouse_client",
         return_value=mock_client,
     )
 
@@ -46,13 +49,9 @@ def mock_clickhouse_stats(
 def test_post__valid_data__returns_201_and_creates_connection(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     response = admin_client.post(
         warehouse_connection_url,
         data={"warehouse_type": "flagsmith"},
@@ -73,14 +72,10 @@ def test_post__valid_data__returns_201_and_creates_connection(
 def test_post__already_exists__returns_409(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     response = admin_client.post(
         warehouse_connection_url,
         data={"warehouse_type": "flagsmith"},
@@ -98,14 +93,10 @@ def test_post__already_exists__returns_409(
 def test_post__different_type_already_exists__returns_409(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     response = admin_client.post(
         warehouse_connection_url,
         data={
@@ -127,12 +118,10 @@ def test_post__different_type_already_exists__returns_409(
 def test_post__soft_deleted_exists__creates_new_record_and_returns_201(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
     warehouse_connection_url: str,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     original_id = warehouse_connection.id
     warehouse_connection.delete()
 
@@ -152,10 +141,8 @@ def test_post__soft_deleted_exists__creates_new_record_and_returns_201(
 def test_post__non_admin__returns_403(
     staff_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-list",
         args=[environment.api_key],
@@ -175,13 +162,9 @@ def test_post__non_admin__returns_403(
 def test_post__valid_data__creates_audit_log(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     admin_client.post(
         warehouse_connection_url,
         data={"warehouse_type": "flagsmith"},
@@ -205,14 +188,10 @@ def test_post__valid_data__creates_audit_log(
 def test_get__exists__returns_200_with_list(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     response = admin_client.get(warehouse_connection_url)
 
     # Then
@@ -228,13 +207,9 @@ def test_get__exists__returns_200_with_list(
 
 def test_get__not_exists__returns_200_with_empty_list(
     admin_client: APIClient,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     response = admin_client.get(warehouse_connection_url)
 
     # Then
@@ -245,11 +220,9 @@ def test_get__not_exists__returns_200_with_empty_list(
 def test_delete__exists__returns_204(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, warehouse_connection.id],
@@ -270,10 +243,8 @@ def test_delete__exists__returns_204(
 def test_delete__not_exists__returns_404(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, 999999],
@@ -289,11 +260,9 @@ def test_delete__not_exists__returns_404(
 def test_delete__exists__creates_audit_log(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, warehouse_connection.id],
@@ -319,11 +288,9 @@ def test_delete__exists__creates_audit_log(
 def test_get_detail__exists__returns_200(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, warehouse_connection.id],
@@ -345,10 +312,8 @@ def test_get_detail__exists__returns_200(
 def test_get_detail__not_exists__returns_404(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, 999999],
@@ -364,11 +329,9 @@ def test_get_detail__not_exists__returns_404(
 def test_post__snowflake_valid_config__returns_201(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     config = {
         "account_identifier": "xy12345.us-east-1",
         "warehouse": "MY_WH",
@@ -401,13 +364,9 @@ def test_post__snowflake_valid_config__returns_201(
 def test_post__snowflake_minimal_config__applies_defaults(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     response = admin_client.post(
         warehouse_connection_url,
         data={
@@ -431,13 +390,9 @@ def test_post__snowflake_minimal_config__applies_defaults(
 
 def test_post__snowflake_missing_account_identifier__returns_400(
     admin_client: APIClient,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     response = admin_client.post(
         warehouse_connection_url,
         data={
@@ -454,13 +409,9 @@ def test_post__snowflake_missing_account_identifier__returns_400(
 
 def test_post__flagsmith_with_config__returns_400(
     admin_client: APIClient,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     response = admin_client.post(
         warehouse_connection_url,
         data={
@@ -476,13 +427,9 @@ def test_post__flagsmith_with_config__returns_400(
 
 def test_post__custom_name__uses_provided_name(
     admin_client: APIClient,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     response = admin_client.post(
         warehouse_connection_url,
         data={"warehouse_type": "flagsmith", "name": "My Custom Name"},
@@ -497,13 +444,9 @@ def test_post__custom_name__uses_provided_name(
 def test_post__snowflake_no_name__auto_generates_name(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     response = admin_client.post(
         warehouse_connection_url,
         data={
@@ -521,11 +464,9 @@ def test_post__snowflake_no_name__auto_generates_name(
 def test_post__snowflake_soft_deleted__creates_new_record_with_new_config(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     create_response = admin_client.post(
         warehouse_connection_url,
         data={
@@ -565,11 +506,9 @@ def test_post__snowflake_soft_deleted__creates_new_record_with_new_config(
 def test_post__different_type_soft_deleted__creates_new_record(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     create_response = admin_client.post(
         warehouse_connection_url,
         data={
@@ -603,11 +542,9 @@ def test_post__different_type_soft_deleted__creates_new_record(
 def test_patch__snowflake_update_config__returns_200(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     create_response = admin_client.post(
         warehouse_connection_url,
         data={
@@ -640,11 +577,9 @@ def test_patch__snowflake_update_config__returns_200(
 def test_patch__snowflake_partial_config__preserves_stored_account_identifier(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     create_response = admin_client.post(
         warehouse_connection_url,
         data={
@@ -677,11 +612,9 @@ def test_patch__snowflake_partial_config__preserves_stored_account_identifier(
 def test_patch__snowflake_update_name__returns_200(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     create_response = admin_client.post(
         warehouse_connection_url,
         data={
@@ -712,11 +645,9 @@ def test_patch__snowflake_update_name__returns_200(
 def test_patch__flagsmith_update_name__returns_200(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, warehouse_connection.id],
@@ -737,11 +668,9 @@ def test_patch__flagsmith_update_name__returns_200(
 def test_patch__flagsmith_add_config__returns_400(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, warehouse_connection.id],
@@ -761,11 +690,9 @@ def test_patch__flagsmith_add_config__returns_400(
 def test_patch__non_admin__returns_403(
     staff_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, warehouse_connection.id],
@@ -785,11 +712,9 @@ def test_patch__non_admin__returns_403(
 def test_patch__exists__creates_audit_log(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, warehouse_connection.id],
@@ -831,7 +756,6 @@ def test_patch__exists__creates_audit_log(
 def test_get__warehouse_type__returns_expected_event_stats(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
     mocker: MockerFixture,
     warehouse_type: str,
@@ -840,7 +764,6 @@ def test_get__warehouse_type__returns_expected_event_stats(
     expected_unique: int | None,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     WarehouseConnection.objects.create(
         environment=environment,
         warehouse_type=warehouse_type,
@@ -848,7 +771,7 @@ def test_get__warehouse_type__returns_expected_event_stats(
         config=config,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         return_value=WarehouseEventStats(
             total_events_received=12,
             unique_events_count=3,
@@ -868,12 +791,10 @@ def test_get__warehouse_type__returns_expected_event_stats(
 def test_get__pending_connection_with_events__shows_stats_but_does_not_flip(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     connection = WarehouseConnection.objects.create(
         environment=environment,
         warehouse_type=WarehouseType.FLAGSMITH,
@@ -881,7 +802,7 @@ def test_get__pending_connection_with_events__shows_stats_but_does_not_flip(
         status=WarehouseConnectionStatus.PENDING_CONNECTION,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         return_value=WarehouseEventStats(
             total_events_received=1,
             unique_events_count=1,
@@ -916,13 +837,11 @@ def test_get__pending_connection_with_events__shows_stats_but_does_not_flip(
 def test_test_warehouse_connection__warehouse_type__expected_status(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_type: str,
     config: dict[str, str] | None,
     expected_status: int,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     connection = WarehouseConnection.objects.create(
         environment=environment,
         warehouse_type=warehouse_type,
@@ -948,11 +867,9 @@ def test_test_warehouse_connection__warehouse_type__expected_status(
 def test_test_warehouse_connection__pending_with_events__flips_to_connected(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     connection = WarehouseConnection.objects.create(
         environment=environment,
         warehouse_type=WarehouseType.FLAGSMITH,
@@ -960,7 +877,7 @@ def test_test_warehouse_connection__pending_with_events__flips_to_connected(
         status=WarehouseConnectionStatus.PENDING_CONNECTION,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         return_value=WarehouseEventStats(
             total_events_received=1,
             unique_events_count=1,
@@ -984,10 +901,8 @@ def test_test_warehouse_connection__pending_with_events__flips_to_connected(
 def test_test_warehouse_connection__pending_no_events__stays_pending(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given (autouse mock returns 0 events)
-    enable_features("experimentation_warehouse_connection")
     connection = WarehouseConnection.objects.create(
         environment=environment,
         warehouse_type=WarehouseType.FLAGSMITH,
@@ -1012,11 +927,9 @@ def test_test_warehouse_connection__pending_no_events__stays_pending(
 def test_test_warehouse_connection__clickhouse_unreachable__stays_pending(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     connection = WarehouseConnection.objects.create(
         environment=environment,
         warehouse_type=WarehouseType.FLAGSMITH,
@@ -1024,7 +937,7 @@ def test_test_warehouse_connection__clickhouse_unreachable__stays_pending(
         status=WarehouseConnectionStatus.PENDING_CONNECTION,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         side_effect=OSError("clickhouse unreachable"),
     )
     url = reverse(
@@ -1046,10 +959,8 @@ def test_test_warehouse_connection__clickhouse_unreachable__stays_pending(
 def test_test_warehouse_connection__already_connected__is_noop(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     connection = WarehouseConnection.objects.create(
         environment=environment,
         warehouse_type=WarehouseType.FLAGSMITH,
@@ -1072,11 +983,9 @@ def test_test_warehouse_connection__already_connected__is_noop(
 def test_test_warehouse_connection__non_admin__returns_403(
     staff_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-test-warehouse-connection",
         args=[environment.api_key, warehouse_connection.id],
@@ -1138,16 +1047,16 @@ def test_get_throttles__other_actions__returns_view_default_throttles(
 def test_get__clickhouse_unconfigured__returns_200_without_stats(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
     warehouse_connection_url: str,
     settings: SettingsWrapper,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     settings.EXPERIMENTATION_CLICKHOUSE_URL = None
-    stats_spy = mocker.patch("experimentation.services.get_warehouse_event_stats")
+    stats_spy = mocker.patch(
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats"
+    )
 
     # When
     response = admin_client.get(warehouse_connection_url)
@@ -1163,13 +1072,11 @@ def test_get__clickhouse_unconfigured__returns_200_without_stats(
 def test_get__exclude_event_stats__returns_200_without_querying_warehouse(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection: WarehouseConnection,
     warehouse_connection_url: str,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     annotate_spy = mocker.patch("experimentation.views.annotate_warehouse_event_stats")
 
     # When
@@ -1187,12 +1094,10 @@ def test_get__exclude_event_stats__returns_200_without_querying_warehouse(
 def test_get__clickhouse_errors__returns_200_without_stats(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     WarehouseConnection.objects.create(
         environment=environment,
         warehouse_type=WarehouseType.FLAGSMITH,
@@ -1200,7 +1105,7 @@ def test_get__clickhouse_errors__returns_200_without_stats(
         status=WarehouseConnectionStatus.PENDING_CONNECTION,
     )
     mocker.patch(
-        "experimentation.services.get_warehouse_event_stats",
+        "experimentation.warehouses.flagsmith.get_warehouse_event_stats",
         side_effect=OSError("clickhouse unreachable"),
     )
 
@@ -1218,15 +1123,13 @@ def test_get__clickhouse_errors__returns_200_without_stats(
 
 def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
     admin_client: APIClient,
-    enable_features: EnableFeaturesFixture,
     environment: Environment,
     mocker: MockerFixture,
     warehouse_connection_url: str,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
 
     # When
@@ -1260,33 +1163,6 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
             {"warehouse_type": "clickhouse", "credentials": {"password": "hunter2"}},
             ("config", "host"),
             id="missing_host",
-        ),
-        pytest.param(
-            {
-                "warehouse_type": "clickhouse",
-                "config": {"host": "127.0.0.1"},
-                "credentials": {"password": "hunter2"},
-            },
-            ("config", "host"),
-            id="loopback_host",
-        ),
-        pytest.param(
-            {
-                "warehouse_type": "clickhouse",
-                "config": {"host": "10.0.0.1"},
-                "credentials": {"password": "hunter2"},
-            },
-            ("config", "host"),
-            id="private_host",
-        ),
-        pytest.param(
-            {
-                "warehouse_type": "clickhouse",
-                "config": {"host": "169.254.169.254"},
-                "credentials": {"password": "hunter2"},
-            },
-            ("config", "host"),
-            id="link_local_host",
         ),
         pytest.param(
             {
@@ -1414,28 +1290,15 @@ def test_post__clickhouse_minimal_payload__applies_defaults_and_generates_name(
             ("config", "warehouse"),
             id="snowflake_non_string_value",
         ),
-        pytest.param(
-            {
-                "warehouse_type": "clickhouse",
-                "config": {"host": "100.64.0.1"},
-                "credentials": {"password": "hunter2"},
-            },
-            ("config", "host"),
-            id="shared_address_space_host",
-        ),
     ],
 )
 def test_post__invalid_payload__returns_400(
     admin_client: APIClient,
     data: dict[str, object],
-    enable_features: EnableFeaturesFixture,
     error_path: tuple[str, ...],
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     response = admin_client.post(warehouse_connection_url, data=data, format="json")
 
     # Then
@@ -1446,14 +1309,64 @@ def test_post__invalid_payload__returns_400(
     assert error_path[-1] in errors
 
 
-def test_post__clickhouse_hostname_resolves_to_internal_ip__returns_400(
+@pytest.mark.parametrize(
+    "host",
+    [
+        pytest.param("127.0.0.1", id="loopback_host"),
+        pytest.param("10.0.0.1", id="private_host"),
+        pytest.param("169.254.169.254", id="link_local_host"),
+        pytest.param("100.64.0.1", id="shared_address_space_host"),
+    ],
+)
+@pytest.mark.usefixtures("saas_mode")
+def test_post__internal_clickhouse_host_on_saas__returns_400(
     admin_client: APIClient,
-    enable_features: EnableFeaturesFixture,
+    host: str,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": host},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "host" in response.json()["config"]
+
+
+def test_post__internal_clickhouse_host_on_self_hosted__returns_201(
+    admin_client: APIClient,
+    warehouse_connection_url: str,
+) -> None:
+    # Given / When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "clickhouse",
+            "config": {"host": "10.0.0.1", "port": 8123, "secure": False},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["config"]["host"] == "10.0.0.1"
+
+
+@pytest.mark.usefixtures("saas_mode")
+def test_post__clickhouse_hostname_resolves_to_internal_ip_on_saas__returns_400(
+    admin_client: APIClient,
     mocker: MockerFixture,
     warehouse_connection_url: str,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     mocker.patch(
         "core.network.socket.getaddrinfo",
         return_value=[(socket.AF_INET, None, None, None, ("192.168.1.100", 0))],
@@ -1477,12 +1390,10 @@ def test_post__clickhouse_hostname_resolves_to_internal_ip__returns_400(
 
 def test_patch__flagsmith_to_clickhouse_without_credentials__returns_400(
     admin_client: APIClient,
-    enable_features: EnableFeaturesFixture,
     environment: Environment,
     warehouse_connection: WarehouseConnection,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, warehouse_connection.id],
@@ -1513,7 +1424,6 @@ def test_patch__flagsmith_to_clickhouse_without_credentials__returns_400(
 )
 def test_post__clickhouse_verification_outcome__returns_201_with_status(
     admin_client: APIClient,
-    enable_features: EnableFeaturesFixture,
     query_side_effect: Exception | None,
     expected_detail: str | None,
     expected_status: str,
@@ -1521,9 +1431,8 @@ def test_post__clickhouse_verification_outcome__returns_201_with_status(
     warehouse_connection_url: str,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     mock_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     mock_client.return_value.query.side_effect = query_side_effect
 
@@ -1550,13 +1459,9 @@ def test_post__clickhouse_verification_outcome__returns_201_with_status(
 def test_get__clickhouse__credentials_not_in_response(
     admin_client: APIClient,
     clickhouse_connection: WarehouseConnection,
-    enable_features: EnableFeaturesFixture,
     warehouse_connection_url: str,
 ) -> None:
-    # Given
-    enable_features("experimentation_warehouse_connection")
-
-    # When
+    # Given / When
     response = admin_client.get(warehouse_connection_url)
 
     # Then
@@ -1569,14 +1474,12 @@ def test_get__clickhouse__credentials_not_in_response(
 def test_patch__clickhouse_config_without_credentials__keeps_stored_password(
     admin_client: APIClient,
     clickhouse_connection: WarehouseConnection,
-    enable_features: EnableFeaturesFixture,
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     mock_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
@@ -1604,14 +1507,12 @@ def test_patch__clickhouse_config_without_credentials__keeps_stored_password(
 def test_patch__clickhouse_name_only__does_not_reverify(
     admin_client: APIClient,
     clickhouse_connection: WarehouseConnection,
-    enable_features: EnableFeaturesFixture,
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     mock_client = mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
@@ -1629,14 +1530,12 @@ def test_patch__clickhouse_name_only__does_not_reverify(
 def test_put__clickhouse_name_only__preserves_config_and_credentials(
     admin_client: APIClient,
     clickhouse_connection: WarehouseConnection,
-    enable_features: EnableFeaturesFixture,
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
@@ -1663,16 +1562,14 @@ def test_put__clickhouse_name_only__preserves_config_and_credentials(
 def test_test_warehouse_connection__clickhouse__reverifies_and_returns_status(
     admin_client: APIClient,
     clickhouse_connection: WarehouseConnection,
-    enable_features: EnableFeaturesFixture,
     environment: Environment,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
     clickhouse_connection.save()
     mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
     )
     url = reverse(
         "api-v1:environments:experimentation:"
@@ -1734,16 +1631,14 @@ def test_test_warehouse_connection_config__payload__returns_expected_response(
     admin_client: APIClient,
     client_side_effect: Exception | None,
     data: dict[str, object],
-    enable_features: EnableFeaturesFixture,
     environment: Environment,
     expected_response: dict[str, object],
     expected_status_code: int,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     mocker.patch(
-        "experimentation.warehouse_delivery_service.clickhouse_connect.get_client",
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
         side_effect=client_side_effect,
     )
     url = reverse(
@@ -1764,11 +1659,9 @@ def test_test_warehouse_connection_config__payload__returns_expected_response(
 def test_patch__clickhouse_to_flagsmith__resets_connection_state(
     admin_client: APIClient,
     clickhouse_connection: WarehouseConnection,
-    enable_features: EnableFeaturesFixture,
     environment: Environment,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     clickhouse_connection.status = WarehouseConnectionStatus.ERRORED
     clickhouse_connection.status_detail = "Authentication failed."
     clickhouse_connection.save()
@@ -1795,12 +1688,10 @@ def test_patch__clickhouse_to_flagsmith__resets_connection_state(
 
 def test_patch__flagsmith_to_clickhouse_without_config__returns_400(
     admin_client: APIClient,
-    enable_features: EnableFeaturesFixture,
     environment: Environment,
     warehouse_connection: WarehouseConnection,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, warehouse_connection.id],
@@ -1824,11 +1715,9 @@ def test_patch__flagsmith_to_clickhouse_without_config__returns_400(
 def test_patch__clickhouse_null_credentials__returns_400(
     admin_client: APIClient,
     clickhouse_connection: WarehouseConnection,
-    enable_features: EnableFeaturesFixture,
     environment: Environment,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, clickhouse_connection.id],
@@ -1868,14 +1757,12 @@ def test_get_events__warehouse_availability__maps_to_response(
     admin_client: APIClient,
     environment: Environment,
     warehouse_connection: WarehouseConnection,
-    enable_features: EnableFeaturesFixture,
     service_result: WarehouseEventNames | None,
     expected_status: int,
     expected_body: dict[str, object],
     mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
     mocker.patch(
         "experimentation.views.get_warehouse_event_names",
         return_value=service_result,
@@ -1896,12 +1783,8 @@ def test_get_events__warehouse_availability__maps_to_response(
 def test_get_events__unsupported_type__returns_400(
     admin_client: APIClient,
     environment: Environment,
-    enable_features: EnableFeaturesFixture,
-    mocker: MockerFixture,
 ) -> None:
     # Given
-    enable_features("experimentation_warehouse_connection")
-    get_event_names = mocker.patch("experimentation.views.get_warehouse_event_names")
     connection = WarehouseConnection.objects.create(
         environment=environment,
         warehouse_type=WarehouseType.SNOWFLAKE,
@@ -1921,4 +1804,212 @@ def test_get_events__unsupported_type__returns_400(
     assert response.json() == {
         "detail": "Event listing is not supported for this warehouse type."
     }
-    get_event_names.assert_not_called()
+
+
+def test_list__verified_connection_failing_delivery__shows_errored_without_saving(
+    admin_client: APIClient,
+    environment: Environment,
+    clickhouse_connection: WarehouseConnection,
+    failing_delivery_status: WarehouseDeliveryStatus,
+) -> None:
+    # Given a connection that passed verification when saved, whose warehouse
+    # has since started refusing the events the delivery service sends
+    clickhouse_connection.status = WarehouseConnectionStatus.CONNECTED
+    clickhouse_connection.save()
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-list",
+        args=[environment.api_key],
+    )
+
+    # When
+    response = admin_client.get(url, {"exclude_event_stats": "true"})
+
+    # Then the dashboard sees the failure, while the stored verification stands
+    assert response.status_code == status.HTTP_200_OK
+    (connection,) = response.json()
+    assert connection["status"] == "errored"
+    assert connection["status_detail"] == "Authentication failed."
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.status == WarehouseConnectionStatus.CONNECTED
+
+
+DATABRICKS_HOST = "https://acme.cloud.databricks.com"
+DATABRICKS_PAYLOAD = {
+    "warehouse_type": "databricks",
+    "config": {
+        "host": "acme.cloud.databricks.com",
+        "workspace_id": "1234567890",
+        "region": "us-east-1",
+        "warehouse_id": "abc123",
+        "catalog": "main",
+    },
+    "credentials": {"client_id": "sp-id", "client_secret": "sp-secret"},
+}
+DATABRICKS_UNAVAILABLE = {
+    "warehouse_type": ["Databricks connections are not available on your plan."]
+}
+
+
+@pytest.fixture()
+def databricks_workspace(
+    requests_mock: RequestsMockerFixture,
+) -> RequestsMockerFixture:
+    requests_mock.post(
+        f"{DATABRICKS_HOST}/oidc/v1/token", json={"access_token": "t0k3n"}
+    )
+    requests_mock.post(
+        f"{DATABRICKS_HOST}/api/2.0/sql/statements",
+        json={
+            "statement_id": "st-1",
+            "status": {"state": "SUCCEEDED"},
+            "manifest": {"schema": {"columns": []}},
+            "result": {},
+        },
+    )
+    return requests_mock
+
+
+@pytest.mark.parametrize(
+    "statement_response, expected_status, expected_detail",
+    [
+        (None, "connected", None),
+        (
+            {
+                "statement_id": "st-1",
+                "status": {
+                    "state": "FAILED",
+                    "error": {
+                        "error_code": "BAD_REQUEST",
+                        "message": "[TABLE_OR_VIEW_NOT_FOUND] The table `events` cannot be found.",
+                    },
+                },
+            },
+            "errored",
+            "Events table not found in the configured database. Run the setup SQL to create it.",
+        ),
+    ],
+    ids=["reachable", "missing-table"],
+)
+def test_post__databricks__returns_201_with_verification_status(
+    admin_client: APIClient,
+    databricks_workspace: RequestsMockerFixture,
+    statement_response: dict[str, object] | None,
+    expected_status: str,
+    expected_detail: str | None,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    if statement_response is not None:
+        databricks_workspace.post(
+            f"{DATABRICKS_HOST}/api/2.0/sql/statements", json=statement_response
+        )
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url, data=DATABRICKS_PAYLOAD, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == expected_status
+    assert response.json()["status_detail"] == expected_detail
+    assert response.json()["config"] == {
+        "host": "acme.cloud.databricks.com",
+        "workspace_id": "1234567890",
+        "region": "us-east-1",
+        "warehouse_id": "abc123",
+        "catalog": "main",
+        "schema": "flagsmith_exp",
+    }
+    assert response.json()["name"] == f"Databricks Warehouse - {environment.name}"
+    assert "credentials" not in response.json()
+
+
+@pytest.mark.parametrize(
+    "url_name",
+    [
+        "warehouse-connections-list",
+        "warehouse-connections-test-warehouse-connection-config",
+    ],
+    ids=["create", "test-unsaved"],
+)
+@pytest.mark.usefixtures("saas_mode")
+def test_post__databricks_below_minimum_plan_on_saas__returns_400(
+    admin_client: APIClient,
+    databricks_workspace: RequestsMockerFixture,
+    environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    url_name: str,
+) -> None:
+    # Given
+    set_warehouses_flag({"minimum_plans": {"databricks": "scale-up"}})
+    url = reverse(
+        f"api-v1:environments:experimentation:{url_name}", args=[environment.api_key]
+    )
+
+    # When
+    response = admin_client.post(url, data=DATABRICKS_PAYLOAD, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == DATABRICKS_UNAVAILABLE
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+    assert databricks_workspace.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "minimum_plan, expected_status_code, expected_type",
+    [
+        ("scale-up", status.HTTP_400_BAD_REQUEST, WarehouseType.CLICKHOUSE),
+        ("free", status.HTTP_200_OK, WarehouseType.DATABRICKS),
+    ],
+    ids=["below-minimum-plan", "meets-minimum-plan"],
+)
+@pytest.mark.usefixtures("saas_mode", "databricks_workspace")
+def test_patch__clickhouse_to_databricks_on_saas__gated_by_plan(
+    admin_client: APIClient,
+    clickhouse_connection: WarehouseConnection,
+    environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    minimum_plan: str,
+    expected_status_code: int,
+    expected_type: str,
+) -> None:
+    # Given
+    set_warehouses_flag({"minimum_plans": {"databricks": minimum_plan}})
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, clickhouse_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(url, data=DATABRICKS_PAYLOAD, format="json")
+
+    # Then
+    assert response.status_code == expected_status_code
+    clickhouse_connection.refresh_from_db()
+    assert clickhouse_connection.warehouse_type == expected_type
+
+
+@pytest.mark.usefixtures("saas_mode")
+def test_patch__existing_databricks_below_minimum_plan_on_saas__saves(
+    admin_client: APIClient,
+    databricks_connection: WarehouseConnection,
+    environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+) -> None:
+    # Given
+    set_warehouses_flag({"minimum_plans": {"databricks": "scale-up"}})
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, databricks_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(url, data={"name": "Renamed"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    databricks_connection.refresh_from_db()
+    assert databricks_connection.name == "Renamed"

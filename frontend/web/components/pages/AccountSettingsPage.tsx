@@ -263,7 +263,7 @@ const AccountSettingsPage: FC = () => {
                 isValid={lastName && lastName.length}
                 type='text'
               />
-              {error && <ErrorMessage>{error}</ErrorMessage>}
+              {error && <ErrorMessage error={error} />}
               <div className='text-right'>
                 <Button
                   type='submit'
@@ -395,9 +395,7 @@ const AccountSettingsPage: FC = () => {
                     isValid={newPassword2 && newPassword2.length}
                     type='password'
                   />
-                  {passwordError && (
-                    <ErrorMessage>{passwordError}</ErrorMessage>
-                  )}
+                  {passwordError && <ErrorMessage error={passwordError} />}
                   <div className='text-right mt-5'>
                     <Button
                       type='submit'

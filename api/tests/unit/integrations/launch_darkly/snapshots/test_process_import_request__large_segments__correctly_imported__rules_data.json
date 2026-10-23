@@ -7,169 +7,169 @@
           "type": "ANY",
           "conditions": [
             {
-              "value": ".*410f8e860cb348ad83218d65834de218\\.com",
+              "value": ".*410f8e860cb348ad83218d65834de218\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*f97d9081f7af47c9b21a97b36d3c5fc2\\.com",
+              "value": ".*f97d9081f7af47c9b21a97b36d3c5fc2\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*7688255f6032482fb3fe4ae9780ca52e\\.com",
+              "value": ".*7688255f6032482fb3fe4ae9780ca52e\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*fe28a542c57946dbaad085c156e33209\\.com",
+              "value": ".*fe28a542c57946dbaad085c156e33209\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*895129ac924d4af29817749f6032c8f9\\.com",
+              "value": ".*895129ac924d4af29817749f6032c8f9\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*a39d13e4cc6c45949bcda57c20b399df\\.com",
+              "value": ".*a39d13e4cc6c45949bcda57c20b399df\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*d8899d51b30749659c9603e6bc11e9e4\\.com",
+              "value": ".*d8899d51b30749659c9603e6bc11e9e4\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*732650e37fdd4ff1bfbb2e239fa7dcd6\\.com",
+              "value": ".*732650e37fdd4ff1bfbb2e239fa7dcd6\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*22d230fac4524132b7e050d1dbf05f82\\.com",
+              "value": ".*22d230fac4524132b7e050d1dbf05f82\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*46e6d0b3f1474c1a8335ce434a9196aa\\.com",
+              "value": ".*46e6d0b3f1474c1a8335ce434a9196aa\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*8a9208af78734d769ed73f0009a28be3\\.com",
+              "value": ".*8a9208af78734d769ed73f0009a28be3\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*cbf2359bb0f0456b83287146a4e22abd\\.com",
+              "value": ".*cbf2359bb0f0456b83287146a4e22abd\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*c1546a6090364b0ab52cadb6067724da\\.com",
+              "value": ".*c1546a6090364b0ab52cadb6067724da\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*6508fe14f12e40a39b23a4390a60f6e6\\.com",
+              "value": ".*6508fe14f12e40a39b23a4390a60f6e6\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*723973bf3e1f4292bea939e2e7ba021f\\.com",
+              "value": ".*723973bf3e1f4292bea939e2e7ba021f\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*b3d74f4883814042876421260d662b52\\.com",
+              "value": ".*b3d74f4883814042876421260d662b52\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*8b89fadafbe44e7399b5dea298996017\\.com",
+              "value": ".*8b89fadafbe44e7399b5dea298996017\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*d0ca397bc2a940ba90508fbc7efe6a52\\.com",
+              "value": ".*d0ca397bc2a940ba90508fbc7efe6a52\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*a5e55423d2d04700926b73f4460527b4\\.com",
+              "value": ".*a5e55423d2d04700926b73f4460527b4\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*433ee12ed20147e78e0dd7d42dd4b576\\.com",
+              "value": ".*433ee12ed20147e78e0dd7d42dd4b576\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*887e35f48b2344848aeeac7ef712aa15\\.com",
+              "value": ".*887e35f48b2344848aeeac7ef712aa15\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*9b878926a653423b9c8749a0440a18f8\\.com",
+              "value": ".*9b878926a653423b9c8749a0440a18f8\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*b772131a81384b3493eaf8cbd7d33bca\\.com",
+              "value": ".*b772131a81384b3493eaf8cbd7d33bca\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*c4130acfcd2e4688a123614f3002161c\\.com",
+              "value": ".*c4130acfcd2e4688a123614f3002161c\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*87c5eb3b67464ae792252125c351f307\\.com",
+              "value": ".*87c5eb3b67464ae792252125c351f307\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*a64061b257014657943e5945ac6af7ca\\.com",
+              "value": ".*a64061b257014657943e5945ac6af7ca\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*eba18f11f40a4b40bbb4fbd52febe4cc\\.com",
+              "value": ".*eba18f11f40a4b40bbb4fbd52febe4cc\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*1cb30c51d69f4f44873bb38ced4d7952\\.com",
+              "value": ".*1cb30c51d69f4f44873bb38ced4d7952\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
@@ -192,169 +192,169 @@
           "type": "ANY",
           "conditions": [
             {
-              "value": ".*410f8e860cb348ad83218d65834de218\\.com",
+              "value": ".*410f8e860cb348ad83218d65834de218\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*f97d9081f7af47c9b21a97b36d3c5fc2\\.com",
+              "value": ".*f97d9081f7af47c9b21a97b36d3c5fc2\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*7688255f6032482fb3fe4ae9780ca52e\\.com",
+              "value": ".*7688255f6032482fb3fe4ae9780ca52e\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*fe28a542c57946dbaad085c156e33209\\.com",
+              "value": ".*fe28a542c57946dbaad085c156e33209\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*895129ac924d4af29817749f6032c8f9\\.com",
+              "value": ".*895129ac924d4af29817749f6032c8f9\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*a39d13e4cc6c45949bcda57c20b399df\\.com",
+              "value": ".*a39d13e4cc6c45949bcda57c20b399df\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*d8899d51b30749659c9603e6bc11e9e4\\.com",
+              "value": ".*d8899d51b30749659c9603e6bc11e9e4\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*732650e37fdd4ff1bfbb2e239fa7dcd6\\.com",
+              "value": ".*732650e37fdd4ff1bfbb2e239fa7dcd6\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*22d230fac4524132b7e050d1dbf05f82\\.com",
+              "value": ".*22d230fac4524132b7e050d1dbf05f82\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*46e6d0b3f1474c1a8335ce434a9196aa\\.com",
+              "value": ".*46e6d0b3f1474c1a8335ce434a9196aa\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*8a9208af78734d769ed73f0009a28be3\\.com",
+              "value": ".*8a9208af78734d769ed73f0009a28be3\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*cbf2359bb0f0456b83287146a4e22abd\\.com",
+              "value": ".*cbf2359bb0f0456b83287146a4e22abd\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*c1546a6090364b0ab52cadb6067724da\\.com",
+              "value": ".*c1546a6090364b0ab52cadb6067724da\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*6508fe14f12e40a39b23a4390a60f6e6\\.com",
+              "value": ".*6508fe14f12e40a39b23a4390a60f6e6\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*723973bf3e1f4292bea939e2e7ba021f\\.com",
+              "value": ".*723973bf3e1f4292bea939e2e7ba021f\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*b3d74f4883814042876421260d662b52\\.com",
+              "value": ".*b3d74f4883814042876421260d662b52\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*8b89fadafbe44e7399b5dea298996017\\.com",
+              "value": ".*8b89fadafbe44e7399b5dea298996017\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*d0ca397bc2a940ba90508fbc7efe6a52\\.com",
+              "value": ".*d0ca397bc2a940ba90508fbc7efe6a52\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*a5e55423d2d04700926b73f4460527b4\\.com",
+              "value": ".*a5e55423d2d04700926b73f4460527b4\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*433ee12ed20147e78e0dd7d42dd4b576\\.com",
+              "value": ".*433ee12ed20147e78e0dd7d42dd4b576\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*887e35f48b2344848aeeac7ef712aa15\\.com",
+              "value": ".*887e35f48b2344848aeeac7ef712aa15\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*9b878926a653423b9c8749a0440a18f8\\.com",
+              "value": ".*9b878926a653423b9c8749a0440a18f8\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*b772131a81384b3493eaf8cbd7d33bca\\.com",
+              "value": ".*b772131a81384b3493eaf8cbd7d33bca\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*c4130acfcd2e4688a123614f3002161c\\.com",
+              "value": ".*c4130acfcd2e4688a123614f3002161c\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*87c5eb3b67464ae792252125c351f307\\.com",
+              "value": ".*87c5eb3b67464ae792252125c351f307\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*a64061b257014657943e5945ac6af7ca\\.com",
+              "value": ".*a64061b257014657943e5945ac6af7ca\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*eba18f11f40a4b40bbb4fbd52febe4cc\\.com",
+              "value": ".*eba18f11f40a4b40bbb4fbd52febe4cc\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null
             },
             {
-              "value": ".*1cb30c51d69f4f44873bb38ced4d7952\\.com",
+              "value": ".*1cb30c51d69f4f44873bb38ced4d7952\\.com$",
               "operator": "REGEX",
               "property": "email",
               "description": null

@@ -13,6 +13,8 @@ module.exports = {
     '^common/(.*)$': '<rootDir>/common/$1',
     '^components/(.*)$': '<rootDir>/web/components/$1',
     '^project/(.*)$': '<rootDir>/web/project/$1',
+    // webpack resolves this one too; without it jest cannot follow the app.
+    '^web/(.*)$': '<rootDir>/web/$1',
   },
   preset: 'ts-jest',
   roots: ['<rootDir>'],

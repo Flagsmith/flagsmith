@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from datetime import timedelta
 
 import freezegun
@@ -22,6 +23,7 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from cohorts.models import Cohort
 from core.helpers import get_current_site_url
+from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import (
@@ -44,6 +46,10 @@ from features.workflows.core.models import (
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+
+# TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
+from segments.types import SegmentRule as SegmentRuleType
+from tests.types import VariantAssignmentFixture
 from users.models import FFAdminUser
 
 now = timezone.now()
@@ -860,7 +866,46 @@ def test_change_request_live_from__with_change_set__sets_live_from_to_commit_tim
     assert change_request.live_from == now
 
 
-def test_change_request_commit__with_draft_segment__publishes_segment_rules(
+def test_change_request_commit__with_draft_segment__publishes_draft(
+    segment: Segment,
+    segment_rules: list[SegmentRuleType],
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    draft_rules = deepcopy(segment_rules)
+    draft_rules[0]["conditions"][0]["value"] = "blue"
+    draft_segment = Segment.objects.create(
+        name="new-name",
+        description="new-description",
+        change_request=change_request,
+        project=segment.project,
+        version_of=segment,
+        rules_data=draft_rules,
+    )
+
+    # When
+    change_request.commit(admin_user)
+
+    # Then
+    segment.refresh_from_db()
+    assert segment.version == 2
+    assert segment.name == "new-name"
+    assert segment.description == "new-description"
+    assert segment.rules_data == draft_rules
+    revision = segment.versioned_segments.exclude(
+        id__in=[segment.id, draft_segment.id]
+    ).get()
+    assert revision.version == 1
+    assert revision.rules_data == segment_rules
+    assert log.has(
+        "segment-revision-created", segment_id=segment.id, revision_id=revision.id
+    )
+
+
+# TODO: Delete as per https://github.com/Flagsmith/flagsmith/issues/7818
+def test_change_request_commit__with_draft_segment__publishes_segment_rules_x_replaced_above(
     segment: Segment,
     change_request: ChangeRequest,
     admin_user: FFAdminUser,
@@ -1199,20 +1244,26 @@ def test_change_request_commit__v1_multivariate_feature__keeps_variant_bucketing
     environment: Environment,
     multivariate_feature: Feature,
     admin_user: FFAdminUser,
+    variant_assignment: VariantAssignmentFixture,
 ) -> None:
     # Given the current live environment-default feature state of a multivariate
     # feature, and the variant each of a range of identities is bucketed into
+    # The fixture derives an option's value from its percentage, so two of them
+    # share a value. Key them so a variant identifies which option won.
+    for index, option in enumerate(multivariate_feature.multivariate_options.all()):
+        option.key = f"variant-{index}"
+        option.save()
     live_feature_state = FeatureState.objects.get(
         environment=environment,
         feature=multivariate_feature,
         identity=None,
         feature_segment=None,
     )
-    identity_hash_keys = [f"identity-{i}" for i in range(50)]
-    original_assignment = {
-        key: live_feature_state.get_multivariate_feature_state_value(key).pk
-        for key in identity_hash_keys
-    }
+    identities = [
+        Identity.objects.create(identifier=f"identity-{i}", environment=environment)
+        for i in range(50)
+    ]
+    original_assignment = variant_assignment(identities, multivariate_feature.name)
 
     # and a change request carrying a draft feature state for the same feature,
     # as created by the API when a change request is raised under v1 versioning
@@ -1242,11 +1293,9 @@ def test_change_request_commit__v1_multivariate_feature__keeps_variant_bucketing
     assert new_live_feature_state.mv_hashing_salt == live_feature_state.id
 
     # and every identity stays in the same variant as before the commit
-    new_assignment = {
-        key: new_live_feature_state.get_multivariate_feature_state_value(key).pk
-        for key in identity_hash_keys
-    }
-    assert new_assignment == original_assignment
+    assert variant_assignment(identities, multivariate_feature.name) == (
+        original_assignment
+    )
 
 
 def test_change_request_commit__v1_segment_override_draft__inherits_mv_hashing_salt(

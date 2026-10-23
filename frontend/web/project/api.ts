@@ -360,12 +360,16 @@ const API = {
     }
   },
 
-  trackPage(title: string): void {
+  // `path` overrides the reported location, e.g. for removing
+  // tokens in URLs
+  trackPage(title: string, path?: string): void {
     if (Project.ga)
       ga('send', {
         hitType: 'pageview',
-        location: document.location.href,
-        page: document.location.pathname,
+        location: path
+          ? `${document.location.origin}${path}`
+          : document.location.href,
+        page: path ?? document.location.pathname,
         title,
       })
   },

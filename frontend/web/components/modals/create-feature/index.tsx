@@ -27,6 +27,11 @@ import ExternalResourcesTable from 'components/ExternalResourcesTable'
 import GitHubLinkSection from 'components/GitHubLinkSection'
 import GitLabLinkSection from 'components/GitLabLinkSection'
 import type { ExternalResource } from 'common/types/responses'
+import {
+  diffVariations,
+  hasApprovableChanges,
+  hasUnmatchedIdentityOverride,
+} from 'common/utils/multivariate'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import FeatureHistory from 'components/FeatureHistory'
 import { getChangeRequests } from 'common/services/useChangeRequest'
@@ -41,6 +46,8 @@ import SegmentOverridesTab, {
   SegmentOverrideValue,
 } from './tabs/SegmentOverridesTab'
 import UsageTab from './tabs/UsageTab'
+import FeatureDependenciesTab from './tabs/FeatureDependenciesTab'
+import { useStagedPrerequisites } from './tabs/FeatureDependenciesTab/hooks/useStagedPrerequisites'
 import FeatureLimitAlert from './components/FeatureLimitAlert'
 import FeatureUpdateSummary from './components/FeatureUpdateSummary'
 import FeatureNameInput from './components/FeatureNameInput'
@@ -149,6 +156,12 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const [, setTabKey] = useState(0)
 
   const isEdit = !!props.projectFlag
+  // In the modal, so a change request from any tab includes them.
+  const dependencyChanges = useStagedPrerequisites({
+    environmentId,
+    projectFlag,
+  })
+  const dependenciesChanged = !!dependencyChanges.staged.length
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const close = useCallback(() => {
@@ -158,7 +171,12 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const onClosing = useCallback(() => {
     if (isEdit) {
       return new Promise<boolean>((resolve) => {
-        if (settingsChanged || valueChanged || segmentsChanged) {
+        if (
+          settingsChanged ||
+          valueChanged ||
+          segmentsChanged ||
+          dependenciesChanged
+        ) {
           openConfirm({
             body: 'Closing this will discard your unsaved changes.',
             noText: 'Cancel',
@@ -173,7 +191,13 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
       })
     }
     return Promise.resolve(true)
-  }, [isEdit, settingsChanged, valueChanged, segmentsChanged])
+  }, [
+    isEdit,
+    settingsChanged,
+    valueChanged,
+    segmentsChanged,
+    dependenciesChanged,
+  ])
 
   const fetchChangeRequests = useCallback(
     (forceRefetch?: boolean) => {
@@ -330,6 +354,17 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     const hasMultivariate =
       props.environmentFlag?.multivariate_feature_state_values?.length
 
+    // A multivariate override is stored as the control value plus a variation
+    // at 100%, so its value is normally re-synced to the control on save. An
+    // override predating the flag becoming multivariate holds a value that
+    // this model cannot express, and re-syncing would destroy it.
+    const keepsOwnValue = hasUnmatchedIdentityOverride({
+      controlValue:
+        projectFlag.environment_feature_state?.feature_state_value ?? null,
+      overrideValue: environmentFlag.feature_state_value ?? null,
+      variationOverrides: environmentFlag.multivariate_feature_state_values,
+    })
+
     if (identity) {
       !isSaving &&
         projectFlag.name &&
@@ -339,9 +374,10 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           identity,
           identityFlag: Object.assign({}, props.identityFlag || {}, {
             enabled: environmentFlag.enabled,
-            feature_state_value: hasMultivariate
-              ? props.environmentFlag?.feature_state_value
-              : cleanInputValue(environmentFlag.feature_state_value),
+            feature_state_value:
+              hasMultivariate && !keepsOwnValue
+                ? props.environmentFlag?.feature_state_value
+                : cleanInputValue(environmentFlag.feature_state_value),
             multivariate_options:
               environmentFlag.multivariate_feature_state_values,
           }),
@@ -442,6 +478,13 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     controlValue < 0
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
+  // Where change requests are enforced, the tab also needs its own flag, so the
+  // change request flow can roll out separately.
+  const isDependenciesTabEnabled =
+    Utils.getFlagsmithHasFeature('flag_dependencies') &&
+    !existingChangeRequest &&
+    (!is4Eyes ||
+      Utils.getFlagsmithHasFeature('flag_dependencies_change_requests'))
 
   let regexValid = true
   try {
@@ -453,6 +496,24 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   }
 
   const Provider = identity ? IdentityProvider : FeatureListProvider
+
+  const toastChangeRequestSaved = (changeRequestId: number) =>
+    toast(
+      `${
+        existingChangeRequest ? 'Updated' : 'Created'
+      } Change Request #${changeRequestId}`,
+      'success',
+      undefined,
+      {
+        buttonText: 'Open',
+        onClick: () => {
+          closeModal()
+          props.history?.push(
+            `/project/${projectId}/environment/${environmentId}/change-requests/${changeRequestId}`,
+          )
+        },
+      },
+    )
   const environmentName = environment.name
 
   return (
@@ -464,7 +525,23 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           setValueChanged(true)
         }
       }}
-      onSave={() => {
+      onSave={(data?: {
+        changeRequest?: boolean
+        updatedChangeRequest?: { id: number }
+      }) => {
+        const changeRequestId = data?.changeRequest
+          ? data.updatedChangeRequest?.id
+          : undefined
+        if (changeRequestId) {
+          const staging = dependenciesChanged
+            ? dependencyChanges.stageInto(changeRequestId)
+            : Promise.resolve(null)
+          // A change request missing some dependency changes gets the banner,
+          // not a success toast.
+          staging.then((failure) => {
+            if (!failure) toastChangeRequestSaved(changeRequestId)
+          })
+        }
         if (identity) {
           close()
         }
@@ -494,16 +571,100 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           editFeatureSegments,
           editFeatureSettings,
           editFeatureValue,
+          saveVariationValues,
         }: any,
       ) => {
+        // Not props.projectFlag: that carries the project default weights, so
+        // comparing against it reports a weight edit that is not one.
+        const variationChanges = diffVariations({
+          edited: projectFlag.multivariate_options,
+          stored: originalMultivariateOptions,
+        })
+        const hasVariationChanges =
+          variationChanges.values || variationChanges.added
+
+        const onSaveVariationValues = () =>
+          openConfirm({
+            body: 'Variation values belong to the feature, so this applies to every environment straight away and is not part of a change request.',
+            noText: 'Cancel',
+            onYes: () => {
+              saveVariationValues(
+                projectId,
+                projectFlag,
+                props.projectFlag,
+                (savedProjectFlag: any) => {
+                  // Only the response carries ids for variations created
+                  // here, but it zeroes every weight, so keep the edited ones.
+                  const persisted = savedProjectFlag?.multivariate_options
+                  if (!persisted?.length) {
+                    return
+                  }
+                  const merged = persisted.map((option: any, i: number) => ({
+                    ...option,
+                    default_percentage_allocation:
+                      projectFlag.multivariate_options?.[i]
+                        ?.default_percentage_allocation ??
+                      option.default_percentage_allocation,
+                  }))
+                  setProjectFlag((prev: any) => ({
+                    ...prev,
+                    multivariate_options: merged,
+                  }))
+                  // Weights are not part of this save, so the baseline keeps
+                  // the ones it had and an edited weight stays dirty. A new
+                  // variation has none, and the server starts it at 0.
+                  setSavedMultivariateOptions(
+                    cloneDeep(
+                      merged.map((option: any) => ({
+                        ...option,
+                        default_percentage_allocation:
+                          originalMultivariateOptions?.find(
+                            (stored: any) => stored.id === option.id,
+                          )?.default_percentage_allocation ?? 0,
+                      })),
+                    ),
+                  )
+                },
+              )
+            },
+            title: 'Save variation values',
+            yesText: 'Save for all environments',
+          })
+
         const saveFeatureValue = saveFeatureWithValidation(
           (schedule?: boolean) => {
             if ((is4Eyes || schedule) && !identity) {
+              const approvable =
+                dependenciesChanged ||
+                hasApprovableChanges({
+                  editedEnabled: environmentFlag.enabled,
+                  editedValue: environmentFlag.feature_state_value,
+                  segmentOverridesChanged: segmentsChanged,
+                  storedEnabled: props.environmentFlag?.enabled,
+                  storedValue: props.environmentFlag?.feature_state_value,
+                  weightsChanged: variationChanges.weights,
+                })
+
+              if (!approvable) {
+                const what = schedule
+                  ? 'a scheduled change'
+                  : 'a change request'
+                toast(
+                  hasVariationChanges
+                    ? `Variation changes are saved separately, and nothing else has changed, so there is nothing to put in ${what}.`
+                    : `Nothing has changed, so there is nothing to put in ${what}.`,
+                  'warning',
+                )
+                return
+              }
+
               setSegmentsChanged(false)
-              setValueChanged(false)
-              const segmentFeatureStates = (segmentOverrides || [])
-                .filter((override: any) => !override.toRemove)
-                .map((override: any) => ({
+              // Variation edits stay unsaved if the user cancels the request.
+              setValueChanged(hasVariationChanges)
+              // Keep overrides marked for removal, flagged with `toRemove`, so
+              // the change request's "no changes" check sees the deletion.
+              const segmentFeatureStates = (segmentOverrides || []).map(
+                (override: any) => ({
                   enabled: override.enabled,
                   feature: override.feature,
                   feature_segment: {
@@ -521,7 +682,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   id: override.id,
                   multivariate_feature_state_values:
                     override.multivariate_options,
-                }))
+                  toRemove: override.toRemove,
+                }),
+              )
               const featureStates = [
                 ...segmentFeatureStates,
                 {
@@ -548,7 +711,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
               openModal2(
                 getModalTitle(),
                 <ChangeRequestModal
-                  showIgnoreConflicts={true}
+                  // Its "no changes" check only sees the feature states, so it
+                  // would flag a change request that only changes dependencies.
+                  showIgnoreConflicts={!dependenciesChanged}
                   showAssignees={is4Eyes}
                   isScheduledChange={schedule}
                   changeRequest={existingChangeRequest}
@@ -669,6 +834,8 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                       isVersioned={isVersioned}
                       isSaving={isSaving}
                       existingChangeRequest={!!existingChangeRequest}
+                      hasVariationChanges={hasVariationChanges}
+                      onSaveVariationValues={onSaveVariationValues}
                       originalMultivariateOptions={originalMultivariateOptions}
                       onSaveFeatureValue={saveFeatureValue}
                       onEnvironmentFlagChange={(changes: any) => {
@@ -715,6 +882,42 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                         />
                       </TabItem>
                     )}
+                  {isDependenciesTabEnabled && (
+                    <TabItem
+                      data-test='feature_dependencies'
+                      tabLabel='Dependencies'
+                      isDirty={dependenciesChanged}
+                    >
+                      <FeatureDependenciesTab
+                        environmentId={environmentId}
+                        environmentName={environmentName}
+                        projectId={projectId}
+                        projectFlag={projectFlag}
+                        requiresChangeRequests={is4Eyes}
+                        isVersioned={isVersioned}
+                        staging={dependencyChanges}
+                        isSaving={isSaving}
+                        onCreateChangeRequest={() => saveFeatureValue()}
+                        onSelectFeature={async (featureId) => {
+                          // Opening another feature replaces this modal
+                          // without closing it, so ask here.
+                          if (!(await onClosing())) return
+                          // The features list, never the current page: it
+                          // owns the deep link and hydrates an off-page
+                          // target. `from` puts a back arrow in the header.
+                          props.history?.push(
+                            `/project/${projectId}/environment/${environmentId}/features?${Utils.toParam(
+                              {
+                                feature: featureId,
+                                from: projectFlag.id,
+                                tab: 'dependencies',
+                              },
+                            )}`,
+                          )
+                        }}
+                      />
+                    </TabItem>
+                  )}
                   {!existingChangeRequest && !hideIdentityOverridesTab && (
                     <TabItem
                       data-test='identity_overrides'
@@ -858,6 +1061,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                   projectId={projectId}
                   error={error}
                   featureState={props.environmentFlag || environmentFlag}
+                  storedFeatureState={
+                    props.identityFlag || props.environmentFlag
+                  }
                   projectFlag={projectFlag}
                   identity={identity}
                   overrideFeatureState={

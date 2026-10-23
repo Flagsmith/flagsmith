@@ -17,6 +17,18 @@ def map_identity_document_to_clickhouse_row(
     composite_key = identity_doc["composite_key"]
     raw_traits = identity_doc.get("identity_traits")
     traits = _flatten_traits(raw_traits) if raw_traits else None
+    if raw_system_traits := identity_doc.get("system_traits"):
+        # System-owned traits are not user data: on a key clash, the system
+        # value wins — the same precedence flag evaluation applies. Dropping
+        # them instead would erase cohort membership for every seeded
+        # identity, as the seeded row supersedes older CDC rows at dedup.
+        traits = {
+            **(traits or {}),
+            **{
+                trait_key: _coerce_trait_value(trait_value)
+                for trait_key, trait_value in raw_system_traits.items()
+            },
+        }
     return (
         env_key,
         identifier,

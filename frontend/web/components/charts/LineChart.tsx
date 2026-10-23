@@ -1,9 +1,11 @@
 import React, { FC } from 'react'
+import { AxisDomain } from 'recharts/types/util/types'
 import {
   CartesianGrid,
   Legend,
   Line,
   LineChart as RawLineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -11,29 +13,56 @@ import {
 } from 'recharts'
 import { colorTextSecondary } from 'common/theme/tokens'
 import ChartTooltip from './ChartTooltip'
-import { ChartDataPoint } from './types'
+import { ChartDataPoint, ChartSeries } from './types'
 
 type LineChartProps = {
   data: ChartDataPoint[]
-  series: string[]
-  colorMap: Record<string, string>
+  series: ChartSeries[]
   height?: number
   xAxisInterval?: number
   showLegend?: boolean
-  seriesLabels?: Record<string, string>
   verticalGrid?: boolean
+  referenceLine?: Threshold
 }
 
+const labelsOf = (series: ChartSeries[]): Record<string, string> =>
+  Object.fromEntries(
+    series.filter((s) => s.label).map((s) => [s.key, s.label as string]),
+  )
+
+type Threshold = { value: number; label?: string; colour: string }
+
+const axisDomainFor = (referenceLine?: Threshold): AxisDomain | undefined =>
+  referenceLine
+    ? [
+        0,
+        (max: number) => Math.round(Math.max(max, referenceLine.value) * 1.08),
+      ]
+    : undefined
+
+const thresholdLabelFor = (referenceLine?: Threshold) =>
+  referenceLine?.label
+    ? {
+        fill: referenceLine.colour,
+        fontSize: 11,
+        position: 'insideTopRight' as const,
+        value: referenceLine.label,
+      }
+    : undefined
+
 const LineChart: FC<LineChartProps> = ({
-  colorMap,
   data,
   height = 400,
+  referenceLine,
   series,
-  seriesLabels,
   showLegend = false,
   verticalGrid = true,
   xAxisInterval = 0,
 }) => {
+  const seriesLabels = labelsOf(series)
+  // A total is only meaningful when every line on the chart can be added up.
+  const hideTooltipTotal = series.some((s) => s.summable === false)
+
   return (
     <ResponsiveContainer height={height} width='100%'>
       <RawLineChart data={data}>
@@ -56,13 +85,19 @@ const LineChart: FC<LineChartProps> = ({
         <YAxis
           tick={{ fill: colorTextSecondary, fontSize: 11 }}
           axisLine={{ stroke: colorTextSecondary }}
+          domain={axisDomainFor(referenceLine)}
           tickFormatter={(value) =>
             value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value
           }
         />
         <Tooltip
           cursor={{ stroke: colorTextSecondary, strokeDasharray: '3 3' }}
-          content={<ChartTooltip seriesLabels={seriesLabels} />}
+          content={
+            <ChartTooltip
+              seriesLabels={seriesLabels}
+              hideTotal={hideTooltipTotal}
+            />
+          }
         />
         {showLegend && (
           <Legend
@@ -72,14 +107,25 @@ const LineChart: FC<LineChartProps> = ({
             }
           />
         )}
-        {series.map((label, index) => (
-          <Line
-            key={label}
-            type='monotone'
-            dataKey={label}
-            stroke={colorMap[label]}
+        {referenceLine && (
+          <ReferenceLine
+            y={referenceLine.value}
+            stroke={referenceLine.colour}
             strokeWidth={2}
+            label={thresholdLabelFor(referenceLine)}
+          />
+        )}
+        {series.map((line, index) => (
+          <Line
+            key={line.key}
+            type='monotone'
+            dataKey={line.key}
+            stroke={line.colour}
+            strokeWidth={2}
+            strokeDasharray={line.dashed ? '6 6' : undefined}
             dot={false}
+            // Recharts' default, pinned: a gap in a series must stay a gap.
+            connectNulls={false}
             animationBegin={index * 80}
             animationDuration={600}
             animationEasing='ease-out'

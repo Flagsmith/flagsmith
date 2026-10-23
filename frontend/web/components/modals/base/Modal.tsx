@@ -37,7 +37,9 @@ const withModal = (
     shouldInterceptClose?: boolean
   } = {},
 ) => {
-  return (props: ModalProps) => {
+  // HTMLAttributes types the native title attribute as a string; the modal
+  // header renders any node.
+  return (props: Omit<ModalProps, 'title'> & { title?: ReactNode }) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const [isOpen, setIsOpen] = useState(true)
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -126,7 +128,7 @@ export const openConfirm = (global.openConfirm = ({
 })
 
 export const openModal = (global.openModal = (
-  title: string,
+  title: ReactNode,
   body: ReactNode,
   className?: string,
   onClose?: () => void,

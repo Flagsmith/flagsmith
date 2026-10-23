@@ -12,6 +12,12 @@ describe('Format', () => {
       ${1234}          | ${'1.2K'}
       ${12345}         | ${'12.3K'}
       ${123456}        | ${'123.5K'}
+      ${0}             | ${'0'}
+      ${undefined}     | ${'0'}
+      ${null}          | ${'0'}
+      ${NaN}           | ${'0'}
+      ${Infinity}      | ${'0'}
+      ${-Infinity}     | ${'0'}
     `('shortenNumber($input) returns $expected', ({ expected, input }) => {
       expect(Format.shortenNumber(input)).toBe(expected)
     })

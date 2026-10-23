@@ -5,9 +5,9 @@ sidebar_position: 3
 description: Define the outcomes your experiments measure, computed from the events your application sends.
 ---
 
-:::info Enterprise beta
+:::info Beta
 
-Experimentation is in beta on **Enterprise** plans. [Get in touch](https://www.flagsmith.com/contact-us) to join.
+Experimentation is in beta.
 
 :::
 
@@ -31,6 +31,13 @@ inside the experiment wizard's Measurement step.
 | **Count**      | Number of times an event occurred        | Number of purchases |
 | **Sum**        | Total of a numeric value across events   | Total revenue       |
 | **Mean**       | Average of a numeric value across events | Average order value |
+
+:::note
+
+Events are delivered at least once, so a retried delivery can occasionally store an event twice. This can slightly
+inflate **Count**, **Sum** and **Mean** metrics. **Occurrence** metrics and exposures are not affected.
+
+:::
 
 :::important
 

@@ -3,6 +3,11 @@ import Highlight from './Highlight'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 
+// Running a test is a real SDK evaluation, which marks the environment as
+// integrated (environment.first_evaluated) — hide it until the project looks
+// genuinely in use.
+export const MIN_FLAGS_TO_SHOW_TRY_IT = 3
+
 const TryIt = class extends Component {
   static displayName = 'TryIt'
 
@@ -52,7 +57,8 @@ const TryIt = class extends Component {
   }
 
   render() {
-    return Utils.getFlagsmithHasFeature('try_it') ? (
+    return Utils.getFlagsmithHasFeature('try_it') &&
+      (E2E || (this.props.totalFeatures || 0) >= MIN_FLAGS_TO_SHOW_TRY_IT) ? (
       <div>
         <Row space>
           <Flex className='align-items-start'>

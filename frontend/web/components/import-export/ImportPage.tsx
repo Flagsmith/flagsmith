@@ -13,10 +13,10 @@ import Button from 'components/base/forms/Button'
 import PanelSearch from 'components/PanelSearch'
 import TabItem from 'components/navigation/TabMenu/TabItem'
 import FeatureImport from './FeatureImport'
-import AccountStore from 'common/stores/account-store'
 import Constants from 'common/constants'
 import { useHistory } from 'react-router-dom'
-import { OrganisationPermission } from 'common/types/permissions.types'
+import { ProjectPermission } from 'common/types/permissions.types'
+import { useHasPermission } from 'common/providers/Permission'
 
 type ImportPageType = {
   projectId: string
@@ -25,6 +25,12 @@ type ImportPageType = {
 
 const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
   const history = useHistory()
+  const { isLoading: isLoadingPermission, permission: isProjectAdmin } =
+    useHasPermission({
+      id: projectId,
+      level: 'project',
+      permission: ProjectPermission.ADMIN,
+    })
   const [LDKey, setLDKey] = useState<string>('')
   const [importId, setImportId] = useState<number>()
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -93,15 +99,19 @@ const ImportPage: FC<ImportPageType> = ({ projectId, projectName }) => {
     })
   }
 
-  const isAdmin = AccountStore.isAdmin()
+  if (isLoadingPermission) {
+    return (
+      <div className='text-center mt-4'>
+        <Loader />
+      </div>
+    )
+  }
 
-  if (!isAdmin) {
+  if (!isProjectAdmin) {
     return (
       <div
         dangerouslySetInnerHTML={{
-          __html: Constants.organisationPermissions(
-            OrganisationPermission.ADMIN,
-          ),
+          __html: Constants.projectPermissions(ProjectPermission.ADMIN),
         }}
         className='mt-4'
       />

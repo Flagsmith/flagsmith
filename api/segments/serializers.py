@@ -8,13 +8,19 @@ from drf_writable_nested.serializers import WritableNestedModelSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from cohorts.models import Cohort
 from edge_api.utils import is_edge_enabled
+from features.dependencies.services import (
+    index_segment_flag_references,
+    validate_segment_flag_dependencies,
+)
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
 from segment_membership.constants import MAX_SEGMENT_MEMBERS_PAGE_SIZE
 from segment_membership.models import SegmentMembershipCount
 from segment_membership.services import enqueue_membership_refresh
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
+from segments.services import check_segment_is_not_system, get_live_overrides
 from segments.types import (
     LegacySegmentRule,
 )
@@ -102,10 +108,38 @@ class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
         ]
 
 
+class _SegmentCohortSerializer(serializers.ModelSerializer[Cohort]):
+    # The environment's key and name ride along so clients can address and
+    # display the cohort without paging through the environments list.
+    environment_api_key = serializers.CharField(
+        source="environment.api_key", read_only=True
+    )
+    environment_name = serializers.CharField(source="environment.name", read_only=True)
+
+    class Meta:
+        model = Cohort
+        fields = [
+            "id",
+            "environment",
+            "environment_api_key",
+            "environment_name",
+            "source_type",
+            "version",
+            "deletion_requested_at",
+        ]
+
+
 class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     rules = SegmentRuleSerializer(many=True, required=True, allow_empty=False)
     metadata = MetadataSerializer(required=False, many=True)
     membership_counts = SegmentMembershipCountSerializer(many=True, read_only=True)
+    cohort = serializers.SerializerMethodField()
+    has_overrides = serializers.SerializerMethodField(
+        help_text=(
+            "Whether any feature override points at this segment, counting "
+            "overrides that are live now or scheduled to go live."
+        ),
+    )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
@@ -140,16 +174,39 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "metadata",
             "membership_counts",
             "managed_by",
+            "cohort",
+            "has_overrides",
         ]
         read_only_fields = [
             "managed_by",
             "membership_counts",
             "project",
+            "has_overrides",
         ]
+
+    @extend_schema_field(_SegmentCohortSerializer(allow_null=True))
+    def get_cohort(self, segment: Segment) -> dict[str, Any] | None:
+        # next() over the relation keeps the list view's prefetch cache warm.
+        cohort = next(iter(segment.cohorts.all()), None)
+        return _SegmentCohortSerializer(cohort).data if cohort else None
+
+    def get_has_overrides(self, segment: Segment) -> bool:
+        # Annotated by `SegmentViewSet.get_queryset`; fall back where a segment
+        # is serialized outside that queryset.
+        if (has_overrides := getattr(segment, "has_overrides", None)) is not None:
+            return bool(has_overrides)
+        return (
+            get_live_overrides(include_scheduled=True).filter(segment=segment).exists()
+        )
 
     def to_internal_value(self, data: dict[str, Any]) -> Any:
         self._validate_rules_depth(data.get("rules", []))
         return super().to_internal_value(data)
+
+    def validate_version_of(self, version_of: Segment | None) -> Segment | None:
+        if version_of is not None:
+            check_segment_is_not_system(version_of)
+        return version_of
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
@@ -171,7 +228,9 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     def create(self, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
         metadata_data = validated_data.pop("metadata", [])
         self._set_rules_data(validated_data)
-        segment = super().create(validated_data)  # type: ignore[no-untyped-call]
+        with transaction.atomic():
+            segment = super().create(validated_data)  # type: ignore[no-untyped-call]
+            index_segment_flag_references(segment)
         self._update_metadata(segment, metadata_data)
         enqueue_membership_refresh(segment.project)
         return segment
@@ -188,6 +247,8 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                     revision_id=segment_revision.id,
                 )
             segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
+            index_segment_flag_references(segment)
+            validate_segment_flag_dependencies(segment)
         self._update_metadata(segment, metadata)
         enqueue_membership_refresh(segment.project)
         return segment
@@ -206,9 +267,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                 }
             )
         for rule in rules:
-            self._validate_rules_depth(
-                cast(list[LegacySegmentRule], rule.get("rules", [])), _depth + 1
-            )
+            self._validate_rules_depth(rule.get("rules", []), _depth + 1)
 
     def _validate_rules_condition_count(self, rules: list[LegacySegmentRule]) -> None:
         condition_count = self._count_conditions(rules)
@@ -271,8 +330,7 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
                     for condition in rule.get("conditions", [])
                     if not condition.get("delete")
                 ],
-                # Cleanup type-ignore as per https://github.com/Flagsmith/flagsmith/issues/8280
-                "rules": self._get_clean_rules_and_conditions(rule.get("rules", [])),  # type: ignore[typeddict-item,arg-type]
+                "rules": self._get_clean_rules_and_conditions(rule.get("rules", [])),
             }
             for rule in rules
             if not rule.get("delete")

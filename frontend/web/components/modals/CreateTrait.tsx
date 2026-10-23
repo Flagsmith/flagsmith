@@ -8,10 +8,8 @@ import React, {
 } from 'react'
 import Highlight from 'components/Highlight'
 import Constants from 'common/constants'
-import Format from 'common/utils/format'
 import ErrorMessage from 'components/ErrorMessage'
 import ModalHR from './ModalHR'
-import IdentityProvider from 'common/providers/IdentityProvider'
 import find from 'lodash/find'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import Button from 'components/base/forms/Button'
@@ -122,11 +120,7 @@ const CreateTrait: FC<CreateTraitProps> = ({
                 }}
                 value={traitKey}
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setTraitKey(
-                    Format.enumeration
-                      .set(Utils.safeParseEventValue(e))
-                      .toLowerCase(),
-                  )
+                  setTraitKey(Utils.safeParseEventValue(e).replace(/ /g, '_'))
                 }
                 isValid={!!traitKey && traitKey.length > 0}
                 type='text'

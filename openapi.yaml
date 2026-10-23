@@ -113,166 +113,33 @@ paths:
         - Master API Key: []
       tags:
         - experimental
-  '/api/experiments/environments/{environment_key}/delete-segment-override/':
-    post:
-      operationId: api_experiments_environments_delete_segment_override_create
-      summary: Delete segment override
-      description: |2-
-
-            **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
-
-            Deletes a segment override for a feature in the given environment.
-
-            **Feature Identification:**
-            - Use `feature.name` OR `feature.id` (mutually exclusive)
-            - Feature must belong to the environment's project
-
-            **Segment Identification:**
-            - Use `segment.id` (required)
-
-            The segment override must exist for the given feature/environment combination.
-            Returns 400 if the segment override does not exist.
-            
+  '/api/__future__/environments/{environment_key}/features/{feature_id}/segment-overrides/{segment_id}/':
+    delete:
+      operationId: api___future___environments_features_segment_overrides_destroy
+      description: 'Remove the flag''s override for the segment, leaving the rest of the flag as it is.'
       parameters:
         - name: environment_key
           in: path
-          description: The environment API key
           required: true
           schema:
             type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeleteSegmentOverride'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/DeleteSegmentOverride'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/DeleteSegmentOverride'
-      responses:
-        '204':
-          description: No response body
-      security:
-        - tokenAuth: []
-        - Master API Key: []
-      tags:
-        - experimental
-  '/api/experiments/environments/{environment_key}/update-flag-v1/':
-    post:
-      operationId: api_experiments_environments_update_flag_v1_create
-      summary: Update single feature state
-      description: |2-
-
-            **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
-
-            Updates a single feature state within an environment. You can update either:
-            - The environment default state (when no segment is specified)
-            - A specific segment override (when segment.id is provided)
-
-            **Feature Identification:**
-            - Use `feature.name` OR `feature.id` (mutually exclusive)
-
-            **Value Format:**
-            - The `value` field is always a string representation
-            - The `type` field tells the server how to parse it
-            - Available types: integer, string, boolean
-            - Examples:
-              - `{"type": "integer", "value": "42"}`
-              - `{"type": "boolean", "value": "true"}`
-              - `{"type": "string", "value": "hello"}`
-
-            **Segment Priority:**
-            - Optional `segment.priority` field controls ordering
-            - If field value is null or the field is omitted, lowest priority is assumed
-            
-      parameters:
-        - name: environment_key
+        - name: feature_id
           in: path
-          description: The environment API key
           required: true
           schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateFlag'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/UpdateFlag'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/UpdateFlag'
-      responses:
-        '204':
-          description: No response body
-      security:
-        - tokenAuth: []
-        - Master API Key: []
-      tags:
-        - experimental
-  '/api/experiments/environments/{environment_key}/update-flag-v2/':
-    post:
-      operationId: api_experiments_environments_update_flag_v2_create
-      summary: Update multiple feature states
-      description: |2-
-
-            **EXPERIMENTAL ENDPOINT** - Subject to change without notice.
-
-            Updates multiple feature states in a single request. This endpoint allows
-            you to configure an entire feature (environment default + all segment overrides)
-            in one operation.
-
-            **What You Can Update:**
-            - Environment default state (required)
-            - Multiple segment overrides (optional)
-            - Priority ordering for each segment
-
-            **Feature Identification:**
-            - Use `feature.name` OR `feature.id` (mutually exclusive)
-
-            **Value Format:**
-            - The `value` field is always a string representation
-            - The `type` field tells the server how to parse it
-            - Available types: integer, string, boolean
-            - Examples:
-              - `{"type": "string", "value": "production"}`
-              - `{"type": "integer", "value": "100"}`
-              - `{"type": "boolean", "value": "false"}`
-
-            **Segment Overrides:**
-            - Provide array of segment override configurations
-            - Each override must specify: segment_id, enabled, value
-            - Optional priority field controls ordering
-            - Duplicate segment_id values are not allowed
-
-            
-      parameters:
-        - name: environment_key
+            type: integer
+        - name: segment_id
           in: path
-          description: The environment API key
           required: true
           schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateFlagV2'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/UpdateFlagV2'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/UpdateFlagV2'
+            type: integer
       responses:
-        '204':
-          description: No response body
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateFlagResponse'
       security:
         - tokenAuth: []
         - Master API Key: []
@@ -514,20 +381,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TokenCreate'
+              $ref: '#/components/schemas/CustomTokenCreate'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/TokenCreate'
+              $ref: '#/components/schemas/CustomTokenCreate'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/TokenCreate'
+              $ref: '#/components/schemas/CustomTokenCreate'
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenCreate'
+                $ref: '#/components/schemas/CustomTokenCreate'
       tags:
         - Authentication
   /api/v1/auth/login/code/:
@@ -538,20 +405,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TokenCreate'
+              $ref: '#/components/schemas/CustomTokenCreate'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/TokenCreate'
+              $ref: '#/components/schemas/CustomTokenCreate'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/TokenCreate'
+              $ref: '#/components/schemas/CustomTokenCreate'
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenCreate'
+                $ref: '#/components/schemas/CustomTokenCreate'
       tags:
         - Authentication
   /api/v1/auth/logout/:
@@ -1626,6 +1493,198 @@ paths:
         - basicAuth: []
       tags:
         - Webhooks
+  /api/v1/cohort-sync/amplitude/lists/:
+    post:
+      operationId: api_v1_cohort_sync_amplitude_lists_create
+      description: Called by Amplitude once per cohort sync setup; creates the backing cohort and returns its identifier as the list ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AmplitudeList'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AmplitudeList'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AmplitudeList'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmplitudeListResponse'
+      security:
+        - Cohort Sync Key: []
+        - Cohort Sync Key (Basic): []
+      tags:
+        - Other
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/cohort-sync/amplitude/lists/{id}/add/':
+    post:
+      operationId: api_v1_cohort_sync_amplitude_lists_add_create
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CohortSyncMembers'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CohortSyncMembers'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CohortSyncMembers'
+      responses:
+        '200':
+          description: No response body
+      security:
+        - Cohort Sync Key: []
+        - Cohort Sync Key (Basic): []
+      tags:
+        - Other
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/cohort-sync/amplitude/lists/{id}/remove/':
+    post:
+      operationId: api_v1_cohort_sync_amplitude_lists_remove_create
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CohortSyncMembers'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CohortSyncMembers'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CohortSyncMembers'
+      responses:
+        '200':
+          description: No response body
+      security:
+        - Cohort Sync Key: []
+        - Cohort Sync Key (Basic): []
+      tags:
+        - Other
+      x-flagsmith-minimum-plan: START_UP
+  /api/v1/cohort-sync/mixpanel/webhook/:
+    post:
+      operationId: api_v1_cohort_sync_mixpanel_webhook_create
+      description: Called by Mixpanel every sync cycle with the cohort's full membership (`members`) or the changes since the last sync (`add_members`/`remove_members`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MixpanelWebhook'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MixpanelWebhook'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MixpanelWebhook'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MixpanelWebhookResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MixpanelWebhookFailureResponse'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MixpanelWebhookFailureResponse'
+      security:
+        - Cohort Sync Key: []
+        - Cohort Sync Key (Basic): []
+      tags:
+        - Webhooks
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/cohort-sync/webhook/cohorts/{id}/members/add/':
+    post:
+      operationId: api_v1_cohort_sync_webhook_cohorts_members_add_create
+      description: 'Add members to a CSV cohort. Accepted deltas are applied to identity data asynchronously. Re-adding a member is a no-op, so retries are safe.'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookSyncMembers'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WebhookSyncMembers'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WebhookSyncMembers'
+      responses:
+        '200':
+          description: No response body
+      security:
+        - Cohort Sync Key: []
+        - Cohort Sync Key (Basic): []
+      tags:
+        - Webhooks
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/cohort-sync/webhook/cohorts/{id}/members/remove/':
+    post:
+      operationId: api_v1_cohort_sync_webhook_cohorts_members_remove_create
+      description: 'Remove members from a CSV cohort. Accepted deltas are applied to identity data asynchronously. Removing a non-member is a no-op, so retries are safe.'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookSyncMembers'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WebhookSyncMembers'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WebhookSyncMembers'
+      responses:
+        '200':
+          description: No response body
+      security:
+        - Cohort Sync Key: []
+        - Cohort Sync Key (Basic): []
+      tags:
+        - Webhooks
+      x-flagsmith-minimum-plan: START_UP
   /api/v1/environment-document/:
     get:
       operationId: sdk_v1_environment_document
@@ -2257,6 +2316,45 @@ paths:
       tags:
         - Environments
       x-flagsmith-minimum-plan: START_UP
+    patch:
+      operationId: api_v1_environments_cohorts_partial_update
+      description: 'Update the cohort''s managed segment name, description and metadata.'
+      parameters:
+        - name: cohort_id
+          in: path
+          description: A unique integer value identifying this cohort.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCohort'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCohort'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCohort'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cohort'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
     delete:
       operationId: api_v1_environments_cohorts_destroy
       description: Request cohort deletion. Memberships are drained from identity data first; the cohort and its segment are deleted once drained.
@@ -2274,6 +2372,135 @@ paths:
             type: string
       responses:
         '202':
+          description: No response body
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/environments/{environment_api_key}/cohorts/{cohort_id}/sync-csv/':
+    post:
+      operationId: api_v1_environments_cohorts_sync_csv_create
+      description: Replace the cohort's members with the identifiers found in the uploaded CSV file and trigger a sync to identity data. `identifier_column` is the 0-based index of the column holding the identifiers; `has_header` skips the first row when true.
+      parameters:
+        - name: cohort_id
+          in: path
+          description: A unique integer value identifying this cohort.
+          required: true
+          schema:
+            type: integer
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CohortCsvSync'
+      responses:
+        '202':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CohortCsvSyncResult'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/environments/{environment_api_key}/cohorts/sync-keys/':
+    get:
+      operationId: api_v1_environments_cohorts_sync_keys_list
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CohortSyncKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+    post:
+      operationId: api_v1_environments_cohorts_sync_keys_create
+      description: Create a cohort sync key. The response is the only time the plaintext key is available.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CohortSyncKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CohortSyncKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CohortSyncKey'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CohortSyncKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Environments
+      x-flagsmith-minimum-plan: START_UP
+  '/api/v1/environments/{environment_api_key}/cohorts/sync-keys/{prefix}/':
+    delete:
+      operationId: api_v1_environments_cohorts_sync_keys_destroy
+      description: Revoke a cohort sync key.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: prefix
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
           description: No response body
       security:
         - tokenAuth: []
@@ -3679,7 +3906,7 @@ paths:
   '/api/v1/environments/{environment_api_key}/experiments/{experiment_id}/rollout/':
     patch:
       operationId: api_v1_environments_experiments_rollout_partial_update
-      description: Manage experiments for an environment.
+      description: 'Sets an experiment''s rollout: the percentage of eligible identities enrolled, the variant weights they are split across, and optionally the targeted audience. The audience can only be changed before the experiment starts serving traffic.'
       parameters:
         - name: environment_api_key
           in: path
@@ -3696,13 +3923,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedExperimentList'
+              $ref: '#/components/schemas/PatchedExperimentRollout'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedExperimentList'
+              $ref: '#/components/schemas/PatchedExperimentRollout'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedExperimentList'
+              $ref: '#/components/schemas/PatchedExperimentRollout'
       responses:
         '200':
           description: ''
@@ -3791,6 +4018,155 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+  '/api/v1/environments/{environment_api_key}/features/{feature_id}/dependencies/':
+    get:
+      operationId: api_v1_environments_features_dependencies_retrieve
+      description: List the features the feature depends on in the environment.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyList'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorDetail'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Features
+  '/api/v1/environments/{environment_api_key}/features/{feature_id}/dependencies/{prerequisite_feature_id}/':
+    post:
+      operationId: api_v1_environments_features_dependencies_create
+      description: Make the feature depend on the prerequisite feature being enabled.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prerequisite_feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyEdge'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyRefusedDetail'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorDetail'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Features
+    delete:
+      operationId: api_v1_environments_features_dependencies_destroy
+      description: Stop the feature depending on the prerequisite feature.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prerequisite_feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: No response body
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorDetail'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorDetail'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Features
+  '/api/v1/environments/{environment_api_key}/features/{feature_id}/dependents/':
+    get:
+      operationId: api_v1_environments_features_dependents_retrieve
+      description: List the features depending on the feature in the environment.
+      parameters:
+        - name: environment_api_key
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: feature_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyList'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorDetail'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Features
   '/api/v1/environments/{environment_api_key}/features/{feature_pk}/create-segment-override/':
     post:
       operationId: create_segment_override
@@ -8268,71 +8644,6 @@ paths:
         - Master API Key: []
       tags:
         - Features
-    put:
-      operationId: api_v1_features_feature_segments_update
-      parameters:
-        - name: id
-          in: path
-          description: A unique integer value identifying this feature segment.
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FeatureSegmentCreate'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/FeatureSegmentCreate'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/FeatureSegmentCreate'
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeatureSegmentCreate'
-      security:
-        - tokenAuth: []
-        - Master API Key: []
-      tags:
-        - Features
-    patch:
-      operationId: api_v1_features_feature_segments_partial_update
-      parameters:
-        - name: id
-          in: path
-          description: A unique integer value identifying this feature segment.
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedFeatureSegmentCreate'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedFeatureSegmentCreate'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedFeatureSegmentCreate'
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FeatureSegmentCreate'
-      security:
-        - tokenAuth: []
-        - Master API Key: []
-      tags:
-        - Features
     delete:
       operationId: delete_feature_segment
       description: 'Deletes a segment override. Applies to environments without v2 feature versioning (use_v2_feature_versioning: false).'
@@ -8815,6 +9126,30 @@ paths:
                         - type: integer
                         - type: boolean
                         - type: string
+                    variant:
+                      type: string
+                      nullable: true
+                    reason:
+                      type: string
+                      nullable: true
+                    metadata:
+                      description: 'Additional, non-evaluation data about a feature state.'
+                      type: object
+                      properties:
+                        experiment:
+                          description: Represents the experiment a feature state is part of. Only present while the experiment is running.
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                            in_experiment:
+                              type: boolean
+                          required:
+                            - id
+                            - in_experiment
+                            - name
                   required:
                     - enabled
                     - feature
@@ -8909,6 +9244,30 @@ paths:
                         - type: integer
                         - type: boolean
                         - type: string
+                    variant:
+                      type: string
+                      nullable: true
+                    reason:
+                      type: string
+                      nullable: true
+                    metadata:
+                      description: 'Additional, non-evaluation data about a feature state.'
+                      type: object
+                      properties:
+                        experiment:
+                          description: Represents the experiment a feature state is part of. Only present while the experiment is running.
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                            in_experiment:
+                              type: boolean
+                          required:
+                            - id
+                            - in_experiment
+                            - name
                   required:
                     - enabled
                     - feature
@@ -9415,6 +9774,179 @@ paths:
         - Master API Key: []
       tags:
         - Audit
+  '/api/v1/organisations/{organisation_pk}/edge-proxy/keys/':
+    get:
+      operationId: api_v1_organisations_edge_proxy_keys_list
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Organisations
+    post:
+      operationId: api_v1_organisations_edge_proxy_keys_create
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProxyKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProxyKey'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Organisations
+  '/api/v1/organisations/{organisation_pk}/edge-proxy/keys/{prefix}/':
+    get:
+      operationId: api_v1_organisations_edge_proxy_keys_retrieve
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prefix
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Organisations
+    put:
+      operationId: api_v1_organisations_edge_proxy_keys_update
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prefix
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProxyKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProxyKey'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Organisations
+    patch:
+      operationId: api_v1_organisations_edge_proxy_keys_partial_update
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prefix
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProxyKey'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProxyKey'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProxyKey'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyKey'
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Organisations
+    delete:
+      operationId: api_v1_organisations_edge_proxy_keys_destroy
+      parameters:
+        - name: organisation_pk
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prefix
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No response body
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Organisations
   '/api/v1/organisations/{organisation_pk}/github/create-cleanup-issue/':
     post:
       operationId: api_v1_organisations_github_create_cleanup_issue_create
@@ -12900,6 +13432,19 @@ paths:
           in: query
           schema:
             type: integer
+        - name: group_by
+          in: query
+          description: |-
+            * `project` - project
+            * `environment` - environment
+          schema:
+            type:
+              - string
+              - 'null'
+            enum:
+              - project
+              - environment
+              - null
         - name: organisation_pk
           in: path
           required: true
@@ -15681,6 +16226,12 @@ paths:
       responses:
         '204':
           description: No response body
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeatureDeletionRefusedDetail'
       security:
         - tokenAuth: []
         - Master API Key: []
@@ -18240,6 +18791,28 @@ paths:
         - Master API Key: []
       tags:
         - Projects
+  /api/v1/proxy/config/:
+    get:
+      operationId: api_v1_proxy_config_list
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EdgeProxyEnvironment'
+      tags:
+        - Other
+  /api/v1/proxy/usage/:
+    post:
+      operationId: api_v1_proxy_usage_create
+      responses:
+        '200':
+          description: No response body
+      tags:
+        - Other
   '/api/v1/segments/get-by-uuid/{uuid}/':
     get:
       operationId: api_v1_segments_get_by_uuid_retrieve
@@ -18467,6 +19040,30 @@ paths:
         - processor
 components:
   schemas:
+    APIErrorDetail:
+      description: The body served where the API refuses a request.
+      type: object
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+      required:
+        - code
+        - message
+      title: APIErrorDetail
+    ActionEnum:
+      description: |-
+        * `members` - members
+        * `add_members` - add_members
+        * `remove_members` - remove_members
+      type: string
+      enum:
+        - members
+        - add_members
+        - remove_members
     ActionTypeEnum:
       description: |-
         * `TOGGLE_FEATURE` - Enable/Disable Feature for the environment
@@ -18518,6 +19115,33 @@ components:
           maxLength: 200
       required:
         - api_key
+    AmplitudeList:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 2000
+      required:
+        - name
+    AmplitudeListResponse:
+      type: object
+      properties:
+        list_id:
+          type: string
+          format: uuid
+        response:
+          $ref: '#/components/schemas/AmplitudeListResponseEnvelope'
+      required:
+        - list_id
+        - response
+    AmplitudeListResponseEnvelope:
+      type: object
+      properties:
+        list_id:
+          type: string
+          format: uuid
+      required:
+        - list_id
     AuditLogList:
       type: object
       properties:
@@ -18982,8 +19606,17 @@ components:
           readOnly: true
         managed_by:
           oneOf:
-            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/SegmentManagedByEnum'
             - $ref: '#/components/schemas/BlankEnum'
+          readOnly: true
+        cohort:
+          oneOf:
+            - $ref: '#/components/schemas/_SegmentCohort'
+            - type: 'null'
+          readOnly: true
+        has_overrides:
+          description: 'Whether any feature override points at this segment, counting overrides that are live now or scheduled to go live.'
+          type: boolean
           readOnly: true
         change_request:
           type:
@@ -19139,6 +19772,11 @@ components:
           type:
             - string
             - 'null'
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/Metadata'
+          writeOnly: true
         segment:
           type: integer
           readOnly: true
@@ -19153,8 +19791,118 @@ components:
           type: string
           format: date-time
           readOnly: true
+        last_synced_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          readOnly: true
+        membership_counts:
+          allOf:
+            - $ref: '#/components/schemas/CohortMembershipCounts'
+          readOnly: true
       required:
         - name
+    CohortCsvSync:
+      type: object
+      properties:
+        file:
+          type: string
+          format: uri
+        identifier_column:
+          type: integer
+          default: 0
+          minimum: 0
+        has_header:
+          type: boolean
+          default: true
+      required:
+        - file
+    CohortCsvSyncIgnoredRows:
+      type: object
+      properties:
+        empty:
+          type: integer
+          minimum: 0
+        duplicates:
+          type: integer
+          minimum: 0
+        too_long:
+          type: integer
+          minimum: 0
+      required:
+        - duplicates
+        - empty
+        - too_long
+    CohortCsvSyncResult:
+      type: object
+      properties:
+        version:
+          type: integer
+          minimum: 0
+        added:
+          type: integer
+          minimum: 0
+        removed:
+          type: integer
+          minimum: 0
+        unchanged:
+          type: integer
+          minimum: 0
+        ignored:
+          $ref: '#/components/schemas/CohortCsvSyncIgnoredRows'
+      required:
+        - added
+        - ignored
+        - removed
+        - unchanged
+        - version
+    CohortMembershipCounts:
+      type: object
+      properties:
+        applied:
+          type: integer
+          minimum: 0
+        pending_add:
+          type: integer
+          minimum: 0
+        pending_remove:
+          type: integer
+          minimum: 0
+      required:
+        - applied
+        - pending_add
+        - pending_remove
+    CohortSyncKey:
+      type: object
+      properties:
+        prefix:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 50
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        key:
+          type:
+            - string
+            - 'null'
+          readOnly: true
+      required:
+        - name
+    CohortSyncMembers:
+      type: object
+      properties:
+        user_ids:
+          type: array
+          items:
+            type: string
+          minItems: 1
+      required:
+        - user_ids
     Condition:
       type: object
       properties:
@@ -19564,6 +20312,17 @@ components:
           type: integer
       required:
         - user
+    CurrentBillingPeriod:
+      type: object
+      properties:
+        starts_at:
+          type: string
+          format: date-time
+          readOnly: true
+        ends_at:
+          type: string
+          format: date-time
+          readOnly: true
     CustomCreateSegmentOverrideFeatureSegment:
       type: object
       properties:
@@ -19707,6 +20466,19 @@ components:
             $ref: '#/components/schemas/MultivariateFeatureStateValue'
       required:
         - feature_state_value
+    CustomTokenCreate:
+      description: |-
+        Tells a user with correct credentials that their account is not yet
+        activated, instead of the generic invalid credentials error.
+
+        The password is verified first, so an address cannot be probed for its
+        activation state by anyone who does not already know the password.
+      type: object
+      properties:
+        password:
+          type: string
+        email:
+          type: string
     CustomUserCreate:
       type: object
       properties:
@@ -19744,8 +20516,14 @@ components:
           type: string
           format: uuid
           readOnly: true
-        key:
+        signup_anonymous_id:
           type: string
+          maxLength: 64
+          writeOnly: true
+        key:
+          type:
+            - string
+            - 'null'
           readOnly: true
         superuser:
           type: boolean
@@ -19780,16 +20558,377 @@ components:
           type: string
       required:
         - key
-    DeleteSegmentOverride:
+    DependencyConflictDetail:
+      description: The body served where existing dependencies refuse a change.
+      type: object
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+        environment:
+          $ref: '#/components/schemas/DependencyConflictDetailReferencingEnvironment'
+        path:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyConflictDetailDependencyEdge'
+          title: Path
+      required:
+        - code
+        - message
+        - environment
+        - path
+      title: DependencyConflictDetail
+    DependencyConflictDetailDependencyEdge:
+      description: One feature's dependency on another.
       type: object
       properties:
         feature:
-          $ref: '#/components/schemas/FeatureIdentifier'
+          $ref: '#/components/schemas/DependencyConflictDetail_Feature'
+        prerequisite:
+          $ref: '#/components/schemas/DependencyConflictDetail_Feature'
         segment:
-          $ref: '#/components/schemas/SegmentIdentifier'
+          $ref: '#/components/schemas/DependencyConflictDetailReferencingSegment'
       required:
         - feature
+        - prerequisite
         - segment
+      title: DependencyEdge
+    DependencyConflictDetailReferencingEnvironment:
+      description: The environment whose live overrides make up a dependency graph.
+      type: object
+      properties:
+        key:
+          type: string
+          title: Key
+        name:
+          type: string
+          title: Name
+      required:
+        - key
+        - name
+      title: ReferencingEnvironment
+    DependencyConflictDetailReferencingSegment:
+      description: The segment whose rules hold the `$.flags` condition making up a dependency.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyConflictDetailSegmentRule'
+          title: Rules
+        condition_json_path:
+          type: string
+          title: Condition Json Path
+        is_system:
+          type: boolean
+          title: Is System
+      required:
+        - id
+        - name
+        - rules
+        - condition_json_path
+        - is_system
+      title: ReferencingSegment
+    DependencyConflictDetailSegmentCondition:
+      type: object
+      properties:
+        property:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Property
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/Operator2a7Enum'
+          title: Operator
+        value:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Value
+        description:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Description
+      required:
+        - property
+        - operator
+        - value
+        - description
+      title: SegmentCondition
+    DependencyConflictDetailSegmentRule:
+      type: object
+      properties:
+        type:
+          allOf:
+            - $ref: '#/components/schemas/TypeC8eEnum'
+          title: Type
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyConflictDetailSegmentCondition'
+          title: Conditions
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyConflictDetailSegmentRule'
+          title: Rules
+      required:
+        - type
+        - conditions
+      title: SegmentRule
+    DependencyConflictDetail_Feature:
+      description: Either a feature or a prerequisite feature in a dependency graph.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+      required:
+        - id
+        - name
+      title: _Feature
+    DependencyEdge:
+      description: One feature's dependency on another.
+      type: object
+      properties:
+        feature:
+          $ref: '#/components/schemas/DependencyEdge_Feature'
+        prerequisite:
+          $ref: '#/components/schemas/DependencyEdge_Feature'
+        segment:
+          $ref: '#/components/schemas/DependencyEdgeReferencingSegment'
+      required:
+        - feature
+        - prerequisite
+        - segment
+      title: DependencyEdge
+    DependencyEdgeReferencingSegment:
+      description: The segment whose rules hold the `$.flags` condition making up a dependency.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyEdgeSegmentRule'
+          title: Rules
+        condition_json_path:
+          type: string
+          title: Condition Json Path
+        is_system:
+          type: boolean
+          title: Is System
+      required:
+        - id
+        - name
+        - rules
+        - condition_json_path
+        - is_system
+      title: ReferencingSegment
+    DependencyEdgeSegmentCondition:
+      type: object
+      properties:
+        property:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Property
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/Operator2a7Enum'
+          title: Operator
+        value:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Value
+        description:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Description
+      required:
+        - property
+        - operator
+        - value
+        - description
+      title: SegmentCondition
+    DependencyEdgeSegmentRule:
+      type: object
+      properties:
+        type:
+          allOf:
+            - $ref: '#/components/schemas/TypeC8eEnum'
+          title: Type
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyEdgeSegmentCondition'
+          title: Conditions
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyEdgeSegmentRule'
+          title: Rules
+      required:
+        - type
+        - conditions
+      title: SegmentRule
+    DependencyEdge_Feature:
+      description: Either a feature or a prerequisite feature in a dependency graph.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+      required:
+        - id
+        - name
+      title: _Feature
+    DependencyList:
+      description: The live dependencies a feature takes part in within an environment.
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyListDependencyEdge'
+          title: Results
+      required:
+        - results
+      title: DependencyList
+    DependencyListDependencyEdge:
+      description: One feature's dependency on another.
+      type: object
+      properties:
+        feature:
+          $ref: '#/components/schemas/DependencyList_Feature'
+        prerequisite:
+          $ref: '#/components/schemas/DependencyList_Feature'
+        segment:
+          $ref: '#/components/schemas/DependencyListReferencingSegment'
+      required:
+        - feature
+        - prerequisite
+        - segment
+      title: DependencyEdge
+    DependencyListReferencingSegment:
+      description: The segment whose rules hold the `$.flags` condition making up a dependency.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyListSegmentRule'
+          title: Rules
+        condition_json_path:
+          type: string
+          title: Condition Json Path
+        is_system:
+          type: boolean
+          title: Is System
+      required:
+        - id
+        - name
+        - rules
+        - condition_json_path
+        - is_system
+      title: ReferencingSegment
+    DependencyListSegmentCondition:
+      type: object
+      properties:
+        property:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Property
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/Operator2a7Enum'
+          title: Operator
+        value:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Value
+        description:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Description
+      required:
+        - property
+        - operator
+        - value
+        - description
+      title: SegmentCondition
+    DependencyListSegmentRule:
+      type: object
+      properties:
+        type:
+          allOf:
+            - $ref: '#/components/schemas/TypeC8eEnum'
+          title: Type
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyListSegmentCondition'
+          title: Conditions
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyListSegmentRule'
+          title: Rules
+      required:
+        - type
+        - conditions
+      title: SegmentRule
+    DependencyList_Feature:
+      description: Either a feature or a prerequisite feature in a dependency graph.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+      required:
+        - id
+        - name
+      title: _Feature
+    DependencyRefusedDetail:
+      oneOf:
+        - $ref: '#/components/schemas/APIErrorDetail'
+        - $ref: '#/components/schemas/DependencyConflictDetail'
     DerivedFrom:
       type: object
       properties:
@@ -19988,6 +21127,48 @@ components:
       required:
         - multivariate_feature_option
         - percentage_allocation
+    EdgeProxyEnvironment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 2000
+        client_side_key:
+          type: string
+        server_side_keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/EdgeProxyServerSideKey'
+        updated_at:
+          description: 'Tracks changes to self and related entities, e.g. FeatureStates.'
+          type: string
+          format: date-time
+        project_id:
+          type: integer
+          readOnly: true
+        organisation_id:
+          type: integer
+          readOnly: true
+      required:
+        - client_side_key
+        - name
+        - server_side_keys
+    EdgeProxyServerSideKey:
+      type: object
+      properties:
+        key:
+          type: string
+          maxLength: 100
+        active:
+          type: boolean
+        expires_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
     EdgeV2MigrationStatusEnum:
       description: |-
         * `NOT_STARTED` - Not Started
@@ -20025,16 +21206,6 @@ components:
           format: date-time
       required:
         - name
-    EnvironmentDefault:
-      type: object
-      properties:
-        enabled:
-          type: boolean
-        value:
-          $ref: '#/components/schemas/FeatureValue'
-      required:
-        - enabled
-        - value
     EnvironmentFeatureVersion:
       type: object
       properties:
@@ -20554,6 +21725,20 @@ components:
         - feature
         - hypothesis
         - name
+    ExperimentAudience:
+      type: object
+      properties:
+        match:
+          default: any
+          allOf:
+            - $ref: '#/components/schemas/MatchEnum'
+        segment_ids:
+          type: array
+          items:
+            type: integer
+          maxItems: 1
+      required:
+        - segment_ids
     ExperimentDetail:
       type: object
       properties:
@@ -20751,9 +21936,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MultivariateValue'
+        audience:
+          $ref: '#/components/schemas/ExperimentAudience'
       required:
         - enabled
         - feature_state_value
+        - multivariate_feature_state_values
         - rollout_percentage
     ExperimentStatistics:
       description: Serializer for statistical analysis results.
@@ -20806,6 +21994,10 @@ components:
         - conversions
         - evaluations
         - variant
+    FeatureDeletionRefusedDetail:
+      oneOf:
+        - $ref: '#/components/schemas/DependencyConflictDetail'
+        - $ref: '#/components/schemas/FeatureIsReferencedDetail'
     FeatureEvaluationData:
       type: object
       properties:
@@ -21050,13 +22242,6 @@ components:
       required:
         - name
         - project
-    FeatureIdentifier:
-      type: object
-      properties:
-        name:
-          type: string
-        id:
-          type: integer
     FeatureImport:
       type: object
       properties:
@@ -21113,6 +22298,103 @@ components:
             additionalProperties: {}
       required:
         - events_list
+    FeatureIsReferencedDetail:
+      description: The body served where segment conditions naming a feature refuse deleting it.
+      type: object
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureIsReferencedDetailReferencingSegment'
+          title: Segments
+      required:
+        - code
+        - message
+        - segments
+      title: FeatureIsReferencedDetail
+    FeatureIsReferencedDetailReferencingSegment:
+      description: The segment whose rules hold the `$.flags` condition making up a dependency.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureIsReferencedDetailSegmentRule'
+          title: Rules
+        condition_json_path:
+          type: string
+          title: Condition Json Path
+        is_system:
+          type: boolean
+          title: Is System
+      required:
+        - id
+        - name
+        - rules
+        - condition_json_path
+        - is_system
+      title: ReferencingSegment
+    FeatureIsReferencedDetailSegmentCondition:
+      type: object
+      properties:
+        property:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Property
+        operator:
+          allOf:
+            - $ref: '#/components/schemas/Operator2a7Enum'
+          title: Operator
+        value:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Value
+        description:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Description
+      required:
+        - property
+        - operator
+        - value
+        - description
+      title: SegmentCondition
+    FeatureIsReferencedDetailSegmentRule:
+      type: object
+      properties:
+        type:
+          allOf:
+            - $ref: '#/components/schemas/TypeC8eEnum'
+          title: Type
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureIsReferencedDetailSegmentCondition'
+          title: Conditions
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureIsReferencedDetailSegmentRule'
+          title: Rules
+      required:
+        - type
+        - conditions
+      title: SegmentRule
     FeatureLifecycleCounts:
       description: Number of features in each lifecycle stage for an environment
       type: object
@@ -21220,6 +22502,23 @@ components:
           readOnly: true
         is_feature_specific:
           type: boolean
+          readOnly: true
+        is_system_segment:
+          description: System segment overrides can't be changed directly.
+          type: boolean
+          readOnly: true
+        segment_managed_by:
+          description: |-
+            The feature managing the segment, if any.
+
+            * `` - Unmanaged
+            * `cohort` - Cohort
+            * `dependency` - Flag dependency
+            * `experiment` - Experiment
+            * `release_pipeline` - Gradual rollout
+          oneOf:
+            - $ref: '#/components/schemas/SegmentManagedByEnum'
+            - $ref: '#/components/schemas/BlankEnum'
           readOnly: true
     FeatureStateSerializerBasic:
       description: Adds nested create feature
@@ -21433,17 +22732,6 @@ components:
           type:
             - boolean
             - 'null'
-    FeatureUpdateSegmentData:
-      type: object
-      properties:
-        id:
-          type: integer
-        priority:
-          type:
-            - integer
-            - 'null'
-      required:
-        - id
     FeatureValue:
       type: object
       properties:
@@ -22208,13 +23496,6 @@ components:
           $ref: '#/components/schemas/UserList'
       required:
         - user
-    ManagedByEnum:
-      description: |-
-        * `` - Unmanaged
-        * `cohort` - Cohort
-      type: string
-      enum:
-        - cohort
     MasterAPIKey:
       type: object
       properties:
@@ -22273,6 +23554,14 @@ components:
           readOnly: true
       required:
         - master_api_key
+    MatchEnum:
+      description: |-
+        * `any` - Any
+        * `all` - All
+      type: string
+      enum:
+        - any
+        - all
     MetaDataModelField:
       description: Adds nested create feature
       type: object
@@ -22456,6 +23745,75 @@ components:
           maxLength: 200
       required:
         - api_key
+    MixpanelMember:
+      type: object
+      properties:
+        mixpanel_distinct_id:
+          type: string
+      required:
+        - mixpanel_distinct_id
+    MixpanelParameters:
+      type: object
+      properties:
+        mixpanel_cohort_id:
+          type: string
+          maxLength: 255
+        mixpanel_cohort_name:
+          type: string
+          maxLength: 2000
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/MixpanelMember'
+      required:
+        - members
+        - mixpanel_cohort_id
+        - mixpanel_cohort_name
+    MixpanelWebhook:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        parameters:
+          $ref: '#/components/schemas/MixpanelParameters'
+      required:
+        - action
+        - parameters
+    MixpanelWebhookError:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: integer
+      required:
+        - code
+        - message
+    MixpanelWebhookFailureResponse:
+      type: object
+      properties:
+        action:
+          type:
+            - string
+            - 'null'
+        status:
+          type: string
+        error:
+          $ref: '#/components/schemas/MixpanelWebhookError'
+      required:
+        - action
+        - error
+        - status
+    MixpanelWebhookResponse:
+      type: object
+      properties:
+        action:
+          type: string
+        status:
+          type: string
+      required:
+        - action
+        - status
     Monitoring:
       type: object
       properties:
@@ -22643,6 +24001,23 @@ components:
         is_new_user:
           type: boolean
           readOnly: true
+    Operator2a7Enum:
+      type: string
+      enum:
+        - EQUAL
+        - GREATER_THAN
+        - LESS_THAN
+        - LESS_THAN_INCLUSIVE
+        - CONTAINS
+        - GREATER_THAN_INCLUSIVE
+        - NOT_CONTAINS
+        - NOT_EQUAL
+        - REGEX
+        - PERCENTAGE_SPLIT
+        - MODULO
+        - IS_SET
+        - IS_NOT_SET
+        - IN
     OrganisationAPIUsageNotification:
       type: object
       properties:
@@ -22708,6 +24083,19 @@ components:
           readOnly: true
         block_access_to_admin:
           description: Enable this to block all the access to admin interface for the organisation
+          type: boolean
+          readOnly: true
+        stop_serving_flags:
+          description: Enable this to cease serving flags for this organisation.
+          type: boolean
+          readOnly: true
+        api_limit_restriction_enabled:
+          type: boolean
+          readOnly: true
+        api_limit_grace_period_used:
+          type: boolean
+          readOnly: true
+        overage_billing_eligible:
           type: boolean
           readOnly: true
         restrict_project_create_to_admin:
@@ -23949,6 +25337,52 @@ components:
             $ref: '#/components/schemas/VersionChangeSet'
         ignore_conflicts:
           type: boolean
+    PatchedCohort:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 2000
+        description:
+          type:
+            - string
+            - 'null'
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/Metadata'
+          writeOnly: true
+        segment:
+          type: integer
+          readOnly: true
+        source_type:
+          allOf:
+            - $ref: '#/components/schemas/SourceTypeEnum'
+          readOnly: true
+        version:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        last_synced_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          readOnly: true
+        membership_counts:
+          allOf:
+            - $ref: '#/components/schemas/CohortMembershipCounts'
+          readOnly: true
     PatchedCreateUpdateUserEnvironmentPermission:
       type: object
       properties:
@@ -24181,54 +25615,6 @@ components:
             - 'null'
           format: date-time
           readOnly: true
-    PatchedExperimentList:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        feature:
-          allOf:
-            - $ref: '#/components/schemas/ExperimentFeature'
-          readOnly: true
-        name:
-          type: string
-          maxLength: 255
-        hypothesis:
-          type: string
-        status:
-          allOf:
-            - $ref: '#/components/schemas/Status7a8Enum'
-          readOnly: true
-        metrics:
-          type: array
-          items:
-            $ref: '#/components/schemas/ExperimentMetric'
-          readOnly: true
-        experiment_rollout:
-          allOf:
-            - $ref: '#/components/schemas/ExperimentRollout'
-          writeOnly: true
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-        started_at:
-          type:
-            - string
-            - 'null'
-          format: date-time
-          readOnly: true
-        ended_at:
-          type:
-            - string
-            - 'null'
-          format: date-time
-          readOnly: true
     PatchedExperimentMetric:
       type: object
       properties:
@@ -24253,6 +25639,24 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedExperimentRollout:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        rollout_percentage:
+          type: number
+          format: double
+          maximum: 100
+          minimum: 0
+        feature_state_value:
+          $ref: '#/components/schemas/FeatureValue'
+        multivariate_feature_state_values:
+          type: array
+          items:
+            $ref: '#/components/schemas/MultivariateValue'
+        audience:
+          $ref: '#/components/schemas/ExperimentAudience'
     PatchedFeatureExternalResource:
       type: object
       properties:
@@ -24271,25 +25675,6 @@ components:
             - type: 'null'
         feature:
           type: integer
-    PatchedFeatureSegmentCreate:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        uuid:
-          type: string
-          format: uuid
-          readOnly: true
-        feature:
-          type: integer
-        segment:
-          type: integer
-        environment:
-          type: integer
-        priority:
-          type: integer
-          readOnly: true
     PatchedFeatureStateSerializerCreate:
       type: object
       properties:
@@ -24693,6 +26078,19 @@ components:
           description: Enable this to block all the access to admin interface for the organisation
           type: boolean
           readOnly: true
+        stop_serving_flags:
+          description: Enable this to cease serving flags for this organisation.
+          type: boolean
+          readOnly: true
+        api_limit_restriction_enabled:
+          type: boolean
+          readOnly: true
+        api_limit_grace_period_used:
+          type: boolean
+          readOnly: true
+        overage_billing_eligible:
+          type: boolean
+          readOnly: true
         restrict_project_create_to_admin:
           type: boolean
         force_2fa:
@@ -24880,6 +26278,47 @@ components:
         enforce_feature_owners:
           description: Require at least one user or group owner when creating a feature.
           type: boolean
+    PatchedProxyKey:
+      type: object
+      properties:
+        prefix:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          description: A free-form name for the API key. Need not be unique. 50 characters max.
+          type: string
+          maxLength: 50
+        revoked:
+          description: 'If the API key is revoked, clients cannot use it anymore. (This cannot be undone.)'
+          type: boolean
+        expiry_date:
+          description: 'Once API key expires, clients cannot use it anymore.'
+          type:
+            - string
+            - 'null'
+          format: date-time
+          title: Expires
+        key:
+          description: 'Only the key hash is stored, so the full key is returned on create and is unavailable from every other endpoint.'
+          type: string
+          readOnly: true
+        has_expired:
+          type: boolean
+          readOnly: true
+        created_by_user:
+          type:
+            - integer
+            - 'null'
+          readOnly: true
+        created_by_master_api_key:
+          type:
+            - string
+            - 'null'
+          readOnly: true
     PatchedReleasePipeline:
       type: object
       properties:
@@ -25126,8 +26565,17 @@ components:
           readOnly: true
         managed_by:
           oneOf:
-            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/SegmentManagedByEnum'
             - $ref: '#/components/schemas/BlankEnum'
+          readOnly: true
+        cohort:
+          oneOf:
+            - $ref: '#/components/schemas/_SegmentCohort'
+            - type: 'null'
+          readOnly: true
+        has_overrides:
+          description: 'Whether any feature override points at this segment, counting overrides that are live now or scheduled to go live.'
+          type: boolean
           readOnly: true
     PatchedSegmentConfiguration:
       type: object
@@ -25202,6 +26650,7 @@ components:
         is_system_tag:
           description: 'Indicates that a tag was created by the system, not the user.'
           type: boolean
+          default: false
           readOnly: true
         type:
           description: |-
@@ -26402,6 +27851,47 @@ components:
           type: boolean
       required:
         - name
+    ProxyKey:
+      type: object
+      properties:
+        prefix:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          description: A free-form name for the API key. Need not be unique. 50 characters max.
+          type: string
+          maxLength: 50
+        revoked:
+          description: 'If the API key is revoked, clients cannot use it anymore. (This cannot be undone.)'
+          type: boolean
+        expiry_date:
+          description: 'Once API key expires, clients cannot use it anymore.'
+          type:
+            - string
+            - 'null'
+          format: date-time
+          title: Expires
+        key:
+          description: 'Only the key hash is stored, so the full key is returned on create and is unavailable from every other endpoint.'
+          type: string
+          readOnly: true
+        has_expired:
+          type: boolean
+          readOnly: true
+        created_by_user:
+          type:
+            - integer
+            - 'null'
+          readOnly: true
+        created_by_master_api_key:
+          type:
+            - string
+            - 'null'
+          readOnly: true
     ReleasePipeline:
       type: object
       properties:
@@ -26858,8 +28348,17 @@ components:
           readOnly: true
         managed_by:
           oneOf:
-            - $ref: '#/components/schemas/ManagedByEnum'
+            - $ref: '#/components/schemas/SegmentManagedByEnum'
             - $ref: '#/components/schemas/BlankEnum'
+          readOnly: true
+        cohort:
+          oneOf:
+            - $ref: '#/components/schemas/_SegmentCohort'
+            - type: 'null'
+          readOnly: true
+        has_overrides:
+          description: 'Whether any feature override points at this segment, counting overrides that are live now or scheduled to go live.'
+          type: boolean
           readOnly: true
       required:
         - name
@@ -26893,13 +28392,19 @@ components:
             - $ref: '#/components/schemas/BaseUrlEnum'
       required:
         - api_key
-    SegmentIdentifier:
-      type: object
-      properties:
-        id:
-          type: integer
-      required:
-        - id
+    SegmentManagedByEnum:
+      description: |-
+        * `` - Unmanaged
+        * `cohort` - Cohort
+        * `dependency` - Flag dependency
+        * `experiment` - Experiment
+        * `release_pipeline` - Gradual rollout
+      type: string
+      enum:
+        - cohort
+        - dependency
+        - experiment
+        - release_pipeline
     SegmentMember:
       type: object
       properties:
@@ -26940,27 +28445,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-    SegmentOverride:
-      type: object
-      properties:
-        segment_id:
-          type: integer
-        priority:
-          type:
-            - integer
-            - 'null'
-        enabled:
-          type: boolean
-        value:
-          $ref: '#/components/schemas/FeatureValue'
-        multivariate_feature_state_values:
-          type: array
-          items:
-            $ref: '#/components/schemas/MultivariateValue'
-      required:
-        - enabled
-        - segment_id
-        - value
     SegmentRule:
       description: Adds nested create feature
       type: object
@@ -27099,10 +28583,15 @@ components:
       required:
         - channel_id
     SourceTypeEnum:
-      description: '* `csv` - CSV'
+      description: |-
+        * `csv` - CSV
+        * `amplitude` - Amplitude
+        * `mixpanel` - Mixpanel
       type: string
       enum:
         - csv
+        - amplitude
+        - mixpanel
     StageAction:
       type: object
       properties:
@@ -27157,6 +28646,11 @@ components:
           readOnly: true
         has_active_billing_periods:
           type: boolean
+          readOnly: true
+        current_billing_period:
+          oneOf:
+            - $ref: '#/components/schemas/CurrentBillingPeriod'
+            - type: 'null'
           readOnly: true
         deleted_at:
           type:
@@ -27282,6 +28776,7 @@ components:
         is_system_tag:
           description: 'Indicates that a tag was created by the system, not the user.'
           type: boolean
+          default: false
           readOnly: true
         type:
           description: |-
@@ -27393,13 +28888,6 @@ components:
           default: 200
       required:
         - detail
-    TokenCreate:
-      type: object
-      properties:
-        password:
-          type: string
-        email:
-          type: string
     TokenExchangeRequest:
       type: object
       properties:
@@ -27412,7 +28900,7 @@ components:
       type: object
       properties:
         access_token:
-          description: Short-lived access token for the Admin API.
+          description: Short-lived access token for the Management API.
           type: string
         token_type:
           description: Always "Bearer".
@@ -27543,6 +29031,12 @@ components:
         - int
         - unicode
         - bool
+    TypeC8eEnum:
+      type: string
+      enum:
+        - ALL
+        - ANY
+        - NONE
     TypeD77Enum:
       description: |-
         * `STANDARD` - STANDARD
@@ -27802,21 +29296,6 @@ components:
           allOf:
             - $ref: '#/components/schemas/LifecycleStageEnum'
           readOnly: true
-    UpdateFlag:
-      type: object
-      properties:
-        feature:
-          $ref: '#/components/schemas/FeatureIdentifier'
-        segment:
-          $ref: '#/components/schemas/FeatureUpdateSegmentData'
-        enabled:
-          type: boolean
-        value:
-          $ref: '#/components/schemas/FeatureValue'
-      required:
-        - enabled
-        - feature
-        - value
     UpdateFlagRequest:
       type: object
       properties:
@@ -27835,7 +29314,9 @@ components:
           type: boolean
           title: Enabled
         value:
-          $ref: '#/components/schemas/UpdateFlagRequestFlagValue'
+          anyOf:
+            - $ref: '#/components/schemas/UpdateFlagRequestFlagValue'
+            - type: 'null'
         variants:
           type: array
           items:
@@ -27868,7 +29349,9 @@ components:
           type: integer
           title: Priority
         value:
-          $ref: '#/components/schemas/UpdateFlagRequestFlagValue'
+          anyOf:
+            - $ref: '#/components/schemas/UpdateFlagRequestFlagValue'
+            - type: 'null'
         variants:
           type: array
           items:
@@ -27996,20 +29479,6 @@ components:
         - id
         - weight
       title: Variant
-    UpdateFlagV2:
-      type: object
-      properties:
-        feature:
-          $ref: '#/components/schemas/FeatureIdentifier'
-        environment_default:
-          $ref: '#/components/schemas/EnvironmentDefault'
-        segment_overrides:
-          type: array
-          items:
-            $ref: '#/components/schemas/SegmentOverride'
-      required:
-        - environment_default
-        - feature
     UpdateSubscription:
       type: object
       properties:
@@ -28034,11 +29503,21 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Labels'
             - type: 'null'
+        project_id:
+          type:
+            - integer
+            - 'null'
+        environment_id:
+          type:
+            - integer
+            - 'null'
       required:
         - day
         - environment_document
+        - environment_id
         - flags
         - identities
+        - project_id
         - traits
     UsageTotalCount:
       type: object
@@ -28159,6 +29638,10 @@ components:
         organisation:
           allOf:
             - $ref: '#/components/schemas/OrganisationSerializerBasic'
+          readOnly: true
+        is_active:
+          description: 'Inactive members can still log in, but cannot access the organisation, and do not count towards its seat limit.'
+          type: boolean
           readOnly: true
       required:
         - role
@@ -28360,6 +29843,24 @@ components:
         - name
         - project
       title: V1EnvironmentDocumentResponse
+    V1EnvironmentDocumentResponseExperimentMetadata:
+      description: Represents the experiment a feature state is part of. Only present while the experiment is running.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        in_experiment:
+          type: boolean
+          title: In Experiment
+      required:
+        - id
+        - name
+        - in_experiment
+      title: ExperimentMetadata
     V1EnvironmentDocumentResponseFeature:
       description: 'Represents a Flagsmith feature, defined at project level.'
       type: object
@@ -28420,6 +29921,8 @@ components:
           items:
             $ref: '#/components/schemas/V1EnvironmentDocumentResponseMultivariateFeatureStateValue'
           title: Multivariate Feature State Values
+        metadata:
+          $ref: '#/components/schemas/V1EnvironmentDocumentResponseFeatureStateMetadata'
       required:
         - feature
         - enabled
@@ -28428,6 +29931,14 @@ components:
         - feature_segment
         - multivariate_feature_state_values
       title: FeatureState
+    V1EnvironmentDocumentResponseFeatureStateMetadata:
+      description: 'Additional, non-evaluation data about a feature state.'
+      type: object
+      properties:
+        experiment:
+          $ref: '#/components/schemas/V1EnvironmentDocumentResponseExperimentMetadata'
+      additionalProperties: true
+      title: FeatureStateMetadata
     V1EnvironmentDocumentResponseIdentityOverride:
       description: 'Represents an identity override, defining feature states specific to an identity.'
       type: object
@@ -28523,7 +30034,7 @@ components:
       properties:
         operator:
           allOf:
-            - $ref: '#/components/schemas/V1EnvironmentDocumentResponseSegmentConditionOperatorEnum'
+            - $ref: '#/components/schemas/Operator2a7Enum'
           title: Operator
         value:
           type: string
@@ -28536,30 +30047,13 @@ components:
         - value
         - property_
       title: SegmentCondition
-    V1EnvironmentDocumentResponseSegmentConditionOperatorEnum:
-      type: string
-      enum:
-        - EQUAL
-        - GREATER_THAN
-        - LESS_THAN
-        - LESS_THAN_INCLUSIVE
-        - CONTAINS
-        - GREATER_THAN_INCLUSIVE
-        - NOT_CONTAINS
-        - NOT_EQUAL
-        - REGEX
-        - PERCENTAGE_SPLIT
-        - MODULO
-        - IS_SET
-        - IS_NOT_SET
-        - IN
     V1EnvironmentDocumentResponseSegmentRule:
       description: Represents a rule within a segment used by Flagsmith engine. Root rules usually contain nested rules.
       type: object
       properties:
         type:
           allOf:
-            - $ref: '#/components/schemas/V1EnvironmentDocumentResponseSegmentRuleTypeEnum'
+            - $ref: '#/components/schemas/TypeC8eEnum'
           title: Type
         rules:
           type: array
@@ -28576,12 +30070,6 @@ components:
         - rules
         - conditions
       title: SegmentRule
-    V1EnvironmentDocumentResponseSegmentRuleTypeEnum:
-      type: string
-      enum:
-        - ALL
-        - ANY
-        - NONE
     V1IdentitiesRequest:
       description: |-
         `/api/v1/identities/` request.
@@ -28656,6 +30144,24 @@ components:
         - flags
         - traits
       title: V1IdentitiesResponse
+    V1IdentitiesResponseExperimentMetadata:
+      description: Represents the experiment a feature state is part of. Only present while the experiment is running.
+      type: object
+      properties:
+        id:
+          type: integer
+          title: Id
+        name:
+          type: string
+          title: Name
+        in_experiment:
+          type: boolean
+          title: In Experiment
+      required:
+        - id
+        - name
+        - in_experiment
+      title: ExperimentMetadata
     V1IdentitiesResponseFeature:
       description: 'Represents a Flagsmith feature, defined at project level.'
       type: object
@@ -28675,6 +30181,14 @@ components:
         - name
         - type
       title: Feature
+    V1IdentitiesResponseFeatureStateMetadata:
+      description: 'Additional, non-evaluation data about a feature state.'
+      type: object
+      properties:
+        experiment:
+          $ref: '#/components/schemas/V1IdentitiesResponseExperimentMetadata'
+      additionalProperties: true
+      title: FeatureStateMetadata
     V1IdentitiesResponseTrait:
       description: Represents a key-value pair associated with an identity.
       type: object
@@ -28710,6 +30224,18 @@ components:
             - type: string
             - type: 'null'
           title: Feature State Value
+        variant:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Variant
+        reason:
+          anyOf:
+            - type: string
+            - type: 'null'
+          title: Reason
+        metadata:
+          $ref: '#/components/schemas/V1IdentitiesResponseFeatureStateMetadata'
       required:
         - feature
         - enabled
@@ -28864,11 +30390,13 @@ components:
         * `flagsmith` - Flagsmith
         * `snowflake` - Snowflake
         * `clickhouse` - ClickHouse
+        * `databricks` - Databricks
       type: string
       enum:
         - flagsmith
         - snowflake
         - clickhouse
+        - databricks
     Webhook:
       type: object
       properties:
@@ -28917,6 +30445,18 @@ components:
       enum:
         - organisation
         - environment
+    WebhookSyncMembers:
+      type: object
+      properties:
+        identifiers:
+          description: 'Identity identifiers, each at most 1024 bytes of UTF-8.'
+          type: array
+          items:
+            type: string
+          maxItems: 10000
+          minItems: 1
+      required:
+        - identifiers
     WorkflowsError:
       type: object
       properties:
@@ -29110,7 +30650,42 @@ components:
           writeOnly: true
       required:
         - type
+    _SegmentCohort:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        environment:
+          type: integer
+        environment_api_key:
+          type: string
+          readOnly: true
+        environment_name:
+          type: string
+          readOnly: true
+        source_type:
+          $ref: '#/components/schemas/SourceTypeEnum'
+        version:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        deletion_requested_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+      required:
+        - environment
   securitySchemes:
+    Cohort Sync Key:
+      type: http
+      scheme: bearer
+      description: 'For cohort sync endpoints called by an external cohort source, such as Amplitude.'
+    Cohort Sync Key (Basic):
+      type: http
+      scheme: basic
+      description: 'For cohort sync endpoints called by an external cohort source that can only send Basic credentials, such as Mixpanel. The key is the password; the username is ignored.'
     Environment API Key:
       type: apiKey
       in: header
@@ -29120,7 +30695,7 @@ components:
       type: apiKey
       in: header
       name: Authorization
-      description: 'For Admin API endpoints. <a href=''https://docs.flagsmith.com/clients/rest#private-api-endpoints''>Find out more</a>.'
+      description: 'For Management API endpoints. <a href=''https://docs.flagsmith.com/integrating-with-flagsmith/flagsmith-api-overview/management-api''>Find out more</a>.'
     basicAuth:
       type: http
       scheme: basic

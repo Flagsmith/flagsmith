@@ -5,9 +5,9 @@ sidebar_position: 8
 description: An end-to-end walkthrough of a real experiment, from flag to rollout.
 ---
 
-:::info Enterprise beta
+:::info Beta
 
-Experimentation is in beta on **Enterprise** plans. [Get in touch](https://www.flagsmith.com/contact-us) to join.
+Experimentation is in beta.
 
 :::
 
@@ -70,8 +70,8 @@ const CheckoutPage: React.FC = () => {
 };
 ```
 
-Outside React, `flagsmith.getExperimentFlag('paypal_button')` does the same job as the hook. The same flow works in
-Python; see [Run an Experiment](/experimentation/run-an-experiment) for both SDKs.
+Outside React, `flagsmith.getExperimentFlag('paypal_button')` does the same job as the hook. The same flow works in the
+other supported SDKs; see [Run an Experiment](/experimentation/run-an-experiment).
 
 If checkout is available to visitors who aren't logged in, identify them with a persistent anonymous GUID so bucketing
 and events stay consistent; see [Identities](/flagsmith-concepts/identities).

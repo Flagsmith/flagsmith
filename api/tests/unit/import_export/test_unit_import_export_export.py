@@ -17,6 +17,7 @@ from pytest_mock import MockerFixture
 from core.constants import STRING
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey, Webhook
+from evaluation.services import get_identity_feature_states
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -539,43 +540,39 @@ def test_export_edge_identities__identities_with_overrides_and_traits__exports_a
     assert bool_trait.trait_key == "bool_trait"
     assert bool_trait.trait_value is True
 
-    all_feature_states = identity.get_all_feature_states()
+    all_feature_states = get_identity_feature_states(identity)
     assert len(all_feature_states) == 7
 
     actual_mv_override = all_feature_states[0]
-    assert str(actual_mv_override.uuid) == mv_override_fs_uuid
-    assert (
-        actual_mv_override.get_feature_state_value(identity=identity)
-        == mv_option.string_value
-    )
+    assert str(actual_mv_override.feature_state.uuid) == mv_override_fs_uuid
+    assert actual_mv_override.evaluation_result["value"] == mv_option.string_value
 
     actual_int_override = all_feature_states[1]
-    assert str(actual_int_override.uuid) == int_override_fs_uuid
-    assert actual_int_override.get_feature_state_value(identity=identity) == 123
+    assert str(actual_int_override.feature_state.uuid) == int_override_fs_uuid
+    assert actual_int_override.evaluation_result["value"] == 123
 
     actual_float_override = all_feature_states[2]
-    assert str(actual_float_override.uuid) == float_override_fs_uuid
-    assert actual_float_override.get_feature_state_value(identity=identity) == "123.123"
+    assert str(actual_float_override.feature_state.uuid) == float_override_fs_uuid
+    assert actual_float_override.evaluation_result["value"] == "123.123"
 
     actual_bool_override = all_feature_states[3]
-    assert str(actual_bool_override.uuid) == bool_override_fs_uuid
-    assert actual_bool_override.get_feature_state_value(identity=identity) is False
+    assert str(actual_bool_override.feature_state.uuid) == bool_override_fs_uuid
+    assert actual_bool_override.evaluation_result["value"] is False
 
     actual_string_fs = all_feature_states[4]
-    assert actual_string_fs.get_feature_state_value(identity=identity) == "foo"
-    assert actual_string_fs.identity is None
+    assert actual_string_fs.evaluation_result["value"] == "foo"
+    assert actual_string_fs.feature_state.identity is None
 
     override_without_mv_option = all_feature_states[5]
-    assert (
-        override_without_mv_option.get_feature_state_value(identity=identity)
-        == "control"
-    )
-    assert override_without_mv_option.identity == identity
+    assert override_without_mv_option.evaluation_result["value"] == "control"
+    assert override_without_mv_option.feature_state.identity == identity
 
     override_with_missing_attributes = all_feature_states[6]
-    assert override_with_missing_attributes.feature_state_value.value is None
     assert (
-        override_with_missing_attributes.multivariate_feature_state_values.exists()
+        override_with_missing_attributes.feature_state.feature_state_value.value is None
+    )
+    assert (
+        override_with_missing_attributes.feature_state.multivariate_feature_state_values.exists()
         is False
     )
 

@@ -3,35 +3,15 @@ from typing import Any
 from rest_framework import serializers
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
-from features.serializers import FeatureStateSerializerFull
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from organisations.models import Subscription
 from organisations.subscriptions.serializers.mixins import (
     ReadOnlyIfNotValidPlanMixin,
 )
 from projects.models import Project
-from projects.serializers import ProjectListSerializer
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
-
-
-class EnvironmentSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
-    feature_states = FeatureStateSerializerFull(many=True)
-    project = ProjectListSerializer()
-
-    class Meta:
-        model = Environment
-        fields = (
-            "id",
-            "name",
-            "feature_states",
-            "project",
-            "api_key",
-            "minimum_change_request_approvals",
-            "allow_client_traits",
-            "is_creating",
-        )
 
 
 class EnvironmentSerializerLight(serializers.ModelSerializer[Environment]):

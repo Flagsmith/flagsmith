@@ -7,7 +7,6 @@ from common.environments.permissions import (
     VIEW_IDENTITIES,
 )
 from django.conf import settings
-from django.db.models import Q
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -34,6 +33,7 @@ from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,
     IdentitySerializerWithTraitsAndSegments,
 )
+from evaluation.services import get_identity_feature_states
 from features.serializers import SDKIdentityFeatureStateSerializer
 from integrations.integration import identify_integrations
 from util.views import SDKAPIView
@@ -134,7 +134,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
             "IdentityTraitFlagsSegments", ("flags", "traits", "segments")
         )
         identity_flags_traits_segments = IdentityFlagsWithTraitsAndSegments(
-            flags=identity.get_all_feature_states(),
+            flags=get_identity_feature_states(identity),
             traits=traits_data,
             segments=identity.get_segments(),
         )
@@ -236,7 +236,7 @@ class SDKIdentities(SDKAPIView):
             context["environment"] = self.request.environment
             if getattr(self, "identity", None):
                 context["identity"] = self.identity
-        context["feature_states_additional_filters"] = self._get_additional_filters()
+        context["hide_server_key_only"] = self._hide_server_key_only()
         return context
 
     @extend_schema(
@@ -276,10 +276,8 @@ class SDKIdentities(SDKAPIView):
             },
         )
 
-    def _get_additional_filters(self) -> Q | None:
-        if self.request.originated_from is RequestOrigin.CLIENT:
-            return Q(feature__is_server_key_only=False)
-        return None
+    def _hide_server_key_only(self) -> bool:
+        return self.request.originated_from is RequestOrigin.CLIENT
 
     def _get_single_feature_state_response(
         self,
@@ -289,12 +287,13 @@ class SDKIdentities(SDKAPIView):
     ) -> Response:
         context = self.get_serializer_context()  # type: ignore[no-untyped-call]
 
-        for feature_state in identity.get_all_feature_states(
-            additional_filters=self._get_additional_filters(),
+        for evaluated_feature_state in get_identity_feature_states(
+            identity,
+            hide_server_key_only=self._hide_server_key_only(),
         ):
-            if feature_state.feature.name == feature_name:
+            if evaluated_feature_state.evaluation_result["name"] == feature_name:
                 serializer = SDKIdentityFeatureStateSerializer(
-                    feature_state, context=context
+                    evaluated_feature_state, context=context
                 )
                 return Response(
                     data=serializer.data, status=status.HTTP_200_OK, headers=headers
@@ -317,8 +316,9 @@ class SDKIdentities(SDKAPIView):
         :param identity: Identity model to return feature states for
         :return: Response containing lists of both serialized flags and traits
         """
-        all_feature_states = identity.get_all_feature_states(
-            additional_filters=self._get_additional_filters(),
+        all_feature_states = get_identity_feature_states(
+            identity,
+            hide_server_key_only=self._hide_server_key_only(),
         )
         serializer_class = self.get_serializer_class()
         serializer = serializer_class(

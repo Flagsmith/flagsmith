@@ -9,7 +9,8 @@ from pytest_mock import MockerFixture
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
-from features.models import FeatureSegment, FeatureState
+from experimentation.models import Experiment, ExperimentStatus
+from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from integrations.common.models import IntegrationsModel
@@ -17,7 +18,7 @@ from integrations.dynatrace.models import DynatraceConfiguration
 from integrations.mixpanel.models import MixpanelConfiguration
 from integrations.segment.models import SegmentConfiguration
 from integrations.webhook.models import WebhookConfiguration
-from segments.models import Condition, Segment, SegmentRule
+from segments.models import Segment, SegmentRule
 from users.models import FFAdminUser
 from util.engine_models.environments.integrations.models import IntegrationModel
 from util.engine_models.environments.models import (
@@ -800,205 +801,114 @@ def test_map_environment_to_engine__v2_versioning_segment_override_removed__retu
     )
 
 
-def test_map_environment_to_evaluation_context__no_identity__returns_environment_only(
+def test_map_environment_to_engine__running_experiment__stamps_every_state_of_feature(
     environment: Environment,
+    feature: "Feature",
+    segment: Segment,
+    running_experiment: Experiment,
 ) -> None:
-    # Given / When
-    result = engine.map_environment_to_evaluation_context(environment=environment)
-
-    # Then
-    assert result == {
-        "environment": {
-            "key": environment.api_key,
-            "name": environment.name,
-        },
-    }
-
-
-def test_map_environment_to_evaluation_context__with_identity__returns_identity_context(
-    environment: Environment,
-    identity: Identity,
-) -> None:
-    # Given / When
-    result = engine.map_environment_to_evaluation_context(
+    # Given - a second segment override on the feature, outside the experiment
+    FeatureState.objects.create(
+        feature=feature,
         environment=environment,
-        identity=identity,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment,
+        ),
     )
+    expected_experiment = {
+        "id": running_experiment.id,
+        "name": "New checkout CTA",
+    }
+
+    # When
+    result = engine.map_environment_to_engine(environment)
 
     # Then
-    assert result == {
-        "environment": {
-            "key": environment.api_key,
-            "name": environment.name,
+    (default_state,) = [
+        fs for fs in result.feature_states if fs.feature.id == feature.id
+    ]
+    assert default_state.metadata == {
+        "experiment": {**expected_experiment, "in_experiment": False},
+    }
+    assert {
+        segment.name: fs.metadata
+        for segment in result.project.segments
+        for fs in segment.feature_states
+    } == {
+        "Experiment rollout": {
+            "experiment": {**expected_experiment, "in_experiment": True},
         },
-        "identity": {
-            "identifier": identity.identifier,
-            "key": identity.get_hash_key(
-                environment.use_identity_composite_key_for_hashing
-            ),
-            "traits": {},
+        "segment": {
+            "experiment": {**expected_experiment, "in_experiment": False},
         },
     }
 
 
-def test_map_environment_to_evaluation_context__with_explicit_traits__returns_given_traits(
+def test_map_environment_to_engine__running_experiment__other_features_unstamped(
     environment: Environment,
-    identity: Identity,
-    trait: Trait,
-) -> None:
-    # Given / When
-    result = engine.map_environment_to_evaluation_context(
-        environment=environment,
-        identity=identity,
-        traits=[trait],
-    )
-
-    # Then
-    assert result == {
-        "environment": {
-            "key": environment.api_key,
-            "name": environment.name,
-        },
-        "identity": {
-            "identifier": identity.identifier,
-            "key": identity.get_hash_key(
-                environment.use_identity_composite_key_for_hashing
-            ),
-            "traits": {trait.trait_key: trait.trait_value},
-        },
-    }
-
-
-def test_map_environment_to_evaluation_context__no_explicit_traits__returns_identity_traits(
-    environment: Environment,
-    identity: Identity,
-    trait: Trait,
-) -> None:
-    # Given / When
-    result = engine.map_environment_to_evaluation_context(
-        environment=environment,
-        identity=identity,
-    )
-
-    # Then
-    assert result == {
-        "environment": {
-            "key": environment.api_key,
-            "name": environment.name,
-        },
-        "identity": {
-            "identifier": identity.identifier,
-            "key": identity.get_hash_key(
-                environment.use_identity_composite_key_for_hashing
-            ),
-            "traits": {trait.trait_key: trait.trait_value},
-        },
-    }
-
-
-def test_map_environment_to_evaluation_context__with_segments__returns_segment_contexts(
-    environment: Environment,
-    identity_matching_segment: Segment,
-) -> None:
-    # Given / When
-    result = engine.map_environment_to_evaluation_context(
-        environment=environment,
-        segments=[identity_matching_segment],
-    )
-
-    # Then
-    segment_key = str(identity_matching_segment.pk)
-    assert result == {
-        "environment": {
-            "key": environment.api_key,
-            "name": environment.name,
-        },
-        "segments": {
-            segment_key: engine.map_segment_to_segment_context(
-                identity_matching_segment
-            ),
-        },
-    }
-
-
-def test_map_segment_to_segment_context__segment_with_rule__returns_expected(
-    identity_matching_segment: Segment,
+    running_experiment: Experiment,
 ) -> None:
     # Given
-    condition = Condition.objects.get(
-        rule__segment=identity_matching_segment,
+    other_feature = Feature.objects.create(
+        name="unexperimented_feature",
+        project=environment.project,
     )
 
     # When
-    result = engine.map_segment_to_segment_context(identity_matching_segment)
+    result = engine.map_environment_to_engine(environment)
 
     # Then
-    assert result == {
-        "key": str(identity_matching_segment.pk),
-        "name": identity_matching_segment.name,
-        "rules": [
-            {
-                "type": "ALL",
-                "conditions": [
-                    {
-                        "property": condition.property,
-                        "operator": condition.operator,
-                        "value": condition.value,
-                    },
-                ],
-                "rules": [],
-            },
-        ],
-        "metadata": {"pk": identity_matching_segment.pk},
-    }
+    (other_state,) = [
+        fs for fs in result.feature_states if fs.feature.id == other_feature.id
+    ]
+    assert other_state.metadata is None
+    assert "metadata" not in other_state.dict()
 
 
-def test_map_rule_to_segment_rule__with_nested_rule__returns_expected(
-    segment_rule: SegmentRule,
-    identity_matching_segment: Segment,
+@pytest.mark.parametrize(
+    "status",
+    (
+        ExperimentStatus.CREATED,
+        ExperimentStatus.PAUSED,
+        ExperimentStatus.COMPLETED,
+    ),
+)
+def test_map_environment_to_engine__experiment_not_running__no_metadata(
+    environment: Environment,
+    running_experiment: Experiment,
+    status: str,
 ) -> None:
     # Given
-    matching_rule = SegmentRule.objects.get(segment=identity_matching_segment)
-    matching_rule.rules.add(segment_rule)
-    condition = Condition.objects.get(rule=matching_rule)
+    Experiment.objects.filter(pk=running_experiment.pk).update(status=status)
 
     # When
-    result = engine.map_rule_to_segment_rule(matching_rule)
+    result = engine.map_environment_to_engine(environment)
 
     # Then
-    assert result == {
-        "type": "ALL",
-        "conditions": [
-            {
-                "property": condition.property,
-                "operator": condition.operator,
-                "value": condition.value,
-            },
-        ],
-        "rules": [
-            {
-                "type": "ALL",
-                "conditions": [],
-                "rules": [],
-            },
-        ],
-    }
-
-
-def test_map_condition_to_segment_condition__valid_condition__returns_expected(
-    identity_matching_segment: Segment,
-) -> None:
-    # Given
-    condition = Condition.objects.get(
-        rule__segment=identity_matching_segment,
+    assert all(fs.metadata is None for fs in result.feature_states)
+    assert all(
+        fs.metadata is None
+        for segment in result.project.segments
+        for fs in segment.feature_states
     )
 
+
+def test_map_environment_to_engine__experiment_without_rollout_segment__no_enrolment(
+    environment: Environment,
+    feature: "Feature",
+    running_experiment: Experiment,
+) -> None:
+    # Given
+    Experiment.objects.filter(pk=running_experiment.pk).update(rollout_segment=None)
+
     # When
-    result = engine.map_condition_to_segment_condition(condition)
+    result = engine.map_environment_to_engine(environment)
 
     # Then
-    assert result == {
-        "property": condition.property,
-        "operator": condition.operator,
-        "value": condition.value,
-    }
+    assert not any(
+        fs.metadata["experiment"]["in_experiment"]  # type: ignore[index]
+        for segment in result.project.segments
+        for fs in segment.feature_states
+    )

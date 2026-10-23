@@ -121,6 +121,11 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[d
         return "Project %s" % self.name
 
     @property
+    def is_workflow_enabled(self) -> bool:
+        """Whether segment change requests are enabled for this project."""
+        return self.minimum_change_request_approvals is not None
+
+    @property
     def is_too_large(self) -> bool:
         return (
             self.features.count() > self.max_features_allowed

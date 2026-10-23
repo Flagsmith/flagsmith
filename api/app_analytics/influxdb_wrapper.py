@@ -22,7 +22,7 @@ from app_analytics.mappers import (
     map_flux_tables_to_usage_data,
     map_labels_to_influx_record_values,
 )
-from app_analytics.types import DownsampleSize, Labels
+from app_analytics.types import DownsampleSize, Labels, UsageGroupByType
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +37,10 @@ DEFAULT_DROP_COLUMNS = (
     "host",
 )
 
-GET_MULTIPLE_EVENTS_LIST_GROUP_CLAUSE = (
-    f"|> group(columns: {json.dumps(['resource', *LABELS])}) "
-)
+GROUP_BY_COLUMNS: dict[UsageGroupByType, tuple[str, ...]] = {
+    "project": ("project_id",),
+    "environment": ("project_id", "environment_id"),
+}
 
 
 class InfluxDBWrapper:
@@ -119,6 +120,7 @@ class InfluxDBWrapper:
         filters: str = "|> filter(fn:(r) => r._measurement == 'api_call')",
         extra: str = "",
         bucket: str | None = None,
+        return_empty_on_error: bool = True,
     ) -> list[FluxTable]:
         if bucket is None:
             # NOTE: Legacy default
@@ -151,7 +153,9 @@ class InfluxDBWrapper:
             return query_api.query(org=settings.INFLUXDB_ORG, query=query)
         except HTTPError as e:
             capture_exception(e)
-            return []
+            if return_empty_on_error:
+                return []
+            raise
 
 
 def get_events_for_organisation(
@@ -200,47 +204,6 @@ def get_events_for_organisation(
     return total
 
 
-def get_event_list_for_organisation(
-    organisation_id: int,
-    date_start: datetime | None = None,
-    date_stop: datetime | None = None,
-) -> tuple[dict[str, list[int]], list[str]]:
-    """
-    Query influx db for usage for given organisation id
-
-    :param organisation_id: an id of the organisation to get usage for
-
-    :return: a number of request counts for organisation in chart.js scheme
-    """
-    now = timezone.now()
-    if date_start is None:
-        date_start = now - timedelta(days=30)
-
-    if date_stop is None:
-        date_stop = now
-
-    results = InfluxDBWrapper.influx_query_manager(
-        filters=(
-            '|> filter(fn:(r) => r._measurement == "api_call") '
-            f'|> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")'
-        ),
-        extra='|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")',
-        date_start=date_start,
-        date_stop=date_stop,
-    )
-    dataset = defaultdict(list)
-    labels = []  # type: ignore[var-annotated]
-
-    date_difference = date_stop - date_start
-    required_records = date_difference.days + 1
-    for result in results:
-        for record in result.records:
-            dataset[record["resource"]].append(record["_value"])
-            if len(labels) != required_records:
-                labels.append(record.values["_time"].strftime("%Y-%m-%d"))
-    return dataset, labels
-
-
 def get_multiple_event_list_for_organisation(
     organisation_id: int,
     project_id: int | None = None,
@@ -248,6 +211,7 @@ def get_multiple_event_list_for_organisation(
     date_start: datetime | None = None,
     date_stop: datetime | None = None,
     labels_filter: Labels | None = None,
+    group_by: UsageGroupByType | None = None,
 ) -> list[UsageData]:
     """
     Query influx db for usage for given organisation id
@@ -282,13 +246,19 @@ def get_multiple_event_list_for_organisation(
             for key, value in map_labels_to_influx_record_values(labels_filter).items()
         ]
 
+    group_by_columns = GROUP_BY_COLUMNS[group_by] if group_by else ()
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,
         date_stop=date_stop,
+        drop_columns=tuple(
+            column for column in DEFAULT_DROP_COLUMNS if column not in group_by_columns
+        ),
         filters=build_filter_string(filters),
         extra=(
-            GET_MULTIPLE_EVENTS_LIST_GROUP_CLAUSE
-            + '|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
+            f"|> group(columns: {json.dumps(['resource', *LABELS, *group_by_columns])}) "
+            "|> aggregateWindow(every: 24h, fn: sum, "
+            f"{'createEmpty: false, ' if group_by else ''}"
+            'timeSrc: "_start")'
         ),
     )
 
@@ -302,6 +272,7 @@ def get_usage_data(
     date_start: datetime | None = None,
     date_stop: datetime | None = None,
     labels_filter: Labels | None = None,
+    group_by: UsageGroupByType | None = None,
 ) -> list[UsageData]:
     now = timezone.now()
     if date_start is None:
@@ -317,6 +288,7 @@ def get_usage_data(
         date_start=date_start,
         date_stop=date_stop,
         labels_filter=labels_filter,
+        group_by=group_by,
     )
 
 

@@ -11,7 +11,7 @@ from app_analytics.tasks import (
     track_feature_evaluation_influxdb_v2,
     track_feature_evaluation_v2,
 )
-from app_analytics.types import Labels, PeriodType
+from app_analytics.types import Labels, PeriodType, UsageGroupByType
 from environments.models import Environment
 from features.models import FeatureState
 
@@ -57,6 +57,8 @@ class UsageDataSerializer(serializers.Serializer):  # type: ignore[type-arg]
     environment_document = serializers.IntegerField()
     day = serializers.CharField()
     labels = LabelsSerializer(allow_null=True, required=False)
+    project_id = serializers.IntegerField(allow_null=True)
+    environment_id = serializers.IntegerField(allow_null=True)
 
 
 class UsageDataQuerySerializer(LabelsQuerySerializerMixin, serializers.Serializer):  # type: ignore[type-arg]
@@ -64,6 +66,12 @@ class UsageDataQuerySerializer(LabelsQuerySerializerMixin, serializers.Serialize
     environment_id = serializers.IntegerField(required=False)
     period = serializers.ChoiceField(
         choices=get_args(PeriodType),
+        allow_null=True,
+        default=None,
+        required=False,
+    )
+    group_by = serializers.ChoiceField(
+        choices=get_args(UsageGroupByType),
         allow_null=True,
         default=None,
         required=False,

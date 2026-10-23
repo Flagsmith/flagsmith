@@ -3,7 +3,7 @@ from datetime import timedelta
 import structlog
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
 
@@ -27,6 +27,7 @@ logger = structlog.get_logger("api_usage")
 def send_api_flags_blocked_notification(organisation: Organisation) -> None:
     recipient_list = FFAdminUser.objects.filter(
         userorganisation__organisation=organisation,
+        userorganisation__is_active=True,
     )
 
     url = get_current_site_url()
@@ -39,14 +40,15 @@ def send_api_flags_blocked_notification(organisation: Organisation) -> None:
     message = "organisations/api_flags_blocked_notification.txt"
     html_message = "organisations/api_flags_blocked_notification.html"
 
-    send_mail(
+    msg = EmailMultiAlternatives(
         subject="Flagsmith API use has been blocked due to overuse",
-        message=render_to_string(message, context),
+        body=render_to_string(message, context),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=list(recipient_list.values_list("email", flat=True)),
-        html_message=render_to_string(html_message, context),
-        fail_silently=True,
+        to=list(recipient_list.values_list("email", flat=True)),
+        cc=settings.API_USAGE_ALERT_CC_RECIPIENT_LIST,
     )
+    msg.attach_alternative(render_to_string(html_message, context), "text/html")
+    msg.send(fail_silently=True)
 
 
 def _send_api_usage_notification(
@@ -61,6 +63,7 @@ def _send_api_usage_notification(
 
     recipient_list = FFAdminUser.objects.filter(
         userorganisation__organisation=organisation,
+        userorganisation__is_active=True,
     )
 
     if matched_threshold < 100:
@@ -83,14 +86,15 @@ def _send_api_usage_notification(
         "usage_url": f"{url}/organisation/{organisation.id}/usage",
     }
 
-    send_mail(
+    msg = EmailMultiAlternatives(
         subject=f"Flagsmith API use has reached {matched_threshold}%",
-        message=render_to_string(message, context),
+        body=render_to_string(message, context),
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=list(recipient_list.values_list("email", flat=True)),
-        html_message=render_to_string(html_message, context),
-        fail_silently=True,
+        to=list(recipient_list.values_list("email", flat=True)),
+        cc=settings.API_USAGE_ALERT_CC_RECIPIENT_LIST,
     )
+    msg.attach_alternative(render_to_string(html_message, context), "text/html")
+    msg.send(fail_silently=True)
 
     OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,

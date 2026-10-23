@@ -3,7 +3,9 @@
 // mocked out to allow `common/utils/utils` to load for real.
 jest.mock('common/stores/account-store', () => ({}))
 jest.mock('common/stores/project-store', () => ({}))
-jest.mock('common/store', () => ({ getStore: () => ({}) }))
+jest.mock('common/store', () => ({
+  getStore: () => ({ getState: () => ({}) }),
+}))
 jest.mock('@flagsmith/flagsmith', () => ({
   getValue: (_key: string, opts: { fallback: unknown }) => opts.fallback,
 }))
@@ -95,4 +97,26 @@ describe('validateRule', () => {
     })
     expect(Utils.validateRule(rule)).toBe(false)
   })
+})
+
+describe('getPlanPermission', () => {
+  beforeEach(() => {
+    jest.spyOn(Utils, 'isEnterpriseImage').mockReturnValue(false)
+    jest.spyOn(Utils, 'isSaas').mockReturnValue(true)
+  })
+  afterEach(() => jest.restoreAllMocks())
+
+  it.each([
+    ['scale-up', 'AUDIT', true],
+    ['enterprise', 'AUDIT', true],
+    ['start-up', 'AUDIT', false],
+    ['free', 'AUDIT', false],
+    ['enterprise', 'SCIM', true],
+    ['scale-up', 'SCIM', false],
+  ] as const)(
+    'hardcoded features: plan=%s feature=%s => %s',
+    (plan, feature, expected) => {
+      expect(Utils.getPlanPermission(plan, feature)).toBe(expected)
+    },
+  )
 })

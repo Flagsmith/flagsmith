@@ -735,6 +735,18 @@
         {
             "source": "/integrating-with-flagsmith/flagsmith-api-overview/admin-api/updating-flags",
             "destination": "/managing-flags/updating-flags"
+        },
+        {
+            "source": "/integrating-with-flagsmith/flagsmith-api-overview/admin-api",
+            "destination": "/integrating-with-flagsmith/flagsmith-api-overview/management-api"
+        },
+        {
+            "source": "/integrating-with-flagsmith/flagsmith-api-overview/admin-api/authentication",
+            "destination": "/integrating-with-flagsmith/flagsmith-api-overview/management-api/authentication"
+        },
+        {
+            "source": "/integrating-with-flagsmith/flagsmith-api-overview/admin-api/code-examples",
+            "destination": "/integrating-with-flagsmith/flagsmith-api-overview/management-api/code-examples"
         }
     ],
     "trailingSlash": false

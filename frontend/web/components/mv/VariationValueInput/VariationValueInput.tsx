@@ -4,7 +4,6 @@ import ErrorMessage from 'components/ErrorMessage'
 import Constants from 'common/constants'
 import Icon from 'components/icons/Icon'
 import Input from 'components/base/forms/Input'
-import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 import shallowEqual from 'fbjs/lib/shallowEqual'
@@ -65,55 +64,38 @@ export const VariationValueInput: React.FC<VariationValueProps> = ({
           )}
         </div>
       </Row>
-      <InputGroup
-        noMargin
-        component={
-          <>
-            {Utils.renderWithPermission(
-              canCreateFeature,
-              readOnly
-                ? 'Variation values are defined at the feature level and cannot be changed per segment.'
-                : Constants.projectPermissions(
-                    ProjectPermission.CREATE_FEATURE,
-                  ),
-              <ValueEditor
-                data-test={`featureVariationValue${
-                  Utils.featureStateToValue(value) || index
-                }`}
-                name='featureValue'
-                className='full-width code-medium'
-                value={Utils.getTypedValue(Utils.featureStateToValue(value))}
-                disabled={!canCreateFeature || disabled || readOnly}
-                onBlur={() => {
-                  const newValue = {
-                    ...value,
-                    // Trim spaces and do conversion on blur
-                    ...Utils.valueToFeatureState(
-                      Utils.featureStateToValue(value),
-                    ),
-                  }
-                  if (!shallowEqual(newValue, value)) {
-                    //occurs if we converted a trimmed value
-                    onChange(newValue)
-                  }
-                }}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  onChange({
-                    ...value,
-                    ...Utils.valueToFeatureState(
-                      Utils.safeParseEventValue(e),
-                      false,
-                    ),
-                  })
-                }}
-                placeholder="e.g. 'big' "
-              />,
-            )}
-          </>
-        }
-        tooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
-        title='Variation Value'
-      />
+      <div>
+        {Utils.renderWithPermission(
+          canCreateFeature,
+          readOnly
+            ? 'Variation values are defined at the feature level and cannot be changed per segment.'
+            : Constants.projectPermissions(ProjectPermission.CREATE_FEATURE),
+          <ValueEditor
+            label='Variation Value'
+            labelTooltip={Constants.strings.REMOTE_CONFIG_DESCRIPTION_VARIATION}
+            className='full-width code-medium'
+            value={Utils.getTypedValue(Utils.featureStateToValue(value))}
+            disabled={!canCreateFeature || disabled || readOnly}
+            onBlur={() => {
+              const newValue = {
+                ...value,
+                // Trim spaces and do conversion on blur
+                ...Utils.valueToFeatureState(Utils.featureStateToValue(value)),
+              }
+              if (!shallowEqual(newValue, value)) {
+                //occurs if we converted a trimmed value
+                onChange(newValue)
+              }
+            }}
+            onChange={(newValue: string) => {
+              onChange({
+                ...value,
+                ...Utils.valueToFeatureState(newValue, false),
+              })
+            }}
+          />,
+        )}
+      </div>
       <Row className='justify-content-between align-items-center mt-2'>
         <label className='mb-0'>{weightTitle}</label>
         <div className='d-flex align-items-center gap-2'>

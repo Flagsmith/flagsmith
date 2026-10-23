@@ -19,7 +19,7 @@ const Version = ({ sdk, spec = '*', options = {} }) => {
     return latest ?? 'x.y.z';
 };
 
-export const JavaVersion = ({ spec = '~7' }) => Version({ sdk: 'java', spec });
+export const JavaVersion = ({ spec = '~8' }) => Version({ sdk: 'java', spec });
 export const AndroidVersion = ({ spec = '~1' }) => Version({ sdk: 'android', spec });
 export const CocoapodsVersion = ({ spec = '~3' }) => Version({ sdk: 'cocoapods', spec });
 export const SwiftPMVersion = ({ spec = '~3' }) => Version({ sdk: 'swiftpm', spec });
@@ -27,5 +27,5 @@ export const DotnetVersion = ({ spec = '~8' }) => Version({ sdk: 'dotnet', spec 
 export const ElixirVersion = ({ spec = '~2' }) => Version({ sdk: 'elixir', spec });
 export const RustVersion = ({ spec = '~2' }) => Version({ sdk: 'rust', spec });
 export const JsVersion = ({ spec = '^12' }) => Version({ sdk: 'js', spec });
-export const NodejsVersion = ({ spec } = { spec: '~6' }) => Version({ sdk: 'nodejs', spec });
+export const NodejsVersion = ({ spec = '^9' } = {}) => Version({ sdk: 'nodejs', spec });
 export const FlutterVersion = ({ spec = '~6' }) => Version({ sdk: 'flutter', spec });

@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Annotated, Any, Iterable, cast
 
 from django.http import HttpRequest
@@ -18,6 +18,7 @@ from app_analytics.models import FeatureEvaluationRaw, Resource
 from app_analytics.types import (
     AnnotatedAPIUsageBucket,
     AnnotatedAPIUsageKey,
+    DailyUsageData,
     FeatureEvaluationCacheKey,
     InputLabels,
     KnownSDK,
@@ -89,32 +90,42 @@ def map_influx_record_values_to_labels(values: dict[str, Any]) -> Labels:
     return labels
 
 
+def _map_influx_tag_to_id(value: str | None) -> int | None:
+    return int(value) if value else None
+
+
 def map_annotated_api_usage_buckets_to_usage_data(
     api_usage_buckets: Iterable[AnnotatedAPIUsageBucket],
 ) -> list[UsageData]:
     """
-    Aggregates API usage data buckets by date and labels.
-    Each resulting `UsageData` object contains the total count for each resource
-    for that date and labels combination.
+    Aggregates API usage data buckets by date, labels and, when grouped,
+    project and environment id. Each resulting `UsageData` object contains
+    the total count for each resource for that combination.
     """
     data_by_key: dict[AnnotatedAPIUsageKey, UsageData] = {}
     for row in api_usage_buckets:
         date = row["created_at__date"]
         labels = row["labels"]
+        project_id = row.get("project_id")
+        environment_id = row.get("environment_id")
         key = AnnotatedAPIUsageKey(
             date=date,
             labels=tuple(labels.items()),
+            project_id=project_id,
+            environment_id=environment_id,
         )
         if key not in data_by_key:
             data_by_key[key] = UsageData(
                 day=date,
                 labels=labels,
+                project_id=project_id,
+                environment_id=environment_id,
             )
         if column_name := Resource(row["resource"]).column_name:
             setattr(
                 data_by_key[key],
                 column_name,
-                row["count"],
+                getattr(data_by_key[key], column_name) + row["count"],
             )
     return list(data_by_key.values())
 
@@ -123,9 +134,9 @@ def map_flux_tables_to_usage_data(
     flux_tables: list[FluxTable],
 ) -> list[UsageData]:
     """
-    Aggregates API usage data buckets by date and labels.
-    Each resulting `UsageData` object contains the total count for each resource
-    for that date and labels combination.
+    Aggregates API usage data buckets by date, labels and, when grouped,
+    project and environment id. Each resulting `UsageData` object contains
+    the total count for each resource for that combination.
     """
     data_by_key: dict[AnnotatedAPIUsageKey, UsageData] = {}
     for flux_table in flux_tables:
@@ -133,24 +144,62 @@ def map_flux_tables_to_usage_data(
             values = record.values
             date = values["_time"].date()
             labels: Labels = map_influx_record_values_to_labels(values)
+            project_id = _map_influx_tag_to_id(values.get("project_id"))
+            environment_id = _map_influx_tag_to_id(values.get("environment_id"))
             key = AnnotatedAPIUsageKey(
                 date=date,
                 labels=tuple(labels.items()),
+                project_id=project_id,
+                environment_id=environment_id,
             )
             if key not in data_by_key:
                 data_by_key[key] = UsageData(
                     day=date,
                     labels=labels,
+                    project_id=project_id,
+                    environment_id=environment_id,
                 )
-            if (resource := Resource.get_from_name(values["resource"])) and (
-                resource_attr := resource.column_name
+            if (
+                (value := values["_value"]) is not None
+                and (resource := Resource.get_from_name(values["resource"]))
+                and (resource_attr := resource.column_name)
             ):
                 setattr(
                     data_by_key[key],
                     resource_attr,
-                    values["_value"],
+                    getattr(data_by_key[key], resource_attr) + value,
                 )
     return list(data_by_key.values())
+
+
+USAGE_DATA_RESOURCE_ATTRIBUTES: tuple[str, ...] = tuple(
+    column_name for resource in Resource if (column_name := resource.column_name)
+)
+
+
+def map_usage_data_to_daily_totals(
+    usage_data: Iterable[UsageData],
+) -> DailyUsageData:
+    """
+    Collapse usage data into a single total per day for each resource.
+
+    Usage data holds a row per day *and* labels combination, so a day with
+    traffic from more than one client application appears more than once. Any
+    caller wanting whole-organisation totals has to sum across those rows.
+    """
+    totals_by_date: defaultdict[str, Counter[str]] = defaultdict(Counter)
+    for data in usage_data:
+        for resource_attr in USAGE_DATA_RESOURCE_ATTRIBUTES:
+            totals_by_date[str(data.day)][resource_attr] += getattr(data, resource_attr)
+
+    dates = sorted(totals_by_date)
+    return DailyUsageData(
+        dates=dates,
+        daily_totals_by_resource={
+            resource_attr: [totals_by_date[date][resource_attr] for date in dates]
+            for resource_attr in USAGE_DATA_RESOURCE_ATTRIBUTES
+        },
+    )
 
 
 def map_flux_tables_to_feature_evaluation_data(
@@ -159,7 +208,7 @@ def map_flux_tables_to_feature_evaluation_data(
     return [
         FeatureEvaluationData(
             day=(values := record.values)["_time"].date(),
-            count=values["_value"],
+            count=values["_value"] or 0,
             labels=map_influx_record_values_to_labels(values),
         )
         for flux_table in flux_tables

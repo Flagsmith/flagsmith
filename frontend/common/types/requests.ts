@@ -5,6 +5,7 @@ import {
   FeatureStateValue,
   ImportStrategy,
   Approval,
+  Metadata,
   MultivariateOption,
   SAMLConfiguration,
   Segment,
@@ -25,6 +26,7 @@ import {
   StageActionBody,
   ChangeRequest,
   ExpectedDirection,
+  ExperimentAudienceMatch,
   ExperimentStatus,
   MetricAggregation,
   MetricDirection,
@@ -33,6 +35,7 @@ import {
   TagStrategy,
   FeatureType,
   LifecycleStage,
+  TrustRelationshipClaimRule,
 } from './responses'
 import { UtmsType } from './utms'
 
@@ -73,7 +76,10 @@ export enum PermissionRoleType {
   GRANTED_FOR_TAGS = 'GRANTED_FOR_TAGS',
   NONE = 'NONE',
 }
-export const billingPeriods = [
+export type BillingPeriod = Req['getOrganisationUsage']['billing_period']
+export type PeriodOption = { label: string; value: BillingPeriod }
+
+export const periodOptions: PeriodOption[] = [
   {
     label: 'Current billing period',
     value: 'current_billing_period',
@@ -85,7 +91,7 @@ export const billingPeriods = [
   { label: 'Last 90 days', value: '90_day_period' },
   { label: 'Last 30 days', value: undefined },
 ]
-export const freePeriods = [
+export const rollingPeriodOptions: PeriodOption[] = [
   { label: 'Last 90 days', value: '90_day_period' },
   { label: 'Last 30 days', value: undefined },
 ]
@@ -118,6 +124,7 @@ export type RegisterRequest = {
   organisation_name?: string
   marketing_consent_given?: boolean
   utm_data?: UtmsType
+  signup_anonymous_id?: string
 }
 export enum SortOrder {
   ASC = 'ASC',
@@ -148,6 +155,32 @@ export interface PipelineStageRequest {
 }
 
 type WarehouseConfigValue = string | number | boolean
+type WarehouseCredentials =
+  | { password: string }
+  | { client_id: string; client_secret: string }
+
+// Omitting `audience` leaves the stored audience untouched; an empty
+// `segment_ids` clears it back to every identity in the environment.
+export type ExperimentAudienceBody = {
+  match: ExperimentAudienceMatch
+  segment_ids: number[]
+}
+
+export type ExperimentRolloutBody = {
+  enabled: boolean
+  rollout_percentage: number
+  feature_state_value: {
+    type: 'integer' | 'string' | 'boolean'
+    value: string
+  }
+  multivariate_feature_state_values: {
+    multivariate_feature_option: number
+    percentage_allocation: number
+  }[]
+  audience?: ExperimentAudienceBody
+}
+
+export type UsageGroupBy = 'project' | 'environment'
 
 export type Req = {
   getFeatureCodeReferences: {
@@ -168,6 +201,50 @@ export type Req = {
   createSegment: {
     projectId: number
     segment: Omit<Segment, 'id' | 'uuid' | 'project'>
+  }
+  createCohort: {
+    environmentApiKey: string
+    projectId: number
+    name: string
+    description?: string
+    metadata?: Metadata[]
+  }
+  deleteCohort: {
+    environmentApiKey: string
+    cohortId: number
+    projectId: number
+  }
+  getCohort: {
+    environmentApiKey: string
+    cohortId: number
+  }
+  updateCohort: {
+    environmentApiKey: string
+    cohortId: number
+    projectId: number
+    segmentId: number
+    name?: string
+    description?: string
+    metadata?: Metadata[]
+  }
+  syncCohortCsv: {
+    environmentApiKey: string
+    cohortId: number
+    projectId: number
+    file: File
+    identifier_column?: number
+    has_header?: boolean
+  }
+  getCohortSyncKeys: {
+    environmentApiKey: string
+  }
+  createCohortSyncKey: {
+    environmentApiKey: string
+    name: string
+  }
+  revokeCohortSyncKey: {
+    environmentApiKey: string
+    prefix: string
   }
   cloneSegment: {
     projectId: number
@@ -196,10 +273,14 @@ export type Req = {
   getEnvironments: {
     projectId: number
   }
+  getAllEnvironments: {
+    projectId: number
+  }
   getOrganisationUsage: {
     organisationId: number
     projectId?: number
     environmentId?: string
+    group_by?: UsageGroupBy
     billing_period?:
       | 'current_billing_period'
       | 'previous_billing_period'
@@ -278,6 +359,8 @@ export type Req = {
     delete_orphan_organisations: boolean
   }
   updateUserEmail: { current_password: string; new_email: string }
+  activateAccount: { uid: string; token: string }
+  resendActivationEmail: { email: string }
   createGroupAdmin: {
     group: number
     user: number
@@ -496,7 +579,11 @@ export type Req = {
   getRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   updateRoleMasterApiKey: { org_id: number; role_id: number; id: string }
   deleteRoleMasterApiKey: { org_id: number; role_id: number; id: string }
-  createRoleMasterApiKey: { org_id: number; role_id: number }
+  createRoleMasterApiKey: {
+    org_id: number
+    role_id: number
+    body: { master_api_key: string }
+  }
   getMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
   deleteMasterAPIKeyWithMasterAPIKeyRoles: {
     org_id: number
@@ -504,6 +591,29 @@ export type Req = {
     role_id: number
   }
   getRolesMasterAPIKeyWithMasterAPIKeyRoles: { org_id: number; prefix: string }
+  getTrustRelationships: { organisation_id: number }
+  createTrustRelationship: {
+    organisation_id: number
+    body: {
+      name: string
+      issuer: string
+      audience: string
+      claim_rules: TrustRelationshipClaimRule[]
+      is_admin: boolean
+    }
+  }
+  updateTrustRelationship: {
+    organisation_id: number
+    id: number
+    body: {
+      name: string
+      issuer: string
+      audience: string
+      claim_rules: TrustRelationshipClaimRule[]
+      is_admin: boolean
+    }
+  }
+  deleteTrustRelationship: { organisation_id: number; id: number }
   createLaunchDarklyProjectImport: {
     project_id: number
     body: {
@@ -769,6 +879,35 @@ export type Req = {
     environmentKey: string
   }
   getFeatureSegment: { id: number }
+  getFeatureDependencies: {
+    environmentId: string
+    featureId: number
+    // Lists them as if this change request were live.
+    changeRequestId?: number
+  }
+  getFeatureDependents: { environmentId: string; featureId: number }
+  createFeatureDependency: {
+    environmentId: string
+    featureId: number
+    prerequisiteFeatureId: number
+    // Stages the change in this change request instead of publishing it.
+    changeRequestId?: number
+  }
+  deleteFeatureDependency: {
+    environmentId: string
+    featureId: number
+    prerequisiteFeatureId: number
+    changeRequestId?: number
+  }
+  createEnvironmentChangeRequest: {
+    environmentId: string
+    featureId: number
+    title: string
+    description: string
+    live_from?: string
+    approvals: Approval[]
+  }
+  deleteChangeRequest: { id: number }
   getSamlConfiguration: { name: string }
   getSamlConfigurations: { organisation_id: number }
   getSamlConfigurationMetadata: { name: string }
@@ -1036,7 +1175,7 @@ export type Req = {
     warehouse_type: string
     name?: string
     config?: Record<string, WarehouseConfigValue>
-    credentials?: { password: string }
+    credentials?: WarehouseCredentials
   }
   deleteWarehouseConnection: { environmentId: string; id: number }
   testWarehouseConnection: { environmentId: string; id: number }
@@ -1045,14 +1184,14 @@ export type Req = {
     warehouse_type: string
     name?: string
     config?: Record<string, WarehouseConfigValue>
-    credentials?: { password: string }
+    credentials?: WarehouseCredentials
   }
   updateWarehouseConnection: {
     environmentId: string
     id: number
     name?: string
     config?: Record<string, WarehouseConfigValue>
-    credentials?: { password: string }
+    credentials?: WarehouseCredentials
   }
   getExperiments: PagedRequest<{
     environmentId: string
@@ -1065,18 +1204,7 @@ export type Req = {
       hypothesis: string
       feature: number
       metrics: { metric: number; expected_direction: ExpectedDirection }[]
-      experiment_rollout: {
-        enabled: boolean
-        rollout_percentage: number
-        feature_state_value: {
-          type: 'integer' | 'string' | 'boolean'
-          value: string
-        }
-        multivariate_feature_state_values: {
-          multivariate_feature_option: number
-          percentage_allocation: number
-        }[]
-      }
+      experiment_rollout: ExperimentRolloutBody
     }
   }
   experimentAction: { environmentId: string; experimentId: number }
@@ -1088,18 +1216,7 @@ export type Req = {
   updateExperimentRollout: {
     environmentId: string
     experimentId: number
-    body: {
-      enabled: boolean
-      rollout_percentage: number
-      feature_state_value: {
-        type: 'integer' | 'string' | 'boolean'
-        value: string
-      }
-      multivariate_feature_state_values: {
-        multivariate_feature_option: number
-        percentage_allocation: number
-      }[]
-    }
+    body: ExperimentRolloutBody
   }
   deleteExperiment: { environmentId: string; experimentId: number }
   getExperiment: { environmentId: string; experimentId: number }

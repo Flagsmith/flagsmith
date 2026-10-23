@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import cast
+from typing import Any, cast
 
 import structlog
 from django.conf import settings
@@ -61,6 +61,9 @@ def seed_organisation_identities(organisation_id: int) -> None:
 
     Rows are versioned at scan start via `inserted_at`
     so writes arriving mid-scan win ReplacingMergeTree dedup over the seeded row.
+
+    Identities carrying no traits are skipped as they carry little to no value
+    for segment membership.
     """
     log = logger.bind(organisation__id=organisation_id)
     if not settings.CLICKHOUSE_ENABLED:
@@ -104,7 +107,10 @@ def seed_organisation_identities(organisation_id: int) -> None:
                                     scan_started_at,
                                 )
                                 for doc in batch
+                                if not _is_empty_identity(doc)
                             ]
+                            if not rows:
+                                continue
                             # Django's CursorWrapper stub forbids dicts in
                             # the params sequence; clickhouse-driver accepts
                             # them as JSON-column payloads.
@@ -269,3 +275,10 @@ def refresh_project_segment_counts(project_id: int) -> None:
             membership_counts__count=len(membership_counts),
             stale_counts__count=stale_deleted,
         )
+
+
+def _is_empty_identity(identity_document: dict[str, Any]) -> bool:
+    return not (
+        identity_document.get("identity_traits")
+        or identity_document.get("system_traits")
+    )

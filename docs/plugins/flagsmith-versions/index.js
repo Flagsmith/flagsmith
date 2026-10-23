@@ -16,10 +16,12 @@ const fallback = (value) => (promise) => {
 };
 
 const fetchMavenVersions = async ({ groupId, artifactId }) => {
-    const data = await fetchJSON(
-        `https://central.sonatype.com/solrsearch/select?q=g:${groupId}+AND+a:${artifactId}&wt=json&core=gav`,
+    const response = await fetch(
+        `https://repo1.maven.org/maven2/${groupId.replaceAll('.', '/')}/${artifactId}/maven-metadata.xml`,
     );
-    return data.response.docs.map((doc) => doc.v);
+    if (!response.ok) throw new Error(await response.text());
+    const xml = await response.text();
+    return [...xml.matchAll(/<version>([^<]+)<\/version>/g)].map((match) => match[1]);
 };
 
 const fetchJavaVersions = async () =>
@@ -88,7 +90,7 @@ export default async function fetchFlagsmithVersions(context, options) {
             const [js, nodejs, java, android, swiftpm, cocoapods, dotnet, rust, elixir, flutter] = await Promise.all(
                 [
                     fetchNpmVersions('@flagsmith/flagsmith'),
-                    fetchNpmVersions('flagsmith-nodejs'),
+                    fetchNpmVersions('@flagsmith/nodejs'),
                     fetchJavaVersions(),
                     fetchAndroidVersions(),
                     fetchSwiftPMVersions(),
