@@ -1,4 +1,3 @@
-import sys
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -22,25 +21,20 @@ def mock_cursor() -> MagicMock:
 def mock_open_clickhouse_cursor(
     mocker: MockerFixture, mock_cursor: MagicMock
 ) -> MagicMock:
-    mock = mocker.patch("segment_membership.services.open_clickhouse_cursor")
-    mock.return_value.__enter__.return_value = mock_cursor
-    cmd_module = sys.modules.get(
-        "segment_membership.management.commands.tombstone_traitless_identities"
+    mock = mocker.patch(
+        "segment_membership.management.commands."
+        "tombstone_traitless_identities.open_clickhouse_cursor"
     )
-    if cmd_module and hasattr(cmd_module, "open_clickhouse_cursor"):
-        mocker.patch.object(cmd_module, "open_clickhouse_cursor", mock)
+    mock.return_value.__enter__.return_value = mock_cursor
     return mock
 
 
 @pytest.fixture
 def mock_enqueue_membership_refresh(mocker: MockerFixture) -> MagicMock:
-    mock = mocker.patch("segment_membership.services.enqueue_membership_refresh")
-    cmd_module = sys.modules.get(
-        "segment_membership.management.commands.tombstone_traitless_identities"
+    return mocker.patch(
+        "segment_membership.management.commands."
+        "tombstone_traitless_identities.enqueue_membership_refresh"
     )
-    if cmd_module and hasattr(cmd_module, "enqueue_membership_refresh"):
-        mocker.patch.object(cmd_module, "enqueue_membership_refresh", mock)
-    return mock
 
 
 @pytest.fixture
@@ -200,6 +194,10 @@ def test_tombstone_traitless_identities__dry_run__queries_count_and_skips_insert
     assert (
         f"[DRY RUN] Environment {mock_environment.id} ({mock_environment.api_key}): "
         f"5 traitless identities found." in captured.out
+    )
+    assert (
+        "Summary: 1 environments scanned, 5 identities would be tombstoned, 0 projects queued for recount."
+        in captured.out
     )
 
 

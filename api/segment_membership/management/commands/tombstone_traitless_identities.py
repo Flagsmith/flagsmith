@@ -104,8 +104,8 @@ class Command(BaseCommand):
                     log_comment=log_comment,
                     dry_run=dry_run,
                 )
-                if tombstoned_count > 0:
-                    tombstoned_total += tombstoned_count
+                tombstoned_total += tombstoned_count
+                if tombstoned_count > 0 and not dry_run:
                     modified_projects.add(environment.project)
             except Exception as e:
                 failed_environments.append(environment.id)
@@ -130,9 +130,10 @@ class Command(BaseCommand):
                     f"Enqueued segment membership refresh for project {project.id}."
                 )
 
+        verb = "would be tombstoned" if dry_run else "tombstoned"
         self.stdout.write(
             f"Summary: {scanned_environments} environments scanned, "
-            f"{tombstoned_total} identities tombstoned, "
+            f"{tombstoned_total} identities {verb}, "
             f"{queued_projects_count} projects queued for recount."
         )
 
@@ -186,17 +187,17 @@ class Command(BaseCommand):
             cursor.execute(_SIZING_SQL, {"env_key": env_key})
             row = cursor.fetchone()
             traitless_count: int = row[0] if row else 0
-            if traitless_count > 0:
-                if dry_run:
-                    self.stdout.write(
-                        f"[DRY RUN] Environment {environment.id} ({env_key}): "
-                        f"{traitless_count} traitless identities found."
-                    )
-                else:
-                    self.stdout.write(
-                        f"Environment {environment.id} ({env_key}): "
-                        f"Tombstoning {traitless_count} traitless identities."
-                    )
-                    cursor.execute(_TOMBSTONE_SQL, {"env_key": env_key})
-                    return traitless_count
-        return 0
+            if traitless_count == 0:
+                return 0
+            if dry_run:
+                self.stdout.write(
+                    f"[DRY RUN] Environment {environment.id} ({env_key}): "
+                    f"{traitless_count} traitless identities found."
+                )
+                return traitless_count
+            self.stdout.write(
+                f"Environment {environment.id} ({env_key}): "
+                f"Tombstoning {traitless_count} traitless identities."
+            )
+            cursor.execute(_TOMBSTONE_SQL, {"env_key": env_key})
+            return traitless_count
