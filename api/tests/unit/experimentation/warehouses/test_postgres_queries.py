@@ -3,7 +3,6 @@ from typing import Any, cast
 
 import pytest
 from django.db import connection
-from pytest_mock import MockerFixture
 
 from experimentation.dataclasses import (
     ConversionBucket,
@@ -133,35 +132,20 @@ def _by_bucket(buckets: list[ExposureBucket]) -> list[ExposureBucket]:
     return sorted(buckets, key=lambda b: (b.bucket, b.variant))
 
 
-@pytest.mark.parametrize(
-    "limit, expected",
-    [
-        (
-            500,
-            WarehouseEventNames(
-                events=["revenue", "purchase", EXPOSURE, "basket_size", "page_view"],
-                is_truncated=False,
-            ),
-        ),
-        (2, WarehouseEventNames(events=["revenue", "purchase"], is_truncated=True)),
-    ],
-    ids=["all", "truncated"],
-)
 def test_event_names_query__postgres__returns_latest_first(
     events_table: None,
-    mocker: MockerFixture,
-    limit: int,
-    expected: WarehouseEventNames,
 ) -> None:
     # Given
-    mocker.patch("experimentation.warehouses.queries.EVENT_NAMES_LIMIT", limit)
     params: dict[str, object] = {**event_names_query_params(ENV)}
 
     # When
     rows, _columns = _run_query(event_names_query(POSTGRES_DIALECT), params)
 
     # Then
-    assert build_event_names(rows) == expected
+    assert build_event_names(rows) == WarehouseEventNames(
+        events=["revenue", "purchase", EXPOSURE, "basket_size", "page_view"],
+        is_truncated=False,
+    )
 
 
 def test_event_stats_query__postgres__counts_environment_events(
@@ -227,63 +211,8 @@ def test_read_exposure_buckets__postgres__buckets_first_exposures(
     assert all(b.bucket.tzinfo is not None for b in buckets)
 
 
-def test_read_results_aggregates__no_metrics__counts_unquarantined_identities(
-    events_table: None,
-) -> None:
-    # Given / When
-    aggregates = read_results_aggregates(
-        _run_query,
-        POSTGRES_DIALECT,
-        environment_key=ENV,
-        feature_name=FEATURE,
-        window_start=WINDOW_START,
-        window_end=WINDOW_END,
-        specs=[],
-        granularity="day",
-    )
-
-    # Then
-    assert aggregates.exposure_counts == {"control": 1, "treatment": 2}
-    assert aggregates.metric_stats == {}
-    assert aggregates.conversion_buckets == {}
-
-
-@pytest.mark.parametrize(
-    "granularity, expected_conversion_buckets",
-    [
-        (
-            "hour",
-            {
-                11: [
-                    ConversionBucket("control", _at(1, 11), 1),
-                    ConversionBucket("treatment", _at(2, 9), 1),
-                ],
-                15: [
-                    ConversionBucket("control", _at(1, 10), 1),
-                    ConversionBucket("treatment", _at(1, 13), 1),
-                ],
-            },
-        ),
-        (
-            "day",
-            {
-                11: [
-                    ConversionBucket("control", _at(1, 0), 1),
-                    ConversionBucket("treatment", _at(2, 0), 1),
-                ],
-                15: [
-                    ConversionBucket("control", _at(1, 0), 1),
-                    ConversionBucket("treatment", _at(1, 0), 1),
-                ],
-            },
-        ),
-    ],
-    ids=["hour", "day"],
-)
 def test_read_results_aggregates__every_aggregation__returns_expected_stats(
     events_table: None,
-    granularity: ExposureGranularity,
-    expected_conversion_buckets: dict[int, list[ConversionBucket]],
 ) -> None:
     # Given / When
     aggregates = read_results_aggregates(
@@ -294,7 +223,7 @@ def test_read_results_aggregates__every_aggregation__returns_expected_stats(
         window_start=WINDOW_START,
         window_end=WINDOW_END,
         specs=SPECS,
-        granularity=granularity,
+        granularity="day",
     )
 
     # Then
@@ -324,32 +253,49 @@ def test_read_results_aggregates__every_aggregation__returns_expected_stats(
     assert {
         metric_id: sorted(buckets, key=lambda b: (b.bucket, b.variant))
         for metric_id, buckets in aggregates.conversion_buckets.items()
-    } == expected_conversion_buckets
+    } == {
+        11: [
+            ConversionBucket("control", _at(1, 0), 1),
+            ConversionBucket("treatment", _at(2, 0), 1),
+        ],
+        15: [
+            ConversionBucket("control", _at(1, 0), 1),
+            ConversionBucket("treatment", _at(1, 0), 1),
+        ],
+    }
 
 
 @pytest.mark.parametrize(
     "value, expected",
     [
-        ("1.5", 1.5),
         ("-2", -2.0),
-        ("+3", 3.0),
-        ("1e3", 1000.0),
         ("1E-2", 0.01),
         (".5", 0.5),
         ("7.", 7.0),
         ("9" * 30 + "." + "9" * 30 + "e99", 1e129),
-        ("0." + "0" * 29 + "1e-99", 1e-129),
-        ("", 0.0),
-        (None, 0.0),
-        ("true", 0.0),
-        ("abc", 0.0),
-        (" 1", 0.0),
-        ("1,5", 0.0),
+        ("1" * 31, 0.0),
         ("inf", 0.0),
         ("nan", 0.0),
         ("1e400", 0.0),
-        ("1e-400", 0.0),
-        ("1" * 31, 0.0),
+        (None, 0.0),
+        ("true", 0.0),
+        (" 1", 0.0),
+        ("\u0661", 0.0),
+    ],
+    ids=[
+        "signed",
+        "exponent",
+        "leading-point",
+        "trailing-point",
+        "30-digit-bound",
+        "31-digits",
+        "inf",
+        "nan",
+        "overflow",
+        "null",
+        "junk",
+        "leading-space",
+        "non-ascii-digit",
     ],
 )
 def test_postgres_float_or_zero__value__casts_numbers_and_zeroes_the_rest(

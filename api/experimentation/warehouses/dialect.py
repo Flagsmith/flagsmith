@@ -154,15 +154,20 @@ class DatabricksDialect:
 
 DATABRICKS_DIALECT = DatabricksDialect()
 
-# Bounded digits keep the cast in double range, so outsized values read as zero.
 _POSTGRES_NUMERIC_PATTERN = (
-    r"^[-+]?(\d{1,30}(\.\d{0,30})?|\.\d{1,30})([eE][-+]?\d{1,2})?$"
+    "^[-+]?([0-9]{1,30}([.][0-9]{0,30})?|[.][0-9]{1,30})([eE][-+]?[0-9]{1,2})?$"
 )
+
+_POSTGRES_BUCKET_UNITS: dict[ExposureGranularity, str] = {
+    "hour": "hour",
+    "day": "day",
+}
 
 
 class PostgresDialect:
-    """Expects ``timestamptz`` columns, so buckets stay UTC whatever the session
-    TimeZone. ``float_or_zero`` reads 'inf', 'nan' and out-of-range values as zero."""
+    """Timestamp columns must be TIMESTAMPTZ. ``float_or_zero`` casts up to 30
+    integer and 30 fractional digits with a 2-digit exponent (about 1e129 at
+    most); anything else, including inf and nan, reads as 0."""
 
     def param(self, name: str) -> str:
         return f"%({name})s"
@@ -187,9 +192,8 @@ class PostgresDialect:
         return f"min({expr})"
 
     def time_bucket(self, expr: str, granularity: ExposureGranularity) -> str:
-        return (
-            f"date_trunc('{granularity}', {expr} AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'"
-        )
+        unit = _POSTGRES_BUCKET_UNITS[granularity]
+        return f"date_trunc('{unit}', {expr} AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'"
 
     def float_or_zero(self, expr: str) -> str:
         return (
