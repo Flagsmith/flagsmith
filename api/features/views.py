@@ -7,7 +7,6 @@ from common.core.utils import is_database_replica_setup, using_database_replica
 from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from django.core.cache import caches
-from django.db import transaction
 from django.db.models import (
     BooleanField,
     Case,
@@ -51,6 +50,7 @@ from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from app_analytics.mappers import map_request_to_sdk_label
 from app_analytics.throttles import InfluxQueryThrottle
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
+from core.dataclasses import AuthorData
 from core.request_origin import RequestOrigin
 from edge_api.identities.edge_identity_service import (
     get_overridden_feature_ids_for_edge_identity,
@@ -76,17 +76,28 @@ from features.dependencies.exceptions import (
     DependencyConflictDetail,
     FeatureIsReferencedDetail,
 )
-from features.dependencies.services import validate_segment_flag_dependencies
 from features.feature_lifecycle.services import (
     annotate_feature_queryset_with_lifecycle_stage,
-    is_feature_lifecycle_enabled,
+)
+from features.feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+    exceeds_segment_override_limit,
+)
+from features.feature_segments.services import (
+    get_next_segment_override_priority,
+    get_segment_override,
+    is_segment_override_unchanged,
+    write_segment_override,
+    writes_live_segment_override,
 )
 from features.services import delete_feature
+from features.types import LegacyFeatureStateData
 from features.value_types import BOOLEAN, INTEGER, STRING
 from projects.code_references.services import (
     annotate_feature_queryset_with_code_references_summary,
 )
 from projects.models import Project
+from segments.services import check_segment_is_not_system
 from users.models import FFAdminUser, UserPermissionGroup
 
 from .constants import INTERSECTION, UNION
@@ -306,12 +317,11 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         if environment_id:
             self.environment = Environment.objects.get(id=environment_id)
-            if is_feature_lifecycle_enabled(project.organisation):
-                queryset = annotate_feature_queryset_with_lifecycle_stage(
-                    queryset, self.environment
-                )
-                if lifecycle_stage := query_data.get("lifecycle_stage"):
-                    queryset = queryset.filter(lifecycle_stage=lifecycle_stage)
+            queryset = annotate_feature_queryset_with_lifecycle_stage(
+                queryset, self.environment
+            )
+            if lifecycle_stage := query_data.get("lifecycle_stage"):
+                queryset = queryset.filter(lifecycle_stage=lifecycle_stage)
             page = self.paginate_queryset(queryset)
             self.feature_ids = [feature.id for feature in page]
             feature_states_query = Q(
@@ -781,6 +791,8 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = self.get_serializer(data=data)
 
         if serializer.is_valid(raise_exception=True):
+            if feature_segment := serializer.validated_data.get("feature_segment"):
+                check_segment_is_not_system(feature_segment.segment)
             feature_state = serializer.save()
             headers = self.get_success_headers(serializer.data)
 
@@ -940,6 +952,7 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
         return self.all(request, *args, **kwargs)  # type: ignore[no-any-return]
 
 
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
 @method_decorator(
     name="list",
     decorator=extend_schema(
@@ -966,7 +979,7 @@ class SimpleFeatureStateViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.ListModelMixin,
-    viewsets.GenericViewSet,  # type: ignore[type-arg]
+    viewsets.GenericViewSet[FeatureState],
 ):
     serializer_class = WritableNestedFeatureStateSerializer
     permission_classes = [FeatureStatePermissions]
@@ -981,10 +994,51 @@ class SimpleFeatureStateViewSet(
                 environment=environment,
                 is_identity_override=bool(request.data.get("identity")),
             )
-        return super().create(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if feature_segment := serializer.validated_data.get("feature_segment"):
+            check_segment_is_not_system(feature_segment.segment)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        require_direct_state_write_for_state(self.get_object())
+        feature_state = self.get_object()
+        require_direct_state_write_for_state(feature_state)
+        if feature_segment := feature_state.feature_segment:
+            serializer = self.get_serializer(
+                feature_state,
+                data=request.data,
+                partial=kwargs.get("partial", False),
+            )
+            serializer.is_valid(raise_exception=True)
+            feature_state_data = typing.cast(
+                LegacyFeatureStateData, serializer.validated_data
+            )
+            if (
+                writes_live_segment_override(feature_state_data)
+                and get_segment_override(
+                    environment=feature_segment.environment,
+                    feature=feature_segment.feature,
+                    segment_id=feature_segment.segment_id,
+                )
+                == feature_state
+            ):
+                # The dashboard writes every override of the flags it saves.
+                if feature_segment.segment.is_system_segment and (
+                    is_segment_override_unchanged(
+                        feature_segment, feature_state, feature_state_data
+                    )
+                ):
+                    return Response(self.get_serializer(feature_state).data)
+                feature_state = write_segment_override(
+                    environment=feature_segment.environment,
+                    feature=feature_segment.feature,
+                    segment_id=feature_segment.segment_id,
+                    feature_state_data=feature_state_data,
+                    author=AuthorData.from_request(request),
+                )
+                return Response(self.get_serializer(feature_state).data)
+            check_segment_is_not_system(feature_segment.segment)
         return super().update(request, *args, **kwargs)
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
@@ -1252,8 +1306,37 @@ def create_segment_override(  # type: ignore[no-untyped-def]
         data=request.data, context={"environment": environment, "feature": feature}
     )
     serializer.is_valid(raise_exception=True)
-    with transaction.atomic():
-        feature_state = serializer.save(environment=environment, feature=feature)  # type: ignore[no-untyped-call]
-        if feature_segment := feature_state.feature_segment:
-            validate_segment_flag_dependencies(feature_segment.segment)
-    return Response(serializer.data, status=201)
+
+    if not (feature_segment_data := serializer.validated_data.get("feature_segment")):
+        raise ValidationError({"feature_segment": ["This field is required."]})
+
+    segment = feature_segment_data["segment"]
+    priority = feature_segment_data.get("priority")
+    feature_state_data = typing.cast(
+        LegacyFeatureStateData, dict(serializer.validated_data)
+    )
+    check_segment_is_not_system(segment)
+    if get_segment_override(
+        environment=environment, feature=feature, segment_id=segment.id
+    ):
+        raise ValidationError("The flag is already overridden for this segment.")
+    feature_state_data.setdefault("enabled", False)
+    if exceeds_segment_override_limit(environment):
+        raise ValidationError({"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE})
+    if priority is None:
+        priority = get_next_segment_override_priority(
+            environment=environment, feature=feature
+        )
+
+    feature_state = write_segment_override(
+        environment=environment,
+        feature=feature,
+        segment_id=segment.id,
+        feature_state_data=feature_state_data,
+        author=AuthorData.from_request(request),
+        priority=priority,
+    )
+    return Response(
+        CustomCreateSegmentOverrideFeatureStateSerializer(feature_state).data,
+        status=201,
+    )

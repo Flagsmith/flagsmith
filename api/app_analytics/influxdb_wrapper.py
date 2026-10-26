@@ -120,6 +120,7 @@ class InfluxDBWrapper:
         filters: str = "|> filter(fn:(r) => r._measurement == 'api_call')",
         extra: str = "",
         bucket: str | None = None,
+        return_empty_on_error: bool = True,
     ) -> list[FluxTable]:
         if bucket is None:
             # NOTE: Legacy default
@@ -152,7 +153,9 @@ class InfluxDBWrapper:
             return query_api.query(org=settings.INFLUXDB_ORG, query=query)
         except HTTPError as e:
             capture_exception(e)
-            return []
+            if return_empty_on_error:
+                return []
+            raise
 
 
 def get_events_for_organisation(

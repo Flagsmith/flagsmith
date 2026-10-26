@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import datetime
+import itertools
 import logging
 import typing
 import uuid
@@ -27,6 +28,9 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 )
 from ordered_model.models import OrderedModelBase  # type: ignore[import-untyped]
 from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
+from simple_history.utils import (  # type: ignore[import-untyped]
+    bulk_update_with_history,
+)
 
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
@@ -152,7 +156,7 @@ class Feature(  # type: ignore[django-manager-missing]
             and self.deleted_at
         ):
             call_github_task(
-                organisation_id=self.project.organisation_id,  # type: ignore[arg-type]
+                organisation_id=self.project.organisation_id,
                 type=GitHubEventType.FLAG_DELETED.value,
                 feature=self,
                 segment_name=None,
@@ -234,16 +238,6 @@ class Feature(  # type: ignore[django-manager-missing]
 
     def _get_project(self) -> typing.Optional["Project"]:
         return self.project
-
-
-def get_next_segment_priority(feature):  # type: ignore[no-untyped-def]
-    feature_segments = FeatureSegment.objects.filter(feature=feature).order_by(
-        "-priority"
-    )
-    if feature_segments.count() == 0:
-        return 1
-    else:
-        return feature_segments.first().priority + 1
 
 
 class FeatureSegment(
@@ -360,7 +354,7 @@ class FeatureSegment(
         """
         feature_segments = cls.objects.filter(
             id__in=[pair[0] for pair in new_feature_segment_id_priorities]
-        )
+        ).order_by("priority", "id")
 
         existing_feature_segment_id_priority_pairs = cls.to_id_priority_tuple_pairs(
             feature_segments
@@ -378,9 +372,31 @@ class FeatureSegment(
 
         id_priority_dict = dict(new_feature_segment_id_priorities)
 
+        # Since this method doesn't enforce that the caller sends an exhaustive list
+        # covering all FeatureSegments that currently exist, we ensure that the
+        # given priorities are respected, and adjust any existing priorities that
+        # might create duplicates.
+        reference = feature_segments[0]
+        free_priorities = (
+            priority
+            for priority in itertools.count()
+            if priority not in id_priority_dict.values()
+        )
+        changed = []
+        for fs in cls.objects.filter(
+            feature_id=reference.feature_id,
+            environment_id=reference.environment_id,
+            environment_feature_version_id=reference.environment_feature_version_id,
+        ).order_by("priority", "id"):
+            priority = id_priority_dict.get(fs.id)
+            if priority is None:
+                priority = next(free_priorities)
+            if fs.priority != priority:
+                fs.priority = priority
+                changed.append(fs)
+        bulk_update_with_history(changed, cls, ["priority"])
         for fs in feature_segments:
-            new_priority = id_priority_dict[fs.id]
-            fs.to(new_priority)
+            fs.priority = id_priority_dict[fs.id]
 
         request = getattr(HistoricalRecords.thread, "request", None)
         if request:
@@ -450,7 +466,7 @@ class FeatureSegment(
             and self.feature.project.organisation.github_config.exists()
         ):
             call_github_task(
-                self.feature.project.organisation_id,  # type: ignore[arg-type]
+                self.feature.project.organisation_id,
                 GitHubEventType.SEGMENT_OVERRIDE_DELETED.value,
                 self.feature,
                 self.segment.name,
@@ -776,6 +792,7 @@ class FeatureState(
             FeatureState.objects.get_live_feature_states(
                 environment=self.environment,  # type: ignore[arg-type]
                 additional_filters=lineage_filter,
+                include_superseded=True,
                 feature_id=self.feature_id,
                 identity__isnull=True,
             )
@@ -1064,16 +1081,12 @@ class FeatureState(
 
     def get_environment_default(self) -> typing.Optional["FeatureState"]:
         if self.feature_segment_id or self.identity_id:
-            return (
-                self.__class__.objects.get_live_feature_states(
-                    environment=self.environment,  # type: ignore[arg-type]
-                    feature_id=self.feature_id,
-                    feature_segment_id__isnull=True,
-                    identity_id__isnull=True,
-                )
-                .order_by("-version", "-environment_feature_version__live_from")
-                .first()
-            )
+            return FeatureState.objects.get_live_feature_states(
+                environment=self.environment,  # type: ignore[arg-type]
+                feature_id=self.feature_id,
+                feature_segment_id__isnull=True,
+                identity_id__isnull=True,
+            ).first()
 
         return None
 

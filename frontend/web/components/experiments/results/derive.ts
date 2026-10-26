@@ -1,6 +1,9 @@
 import moment from 'moment'
 import { ChartDataPoint, buildChartColorMap } from 'components/charts'
 import {
+  colorIconDanger,
+  colorIconSecondary,
+  colorIconSuccess,
   colorTextDanger,
   colorTextSecondary,
   colorTextSuccess,
@@ -133,12 +136,21 @@ export const isLiftFavourable = (
   direction: MetricDirection,
 ): boolean => (direction === 'down' ? lift < 0 : lift > 0)
 
+export type LiftColourRole = 'fill' | 'text'
+
 export const getLiftColour = (
   lift: number,
   direction: MetricDirection,
+  role: LiftColourRole,
 ): string => {
-  if (direction === 'informational') return colorTextSecondary
-  return isLiftFavourable(lift, direction) ? colorTextSuccess : colorTextDanger
+  const isText = role === 'text'
+  if (direction === 'informational') {
+    return isText ? colorTextSecondary : colorIconSecondary
+  }
+  if (isLiftFavourable(lift, direction)) {
+    return isText ? colorTextSuccess : colorIconSuccess
+  }
+  return isText ? colorTextDanger : colorIconDanger
 }
 
 // Extreme rounded probabilities would read as certainties — hedge them.

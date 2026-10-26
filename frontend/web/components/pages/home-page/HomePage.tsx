@@ -37,6 +37,7 @@ import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import { useUTMs } from 'common/useUTMs'
 import useSignupExperiment from 'common/useSignupExperiment'
+import { storageGet } from 'common/safeLocalStorage'
 
 type LoginLocationState = { isGettingStarted?: boolean } | undefined
 type EmailFieldError = string | string[]
@@ -657,6 +658,9 @@ const HomePage: React.FC = () => {
                                   document.location.href.indexOf('invite') !==
                                   -1
                                 setSubmittedEmail(email)
+                                const signupAnonymousId =
+                                  signupVariant &&
+                                  storageGet('signup_anonymous_id')
                                 register(
                                   {
                                     email,
@@ -666,6 +670,9 @@ const HomePage: React.FC = () => {
                                       marketingConsentGiven,
                                     password,
                                     ...(utms && { utm_data: utms }),
+                                    ...(signupAnonymousId && {
+                                      signup_anonymous_id: signupAnonymousId,
+                                    }),
                                   },
                                   isInvite,
                                 )

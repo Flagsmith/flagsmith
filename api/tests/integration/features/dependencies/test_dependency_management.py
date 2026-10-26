@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest import mock
 
 import pytest
 from common.environments.permissions import UPDATE_FEATURE_STATE
@@ -34,7 +35,7 @@ pytestmark = pytest.mark.usefixtures("versioned_environment")
     ],
 )
 def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependency(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
     organisation: int,
@@ -47,7 +48,7 @@ def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependenc
     prerequisite = Feature.objects.create(name=prerequisite_name, project_id=project)
 
     # When
-    response = admin_client.post(
+    response = admin_client_new.post(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
     )
 
@@ -91,7 +92,7 @@ def test_add_feature_dependency__valid_prerequisite__responds_201_with_dependenc
             "condition_json_path": "$[0].conditions[0]",
         }
     ]
-    flag_response = admin_client.get(
+    flag_response = admin_client_new.get(
         f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
     )
     assert flag_response.json()["segment_overrides"] == [
@@ -438,6 +439,67 @@ def test_add_feature_dependency__feature_has_another_override__responds_201_reor
         feature__name="checkout",
         prerequisite_feature__name="payments",
     )
+
+
+def test_add_feature_dependency__feature_segment_without_override__responds_201_putting_dependency_first(
+    admin_client: APIClient,
+    create_segment_override: CreateSegmentOverrideFixture,
+    environment: int,
+    environment_api_key: str,
+    project: int,
+    segment: int,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=feature.id,
+        segment_id=segment,
+        enabled=True,
+        priority=0,
+    )
+    # The Terraform provider and Go client create feature segments first, and
+    # their overrides after.
+    other_segment = Segment.objects.create(name="other", project_id=project)
+    feature_segment_response = admin_client.post(
+        "/api/v1/features/feature-segments/",
+        {
+            "feature": feature.id,
+            "segment": other_segment.id,
+            "environment": environment,
+        },
+        format="json",
+    )
+    assert feature_segment_response.status_code == 201
+
+    # When
+    response = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    )
+
+    # Then
+    assert response.status_code == 201
+    system_segment = Segment.objects.get(feature=feature, is_system_segment=True)
+    flag_response = admin_client.get(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
+    )
+    assert flag_response.json()["segment_overrides"] == [
+        {
+            "segment": {"id": system_segment.id},
+            "priority": 0,
+            "enabled": False,
+            "value": None,
+            "variants": [],
+        },
+        {
+            "segment": {"id": segment},
+            "priority": 1,
+            "enabled": True,
+            "value": None,
+            "variants": [],
+        },
+    ]
 
 
 def test_add_feature_dependency__prerequisite_already_has_prerequisite__responds_400_with_error(
@@ -843,7 +905,7 @@ def test_add_feature_dependency__missing_environment_permission__responds_403_wi
 
 
 def test_delete_feature_dependency__dependency_exists__responds_204_removing_override(
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     environment_api_key: str,
     log: StructuredLogCapture,
     organisation: int,
@@ -853,15 +915,15 @@ def test_delete_feature_dependency__dependency_exists__responds_204_removing_ove
     feature = Feature.objects.create(name="checkout", project_id=project)
     prerequisite = Feature.objects.create(name="payments", project_id=project)
     other_prerequisite = Feature.objects.create(name="inventory", project_id=project)
-    segment_id = admin_client.post(
+    segment_id = admin_client_new.post(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
     ).json()["segment"]["id"]
-    other_segment_id = admin_client.post(
+    other_segment_id = admin_client_new.post(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{other_prerequisite.id}/",
     ).json()["segment"]["id"]
 
     # When
-    response = admin_client.delete(
+    response = admin_client_new.delete(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
     )
 
@@ -878,7 +940,7 @@ def test_delete_feature_dependency__dependency_exists__responds_204_removing_ove
         {"segment": segment_id, "prerequisite_feature": prerequisite.id},
         {"segment": other_segment_id, "prerequisite_feature": other_prerequisite.id},
     ]
-    flag_response = admin_client.get(
+    flag_response = admin_client_new.get(
         f"/api/__future__/environments/{environment_api_key}/features/{feature.id}/",
     )
     assert flag_response.json()["segment_overrides"] == [
@@ -890,7 +952,7 @@ def test_delete_feature_dependency__dependency_exists__responds_204_removing_ove
             "variants": [],
         }
     ]
-    dependencies_response = admin_client.get(
+    dependencies_response = admin_client_new.get(
         f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/",
     )
     assert [
@@ -1768,4 +1830,64 @@ def test_either_list__missing_environment_permission__responds_404_with_error(
     assert response.json() == {
         "code": "environment_not_found",
         "message": f"Environment key '{environment_api_key}' does not exist.",
+    }
+
+
+def test_list_feature_segments__dependency_override__responds_with_system_segment_owner(
+    admin_client: APIClient,
+    create_segment_override: CreateSegmentOverrideFixture,
+    environment: int,
+    environment_api_key: str,
+    project: int,
+    segment: int,
+    segment_name: str,
+) -> None:
+    # Given
+    feature = Feature.objects.create(name="checkout", project_id=project)
+    prerequisite = Feature.objects.create(name="payments", project_id=project)
+    create_segment_override(
+        environment_api_key=environment_api_key,
+        feature_id=feature.id,
+        segment_id=segment,
+    )
+    system_segment_id = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{feature.id}/dependencies/{prerequisite.id}/",
+    ).json()["segment"]["id"]
+
+    # When
+    response = admin_client.get(
+        "/api/v1/features/feature-segments/",
+        data={"environment": environment, "feature": feature.id},
+    )
+
+    # Then
+    assert response.status_code == 200
+    assert response.json() == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "id": mock.ANY,
+                "uuid": mock.ANY,
+                "segment": system_segment_id,
+                "priority": 0,
+                "environment": environment,
+                "segment_name": "checkout-depends-on-payments",
+                "is_feature_specific": True,
+                "is_system_segment": True,
+                "segment_managed_by": "dependency",
+            },
+            {
+                "id": mock.ANY,
+                "uuid": mock.ANY,
+                "segment": segment,
+                "priority": 1,
+                "environment": environment,
+                "segment_name": segment_name,
+                "is_feature_specific": False,
+                "is_system_segment": False,
+                "segment_managed_by": "",
+            },
+        ],
     }

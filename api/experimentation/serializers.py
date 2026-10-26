@@ -32,16 +32,19 @@ from experimentation.services import (
     get_experiment_rollout,
 )
 from experimentation.types import MetricExperimentResult
-from experimentation.warehouse_validation import validate_credentials
+from experimentation.warehouse_validation import (
+    validate_credentials,
+    validate_warehouse_type_allowed,
+)
 from experimentation.warehouses.registry import get_warehouse
 from features.feature_states.serializers import (
     FeatureValueSerializer,
     MultivariateValueSerializer,
 )
 from features.feature_types import MULTIVARIATE
+from features.future.types import Variant
 from features.models import Feature
 from features.multivariate.serializers import NestedMultivariateFeatureOptionSerializer
-from features.versioning.dataclasses import MultivariateValueChangeSet
 
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -79,6 +82,11 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
             and getattr(self.instance, "warehouse_type", "") != warehouse_type
         )
 
+        validate_warehouse_type_allowed(
+            warehouse_type,
+            self.instance,  # type: ignore[arg-type]
+            self.context.get("environment"),
+        )
         validate_credentials(attrs, warehouse_type, self.instance)  # type: ignore[arg-type]
 
         if "config" not in attrs and self.instance is not None and not type_changed:
@@ -249,7 +257,7 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
     )
     feature_state_value = FeatureValueSerializer(required=True)
     multivariate_feature_state_values = MultivariateValueSerializer(
-        many=True, required=False
+        many=True, required=True
     )
     # Omitted leaves the stored audience unchanged; an empty segment_ids list
     # targets every identity in the environment.
@@ -264,12 +272,12 @@ class ExperimentRolloutSerializer(serializers.Serializer):  # type: ignore[type-
             rollout_percentage=data["rollout_percentage"],
             feature_state_value=value["value"],
             value_type=value["type"],
-            multivariate_values=[
-                MultivariateValueChangeSet(
-                    multivariate_feature_option_id=mv["multivariate_feature_option"],
-                    percentage_allocation=mv["percentage_allocation"],
+            variants=[
+                Variant(
+                    id=mv["multivariate_feature_option"],
+                    weight=mv["percentage_allocation"],
                 )
-                for mv in data.get("multivariate_feature_state_values", [])
+                for mv in data["multivariate_feature_state_values"]
             ],
             author=AuthorData.from_request(request),
             audience=(
@@ -340,6 +348,10 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
             raise serializers.ValidationError(
                 {"metrics": "Cannot change the metrics of an existing experiment."}
             )
+        if self.instance is None and "experiment_rollout" not in attrs:
+            raise serializers.ValidationError(
+                {"experiment_rollout": "This field is required."}
+            )
         if self.instance is not None and "experiment_rollout" in attrs:
             raise serializers.ValidationError(
                 {
@@ -361,7 +373,7 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
 
     def create(self, validated_data: dict[str, Any]) -> Experiment:
         metrics: list[dict[str, Any]] = validated_data.pop("metrics", [])
-        rollout: dict[str, Any] | None = validated_data.pop("experiment_rollout", None)
+        rollout: dict[str, Any] = validated_data.pop("experiment_rollout")
         with transaction.atomic():
             experiment: Experiment = super().create(validated_data)
             ExperimentMetric.objects.bulk_create(
@@ -372,13 +384,10 @@ class ExperimentSerializer(serializers.ModelSerializer):  # type: ignore[type-ar
                 )
                 for entry in metrics
             )
-            if rollout is not None:
-                apply_experiment_rollout(
-                    experiment,
-                    ExperimentRolloutSerializer.to_spec(
-                        rollout, self.context["request"]
-                    ),
-                )
+            apply_experiment_rollout(
+                experiment,
+                ExperimentRolloutSerializer.to_spec(rollout, self.context["request"]),
+            )
         return experiment
 
 

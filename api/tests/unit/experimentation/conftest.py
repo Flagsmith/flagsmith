@@ -1,14 +1,21 @@
+import json
 from typing import Protocol
 
+import openfeature.api as openfeature_api
 import pytest
 from django.urls import reverse
 from django.utils import timezone
 from flag_engine.segments.constants import EQUAL
+from openfeature.provider.in_memory_provider import InMemoryFlag, InMemoryProvider
 from pytest_mock import MockerFixture
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
-from experimentation.dataclasses import AudienceSpec, RolloutSpec
+from experimentation.constants import WAREHOUSES_FLAG
+from experimentation.dataclasses import (
+    AudienceSpec,
+    RolloutSpec,
+)
 from experimentation.models import (
     Experiment,
     ExperimentStatus,
@@ -19,9 +26,10 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.services import apply_experiment_rollout
+from features.future.types import Variant
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
-from features.versioning.dataclasses import MultivariateValueChangeSet
+from integrations.flagsmith.client import DEFAULT_OPENFEATURE_DOMAIN
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
@@ -33,9 +41,26 @@ class RolloutSpecFactory(Protocol):
         *,
         rollout_percentage: float = ...,
         enabled: bool = ...,
-        multivariate_values: list[MultivariateValueChangeSet] | None = ...,
+        variants: list[Variant] | None = ...,
         audience: AudienceSpec | None = ...,
     ) -> RolloutSpec: ...
+
+
+class SetWarehousesFlagFixture(Protocol):
+    def __call__(self, value: dict[str, object] | str) -> None: ...
+
+
+@pytest.fixture()
+def set_warehouses_flag() -> SetWarehousesFlagFixture:
+    def _set_warehouses_flag(value: dict[str, object] | str) -> None:
+        raw = value if isinstance(value, str) else json.dumps(value)
+        flag = InMemoryFlag(variants={"value": raw}, default_variant="value")
+        openfeature_api.set_provider(
+            InMemoryProvider({WAREHOUSES_FLAG: flag}),
+            domain=DEFAULT_OPENFEATURE_DOMAIN,
+        )
+
+    return _set_warehouses_flag
 
 
 @pytest.fixture()
@@ -87,7 +112,7 @@ def experiment_with_rollout(
     multivariate_options: list[MultivariateFeatureOption],
     admin_user: FFAdminUser,
 ) -> Experiment:
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     apply_experiment_rollout(
         experiment,
         RolloutSpec(
@@ -95,9 +120,10 @@ def experiment_with_rollout(
             rollout_percentage=20.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -121,6 +147,27 @@ def clickhouse_connection(
             "secure": True,
         },
         credentials={"password": "hunter2"},
+    )
+    return connection
+
+
+@pytest.fixture()
+def databricks_connection(
+    environment: Environment,
+) -> WarehouseConnection:
+    connection: WarehouseConnection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.DATABRICKS,
+        name="Production Databricks",
+        config={
+            "host": "acme.cloud.databricks.com",
+            "workspace_id": "1234567890",
+            "region": "us-east-1",
+            "warehouse_id": "abc123",
+            "catalog": "main",
+            "schema": "flagsmith_exp",
+        },
+        credentials={"client_id": "sp-id", "client_secret": "sp-secret"},
     )
     return connection
 
@@ -151,12 +198,17 @@ def successful_delivery_status(
 
 
 @pytest.fixture()
-def rollout_spec(admin_user: FFAdminUser) -> RolloutSpecFactory:
+def rollout_spec(
+    admin_user: FFAdminUser,
+    multivariate_options: list[MultivariateFeatureOption],
+) -> RolloutSpecFactory:
+    """Make rollout specs, with every variant weighted 0 unless given."""
+
     def _make(
         *,
         rollout_percentage: float = 100.0,
         enabled: bool = True,
-        multivariate_values: list[MultivariateValueChangeSet] | None = None,
+        variants: list[Variant] | None = None,
         audience: AudienceSpec | None = None,
     ) -> RolloutSpec:
         return RolloutSpec(
@@ -164,7 +216,11 @@ def rollout_spec(admin_user: FFAdminUser) -> RolloutSpecFactory:
             rollout_percentage=rollout_percentage,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=multivariate_values or [],
+            variants=(
+                [{"id": option.id, "weight": 0.0} for option in multivariate_options]
+                if variants is None
+                else variants
+            ),
             author=AuthorData(user=admin_user),
             audience=audience,
         )

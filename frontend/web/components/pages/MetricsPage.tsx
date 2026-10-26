@@ -1,6 +1,7 @@
 import { ChangeEvent, FC, useEffect, useState } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import Utils from 'common/utils/utils'
+import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 import { useRouteContext } from 'components/providers/RouteContext'
 import {
   useCreateMetricMutation,
@@ -29,6 +30,7 @@ import './MetricsPage.scss'
 
 const WAREHOUSE_TYPE_LABEL: Record<WarehouseType, string> = {
   clickhouse: 'ClickHouse',
+  databricks: 'Databricks',
   flagsmith: 'Flagsmith',
   snowflake: 'Snowflake',
 }
@@ -47,7 +49,8 @@ const MetricsPage: FC = () => {
     useUpdateMetricMutation()
   const [deleteMetric] = useDeleteMetricMutation()
 
-  const isEnabled = Utils.getFlagsmithHasFeature('experiment_metrics')
+  const { enabled: isEnabled, isLoading: isLoadingFeature } =
+    useExperimentationEnabled()
   const params = new URLSearchParams(location.search)
   const isCreating = params.get('create') === 'true'
   const editParam = params.get('edit')
@@ -55,12 +58,12 @@ const MetricsPage: FC = () => {
     editParam && !isNaN(Number(editParam)) ? Number(editParam) : null
 
   useEffect(() => {
-    if (!isEnabled && environmentId && projectId) {
+    if (!isLoadingFeature && !isEnabled && environmentId && projectId) {
       history.replace(
         `/project/${projectId}/environment/${environmentId}/features`,
       )
     }
-  }, [isEnabled, environmentId, projectId, history])
+  }, [isLoadingFeature, isEnabled, environmentId, projectId, history])
 
   useEffect(() => {
     setPage(1)
@@ -99,14 +102,11 @@ const MetricsPage: FC = () => {
   const metrics = metricsData?.results
   const metricCount = metricsData?.count ?? 0
   const hasActiveSearch = !!search
-  const version =
-    Number(Utils.getFlagsmithValue('experiment_metrics')) ||
-    DEFAULT_METRIC_DEFINITION_VERSION
 
   const handleCreate = async (state: MetricFormState) => {
     try {
       await createMetric({
-        body: buildMetricPayload(state, version),
+        body: buildMetricPayload(state, DEFAULT_METRIC_DEFINITION_VERSION),
         environmentId,
       }).unwrap()
       toast('Metric created successfully')
@@ -119,7 +119,7 @@ const MetricsPage: FC = () => {
   const handleUpdate = (metric: Metric) => async (state: MetricFormState) => {
     try {
       await updateMetric({
-        body: buildMetricPayload(state, version),
+        body: buildMetricPayload(state, DEFAULT_METRIC_DEFINITION_VERSION),
         environmentId,
         metricId: metric.id,
       }).unwrap()

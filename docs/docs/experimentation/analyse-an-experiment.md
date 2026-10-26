@@ -5,9 +5,9 @@ sidebar_position: 6
 description: Read the results page (lift, credible intervals, win probability) and decide when to roll out a winner.
 ---
 
-:::info Enterprise beta
+:::info Beta
 
-Experimentation is in beta on **Enterprise** plans. [Get in touch](https://www.flagsmith.com/contact-us) to join.
+Experimentation is in beta.
 
 :::
 

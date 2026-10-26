@@ -5,7 +5,7 @@ from core.dataclasses import AuthorData
 from experimentation.stats import Inference, VariantStats
 from experimentation.types import ExposureGranularity
 from features.feature_states.models import FeatureValueType
-from features.versioning.dataclasses import MultivariateValueChangeSet
+from features.future.types import Variant
 
 
 @dataclass(frozen=True)
@@ -20,7 +20,7 @@ class RolloutSpec:
     rollout_percentage: float
     feature_state_value: str
     value_type: FeatureValueType
-    multivariate_values: list[MultivariateValueChangeSet]
+    variants: list[Variant]
     author: AuthorData
     audience: AudienceSpec | None = None
 

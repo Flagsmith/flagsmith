@@ -43,11 +43,7 @@ from experimentation.models import (
     WarehouseConnectionStatus,
     WarehouseType,
 )
-from experimentation.permissions import (
-    ExperimentPermission,
-    MetricPermission,
-    WarehouseConnectionPermission,
-)
+from experimentation.permissions import ExperimentationPermission
 from experimentation.serializers import (
     ExperimentDetailSerializer,
     ExperimentExposuresSerializer,
@@ -96,7 +92,7 @@ class WarehouseConnectionViewSet(
 
     serializer_class = WarehouseConnectionSerializer
     pagination_class = None
-    permission_classes = [IsAuthenticated, WarehouseConnectionPermission]
+    permission_classes = [IsAuthenticated, ExperimentationPermission]
     model_class = WarehouseConnection
     lookup_field = "id"
     lookup_url_kwarg = "connection_id"
@@ -118,6 +114,11 @@ class WarehouseConnectionViewSet(
 
     def get_queryset(self) -> "QuerySet[WarehouseConnection]":
         return super().get_queryset().select_related("delivery_status")
+
+    def get_serializer_context(self) -> dict[str, Any]:
+        context = super().get_serializer_context()
+        context["environment"] = self._get_environment()
+        return context
 
     def perform_create(self, serializer: BaseSerializer[WarehouseConnection]) -> None:
         connection: WarehouseConnection = serializer.save(
@@ -358,7 +359,7 @@ class ExperimentViewSet(
 
     serializer_class = ExperimentSerializer
     pagination_class = CustomPagination
-    permission_classes = [IsAuthenticated, ExperimentPermission]
+    permission_classes = [IsAuthenticated, ExperimentationPermission]
     model_class = Experiment
     lookup_field = "id"
     lookup_url_kwarg = "experiment_id"
@@ -643,7 +644,7 @@ class ExperimentMetricViewSet(
 
     serializer_class = ExperimentMetricSerializer
     pagination_class = None
-    permission_classes = [IsAuthenticated, ExperimentPermission]
+    permission_classes = [IsAuthenticated, ExperimentationPermission]
     lookup_field = "id"
     lookup_url_kwarg = "pk"
 
@@ -737,7 +738,7 @@ class MetricViewSet(
 
     serializer_class = MetricSerializer
     pagination_class = CustomPagination
-    permission_classes = [IsAuthenticated, MetricPermission]
+    permission_classes = [IsAuthenticated, ExperimentationPermission]
     model_class = Metric
     lookup_field = "id"
     lookup_url_kwarg = "pk"

@@ -1,5 +1,186 @@
 # Changelog
 
+## [2.287.0](https://github.com/Flagsmith/flagsmith/compare/v2.286.0...v2.287.0) (2026-10-16)
+
+
+### Features
+
+* **API:** Remove the experimental flag update endpoints ([#8736](https://github.com/Flagsmith/flagsmith/issues/8736)) ([20cd1c2](https://github.com/Flagsmith/flagsmith/commit/20cd1c2daf3b3c34f0a69c37c49b4ed9b4857201))
+* **docker:** run experimentation infra in docker compose ([#8752](https://github.com/Flagsmith/flagsmith/issues/8752)) ([a815a96](https://github.com/Flagsmith/flagsmith/commit/a815a96083f0cf2cedcc48f7c1153cb8d987c342))
+* **Flag Dependency:** API support for change requests ([#8720](https://github.com/Flagsmith/flagsmith/issues/8720)) ([9d7907c](https://github.com/Flagsmith/flagsmith/commit/9d7907caf229c6431ce199a20acc2578268753cf))
+
+
+### Bug Fixes
+
+* **experimentation:** make migration 0014 reversible ([#8750](https://github.com/Flagsmith/flagsmith/issues/8750)) ([e40b88b](https://github.com/Flagsmith/flagsmith/commit/e40b88bed0c95d1c0338aead3e3c44c59f01cab2))
+* **Experiments:** fix result bars tokens ([#8789](https://github.com/Flagsmith/flagsmith/issues/8789)) ([b6824ac](https://github.com/Flagsmith/flagsmith/commit/b6824aca5fcff7f4448cac909390f875e52e790f))
+* **Local:** API workers crash on macOS when connecting to Postgres ([#8794](https://github.com/Flagsmith/flagsmith/issues/8794)) ([abb07d8](https://github.com/Flagsmith/flagsmith/commit/abb07d8ff232583b474aeeefa21bcd53e79a238f))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.14.2,&lt;1 ([#8791](https://github.com/Flagsmith/flagsmith/issues/8791)) ([a297876](https://github.com/Flagsmith/flagsmith/commit/a297876b3d7de4ba312674355aeea3e64f3ec194))
+
+
+### Docs
+
+* add ready-to-use coding agent prompts for local setup and experiments ([#8802](https://github.com/Flagsmith/flagsmith/issues/8802)) ([da6850b](https://github.com/Flagsmith/flagsmith/commit/da6850b5012780b39762ccec5be1135bba0c32c9))
+* document the dashboard's first-run admin setup for self-hosted ([#8799](https://github.com/Flagsmith/flagsmith/issues/8799)) ([defeac7](https://github.com/Flagsmith/flagsmith/commit/defeac735f2b6178edda05ef84ea22bd73d45148))
+* **experimentation:** add experimentation architecture to platform architecture page ([#8763](https://github.com/Flagsmith/flagsmith/issues/8763)) ([8bed28a](https://github.com/Flagsmith/flagsmith/commit/8bed28a1e7dbe614f47d74786b988e2c0faece7e))
+* **experimentation:** document SDK setup for events, including self-hosted ([#8797](https://github.com/Flagsmith/flagsmith/issues/8797)) ([ae30257](https://github.com/Flagsmith/flagsmith/commit/ae30257c6f26868b5816bea958144d99dd2dc9a4))
+* **experimentation:** Document WAREHOUSE_CREDENTIALS_SECRET and its chart secret ([#8796](https://github.com/Flagsmith/flagsmith/issues/8796)) ([b6d6988](https://github.com/Flagsmith/flagsmith/commit/b6d69889652df199a21dfa9f64a2c8a7550936f0))
+* **experimentation:** List the experimentation values in the Helm chart values table ([#8800](https://github.com/Flagsmith/flagsmith/issues/8800)) ([1b1adff](https://github.com/Flagsmith/flagsmith/commit/1b1adff03d9d6fde5789bec96f6c10b3e3ea26b8))
+* **experimentation:** Make the self-hosted experimentation guide easier to follow ([#8801](https://github.com/Flagsmith/flagsmith/issues/8801)) ([8f84966](https://github.com/Flagsmith/flagsmith/commit/8f849662e63f3646ffea5083f44664ea2c9d41fa))
+
+
+### Refactoring
+
+* **Dependencies:** Split the tab ahead of change request support ([#8768](https://github.com/Flagsmith/flagsmith/issues/8768)) ([1dc9b86](https://github.com/Flagsmith/flagsmith/commit/1dc9b86960d64a7aaea2de752ccc4e9f64b374ed))
+* **Flags:** Write live overrides of the legacy feature segment API through the flag API ([#8734](https://github.com/Flagsmith/flagsmith/issues/8734)) ([80fc3a6](https://github.com/Flagsmith/flagsmith/commit/80fc3a6ce26e3722fbfc4b4844ff484eae21fa70))
+* **Flags:** Write live overrides of the legacy feature state APIs through the flag API ([#8732](https://github.com/Flagsmith/flagsmith/issues/8732)) ([189d7df](https://github.com/Flagsmith/flagsmith/commit/189d7df6b51650bdb4dd78999ed7c4a2cffce793))
+
+## [2.286.0](https://github.com/Flagsmith/flagsmith/compare/v2.285.0...v2.286.0) (2026-10-15)
+
+
+### Features
+
+* **experimentation:** drop experimentation flag reads from the dashboard ([#8772](https://github.com/Flagsmith/flagsmith/issues/8772)) ([4a92f99](https://github.com/Flagsmith/flagsmith/commit/4a92f99f9de092102117f05251c35362079462c1))
+* **experimentation:** plan-gate bring-your-own warehouses ([#8779](https://github.com/Flagsmith/flagsmith/issues/8779)) ([03fba58](https://github.com/Flagsmith/flagsmith/commit/03fba5821d4271531abaf58e4a914be3573a4dc1))
+
+
+### Bug Fixes
+
+* **GitHub:** "Add to organisation" opens a 404 page on self-hosted ([#8782](https://github.com/Flagsmith/flagsmith/issues/8782)) ([59523a6](https://github.com/Flagsmith/flagsmith/commit/59523a60b6352592cd07979cb8c2fd1c43daa02b))
+
+
+### Docs
+
+* **experimentation:** add Databricks bring-your-own-warehouse guide ([#8708](https://github.com/Flagsmith/flagsmith/issues/8708)) ([19ff3fe](https://github.com/Flagsmith/flagsmith/commit/19ff3fee826db77da3de0bc19fc786431854d5dc))
+* **experimentation:** add experimentation sizing to self-hosting sizing guide ([#8765](https://github.com/Flagsmith/flagsmith/issues/8765)) ([11cf3f0](https://github.com/Flagsmith/flagsmith/commit/11cf3f0795e68e0993ed8fbe685c52776c60276b))
+* **experimentation:** Cover self-hosted warehouses ([#8780](https://github.com/Flagsmith/flagsmith/issues/8780)) ([77082ff](https://github.com/Flagsmith/flagsmith/commit/77082ff1a6e0c94dfcb65d59c444d0aff61c8634))
+* **experimentation:** Update the Helm chart docs for warehouse delivery ([#8777](https://github.com/Flagsmith/flagsmith/issues/8777)) ([4700912](https://github.com/Flagsmith/flagsmith/commit/4700912aca01c293f6d381bd01922383531ee24d))
+
+## [2.285.0](https://github.com/Flagsmith/flagsmith/compare/v2.284.0...v2.285.0) (2026-10-15)
+
+
+### Features
+
+* **ds:** add the Accordion component ([#8714](https://github.com/Flagsmith/flagsmith/issues/8714)) ([cfaf7ba](https://github.com/Flagsmith/flagsmith/commit/cfaf7bab96a2496e3b069e5e9fa38bc2b4ae6eca))
+* **experimentation:** hide the managed Flagsmith warehouse on self-hosted ([#8761](https://github.com/Flagsmith/flagsmith/issues/8761)) ([a630eb9](https://github.com/Flagsmith/flagsmith/commit/a630eb95348af28048ff292cbac94d938abfc836))
+* **experimentation:** only block internal warehouse hosts on SaaS ([#8760](https://github.com/Flagsmith/flagsmith/issues/8760)) ([f451ebc](https://github.com/Flagsmith/flagsmith/commit/f451ebcb9e93d67ce4fd82c9152faec9d1cdcb65))
+* **experimentation:** replace flag gates with one experimentation_warehouses flag ([#8771](https://github.com/Flagsmith/flagsmith/issues/8771)) ([0480eef](https://github.com/Flagsmith/flagsmith/commit/0480eef2d37349b2f4569a05a4f6a85f569eb4fb))
+* **tokens:** adopt the design system colour system ([#8594](https://github.com/Flagsmith/flagsmith/issues/8594)) ([70eee7a](https://github.com/Flagsmith/flagsmith/commit/70eee7ad2f9215033fb4bd6e520c2f2f25ba87b2))
+* **usage:** say whether an overage is covered or charged ([#8653](https://github.com/Flagsmith/flagsmith/issues/8653)) ([ff1f862](https://github.com/Flagsmith/flagsmith/commit/ff1f862211f370a2ad9402dec2ce9cc69cf94d12))
+
+
+### Bug Fixes
+
+* **experimentation:** Remove superseded experiment rollouts on start ([#8770](https://github.com/Flagsmith/flagsmith/issues/8770)) ([78d77d1](https://github.com/Flagsmith/flagsmith/commit/78d77d1213f38a5062aa19cc4409343ea2f3ca71))
+* **Flags:** Enforce the segment override limit and run delete hooks in the flag API ([#8729](https://github.com/Flagsmith/flagsmith/issues/8729)) ([0934ae4](https://github.com/Flagsmith/flagsmith/commit/0934ae45f4e7c2df6247fecd04a03c092666f2f9))
+* **Flags:** Segment overrides can be transplanted ([#8769](https://github.com/Flagsmith/flagsmith/issues/8769)) ([c6cfc65](https://github.com/Flagsmith/flagsmith/commit/c6cfc6531636163c3b55c25599f5552aa767da26))
+* **Segments:** Refuse system segment changes through the flag API ([#8728](https://github.com/Flagsmith/flagsmith/issues/8728)) ([75760e0](https://github.com/Flagsmith/flagsmith/commit/75760e0da1d546b1dbf85eef48f20035d0bbbb8f))
+* **Segments:** Refuse system segment changes through the legacy versioning APIs ([#8730](https://github.com/Flagsmith/flagsmith/issues/8730)) ([8777622](https://github.com/Flagsmith/flagsmith/commit/8777622da1e5494504a15b8b38aa68e01a37ad85))
+* **self-hosted:** theme the first-run setup steps in dark mode ([#8755](https://github.com/Flagsmith/flagsmith/issues/8755)) ([cd2bf41](https://github.com/Flagsmith/flagsmith/commit/cd2bf411d3a23670dae67e50d6212801fc94eb57))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-common to v3.16.0 ([#8746](https://github.com/Flagsmith/flagsmith/issues/8746)) ([6f41b05](https://github.com/Flagsmith/flagsmith/commit/6f41b058549ea329952513d290eae4207c2cfc3e))
+
+
+### Docs
+
+* Add documentation on how to add the ingestion server ([#8676](https://github.com/Flagsmith/flagsmith/issues/8676)) ([486d78e](https://github.com/Flagsmith/flagsmith/commit/486d78e1258d0b50f32fbeb33b10ed2af5037d30))
+* **experimentation:** drop Enterprise-only beta notice ([#8764](https://github.com/Flagsmith/flagsmith/issues/8764)) ([7cf5933](https://github.com/Flagsmith/flagsmith/commit/7cf5933ecc5ca5d68397bcd3de0d34f95f8611ca))
+
+
+### Refactoring
+
+* **Experiments:** Write rollouts through the flag API ([#8731](https://github.com/Flagsmith/flagsmith/issues/8731)) ([1def437](https://github.com/Flagsmith/flagsmith/commit/1def43795442293edc6349366c40bb42fe3b344f))
+
+## [2.284.0](https://github.com/Flagsmith/flagsmith/compare/v2.283.0...v2.284.0) (2026-10-13)
+
+
+### Features
+
+* **experimentation:** add the Databricks warehouse connection form ([#8725](https://github.com/Flagsmith/flagsmith/issues/8725)) ([caa24ed](https://github.com/Flagsmith/flagsmith/commit/caa24ed757c6f8c97749db81ae2691a5cc9427e6))
+* **experimentation:** hide experimentation UI when the experimentation infra isn't deployed ([#8749](https://github.com/Flagsmith/flagsmith/issues/8749)) ([bb9cd36](https://github.com/Flagsmith/flagsmith/commit/bb9cd36271bcc7fdeac85e1d8430382cfed7a213))
+* **Signup:** Track signup experiment conversion on activation ([#8674](https://github.com/Flagsmith/flagsmith/issues/8674)) ([09f3764](https://github.com/Flagsmith/flagsmith/commit/09f3764ad711d17565f428c00ed34325a37a7ed1))
+
+
+### Bug Fixes
+
+* **experimentation:** order ClickHouse setup SQL and show experiment snippets for all supported SDKs ([#8737](https://github.com/Flagsmith/flagsmith/issues/8737)) ([d5147f4](https://github.com/Flagsmith/flagsmith/commit/d5147f4a84e86d4c8503d22fc6bca49fd7dfb394))
+
+## [2.283.0](https://github.com/Flagsmith/flagsmith/compare/v2.282.0...v2.283.0) (2026-10-13)
+
+
+### Features
+
+* **experimentation:** add a Databricks statement client ([#8700](https://github.com/Flagsmith/flagsmith/issues/8700)) ([a1ace4a](https://github.com/Flagsmith/flagsmith/commit/a1ace4a9b639f3371bdb4b3becf0757ed6cb82d8))
+* **experimentation:** add the Databricks warehouse provider ([#8703](https://github.com/Flagsmith/flagsmith/issues/8703)) ([c3cff21](https://github.com/Flagsmith/flagsmith/commit/c3cff21c8560514417ad2620ca02706ac63a4c3b))
+* **experimentation:** gate experimentation on `EXPERIMENTATION_ENABLED` ([#8747](https://github.com/Flagsmith/flagsmith/issues/8747)) ([6337405](https://github.com/Flagsmith/flagsmith/commit/6337405cb7f89eba6dcffc3b828507647097b26e))
+* **usage:** break usage down by project and environment ([#8654](https://github.com/Flagsmith/flagsmith/issues/8654)) ([8ccdded](https://github.com/Flagsmith/flagsmith/commit/8ccdded4b0e79e74e9f1e11fb5df60c03020e47c))
+
+
+### Refactoring
+
+* **API:** Render APIErrorDetail bodies from a common APIError base class ([#8726](https://github.com/Flagsmith/flagsmith/issues/8726)) ([c121827](https://github.com/Flagsmith/flagsmith/commit/c1218279629498569be6b2b7b0bf897c9c79830f))
+* **Flags:** Write flags through the flag API with AuthorData ([#8727](https://github.com/Flagsmith/flagsmith/issues/8727)) ([c092cd6](https://github.com/Flagsmith/flagsmith/commit/c092cd693bcc19e0f0f5b583ed4362d646ab07a5))
+
+## [2.282.0](https://github.com/Flagsmith/flagsmith/compare/v2.281.0...v2.282.0) (2026-10-12)
+
+
+### Features
+
+* **traits:** add updated_at to Trait ([#8665](https://github.com/Flagsmith/flagsmith/issues/8665)) ([027ff84](https://github.com/Flagsmith/flagsmith/commit/027ff84c3a76dabe113ffe6554bd018d2287d1db))
+
+
+### Refactoring
+
+* **experimentation:** extract a SQL dialect from the results queries ([#8690](https://github.com/Flagsmith/flagsmith/issues/8690)) ([a47f91b](https://github.com/Flagsmith/flagsmith/commit/a47f91bfa86b924c80c3bbabd17f3ff348629c07))
+
+## [2.281.0](https://github.com/Flagsmith/flagsmith/compare/v2.280.0...v2.281.0) (2026-10-11)
+
+
+### Features
+
+* **dependencies:** add the Dependencies tab ([#8637](https://github.com/Flagsmith/flagsmith/issues/8637)) ([7ca6598](https://github.com/Flagsmith/flagsmith/commit/7ca6598c8abf041c7d32f164227a664df5863f31))
+* **experimentation:** read experiment results and exposures through the environment's warehouse ([#8683](https://github.com/Flagsmith/flagsmith/issues/8683)) ([fa52035](https://github.com/Flagsmith/flagsmith/commit/fa5203540d55312651751e17034ea109c2d501bc))
+* **Flag Dependency:** Remove a feature's prerequisite ([#8650](https://github.com/Flagsmith/flagsmith/issues/8650)) ([e588efa](https://github.com/Flagsmith/flagsmith/commit/e588efa444f2111f320677e4977f448c8f343901))
+* **Segments:** Expose managed feature segments ([#8699](https://github.com/Flagsmith/flagsmith/issues/8699)) ([1419461](https://github.com/Flagsmith/flagsmith/commit/1419461b2a4d93a51ae99d5509291ea7a4dd6fb9))
+* **usage:** expose API limit restriction, grace period and overage billing state ([#8641](https://github.com/Flagsmith/flagsmith/issues/8641)) ([fa8a60c](https://github.com/Flagsmith/flagsmith/commit/fa8a60cca02517cf696c525b4e23e0c67d27383d))
+* **usage:** group usage data by project or environment ([#8645](https://github.com/Flagsmith/flagsmith/issues/8645)) ([76c4802](https://github.com/Flagsmith/flagsmith/commit/76c480252978b3a90b90fd18c513bcfa10093589))
+
+
+### Bug Fixes
+
+* **Change Requests:** Scheduled feature changes inconsistent with actual state ([#8680](https://github.com/Flagsmith/flagsmith/issues/8680)) ([618f0fb](https://github.com/Flagsmith/flagsmith/commit/618f0fbccfeec065e3a80b09b3b55f10666ba5d3))
+* **Feature Lifecycle:** Release for public use ([#8694](https://github.com/Flagsmith/flagsmith/issues/8694)) ([6b0a8d1](https://github.com/Flagsmith/flagsmith/commit/6b0a8d1e71f2df5f14f82181f0b6b3ed4080dade))
+* **features:** lock the initial state and value when defaults are prevented ([#8664](https://github.com/Flagsmith/flagsmith/issues/8664)) ([da773ed](https://github.com/Flagsmith/flagsmith/commit/da773ed8c4183771961e8df9572bc292a1bb76cd))
+
+
+### Dependency Updates
+
+* **docs:** Bump serialize-javascript to 7.1.2 [security] ([#8672](https://github.com/Flagsmith/flagsmith/issues/8672)) ([a21c612](https://github.com/Flagsmith/flagsmith/commit/a21c61204b50ea9b3862752278ee6e9abbf68ea1))
+* update dependency flagsmith-common to v3.15.1 ([#8239](https://github.com/Flagsmith/flagsmith/issues/8239)) ([3166780](https://github.com/Flagsmith/flagsmith/commit/3166780af837923f5ed864cb1a1efb48d2092b8a))
+
+
+### CI
+
+* **frontend-deploy:** name what is being deployed ([#8431](https://github.com/Flagsmith/flagsmith/issues/8431)) ([68ce670](https://github.com/Flagsmith/flagsmith/commit/68ce670f43e5556aff31f4b9414c193555fed3dc))
+
+
+### Docs
+
+* **scim:** Document that Entra's `aadOptscim062020` flag is not supported ([#8621](https://github.com/Flagsmith/flagsmith/issues/8621)) ([a1522da](https://github.com/Flagsmith/flagsmith/commit/a1522dab03fce929c472da5e1834d325b1a4eaa6))
+
+
+### Refactoring
+
+* **experimentation:** introduce warehouse providers and port ClickHouse ([#8661](https://github.com/Flagsmith/flagsmith/issues/8661)) ([edfb91d](https://github.com/Flagsmith/flagsmith/commit/edfb91d1b5e41e5b047c3db8e609c0fa60536e0c))
+* **experimentation:** move managed warehouse reads into the Flagsmith provider ([#8677](https://github.com/Flagsmith/flagsmith/issues/8677)) ([7dfcd9a](https://github.com/Flagsmith/flagsmith/commit/7dfcd9acf1984820db8ea92d5f475e0b2d92c6ea))
+
 ## [2.280.0](https://github.com/Flagsmith/flagsmith/compare/v2.279.0...v2.280.0) (2026-10-05)
 
 

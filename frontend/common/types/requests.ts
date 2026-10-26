@@ -124,6 +124,7 @@ export type RegisterRequest = {
   organisation_name?: string
   marketing_consent_given?: boolean
   utm_data?: UtmsType
+  signup_anonymous_id?: string
 }
 export enum SortOrder {
   ASC = 'ASC',
@@ -154,6 +155,9 @@ export interface PipelineStageRequest {
 }
 
 type WarehouseConfigValue = string | number | boolean
+type WarehouseCredentials =
+  | { password: string }
+  | { client_id: string; client_secret: string }
 
 // Omitting `audience` leaves the stored audience untouched; an empty
 // `segment_ids` clears it back to every identity in the environment.
@@ -175,6 +179,8 @@ export type ExperimentRolloutBody = {
   }[]
   audience?: ExperimentAudienceBody
 }
+
+export type UsageGroupBy = 'project' | 'environment'
 
 export type Req = {
   getFeatureCodeReferences: {
@@ -267,10 +273,14 @@ export type Req = {
   getEnvironments: {
     projectId: number
   }
+  getAllEnvironments: {
+    projectId: number
+  }
   getOrganisationUsage: {
     organisationId: number
     projectId?: number
     environmentId?: string
+    group_by?: UsageGroupBy
     billing_period?:
       | 'current_billing_period'
       | 'previous_billing_period'
@@ -869,18 +879,35 @@ export type Req = {
     environmentKey: string
   }
   getFeatureSegment: { id: number }
-  getFeatureDependencies: { environmentId: string; featureId: number }
+  getFeatureDependencies: {
+    environmentId: string
+    featureId: number
+    // Lists them as if this change request were live.
+    changeRequestId?: number
+  }
   getFeatureDependents: { environmentId: string; featureId: number }
   createFeatureDependency: {
     environmentId: string
     featureId: number
     prerequisiteFeatureId: number
+    // Stages the change in this change request instead of publishing it.
+    changeRequestId?: number
   }
   deleteFeatureDependency: {
     environmentId: string
     featureId: number
     prerequisiteFeatureId: number
+    changeRequestId?: number
   }
+  createEnvironmentChangeRequest: {
+    environmentId: string
+    featureId: number
+    title: string
+    description: string
+    live_from?: string
+    approvals: Approval[]
+  }
+  deleteChangeRequest: { id: number }
   getSamlConfiguration: { name: string }
   getSamlConfigurations: { organisation_id: number }
   getSamlConfigurationMetadata: { name: string }
@@ -1148,7 +1175,7 @@ export type Req = {
     warehouse_type: string
     name?: string
     config?: Record<string, WarehouseConfigValue>
-    credentials?: { password: string }
+    credentials?: WarehouseCredentials
   }
   deleteWarehouseConnection: { environmentId: string; id: number }
   testWarehouseConnection: { environmentId: string; id: number }
@@ -1157,14 +1184,14 @@ export type Req = {
     warehouse_type: string
     name?: string
     config?: Record<string, WarehouseConfigValue>
-    credentials?: { password: string }
+    credentials?: WarehouseCredentials
   }
   updateWarehouseConnection: {
     environmentId: string
     id: number
     name?: string
     config?: Record<string, WarehouseConfigValue>
-    credentials?: { password: string }
+    credentials?: WarehouseCredentials
   }
   getExperiments: PagedRequest<{
     environmentId: string

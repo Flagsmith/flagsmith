@@ -148,9 +148,11 @@ The chart supports [Gateway API](https://gateway-api.sigs.k8s.io/) HTTPRoutes as
 Install these independently before enabling HTTPRoutes:
 
 1. **Gateway API CRDs**:
+
    ```bash
    kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/latest/download/standard-install.yaml
    ```
+
 2. **A Gateway controller** (e.g., [Envoy Gateway](https://gateway.envoyproxy.io/), Cilium, Istio)
 3. **A GatewayClass and Gateway resource** in your cluster. For example, using Envoy Gateway:
 
@@ -303,15 +305,15 @@ api:
 
 By default, no resource limits or requests are set.
 
-Our recommended limits are 1vCPU and 2GB RAM for all of our pods, but this might vary depending on your usage pattern 
-and hosting environment. 
+Our recommended limits are 1vCPU and 2GB RAM for all of our pods, but this might vary depending on your usage pattern
+and hosting environment.
 
 ### Replicas
 
-By default, 1 replica of each of the frontend, API, and task processor is used. We recommend tailoring these to your 
-requirements based on expected load, and your hosting environment. As the API will be the most heavily used service, we 
-would recommend adding more replicas to your API than the other services. A standard configuration, with some built in 
-fault tolerance, might look something like: 
+By default, 1 replica of each of the frontend, API, and task processor is used. We recommend tailoring these to your
+requirements based on expected load, and your hosting environment. As the API will be the most heavily used service, we
+would recommend adding more replicas to your API than the other services. A standard configuration, with some built in
+fault tolerance, might look something like:
 
 ```yaml
 frontend:
@@ -388,6 +390,105 @@ By default, Flagsmith uses PostgreSQL to store time series data. You can alterna
 ### Task Processor
 
 The task processor itself is documented [here](/deployment-self-hosting/scaling-and-performance/asynchronous-task-processor). See the table below for the values to set to configure the task processor using the Helm chart.
+
+### Experimentation
+
+The chart can run [experimentation](/experimentation). You bring your own Kafka and data warehouse, and each
+environment's events are delivered to the warehouse connected to it. The chart then:
+
+- Runs the event ingestion service, which receives SDK events and writes them to a Kafka topic.
+- Runs warehouse delivery, which reads that topic and inserts each environment's events into its warehouse.
+- Runs a job after each install and upgrade. The job creates the events topic and a retry topic for failed deliveries.
+
+#### Prerequisites
+
+- Flagsmith API 2.285.0 or later.
+- Kafka with at least 3 brokers, for the default replication factor of 3, and a login for Flagsmith with the
+  [permissions below](#kafka-topics-and-permissions).
+- A data warehouse that you host and run yourself, either ClickHouse or Databricks, reachable from both warehouse
+  delivery and the API.
+
+Experiment events are stored in the warehouse rather than in the Flagsmith database, and results are computed by
+querying it, so it is infrastructure you provision before enabling experimentation: the managed Flagsmith warehouse is
+available only on Flagsmith Cloud. Each environment that runs experiments needs a warehouse connection, created in the
+dashboard, but one warehouse can serve every environment, as events are scoped by environment. See
+[Connect a warehouse](/experimentation/connect-a-warehouse).
+
+#### Configuration
+
+Add the following to your values file. It turns the experimentation services on, points them at your Kafka, and
+publishes the ingestion service so that your applications can reach it:
+
+```yaml
+experimentation:
+ # Runs the ingestion service, warehouse delivery, and the topic creation job
+ enabled: true
+ # Optional: provide your own, or the chart generates one
+ warehouseCredentialsSecretFromExistingSecret:
+  enabled: true
+  name: flagsmith-warehouse-credentials
+  key: warehouse-credentials-secret
+ kafka:
+  bootstrapServers: kafka-1:9096,kafka-2:9096,kafka-3:9096
+  auth: scram
+  username: flagsmith
+  password: <password> # Use passwordFromExistingSecret in production
+
+# The ingestion service is the endpoint your SDKs send events to, so it has to be
+# reachable from wherever your applications run
+ingress:
+ ingestion:
+  enabled: true
+  hosts:
+   - host: events.flagsmith.example.com
+     paths:
+      - /
+```
+
+#### Kafka topics and permissions
+
+The chart creates two topics, `flagsmith_warehouse_events` and `flagsmith_warehouse_events_retry`. Use
+`experimentation.kafka.topic` and `experimentation.kafka.retryTopic` respectively to optionally change their names.
+
+The Kafka login needs these permissions:
+
+- Read and write both topics.
+- Read the consumer groups `warehouse-delivery` and `warehouse-delivery-retry`, which warehouse delivery consumes with.
+
+To keep topic creation away from the runtime login, give the topic creation job its own admin login with
+`jobs.experimentationInit.kafka`.
+
+If your brokers have `auto.create.topics.enable=true`, create both topics yourself before enabling experimentation. The
+services connect before that job runs, so the brokers would otherwise create them with their default partition count.
+
+#### Database users
+
+The ingestion service and warehouse delivery both connect to the Flagsmith database as the API's user by default. To
+limit what each one can reach, create a user of its own and grant it only what it needs.
+
+The ingestion service checks the SDK key on every event it receives, so it only needs to read the environment keys view:
+
+```sql
+CREATE ROLE ingestion_server WITH LOGIN PASSWORD '<password>';
+GRANT CONNECT ON DATABASE flagsmith TO ingestion_server;
+GRANT USAGE ON SCHEMA public TO ingestion_server;
+GRANT SELECT ON experimentation_environment_keys TO ingestion_server;
+```
+
+Warehouse delivery reads each environment's warehouse connection, and records the delivery status that the dashboard
+shows:
+
+```sql
+CREATE ROLE warehouse_delivery WITH LOGIN PASSWORD '<password>';
+GRANT CONNECT ON DATABASE flagsmith TO warehouse_delivery;
+GRANT USAGE ON SCHEMA public TO warehouse_delivery;
+GRANT SELECT ON experimentation_delivery_connections TO warehouse_delivery;
+GRANT SELECT, INSERT, UPDATE ON experimentation_warehousedeliverystatus TO warehouse_delivery;
+```
+
+Store each user's connection URL in a Kubernetes secret, then point the service at it with
+`experimentation.ingestion.databaseUrlFromExistingSecret` or
+`experimentation.warehouseDelivery.databaseUrlFromExistingSecret`.
 
 ## Chart Values
 
@@ -568,6 +669,8 @@ The following table lists the configurable parameters of the chart and their def
 | `ingress.api.hosts[].host`                         |                                                                           | `chart-example.local`          |
 | `ingress.api.hosts[].paths`                        |                                                                           | `[]`                           |
 | `ingress.api.tls`                                  |                                                                           | `[]`                           |
+| `ingress.ingestion.enabled`                        | Expose event ingestion with an Ingress                                    | `false`                        |
+| `ingress.ingestion.hosts`                          | Hosts for that Ingress                                                    | `[]`                           |
 | `api.statsd.enabled`                               | Enable statsd metric reporting from gunicorn.                             | `false`                        |
 | `api.statsd.host`                                  | Host URL to receive statsd metrics                                        | `null`                         |
 | `api.statsd.hostFromNodeIp`                        | Set as true to use the node IP as the statsd host instead                 | `false`                        |
@@ -575,6 +678,40 @@ The following table lists the configurable parameters of the chart and their def
 | `api.statsd.prefix`                                | Prefix to add to metric IDs                                               | `flagsmith.api`                |
 | `common.labels`                                    | Labels to add to all resources                                            | `{}`                           |
 | `common.annotations`                               | Annotations to add to all resources                                       | `{}`                           |
+| `experimentation.enabled`                          | Run event ingestion and warehouse delivery, and turn experimentation on in the API | `false`                        |
+| `experimentation.kafka.bootstrapServers`           | Kafka brokers, e.g. `host1:9096,host2:9096`                               | `null`                         |
+| `experimentation.kafka.topic`                      | Topic for experiment events                                               | `flagsmith_warehouse_events`   |
+| `experimentation.kafka.retryTopic`                 | Topic for events warehouse delivery retries                               | `flagsmith_warehouse_events_retry` |
+| `experimentation.kafka.topicPartitions`            | Partitions for both topics                                                | `8`                            |
+| `experimentation.kafka.topicReplicationFactor`     | Replication factor for both topics                                        | `3`                            |
+| `experimentation.kafka.auth`                       | `scram` (SASL/SCRAM-SHA-512 over TLS) or `none`                           | `scram`                        |
+| `experimentation.kafka.username`                   | Kafka username for `scram`                                                | `null`                         |
+| `experimentation.kafka.password`                   | Kafka password for `scram`                                                | `null`                         |
+| `experimentation.kafka.passwordFromExistingSecret.enabled` | Read the Kafka password from an existing k8s secret                       | `false`                        |
+| `experimentation.kafka.passwordFromExistingSecret.name` | Name of that secret                                                       | `null`                         |
+| `experimentation.kafka.passwordFromExistingSecret.key` | Key of the password in that secret                                        | `null`                         |
+| `experimentation.warehouseCredentialsSecretFromExistingSecret.enabled` | Read the warehouse credentials secret from an existing k8s secret, instead of generating it | `false`                        |
+| `experimentation.warehouseCredentialsSecretFromExistingSecret.name` | Name of that secret                                                       | `""`                           |
+| `experimentation.warehouseCredentialsSecretFromExistingSecret.key` | Key of the value in that secret                                           | `warehouse-credentials-secret` |
+| `experimentation.ingestion.image.repository`       | Docker image repository for event ingestion                               | `flagsmith/events-ingestion-api` |
+| `experimentation.ingestion.image.tag`              | Docker image tag for event ingestion                                      | `0.5`                          |
+| `experimentation.ingestion.resources`              | Resources for event ingestion                                             | see `values.yaml`              |
+| `experimentation.ingestion.databaseUrlFromExistingSecret.enabled` | Connect event ingestion with its own database user, from an existing k8s secret | `false`                        |
+| `experimentation.ingestion.databaseUrlFromExistingSecret.name` | Name of that secret                                                       | `null`                         |
+| `experimentation.ingestion.databaseUrlFromExistingSecret.key` | Key of the database URL in that secret                                    | `null`                         |
+| `experimentation.warehouseDelivery.image.repository` | Docker image repository for warehouse delivery                            | `flagsmith/warehouse-delivery` |
+| `experimentation.warehouseDelivery.image.tag`      | Docker image tag for warehouse delivery                                   | `0.4.0`                        |
+| `experimentation.warehouseDelivery.replicaCount`   | Replicas for warehouse delivery; more than `topicPartitions` sit idle     | `1`                            |
+| `experimentation.warehouseDelivery.resources`      | Resources for warehouse delivery                                          | see `values.yaml`              |
+| `experimentation.warehouseDelivery.databaseUrlFromExistingSecret.enabled` | Connect warehouse delivery with its own database user, from an existing k8s secret | `false`                        |
+| `experimentation.warehouseDelivery.databaseUrlFromExistingSecret.name` | Name of that secret                                                       | `null`                         |
+| `experimentation.warehouseDelivery.databaseUrlFromExistingSecret.key` | Key of the database URL in that secret                                    | `null`                         |
+| `experimentation.warehouseDelivery.extraEnv`       | Extra environment variables for warehouse delivery, e.g. `BATCH_MAX_RECORDS` | `{}`                           |
+| `jobs.experimentationInit.kafkaImage`              | Image for the job that creates the Kafka topics                           | `apache/kafka:4.3.1`           |
+| `jobs.experimentationInit.kafka.username`          | Admin Kafka username for creating the topics; defaults to `experimentation.kafka.username` | `null`                         |
+| `jobs.experimentationInit.kafka.passwordFromExistingSecret.enabled` | Read that admin password from an existing k8s secret                      | `false`                        |
+| `jobs.experimentationInit.kafka.passwordFromExistingSecret.name` | Name of that secret                                                       | `null`                         |
+| `jobs.experimentationInit.kafka.passwordFromExistingSecret.key` | Key of the password in that secret                                        | `null`                         |
 
 ---
 
@@ -623,4 +760,4 @@ To build chart package run:
 
 ```bash
 helm package ./flagsmith
-``` 
+```

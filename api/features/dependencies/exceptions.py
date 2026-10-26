@@ -1,9 +1,13 @@
 from abc import ABC, abstractmethod
 
-from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
+from common.environments.permissions import (
+    CREATE_CHANGE_REQUEST,
+    MANAGE_SEGMENT_OVERRIDES,
+)
 from rest_framework import status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 
+from core.exceptions import APIError
 from core.types import APIErrorDetail
 from features.dependencies.types import (
     DependencyPath,
@@ -105,7 +109,7 @@ class DependencyExistsError(DependencyConflictError):
         )
 
 
-class DependencyNotFoundError(NotFound):
+class DependencyNotFoundError(APIError, NotFound):
     """Raised where the feature does not depend on the prerequisite in the environment."""
 
     default_code = "dependency_not_found"
@@ -114,37 +118,28 @@ class DependencyNotFoundError(NotFound):
         self, feature_name: FeatureName, prerequisite_feature_name: FeatureName
     ) -> None:
         super().__init__(
-            {
-                "code": self.default_code,
-                "message": f'The feature "{feature_name}" does not depend'
-                f' on the feature "{prerequisite_feature_name}".',
-            }
+            f'The feature "{feature_name}" does not depend'
+            f' on the feature "{prerequisite_feature_name}".'
         )
 
 
-class FeatureDependencyPermissionDeniedError(PermissionDenied):
+class FeatureDependencyPermissionDeniedError(APIError, PermissionDenied):
     """Raised where a caller may not manage the environment's segment overrides."""
 
     def __init__(self) -> None:
         permission_name = MANAGE_SEGMENT_OVERRIDES.capitalize().replace("_", " ")
         super().__init__(
-            {
-                "code": self.default_code,
-                "message": f'The permission "{permission_name}" is necessary'
-                " to manage feature dependencies.",
-            }
+            f'The permission "{permission_name}" is necessary'
+            " to manage feature dependencies."
         )
 
 
-class PrerequisiteIsSelfError(APIException):
+class PrerequisiteIsSelfError(APIError):
     """Raised where a feature is requested as its own prerequisite."""
 
     status_code = status.HTTP_400_BAD_REQUEST
     default_code = "prerequisite_is_self"
     default_detail = "A feature cannot depend on itself."
-
-    def __init__(self) -> None:
-        super().__init__({"code": self.default_code, "message": self.default_detail})
 
 
 class PrerequisiteFeatureNotFoundError(APIException):
@@ -188,3 +183,65 @@ class FeatureIsReferencedError(APIException):
             "segments": segments,
         }
         self.detail = detail  # type: ignore[assignment]
+
+
+class ChangeRequestNotFoundError(APIError, NotFound):
+    """Raised when a referenced change request does not exist."""
+
+    default_code = "change_request_not_found"
+    default_detail = "Change request not found."
+
+
+class ChangeRequestAlreadyCommittedError(APIError):
+    """Raised when a referenced change request has already been committed."""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_code = "change_request_committed"
+    default_detail = "The change request is already committed."
+
+
+class ChangeRequestPermissionDeniedError(APIError, PermissionDenied):
+    """Raised when a referenced change request is not accessible to the caller."""
+
+    def __init__(self) -> None:
+        permission_name = CREATE_CHANGE_REQUEST.capitalize().replace("_", " ")
+        super().__init__(
+            f'The permission "{permission_name}" is necessary'
+            " to change dependencies in change requests."
+        )
+
+
+class ChangeRequestApprovedError(APIError):
+    """Raised when a referenced change request has already been approved."""
+
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_code = "change_request_approved"
+    default_detail = "Cannot change an approved change request."
+
+
+class ChangeRequestDisabledError(APIError):
+    """Raised when a change request is referenced where change requests are disabled."""
+
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "change_requests_disabled"
+    default_detail = (
+        "Enable Feature Change Requests to change dependencies in change requests."
+    )
+
+
+class FeatureVersioningDisabledError(APIError):
+    """Raised when a change request is referenced where feature versioning is disabled."""
+
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "feature_versioning_disabled"
+    default_detail = (
+        "Enable Feature Versioning to change dependencies in change requests."
+    )
+
+
+class ChangeRequestRequiredError(APIError):
+    """Raised when a dependency is changed directly where change requests are enabled."""
+
+    status_code = status.HTTP_409_CONFLICT
+    default_code = "change_requests_enabled"
+    default_detail = "Cannot make this change where change requests are enabled."

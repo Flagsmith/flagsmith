@@ -67,6 +67,10 @@ def test_get_current_user__pylon_secret_configured__returns_pylon_signature(
     [
         (None, None),
         (
+            {"signup_anonymous_id": "6f1c5d2e-3b4a-4c8d-9e0f-1a2b3c4d5e6f"},
+            {"tasks": []},
+        ),
+        (
             {"tasks": [{"name": "task-1"}]},
             {"tasks": [{"name": "task-1", "completed_at": "2025-01-01T12:00:00Z"}]},
         ),
@@ -326,3 +330,67 @@ def test_reset_password_confirm__token_auth__revokes_token(
     assert not Token.objects.filter(user=staff_user).exists()
     me_url = reverse("api-v1:custom_auth:ffadminuser-me")
     assert authenticated_client.get(me_url).status_code == status.HTTP_401_UNAUTHORIZED
+@pytest.mark.parametrize(
+    "signup_data, expected_onboarding_data",
+    [
+        (
+            {"signup_anonymous_id": "6f1c5d2e-3b4a-4c8d-9e0f-1a2b3c4d5e6f"},
+            {"signup_anonymous_id": "6f1c5d2e-3b4a-4c8d-9e0f-1a2b3c4d5e6f"},
+        ),
+        (
+            {"signup_anonymous_id": "1759651200000-0.123"},
+            {"signup_anonymous_id": "1759651200000-0.123"},
+        ),
+        ({}, None),
+    ],
+)
+def test_create_user__signup_anonymous_id__stores_in_onboarding_data(
+    db: None,
+    api_client: APIClient,
+    signup_data: dict[str, Any],
+    expected_onboarding_data: dict[str, Any] | None,
+) -> None:
+    # Given
+    data = {
+        "first_name": "new",
+        "last_name": "user",
+        "email": "test@exemple.fr",
+        "password": "password123456!=&",
+        **signup_data,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert "signup_anonymous_id" not in response.json()
+    user = FFAdminUser.objects.get(email="test@exemple.fr")
+    onboarding_data = json.loads(user.onboarding_data) if user.onboarding_data else None
+    assert onboarding_data == expected_onboarding_data
+
+
+@pytest.mark.parametrize("signup_anonymous_id", ["   ", "a" * 65])
+def test_create_user__invalid_signup_anonymous_id__returns_400(
+    db: None,
+    api_client: APIClient,
+    signup_anonymous_id: str,
+) -> None:
+    # Given
+    data = {
+        "first_name": "new",
+        "last_name": "user",
+        "email": "test@exemple.fr",
+        "password": "password123456!=&",
+        "signup_anonymous_id": signup_anonymous_id,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "signup_anonymous_id" in response.json()
+    assert not FFAdminUser.objects.filter(email="test@exemple.fr").exists()

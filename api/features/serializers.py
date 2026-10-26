@@ -32,11 +32,7 @@ from evaluation.types import EvaluatedFeatureState
 from experimentation.feature_state_metadata import (
     get_feature_state_metadata_builder,
 )
-from integrations.github.constants import GitHubEventType
-from integrations.github.github import call_github_task
-from integrations.gitlab.services import (
-    post_gitlab_state_change_comment_for_feature_state,
-)
+from integrations.vcs.services import dispatch_vcs_on_feature_state_changed
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.code_references.serializers import (
     FeatureFlagCodeReferencesRepositoryCountSerializer,
@@ -62,7 +58,7 @@ from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
 from .feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE
-from .models import Feature, FeatureState
+from .models import Feature, FeatureSegment, FeatureState
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
 
@@ -707,26 +703,8 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
     def save(self, **kwargs):  # type: ignore[no-untyped-def]
         try:
             response = super().save(**kwargs)  # type: ignore[no-untyped-call]
-
-            feature_state = self.instance
-            if (
-                not feature_state.identity_id  # type: ignore[union-attr]
-                and feature_state.feature.external_resources.exists()  # type: ignore[union-attr]
-                and feature_state.environment.project.github_project.exists()  # type: ignore[union-attr]
-                and feature_state.environment.project.organisation.github_config.exists()  # type: ignore[union-attr]
-            ):
-                call_github_task(
-                    organisation_id=feature_state.feature.project.organisation_id,  # type: ignore[union-attr]
-                    type=GitHubEventType.FLAG_UPDATED.value,
-                    feature=feature_state.feature,  # type: ignore[union-attr]
-                    segment_name=None,
-                    url=None,
-                    feature_states=[feature_state],
-                )
-
-            if isinstance(feature_state, FeatureState):
-                post_gitlab_state_change_comment_for_feature_state(feature_state)
-
+            if isinstance(feature_state := self.instance, FeatureState):
+                dispatch_vcs_on_feature_state_changed(feature_state)
             return response
 
         except django.core.exceptions.ValidationError as e:
@@ -747,6 +725,19 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
                 "Cannot change the environment of a feature state"
             )
         return environment
+
+    def validate_feature_segment(
+        self, feature_segment: FeatureSegment | None
+    ) -> FeatureSegment | None:
+        feature_segment_id = feature_segment.id if feature_segment else None
+        if (
+            isinstance(self.instance, FeatureState)
+            and self.instance.feature_segment_id != feature_segment_id
+        ):
+            raise serializers.ValidationError(
+                "Cannot change the feature segment of a feature state"
+            )
+        return feature_segment
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         environment = attrs.get("environment") or self.context["environment"]

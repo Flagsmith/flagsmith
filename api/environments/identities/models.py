@@ -1,6 +1,7 @@
 from itertools import chain
 
 from django.db import models
+from django.utils import timezone
 from flag_engine.engine import get_evaluation_result
 
 from environments.identities.managers import IdentityManager
@@ -191,6 +192,8 @@ class Identity(models.Model):
 
                 for attr, value in trait_value_data.items():
                     setattr(current_trait, attr, value)
+                # bulk_update() skips auto_now
+                current_trait.updated_at = timezone.now()
                 updated_traits.append(current_trait)
                 continue
 

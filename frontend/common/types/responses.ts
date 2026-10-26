@@ -185,6 +185,13 @@ export type DependencyEdge = {
   segment: DependencyEdgeSegment
 }
 
+export type StagedAction = 'add' | 'remove'
+
+export type StagedDependencyChange = {
+  action: StagedAction
+  prerequisite: DependencyFeature
+}
+
 export type DependencyConflictCode =
   | 'circular_dependency'
   | 'dependency_exists'
@@ -239,7 +246,10 @@ export type Segment = {
   metadata: Metadata[] | []
   membership_counts?: SegmentMembership[]
   cohort?: SegmentCohort | null
+  managed_by?: SegmentManagedBy
 }
+// What creates and edits the segment, empty where users do.
+export type SegmentManagedBy = '' | 'cohort' | 'dependency' | 'experiment'
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
   | 'environment_feature_versions'
@@ -599,6 +609,10 @@ export type Organisation = {
   role: string
   persist_trait_data: boolean
   block_access_to_admin: boolean
+  stop_serving_flags: boolean
+  api_limit_restriction_enabled: boolean
+  api_limit_grace_period_used: boolean
+  overage_billing_eligible: boolean
   restrict_project_create_to_admin: boolean
 }
 export type Identity = {
@@ -1258,6 +1272,7 @@ export type Version = {
     ci_commit_sha: string
     image_tag: string
     has_email_provider: boolean
+    experimentation_enabled: boolean
     is_enterprise: boolean
     is_saas: boolean
     'self_hosted_data'?: {
@@ -1414,7 +1429,11 @@ export type WarehouseConnectionStatus =
   | 'connected'
   | 'errored'
 
-export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
+export type WarehouseType =
+  | 'flagsmith'
+  | 'snowflake'
+  | 'clickhouse'
+  | 'databricks'
 
 export type SnowflakeConfig = {
   account_identifier: string
@@ -1433,9 +1452,19 @@ export type ClickHouseConfig = {
   secure: boolean
 }
 
+export type DatabricksConfig = {
+  host: string
+  workspace_id: string
+  region: string
+  warehouse_id: string
+  catalog: string
+  schema: string
+}
+
 export type WarehouseConfigResponse =
   | SnowflakeConfig
   | ClickHouseConfig
+  | DatabricksConfig
   | Record<string, never>
 
 export type WarehouseConnectionTestResult = {
@@ -1493,6 +1522,7 @@ export type Res = {
   projects: ProjectSummary[]
   project: Project
   environments: PagedResponse<Environment>
+  allEnvironments: Environment[]
   webhook: Webhook
   webhooks: Webhook[]
   organisationUsage: {
@@ -1586,6 +1616,7 @@ export type Res = {
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   updateChangeRequest: ChangeRequest
+  createEnvironmentChangeRequest: ChangeRequest
   groupSummaries: UserGroupSummary[]
   supportedContentType: ContentType[]
   externalResource: PagedResponse<ExternalResource>
