@@ -330,6 +330,8 @@ def test_reset_password_confirm__token_auth__revokes_token(
     assert not Token.objects.filter(user=staff_user).exists()
     me_url = reverse("api-v1:custom_auth:ffadminuser-me")
     assert authenticated_client.get(me_url).status_code == status.HTTP_401_UNAUTHORIZED
+
+
 @pytest.mark.parametrize(
     "signup_data, expected_onboarding_data",
     [
