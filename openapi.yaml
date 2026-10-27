@@ -23008,8 +23008,12 @@ components:
       properties:
         token:
           type: string
+        email:
+          type: string
+          format: email
       required:
         - token
+        - email
     IdentifierOnlyIdentity:
       type: object
       properties:

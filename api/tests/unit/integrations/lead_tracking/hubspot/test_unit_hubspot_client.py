@@ -8,6 +8,7 @@ from hubspot.conversations.visitor_identification import (  # type: ignore[impor
     ApiException,
 )
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 
 from integrations.lead_tracking.hubspot.client import HubspotClient
@@ -321,7 +322,7 @@ def test_create_visitor_identification_token__hubspot_returns_token__returns_tok
 def test_create_visitor_identification_token__hubspot_fails__logs_and_returns_none(
     staff_user: FFAdminUser,
     hubspot_client: HubspotClient,
-    caplog: pytest.LogCaptureFixture,
+    log: StructuredLogCapture,
     error: Exception,
 ) -> None:
     # Given
@@ -332,6 +333,11 @@ def test_create_visitor_identification_token__hubspot_fails__logs_and_returns_no
 
     # Then
     assert token is None
-    assert caplog.messages == [
-        f"Failed to create HubSpot visitor identification token for user {staff_user.id}"
+    assert log.events == [
+        {
+            "event": "visitor_identification_token.create_failed",
+            "level": "error",
+            "user__id": staff_user.id,
+            "exc_info": True,
+        }
     ]

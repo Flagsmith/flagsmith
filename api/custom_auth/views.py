@@ -189,7 +189,10 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         responses={
             200: inline_serializer(
                 name="HubspotChatTokenResponse",
-                fields={"token": serializers.CharField()},
+                fields={
+                    "token": serializers.CharField(),
+                    "email": serializers.EmailField(),
+                },
             ),
             404: None,
             502: None,
@@ -216,7 +219,7 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         if token is None:
             return Response(status=status.HTTP_502_BAD_GATEWAY)
 
-        return Response({"token": token})
+        return Response({"token": token, "email": user.email})
 
     @action(["post"], detail=False)
     def reset_password(self, request: Request, *args: Any, **kwargs: Any) -> Response:

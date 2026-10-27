@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import hubspot  # type: ignore[import-untyped]
 import requests
+import structlog
 import urllib3
 from django.conf import settings
 from hubspot.conversations.visitor_identification import (  # type: ignore[import-untyped]
@@ -30,6 +31,7 @@ if TYPE_CHECKING:
     from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
+hubspot_logger = structlog.get_logger("hubspot")
 
 
 class HubspotClient:
@@ -77,9 +79,8 @@ class HubspotClient:
                 _request_timeout=HUBSPOT_VISITOR_IDENTIFICATION_TIMEOUT_SECONDS,
             )
         except (ApiException, urllib3.exceptions.HTTPError):
-            logger.exception(
-                "Failed to create HubSpot visitor identification token for user %d",
-                user.id,
+            hubspot_logger.exception(
+                "visitor_identification_token.create_failed", user__id=user.id
             )
             return None
 

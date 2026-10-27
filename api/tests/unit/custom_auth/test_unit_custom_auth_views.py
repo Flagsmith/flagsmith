@@ -359,7 +359,7 @@ def test_hubspot_chat_token__hubspot_configured__returns_token(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {"token": "test-token"}
+    assert response.json() == {"token": "test-token", "email": staff_user.email}
     mock_create_token.assert_called_once_with(staff_user)
 
 
