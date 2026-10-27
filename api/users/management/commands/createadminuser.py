@@ -6,7 +6,8 @@ from admin_sso.models import Assignment
 from django.conf import settings
 from django.core.management import BaseCommand, CommandError
 
-from users.services import create_superuser, should_skip_create_initial_superuser
+from users.models import FFAdminUser
+from users.services import create_superuser
 
 
 class Command(BaseCommand):
@@ -33,7 +34,7 @@ class Command(BaseCommand):
         **options: Any,
     ) -> None:
         if (
-            not should_skip_create_initial_superuser()
+            not FFAdminUser.objects.filter(is_superuser=True).exists()
             and not settings.ALLOW_ADMIN_INITIATION_VIA_CLI
         ):
             raise CommandError(
