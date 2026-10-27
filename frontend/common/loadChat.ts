@@ -20,10 +20,11 @@ declare global {
 }
 
 import AccountStore from './stores/account-store'
-import data from './data/base/_data'
+import { getStore } from './store'
+import { getHubspotChatToken } from './services/useHubspotChatToken'
 import getUserDisplayName from './utils/getUserDisplayName'
 import Utils from './utils/utils'
-import { AccountModel } from './types/responses'
+import { AccountModel, HubspotChatToken } from './types/responses'
 import Project from './project'
 
 const defaultPylonID = '028babb7-d93f-4e32-be6a-59db190a084f'
@@ -98,41 +99,59 @@ function hidePylon() {
   }
 }
 
+let isLoadingHubSpot = false
+let openHubSpotOnLoad = false
+// load() was called. status().loaded stays false until HubSpot's iframe is
+// ready, so it can't tell us on its own.
+let hasRequestedHubSpotLoad = false
+// Bumped when the widget is removed (e.g. logout), so a token fetched for
+// the previous user is never used.
+let hubSpotGeneration = 0
+
 function canLoadHubSpot() {
   const widget = window.HubSpotConversations?.widget
-  return !!widget && getChatProvider() === 'hubspot' && !widget.status().loaded
+  return (
+    !!widget &&
+    getChatProvider() === 'hubspot' &&
+    !hasRequestedHubSpotLoad &&
+    !widget.status().loaded
+  )
 }
 
-// Tells HubSpot who is chatting, so their tickets get a contact instead of
-// "Unknown Visitor". HubSpot reads this when load() is called. Without a token
-// (an API without the endpoint, or HubSpot failing) the widget still loads,
-// just anonymously.
-async function identifyHubSpotVisitor() {
+// HubSpot reads the identity when load() is called, so tickets get a contact
+// instead of "Unknown Visitor".
+function setHubSpotIdentity(identity?: HubspotChatToken) {
   const settings = { ...window.hsConversationsSettings }
   delete settings.identificationEmail
   delete settings.identificationToken
-  window.hsConversationsSettings = settings
-
-  const user = AccountStore.getUser() as AccountModel | undefined
-  if (!user?.email) return
-  try {
-    const { token } = await data.get(
-      `${Project.api}auth/users/me/hubspot-chat-token/`,
-    )
-    if (token) {
-      window.hsConversationsSettings = {
+  window.hsConversationsSettings = identity
+    ? {
         ...settings,
-        identificationEmail: user.email,
-        identificationToken: token,
+        identificationEmail: identity.email,
+        identificationToken: identity.token,
       }
+    : settings
+}
+
+// Without a token the widget still loads, just anonymously. A 404 means the
+// API has no HubSpot token configured (e.g. self-hosted), so it isn't logged.
+async function fetchHubSpotIdentity(): Promise<HubspotChatToken | undefined> {
+  const user = AccountStore.getUser() as AccountModel | undefined
+  if (!user?.id) return
+  try {
+    const { data, error } = await getHubspotChatToken(
+      getStore(),
+      { userId: user.id },
+      { subscribe: false },
+    )
+    if (error && error.status !== 404) {
+      console.error('Failed to identify the HubSpot chat user:', error)
     }
+    return data
   } catch (error) {
     console.error('Failed to identify the HubSpot chat user:', error)
   }
 }
-
-let isLoadingHubSpot = false
-let openHubSpotOnLoad = false
 
 // The HubSpot script is added in libs.js with loadImmediately: false, so the
 // widget only appears once we call load(). Calls made while the token is being
@@ -142,19 +161,19 @@ function loadHubSpotWidget(widgetOpen = false) {
   openHubSpotOnLoad = openHubSpotOnLoad || widgetOpen
   if (isLoadingHubSpot) return
   isLoadingHubSpot = true
-  identifyHubSpotVisitor()
-    .then(() => {
-      // Re-checked: the org may have changed while the token was fetched.
-      if (canLoadHubSpot()) {
-        window.HubSpotConversations?.widget.load({
-          widgetOpen: openHubSpotOnLoad,
-        })
-      }
-    })
-    .finally(() => {
-      isLoadingHubSpot = false
-      openHubSpotOnLoad = false
-    })
+  const generation = hubSpotGeneration
+  fetchHubSpotIdentity().then((identity) => {
+    // Removed during the fetch: any newer call has started its own.
+    if (generation !== hubSpotGeneration) return
+    isLoadingHubSpot = false
+    const widgetOpenOnLoad = openHubSpotOnLoad
+    openHubSpotOnLoad = false
+    // Re-checked: the org may have changed while the token was fetched.
+    if (!canLoadHubSpot()) return
+    setHubSpotIdentity(identity)
+    hasRequestedHubSpotLoad = true
+    window.HubSpotConversations?.widget.load({ widgetOpen: widgetOpenOnLoad })
+  })
 }
 
 // Module-level so that repeated calls before the API is ready queue it only
@@ -175,6 +194,11 @@ function showHubSpot() {
 }
 
 function removeHubSpot() {
+  hubSpotGeneration += 1
+  isLoadingHubSpot = false
+  openHubSpotOnLoad = false
+  hasRequestedHubSpotLoad = false
+  setHubSpotIdentity()
   window.HubSpotConversations?.widget.remove()
 }
 
@@ -203,7 +227,8 @@ export function openChat() {
   const provider = getChatProvider()
   if (provider === 'hubspot' && window.HubSpotConversations) {
     const { widget } = window.HubSpotConversations
-    if (widget.status().loaded) {
+    // Once load() was called, open() is all that's left to do.
+    if (widget.status().loaded || hasRequestedHubSpotLoad) {
       widget.open()
     } else {
       loadHubSpotWidget(true)

@@ -1,7 +1,13 @@
 import AccountStore from 'common/stores/account-store'
-import data from 'common/data/base/_data'
 import Utils from 'common/utils/utils'
-import { getChatProvider, identifyChatUser, openChat } from 'common/loadChat'
+import { getHubspotChatToken } from 'common/services/useHubspotChatToken'
+import { Res } from 'common/types/responses'
+import {
+  getChatProvider,
+  hideChat,
+  identifyChatUser,
+  openChat,
+} from 'common/loadChat'
 
 jest.mock('common/utils/utils', () => ({
   getFlagsmithHasFeature: jest.fn(),
@@ -9,15 +15,34 @@ jest.mock('common/utils/utils', () => ({
   isOrgOnFreePlan: jest.fn(),
 }))
 jest.mock('common/stores/account-store', () => ({ getUser: jest.fn() }))
-jest.mock('common/data/base/_data', () => ({ get: jest.fn() }))
+jest.mock('common/store', () => ({ getStore: () => 'store' }))
+jest.mock('common/services/useHubspotChatToken', () => ({
+  getHubspotChatToken: jest.fn(),
+}))
 jest.mock('common/project', () => ({ api: 'https://api.test/api/v1/' }))
 
 const mockUtils = Utils as jest.Mocked<typeof Utils>
 const mockAccountStore = AccountStore as jest.Mocked<typeof AccountStore>
-const mockData = data as jest.Mocked<typeof data>
+const mockGetToken = getHubspotChatToken as jest.MockedFunction<
+  typeof getHubspotChatToken
+>
 
-const USER_EMAIL = 'user@example.com'
-const TOKEN_URL = 'https://api.test/api/v1/auth/users/me/hubspot-chat-token/'
+const USER_ID = 1
+const TOKEN: Res['hubspotChatToken'] = {
+  email: 'user@example.com',
+  token: 'test-token',
+}
+
+type TokenResult = { data?: Res['hubspotChatToken']; error?: unknown }
+
+// Lets a test decide when (and with what) the token request resolves.
+const deferredToken = () => {
+  let resolve: (result: TokenResult) => void = () => {}
+  const promise = new Promise<TokenResult>((r) => {
+    resolve = r
+  })
+  return { promise, resolve }
+}
 
 // The HubSpot load waits for the token request.
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve))
@@ -40,13 +65,15 @@ const hubSpotWidget = (loaded: boolean) => ({
 beforeEach(() => {
   jest.resetAllMocks()
   mockUtils.isOrgOnFreePlan.mockReturnValue(false)
-  mockAccountStore.getUser.mockReturnValue({ email: USER_EMAIL } as any)
-  mockData.get.mockResolvedValue({ token: 'test-token' })
+  mockAccountStore.getUser.mockReturnValue({ id: USER_ID })
+  mockGetToken.mockResolvedValue({ data: TOKEN })
   // jest runs in node, so give the module a minimal window.
   ;(global as any).window = {
     hsConversationsSettings: { loadImmediately: false },
     location: { href: '' },
   }
+  // Resets the module's HubSpot load state between tests.
+  hideChat()
 })
 
 describe('getChatProvider', () => {
@@ -240,35 +267,48 @@ describe('HubSpot visitor identification', () => {
     await flushPromises()
 
     // Then
-    expect(mockData.get).toHaveBeenCalledWith(TOKEN_URL)
+    expect(mockGetToken).toHaveBeenCalledWith(
+      'store',
+      { userId: USER_ID },
+      { subscribe: false },
+    )
     expect(settingsAtLoad).toEqual({
-      identificationEmail: USER_EMAIL,
-      identificationToken: 'test-token',
+      identificationEmail: TOKEN.email,
+      identificationToken: TOKEN.token,
       loadImmediately: false,
     })
   })
 
-  it('loads the widget anonymously when the token request fails', async () => {
-    // Given
-    setFlags(['hubspot_chat'])
-    mockData.get.mockRejectedValue(new Error('Not found'))
-    jest.spyOn(console, 'error').mockImplementation(() => {})
-    const widget = hubSpotWidget(false)
-    window.HubSpotConversations = { widget }
+  it.each([
+    { logged: false, status: 404 },
+    { logged: true, status: 500 },
+  ])(
+    'loads the widget anonymously when the token request returns $status',
+    async ({ logged, status }) => {
+      // Given
+      setFlags(['hubspot_chat'])
+      mockGetToken.mockResolvedValue({ error: { status } })
+      const consoleError = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {})
+      const widget = hubSpotWidget(false)
+      window.HubSpotConversations = { widget }
 
-    // When
-    identifyChatUser()
-    await flushPromises()
+      // When
+      identifyChatUser()
+      await flushPromises()
 
-    // Then
-    expect(widget.load).toHaveBeenCalledWith({ widgetOpen: false })
-    expect(window.hsConversationsSettings).toEqual({ loadImmediately: false })
-  })
+      // Then
+      expect(widget.load).toHaveBeenCalledWith({ widgetOpen: false })
+      expect(window.hsConversationsSettings).toEqual({ loadImmediately: false })
+      expect(consoleError).toHaveBeenCalledTimes(logged ? 1 : 0)
+    },
+  )
 
   it("drops a previous user's identity when no new token comes back", async () => {
     // Given
     setFlags(['hubspot_chat'])
-    mockData.get.mockResolvedValue({})
+    mockGetToken.mockResolvedValue({})
     window.hsConversationsSettings = {
       identificationEmail: 'previous@example.com',
       identificationToken: 'previous-token',
@@ -296,9 +336,29 @@ describe('HubSpot visitor identification', () => {
     await flushPromises()
 
     // Then
-    expect(mockData.get).toHaveBeenCalledTimes(1)
+    expect(mockGetToken).toHaveBeenCalledTimes(1)
     expect(widget.load).toHaveBeenCalledTimes(1)
     expect(widget.load).toHaveBeenCalledWith({ widgetOpen: true })
+  })
+
+  it('does not fetch or load again while the widget is still loading', async () => {
+    // Given
+    setFlags(['hubspot_chat'])
+    // status().loaded stays false until HubSpot's iframe is ready.
+    const widget = hubSpotWidget(false)
+    window.HubSpotConversations = { widget }
+    identifyChatUser()
+    await flushPromises()
+
+    // When
+    identifyChatUser()
+    openChat()
+    await flushPromises()
+
+    // Then
+    expect(mockGetToken).toHaveBeenCalledTimes(1)
+    expect(widget.load).toHaveBeenCalledTimes(1)
+    expect(widget.open).toHaveBeenCalled()
   })
 
   it('does not fetch a token when the widget is already loaded', async () => {
@@ -311,7 +371,7 @@ describe('HubSpot visitor identification', () => {
     await flushPromises()
 
     // Then
-    expect(mockData.get).not.toHaveBeenCalled()
+    expect(mockGetToken).not.toHaveBeenCalled()
   })
 
   it('does not load the widget when the org changed during the fetch', async () => {
@@ -327,5 +387,64 @@ describe('HubSpot visitor identification', () => {
 
     // Then
     expect(widget.load).not.toHaveBeenCalled()
+  })
+
+  it('does not load the widget when the user logs out during the fetch', async () => {
+    // Given
+    setFlags(['hubspot_chat'])
+    const token = deferredToken()
+    mockGetToken.mockReturnValue(token.promise)
+    const widget = hubSpotWidget(false)
+    window.HubSpotConversations = { widget }
+
+    // When
+    identifyChatUser()
+    hideChat()
+    token.resolve({ data: TOKEN })
+    await flushPromises()
+
+    // Then
+    expect(widget.remove).toHaveBeenCalled()
+    expect(widget.load).not.toHaveBeenCalled()
+    expect(window.hsConversationsSettings).toEqual({ loadImmediately: false })
+  })
+
+  it("loads the next user's identity when they log in during the previous fetch", async () => {
+    // Given
+    setFlags(['hubspot_chat'])
+    const previousToken = deferredToken()
+    const nextToken = deferredToken()
+    const NEXT_TOKEN: Res['hubspotChatToken'] = {
+      email: 'next@example.com',
+      token: 'next-token',
+    }
+    mockGetToken
+      .mockReturnValueOnce(previousToken.promise)
+      .mockReturnValueOnce(nextToken.promise)
+    const widget = hubSpotWidget(false)
+    window.HubSpotConversations = { widget }
+
+    // When
+    identifyChatUser()
+    hideChat()
+    mockAccountStore.getUser.mockReturnValue({ id: 2 })
+    identifyChatUser()
+    nextToken.resolve({ data: NEXT_TOKEN })
+    await flushPromises()
+    previousToken.resolve({ data: TOKEN })
+    await flushPromises()
+
+    // Then
+    expect(mockGetToken).toHaveBeenLastCalledWith(
+      'store',
+      { userId: 2 },
+      { subscribe: false },
+    )
+    expect(widget.load).toHaveBeenCalledTimes(1)
+    expect(window.hsConversationsSettings).toEqual({
+      identificationEmail: NEXT_TOKEN.email,
+      identificationToken: NEXT_TOKEN.token,
+      loadImmediately: false,
+    })
   })
 })

@@ -998,6 +998,8 @@ export type Req = {
   }
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
+  // The backend reads the user from the session; the id keys the cache per user.
+  getHubspotChatToken: { userId: number }
   getEnvironmentMetrics: { id: number }
   getEnvironmentOnboardingStatus: { environmentKey: string }
   getUserEnvironmentPermissions: {
