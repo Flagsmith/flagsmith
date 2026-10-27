@@ -23012,8 +23012,8 @@ components:
           type: string
           format: email
       required:
-        - token
         - email
+        - token
     IdentifierOnlyIdentity:
       type: object
       properties:
