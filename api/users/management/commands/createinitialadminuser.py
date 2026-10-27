@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.management import BaseCommand
 
 from users.services import (
-    create_initial_superuser,
+    create_superuser,
     should_skip_create_initial_superuser,
 )
 
@@ -35,7 +35,7 @@ class Command(BaseCommand):
         ):
             logger.debug("Skipping initial user creation.")
             return
-        response = create_initial_superuser(
+        response = create_superuser(
             admin_email=admin_email,
         )
         self.stdout.write(

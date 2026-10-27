@@ -3,9 +3,11 @@ from typing import Any
 
 from admin_sso.default_settings import ASSIGNMENT_MATCH
 from admin_sso.models import Assignment
+from django.conf import settings
 from django.core.management import BaseCommand, CommandError
 
 from users.models import FFAdminUser
+from users.services import should_skip_create_initial_superuser, create_superuser
 
 
 class Command(BaseCommand):
@@ -31,9 +33,17 @@ class Command(BaseCommand):
         enforce_sso: bool,
         **options: Any,
     ) -> None:
-        superuser = self._get_or_create_superuser(email)
+        if (
+            not should_skip_create_initial_superuser()
+            and not settings.ALLOW_ADMIN_INITIATION_VIA_CLI
+        ):
+            raise CommandError(
+                "There are no superusers yet. Set `ALLOW_ADMIN_INITIATION_VIA_CLI`"
+            )
+
+        superuser = create_superuser(admin_email=email).user
         if enforce_sso:
-            username, domain = superuser.email.split("@")
+            username, domain = email.split("@")
             Assignment.objects.get_or_create(
                 username_mode=ASSIGNMENT_MATCH,
                 username=username,
@@ -41,17 +51,6 @@ class Command(BaseCommand):
                 user=superuser,
             )
 
-    def _get_or_create_superuser(self, email: str) -> FFAdminUser:
-        user: FFAdminUser | None = FFAdminUser.objects.filter(
-            email__iexact=email
-        ).first()
-        if user is None:
-            user = FFAdminUser.objects.create_superuser(  # type: ignore[no-untyped-call]
-                email=email, password=None, is_active=True
-            )
-            self.stdout.write(
-                self.style.SUCCESS(f'Superuser "{email}" created successfully.')
-            )
-        if not user.is_superuser:
-            raise CommandError(f'User "{email}" exists and is not a superuser.')
-        return user
+        self.stdout.write(
+            self.style.SUCCESS('Superuser "%s" created successfully.' % superuser.email)
+        )

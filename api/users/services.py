@@ -8,7 +8,7 @@ from users.models import FFAdminUser
 
 
 @dataclass
-class CreateInitialSuperuserResponse:
+class CreateSuperuserResponse:
     user: FFAdminUser
     password_reset_url: str
 
@@ -17,15 +17,15 @@ def should_skip_create_initial_superuser() -> bool:
     return FFAdminUser.objects.exists()
 
 
-def create_initial_superuser(
+def create_superuser(
     admin_email: str | None = None,
-) -> CreateInitialSuperuserResponse:
+) -> CreateSuperuserResponse:
     superuser = FFAdminUser.objects.create_superuser(  # type: ignore[no-untyped-call]
         email=admin_email or settings.ADMIN_EMAIL,
         is_active=True,
         password=None,
     )
-    return CreateInitialSuperuserResponse(
+    return CreateSuperuserResponse(
         user=superuser,
         password_reset_url=_get_user_password_reset_url(superuser),
     )
