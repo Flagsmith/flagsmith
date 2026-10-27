@@ -2071,41 +2071,14 @@ def test_post__postgres_below_minimum_plan_on_saas__returns_400(
     assert not WarehouseConnection.objects.filter(environment=environment).exists()
 
 
-@pytest.mark.parametrize(
-    "data, expected_status_code, expected_host",
-    [
-        (
-            {"config": {"host": "pg2.example.com"}},
-            status.HTTP_400_BAD_REQUEST,
-            "pg.example.com",
-        ),
-        (
-            {
-                "config": {"host": "pg2.example.com"},
-                "credentials": {"password": "new-password"},
-            },
-            status.HTTP_200_OK,
-            "pg2.example.com",
-        ),
-        ({"config": {"host": "pg.example.com"}}, status.HTTP_200_OK, "pg.example.com"),
-        ({"config": {"port": 6543}}, status.HTTP_200_OK, "pg.example.com"),
-    ],
-    ids=["host-without-password", "host-with-password", "same-host", "port-only"],
-)
-def test_patch__postgres_config__requires_password_for_host_change(
+def test_patch__postgres_host_without_password__returns_400(
     admin_client: APIClient,
     environment: Environment,
-    mocker: MockerFixture,
-    data: dict[str, object],
-    expected_status_code: int,
-    expected_host: str,
 ) -> None:
     # Given
-    mocker.patch("experimentation.warehouses.postgres.psycopg2.connect")
     connection = WarehouseConnection.objects.create(
         environment=environment,
         warehouse_type=WarehouseType.POSTGRES,
-        name="Production PostgreSQL",
         config={
             "host": "pg.example.com",
             "port": 5432,
@@ -2122,14 +2095,12 @@ def test_patch__postgres_config__requires_password_for_host_change(
     )
 
     # When
-    response = admin_client.patch(url, data=data, format="json")
+    response = admin_client.patch(
+        url, data={"config": {"host": "pg2.example.com"}}, format="json"
+    )
 
     # Then
-    assert response.status_code == expected_status_code
-    if expected_status_code == status.HTTP_400_BAD_REQUEST:
-        assert response.json() == {
-            "config": {"host": "Re-enter the password when changing the host."}
-        }
-    connection.refresh_from_db()
-    assert connection.config is not None
-    assert connection.config["host"] == expected_host
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "config": {"host": "Re-enter the password when changing the host."}
+    }

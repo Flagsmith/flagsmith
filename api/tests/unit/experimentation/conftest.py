@@ -1,6 +1,7 @@
 import json
 import uuid
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -14,7 +15,7 @@ from django.utils import timezone
 from flag_engine.segments.constants import EQUAL
 from openfeature.provider.in_memory_provider import InMemoryFlag, InMemoryProvider
 from psycopg2 import sql
-from psycopg2.extensions import connection as PgConnection
+from psycopg2.extensions import cursor as PgCursor
 from pytest_mock import MockerFixture
 
 from core.dataclasses import AuthorData
@@ -187,54 +188,49 @@ POSTGRES_EVENTS_SQL_PATH = (
 
 @dataclass
 class PostgresWarehouseSchema:
-    """An events table in its own schema on the test database server, reached
-    over a separate session so the provider sees what the test commits."""
+    """An events table in its own schema, managed over a separate autocommit
+    session so the provider's own connections see it."""
 
-    admin: PgConnection
+    cursor: PgCursor
     schema: str
     config: dict[str, object]
     password: str
-
-    def execute(
-        self,
-        query: str | sql.Composable,
-        params: Sequence[object] | None = None,
-    ) -> None:
-        with self.admin.cursor() as cursor:
-            cursor.execute(query, params)
 
 
 @pytest.fixture()
 def postgres_warehouse_schema(db: None) -> Iterator[PostgresWarehouseSchema]:
     settings = django_connection.settings_dict
-    admin = psycopg2.connect(
-        host=settings["HOST"],
-        port=settings["PORT"],
-        dbname=settings["NAME"],
-        user=settings["USER"],
-        password=settings["PASSWORD"],
-    )
-    admin.autocommit = True
     schema = f"exp_{uuid.uuid4().hex[:12]}"
-    target = PostgresWarehouseSchema(
-        admin=admin,
-        schema=schema,
-        config={
-            "host": settings["HOST"],
-            "port": int(settings["PORT"]),
-            "database": settings["NAME"],
-            "schema": schema,
-            "username": settings["USER"],
-            "sslmode": "disable",
-        },
-        password=settings["PASSWORD"],
-    )
-    target.execute(
-        POSTGRES_EVENTS_SQL_PATH.read_text().replace("flagsmith_exp", schema)
-    )
-    yield target
-    target.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
-    admin.close()
+    with closing(
+        psycopg2.connect(
+            host=settings["HOST"],
+            port=settings["PORT"],
+            dbname=settings["NAME"],
+            user=settings["USER"],
+            password=settings["PASSWORD"],
+        )
+    ) as admin:
+        admin.autocommit = True
+        with admin.cursor() as cursor:
+            cursor.execute(
+                POSTGRES_EVENTS_SQL_PATH.read_text().replace("flagsmith_exp", schema)
+            )
+            yield PostgresWarehouseSchema(
+                cursor=cursor,
+                schema=schema,
+                config={
+                    "host": settings["HOST"],
+                    "port": int(settings["PORT"]),
+                    "database": settings["NAME"],
+                    "schema": schema,
+                    "username": settings["USER"],
+                    "sslmode": "disable",
+                },
+                password=settings["PASSWORD"],
+            )
+            cursor.execute(
+                sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema))
+            )
 
 
 @pytest.fixture()

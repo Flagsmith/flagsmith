@@ -73,22 +73,19 @@ logger = structlog.get_logger("warehouse")
 CONNECT_TIMEOUT_SECONDS = 10
 
 # Kept in step with experimentation/postgres/events.sql.
-EVENTS_TABLE_COLUMNS = frozenset(
-    {
-        "environment_key",
-        "event",
-        "feature_name",
-        "timestamp",
-        "collected_at",
-        "identifier",
-        "value",
-        "traits",
-        "metadata",
-        "sdk_language",
-        "sdk_version",
-    }
-)
-TIMESTAMPTZ_COLUMNS = ("timestamp", "collected_at")
+EVENTS_TABLE_COLUMN_TYPES = {
+    "environment_key": "text",
+    "event": "text",
+    "feature_name": "text",
+    "timestamp": "timestamp with time zone",
+    "collected_at": "timestamp with time zone",
+    "identifier": "text",
+    "value": "text",
+    "traits": "text",
+    "metadata": "text",
+    "sdk_language": "text",
+    "sdk_version": "text",
+}
 
 # Lowercase only: the setup SQL leaves it unquoted, which folds it to lowercase.
 # One hostname or IPv4 address: libpq would also accept a host list or a
@@ -223,7 +220,7 @@ def _fetch_flag(cursor: "Cursor") -> bool:
 
 def check_events_table(cursor: "Cursor", schema: str) -> None:
     """Raise if the schema or its events table is missing, unusable by the
-    configured user, or lacks a column delivery writes.
+    configured user, or its columns don't match the setup SQL.
 
     Privileges are checked before columns: catalogue views hide the columns of
     tables the user holds no privilege on."""
@@ -254,9 +251,9 @@ def check_events_table(cursor: "Cursor", schema: str) -> None:
         "WHERE attrelid = 'events'::regclass AND attnum > 0 AND NOT attisdropped"
     )
     column_types = dict(cursor.fetchall())
-    if not EVENTS_TABLE_COLUMNS <= column_types.keys() or any(
-        column_types[column] != "timestamp with time zone"
-        for column in TIMESTAMPTZ_COLUMNS
+    if any(
+        column_types.get(column) != column_type
+        for column, column_type in EVENTS_TABLE_COLUMN_TYPES.items()
     ):
         raise EventsTableSchemaMismatchError()
 
