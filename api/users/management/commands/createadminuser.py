@@ -41,7 +41,13 @@ class Command(BaseCommand):
                 "There are no superusers yet. Set `ALLOW_ADMIN_INITIATION_VIA_CLI`"
             )
 
-        superuser = create_superuser(admin_email=email).user
+        superuser = FFAdminUser.objects.filter(email__iexact=email).first()
+        if superuser:
+            superuser.is_staff = superuser.is_superuser = True
+            superuser.save(update_fields=["is_staff", "is_superuser"])
+        else:
+            superuser = create_superuser(admin_email=email).user
+
         if enforce_sso:
             username, domain = email.split("@")
             Assignment.objects.get_or_create(

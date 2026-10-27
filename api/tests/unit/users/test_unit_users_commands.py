@@ -40,14 +40,31 @@ def test_createadminuser__enforce_sso_run_twice__creates_one_sso_superuser(
     assert Assignment.objects.get().user == superuser
 
 
-def test_createadminuser__existing_regular_user__raises_error(
+def test_createadminuser__existing_regular_user__promotes_to_superuser(
+    settings: SettingsWrapper,
     staff_user: FFAdminUser,
 ) -> None:
-    # Given / When
-    with pytest.raises(CommandError):
-        call_command("createadminuser", "--email", staff_user.email, "--enforce-sso")
+    # Given
+    settings.ALLOW_ADMIN_INITIATION_VIA_CLI = True
+
+    # When
+    call_command(
+        "createadminuser", "--email", staff_user.email.upper(), "--enforce-sso"
+    )
 
     # Then
     staff_user.refresh_from_db()
-    assert not staff_user.is_superuser
-    assert not Assignment.objects.exists()
+    assert staff_user.is_superuser
+    assert staff_user.is_staff
+    assert Assignment.objects.get().user == staff_user
+
+
+def test_createadminuser__no_superuser_and_cli_initiation_disallowed__raises_error() -> (
+    None
+):
+    # Given / When
+    with pytest.raises(CommandError):
+        call_command("createadminuser", "--email", "admin@example.com")
+
+    # Then
+    assert not FFAdminUser.objects.exists()
