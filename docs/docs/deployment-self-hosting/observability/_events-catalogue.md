@@ -931,7 +931,7 @@ Attributes:
 ### `warehouse.connection.event_names_failed`
 
 Logged at `warning` from:
- - `api/experimentation/warehouses/clickhouse.py:297`
+ - `api/experimentation/warehouses/clickhouse.py:334`
  - `api/experimentation/warehouses/flagsmith.py:181`
 
 Attributes:
@@ -942,7 +942,7 @@ Attributes:
 ### `warehouse.connection.event_stats_failed`
 
 Logged at `warning` from:
- - `api/experimentation/warehouses/clickhouse.py:334`
+ - `api/experimentation/warehouses/clickhouse.py:371`
 
 Attributes:
  - `environment.id`
