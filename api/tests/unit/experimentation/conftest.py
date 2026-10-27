@@ -1,12 +1,20 @@
 import json
+import uuid
+from collections.abc import Iterator, Sequence
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Protocol
 
 import openfeature.api as openfeature_api
+import psycopg2
 import pytest
+from django.db import connection as django_connection
 from django.urls import reverse
 from django.utils import timezone
 from flag_engine.segments.constants import EQUAL
 from openfeature.provider.in_memory_provider import InMemoryFlag, InMemoryProvider
+from psycopg2 import sql
+from psycopg2.extensions import connection as PgConnection
 from pytest_mock import MockerFixture
 
 from core.dataclasses import AuthorData
@@ -168,6 +176,78 @@ def databricks_connection(
             "schema": "flagsmith_exp",
         },
         credentials={"client_id": "sp-id", "client_secret": "sp-secret"},
+    )
+    return connection
+
+
+POSTGRES_EVENTS_SQL_PATH = (
+    Path(__file__).resolve().parents[4] / "experimentation" / "postgres" / "events.sql"
+)
+
+
+@dataclass
+class PostgresWarehouseSchema:
+    """An events table in its own schema on the test database server, reached
+    over a separate session so the provider sees what the test commits."""
+
+    admin: PgConnection
+    schema: str
+    config: dict[str, object]
+    password: str
+
+    def execute(
+        self,
+        query: str | sql.Composable,
+        params: Sequence[object] | None = None,
+    ) -> None:
+        with self.admin.cursor() as cursor:
+            cursor.execute(query, params)
+
+
+@pytest.fixture()
+def postgres_warehouse_schema(db: None) -> Iterator[PostgresWarehouseSchema]:
+    settings = django_connection.settings_dict
+    admin = psycopg2.connect(
+        host=settings["HOST"],
+        port=settings["PORT"],
+        dbname=settings["NAME"],
+        user=settings["USER"],
+        password=settings["PASSWORD"],
+    )
+    admin.autocommit = True
+    schema = f"exp_{uuid.uuid4().hex[:12]}"
+    target = PostgresWarehouseSchema(
+        admin=admin,
+        schema=schema,
+        config={
+            "host": settings["HOST"],
+            "port": int(settings["PORT"]),
+            "database": settings["NAME"],
+            "schema": schema,
+            "username": settings["USER"],
+            "sslmode": "disable",
+        },
+        password=settings["PASSWORD"],
+    )
+    target.execute(
+        POSTGRES_EVENTS_SQL_PATH.read_text().replace("flagsmith_exp", schema)
+    )
+    yield target
+    target.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
+    admin.close()
+
+
+@pytest.fixture()
+def postgres_connection(
+    environment: Environment,
+    postgres_warehouse_schema: PostgresWarehouseSchema,
+) -> WarehouseConnection:
+    connection: WarehouseConnection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.POSTGRES,
+        name="Production PostgreSQL",
+        config=postgres_warehouse_schema.config,
+        credentials={"password": postgres_warehouse_schema.password},
     )
     return connection
 

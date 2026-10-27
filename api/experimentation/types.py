@@ -90,3 +90,26 @@ DATABRICKS_DEFAULTS: DatabricksConfig = {
 class DatabricksCredentials(TypedDict):
     client_id: str
     client_secret: str
+
+
+class PostgresConfig(TypedDict):
+    host: str
+    port: int
+    database: str
+    schema: str
+    username: str
+    sslmode: str
+
+
+POSTGRES_DEFAULTS: PostgresConfig = {
+    "host": "",
+    "port": 5432,
+    "database": "",
+    "schema": "flagsmith_exp",
+    "username": "",
+    "sslmode": "require",
+}
+
+
+class PostgresCredentials(TypedDict):
+    password: str

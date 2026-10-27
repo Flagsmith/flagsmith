@@ -24,7 +24,10 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.views import WarehouseConnectionViewSet
-from tests.unit.experimentation.conftest import SetWarehousesFlagFixture
+from tests.unit.experimentation.conftest import (
+    PostgresWarehouseSchema,
+    SetWarehousesFlagFixture,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -2013,3 +2016,120 @@ def test_patch__existing_databricks_below_minimum_plan_on_saas__saves(
     assert response.status_code == status.HTTP_200_OK
     databricks_connection.refresh_from_db()
     assert databricks_connection.name == "Renamed"
+
+
+def test_post__postgres__returns_201_connected_with_generated_name(
+    admin_client: APIClient,
+    environment: Environment,
+    postgres_warehouse_schema: PostgresWarehouseSchema,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    payload = {
+        "warehouse_type": "postgres",
+        "config": postgres_warehouse_schema.config,
+        "credentials": {"password": postgres_warehouse_schema.password},
+    }
+
+    # When
+    response = admin_client.post(warehouse_connection_url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == WarehouseConnectionStatus.CONNECTED
+    assert response.json()["name"] == f"PostgreSQL Warehouse - {environment.name}"
+    assert response.json()["config"] == postgres_warehouse_schema.config
+    assert "credentials" not in response.json()
+
+
+@pytest.mark.usefixtures("saas_mode")
+def test_post__postgres_below_minimum_plan_on_saas__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    set_warehouses_flag({"minimum_plans": {"postgres": "scale-up"}})
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "postgres",
+            "config": {"host": "pg.example.com", "database": "a", "username": "b"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "warehouse_type": ["PostgreSQL connections are not available on your plan."]
+    }
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+@pytest.mark.parametrize(
+    "data, expected_status_code, expected_host",
+    [
+        (
+            {"config": {"host": "pg2.example.com"}},
+            status.HTTP_400_BAD_REQUEST,
+            "pg.example.com",
+        ),
+        (
+            {
+                "config": {"host": "pg2.example.com"},
+                "credentials": {"password": "new-password"},
+            },
+            status.HTTP_200_OK,
+            "pg2.example.com",
+        ),
+        ({"config": {"host": "pg.example.com"}}, status.HTTP_200_OK, "pg.example.com"),
+        ({"config": {"port": 6543}}, status.HTTP_200_OK, "pg.example.com"),
+    ],
+    ids=["host-without-password", "host-with-password", "same-host", "port-only"],
+)
+def test_patch__postgres_config__requires_password_for_host_change(
+    admin_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    data: dict[str, object],
+    expected_status_code: int,
+    expected_host: str,
+) -> None:
+    # Given
+    mocker.patch("experimentation.warehouses.postgres.psycopg2.connect")
+    connection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.POSTGRES,
+        name="Production PostgreSQL",
+        config={
+            "host": "pg.example.com",
+            "port": 5432,
+            "database": "analytics",
+            "schema": "flagsmith_exp",
+            "username": "flagsmith",
+            "sslmode": "require",
+        },
+        credentials={"password": "hunter2"},
+    )
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, connection.id],
+    )
+
+    # When
+    response = admin_client.patch(url, data=data, format="json")
+
+    # Then
+    assert response.status_code == expected_status_code
+    if expected_status_code == status.HTTP_400_BAD_REQUEST:
+        assert response.json() == {
+            "config": {"host": "Re-enter the password when changing the host."}
+        }
+    connection.refresh_from_db()
+    assert connection.config is not None
+    assert connection.config["host"] == expected_host
