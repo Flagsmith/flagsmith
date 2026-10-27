@@ -8,7 +8,7 @@ pytestmark = pytest.mark.django_db
 
 
 def test_createadminuser__new_email__creates_superuser_without_password() -> None:
-    # When
+    # Given / When
     call_command("createadminuser", "--email", "admin@example.com")
 
     # Then
@@ -19,7 +19,7 @@ def test_createadminuser__new_email__creates_superuser_without_password() -> Non
 
 
 def test_createadminuser__enforce_sso_run_twice__creates_one_sso_superuser() -> None:
-    # When
+    # Given / When
     call_command("createadminuser", "--email", "admin@example.com", "--enforce-sso")
     call_command("createadminuser", "--email", "admin@example.com", "--enforce-sso")
 
@@ -32,7 +32,7 @@ def test_createadminuser__enforce_sso_run_twice__creates_one_sso_superuser() -> 
 def test_createadminuser__existing_regular_user__raises_error(
     staff_user: FFAdminUser,
 ) -> None:
-    # When
+    # Given / When
     with pytest.raises(CommandError):
         call_command("createadminuser", "--email", staff_user.email, "--enforce-sso")
 
