@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import socket
 import typing
 from collections.abc import Mapping
 from typing import Any, Protocol
 
 from common.core.utils import is_saas
 
-from core.network import is_internal_address
+from core.network import is_internal_address, is_internal_ip, resolve_addresses
+from experimentation.warehouses.exceptions import DeliveryConfigError
 
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence
@@ -26,6 +28,23 @@ if typing.TYPE_CHECKING:
 def is_disallowed_host(host: str) -> bool:
     # Without this, SaaS customers could point a connection at Flagsmith's internal network.
     return is_saas() and is_internal_address(host, include_shared=True)
+
+
+def pin_host_address(host: str) -> str | None:
+    """On SaaS, resolve the host once and return the address to connect to, so
+    DNS cannot rebind between the check and the connection. Returns None on
+    self-hosted, where internal hosts are allowed."""
+    if not is_saas():
+        return None
+    try:
+        addresses = resolve_addresses(host)
+    except socket.gaierror as exc:
+        raise DeliveryConfigError("Could not connect to the host.") from exc
+    if any(is_internal_ip(ip, include_shared=True) for ip in addresses):
+        raise DeliveryConfigError(
+            "Host must not target internal or private network addresses."
+        )
+    return str(addresses[0])
 
 
 class Warehouse(Protocol):

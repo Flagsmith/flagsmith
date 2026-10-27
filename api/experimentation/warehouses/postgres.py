@@ -22,7 +22,7 @@ from experimentation.types import (
     PostgresConfig,
     PostgresCredentials,
 )
-from experimentation.warehouses.base import is_disallowed_host
+from experimentation.warehouses.base import is_disallowed_host, pin_host_address
 from experimentation.warehouses.cache import (
     CUSTOMER_EVENT_UNAVAILABLE,
     customer_cache_key,
@@ -182,9 +182,7 @@ def read_cursor(
     except KeyError as exc:
         raise DeliveryConfigError("Stored connection details are incomplete.") from exc
 
-    # Re-checked immediately before connecting: DNS may resolve differently
-    # than it did at validation time.
-    if not is_single_host(host) or is_disallowed_host(host):
+    if not is_single_host(host):
         raise DeliveryConfigError(
             "Host must not target internal or private network addresses."
         )
@@ -192,6 +190,7 @@ def read_cursor(
     with closing(
         psycopg2.connect(
             host=host,
+            hostaddr=pin_host_address(host),
             port=port,
             dbname=database,
             user=username,
