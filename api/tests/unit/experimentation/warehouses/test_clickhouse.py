@@ -252,6 +252,53 @@ def test_no_redirect_pool_manager__urlopen__refuses_to_follow_redirects(
     assert urlopen.call_args.kwargs["redirect"] is False
 
 
+@pytest.mark.parametrize(
+    "pinned_address, expected_dialled_host",
+    [("8.8.8.8", "8.8.8.8"), (None, "ch.acme-corp.example")],
+    ids=["saas", "self-hosted"],
+)
+def test_pinned_address_connection__new_conn__dials_checked_address(
+    mocker: MockerFixture,
+    pinned_address: str | None,
+    expected_dialled_host: str,
+) -> None:
+    # Given
+    mocker.patch.object(clickhouse, "pin_host_address", return_value=pinned_address)
+    create_connection = mocker.patch("urllib3.connection.connection.create_connection")
+    connection = clickhouse._PinnedAddressHTTPSConnection("ch.acme-corp.example", 8443)
+
+    # When
+    connection._new_conn()
+
+    # Then the checked address is dialled, and the hostname is kept for TLS
+    assert create_connection.call_args.args[0] == (expected_dialled_host, 8443)
+    assert connection.host == "ch.acme-corp.example"
+
+
+@pytest.mark.parametrize(
+    "url, expected_connection_cls",
+    [
+        ("http://ch.acme-corp.example:8123/", clickhouse._PinnedAddressConnection),
+        (
+            "https://ch.acme-corp.example:8443/",
+            clickhouse._PinnedAddressHTTPSConnection,
+        ),
+    ],
+)
+def test_no_redirect_pool_manager__pools__use_pinned_address_connections(
+    url: str,
+    expected_connection_cls: type,
+) -> None:
+    # Given
+    manager = clickhouse._NoRedirectPoolManager()
+
+    # When
+    pool = manager.connection_from_url(url)
+
+    # Then
+    assert pool.ConnectionCls is expected_connection_cls
+
+
 WINDOW_START = datetime(2026, 1, 1, tzinfo=timezone.utc)
 WINDOW_END = datetime(2026, 1, 8, tzinfo=timezone.utc)
 

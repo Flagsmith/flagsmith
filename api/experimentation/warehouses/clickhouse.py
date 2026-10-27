@@ -1,3 +1,4 @@
+import socket
 import typing
 from contextlib import contextmanager
 from functools import lru_cache
@@ -12,7 +13,8 @@ from clickhouse_connect.driver.exceptions import (
 )
 from django.core.cache import cache
 from rest_framework import serializers
-from urllib3 import PoolManager
+from urllib3 import HTTPConnectionPool, HTTPSConnectionPool, PoolManager
+from urllib3.connection import HTTPConnection, HTTPSConnection
 
 from experimentation.dataclasses import (
     ExposureBucket,
@@ -25,7 +27,7 @@ from experimentation.types import (
     ClickHouseConfig,
     ClickHouseCredentials,
 )
-from experimentation.warehouses.base import is_disallowed_host
+from experimentation.warehouses.base import is_disallowed_host, pin_host_address
 from experimentation.warehouses.cache import (
     CUSTOMER_EVENT_UNAVAILABLE,
     customer_cache_key,
@@ -71,10 +73,45 @@ EVENTS_TABLE_NAME = "events"
 CONNECT_TIMEOUT_SECONDS = 10
 
 
+class _PinnedAddressConnection(HTTPConnection):
+    """Dials the address the internal-address guard checked, so DNS cannot
+    rebind in between. The hostname still drives TLS SNI, certificate
+    verification and the Host header."""
+
+    def _new_conn(self) -> socket.socket:
+        address = pin_host_address(self.host)
+        if address is None:
+            return super()._new_conn()
+        hostname, self._dns_host = self._dns_host, address
+        try:
+            return super()._new_conn()
+        finally:
+            self._dns_host = hostname
+
+
+class _PinnedAddressHTTPSConnection(_PinnedAddressConnection, HTTPSConnection):
+    pass
+
+
+class _PinnedAddressConnectionPool(HTTPConnectionPool):
+    ConnectionCls = _PinnedAddressConnection
+
+
+class _PinnedAddressHTTPSConnectionPool(HTTPSConnectionPool):
+    ConnectionCls = _PinnedAddressHTTPSConnection
+
+
 class _NoRedirectPoolManager(PoolManager):
     """The internal-address guard validates the host we dial; following a
     redirect would let a permitted host bounce the request, and its event
     payload, to an address that was never checked."""
+
+    def __init__(self, **kwargs: "Any") -> None:
+        super().__init__(**kwargs)
+        self.pool_classes_by_scheme = {
+            "http": _PinnedAddressConnectionPool,
+            "https": _PinnedAddressHTTPSConnectionPool,
+        }
 
     def urlopen(  # type: ignore[override]
         self,
