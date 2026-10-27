@@ -395,7 +395,7 @@ def test_process_import_request__valid_segments__creates_segment_per_environment
                                 {
                                     "property": "p3",
                                     "operator": segment_constants.REGEX,
-                                    "value": ".*(?:foo[0-9]{0,1})",
+                                    "value": "[\\s\\S]*(?:foo[0-9]{0,1})",
                                     "description": None,
                                 }
                             ],
@@ -520,6 +520,8 @@ def test_process_import_request__ends_with_clause__matches_suffix_only(
         (r"^gmail|corp", "user@corp.com", True),
         (r"^gmail|corp", "user@gmail.com", False),
         (r"(?i)GMAIL\.com", "user@gmail.com", True),
+        (r"corp", "first\nuser@corp.com", True),
+        (r"^corp", "first\ncorp", False),
     ],
 )
 @pytest.mark.django_db(transaction=True)
@@ -693,7 +695,7 @@ def test_process_import_request__valid_segments__imports_correctly_x_replaced_ab
             "property", "operator", "value"
         )
     ) == {
-        ("p3", segment_constants.REGEX, ".*(?:foo[0-9]{0,1})"),
+        ("p3", segment_constants.REGEX, "[\\s\\S]*(?:foo[0-9]{0,1})"),
     }
 
     # Include individual users

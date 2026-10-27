@@ -179,7 +179,7 @@ def _to_unanchored_regex(pattern: str) -> str:
     # start only. Leading inline flags such as `(?i)` must stay at the start of the expression.
     flags = re.match(r"(?:\(\?[a-zA-Z]+\))+", pattern)
     prefix = flags.group() if flags else ""
-    return f"{prefix}.*(?:{pattern[len(prefix) :]})"
+    return f"{prefix}[\\s\\S]*(?:{pattern[len(prefix) :]})"
 
 
 def _convert_ld_values(values: list[str], ld_operator: str) -> list[str]:
