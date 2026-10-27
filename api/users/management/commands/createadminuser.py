@@ -6,8 +6,7 @@ from admin_sso.models import Assignment
 from django.conf import settings
 from django.core.management import BaseCommand, CommandError
 
-from users.models import FFAdminUser
-from users.services import should_skip_create_initial_superuser, create_superuser
+from users.services import create_superuser, should_skip_create_initial_superuser
 
 
 class Command(BaseCommand):
