@@ -1,14 +1,20 @@
 import pytest
 from admin_sso.models import Assignment
 from django.core.management import CommandError, call_command
+from pytest_django.fixtures import SettingsWrapper
 
 from users.models import FFAdminUser
 
 pytestmark = pytest.mark.django_db
 
 
-def test_createadminuser__new_email__creates_superuser_without_password() -> None:
-    # Given / When
+def test_createadminuser__new_email__creates_superuser_without_password(
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ALLOW_ADMIN_INITIATION_VIA_CLI = True
+
+    # When
     call_command("createadminuser", "--email", "admin@example.com")
 
     # Then
@@ -18,8 +24,13 @@ def test_createadminuser__new_email__creates_superuser_without_password() -> Non
     assert not Assignment.objects.exists()
 
 
-def test_createadminuser__enforce_sso_run_twice__creates_one_sso_superuser() -> None:
-    # Given / When
+def test_createadminuser__enforce_sso_run_twice__creates_one_sso_superuser(
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ALLOW_ADMIN_INITIATION_VIA_CLI = True
+
+    # When
     call_command("createadminuser", "--email", "admin@example.com", "--enforce-sso")
     call_command("createadminuser", "--email", "admin@example.com", "--enforce-sso")
 
