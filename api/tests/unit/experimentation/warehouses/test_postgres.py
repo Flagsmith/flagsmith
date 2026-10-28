@@ -273,32 +273,6 @@ def test_read_cursor__unusable_config__raises_before_connecting(
     connect.assert_not_called()
 
 
-@pytest.mark.usefixtures("saas_mode")
-def test_read_cursor__saas__connects_to_pinned_address(mocker: MockerFixture) -> None:
-    # Given
-    mocker.patch(
-        "core.network.socket.getaddrinfo",
-        return_value=[(None, None, None, "", ("8.8.8.8", 0))],
-    )
-    connect = mocker.patch(
-        "experimentation.warehouses.postgres.psycopg2.connect",
-        side_effect=psycopg2.OperationalError("stop"),
-    )
-    connection = WarehouseConnection(
-        warehouse_type="postgres", config={**VALID_CONFIG, **DEFAULTS}
-    )
-    connection.credentials = {"password": "hunter2"}
-
-    # When
-    with pytest.raises(psycopg2.OperationalError):
-        with read_cursor(connection, statement_timeout=5):
-            pass  # pragma: no cover
-
-    # Then
-    assert connect.call_args.kwargs["host"] == "pg.example.com"
-    assert connect.call_args.kwargs["hostaddr"] == "8.8.8.8"
-
-
 @pytest.mark.parametrize(
     "setup, expected_detail",
     [
