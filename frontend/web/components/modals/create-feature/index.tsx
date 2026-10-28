@@ -47,6 +47,7 @@ import SegmentOverridesTab, {
 } from './tabs/SegmentOverridesTab'
 import UsageTab from './tabs/UsageTab'
 import FeatureDependenciesTab from './tabs/FeatureDependenciesTab'
+import { useStagedPrerequisites } from './tabs/FeatureDependenciesTab/hooks/useStagedPrerequisites'
 import FeatureLimitAlert from './components/FeatureLimitAlert'
 import FeatureUpdateSummary from './components/FeatureUpdateSummary'
 import FeatureNameInput from './components/FeatureNameInput'
@@ -155,6 +156,12 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const [, setTabKey] = useState(0)
 
   const isEdit = !!props.projectFlag
+  // In the modal, so a change request from any tab includes them.
+  const dependencyChanges = useStagedPrerequisites({
+    environmentId,
+    projectFlag,
+  })
+  const dependenciesChanged = !!dependencyChanges.staged.length
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const close = useCallback(() => {
@@ -164,7 +171,12 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   const onClosing = useCallback(() => {
     if (isEdit) {
       return new Promise<boolean>((resolve) => {
-        if (settingsChanged || valueChanged || segmentsChanged) {
+        if (
+          settingsChanged ||
+          valueChanged ||
+          segmentsChanged ||
+          dependenciesChanged
+        ) {
           openConfirm({
             body: 'Closing this will discard your unsaved changes.',
             noText: 'Cancel',
@@ -179,7 +191,13 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
       })
     }
     return Promise.resolve(true)
-  }, [isEdit, settingsChanged, valueChanged, segmentsChanged])
+  }, [
+    isEdit,
+    settingsChanged,
+    valueChanged,
+    segmentsChanged,
+    dependenciesChanged,
+  ])
 
   const fetchChangeRequests = useCallback(
     (forceRefetch?: boolean) => {
@@ -460,12 +478,13 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     controlValue < 0
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
-  // Change requests are out of scope for the first version, so the tab stays
-  // hidden where they are enforced. See #8428.
+  // Where change requests are enforced, the tab also needs its own flag, so the
+  // change request flow can roll out separately.
   const isDependenciesTabEnabled =
     Utils.getFlagsmithHasFeature('flag_dependencies') &&
     !existingChangeRequest &&
-    !is4Eyes
+    (!is4Eyes ||
+      Utils.getFlagsmithHasFeature('flag_dependencies_change_requests'))
 
   let regexValid = true
   try {
@@ -477,6 +496,24 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   }
 
   const Provider = identity ? IdentityProvider : FeatureListProvider
+
+  const toastChangeRequestSaved = (changeRequestId: number) =>
+    toast(
+      `${
+        existingChangeRequest ? 'Updated' : 'Created'
+      } Change Request #${changeRequestId}`,
+      'success',
+      undefined,
+      {
+        buttonText: 'Open',
+        onClick: () => {
+          closeModal()
+          props.history?.push(
+            `/project/${projectId}/environment/${environmentId}/change-requests/${changeRequestId}`,
+          )
+        },
+      },
+    )
   const environmentName = environment.name
 
   return (
@@ -488,7 +525,23 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
           setValueChanged(true)
         }
       }}
-      onSave={() => {
+      onSave={(data?: {
+        changeRequest?: boolean
+        updatedChangeRequest?: { id: number }
+      }) => {
+        const changeRequestId = data?.changeRequest
+          ? data.updatedChangeRequest?.id
+          : undefined
+        if (changeRequestId) {
+          const staging = dependenciesChanged
+            ? dependencyChanges.stageInto(changeRequestId)
+            : Promise.resolve(null)
+          // A change request missing some dependency changes gets the banner,
+          // not a success toast.
+          staging.then((failure) => {
+            if (!failure) toastChangeRequestSaved(changeRequestId)
+          })
+        }
         if (identity) {
           close()
         }
@@ -581,14 +634,16 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
         const saveFeatureValue = saveFeatureWithValidation(
           (schedule?: boolean) => {
             if ((is4Eyes || schedule) && !identity) {
-              const approvable = hasApprovableChanges({
-                editedEnabled: environmentFlag.enabled,
-                editedValue: environmentFlag.feature_state_value,
-                segmentOverridesChanged: segmentsChanged,
-                storedEnabled: props.environmentFlag?.enabled,
-                storedValue: props.environmentFlag?.feature_state_value,
-                weightsChanged: variationChanges.weights,
-              })
+              const approvable =
+                dependenciesChanged ||
+                hasApprovableChanges({
+                  editedEnabled: environmentFlag.enabled,
+                  editedValue: environmentFlag.feature_state_value,
+                  segmentOverridesChanged: segmentsChanged,
+                  storedEnabled: props.environmentFlag?.enabled,
+                  storedValue: props.environmentFlag?.feature_state_value,
+                  weightsChanged: variationChanges.weights,
+                })
 
               if (!approvable) {
                 const what = schedule
@@ -656,7 +711,9 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
               openModal2(
                 getModalTitle(),
                 <ChangeRequestModal
-                  showIgnoreConflicts={true}
+                  // Its "no changes" check only sees the feature states, so it
+                  // would flag a change request that only changes dependencies.
+                  showIgnoreConflicts={!dependenciesChanged}
                   showAssignees={is4Eyes}
                   isScheduledChange={schedule}
                   changeRequest={existingChangeRequest}
@@ -829,13 +886,22 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
                     <TabItem
                       data-test='feature_dependencies'
                       tabLabel='Dependencies'
+                      isDirty={dependenciesChanged}
                     >
                       <FeatureDependenciesTab
                         environmentId={environmentId}
                         environmentName={environmentName}
                         projectId={projectId}
                         projectFlag={projectFlag}
-                        onSelectFeature={(featureId) => {
+                        requiresChangeRequests={is4Eyes}
+                        isVersioned={isVersioned}
+                        staging={dependencyChanges}
+                        isSaving={isSaving}
+                        onCreateChangeRequest={() => saveFeatureValue()}
+                        onSelectFeature={async (featureId) => {
+                          // Opening another feature replaces this modal
+                          // without closing it, so ask here.
+                          if (!(await onClosing())) return
                           // The features list, never the current page: it
                           // owns the deep link and hydrates an off-page
                           // target. `from` puts a back arrow in the header.

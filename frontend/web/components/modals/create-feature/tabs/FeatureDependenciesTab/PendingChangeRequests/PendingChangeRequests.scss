@@ -1,0 +1,21 @@
+// Each change request hides itself when it changes no prerequisite, so the
+// heading goes too once none are left.
+.pending-change-requests:not(:has(.pending-change-requests__list > *)) {
+  display: none;
+}
+
+// B2, as the accordion's title, so it reads as secondary to the table.
+.pending-change-requests__link {
+  font-size: 0.8125rem;
+}
+
+// Lets a long title shrink and truncate beside the count.
+.pending-change-requests__title {
+  min-width: 0;
+}
+
+// Close to a fixed width, so the counts line up down the list.
+.pending-change-requests__count {
+  min-width: 4rem;
+  font-variant-numeric: tabular-nums;
+}

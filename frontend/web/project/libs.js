@@ -88,6 +88,9 @@ if(Project.linkedinPartnerTracking) {
 }
 
 if(Project.hubspot && !disableThirdPartyScripts) {
+    // Must be set before the script loads. The chat widget is loaded by
+    // common/loadChat behind the hubspot_chat flag, not by chatflow targeting.
+    window.hsConversationsSettings = { loadImmediately: false };
     var script = document.createElement("script");
     script.type = "text/javascript";
     script.id = "hs-script-loader";

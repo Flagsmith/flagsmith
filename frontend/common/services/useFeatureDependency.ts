@@ -25,6 +25,22 @@ const invalidateEnvironment = (query: {
   { id: `LIST-${query.environmentId}`, type: 'FeatureDependency' },
 ]
 
+// With a change request, the API stages the change in it, or lists the
+// dependencies as if it were live.
+const withChangeRequest = (url: string, changeRequestId?: number) =>
+  changeRequestId ? `${url}?change_request=${changeRequestId}` : url
+
+const dependencyUrl = (query: Req['createFeatureDependency']) =>
+  withChangeRequest(
+    `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`,
+    query.changeRequestId,
+  )
+
+const pendingTags = (featureId: number): DependencyTag[] => [
+  { id: `PENDING-${featureId}`, type: 'FeatureDependency' },
+  { id: 'PENDING', type: 'FeatureDependency' },
+]
+
 export const featureDependencyService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureDependency'] })
   .injectEndpoints({
@@ -33,10 +49,15 @@ export const featureDependencyService = service
         Res['featureDependency'],
         Req['createFeatureDependency']
       >({
-        invalidatesTags: (res, err, query) => invalidateEnvironment(query),
+        // A staged change is not live, so only the pending lists change.
+        invalidatesTags: (res, err, query) =>
+          query.changeRequestId
+            ? pendingTags(query.featureId)
+            : invalidateEnvironment(query),
         // The POST answers with the edge, so the row need not wait on the
         // refetch the invalidation triggers.
         onQueryStarted: async (query, { dispatch, queryFulfilled }) => {
+          if (query.changeRequestId) return
           let edge: Res['featureDependency']
           try {
             edge = (await queryFulfilled).data
@@ -62,28 +83,38 @@ export const featureDependencyService = service
         },
         query: (query: Req['createFeatureDependency']) => ({
           method: 'POST',
-          url: `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`,
+          url: dependencyUrl(query),
         }),
       }),
       deleteFeatureDependency: builder.mutation<
         void,
         Req['deleteFeatureDependency']
       >({
-        invalidatesTags: (res, err, query) => invalidateEnvironment(query),
+        invalidatesTags: (res, err, query) =>
+          query.changeRequestId
+            ? pendingTags(query.featureId)
+            : invalidateEnvironment(query),
         query: (query: Req['deleteFeatureDependency']) => ({
           method: 'DELETE',
-          url: `environments/${query.environmentId}/features/${query.featureId}/dependencies/${query.prerequisiteFeatureId}/`,
+          url: dependencyUrl(query),
         }),
       }),
       getFeatureDependencies: builder.query<
         Res['featureDependencies'],
         Req['getFeatureDependencies']
       >({
-        providesTags: (res, err, query) => listTags(query),
+        providesTags: (res, err, query) => [
+          ...listTags(query),
+          ...(query.changeRequestId ? pendingTags(query.featureId) : []),
+        ],
         query: (query: Req['getFeatureDependencies']) => ({
-          url: `environments/${query.environmentId}/features/${query.featureId}/dependencies/`,
+          url: withChangeRequest(
+            `environments/${query.environmentId}/features/${query.featureId}/dependencies/`,
+            query.changeRequestId,
+          ),
         }),
       }),
+
       getFeatureDependents: builder.query<
         Res['featureDependents'],
         Req['getFeatureDependents']

@@ -185,6 +185,13 @@ export type DependencyEdge = {
   segment: DependencyEdgeSegment
 }
 
+export type StagedAction = 'add' | 'remove'
+
+export type StagedDependencyChange = {
+  action: StagedAction
+  prerequisite: DependencyFeature
+}
+
 export type DependencyConflictCode =
   | 'circular_dependency'
   | 'dependency_exists'
@@ -239,7 +246,10 @@ export type Segment = {
   metadata: Metadata[] | []
   membership_counts?: SegmentMembership[]
   cohort?: SegmentCohort | null
+  managed_by?: SegmentManagedBy
 }
+// What creates and edits the segment, empty where users do.
+export type SegmentManagedBy = '' | 'cohort' | 'dependency' | 'experiment'
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
   | 'environment_feature_versions'
@@ -1607,6 +1617,7 @@ export type Res = {
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   updateChangeRequest: ChangeRequest
+  createEnvironmentChangeRequest: ChangeRequest
   groupSummaries: UserGroupSummary[]
   supportedContentType: ContentType[]
   externalResource: PagedResponse<ExternalResource>
