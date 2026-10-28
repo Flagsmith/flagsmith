@@ -1,4 +1,3 @@
-import re
 import uuid
 from collections.abc import Callable, Iterator
 from datetime import datetime, timezone
@@ -30,7 +29,6 @@ from experimentation.warehouses.postgres import (
     read_cursor,
 )
 from tests.unit.experimentation.conftest import (
-    POSTGRES_EVENTS_SQL_PATH,
     PostgresWarehouseSchema,
 )
 
@@ -70,7 +68,7 @@ def _seed(target: PostgresWarehouseSchema) -> None:
     )
 
 
-def _use(connection: WarehouseConnection, **config: object) -> None:
+def _override_config(connection: WarehouseConnection, **config: object) -> None:
     connection.config = {**(connection.config or {}), **config}
 
 
@@ -80,7 +78,7 @@ def _alter(target: PostgresWarehouseSchema, statement: str) -> None:
 
 def _login_as(connection: WarehouseConnection, role: tuple[str, str]) -> None:
     username, password = role
-    _use(connection, username=username)
+    _override_config(connection, username=username)
     connection.credentials = {"password": password}
 
 
@@ -116,18 +114,21 @@ def make_role(
         cursor.execute(sql.SQL("DROP OWNED BY {0}; DROP ROLE {0}").format(role))
 
 
-def test_events_table_columns__events_sql__match_provider() -> None:
+def test_events_table_column_types__events_sql__stay_in_sync(
+    postgres_warehouse_schema: PostgresWarehouseSchema,
+) -> None:
     # Given
-    ddl = POSTGRES_EVENTS_SQL_PATH.read_text()
+    cursor = postgres_warehouse_schema.cursor
 
     # When
-    columns = dict(re.findall(r"^\s+(\w+)\s+(TEXT|TIMESTAMPTZ)\b", ddl, re.M))
+    cursor.execute(
+        "SELECT column_name, data_type FROM information_schema.columns "
+        "WHERE table_schema = %s AND table_name = 'events'",
+        (postgres_warehouse_schema.schema,),
+    )
 
     # Then
-    assert columns == {
-        name: "TEXT" if column_type == "text" else "TIMESTAMPTZ"
-        for name, column_type in EVENTS_TABLE_COLUMN_TYPES.items()
-    }
+    assert dict(cursor.fetchall()) == EVENTS_TABLE_COLUMN_TYPES
 
 
 @pytest.mark.parametrize(
@@ -283,7 +284,9 @@ def test_read_cursor__unusable_config__raises_before_connecting(
             MISSING_EVENTS_TABLE_DETAIL,
         ),
         (
-            lambda _target, connection, _make_role: _use(connection, schema="missing"),
+            lambda _target, connection, _make_role: _override_config(
+                connection, schema="missing"
+            ),
             MISSING_EVENTS_TABLE_DETAIL,
         ),
         (
@@ -313,7 +316,7 @@ def test_read_cursor__unusable_config__raises_before_connecting(
             "Authentication failed.",
         ),
         (
-            lambda _target, connection, _make_role: _use(
+            lambda _target, connection, _make_role: _override_config(
                 connection, database="missing"
             ),
             "Database does not exist.",
@@ -436,7 +439,7 @@ def test_event_reads__unreachable__return_none_and_cache_failure(
     method: str,
 ) -> None:
     # Given
-    _use(postgres_connection, port=1)
+    _override_config(postgres_connection, port=1)
     connect = mocker.spy(psycopg2, "connect")
     read = getattr(PostgresWarehouse(), method)
 

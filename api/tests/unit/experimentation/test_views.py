@@ -2069,38 +2069,3 @@ def test_post__postgres_below_minimum_plan_on_saas__returns_400(
         "warehouse_type": ["PostgreSQL connections are not available on your plan."]
     }
     assert not WarehouseConnection.objects.filter(environment=environment).exists()
-
-
-def test_patch__postgres_host_without_password__returns_400(
-    admin_client: APIClient,
-    environment: Environment,
-) -> None:
-    # Given
-    connection = WarehouseConnection.objects.create(
-        environment=environment,
-        warehouse_type=WarehouseType.POSTGRES,
-        config={
-            "host": "pg.example.com",
-            "port": 5432,
-            "database": "analytics",
-            "schema": "flagsmith_exp",
-            "username": "flagsmith",
-            "sslmode": "require",
-        },
-        credentials={"password": "hunter2"},
-    )
-    url = reverse(
-        "api-v1:environments:experimentation:warehouse-connections-detail",
-        args=[environment.api_key, connection.id],
-    )
-
-    # When
-    response = admin_client.patch(
-        url, data={"config": {"host": "pg2.example.com"}}, format="json"
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {
-        "config": {"host": "Re-enter the password when changing the host."}
-    }

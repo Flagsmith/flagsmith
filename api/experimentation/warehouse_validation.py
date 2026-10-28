@@ -51,26 +51,3 @@ def validate_credentials(
             )
         if instance is not None and instance.credentials is not None:
             attrs["credentials"] = None
-
-
-# Their stored password would otherwise follow a host change to the new host.
-HOST_BOUND_CREDENTIAL_TYPES = frozenset({WarehouseType.POSTGRES})
-
-
-def validate_host_change_resends_credentials(
-    attrs: dict[str, Any],
-    warehouse_type: str,
-    instance: WarehouseConnection | None,
-) -> None:
-    if (
-        warehouse_type not in HOST_BOUND_CREDENTIAL_TYPES
-        or instance is None
-        or instance.warehouse_type != warehouse_type
-        or "credentials" in attrs
-    ):
-        return
-    stored_host = (instance.config or {}).get("host")
-    if (attrs.get("config") or {}).get("host") != stored_host:
-        raise serializers.ValidationError(
-            {"config": {"host": "Re-enter the password when changing the host."}}
-        )

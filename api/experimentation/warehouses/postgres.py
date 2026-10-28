@@ -87,12 +87,12 @@ EVENTS_TABLE_COLUMN_TYPES = {
     "sdk_version": "text",
 }
 
-# Lowercase only: the setup SQL leaves it unquoted, which folds it to lowercase.
-# One hostname or IPv4 address: libpq would also accept a host list or a
+# One hostname, IPv4 or IPv6 address: libpq would also accept a host list or a
 # socket directory, either of which would sidestep the internal-address check.
 HOST_PATTERN = re.compile(
     r"(?!-)[A-Za-z0-9_-]{1,63}(?<!-)(\.(?!-)[A-Za-z0-9_-]{1,63}(?<!-))*"
 )
+# Lowercase only: the setup SQL leaves it unquoted, which folds it to lowercase.
 SCHEMA_PATTERN = re.compile(r"[a-z_][a-z0-9_]{0,62}")
 SELF_HOSTED_ONLY_SSLMODES = frozenset({"disable"})
 SSLMODES = frozenset({"require"}) | SELF_HOSTED_ONLY_SSLMODES
@@ -114,7 +114,7 @@ _CONNECT_FAILURE_SQLSTATES = (
 )
 
 
-def _sqlstate(error: psycopg2.Error) -> str | None:
+def _error_sqlstate(error: psycopg2.Error) -> str | None:
     if error.pgcode:
         return error.pgcode
     message = str(error)
@@ -124,7 +124,7 @@ def _sqlstate(error: psycopg2.Error) -> str | None:
     return None
 
 
-def is_single_host(host: str) -> bool:
+def is_plain_host(host: str) -> bool:
     if HOST_PATTERN.fullmatch(host):
         return True
     try:
@@ -146,7 +146,7 @@ def describe_postgres_error(error: Exception) -> str:
     if isinstance(error, EventsTablePermissionError):
         return PERMISSION_DENIED_DETAIL
     if isinstance(error, psycopg2.Error):
-        if detail := _SQLSTATE_DETAILS.get(_sqlstate(error) or ""):
+        if detail := _SQLSTATE_DETAILS.get(_error_sqlstate(error) or ""):
             return detail
         if isinstance(error, psycopg2.OperationalError):
             return "Could not connect to the host."
@@ -184,7 +184,7 @@ def read_cursor(
 
     # Re-checked immediately before connecting: DNS may resolve differently
     # than it did at validation time.
-    if not is_single_host(host) or is_disallowed_host(host):
+    if not is_plain_host(host) or is_disallowed_host(host):
         raise DeliveryConfigError(
             "Host must not target internal or private network addresses."
         )
@@ -213,7 +213,7 @@ def read_cursor(
             yield cursor
 
 
-def _fetch_flag(cursor: "Cursor") -> bool:
+def _fetch_bool(cursor: "Cursor") -> bool:
     row = cursor.fetchone()
     return bool(row and row[0])
 
@@ -236,14 +236,14 @@ def check_events_table(cursor: "Cursor", schema: str) -> None:
         raise EventsTablePermissionError()
 
     cursor.execute("SELECT to_regclass('events') IS NOT NULL")
-    if not _fetch_flag(cursor):
+    if not _fetch_bool(cursor):
         raise MissingEventsTableError()
 
     cursor.execute(
         "SELECT has_table_privilege('events', 'SELECT') "
         "AND has_table_privilege('events', 'INSERT')"
     )
-    if not _fetch_flag(cursor):
+    if not _fetch_bool(cursor):
         raise EventsTablePermissionError()
 
     cursor.execute(
@@ -274,7 +274,7 @@ def _config_error(field: str, message: str) -> serializers.ValidationError:
 def _validate_host(host: object) -> None:
     if not host or not isinstance(host, str):
         raise _config_error("host", "This field is required.")
-    if not is_single_host(host):
+    if not is_plain_host(host):
         raise _config_error("host", "Enter a single hostname or IP address.")
     if is_disallowed_host(host):
         raise _config_error(
