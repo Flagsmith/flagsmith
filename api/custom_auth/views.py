@@ -112,8 +112,6 @@ def delete_token(request):  # type: ignore[no-untyped-def]
     name="destroy",
     decorator=extend_schema(parameters=[CustomUserDelete]),
 )
-
-
 @method_decorator(name="set_password", decorator=transaction.atomic)
 @method_decorator(name="reset_password_confirm", decorator=transaction.atomic)
 class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
