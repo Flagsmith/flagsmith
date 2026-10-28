@@ -24,14 +24,15 @@ def create_superuser(
     enforce_sso: bool = False,
 ) -> CreateSuperuserResponse:
     """Create or promote a superuser"""
-    superuser = FFAdminUser.objects.filter(email__iexact=admin_email).first()
+    email = admin_email or settings.ADMIN_EMAIL
+    superuser = FFAdminUser.objects.filter(email__iexact=email).first()
 
     if superuser:
         superuser.is_staff = superuser.is_superuser = True
         superuser.save(update_fields=["is_staff", "is_superuser"])
     else:
         superuser = FFAdminUser.objects.create_superuser(  # type: ignore[no-untyped-call]
-            email=admin_email or settings.ADMIN_EMAIL,
+            email=email,
             is_active=True,
             password=None,
         )
@@ -39,7 +40,7 @@ def create_superuser(
     if enforce_sso:
         Assignment.objects.get_or_create(
             username_mode=ASSIGNMENT_MATCH,
-            username=superuser.username,
+            username=superuser.email.split("@")[0],
             domain=superuser.email_domain,
             user=superuser,
         )

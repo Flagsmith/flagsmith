@@ -27,12 +27,18 @@ class Command(BaseCommand):
             action="store_true",
             help="Create the superuser even if other users already exist",
         )
+        parser.add_argument(
+            "--enforce-sso",
+            action="store_true",
+            help="Allow the superuser to log in to Django admin through SSO",
+        )
 
     def handle(
         self,
         *args: Any,
         admin_email: str,
         force: bool,
+        enforce_sso: bool,
         **options: Any,
     ) -> None:
         if not settings.ALLOW_ADMIN_INITIATION_VIA_CLI or (
@@ -43,6 +49,7 @@ class Command(BaseCommand):
 
         response = create_superuser(
             admin_email=admin_email,
+            enforce_sso=enforce_sso,
         )
 
         self.stdout.write(
