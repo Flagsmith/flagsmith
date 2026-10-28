@@ -59,6 +59,20 @@ def test_createadminuser__existing_regular_user__promotes_to_superuser(
     assert Assignment.objects.get().user == staff_user
 
 
+def test_createinitialadminuser__users_exist_and_force__creates_superuser(
+    settings: SettingsWrapper,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    settings.ALLOW_ADMIN_INITIATION_VIA_CLI = True
+
+    # When
+    call_command("createinitialadminuser", "--email", "admin@example.com", "--force")
+
+    # Then
+    assert FFAdminUser.objects.get(email="admin@example.com").is_superuser
+
+
 def test_createadminuser__no_superuser_and_cli_initiation_disallowed__raises_error() -> (
     None
 ):

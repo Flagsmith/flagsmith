@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from admin_sso.default_settings import ASSIGNMENT_MATCH
+from admin_sso.models import Assignment
 from django.conf import settings
 from djoser.email import PasswordResetEmail  # type: ignore[import-untyped]
 
@@ -19,12 +21,29 @@ def should_skip_create_initial_superuser() -> bool:
 
 def create_superuser(
     admin_email: str | None = None,
+    enforce_sso: bool = False,
 ) -> CreateSuperuserResponse:
-    superuser = FFAdminUser.objects.create_superuser(  # type: ignore[no-untyped-call]
-        email=admin_email or settings.ADMIN_EMAIL,
-        is_active=True,
-        password=None,
-    )
+    """Create or promote a superuser"""
+    superuser = FFAdminUser.objects.filter(email__iexact=admin_email).first()
+
+    if superuser:
+        superuser.is_staff = superuser.is_superuser = True
+        superuser.save(update_fields=["is_staff", "is_superuser"])
+    else:
+        superuser = FFAdminUser.objects.create_superuser(  # type: ignore[no-untyped-call]
+            email=admin_email or settings.ADMIN_EMAIL,
+            is_active=True,
+            password=None,
+        )
+
+    if enforce_sso:
+        Assignment.objects.get_or_create(
+            username_mode=ASSIGNMENT_MATCH,
+            username=superuser.username,
+            domain=superuser.email_domain,
+            user=superuser,
+        )
+
     return CreateSuperuserResponse(
         user=superuser,
         password_reset_url=_get_user_password_reset_url(superuser),

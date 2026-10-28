@@ -22,22 +22,29 @@ class Command(BaseCommand):
             help="Email address for the superuser",
             default=settings.ADMIN_EMAIL,
         )
+        parser.add_argument(
+            "--force",
+            action="store_true",
+            help="Create the superuser even if other users already exist",
+        )
 
     def handle(
         self,
         *args: Any,
         admin_email: str,
+        force: bool,
         **options: Any,
     ) -> None:
-        if (
-            not settings.ALLOW_ADMIN_INITIATION_VIA_CLI
-            or should_skip_create_initial_superuser()
+        if not settings.ALLOW_ADMIN_INITIATION_VIA_CLI or (
+            should_skip_create_initial_superuser() and not force
         ):
             logger.debug("Skipping initial user creation.")
             return
+
         response = create_superuser(
             admin_email=admin_email,
         )
+
         self.stdout.write(
             self.style.SUCCESS(
                 'Superuser "%s" created successfully.' % response.user.email
