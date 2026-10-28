@@ -6,8 +6,10 @@ import pytest
 from django.urls import reverse
 from freezegun import freeze_time
 from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
+from rest_framework.throttling import ScopedRateThrottle
 
 from users.models import FFAdminUser, HubspotTracker
 
@@ -335,3 +337,104 @@ def test_create_user__invalid_signup_anonymous_id__returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert "signup_anonymous_id" in response.json()
     assert not FFAdminUser.objects.filter(email="test@exemple.fr").exists()
+
+
+def test_hubspot_chat_token__hubspot_configured__returns_token(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.HUBSPOT_ACCESS_TOKEN = "test-access-token"
+    mock_hubspot_client = mocker.patch("custom_auth.views.HubspotClient")
+    mock_create_token = (
+        mock_hubspot_client.return_value.create_visitor_identification_token
+    )
+    mock_create_token.return_value = "test-token"
+    url = reverse("api-v1:custom_auth:ffadminuser-hubspot-chat-token")
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"token": "test-token", "email": staff_user.email}
+    mock_create_token.assert_called_once_with(staff_user)
+
+
+def test_hubspot_chat_token__hubspot_not_configured__returns_404(
+    staff_client: APIClient,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.HUBSPOT_ACCESS_TOKEN = None
+    mock_hubspot_client = mocker.patch("custom_auth.views.HubspotClient")
+    url = reverse("api-v1:custom_auth:ffadminuser-hubspot-chat-token")
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    mock_hubspot_client.assert_not_called()
+
+
+def test_hubspot_chat_token__hubspot_fails__returns_502(
+    staff_client: APIClient,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.HUBSPOT_ACCESS_TOKEN = "test-access-token"
+    mock_hubspot_client = mocker.patch("custom_auth.views.HubspotClient")
+    mock_hubspot_client.return_value.create_visitor_identification_token.return_value = None
+    url = reverse("api-v1:custom_auth:ffadminuser-hubspot-chat-token")
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_502_BAD_GATEWAY
+
+
+def test_hubspot_chat_token__unauthenticated__returns_401(
+    api_client: APIClient,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.HUBSPOT_ACCESS_TOKEN = "test-access-token"
+    mock_hubspot_client = mocker.patch("custom_auth.views.HubspotClient")
+    url = reverse("api-v1:custom_auth:ffadminuser-hubspot-chat-token")
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    mock_hubspot_client.assert_not_called()
+
+
+def test_hubspot_chat_token__rate_exceeded__returns_429(
+    staff_client: APIClient,
+    reset_cache: None,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.HUBSPOT_ACCESS_TOKEN = "test-access-token"
+    mocker.patch.dict(
+        ScopedRateThrottle.THROTTLE_RATES, {"hubspot_chat_token": "1/min"}
+    )
+    mock_hubspot_client = mocker.patch("custom_auth.views.HubspotClient")
+    mock_hubspot_client.return_value.create_visitor_identification_token.return_value = "test-token"
+    url = reverse("api-v1:custom_auth:ffadminuser-hubspot-chat-token")
+    staff_client.get(url)
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS

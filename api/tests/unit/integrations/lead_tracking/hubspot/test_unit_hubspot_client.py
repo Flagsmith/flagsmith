@@ -3,7 +3,12 @@ import typing
 
 import pytest
 import responses
+import urllib3
+from hubspot.conversations.visitor_identification import (  # type: ignore[import-untyped]
+    ApiException,
+)
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 from rest_framework import status
 
 from integrations.lead_tracking.hubspot.client import HubspotClient
@@ -11,6 +16,7 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_FORM_ID_SAAS,
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
+    HUBSPOT_VISITOR_IDENTIFICATION_TIMEOUT_SECONDS,
 )
 from tests.unit.integrations.lead_tracking.hubspot._hubspot_responses import (
     generate_create_company_response,
@@ -265,3 +271,73 @@ def test_update_company__with_properties__calls_hubspot_api_with_expected_proper
 
     simple_input = call_kwargs["simple_public_object_input"]
     assert simple_input.properties == expected_properties
+
+
+@pytest.mark.parametrize(
+    "first_name, last_name, expected_first_name, expected_last_name",
+    [
+        ("Ada", "Lovelace", "Ada", "Lovelace"),
+        ("", "", None, None),
+    ],
+)
+def test_create_visitor_identification_token__hubspot_returns_token__returns_token(
+    db: None,
+    hubspot_client: HubspotClient,
+    first_name: str,
+    last_name: str,
+    expected_first_name: str | None,
+    expected_last_name: str | None,
+) -> None:
+    # Given
+    user = FFAdminUser.objects.create(
+        email="chat@example.com", first_name=first_name, last_name=last_name
+    )
+    mock_generate_token = hubspot_client.client.conversations.visitor_identification.generate_api.generate_token
+    mock_generate_token.return_value.token = "test-token"
+
+    # When
+    token = hubspot_client.create_visitor_identification_token(user)
+
+    # Then
+    assert token == "test-token"
+    mock_generate_token.assert_called_once()
+    _, call_kwargs = mock_generate_token.call_args
+    request = call_kwargs["identification_token_generation_request"]
+    assert request.email == "chat@example.com"
+    assert request.first_name == expected_first_name
+    assert request.last_name == expected_last_name
+    assert (
+        call_kwargs["_request_timeout"]
+        == HUBSPOT_VISITOR_IDENTIFICATION_TIMEOUT_SECONDS
+    )
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        ApiException(status=403, reason="Forbidden"),
+        urllib3.exceptions.ReadTimeoutError(None, "", "Read timed out."),  # type: ignore[arg-type]
+    ],
+)
+def test_create_visitor_identification_token__hubspot_fails__logs_and_returns_none(
+    staff_user: FFAdminUser,
+    hubspot_client: HubspotClient,
+    log: StructuredLogCapture,
+    error: Exception,
+) -> None:
+    # Given
+    hubspot_client.client.conversations.visitor_identification.generate_api.generate_token.side_effect = error
+
+    # When
+    token = hubspot_client.create_visitor_identification_token(staff_user)
+
+    # Then
+    assert token is None
+    assert log.events == [
+        {
+            "event": "visitor_identification_token.create_failed",
+            "level": "error",
+            "user__id": staff_user.id,
+            "exc_info": True,
+        }
+    ]
