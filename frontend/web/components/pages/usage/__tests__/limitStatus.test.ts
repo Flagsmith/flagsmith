@@ -19,7 +19,7 @@ describe('limitStatusOf', () => {
     ${{ block_access_to_admin: true }}                                 | ${false}    | ${false}
     ${{ stop_serving_flags: true }}                                    | ${true}     | ${false}
     ${{ api_limit_access_blocked: true }}                              | ${false}    | ${true}
-    ${{ block_access_to_admin: true, api_limit_access_blocked: true }} | ${false}    | ${true}
+    ${{ api_limit_access_blocked: true, block_access_to_admin: true }} | ${false}    | ${true}
   `(
     'reports a restriction from $values',
     ({ apiLimitAccessBlocked, flagsPaused, values }) => {
@@ -31,6 +31,18 @@ describe('limitStatusOf', () => {
       })
     },
   )
+
+  // Still over the limit, the block must win over the "will be restricted" copy.
+  it('treats an API-limit block as restricted while usage is still over', () => {
+    expect(
+      limitStatusOf(organisation({ api_limit_access_blocked: true }), over),
+    ).toEqual({
+      apiLimitAccessBlocked: true,
+      flagsPaused: false,
+      kind: 'restricted',
+      over,
+    })
+  })
 
   it.each`
     values                                                                        | overBy    | kind
