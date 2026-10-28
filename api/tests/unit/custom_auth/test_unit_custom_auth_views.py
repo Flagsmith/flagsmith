@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.tokens import default_token_generator
+from django.db import DatabaseError
 from django.urls import reverse
 from djoser import utils  # type: ignore[import-untyped]
 from freezegun import freeze_time
@@ -330,6 +331,59 @@ def test_reset_password_confirm__token_auth__revokes_token(
     assert not Token.objects.filter(user=staff_user).exists()
     me_url = reverse("api-v1:custom_auth:ffadminuser-me")
     assert authenticated_client.get(me_url).status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_set_password__save_fails__keeps_token(
+    staff_user: FFAdminUser,
+    mocker: MagicMock,
+) -> None:
+    # Given
+    staff_user.password = make_password("old-password")
+    staff_user.save()
+    token = Token.objects.create(user=staff_user)
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+    url = reverse("api-v1:custom_auth:ffadminuser-set-password")
+    mocker.patch.object(FFAdminUser, "save", side_effect=DatabaseError)
+
+    # When
+    with pytest.raises(DatabaseError):
+        client.post(
+            url,
+            data={
+                "current_password": "old-password",
+                "new_password": "new-password-123!",
+                "re_new_password": "new-password-123!",
+            },
+        )
+
+    # Then
+    assert Token.objects.filter(key=token.key).exists()
+
+
+def test_reset_password_confirm__save_fails__keeps_token(
+    staff_user: FFAdminUser,
+    mocker: MagicMock,
+) -> None:
+    # Given
+    token = Token.objects.create(user=staff_user)
+    url = reverse("api-v1:custom_auth:ffadminuser-reset-password-confirm")
+    mocker.patch.object(FFAdminUser, "save", side_effect=DatabaseError)
+
+    # When
+    with pytest.raises(DatabaseError):
+        APIClient().post(
+            url,
+            data={
+                "uid": utils.encode_uid(staff_user.pk),
+                "token": default_token_generator.make_token(staff_user),
+                "new_password": "new-password-123!",
+                "re_new_password": "new-password-123!",
+            },
+        )
+
+    # Then
+    assert Token.objects.filter(key=token.key).exists()
 
 
 @pytest.mark.parametrize(

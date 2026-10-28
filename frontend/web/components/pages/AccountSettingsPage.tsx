@@ -159,6 +159,7 @@ const AccountSettingsPage: FC = () => {
       ),
       onYes: () => {
         setIsSaving(true)
+        setPasswordError(null)
         _data
           .post(`${Project.api}auth/users/set_password/`, {
             current_password: currentPassword,
