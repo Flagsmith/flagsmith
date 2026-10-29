@@ -70,6 +70,12 @@ class AuditLog(LifecycleModel):  # type: ignore[misc]
     class Meta:
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
+        indexes = [
+            models.Index(
+                fields=["project", "-created_date"],
+                name="audit_project_created_idx",
+            ),
+        ]
 
     @property
     def organisation(self) -> "Organisation | None":
