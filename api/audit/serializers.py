@@ -102,4 +102,4 @@ class AuditLogsQueryParamSerializer(serializers.Serializer):  # type: ignore[typ
     is_system_event = serializers.BooleanField(
         required=False, allow_null=True, default=None
     )
-    search = serializers.CharField(max_length=256, required=False)
+    search = serializers.CharField(min_length=3, max_length=256, required=False)
