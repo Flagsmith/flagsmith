@@ -27,13 +27,13 @@ def customer_cache_key(kind: str, connection: "WarehouseConnection") -> str:
 
 def cache_warehouse_read_unless_empty(
     cache_key: str,
-    result: WarehouseEventNames | WarehouseEventStats,
-    seconds: int,
+    warehouse_read: WarehouseEventNames | WarehouseEventStats,
+    ttl_seconds: int,
 ) -> None:
     """A read before the first event lands must not pin "no events" for the TTL."""
-    if isinstance(result, WarehouseEventNames):
-        is_empty = not result.events
+    if isinstance(warehouse_read, WarehouseEventNames):
+        is_empty = not warehouse_read.events
     else:
-        is_empty = not result.total_events_received
+        is_empty = not warehouse_read.total_events_received
     if not is_empty:
-        cache.set(cache_key, result, seconds)
+        cache.set(cache_key, warehouse_read, ttl_seconds)
