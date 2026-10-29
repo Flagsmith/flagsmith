@@ -35,8 +35,11 @@ def validate_credentials(
     instance: WarehouseConnection | None,
 ) -> None:
     config = attrs.get("config", getattr(instance, "config", None))
-    if warehouse_type == WarehouseType.POSTGRES and is_flagsmith_database_config(
-        config
+    # Any `source` selects the mode, so validate_config reports a malformed marker.
+    if (
+        warehouse_type == WarehouseType.POSTGRES
+        and isinstance(config, dict)
+        and "source" in config
     ):
         if attrs.get("credentials") is not None:
             raise serializers.ValidationError(

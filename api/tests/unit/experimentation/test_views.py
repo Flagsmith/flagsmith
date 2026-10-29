@@ -2133,26 +2133,43 @@ def test_post__flagsmith_database_config_unavailable__returns_400(
     assert not WarehouseConnection.objects.filter(environment=environment).exists()
 
 
-def test_post__flagsmith_database_config_with_credentials__returns_400(
+@pytest.mark.parametrize(
+    "payload, expected_error",
+    [
+        (
+            {
+                "config": {"source": FLAGSMITH_DATABASE_SOURCE},
+                "credentials": {"password": "hunter2"},
+            },
+            {"credentials": ["The Flagsmith database takes no credentials."]},
+        ),
+        (
+            {"config": {"source": FLAGSMITH_DATABASE_SOURCE, "host": "db.example"}},
+            {
+                "config": {
+                    "source": 'Must be "flagsmith_database", with no other fields.'
+                }
+            },
+        ),
+    ],
+    ids=["with-credentials", "extra-config-keys"],
+)
+def test_post__invalid_flagsmith_database_payload__returns_400(
     admin_client: APIClient,
     environment: Environment,
     warehouse_connection_url: str,
+    payload: dict[str, object],
+    expected_error: dict[str, object],
 ) -> None:
     # Given
-    payload = {
-        "warehouse_type": "postgres",
-        "config": {"source": FLAGSMITH_DATABASE_SOURCE},
-        "credentials": {"password": "hunter2"},
-    }
+    payload = {"warehouse_type": "postgres", **payload}
 
     # When
     response = admin_client.post(warehouse_connection_url, data=payload, format="json")
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {
-        "credentials": ["The Flagsmith database takes no credentials."]
-    }
+    assert response.json() == expected_error
     assert not WarehouseConnection.objects.filter(environment=environment).exists()
 
 
