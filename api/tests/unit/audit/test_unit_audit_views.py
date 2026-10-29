@@ -5,6 +5,7 @@ import pytest
 from django.db.models import Model
 from django.urls import reverse
 from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -12,6 +13,7 @@ from rest_framework.test import APIClient
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from audit.views import AllAuditLogViewSet
 from environments.models import Environment
 from features.models import Feature
 from features.versioning.models import EnvironmentFeatureVersion
@@ -76,6 +78,34 @@ def test_list_audit_log__filter_by_log_text__returns_matching_logs(
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["results"][0]["log"] == flag_state_deleted_log
     assert response.json()["results"][1]["log"] == flag_state_updated_log
+
+
+def test_list_audit_log__search_exceeds_statement_timeout__returns_503(
+    admin_client: APIClient,
+    project: Project,
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.SEARCH_STATEMENT_TIMEOUT_MS = 1
+    AuditLog.objects.create(project=project, log="Flag state updated")
+    mocker.patch.object(
+        AllAuditLogViewSet,
+        "_apply_visibility_limits",
+        side_effect=lambda queryset: queryset.extra(where=["pg_sleep(0.1)::text = ''"]),
+    )
+
+    url = reverse("api-v1:audit-list")
+
+    # When
+    response = admin_client.get(url, {"project": project.id, "search": "flag state"})  # type: ignore[arg-type]
+
+    # Then
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
+    assert response.json() == {
+        "code": "statement_timeout",
+        "message": "The request took too long. Try a more specific search term.",
+    }
 
 
 def test_list_audit_log__filter_by_project__returns_matching_logs(

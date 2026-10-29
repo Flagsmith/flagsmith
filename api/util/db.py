@@ -2,13 +2,22 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import TypeVar
 
-from django.db import close_old_connections
+from django.db import (
+    DEFAULT_DB_ALIAS,
+    OperationalError,
+    close_old_connections,
+    connections,
+    transaction,
+)
 from django.db.models import QuerySet
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_DELETE,
     BEFORE_DELETE,
     LifecycleModelMixin,
 )
+from psycopg2.errors import QueryCanceled
+
+from core.exceptions import StatementTimeoutError
 
 M = TypeVar("M", bound=LifecycleModelMixin)
 
@@ -43,3 +52,25 @@ def with_delete_hooks(queryset: QuerySet[M]) -> Iterator[QuerySet[M]]:
     yield queryset
     for instance in instances:
         instance._run_hooked_methods(AFTER_DELETE)
+
+
+@contextmanager
+def statement_timeout(
+    milliseconds: int,
+    using: str = DEFAULT_DB_ALIAS,
+) -> Iterator[None]:
+    """
+    Cancel any query in the wrapped block that runs longer than `milliseconds`.
+
+    Without this, Postgres keeps running a slow query after the client gives
+    up, and retries pile more queries onto the database.
+    """
+    try:
+        with transaction.atomic(using=using):
+            with connections[using].cursor() as cursor:
+                cursor.execute("SET LOCAL statement_timeout = %s", [milliseconds])
+            yield
+    except OperationalError as exc:
+        if not isinstance(exc.__cause__, QueryCanceled):
+            raise
+        raise StatementTimeoutError() from exc

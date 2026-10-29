@@ -1,12 +1,16 @@
 from abc import abstractmethod
 from datetime import timedelta
+from typing import Any
 
+from django.conf import settings
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from app.pagination import CustomPagination
 from audit.models import AuditLog
@@ -20,6 +24,7 @@ from audit.serializers import (
     AuditLogsQueryParamSerializer,
 )
 from organisations.models import Organisation, OrganisationRole
+from util.db import statement_timeout
 
 
 @method_decorator(
@@ -32,6 +37,17 @@ class _BaseAuditLogViewSet(
     viewsets.GenericViewSet,  # type: ignore[type-arg]
 ):
     pagination_class = CustomPagination
+
+    def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        if not request.GET.get("search"):
+            return super().list(request, *args, **kwargs)
+
+        # Text search scans every audit log row in scope, so a few searches
+        # on a large audit log can use all the database CPU.
+        with statement_timeout(
+            settings.SEARCH_STATEMENT_TIMEOUT_MS, using=AuditLog.objects.db
+        ):
+            return super().list(request, *args, **kwargs)
 
     def get_queryset(self) -> QuerySet[AuditLog]:
         if getattr(self, "swagger_fake_view", False):
