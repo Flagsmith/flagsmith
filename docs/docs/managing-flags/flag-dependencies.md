@@ -1,0 +1,45 @@
+---
+title: Flag Dependencies
+sidebar_label: Flag Dependencies
+sidebar_position: 20
+---
+
+## Overview
+
+Suppose you have a feature flag `coffee_machine`, but it needs another feature `hamster_power_grid` turned on so it can be evaluated as enabled. Flag dependencies allow for establishing prerequisites between flags.
+
+![`coffee_machine` requires `hamster_power_grid`](/img/flag-dependencies/overview.png)
+
+When the prerequisite feature is disabled, the dependent feature is also evaluated as _disabled_. Flag value will be served from the environment default.
+
+Feature prerequisites take priority over segment overrides. Identity overrides still take absolute precedence. Prerequisite flags overridden by segment or identity overrides will satisfy dependent flags.
+
+Flag dependencies are configured per-environment.
+
+![`coffee_machine` serving is off since `hamster_power_grid` is disabled](/img/flag-dependencies/serving-off.png)
+
+## Adding a prerequisite to a feature flag
+
+1. Go to the _Features_ list page.
+2. Make sure you select the _environment_ on the left.
+3. Select any feature in the list.
+4. **Visit the _Dependencies_ tab**.
+5. Click _Add prerequisite_, and choose from the list the prerequisite feature.
+
+![Adding a prerequisite feature](/img/flag-dependencies/add-prerequisite.png)
+
+A feature can have as many prerequisites as necessary. We do restrict:
+- Nesting levels - dependencies only go one level deep.
+- Cycles - circular dependencies are not allowed.
+
+## Removing a prerequisite
+
+Just click the 🗑️ icon next to the prerequisite feature you want to remove in the _Dependencies_ tab.
+
+![Removing a prerequisite feature](/img/flag-dependencies/remove-prerequisite.png)
+
+## Change requests
+
+When _Feature change requests_ are enabled, changes to feature prerequisites will also require approval.
+
+![Flag dependency changes wrapped in a change request](/img/flag-dependencies/requires-change-request.png)
