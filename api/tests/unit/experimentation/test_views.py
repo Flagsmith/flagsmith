@@ -24,6 +24,10 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.views import WarehouseConnectionViewSet
+from experimentation.warehouses.constants import (
+    FLAGSMITH_DATABASE_SOURCE,
+    FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL,
+)
 from tests.unit.experimentation.conftest import (
     PostgresWarehouseSchema,
     SetWarehousesFlagFixture,
@@ -2069,3 +2073,167 @@ def test_post__postgres_below_minimum_plan_on_saas__returns_400(
         "warehouse_type": ["PostgreSQL connections are not available on your plan."]
     }
     assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+def test_post__flagsmith_database_config__returns_201_connected_without_credentials(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    payload = {
+        "warehouse_type": "postgres",
+        "config": {"source": FLAGSMITH_DATABASE_SOURCE},
+    }
+
+    # When
+    response = admin_client.post(warehouse_connection_url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == WarehouseConnectionStatus.CONNECTED
+    assert response.json()["config"] == {"source": FLAGSMITH_DATABASE_SOURCE}
+    connection = WarehouseConnection.objects.get(environment=environment)
+    assert connection.credentials is None
+
+
+@pytest.mark.parametrize(
+    "is_saas, is_flagsmith_database_postgres",
+    [(True, True), (False, False)],
+    ids=["saas", "non-postgres-database"],
+)
+def test_post__flagsmith_database_config_unavailable__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    warehouse_connection_url: str,
+    is_saas: bool,
+    is_flagsmith_database_postgres: bool,
+) -> None:
+    # Given
+    mocker.patch("experimentation.warehouses.postgres.is_saas", return_value=is_saas)
+    mocker.patch(
+        "experimentation.warehouses.postgres.is_flagsmith_database_postgres",
+        return_value=is_flagsmith_database_postgres,
+    )
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "postgres",
+            "config": {"source": FLAGSMITH_DATABASE_SOURCE},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"config": [FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL]}
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+def test_post__flagsmith_database_config_with_credentials__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    payload = {
+        "warehouse_type": "postgres",
+        "config": {"source": FLAGSMITH_DATABASE_SOURCE},
+        "credentials": {"password": "hunter2"},
+    }
+
+    # When
+    response = admin_client.post(warehouse_connection_url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "credentials": ["The Flagsmith database takes no credentials."]
+    }
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+@pytest.mark.parametrize(
+    "with_credentials, expected_status_code",
+    [(True, status.HTTP_200_OK), (False, status.HTTP_400_BAD_REQUEST)],
+    ids=["with-credentials", "without-credentials"],
+)
+def test_patch__flagsmith_database_config_to_postgres_config__saves_only_with_credentials(
+    admin_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+    postgres_warehouse_schema: PostgresWarehouseSchema,
+    with_credentials: bool,
+    expected_status_code: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, flagsmith_database_connection.id],
+    )
+    payload: dict[str, object] = {"config": postgres_warehouse_schema.config}
+    if with_credentials:
+        payload["credentials"] = {"password": postgres_warehouse_schema.password}
+
+    # When
+    response = admin_client.patch(url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == expected_status_code
+    flagsmith_database_connection.refresh_from_db()
+    assert flagsmith_database_connection.config == (
+        postgres_warehouse_schema.config
+        if with_credentials
+        else {"source": FLAGSMITH_DATABASE_SOURCE}
+    )
+
+
+def test_patch__flagsmith_database_connection_name_only__saves_without_verifying(
+    admin_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    verify = mocker.patch("experimentation.views.verify_warehouse_connection")
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, flagsmith_database_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(url, data={"name": "Renamed"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    flagsmith_database_connection.refresh_from_db()
+    assert flagsmith_database_connection.name == "Renamed"
+    assert flagsmith_database_connection.credentials is None
+    verify.assert_not_called()
+
+
+def test_patch__postgres_to_flagsmith_database_config__clears_credentials(
+    admin_client: APIClient,
+    environment: Environment,
+    postgres_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, postgres_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url, data={"config": {"source": FLAGSMITH_DATABASE_SOURCE}}, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    postgres_connection.refresh_from_db()
+    assert postgres_connection.config == {"source": FLAGSMITH_DATABASE_SOURCE}
+    assert postgres_connection.credentials is None
+    assert postgres_connection.status == WarehouseConnectionStatus.CONNECTED

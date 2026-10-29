@@ -1,14 +1,17 @@
 import uuid
 from collections.abc import Callable, Iterator
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 import psycopg2
 import pytest
 from psycopg2 import sql
+from psycopg2.extensions import cursor as PgCursor
 from pytest_mock import MockerFixture
 from rest_framework import serializers
 
+import experimentation.migrations
 from experimentation.dataclasses import (
     MetricSpec,
     WarehouseEventNames,
@@ -16,6 +19,10 @@ from experimentation.dataclasses import (
 )
 from experimentation.models import MetricAggregation, WarehouseConnection
 from experimentation.warehouses.constants import (
+    FLAGSMITH_DATABASE_MISSING_EVENTS_TABLE_DETAIL,
+    FLAGSMITH_DATABASE_PERMISSION_DENIED_DETAIL,
+    FLAGSMITH_DATABASE_SOURCE,
+    FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL,
     MISSING_EVENTS_TABLE_DETAIL,
     PERMISSION_DENIED_DETAIL,
     QUERY_TIMEOUT_DETAIL,
@@ -26,9 +33,11 @@ from experimentation.warehouses.postgres import (
     EVENTS_TABLE_COLUMN_TYPES,
     PostgresWarehouse,
     describe_postgres_error,
+    flagsmith_database_connect_params,
     read_cursor,
 )
 from tests.unit.experimentation.conftest import (
+    POSTGRES_EVENTS_SQL_PATH,
     PostgresWarehouseSchema,
 )
 
@@ -42,6 +51,11 @@ DEFAULTS = {"port": 5432, "schema": "flagsmith_exp", "sslmode": "require"}
 NAIVE_TIMESTAMP = "ALTER TABLE {}.events ALTER COLUMN timestamp TYPE TIMESTAMP"
 UUID_IDENTIFIER = "ALTER TABLE {}.events ALTER COLUMN identifier TYPE UUID USING NULL"
 SINGLE_HOST_ERROR = {"config": {"host": "Enter a single hostname or IP address."}}
+FLAGSMITH_DATABASE_CONFIG = {"source": FLAGSMITH_DATABASE_SOURCE}
+FLAGSMITH_DATABASE_SOURCE_ERROR = {
+    "config": {"source": 'Must be "flagsmith_database", with no other fields.'}
+}
+FLAGSMITH_DATABASE_UNAVAILABLE_ERROR = {"config": FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL}
 
 MakeRole = Callable[[list[str], bool], tuple[str, str]]
 Setup = Callable[[PostgresWarehouseSchema, WarehouseConnection, MakeRole], None]
@@ -213,6 +227,58 @@ def test_validate_config__input__returns_config_or_field_error(
 
 
 @pytest.mark.parametrize(
+    "config, saas, is_postgres, expected",
+    [
+        (FLAGSMITH_DATABASE_CONFIG, False, True, FLAGSMITH_DATABASE_CONFIG),
+        (FLAGSMITH_DATABASE_CONFIG, True, True, FLAGSMITH_DATABASE_UNAVAILABLE_ERROR),
+        (FLAGSMITH_DATABASE_CONFIG, False, False, FLAGSMITH_DATABASE_UNAVAILABLE_ERROR),
+        (
+            {**FLAGSMITH_DATABASE_CONFIG, "host": "pg.example.com"},
+            False,
+            True,
+            FLAGSMITH_DATABASE_SOURCE_ERROR,
+        ),
+        ({"source": "other"}, False, True, FLAGSMITH_DATABASE_SOURCE_ERROR),
+    ],
+    ids=["self-hosted-postgres", "saas", "non-postgres", "extra-field", "other-source"],
+)
+def test_validate_config__flagsmith_database_config__returns_config_or_error(
+    mocker: MockerFixture,
+    config: dict[str, object],
+    saas: bool,
+    is_postgres: bool,
+    expected: dict[str, object],
+) -> None:
+    # Given
+    mocker.patch("experimentation.warehouses.postgres.is_saas", return_value=saas)
+    mocker.patch(
+        "experimentation.warehouses.postgres.is_flagsmith_database_postgres",
+        return_value=is_postgres,
+    )
+
+    # When
+    try:
+        result: object = PostgresWarehouse().validate_config(config)
+    except serializers.ValidationError as error:
+        result = error.detail
+
+    # Then
+    assert result == expected
+
+
+def test_validate_config__stored_flagsmith_database_config__returns_config_merged_over_defaults() -> (
+    None
+):
+    # Given / When
+    result = PostgresWarehouse().validate_config(
+        VALID_CONFIG, stored=FLAGSMITH_DATABASE_CONFIG
+    )
+
+    # Then
+    assert result == {**DEFAULTS, **VALID_CONFIG}
+
+
+@pytest.mark.parametrize(
     "credentials, expected",
     [
         ({"password": "hunter2"}, {"password": "hunter2"}),
@@ -252,15 +318,21 @@ def test_read_cursor__connection__scopes_session_to_read_only_schema(
 
 
 @pytest.mark.parametrize(
-    "config",
-    [{"host": "pg.example.com"}, {**VALID_CONFIG, **DEFAULTS, "host": "db1,127.0.0.1"}],
-    ids=["incomplete-config", "host-list"],
+    "config, saas",
+    [
+        ({"host": "pg.example.com"}, False),
+        ({**VALID_CONFIG, **DEFAULTS, "host": "db1,127.0.0.1"}, False),
+        (FLAGSMITH_DATABASE_CONFIG, True),
+    ],
+    ids=["incomplete-config", "host-list", "flagsmith-database-on-saas"],
 )
 def test_read_cursor__unusable_config__raises_before_connecting(
     mocker: MockerFixture,
     config: dict[str, object],
+    saas: bool,
 ) -> None:
     # Given
+    mocker.patch("experimentation.warehouses.postgres.is_saas", return_value=saas)
     connect = mocker.patch("experimentation.warehouses.postgres.psycopg2.connect")
     connection = WarehouseConnection(warehouse_type="postgres", config=config)
     connection.credentials = {"password": "hunter2"}
@@ -512,3 +584,104 @@ def test_get_results_aggregates__events__reads_customer_schema(
         "control": 1,
         "treatment": 0,
     }
+
+
+@pytest.mark.parametrize(
+    "schema, expected_detail",
+    [
+        ("flagsmith_exp", None),
+        ("missing", FLAGSMITH_DATABASE_MISSING_EVENTS_TABLE_DETAIL),
+    ],
+    ids=["migrated", "missing-table"],
+)
+def test_verify__flagsmith_database_config__connects_or_reports_missing_table(
+    flagsmith_database_connection: WarehouseConnection,
+    mocker: MockerFixture,
+    schema: str,
+    expected_detail: str | None,
+) -> None:
+    # Given
+    mocker.patch(
+        "experimentation.warehouses.postgres.FLAGSMITH_DATABASE_SCHEMA", schema
+    )
+    warehouse = PostgresWarehouse()
+
+    # When
+    try:
+        warehouse.verify(flagsmith_database_connection)
+        detail = None
+    except Exception as error:
+        detail = warehouse.describe_error(error)
+
+    # Then
+    assert detail == expected_detail
+
+
+def test_verify__flagsmith_database_role_without_privileges__reports_permission_denied(
+    flagsmith_database_connection: WarehouseConnection,
+    flagsmith_database_events_cursor: PgCursor,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    role, password = f"exp_role_{uuid.uuid4().hex[:12]}", uuid.uuid4().hex
+    flagsmith_database_events_cursor.execute(
+        sql.SQL("CREATE ROLE {} LOGIN PASSWORD %s").format(sql.Identifier(role)),
+        (password,),
+    )
+    mocker.patch(
+        "experimentation.warehouses.postgres.flagsmith_database_connect_params",
+        return_value={
+            **flagsmith_database_connect_params(),
+            "user": role,
+            "password": password,
+        },
+    )
+    warehouse = PostgresWarehouse()
+
+    # When
+    with pytest.raises(DeliveryConfigError) as exc_info:
+        warehouse.verify(flagsmith_database_connection)
+
+    # Then
+    assert (
+        warehouse.describe_error(exc_info.value)
+        == FLAGSMITH_DATABASE_PERMISSION_DENIED_DETAIL
+    )
+    flagsmith_database_events_cursor.execute(
+        sql.SQL("DROP ROLE {}").format(sql.Identifier(role))
+    )
+
+
+def test_get_event_stats__flagsmith_database_config__returns_counts_from_flagsmith_database(
+    flagsmith_database_connection: WarehouseConnection,
+    flagsmith_database_events_cursor: PgCursor,
+) -> None:
+    # Given
+    flagsmith_database_events_cursor.executemany(
+        "INSERT INTO flagsmith_exp.events "
+        "(environment_key, identifier, event, timestamp) VALUES (%s, %s, %s, %s)",
+        [(ENV, "u1", "purchase", _at(1, 10)), (ENV, "u2", "signup", _at(1, 11))],
+    )
+
+    # When
+    stats = PostgresWarehouse().get_event_stats(flagsmith_database_connection, ENV)
+
+    # Then
+    assert stats == WarehouseEventStats(total_events_received=2, unique_events_count=2)
+
+
+def test_migration_0019_events_sql__compared_with_repo_events_sql__is_identical() -> (
+    None
+):
+    # Given
+    migration_sql_path = (
+        Path(experimentation.migrations.__file__).parent
+        / "sql"
+        / "0019_create_flagsmith_database_events_table.sql"
+    )
+
+    # When
+    migration_sql = migration_sql_path.read_text()
+
+    # Then
+    assert migration_sql == POSTGRES_EVENTS_SQL_PATH.read_text()

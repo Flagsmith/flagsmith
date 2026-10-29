@@ -35,6 +35,8 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.services import apply_experiment_rollout
+from experimentation.warehouses.constants import FLAGSMITH_DATABASE_SOURCE
+from experimentation.warehouses.postgres import flagsmith_database_connect_params
 from features.future.types import Variant
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
@@ -244,6 +246,30 @@ def postgres_connection(
         name="Production PostgreSQL",
         config=postgres_warehouse_schema.config,
         credentials={"password": postgres_warehouse_schema.password},
+    )
+    return connection
+
+
+@pytest.fixture()
+def flagsmith_database_events_cursor(db: None) -> Iterator[PgCursor]:
+    """An autocommit session on the Flagsmith database's events table, which
+    migrations create; emptied on teardown."""
+    with closing(psycopg2.connect(**flagsmith_database_connect_params())) as admin:
+        admin.autocommit = True
+        with admin.cursor() as cursor:
+            yield cursor
+            cursor.execute("TRUNCATE flagsmith_exp.events")
+
+
+@pytest.fixture()
+def flagsmith_database_connection(
+    environment: Environment,
+) -> WarehouseConnection:
+    connection: WarehouseConnection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.POSTGRES,
+        name="Flagsmith database",
+        config={"source": FLAGSMITH_DATABASE_SOURCE},
     )
     return connection
 
