@@ -3,7 +3,7 @@ from django.db import OperationalError, connection
 from pytest_mock import MockerFixture
 
 from core.exceptions import StatementTimeoutError
-from util.db import closing_stale_connections, statement_timeout
+from util.db import closing_stale_connections, with_statement_timeout
 
 
 def test_closing_stale_connections__exit__calls_close_old_connections(
@@ -21,13 +21,13 @@ def test_closing_stale_connections__exit__calls_close_old_connections(
 
 
 @pytest.mark.django_db
-def test_statement_timeout__slow_query__raises_statement_timeout_error() -> None:
+def test_with_statement_timeout__slow_query__raises_statement_timeout_error() -> None:
     # Given
     cursor = connection.cursor()
 
     # When
     with pytest.raises(StatementTimeoutError):
-        with statement_timeout(milliseconds=1):
+        with with_statement_timeout(milliseconds=1):
             cursor.execute("SELECT pg_sleep(0.1)")
 
     # Then
@@ -36,13 +36,13 @@ def test_statement_timeout__slow_query__raises_statement_timeout_error() -> None
 
 
 @pytest.mark.django_db
-def test_statement_timeout__other_database_error__propagates_error() -> None:
+def test_with_statement_timeout__other_database_error__propagates_error() -> None:
     # Given
     error = OperationalError("connection lost")
 
     # When
     with pytest.raises(OperationalError) as exc_info:
-        with statement_timeout(milliseconds=1000):
+        with with_statement_timeout(milliseconds=1000):
             raise error
 
     # Then

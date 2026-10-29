@@ -23,7 +23,7 @@ from audit.serializers import (
     AuditLogsQueryParamSerializer,
 )
 from organisations.models import Organisation, OrganisationRole
-from util.db import statement_timeout
+from util.db import with_statement_timeout
 
 SEARCH_STATEMENT_TIMEOUT_MS = 3000
 
@@ -45,7 +45,9 @@ class _BaseAuditLogViewSet(
 
         # Text search scans every audit log row in scope, so a few searches
         # on a large audit log can use all the database CPU.
-        with statement_timeout(SEARCH_STATEMENT_TIMEOUT_MS, using=AuditLog.objects.db):
+        with with_statement_timeout(
+            SEARCH_STATEMENT_TIMEOUT_MS, using=AuditLog.objects.db
+        ):
             return super().list(request, *args, **kwargs)
 
     def get_queryset(self) -> QuerySet[AuditLog]:

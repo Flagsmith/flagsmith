@@ -55,7 +55,7 @@ def with_delete_hooks(queryset: QuerySet[M]) -> Iterator[QuerySet[M]]:
 
 
 @contextmanager
-def statement_timeout(
+def with_statement_timeout(
     milliseconds: int,
     using: str = DEFAULT_DB_ALIAS,
 ) -> Iterator[None]:
