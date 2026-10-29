@@ -1297,6 +1297,11 @@ export type Webhook = {
   updated_at: string
 }
 
+export type HubspotChatToken = {
+  email: string
+  token: string
+}
+
 export type AccountModel = Account & {
   organisations: Organisation[]
 }
@@ -1662,6 +1667,7 @@ export type Res = {
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>
   onboardingSupportOptIn: { id: string }
+  hubspotChatToken: HubspotChatToken
   environmentMetrics: {
     metrics: {
       value: number

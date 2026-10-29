@@ -65,7 +65,8 @@ const AuditLog: FC<AuditLogType> = (props) => {
       page,
       page_size: props.pageSize,
       project: props.projectId,
-      search,
+      // The API rejects searches shorter than 3 characters.
+      search: search?.trim().length >= 3 ? search.trim() : undefined,
     },
     {
       refetchOnMountOrArgChange: true,
