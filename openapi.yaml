@@ -287,7 +287,7 @@ paths:
           schema:
             type: string
             maxLength: 256
-            minLength: 1
+            minLength: 3
       responses:
         '200':
           description: ''
@@ -9754,7 +9754,7 @@ paths:
           schema:
             type: string
             maxLength: 256
-            minLength: 1
+            minLength: 3
       responses:
         '200':
           description: ''
@@ -14907,7 +14907,7 @@ paths:
           schema:
             type: string
             maxLength: 256
-            minLength: 1
+            minLength: 3
       responses:
         '200':
           description: ''
