@@ -78,6 +78,22 @@ def test_list_audit_log__filter_by_log_text__returns_matching_logs(
     assert response.json()["results"][1]["log"] == flag_state_updated_log
 
 
+def test_list_audit_log__search_shorter_than_3_characters__returns_400(
+    admin_client: APIClient, project: Project
+) -> None:
+    # Given
+    url = reverse("api-v1:audit-list")
+
+    # When
+    response = admin_client.get(url, {"project": project.id, "search": "ab"})  # type: ignore[arg-type]
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "search": ["Ensure this field has at least 3 characters."]
+    }
+
+
 def test_list_audit_log__filter_by_project__returns_matching_logs(
     admin_client: APIClient,
     project: Project,
