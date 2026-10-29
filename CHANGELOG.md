@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.288.1](https://github.com/Flagsmith/flagsmith/compare/v2.288.0...v2.288.1) (2026-10-29)
+
+
+### Performance Improvements
+
+* **Audit:** Index audit logs by project and created date ([#8848](https://github.com/Flagsmith/flagsmith/issues/8848)) ([660f4dc](https://github.com/Flagsmith/flagsmith/commit/660f4dc9da4edaf162a4b311fc34ab87dd3d100d))
+
 ## [2.288.0](https://github.com/Flagsmith/flagsmith/compare/v2.287.0...v2.288.0) (2026-10-28)
 
 
