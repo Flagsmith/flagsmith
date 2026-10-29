@@ -122,6 +122,7 @@ jobs:
           context: .
           save: ${{ inputs.ephemeral }}
           push: ${{ !inputs.ephemeral }}
+          outputs: type=image,oci-mediatypes=true
           platforms: linux/amd64,linux/arm64
           secrets: |
             ${{ secrets.secrets }}
