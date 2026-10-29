@@ -20,7 +20,7 @@ def test_cache_warehouse_read_unless_empty__empty_or_populated_read__caches_only
     warehouse_read: WarehouseEventNames | WarehouseEventStats,
     expected_cached: bool,
 ) -> None:
-    # When
+    # Given / When
     cache_warehouse_read_unless_empty("key", warehouse_read, 60)
 
     # Then
