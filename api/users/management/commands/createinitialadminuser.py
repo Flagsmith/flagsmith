@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.management import BaseCommand
 
 from users.services import (
-    create_initial_superuser,
+    create_superuser,
     should_skip_create_initial_superuser,
 )
 
@@ -22,22 +22,36 @@ class Command(BaseCommand):
             help="Email address for the superuser",
             default=settings.ADMIN_EMAIL,
         )
+        parser.add_argument(
+            "--force",
+            action="store_true",
+            help="Create the superuser even if other users already exist",
+        )
+        parser.add_argument(
+            "--enforce-sso",
+            action="store_true",
+            help="Allow the superuser to log in to Django admin through SSO",
+        )
 
     def handle(
         self,
         *args: Any,
         admin_email: str,
+        force: bool,
+        enforce_sso: bool,
         **options: Any,
     ) -> None:
-        if (
-            not settings.ALLOW_ADMIN_INITIATION_VIA_CLI
-            or should_skip_create_initial_superuser()
+        if not settings.ALLOW_ADMIN_INITIATION_VIA_CLI or (
+            should_skip_create_initial_superuser() and not force
         ):
             logger.debug("Skipping initial user creation.")
             return
-        response = create_initial_superuser(
+
+        response = create_superuser(
             admin_email=admin_email,
+            enforce_sso=enforce_sso,
         )
+
         self.stdout.write(
             self.style.SUCCESS(
                 'Superuser "%s" created successfully.' % response.user.email

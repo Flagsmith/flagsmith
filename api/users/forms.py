@@ -6,8 +6,8 @@ from django.forms import HiddenInput, fields
 
 from users.models import FFAdminUser
 from users.services import (
-    CreateInitialSuperuserResponse,
-    create_initial_superuser,
+    CreateSuperuserResponse,
+    create_superuser,
 )
 
 
@@ -30,8 +30,8 @@ class InitConfigForm(forms.Form):
         help_text="The fully qualified domain name associated with the website. For example, www.example.com",
     )
 
-    def create_admin(self) -> CreateInitialSuperuserResponse:
-        return create_initial_superuser(
+    def create_admin(self) -> CreateSuperuserResponse:
+        return create_superuser(
             admin_email=self.cleaned_data["email"],
         )
 
