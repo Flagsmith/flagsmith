@@ -31,6 +31,7 @@ class WarehouseType(models.TextChoices):
     SNOWFLAKE = "snowflake", "Snowflake"
     CLICKHOUSE = "clickhouse", "ClickHouse"
     DATABRICKS = "databricks", "Databricks"
+    POSTGRES = "postgres", "PostgreSQL"
 
 
 class WarehouseConnectionStatus(models.TextChoices):

@@ -30422,12 +30422,14 @@ components:
         * `snowflake` - Snowflake
         * `clickhouse` - ClickHouse
         * `databricks` - Databricks
+        * `postgres` - PostgreSQL
       type: string
       enum:
         - flagsmith
         - snowflake
         - clickhouse
         - databricks
+        - postgres
     Webhook:
       type: object
       properties:

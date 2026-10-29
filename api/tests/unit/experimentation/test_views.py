@@ -24,7 +24,10 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.views import WarehouseConnectionViewSet
-from tests.unit.experimentation.conftest import SetWarehousesFlagFixture
+from tests.unit.experimentation.conftest import (
+    PostgresWarehouseSchema,
+    SetWarehousesFlagFixture,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -2013,3 +2016,56 @@ def test_patch__existing_databricks_below_minimum_plan_on_saas__saves(
     assert response.status_code == status.HTTP_200_OK
     databricks_connection.refresh_from_db()
     assert databricks_connection.name == "Renamed"
+
+
+def test_post__postgres__returns_201_connected_with_generated_name(
+    admin_client: APIClient,
+    environment: Environment,
+    postgres_warehouse_schema: PostgresWarehouseSchema,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    payload = {
+        "warehouse_type": "postgres",
+        "config": postgres_warehouse_schema.config,
+        "credentials": {"password": postgres_warehouse_schema.password},
+    }
+
+    # When
+    response = admin_client.post(warehouse_connection_url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == WarehouseConnectionStatus.CONNECTED
+    assert response.json()["name"] == f"PostgreSQL Warehouse - {environment.name}"
+    assert response.json()["config"] == postgres_warehouse_schema.config
+    assert "credentials" not in response.json()
+
+
+@pytest.mark.usefixtures("saas_mode")
+def test_post__postgres_below_minimum_plan_on_saas__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    set_warehouses_flag({"minimum_plans": {"postgres": "scale-up"}})
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "postgres",
+            "config": {"host": "pg.example.com", "database": "a", "username": "b"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "warehouse_type": ["PostgreSQL connections are not available on your plan."]
+    }
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
