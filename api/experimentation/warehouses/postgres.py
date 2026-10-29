@@ -25,6 +25,7 @@ from experimentation.types import (
 from experimentation.warehouses.base import is_disallowed_host
 from experimentation.warehouses.cache import (
     CUSTOMER_EVENT_UNAVAILABLE,
+    cache_warehouse_read_unless_empty,
     customer_cache_key,
 )
 from experimentation.warehouses.constants import (
@@ -380,7 +381,9 @@ class PostgresWarehouse:
             )
             return None
         event_names = build_event_names(rows)
-        cache.set(cache_key, event_names, EVENT_NAMES_CACHE_SECONDS)
+        cache_warehouse_read_unless_empty(
+            cache_key, event_names, EVENT_NAMES_CACHE_SECONDS
+        )
         return event_names
 
     def get_event_stats(
@@ -416,7 +419,9 @@ class PostgresWarehouse:
                 exc_info=True,
             )
             return None
-        cache.set(cache_key, stats, CUSTOMER_EVENT_STATS_CACHE_SECONDS)
+        cache_warehouse_read_unless_empty(
+            cache_key, stats, CUSTOMER_EVENT_STATS_CACHE_SECONDS
+        )
         return stats
 
     def get_exposure_buckets(

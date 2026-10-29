@@ -2,6 +2,10 @@ import hashlib
 import json
 import typing
 
+from django.core.cache import cache
+
+from experimentation.dataclasses import WarehouseEventNames, WarehouseEventStats
+
 if typing.TYPE_CHECKING:
     from experimentation.models import WarehouseConnection
 
@@ -19,3 +23,17 @@ def customer_cache_key(kind: str, connection: "WarehouseConnection") -> str:
     )
     digest = hashlib.sha256(details.encode()).hexdigest()[:12]
     return f"experimentation:customer_{kind}:{connection.id}:{digest}"
+
+
+def cache_warehouse_read_unless_empty(
+    cache_key: str,
+    result: WarehouseEventNames | WarehouseEventStats,
+    seconds: int,
+) -> None:
+    """A read before the first event lands must not pin "no events" for the TTL."""
+    if isinstance(result, WarehouseEventNames):
+        is_empty = not result.events
+    else:
+        is_empty = not result.total_events_received
+    if not is_empty:
+        cache.set(cache_key, result, seconds)
