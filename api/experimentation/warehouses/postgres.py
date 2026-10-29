@@ -144,15 +144,15 @@ def is_flagsmith_database_config(config: object) -> bool:
     return config == {"source": FLAGSMITH_DATABASE_SOURCE}
 
 
-def is_flagsmith_database_postgres() -> bool:
+def is_default_database_postgresql() -> bool:
     return connections[DEFAULT_DB_ALIAS].vendor == "postgresql"
 
 
-def flagsmith_database_connect_params() -> dict[str, Any]:
+def get_flagsmith_database_connect_params() -> dict[str, Any]:
     # Could be improved by using a dedicated Django database alias.
-    params = connections[DEFAULT_DB_ALIAS].get_connection_params()
-    params.pop("cursor_factory", None)
-    return params
+    connect_params = connections[DEFAULT_DB_ALIAS].get_connection_params()
+    connect_params.pop("cursor_factory", None)
+    return connect_params
 
 
 def describe_postgres_error(error: Exception) -> str:
@@ -175,7 +175,7 @@ def describe_postgres_error(error: Exception) -> str:
     return "Connection failed."
 
 
-def _stored_connect_params_and_schema(
+def _get_stored_connect_params_and_schema(
     connection: "WarehouseConnection",
 ) -> tuple[dict[str, Any], str]:
     config = typing.cast(PostgresConfig, connection.config or {})
@@ -221,10 +221,10 @@ def read_cursor(
     if is_flagsmith_database_config(connection.config):
         if is_saas():
             raise DeliveryConfigError(FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL)
-        connect_params = flagsmith_database_connect_params()
+        connect_params = get_flagsmith_database_connect_params()
         schema = FLAGSMITH_DATABASE_SCHEMA
     else:
-        connect_params, schema = _stored_connect_params_and_schema(connection)
+        connect_params, schema = _get_stored_connect_params_and_schema(connection)
 
     with closing(
         psycopg2.connect(
@@ -321,7 +321,7 @@ def _validate_flagsmith_database_config(config: dict[str, Any]) -> dict[str, str
         raise _config_error(
             "source", f'Must be "{FLAGSMITH_DATABASE_SOURCE}", with no other fields.'
         )
-    if is_saas() or not is_flagsmith_database_postgres():
+    if is_saas() or not is_default_database_postgresql():
         raise serializers.ValidationError(
             {"config": FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL}
         )

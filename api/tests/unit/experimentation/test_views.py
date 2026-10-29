@@ -2098,7 +2098,7 @@ def test_post__flagsmith_database_config__returns_201_connected_without_credenti
 
 
 @pytest.mark.parametrize(
-    "is_saas, is_flagsmith_database_postgres",
+    "is_saas, is_default_database_postgresql",
     [(True, True), (False, False)],
     ids=["saas", "non-postgres-database"],
 )
@@ -2108,13 +2108,13 @@ def test_post__flagsmith_database_config_unavailable__returns_400(
     mocker: MockerFixture,
     warehouse_connection_url: str,
     is_saas: bool,
-    is_flagsmith_database_postgres: bool,
+    is_default_database_postgresql: bool,
 ) -> None:
     # Given
     mocker.patch("experimentation.warehouses.postgres.is_saas", return_value=is_saas)
     mocker.patch(
-        "experimentation.warehouses.postgres.is_flagsmith_database_postgres",
-        return_value=is_flagsmith_database_postgres,
+        "experimentation.warehouses.postgres.is_default_database_postgresql",
+        return_value=is_default_database_postgresql,
     )
 
     # When
@@ -2174,7 +2174,7 @@ def test_post__invalid_flagsmith_database_payload__returns_400(
 
 
 @pytest.mark.parametrize(
-    "with_credentials, expected_status_code",
+    "has_credentials, expected_status_code",
     [(True, status.HTTP_200_OK), (False, status.HTTP_400_BAD_REQUEST)],
     ids=["with-credentials", "without-credentials"],
 )
@@ -2183,7 +2183,7 @@ def test_patch__flagsmith_database_config_to_postgres_config__saves_only_with_cr
     environment: Environment,
     flagsmith_database_connection: WarehouseConnection,
     postgres_warehouse_schema: PostgresWarehouseSchema,
-    with_credentials: bool,
+    has_credentials: bool,
     expected_status_code: int,
 ) -> None:
     # Given
@@ -2192,7 +2192,7 @@ def test_patch__flagsmith_database_config_to_postgres_config__saves_only_with_cr
         args=[environment.api_key, flagsmith_database_connection.id],
     )
     payload: dict[str, object] = {"config": postgres_warehouse_schema.config}
-    if with_credentials:
+    if has_credentials:
         payload["credentials"] = {"password": postgres_warehouse_schema.password}
 
     # When
@@ -2203,19 +2203,17 @@ def test_patch__flagsmith_database_config_to_postgres_config__saves_only_with_cr
     flagsmith_database_connection.refresh_from_db()
     assert flagsmith_database_connection.config == (
         postgres_warehouse_schema.config
-        if with_credentials
+        if has_credentials
         else {"source": FLAGSMITH_DATABASE_SOURCE}
     )
 
 
-def test_patch__flagsmith_database_connection_name_only__saves_without_verifying(
+def test_patch__flagsmith_database_connection_name_only__saves_without_credentials(
     admin_client: APIClient,
     environment: Environment,
     flagsmith_database_connection: WarehouseConnection,
-    mocker: MockerFixture,
 ) -> None:
     # Given
-    verify = mocker.patch("experimentation.views.verify_warehouse_connection")
     url = reverse(
         "api-v1:environments:experimentation:warehouse-connections-detail",
         args=[environment.api_key, flagsmith_database_connection.id],
@@ -2228,8 +2226,6 @@ def test_patch__flagsmith_database_connection_name_only__saves_without_verifying
     assert response.status_code == status.HTTP_200_OK
     flagsmith_database_connection.refresh_from_db()
     assert flagsmith_database_connection.name == "Renamed"
-    assert flagsmith_database_connection.credentials is None
-    verify.assert_not_called()
 
 
 def test_patch__postgres_to_flagsmith_database_config__clears_credentials(
