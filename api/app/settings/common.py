@@ -1257,9 +1257,6 @@ BUCKETED_ANALYTICS_DATA_RETENTION_DAYS = env.int(
     "BUCKETED_ANALYTICS_DATA_RETENTION_DAYS", 90
 )
 
-# Maximum time, in milliseconds, a single text search query may run for.
-SEARCH_STATEMENT_TIMEOUT_MS = env.int("SEARCH_STATEMENT_TIMEOUT_MS", default=5000)
-
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
 PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
 PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)

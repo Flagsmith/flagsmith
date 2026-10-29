@@ -5,7 +5,6 @@ import pytest
 from django.db.models import Model
 from django.urls import reverse
 from django.utils import timezone
-from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -84,10 +83,9 @@ def test_list_audit_log__search_exceeds_statement_timeout__returns_503(
     admin_client: APIClient,
     project: Project,
     mocker: MockerFixture,
-    settings: SettingsWrapper,
 ) -> None:
     # Given
-    settings.SEARCH_STATEMENT_TIMEOUT_MS = 1
+    mocker.patch("audit.views.SEARCH_STATEMENT_TIMEOUT_MS", 1)
     AuditLog.objects.create(project=project, log="Flag state updated")
     mocker.patch.object(
         AllAuditLogViewSet,
