@@ -27,3 +27,11 @@ class ChangeRequestsEnabledError(APIException):
         super().__init__(
             {"detail": detail or self.default_detail, "code": self.default_code}
         )
+
+
+class StatementTimeoutError(APIError):
+    """Raised where a database query is cancelled for exceeding its time limit."""
+
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    default_code = "statement_timeout"
+    default_detail = "The request took too long to complete."
