@@ -34,4 +34,4 @@ class StatementTimeoutError(APIError):
 
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     default_code = "statement_timeout"
-    default_detail = "The request took too long. Try a more specific search term."
+    default_detail = "The request took too long to complete."

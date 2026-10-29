@@ -102,7 +102,7 @@ def test_list_audit_log__search_exceeds_statement_timeout__returns_503(
     assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
     assert response.json() == {
         "code": "statement_timeout",
-        "message": "The request took too long. Try a more specific search term.",
+        "message": "The request took too long to complete.",
     }
 
 
