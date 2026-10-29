@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.288.2](https://github.com/Flagsmith/flagsmith/compare/v2.288.1...v2.288.2) (2026-10-29)
+
+
+### Bug Fixes
+
+* **Audit:** Require at least 3 characters for audit log search ([#8851](https://github.com/Flagsmith/flagsmith/issues/8851)) ([4a4af55](https://github.com/Flagsmith/flagsmith/commit/4a4af55dd7a21df99994778727e6ddce3672afe2))
+
+
+### Performance Improvements
+
+* **Audit:** Index audit log text for search ([#8850](https://github.com/Flagsmith/flagsmith/issues/8850)) ([dcb1754](https://github.com/Flagsmith/flagsmith/commit/dcb1754ac5012b4880774d79bd0d041de22e3902))
+
 ## [2.288.1](https://github.com/Flagsmith/flagsmith/compare/v2.288.0...v2.288.1) (2026-10-29)
 
 
