@@ -24,7 +24,7 @@ def create_superuser(
     enforce_sso: bool = False,
 ) -> CreateSuperuserResponse:
     """Create or promote a superuser"""
-    email = admin_email or settings.ADMIN_EMAIL
+    email = (admin_email or settings.ADMIN_EMAIL).lower()
     superuser = FFAdminUser.objects.filter(email__iexact=email).first()
 
     if superuser:
@@ -38,10 +38,11 @@ def create_superuser(
         )
 
     if enforce_sso:
+        username, domain = email.split("@")
         Assignment.objects.get_or_create(
             username_mode=ASSIGNMENT_MATCH,
-            username=superuser.email.split("@")[0],
-            domain=superuser.email_domain,
+            username=username,
+            domain=domain,
             user=superuser,
         )
 
