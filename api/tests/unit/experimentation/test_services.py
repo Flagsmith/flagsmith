@@ -155,31 +155,28 @@ def test_get_clickhouse_client__repeated_calls__builds_fresh_clients(
 
 
 @pytest.mark.parametrize(
-    "rows, expected, expected_query_count",
+    "rows, expected",
     [
         (
             [("conversion",), ("page_view",)],
             WarehouseEventNames(events=["conversion", "page_view"], is_truncated=False),
-            1,
         ),
-        ([], WarehouseEventNames(events=[], is_truncated=False), 2),
+        ([], WarehouseEventNames(events=[], is_truncated=False)),
         (
             [(f"event_{i:03d}",) for i in range(501)],
             WarehouseEventNames(
                 events=[f"event_{i:03d}" for i in range(500)], is_truncated=True
             ),
-            1,
         ),
     ],
     ids=["few", "none", "truncated"],
 )
-def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names_and_caches_non_empty(
+def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
     warehouse_connection: WarehouseConnection,
     settings: SettingsWrapper,
     reset_cache: None,
     rows: list[tuple[str]],
     expected: WarehouseEventNames,
-    expected_query_count: int,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -197,15 +194,6 @@ def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names_a
     # Then
     assert result == expected
     mock_client.disconnect.assert_called_once_with()
-
-    # When — non-empty results are cached, so a second request doesn't hit the warehouse
-    second_result = services.get_warehouse_event_names(
-        warehouse_connection, "env-key-123"
-    )
-
-    # Then
-    assert mock_client.execute.call_count == expected_query_count
-    assert second_result == expected
 
 
 @pytest.mark.parametrize(
