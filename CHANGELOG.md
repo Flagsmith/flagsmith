@@ -1,5 +1,33 @@
 # Changelog
 
+## [2.288.1](https://github.com/Flagsmith/flagsmith/compare/v2.288.0...v2.288.1) (2026-10-29)
+
+
+### Performance Improvements
+
+* **Audit:** Index audit logs by project and created date ([#8848](https://github.com/Flagsmith/flagsmith/issues/8848)) ([660f4dc](https://github.com/Flagsmith/flagsmith/commit/660f4dc9da4edaf162a4b311fc34ab87dd3d100d))
+
+## [2.288.0](https://github.com/Flagsmith/flagsmith/compare/v2.287.0...v2.288.0) (2026-10-28)
+
+
+### Features
+
+* **Dependencies:** Add the API calls for staging changes in a change request ([#8718](https://github.com/Flagsmith/flagsmith/issues/8718)) ([965c27d](https://github.com/Flagsmith/flagsmith/commit/965c27d124dd3bfa977cc436ee6b7812e5293319))
+* **Dependencies:** Keep the staged changes footer in view ([#8717](https://github.com/Flagsmith/flagsmith/issues/8717)) ([e5bbe9f](https://github.com/Flagsmith/flagsmith/commit/e5bbe9fefedbfbf7c88513f84e29002b06760b0b))
+* **Dependencies:** Show a change request's dependency changes ([#8716](https://github.com/Flagsmith/flagsmith/issues/8716)) ([7578fbf](https://github.com/Flagsmith/flagsmith/commit/7578fbf1f73d8e8b3168360b8023210421e564c3))
+* **Dependencies:** Show dependency changes pending in change requests ([#8783](https://github.com/Flagsmith/flagsmith/issues/8783)) ([d031dbe](https://github.com/Flagsmith/flagsmith/commit/d031dbe740f99e723ecbd7d97b219cc72111606c))
+* **Dependencies:** Stage dependency changes in a change request ([#8715](https://github.com/Flagsmith/flagsmith/issues/8715)) ([910ff3f](https://github.com/Flagsmith/flagsmith/commit/910ff3f5f0b770b7c7d972c2d4958b577d5b2447))
+* **experimentation:** add a PostgreSQL warehouse dialect ([#8841](https://github.com/Flagsmith/flagsmith/issues/8841)) ([1c5983e](https://github.com/Flagsmith/flagsmith/commit/1c5983e42681d79decb19d7f199e98c5673d3d03))
+* **Support:** Add an endpoint that issues HubSpot chat visitor tokens ([#8813](https://github.com/Flagsmith/flagsmith/issues/8813)) ([f4735b6](https://github.com/Flagsmith/flagsmith/commit/f4735b64807f742f81ece1f18e715d3044e2e222))
+* **Support:** Identify logged-in users in HubSpot chat ([#8814](https://github.com/Flagsmith/flagsmith/issues/8814)) ([3de69a9](https://github.com/Flagsmith/flagsmith/commit/3de69a9bfc10243ca3fb612825c5487a0d509094))
+* **Support:** Move in-app chat to HubSpot behind a feature flag ([#8710](https://github.com/Flagsmith/flagsmith/issues/8710)) ([b593df0](https://github.com/Flagsmith/flagsmith/commit/b593df0288b55bc4934e238233d51d0a2213d1fe))
+
+
+### Bug Fixes
+
+* **Billing:** Contact Sales opens the sales form instead of support chat ([#8711](https://github.com/Flagsmith/flagsmith/issues/8711)) ([eea9b7f](https://github.com/Flagsmith/flagsmith/commit/eea9b7f27b9d2f7d67a80b1b79001c593b2c8cd6))
+* land on experiments list when switching environment from an experiment ([#8790](https://github.com/Flagsmith/flagsmith/issues/8790)) ([6c4ef63](https://github.com/Flagsmith/flagsmith/commit/6c4ef63d629a435ead046a3bacf68d292f144a40))
+
 ## [2.287.0](https://github.com/Flagsmith/flagsmith/compare/v2.286.0...v2.287.0) (2026-10-16)
 
 
