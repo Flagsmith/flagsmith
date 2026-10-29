@@ -63,7 +63,7 @@ const convertSegmentOverrideToFeatureState = (
     feature: override.feature,
     feature_segment: {
       id: override.id,
-      priority: i,
+      priority: override.priority ?? i,
       segment: override.segment,
       uuid: override.uuid,
     },
@@ -443,14 +443,15 @@ const controller = {
                     getStore(),
                     segmentOverrides.map((override, index) => ({
                       id: override.id,
-                      priority: index,
+                      priority: override.priority ?? index,
                     })),
                   )
                 : Promise.resolve([])
               ).then(() =>
                 Promise.all(
                   segmentOverrides.map((override) =>
-                    !override.created
+                    // System segment overrides can't be changed directly.
+                    !override.created && !override.is_system_segment
                       ? data.put(
                           `${Project.api}features/featurestates/${override.feature_segment_value.id}/`,
                           {
