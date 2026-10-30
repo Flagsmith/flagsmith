@@ -26,6 +26,7 @@ from experimentation.types import (
 from experimentation.warehouses.base import is_disallowed_host
 from experimentation.warehouses.cache import (
     CUSTOMER_EVENT_UNAVAILABLE,
+    cache_warehouse_read_unless_empty,
     customer_cache_key,
 )
 from experimentation.warehouses.constants import (
@@ -59,7 +60,7 @@ if typing.TYPE_CHECKING:
 
 logger = structlog.get_logger("warehouse")
 
-T = TypeVar("T")
+T = TypeVar("T", WarehouseEventNames, WarehouseEventStats)
 
 HOST_SUFFIXES = (".cloud.databricks.com", ".azuredatabricks.net", ".gcp.databricks.com")
 _HOSTNAME = re.compile(r"(?!-)[a-z0-9-]+(?<!-)(\.(?!-)[a-z0-9-]+(?<!-))+")
@@ -503,7 +504,7 @@ class DatabricksWarehouse:
                 exc_info=True,
             )
             return None
-        cache.set(cache_key, result, success_seconds)
+        cache_warehouse_read_unless_empty(cache_key, result, success_seconds)
         return result
 
     def get_event_names(

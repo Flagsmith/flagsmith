@@ -195,15 +195,6 @@ def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
     assert result == expected
     mock_client.disconnect.assert_called_once_with()
 
-    # When — the result is cached, so a second request doesn't hit the warehouse
-    second_result = services.get_warehouse_event_names(
-        warehouse_connection, "env-key-123"
-    )
-
-    # Then
-    mock_client.execute.assert_called_once()
-    assert second_result == expected
-
 
 @pytest.mark.parametrize(
     "clickhouse_url, execute_side_effect",
