@@ -74,9 +74,6 @@ export const Variants: Story = {
       <Button theme='success'>Success</Button>
       <Button theme='tertiary'>Tertiary</Button>
       <Button theme='text'>Text</Button>
-      <Button theme='icon'>
-        <Icon name='copy' />
-      </Button>
     </div>
   ),
 }

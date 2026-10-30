@@ -212,6 +212,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                 >
                   {({ permission }) => (
                     <SegmentOverrideActions
+                      segmentName={name || getOverrideLabel(v)}
                       hideViewSegment={hideViewSegment}
                       canCompare={canCompare}
                       onCompare={onCompare}

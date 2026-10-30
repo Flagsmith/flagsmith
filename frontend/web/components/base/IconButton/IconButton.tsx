@@ -12,8 +12,7 @@ export type IconButtonVariant =
 
 export type IconButtonSize = 'small' | 'medium' | 'large'
 
-// A separate component from Button, which stays text-only. Nothing is migrated
-// onto this yet.
+// A separate component from Button, which stays text-only.
 export type IconButtonProps = BareButtonProps & {
   // There is no label to read, so the accessible name is required rather than
   // something a caller can forget.

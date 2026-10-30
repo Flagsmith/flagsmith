@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
+import IconButton from 'components/base/IconButton'
 import { Link, useRouteMatch, withRouter } from 'react-router-dom'
 import { useHasPermission } from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -264,10 +265,11 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
                     </div>
                   </Link>
                   <div className='table-column'>
-                    <Button
+                    <IconButton
+                      variant='secondary'
+                      size='large'
+                      aria-label={`Delete identity ${identifier}`}
                       id='remove-feature'
-                      className='btn btn-with-icon'
-                      type='button'
                       onClick={() => {
                         if (id) {
                           removeIdentity(id, identifier, environmentId)
@@ -280,8 +282,8 @@ const IdentitiesPage: FC<{ props: any }> = (props) => {
                         }
                       }}
                     >
-                      <Icon name='trash-2' width={20} fill='#656D7B' />
-                    </Button>
+                      <Icon width={20} name='trash-2' />
+                    </IconButton>
                   </div>
                 </Row>
               ) : (

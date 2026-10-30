@@ -6,6 +6,7 @@ import useOutsideClick from 'common/useOutsideClick'
 import { calculateListPosition } from 'common/utils/calculateListPosition'
 
 interface SegmentActionProps {
+  segmentName: string
   index: number
   isRemoveDisabled: boolean
   isCloneDisabled: boolean
@@ -19,6 +20,7 @@ const SegmentAction: FC<SegmentActionProps> = ({
   isRemoveDisabled,
   onClone,
   onRemove,
+  segmentName,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const btnRef = useRef<HTMLDivElement>(null)
@@ -41,8 +43,9 @@ const SegmentAction: FC<SegmentActionProps> = ({
     <div className='feature-action'>
       <div ref={btnRef}>
         <ActionButton
+          label={segmentName}
+          isOpen={isOpen}
           onClick={() => setIsOpen(true)}
-          data-test={`segment-action-${index}`}
         />
       </div>
       {isOpen && (

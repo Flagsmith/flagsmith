@@ -1,5 +1,5 @@
 import React from 'react'
-import Button from 'components/base/forms/Button'
+import IconButton from 'components/base/IconButton'
 import Icon from 'components/icons/Icon'
 import { useTheme } from 'project/darkMode'
 
@@ -11,13 +11,14 @@ const ThemeToggle = () => {
   const { isDark, setDarkMode } = useTheme()
 
   return (
-    <Button
-      theme='icon'
+    <IconButton
+      variant='ghost'
+      size='small'
       onClick={() => setDarkMode(!isDark)}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      <Icon name={isDark ? 'sun' : 'moon'} width={18} />
-    </Button>
+      <Icon width={16} name={isDark ? 'sun' : 'moon'} />
+    </IconButton>
   )
 }
 
