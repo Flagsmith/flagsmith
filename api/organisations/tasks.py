@@ -1,12 +1,15 @@
 import logging
 import math
-from datetime import timedelta
+from datetime import datetime, timedelta
 
+import structlog
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db import transaction
 from django.db.models import F, Max, Q
 from django.utils import timezone
+from openfeature.client import OpenFeatureClient
 from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
@@ -29,7 +32,10 @@ from organisations.models import (
     Subscription,
 )
 from organisations.services import get_api_limit_enforcement
-from organisations.subscriptions.constants import FREE_PLAN_ID
+from organisations.subscriptions.constants import (
+    FREE_PLAN_ID,
+    MAX_API_CALLS_IN_FREE_PLAN,
+)
 from organisations.usage_reporting.services import push_usage_snapshots
 from users.models import FFAdminUser
 
@@ -49,6 +55,8 @@ from .task_helpers import (
 )
 
 logger = logging.getLogger(__name__)
+
+api_usage_logger = structlog.get_logger("api_usage")
 
 
 @register_task_handler()
@@ -338,54 +346,84 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         )
     )
 
-    api_limit_access_blocks = []
     openfeature_client = get_openfeature_client()
 
     for organisation in organisations:
-        enforcement = get_api_limit_enforcement(organisation)
-        if not enforcement.enabled:
-            continue
-
-        if not organisation.has_subscription_information_cache():
-            continue
-
-        OrganisationBreachedGracePeriod.objects.get_or_create(organisation=organisation)
-
-        ctx = organisation.openfeature_evaluation_context
-        subscription_cache = organisation.subscription_information_cache
-        # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
-        if openfeature_client.get_boolean_value(
-            "get_current_api_usage_deprecated",
-            default_value=False,
-            evaluation_context=ctx,
-        ):  # pragma: no cover
-            api_usage = get_total_events_count(
-                organisation,
-                date_start=now - timedelta(days=30),
+        try:
+            _restrict_use_for_organisation(organisation, now, openfeature_client)
+        except Exception:
+            # Prevent an error with a single organisation killing the task.
+            api_usage_logger.exception(
+                "restriction.failed",
+                organisation__id=organisation.id,
             )
-        else:
-            api_usage = get_current_api_usage(
-                organisation_id=organisation.id,
-                date_start=now - timedelta(days=30),
-            )
-        if api_usage / subscription_cache.allowed_30d_api_calls < 1.0:
-            logger.info(
-                f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
-            )
-            continue
 
-        organisation.stop_serving_flags = enforcement.stops_serving_flags
-        organisation.block_access_to_admin = enforcement.blocks_access_to_admin
 
-        if enforcement.stops_serving_flags:
-            send_api_flags_blocked_notification(organisation)
+def _restrict_use_for_organisation(
+    organisation: Organisation,
+    now: datetime,
+    openfeature_client: OpenFeatureClient,
+) -> None:
+    """
+    Restrict a single organisation whose API use is still over its limit.
+    """
+    enforcement = get_api_limit_enforcement(organisation)
+    if not enforcement.enabled:
+        return
 
+    if not organisation.has_subscription_information_cache():
+        return
+
+    OrganisationBreachedGracePeriod.objects.get_or_create(organisation=organisation)
+
+    ctx = organisation.openfeature_evaluation_context
+    subscription_cache = organisation.subscription_information_cache
+    # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
+    if openfeature_client.get_boolean_value(
+        "get_current_api_usage_deprecated",
+        default_value=False,
+        evaluation_context=ctx,
+    ):  # pragma: no cover
+        api_usage = get_total_events_count(
+            organisation,
+            date_start=now - timedelta(days=30),
+        )
+    else:
+        api_usage = get_current_api_usage(
+            organisation_id=organisation.id,
+            date_start=now - timedelta(days=30),
+        )
+
+    # The cache is sometimes left with a zero allowance, which would otherwise
+    # fail the whole task with a ZeroDivisionError.
+    allowed_30d_api_calls = (
+        subscription_cache.allowed_30d_api_calls or MAX_API_CALLS_IN_FREE_PLAN
+    )
+    if api_usage / allowed_30d_api_calls < 1.0:
+        logger.info(
+            f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
+        )
+        return
+
+    organisation.stop_serving_flags = enforcement.stops_serving_flags
+    organisation.block_access_to_admin = enforcement.blocks_access_to_admin
+
+    with transaction.atomic():
         # Save models individually to allow lifecycle hooks to fire.
         organisation.save()
+        APILimitAccessBlock.objects.create(organisation=organisation)
 
-        api_limit_access_blocks.append(APILimitAccessBlock(organisation=organisation))
+    if enforcement.stops_serving_flags:
+        send_api_flags_blocked_notification(organisation)
 
-    APILimitAccessBlock.objects.bulk_create(api_limit_access_blocks)
+    api_usage_logger.info(
+        "restriction.applied",
+        organisation__id=organisation.id,
+        api_usage=api_usage,
+        allowed_30d_api_calls=allowed_30d_api_calls,
+        stop_serving_flags=enforcement.stops_serving_flags,
+        block_access_to_admin=enforcement.blocks_access_to_admin,
+    )
 
 
 # Task enqueued in register_recurring_tasks below.
