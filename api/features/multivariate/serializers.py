@@ -82,8 +82,25 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
-        feature = attrs["feature"]
-        default_percentage_allocation = attrs["default_percentage_allocation"]
+        # Both fields are optional in the payload: `default_percentage_allocation`
+        # has a model default, and a partial update omits whatever it isn't
+        # changing. Validate the values that would actually be saved.
+        if self.instance is None:
+            key = attrs.get("key")
+            feature = attrs["feature"]
+            default_percentage_allocation = attrs.get(
+                "default_percentage_allocation",
+                MultivariateFeatureOption._meta.get_field(
+                    "default_percentage_allocation"
+                ).get_default(),
+            )
+        else:
+            key = attrs.get("key", self.instance.key)  # type: ignore[union-attr]
+            feature = attrs.get("feature", self.instance.feature)  # type: ignore[union-attr]
+            default_percentage_allocation = attrs.get(
+                "default_percentage_allocation",
+                self.instance.default_percentage_allocation,  # type: ignore[union-attr]
+            )
 
         total_sibling_percentage_allocation = (
             self._get_siblings(feature).aggregate(
@@ -112,7 +129,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
                 feature, default_percentage_allocation
             )
 
-        self._validate_key_is_unique(attrs)
+        self._validate_key_is_unique(feature, key)
 
         return attrs
 
@@ -135,11 +152,10 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
                 {"default_percentage_allocation": "Invalid percentage allocation"}
             )
 
-    def _validate_key_is_unique(self, attrs: dict[str, typing.Any]) -> None:
-        key = attrs.get("key")
+    def _validate_key_is_unique(self, feature: Feature, key: str | None) -> None:
         if key is None:
             return
-        if self._get_siblings(attrs["feature"]).filter(key=key).exists():
+        if self._get_siblings(feature).filter(key=key).exists():
             raise ValidationError(
                 {
                     "key": "Multivariate option with this key already exists for the feature."
