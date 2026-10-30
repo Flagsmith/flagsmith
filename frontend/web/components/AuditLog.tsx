@@ -29,7 +29,9 @@ type AuditLogType = {
 const widths = [210, 310, 150]
 const AuditLog: FC<AuditLogType> = (props) => {
   const [page, setPage] = useState(Utils.fromParam().page ?? 1)
-  const { search, searchInput, setSearchInput } = useDebouncedSearch()
+  const { search, searchInput, setSearchInput } = useDebouncedSearch(
+    Utils.fromParam().search ?? '',
+  )
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
     id: AccountStore.getOrganisation()?.id,
   })
