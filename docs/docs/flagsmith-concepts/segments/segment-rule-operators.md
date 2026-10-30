@@ -19,7 +19,7 @@ Segment rule operators in Flagsmith allow you to define how trait values are com
 | `In`                  | Trait value is equal to any element in a comma-separated list (case-sensitive). [Learn more](?operators=in#operator-details)                             |
 | `Contains`            | Rule value is a substring of the trait value                                                                                                             |
 | `Does not contain`    | Rule value is not a substring of the trait value                                                                                                         |
-| `Matches regex`       | Trait value matches the given regular expression                                                                                                         |
+| `Matches regex`       | Trait value matches the given regular expression. [Learn more](?operators=regex#operator-details)                                                        |
 | `Is set`              | Trait value is set for the given identity and trait key                                                                                                  |
 | `Is not set`          | Trait value is not set for the given identity and trait key                                                                                              |
 | `SemVer`              | Trait value is compared against the rule value according to [Semantic Versioning](https://semver.org/). [Learn more](?operators=semver#operator-details) |
@@ -69,6 +69,36 @@ This operator performs a [modulo operation](https://en.wikipedia.org/wiki/Modulo
 This segment will include all identities having a `user_id` trait that is divisible by 2, i.e. even numbers. This is equivalent to the following expression in many programming languages:
 
 `user_id % 2 == 0`
+
+</TabItem>
+<TabItem value="regex" label="Matches regex">
+
+The `Matches regex` operator compares a trait value against a regular expression. For example, the following rule
+includes every identity whose `email` trait is an address at `example.com`:
+
+`email` `Matches regex` `^[^@]+@example\.com$`
+
+The pattern is matched from the start of the trait value, but it doesn't have to cover the whole value. For example,
+`prod` matches `production`, while `@example\.com$` does not match `jane@example.com` because the value doesn't start
+with `@`. To match the whole trait value, start the pattern with `^` and end it with `$`.
+
+Use syntax that every SDK supports: character classes, groups, alternation (`|`) and quantifiers. Lookarounds such as
+`(?=...)` and backreferences are not supported by the Go and Rust SDKs. Matching is case-sensitive, and inline flags
+such as `(?i)` don't work in every SDK, so use a character class such as `[Pp]rod` when either case should match.
+
+Some common patterns:
+
+| Use case           | Rule value                       | Matches                  | Does not match                                |
+| ------------------ | -------------------------------- | ------------------------ | --------------------------------------------- |
+| Email domain       | `^[^@]+@example\.com$`           | `jane@example.com`       | `jane@example.com.au`, `jane@sub.example.com` |
+| Environment prefix | `^(prod\|uat\|dev)-.+$`          | `prod-api`, `dev-web`    | `staging-api`, `myprod-api`                   |
+| Fixed-format ID    | `^user-[0-9]{4}$`                | `user-0001`, `user-1234` | `user-12345`, `xuser-1234`                    |
+| Team prefix        | `^team-(alpha\|beta\|gamma)-.+$` | `team-alpha-checkout`    | `team-delta-checkout`, `team-alpha`           |
+
+To match a trait against a fixed list of exact values, the [`In`](?operators=in#operator-details) operator is simpler.
+
+To enforce a naming convention for features with a regular expression, see
+[Enforcing naming conventions](/best-practices/naming-conventions#enforcing-naming-conventions).
 
 </TabItem>
 </Tabs>
