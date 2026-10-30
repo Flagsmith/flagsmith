@@ -32,6 +32,7 @@ const WAREHOUSE_TYPE_LABEL: Record<WarehouseType, string> = {
   clickhouse: 'ClickHouse',
   databricks: 'Databricks',
   flagsmith: 'Flagsmith',
+  postgres: 'PostgreSQL',
   snowflake: 'Snowflake',
 }
 

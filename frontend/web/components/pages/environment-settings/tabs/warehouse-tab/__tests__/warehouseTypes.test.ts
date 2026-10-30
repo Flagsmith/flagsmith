@@ -4,11 +4,13 @@ import {
   getPlanAvailabilityMessage,
   getWarehouseMinimumPlan,
   getWarehouseTypeStatus,
+  isFlagsmithDatabaseConnection,
   MinimumPlans,
   WarehouseTypeOption,
   WarehouseTypeStatus,
 } from 'components/pages/environment-settings/tabs/warehouse-tab/warehouseTypes'
 import { PlanFamily } from 'common/utils/plans'
+import { WarehouseConnection } from 'common/types/responses'
 
 const minimumPlans: MinimumPlans = {
   clickhouse: 'scale-up',
@@ -23,7 +25,7 @@ const flagValue = JSON.stringify({
 
 describe('getConfigurableWarehouseTypes', () => {
   it.each([
-    [false, ['clickhouse', 'databricks']],
+    [false, ['flagsmith_database', 'clickhouse', 'databricks']],
     [true, ['flagsmith', 'clickhouse', 'databricks']],
   ])('isSaas=%s => %j', (isSaas, expected) => {
     expect(getConfigurableWarehouseTypes(isSaas)).toEqual(expected)
@@ -72,10 +74,24 @@ describe('getWarehouseTypeStatus', () => {
     ['clickhouse', 'free', false, 'available'],
     ['databricks', null, false, 'available'],
     ['flagsmith', 'enterprise', false, 'coming-soon'],
+    ['flagsmith_database', null, false, 'available'],
   ])('%s on %s (isSaas=%s) => %s', (type, planId, isSaas, expected) => {
     expect(getWarehouseTypeStatus(type, { isSaas, minimumPlans, planId })).toBe(
       expected,
     )
+  })
+})
+
+describe('isFlagsmithDatabaseConnection', () => {
+  it.each<[Pick<WarehouseConnection, 'config' | 'warehouse_type'>, boolean]>([
+    [
+      { config: { source: 'flagsmith_database' }, warehouse_type: 'postgres' },
+      true,
+    ],
+    [{ config: {}, warehouse_type: 'postgres' }, false],
+    [{ config: {}, warehouse_type: 'flagsmith' }, false],
+  ])('%j => %s', (connection, expected) => {
+    expect(isFlagsmithDatabaseConnection(connection)).toBe(expected)
   })
 })
 

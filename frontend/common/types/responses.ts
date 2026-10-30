@@ -1439,6 +1439,7 @@ export type WarehouseType =
   | 'snowflake'
   | 'clickhouse'
   | 'databricks'
+  | 'postgres'
 
 export type SnowflakeConfig = {
   account_identifier: string
@@ -1466,10 +1467,15 @@ export type DatabricksConfig = {
   schema: string
 }
 
+export type FlagsmithDatabaseConfig = {
+  source: 'flagsmith_database'
+}
+
 export type WarehouseConfigResponse =
   | SnowflakeConfig
   | ClickHouseConfig
   | DatabricksConfig
+  | FlagsmithDatabaseConfig
   | Record<string, never>
 
 export type WarehouseConnectionTestResult = {

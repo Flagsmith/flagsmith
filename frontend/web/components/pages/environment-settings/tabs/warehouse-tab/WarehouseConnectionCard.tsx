@@ -20,6 +20,7 @@ import {
   getDatabricksSetupSql,
 } from './databricksSetupSql'
 import WarehouseStats from './WarehouseStats'
+import { isFlagsmithDatabaseConnection } from './warehouseTypes'
 
 type WarehouseConnectionCardProps = {
   connection: WarehouseConnection
@@ -48,7 +49,16 @@ const STATUS_LABEL: Record<WarehouseConnectionStatus, string> = {
 const TYPE_LABEL: Partial<Record<WarehouseType, string>> = {
   clickhouse: 'ClickHouse',
   databricks: 'Databricks',
+  postgres: 'PostgreSQL',
   snowflake: 'Snowflake',
+}
+
+const getTypeLabel = (connection: WarehouseConnection): string | null => {
+  if (isFlagsmithDatabaseConnection(connection)) {
+    return 'Flagsmith database (PostgreSQL)'
+  }
+  if (connection.warehouse_type === 'flagsmith') return null
+  return TYPE_LABEL[connection.warehouse_type] ?? connection.warehouse_type
 }
 
 const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
@@ -60,19 +70,17 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   onSendTestEvent,
   onTestConnection,
 }) => {
-  const typeLabel =
-    connection.warehouse_type !== 'flagsmith'
-      ? TYPE_LABEL[connection.warehouse_type] ?? connection.warehouse_type
-      : null
+  const typeLabel = getTypeLabel(connection)
 
   const isFlagsmith = connection.warehouse_type === 'flagsmith'
   const isPending = connection.status === 'pending_connection'
   const isConnected = connection.status === 'connected'
   const isCustomerWarehouse =
     connection.warehouse_type === 'clickhouse' ||
-    connection.warehouse_type === 'databricks'
-  // ClickHouse and Databricks connections are born connected, so the
-  // first-event nudge stays until events actually arrive in the customer's
+    connection.warehouse_type === 'databricks' ||
+    connection.warehouse_type === 'postgres'
+  // ClickHouse, Databricks and PostgreSQL connections are born connected, so
+  // the first-event nudge stays until events actually arrive in the customer's
   // warehouse.
   const showSendFirstEvent = isFlagsmith
     ? !isPending && !isConnected
