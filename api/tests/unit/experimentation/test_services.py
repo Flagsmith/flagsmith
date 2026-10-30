@@ -68,7 +68,10 @@ from features.feature_segments.services import get_next_segment_override_priorit
 from features.feature_types import MULTIVARIATE
 from features.future.services import update_flag
 from features.models import Feature, FeatureState
-from features.multivariate.models import MultivariateFeatureOption
+from features.multivariate.models import (
+    MultivariateFeatureOption,
+    MultivariateFeatureStateValue,
+)
 from features.value_types import STRING
 from organisations.models import Organisation
 from projects.models import Project
@@ -1560,51 +1563,102 @@ def _multivariate_feature(
     return feature
 
 
-@pytest.mark.django_db
-def test_expected_variant_shares__keyed_options__control_takes_remainder(
+def _split_experiment(
     environment: Environment,
-) -> None:
-    # Given a multivariate feature whose options are allocated 30% and 20%
-    feature = _multivariate_feature(environment, {"variant_a": 30, "variant_b": 20})
-    experiment = Experiment.objects.create(
+    allocations: dict[str | None, int],
+    author: FFAdminUser,
+    *,
+    rollout_percentage: float = 100.0,
+) -> Experiment:
+    """An experiment on a fresh multivariate feature whose rollout splits its
+    cohort by ``allocations``, as do the options' environment defaults."""
+    feature = _multivariate_feature(environment, allocations)
+    experiment: Experiment = Experiment.objects.create(
         environment=environment,
         feature=feature,
         name="exp",
         hypothesis="h",
         status=ExperimentStatus.RUNNING,
+    )
+    services.apply_experiment_rollout(
+        experiment,
+        RolloutSpec(
+            enabled=True,
+            rollout_percentage=rollout_percentage,
+            feature_state_value="control",
+            value_type="string",
+            variants=[
+                {"id": option.id, "weight": option.default_percentage_allocation}
+                for option in feature.multivariate_options.all()
+            ],
+            author=AuthorData(user=author),
+        ),
+    )
+    return experiment
+
+
+@pytest.mark.parametrize(
+    "allocations, rollout_percentage, expected_shares",
+    [
+        ({"treatment": 50}, 100.0, {"treatment": 0.5, "control": 0.5}),
+        (
+            {"variant_a": 30, "variant_b": 20},
+            20.0,
+            {"variant_a": 0.3, "variant_b": 0.2, "control": 0.5},
+        ),
+        (
+            {"variant_a": 50, "variant_b": 50},
+            100.0,
+            {"variant_a": 0.5, "variant_b": 0.5},
+        ),
+        (
+            {"variant_a": 50, "variant_b": 0},
+            100.0,
+            {"variant_a": 0.5, "control": 0.5},
+        ),
+    ],
+    ids=["control_remainder", "partial_rollout", "fully_allocated", "zero_weight"],
+)
+@pytest.mark.django_db
+def test_expected_variant_shares__rollout_applied__returns_rollout_split(
+    environment: Environment,
+    admin_user: FFAdminUser,
+    allocations: dict[str | None, int],
+    rollout_percentage: float,
+    expected_shares: dict[str, float],
+) -> None:
+    # Given an experiment whose rollout has zeroed the environment default's
+    # allocations, leaving the split on the rollout override alone
+    experiment = _split_experiment(
+        environment, allocations, admin_user, rollout_percentage=rollout_percentage
     )
 
     # When
     shares = services._expected_variant_shares(experiment)
 
-    # Then control takes the unallocated remainder
-    assert shares == pytest.approx({"variant_a": 0.3, "variant_b": 0.2, "control": 0.5})
+    # Then the rollout cohort's split is tested, with control taking any
+    # remainder and zero-weight variants left out
+    assert shares == pytest.approx(expected_shares)
 
 
 @pytest.mark.django_db
 def test_expected_variant_shares__null_option_keys__returns_empty(
-    experiment: Experiment,
+    experiment_with_rollout: Experiment,
 ) -> None:
     # Given the experiment's multivariate options carry no variant keys
 
     # When / Then the split can't be described, so SRM is skipped
-    assert services._expected_variant_shares(experiment) == {}
+    assert services._expected_variant_shares(experiment_with_rollout) == {}
 
 
 @pytest.mark.django_db
 def test_expected_variant_shares__mixed_keyed_and_null_options__returns_empty(
     environment: Environment,
+    admin_user: FFAdminUser,
     log: StructuredLogCapture,
 ) -> None:
-    # Given a multivariate feature with one keyed and one unkeyed option
-    feature = _multivariate_feature(environment, {"variant_a": 30, None: 30})
-    experiment = Experiment.objects.create(
-        environment=environment,
-        feature=feature,
-        name="exp",
-        hypothesis="h",
-        status=ExperimentStatus.RUNNING,
-    )
+    # Given a rollout splitting between one keyed and one unkeyed option
+    experiment = _split_experiment(environment, {"variant_a": 30, None: 30}, admin_user)
 
     # When / Then the unkeyed option's share can't be attributed, so rather than
     # folding it into control SRM is skipped entirely and the gap is logged
@@ -1621,17 +1675,17 @@ def test_expected_variant_shares__mixed_keyed_and_null_options__returns_empty(
 @pytest.mark.django_db
 def test_expected_variant_shares__overallocated_options__returns_empty(
     environment: Environment,
+    admin_user: FFAdminUser,
     log: StructuredLogCapture,
 ) -> None:
-    # Given a misconfigured feature whose options allocate more than 100%
-    feature = _multivariate_feature(environment, {"variant_a": 70, "variant_b": 60})
-    experiment = Experiment.objects.create(
-        environment=environment,
-        feature=feature,
-        name="exp",
-        hypothesis="h",
-        status=ExperimentStatus.RUNNING,
+    # Given a rollout override whose options were pushed past 100% in total
+    experiment = _split_experiment(
+        environment, {"variant_a": 50, "variant_b": 50}, admin_user
     )
+    MultivariateFeatureStateValue.objects.filter(
+        feature_state__feature_segment__segment_id=experiment.rollout_segment_id,
+        multivariate_feature_option__key="variant_a",
+    ).update(percentage_allocation=70)
 
     # When / Then control's share would be negative, so SRM is skipped and logged
     assert services._expected_variant_shares(experiment) == {}
@@ -1645,11 +1699,26 @@ def test_expected_variant_shares__overallocated_options__returns_empty(
 
 
 @pytest.mark.django_db
-def test_expected_variant_shares__no_multivariate_options__returns_empty(
+def test_expected_variant_shares__all_variants_zero_weight__returns_empty(
     environment: Environment,
-    feature: Feature,
+    admin_user: FFAdminUser,
 ) -> None:
-    # Given a standard feature with no multivariate allocations
+    # Given a rollout that sends its whole cohort to control
+    experiment = _split_experiment(
+        environment, {"variant_a": 0, "variant_b": 0}, admin_user
+    )
+
+    # When / Then there is no split to test
+    assert services._expected_variant_shares(experiment) == {}
+
+
+@pytest.mark.django_db
+def test_expected_variant_shares__no_rollout__returns_empty(
+    environment: Environment,
+) -> None:
+    # Given an experiment whose feature splits traffic by default, but which
+    # has no rollout, so no identity is in the experiment
+    feature = _multivariate_feature(environment, {"variant_a": 50})
     experiment = Experiment.objects.create(
         environment=environment,
         feature=feature,
@@ -1658,22 +1727,21 @@ def test_expected_variant_shares__no_multivariate_options__returns_empty(
         status=ExperimentStatus.RUNNING,
     )
 
-    # When / Then there is no split to test
+    # When / Then the environment default's split isn't tested
     assert services._expected_variant_shares(experiment) == {}
 
 
 @pytest.mark.django_db
-def test_expected_variant_shares__no_live_feature_state__returns_empty(
-    experiment: Experiment,
+def test_expected_variant_shares__no_live_rollout_override__returns_empty(
+    experiment_with_rollout: Experiment,
 ) -> None:
-    # Given the feature has no live state in the environment
+    # Given the rollout segment's override is gone
     FeatureState.objects.filter(
-        feature=experiment.feature,
-        environment=experiment.environment,
+        feature_segment__segment_id=experiment_with_rollout.rollout_segment_id,
     ).delete()
 
     # When / Then
-    assert services._expected_variant_shares(experiment) == {}
+    assert services._expected_variant_shares(experiment_with_rollout) == {}
 
 
 COMPUTE_SUMMARIES = pytest.mark.parametrize(
@@ -1756,17 +1824,13 @@ def test_compute_summary__deleted_connection__reads_managed_store(
 @pytest.mark.django_db
 def test_compute_results_summary__experiment__queries_warehouse_and_builds(
     environment: Environment,
+    admin_user: FFAdminUser,
     mocker: MockerFixture,
 ) -> None:
-    # Given a running experiment with one keyed variant and one attached metric
-    feature = _multivariate_feature(environment, {"variant_a": 50})
-    experiment = Experiment.objects.create(
-        environment=environment,
-        feature=feature,
-        name="exp",
-        hypothesis="h",
-        status=ExperimentStatus.RUNNING,
-    )
+    # Given a running experiment rolled out to one keyed variant, with one
+    # attached metric
+    experiment = _split_experiment(environment, {"variant_a": 50}, admin_user)
+    feature = experiment.feature
     metric = Metric.objects.create(
         environment=environment,
         name="Purchases",
