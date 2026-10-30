@@ -78,3 +78,16 @@ def test_delivery_connections_db_view__deleted_environment__finds_nothing(
 
     # Then
     assert rows == []
+
+
+def test_delivery_connections_db_view__flagsmith_database_connection__finds_nothing(
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+) -> None:
+    # Given an environment reading events from the Flagsmith database
+
+    # When
+    rows = read_delivery_connection(environment.api_key)
+
+    # Then
+    assert rows == []

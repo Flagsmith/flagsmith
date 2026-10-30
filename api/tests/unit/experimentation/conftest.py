@@ -35,6 +35,8 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.services import apply_experiment_rollout
+from experimentation.warehouses.constants import FLAGSMITH_DATABASE_SOURCE
+from experimentation.warehouses.postgres import get_flagsmith_database_connect_params
 from features.future.types import Variant
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
@@ -244,6 +246,41 @@ def postgres_connection(
         name="Production PostgreSQL",
         config=postgres_warehouse_schema.config,
         credentials={"password": postgres_warehouse_schema.password},
+    )
+    return connection
+
+
+@pytest.fixture()
+def unprivileged_role_connect_params(
+    db: None,
+) -> Iterator[dict[str, object]]:
+    """Connect params for a login role with no privileges on the events table,
+    created over a separate autocommit session so the provider's own
+    connections see it."""
+    connect_params = get_flagsmith_database_connect_params()
+    role, password = f"exp_role_{uuid.uuid4().hex[:12]}", uuid.uuid4().hex
+    with closing(psycopg2.connect(**connect_params)) as admin:
+        admin.autocommit = True
+        with admin.cursor() as cursor:
+            cursor.execute(
+                sql.SQL("CREATE ROLE {} LOGIN PASSWORD %s").format(
+                    sql.Identifier(role)
+                ),
+                (password,),
+            )
+            yield {**connect_params, "user": role, "password": password}
+            cursor.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(role)))
+
+
+@pytest.fixture()
+def flagsmith_database_connection(
+    environment: Environment,
+) -> WarehouseConnection:
+    connection: WarehouseConnection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.POSTGRES,
+        name="Flagsmith database",
+        config={"source": FLAGSMITH_DATABASE_SOURCE},
     )
     return connection
 

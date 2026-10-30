@@ -8,6 +8,7 @@ import psycopg2
 import structlog
 from common.core.utils import is_saas
 from django.core.cache import cache
+from django.db import DEFAULT_DB_ALIAS, connections
 from psycopg2 import sql
 from rest_framework import serializers
 
@@ -34,6 +35,11 @@ from experimentation.warehouses.constants import (
     CUSTOMER_EVENT_STATS_CACHE_SECONDS,
     EVENT_NAMES_CACHE_SECONDS,
     EVENT_NAMES_TIMEOUT_SECONDS,
+    FLAGSMITH_DATABASE_MISSING_EVENTS_TABLE_DETAIL,
+    FLAGSMITH_DATABASE_PERMISSION_DENIED_DETAIL,
+    FLAGSMITH_DATABASE_SCHEMA,
+    FLAGSMITH_DATABASE_SOURCE,
+    FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL,
     MISSING_EVENTS_TABLE_DETAIL,
     PERMISSION_DENIED_DETAIL,
     QUERY_TIMEOUT_DETAIL,
@@ -135,6 +141,21 @@ def is_plain_host(host: str) -> bool:
     return True
 
 
+def is_flagsmith_database_config(config: object) -> bool:
+    return config == {"source": FLAGSMITH_DATABASE_SOURCE}
+
+
+def is_default_database_postgresql() -> bool:
+    return connections[DEFAULT_DB_ALIAS].vendor == "postgresql"
+
+
+def get_flagsmith_database_connect_params() -> dict[str, Any]:
+    # Could be improved by using a dedicated Django database alias.
+    connect_params = connections[DEFAULT_DB_ALIAS].get_connection_params()
+    connect_params.pop("cursor_factory", None)
+    return connect_params
+
+
 def describe_postgres_error(error: Exception) -> str:
     """Return a user-facing description of a failed verification, suitable for
     the connection's ``status_detail``. Raw exception text stays in the logs."""
@@ -155,6 +176,34 @@ def describe_postgres_error(error: Exception) -> str:
     return "Connection failed."
 
 
+def _get_stored_connect_params_and_schema(
+    connection: "WarehouseConnection",
+) -> tuple[dict[str, Any], str]:
+    config = typing.cast(PostgresConfig, connection.config or {})
+    credentials = typing.cast(PostgresCredentials, connection.credentials or {})
+    try:
+        host = config["host"]
+        connect_params: dict[str, Any] = {
+            "host": host,
+            "port": config["port"],
+            "dbname": config["database"],
+            "user": config["username"],
+            "password": credentials["password"],
+            "sslmode": config["sslmode"],
+        }
+        schema = config["schema"]
+    except KeyError as exc:
+        raise DeliveryConfigError("Stored connection details are incomplete.") from exc
+
+    # Re-checked immediately before connecting: DNS may resolve differently
+    # than it did at validation time.
+    if not is_plain_host(host) or is_disallowed_host(host):
+        raise DeliveryConfigError(
+            "Host must not target internal or private network addresses."
+        )
+    return connect_params, schema
+
+
 @contextmanager
 def read_cursor(
     connection: "WarehouseConnection",
@@ -168,38 +217,23 @@ def read_cursor(
     options, which transaction-mode poolers such as Supabase's and Neon's reject.
 
     Raises ``DeliveryConfigError`` if the stored configuration cannot be turned
-    into a usable connection.
+    into a usable connection, or names the Flagsmith database on SaaS.
     """
-    config = typing.cast(PostgresConfig, connection.config or {})
-    credentials = typing.cast(PostgresCredentials, connection.credentials or {})
-    try:
-        host = config["host"]
-        port = config["port"]
-        database = config["database"]
-        schema = config["schema"]
-        username = config["username"]
-        sslmode = config["sslmode"]
-        password = credentials["password"]
-    except KeyError as exc:
-        raise DeliveryConfigError("Stored connection details are incomplete.") from exc
-
-    # Re-checked immediately before connecting: DNS may resolve differently
-    # than it did at validation time.
-    if not is_plain_host(host) or is_disallowed_host(host):
-        raise DeliveryConfigError(
-            "Host must not target internal or private network addresses."
-        )
+    if is_flagsmith_database_config(connection.config):
+        if is_saas():
+            raise DeliveryConfigError(FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL)
+        connect_params = get_flagsmith_database_connect_params()
+        schema = FLAGSMITH_DATABASE_SCHEMA
+    else:
+        connect_params, schema = _get_stored_connect_params_and_schema(connection)
 
     with closing(
         psycopg2.connect(
-            host=host,
-            port=port,
-            dbname=database,
-            user=username,
-            password=password,
-            sslmode=sslmode,
-            connect_timeout=CONNECT_TIMEOUT_SECONDS,
-            application_name="flagsmith",
+            **{
+                "connect_timeout": CONNECT_TIMEOUT_SECONDS,
+                "application_name": "flagsmith",
+                **connect_params,
+            }
         )
     ) as pg_connection:
         with pg_connection.cursor() as cursor:
@@ -283,15 +317,31 @@ def _validate_host(host: object) -> None:
         )
 
 
+def _validate_flagsmith_database_config(config: dict[str, Any]) -> dict[str, str]:
+    if not is_flagsmith_database_config(config):
+        raise _config_error(
+            "source", f'Must be "{FLAGSMITH_DATABASE_SOURCE}", with no other fields.'
+        )
+    if is_saas() or not is_default_database_postgresql():
+        raise serializers.ValidationError(
+            {"config": FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL}
+        )
+    return {"source": FLAGSMITH_DATABASE_SOURCE}
+
+
 class PostgresWarehouse:
     def validate_config(
         self,
         config: dict[str, Any],
         *,
         stored: dict[str, Any] | None = None,
-    ) -> PostgresConfig:
+    ) -> PostgresConfig | dict[str, str]:
         if not isinstance(config, dict):
             raise serializers.ValidationError({"config": "Must be an object."})
+        if "source" in config:
+            return _validate_flagsmith_database_config(config)
+        if is_flagsmith_database_config(stored):
+            stored = None
         if unknown_keys := set(config) - set(POSTGRES_DEFAULTS):
             raise serializers.ValidationError(
                 {"config": {key: "Unknown field." for key in sorted(unknown_keys)}}
@@ -339,11 +389,25 @@ class PostgresWarehouse:
         return {"password": password}
 
     def verify(self, connection: "WarehouseConnection") -> None:
+        is_flagsmith_database = is_flagsmith_database_config(connection.config)
+        schema = (
+            FLAGSMITH_DATABASE_SCHEMA
+            if is_flagsmith_database
+            else typing.cast(PostgresConfig, connection.config)["schema"]
+        )
         with read_cursor(
             connection, statement_timeout=VERIFY_TIMEOUT_SECONDS
         ) as cursor:
-            config = typing.cast(PostgresConfig, connection.config)
-            check_events_table(cursor, config["schema"])
+            try:
+                check_events_table(cursor, schema)
+            except (MissingEventsTableError, EventsTablePermissionError) as error:
+                if not is_flagsmith_database:
+                    raise
+                raise DeliveryConfigError(
+                    FLAGSMITH_DATABASE_MISSING_EVENTS_TABLE_DETAIL
+                    if isinstance(error, MissingEventsTableError)
+                    else FLAGSMITH_DATABASE_PERMISSION_DENIED_DETAIL
+                ) from error
 
     def describe_error(self, error: Exception) -> str:
         return describe_postgres_error(error)

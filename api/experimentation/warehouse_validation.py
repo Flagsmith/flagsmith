@@ -6,6 +6,7 @@ from environments.models import Environment
 from experimentation.models import WarehouseConnection, WarehouseType
 from experimentation.services import is_warehouse_type_available
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
+from experimentation.warehouses.postgres import is_flagsmith_database_config
 from experimentation.warehouses.registry import get_warehouse
 
 
@@ -33,10 +34,25 @@ def validate_credentials(
     warehouse_type: str,
     instance: WarehouseConnection | None,
 ) -> None:
+    config = attrs.get("config", getattr(instance, "config", None))
+    # Any `source` selects the mode, so validate_config reports a malformed marker.
+    if (
+        warehouse_type == WarehouseType.POSTGRES
+        and isinstance(config, dict)
+        and "source" in config
+    ):
+        if attrs.get("credentials") is not None:
+            raise serializers.ValidationError(
+                {"credentials": "The Flagsmith database takes no credentials."}
+            )
+        if instance is not None and instance.credentials is not None:
+            attrs["credentials"] = None
+        return
     if (
         "credentials" not in attrs
         and instance is not None
         and instance.warehouse_type == warehouse_type
+        and not is_flagsmith_database_config(instance.config)
     ):
         return
     credentials: dict[str, Any] | None = attrs.get("credentials")
