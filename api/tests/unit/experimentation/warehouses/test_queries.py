@@ -23,7 +23,8 @@ EVENT_NAMES_SQL = (
     "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s"
 )
 EVENT_STATS_SQL = (
-    "SELECT count() AS total, uniqExact(event) AS unique "
+    "SELECT count() AS total, uniqExact(event) AS unique, "
+    "max(timestamp) AS last_event_at "
     "FROM events WHERE environment_key = %(environment_key)s"
 )
 

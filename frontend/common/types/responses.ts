@@ -1492,6 +1492,7 @@ export type WarehouseConnection = {
   created_at: string
   total_events_received: number | null
   unique_events_count: number | null
+  last_event_received_at: string | null
 }
 
 export type TrustRelationshipClaimRule = {

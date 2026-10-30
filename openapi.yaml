@@ -27093,6 +27093,12 @@ components:
             - integer
             - 'null'
           readOnly: true
+        last_event_received_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          readOnly: true
     PatchedWebhook:
       type: object
       properties:
@@ -30363,6 +30369,12 @@ components:
           type:
             - integer
             - 'null'
+          readOnly: true
+        last_event_received_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
           readOnly: true
       required:
         - warehouse_type
