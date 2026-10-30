@@ -4,6 +4,7 @@ from typing import Any
 
 from django.conf import settings
 from django.contrib.auth import user_logged_out
+from django.db import transaction
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from djoser.views import TokenCreateView, UserViewSet  # type: ignore[import-untyped]
@@ -112,6 +113,8 @@ def delete_token(request):  # type: ignore[no-untyped-def]
     name="destroy",
     decorator=extend_schema(parameters=[CustomUserDelete]),
 )
+@method_decorator(name="set_password", decorator=transaction.atomic)
+@method_decorator(name="reset_password_confirm", decorator=transaction.atomic)
 class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
     throttle_scope = "signup"
 

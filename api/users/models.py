@@ -21,6 +21,7 @@ from django_lifecycle.conditions import (  # type: ignore[import-untyped]
     WhenFieldHasChanged,
 )
 from pydantic import BaseModel
+from rest_framework.authtoken.models import Token
 
 from integrations.pylon.identity_verification import get_user_email_signature
 from organisations.models import (
@@ -188,6 +189,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         super().set_password(raw_password)
         if self.id:
             self.password_reset_requests.all().delete()
+            Token.objects.filter(user=self).delete()
 
     @property
     def auth_type(self):  # type: ignore[no-untyped-def]
