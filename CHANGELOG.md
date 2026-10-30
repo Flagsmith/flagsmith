@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.289.0](https://github.com/Flagsmith/flagsmith/compare/v2.288.2...v2.289.0) (2026-10-30)
+
+
+### Features
+
+* **experimentation:** add bring-your-own PostgreSQL warehouses ([#8843](https://github.com/Flagsmith/flagsmith/issues/8843)) ([fdbe6fa](https://github.com/Flagsmith/flagsmith/commit/fdbe6fa34ec672007d9f9f287d106c6cb4d27fe7))
+
+
+### Bug Fixes
+
+* **experimentation:** don't cache empty warehouse event names and stats ([#8859](https://github.com/Flagsmith/flagsmith/issues/8859)) ([c964f50](https://github.com/Flagsmith/flagsmith/commit/c964f5014addf9058e1a03931666e283fdd5417f))
+
 ## [2.288.2](https://github.com/Flagsmith/flagsmith/compare/v2.288.1...v2.288.2) (2026-10-29)
 
 
