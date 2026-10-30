@@ -19,6 +19,7 @@ type WarehouseFormActionsProps = {
   canSave: boolean
   isTesting: boolean
   isSaving: boolean
+  saveErrorDetail: string | null
   saveFailed: boolean
   testState: WarehouseTestState
   testDetail: string | null
@@ -32,12 +33,17 @@ const WarehouseFormActions: FC<WarehouseFormActionsProps> = ({
   isTesting,
   onCancel,
   onTest,
+  saveErrorDetail,
   saveFailed,
   testDetail,
   testState,
 }) => (
   <>
-    {saveFailed && <ErrorMessage error={getWarehouseErrorMessage(isEdit)} />}
+    {saveFailed && (
+      <ErrorMessage
+        error={saveErrorDetail || getWarehouseErrorMessage(isEdit)}
+      />
+    )}
 
     <div className='wh-config-form__actions'>
       {isEdit && onCancel && (
@@ -91,6 +97,7 @@ const WarehouseFormActions: FC<WarehouseFormActionsProps> = ({
         </div>
       </div>
     )}
+    {testState === 'rejected' && <ErrorMessage error={testDetail} />}
     {testState === 'errored' && (
       <div className='d-flex'>
         <ErrorMessage

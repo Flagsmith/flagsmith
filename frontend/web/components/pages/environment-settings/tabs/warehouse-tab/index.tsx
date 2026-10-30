@@ -9,6 +9,7 @@ import {
 import {
   ClickHouseConfig,
   DatabricksConfig,
+  PostgresConfig,
   SnowflakeConfig,
 } from 'common/types/responses'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
@@ -19,6 +20,8 @@ import ClickHouseConfigForm from './ClickHouseConfigForm'
 import { ClickHouseFormData } from './clickhouseConfig'
 import DatabricksConfigForm from './DatabricksConfigForm'
 import { DatabricksFormData } from './databricksConfig'
+import PostgresConfigForm from './PostgresConfigForm'
+import { PostgresFormData } from './postgresConfig'
 import sendWarehouseTestEvent from './sendWarehouseTestEvent'
 import { getWarehousePollingInterval } from './warehousePolling'
 
@@ -147,7 +150,9 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
       .unwrap()
       .then(() => toast('Warehouse connection created'))
 
-  const handleUpdate = (data: ClickHouseFormData | DatabricksFormData) => {
+  const handleUpdate = (
+    data: ClickHouseFormData | DatabricksFormData | PostgresFormData,
+  ) => {
     if (!connection) return Promise.reject()
     return updateConnection({
       environmentId,
@@ -165,6 +170,15 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     createConnection({
       environmentId,
       warehouse_type: 'databricks',
+      ...data,
+    })
+      .unwrap()
+      .then(() => toast('Warehouse connection created'))
+
+  const handleCreatePostgres = (data: PostgresFormData) =>
+    createConnection({
+      environmentId,
+      warehouse_type: 'postgres',
       ...data,
     })
       .unwrap()
@@ -238,6 +252,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
           onCreateSnowflake={handleCreateSnowflake}
           onCreateClickHouse={handleCreateClickHouse}
           onCreateDatabricks={handleCreateDatabricks}
+          onCreatePostgres={handleCreatePostgres}
           isCreating={isCreating || isEnabling}
         />
       </div>
@@ -288,6 +303,21 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     )
   }
 
+  if (editing && connection.warehouse_type === 'postgres') {
+    return (
+      <div className='mt-4 col-md-12'>
+        <PostgresConfigForm
+          isEdit
+          environmentId={environmentId}
+          initialConfig={connection.config as PostgresConfig}
+          initialName={connection.name}
+          onSave={handleUpdate}
+          onCancel={() => setEditing(false)}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className='mt-4 col-md-12'>
       <WarehouseConnectionCard
@@ -301,7 +331,8 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
         onSendTestEvent={handleSendTestEvent}
         onTestConnection={
           connection.warehouse_type === 'clickhouse' ||
-          connection.warehouse_type === 'databricks'
+          connection.warehouse_type === 'databricks' ||
+          connection.warehouse_type === 'postgres'
             ? handleTestConnection
             : undefined
         }

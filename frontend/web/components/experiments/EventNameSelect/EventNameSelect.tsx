@@ -20,6 +20,7 @@ const SUPPORTED_WAREHOUSE_TYPES: WarehouseType[] = [
   'flagsmith',
   'clickhouse',
   'databricks',
+  'postgres',
 ]
 
 const EventNameSelect: FC<EventNameSelectProps> = ({ onChange, value }) => {

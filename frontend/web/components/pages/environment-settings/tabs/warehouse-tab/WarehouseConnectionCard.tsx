@@ -19,6 +19,10 @@ import {
   DATABRICKS_SETUP_SQL_LABEL,
   getDatabricksSetupSql,
 } from './databricksSetupSql'
+import {
+  getPostgresSetupSql,
+  POSTGRES_SETUP_SQL_LABEL,
+} from './postgresSetupSql'
 import WarehouseStats from './WarehouseStats'
 
 type WarehouseConnectionCardProps = {
@@ -48,6 +52,7 @@ const STATUS_LABEL: Record<WarehouseConnectionStatus, string> = {
 const TYPE_LABEL: Partial<Record<WarehouseType, string>> = {
   clickhouse: 'ClickHouse',
   databricks: 'Databricks',
+  postgres: 'PostgreSQL',
   snowflake: 'Snowflake',
 }
 
@@ -70,10 +75,10 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   const isConnected = connection.status === 'connected'
   const isCustomerWarehouse =
     connection.warehouse_type === 'clickhouse' ||
-    connection.warehouse_type === 'databricks'
-  // ClickHouse and Databricks connections are born connected, so the
-  // first-event nudge stays until events actually arrive in the customer's
-  // warehouse.
+    connection.warehouse_type === 'databricks' ||
+    connection.warehouse_type === 'postgres'
+  // Customer warehouse connections are born connected, so the first-event
+  // nudge stays until events actually arrive in the customer's warehouse.
   const showSendFirstEvent = isFlagsmith
     ? !isPending && !isConnected
     : isCustomerWarehouse && !connection.total_events_received
@@ -185,6 +190,15 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
                 catalog: connection.config.catalog,
                 schema: connection.config.schema,
               })}
+            />
+          </div>
+        )}
+      {connection.warehouse_type === 'postgres' &&
+        'sslmode' in connection.config && (
+          <div className='mt-3'>
+            <WarehouseSetupSqlHelp
+              label={POSTGRES_SETUP_SQL_LABEL}
+              sql={getPostgresSetupSql(connection.config.schema)}
             />
           </div>
         )}

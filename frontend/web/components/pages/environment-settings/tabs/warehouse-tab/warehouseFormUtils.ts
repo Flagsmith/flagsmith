@@ -1,3 +1,15 @@
+import { experimentErrorMessage } from 'components/experiments/errors'
+
+// The API's own message, e.g. {"config": {"host": ["..."]}}, or null.
+export const getApiErrorDetail = (error: unknown): string | null =>
+  experimentErrorMessage(error, '') || null
+
+export const invalidIf = (
+  value: string,
+  isValid: boolean,
+  message: string,
+): string | false => !!value.trim() && !isValid && message
+
 export const getButtonLabel = (isEdit: boolean, isSaving: boolean): string => {
   if (isSaving) return isEdit ? 'Saving...' : 'Creating...'
   return isEdit ? 'Save changes' : 'Save and continue'

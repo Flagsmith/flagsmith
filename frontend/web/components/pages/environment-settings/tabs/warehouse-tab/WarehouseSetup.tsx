@@ -15,6 +15,9 @@ import { ClickHouseFormData } from './clickhouseConfig'
 import DatabricksConfigForm from './DatabricksConfigForm'
 import { getDatabricksSetupSql } from './databricksSetupSql'
 import { DatabricksFormData } from './databricksConfig'
+import PostgresConfigForm from './PostgresConfigForm'
+import { getPostgresOnboardingSql } from './postgresSetupSql'
+import { PostgresFormData } from './postgresConfig'
 import {
   getMinimumPlans,
   getPlanAvailabilityMessage,
@@ -32,6 +35,7 @@ type WarehouseSetupProps = {
   onCreateSnowflake: (data: ConfigFormData) => Promise<unknown>
   onCreateClickHouse: (data: ClickHouseFormData) => Promise<unknown>
   onCreateDatabricks: (data: DatabricksFormData) => Promise<unknown>
+  onCreatePostgres: (data: PostgresFormData) => Promise<unknown>
   isCreating: boolean
 }
 
@@ -80,6 +84,12 @@ const WAREHOUSE_TYPE_CARDS: WarehouseTypeCard[] = [
     title: 'Databricks',
     type: 'databricks',
   },
+  {
+    description: 'Open-source relational database',
+    icon: <Icon name='layers' width={20} />,
+    title: 'PostgreSQL',
+    type: 'postgres',
+  },
 ]
 
 const STATUS_ORDER: Record<WarehouseTypeStatus, number> = {
@@ -93,6 +103,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
   isCreating,
   onCreateClickHouse,
   onCreateDatabricks,
+  onCreatePostgres,
   onCreateSnowflake,
   onEnableFlagsmith,
 }) => {
@@ -252,6 +263,28 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
           <DatabricksConfigForm
             environmentId={environmentId}
             onSave={onCreateDatabricks}
+          />
+        </WarehouseSetupSteps>
+      )}
+
+      {activeType === 'postgres' && (
+        <WarehouseSetupSteps
+          configure={
+            <>
+              <p className='text-muted mb-3'>
+                Run this once as a superuser or a role with CREATEROLE. Replace{' '}
+                {'<USER>'} and {'<CHANGE_ME_PASSWORD>'} with your own values.
+                This also works with PostgreSQL-compatible services such as
+                Supabase, Neon, Amazon RDS and Aurora, AlloyDB and Cloud SQL.
+              </p>
+              <WarehouseSqlSnippet sql={getPostgresOnboardingSql()} />
+            </>
+          }
+          connectDescription='Enter the connection details for the user you created in step 1.'
+        >
+          <PostgresConfigForm
+            environmentId={environmentId}
+            onSave={onCreatePostgres}
           />
         </WarehouseSetupSteps>
       )}

@@ -18,6 +18,7 @@ export const getConfigurableWarehouseTypes = (
   ...(isSaas ? (['flagsmith'] as const) : []),
   'clickhouse',
   'databricks',
+  'postgres',
 ]
 
 export type MinimumPlans = Record<string, unknown>
