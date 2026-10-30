@@ -16,7 +16,12 @@ The metrics provided by Flagsmith are described below.
 
 <MetricsCatalogue />
 
+## Monitoring worker memory
+
+The `flagsmith_worker_rss_bytes` gauge reports the peak resident-set size for each worker process. See the
+[Worker RSS monitoring guide](./worker-rss-monitoring) for PromQL examples, Grafana panels, and interpretation notes.
+
 ## StatsD
 
-The Flagsmith WSGI worker emits per-request access log metrics (request counts, durations, HTTP statuses) to StatsD
-when configured. See [StatsD](/deployment-self-hosting/observability/monitoring#statsd) for setup.
+The Flagsmith WSGI worker emits per-request access log metrics (request counts, durations, HTTP statuses) to StatsD when
+configured. See [StatsD](/deployment-self-hosting/observability/monitoring#statsd) for setup.
