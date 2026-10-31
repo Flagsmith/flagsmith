@@ -269,3 +269,24 @@ def test_clone_identity_feature_states__source_has_overrides__clones_correctly(
         environment=environment,
         identity=target_identity,
     ).exists()
+
+
+def test_list_identity_feature_states__non_numeric_identity_pk__returns_empty(
+    environment: Environment,
+    staff_client: APIClient,
+    view_environment_permission: PermissionModel,
+    user_environment_permission: UserEnvironmentPermission,
+) -> None:
+    # Given
+    user_environment_permission.permissions.add(view_environment_permission)
+    url = reverse(
+        "api-v1:environments:identity-featurestates-list",
+        args=(environment.api_key, "org_3COWhASRXfhcdxVrd0wEjpQp4dg"),
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == []
