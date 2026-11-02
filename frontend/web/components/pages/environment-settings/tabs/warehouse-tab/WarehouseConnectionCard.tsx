@@ -170,7 +170,9 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
           </span>
         </div>
       )}
-      <WarehouseEventCodeHelp />
+      <WarehouseEventCodeHelp
+        isFlagsmithDatabase={isFlagsmithDatabaseConnection(connection)}
+      />
       {connection.warehouse_type === 'clickhouse' && (
         <div className='mt-3'>
           <WarehouseSetupSqlHelp

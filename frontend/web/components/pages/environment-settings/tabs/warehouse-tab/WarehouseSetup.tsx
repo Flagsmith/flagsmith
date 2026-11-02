@@ -199,9 +199,8 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
               configuration required.
             </p>
             <p className='text-muted mb-1'>
-              Events go to a separate <code>flagsmith_exp</code> schema in the
-              database this Flagsmith installation already runs on, so there is
-              nothing extra to host or secure.
+              Events are stored in the database this Flagsmith installation
+              already runs on, so there is nothing extra to host or secure.
             </p>
             <p className='text-muted mb-0'>
               This suits most installations. For very high event volumes,

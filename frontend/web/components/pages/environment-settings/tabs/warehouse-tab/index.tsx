@@ -12,6 +12,7 @@ import {
   SnowflakeConfig,
 } from 'common/types/responses'
 import { experimentErrorMessage } from 'components/experiments/errors'
+import Project from 'common/project'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 import WarehouseSetup from './WarehouseSetup'
 import WarehouseSetupSkeleton from './WarehouseSetupSkeleton'
@@ -21,6 +22,7 @@ import { ClickHouseFormData } from './clickhouseConfig'
 import DatabricksConfigForm from './DatabricksConfigForm'
 import { DatabricksFormData } from './databricksConfig'
 import sendWarehouseTestEvent from './sendWarehouseTestEvent'
+import { getApiEventsUrl } from './warehouseEventSnippets'
 import { getWarehousePollingInterval } from './warehousePolling'
 import {
   FLAGSMITH_DATABASE_CONFIG,
@@ -233,7 +235,12 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
 
   const handleSendTestEvent = () => {
     if (!connection) return
-    sendWarehouseTestEvent(environmentId)
+    sendWarehouseTestEvent(
+      environmentId,
+      isFlagsmithDatabaseConnection(connection)
+        ? getApiEventsUrl(Project.api)
+        : undefined,
+    )
       .then(() => testConnection({ environmentId, id: connection.id }).unwrap())
       .then(() => toast('Test event sent'))
       .catch((error) => {
