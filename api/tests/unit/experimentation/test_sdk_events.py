@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from experimentation.sdk_events import (
-    DEFAULT_BODY_LIMIT,
+    MAX_BODY_BYTES,
     MAX_VALUE_BYTES,
     MIN_TIMESTAMP_MS,
     build_sdk_experimentation_event,
@@ -134,14 +134,16 @@ def test_parse_sdk_user_agent__header__returns_language_and_version(
     assert result == expected
 
 
-def test_build_sdk_experimentation_event__event__maps_to_row() -> None:
+def test_build_sdk_experimentation_event__json_values_nul_and_lone_surrogate__maps_to_row() -> (
+    None
+):
     # Given
     event = {
         "event": "purchase\x00",
         "feature_name": "checkout\ud800",
         "timestamp": NOW_MS + 7,
         "value": {"amount": 42},
-        "traits": {"plan": "pro"},
+        "traits": {"plan": "pró"},
     }
 
     # When
@@ -174,7 +176,7 @@ def test_build_sdk_experimentation_event__event__maps_to_row() -> None:
         NOW,
         "",
         '{"amount":42}',
-        '{"plan":"pro"}',
+        '{"plan":"pró"}',
         None,
         "python",
         "6.2.3",
@@ -184,12 +186,12 @@ def test_build_sdk_experimentation_event__event__maps_to_row() -> None:
 @pytest.mark.parametrize(
     "content_length, expected",
     [
-        (str(DEFAULT_BODY_LIMIT), False),
-        (str(DEFAULT_BODY_LIMIT + 1), True),
+        (str(MAX_BODY_BYTES), False),
+        (str(MAX_BODY_BYTES + 1), True),
         ("x", False),
     ],
 )
-def test_is_over_body_limit__content_length__compares_with_limit(
+def test_is_over_body_limit__content_length__true_only_above_limit(
     content_length: str | None,
     expected: bool,
 ) -> None:

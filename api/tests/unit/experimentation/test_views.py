@@ -28,7 +28,7 @@ from experimentation.models import (
     WarehouseDeliveryStatus,
     WarehouseType,
 )
-from experimentation.sdk_events import BODY_LIMIT_ERROR, DEFAULT_BODY_LIMIT
+from experimentation.sdk_events import BODY_LIMIT_ERROR, MAX_BODY_BYTES
 from experimentation.views import WarehouseConnectionViewSet
 from experimentation.warehouses.constants import (
     FLAGSMITH_DATABASE_SOURCE,
@@ -2288,7 +2288,7 @@ def test_post_sdk_events__mixed_batch__stores_valid_events_and_returns_202(
 
     # When
     response = api_client.post(
-        reverse("api-v1:sdk-experimentation-events"), data=payload, format="json"
+        reverse("api-v1:experimentation-events"), data=payload, format="json"
     )
 
     # Then
@@ -2363,7 +2363,7 @@ def test_post_sdk_events__nothing_to_store__returns_400(
 
     # When
     response = api_client.post(
-        reverse("api-v1:sdk-experimentation-events"), data=payload, format="json"
+        reverse("api-v1:experimentation-events"), data=payload, format="json"
     )
 
     # Then
@@ -2390,7 +2390,7 @@ def test_post_sdk_events__environment_without_flagsmith_database__returns_404(
 
     # When
     response = api_client.post(
-        reverse("api-v1:sdk-experimentation-events"),
+        reverse("api-v1:experimentation-events"),
         data={"events": [{"event": "purchase", "timestamp": 1}]},
         format="json",
     )
@@ -2408,11 +2408,11 @@ def test_post_sdk_events__body_over_limit__returns_413_without_parsing(
     # Given
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     parse = mocker.spy(JSONParser, "parse")
-    payload = {"events": [{"event": "purchase", "value": "x" * DEFAULT_BODY_LIMIT}]}
+    payload = {"events": [{"event": "purchase", "value": "x" * MAX_BODY_BYTES}]}
 
     # When
     response = api_client.post(
-        reverse("api-v1:sdk-experimentation-events"), data=payload, format="json"
+        reverse("api-v1:experimentation-events"), data=payload, format="json"
     )
 
     # Then

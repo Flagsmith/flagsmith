@@ -77,7 +77,7 @@ urlpatterns = [
     re_path(
         r"^events/?$",
         SDKExperimentationEventsView.as_view(),
-        name="sdk-experimentation-events",
+        name="experimentation-events",
     ),
     re_path(
         r"^environment-document/$",

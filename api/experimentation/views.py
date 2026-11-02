@@ -19,6 +19,7 @@ from drf_spectacular.utils import (
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, Throttled, ValidationError
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -818,20 +819,14 @@ class MetricViewSet(
 
 
 class SDKExperimentationEventsView(APIView):
-    """Store SDK events for environments whose warehouse is the Flagsmith
-    database, with the ingestion server's request and response contract."""
-
     authentication_classes = (EnvironmentKeyAuthentication,)
     permission_classes = (EnvironmentKeyPermissions,)
+    parser_classes = (JSONParser,)
     throttle_classes = []
 
     @extend_schema(
         request=OpenApiTypes.OBJECT,
-        responses={
-            202: OpenApiTypes.OBJECT,
-            400: OpenApiTypes.OBJECT,
-            413: OpenApiTypes.STR,
-        },
+        responses={202: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT},
     )
     def post(self, request: Request) -> HttpResponse:
         if is_over_body_limit(request.META.get("CONTENT_LENGTH")):

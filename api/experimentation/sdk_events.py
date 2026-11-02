@@ -1,6 +1,4 @@
-"""The SDK event contract, mirrored from the ingestion server so SDKs send
-events here unchanged. Limits are named after its constants:
-https://github.com/Flagsmith/ingestion-server/blob/main/src/routes/ingest.rs"""
+"""Mirrors https://github.com/Flagsmith/ingestion-server/blob/main/src/routes/ingest.rs so SDKs send events here unchanged."""
 
 import json
 import re
@@ -30,10 +28,8 @@ MAX_SDK_FIELD_CHARS = 100
 
 EMPTY_BATCH_ERROR = "events must be non-empty"
 
-# axum's DEFAULT_LIMIT, which the ingestion server leaves in place, and the
-# plain-text 413 its body extractors reject with:
-# https://github.com/tokio-rs/axum/blob/axum-core-v0.4.5/axum-core/src/ext_traits/request.rs
-DEFAULT_BODY_LIMIT = 2_097_152
+# axum-core 0.4.5's DEFAULT_LIMIT and its 413 text, which the ingestion server keeps.
+MAX_BODY_BYTES = 2_097_152
 BODY_LIMIT_ERROR = "Failed to buffer the request body: length limit exceeded"
 
 _UNIX_EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
@@ -45,8 +41,7 @@ def partition_sdk_events(
     events: list[object],
     now: datetime,
 ) -> tuple[list[dict[str, Any]], list[RejectedSDKEvent]]:
-    """Split a batch into storable events and per-event rejections, so one
-    invalid event never blocks its neighbours."""
+    """One invalid event never blocks its neighbours."""
     now_ms = (now - _UNIX_EPOCH) // timedelta(milliseconds=1)
     valid_events: list[dict[str, Any]] = []
     rejected_events: list[RejectedSDKEvent] = []
@@ -65,17 +60,15 @@ def partition_sdk_events(
 
 
 def is_over_body_limit(content_length: str | None) -> bool:
-    """Django reads no more than the declared length, so checking it bounds
-    what is read and parsed."""
+    """Django reads at most the declared length, so this bounds what is parsed."""
     try:
-        return int(content_length or 0) > DEFAULT_BODY_LIMIT
+        return int(content_length or 0) > MAX_BODY_BYTES
     except ValueError:
         return False
 
 
 def parse_sdk_user_agent(header: str | None) -> tuple[str, str]:
-    """Return the SDK language and version from a `Flagsmith-SDK-User-Agent`
-    header such as `flagsmith-js-sdk/11.0.0`."""
+    """`flagsmith-js-sdk/11.0.0` gives `("js", "11.0.0")`."""
     if header is None:
         return "unknown", "unknown"
     sdk_part, separator, version = header.partition("/")
@@ -95,8 +88,6 @@ def build_sdk_experimentation_event(
     sdk_language: str,
     sdk_version: str,
 ) -> SDKExperimentationEvent:
-    """Map a valid event to its row: JSON values other than strings are stored
-    as compact JSON, and a missing identifier as an empty string."""
     return SDKExperimentationEvent(
         environment_key=environment_key,
         event=_as_column_text(event["event"]) or "",
@@ -199,7 +190,10 @@ def _json_byte_size(value: object) -> int:
 def _as_column_text(value: object) -> str | None:
     if value is None:
         return None
-    text = value if isinstance(value, str) else json.dumps(value, separators=(",", ":"))
-    # PostgreSQL text cannot hold NUL, and a lone surrogate, which JSON allows,
-    # cannot be encoded as UTF-8. Either would fail the whole batch.
+    text = (
+        value
+        if isinstance(value, str)
+        else json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+    )
+    # PostgreSQL text can't hold NUL, nor UTF-8 a lone surrogate; either fails the batch.
     return _LONE_SURROGATE_PATTERN.sub("\ufffd", text.replace("\x00", ""))

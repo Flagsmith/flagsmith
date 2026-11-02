@@ -178,7 +178,6 @@ def ensure_flagsmith_warehouse_connection(
 def has_flagsmith_database_connection(environment: Environment) -> bool:
     exists: bool = WarehouseConnection.objects.filter(
         environment=environment,
-        warehouse_type=WarehouseType.POSTGRES,
         config={"source": FLAGSMITH_DATABASE_SOURCE},
     ).exists()
     return exists
@@ -190,8 +189,6 @@ def store_sdk_experimentation_events(
     *,
     sdk_user_agent: str | None,
 ) -> tuple[int, list[RejectedSDKEvent]]:
-    """Store the valid events of an SDK batch and return how many were stored,
-    with the rejected ones."""
     collected_at = timezone.now()
     valid_events, rejected_events = partition_sdk_events(submitted_events, collected_at)
     sdk_language, sdk_version = parse_sdk_user_agent(sdk_user_agent)
