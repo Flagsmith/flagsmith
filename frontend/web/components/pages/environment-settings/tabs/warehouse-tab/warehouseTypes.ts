@@ -19,11 +19,16 @@ export type WarehouseTypeOption =
 export const WAREHOUSES_FLAG = 'experimentation_warehouses'
 
 // The managed Flagsmith warehouse only exists on SaaS, and the Flagsmith
-// database only on self-hosted installations.
-export const getConfigurableWarehouseTypes = (
-  isSaas: boolean,
-): WarehouseTypeOption[] => [
-  isSaas ? 'flagsmith' : 'flagsmith_database',
+// database only where the API reports it usable.
+export const getConfigurableWarehouseTypes = ({
+  isFlagsmithDatabaseAvailable,
+  isSaas,
+}: Pick<
+  WarehouseGate,
+  'isFlagsmithDatabaseAvailable' | 'isSaas'
+>): WarehouseTypeOption[] => [
+  ...(isSaas ? (['flagsmith'] as const) : []),
+  ...(isFlagsmithDatabaseAvailable ? (['flagsmith_database'] as const) : []),
   'clickhouse',
   'databricks',
 ]
@@ -67,6 +72,7 @@ export const getWarehouseMinimumPlan = (
 }
 
 export type WarehouseGate = {
+  isFlagsmithDatabaseAvailable: boolean
   isSaas: boolean
   minimumPlans: MinimumPlans
   planId: string | null | undefined
@@ -84,7 +90,7 @@ export const getWarehouseTypeStatus = (
   type: WarehouseTypeOption,
   gate: WarehouseGate,
 ): WarehouseTypeStatus => {
-  if (!getConfigurableWarehouseTypes(gate.isSaas).includes(type)) {
+  if (!getConfigurableWarehouseTypes(gate).includes(type)) {
     return 'coming-soon'
   }
   return isWarehouseTypeAvailable(type, gate) ? 'available' : 'plan-gated'

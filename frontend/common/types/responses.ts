@@ -1273,6 +1273,7 @@ export type Version = {
     image_tag: string
     has_email_provider: boolean
     experimentation_enabled: boolean
+    flagsmith_database_warehouse_available: boolean
     is_enterprise: boolean
     is_saas: boolean
     'self_hosted_data'?: {

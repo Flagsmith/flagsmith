@@ -24,12 +24,18 @@ const flagValue = JSON.stringify({
 })
 
 describe('getConfigurableWarehouseTypes', () => {
-  it.each([
-    [false, ['flagsmith_database', 'clickhouse', 'databricks']],
-    [true, ['flagsmith', 'clickhouse', 'databricks']],
-  ])('isSaas=%s => %j', (isSaas, expected) => {
-    expect(getConfigurableWarehouseTypes(isSaas)).toEqual(expected)
-  })
+  it.each<[boolean, boolean, WarehouseTypeOption[]]>([
+    [true, false, ['flagsmith', 'clickhouse', 'databricks']],
+    [false, true, ['flagsmith_database', 'clickhouse', 'databricks']],
+    [false, false, ['clickhouse', 'databricks']],
+  ])(
+    'isSaas=%s isFlagsmithDatabaseAvailable=%s => %j',
+    (isSaas, isFlagsmithDatabaseAvailable, expected) => {
+      expect(
+        getConfigurableWarehouseTypes({ isFlagsmithDatabaseAvailable, isSaas }),
+      ).toEqual(expected)
+    },
+  )
 })
 
 describe('getMinimumPlans', () => {
@@ -76,9 +82,14 @@ describe('getWarehouseTypeStatus', () => {
     ['flagsmith', 'enterprise', false, 'coming-soon'],
     ['flagsmith_database', null, false, 'available'],
   ])('%s on %s (isSaas=%s) => %s', (type, planId, isSaas, expected) => {
-    expect(getWarehouseTypeStatus(type, { isSaas, minimumPlans, planId })).toBe(
-      expected,
-    )
+    expect(
+      getWarehouseTypeStatus(type, {
+        isFlagsmithDatabaseAvailable: !isSaas,
+        isSaas,
+        minimumPlans,
+        planId,
+      }),
+    ).toBe(expected)
   })
 })
 
