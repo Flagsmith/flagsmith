@@ -104,8 +104,7 @@ class WarehouseDeliveryStatus(models.Model):
 
 
 class SDKExperimentationEvent(models.Model):
-    """An SDK event stored in Flagsmith's own database, for environments whose
-    warehouse is the Flagsmith database. Columns match experimentation/postgres/events.sql."""
+    """Columns match experimentation/postgres/events.sql, so the same queries read both."""
 
     id = models.BigAutoField(primary_key=True)
     environment_key = models.TextField()

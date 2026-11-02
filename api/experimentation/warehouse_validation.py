@@ -35,7 +35,7 @@ def validate_credentials(
     instance: WarehouseConnection | None,
 ) -> None:
     config = attrs.get("config", getattr(instance, "config", None))
-    # Any `source` selects the mode, so validate_config reports a malformed marker.
+    # Any `source` selects this mode, so validate_config reports a malformed one.
     if (
         warehouse_type == WarehouseType.POSTGRES
         and isinstance(config, dict)

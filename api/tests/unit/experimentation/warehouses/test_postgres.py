@@ -7,6 +7,7 @@ from typing import Any
 import psycopg2
 import pytest
 from psycopg2 import sql
+from psycopg2.extensions import cursor as PgCursor
 from pytest_mock import MockerFixture
 from rest_framework import serializers
 
@@ -32,6 +33,7 @@ from experimentation.warehouses.postgres import (
     PostgresWarehouse,
     describe_postgres_error,
     get_flagsmith_database_connect_params,
+    is_flagsmith_database_config,
     read_cursor,
 )
 from tests.unit.experimentation.conftest import (
@@ -66,13 +68,17 @@ SEED_ROWS = [
 SEED_COLUMNS = "environment_key, identifier, event, feature_name, value, timestamp"
 
 
-def _seed(target: PostgresWarehouseSchema) -> None:
-    target.cursor.executemany(
+def _seed(cursor: PgCursor, table: sql.Composable) -> None:
+    cursor.executemany(
         sql.SQL(
-            f"INSERT INTO {{}}.events ({SEED_COLUMNS}) VALUES (%s, %s, %s, %s, %s, %s)"
-        ).format(sql.Identifier(target.schema)),
+            f"INSERT INTO {{}} ({SEED_COLUMNS}) VALUES (%s, %s, %s, %s, %s, %s)"
+        ).format(table),
         SEED_ROWS,
     )
+
+
+def _seed_customer_schema(target: PostgresWarehouseSchema) -> None:
+    _seed(target.cursor, sql.Identifier(target.schema, "events"))
 
 
 def _override_config(connection: WarehouseConnection, **config: object) -> None:
@@ -90,20 +96,22 @@ def _login_as(connection: WarehouseConnection, role: tuple[str, str]) -> None:
 
 
 @pytest.fixture()
-def seeded_flagsmith_database_events(db: None) -> Iterator[None]:
-    """Seed the Flagsmith database's events table over a separate autocommit
-    session, so the provider's own connections see the rows."""
+def seeded_connection(
+    request: pytest.FixtureRequest,
+    connection_fixture: str,
+) -> Iterator[WarehouseConnection]:
+    """Seeds over autocommit, so the provider's own connections see the rows."""
+    connection: WarehouseConnection = request.getfixturevalue(connection_fixture)
+    if not is_flagsmith_database_config(connection.config):
+        _seed_customer_schema(request.getfixturevalue("postgres_warehouse_schema"))
+        yield connection
+        return
     table = sql.Identifier(SDKExperimentationEvent._meta.db_table)
     with closing(psycopg2.connect(**get_flagsmith_database_connect_params())) as admin:
         admin.autocommit = True
         with admin.cursor() as cursor:
-            cursor.executemany(
-                sql.SQL(
-                    f"INSERT INTO {{}} ({SEED_COLUMNS}) VALUES (%s, %s, %s, %s, %s, %s)"
-                ).format(table),
-                SEED_ROWS,
-            )
-            yield
+            _seed(cursor, table)
+            yield connection
             cursor.execute(sql.SQL("DELETE FROM {}").format(table))
 
 
@@ -437,20 +445,23 @@ def test_describe_error__other_failures__returns_detail(
         ),
     ],
 )
-def test_event_reads__events__return_and_cache(
-    postgres_connection: WarehouseConnection,
-    postgres_warehouse_schema: PostgresWarehouseSchema,
+@pytest.mark.parametrize(
+    "connection_fixture",
+    ["postgres_connection", "flagsmith_database_connection"],
+    ids=["customer-postgres", "flagsmith-database"],
+)
+def test_event_reads__seeded_events__return_and_cache(
+    seeded_connection: WarehouseConnection,
     mocker: MockerFixture,
     method: str,
     expected: object,
 ) -> None:
     # Given
-    _seed(postgres_warehouse_schema)
     connect = mocker.spy(psycopg2, "connect")
     read = getattr(PostgresWarehouse(), method)
 
     # When
-    results = [read(postgres_connection, ENV), read(postgres_connection, ENV)]
+    results = [read(seeded_connection, ENV), read(seeded_connection, ENV)]
 
     # Then
     assert results == [expected, expected]
@@ -483,7 +494,7 @@ def test_get_exposure_buckets__naive_column_and_non_utc_role__buckets_in_utc(
 ) -> None:
     # Given
     _alter(postgres_warehouse_schema, NAIVE_TIMESTAMP)
-    _seed(postgres_warehouse_schema)
+    _seed_customer_schema(postgres_warehouse_schema)
     role = make_role(["SELECT"], True)
     postgres_warehouse_schema.cursor.execute(
         sql.SQL("ALTER ROLE {} SET TimeZone = 'America/New_York'").format(
@@ -510,17 +521,20 @@ def test_get_exposure_buckets__naive_column_and_non_utc_role__buckets_in_utc(
     ) == [("control", _at(1, 0)), ("treatment", _at(1, 0))]
 
 
-def test_get_results_aggregates__events__reads_customer_schema(
-    postgres_connection: WarehouseConnection,
-    postgres_warehouse_schema: PostgresWarehouseSchema,
+@pytest.mark.parametrize(
+    "connection_fixture",
+    ["postgres_connection", "flagsmith_database_connection"],
+    ids=["customer-postgres", "flagsmith-database"],
+)
+def test_get_results_aggregates__seeded_events__returns_seeded_aggregates(
+    seeded_connection: WarehouseConnection,
 ) -> None:
     # Given
-    _seed(postgres_warehouse_schema)
     spec = MetricSpec(1, "purchase", MetricAggregation.OCCURRENCE, False)
 
     # When
     aggregates = PostgresWarehouse().get_results_aggregates(
-        postgres_connection,
+        seeded_connection,
         environment_key=ENV,
         feature_name=FEATURE,
         specs=[spec],
@@ -537,57 +551,3 @@ def test_get_results_aggregates__events__reads_customer_schema(
         "control": 1,
         "treatment": 0,
     }
-
-
-@pytest.mark.parametrize(
-    "method, expected",
-    [
-        (
-            "get_event_names",
-            WarehouseEventNames(events=["purchase", EXPOSURE], is_truncated=False),
-        ),
-        (
-            "get_event_stats",
-            WarehouseEventStats(total_events_received=3, unique_events_count=2),
-        ),
-    ],
-)
-def test_event_reads__flagsmith_database__read_sdk_experimentation_events(
-    flagsmith_database_connection: WarehouseConnection,
-    seeded_flagsmith_database_events: None,
-    method: str,
-    expected: object,
-) -> None:
-    # Given
-    read = getattr(PostgresWarehouse(), method)
-
-    # When
-    result = read(flagsmith_database_connection, ENV)
-
-    # Then
-    assert result == expected
-
-
-def test_get_results_aggregates__flagsmith_database__reads_sdk_experimentation_events(
-    flagsmith_database_connection: WarehouseConnection,
-    seeded_flagsmith_database_events: None,
-) -> None:
-    # Given
-    spec = MetricSpec(1, "purchase", MetricAggregation.OCCURRENCE, False)
-
-    # When
-    aggregates = PostgresWarehouse().get_results_aggregates(
-        flagsmith_database_connection,
-        environment_key=ENV,
-        feature_name=FEATURE,
-        specs=[spec],
-        window_start=WINDOW_START,
-        window_end=WINDOW_END,
-        granularity="day",
-    )
-
-    # Then
-    assert aggregates.exposure_counts == {"control": 1, "treatment": 1}
-    assert {
-        variant: stats.sum for variant, stats in aggregates.metric_stats[1].items()
-    } == {"control": 1, "treatment": 0}

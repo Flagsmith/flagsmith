@@ -2109,7 +2109,7 @@ def test_post__flagsmith_database_config__returns_201_connected_without_credenti
     [(True, True), (False, False)],
     ids=["saas", "non-postgres-database"],
 )
-def test_post__flagsmith_database_config_unavailable__returns_400(
+def test_post__flagsmith_database_on_saas_or_non_postgres__returns_400(
     admin_client: APIClient,
     environment: Environment,
     mocker: MockerFixture,
@@ -2185,7 +2185,7 @@ def test_post__invalid_flagsmith_database_payload__returns_400(
     [(True, status.HTTP_200_OK), (False, status.HTTP_400_BAD_REQUEST)],
     ids=["with-credentials", "without-credentials"],
 )
-def test_patch__flagsmith_database_config_to_postgres_config__saves_only_with_credentials(
+def test_patch__flagsmith_database_to_customer_postgres__requires_credentials(
     admin_client: APIClient,
     environment: Environment,
     flagsmith_database_connection: WarehouseConnection,
