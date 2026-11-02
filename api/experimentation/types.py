@@ -113,8 +113,3 @@ POSTGRES_DEFAULTS: PostgresConfig = {
 
 class PostgresCredentials(TypedDict):
     password: str
-
-
-class RejectedSDKEvent(TypedDict):
-    index: int
-    error: str

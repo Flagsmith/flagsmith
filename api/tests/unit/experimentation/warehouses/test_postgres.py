@@ -90,7 +90,7 @@ def _login_as(connection: WarehouseConnection, role: tuple[str, str]) -> None:
 
 
 @pytest.fixture()
-def flagsmith_database_events(db: None) -> Iterator[None]:
+def seeded_flagsmith_database_events(db: None) -> Iterator[None]:
     """Seed the Flagsmith database's events table over a separate autocommit
     session, so the provider's own connections see the rows."""
     table = sql.Identifier(SDKExperimentationEvent._meta.db_table)
@@ -539,20 +539,6 @@ def test_get_results_aggregates__events__reads_customer_schema(
     }
 
 
-def test_verify__flagsmith_database__succeeds_without_connecting(
-    flagsmith_database_connection: WarehouseConnection,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    connect = mocker.patch("experimentation.warehouses.postgres.psycopg2.connect")
-
-    # When
-    PostgresWarehouse().verify(flagsmith_database_connection)
-
-    # Then
-    connect.assert_not_called()
-
-
 @pytest.mark.parametrize(
     "method, expected",
     [
@@ -568,7 +554,7 @@ def test_verify__flagsmith_database__succeeds_without_connecting(
 )
 def test_event_reads__flagsmith_database__read_sdk_experimentation_events(
     flagsmith_database_connection: WarehouseConnection,
-    flagsmith_database_events: None,
+    seeded_flagsmith_database_events: None,
     method: str,
     expected: object,
 ) -> None:
@@ -584,7 +570,7 @@ def test_event_reads__flagsmith_database__read_sdk_experimentation_events(
 
 def test_get_results_aggregates__flagsmith_database__reads_sdk_experimentation_events(
     flagsmith_database_connection: WarehouseConnection,
-    flagsmith_database_events: None,
+    seeded_flagsmith_database_events: None,
 ) -> None:
     # Given
     spec = MetricSpec(1, "purchase", MetricAggregation.OCCURRENCE, False)

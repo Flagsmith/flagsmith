@@ -62,15 +62,6 @@ Results of cache retrieval for environment document. `result` label is either `h
 Labels:
  - `result`
 
-### `flagsmith_experimentation_sdk_events`
-
-Counter.
-
-SDK events sent to Flagsmith for environments whose warehouse is the Flagsmith database. `result` label is either `accepted` or `rejected`.
-
-Labels:
- - `result`
-
 ### `flagsmith_experimentation_warehouse_connection_verifications`
 
 Counter.

@@ -8,7 +8,7 @@ class Dialect(Protocol):
     """The SQL fragments that differ between warehouses. A warehouse needing a
     differently shaped query overrides that query in its provider instead."""
 
-    events_table: str
+    events_table_name: str
 
     def param(self, name: str) -> str: ...
 
@@ -54,7 +54,7 @@ _CLICKHOUSE_BUCKET_FUNCTIONS: dict[ExposureGranularity, str] = {
 
 
 class ClickHouseDialect:
-    events_table = "events"
+    events_table_name = "events"
 
     def param(self, name: str) -> str:
         return f"%({name})s"
@@ -110,7 +110,7 @@ _BUCKET_SECONDS: dict[ExposureGranularity, int] = {
 
 
 class DatabricksDialect:
-    events_table = "events"
+    events_table_name = "events"
 
     def param(self, name: str) -> str:
         return f":{name}"
@@ -175,8 +175,8 @@ class PostgresDialect:
     integer and 30 fractional digits with a 2-digit exponent (about 1e129 at
     most); anything else, including inf and nan, reads as 0."""
 
-    def __init__(self, events_table: str = "events") -> None:
-        self.events_table = events_table
+    def __init__(self, events_table_name: str = "events") -> None:
+        self.events_table_name = events_table_name
 
     def param(self, name: str) -> str:
         return f"%({name})s"

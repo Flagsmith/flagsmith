@@ -6,11 +6,9 @@ from typing import Any
 
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Prefetch, Q, QuerySet
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter,
     extend_schema,
@@ -18,19 +16,16 @@ from drf_spectacular.utils import (
 )
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound, Throttled, ValidationError
+from rest_framework.exceptions import Throttled, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 from rest_framework.throttling import BaseThrottle, ScopedRateThrottle
-from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
 from core.dataclasses import AuthorData
-from environments.authentication import EnvironmentKeyAuthentication
-from environments.permissions.permissions import EnvironmentKeyPermissions
 from environments.views import NestedEnvironmentViewSet
 from experimentation.constants import (
     EXPOSURES_REFRESH_MIN_INTERVAL,
@@ -49,11 +44,6 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.permissions import ExperimentationPermission
-from experimentation.sdk_events import (
-    BODY_LIMIT_ERROR,
-    EMPTY_BATCH_ERROR,
-    exceeds_body_limit,
-)
 from experimentation.serializers import (
     ExperimentDetailSerializer,
     ExperimentExposuresSerializer,
@@ -75,10 +65,8 @@ from experimentation.services import (
     create_warehouse_audit_log,
     enable_experiment_rollout,
     get_warehouse_event_names,
-    has_flagsmith_database_connection,
     mark_warehouse_pending_connection,
     refresh_warehouse_connection_status,
-    store_sdk_experimentation_events,
     transition_experiment_status,
     verify_warehouse_connection,
 )
@@ -815,48 +803,3 @@ class MetricViewSet(
     @staticmethod
     def _get_user(request: Request) -> FFAdminUser:
         return request.user  # type: ignore[return-value]
-
-
-class SDKExperimentationEventsView(APIView):
-    """Store SDK events for environments whose warehouse is the Flagsmith
-    database, with the ingestion server's request and response contract."""
-
-    authentication_classes = (EnvironmentKeyAuthentication,)
-    permission_classes = (EnvironmentKeyPermissions,)
-    throttle_classes = []
-
-    @extend_schema(
-        request=OpenApiTypes.OBJECT,
-        responses={
-            202: OpenApiTypes.OBJECT,
-            400: OpenApiTypes.OBJECT,
-            413: OpenApiTypes.STR,
-        },
-    )
-    def post(self, request: Request) -> HttpResponse:
-        if exceeds_body_limit(request.META.get("CONTENT_LENGTH")):
-            return HttpResponse(
-                BODY_LIMIT_ERROR,
-                status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                content_type="text/plain; charset=utf-8",
-            )
-        environment = request.environment
-        if not has_flagsmith_database_connection(environment):
-            raise NotFound("This environment does not store events in Flagsmith.")
-        events = request.data.get("events") if isinstance(request.data, dict) else None
-        if not isinstance(events, list) or not events:
-            return Response(
-                {"accepted": 0, "rejected": [], "error": EMPTY_BATCH_ERROR},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        accepted, rejected = store_sdk_experimentation_events(
-            environment,
-            events,
-            sdk_user_agent=request.headers.get("Flagsmith-SDK-User-Agent"),
-        )
-        return Response(
-            {"accepted": accepted, "rejected": rejected},
-            status=status.HTTP_202_ACCEPTED
-            if accepted
-            else status.HTTP_400_BAD_REQUEST,
-        )

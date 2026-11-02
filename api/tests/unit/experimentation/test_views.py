@@ -1,16 +1,12 @@
 import socket
-from datetime import datetime, timezone
 
 import pytest
 from clickhouse_connect.driver.exceptions import OperationalError
-from common.test_tools import AssertMetricFixture
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
-from pytest_structlog import StructuredLogCapture
 from requests_mock import Mocker as RequestsMockerFixture
 from rest_framework import status
-from rest_framework.parsers import JSONParser
 from rest_framework.test import APIClient
 from rest_framework.throttling import ScopedRateThrottle
 
@@ -22,13 +18,11 @@ from experimentation.dataclasses import (
     WarehouseEventStats,
 )
 from experimentation.models import (
-    SDKExperimentationEvent,
     WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseDeliveryStatus,
     WarehouseType,
 )
-from experimentation.sdk_events import BODY_LIMIT_ERROR, DEFAULT_LIMIT
 from experimentation.views import WarehouseConnectionViewSet
 from experimentation.warehouses.constants import (
     FLAGSMITH_DATABASE_SOURCE,
@@ -2257,184 +2251,3 @@ def test_patch__postgres_to_flagsmith_database_config__clears_credentials(
     assert postgres_connection.config == {"source": FLAGSMITH_DATABASE_SOURCE}
     assert postgres_connection.credentials is None
     assert postgres_connection.status == WarehouseConnectionStatus.CONNECTED
-
-
-def test_post_sdk_events__mixed_batch__stores_valid_events_and_returns_202(
-    api_client: APIClient,
-    environment: Environment,
-    flagsmith_database_connection: WarehouseConnection,
-    log: StructuredLogCapture,
-    assert_metric: AssertMetricFixture,
-) -> None:
-    # Given
-    timestamp = datetime.now(timezone.utc).replace(microsecond=0)
-    timestamp_ms = int(timestamp.timestamp() * 1000)
-    api_client.credentials(
-        HTTP_X_ENVIRONMENT_KEY=environment.api_key,
-        HTTP_FLAGSMITH_SDK_USER_AGENT="flagsmith-python-sdk/6.2.3",
-    )
-    payload = {
-        "events": [
-            {
-                "event": "$flag_exposure",
-                "feature_name": "checkout",
-                "identifier": "user-1",
-                "value": "variant_a",
-                "timestamp": timestamp_ms,
-            },
-            {"event": "purchase", "timestamp": 1},
-        ]
-    }
-
-    # When
-    response = api_client.post(
-        reverse("api-v1:sdk-experimentation-events"), data=payload, format="json"
-    )
-
-    # Then
-    error = "events[1].timestamp must be an epoch-millis value after 2020-01-01"
-    assert response.status_code == status.HTTP_202_ACCEPTED
-    assert response.json() == {
-        "accepted": 1,
-        "rejected": [{"index": 1, "error": error}],
-    }
-    assert list(
-        SDKExperimentationEvent.objects.values_list(
-            "environment_key",
-            "event",
-            "feature_name",
-            "identifier",
-            "value",
-            "timestamp",
-            "sdk_language",
-            "sdk_version",
-        )
-    ) == [
-        (
-            environment.api_key,
-            "$flag_exposure",
-            "checkout",
-            "user-1",
-            "variant_a",
-            timestamp,
-            "python",
-            "6.2.3",
-        )
-    ]
-    assert log.events == [
-        {
-            "level": "warning",
-            "event": "sdk_events.rejected",
-            "environment__id": environment.id,
-            "events__count": 2,
-            "rejected_events__count": 1,
-            "first_error": error,
-        }
-    ]
-    assert_metric(
-        name="flagsmith_experimentation_sdk_events_total",
-        labels={"result": "accepted"},
-        value=1,
-    )
-    assert_metric(
-        name="flagsmith_experimentation_sdk_events_total",
-        labels={"result": "rejected"},
-        value=1,
-    )
-
-
-@pytest.mark.parametrize(
-    "payload, expected_body",
-    [
-        (
-            {"events": []},
-            {"accepted": 0, "rejected": [], "error": "events must be non-empty"},
-        ),
-        (
-            [{"event": "purchase"}],
-            {"accepted": 0, "rejected": [], "error": "events must be non-empty"},
-        ),
-        (
-            {"events": [{"event": "$made_up", "timestamp": 1}]},
-            {
-                "accepted": 0,
-                "rejected": [
-                    {
-                        "index": 0,
-                        "error": 'events[0].event "$made_up" uses the reserved `$` prefix but is not a known system event',
-                    }
-                ],
-            },
-        ),
-    ],
-    ids=["empty-batch", "not-a-batch", "no-valid-events"],
-)
-def test_post_sdk_events__nothing_to_store__returns_400(
-    api_client: APIClient,
-    environment: Environment,
-    flagsmith_database_connection: WarehouseConnection,
-    payload: object,
-    expected_body: dict[str, object],
-) -> None:
-    # Given
-    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-
-    # When
-    response = api_client.post(
-        reverse("api-v1:sdk-experimentation-events"), data=payload, format="json"
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == expected_body
-    assert not SDKExperimentationEvent.objects.exists()
-
-
-@pytest.mark.parametrize("has_postgres_connection", [False, True])
-def test_post_sdk_events__environment_without_flagsmith_database__returns_404(
-    api_client: APIClient,
-    environment: Environment,
-    has_postgres_connection: bool,
-) -> None:
-    # Given
-    if has_postgres_connection:
-        WarehouseConnection.objects.create(
-            environment=environment,
-            warehouse_type=WarehouseType.POSTGRES,
-            name="Production PostgreSQL",
-            config={"host": "pg.example.com"},
-        )
-    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-
-    # When
-    response = api_client.post(
-        reverse("api-v1:sdk-experimentation-events"),
-        data={"events": [{"event": "purchase", "timestamp": 1}]},
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-
-
-def test_post_sdk_events__body_over_limit__returns_413_without_parsing(
-    api_client: APIClient,
-    environment: Environment,
-    flagsmith_database_connection: WarehouseConnection,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-    parse = mocker.spy(JSONParser, "parse")
-    payload = {"events": [{"event": "purchase", "value": "x" * DEFAULT_LIMIT}]}
-
-    # When
-    response = api_client.post(
-        reverse("api-v1:sdk-experimentation-events"), data=payload, format="json"
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
-    assert response.content == BODY_LIMIT_ERROR.encode()
-    parse.assert_not_called()
-    assert not SDKExperimentationEvent.objects.exists()

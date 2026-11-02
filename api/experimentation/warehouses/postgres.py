@@ -79,7 +79,7 @@ logger = structlog.get_logger("warehouse")
 CONNECT_TIMEOUT_SECONDS = 10
 
 FLAGSMITH_DATABASE_DIALECT = PostgresDialect(
-    events_table=SDKExperimentationEvent._meta.db_table
+    events_table_name=SDKExperimentationEvent._meta.db_table
 )
 
 # Kept in step with experimentation/postgres/events.sql.
@@ -159,7 +159,7 @@ def get_flagsmith_database_connect_params() -> dict[str, Any]:
     return connect_params
 
 
-def _get_dialect(connection: "WarehouseConnection") -> "Dialect":
+def _get_connection_dialect(connection: "WarehouseConnection") -> "Dialect":
     if is_flagsmith_database_config(connection.config):
         return FLAGSMITH_DATABASE_DIALECT
     return POSTGRES_DIALECT
@@ -428,7 +428,7 @@ class PostgresWarehouse:
                 connection, statement_timeout=EVENT_NAMES_TIMEOUT_SECONDS
             ) as cursor:
                 cursor.execute(
-                    event_names_query(_get_dialect(connection)),
+                    event_names_query(_get_connection_dialect(connection)),
                     event_names_query_params(environment_key),
                 )
                 rows = cursor.fetchall()
@@ -466,7 +466,7 @@ class PostgresWarehouse:
                 connection, statement_timeout=VERIFY_TIMEOUT_SECONDS
             ) as cursor:
                 cursor.execute(
-                    event_stats_query(_get_dialect(connection)),
+                    event_stats_query(_get_connection_dialect(connection)),
                     {"environment_key": environment_key},
                 )
                 rows = cursor.fetchall()
@@ -503,7 +503,7 @@ class PostgresWarehouse:
         ) as cursor:
             return read_exposure_buckets(
                 _query_runner(cursor),
-                _get_dialect(connection),
+                _get_connection_dialect(connection),
                 environment_key=environment_key,
                 feature_name=feature_name,
                 window_start=window_start,
@@ -527,7 +527,7 @@ class PostgresWarehouse:
         ) as cursor:
             return read_results_aggregates(
                 _query_runner(cursor),
-                _get_dialect(connection),
+                _get_connection_dialect(connection),
                 environment_key=environment_key,
                 feature_name=feature_name,
                 window_start=window_start,

@@ -41,7 +41,7 @@ WITH exposures AS (
         CASE WHEN {distinct_values} > 1 THEN '' ELSE {dialect.any_value(value)} END AS variant,
         {dialect.bool_to_number(f"{distinct_values} > 1")} AS quarantined,
         min(timestamp) AS first_exposure
-    FROM {dialect.events_table}
+    FROM {dialect.events_table_name}
     WHERE environment_key = {p("environment_key")}
         AND event = {p("exposure_event")}
         AND feature_name = {p("feature_name")}
@@ -74,7 +74,7 @@ def _metric_join(dialect: Dialect, events_param: str, events: Sequence[str]) -> 
     the bound list of event names, so a query can join only the events it
     aggregates."""
     p = dialect.param
-    return f"""    LEFT JOIN {dialect.events_table} AS m
+    return f"""    LEFT JOIN {dialect.events_table_name} AS m
         ON m.identifier = e.identifier
         AND m.environment_key = {p("environment_key")}
         AND {dialect.in_list("m.event", events_param, len(events))}

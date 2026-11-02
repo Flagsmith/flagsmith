@@ -4012,10 +4012,19 @@ def test_annotate_warehouse_delivery_statuses__unverified_external_connection__k
     assert clickhouse_connection.status_detail == "Could not connect to the host."
 
 
-def test_annotate_warehouse_delivery_statuses__flagsmith_warehouse__stays_connected(
-    warehouse_connection: WarehouseConnection,
+@pytest.mark.parametrize(
+    "connection_fixture",
+    ["warehouse_connection", "flagsmith_database_connection"],
+    ids=["flagsmith-warehouse", "flagsmith-database"],
+)
+def test_annotate_warehouse_delivery_statuses__connection_not_delivered_by_service__stays_connected(
+    request: pytest.FixtureRequest,
+    connection_fixture: str,
 ) -> None:
-    # Given a Flagsmith connection, which the delivery service never handles
+    # Given a connection whose events the delivery service never handles
+    warehouse_connection: WarehouseConnection = request.getfixturevalue(
+        connection_fixture
+    )
     warehouse_connection.status = WarehouseConnectionStatus.CONNECTED
     WarehouseDeliveryStatus.objects.create(
         connection=warehouse_connection,
