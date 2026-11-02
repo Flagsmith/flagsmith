@@ -6,6 +6,7 @@ from typing import Any
 
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Prefetch, Q, QuerySet
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -48,7 +49,11 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.permissions import ExperimentationPermission
-from experimentation.sdk_events import EMPTY_BATCH_ERROR
+from experimentation.sdk_events import (
+    BODY_LIMIT_ERROR,
+    EMPTY_BATCH_ERROR,
+    exceeds_body_limit,
+)
 from experimentation.serializers import (
     ExperimentDetailSerializer,
     ExperimentExposuresSerializer,
@@ -822,9 +827,19 @@ class SDKExperimentationEventsView(APIView):
 
     @extend_schema(
         request=OpenApiTypes.OBJECT,
-        responses={202: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT},
+        responses={
+            202: OpenApiTypes.OBJECT,
+            400: OpenApiTypes.OBJECT,
+            413: OpenApiTypes.STR,
+        },
     )
-    def post(self, request: Request) -> Response:
+    def post(self, request: Request) -> HttpResponse:
+        if exceeds_body_limit(request.META.get("CONTENT_LENGTH")):
+            return HttpResponse(
+                BODY_LIMIT_ERROR,
+                status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                content_type="text/plain; charset=utf-8",
+            )
         environment = request.environment
         if not has_flagsmith_database_connection(environment):
             raise NotFound("This environment does not store events in Flagsmith.")

@@ -10,6 +10,7 @@ from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 from requests_mock import Mocker as RequestsMockerFixture
 from rest_framework import status
+from rest_framework.parsers import JSONParser
 from rest_framework.test import APIClient
 from rest_framework.throttling import ScopedRateThrottle
 
@@ -27,6 +28,7 @@ from experimentation.models import (
     WarehouseDeliveryStatus,
     WarehouseType,
 )
+from experimentation.sdk_events import BODY_LIMIT_ERROR, DEFAULT_LIMIT
 from experimentation.views import WarehouseConnectionViewSet
 from experimentation.warehouses.constants import (
     FLAGSMITH_DATABASE_SOURCE,
@@ -2413,3 +2415,26 @@ def test_post_sdk_events__environment_without_flagsmith_database__returns_404(
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_post_sdk_events__body_over_limit__returns_413_without_parsing(
+    api_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    parse = mocker.spy(JSONParser, "parse")
+    payload = {"events": [{"event": "purchase", "value": "x" * DEFAULT_LIMIT}]}
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:sdk-experimentation-events"), data=payload, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    assert response.content == BODY_LIMIT_ERROR.encode()
+    parse.assert_not_called()
+    assert not SDKExperimentationEvent.objects.exists()

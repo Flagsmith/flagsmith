@@ -3,9 +3,11 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from experimentation.sdk_events import (
+    DEFAULT_LIMIT,
     MAX_VALUE_BYTES,
     MIN_TIMESTAMP_MS,
     build_sdk_experimentation_event,
+    exceeds_body_limit,
     parse_sdk_user_agent,
     partition_sdk_events,
 )
@@ -181,3 +183,23 @@ def test_build_sdk_experimentation_event__event__maps_to_row() -> None:
         "python",
         "6.2.3",
     )
+
+
+@pytest.mark.parametrize(
+    "content_length, expected",
+    [
+        (str(DEFAULT_LIMIT), False),
+        (str(DEFAULT_LIMIT + 1), True),
+        (None, False),
+        ("x", False),
+    ],
+)
+def test_exceeds_body_limit__content_length__compares_with_limit(
+    content_length: str | None,
+    expected: bool,
+) -> None:
+    # Given / When
+    result = exceeds_body_limit(content_length)
+
+    # Then
+    assert result is expected

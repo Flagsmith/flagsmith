@@ -30,6 +30,12 @@ MAX_SDK_FIELD_CHARS = 100
 
 EMPTY_BATCH_ERROR = "events must be non-empty"
 
+# axum's DEFAULT_LIMIT, which the ingestion server leaves in place, and the
+# plain-text 413 its body extractors reject with:
+# https://github.com/tokio-rs/axum/blob/axum-core-v0.4.5/axum-core/src/ext_traits/request.rs
+DEFAULT_LIMIT = 2_097_152
+BODY_LIMIT_ERROR = "Failed to buffer the request body: length limit exceeded"
+
 _EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 _SDK_USER_AGENT_PATTERN = re.compile(r"flagsmith-(.*)-sdk", re.DOTALL)
 
@@ -53,6 +59,15 @@ def partition_sdk_events(
         else:
             valid.append(event)
     return valid, rejected
+
+
+def exceeds_body_limit(content_length: str | None) -> bool:
+    """Django reads no more than the declared length, so checking it bounds
+    what is read and parsed."""
+    try:
+        return int(content_length or 0) > DEFAULT_LIMIT
+    except ValueError:
+        return False
 
 
 def parse_sdk_user_agent(header: str | None) -> tuple[str, str]:
