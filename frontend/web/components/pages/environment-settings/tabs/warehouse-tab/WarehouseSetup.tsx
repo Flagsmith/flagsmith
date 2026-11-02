@@ -3,7 +3,6 @@ import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
-import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import { ConfigFormData } from './ConfigForm'
 import SelectableCard from 'components/base/SelectableCard'
@@ -17,7 +16,6 @@ import DatabricksConfigForm from './DatabricksConfigForm'
 import { getDatabricksSetupSql } from './databricksSetupSql'
 import { DatabricksFormData } from './databricksConfig'
 import {
-  getConfigurableWarehouseTypes,
   getMinimumPlans,
   getPlanAvailabilityMessage,
   getWarehouseMinimumPlan,
@@ -108,25 +106,20 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
   onEnableFlagsmith,
   onEnableFlagsmithDatabase,
 }) => {
-  const { data: version } = useGetBuildVersionQuery({})
+  const isSaas = !!Utils.isSaas()
   const minimumPlans = getMinimumPlans({
     enabled: Utils.getFlagsmithHasFeature(WAREHOUSES_FLAG),
     value: Utils.getFlagsmithValue(WAREHOUSES_FLAG),
   })
   const gate = {
-    isFlagsmithDatabaseAvailable:
-      !!version?.backend?.flagsmith_database_warehouse_available,
-    isSaas: !!version?.backend?.is_saas,
+    isSaas,
     minimumPlans,
     planId: AccountStore.getActiveOrgPlan(),
   }
   const statusOf = (type: WarehouseTypeOption) =>
     getWarehouseTypeStatus(type, gate)
-  const configurableTypes = getConfigurableWarehouseTypes(gate)
   const typeCards = WAREHOUSE_TYPE_CARDS.filter(
-    ({ type }) =>
-      (type !== 'flagsmith' && type !== 'flagsmith_database') ||
-      configurableTypes.includes(type),
+    ({ type }) => type !== (isSaas ? 'flagsmith_database' : 'flagsmith'),
   ).sort(
     (a, b) => STATUS_ORDER[statusOf(a.type)] - STATUS_ORDER[statusOf(b.type)],
   )
