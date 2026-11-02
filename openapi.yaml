@@ -8498,6 +8498,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: {}
+        '413':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: string
       security:
         - Environment API Key: []
       tags:
