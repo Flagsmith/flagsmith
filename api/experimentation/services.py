@@ -45,6 +45,7 @@ from experimentation.dataclasses import (
     WarehouseEventStats,
 )
 from experimentation.metrics import (
+    flagsmith_experimentation_sdk_events_total,
     flagsmith_experimentation_warehouse_connection_verifications_total,
 )
 from experimentation.models import (
@@ -54,10 +55,16 @@ from experimentation.models import (
     ExperimentStatus,
     MetricAggregation,
     MetricDirection,
+    SDKExperimentationEvent,
     WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseDeliveryStatus,
     WarehouseType,
+)
+from experimentation.sdk_events import (
+    build_sdk_experimentation_event,
+    parse_sdk_user_agent,
+    partition_sdk_events,
 )
 from experimentation.stats import (
     Inference,
@@ -66,6 +73,7 @@ from experimentation.stats import (
     srm_p_value,
 )
 from experimentation.warehouses import flagsmith
+from experimentation.warehouses.constants import FLAGSMITH_DATABASE_SOURCE
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.registry import get_warehouse
 from features.feature_segments.services import get_next_segment_override_priority
@@ -91,7 +99,7 @@ if typing.TYPE_CHECKING:
 
     from environments.models import Environment
     from experimentation.models import Metric
-    from experimentation.types import ExposureGranularity
+    from experimentation.types import ExposureGranularity, RejectedSDKEvent
     from features.feature_states.models import FeatureValueType
     from features.models import FeatureStateValue
     from organisations.models import Organisation
@@ -164,6 +172,51 @@ def ensure_flagsmith_warehouse_connection(
         return connection
     except IntegrityError:
         return None
+
+
+def has_flagsmith_database_connection(environment: Environment) -> bool:
+    exists: bool = WarehouseConnection.objects.filter(
+        environment=environment,
+        warehouse_type=WarehouseType.POSTGRES,
+        config={"source": FLAGSMITH_DATABASE_SOURCE},
+    ).exists()
+    return exists
+
+
+def store_sdk_experimentation_events(
+    environment: Environment,
+    events: list[object],
+    *,
+    sdk_user_agent: str | None,
+) -> tuple[int, list[RejectedSDKEvent]]:
+    """Store the valid events of an SDK batch and return how many were stored,
+    with the rejected ones."""
+    collected_at = timezone.now()
+    valid, rejected = partition_sdk_events(events, collected_at)
+    sdk_language, sdk_version = parse_sdk_user_agent(sdk_user_agent)
+    SDKExperimentationEvent.objects.bulk_create(
+        build_sdk_experimentation_event(
+            event,
+            environment_key=environment.api_key,
+            collected_at=collected_at,
+            sdk_language=sdk_language,
+            sdk_version=sdk_version,
+        )
+        for event in valid
+    )
+    flagsmith_experimentation_sdk_events_total.labels(result="accepted").inc(len(valid))
+    flagsmith_experimentation_sdk_events_total.labels(result="rejected").inc(
+        len(rejected)
+    )
+    if rejected:
+        experimentation_logger.warning(
+            "sdk_events.rejected",
+            environment__id=environment.id,
+            events__count=len(events),
+            rejected_events__count=len(rejected),
+            first_error=rejected[0]["error"],
+        )
+    return len(valid), rejected
 
 
 def get_warehouse_event_names(

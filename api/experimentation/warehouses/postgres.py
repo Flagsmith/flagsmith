@@ -18,6 +18,7 @@ from experimentation.dataclasses import (
     WarehouseEventNames,
     WarehouseEventStats,
 )
+from experimentation.models import SDKExperimentationEvent
 from experimentation.types import (
     POSTGRES_DEFAULTS,
     PostgresConfig,
@@ -35,9 +36,6 @@ from experimentation.warehouses.constants import (
     CUSTOMER_EVENT_STATS_CACHE_SECONDS,
     EVENT_NAMES_CACHE_SECONDS,
     EVENT_NAMES_TIMEOUT_SECONDS,
-    FLAGSMITH_DATABASE_MISSING_EVENTS_TABLE_DETAIL,
-    FLAGSMITH_DATABASE_PERMISSION_DENIED_DETAIL,
-    FLAGSMITH_DATABASE_SCHEMA,
     FLAGSMITH_DATABASE_SOURCE,
     FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL,
     MISSING_EVENTS_TABLE_DETAIL,
@@ -46,7 +44,7 @@ from experimentation.warehouses.constants import (
     SCHEMA_MISMATCH_DETAIL,
     VERIFY_TIMEOUT_SECONDS,
 )
-from experimentation.warehouses.dialect import POSTGRES_DIALECT
+from experimentation.warehouses.dialect import POSTGRES_DIALECT, PostgresDialect
 from experimentation.warehouses.exceptions import (
     DeliveryConfigError,
     EventsTablePermissionError,
@@ -74,10 +72,15 @@ if typing.TYPE_CHECKING:
     from experimentation.dataclasses import MetricSpec
     from experimentation.models import WarehouseConnection
     from experimentation.types import ExposureGranularity
+    from experimentation.warehouses.dialect import Dialect
 
 logger = structlog.get_logger("warehouse")
 
 CONNECT_TIMEOUT_SECONDS = 10
+
+FLAGSMITH_DATABASE_DIALECT = PostgresDialect(
+    events_table=SDKExperimentationEvent._meta.db_table
+)
 
 # Kept in step with experimentation/postgres/events.sql.
 EVENTS_TABLE_COLUMN_TYPES = {
@@ -156,6 +159,12 @@ def get_flagsmith_database_connect_params() -> dict[str, Any]:
     return connect_params
 
 
+def _get_dialect(connection: "WarehouseConnection") -> "Dialect":
+    if is_flagsmith_database_config(connection.config):
+        return FLAGSMITH_DATABASE_DIALECT
+    return POSTGRES_DIALECT
+
+
 def describe_postgres_error(error: Exception) -> str:
     """Return a user-facing description of a failed verification, suitable for
     the connection's ``status_detail``. Raw exception text stays in the logs."""
@@ -211,19 +220,18 @@ def read_cursor(
     statement_timeout: int,
 ) -> "Iterator[Cursor]":
     """Yield a cursor in a read-only transaction on the connection's schema,
-    then discard the session.
+    then discard the session. The Flagsmith database keeps Django's own
+    search path.
 
     Settings are scoped to the transaction rather than passed as startup
     options, which transaction-mode poolers such as Supabase's and Neon's reject.
 
     Raises ``DeliveryConfigError`` if the stored configuration cannot be turned
-    into a usable connection, or names the Flagsmith database on SaaS.
+    into a usable connection.
     """
+    schema: str | None = None
     if is_flagsmith_database_config(connection.config):
-        if is_saas():
-            raise DeliveryConfigError(FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL)
         connect_params = get_flagsmith_database_connect_params()
-        schema = FLAGSMITH_DATABASE_SCHEMA
     else:
         connect_params, schema = _get_stored_connect_params_and_schema(connection)
 
@@ -242,9 +250,12 @@ def read_cursor(
                 "SET LOCAL statement_timeout = %s", (f"{statement_timeout}s",)
             )
             cursor.execute("SET LOCAL TIME ZONE 'UTC'")
-            cursor.execute(
-                sql.SQL("SET LOCAL search_path TO {}").format(sql.Identifier(schema))
-            )
+            if schema is not None:
+                cursor.execute(
+                    sql.SQL("SET LOCAL search_path TO {}").format(
+                        sql.Identifier(schema)
+                    )
+                )
             yield cursor
 
 
@@ -389,25 +400,14 @@ class PostgresWarehouse:
         return {"password": password}
 
     def verify(self, connection: "WarehouseConnection") -> None:
-        is_flagsmith_database = is_flagsmith_database_config(connection.config)
-        schema = (
-            FLAGSMITH_DATABASE_SCHEMA
-            if is_flagsmith_database
-            else typing.cast(PostgresConfig, connection.config)["schema"]
-        )
+        # Flagsmith's own migrations create the Flagsmith database's table.
+        if is_flagsmith_database_config(connection.config):
+            return
         with read_cursor(
             connection, statement_timeout=VERIFY_TIMEOUT_SECONDS
         ) as cursor:
-            try:
-                check_events_table(cursor, schema)
-            except (MissingEventsTableError, EventsTablePermissionError) as error:
-                if not is_flagsmith_database:
-                    raise
-                raise DeliveryConfigError(
-                    FLAGSMITH_DATABASE_MISSING_EVENTS_TABLE_DETAIL
-                    if isinstance(error, MissingEventsTableError)
-                    else FLAGSMITH_DATABASE_PERMISSION_DENIED_DETAIL
-                ) from error
+            config = typing.cast(PostgresConfig, connection.config)
+            check_events_table(cursor, config["schema"])
 
     def describe_error(self, error: Exception) -> str:
         return describe_postgres_error(error)
@@ -428,7 +428,7 @@ class PostgresWarehouse:
                 connection, statement_timeout=EVENT_NAMES_TIMEOUT_SECONDS
             ) as cursor:
                 cursor.execute(
-                    event_names_query(POSTGRES_DIALECT),
+                    event_names_query(_get_dialect(connection)),
                     event_names_query_params(environment_key),
                 )
                 rows = cursor.fetchall()
@@ -466,7 +466,7 @@ class PostgresWarehouse:
                 connection, statement_timeout=VERIFY_TIMEOUT_SECONDS
             ) as cursor:
                 cursor.execute(
-                    event_stats_query(POSTGRES_DIALECT),
+                    event_stats_query(_get_dialect(connection)),
                     {"environment_key": environment_key},
                 )
                 rows = cursor.fetchall()
@@ -503,7 +503,7 @@ class PostgresWarehouse:
         ) as cursor:
             return read_exposure_buckets(
                 _query_runner(cursor),
-                POSTGRES_DIALECT,
+                _get_dialect(connection),
                 environment_key=environment_key,
                 feature_name=feature_name,
                 window_start=window_start,
@@ -527,7 +527,7 @@ class PostgresWarehouse:
         ) as cursor:
             return read_results_aggregates(
                 _query_runner(cursor),
-                POSTGRES_DIALECT,
+                _get_dialect(connection),
                 environment_key=environment_key,
                 feature_name=feature_name,
                 window_start=window_start,

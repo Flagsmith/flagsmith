@@ -17,7 +17,4 @@ PERMISSION_DENIED_DETAIL = (
 QUERY_TIMEOUT_DETAIL = "The query timed out."
 
 FLAGSMITH_DATABASE_SOURCE = "flagsmith_database"
-FLAGSMITH_DATABASE_SCHEMA = "flagsmith_exp"
 FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL = "The Flagsmith database can only be used as a warehouse on self-hosted PostgreSQL installations."
-FLAGSMITH_DATABASE_MISSING_EVENTS_TABLE_DETAIL = "The events table is missing from the Flagsmith database. Run the database migrations to create it."
-FLAGSMITH_DATABASE_PERMISSION_DENIED_DETAIL = "Permission denied on the events table. Flagsmith's database user needs SELECT and INSERT on it."

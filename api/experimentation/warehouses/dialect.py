@@ -8,6 +8,8 @@ class Dialect(Protocol):
     """The SQL fragments that differ between warehouses. A warehouse needing a
     differently shaped query overrides that query in its provider instead."""
 
+    events_table: str
+
     def param(self, name: str) -> str: ...
 
     def in_list(self, expr: str, name: str, size: int) -> str: ...
@@ -52,6 +54,8 @@ _CLICKHOUSE_BUCKET_FUNCTIONS: dict[ExposureGranularity, str] = {
 
 
 class ClickHouseDialect:
+    events_table = "events"
+
     def param(self, name: str) -> str:
         return f"%({name})s"
 
@@ -106,6 +110,8 @@ _BUCKET_SECONDS: dict[ExposureGranularity, int] = {
 
 
 class DatabricksDialect:
+    events_table = "events"
+
     def param(self, name: str) -> str:
         return f":{name}"
 
@@ -168,6 +174,9 @@ class PostgresDialect:
     """Timestamp columns must be TIMESTAMPTZ. ``float_or_zero`` casts up to 30
     integer and 30 fractional digits with a 2-digit exponent (about 1e129 at
     most); anything else, including inf and nan, reads as 0."""
+
+    def __init__(self, events_table: str = "events") -> None:
+        self.events_table = events_table
 
     def param(self, name: str) -> str:
         return f"%({name})s"
