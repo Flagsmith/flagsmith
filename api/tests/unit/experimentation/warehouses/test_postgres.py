@@ -100,9 +100,7 @@ def seeded_connection(
     request: pytest.FixtureRequest,
     connection_fixture: str,
 ) -> Iterator[WarehouseConnection]:
-    """The parametrised connection, with ``SEED_ROWS`` in the events table it
-    reads. Rows go in over a separate autocommit session, so the provider's own
-    connections see them."""
+    """Seeds over autocommit, so the provider's own connections see the rows."""
     connection: WarehouseConnection = request.getfixturevalue(connection_fixture)
     if not is_flagsmith_database_config(connection.config):
         _seed_customer_schema(request.getfixturevalue("postgres_warehouse_schema"))

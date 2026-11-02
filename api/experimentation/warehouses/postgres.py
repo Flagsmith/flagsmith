@@ -220,8 +220,7 @@ def read_cursor(
     statement_timeout: int,
 ) -> "Iterator[Cursor]":
     """Yield a cursor in a read-only transaction on the connection's schema,
-    then discard the session. The Flagsmith database keeps Django's own
-    search path.
+    then discard the session.
 
     Settings are scoped to the transaction rather than passed as startup
     options, which transaction-mode poolers such as Supabase's and Neon's reject.
@@ -400,7 +399,6 @@ class PostgresWarehouse:
         return {"password": password}
 
     def verify(self, connection: "WarehouseConnection") -> None:
-        # Flagsmith's own migrations create the Flagsmith database's table.
         if is_flagsmith_database_config(connection.config):
             return
         with read_cursor(

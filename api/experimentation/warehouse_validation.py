@@ -35,8 +35,7 @@ def validate_credentials(
     instance: WarehouseConnection | None,
 ) -> None:
     config = attrs.get("config", getattr(instance, "config", None))
-    # `source` in any form selects the Flagsmith database mode; a malformed one is
-    # reported by validate_config, not as a missing password.
+    # Any `source` selects this mode, so validate_config reports a malformed one.
     if (
         warehouse_type == WarehouseType.POSTGRES
         and isinstance(config, dict)

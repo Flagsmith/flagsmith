@@ -1204,13 +1204,11 @@ def annotate_warehouse_delivery_statuses(
     connections: Sequence[WarehouseConnection],
 ) -> None:
     """For external connections that passed verification, show what the
-    warehouse-delivery service last saw. Read-only: nothing is saved.
-
-    The Flagsmith database is skipped: Django stores its events, so a delivery
-    status can only come from an SDK misdirected at an ingestion server."""
+    warehouse-delivery service last saw. Read-only: nothing is saved."""
     for connection in connections:
         if (
             connection.warehouse_type == WarehouseType.FLAGSMITH
+            # Django stores these events, so a delivery status means a misdirected SDK.
             or is_flagsmith_database_config(connection.config)
             or connection.status != WarehouseConnectionStatus.CONNECTED
         ):

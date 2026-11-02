@@ -4021,7 +4021,7 @@ def test_annotate_warehouse_delivery_statuses__connection_not_delivered_by_servi
     request: pytest.FixtureRequest,
     connection_fixture: str,
 ) -> None:
-    # Given a connection whose events the delivery service never handles
+    # Given
     warehouse_connection: WarehouseConnection = request.getfixturevalue(
         connection_fixture
     )

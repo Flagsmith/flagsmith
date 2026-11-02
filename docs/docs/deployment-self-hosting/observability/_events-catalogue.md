@@ -933,7 +933,7 @@ Attributes:
 Logged at `warning` from:
  - `api/experimentation/warehouses/clickhouse.py:298`
  - `api/experimentation/warehouses/flagsmith.py:182`
- - `api/experimentation/warehouses/postgres.py:441`
+ - `api/experimentation/warehouses/postgres.py:439`
 
 Attributes:
  - `environment.id`
@@ -944,7 +944,7 @@ Attributes:
 
 Logged at `warning` from:
  - `api/experimentation/warehouses/clickhouse.py:337`
- - `api/experimentation/warehouses/postgres.py:480`
+ - `api/experimentation/warehouses/postgres.py:478`
 
 Attributes:
  - `environment.id`
