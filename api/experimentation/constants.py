@@ -1,8 +1,6 @@
 from datetime import timedelta
 
-WAREHOUSE_CONNECTION_FLAG = "experimentation_warehouse_connection"
-EXPERIMENT_FLAG = "experimental_flags"
-DATABRICKS_WAREHOUSE_FLAG = "databricks_warehouse"
+WAREHOUSES_FLAG = "experimentation_warehouses"
 
 EXPOSURE_EVENT_NAME = "$flag_exposure"
 """Emitted by SDKs when an identity is served a variant; ``value`` is the

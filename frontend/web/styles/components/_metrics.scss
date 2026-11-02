@@ -1,17 +1,4 @@
 @import '../variables';
-.accordion-card {
-  background-color: transparent;
-  border: 1px solid rgba(101, 109, 123, 0.16);
-  border-radius: 8px;
-}
-
-.btn--accordion-header {
-  all: unset;
-  box-sizing: border-box;
-  cursor: pointer;
-  width: 100%;
-}
-
 .metric-label {
   font-size: 14px;
   font-weight: 500;

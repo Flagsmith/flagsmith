@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react'
 import Icon from 'components/icons/Icon'
-import { colorTextSuccess, colorTextWarning } from 'common/theme/tokens'
+import { colorIconSuccess, colorIconWarning } from 'common/theme/tokens'
 import { BayesianResultsSummary, Experiment } from 'common/types/responses'
 import { deriveSummary } from './derive'
 import VariantName from './VariantName'
@@ -25,7 +25,7 @@ const ExperimentRecommendation: FC<ExperimentRecommendationProps> = ({
     return (
       <div className='alert alert-warning experiment-recommendation mb-3'>
         <div className='d-flex align-items-center gap-2 mb-2'>
-          <Icon name='warning' width={20} fill={colorTextWarning} />
+          <Icon name='warning' width={20} fill={colorIconWarning} />
           <span className='text-warning fw-semibold'>
             Control is the winner
           </span>
@@ -47,7 +47,7 @@ const ExperimentRecommendation: FC<ExperimentRecommendationProps> = ({
   return (
     <div className='alert alert-success experiment-recommendation mb-3'>
       <div className='d-flex align-items-center gap-2 mb-2'>
-        <Icon name='checkmark-circle' width={20} fill={colorTextSuccess} />
+        <Icon name='checkmark-circle' width={20} fill={colorIconSuccess} />
         <span className='text-success fw-semibold'>
           {summary.chanceToBest} Winner Probability Confirmed
         </span>

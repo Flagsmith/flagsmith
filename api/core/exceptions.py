@@ -2,6 +2,19 @@ from rest_framework import status
 from rest_framework.exceptions import APIException
 
 
+class APIError(APIException):
+    """Refuses a request with an `APIErrorDetail` body, telling clients what went
+    wrong by code."""
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(
+            {
+                "code": str(self.default_code),
+                "message": message or str(self.default_detail),
+            }
+        )
+
+
 class ChangeRequestsEnabledError(APIException):
     """Raised where a change can only be made by going through a change request."""
 

@@ -1,5 +1,6 @@
 import React, { FC, useEffect } from 'react'
-import AccordionCard from 'components/base/accordion/AccordionCard'
+import Accordion from 'components/base/Accordion'
+import Loader from 'components/Loader'
 import { useGetEnvironmentMetricsQuery } from 'common/services/useEnvironment'
 import EnvironmentMetric from './EnvironmentMetric'
 import { getExtraMetricsData } from './constants'
@@ -36,28 +37,35 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
   }, [forceRefetch, refetch])
 
   return (
-    <div className='mb-3'>
-      <AccordionCard title='Summary' isLoading={isLoading}>
-        <div className='flex gap-2 mt-4'>
-          <div
-            className='metrics-grid'
-            style={{
-              gridTemplateColumns: `repeat(${columns}, 1fr)`,
-            }}
-          >
-            {data?.metrics.map((metric) => (
-              <EnvironmentMetric
-                key={metric.name}
-                label={metric.description}
-                value={metric.value}
-                link={extraMetricsData?.[metric.name]?.link}
-                tooltip={extraMetricsData?.[metric.name]?.tooltip}
-              />
-            ))}
-          </div>
+    <Accordion
+      className='mb-3'
+      disabled={isLoading}
+      title={
+        <>
+          Summary
+          {isLoading && <Loader width='15px' height='15px' />}
+        </>
+      }
+    >
+      <div className='flex gap-2'>
+        <div
+          className='metrics-grid'
+          style={{
+            gridTemplateColumns: `repeat(${columns}, 1fr)`,
+          }}
+        >
+          {data?.metrics.map((metric) => (
+            <EnvironmentMetric
+              key={metric.name}
+              label={metric.description}
+              value={metric.value}
+              link={extraMetricsData?.[metric.name]?.link}
+              tooltip={extraMetricsData?.[metric.name]?.tooltip}
+            />
+          ))}
         </div>
-      </AccordionCard>
-    </div>
+      </div>
+    </Accordion>
   )
 }
 

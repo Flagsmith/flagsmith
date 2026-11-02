@@ -43,7 +43,8 @@ def test_delivery_client__incomplete_config__raises_config_error(
             pass  # pragma: no cover
 
 
-def test_delivery_client__internal_host__raises_config_error(
+@pytest.mark.usefixtures("saas_mode")
+def test_delivery_client__internal_host_on_saas__raises_config_error(
     clickhouse_connection: WarehouseConnection,
 ) -> None:
     # Given
@@ -59,6 +60,26 @@ def test_delivery_client__internal_host__raises_config_error(
             send_receive_timeout=5,
         ):
             pass  # pragma: no cover
+
+
+def test_delivery_client__internal_host_on_self_hosted__connects(
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    clickhouse_connection.config["host"] = "10.13.37.1"  # type: ignore[index]
+    get_client = mocker.patch(
+        "experimentation.warehouses.clickhouse.clickhouse_connect.get_client",
+    )
+
+    # When
+    with clickhouse.delivery_client(
+        clickhouse_connection,
+        send_receive_timeout=5,
+    ) as client:
+        # Then
+        assert client is get_client.return_value
+        assert get_client.call_args.kwargs["host"] == "10.13.37.1"
 
 
 def test_delivery_client__valid_config__yields_http_client_and_closes(

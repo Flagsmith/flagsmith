@@ -11,6 +11,14 @@ import Button from 'components/base/forms/Button'
 import WarehouseEventCodeHelp from './WarehouseEventCodeHelp'
 import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
 import { CLICKHOUSE_DEFAULTS } from './clickhouseConfig'
+import {
+  CLICKHOUSE_SETUP_SQL_LABEL,
+  getClickHouseSetupSql,
+} from './clickhouseSetupSql'
+import {
+  DATABRICKS_SETUP_SQL_LABEL,
+  getDatabricksSetupSql,
+} from './databricksSetupSql'
 import WarehouseStats from './WarehouseStats'
 
 type WarehouseConnectionCardProps = {
@@ -39,6 +47,7 @@ const STATUS_LABEL: Record<WarehouseConnectionStatus, string> = {
 
 const TYPE_LABEL: Partial<Record<WarehouseType, string>> = {
   clickhouse: 'ClickHouse',
+  databricks: 'Databricks',
   snowflake: 'Snowflake',
 }
 
@@ -59,12 +68,15 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   const isFlagsmith = connection.warehouse_type === 'flagsmith'
   const isPending = connection.status === 'pending_connection'
   const isConnected = connection.status === 'connected'
-  // ClickHouse connections are born connected, so the first-event nudge stays
-  // until events actually arrive in the customer's warehouse.
+  const isCustomerWarehouse =
+    connection.warehouse_type === 'clickhouse' ||
+    connection.warehouse_type === 'databricks'
+  // ClickHouse and Databricks connections are born connected, so the
+  // first-event nudge stays until events actually arrive in the customer's
+  // warehouse.
   const showSendFirstEvent = isFlagsmith
     ? !isPending && !isConnected
-    : connection.warehouse_type === 'clickhouse' &&
-      !connection.total_events_received
+    : isCustomerWarehouse && !connection.total_events_received
 
   const handleDelete = () => {
     openConfirm({
@@ -154,15 +166,28 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
       {connection.warehouse_type === 'clickhouse' && (
         <div className='mt-3'>
           <WarehouseSetupSqlHelp
-            database={
+            label={CLICKHOUSE_SETUP_SQL_LABEL}
+            sql={getClickHouseSetupSql(
               (connection.config &&
                 'database' in connection.config &&
                 connection.config.database) ||
-              CLICKHOUSE_DEFAULTS.database
-            }
+                CLICKHOUSE_DEFAULTS.database,
+            )}
           />
         </div>
       )}
+      {connection.warehouse_type === 'databricks' &&
+        'catalog' in connection.config && (
+          <div className='mt-3'>
+            <WarehouseSetupSqlHelp
+              label={DATABRICKS_SETUP_SQL_LABEL}
+              sql={getDatabricksSetupSql({
+                catalog: connection.config.catalog,
+                schema: connection.config.schema,
+              })}
+            />
+          </div>
+        )}
       <div className='d-flex justify-content-end mt-3'>
         {onTestConnection && !isConnected && (
           <Button

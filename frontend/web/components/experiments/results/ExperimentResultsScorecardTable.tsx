@@ -4,6 +4,7 @@ import Icon from 'components/icons/Icon'
 import Tooltip from 'components/Tooltip'
 import {
   colorIconSecondary,
+  colorIconSuccess,
   colorTextSecondary,
   colorTextSuccess,
 } from 'common/theme/tokens'
@@ -55,7 +56,8 @@ const renderLift = (
   if (!inference) {
     return <span className='text-secondary fs-caption'>Collecting data…</span>
   }
-  const colour = getLiftColour(inference.lift, direction)
+  const fill = getLiftColour(inference.lift, direction, 'fill')
+  const text = getLiftColour(inference.lift, direction, 'text')
   const left = liftToPercent(inference.ci_low, liftRange)
   const right = liftToPercent(inference.ci_high, liftRange)
   const dotPos = liftToPercent(inference.lift, liftRange)
@@ -67,20 +69,17 @@ const renderLift = (
         <div
           className='experiment-results__lift-fill'
           style={{
-            background: colour,
+            background: fill,
             left: `${left}%`,
             width: `${right - left}%`,
           }}
         />
         <div
           className='experiment-results__lift-dot'
-          style={{ background: colour, left: `${dotPos}%` }}
+          style={{ background: fill, left: `${dotPos}%` }}
         />
       </div>
-      <span
-        className='experiment-results__lift-value'
-        style={{ color: colour }}
-      >
+      <span className='experiment-results__lift-value' style={{ color: text }}>
         {formatLiftPct(inference.lift)}
       </span>
     </div>
@@ -109,16 +108,17 @@ const renderWinProbability = (
 ): ReactNode => {
   if (chanceToWin === null) return '—'
   const pct = Math.round(chanceToWin * 100)
-  const colour = isHighest ? colorTextSuccess : colorTextSecondary
+  const fill = isHighest ? colorIconSuccess : colorIconSecondary
+  const text = isHighest ? colorTextSuccess : colorTextSecondary
   return (
     <div className='experiment-results__win-prob'>
       <div className='experiment-results__win-prob-track'>
         <div
           className='experiment-results__win-prob-fill'
-          style={{ background: colour, width: `${pct}%` }}
+          style={{ background: fill, width: `${pct}%` }}
         />
       </div>
-      <span style={{ color: colour }}>{formatChancePct(chanceToWin)}</span>
+      <span style={{ color: text }}>{formatChancePct(chanceToWin)}</span>
     </div>
   )
 }

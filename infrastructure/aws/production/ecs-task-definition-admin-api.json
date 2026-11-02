@@ -33,6 +33,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "EXPERIMENTATION_ENABLED",
+                    "value": "true"
+                },
+                {
                     "name": "LOG_LEVEL",
                     "value": "INFO"
                 },

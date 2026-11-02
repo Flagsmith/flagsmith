@@ -12,7 +12,6 @@ import structlog
 from django.core.cache import cache
 from rest_framework import serializers
 
-from core.network import is_internal_address
 from experimentation.dataclasses import (
     ExposureBucket,
     ResultsAggregates,
@@ -24,8 +23,10 @@ from experimentation.types import (
     DatabricksConfig,
     DatabricksCredentials,
 )
+from experimentation.warehouses.base import is_disallowed_host
 from experimentation.warehouses.cache import (
     CUSTOMER_EVENT_UNAVAILABLE,
+    cache_warehouse_read_unless_empty,
     customer_cache_key,
 )
 from experimentation.warehouses.constants import (
@@ -59,7 +60,7 @@ if typing.TYPE_CHECKING:
 
 logger = structlog.get_logger("warehouse")
 
-T = TypeVar("T")
+T = TypeVar("T", WarehouseEventNames, WarehouseEventStats)
 
 HOST_SUFFIXES = (".cloud.databricks.com", ".azuredatabricks.net", ".gcp.databricks.com")
 _HOSTNAME = re.compile(r"(?!-)[a-z0-9-]+(?<!-)(\.(?!-)[a-z0-9-]+(?<!-))+")
@@ -318,7 +319,7 @@ def databricks_session(
         and DatabricksCredentials.__required_keys__ <= credentials.keys()
     ):
         raise DeliveryConfigError("Stored connection details are incomplete.")
-    if is_internal_address(config["host"], include_shared=True):
+    if is_disallowed_host(config["host"]):
         raise DeliveryConfigError(
             "Host must not target internal or private network addresses."
         )
@@ -408,7 +409,7 @@ def _validate_host(host: object) -> None:
         raise serializers.ValidationError(
             {"config": {"host": "Enter a Databricks workspace hostname."}}
         )
-    if is_internal_address(host, include_shared=True):
+    if is_disallowed_host(host):
         raise serializers.ValidationError(
             {
                 "config": {
@@ -503,7 +504,7 @@ class DatabricksWarehouse:
                 exc_info=True,
             )
             return None
-        cache.set(cache_key, result, success_seconds)
+        cache_warehouse_read_unless_empty(cache_key, result, success_seconds)
         return result
 
     def get_event_names(

@@ -185,6 +185,13 @@ export type DependencyEdge = {
   segment: DependencyEdgeSegment
 }
 
+export type StagedAction = 'add' | 'remove'
+
+export type StagedDependencyChange = {
+  action: StagedAction
+  prerequisite: DependencyFeature
+}
+
 export type DependencyConflictCode =
   | 'circular_dependency'
   | 'dependency_exists'
@@ -239,7 +246,10 @@ export type Segment = {
   metadata: Metadata[] | []
   membership_counts?: SegmentMembership[]
   cohort?: SegmentCohort | null
+  managed_by?: SegmentManagedBy
 }
+// What creates and edits the segment, empty where users do.
+export type SegmentManagedBy = '' | 'cohort' | 'dependency' | 'experiment'
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
   | 'environment_feature_versions'
@@ -1262,6 +1272,7 @@ export type Version = {
     ci_commit_sha: string
     image_tag: string
     has_email_provider: boolean
+    experimentation_enabled: boolean
     is_enterprise: boolean
     is_saas: boolean
     'self_hosted_data'?: {
@@ -1284,6 +1295,11 @@ export type Webhook = {
   enabled: boolean
   created_at: string
   updated_at: string
+}
+
+export type HubspotChatToken = {
+  email: string
+  token: string
 }
 
 export type AccountModel = Account & {
@@ -1418,7 +1434,11 @@ export type WarehouseConnectionStatus =
   | 'connected'
   | 'errored'
 
-export type WarehouseType = 'flagsmith' | 'snowflake' | 'clickhouse'
+export type WarehouseType =
+  | 'flagsmith'
+  | 'snowflake'
+  | 'clickhouse'
+  | 'databricks'
 
 export type SnowflakeConfig = {
   account_identifier: string
@@ -1437,9 +1457,19 @@ export type ClickHouseConfig = {
   secure: boolean
 }
 
+export type DatabricksConfig = {
+  host: string
+  workspace_id: string
+  region: string
+  warehouse_id: string
+  catalog: string
+  schema: string
+}
+
 export type WarehouseConfigResponse =
   | SnowflakeConfig
   | ClickHouseConfig
+  | DatabricksConfig
   | Record<string, never>
 
 export type WarehouseConnectionTestResult = {
@@ -1498,6 +1528,7 @@ export type Res = {
   projects: ProjectSummary[]
   project: Project
   environments: PagedResponse<Environment>
+  allEnvironments: Environment[]
   webhook: Webhook
   webhooks: Webhook[]
   organisationUsage: {
@@ -1591,6 +1622,7 @@ export type Res = {
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   updateChangeRequest: ChangeRequest
+  createEnvironmentChangeRequest: ChangeRequest
   groupSummaries: UserGroupSummary[]
   supportedContentType: ContentType[]
   externalResource: PagedResponse<ExternalResource>
@@ -1636,6 +1668,7 @@ export type Res = {
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>
   onboardingSupportOptIn: { id: string }
+  hubspotChatToken: HubspotChatToken
   environmentMetrics: {
     metrics: {
       value: number

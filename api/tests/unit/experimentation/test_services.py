@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.db import IntegrityError, connection
+from django.db.models import Q
 from django.test.utils import CaptureQueriesContext
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from prometheus_client import REGISTRY
@@ -63,16 +64,20 @@ from experimentation.warehouses import flagsmith
 from experimentation.warehouses.constants import VERIFY_TIMEOUT_SECONDS
 from experimentation.warehouses.dialect import CLICKHOUSE_DIALECT
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
+from features.feature_segments.services import get_next_segment_override_priority
 from features.feature_types import MULTIVARIATE
+from features.future.services import update_flag
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
-from features.versioning.dataclasses import MultivariateValueChangeSet
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentManagedBy, SegmentRule
 from tests.types import VariantAssignmentFixture
-from tests.unit.experimentation.conftest import RolloutSpecFactory
+from tests.unit.experimentation.conftest import (
+    RolloutSpecFactory,
+    SetWarehousesFlagFixture,
+)
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
 
@@ -189,15 +194,6 @@ def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
     # Then
     assert result == expected
     mock_client.disconnect.assert_called_once_with()
-
-    # When — the result is cached, so a second request doesn't hit the warehouse
-    second_result = services.get_warehouse_event_names(
-        warehouse_connection, "env-key-123"
-    )
-
-    # Then
-    mock_client.execute.assert_called_once()
-    assert second_result == expected
 
 
 @pytest.mark.parametrize(
@@ -1871,7 +1867,7 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
     admin_user: FFAdminUser,
 ) -> None:
     # Given
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     services.apply_experiment_rollout(
@@ -1881,9 +1877,10 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
             rollout_percentage=42.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 60.0),
-                MultivariateValueChangeSet(option_b.id, 40.0),
+            variants=[
+                {"id": option_a.id, "weight": 60.0},
+                {"id": option_b.id, "weight": 40.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -1923,16 +1920,16 @@ def test_apply_experiment_rollout__no_segment__creates_segment_and_override(
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
     }
-    assert allocations == {option_a.id: 60.0, option_b.id: 40.0}
+    assert allocations == {option_a.id: 60.0, option_b.id: 40.0, option_c.id: 0.0}
 
 
-def test_apply_experiment_rollout__null_default_value__serialised_as_empty_string(
+def test_apply_experiment_rollout__null_default_value__leaves_default_value(
     experiment: Experiment,
     multivariate_options: list[MultivariateFeatureOption],
     admin_user: FFAdminUser,
 ) -> None:
     # Given the environment default has no value stored
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     default_state = FeatureState.objects.get(
         environment=experiment.environment,
         feature=experiment.feature,
@@ -1950,17 +1947,18 @@ def test_apply_experiment_rollout__null_default_value__serialised_as_empty_strin
             rollout_percentage=42.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 60.0),
-                MultivariateValueChangeSet(option_b.id, 40.0),
+            variants=[
+                {"id": option_a.id, "weight": 60.0},
+                {"id": option_b.id, "weight": 40.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
     )
 
-    # Then the default value is not rewritten as the string "None"
+    # Then only the variant weights of the default are written
     default_state.refresh_from_db()
-    assert default_state.get_feature_state_value() == ""
+    assert default_state.get_feature_state_value() is None
 
 
 def test_apply_experiment_rollout__first_rollout__zeroes_default_allocations(
@@ -1979,9 +1977,10 @@ def test_apply_experiment_rollout__first_rollout__zeroes_default_allocations(
             rollout_percentage=42.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 60.0),
-                MultivariateValueChangeSet(option_b.id, 40.0),
+            variants=[
+                {"id": option_a.id, "weight": 60.0},
+                {"id": option_b.id, "weight": 40.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -2011,7 +2010,11 @@ def test_apply_experiment_rollout__first_rollout__zeroes_default_allocations(
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
     }
-    assert override_allocations == {option_a.id: 60.0, option_b.id: 40.0}
+    assert override_allocations == {
+        option_a.id: 60.0,
+        option_b.id: 40.0,
+        option_c.id: 0.0,
+    }
 
 
 def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
@@ -2021,7 +2024,7 @@ def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
 ) -> None:
     # Given
     experiment = experiment_with_rollout
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     default_state = FeatureState.objects.get(
         environment=experiment.environment,
         feature=experiment.feature,
@@ -2041,9 +2044,10 @@ def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
             rollout_percentage=80.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -2067,7 +2071,11 @@ def test_apply_experiment_rollout__existing_segment__leaves_default_allocations(
         mv.multivariate_feature_option_id: mv.percentage_allocation
         for mv in override.multivariate_feature_state_values.all()
     }
-    assert override_allocations == {option_a.id: 50.0, option_b.id: 50.0}
+    assert override_allocations == {
+        option_a.id: 50.0,
+        option_b.id: 50.0,
+        option_c.id: 0.0,
+    }
 
 
 def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enabled(
@@ -2077,7 +2085,7 @@ def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enab
 ) -> None:
     # Given
     experiment = experiment_with_rollout
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     services.apply_experiment_rollout(
@@ -2087,9 +2095,10 @@ def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enab
             rollout_percentage=80.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -2123,6 +2132,7 @@ def test_apply_experiment_rollout__existing_segment__updates_percentage_and_enab
 
 
 def test_apply_experiment_rollout__completed__raises(
+    multivariate_options: list[MultivariateFeatureOption],
     experiment_with_rollout: Experiment,
     admin_user: FFAdminUser,
 ) -> None:
@@ -2140,7 +2150,9 @@ def test_apply_experiment_rollout__completed__raises(
                 rollout_percentage=50.0,
                 feature_state_value="control",
                 value_type="string",
-                multivariate_values=[],
+                variants=[
+                    {"id": option.id, "weight": 0.0} for option in multivariate_options
+                ],
                 author=AuthorData(user=admin_user),
             ),
         )
@@ -2151,6 +2163,7 @@ def test_apply_experiment_rollout__completed__raises(
     [ExperimentStatus.RUNNING, ExperimentStatus.PAUSED],
 )
 def test_apply_experiment_rollout__running_or_paused__updates_rollout(
+    multivariate_options: list[MultivariateFeatureOption],
     status: ExperimentStatus,
     experiment_with_rollout: Experiment,
     admin_user: FFAdminUser,
@@ -2168,7 +2181,9 @@ def test_apply_experiment_rollout__running_or_paused__updates_rollout(
             rollout_percentage=50.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[],
+            variants=[
+                {"id": option.id, "weight": 0.0} for option in multivariate_options
+            ],
             author=AuthorData(user=admin_user),
         ),
     )
@@ -2184,7 +2199,7 @@ def test_apply_experiment_rollout__duplicate_options__raises(
     admin_user: FFAdminUser,
 ) -> None:
     # Given
-    option_a, _, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When / Then
     with pytest.raises(ValidationError):
@@ -2195,9 +2210,11 @@ def test_apply_experiment_rollout__duplicate_options__raises(
                 rollout_percentage=20.0,
                 feature_state_value="control",
                 value_type="string",
-                multivariate_values=[
-                    MultivariateValueChangeSet(option_a.id, 40.0),
-                    MultivariateValueChangeSet(option_a.id, 60.0),
+                variants=[
+                    {"id": option_a.id, "weight": 40.0},
+                    {"id": option_a.id, "weight": 60.0},
+                    {"id": option_b.id, "weight": 0.0},
+                    {"id": option_c.id, "weight": 0.0},
                 ],
                 author=AuthorData(user=admin_user),
             ),
@@ -2205,6 +2222,7 @@ def test_apply_experiment_rollout__duplicate_options__raises(
 
 
 def test_apply_experiment_rollout__update_flag_fails__rolls_back(
+    multivariate_options: list[MultivariateFeatureOption],
     experiment_with_rollout: Experiment,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -2225,7 +2243,9 @@ def test_apply_experiment_rollout__update_flag_fails__rolls_back(
                 rollout_percentage=80.0,
                 feature_state_value="control",
                 value_type="string",
-                multivariate_values=[],
+                variants=[
+                    {"id": option.id, "weight": 0.0} for option in multivariate_options
+                ],
                 author=AuthorData(user=admin_user),
             ),
         )
@@ -2272,8 +2292,7 @@ def test_apply_experiment_rollout__update_under_v2__rebuilds_environment_documen
     environment = environment_v2_versioning
     environment.project.enable_dynamo_db = True
     environment.project.save()
-
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     experiment = Experiment.objects.create(
         environment=environment,
         feature=multivariate_feature,
@@ -2288,9 +2307,10 @@ def test_apply_experiment_rollout__update_under_v2__rebuilds_environment_documen
             rollout_percentage=rollout_percentage,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         )
@@ -2323,8 +2343,7 @@ def test_apply_experiment_rollout__update_under_v1__rebuilds_environment_documen
     mock_dynamo_env_wrapper = mocker.patch("environments.models.environment_wrapper")
     environment.project.enable_dynamo_db = True
     environment.project.save()
-
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     experiment = Experiment.objects.create(
         environment=environment,
         feature=multivariate_feature,
@@ -2339,9 +2358,10 @@ def test_apply_experiment_rollout__update_under_v1__rebuilds_environment_documen
             rollout_percentage=rollout_percentage,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         )
@@ -2365,7 +2385,7 @@ def test_get_experiment_rollout__rollout_exists__returns_representation(
     multivariate_options: list[MultivariateFeatureOption],
 ) -> None:
     # Given a rollout (20%, options split 50/50, value "control") from the fixture
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     # When
     rollout = services.get_experiment_rollout(experiment_with_rollout)
@@ -2378,7 +2398,7 @@ def test_get_experiment_rollout__rollout_exists__returns_representation(
     assert {
         (mv["multivariate_feature_option"], mv["percentage_allocation"])
         for mv in rollout["multivariate_feature_state_values"]
-    } == {(option_a.id, 50.0), (option_b.id, 50.0)}
+    } == {(option_a.id, 50.0), (option_b.id, 50.0), (option_c.id, 0.0)}
 
 
 def test_get_experiment_rollout__no_rollout__returns_none(
@@ -2396,7 +2416,7 @@ def test_get_experiment_rollout__v2_versioning__returns_representation(
     admin_user: FFAdminUser,
 ) -> None:
     # Given a rollout on a v2 environment
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     experiment = Experiment.objects.create(
         environment=environment_v2_versioning,
         feature=multivariate_feature,
@@ -2411,9 +2431,10 @@ def test_get_experiment_rollout__v2_versioning__returns_representation(
             rollout_percentage=30.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 60.0),
-                MultivariateValueChangeSet(option_b.id, 40.0),
+            variants=[
+                {"id": option_a.id, "weight": 60.0},
+                {"id": option_b.id, "weight": 40.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -2428,11 +2449,12 @@ def test_get_experiment_rollout__v2_versioning__returns_representation(
     assert {
         (mv["multivariate_feature_option"], mv["percentage_allocation"])
         for mv in rollout["multivariate_feature_state_values"]
-    } == {(option_a.id, 60.0), (option_b.id, 40.0)}
+    } == {(option_a.id, 60.0), (option_b.id, 40.0), (option_c.id, 0.0)}
     assert rollout["audience"] == {"match": "any", "segments": []}
 
 
 def test_get_experiment_rollout__boolean_value__returns_lowercase_string(
+    multivariate_options: list[MultivariateFeatureOption],
     experiment: Experiment,
     admin_user: FFAdminUser,
 ) -> None:
@@ -2444,7 +2466,9 @@ def test_get_experiment_rollout__boolean_value__returns_lowercase_string(
             rollout_percentage=20.0,
             feature_state_value="true",
             value_type="boolean",
-            multivariate_values=[],
+            variants=[
+                {"id": option.id, "weight": 0.0} for option in multivariate_options
+            ],
             author=AuthorData(user=admin_user),
         ),
     )
@@ -2463,7 +2487,7 @@ def test_enable_experiment_rollout__disabled_rollout__enables_and_preserves_allo
     admin_user: FFAdminUser,
 ) -> None:
     # Given a disabled rollout with a 50/50 multivariate split
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     services.apply_experiment_rollout(
         experiment,
         RolloutSpec(
@@ -2471,9 +2495,10 @@ def test_enable_experiment_rollout__disabled_rollout__enables_and_preserves_allo
             rollout_percentage=20.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[
-                MultivariateValueChangeSet(option_a.id, 50.0),
-                MultivariateValueChangeSet(option_b.id, 50.0),
+            variants=[
+                {"id": option_a.id, "weight": 50.0},
+                {"id": option_b.id, "weight": 50.0},
+                {"id": option_c.id, "weight": 0.0},
             ],
             author=AuthorData(user=admin_user),
         ),
@@ -2489,7 +2514,7 @@ def test_enable_experiment_rollout__disabled_rollout__enables_and_preserves_allo
     assert {
         (mv["multivariate_feature_option"], mv["percentage_allocation"])
         for mv in rollout["multivariate_feature_state_values"]
-    } == {(option_a.id, 50.0), (option_b.id, 50.0)}
+    } == {(option_a.id, 50.0), (option_b.id, 50.0), (option_c.id, 0.0)}
 
 
 def test_enable_experiment_rollout__already_enabled__no_op(
@@ -2532,7 +2557,7 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
     variant_assignment: VariantAssignmentFixture,
 ) -> None:
     # Given a running experiment whose rollout splits two variants 50/50
-    option_a, option_b, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
     # The fixture derives an option's value from its percentage, so two of them
     # share a value. Key them so a variant identifies which option won.
     for index, option in enumerate(multivariate_options):
@@ -2550,9 +2575,10 @@ def test_apply_experiment_rollout__reapplied_under_v2__keeps_variant_assignment(
         rollout_percentage=50.0,
         feature_state_value="control",
         value_type="string",
-        multivariate_values=[
-            MultivariateValueChangeSet(option_a.id, 50.0),
-            MultivariateValueChangeSet(option_b.id, 50.0),
+        variants=[
+            {"id": option_a.id, "weight": 50.0},
+            {"id": option_b.id, "weight": 50.0},
+            {"id": option_c.id, "weight": 0.0},
         ],
         author=AuthorData(user=admin_user),
     )
@@ -2691,7 +2717,8 @@ def test_verify_warehouse_connection__failure__sets_errored_with_detail(
     )
 
 
-def test_verify_warehouse_connection__internal_host__sets_errored_without_connecting(
+@pytest.mark.usefixtures("saas_mode")
+def test_verify_warehouse_connection__internal_host_on_saas__sets_errored_without_connecting(
     clickhouse_connection: WarehouseConnection,
     mocker: MockerFixture,
 ) -> None:
@@ -2771,123 +2798,162 @@ def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer
     assert getattr(fresh_connection, "event_stats", None) == expected_stats
 
 
-def test_get_experiment_flag_config__flag_disabled__returns_empty(
+@pytest.mark.parametrize(
+    "flag_value, expected",
+    [
+        (None, {}),
+        ("not-json", {}),
+        ("", {}),
+        ('["free"]', {}),
+        ('{"auto_connect_flagsmith": true}', {"auto_connect_flagsmith": True}),
+    ],
+    ids=["missing", "invalid-json", "empty-string", "non-dict", "valid"],
+)
+def test_get_warehouses_flag_config__flag_value__returns_parsed_dict(
     organisation: Organisation,
-    mocker: MockerFixture,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    flag_value: str | None,
+    expected: dict[str, object],
 ) -> None:
     # Given
-    mock_client = MagicMock()
-    mock_client.get_boolean_value.return_value = False
-    mocker.patch(
-        "experimentation.services.get_openfeature_client",
-        return_value=mock_client,
-    )
+    if flag_value is not None:
+        set_warehouses_flag(flag_value)
 
     # When
-    result = services.get_experiment_flag_config(organisation)
+    result = services.get_warehouses_flag_config(organisation)
 
     # Then
-    assert result == {}
-    mock_client.get_string_value.assert_not_called()
+    assert result == expected
 
 
-def test_get_experiment_flag_config__flag_enabled_with_valid_json__returns_parsed(
+def test_is_warehouse_type_available__self_hosted__ignores_flag(
     organisation: Organisation,
-    mocker: MockerFixture,
+    set_warehouses_flag: SetWarehousesFlagFixture,
 ) -> None:
     # Given
-    mock_client = MagicMock()
-    mock_client.get_boolean_value.return_value = True
-    mock_client.get_string_value.return_value = '{"auto_connect_warehouse": true}'
-    mocker.patch(
-        "experimentation.services.get_openfeature_client",
-        return_value=mock_client,
-    )
+    set_warehouses_flag({"minimum_plans": {"databricks": "enterprise"}})
 
     # When
-    result = services.get_experiment_flag_config(organisation)
+    result = services.is_warehouse_type_available(
+        organisation, WarehouseType.DATABRICKS
+    )
 
     # Then
-    assert result == {"auto_connect_warehouse": True}
+    assert result is True
 
 
 @pytest.mark.parametrize(
-    "raw_value",
-    ["not-json", "", None],
-    ids=["invalid-json", "empty-string", "none"],
+    "flag_value, plan, expected",
+    [
+        ({}, "free", True),
+        ({"minimum_plans": ["databricks"]}, "free", True),
+        ({"minimum_plans": {"databricks": None}}, "free", True),
+        ({"minimum_plans": {"databricks": "free"}}, "free", True),
+        ({"minimum_plans": {"databricks": "typo"}}, "free", True),
+        ({"minimum_plans": {"clickhouse": "scale-up"}}, "free", True),
+        ({"minimum_plans": {"databricks": "scale-up"}}, "free", False),
+        ({"minimum_plans": {"databricks": "scale-up"}}, "start-up-v2", False),
+        ({"minimum_plans": {"databricks": "scale-up"}}, "scale-up-v2", True),
+        ({"minimum_plans": {"databricks": "scale-up"}}, "enterprise", True),
+    ],
+    ids=[
+        "no-minimum-plans",
+        "minimum-plans-not-a-dict",
+        "null-plan",
+        "free-plan",
+        "unknown-plan",
+        "other-type-gated",
+        "free-below-scale-up",
+        "start-up-below-scale-up",
+        "scale-up-meets-scale-up",
+        "enterprise-above-scale-up",
+    ],
 )
-def test_get_experiment_flag_config__flag_enabled_with_bad_value__returns_empty(
+@pytest.mark.usefixtures("saas_mode")
+def test_is_warehouse_type_available__saas__compares_plan_to_minimum(
     organisation: Organisation,
-    mocker: MockerFixture,
-    raw_value: str | None,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    flag_value: dict[str, object],
+    plan: str,
+    expected: bool,
 ) -> None:
     # Given
-    mock_client = MagicMock()
-    mock_client.get_boolean_value.return_value = True
-    mock_client.get_string_value.return_value = raw_value
-    mocker.patch(
-        "experimentation.services.get_openfeature_client",
-        return_value=mock_client,
-    )
+    set_warehouses_flag(flag_value)
+    organisation.subscription.plan = plan
+    organisation.subscription.save()
 
     # When
-    result = services.get_experiment_flag_config(organisation)
-
-    # Then
-    assert result == {}
-
-
-def test_get_experiment_flag_config__flag_enabled_with_non_dict_json__returns_empty(
-    organisation: Organisation,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mock_client = MagicMock()
-    mock_client.get_boolean_value.return_value = True
-    mock_client.get_string_value.return_value = '["free"]'
-    mocker.patch(
-        "experimentation.services.get_openfeature_client",
-        return_value=mock_client,
+    result = services.is_warehouse_type_available(
+        organisation, WarehouseType.DATABRICKS
     )
 
-    # When
-    result = services.get_experiment_flag_config(organisation)
-
     # Then
-    assert result == {}
+    assert result is expected
 
 
-@pytest.mark.django_db()
+@pytest.mark.parametrize(
+    "experimentation_enabled, flag_value",
+    [
+        (True, {}),
+        (True, {"auto_connect_flagsmith": False}),
+        (False, {"auto_connect_flagsmith": True}),
+        (
+            True,
+            {
+                "auto_connect_flagsmith": True,
+                "minimum_plans": {"flagsmith": "scale-up"},
+            },
+        ),
+    ],
+    ids=[
+        "flag-missing",
+        "auto-connect-off",
+        "experimentation-not-deployed",
+        "below-minimum-plan",
+    ],
+)
+@pytest.mark.usefixtures("saas_mode")
 def test_ensure_flagsmith_warehouse_connection__auto_connect_disabled__returns_none(
     environment: Environment,
-    mocker: MockerFixture,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    settings: SettingsWrapper,
+    experimentation_enabled: bool,
+    flag_value: dict[str, object],
 ) -> None:
     # Given
-    mocker.patch(
-        "experimentation.services.get_experiment_flag_config",
-        return_value={},
-    )
+    settings.EXPERIMENTATION_ENABLED = experimentation_enabled
+    set_warehouses_flag(flag_value)
 
     # When
     result = services.ensure_flagsmith_warehouse_connection(environment)
 
     # Then
     assert result is None
-    assert not WarehouseConnection.objects.filter(
-        environment=environment,
-    ).exists()
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
 
 
-@pytest.mark.django_db()
-def test_ensure_flagsmith_warehouse_connection__auto_connect_enabled__creates_connection(
+def test_ensure_flagsmith_warehouse_connection__self_hosted__returns_none(
     environment: Environment,
-    mocker: MockerFixture,
+    set_warehouses_flag: SetWarehousesFlagFixture,
 ) -> None:
     # Given
-    mocker.patch(
-        "experimentation.services.get_experiment_flag_config",
-        return_value={"auto_connect_warehouse": True},
-    )
+    set_warehouses_flag({"auto_connect_flagsmith": True})
+
+    # When
+    result = services.ensure_flagsmith_warehouse_connection(environment)
+
+    # Then
+    assert result is None
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+@pytest.mark.usefixtures("saas_mode")
+def test_ensure_flagsmith_warehouse_connection__auto_connect_enabled__creates_connection(
+    environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+) -> None:
+    # Given
+    set_warehouses_flag({"auto_connect_flagsmith": True})
 
     # When
     result = services.ensure_flagsmith_warehouse_connection(environment)
@@ -2899,17 +2965,14 @@ def test_ensure_flagsmith_warehouse_connection__auto_connect_enabled__creates_co
     assert result.environment == environment
 
 
-@pytest.mark.django_db()
+@pytest.mark.usefixtures("saas_mode")
 def test_ensure_flagsmith_warehouse_connection__connection_already_exists__returns_none(
     environment: Environment,
     warehouse_connection: WarehouseConnection,
-    mocker: MockerFixture,
+    set_warehouses_flag: SetWarehousesFlagFixture,
 ) -> None:
     # Given
-    mocker.patch(
-        "experimentation.services.get_experiment_flag_config",
-        return_value={"auto_connect_warehouse": True},
-    )
+    set_warehouses_flag({"auto_connect_flagsmith": True})
 
     # When
     result = services.ensure_flagsmith_warehouse_connection(environment)
@@ -2925,15 +2988,14 @@ def test_ensure_flagsmith_warehouse_connection__connection_already_exists__retur
     )
 
 
+@pytest.mark.usefixtures("saas_mode")
 def test_ensure_flagsmith_warehouse_connection__race_condition__handles_integrity_error(
     environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mocker.patch(
-        "experimentation.services.get_experiment_flag_config",
-        return_value={"auto_connect_warehouse": True},
-    )
+    set_warehouses_flag({"auto_connect_flagsmith": True})
     mocker.patch.object(
         WarehouseConnection.objects,
         "filter",
@@ -3485,14 +3547,18 @@ def experiment_with_audience_rollout(
 ) -> Callable[[str, list[int]], Experiment]:
     """Roll the experiment out to every identity in the given audience, serving
     them all the first variant."""
-    option_a, _, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     def _apply(match: str, segment_ids: list[int]) -> Experiment:
         services.apply_experiment_rollout(
             experiment,
             rollout_spec(
                 rollout_percentage=100.0,
-                multivariate_values=[MultivariateValueChangeSet(option_a.id, 100.0)],
+                variants=[
+                    {"id": option_a.id, "weight": 100.0},
+                    {"id": option_b.id, "weight": 0.0},
+                    {"id": option_c.id, "weight": 0.0},
+                ],
                 audience=AudienceSpec(match=match, segment_ids=segment_ids),
             ),
         )
@@ -3568,6 +3634,119 @@ def test_experiment_rollout__cohort_audience__enrols_members_only(
         experiment.rollout_segment_id
     )
     assert _identity_flag_value(outsider, multivariate_feature)[1] is None
+
+
+def _experiment_with_rollout(
+    environment: Environment,
+    feature: Feature,
+    rollout_spec: RolloutSpecFactory,
+    *,
+    status: str,
+) -> Experiment:
+    experiment: Experiment = Experiment.objects.create(
+        environment=environment,
+        feature=feature,
+        name=f"Experiment on {feature.name}",
+        hypothesis="h",
+    )
+    services.apply_experiment_rollout(experiment, rollout_spec())
+    experiment.refresh_from_db()
+    experiment.status = status
+    experiment.save()
+    return experiment
+
+
+def _live_override_segment_ids(environment: Environment, feature: Feature) -> set[int]:
+    return set(
+        FeatureState.objects.get_live_feature_states(
+            environment=environment,
+            additional_filters=Q(feature_segment__isnull=False, identity__isnull=True),
+            feature_id=feature.id,
+        ).values_list("feature_segment__segment_id", flat=True)
+    )
+
+
+@pytest.mark.parametrize(
+    "environment_fixture_name",
+    ["environment", "environment_v2_versioning"],
+)
+def test_transition_experiment_status__first_start__removes_superseded_rollouts(  # type: ignore[no-untyped-def]
+    environment_fixture_name: str,
+    multivariate_feature: Feature,
+    audience_segment: Segment,
+    admin_user: FFAdminUser,
+    rollout_spec: RolloutSpecFactory,
+    log: StructuredLogCapture,
+    request: pytest.FixtureRequest,
+    django_capture_on_commit_callbacks,
+) -> None:
+    # Given
+    environment: Environment = request.getfixturevalue(environment_fixture_name)
+    completed = _experiment_with_rollout(
+        environment,
+        multivariate_feature,
+        rollout_spec,
+        status=ExperimentStatus.COMPLETED,
+    )
+    deleted = _experiment_with_rollout(
+        environment,
+        multivariate_feature,
+        rollout_spec,
+        status=ExperimentStatus.PAUSED,
+    )
+    deleted.delete()
+    update_flag(
+        environment=environment,
+        feature=multivariate_feature,
+        changes={
+            "segment_overrides": [
+                {
+                    "segment": {"id": audience_segment.id},
+                    "priority": get_next_segment_override_priority(
+                        environment=environment, feature=multivariate_feature
+                    ),
+                    "value": {"type": "string", "value": "user segment"},
+                }
+            ]
+        },
+        replace=False,
+        author=AuthorData(user=admin_user),
+        overwrite_system_segment_overrides=False,
+    )
+    new = _experiment_with_rollout(
+        environment,
+        multivariate_feature,
+        rollout_spec,
+        status=ExperimentStatus.CREATED,
+    )
+    identity = Identity.objects.create(identifier="identity", environment=environment)
+
+    # When
+    with django_capture_on_commit_callbacks(execute=True):
+        services.transition_experiment_status(new, ExperimentStatus.RUNNING, admin_user)
+
+    # Then
+    assert _identity_flag_value(identity, multivariate_feature)[1] == (
+        new.rollout_segment_id
+    )
+    assert _live_override_segment_ids(environment, multivariate_feature) == {
+        audience_segment.id,
+        new.rollout_segment_id,
+    }
+    assert services.get_experiment_rollout(completed) is None
+    assert [
+        event for event in log.events if event["event"] == "rollout.superseded"
+    ] == [
+        {
+            "level": "info",
+            "event": "rollout.superseded",
+            "experiment__id": new.id,
+            "superseded_experiment__id": superseded.id,
+            "environment__id": environment.id,
+            "feature__id": multivariate_feature.id,
+        }
+        for superseded in (completed, deleted)
+    ]
 
 
 def test_get_experiment_rollout__audience__returns_segment_details(
@@ -3709,7 +3888,9 @@ def test_apply_experiment_rollout__master_api_key_author__attributes_audit_log(
             rollout_percentage=30.0,
             feature_state_value="control",
             value_type="string",
-            multivariate_values=[],
+            variants=[
+                {"id": option.id, "weight": 0.0} for option in multivariate_options
+            ],
             author=AuthorData(api_key=master_api_key),
         ),
     )
@@ -3732,12 +3913,16 @@ def test_apply_experiment_rollout__resubmitted__records_history_only_on_change( 
     django_capture_on_commit_callbacks,
 ) -> None:
     # Given
-    option_a, _, _ = multivariate_options
+    option_a, option_b, option_c = multivariate_options
 
     def _spec() -> RolloutSpec:
         return rollout_spec(
             rollout_percentage=40.0,
-            multivariate_values=[MultivariateValueChangeSet(option_a.id, 100.0)],
+            variants=[
+                {"id": option_a.id, "weight": 100.0},
+                {"id": option_b.id, "weight": 0.0},
+                {"id": option_c.id, "weight": 0.0},
+            ],
             audience=AudienceSpec(match="any", segment_ids=[audience_segment.id]),
         )
 
@@ -3839,10 +4024,19 @@ def test_annotate_warehouse_delivery_statuses__unverified_external_connection__k
     assert clickhouse_connection.status_detail == "Could not connect to the host."
 
 
-def test_annotate_warehouse_delivery_statuses__flagsmith_warehouse__stays_connected(
-    warehouse_connection: WarehouseConnection,
+@pytest.mark.parametrize(
+    "connection_fixture",
+    ["warehouse_connection", "flagsmith_database_connection"],
+    ids=["flagsmith-warehouse", "flagsmith-database"],
+)
+def test_annotate_warehouse_delivery_statuses__connection_not_delivered_by_service__stays_connected(
+    request: pytest.FixtureRequest,
+    connection_fixture: str,
 ) -> None:
-    # Given a Flagsmith connection, which the delivery service never handles
+    # Given
+    warehouse_connection: WarehouseConnection = request.getfixturevalue(
+        connection_fixture
+    )
     warehouse_connection.status = WarehouseConnectionStatus.CONNECTED
     WarehouseDeliveryStatus.objects.create(
         connection=warehouse_connection,

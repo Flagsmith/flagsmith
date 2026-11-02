@@ -4,12 +4,14 @@ from common.projects.permissions import VIEW_PROJECT
 from django.db import transaction
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 
+from core.dataclasses import AuthorData
 from environments.models import Environment
 from features.dependencies.services import validate_segment_flag_dependencies
 from features.feature_segments.serializers import (
@@ -18,16 +20,24 @@ from features.feature_segments.serializers import (
     FeatureSegmentListSerializer,
     FeatureSegmentQuerySerializer,
 )
+from features.feature_segments.services import (
+    is_live_segment_override,
+)
+from features.future.services import (
+    delete_segment_override,
+)
 from features.models import FeatureSegment
 from features.versioning.versioning_service import (
     get_current_live_environment_feature_version,
 )
+from segments.services import check_segment_is_not_system
 
 from .permissions import FeatureSegmentPermissions
 
 logger = logging.getLogger(__name__)
 
 
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
 @method_decorator(
     name="list",
     decorator=extend_schema(
@@ -46,7 +56,11 @@ logger = logging.getLogger(__name__)
     ),
 )
 class FeatureSegmentViewSet(
-    viewsets.ModelViewSet,  # type: ignore[type-arg]
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet[FeatureSegment],
 ):
     permission_classes = [FeatureSegmentPermissions]
 
@@ -82,13 +96,41 @@ class FeatureSegmentViewSet(
 
         return queryset
 
-    @transaction.atomic
     def perform_create(self, serializer: BaseSerializer[FeatureSegment]) -> None:
-        feature_segment = serializer.save()
-        validate_segment_flag_dependencies(feature_segment.segment)
+        environment = serializer.validated_data["environment"]
+        feature = serializer.validated_data["feature"]
+        segment = serializer.validated_data["segment"]
+        check_segment_is_not_system(segment)
+        # Overrides of v2 environments are drafted, for versions to add.
+        if (
+            not environment.use_v2_feature_versioning
+            and FeatureSegment.objects.filter(
+                feature=feature,
+                environment=environment,
+                segment=segment,
+                environment_feature_version=None,
+            ).exists()
+        ):
+            raise ValidationError("The flag is already overridden for this segment.")
+        with transaction.atomic():
+            feature_segment = serializer.save()
+            validate_segment_flag_dependencies(feature_segment.segment)
+
+    def perform_destroy(self, instance: FeatureSegment) -> None:
+        if is_live_segment_override(instance):
+            delete_segment_override(
+                environment=instance.environment,
+                feature=instance.feature,
+                segment_id=instance.segment_id,
+                author=AuthorData.from_request(self.request),
+                overwrite_system_segment_overrides=False,
+            )
+            return
+        check_segment_is_not_system(instance.segment)
+        instance.delete()
 
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
-        if self.action in ["create", "update", "partial_update"]:
+        if self.action == "create":
             return FeatureSegmentCreateSerializer
 
         if self.action == "update_priorities":

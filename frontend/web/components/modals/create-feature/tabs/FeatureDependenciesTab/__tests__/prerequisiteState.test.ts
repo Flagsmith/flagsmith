@@ -4,6 +4,7 @@ import {
   isBlocked,
   toPrerequisiteRow,
   toPrerequisiteRows,
+  withStagedChanges,
 } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/prerequisiteState'
 
 const edge = (
@@ -139,5 +140,43 @@ describe('describeOffCount', () => {
     expect(describeOffCount([row(false, undefined), row(true, true)])).toBe(
       '1 of 2 prerequisites are off',
     )
+  })
+})
+
+describe('withStagedChanges', () => {
+  const live = [
+    toPrerequisiteRow(edge(1), true),
+    toPrerequisiteRow(edge(2), false),
+  ]
+  const isEnabled = (id: number) => id === 3
+
+  it('marks a held removal on its live row', () => {
+    const rows = withStagedChanges(
+      live,
+      [{ action: 'remove', prerequisite: { id: 2, name: 'prereq_2' } }],
+      1,
+      isEnabled,
+    )
+    expect(rows.map((r) => r.staged)).toEqual([undefined, 'remove'])
+  })
+
+  it('appends a held add after the live rows, with its current state', () => {
+    const rows = withStagedChanges(
+      live,
+      [{ action: 'add', prerequisite: { id: 3, name: 'prereq_3' } }],
+      1,
+      isEnabled,
+    )
+    expect(rows).toHaveLength(3)
+    expect(rows[2]).toMatchObject({
+      isEnabled: true,
+      isMet: true,
+      staged: 'add',
+    })
+    expect(rows[2].edge.prerequisite).toEqual({ id: 3, name: 'prereq_3' })
+  })
+
+  it('leaves the rows alone with nothing held', () => {
+    expect(withStagedChanges(live, [], 1, isEnabled)).toEqual(live)
   })
 })

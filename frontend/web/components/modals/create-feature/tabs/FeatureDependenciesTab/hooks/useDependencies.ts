@@ -6,8 +6,7 @@ import {
   useGetFeatureDependenciesQuery,
   useGetFeatureDependentsQuery,
 } from 'common/services/useFeatureDependency'
-import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
-import { useProjectEnvironments } from 'common/hooks/useProjectEnvironments'
+import { useFeatureStates } from 'common/hooks/useFeatureStates'
 import { toPrerequisiteRows } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/prerequisiteState'
 
 type UseDependenciesArgs = {
@@ -38,37 +37,13 @@ export const useDependencies = ({
   const [deleteDependency] = useDeleteFeatureDependencyMutation()
 
   // The edges carry only the prerequisite's name and id, so its current state
-  // in this environment comes from the feature list. getFeatureList parses
-  // environmentId as the numeric id, not the api key.
-  const {
-    error: environmentsError,
-    getEnvironmentIdFromKey,
-    isLoading: isLoadingEnvironments,
-  } = useProjectEnvironments(projectId)
-  const numericEnvId = getEnvironmentIdFromKey(environmentId)
-  const {
-    data: featureList,
-    isError: isFeatureListError,
-    isLoading: isLoadingFeatureList,
-  } = useGetFeatureListQuery(
-    {
-      environmentId: String(numericEnvId ?? ''),
-      page: 1,
-      // One page has to cover every prerequisite, or one outside it reads as
-      // unmet and the banner claims the flag is serving off.
-      page_size: 999,
-      projectId,
-    },
-    { skip: !numericEnvId },
-  )
+  // in this environment comes from the feature list.
+  const featureStates = useFeatureStates({ environmentId, projectId })
 
   const rows = useMemo(
     () =>
-      toPrerequisiteRows(
-        dependencies?.results ?? [],
-        featureList?.results ?? [],
-      ),
-    [dependencies, featureList],
+      toPrerequisiteRows(dependencies?.results ?? [], featureStates.features),
+    [dependencies, featureStates.features],
   )
 
   return {
@@ -80,22 +55,13 @@ export const useDependencies = ({
       }).unwrap(),
     dependentEdges: dependents?.results ?? [],
     isCreating,
+    isEnabled: featureStates.isEnabled,
     // The feature list counts too. Without it every prerequisite reads as off,
     // so the tab would claim the flag is serving off while the list is still
     // in flight, or for good if the request fails.
-    isError:
-      isDependenciesError ||
-      isDependentsError ||
-      isFeatureListError ||
-      !!environmentsError ||
-      // The lookup finished without finding the environment, so the feature
-      // list will never run and nothing is coming.
-      (!isLoadingEnvironments && !numericEnvId),
+    isError: isDependenciesError || isDependentsError || featureStates.isError,
     isLoading:
-      isLoadingDependencies ||
-      isLoadingDependents ||
-      isLoadingEnvironments ||
-      isLoadingFeatureList,
+      isLoadingDependencies || isLoadingDependents || featureStates.isLoading,
     remove: (prerequisiteFeatureId: number) =>
       deleteDependency({
         environmentId,

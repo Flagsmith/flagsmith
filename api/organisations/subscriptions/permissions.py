@@ -4,14 +4,7 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 
 from organisations.models import Organisation
-from organisations.subscriptions.constants import SubscriptionPlanFamily
-
-_PLAN_RANK = {
-    SubscriptionPlanFamily.FREE: 0,
-    SubscriptionPlanFamily.START_UP: 1,
-    SubscriptionPlanFamily.SCALE_UP: 2,
-    SubscriptionPlanFamily.ENTERPRISE: 3,
-}
+from organisations.subscriptions.constants import PLAN_RANK, SubscriptionPlanFamily
 
 
 def require_minimum_plan(minimum: SubscriptionPlanFamily) -> type[BasePermission]:
@@ -28,10 +21,10 @@ def require_minimum_plan(minimum: SubscriptionPlanFamily) -> type[BasePermission
       - `obj.organisation` for detail actions (via `has_object_permission`)
       - `request.data["organisation"]` or `?organisation=` for list/create
     """
-    min_rank = _PLAN_RANK[minimum]
+    min_rank = PLAN_RANK[minimum]
 
     def _meets(org: Organisation) -> bool:
-        return _PLAN_RANK.get(org.subscription.subscription_plan_family, -1) >= min_rank
+        return PLAN_RANK.get(org.subscription.subscription_plan_family, -1) >= min_rank
 
     class _MinimumPlanPermission(BasePermission):
         message = f"This resource requires a {minimum.value} plan or above."

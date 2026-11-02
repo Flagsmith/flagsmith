@@ -1,16 +1,17 @@
 import React, { FC, useState } from 'react'
 import CalloutBar from 'components/CalloutBar'
 import WarehouseSqlSnippet from './WarehouseSqlSnippet'
-import { getClickHouseSetupSql } from './clickhouseSetupSql'
 
 type WarehouseSetupSqlHelpProps = {
-  database: string
+  sql: string
+  label: string
   showInitially?: boolean
 }
 
 const WarehouseSetupSqlHelp: FC<WarehouseSetupSqlHelpProps> = ({
-  database,
+  label,
   showInitially,
+  sql,
 }) => {
   // Visibility follows showInitially until the user toggles; their choice
   // then stays authoritative across re-renders.
@@ -21,11 +22,11 @@ const WarehouseSetupSqlHelp: FC<WarehouseSetupSqlHelpProps> = ({
     <div>
       <CalloutBar
         prefix='Database setup:'
-        label='Run once against your ClickHouse instance to create the events table'
+        label={label}
         expanded={visible}
         onClick={() => setOverride(!visible)}
       />
-      {visible && <WarehouseSqlSnippet sql={getClickHouseSetupSql(database)} />}
+      {visible && <WarehouseSqlSnippet sql={sql} />}
     </div>
   )
 }

@@ -61,15 +61,9 @@ export type PaidFeature =
 
 export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
 
-// Define a type for plan categories
-type Plan = 'free' | 'start-up' | 'scale-up' | 'enterprise' | null
-
-export const planNames = {
-  enterprise: 'Enterprise',
-  free: 'Free',
-  scaleUp: 'Scale-Up',
-  startup: 'Startup',
-}
+export { planNames } from './plans'
+export type { Plan } from './plans'
+import { Plan, planNames } from './plans'
 import BaseUtils from './base/_utils'
 import { copyToClipboard } from './copyToClipboard'
 const Utils = Object.assign({}, BaseUtils, {
@@ -532,29 +526,6 @@ const Utils = Object.assign({}, BaseUtils, {
         plan = 'enterprise'
         break
       }
-      case 'WAREHOUSE': {
-        const remoteValue = Utils.getFlagsmithJSONValue(
-          'experimentation_warehouse_connection',
-          [],
-        )
-        let remotePlans: string[] = []
-        if (Array.isArray(remoteValue)) {
-          remotePlans = remoteValue
-        } else if (Array.isArray(remoteValue?.allowed_plans)) {
-          remotePlans = remoteValue.allowed_plans
-        }
-        const allowedPlans = [...remotePlans, 'enterprise']
-        const planHierarchy: Plan[] = [
-          'free',
-          'start-up',
-          'scale-up',
-          'enterprise',
-        ]
-        plan =
-          planHierarchy.find((p) => allowedPlans.includes(p)) || 'enterprise'
-        break
-      }
-
       case 'SCHEDULE_FLAGS':
       case 'CREATE_ADDITIONAL_PROJECT':
       case '2FA':

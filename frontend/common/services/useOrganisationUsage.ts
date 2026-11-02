@@ -11,6 +11,9 @@ export const organisationUsageService = service
         Res['organisationUsage'],
         Req['getOrganisationUsage']
       >({
+        // Usage lags by up to 3 hours and the endpoint is throttled, so going
+        // back to a period or breakdown already seen should not refetch.
+        keepUnusedDataFor: 600,
         providesTags: () => [{ id: 'LIST', type: 'OrganisationUsage' }],
         query: (query: Req['getOrganisationUsage']) => {
           return {
@@ -18,6 +21,7 @@ export const organisationUsageService = service
               query.organisationId
             }/usage-data/?${Utils.toParam({
               environment_id: query.environmentId,
+              group_by: query.group_by,
               period: query.billing_period,
               project_id: query.projectId,
             })}`,

@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.dataclasses import AuthorData
 from core.exceptions import ChangeRequestsEnabledError
 from core.types import AuthenticatedRequest
 from environments.models import Environment
@@ -112,7 +113,8 @@ class FlagAPIView(APIView):
                 feature=feature,
                 changes=serializer.validated_data,
                 replace=replace,
-                author=request.user,
+                author=AuthorData.from_request(request),
+                overwrite_system_segment_overrides=False,
             )
         )
 
@@ -148,6 +150,7 @@ class SegmentOverrideAPIView(APIView):
                 environment=environment,
                 feature=feature,
                 segment_id=segment_id,
-                author=request.user,
+                author=AuthorData.from_request(request),
+                overwrite_system_segment_overrides=False,
             )
         )

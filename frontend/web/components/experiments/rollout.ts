@@ -13,7 +13,7 @@ import { getDefaultVariantKey } from 'common/utils/multivariate'
 import {
   CHART_COLOURS,
   colorTextAction,
-  colorTextSuccess,
+  colorIconSuccess,
 } from 'common/theme/tokens'
 
 export type VariationSplitEntry = {
@@ -43,7 +43,7 @@ export type RolloutSummaryRow = {
   percentage: number
 }
 
-export const CONTROL_COLOUR = colorTextSuccess
+export const CONTROL_COLOUR = colorIconSuccess
 export const VARIATION_COLOURS = [colorTextAction, ...CHART_COLOURS]
 
 export const getVariationColour = (index: number): string =>

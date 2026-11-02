@@ -1,0 +1,81 @@
+@import '../../../../styles/variables';
+
+// HubSpot renders the form unstyled (css: ''), so it takes our look here.
+.contact-sales-form {
+  // The heading duplicates the panel title, and its colours are inline.
+  .hs-form > div:first-child:not(.hs-form-field) {
+    display: none;
+  }
+
+  fieldset {
+    max-width: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+  }
+
+  .hs-form-field {
+    margin-bottom: 16px;
+  }
+
+  label {
+    display: block;
+  }
+
+  // :where keeps the specificity of .hs-input, so textarea.hs-input still wins.
+  .hs-input:where(:not([type='checkbox'], [type='radio'])) {
+    width: 100%;
+    height: $input-height;
+    padding: $input-padding;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-default);
+    color: var(--color-text-default);
+    outline: none;
+
+    &:hover {
+      border-color: var(--color-border-strong);
+    }
+
+    &:focus {
+      border-color: var(--color-border-action);
+    }
+
+    &::placeholder {
+      color: var(--color-text-tertiary);
+    }
+  }
+
+  textarea.hs-input {
+    height: $textarea-height;
+  }
+
+  .inputs-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .hs-field-desc,
+  .legal-consent-container {
+    color: var(--color-text-secondary);
+    font-size: $font-size-sm;
+  }
+
+  .hs-error-msg,
+  .hs-form-required {
+    color: var(--color-text-danger);
+  }
+
+  .hs-button {
+    padding: $input-padding-sm;
+    border: 0;
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-action);
+    color: white;
+
+    &:hover {
+      background-color: var(--color-surface-action-hover);
+    }
+  }
+}

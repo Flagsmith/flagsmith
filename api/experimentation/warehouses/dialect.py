@@ -8,6 +8,8 @@ class Dialect(Protocol):
     """The SQL fragments that differ between warehouses. A warehouse needing a
     differently shaped query overrides that query in its provider instead."""
 
+    events_table_name: str
+
     def param(self, name: str) -> str: ...
 
     def in_list(self, expr: str, name: str, size: int) -> str: ...
@@ -52,6 +54,8 @@ _CLICKHOUSE_BUCKET_FUNCTIONS: dict[ExposureGranularity, str] = {
 
 
 class ClickHouseDialect:
+    events_table_name = "events"
+
     def param(self, name: str) -> str:
         return f"%({name})s"
 
@@ -106,6 +110,8 @@ _BUCKET_SECONDS: dict[ExposureGranularity, int] = {
 
 
 class DatabricksDialect:
+    events_table_name = "events"
+
     def param(self, name: str) -> str:
         return f":{name}"
 
@@ -153,3 +159,72 @@ class DatabricksDialect:
 
 
 DATABRICKS_DIALECT = DatabricksDialect()
+
+_POSTGRES_NUMERIC_PATTERN = (
+    "^[-+]?([0-9]{1,30}([.][0-9]{0,30})?|[.][0-9]{1,30})([eE][-+]?[0-9]{1,2})?$"
+)
+
+_POSTGRES_BUCKET_UNITS: dict[ExposureGranularity, str] = {
+    "hour": "hour",
+    "day": "day",
+}
+
+
+class PostgresDialect:
+    """Timestamp columns must be TIMESTAMPTZ. ``float_or_zero`` casts up to 30
+    integer and 30 fractional digits with a 2-digit exponent (about 1e129 at
+    most); anything else, including inf and nan, reads as 0."""
+
+    def __init__(self, events_table_name: str = "events") -> None:
+        self.events_table_name = events_table_name
+
+    def param(self, name: str) -> str:
+        return f"%({name})s"
+
+    def in_list(self, expr: str, name: str, size: int) -> str:
+        return f"{expr} = ANY({self.param(name)})"
+
+    def list_params(self, name: str, values: Sequence[str]) -> dict[str, object]:
+        return {name: list(values)}
+
+    def count_all(self) -> str:
+        return "count(*)"
+
+    def count_if(self, cond: str) -> str:
+        return f"count(*) FILTER (WHERE {cond})"
+
+    def count_distinct(self, expr: str) -> str:
+        return f"count(DISTINCT {expr})"
+
+    def any_value(self, expr: str) -> str:
+        # any_value() needs PostgreSQL 16.
+        return f"min({expr})"
+
+    def time_bucket(self, expr: str, granularity: ExposureGranularity) -> str:
+        unit = _POSTGRES_BUCKET_UNITS[granularity]
+        return f"date_trunc('{unit}', {expr} AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'"
+
+    def float_or_zero(self, expr: str) -> str:
+        return (
+            f"CASE WHEN {expr} ~ '{_POSTGRES_NUMERIC_PATTERN}' "
+            f"THEN ({expr})::double precision ELSE 0 END"
+        )
+
+    def sum_if(self, expr: str, cond: str) -> str:
+        return f"coalesce(sum({expr}) FILTER (WHERE {cond}), 0)"
+
+    def avg_if(self, expr: str, cond: str) -> str:
+        return f"coalesce(avg({expr}) FILTER (WHERE {cond}), 0)"
+
+    def min_if(self, expr: str, cond: str) -> str:
+        return f"min({expr}) FILTER (WHERE {cond})"
+
+    def bool_to_number(self, expr: str) -> str:
+        return f"({expr})::int"
+
+    def zip_unnest(self, arrays: Mapping[str, Sequence[str]]) -> str:
+        zipped = ", ".join(f"ARRAY[{', '.join(values)}]" for values in arrays.values())
+        return f"CROSS JOIN LATERAL unnest({zipped}) AS zipped({', '.join(arrays)})"
+
+
+POSTGRES_DIALECT = PostgresDialect()

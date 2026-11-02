@@ -43,11 +43,7 @@ from experimentation.models import (
     WarehouseConnectionStatus,
     WarehouseType,
 )
-from experimentation.permissions import (
-    ExperimentPermission,
-    MetricPermission,
-    WarehouseConnectionPermission,
-)
+from experimentation.permissions import ExperimentationPermission
 from experimentation.serializers import (
     ExperimentDetailSerializer,
     ExperimentExposuresSerializer,
@@ -96,7 +92,7 @@ class WarehouseConnectionViewSet(
 
     serializer_class = WarehouseConnectionSerializer
     pagination_class = None
-    permission_classes = [IsAuthenticated, WarehouseConnectionPermission]
+    permission_classes = [IsAuthenticated, ExperimentationPermission]
     model_class = WarehouseConnection
     lookup_field = "id"
     lookup_url_kwarg = "connection_id"
@@ -363,7 +359,7 @@ class ExperimentViewSet(
 
     serializer_class = ExperimentSerializer
     pagination_class = CustomPagination
-    permission_classes = [IsAuthenticated, ExperimentPermission]
+    permission_classes = [IsAuthenticated, ExperimentationPermission]
     model_class = Experiment
     lookup_field = "id"
     lookup_url_kwarg = "experiment_id"
@@ -648,7 +644,7 @@ class ExperimentMetricViewSet(
 
     serializer_class = ExperimentMetricSerializer
     pagination_class = None
-    permission_classes = [IsAuthenticated, ExperimentPermission]
+    permission_classes = [IsAuthenticated, ExperimentationPermission]
     lookup_field = "id"
     lookup_url_kwarg = "pk"
 
@@ -742,7 +738,7 @@ class MetricViewSet(
 
     serializer_class = MetricSerializer
     pagination_class = CustomPagination
-    permission_classes = [IsAuthenticated, MetricPermission]
+    permission_classes = [IsAuthenticated, ExperimentationPermission]
     model_class = Metric
     lookup_field = "id"
     lookup_url_kwarg = "pk"

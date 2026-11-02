@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 from common.core.utils import is_saas
@@ -83,6 +84,10 @@ class InviteLinkValidationMixin:
 
 
 class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin):  # type: ignore[misc]
+    signup_anonymous_id = serializers.CharField(
+        write_only=True, required=False, max_length=64
+    )
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         if not settings.COOKIE_AUTH_ENABLED:
@@ -98,6 +103,7 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
             "is_active",
             "marketing_consent_given",
             "uuid",
+            "signup_anonymous_id",
         )
         read_only_fields = ("is_active", "uuid", "marketing_consent_given")
         write_only_fields = ("sign_up_type",)
@@ -108,6 +114,11 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         }
 
     def validate(self, attrs):  # type: ignore[no-untyped-def]
+        if signup_anonymous_id := attrs.pop("signup_anonymous_id", None):
+            attrs["onboarding_data"] = json.dumps(
+                {"signup_anonymous_id": signup_anonymous_id}
+            )
+
         email = attrs.get("email", "")
         self._validate_registration_invite(
             email=email, sign_up_type=attrs.get("sign_up_type")

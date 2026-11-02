@@ -14,6 +14,7 @@ from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
     exceeds_segment_override_limit,
 )
+from features.future.exceptions import DuplicatePriorityError
 from features.models import FeatureSegment
 from segments.models import SegmentManagedBy
 
@@ -141,6 +142,10 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer): 
         validated_attrs = super().validate(attrs)
         if len(validated_attrs) == 0:
             return validated_attrs
+
+        priorities = [item["priority"] for item in validated_attrs]
+        if duplicates := sorted({p for p in priorities if priorities.count(p) > 1}):
+            raise DuplicatePriorityError(f"Duplicate priority: {duplicates[0]}.")
 
         feature_segments = list(
             FeatureSegment.objects.filter(

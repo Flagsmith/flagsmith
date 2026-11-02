@@ -1,0 +1,44 @@
+import { Meta } from '@storybook/addon-docs/blocks'
+
+<Meta
+  title="Design System/Tokens"
+  parameters={{ chromatic: { disableSnapshot: true } }}
+/>
+
+# Tokens
+
+Every token lives in `common/theme/tokens.json`. Everything else is generated from it.
+
+## Three colour layers
+
+**Reach for a semantic token first.**
+
+1. **Semantic** (`--color-text-danger`): a UI role. Use these in components.
+2. **Ramps** (`--primary-*`, `--neutral-*`, `--state-*`, `--always-*`): the palette, themed for light and dark. Fine in code when no semantic token fits yet. A colour used twice is a role and wants a semantic token.
+3. **Primitives** (`--purple-600`): raw values, not themed. Never use them in code. Only `tokens.json` and the generated Sass map (`primitive()`) read them.
+
+Use `var(--color-text-danger)` in SCSS, the exports from `common/theme/tokens` in TypeScript, and the generated utilities (`.text-danger`, `.bg-surface-action`) in JSX.
+
+## Where a new colour goes
+
+- **A UI role** (text, surface, border, icon): a semantic token under `color`, with a `light` and a `dark` value. Each element type gets its own token, so a text token never paints a background.
+- **A decorative set** (chart series; tags and projects later): its own group beside `chart`. Tag and project colours still sit in `constants.ts`. Don't add to them.
+- **A new hue**: agree it with design first, then add a 50 to 950 scale under `primitives`.
+
+Text must reach 4.5:1 on its surface in both themes; borders and icons 3:1.
+
+Spacing comes from Bootstrap utilities (`gap-2`, `p-3`). There are no spacing tokens.
+
+## Changing a token
+
+Edit `tokens.json` and commit. The pre-commit hook runs `npm run generate:tokens` and stages the output. Never edit the generated files: `tokens.ts`, `_tokens.scss`, `_primitives.scss`, `_token-utilities.scss` and `TokenReference.generated.stories.tsx`.
+
+To remove a token, replace its usages first.
+
+## The pages
+
+- **Colour System**: the design system's ramps, in both themes.
+- **Palette**: every primitive scale.
+- **Semantic Colour Tokens**: the semantic layer as it renders.
+- **Token Reference (MCP)**: every token and its value, for Storybook MCP.
+- **Tag & Project Colours**: the decorative sets still in `constants.ts`.

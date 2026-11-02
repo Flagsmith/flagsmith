@@ -1,3 +1,4 @@
+from django.conf import settings
 from drf_spectacular.utils import PolymorphicProxySerializer, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -6,8 +7,19 @@ from rest_framework.views import APIView
 
 from core.types import APIErrorDetail, AuthenticatedRequest
 from environments.services import get_environment
-from features.dependencies.exceptions import DependencyConflictDetail
-from features.dependencies.permissions import check_manage_permissions
+from features.dependencies.exceptions import (
+    ChangeRequestAlreadyCommittedError,
+    ChangeRequestApprovedError,
+    ChangeRequestDisabledError,
+    ChangeRequestNotFoundError,
+    DependencyConflictDetail,
+    FeatureVersioningDisabledError,
+)
+from features.dependencies.permissions import (
+    check_change_request_permissions,
+    check_manage_permissions,
+)
+from features.dependencies.serializers import ChangeRequestReferenceSerializer
 from features.dependencies.services import (
     create_flag_dependency,
     delete_flag_dependency,
@@ -17,9 +29,42 @@ from features.dependencies.services import (
 from features.dependencies.types import DependencyEdge, DependencyList
 from features.future.permissions import check_read_permissions
 from features.services import get_feature
+from features.workflows.core.models import ChangeRequest
 
 
-class FeatureDependencyAPIView(APIView):
+def _ensure_change_request_is_open(change_request: ChangeRequest) -> None:
+    if change_request.has_approvals():
+        raise ChangeRequestApprovedError()
+
+
+def _get_change_request(
+    request: AuthenticatedRequest, environment_api_key: str
+) -> ChangeRequest | None:
+    if not settings.WORKFLOWS_LOGIC_INSTALLED:
+        return None
+    if "change_request" not in request.query_params:
+        return None
+    serializer = ChangeRequestReferenceSerializer(data=request.query_params)
+    serializer.is_valid(raise_exception=True)
+    environment = get_environment(environment_api_key)
+    check_read_permissions(request.user, environment)
+    if not environment.is_workflow_enabled:
+        raise ChangeRequestDisabledError()
+    if not environment.use_v2_feature_versioning:
+        raise FeatureVersioningDisabledError()
+    try:
+        change_request: ChangeRequest = ChangeRequest.objects.get(
+            environment=environment,
+            id=serializer.validated_data["change_request"],
+        )
+    except ChangeRequest.DoesNotExist:
+        raise ChangeRequestNotFoundError()
+    if change_request.is_committed:
+        raise ChangeRequestAlreadyCommittedError()
+    return change_request
+
+
+class FeaturePrerequisiteAPIView(APIView):
     """Manage a feature's dependency on another feature in an environment."""
 
     permission_classes = [IsAuthenticated]
@@ -44,7 +89,11 @@ class FeatureDependencyAPIView(APIView):
         prerequisite_feature_id: int,
     ) -> Response:
         environment = get_environment(environment_api_key)
-        check_manage_permissions(request.user, environment)
+        if change_request := _get_change_request(request, environment_api_key):
+            check_change_request_permissions(request.user, environment)
+            _ensure_change_request_is_open(change_request)
+        else:
+            check_manage_permissions(request.user, environment)
         feature = get_feature(environment, feature_id)
         prerequisite_feature = get_feature(environment, prerequisite_feature_id)
         return Response(
@@ -53,6 +102,7 @@ class FeatureDependencyAPIView(APIView):
                 feature=feature,
                 prerequisite_feature=prerequisite_feature,
                 author=request.user,
+                change_request=change_request,
             ),
             status=status.HTTP_201_CREATED,
         )
@@ -73,7 +123,11 @@ class FeatureDependencyAPIView(APIView):
         prerequisite_feature_id: int,
     ) -> Response:
         environment = get_environment(environment_api_key)
-        check_manage_permissions(request.user, environment)
+        if change_request := _get_change_request(request, environment_api_key):
+            check_change_request_permissions(request.user, environment)
+            _ensure_change_request_is_open(change_request)
+        else:
+            check_manage_permissions(request.user, environment)
         feature = get_feature(environment, feature_id)
         prerequisite_feature = get_feature(environment, prerequisite_feature_id)
         delete_flag_dependency(
@@ -81,6 +135,7 @@ class FeatureDependencyAPIView(APIView):
             feature=feature,
             prerequisite_feature=prerequisite_feature,
             author=request.user,
+            change_request=change_request,
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -104,7 +159,11 @@ class FeatureDependenciesAPIView(APIView):
         check_read_permissions(request.user, environment)
         feature = get_feature(environment, feature_id)
         return Response(
-            list_flag_dependencies(environment=environment, feature=feature)
+            list_flag_dependencies(
+                environment=environment,
+                feature=feature,
+                change_request=_get_change_request(request, environment_api_key),
+            )
         )
 
 
@@ -126,4 +185,10 @@ class FeatureDependentsAPIView(APIView):
         environment = get_environment(environment_api_key)
         check_read_permissions(request.user, environment)
         feature = get_feature(environment, feature_id)
-        return Response(list_flag_dependents(environment=environment, feature=feature))
+        return Response(
+            list_flag_dependents(
+                environment=environment,
+                feature=feature,
+                change_request=_get_change_request(request, environment_api_key),
+            )
+        )

@@ -58,8 +58,8 @@ EXPOSURES_CTE_SQL = """
 WITH exposures AS (
     SELECT
         identifier,
-        if(count(DISTINCT value) > 1, '', any_value(value)) AS variant,
-        CAST(count(DISTINCT value) > 1 AS INT) AS quarantined,
+        CASE WHEN count(DISTINCT coalesce(value, '')) > 1 THEN '' ELSE any_value(coalesce(value, '')) END AS variant,
+        CAST(count(DISTINCT coalesce(value, '')) > 1 AS INT) AS quarantined,
         min(timestamp) AS first_exposure
     FROM events
     WHERE environment_key = :environment_key
@@ -214,9 +214,9 @@ def sleep(freezer: FrozenDateTimeFactory, mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture(autouse=True)
-def is_internal_address(mocker: MockerFixture) -> MagicMock:
+def is_disallowed_host(mocker: MockerFixture) -> MagicMock:
     mock: MagicMock = mocker.patch.object(
-        databricks, "is_internal_address", return_value=False
+        databricks, "is_disallowed_host", return_value=False
     )
     return mock
 
@@ -400,11 +400,11 @@ def test_validate_config__invalid__raises_validation_error(
     assert exc_info.value.detail == expected_errors
 
 
-def test_validate_config__internal_host__raises_validation_error(
-    is_internal_address: MagicMock,
+def test_validate_config__disallowed_host__raises_validation_error(
+    is_disallowed_host: MagicMock,
 ) -> None:
     # Given
-    is_internal_address.return_value = True
+    is_disallowed_host.return_value = True
 
     # When
     with pytest.raises(serializers.ValidationError) as exc_info:
@@ -416,9 +416,7 @@ def test_validate_config__internal_host__raises_validation_error(
             "host": "Host must not target internal or private network addresses."
         }
     }
-    is_internal_address.assert_called_once_with(
-        "acme.cloud.databricks.com", include_shared=True
-    )
+    is_disallowed_host.assert_called_once_with("acme.cloud.databricks.com")
 
 
 def test_validate_credentials__valid__returns_client_credentials() -> None:
@@ -575,12 +573,12 @@ def test_databricks_session__incomplete_details__raises_config_error(
             pass  # pragma: no cover
 
 
-def test_databricks_session__internal_host__raises_config_error(
+def test_databricks_session__disallowed_host__raises_config_error(
     databricks_connection: WarehouseConnection,
-    is_internal_address: MagicMock,
+    is_disallowed_host: MagicMock,
 ) -> None:
     # Given
-    is_internal_address.return_value = True
+    is_disallowed_host.return_value = True
 
     # When / Then
     with pytest.raises(DeliveryConfigError, match="internal or private"):

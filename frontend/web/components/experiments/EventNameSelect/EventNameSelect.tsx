@@ -16,7 +16,11 @@ type EventNameSelectProps = {
   onChange: (value: string) => void
 }
 
-const SUPPORTED_WAREHOUSE_TYPES: WarehouseType[] = ['flagsmith', 'clickhouse']
+const SUPPORTED_WAREHOUSE_TYPES: WarehouseType[] = [
+  'flagsmith',
+  'clickhouse',
+  'databricks',
+]
 
 const EventNameSelect: FC<EventNameSelectProps> = ({ onChange, value }) => {
   const { environmentId } = useRouteContext()

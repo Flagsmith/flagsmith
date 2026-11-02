@@ -440,3 +440,33 @@ def test_retrieve_audit_log__segment_override_created_for_feature_value__include
     assert audit_log_details["change_details"] == [
         {"field": "string_value", "old": "default_value", "new": "foo"},
     ]
+
+
+def test_retrieve_audit_log__segment_override_created_through_flag_api__includes_change_details(
+    admin_client: APIClient,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    segment: int,
+) -> None:
+    # Given
+    response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{feature}/",
+        {"segment_overrides": [{"segment": {"id": segment}, "enabled": True}]},
+        format="json",
+    )
+    assert response.status_code == status.HTTP_200_OK
+    [latest_audit_log, *_] = admin_client.get(
+        reverse("api-v1:audit-list"), {"environment": environment}
+    ).json()["results"]
+
+    # When
+    response = admin_client.get(
+        reverse("api-v1:audit-detail", args=[latest_audit_log["id"]])
+    )
+
+    # Then
+    assert response.json()["change_type"] == "CREATE"
+    assert response.json()["change_details"] == [
+        {"field": "enabled", "old": None, "new": True},
+    ]

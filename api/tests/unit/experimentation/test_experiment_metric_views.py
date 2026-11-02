@@ -8,7 +8,6 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment
-from experimentation.constants import EXPERIMENT_FLAG
 from experimentation.models import (
     ExpectedDirection,
     Experiment,
@@ -19,7 +18,6 @@ from experimentation.models import (
 
 if TYPE_CHECKING:
     from projects.models import Project
-    from tests.types import EnableFeaturesFixture
 
 pytestmark = pytest.mark.django_db
 
@@ -45,12 +43,8 @@ def test_attach_metric__valid__returns_201(
     environment: Environment,
     experiment: Experiment,
     metric: Metric,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.post(
         _list_url(environment, experiment),
         data={
@@ -76,10 +70,8 @@ def test_attach_metric__same_metric_twice__returns_400(
     environment: Environment,
     experiment: Experiment,
     metric: Metric,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     ExperimentMetric.objects.create(
         experiment=experiment,
         metric=metric,
@@ -102,10 +94,8 @@ def test_attach_metric__from_other_environment__returns_400(
     environment: Environment,
     experiment: Experiment,
     project: "Project",
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given a metric defined in a sibling environment
-    enable_features(EXPERIMENT_FLAG)
     other_env = Environment.objects.create(name="Other", project=project)
     foreign = Metric.objects.create(
         environment=other_env,
@@ -128,10 +118,8 @@ def test_attach_metric__unknown_experiment__returns_404(
     admin_client_new: APIClient,
     environment: Environment,
     metric: Metric,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     url = reverse(
         "api-v1:environments:experiments:experiment-metrics-list",
         args=[environment.api_key, 999_999_999],
@@ -153,10 +141,8 @@ def test_attach_metric__completed_experiment__returns_400(
     environment: Environment,
     experiment: Experiment,
     metric: Metric,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = ExperimentStatus.COMPLETED
     experiment.save()
 
@@ -176,10 +162,8 @@ def test_detach_metric__completed_experiment__returns_400(
     environment: Environment,
     experiment: Experiment,
     metric: Metric,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     em = ExperimentMetric.objects.create(
         experiment=experiment,
         metric=metric,
@@ -201,10 +185,8 @@ def test_list_metrics__with_attachment__returns_attached(
     environment: Environment,
     experiment: Experiment,
     metric: Metric,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     ExperimentMetric.objects.create(
         experiment=experiment,
         metric=metric,
@@ -226,10 +208,8 @@ def test_detach_metric__attached__returns_204(
     environment: Environment,
     experiment: Experiment,
     metric: Metric,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     em = ExperimentMetric.objects.create(
         experiment=experiment,
         metric=metric,
@@ -249,10 +229,8 @@ def test_update_attachment__new_direction__returns_200(
     environment: Environment,
     experiment: Experiment,
     metric: Metric,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given an attached metric
-    enable_features(EXPERIMENT_FLAG)
     em = ExperimentMetric.objects.create(
         experiment=experiment,
         metric=metric,

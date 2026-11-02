@@ -1085,6 +1085,39 @@ def test_feature_segment_update_priorities__no_changes__does_not_trigger_audit_l
     mocked_create_segment_priorities_changed_audit_log.delay.assert_not_called()
 
 
+def test_feature_segment_update_priorities__with_changes__records_history(
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    feature_segment: FeatureSegment,
+) -> None:
+    # Given
+    another_feature_segment = FeatureSegment.objects.create(
+        feature=feature,
+        segment=Segment.objects.create(project=project, name="Another segment"),
+        environment=environment,
+        priority=feature_segment.priority + 1,
+    )
+
+    # When
+    FeatureSegment.update_priorities(
+        new_feature_segment_id_priorities=[
+            (another_feature_segment.id, feature_segment.priority)
+        ]
+    )
+
+    # Then
+    assert [
+        (record.id, record.priority, record.history_type)
+        for record in FeatureSegment.history.order_by("history_id")
+    ] == [
+        (feature_segment.id, 0, "+"),
+        (another_feature_segment.id, 1, "+"),
+        (feature_segment.id, 1, "~"),
+        (another_feature_segment.id, 0, "~"),
+    ]
+
+
 def test_feature_segment_update_priorities__with_changes__triggers_audit_log(  # type: ignore[no-untyped-def]
     project, environment, feature, feature_segment, admin_user, mocker
 ):

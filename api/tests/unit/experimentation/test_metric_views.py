@@ -6,13 +6,13 @@ import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
-from experimentation.constants import EXPERIMENT_FLAG
 from experimentation.models import (
     ExpectedDirection,
     Experiment,
@@ -25,7 +25,6 @@ from experimentation.models import (
 
 if TYPE_CHECKING:
     from projects.models import Project
-    from tests.types import EnableFeaturesFixture
 
 pytestmark = pytest.mark.django_db
 
@@ -62,15 +61,11 @@ def _metric(environment: Environment, name: str) -> Metric:
     return metric
 
 
-def test_create_metric__admin_with_flag__returns_201(
+def test_create_metric__admin__returns_201(
     admin_client_new: APIClient,
     environment: Environment,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.post(
         _list_url(environment), data=_numeric_payload(), format="json"
     )
@@ -87,11 +82,13 @@ def test_create_metric__admin_with_flag__returns_201(
     ).exists()
 
 
-def test_create_metric__without_flag__returns_403(
+def test_create_metric__experimentation_not_deployed__returns_403(
     admin_client_new: APIClient,
     environment: Environment,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.EXPERIMENTATION_ENABLED = False
 
     # When
     response = admin_client_new.post(
@@ -105,12 +102,8 @@ def test_create_metric__without_flag__returns_403(
 def test_create_metric__staff_user__returns_403(
     staff_client: APIClient,
     environment: Environment,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = staff_client.post(
         _list_url(environment), data=_numeric_payload(), format="json"
     )
@@ -129,12 +122,10 @@ def test_create_metric__staff_user__returns_403(
 def test_create_metric__value_free_aggregation__returns_201(
     admin_client_new: APIClient,
     environment: Environment,
-    enable_features: "EnableFeaturesFixture",
     aggregation: str,
     event: str,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     payload = {
         "name": "Metric",
         "aggregation": aggregation,
@@ -164,11 +155,9 @@ def test_create_metric__value_free_aggregation__returns_201(
 def test_create_metric__invalid_definition__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
-    enable_features: "EnableFeaturesFixture",
     definition: object,
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     payload = {"name": "Bad", "aggregation": "count", "definition": definition}
 
     # When
@@ -184,10 +173,8 @@ def test_create_metric__invalid_definition__returns_400(
 def test_create_metric__with_direction__persists_direction(
     admin_client_new: APIClient,
     environment: Environment,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     payload = {
         **_numeric_payload("Time to Activation"),
         "direction": MetricDirection.DOWN,
@@ -209,12 +196,8 @@ def test_create_metric__with_direction__persists_direction(
 def test_create_metric__without_direction__defaults_to_increase(
     admin_client_new: APIClient,
     environment: Environment,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
-    # Given
-    enable_features(EXPERIMENT_FLAG)
-
-    # When
+    # Given / When
     response = admin_client_new.post(
         _list_url(environment), data=_numeric_payload(), format="json"
     )
@@ -228,10 +211,8 @@ def test_list_metrics__other_environment__excluded(
     admin_client_new: APIClient,
     environment: Environment,
     project: "Project",
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     other_env = Environment.objects.create(name="Other", project=project)
     _metric(environment, "mine")
     _metric(other_env, "theirs")
@@ -248,10 +229,8 @@ def test_list_metrics__other_environment__excluded(
 def test_list_metrics__search_query__filters_by_name(
     admin_client_new: APIClient,
     environment: Environment,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     _metric(environment, "Checkout Conversion")
     _metric(environment, "Revenue per User")
 
@@ -268,10 +247,8 @@ def test_list_metrics__attached_experiments__included(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "with-experiment")
     ExperimentMetric.objects.create(
         experiment=experiment,
@@ -306,10 +283,8 @@ def test_list_metrics__no_active_attachment__empty_experiments(
     environment: Environment,
     experiment: Experiment,
     soft_deleted_attachment: bool,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "no-experiments")
     if soft_deleted_attachment:
         ExperimentMetric.objects.create(
@@ -331,10 +306,8 @@ def test_list_metrics__multiple_attachments__no_n_plus_one(
     admin_client_new: APIClient,
     environment: Environment,
     experiment: Experiment,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "first")
     ExperimentMetric.objects.create(
         experiment=experiment,
@@ -363,10 +336,8 @@ def test_list_metrics__multiple_attachments__no_n_plus_one(
 def test_update_metric__patch__updates_and_audits(
     admin_client_new: APIClient,
     environment: Environment,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "before")
 
     # When
@@ -399,10 +370,8 @@ def test_update_metric__patch__updates_and_audits(
 def test_update_metric__invalid_definition__returns_400(
     admin_client_new: APIClient,
     environment: Environment,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "before")
 
     # When
@@ -420,10 +389,8 @@ def test_update_metric__invalid_definition__returns_400(
 def test_update_metric__staff_user__returns_403(
     staff_client: APIClient,
     environment: Environment,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "before")
 
     # When
@@ -448,10 +415,8 @@ def test_delete_metric__attached_to_active_experiment__returns_409(
     environment: Environment,
     experiment: Experiment,
     experiment_status: str,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     experiment.status = experiment_status
     experiment.save()
     metric = _metric(environment, "attached")
@@ -482,10 +447,8 @@ def test_delete_metric__no_active_attachment__returns_204(
     environment: Environment,
     experiment: Experiment,
     attachment: str,
-    enable_features: "EnableFeaturesFixture",
 ) -> None:
     # Given
-    enable_features(EXPERIMENT_FLAG)
     metric = _metric(environment, "deletable")
     if attachment == "completed":
         experiment.status = ExperimentStatus.COMPLETED

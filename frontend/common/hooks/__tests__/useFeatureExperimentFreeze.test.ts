@@ -7,23 +7,20 @@ jest.mock('react', () => ({
   useMemo: (fn: () => any) => fn(),
 }))
 
-jest.mock('common/utils/utils', () => ({
-  __esModule: true,
-  default: {
-    getFlagsmithHasFeature: jest.fn(),
-  },
+jest.mock('common/hooks/useExperimentationEnabled', () => ({
+  useExperimentationEnabled: jest.fn(),
 }))
 
 import { useFeatureExperimentFreeze } from 'common/hooks/useFeatureExperimentFreeze'
 import { useGetExperimentsQuery } from 'common/services/useExperiment'
-import Utils from 'common/utils/utils'
+import { useExperimentationEnabled } from 'common/hooks/useExperimentationEnabled'
 import { Experiment } from 'common/types/responses'
 
 const mockUseGetExperimentsQuery =
   useGetExperimentsQuery as jest.MockedFunction<typeof useGetExperimentsQuery>
-const mockGetFlagsmithHasFeature =
-  Utils.getFlagsmithHasFeature as jest.MockedFunction<
-    typeof Utils.getFlagsmithHasFeature
+const mockUseExperimentationEnabled =
+  useExperimentationEnabled as jest.MockedFunction<
+    typeof useExperimentationEnabled
   >
 
 const makeExperiment = (
@@ -56,7 +53,10 @@ const withResults = (experiments: Experiment[]) =>
 describe('useFeatureExperimentFreeze', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockGetFlagsmithHasFeature.mockReturnValue(true)
+    mockUseExperimentationEnabled.mockReturnValue({
+      enabled: true,
+      isLoading: false,
+    })
   })
 
   it('returns isFrozen true when a running experiment exists for the feature', () => {
@@ -125,8 +125,11 @@ describe('useFeatureExperimentFreeze', () => {
     )
   })
 
-  it('skips query when experimental_flags feature is disabled', () => {
-    mockGetFlagsmithHasFeature.mockReturnValue(false)
+  it('skips query when experimentation is unavailable', () => {
+    mockUseExperimentationEnabled.mockReturnValue({
+      enabled: false,
+      isLoading: false,
+    })
     mockUseGetExperimentsQuery.mockReturnValue(empty)
 
     const result = useFeatureExperimentFreeze(42, 'env-123')
@@ -136,6 +139,18 @@ describe('useFeatureExperimentFreeze', () => {
       { environmentId: 'env-123', status: 'running' },
       { skip: true },
     )
+  })
+
+  it('returns isLoading true while the experimentation check is loading', () => {
+    mockUseExperimentationEnabled.mockReturnValue({
+      enabled: false,
+      isLoading: true,
+    })
+    mockUseGetExperimentsQuery.mockReturnValue(empty)
+
+    const result = useFeatureExperimentFreeze(42, 'env-123')
+
+    expect(result.isLoading).toBe(true)
   })
 
   it('queries only running experiments when feature is enabled', () => {

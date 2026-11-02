@@ -5,6 +5,7 @@ import pytest
 import responses
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
+from rest_framework.test import APIClient
 
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -825,3 +826,33 @@ def test_post_gitlab_state_change_comment_for_feature_state__no_environment__noo
 
     # Then
     mock_task.delay.assert_not_called()
+
+
+def test_create_segment_override__gitlab_config__dispatches_state_change_comment(
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    gitlab_config: GitLabConfiguration,
+    mocker: MockerFixture,
+    segment: Segment,
+) -> None:
+    # Given
+    mock_task = mocker.patch(
+        "integrations.gitlab.tasks.post_gitlab_state_change_comment",
+    )
+
+    # When
+    response = admin_client_new.post(
+        f"/api/v1/environments/{environment.api_key}/features/{feature.id}"
+        "/create-segment-override/",
+        {
+            "feature_segment": {"segment": segment.id},
+            "enabled": True,
+            "feature_state_value": {"string_value": "segment value!"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 201
+    mock_task.delay.assert_called_once_with(args=(response.json()["id"],))

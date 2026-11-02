@@ -4,11 +4,9 @@ sidebar_label: Statistics Glossary
 sidebar_position: 7
 ---
 
-:::info Coming soon — Enterprise beta
+:::info Beta
 
-Experiment statistics aren't generally available yet. They are launching as a beta on **Enterprise** plans — to join,
-[get in touch](https://www.flagsmith.com/contact-us). Everything described on this page is part of that upcoming
-release; it previews what the feature will do.
+Experimentation is in beta.
 
 :::
 
@@ -128,19 +126,19 @@ metrics into **goals** and **guardrails**.
 
 ## Summary
 
-Nothing here is generally available yet — the table shows what the upcoming Enterprise beta will include.
-
 | Capability                                      | Status                |
 | ----------------------------------------------- | --------------------- |
-| Exposures panel (counts, chart, share)          | In the first beta     |
-| First-exposure attribution & duplicate immunity | In the first beta     |
-| Quarantined (multi-variant) identities          | In the first beta     |
-| Metric definitions                              | In the first beta     |
-| Results scorecard: lift, credible interval      | Planned               |
-| Chance to beat control & winning/losing flags   | Planned               |
-| Sample ratio mismatch (SRM) check               | Planned               |
-| Collecting-data floor                           | Planned               |
-| Risk / decision banner / trend chart            | Not currently planned |
+| Exposures panel (counts, chart, share)          | Available             |
+| First-exposure attribution & duplicate immunity | Available             |
+| Quarantined (multi-variant) identities          | Available             |
+| Metric definitions                              | Available             |
+| Results scorecard: lift, credible interval      | Available             |
+| Chance to beat control & winning/losing flags   | Available             |
+| Sample ratio mismatch (SRM) check               | Available             |
+| Collecting-data floor                           | Available             |
+| Decision banner                                 | Available             |
+| Conversions trend chart                         | Available             |
+| Risk (expected loss)                            | Not currently planned |
 | Frequentist engine                              | Deferred              |
 
 For experiment setup, see [Create an Experiment](/experimentation/create-an-experiment) and

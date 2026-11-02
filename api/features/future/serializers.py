@@ -7,6 +7,7 @@ from rest_framework import serializers
 from features.feature_states.exceptions import FeatureValueError
 from features.feature_states.models import FeatureValueType
 from features.feature_types import MULTIVARIATE
+from features.future.services import check_variants
 from features.future.types import (
     EnvironmentDefaultRequest,
     FlagValue,
@@ -50,10 +51,16 @@ class FlagStateSerializer(serializers.Serializer[dict[str, object]]):
     """What a flag serves somewhere in an environment."""
 
     enabled = serializers.BooleanField(required=False)
-    value = FlagValueSerializer(required=False)
+    value = FlagValueSerializer(
+        required=False,
+        allow_null=True,
+        help_text="Null clears the value.",
+    )
     variants = VariantSerializer(many=True, required=False)
 
-    def validate_value(self, value: FlagValue) -> FlagValue:
+    def validate_value(self, value: FlagValue | None) -> FlagValue | None:
+        if value is None:
+            return None
         try:
             FeatureStateValue().set_value(value["value"], value["type"])
         except FeatureValueError as error:
@@ -61,17 +68,7 @@ class FlagStateSerializer(serializers.Serializer[dict[str, object]]):
         return value
 
     def validate_variants(self, variants: list[Variant]) -> list[Variant]:
-        feature: Feature = self.context["feature"]
-        if feature.type != MULTIVARIATE:
-            raise serializers.ValidationError("Feature is not multivariate.")
-        known_ids = set(feature.multivariate_options.values_list("id", flat=True))
-        given_ids = {variant["id"] for variant in variants}
-        if given_ids - known_ids:
-            raise serializers.ValidationError("Variant not found.")
-        if known_ids - given_ids:
-            raise serializers.ValidationError("Must include all feature's variants.")
-        if sum(variant["weight"] for variant in variants) > 100:
-            raise serializers.ValidationError("Total weight must not exceed 100.")
+        check_variants(self.context["feature"], [variants])
         return variants
 
 

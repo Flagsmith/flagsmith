@@ -74,3 +74,11 @@ class SubscriptionPlanFamily(Enum):
                 return cls.ENTERPRISE
             case _:
                 return cls.FREE
+
+
+PLAN_RANK = {
+    SubscriptionPlanFamily.FREE: 0,
+    SubscriptionPlanFamily.START_UP: 1,
+    SubscriptionPlanFamily.SCALE_UP: 2,
+    SubscriptionPlanFamily.ENTERPRISE: 3,
+}

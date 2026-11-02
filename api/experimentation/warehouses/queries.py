@@ -36,7 +36,7 @@ QueryRunner = Callable[[str, dict[str, object]], QueryResult]
 
 def event_names_query(dialect: "Dialect") -> str:
     return (
-        "SELECT event FROM events "
+        f"SELECT event FROM {dialect.events_table_name} "
         f"WHERE environment_key = {dialect.param('environment_key')} "
         f"GROUP BY event ORDER BY max(timestamp) DESC LIMIT {dialect.param('limit')}"
     )
@@ -47,7 +47,7 @@ def event_stats_query(dialect: "Dialect") -> str:
         f"SELECT {dialect.count_all()} AS total, "
         f"{dialect.count_distinct('event')} AS unique, "
         "max(timestamp) AS last_event_at "
-        f"FROM events WHERE environment_key = {dialect.param('environment_key')}"
+        f"FROM {dialect.events_table_name} WHERE environment_key = {dialect.param('environment_key')}"
     )
 
 

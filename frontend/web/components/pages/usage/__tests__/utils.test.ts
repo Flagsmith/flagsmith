@@ -1,17 +1,19 @@
 import { Subscription } from 'common/types/responses'
 import {
   isBillingPeriodSelected,
-  isChargedForOverages,
   allowanceWindow,
   allowanceWindowLabel,
-  showsContribution,
   showsPlanCeiling,
   showsProjection,
   usageBasisOf,
   periodsFor,
   resolvePeriod,
 } from 'components/pages/usage/utils'
-import { contributionNote, planSectionCopy } from 'components/pages/usage/copy'
+import {
+  contributionNote,
+  showsContribution,
+} from 'components/pages/usage/contribution'
+import { planHeading } from 'components/pages/usage/planHeading'
 
 const subscription = (values: Partial<Subscription>): Subscription =>
   ({ has_active_billing_periods: false, plan: null, ...values } as Subscription)
@@ -71,36 +73,22 @@ describe('UsageDashboard utils', () => {
     })
   })
 
-  describe('planSectionCopy', () => {
+  describe('planHeading', () => {
     const rolling = { reason: 'free', window: 'rolling' } as const
 
     it('measures against the allowance when there is one', () => {
-      const copy = planSectionCopy(rolling, 50000)
+      const copy = planHeading(rolling, 50000)
 
       expect(copy.title).toBe('Your plan')
       expect(copy.hint).toContain('against your plan limit')
     })
 
     it('claims no allowance where there is none to claim', () => {
-      const copy = planSectionCopy(rolling, null)
+      const copy = planHeading(rolling, null)
 
       expect(copy.title).toBe('Your usage')
       expect(copy.hint).toContain('no plan limit')
       expect(copy.hint).not.toContain('allowance')
-    })
-  })
-
-  describe('isChargedForOverages', () => {
-    it.each`
-      plan             | expected
-      ${'start-up'}    | ${true}
-      ${'startup-v2'}  | ${true}
-      ${'scale-up-v2'} | ${true}
-      ${'enterprise'}  | ${false}
-      ${'free'}        | ${false}
-      ${null}          | ${false}
-    `('$plan is charged for overages: $expected', ({ expected, plan }) => {
-      expect(isChargedForOverages(subscription({ plan }))).toBe(expected)
     })
   })
 
@@ -118,10 +106,7 @@ describe('UsageDashboard utils', () => {
 
     // Deliberate: see RollingReason.
     it('promises a free plan no deadline it cannot keep', () => {
-      const hint = planSectionCopy(
-        usageBasisOf(subscription({}), true),
-        50000,
-      ).hint
+      const hint = planHeading(usageBasisOf(subscription({}), true), 50000).hint
 
       expect(hint).not.toContain('7 day')
       expect(hint).not.toContain('seven day')
@@ -133,7 +118,7 @@ describe('UsageDashboard utils', () => {
 
       expect(basis).toEqual({ reason: 'free', window: 'rolling' })
       expect(allowanceWindow(basis)).toBeUndefined()
-      expect(planSectionCopy(basis, 50000).hint).toBe(
+      expect(planHeading(basis, 50000).hint).toBe(
         'Usage against your plan limit over the last 30 days.',
       )
     })
@@ -145,7 +130,7 @@ describe('UsageDashboard utils', () => {
       )
 
       expect(basis).toEqual({ reason: 'no-period', window: 'rolling' })
-      expect(planSectionCopy(basis, 50000).hint).toContain(
+      expect(planHeading(basis, 50000).hint).toContain(
         'unable to show exact billing periods',
       )
     })

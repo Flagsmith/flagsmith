@@ -5,6 +5,8 @@ import {
 } from 'components/pages/usage/__tests__/fixtures'
 import {
   byRequestType,
+  byScope,
+  groupByOf,
   barPercent,
   bySdk,
   sharesOf,
@@ -135,5 +137,74 @@ describe('UsageBreakdown utils', () => {
       expect(barPercent(0, 8_900_000)).toBe(0)
       expect(barPercent(10, 0)).toBe(0)
     })
+  })
+
+  describe('byScope', () => {
+    it('ranks projects by their total and names them', () => {
+      const rows = byScope(
+        usageResponse([
+          usageEvent({ flags: 10, project_id: 1 }),
+          usageEvent({ flags: 5, identities: 20, project_id: 2 }),
+          usageEvent({ flags: 4, project_id: 1 }),
+        ]),
+        'project_id',
+        new Map([
+          [1, 'Checkout'],
+          [2, 'Mobile app'],
+        ]),
+        'Deleted project',
+      )
+
+      expect(rows.map(({ label, value }) => [label, value])).toEqual([
+        ['Mobile app', 25],
+        ['Checkout', 14],
+      ])
+    })
+
+    it('folds usage from every deleted project into one row', () => {
+      const rows = byScope(
+        usageResponse([
+          usageEvent({ flags: 3, project_id: 9 }),
+          usageEvent({ flags: 10, project_id: 1 }),
+          usageEvent({ flags: 4, project_id: 7 }),
+          usageEvent({ flags: 2, project_id: 9 }),
+        ]),
+        'project_id',
+        new Map([[1, 'Checkout']]),
+        'Deleted projects',
+      )
+
+      expect(rows.map(({ key, label, value }) => [key, label, value])).toEqual([
+        ['project_id-1', 'Checkout', 10],
+        ['project_id-deleted', 'Deleted projects', 9],
+      ])
+    })
+
+    it('skips rows the API did not group', () => {
+      expect(
+        byScope(
+          usageResponse([usageEvent({ flags: 3 })]),
+          'environment_id',
+          new Map(),
+          'Deleted environment',
+        ),
+      ).toEqual([])
+    })
+  })
+
+  describe('groupByOf', () => {
+    it.each`
+      dimension         | projectId    | expected
+      ${'request-type'} | ${undefined} | ${undefined}
+      ${'sdk'}          | ${12}        | ${undefined}
+      ${'project'}      | ${undefined} | ${'project'}
+      ${'environment'}  | ${undefined} | ${undefined}
+      ${'environment'}  | ${12}        | ${'environment'}
+    `(
+      '$dimension with project $projectId groups by $expected',
+      ({ dimension, expected, projectId }) => {
+        expect(groupByOf(dimension, projectId)).toBe(expected)
+      },
+    )
   })
 })

@@ -1,7 +1,7 @@
 import { FC, useState } from 'react'
 import LineChart from 'components/charts/LineChart'
 import { ChartDataPoint, ChartSeries } from 'components/charts/types'
-import { colorChart5, colorTextSuccess } from 'common/theme/tokens'
+import { colorChart5, colorIconSuccess } from 'common/theme/tokens'
 import './MetricsTrendChart.scss'
 
 export type MetricTrendPoint = {
@@ -20,7 +20,7 @@ type MetricsTrendChartProps = {
 }
 
 const SERIES: ChartSeries[] = [
-  { colour: colorTextSuccess, key: 'control', label: 'Control' },
+  { colour: colorIconSuccess, key: 'control', label: 'Control' },
   { colour: colorChart5, key: 'variant', label: 'Variant B' },
 ]
 

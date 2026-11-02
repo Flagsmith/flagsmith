@@ -95,7 +95,8 @@ const ExperimentResultsAxisChart: FC<ExperimentResultsAxisChartProps> = ({
               )
             }
             if (!inf) return null
-            const colour = getLiftColour(inf.lift, direction)
+            const fill = getLiftColour(inf.lift, direction, 'fill')
+            const text = getLiftColour(inf.lift, direction, 'text')
             const ciLeft = valueToPercent(inf.ci_low, range)
             const ciRight = valueToPercent(inf.ci_high, range)
             const dotPos = valueToPercent(inf.lift, range)
@@ -118,18 +119,18 @@ const ExperimentResultsAxisChart: FC<ExperimentResultsAxisChartProps> = ({
                   <div
                     className='experiment-results__axis-bar'
                     style={{
-                      background: colour,
+                      background: fill,
                       left: `${ciLeft}%`,
                       width: `${ciRight - ciLeft}%`,
                     }}
                   />
                   <div
                     className='experiment-results__axis-dot'
-                    style={{ background: colour, left: `${dotPos}%` }}
+                    style={{ background: fill, left: `${dotPos}%` }}
                   />
                   <span
                     className='experiment-results__axis-dot-label'
-                    style={{ color: colour, left: `${dotPos}%` }}
+                    style={{ color: text, left: `${dotPos}%` }}
                   >
                     {formatLiftPct(inf.lift)}
                   </span>

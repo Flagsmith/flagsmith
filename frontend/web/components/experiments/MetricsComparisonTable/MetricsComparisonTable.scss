@@ -119,15 +119,15 @@
     border-radius: var(--radius-sm);
 
     &--positive {
-      background: var(--color-text-success);
+      background: var(--color-icon-success);
     }
 
     &--negative {
-      background: var(--color-text-danger);
+      background: var(--color-icon-danger);
     }
 
     &--neutral {
-      background: var(--color-text-tertiary);
+      background: var(--color-icon-secondary);
     }
   }
 

@@ -1,7 +1,16 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
+from typing import TypeVar
 
 from django.db import close_old_connections
+from django.db.models import QuerySet
+from django_lifecycle import (  # type: ignore[import-untyped]
+    AFTER_DELETE,
+    BEFORE_DELETE,
+    LifecycleModelMixin,
+)
+
+M = TypeVar("M", bound=LifecycleModelMixin)
 
 
 @contextmanager
@@ -17,3 +26,20 @@ def closing_stale_connections() -> Iterator[None]:
         yield
     finally:
         close_old_connections()
+
+
+@contextmanager
+def with_delete_hooks(queryset: QuerySet[M]) -> Iterator[QuerySet[M]]:
+    """Run the django-lifecycle delete hooks of the instances a queryset deletes.
+
+    Deleting a queryset, rather than each instance, skips those hooks.
+
+    TODO: Stop running private hooks after
+    https://github.com/Flagsmith/flagsmith/issues/7315
+    """
+    instances = list(queryset)
+    for instance in instances:
+        instance._run_hooked_methods(BEFORE_DELETE)
+    yield queryset
+    for instance in instances:
+        instance._run_hooked_methods(AFTER_DELETE)

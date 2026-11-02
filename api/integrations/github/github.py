@@ -246,7 +246,7 @@ def generate_data(
 
 
 def call_github_task(
-    organisation_id: str,
+    organisation_id: int,
     type: str,
     feature: Feature,
     segment_name: str | None,
