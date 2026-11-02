@@ -2093,6 +2093,7 @@ def test_post__flagsmith_database_config__returns_201_connected_without_credenti
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["status"] == WarehouseConnectionStatus.CONNECTED
     assert response.json()["config"] == {"source": FLAGSMITH_DATABASE_SOURCE}
+    assert response.json()["name"] == f"Flagsmith database - {environment.name}"
     connection = WarehouseConnection.objects.get(environment=environment)
     assert connection.credentials is None
 
