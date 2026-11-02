@@ -399,11 +399,16 @@ class PostgresWarehouse:
         return {"password": password}
 
     def verify(self, connection: "WarehouseConnection") -> None:
-        if is_flagsmith_database_config(connection.config):
-            return
         with read_cursor(
             connection, statement_timeout=VERIFY_TIMEOUT_SECONDS
         ) as cursor:
+            if is_flagsmith_database_config(connection.config):
+                cursor.execute(
+                    sql.SQL("SELECT 1 FROM {} LIMIT 1").format(
+                        sql.Identifier(FLAGSMITH_DATABASE_DIALECT.events_table_name)
+                    )
+                )
+                return
             config = typing.cast(PostgresConfig, connection.config)
             check_events_table(cursor, config["schema"])
 
