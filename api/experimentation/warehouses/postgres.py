@@ -185,7 +185,7 @@ def describe_postgres_error(error: Exception) -> str:
     return "Connection failed."
 
 
-def _get_stored_connect_params_and_schema(
+def _get_customer_connect_params_and_schema(
     connection: "WarehouseConnection",
 ) -> tuple[dict[str, Any], str]:
     config = typing.cast(PostgresConfig, connection.config or {})
@@ -233,7 +233,7 @@ def read_cursor(
     if is_flagsmith_database_config(connection.config):
         connect_params = get_flagsmith_database_connect_params()
     else:
-        connect_params, schema = _get_stored_connect_params_and_schema(connection)
+        connect_params, schema = _get_customer_connect_params_and_schema(connection)
 
     with closing(
         psycopg2.connect(
@@ -328,7 +328,7 @@ def _validate_host(host: object) -> None:
         )
 
 
-def _validate_flagsmith_database_config(config: dict[str, Any]) -> dict[str, str]:
+def _validate_flagsmith_database_config(config: dict[str, Any]) -> dict[str, Any]:
     if not is_flagsmith_database_config(config):
         raise _config_error(
             "source", f'Must be "{FLAGSMITH_DATABASE_SOURCE}", with no other fields.'
@@ -337,7 +337,7 @@ def _validate_flagsmith_database_config(config: dict[str, Any]) -> dict[str, str
         raise serializers.ValidationError(
             {"config": FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL}
         )
-    return {"source": FLAGSMITH_DATABASE_SOURCE}
+    return config
 
 
 class PostgresWarehouse:
@@ -346,7 +346,7 @@ class PostgresWarehouse:
         config: dict[str, Any],
         *,
         stored: dict[str, Any] | None = None,
-    ) -> PostgresConfig | dict[str, str]:
+    ) -> PostgresConfig | dict[str, Any]:
         if not isinstance(config, dict):
             raise serializers.ValidationError({"config": "Must be an object."})
         if "source" in config:
