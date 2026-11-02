@@ -8466,20 +8466,9 @@ paths:
   /api/v1/events/:
     post:
       operationId: api_v1_events_create
-      description: |-
-        Store SDK events for environments whose warehouse is the Flagsmith
-        database, with the ingestion server's request and response contract.
       requestBody:
         content:
           application/json:
-            schema:
-              type: object
-              additionalProperties: {}
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              additionalProperties: {}
-          multipart/form-data:
             schema:
               type: object
               additionalProperties: {}
@@ -8498,12 +8487,6 @@ paths:
               schema:
                 type: object
                 additionalProperties: {}
-        '413':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: string
       security:
         - Environment API Key: []
       tags:
