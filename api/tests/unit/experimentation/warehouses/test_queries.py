@@ -24,7 +24,7 @@ EVENT_NAMES_SQL = (
 )
 EVENT_STATS_SQL = (
     "SELECT count() AS total, uniqExact(event) AS unique, "
-    "max(timestamp) AS last_event_at "
+    "toTimeZone(max(timestamp), 'UTC') AS last_event_at "
     "FROM events WHERE environment_key = %(environment_key)s"
 )
 
