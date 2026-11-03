@@ -8,7 +8,7 @@ from botocore.config import Config
 from sentry_sdk import set_context  # TODO @kgustyr: Replace with OTel
 
 if typing.TYPE_CHECKING:
-    from mypy_boto3_dynamodb.service_resource import Table
+    from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
     from mypy_boto3_dynamodb.type_defs import (
         QueryOutputTableTypeDef,
         ScanOutputTableTypeDef,
@@ -27,6 +27,7 @@ class BaseDynamoWrapper:
 
     def __init__(self) -> None:
         self._table: typing.Optional["Table"] = None
+        self._resource: typing.Optional["DynamoDBServiceResource"] = None
 
     @property
     def table(self) -> typing.Optional["Table"]:
@@ -34,14 +35,25 @@ class BaseDynamoWrapper:
             self._table = self.get_table()
         return self._table
 
+    @property
+    def resource(self) -> "DynamoDBServiceResource":
+        """
+        The service resource behind `table`, for operations that span items —
+        e.g. `batch_get_item`, which is not available on a `Table`.
+        """
+        if not self._resource:
+            self._resource = self.get_resource()
+        return self._resource
+
     def get_table_name(self) -> str:
         return self.table_name
 
+    def get_resource(self) -> "DynamoDBServiceResource":
+        return boto3.resource("dynamodb", config=Config(tcp_keepalive=True))
+
     def get_table(self) -> "Table | None":
         if table_name := self.get_table_name():
-            return boto3.resource("dynamodb", config=Config(tcp_keepalive=True)).Table(
-                table_name
-            )
+            return self.resource.Table(table_name)
         return None
 
     @property
