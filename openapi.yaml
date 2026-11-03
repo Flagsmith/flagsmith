@@ -8467,11 +8467,11 @@ paths:
     post:
       operationId: api_v1_events_create
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              type: object
-              additionalProperties: {}
+              $ref: '#/components/schemas/SDKExperimentationEventBatch'
       responses:
         '202':
           description: ''
@@ -28201,6 +28201,52 @@ components:
         - identity
         - trait_key
         - trait_value
+    SDKExperimentationEvent:
+      description: 'Expects `now` in its context, to bound the timestamp.'
+      type: object
+      properties:
+        event:
+          type: string
+          maxLength: 256
+        feature_name:
+          type:
+            - string
+            - 'null'
+          maxLength: 2000
+        identifier:
+          type:
+            - string
+            - 'null'
+          maxLength: 2000
+        timestamp:
+          type: integer
+          format: int64
+          minimum: 1577836800001
+        value:
+          oneOf:
+            - {}
+            - type: 'null'
+        traits:
+          type:
+            - object
+            - 'null'
+          additionalProperties: {}
+        metadata:
+          oneOf:
+            - {}
+            - type: 'null'
+      required:
+        - event
+        - timestamp
+    SDKExperimentationEventBatch:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/SDKExperimentationEvent'
+      required:
+        - events
     SamlAttributeMapping:
       type: object
       properties:
