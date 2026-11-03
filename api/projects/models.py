@@ -200,7 +200,9 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[d
     def live_segment_count(self) -> int:
         from segments.models import Segment
 
-        return Segment.live_objects.filter(project=self).count()  # type: ignore[no-any-return]
+        return Segment.live_objects.filter(  # type: ignore[no-any-return]
+            project=self, is_system_segment=False, feature__isnull=True
+        ).count()
 
     def is_feature_name_valid(self, feature_name: str) -> bool:
         """

@@ -2823,3 +2823,37 @@ def test_list_segments__mixed_overrides__returns_has_overrides(
     }
     assert has_overrides_by_id[segment.id] is True
     assert has_overrides_by_id[another_segment.id] is False
+
+
+def test_create_segment__hidden_segments_at_limit__returns_201(
+    project: Project,
+    admin_client: APIClient,
+    settings: SettingsWrapper,
+    feature_specific_segment: Segment,
+) -> None:
+    # Given
+    settings.EDGE_ENABLED = True
+    project.max_segments_allowed = 1
+    project.save()
+    Segment.objects.create(name="system", project=project, is_system_segment=True)
+
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "New segment name",
+        "project": project.id,
+        "rules": [
+            {
+                "type": "ALL",
+                "rules": [],
+                "conditions": [{"operator": EQUAL, "property": "test-property"}],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
