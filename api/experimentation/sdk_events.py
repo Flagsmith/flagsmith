@@ -5,9 +5,13 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from django.core.validators import ProhibitNullCharactersValidator
+from rest_framework import serializers
+from rest_framework.validators import ProhibitSurrogateCharactersValidator
+
+from environments.identities.traits.constants import TRAIT_STRING_VALUE_MAX_LENGTH
 from experimentation.constants import EXPOSURE_EVENT_NAME
 from experimentation.models import SDKExperimentationEvent
-from experimentation.types import RejectedSDKEvent
 
 # 2020-01-01T00:00:00Z.
 MIN_TIMESTAMP_MS = 1_577_836_800_000
@@ -18,13 +22,10 @@ MAX_EVENT_NAME_CHARS = 256
 MAX_FEATURE_NAME_CHARS = 2000
 MAX_IDENTIFIER_CHARS = 2000
 MAX_TRAIT_KEY_CHARS = 200
-MAX_TRAIT_STRING_VALUE_CHARS = 2000
 
 MAX_VALUE_BYTES = 128 * 1024
 MAX_TRAITS_BYTES = 32 * 1024
 MAX_METADATA_BYTES = 8 * 1024
-
-MAX_SDK_FIELD_CHARS = 100
 
 EMPTY_BATCH_ERROR = "events must be non-empty"
 
@@ -34,29 +35,105 @@ BODY_LIMIT_ERROR = "Failed to buffer the request body: length limit exceeded"
 
 _UNIX_EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 _LONE_SURROGATE_PATTERN = re.compile("[\ud800-\udfff]")
-_SDK_USER_AGENT_PATTERN = re.compile(r"flagsmith-(.*)-sdk", re.DOTALL)
 
 
-def partition_sdk_events(
-    events: list[object],
-    now: datetime,
-) -> tuple[list[dict[str, Any]], list[RejectedSDKEvent]]:
-    """One invalid event never blocks its neighbours."""
-    now_ms = (now - _UNIX_EPOCH) // timedelta(milliseconds=1)
-    valid_events: list[dict[str, Any]] = []
-    rejected_events: list[RejectedSDKEvent] = []
-    for index, event in enumerate(events):
-        if not isinstance(event, dict):
-            rejected_events.append(
-                {"index": index, "error": f"events[{index}] must be an object"}
+class _StrictCharField(serializers.CharField):
+    """Rejects numbers, which CharField would coerce to strings."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        # The ingestion server accepts these; _as_column_text sanitises them.
+        self.validators = [
+            validator
+            for validator in self.validators
+            if not isinstance(
+                validator,
+                (ProhibitNullCharactersValidator, ProhibitSurrogateCharactersValidator),
             )
-        elif error := _validate_sdk_event(event, now_ms):
-            rejected_events.append(
-                {"index": index, "error": f"events[{index}].{error}"}
+        ]
+
+    def to_internal_value(self, data: object) -> str:
+        if not isinstance(data, str):
+            self.fail("invalid")
+        return super().to_internal_value(data)
+
+
+class _StrictIntegerField(serializers.IntegerField):
+    """Rejects booleans, floats and strings, which IntegerField would coerce."""
+
+    def to_internal_value(self, data: object) -> int:
+        if isinstance(data, bool) or not isinstance(data, int):
+            self.fail("invalid")
+        return super().to_internal_value(data)
+
+
+class SDKExperimentationEventSerializer(serializers.Serializer[dict[str, Any]]):
+    """Expects `now` in its context, to bound the timestamp."""
+
+    event = _StrictCharField(max_length=MAX_EVENT_NAME_CHARS, trim_whitespace=False)
+    feature_name = _StrictCharField(
+        max_length=MAX_FEATURE_NAME_CHARS,
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        trim_whitespace=False,
+    )
+    identifier = _StrictCharField(
+        max_length=MAX_IDENTIFIER_CHARS,
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        trim_whitespace=False,
+    )
+    timestamp = _StrictIntegerField(min_value=MIN_TIMESTAMP_MS + 1)
+    value = serializers.JSONField(required=False, allow_null=True)
+    traits = serializers.DictField(required=False, allow_null=True)
+    metadata = serializers.JSONField(required=False, allow_null=True)
+
+    def validate_event(self, name: str) -> str:
+        if not name.strip():
+            raise serializers.ValidationError("This field may not be blank.")
+        if name.startswith("$") and name != EXPOSURE_EVENT_NAME:
+            raise serializers.ValidationError("The `$` prefix is reserved.")
+        return name
+
+    def validate_timestamp(self, timestamp: int) -> int:
+        now: datetime = self.context["now"]
+        if timestamp > _to_epoch_ms(now + timedelta(hours=MAX_FUTURE_SKEW_HOURS)):
+            raise serializers.ValidationError(
+                f"Must be at most {MAX_FUTURE_SKEW_HOURS} hours in the future."
             )
-        else:
-            valid_events.append(event)
-    return valid_events, rejected_events
+        if timestamp < _to_epoch_ms(now - timedelta(days=MAX_EVENT_AGE_DAYS)):
+            raise serializers.ValidationError(
+                f"Must be at most {MAX_EVENT_AGE_DAYS} days in the past."
+            )
+        return timestamp
+
+    def validate_value(self, value: object) -> object:
+        return _validate_json_byte_size(value, MAX_VALUE_BYTES)
+
+    def validate_traits(self, traits: dict[str, Any] | None) -> dict[str, Any] | None:
+        _validate_json_byte_size(traits, MAX_TRAITS_BYTES)
+        for key, value in (traits or {}).items():
+            if len(key) > MAX_TRAIT_KEY_CHARS:
+                raise serializers.ValidationError(
+                    f"Keys must be at most {MAX_TRAIT_KEY_CHARS} characters."
+                )
+            if isinstance(value, str) and len(value) > TRAIT_STRING_VALUE_MAX_LENGTH:
+                raise serializers.ValidationError(
+                    f"String values must be at most {TRAIT_STRING_VALUE_MAX_LENGTH} characters."
+                )
+        return traits
+
+    def validate_metadata(self, metadata: object) -> object:
+        return _validate_json_byte_size(metadata, MAX_METADATA_BYTES)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        if attrs["event"] == EXPOSURE_EVENT_NAME and attrs.get("feature_name") is None:
+            raise serializers.ValidationError(
+                {"feature_name": f"Required for {EXPOSURE_EVENT_NAME} events."}
+            )
+        return attrs
 
 
 def is_over_body_limit(content_length: str | None) -> bool:
@@ -65,19 +142,6 @@ def is_over_body_limit(content_length: str | None) -> bool:
         return int(content_length or 0) > MAX_BODY_BYTES
     except ValueError:
         return False
-
-
-def parse_sdk_user_agent(header: str | None) -> tuple[str, str]:
-    """`flagsmith-js-sdk/11.0.0` gives `("js", "11.0.0")`."""
-    if header is None:
-        return "unknown", "unknown"
-    sdk_part, separator, version = header.partition("/")
-    language_match = _SDK_USER_AGENT_PATTERN.fullmatch(sdk_part)
-    language = language_match[1] if language_match else "unknown"
-    return (
-        language[:MAX_SDK_FIELD_CHARS],
-        (version if separator else "unknown")[:MAX_SDK_FIELD_CHARS],
-    )
 
 
 def build_sdk_experimentation_event(
@@ -103,88 +167,18 @@ def build_sdk_experimentation_event(
     )
 
 
-def _validate_sdk_event(event: dict[str, Any], now_ms: int) -> str | None:
-    """Return the first rule the event breaks, in the ingestion server's order."""
-    name = event.get("event", "")
-    feature_name = event.get("feature_name")
-    return (
-        _validate_event_name(name)
-        or (
-            f"feature_name is required for {EXPOSURE_EVENT_NAME} events"
-            if name == EXPOSURE_EVENT_NAME and feature_name is None
-            else None
+def _to_epoch_ms(moment: datetime) -> int:
+    return (moment - _UNIX_EPOCH) // timedelta(milliseconds=1)
+
+
+def _validate_json_byte_size(value: object, max_bytes: int) -> object:
+    """Measures UTF-8 bytes, as the ingestion server does."""
+    serialised = json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+    if len(serialised.encode(errors="surrogatepass")) > max_bytes:
+        raise serializers.ValidationError(
+            f"Must serialise to at most {max_bytes} bytes."
         )
-        or _validate_optional_string(
-            "feature_name", feature_name, MAX_FEATURE_NAME_CHARS
-        )
-        or _validate_optional_string(
-            "identifier", event.get("identifier"), MAX_IDENTIFIER_CHARS
-        )
-        or _validate_timestamp(event.get("timestamp", 0), now_ms)
-        or _validate_json_fields(event)
-    )
-
-
-def _validate_event_name(name: object) -> str | None:
-    if not isinstance(name, str):
-        return "event must be a string"
-    if not name.strip():
-        return "event must be non-empty"
-    if len(name) > MAX_EVENT_NAME_CHARS:
-        return f"event must be at most {MAX_EVENT_NAME_CHARS} characters"
-    if name.startswith("$") and name != EXPOSURE_EVENT_NAME:
-        return f'event "{name}" uses the reserved `$` prefix but is not a known system event'
-    return None
-
-
-def _validate_optional_string(field: str, value: object, max_chars: int) -> str | None:
-    if value is None:
-        return None
-    if not isinstance(value, str):
-        return f"{field} must be a string"
-    if len(value) > max_chars:
-        return f"{field} must be at most {max_chars} characters"
-    return None
-
-
-def _validate_timestamp(timestamp: object, now_ms: int) -> str | None:
-    if isinstance(timestamp, bool) or not isinstance(timestamp, int):
-        return "timestamp must be an integer"
-    if timestamp <= MIN_TIMESTAMP_MS:
-        return "timestamp must be an epoch-millis value after 2020-01-01"
-    if timestamp > now_ms + MAX_FUTURE_SKEW_HOURS * 3_600_000:
-        return f"timestamp must not be more than {MAX_FUTURE_SKEW_HOURS}h in the future"
-    if timestamp < now_ms - MAX_EVENT_AGE_DAYS * 86_400_000:
-        return f"timestamp must not be more than {MAX_EVENT_AGE_DAYS} days in the past"
-    return None
-
-
-def _validate_json_fields(event: dict[str, Any]) -> str | None:
-    if _json_byte_size(event.get("value")) > MAX_VALUE_BYTES:
-        return f"value must serialize to at most {MAX_VALUE_BYTES} bytes"
-    if (traits := event.get("traits")) is not None:
-        if _json_byte_size(traits) > MAX_TRAITS_BYTES:
-            return f"traits must serialize to at most {MAX_TRAITS_BYTES} bytes"
-        if not isinstance(traits, dict):
-            return "traits must be a JSON object"
-        for key, value in traits.items():
-            if len(key) > MAX_TRAIT_KEY_CHARS:
-                return f"trait keys must be at most {MAX_TRAIT_KEY_CHARS} characters"
-            if isinstance(value, str) and len(value) > MAX_TRAIT_STRING_VALUE_CHARS:
-                return f'traits["{key}"] string values must be at most {MAX_TRAIT_STRING_VALUE_CHARS} characters'
-    metadata = event.get("metadata")
-    if metadata is not None and _json_byte_size(metadata) > MAX_METADATA_BYTES:
-        return f"metadata must serialize to at most {MAX_METADATA_BYTES} bytes"
-    return None
-
-
-def _json_byte_size(value: object) -> int:
-    """Serialised size in UTF-8 bytes, as the ingestion server measures it."""
-    return len(
-        json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode(
-            errors="surrogatepass"
-        )
-    )
+    return value
 
 
 def _as_column_text(value: object) -> str | None:
@@ -196,4 +190,4 @@ def _as_column_text(value: object) -> str | None:
         else json.dumps(value, ensure_ascii=False, separators=(",", ":"))
     )
     # PostgreSQL text can't hold NUL, nor UTF-8 a lone surrogate; either fails the batch.
-    return _LONE_SURROGATE_PATTERN.sub("\ufffd", text.replace("\x00", ""))
+    return _LONE_SURROGATE_PATTERN.sub("�", text.replace("\x00", ""))

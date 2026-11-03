@@ -2283,6 +2283,7 @@ def test_post_sdk_events__mixed_batch__stores_valid_events_and_returns_202(
                 "timestamp": timestamp_ms,
             },
             {"event": "purchase", "timestamp": 1},
+            "purchase",
         ]
     }
 
@@ -2292,11 +2293,19 @@ def test_post_sdk_events__mixed_batch__stores_valid_events_and_returns_202(
     )
 
     # Then
-    error = "events[1].timestamp must be an epoch-millis value after 2020-01-01"
     assert response.status_code == status.HTTP_202_ACCEPTED
     assert response.json() == {
         "accepted": 1,
-        "rejected": [{"index": 1, "error": error}],
+        "rejected": [
+            {
+                "index": 1,
+                "error": "timestamp: Ensure this value is greater than or equal to 1577836800001.",
+            },
+            {
+                "index": 2,
+                "error": "Invalid data. Expected a dictionary, but got str.",
+            },
+        ],
     }
     assert list(
         SDKExperimentationEvent.objects.values_list(
@@ -2308,9 +2317,9 @@ def test_post_sdk_events__mixed_batch__stores_valid_events_and_returns_202(
             "level": "warning",
             "event": "sdk_events.rejected",
             "environment__id": environment.id,
-            "submitted_events__count": 2,
-            "rejected_events__count": 1,
-            "rejected_events__first_error": error,
+            "submitted_events__count": 3,
+            "rejected_events__count": 2,
+            "rejected_events__fields": ["non_field_errors", "timestamp"],
         }
     ]
     assert_metric(
@@ -2321,7 +2330,7 @@ def test_post_sdk_events__mixed_batch__stores_valid_events_and_returns_202(
     assert_metric(
         name="flagsmith_experimentation_sdk_events_total",
         labels={"result": "rejected"},
-        value=1,
+        value=2,
     )
 
 
@@ -2341,10 +2350,7 @@ def test_post_sdk_events__mixed_batch__stores_valid_events_and_returns_202(
             {
                 "accepted": 0,
                 "rejected": [
-                    {
-                        "index": 0,
-                        "error": 'events[0].event "$made_up" uses the reserved `$` prefix but is not a known system event',
-                    }
+                    {"index": 0, "error": "event: The `$` prefix is reserved."}
                 ],
             },
         ),

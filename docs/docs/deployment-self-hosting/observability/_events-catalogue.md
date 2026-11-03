@@ -240,7 +240,7 @@ Attributes:
 ### `experimentation.rollout.applied`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1071`
+ - `api/experimentation/services.py:1089`
 
 Attributes:
  - `audience.match`
@@ -256,7 +256,7 @@ Attributes:
 ### `experimentation.rollout.superseded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:662`
+ - `api/experimentation/services.py:680`
 
 Attributes:
  - `environment.id`
@@ -267,12 +267,12 @@ Attributes:
 ### `experimentation.sdk_events.rejected`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:212`
+ - `api/experimentation/services.py:230`
 
 Attributes:
  - `environment.id`
  - `rejected_events.count`
- - `rejected_events.first_error`
+ - `rejected_events.fields`
  - `submitted_events.count`
 
 ### `feature_health.feature_health_event_dismissal_not_supported`
@@ -933,7 +933,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1247`
+ - `api/experimentation/services.py:1265`
 
 Attributes:
  - `environment.id`
@@ -964,7 +964,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1190`
+ - `api/experimentation/services.py:1208`
 
 Attributes:
  - `environment.id`
@@ -973,7 +973,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1222`
+ - `api/experimentation/services.py:1240`
 
 Attributes:
  - `environment.id`
@@ -983,7 +983,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1232`
+ - `api/experimentation/services.py:1250`
 
 Attributes:
  - `environment.id`
@@ -992,7 +992,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:451`
+ - `api/experimentation/services.py:469`
 
 Attributes:
  - `environment.id`
@@ -1002,7 +1002,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:437`
+ - `api/experimentation/services.py:455`
 
 Attributes:
  - `environment.id`

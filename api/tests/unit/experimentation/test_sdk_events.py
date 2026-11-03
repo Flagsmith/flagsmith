@@ -6,90 +6,106 @@ from experimentation.sdk_events import (
     MAX_BODY_BYTES,
     MAX_VALUE_BYTES,
     MIN_TIMESTAMP_MS,
+    SDKExperimentationEventSerializer,
     build_sdk_experimentation_event,
     is_over_body_limit,
-    parse_sdk_user_agent,
-    partition_sdk_events,
 )
 
 NOW = datetime(2026, 11, 2, 12, tzinfo=timezone.utc)
 NOW_MS = int(NOW.timestamp() * 1000)
 HOUR_MS = 3_600_000
 PURCHASE = {"event": "purchase", "timestamp": NOW_MS}
+NOT_A_STRING = ["Not a valid string."]
+NOT_AN_INTEGER = ["A valid integer is required."]
 
 
 @pytest.mark.parametrize(
-    "event, expected_error",
+    "event, expected_errors",
     [
-        ("purchase", "events[0] must be an object"),
-        ({**PURCHASE, "event": 1}, "events[0].event must be a string"),
-        ({**PURCHASE, "event": "   "}, "events[0].event must be non-empty"),
+        (
+            "purchase",
+            {"non_field_errors": ["Invalid data. Expected a dictionary, but got str."]},
+        ),
+        (
+            {},
+            {
+                "event": ["This field is required."],
+                "timestamp": ["This field is required."],
+            },
+        ),
+        ({**PURCHASE, "event": 1}, {"event": NOT_A_STRING}),
+        ({**PURCHASE, "event": "   "}, {"event": ["This field may not be blank."]}),
         (
             {**PURCHASE, "event": "e" * 257},
-            "events[0].event must be at most 256 characters",
+            {"event": ["Ensure this field has no more than 256 characters."]},
         ),
-        (
-            {**PURCHASE, "event": "$made_up"},
-            'events[0].event "$made_up" uses the reserved `$` prefix but is not a known system event',
-        ),
+        ({**PURCHASE, "event": "$made_up"}, {"event": ["The `$` prefix is reserved."]}),
         (
             {**PURCHASE, "event": "$flag_exposure"},
-            "events[0].feature_name is required for $flag_exposure events",
+            {"feature_name": ["Required for $flag_exposure events."]},
         ),
-        (
-            {**PURCHASE, "feature_name": 1},
-            "events[0].feature_name must be a string",
-        ),
+        ({**PURCHASE, "feature_name": 1}, {"feature_name": NOT_A_STRING}),
         (
             {**PURCHASE, "identifier": "u" * 2001},
-            "events[0].identifier must be at most 2000 characters",
+            {"identifier": ["Ensure this field has no more than 2000 characters."]},
         ),
-        ({**PURCHASE, "timestamp": 1.7e12}, "events[0].timestamp must be an integer"),
+        ({**PURCHASE, "timestamp": 1.7e12}, {"timestamp": NOT_AN_INTEGER}),
+        ({**PURCHASE, "timestamp": True}, {"timestamp": NOT_AN_INTEGER}),
         (
             {**PURCHASE, "timestamp": MIN_TIMESTAMP_MS},
-            "events[0].timestamp must be an epoch-millis value after 2020-01-01",
+            {
+                "timestamp": [
+                    "Ensure this value is greater than or equal to 1577836800001."
+                ]
+            },
         ),
         (
             {**PURCHASE, "timestamp": NOW_MS + 25 * HOUR_MS},
-            "events[0].timestamp must not be more than 24h in the future",
+            {"timestamp": ["Must be at most 24 hours in the future."]},
         ),
         (
             {**PURCHASE, "timestamp": NOW_MS - 11 * 24 * HOUR_MS},
-            "events[0].timestamp must not be more than 10 days in the past",
+            {"timestamp": ["Must be at most 10 days in the past."]},
         ),
         (
             {**PURCHASE, "value": "x" * MAX_VALUE_BYTES},
-            "events[0].value must serialize to at most 131072 bytes",
+            {"value": ["Must serialise to at most 131072 bytes."]},
         ),
         (
             {**PURCHASE, "traits": {f"t{i}": "v" * 1900 for i in range(20)}},
-            "events[0].traits must serialize to at most 32768 bytes",
+            {"traits": ["Must serialise to at most 32768 bytes."]},
         ),
-        ({**PURCHASE, "traits": ["a"]}, "events[0].traits must be a JSON object"),
+        (
+            {**PURCHASE, "traits": ["a"]},
+            {"traits": ['Expected a dictionary of items but got type "list".']},
+        ),
         (
             {**PURCHASE, "traits": {"k" * 201: 1}},
-            "events[0].trait keys must be at most 200 characters",
+            {"traits": ["Keys must be at most 200 characters."]},
         ),
         (
             {**PURCHASE, "traits": {"plan": "v" * 2001}},
-            'events[0].traits["plan"] string values must be at most 2000 characters',
+            {"traits": ["String values must be at most 2000 characters."]},
         ),
         (
             {**PURCHASE, "metadata": {"note": "m" * 9000}},
-            "events[0].metadata must serialize to at most 8192 bytes",
+            {"metadata": ["Must serialise to at most 8192 bytes."]},
         ),
     ],
 )
-def test_partition_sdk_events__invalid_event__rejects_with_error(
+def test_sdk_experimentation_event_serializer__invalid_event__returns_errors(
     event: object,
-    expected_error: str,
+    expected_errors: dict[str, list[str]],
 ) -> None:
-    # Given / When
-    valid, rejected = partition_sdk_events([event], NOW)
+    # Given
+    serializer = SDKExperimentationEventSerializer(data=event, context={"now": NOW})
+
+    # When
+    is_valid = serializer.is_valid()
 
     # Then
-    assert valid == []
-    assert rejected == [{"index": 0, "error": expected_error}]
+    assert not is_valid
+    assert serializer.errors == expected_errors
 
 
 @pytest.mark.parametrize(
@@ -99,39 +115,37 @@ def test_partition_sdk_events__invalid_event__rejects_with_error(
         {**PURCHASE, "value": "x" * (MAX_VALUE_BYTES - 2)},
         {**PURCHASE, "identifier": "é" * 2000, "traits": {"plan": "é" * 2000}},
         {**PURCHASE, "timestamp": NOW_MS - 10 * 24 * HOUR_MS + 60_000},
+        {**PURCHASE, "event": "purchase\x00", "feature_name": "checkout\ud800"},
+        {
+            **PURCHASE,
+            "feature_name": None,
+            "identifier": None,
+            "value": None,
+            "traits": None,
+            "metadata": None,
+        },
     ],
-    ids=["exposure", "value-at-byte-limit", "chars-not-bytes", "oldest-allowed"],
+    ids=[
+        "exposure",
+        "value-at-byte-limit",
+        "chars-not-bytes",
+        "oldest-allowed",
+        "nul-and-lone-surrogate",
+        "null-optionals",
+    ],
 )
-def test_partition_sdk_events__valid_event__keeps_it(
+def test_sdk_experimentation_event_serializer__valid_event__returns_it(
     event: dict[str, object],
 ) -> None:
-    # Given / When
-    valid, rejected = partition_sdk_events([event], NOW)
+    # Given
+    serializer = SDKExperimentationEventSerializer(data=event, context={"now": NOW})
+
+    # When
+    is_valid = serializer.is_valid()
 
     # Then
-    assert valid == [event]
-    assert rejected == []
-
-
-@pytest.mark.parametrize(
-    "header, expected",
-    [
-        ("flagsmith-python-sdk/6.2.3", ("python", "6.2.3")),
-        ("flagsmith-js-sdk", ("js", "unknown")),
-        ("flagsmith-sdk/1.0.0", ("unknown", "1.0.0")),
-        (None, ("unknown", "unknown")),
-        (f"flagsmith-{'l' * 400}-sdk/{'9' * 400}", ("l" * 100, "9" * 100)),
-    ],
-)
-def test_parse_sdk_user_agent__header__returns_language_and_version(
-    header: str | None,
-    expected: tuple[str, str],
-) -> None:
-    # Given / When
-    result = parse_sdk_user_agent(header)
-
-    # Then
-    assert result == expected
+    assert is_valid
+    assert serializer.validated_data == event
 
 
 def test_build_sdk_experimentation_event__json_values_nul_and_lone_surrogate__maps_to_row() -> (
@@ -171,7 +185,7 @@ def test_build_sdk_experimentation_event__json_values_nul_and_lone_surrogate__ma
     ) == (
         "env-key",
         "purchase",
-        "checkout\ufffd",
+        "checkout�",
         NOW + timedelta(milliseconds=7),
         NOW,
         "",
