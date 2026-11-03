@@ -1,9 +1,9 @@
 import React, { FC, useEffect } from 'react'
+import IconButton from './base/IconButton'
 import {
   useDeleteGithubRepositoryMutation,
   useUpdateGithubRepositoryMutation,
 } from 'common/services/useGithubRepository'
-import Button from './base/forms/Button'
 import Icon from './icons/Icon'
 import PanelSearch from './PanelSearch'
 import { GithubRepository } from 'common/types/responses'
@@ -107,7 +107,10 @@ const TableRow: FC<{
         />
       </div>
       <div className='table-column  text-center' style={{ width: '80px' }}>
-        <Button
+        <IconButton
+          variant='secondary'
+          size='large'
+          aria-label={`Unlink repository ${repo.repository_owner}/${repo.repository_name}`}
           onClick={() => {
             openConfirm({
               body: (
@@ -129,10 +132,9 @@ const TableRow: FC<{
               yesText: 'Confirm',
             })
           }}
-          className='btn btn-with-icon'
         >
-          <Icon name='trash-2' width={20} fill='#656D7B' />
-        </Button>
+          <Icon width={20} name='trash-2' />
+        </IconButton>
       </div>
     </Row>
   )

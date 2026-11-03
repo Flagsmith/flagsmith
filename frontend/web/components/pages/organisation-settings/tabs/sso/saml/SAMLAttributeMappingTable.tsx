@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import IconButton from 'components/base/IconButton'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/icons/Icon'
@@ -77,10 +78,12 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
               </Tooltip>
             </Flex>
             <div className='table-column'>
-              <Button
+              <IconButton
+                variant='secondary'
+                size='large'
+                aria-label={`Delete mapping ${attribute.idp_attribute_name}`}
                 id='delete-attribute'
                 data-test='delete-attribute'
-                type='button'
                 onClick={(e) => {
                   openModal2(
                     'Delete SAML attribute',
@@ -119,10 +122,9 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
                   e.stopPropagation()
                   e.preventDefault()
                 }}
-                className='btn btn-with-icon'
               >
                 <Icon name='trash-2' width={20} />
-              </Button>
+              </IconButton>
             </div>
           </Row>
         )}

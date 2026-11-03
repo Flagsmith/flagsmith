@@ -1200,6 +1200,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                   >
                                     {!orgAdmin && (
                                       <UserAction
+                                        userName={email}
                                         canEdit
                                         canRemove={false}
                                         canInspectPermissions={hasRbac}
