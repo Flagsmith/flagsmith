@@ -67,6 +67,7 @@ from experimentation.stats import (
 )
 from experimentation.warehouses import flagsmith
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
+from experimentation.warehouses.postgres import is_flagsmith_database_config
 from experimentation.warehouses.registry import get_warehouse
 from features.feature_segments.services import get_next_segment_override_priority
 from features.feature_states.models import API_VALUE_TYPES
@@ -1207,6 +1208,8 @@ def annotate_warehouse_delivery_statuses(
     for connection in connections:
         if (
             connection.warehouse_type == WarehouseType.FLAGSMITH
+            # Django stores these events, so a delivery status means a misdirected SDK.
+            or is_flagsmith_database_config(connection.config)
             or connection.status != WarehouseConnectionStatus.CONNECTED
         ):
             continue

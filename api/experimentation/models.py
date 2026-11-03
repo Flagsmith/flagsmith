@@ -103,6 +103,35 @@ class WarehouseDeliveryStatus(models.Model):
     updated_at = models.DateTimeField()
 
 
+class SDKExperimentationEvent(models.Model):
+    """Columns match experimentation/postgres/events.sql, so the same queries read both."""
+
+    id = models.BigAutoField(primary_key=True)
+    environment_key = models.TextField()
+    event = models.TextField()
+    feature_name = models.TextField(null=True)
+    timestamp = models.DateTimeField()
+    collected_at = models.DateTimeField(null=True)
+    identifier = models.TextField()
+    value = models.TextField(null=True)
+    traits = models.TextField(null=True)
+    metadata = models.TextField(null=True)
+    sdk_language = models.TextField(null=True)
+    sdk_version = models.TextField(null=True)
+
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["environment_key", "event", "feature_name", "timestamp"],
+                name="sdk_exp_event_feature_idx",
+            ),
+            models.Index(
+                fields=["environment_key", "event", "identifier", "timestamp"],
+                name="sdk_exp_event_identifier_idx",
+            ),
+        ]
+
+
 class ExperimentStatus(models.TextChoices):
     CREATED = "created", "Created"
     RUNNING = "running", "Running"
