@@ -8487,6 +8487,19 @@ paths:
               schema:
                 type: object
                 additionalProperties: {}
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+        '413':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
       security:
         - Environment API Key: []
       tags:
