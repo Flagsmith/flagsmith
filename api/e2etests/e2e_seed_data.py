@@ -10,6 +10,7 @@ from common.projects.permissions import (
     VIEW_PROJECT,
 )
 from django.conf import settings
+from django.db import transaction
 
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
@@ -37,8 +38,9 @@ def delete_user_and_its_organisations(user_email: str) -> None:
     user: FFAdminUser | None = FFAdminUser.objects.filter(email=user_email).first()
 
     if user:
-        user.organisations.all().delete()
-        user.delete()
+        with transaction.atomic():
+            user.organisations.all().delete()
+            user.delete()
 
 
 def teardown() -> None:

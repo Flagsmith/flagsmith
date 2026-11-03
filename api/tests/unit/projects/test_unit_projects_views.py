@@ -876,22 +876,27 @@ def test_get_project__with_features_and_segments__returns_detailed_data(
 
 
 def test_delete_project__existing_project__calls_cascade_delete(
-    admin_client: APIClient,
-    project: Project,
-    mocker: MockerFixture,
-    settings: SettingsWrapper,
+    admin_client: "APIClient",
+    project: "Project",
+    mocker: "MockerFixture",
+    settings: "SettingsWrapper",
 ) -> None:
     # Given
+    from django.test import TestCase
+
     settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
 
     url = reverse("api-v1:projects:project-detail", args=[project.id])
     mocked_handle_cascade_delete = mocker.patch("projects.models.handle_cascade_delete")
 
     # When
-    response = admin_client.delete(url)
+    test_case = TestCase()
+    with test_case.captureOnCommitCallbacks(execute=True) as callbacks:
+        response = admin_client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert len(callbacks) > 0  # Ensure the callback was captured
     mocked_handle_cascade_delete.delay.assert_called_once_with(
         kwargs={"project_id": project.id}
     )

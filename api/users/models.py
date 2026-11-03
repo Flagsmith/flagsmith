@@ -180,9 +180,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self,
         delete_orphan_organisations: bool = DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
     ):
-        if delete_orphan_organisations:
-            self.delete_orphan_organisations()
-        super().delete()
+        from django.db import transaction
+
+        with transaction.atomic():
+            if delete_orphan_organisations:
+                self.delete_orphan_organisations()
+            super().delete()
 
     def set_password(self, raw_password):  # type: ignore[no-untyped-def]
         super().set_password(raw_password)
