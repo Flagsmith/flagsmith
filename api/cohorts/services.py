@@ -132,19 +132,33 @@ def create_cohort(
             {"project": ["The project has reached the maximum allowed segments limit."]}
         )
     with transaction.atomic():
+        cohort = Cohort(
+            environment=environment,
+            source_type=source_type,
+            external_id=external_id,
+        )
         segment = Segment.objects.create(
             name=name,
             project=environment.project,
             description=description,
             managed_by=SegmentManagedBy.COHORT,
+            rules_data=[
+                {
+                    "type": SegmentRule.ALL_RULE,
+                    "conditions": [
+                        {
+                            "property": cohort.system_trait_key,
+                            "operator": IS_SET,
+                            "value": None,
+                            "description": None,
+                        }
+                    ],
+                }
+            ],
         )
         rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
-        cohort: Cohort = Cohort.objects.create(
-            environment=environment,
-            segment=segment,
-            source_type=source_type,
-            external_id=external_id,
-        )
+        cohort.segment = segment
+        cohort.save()
         Condition.objects.create(
             rule=rule,
             operator=IS_SET,
