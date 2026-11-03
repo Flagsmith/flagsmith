@@ -9,13 +9,14 @@ from django.core.validators import ProhibitNullCharactersValidator
 from rest_framework import serializers
 from rest_framework.validators import ProhibitSurrogateCharactersValidator
 
-from environments.identities.models import Identity
-from environments.identities.traits.constants import TRAIT_STRING_VALUE_MAX_LENGTH
-from environments.identities.traits.models import Trait
+from environments.identities.constants import IDENTITY_IDENTIFIER_MAX_LENGTH
+from environments.identities.traits.constants import (
+    TRAIT_KEY_MAX_LENGTH,
+    TRAIT_STRING_VALUE_MAX_LENGTH,
+)
 from experimentation.constants import EXPOSURE_EVENT_NAME
 from experimentation.models import SDKExperimentationEvent
-from features.models import Feature
-from util.db import get_field_max_length
+from features.constants import FEATURE_NAME_MAX_LENGTH
 
 # 2020-01-01T00:00:00Z.
 MIN_TIMESTAMP_MS = 1_577_836_800_000
@@ -23,9 +24,6 @@ MAX_FUTURE_SKEW_HOURS = 24
 MAX_EVENT_AGE_DAYS = 10
 
 MAX_EVENT_NAME_CHARS = 256
-MAX_FEATURE_NAME_CHARS = get_field_max_length(Feature, "name")
-MAX_IDENTIFIER_CHARS = get_field_max_length(Identity, "identifier")
-MAX_TRAIT_KEY_CHARS = get_field_max_length(Trait, "trait_key")
 
 MAX_VALUE_BYTES = 128 * 1024
 MAX_TRAITS_BYTES = 32 * 1024
@@ -76,14 +74,14 @@ class SDKExperimentationEventSerializer(serializers.Serializer[dict[str, Any]]):
 
     event = _StrictCharField(max_length=MAX_EVENT_NAME_CHARS, trim_whitespace=False)
     feature_name = _StrictCharField(
-        max_length=MAX_FEATURE_NAME_CHARS,
+        max_length=FEATURE_NAME_MAX_LENGTH,
         required=False,
         allow_null=True,
         allow_blank=True,
         trim_whitespace=False,
     )
     identifier = _StrictCharField(
-        max_length=MAX_IDENTIFIER_CHARS,
+        max_length=IDENTITY_IDENTIFIER_MAX_LENGTH,
         required=False,
         allow_null=True,
         allow_blank=True,
@@ -119,9 +117,9 @@ class SDKExperimentationEventSerializer(serializers.Serializer[dict[str, Any]]):
     def validate_traits(self, traits: dict[str, Any] | None) -> dict[str, Any] | None:
         _validate_json_value(traits, MAX_TRAITS_BYTES)
         for key, value in (traits or {}).items():
-            if len(key) > MAX_TRAIT_KEY_CHARS:
+            if len(key) > TRAIT_KEY_MAX_LENGTH:
                 raise serializers.ValidationError(
-                    f"Keys must be at most {MAX_TRAIT_KEY_CHARS} characters."
+                    f"Keys must be at most {TRAIT_KEY_MAX_LENGTH} characters."
                 )
             if isinstance(value, str) and len(value) > TRAIT_STRING_VALUE_MAX_LENGTH:
                 raise serializers.ValidationError(

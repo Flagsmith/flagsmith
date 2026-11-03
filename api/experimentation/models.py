@@ -13,6 +13,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 
 from core.models import SoftDeleteExportableModel
 from environments.models import Environment
+from experimentation.constants import WAREHOUSE_CONNECTION_NAME_MAX_LENGTH
 from experimentation.dataclasses import (
     ExposuresSummary,
     ResultsSummary,
@@ -57,7 +58,7 @@ class WarehouseConnection(LifecycleModelMixin, SoftDeleteExportableModel):  # ty
         default=WarehouseConnectionStatus.CREATED,
     )
     status_detail = models.CharField(max_length=255, null=True, blank=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=WAREHOUSE_CONNECTION_NAME_MAX_LENGTH)
     config: models.JSONField[dict[str, object] | None, dict[str, object] | None] = (
         models.JSONField(null=True, blank=True)
     )
