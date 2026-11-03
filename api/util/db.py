@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from typing import TypeVar
 
 from django.db import close_old_connections
-from django.db.models import QuerySet
+from django.db.models import Model, QuerySet
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_DELETE,
     BEFORE_DELETE,
@@ -11,6 +11,11 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 )
 
 M = TypeVar("M", bound=LifecycleModelMixin)
+
+
+def get_field_max_length(model: type[Model], field_name: str) -> int:
+    # get_field() is typed for every field kind; callers pass CharFields, which set max_length.
+    return model._meta.get_field(field_name).max_length  # type: ignore[union-attr,return-value]
 
 
 @contextmanager

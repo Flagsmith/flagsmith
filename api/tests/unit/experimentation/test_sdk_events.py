@@ -35,11 +35,13 @@ NOT_AN_INTEGER = ["A valid integer is required."]
         ),
         ({**PURCHASE, "event": 1}, {"event": NOT_A_STRING}),
         ({**PURCHASE, "event": "   "}, {"event": ["This field may not be blank."]}),
+        ({**PURCHASE, "event": "\x00"}, {"event": ["This field may not be blank."]}),
         (
             {**PURCHASE, "event": "e" * 257},
             {"event": ["Ensure this field has no more than 256 characters."]},
         ),
         ({**PURCHASE, "event": "$made_up"}, {"event": ["The `$` prefix is reserved."]}),
+        ({**PURCHASE, "event": "\x00$x"}, {"event": ["The `$` prefix is reserved."]}),
         (
             {**PURCHASE, "event": "$flag_exposure"},
             {"feature_name": ["Required for $flag_exposure events."]},
@@ -70,6 +72,14 @@ NOT_AN_INTEGER = ["A valid integer is required."]
         (
             {**PURCHASE, "value": "x" * MAX_VALUE_BYTES},
             {"value": ["Must serialise to at most 131072 bytes."]},
+        ),
+        (
+            {**PURCHASE, "value": {"amount": float("inf")}},
+            {"value": ["Value must be valid JSON."]},
+        ),
+        (
+            {**PURCHASE, "traits": {"score": float("inf")}},
+            {"traits": ["Must not contain non-finite numbers."]},
         ),
         (
             {**PURCHASE, "traits": {f"t{i}": "v" * 1900 for i in range(20)}},
@@ -115,7 +125,6 @@ def test_sdk_experimentation_event_serializer__invalid_event__returns_errors(
         {**PURCHASE, "value": "x" * (MAX_VALUE_BYTES - 2)},
         {**PURCHASE, "identifier": "é" * 2000, "traits": {"plan": "é" * 2000}},
         {**PURCHASE, "timestamp": NOW_MS - 10 * 24 * HOUR_MS + 60_000},
-        {**PURCHASE, "event": "purchase\x00", "feature_name": "checkout\ud800"},
         {
             **PURCHASE,
             "feature_name": None,
@@ -130,7 +139,6 @@ def test_sdk_experimentation_event_serializer__invalid_event__returns_errors(
         "value-at-byte-limit",
         "chars-not-bytes",
         "oldest-allowed",
-        "nul-and-lone-surrogate",
         "null-optionals",
     ],
 )
@@ -148,21 +156,25 @@ def test_sdk_experimentation_event_serializer__valid_event__returns_it(
     assert serializer.validated_data == event
 
 
-def test_build_sdk_experimentation_event__json_values_nul_and_lone_surrogate__maps_to_row() -> (
+def test_build_sdk_experimentation_event__validated_nul_and_lone_surrogate__maps_to_cleaned_row() -> (
     None
 ):
     # Given
-    event = {
-        "event": "purchase\x00",
-        "feature_name": "checkout\ud800",
-        "timestamp": NOW_MS + 7,
-        "value": {"amount": 42},
-        "traits": {"plan": "pró"},
-    }
+    serializer = SDKExperimentationEventSerializer(
+        data={
+            "event": "purchase\x00",
+            "feature_name": "checkout\ud800",
+            "timestamp": NOW_MS + 7,
+            "value": "a\x00b",
+            "traits": {"plan": "pró\ud800"},
+        },
+        context={"now": NOW},
+    )
+    serializer.is_valid(raise_exception=True)
 
     # When
     row = build_sdk_experimentation_event(
-        event,
+        serializer.validated_data,
         environment_key="env-key",
         collected_at=NOW,
         sdk_language="python",
@@ -189,8 +201,8 @@ def test_build_sdk_experimentation_event__json_values_nul_and_lone_surrogate__ma
         NOW + timedelta(milliseconds=7),
         NOW,
         "",
-        '{"amount":42}',
-        '{"plan":"pró"}',
+        "ab",
+        '{"plan":"pró\ufffd"}',
         None,
         "python",
         "6.2.3",

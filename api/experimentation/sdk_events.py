@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from django.core.validators import ProhibitNullCharactersValidator
-from django.db import models
 from rest_framework import serializers
 from rest_framework.validators import ProhibitSurrogateCharactersValidator
 
@@ -16,12 +15,7 @@ from environments.identities.traits.models import Trait
 from experimentation.constants import EXPOSURE_EVENT_NAME
 from experimentation.models import SDKExperimentationEvent
 from features.models import Feature
-
-
-def _max_length(model: type[models.Model], field_name: str) -> int:
-    # get_field() is typed for every field kind; callers pass CharFields, which set max_length.
-    return model._meta.get_field(field_name).max_length  # type: ignore[union-attr,return-value]
-
+from util.db import get_field_max_length
 
 # 2020-01-01T00:00:00Z.
 MIN_TIMESTAMP_MS = 1_577_836_800_000
@@ -29,9 +23,9 @@ MAX_FUTURE_SKEW_HOURS = 24
 MAX_EVENT_AGE_DAYS = 10
 
 MAX_EVENT_NAME_CHARS = 256
-MAX_FEATURE_NAME_CHARS = _max_length(Feature, "name")
-MAX_IDENTIFIER_CHARS = _max_length(Identity, "identifier")
-MAX_TRAIT_KEY_CHARS = _max_length(Trait, "trait_key")
+MAX_FEATURE_NAME_CHARS = get_field_max_length(Feature, "name")
+MAX_IDENTIFIER_CHARS = get_field_max_length(Identity, "identifier")
+MAX_TRAIT_KEY_CHARS = get_field_max_length(Trait, "trait_key")
 
 MAX_VALUE_BYTES = 128 * 1024
 MAX_TRAITS_BYTES = 32 * 1024
@@ -52,7 +46,7 @@ class _StrictCharField(serializers.CharField):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        # The ingestion server accepts these; _as_column_text sanitises them.
+        # The ingestion server accepts these; to_internal_value cleans them.
         self.validators = [
             validator
             for validator in self.validators
@@ -65,7 +59,7 @@ class _StrictCharField(serializers.CharField):
     def to_internal_value(self, data: object) -> str:
         if not isinstance(data, str):
             self.fail("invalid")
-        return super().to_internal_value(data)
+        return _clean_text(super().to_internal_value(data))
 
 
 class _StrictIntegerField(serializers.IntegerField):
@@ -120,10 +114,10 @@ class SDKExperimentationEventSerializer(serializers.Serializer[dict[str, Any]]):
         return timestamp
 
     def validate_value(self, value: object) -> object:
-        return _validate_json_byte_size(value, MAX_VALUE_BYTES)
+        return _validate_json_value(value, MAX_VALUE_BYTES)
 
     def validate_traits(self, traits: dict[str, Any] | None) -> dict[str, Any] | None:
-        _validate_json_byte_size(traits, MAX_TRAITS_BYTES)
+        _validate_json_value(traits, MAX_TRAITS_BYTES)
         for key, value in (traits or {}).items():
             if len(key) > MAX_TRAIT_KEY_CHARS:
                 raise serializers.ValidationError(
@@ -136,7 +130,7 @@ class SDKExperimentationEventSerializer(serializers.Serializer[dict[str, Any]]):
         return traits
 
     def validate_metadata(self, metadata: object) -> object:
-        return _validate_json_byte_size(metadata, MAX_METADATA_BYTES)
+        return _validate_json_value(metadata, MAX_METADATA_BYTES)
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         if attrs["event"] == EXPOSURE_EVENT_NAME and attrs.get("feature_name") is None:
@@ -164,14 +158,14 @@ def build_sdk_experimentation_event(
 ) -> SDKExperimentationEvent:
     return SDKExperimentationEvent(
         environment_key=environment_key,
-        event=_as_column_text(event["event"]) or "",
-        feature_name=_as_column_text(event.get("feature_name")),
+        event=event["event"],
+        feature_name=event.get("feature_name"),
         timestamp=_UNIX_EPOCH + timedelta(milliseconds=event["timestamp"]),
         collected_at=collected_at,
-        identifier=_as_column_text(event.get("identifier")) or "",
-        value=_as_column_text(event.get("value")),
-        traits=_as_column_text(event.get("traits")),
-        metadata=_as_column_text(event.get("metadata")),
+        identifier=event.get("identifier") or "",
+        value=_as_json_column_text(event.get("value")),
+        traits=_as_json_column_text(event.get("traits")),
+        metadata=_as_json_column_text(event.get("metadata")),
         sdk_language=sdk_language,
         sdk_version=sdk_version,
     )
@@ -181,9 +175,14 @@ def _to_epoch_ms(moment: datetime) -> int:
     return (moment - _UNIX_EPOCH) // timedelta(milliseconds=1)
 
 
-def _validate_json_byte_size(value: object, max_bytes: int) -> object:
+def _validate_json_value(value: object, max_bytes: int) -> object:
     """Measures UTF-8 bytes, as the ingestion server does."""
-    serialised = json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+    try:
+        serialised = json.dumps(
+            value, ensure_ascii=False, allow_nan=False, separators=(",", ":")
+        )
+    except ValueError:
+        raise serializers.ValidationError("Must not contain non-finite numbers.")
     if len(serialised.encode(errors="surrogatepass")) > max_bytes:
         raise serializers.ValidationError(
             f"Must serialise to at most {max_bytes} bytes."
@@ -191,13 +190,16 @@ def _validate_json_byte_size(value: object, max_bytes: int) -> object:
     return value
 
 
-def _as_column_text(value: object) -> str | None:
+def _as_json_column_text(value: object) -> str | None:
     if value is None:
         return None
-    text = (
+    return _clean_text(
         value
         if isinstance(value, str)
         else json.dumps(value, ensure_ascii=False, separators=(",", ":"))
     )
+
+
+def _clean_text(text: str) -> str:
     # PostgreSQL text can't hold NUL, nor UTF-8 a lone surrogate; either fails the batch.
-    return _LONE_SURROGATE_PATTERN.sub("�", text.replace("\x00", ""))
+    return _LONE_SURROGATE_PATTERN.sub("\ufffd", text.replace("\x00", ""))

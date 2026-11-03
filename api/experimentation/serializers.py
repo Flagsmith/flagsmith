@@ -46,6 +46,7 @@ from features.feature_types import MULTIVARIATE
 from features.future.types import Variant
 from features.models import Feature
 from features.multivariate.serializers import NestedMultivariateFeatureOptionSerializer
+from util.db import get_field_max_length
 
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -139,9 +140,12 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
         warehouse_type: str, config: object, environment: Environment
     ) -> str:
         if is_flagsmith_database_config(config):
-            return f"Flagsmith database - {environment.name}"
-        label = WarehouseType(warehouse_type).label
-        return f"{label} Warehouse - {environment.name}"
+            name = f"Flagsmith database - {environment.name}"
+        else:
+            name = (
+                f"{WarehouseType(warehouse_type).label} Warehouse - {environment.name}"
+            )
+        return name[: get_field_max_length(WarehouseConnection, "name")]
 
 
 class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]

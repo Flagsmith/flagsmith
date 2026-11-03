@@ -175,13 +175,6 @@ def ensure_flagsmith_warehouse_connection(
         return None
 
 
-def has_flagsmith_database_connection(environment: Environment) -> bool:
-    return any(
-        is_flagsmith_database_config(config)
-        for config in environment.warehouse_connections.values_list("config", flat=True)
-    )
-
-
 def store_sdk_experimentation_events(
     environment: Environment,
     submitted_events: list[object],

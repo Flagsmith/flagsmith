@@ -77,7 +77,6 @@ from experimentation.services import (
     create_warehouse_audit_log,
     enable_experiment_rollout,
     get_warehouse_event_names,
-    has_flagsmith_database_connection,
     mark_warehouse_pending_connection,
     refresh_warehouse_connection_status,
     store_sdk_experimentation_events,
@@ -89,6 +88,7 @@ from experimentation.tasks import (
     compute_experiment_results,
 )
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
+from experimentation.warehouses.postgres import is_flagsmith_database_config
 from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
@@ -830,7 +830,12 @@ class SDKExperimentationEventsView(APIView):
             name="SDKExperimentationEventBatch",
             fields={"events": SDKExperimentationEventSerializer(many=True)},
         ),
-        responses={202: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT},
+        responses={
+            202: OpenApiTypes.OBJECT,
+            400: OpenApiTypes.OBJECT,
+            404: OpenApiTypes.OBJECT,
+            (413, "text/plain"): OpenApiTypes.STR,
+        },
     )
     def post(self, request: Request) -> HttpResponse:
         if is_over_body_limit(request.META.get("CONTENT_LENGTH")):
@@ -840,7 +845,10 @@ class SDKExperimentationEventsView(APIView):
                 content_type="text/plain; charset=utf-8",
             )
         environment = request.environment
-        if not has_flagsmith_database_connection(environment):
+        config = environment.warehouse_connections.values_list(
+            "config", flat=True
+        ).first()
+        if not (config and is_flagsmith_database_config(config)):
             raise NotFound("This environment does not store events in Flagsmith.")
         submitted_events = (
             request.data.get("events") if isinstance(request.data, dict) else None
