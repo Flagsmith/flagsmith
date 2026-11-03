@@ -25,6 +25,16 @@ from cohorts.models import Cohort
 from core.helpers import get_current_site_url
 from environments.identities.models import Identity
 from environments.models import Environment
+from features.dependencies.exceptions import (
+    FeatureHasDependentsError,
+    PrerequisiteFeatureNotFoundError,
+)
+from features.dependencies.models import SegmentFlagReference
+from features.dependencies.services import (
+    index_segment_flag_references,
+    list_flag_dependencies,
+    validate_feature_is_not_prerequisite,
+)
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import (
     EnvironmentFeatureVersion,
@@ -46,6 +56,7 @@ from features.workflows.core.models import (
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+from segments.serializers import SegmentSerializer
 
 # TODO: Delete alias as per https://github.com/Flagsmith/flagsmith/issues/7818
 from segments.types import SegmentRule as SegmentRuleType
@@ -1332,3 +1343,185 @@ def test_change_request_commit__v1_segment_override_draft__inherits_mv_hashing_s
     # Then the draft carries the superseded override's id as its bucketing salt
     draft_feature_state.refresh_from_db()
     assert draft_feature_state.mv_hashing_salt == live_override.id
+
+
+def _flag_rules(feature_name: str) -> list[SegmentRuleType]:
+    return [
+        {
+            "type": "ALL",
+            "conditions": [
+                {
+                    "property": f"$.flags['{feature_name}'].enabled",
+                    "operator": "EQUAL",
+                    "value": "true",
+                    "description": None,
+                }
+            ],
+            "rules": [],
+        }
+    ]
+
+
+def test_change_request_commit__draft_segment_changes_flag__reindexes_live_segment(
+    project: Project,
+    environment: Environment,
+    segment: Segment,
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    payments = Feature.objects.create(name="payments", project=project)
+    billing = Feature.objects.create(name="billing", project=project)
+    checkout = Feature.objects.create(name="checkout", project=project)
+    segment.rules_data = _flag_rules("payments")
+    segment.save()
+    index_segment_flag_references(segment)
+    feature_segment = FeatureSegment.objects.create(
+        feature=checkout, segment=segment, environment=environment
+    )
+    FeatureState.objects.create(
+        feature=checkout, environment=environment, feature_segment=feature_segment
+    )
+    draft_segment = Segment.objects.create(
+        name=segment.name,
+        change_request=change_request,
+        project=project,
+        version_of=segment,
+        rules_data=_flag_rules("billing"),
+    )
+
+    # When
+    change_request.commit(admin_user)
+
+    # Then
+    assert list(
+        SegmentFlagReference.objects.filter(segment=segment).values_list(
+            "prerequisite_feature_id", flat=True
+        )
+    ) == [billing.id]
+    assert not SegmentFlagReference.objects.filter(segment=draft_segment).exists()
+    dependencies = list_flag_dependencies(environment=environment, feature=checkout)
+    assert [result["prerequisite"]["name"] for result in dependencies["results"]] == [
+        "billing"
+    ]
+    validate_feature_is_not_prerequisite(payments)
+    with pytest.raises(FeatureHasDependentsError):
+        validate_feature_is_not_prerequisite(billing)
+
+
+def test_segment_serializer__draft_segment_with_flag_condition__does_not_index_references(
+    project: Project,
+    change_request: ChangeRequest,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    Feature.objects.create(name="payments", project=project)
+    serializer = SegmentSerializer(
+        data={
+            "name": "draft",
+            "project": project.id,
+            "rules": _flag_rules("payments"),
+        },
+        context={"view": mocker.Mock(kwargs={"project_pk": project.id})},
+    )
+    serializer.is_valid(raise_exception=True)
+
+    # When
+    draft_segment = serializer.save(change_request=change_request)  # type: ignore[no-untyped-call]
+
+    # Then
+    assert not SegmentFlagReference.objects.filter(segment=draft_segment).exists()
+
+
+def test_segment_serializer__draft_segment_with_unknown_flag__raises(
+    project: Project,
+    change_request: ChangeRequest,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    serializer = SegmentSerializer(
+        data={
+            "name": "draft",
+            "project": project.id,
+            "rules": _flag_rules("missing"),
+        },
+        context={"view": mocker.Mock(kwargs={"project_pk": project.id})},
+    )
+    serializer.is_valid(raise_exception=True)
+
+    # When / Then
+    with pytest.raises(PrerequisiteFeatureNotFoundError):
+        serializer.save(change_request=change_request)  # type: ignore[no-untyped-call]
+
+
+def test_segment_serializer__update_draft_segment_with_flag_condition__does_not_index_references(
+    project: Project,
+    segment: Segment,
+    change_request: ChangeRequest,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    Feature.objects.create(name="payments", project=project)
+    draft_segment = Segment.objects.create(
+        name="draft",
+        change_request=change_request,
+        project=project,
+        version_of=segment,
+        rules_data=[],
+    )
+    serializer = SegmentSerializer(
+        draft_segment,
+        data={
+            "name": "draft",
+            "project": project.id,
+            "rules": _flag_rules("payments"),
+        },
+        context={"view": mocker.Mock(kwargs={"project_pk": project.id})},
+    )
+    serializer.is_valid(raise_exception=True)
+
+    # When
+    serializer.save()  # type: ignore[no-untyped-call]
+
+    # Then
+    assert not SegmentFlagReference.objects.filter(segment=draft_segment).exists()
+
+
+def test_segment_serializer__update_draft_segment_with_legacy_references__removes_them(
+    project: Project,
+    segment: Segment,
+    change_request: ChangeRequest,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    payments = Feature.objects.create(name="payments", project=project)
+    Feature.objects.create(name="billing", project=project)
+    draft_segment = Segment.objects.create(
+        name="draft",
+        change_request=change_request,
+        project=project,
+        version_of=segment,
+        rules_data=_flag_rules("payments"),
+    )
+    SegmentFlagReference.objects.create(
+        segment=draft_segment,
+        prerequisite_feature=payments,
+        condition_json_path="$[0].conditions[0]",
+    )
+    serializer = SegmentSerializer(
+        draft_segment,
+        data={
+            "name": "draft",
+            "project": project.id,
+            "rules": _flag_rules("billing"),
+        },
+        context={"view": mocker.Mock(kwargs={"project_pk": project.id})},
+    )
+    serializer.is_valid(raise_exception=True)
+
+    # When
+    serializer.save()  # type: ignore[no-untyped-call]
+
+    # Then
+    assert not SegmentFlagReference.objects.filter(segment=draft_segment).exists()
+    validate_feature_is_not_prerequisite(payments)
