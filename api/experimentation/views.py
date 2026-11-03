@@ -34,6 +34,8 @@ from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
 from environments.views import NestedEnvironmentViewSet
 from experimentation.constants import (
+    BODY_LIMIT_ERROR,
+    EMPTY_BATCH_ERROR,
     EXPOSURES_REFRESH_MIN_INTERVAL,
     RESULTS_REFRESH_MIN_INTERVAL,
 )
@@ -51,9 +53,7 @@ from experimentation.models import (
 )
 from experimentation.permissions import ExperimentationPermission
 from experimentation.sdk_events import (
-    BODY_LIMIT_ERROR,
-    EMPTY_BATCH_ERROR,
-    SDKExperimentationEventSerializer,
+    SDKExperimentationEventBatchSerializer,
     is_over_body_limit,
 )
 from experimentation.serializers import (
@@ -87,6 +87,7 @@ from experimentation.tasks import (
     compute_experiment_exposures,
     compute_experiment_results,
 )
+from experimentation.types import SDKEventBatchResult
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
 from experimentation.warehouses.postgres import is_flagsmith_database_config
 from users.models import FFAdminUser
@@ -826,13 +827,10 @@ class SDKExperimentationEventsView(APIView):
     throttle_classes = []
 
     @extend_schema(
-        request=inline_serializer(
-            name="SDKExperimentationEventBatch",
-            fields={"events": SDKExperimentationEventSerializer(many=True)},
-        ),
+        request=SDKExperimentationEventBatchSerializer,
         responses={
-            202: OpenApiTypes.OBJECT,
-            400: OpenApiTypes.OBJECT,
+            202: SDKEventBatchResult,
+            400: SDKEventBatchResult,
             404: OpenApiTypes.OBJECT,
             (413, "text/plain"): OpenApiTypes.STR,
         },
@@ -850,22 +848,20 @@ class SDKExperimentationEventsView(APIView):
         ).first()
         if not (config and is_flagsmith_database_config(config)):
             raise NotFound("This environment does not store events in Flagsmith.")
-        submitted_events = (
-            request.data.get("events") if isinstance(request.data, dict) else None
-        )
-        if not isinstance(submitted_events, list) or not submitted_events:
+        batch = SDKExperimentationEventBatchSerializer(data=request.data)
+        if not batch.is_valid():
             return Response(
                 {"accepted": 0, "rejected": [], "error": EMPTY_BATCH_ERROR},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        accepted, rejected = store_sdk_experimentation_events(
+        result = store_sdk_experimentation_events(
             environment,
-            submitted_events,
+            batch.validated_data["events"],
             sdk_user_agent=request.headers.get("Flagsmith-SDK-User-Agent"),
         )
         return Response(
-            {"accepted": accepted, "rejected": rejected},
+            result,
             status=status.HTTP_202_ACCEPTED
-            if accepted
+            if result["accepted"]
             else status.HTTP_400_BAD_REQUEST,
         )

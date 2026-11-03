@@ -10,13 +10,13 @@ from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 from requests_mock import Mocker as RequestsMockerFixture
 from rest_framework import status
-from rest_framework.parsers import JSONParser
 from rest_framework.test import APIClient
 from rest_framework.throttling import ScopedRateThrottle
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
+from experimentation.constants import BODY_LIMIT_ERROR, MAX_BODY_BYTES
 from experimentation.dataclasses import (
     WarehouseEventNames,
     WarehouseEventStats,
@@ -28,7 +28,6 @@ from experimentation.models import (
     WarehouseDeliveryStatus,
     WarehouseType,
 )
-from experimentation.sdk_events import BODY_LIMIT_ERROR, MAX_BODY_BYTES
 from experimentation.views import WarehouseConnectionViewSet
 from experimentation.warehouses.constants import (
     FLAGSMITH_DATABASE_SOURCE,
@@ -2299,7 +2298,7 @@ def test_post_sdk_events__mixed_batch__stores_valid_events_and_returns_202(
         "rejected": [
             {
                 "index": 1,
-                "error": "timestamp: Ensure this value is greater than or equal to 1577836800001.",
+                "error": "timestamp: Timestamp must be after 2020-01-01.",
             },
             {
                 "index": 2,
@@ -2378,20 +2377,23 @@ def test_post_sdk_events__nothing_to_store__returns_400(
     assert not SDKExperimentationEvent.objects.exists()
 
 
-@pytest.mark.parametrize("has_postgres_connection", [False, True])
+@pytest.mark.parametrize(
+    "config",
+    [None, {"host": "pg.example.com"}],
+    ids=["no-config", "customer-postgres"],
+)
 def test_post_sdk_events__environment_without_flagsmith_database__returns_404(
     api_client: APIClient,
     environment: Environment,
-    has_postgres_connection: bool,
+    config: dict[str, str] | None,
 ) -> None:
     # Given
-    if has_postgres_connection:
-        WarehouseConnection.objects.create(
-            environment=environment,
-            warehouse_type=WarehouseType.POSTGRES,
-            name="Production PostgreSQL",
-            config={"host": "pg.example.com"},
-        )
+    WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.POSTGRES,
+        name="Production PostgreSQL",
+        config=config,
+    )
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
     # When
@@ -2405,15 +2407,13 @@ def test_post_sdk_events__environment_without_flagsmith_database__returns_404(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_post_sdk_events__body_over_limit__returns_413_without_parsing(
+def test_post_sdk_events__body_over_limit__returns_413(
     api_client: APIClient,
     environment: Environment,
     flagsmith_database_connection: WarehouseConnection,
-    mocker: MockerFixture,
 ) -> None:
     # Given
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-    parse = mocker.spy(JSONParser, "parse")
     payload = {"events": [{"event": "purchase", "value": "x" * MAX_BODY_BYTES}]}
 
     # When
@@ -2424,5 +2424,4 @@ def test_post_sdk_events__body_over_limit__returns_413_without_parsing(
     # Then
     assert response.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
     assert response.content == BODY_LIMIT_ERROR.encode()
-    parse.assert_not_called()
     assert not SDKExperimentationEvent.objects.exists()

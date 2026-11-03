@@ -1,13 +1,11 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 import pytest
+from freezegun import freeze_time
 
+from experimentation.constants import MAX_BODY_BYTES, MAX_VALUE_BYTES, MIN_TIMESTAMP_MS
 from experimentation.sdk_events import (
-    MAX_BODY_BYTES,
-    MAX_VALUE_BYTES,
-    MIN_TIMESTAMP_MS,
     SDKExperimentationEventSerializer,
-    build_sdk_experimentation_event,
     is_over_body_limit,
 )
 
@@ -19,6 +17,7 @@ NOT_A_STRING = ["Not a valid string."]
 NOT_AN_INTEGER = ["A valid integer is required."]
 
 
+@freeze_time(NOW)
 @pytest.mark.parametrize(
     "event, expected_errors",
     [
@@ -35,13 +34,15 @@ NOT_AN_INTEGER = ["A valid integer is required."]
         ),
         ({**PURCHASE, "event": 1}, {"event": NOT_A_STRING}),
         ({**PURCHASE, "event": "   "}, {"event": ["This field may not be blank."]}),
-        ({**PURCHASE, "event": "\x00"}, {"event": ["This field may not be blank."]}),
+        (
+            {**PURCHASE, "event": "a\x00"},
+            {"event": ["Null characters are not allowed."]},
+        ),
         (
             {**PURCHASE, "event": "e" * 257},
             {"event": ["Ensure this field has no more than 256 characters."]},
         ),
         ({**PURCHASE, "event": "$made_up"}, {"event": ["The `$` prefix is reserved."]}),
-        ({**PURCHASE, "event": "\x00$x"}, {"event": ["The `$` prefix is reserved."]}),
         (
             {**PURCHASE, "event": "$flag_exposure"},
             {"feature_name": ["Required for $flag_exposure events."]},
@@ -55,23 +56,23 @@ NOT_AN_INTEGER = ["A valid integer is required."]
         ({**PURCHASE, "timestamp": True}, {"timestamp": NOT_AN_INTEGER}),
         (
             {**PURCHASE, "timestamp": MIN_TIMESTAMP_MS},
-            {
-                "timestamp": [
-                    "Ensure this value is greater than or equal to 1577836800001."
-                ]
-            },
+            {"timestamp": ["Timestamp must be after 2020-01-01."]},
         ),
         (
             {**PURCHASE, "timestamp": NOW_MS + 25 * HOUR_MS},
-            {"timestamp": ["Must be at most 24 hours in the future."]},
+            {"timestamp": ["Timestamp is too far in the future."]},
         ),
         (
             {**PURCHASE, "timestamp": NOW_MS - 11 * 24 * HOUR_MS},
-            {"timestamp": ["Must be at most 10 days in the past."]},
+            {"timestamp": ["Timestamp is older than 10 days."]},
         ),
         (
             {**PURCHASE, "value": "x" * MAX_VALUE_BYTES},
             {"value": ["Must serialise to at most 131072 bytes."]},
+        ),
+        (
+            {**PURCHASE, "value": "a\x00"},
+            {"value": ["Null characters are not allowed."]},
         ),
         (
             {**PURCHASE, "value": {"amount": float("inf")}},
@@ -80,6 +81,10 @@ NOT_AN_INTEGER = ["A valid integer is required."]
         (
             {**PURCHASE, "traits": {"score": float("inf")}},
             {"traits": ["Must not contain non-finite numbers."]},
+        ),
+        (
+            {**PURCHASE, "traits": {"plan": "\ud800"}},
+            {"traits": ["Surrogate characters are not allowed."]},
         ),
         (
             {**PURCHASE, "traits": {f"t{i}": "v" * 1900 for i in range(20)}},
@@ -108,7 +113,7 @@ def test_sdk_experimentation_event_serializer__invalid_event__returns_errors(
     expected_errors: dict[str, list[str]],
 ) -> None:
     # Given
-    serializer = SDKExperimentationEventSerializer(data=event, context={"now": NOW})
+    serializer = SDKExperimentationEventSerializer(data=event)
 
     # When
     is_valid = serializer.is_valid()
@@ -118,6 +123,7 @@ def test_sdk_experimentation_event_serializer__invalid_event__returns_errors(
     assert serializer.errors == expected_errors
 
 
+@freeze_time(NOW)
 @pytest.mark.parametrize(
     "event",
     [
@@ -146,7 +152,7 @@ def test_sdk_experimentation_event_serializer__valid_event__returns_it(
     event: dict[str, object],
 ) -> None:
     # Given
-    serializer = SDKExperimentationEventSerializer(data=event, context={"now": NOW})
+    serializer = SDKExperimentationEventSerializer(data=event)
 
     # When
     is_valid = serializer.is_valid()
@@ -154,59 +160,6 @@ def test_sdk_experimentation_event_serializer__valid_event__returns_it(
     # Then
     assert is_valid
     assert serializer.validated_data == event
-
-
-def test_build_sdk_experimentation_event__validated_nul_and_lone_surrogate__maps_to_cleaned_row() -> (
-    None
-):
-    # Given
-    serializer = SDKExperimentationEventSerializer(
-        data={
-            "event": "purchase\x00",
-            "feature_name": "checkout\ud800",
-            "timestamp": NOW_MS + 7,
-            "value": "a\x00b",
-            "traits": {"plan": "pró\ud800"},
-        },
-        context={"now": NOW},
-    )
-    serializer.is_valid(raise_exception=True)
-
-    # When
-    row = build_sdk_experimentation_event(
-        serializer.validated_data,
-        environment_key="env-key",
-        collected_at=NOW,
-        sdk_language="python",
-        sdk_version="6.2.3",
-    )
-
-    # Then
-    assert (
-        row.environment_key,
-        row.event,
-        row.feature_name,
-        row.timestamp,
-        row.collected_at,
-        row.identifier,
-        row.value,
-        row.traits,
-        row.metadata,
-        row.sdk_language,
-        row.sdk_version,
-    ) == (
-        "env-key",
-        "purchase",
-        "checkout�",
-        NOW + timedelta(milliseconds=7),
-        NOW,
-        "",
-        "ab",
-        '{"plan":"pró\ufffd"}',
-        None,
-        "python",
-        "6.2.3",
-    )
 
 
 @pytest.mark.parametrize(

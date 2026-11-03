@@ -14,7 +14,7 @@ from flag_engine.segments.constants import ALL_RULE, ANY_RULE, PERCENTAGE_SPLIT
 from rest_framework.exceptions import ValidationError
 from rest_framework.settings import api_settings
 
-from app_analytics.mappers import map_user_agent_to_sdk_user_agent
+from app_analytics.mappers import map_user_agent_to_sdk_language_and_version
 from audit.constants import EXPERIMENT_ROLLOUT_APPLIED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -46,6 +46,7 @@ from experimentation.dataclasses import (
     WarehouseEventNames,
     WarehouseEventStats,
 )
+from experimentation.mappers import map_sdk_event_to_sdk_experimentation_event
 from experimentation.metrics import (
     flagsmith_experimentation_sdk_events_total,
     flagsmith_experimentation_warehouse_connection_verifications_total,
@@ -63,10 +64,7 @@ from experimentation.models import (
     WarehouseDeliveryStatus,
     WarehouseType,
 )
-from experimentation.sdk_events import (
-    SDKExperimentationEventSerializer,
-    build_sdk_experimentation_event,
-)
+from experimentation.sdk_events import SDKExperimentationEventSerializer
 from experimentation.stats import (
     Inference,
     VariantStats,
@@ -100,7 +98,11 @@ if typing.TYPE_CHECKING:
 
     from environments.models import Environment
     from experimentation.models import Metric
-    from experimentation.types import ExposureGranularity, RejectedSDKEvent
+    from experimentation.types import (
+        ExposureGranularity,
+        RejectedSDKEvent,
+        SDKEventBatchResult,
+    )
     from features.feature_states.models import FeatureValueType
     from features.models import FeatureStateValue
     from organisations.models import Organisation
@@ -180,22 +182,19 @@ def store_sdk_experimentation_events(
     submitted_events: list[object],
     *,
     sdk_user_agent: str | None,
-) -> tuple[int, list[RejectedSDKEvent]]:
+) -> SDKEventBatchResult:
     collected_at = timezone.now()
-    sdk_name, _, sdk_version = (
-        map_user_agent_to_sdk_user_agent(sdk_user_agent or "") or "unknown/unknown"
-    ).partition("/")
-    sdk_language = sdk_name.removeprefix("flagsmith-").removesuffix("-sdk")
+    sdk_language, sdk_version = map_user_agent_to_sdk_language_and_version(
+        sdk_user_agent
+    )
     valid_events: list[SDKExperimentationEvent] = []
     rejected_events: list[RejectedSDKEvent] = []
     rejected_fields: set[str] = set()
     for index, event in enumerate(submitted_events):
-        serializer = SDKExperimentationEventSerializer(
-            data=event, context={"now": collected_at}
-        )
+        serializer = SDKExperimentationEventSerializer(data=event)
         if serializer.is_valid():
             valid_events.append(
-                build_sdk_experimentation_event(
+                map_sdk_event_to_sdk_experimentation_event(
                     serializer.validated_data,
                     environment_key=environment.api_key,
                     collected_at=collected_at,
@@ -227,7 +226,7 @@ def store_sdk_experimentation_events(
             rejected_events__count=len(rejected_events),
             rejected_events__fields=sorted(rejected_fields),
         )
-    return len(valid_events), rejected_events
+    return {"accepted": len(valid_events), "rejected": rejected_events}
 
 
 def get_warehouse_event_names(

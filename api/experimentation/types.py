@@ -118,3 +118,8 @@ class PostgresCredentials(TypedDict):
 class RejectedSDKEvent(TypedDict):
     index: int
     error: str
+
+
+class SDKEventBatchResult(TypedDict):
+    accepted: int
+    rejected: list[RejectedSDKEvent]

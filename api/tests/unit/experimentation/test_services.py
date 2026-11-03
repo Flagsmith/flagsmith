@@ -49,7 +49,6 @@ from experimentation.models import (
     Metric,
     MetricAggregation,
     MetricDirection,
-    SDKExperimentationEvent,
     WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseDeliveryStatus,
@@ -4040,33 +4039,3 @@ def test_annotate_warehouse_delivery_statuses__connection_not_delivered_by_servi
     # Then
     assert warehouse_connection.status == WarehouseConnectionStatus.CONNECTED
     assert warehouse_connection.status_detail is None
-
-
-@pytest.mark.parametrize(
-    "sdk_user_agent, expected",
-    [
-        ("flagsmith-python-sdk/6.2.3", ("python", "6.2.3")),
-        ("flagsmith-swift-ios-sdk/99.0.0", ("swift-ios", "unknown")),
-        ("curl/8.0", ("unknown", "unknown")),
-        (None, ("unknown", "unknown")),
-    ],
-    ids=["known-version", "untracked-version", "not-an-sdk", "missing"],
-)
-def test_store_sdk_experimentation_events__sdk_user_agent__stores_language_and_version(
-    environment: Environment,
-    sdk_user_agent: str | None,
-    expected: tuple[str, str],
-) -> None:
-    # Given
-    event = {"event": "purchase", "timestamp": int(datetime.now().timestamp() * 1000)}
-
-    # When
-    services.store_sdk_experimentation_events(
-        environment, [event], sdk_user_agent=sdk_user_agent
-    )
-
-    # Then
-    assert (
-        SDKExperimentationEvent.objects.values_list("sdk_language", "sdk_version").get()
-        == expected
-    )

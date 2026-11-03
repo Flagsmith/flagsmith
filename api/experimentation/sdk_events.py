@@ -1,63 +1,39 @@
 """Accepts the payload and limits of https://github.com/Flagsmith/ingestion-server/blob/main/src/routes/ingest.rs, with DRF-style error messages."""
 
 import json
-import re
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from typing import Any
 
-from django.core.validators import ProhibitNullCharactersValidator
+from django.utils import timezone
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from rest_framework.validators import ProhibitSurrogateCharactersValidator
 
 from environments.identities.constants import IDENTITY_IDENTIFIER_MAX_LENGTH
 from environments.identities.traits.constants import (
     TRAIT_KEY_MAX_LENGTH,
     TRAIT_STRING_VALUE_MAX_LENGTH,
 )
-from experimentation.constants import EXPOSURE_EVENT_NAME
-from experimentation.models import SDKExperimentationEvent
+from experimentation.constants import (
+    EXPOSURE_EVENT_NAME,
+    MAX_BODY_BYTES,
+    MAX_EVENT_AGE_DAYS,
+    MAX_EVENT_NAME_CHARS,
+    MAX_FUTURE_SKEW_HOURS,
+    MAX_METADATA_BYTES,
+    MAX_TRAITS_BYTES,
+    MAX_VALUE_BYTES,
+    MIN_TIMESTAMP_MS,
+)
 from features.constants import FEATURE_NAME_MAX_LENGTH
-
-# 2020-01-01T00:00:00Z.
-MIN_TIMESTAMP_MS = 1_577_836_800_000
-MAX_FUTURE_SKEW_HOURS = 24
-MAX_EVENT_AGE_DAYS = 10
-
-MAX_EVENT_NAME_CHARS = 256
-
-MAX_VALUE_BYTES = 128 * 1024
-MAX_TRAITS_BYTES = 32 * 1024
-MAX_METADATA_BYTES = 8 * 1024
-
-EMPTY_BATCH_ERROR = "events must be non-empty"
-
-# axum-core 0.4.5's DEFAULT_LIMIT and its 413 text, which the ingestion server keeps.
-MAX_BODY_BYTES = 2_097_152
-BODY_LIMIT_ERROR = "Failed to buffer the request body: length limit exceeded"
-
-_UNIX_EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
-_LONE_SURROGATE_PATTERN = re.compile("[\ud800-\udfff]")
 
 
 class _StrictCharField(serializers.CharField):
     """Rejects numbers, which CharField would coerce to strings."""
 
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
-        # The ingestion server accepts these; to_internal_value cleans them.
-        self.validators = [
-            validator
-            for validator in self.validators
-            if not isinstance(
-                validator,
-                (ProhibitNullCharactersValidator, ProhibitSurrogateCharactersValidator),
-            )
-        ]
-
     def to_internal_value(self, data: object) -> str:
         if not isinstance(data, str):
             self.fail("invalid")
-        return _clean_text(super().to_internal_value(data))
+        return super().to_internal_value(data)
 
 
 class _StrictIntegerField(serializers.IntegerField):
@@ -70,8 +46,6 @@ class _StrictIntegerField(serializers.IntegerField):
 
 
 class SDKExperimentationEventSerializer(serializers.Serializer[dict[str, Any]]):
-    """Expects `now` in its context, to bound the timestamp."""
-
     event = _StrictCharField(max_length=MAX_EVENT_NAME_CHARS, trim_whitespace=False)
     feature_name = _StrictCharField(
         max_length=FEATURE_NAME_MAX_LENGTH,
@@ -87,7 +61,7 @@ class SDKExperimentationEventSerializer(serializers.Serializer[dict[str, Any]]):
         allow_blank=True,
         trim_whitespace=False,
     )
-    timestamp = _StrictIntegerField(min_value=MIN_TIMESTAMP_MS + 1)
+    timestamp = _StrictIntegerField()
     value = serializers.JSONField(required=False, allow_null=True)
     traits = serializers.DictField(required=False, allow_null=True)
     metadata = serializers.JSONField(required=False, allow_null=True)
@@ -100,14 +74,17 @@ class SDKExperimentationEventSerializer(serializers.Serializer[dict[str, Any]]):
         return name
 
     def validate_timestamp(self, timestamp: int) -> int:
-        now: datetime = self.context["now"]
-        if timestamp > _to_epoch_ms(now + timedelta(hours=MAX_FUTURE_SKEW_HOURS)):
+        now = timezone.now()
+        if timestamp <= MIN_TIMESTAMP_MS:
+            raise serializers.ValidationError("Timestamp must be after 2020-01-01.")
+        if (
+            timestamp
+            > (now + timedelta(hours=MAX_FUTURE_SKEW_HOURS)).timestamp() * 1000
+        ):
+            raise serializers.ValidationError("Timestamp is too far in the future.")
+        if timestamp < (now - timedelta(days=MAX_EVENT_AGE_DAYS)).timestamp() * 1000:
             raise serializers.ValidationError(
-                f"Must be at most {MAX_FUTURE_SKEW_HOURS} hours in the future."
-            )
-        if timestamp < _to_epoch_ms(now - timedelta(days=MAX_EVENT_AGE_DAYS)):
-            raise serializers.ValidationError(
-                f"Must be at most {MAX_EVENT_AGE_DAYS} days in the past."
+                f"Timestamp is older than {MAX_EVENT_AGE_DAYS} days."
             )
         return timestamp
 
@@ -138,6 +115,15 @@ class SDKExperimentationEventSerializer(serializers.Serializer[dict[str, Any]]):
         return attrs
 
 
+@extend_schema_field(SDKExperimentationEventSerializer(many=True))
+class _SDKEventListField(serializers.ListField):
+    """Leaves each event to SDKExperimentationEventSerializer, so one bad event doesn't fail the batch."""
+
+
+class SDKExperimentationEventBatchSerializer(serializers.Serializer[dict[str, Any]]):
+    events = _SDKEventListField(allow_empty=False)
+
+
 def is_over_body_limit(content_length: str | None) -> bool:
     """Django reads at most the declared length, so this bounds what is parsed."""
     try:
@@ -146,58 +132,20 @@ def is_over_body_limit(content_length: str | None) -> bool:
         return False
 
 
-def build_sdk_experimentation_event(
-    event: dict[str, Any],
-    *,
-    environment_key: str,
-    collected_at: datetime,
-    sdk_language: str,
-    sdk_version: str,
-) -> SDKExperimentationEvent:
-    return SDKExperimentationEvent(
-        environment_key=environment_key,
-        event=event["event"],
-        feature_name=event.get("feature_name"),
-        timestamp=_UNIX_EPOCH + timedelta(milliseconds=event["timestamp"]),
-        collected_at=collected_at,
-        identifier=event.get("identifier") or "",
-        value=_as_json_column_text(event.get("value")),
-        traits=_as_json_column_text(event.get("traits")),
-        metadata=_as_json_column_text(event.get("metadata")),
-        sdk_language=sdk_language,
-        sdk_version=sdk_version,
-    )
-
-
-def _to_epoch_ms(moment: datetime) -> int:
-    return (moment - _UNIX_EPOCH) // timedelta(milliseconds=1)
-
-
 def _validate_json_value(value: object, max_bytes: int) -> object:
     """Measures UTF-8 bytes, as the ingestion server does."""
     try:
         serialised = json.dumps(
             value, ensure_ascii=False, allow_nan=False, separators=(",", ":")
-        )
+        ).encode()
+    except UnicodeEncodeError:
+        raise serializers.ValidationError("Surrogate characters are not allowed.")
     except ValueError:
         raise serializers.ValidationError("Must not contain non-finite numbers.")
-    if len(serialised.encode(errors="surrogatepass")) > max_bytes:
+    if isinstance(value, str) and "\x00" in value:
+        raise serializers.ValidationError("Null characters are not allowed.")
+    if len(serialised) > max_bytes:
         raise serializers.ValidationError(
             f"Must serialise to at most {max_bytes} bytes."
         )
     return value
-
-
-def _as_json_column_text(value: object) -> str | None:
-    if value is None:
-        return None
-    return _clean_text(
-        value
-        if isinstance(value, str)
-        else json.dumps(value, ensure_ascii=False, separators=(",", ":"))
-    )
-
-
-def _clean_text(text: str) -> str:
-    # PostgreSQL text can't hold NUL, nor UTF-8 a lone surrogate; either fails the batch.
-    return _LONE_SURROGATE_PATTERN.sub("\ufffd", text.replace("\x00", ""))
