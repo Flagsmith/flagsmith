@@ -8478,15 +8478,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: {}
+                $ref: '#/components/schemas/SDKEventBatchResult'
         '400':
           description: ''
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: {}
+                $ref: '#/components/schemas/SDKEventBatchResult'
         '404':
           description: ''
           content:
@@ -28214,8 +28212,35 @@ components:
         - identity
         - trait_key
         - trait_value
+    SDKEventBatchResult:
+      type: object
+      properties:
+        accepted:
+          type: integer
+          title: Accepted
+        rejected:
+          type: array
+          items:
+            $ref: '#/components/schemas/SDKEventBatchResultRejectedSDKEvent'
+          title: Rejected
+      required:
+        - accepted
+        - rejected
+      title: SDKEventBatchResult
+    SDKEventBatchResultRejectedSDKEvent:
+      type: object
+      properties:
+        index:
+          type: integer
+          title: Index
+        error:
+          type: string
+          title: Error
+      required:
+        - index
+        - error
+      title: RejectedSDKEvent
     SDKExperimentationEvent:
-      description: 'Expects `now` in its context, to bound the timestamp.'
       type: object
       properties:
         event:
@@ -28233,8 +28258,6 @@ components:
           maxLength: 2000
         timestamp:
           type: integer
-          format: int64
-          minimum: 1577836800001
         value:
           oneOf:
             - {}
