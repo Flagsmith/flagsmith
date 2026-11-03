@@ -1,4 +1,4 @@
-"""Mirrors https://github.com/Flagsmith/ingestion-server/blob/main/src/routes/ingest.rs so SDKs send events here unchanged."""
+"""Accepts the payload and limits of https://github.com/Flagsmith/ingestion-server/blob/main/src/routes/ingest.rs, with DRF-style error messages."""
 
 import json
 import re
@@ -6,12 +6,22 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from django.core.validators import ProhibitNullCharactersValidator
+from django.db import models
 from rest_framework import serializers
 from rest_framework.validators import ProhibitSurrogateCharactersValidator
 
+from environments.identities.models import Identity
 from environments.identities.traits.constants import TRAIT_STRING_VALUE_MAX_LENGTH
+from environments.identities.traits.models import Trait
 from experimentation.constants import EXPOSURE_EVENT_NAME
 from experimentation.models import SDKExperimentationEvent
+from features.models import Feature
+
+
+def _max_length(model: type[models.Model], field_name: str) -> int:
+    # get_field() is typed for every field kind; callers pass CharFields, which set max_length.
+    return model._meta.get_field(field_name).max_length  # type: ignore[union-attr,return-value]
+
 
 # 2020-01-01T00:00:00Z.
 MIN_TIMESTAMP_MS = 1_577_836_800_000
@@ -19,9 +29,9 @@ MAX_FUTURE_SKEW_HOURS = 24
 MAX_EVENT_AGE_DAYS = 10
 
 MAX_EVENT_NAME_CHARS = 256
-MAX_FEATURE_NAME_CHARS = 2000
-MAX_IDENTIFIER_CHARS = 2000
-MAX_TRAIT_KEY_CHARS = 200
+MAX_FEATURE_NAME_CHARS = _max_length(Feature, "name")
+MAX_IDENTIFIER_CHARS = _max_length(Identity, "identifier")
+MAX_TRAIT_KEY_CHARS = _max_length(Trait, "trait_key")
 
 MAX_VALUE_BYTES = 128 * 1024
 MAX_TRAITS_BYTES = 32 * 1024

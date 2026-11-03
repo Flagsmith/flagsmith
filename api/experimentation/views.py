@@ -53,6 +53,7 @@ from experimentation.permissions import ExperimentationPermission
 from experimentation.sdk_events import (
     BODY_LIMIT_ERROR,
     EMPTY_BATCH_ERROR,
+    SDKExperimentationEventSerializer,
     is_over_body_limit,
 )
 from experimentation.serializers import (
@@ -825,7 +826,10 @@ class SDKExperimentationEventsView(APIView):
     throttle_classes = []
 
     @extend_schema(
-        request=OpenApiTypes.OBJECT,
+        request=inline_serializer(
+            name="SDKExperimentationEventBatch",
+            fields={"events": SDKExperimentationEventSerializer(many=True)},
+        ),
         responses={202: OpenApiTypes.OBJECT, 400: OpenApiTypes.OBJECT},
     )
     def post(self, request: Request) -> HttpResponse:
