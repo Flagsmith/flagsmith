@@ -121,6 +121,7 @@ def track_only_feature_related_events(signal_function):  # type: ignore[no-untyp
         RelatedObjectType.FEATURE_STATE,
         RelatedObjectType.SEGMENT,
         RelatedObjectType.EF_VERSION,
+        RelatedObjectType.EDGE_IDENTITY,
     ]
     return track_only(allowed_types)(signal_function)
 

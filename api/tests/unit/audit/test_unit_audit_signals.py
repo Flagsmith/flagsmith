@@ -10,14 +10,17 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from audit.signals import (
     call_webhooks,
+    send_audit_log_event_to_datadog,
     send_audit_log_event_to_dynatrace,
     send_audit_log_event_to_grafana,
+    send_audit_log_event_to_slack,
     send_feature_flag_went_live_signal,
     trigger_feature_state_change_webhooks,
 )
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.datadog.models import DataDogConfiguration
 from integrations.dynatrace.dynatrace import EVENTS_API_URI
 from integrations.dynatrace.models import DynatraceConfiguration
 from integrations.grafana.grafana import ROUTE_API_ANNOTATIONS
@@ -25,6 +28,7 @@ from integrations.grafana.models import (
     GrafanaOrganisationConfiguration,
     GrafanaProjectConfiguration,
 )
+from integrations.slack.models import SlackConfiguration, SlackEnvironment
 from organisations.models import Organisation, OrganisationWebhook
 from projects.models import Project
 from projects.tags.models import Tag
@@ -334,6 +338,96 @@ def test_send_audit_log_event_to_dynatrace__environment_feature_version__sends_e
         },
         "entitySelector": "",
     }
+
+
+def test_send_audit_log_event_to_datadog__edge_identity_related_object_type__calls_expected(
+    mocker: MockerFixture,
+    project: Project,
+) -> None:
+    # Given
+    audit_log_record = AuditLog.objects.create(
+        project=project,
+        related_object_type=RelatedObjectType.EDGE_IDENTITY.name,
+    )
+    data_dog_wrapper_mock = mocker.patch("audit.signals.DataDogWrapper", autospec=True)
+    data_dog_wrapper_instance_mock = data_dog_wrapper_mock.return_value
+
+    data_dog_config = DataDogConfiguration(base_url="test.com", api_key="test")
+    project.data_dog_config = data_dog_config
+
+    # When
+    send_audit_log_event_to_datadog(AuditLog, audit_log_record)
+
+    # Then
+    data_dog_wrapper_mock.assert_called_once_with(
+        base_url=data_dog_config.base_url,
+        api_key=data_dog_config.api_key,
+        use_custom_source=data_dog_config.use_custom_source,
+    )
+    data_dog_wrapper_instance_mock.generate_event_data.assert_called_once_with(
+        audit_log_record=audit_log_record
+    )
+    data_dog_wrapper_instance_mock.track_event_async.assert_called_once_with(
+        event=data_dog_wrapper_instance_mock.generate_event_data.return_value
+    )
+
+
+def test_send_audit_log_event_to_slack__edge_identity_related_object_type__calls_expected(
+    mocker: MockerFixture,
+    environment: Environment,
+    project: Project,
+) -> None:
+    # Given
+    audit_log_record = AuditLog.objects.create(
+        project=project,
+        environment=environment,
+        related_object_type=RelatedObjectType.EDGE_IDENTITY.name,
+        log="Feature override created for feature 'my_feature' and identity 'my_identity'",
+    )
+    slack_wrapper_mock = mocker.patch("audit.signals.SlackWrapper", autospec=True)
+    slack_wrapper_instance_mock = slack_wrapper_mock.return_value
+
+    slack_config = SlackConfiguration.objects.create(
+        project=project, api_token="test-token"
+    )
+    SlackEnvironment.objects.create(
+        slack_configuration=slack_config,
+        environment=environment,
+        channel_id="test-channel",
+        enabled=True,
+    )
+
+    # When
+    send_audit_log_event_to_slack(AuditLog, audit_log_record)
+
+    # Then
+    slack_wrapper_mock.assert_called_once_with(
+        api_token=slack_config.api_token, channel_id="test-channel"
+    )
+    slack_wrapper_instance_mock.generate_event_data.assert_called_once_with(
+        audit_log_record=audit_log_record
+    )
+    slack_wrapper_instance_mock.track_event_async.assert_called_once_with(
+        event=slack_wrapper_instance_mock.generate_event_data.return_value
+    )
+
+
+def test_send_audit_log_event_to_datadog__edge_identity_related_object_type_no_config__does_not_call(
+    project: Project,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    audit_log_record = AuditLog.objects.create(
+        project=project,
+        related_object_type=RelatedObjectType.EDGE_IDENTITY.name,
+    )
+    data_dog_wrapper_mock = mocker.patch("audit.signals.DataDogWrapper", autospec=True)
+
+    # When
+    send_audit_log_event_to_datadog(AuditLog, audit_log_record)
+
+    # Then
+    data_dog_wrapper_mock.assert_not_called()
 
 
 def _create_and_publish_environment_feature_version(
