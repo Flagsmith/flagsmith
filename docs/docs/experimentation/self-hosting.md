@@ -28,7 +28,7 @@ To set it up, see
 
 ## Your own warehouse
 
-Events are delivered to your own [ClickHouse](/experimentation/connect-a-warehouse#bring-your-own-clickhouse),
+Events are delivered to your own [ClickHouse](/experimentation/connect-clickhouse),
 [Databricks](/experimentation/connect-databricks) or [PostgreSQL](/experimentation/connect-postgresql).
 
 - Also run the event ingestion service, Kafka and warehouse delivery. See [Deploying](#deploying).

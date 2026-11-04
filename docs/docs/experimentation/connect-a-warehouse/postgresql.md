@@ -1,7 +1,8 @@
 ---
 title: Connect PostgreSQL
-sidebar_label: Connect PostgreSQL
-sidebar_position: 2.7
+sidebar_label: PostgreSQL
+sidebar_position: 3
+slug: /experimentation/connect-postgresql
 description: Store and query experiment events in your own PostgreSQL database.
 ---
 
@@ -103,8 +104,8 @@ The host can't be changed. To use a different PostgreSQL database, disconnect an
 ## Performance and table growth
 
 Results queries scan the events table, so they slow down as it grows. For high event volumes, use
-[ClickHouse](/experimentation/connect-a-warehouse#bring-your-own-clickhouse) or
-[Databricks](/experimentation/connect-databricks), which are built for this kind of query.
+[ClickHouse](/experimentation/connect-clickhouse) or [Databricks](/experimentation/connect-databricks), which are built
+for this kind of query.
 
 Flagsmith doesn't delete old events or partition the table. Monitor its size and manage retention yourself.
 

@@ -9,7 +9,7 @@ describe('getDatabricksSetupSql', () => {
     const doc = fs.readFileSync(
       path.join(
         __dirname,
-        '../../../../../../../../docs/docs/experimentation/connect-databricks.md',
+        '../../../../../../../../docs/docs/experimentation/connect-a-warehouse/databricks.md',
       ),
       'utf8',
     )
