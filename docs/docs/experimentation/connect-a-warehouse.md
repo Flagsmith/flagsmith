@@ -56,8 +56,6 @@ Warehouse tab open.
 Once connected, the warehouse card shows the total number of events received and the number of unique event names, which
 is useful to verify that instrumentation data is arriving.
 
-<!-- Screenshot: connected warehouse card with event stats -->
-
 ### Connection statuses
 
 The current status is shown on the warehouse card in **Environment Settings › Warehouse**.
