@@ -343,7 +343,11 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     )
   }
 
-  if (editing && connection.warehouse_type === 'postgres') {
+  if (
+    editing &&
+    connection.warehouse_type === 'postgres' &&
+    !isFlagsmithDatabaseConnection(connection)
+  ) {
     return (
       <div className='mt-4 col-md-12'>
         <PostgresConfigForm

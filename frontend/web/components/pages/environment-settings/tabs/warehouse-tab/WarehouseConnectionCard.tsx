@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import IconButton from 'components/base/IconButton'
 import {
+  PostgresConfig,
   WarehouseConnection,
   WarehouseConnectionStatus,
   WarehouseType,
@@ -205,11 +206,13 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
           </div>
         )}
       {connection.warehouse_type === 'postgres' &&
-        'sslmode' in connection.config && (
+        !isFlagsmithDatabaseConnection(connection) && (
           <div className='mt-3'>
             <WarehouseSetupSqlHelp
               label={POSTGRES_SETUP_SQL_LABEL}
-              sql={getPostgresSetupSql(connection.config.schema)}
+              sql={getPostgresSetupSql(
+                (connection.config as PostgresConfig).schema,
+              )}
             />
           </div>
         )}
