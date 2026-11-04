@@ -38,6 +38,13 @@ def map_user_agent_to_sdk_user_agent(value: str) -> str | None:
     return None
 
 
+def map_user_agent_to_sdk_language_and_version(value: str | None) -> tuple[str, str]:
+    sdk_name, _, sdk_version = (
+        map_user_agent_to_sdk_user_agent(value or "") or "unknown/unknown"
+    ).partition("/")
+    return sdk_name.removeprefix("flagsmith-").removesuffix("-sdk"), sdk_version
+
+
 def map_request_to_sdk_label(request: HttpRequest) -> KnownSDK | None:
     for header in SDK_USER_AGENT_HEADERS:
         if (value := request.headers.get(header)) and (

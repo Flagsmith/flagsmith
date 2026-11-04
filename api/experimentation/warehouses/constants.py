@@ -15,3 +15,6 @@ PERMISSION_DENIED_DETAIL = (
     "Permission denied on the events table. The user needs SELECT and INSERT on it."
 )
 QUERY_TIMEOUT_DETAIL = "The query timed out."
+
+FLAGSMITH_DATABASE_SOURCE = "flagsmith_database"
+FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL = "The Flagsmith database can only be used as a warehouse on self-hosted PostgreSQL installations."

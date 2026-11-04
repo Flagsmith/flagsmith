@@ -1,5 +1,9 @@
 export const EVENTS_URL_PLACEHOLDER = '<your event ingestion service URL>'
 
+// SDKs append `v1/events` to their events URL.
+export const getApiEventsUrl = (apiUrl: string): string =>
+  apiUrl.replace(/v1\/?$/, '')
+
 export type SelfHostedUrls = {
   apiUrl: string
   eventsUrl: string

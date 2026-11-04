@@ -1,9 +1,8 @@
 import React, { FC, useState } from 'react'
-import Switch from 'components/Switch'
-import FieldLabel from 'components/base/forms/FieldLabel'
 import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
 import WarehouseConfigField from './WarehouseConfigField'
 import WarehouseFormActions from './WarehouseFormActions'
+import WarehouseTlsSwitch from './WarehouseTlsSwitch'
 import useWarehouseConnectionTest from './useWarehouseConnectionTest'
 import useWarehouseFormSubmit from './useWarehouseFormSubmit'
 import {
@@ -57,7 +56,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
     testState,
     withTestReset,
   } = useWarehouseConnectionTest(environmentId, 'clickhouse')
-  const { clearSaveFailed, isSaving, saveFailed, submit } =
+  const { clearSaveFailed, isSaving, saveErrorDetail, saveFailed, submit } =
     useWarehouseFormSubmit(onSave)
 
   const form: ClickHouseFormState = {
@@ -157,17 +156,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
           }
         />
 
-        <div className='wh-config-form__field'>
-          <div className='d-flex flex-row align-items-center gap-2'>
-            <Switch id='warehouse-config-secure' checked={secure} disabled />
-            <FieldLabel
-              htmlFor='warehouse-config-secure'
-              className='wh-config-form__label fs-caption text-secondary mb-0'
-            >
-              Secure connection (TLS)
-            </FieldLabel>
-          </div>
-        </div>
+        <WarehouseTlsSwitch checked={secure} disabled />
 
         {isEdit && (
           <WarehouseSetupSqlHelp
@@ -187,6 +176,7 @@ const ClickHouseConfigForm: FC<ClickHouseConfigFormProps> = ({
           canSave={canSave}
           isTesting={isTesting}
           isSaving={isSaving}
+          saveErrorDetail={saveErrorDetail}
           saveFailed={saveFailed}
           testState={testState}
           testDetail={testDetail}

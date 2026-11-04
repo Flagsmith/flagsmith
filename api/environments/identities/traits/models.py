@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
+from environments.identities.traits.constants import TRAIT_KEY_MAX_LENGTH
 from environments.identities.traits.exceptions import TraitPersistenceError
 
 
@@ -28,7 +29,7 @@ class Trait(models.Model):
     identity = models.ForeignKey(
         "identities.Identity", related_name="identity_traits", on_delete=models.CASCADE
     )
-    trait_key = models.CharField(max_length=200)
+    trait_key = models.CharField(max_length=TRAIT_KEY_MAX_LENGTH)
     value_type = models.CharField(
         max_length=10, choices=TRAIT_VALUE_TYPES, default=STRING, null=True, blank=True
     )

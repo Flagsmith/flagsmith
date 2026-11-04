@@ -5,6 +5,7 @@
 
   &__type-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: stretch;
     gap: 12px;
     margin-top: 8px;

@@ -4,6 +4,7 @@ import WarehouseConfigField from './WarehouseConfigField'
 import WarehouseFormActions from './WarehouseFormActions'
 import useWarehouseConnectionTest from './useWarehouseConnectionTest'
 import useWarehouseFormSubmit from './useWarehouseFormSubmit'
+import { invalidIf } from './warehouseFormUtils'
 import { DatabricksConfig } from 'common/types/responses'
 import {
   buildDatabricksPayload,
@@ -38,9 +39,6 @@ type DatabricksConfigFormProps = {
 
 const IDENTIFIER_ERROR = 'Use letters, numbers and underscores only.'
 
-const invalidIf = (value: string, isValid: boolean, message: string) =>
-  !!value.trim() && !isValid && message
-
 const DatabricksConfigForm: FC<DatabricksConfigFormProps> = ({
   environmentId,
   initialConfig,
@@ -68,7 +66,7 @@ const DatabricksConfigForm: FC<DatabricksConfigFormProps> = ({
     testState,
     withTestReset,
   } = useWarehouseConnectionTest(environmentId, 'databricks')
-  const { clearSaveFailed, isSaving, saveFailed, submit } =
+  const { clearSaveFailed, isSaving, saveErrorDetail, saveFailed, submit } =
     useWarehouseFormSubmit(onSave)
 
   const form: DatabricksFormState = {
@@ -251,6 +249,7 @@ const DatabricksConfigForm: FC<DatabricksConfigFormProps> = ({
           canSave={canSave}
           isTesting={isTesting}
           isSaving={isSaving}
+          saveErrorDetail={saveErrorDetail}
           saveFailed={saveFailed}
           testState={testState}
           testDetail={testDetail}

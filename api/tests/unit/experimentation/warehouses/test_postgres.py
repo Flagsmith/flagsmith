@@ -1,11 +1,13 @@
 import uuid
 from collections.abc import Callable, Iterator
+from contextlib import closing
 from datetime import datetime, timezone
 from typing import Any
 
 import psycopg2
 import pytest
 from psycopg2 import sql
+from psycopg2.extensions import cursor as PgCursor
 from pytest_mock import MockerFixture
 from rest_framework import serializers
 
@@ -14,7 +16,11 @@ from experimentation.dataclasses import (
     WarehouseEventNames,
     WarehouseEventStats,
 )
-from experimentation.models import MetricAggregation, WarehouseConnection
+from experimentation.models import (
+    MetricAggregation,
+    SDKExperimentationEvent,
+    WarehouseConnection,
+)
 from experimentation.warehouses.constants import (
     MISSING_EVENTS_TABLE_DETAIL,
     PERMISSION_DENIED_DETAIL,
@@ -26,6 +32,8 @@ from experimentation.warehouses.postgres import (
     EVENTS_TABLE_COLUMN_TYPES,
     PostgresWarehouse,
     describe_postgres_error,
+    get_flagsmith_database_connect_params,
+    is_flagsmith_database_config,
     read_cursor,
 )
 from tests.unit.experimentation.conftest import (
@@ -51,21 +59,26 @@ def _at(day: int, hour: int) -> datetime:
     return datetime(2026, 1, day, hour, tzinfo=timezone.utc)
 
 
-def _seed(target: PostgresWarehouseSchema) -> None:
-    rows = [
-        (ENV, "u1", EXPOSURE, FEATURE, "control", _at(1, 10)),
-        (ENV, "u2", EXPOSURE, FEATURE, "treatment", _at(1, 11)),
-        (ENV, "u1", "purchase", None, None, _at(1, 12)),
-        ("other-env", "u3", "signup", None, None, _at(2, 9)),
-    ]
-    target.cursor.executemany(
+SEED_ROWS = [
+    (ENV, "u1", EXPOSURE, FEATURE, "control", _at(1, 10)),
+    (ENV, "u2", EXPOSURE, FEATURE, "treatment", _at(1, 11)),
+    (ENV, "u1", "purchase", None, None, _at(1, 12)),
+    ("other-env", "u3", "signup", None, None, _at(2, 9)),
+]
+SEED_COLUMNS = "environment_key, identifier, event, feature_name, value, timestamp"
+
+
+def _seed(cursor: PgCursor, table: sql.Composable) -> None:
+    cursor.executemany(
         sql.SQL(
-            "INSERT INTO {}.events "
-            "(environment_key, identifier, event, feature_name, value, timestamp) "
-            "VALUES (%s, %s, %s, %s, %s, %s)"
-        ).format(sql.Identifier(target.schema)),
-        rows,
+            f"INSERT INTO {{}} ({SEED_COLUMNS}) VALUES (%s, %s, %s, %s, %s, %s)"
+        ).format(table),
+        SEED_ROWS,
     )
+
+
+def _seed_customer_schema(target: PostgresWarehouseSchema) -> None:
+    _seed(target.cursor, sql.Identifier(target.schema, "events"))
 
 
 def _override_config(connection: WarehouseConnection, **config: object) -> None:
@@ -80,6 +93,26 @@ def _login_as(connection: WarehouseConnection, role: tuple[str, str]) -> None:
     username, password = role
     _override_config(connection, username=username)
     connection.credentials = {"password": password}
+
+
+@pytest.fixture()
+def seeded_connection(
+    request: pytest.FixtureRequest,
+    connection_fixture: str,
+) -> Iterator[WarehouseConnection]:
+    """Seeds over autocommit, so the provider's own connections see the rows."""
+    connection: WarehouseConnection = request.getfixturevalue(connection_fixture)
+    if not is_flagsmith_database_config(connection.config):
+        _seed_customer_schema(request.getfixturevalue("postgres_warehouse_schema"))
+        yield connection
+        return
+    table = sql.Identifier(SDKExperimentationEvent._meta.db_table)
+    with closing(psycopg2.connect(**get_flagsmith_database_connect_params())) as admin:
+        admin.autocommit = True
+        with admin.cursor() as cursor:
+            _seed(cursor, table)
+            yield connection
+            cursor.execute(sql.SQL("DELETE FROM {}").format(table))
 
 
 @pytest.fixture()
@@ -412,20 +445,23 @@ def test_describe_error__other_failures__returns_detail(
         ),
     ],
 )
-def test_event_reads__events__return_and_cache(
-    postgres_connection: WarehouseConnection,
-    postgres_warehouse_schema: PostgresWarehouseSchema,
+@pytest.mark.parametrize(
+    "connection_fixture",
+    ["postgres_connection", "flagsmith_database_connection"],
+    ids=["customer-postgres", "flagsmith-database"],
+)
+def test_event_reads__seeded_events__return_and_cache(
+    seeded_connection: WarehouseConnection,
     mocker: MockerFixture,
     method: str,
     expected: object,
 ) -> None:
     # Given
-    _seed(postgres_warehouse_schema)
     connect = mocker.spy(psycopg2, "connect")
     read = getattr(PostgresWarehouse(), method)
 
     # When
-    results = [read(postgres_connection, ENV), read(postgres_connection, ENV)]
+    results = [read(seeded_connection, ENV), read(seeded_connection, ENV)]
 
     # Then
     assert results == [expected, expected]
@@ -458,7 +494,7 @@ def test_get_exposure_buckets__naive_column_and_non_utc_role__buckets_in_utc(
 ) -> None:
     # Given
     _alter(postgres_warehouse_schema, NAIVE_TIMESTAMP)
-    _seed(postgres_warehouse_schema)
+    _seed_customer_schema(postgres_warehouse_schema)
     role = make_role(["SELECT"], True)
     postgres_warehouse_schema.cursor.execute(
         sql.SQL("ALTER ROLE {} SET TimeZone = 'America/New_York'").format(
@@ -485,17 +521,20 @@ def test_get_exposure_buckets__naive_column_and_non_utc_role__buckets_in_utc(
     ) == [("control", _at(1, 0)), ("treatment", _at(1, 0))]
 
 
-def test_get_results_aggregates__events__reads_customer_schema(
-    postgres_connection: WarehouseConnection,
-    postgres_warehouse_schema: PostgresWarehouseSchema,
+@pytest.mark.parametrize(
+    "connection_fixture",
+    ["postgres_connection", "flagsmith_database_connection"],
+    ids=["customer-postgres", "flagsmith-database"],
+)
+def test_get_results_aggregates__seeded_events__returns_seeded_aggregates(
+    seeded_connection: WarehouseConnection,
 ) -> None:
     # Given
-    _seed(postgres_warehouse_schema)
     spec = MetricSpec(1, "purchase", MetricAggregation.OCCURRENCE, False)
 
     # When
     aggregates = PostgresWarehouse().get_results_aggregates(
-        postgres_connection,
+        seeded_connection,
         environment_key=ENV,
         feature_name=FEATURE,
         specs=[spec],
