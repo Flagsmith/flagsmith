@@ -76,15 +76,15 @@ be reachable from Flagsmith: on Flagsmith Cloud, over the internet; when self-ho
 warehouse delivery.
 
 1. Configure your instance by running the following against it, using an administrative user (the statements require
-   `CREATE USER`, `GRANT`, `CREATE DATABASE` and `CREATE TABLE` privileges). Replace `<USER>` and `<CHANGE_ME_PASSWORD>`
-   with your own values. This is a one-off setup step; the same SQL is available to copy from the Flagsmith dashboard.
+   `CREATE USER`, `GRANT`, `CREATE DATABASE` and `CREATE TABLE` privileges). Replace `<USER>` and `<YOUR_PASSWORD>` with
+   your own values. This is a one-off setup step; the same SQL is available to copy from the Flagsmith dashboard.
 
    <CodeBlock language="sql">{eventsSql}</CodeBlock>
 
    ```sql
    -- Create a dedicated user for Flagsmith
    CREATE USER IF NOT EXISTS <USER>
-       IDENTIFIED WITH sha256_password BY '<CHANGE_ME_PASSWORD>';
+       IDENTIFIED WITH sha256_password BY '<YOUR_PASSWORD>';
 
    -- Allow it to write and read experiment events
    GRANT SELECT, INSERT ON flagsmith_exp.events TO <USER>;

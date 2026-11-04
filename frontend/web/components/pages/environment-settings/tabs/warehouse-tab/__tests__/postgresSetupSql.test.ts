@@ -13,7 +13,7 @@ describe('getPostgresOnboardingSql', () => {
     const sql = getPostgresOnboardingSql()
     const positions = [
       'CREATE TABLE IF NOT EXISTS flagsmith_exp.events',
-      "CREATE USER <USER> PASSWORD '<CHANGE_ME_PASSWORD>';",
+      "CREATE USER <USER> PASSWORD '<YOUR_PASSWORD>';",
       'GRANT USAGE ON SCHEMA flagsmith_exp TO <USER>;',
       'GRANT SELECT, INSERT ON flagsmith_exp.events TO <USER>;',
     ].map((statement) => sql.indexOf(statement))

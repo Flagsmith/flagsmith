@@ -245,8 +245,8 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
             <>
               <p className='text-muted mb-3'>
                 Run this once against your ClickHouse instance using an
-                administrative user. Replace {'<USER>'} and{' '}
-                {'<CHANGE_ME_PASSWORD>'} with your own values.
+                administrative user. Replace {'<USER>'} and {'<YOUR_PASSWORD>'}{' '}
+                with your own values.
               </p>
               <WarehouseSqlSnippet sql={getClickHouseOnboardingSql()} />
             </>
@@ -314,9 +314,9 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
               <p className='text-muted mb-3'>
                 Run this once as a superuser, or as a role with CREATEROLE and
                 CREATE on the database. Replace {'<USER>'} and{' '}
-                {'<CHANGE_ME_PASSWORD>'} with your own values. This also works
-                with PostgreSQL-compatible services such as Supabase, Neon,
-                Amazon RDS and Aurora, AlloyDB and Cloud SQL.
+                {'<YOUR_PASSWORD>'} with your own values. This also works with
+                PostgreSQL-compatible services such as Supabase, Neon, Amazon
+                RDS and Aurora, AlloyDB and Cloud SQL.
               </p>
               <WarehouseSqlSnippet sql={getPostgresOnboardingSql()} />
             </>

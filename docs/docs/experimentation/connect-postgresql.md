@@ -30,7 +30,7 @@ PostgreSQL-compatible services such as Amazon RDS and Aurora, Cloud SQL, AlloyDB
 
 ## 1. Create the events table and user
 
-Run this once against your database. Replace `<USER>` and `<CHANGE_ME_PASSWORD>` with your own values. The same SQL is
+Run this once against your database. Replace `<USER>` and `<YOUR_PASSWORD>` with your own values. The same SQL is
 available to copy from the Flagsmith dashboard.
 
 ```sql
@@ -53,7 +53,7 @@ CREATE INDEX IF NOT EXISTS events_env_event_feature_ts ON flagsmith_exp.events (
 CREATE INDEX IF NOT EXISTS events_env_event_identifier_ts ON flagsmith_exp.events (environment_key, event, identifier, timestamp);
 
 -- Create a dedicated user for Flagsmith
-CREATE USER <USER> PASSWORD '<CHANGE_ME_PASSWORD>';
+CREATE USER <USER> PASSWORD '<YOUR_PASSWORD>';
 
 -- Allow it to read and write experiment events
 GRANT USAGE ON SCHEMA flagsmith_exp TO <USER>;
