@@ -85,9 +85,9 @@ Flagsmith doesn't create or alter the table, so keep exactly these columns and t
 4. On Flagsmith Cloud, to verify events reach your table, click **Send your first event** on the connection card; the
    button disappears once the first event arrives.
 
-<!-- Screenshot: warehouse-postgres-form.png, the PostgreSQL connection form with the setup SQL -->
+![The PostgreSQL connection form with host, name, port, database, schema, username, password and TLS fields](/img/experimentation/warehouse-postgres-form.png)
 
-<!-- Screenshot: warehouse-postgres-connected.png, a connected PostgreSQL warehouse card -->
+![A connected PostgreSQL warehouse card showing the last event received, total events, unique event names and the database setup SQL](/img/experimentation/warehouse-postgres-connected.png)
 
 ## Manage the connection
 

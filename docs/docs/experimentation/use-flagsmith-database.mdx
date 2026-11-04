@@ -35,7 +35,7 @@ You don't need the event ingestion service, Kafka or warehouse delivery from the
 1. Go to **Environment Settings › Warehouse**.
 2. Select **Flagsmith database** and click **Enable**, then confirm.
 
-<!-- Screenshot: warehouse-flagsmith-database.png, the Warehouse tab with the Flagsmith database card selected -->
+![The Warehouse tab with the Flagsmith database card selected and the Enable button](/img/experimentation/warehouse-flagsmith-database.png)
 
 The connection is named **Flagsmith database - _environment name_**. When you enable it, Flagsmith checks that it can
 read the events table and shows **Connected** straight away. If the check fails, the connection shows **Errored** with
@@ -50,7 +50,7 @@ By default, the SDKs send events to Flagsmith Cloud. Set each SDK's events URL t
 `/api/`, for example `https://flagsmith.example.com/api/`. Don't add `v1/events`; the SDKs append it. The connection
 card shows this URL with a copy button.
 
-<!-- Screenshot: warehouse-flagsmith-database-connected.png, the connected card with the events URL and SDK snippet -->
+![A connected Flagsmith database card showing the events URL, an SDK snippet and the Send your first event button](/img/experimentation/warehouse-flagsmith-database-connected.png)
 
 <Tabs groupId="language" queryString>
 <TabItem value="js" label="JavaScript">
