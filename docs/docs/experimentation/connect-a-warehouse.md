@@ -74,19 +74,8 @@ the reason; fix it and click **Test connection** on the card.
 
 Then set each SDK's events URL to your Flagsmith API URL ending in `/api/`, for example
 `https://flagsmith.example.com/api/`. Don't add `v1/events`; the SDKs append it. The card shows this URL with a copy
-button.
-
-```javascript
-await flagsmith.init({
- environmentID: 'YOUR_CLIENT_SIDE_ENVIRONMENT_KEY',
- enableEvents: true,
- api: 'https://flagsmith.example.com/api/v1/',
- eventProcessorConfig: { eventsApiUrl: 'https://flagsmith.example.com/api/' },
-});
-```
-
-For other SDKs, see [Initialise](/experimentation/run-an-experiment#initialise). To verify events arrive, click **Send
-your first event** on the card.
+button. For each SDK, see [Initialise](/experimentation/run-an-experiment#initialise). To verify events arrive, click
+**Send your first event** on the card.
 
 ![A connected Flagsmith database card showing the events URL, an SDK snippet and the Send your first event button](/img/experimentation/warehouse-flagsmith-database-connected.png)
 

@@ -21,7 +21,7 @@ Events are stored in the PostgreSQL database Flagsmith already runs on, and the 
 
 - Needs only the Flagsmith API; there is nothing extra to run.
 - Only works when your Flagsmith database is PostgreSQL.
-- Events share your application database.
+- Events share your application database, so they add to its size, backups and load.
 
 To set it up, see
 [Self-hosted: use the Flagsmith database](/experimentation/connect-a-warehouse#self-hosted-use-the-flagsmith-database).
@@ -55,7 +55,6 @@ The SDKs append `v1/events` themselves. See [Initialise](/experimentation/run-an
 - Events with a timestamp more than 10 days in the past or 24 hours in the future are rejected.
 - A batch over 2 MiB is rejected whole.
 - Flagsmith never deletes events. Monitor the size of your database or warehouse.
-- In Flagsmith database mode, events add to your application database's size, backups and load.
 
 ## Deploying
 
