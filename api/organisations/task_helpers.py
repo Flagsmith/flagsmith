@@ -24,6 +24,24 @@ from .constants import API_USAGE_ALERT_THRESHOLDS
 logger = structlog.get_logger("api_usage")
 
 
+def _send_email(msg: EmailMultiAlternatives, organisation: Organisation) -> None:
+    """
+    This exists because `fail_silently` doesn't work properly.
+    Added here to avoid too many changes in a single PR, but the real solution is
+    to replace django-sendgrid.
+
+    TODO: https://github.com/Flagsmith/flagsmith/issues/8754
+    """
+    try:
+        msg.send(fail_silently=True)
+    except Exception:
+        logger.exception(
+            "email.send_failed",
+            organisation__id=organisation.id,
+            email__subject=msg.subject,
+        )
+
+
 def send_api_flags_blocked_notification(organisation: Organisation) -> None:
     recipient_list = FFAdminUser.objects.filter(
         userorganisation__organisation=organisation,
@@ -48,7 +66,7 @@ def send_api_flags_blocked_notification(organisation: Organisation) -> None:
         cc=settings.API_USAGE_ALERT_CC_RECIPIENT_LIST,
     )
     msg.attach_alternative(render_to_string(html_message, context), "text/html")
-    msg.send(fail_silently=True)
+    _send_email(msg, organisation)
 
 
 def _send_api_usage_notification(
@@ -94,7 +112,7 @@ def _send_api_usage_notification(
         cc=settings.API_USAGE_ALERT_CC_RECIPIENT_LIST,
     )
     msg.attach_alternative(render_to_string(html_message, context), "text/html")
-    msg.send(fail_silently=True)
+    _send_email(msg, organisation)
 
     OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,

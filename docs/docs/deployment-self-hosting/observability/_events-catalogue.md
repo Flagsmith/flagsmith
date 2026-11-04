@@ -1,8 +1,17 @@
 
+### `api_usage.email.send_failed`
+
+Logged at `exception` from:
+ - `api/organisations/task_helpers.py:38`
+
+Attributes:
+ - `email.subject`
+ - `organisation.id`
+
 ### `api_usage.notification.evaluated`
 
 Logged at `info` from:
- - `api/organisations/task_helpers.py:157`
+ - `api/organisations/task_helpers.py:175`
 
 Attributes:
  - `allowed_api_calls`
@@ -16,7 +25,7 @@ Attributes:
 ### `api_usage.notification.missing_billing_starts_at`
 
 Logged at `error` from:
- - `api/organisations/task_helpers.py:122`
+ - `api/organisations/task_helpers.py:140`
 
 Attributes:
  - `organisation.id`
@@ -24,10 +33,30 @@ Attributes:
 ### `api_usage.notification.sent`
 
 Logged at `info` from:
- - `api/organisations/task_helpers.py:180`
+ - `api/organisations/task_helpers.py:198`
 
 Attributes:
  - `matched_threshold`
+ - `organisation.id`
+
+### `api_usage.restriction.applied`
+
+Logged at `info` from:
+ - `api/organisations/tasks.py:419`
+
+Attributes:
+ - `allowed_30d_api_calls`
+ - `api_usage`
+ - `block_access_to_admin`
+ - `organisation.id`
+ - `stop_serving_flags`
+
+### `api_usage.restriction.failed`
+
+Logged at `exception` from:
+ - `api/organisations/tasks.py:356`
+
+Attributes:
  - `organisation.id`
 
 ### `app_analytics.no_analytics_database_configured`
