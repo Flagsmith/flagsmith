@@ -23,8 +23,8 @@ choosing it for a high-traffic environment.
 - A database reachable from Flagsmith: on Flagsmith Cloud, over the internet; when self-hosting, from your Flagsmith API
   and warehouse delivery. On Flagsmith Cloud, servers restricted by IP allowlists aren't currently supported.
 - A superuser, or a role with `CREATEROLE` and `CREATE` on the database, to run the setup SQL.
-- When self-hosting, the event ingestion service, Kafka and warehouse delivery, deployed for example with the
-  [Helm chart](/deployment-self-hosting/hosting-guides/kubernetes-openshift#experimentation).
+- When self-hosting, the event ingestion service, Kafka and warehouse delivery. See
+  [Self-Hosting and Open Source](/experimentation/self-hosting).
 
 PostgreSQL-compatible services such as Amazon RDS and Aurora, Cloud SQL, AlloyDB, Supabase and Neon also work.
 

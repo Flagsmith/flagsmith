@@ -18,10 +18,9 @@ warehouse connection, and it must be in place before you can create experiments.
 
 :::note Self-hosted
 
-The managed Flagsmith warehouse is only available on Flagsmith Cloud. When self-hosting on PostgreSQL, the simplest
-option is to [use Flagsmith's database](/experimentation/use-flagsmith-database), with nothing extra to deploy. To
-connect your own warehouse instead, as described below, also deploy event ingestion and warehouse delivery, for example
-with the [Helm chart](/deployment-self-hosting/hosting-guides/kubernetes-openshift#experimentation).
+The managed Flagsmith warehouse is only available on Flagsmith Cloud. When self-hosting on PostgreSQL, you can
+[use the Flagsmith database](#self-hosted-use-the-flagsmith-database) instead. See
+[Self-Hosting and Open Source](/experimentation/self-hosting) for what each option needs deployed.
 
 :::
 
@@ -34,7 +33,11 @@ On Flagsmith Cloud, connecting your own ClickHouse, Databricks or PostgreSQL req
 
 ## Connect the Flagsmith warehouse
 
-The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing to provision or configure.
+Flagsmith can store experiment events for you, with nothing to provision. On Flagsmith Cloud, this is the managed
+**Flagsmith** warehouse. When self-hosting on PostgreSQL, it is the **Flagsmith database**, the database your
+installation already runs on.
+
+### Flagsmith Cloud
 
 1. Go to **Environment Settings › Warehouse**.
 2. Select **Flagsmith** and click **Enable**, then confirm.
@@ -55,6 +58,40 @@ Warehouse tab open.
 
 Once connected, the warehouse card shows the total number of events received and the number of unique event names, which
 is useful to verify that instrumentation data is arriving.
+
+### Self-hosted: use the Flagsmith database
+
+This needs `EXPERIMENTATION_ENABLED=true` on the API and a PostgreSQL database; it fails on MySQL or Oracle. See
+[Self-Hosting and Open Source](/experimentation/self-hosting).
+
+1. Go to **Environment Settings › Warehouse**.
+2. Select **Flagsmith database** and click **Enable**, then confirm.
+
+![The Warehouse tab with the Flagsmith database card selected and the Enable button](/img/experimentation/warehouse-flagsmith-database.png)
+
+The connection shows **Connected** straight away. If Flagsmith can't read the events table, it shows **Errored** with
+the reason; fix it and click **Test connection** on the card.
+
+Then set each SDK's events URL to your Flagsmith API URL ending in `/api/`, for example
+`https://flagsmith.example.com/api/`. Don't add `v1/events`; the SDKs append it. The card shows this URL with a copy
+button.
+
+```javascript
+await flagsmith.init({
+ environmentID: 'YOUR_CLIENT_SIDE_ENVIRONMENT_KEY',
+ enableEvents: true,
+ api: 'https://flagsmith.example.com/api/v1/',
+ eventProcessorConfig: { eventsApiUrl: 'https://flagsmith.example.com/api/' },
+});
+```
+
+For other SDKs, see [Initialise](/experimentation/run-an-experiment#initialise). To verify events arrive, click **Send
+your first event** on the card.
+
+![A connected Flagsmith database card showing the events URL, an SDK snippet and the Send your first event button](/img/experimentation/warehouse-flagsmith-database-connected.png)
+
+The connection has no settings to edit. To stop storing events, delete the connection; events already stored stay in the
+table.
 
 ### Connection statuses
 
