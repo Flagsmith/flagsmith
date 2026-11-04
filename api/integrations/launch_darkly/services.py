@@ -174,6 +174,16 @@ def _ld_operator_to_flagsmith_operator(ld_operator: str) -> Optional[ConditionOp
     }.get(ld_operator, None)
 
 
+def _pad_semver(value: str) -> str:
+    # Launch Darkly zero-pads partial versions ("1" and "1.0" mean 1.0.0), but Flagsmith's
+    # semver parser rejects anything with fewer than three components.
+    return re.sub(
+        r"^(\d+)(?:\.(\d+))?(?=$|[-+])",
+        lambda m: f"{m[1]}.{m[2] or '0'}.0",
+        value,
+    )
+
+
 def _convert_ld_values(values: list[str], ld_operator: str) -> list[str]:
     """
     Convert "values" of a Launch Darkly clause to Flagsmith compatible values. Some matching is converted to
@@ -202,7 +212,7 @@ def _convert_ld_values(values: list[str], ld_operator: str) -> list[str]:
         case "startsWith":
             return ["^" + re.escape(value) for value in values]
         case "semVerEqual" | "semVerLessThan" | "semVerGreaterThan":
-            return [value + ":semver" for value in values]
+            return [_pad_semver(value) + ":semver" for value in values]
         case _:
             return [value for value in values]
 
