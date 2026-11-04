@@ -6,7 +6,10 @@ from rest_framework import serializers
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
-from experimentation.constants import MAX_AUDIENCE_SEGMENTS
+from experimentation.constants import (
+    MAX_AUDIENCE_SEGMENTS,
+    WAREHOUSE_CONNECTION_NAME_MAX_LENGTH,
+)
 from experimentation.dataclasses import (
     AudienceSpec,
     RolloutSpec,
@@ -49,7 +52,9 @@ from features.multivariate.serializers import NestedMultivariateFeatureOptionSer
 
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
-    name = serializers.CharField(max_length=255, required=False)
+    name = serializers.CharField(
+        max_length=WAREHOUSE_CONNECTION_NAME_MAX_LENGTH, required=False
+    )
     config = serializers.JSONField(required=False, allow_null=True)
     credentials = serializers.JSONField(
         required=False, allow_null=True, write_only=True
@@ -139,9 +144,12 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
         warehouse_type: str, config: object, environment: Environment
     ) -> str:
         if is_flagsmith_database_config(config):
-            return f"Flagsmith database - {environment.name}"
-        label = WarehouseType(warehouse_type).label
-        return f"{label} Warehouse - {environment.name}"
+            name = f"Flagsmith database - {environment.name}"
+        else:
+            name = (
+                f"{WarehouseType(warehouse_type).label} Warehouse - {environment.name}"
+            )
+        return name[:WAREHOUSE_CONNECTION_NAME_MAX_LENGTH]
 
 
 class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]

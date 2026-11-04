@@ -1,4 +1,6 @@
-from typing import Literal, TypedDict
+from typing import Literal
+
+from typing_extensions import TypedDict
 
 ExposureGranularity = Literal["hour", "day"]
 
@@ -113,3 +115,13 @@ POSTGRES_DEFAULTS: PostgresConfig = {
 
 class PostgresCredentials(TypedDict):
     password: str
+
+
+class RejectedSDKEvent(TypedDict):
+    index: int
+    error: str
+
+
+class SDKEventBatchResult(TypedDict):
+    accepted: int
+    rejected: list[RejectedSDKEvent]

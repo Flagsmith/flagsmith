@@ -10,6 +10,7 @@ from app_analytics.mappers import (
     map_flux_tables_to_usage_data,
     map_influx_record_values_to_labels,
     map_usage_data_to_daily_totals,
+    map_user_agent_to_sdk_language_and_version,
 )
 from app_analytics.models import Resource
 from app_analytics.types import AnnotatedAPIUsageBucket
@@ -205,6 +206,27 @@ def test_map_influx_record_values_to_labels__various_user_agents__returns_expect
 ) -> None:
     # Given / When
     result = map_influx_record_values_to_labels(values)
+
+    # Then
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "user_agent, expected",
+    [
+        ("flagsmith-python-sdk/6.2.3", ("python", "6.2.3")),
+        ("flagsmith-swift-ios-sdk/99.0.0", ("swift-ios", "unknown")),
+        ("curl/8.0", ("unknown", "unknown")),
+        (None, ("unknown", "unknown")),
+    ],
+    ids=["known-version", "untracked-version", "not-an-sdk", "missing"],
+)
+def test_map_user_agent_to_sdk_language_and_version__user_agent__returns_language_and_version(
+    user_agent: str | None,
+    expected: tuple[str, str],
+) -> None:
+    # Given / When
+    result = map_user_agent_to_sdk_language_and_version(user_agent)
 
     # Then
     assert result == expected
