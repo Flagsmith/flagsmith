@@ -82,8 +82,8 @@ Flagsmith doesn't create or alter the table, so keep exactly these columns and t
    schema, and that the events table exists, has the expected columns and allows `SELECT` and `INSERT`. If the test
    can't connect, you can save anyway and test again later, but events won't be delivered until it succeeds. If
    Flagsmith rejects a field, such as the host or schema, fix it before saving.
-4. To verify events reach your table, click **Send your first event** on the connection card; the button disappears once
-   the first event arrives.
+4. On Flagsmith Cloud, to verify events reach your table, click **Send your first event** on the connection card; the
+   button disappears once the first event arrives.
 
 <!-- Screenshot: warehouse-postgres-form.png, the PostgreSQL connection form with the setup SQL -->
 

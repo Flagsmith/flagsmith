@@ -97,8 +97,8 @@ warehouse delivery.
    (8443 by default), database (`flagsmith_exp` by default), and the username and password of the user you created in
    step 1.
 3. Click **Test connection**. Once the test succeeds, save the connection.
-4. Click **Send your first event** on the connection card to verify events are arriving in your warehouse; the button
-   disappears once the first event is received.
+4. On Flagsmith Cloud, click **Send your first event** on the connection card to verify events are arriving in your
+   warehouse; the button disappears once the first event is received.
 
 Connections use the ClickHouse HTTP(S) interface, with TLS enabled by default.
 
