@@ -85,8 +85,9 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
     connection.warehouse_type === 'clickhouse' ||
     connection.warehouse_type === 'databricks' ||
     connection.warehouse_type === 'postgres'
-  // Customer warehouse connections are born connected, so the first-event
-  // nudge stays until events actually arrive in the customer's warehouse.
+  // ClickHouse, Databricks and PostgreSQL connections are born connected, so
+  // the first-event nudge stays until events actually arrive in the customer's
+  // warehouse.
   const showSendFirstEvent = isFlagsmith
     ? !isPending && !isConnected
     : isCustomerWarehouse && !connection.total_events_received
