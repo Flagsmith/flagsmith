@@ -6,7 +6,10 @@ from rest_framework import serializers
 
 from core.dataclasses import AuthorData
 from environments.models import Environment
-from experimentation.constants import MAX_AUDIENCE_SEGMENTS
+from experimentation.constants import (
+    MAX_AUDIENCE_SEGMENTS,
+    WAREHOUSE_CONNECTION_NAME_MAX_LENGTH,
+)
 from experimentation.dataclasses import (
     AudienceSpec,
     RolloutSpec,
@@ -36,6 +39,7 @@ from experimentation.warehouse_validation import (
     validate_credentials,
     validate_warehouse_type_allowed,
 )
+from experimentation.warehouses.postgres import is_flagsmith_database_config
 from experimentation.warehouses.registry import get_warehouse
 from features.feature_states.serializers import (
     FeatureValueSerializer,
@@ -48,7 +52,9 @@ from features.multivariate.serializers import NestedMultivariateFeatureOptionSer
 
 
 class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
-    name = serializers.CharField(max_length=255, required=False)
+    name = serializers.CharField(
+        max_length=WAREHOUSE_CONNECTION_NAME_MAX_LENGTH, required=False
+    )
     config = serializers.JSONField(required=False, allow_null=True)
     credentials = serializers.JSONField(
         required=False, allow_null=True, write_only=True
@@ -118,7 +124,9 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
         warehouse_type: str = validated_data["warehouse_type"]
 
         if not validated_data.get("name"):
-            validated_data["name"] = self._generate_name(warehouse_type, environment)
+            validated_data["name"] = self._generate_name(
+                warehouse_type, validated_data.get("config"), environment
+            )
 
         result: WarehouseConnection = super().create(validated_data)
         return result
@@ -132,9 +140,16 @@ class WarehouseConnectionSerializer(serializers.ModelSerializer):  # type: ignor
         return stats.unique_events_count if stats else None
 
     @staticmethod
-    def _generate_name(warehouse_type: str, environment: Environment) -> str:
-        label = WarehouseType(warehouse_type).label
-        return f"{label} Warehouse - {environment.name}"
+    def _generate_name(
+        warehouse_type: str, config: object, environment: Environment
+    ) -> str:
+        if is_flagsmith_database_config(config):
+            name = f"Flagsmith database - {environment.name}"
+        else:
+            name = (
+                f"{WarehouseType(warehouse_type).label} Warehouse - {environment.name}"
+            )
+        return name[:WAREHOUSE_CONNECTION_NAME_MAX_LENGTH]
 
 
 class MetricSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]

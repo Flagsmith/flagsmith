@@ -1,4 +1,5 @@
 import React, { FC, useState } from 'react'
+import IconButton from 'components/base/IconButton'
 import JSONReference from 'components/JSONReference'
 import Button from 'components/base/forms/Button'
 import Tabs from 'components/navigation/TabMenu/Tabs'
@@ -515,18 +516,17 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                     width: widths[5],
                                   }}
                                 >
-                                  <Button
+                                  <IconButton
+                                    variant='secondary'
+                                    size='large'
+                                    aria-label={`Delete invite for ${
+                                      email || link
+                                    }`}
                                     id='delete-invite'
-                                    type='button'
                                     onClick={() => deleteInvite(id)}
-                                    className='btn btn-with-icon'
                                   >
-                                    <Icon
-                                      name='trash-2'
-                                      width={20}
-                                      fill='#656D7B'
-                                    />
-                                  </Button>
+                                    <Icon width={20} name='trash-2' />
+                                  </IconButton>
                                 </div>
                               </Row>
                             )}
