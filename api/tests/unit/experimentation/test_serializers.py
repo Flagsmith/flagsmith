@@ -60,10 +60,21 @@ def test_create__soft_deleted_exists__creates_new_record(
     assert connection.name == f"Flagsmith Warehouse - {environment.name}"
 
 
-def test_create__valid_data__name_uses_warehouse_type_label(
+@pytest.mark.parametrize(
+    "environment_name, expected_name",
+    [
+        ("Production", "Flagsmith Warehouse - Production"),
+        ("e" * 300, f"Flagsmith Warehouse - {'e' * 233}"),
+    ],
+    ids=["short", "truncated-to-max-length"],
+)
+def test_create__environment_name__name_uses_warehouse_type_label(
     environment: Environment,
+    environment_name: str,
+    expected_name: str,
 ) -> None:
     # Given
+    environment.name = environment_name
     serializer = WarehouseConnectionSerializer(
         data={"warehouse_type": "flagsmith"},
     )
@@ -73,8 +84,7 @@ def test_create__valid_data__name_uses_warehouse_type_label(
     connection = serializer.save(environment=environment)
 
     # Then
-    assert connection.name.startswith("Flagsmith Warehouse")
-    assert environment.name in connection.name
+    assert connection.name == expected_name
 
 
 def test_create__snowflake_minimal_config__applies_defaults(

@@ -53,7 +53,12 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
-from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
+from features.constants import (
+    ENVIRONMENT,
+    FEATURE_NAME_MAX_LENGTH,
+    FEATURE_SEGMENT,
+    IDENTITY,
+)
 from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE, STANDARD
@@ -99,7 +104,7 @@ class Feature(  # type: ignore[django-manager-missing]
     CustomLifecycleModelMixin,
     abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
 ):
-    name = models.CharField(max_length=2000)
+    name = models.CharField(max_length=FEATURE_NAME_MAX_LENGTH)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     project = models.ForeignKey(
         Project,

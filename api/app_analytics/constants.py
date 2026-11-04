@@ -112,10 +112,12 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "6.2.2",
         "6.2.3",
         "6.3.0",
+        "6.4.0",
     ],
     "flagsmith-ruby-sdk": [
         "unknown",
         "5.0.0",
+        "5.1.0",
     ],
     "flagsmith-rust-sdk": [
         "unknown",
@@ -125,6 +127,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "3.1.0",
         "3.1.1",
         "3.1.2",
+        "3.2.0",
     ],
     "flagsmith-swift-ios-sdk": [
         "unknown",
