@@ -1,4 +1,8 @@
-import { WarehouseType } from 'common/types/responses'
+import {
+  FlagsmithDatabaseConfig,
+  WarehouseConnection,
+  WarehouseType,
+} from 'common/types/responses'
 import {
   getPlanFamily,
   isPlanAtLeast,
@@ -7,18 +11,33 @@ import {
   PlanFamily,
 } from 'common/utils/plans'
 
-export type WarehouseTypeOption = WarehouseType | 'bigquery'
+export type WarehouseTypeOption =
+  | WarehouseType
+  | 'bigquery'
+  | 'flagsmith_database'
 
 export const WAREHOUSES_FLAG = 'experimentation_warehouses'
 
-// The managed Flagsmith warehouse only exists on SaaS.
+// The managed Flagsmith warehouse only exists on SaaS, and the Flagsmith
+// database only on self-hosted installations.
 export const getConfigurableWarehouseTypes = (
   isSaas: boolean,
 ): WarehouseTypeOption[] => [
-  ...(isSaas ? (['flagsmith'] as const) : []),
+  isSaas ? 'flagsmith' : 'flagsmith_database',
   'clickhouse',
   'databricks',
 ]
+
+export const FLAGSMITH_DATABASE_CONFIG: FlagsmithDatabaseConfig = {
+  source: 'flagsmith_database',
+}
+
+export const isFlagsmithDatabaseConnection = (
+  connection: Pick<WarehouseConnection, 'config' | 'warehouse_type'>,
+): boolean =>
+  connection.warehouse_type === 'postgres' &&
+  'source' in connection.config &&
+  connection.config.source === FLAGSMITH_DATABASE_CONFIG.source
 
 export type MinimumPlans = Record<string, unknown>
 

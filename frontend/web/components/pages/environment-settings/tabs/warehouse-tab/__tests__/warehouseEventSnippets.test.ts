@@ -1,5 +1,6 @@
 import {
   EVENTS_URL_PLACEHOLDER,
+  getApiEventsUrl,
   getWarehouseEventSnippets,
 } from 'components/pages/environment-settings/tabs/warehouse-tab/warehouseEventSnippets'
 
@@ -7,6 +8,22 @@ const selfHosted = {
   apiUrl: 'https://flagsmith.example.com/api/v1/',
   eventsUrl: EVENTS_URL_PLACEHOLDER,
 }
+
+describe('getApiEventsUrl', () => {
+  it.each([
+    [
+      'https://flagsmith.example.com/api/v1/',
+      'https://flagsmith.example.com/api/',
+    ],
+    [
+      'https://flagsmith.example.com/api/v1',
+      'https://flagsmith.example.com/api/',
+    ],
+    ['/api/v1/', '/api/'],
+  ])('%s => %s', (apiUrl, expected) => {
+    expect(getApiEventsUrl(apiUrl)).toBe(expected)
+  })
+})
 
 describe('getWarehouseEventSnippets', () => {
   it('covers the SDKs documented for experimentation', () => {
