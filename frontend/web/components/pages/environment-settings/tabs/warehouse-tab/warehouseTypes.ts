@@ -26,6 +26,7 @@ export const getConfigurableWarehouseTypes = (
   isSaas ? 'flagsmith' : 'flagsmith_database',
   'clickhouse',
   'databricks',
+  'postgres',
 ]
 
 export const FLAGSMITH_DATABASE_CONFIG: FlagsmithDatabaseConfig = {

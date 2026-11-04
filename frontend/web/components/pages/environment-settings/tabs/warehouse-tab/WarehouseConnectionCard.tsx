@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import IconButton from 'components/base/IconButton'
 import {
+  PostgresConfig,
   WarehouseConnection,
   WarehouseConnectionStatus,
   WarehouseType,
@@ -20,6 +21,10 @@ import {
   DATABRICKS_SETUP_SQL_LABEL,
   getDatabricksSetupSql,
 } from './databricksSetupSql'
+import {
+  getPostgresSetupSql,
+  POSTGRES_SETUP_SQL_LABEL,
+} from './postgresSetupSql'
 import WarehouseStats from './WarehouseStats'
 import { isFlagsmithDatabaseConnection } from './warehouseTypes'
 
@@ -198,6 +203,17 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
                 catalog: connection.config.catalog,
                 schema: connection.config.schema,
               })}
+            />
+          </div>
+        )}
+      {connection.warehouse_type === 'postgres' &&
+        !isFlagsmithDatabaseConnection(connection) && (
+          <div className='mt-3'>
+            <WarehouseSetupSqlHelp
+              label={POSTGRES_SETUP_SQL_LABEL}
+              sql={getPostgresSetupSql(
+                (connection.config as PostgresConfig).schema,
+              )}
             />
           </div>
         )}

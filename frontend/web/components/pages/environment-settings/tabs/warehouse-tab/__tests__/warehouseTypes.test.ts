@@ -16,6 +16,7 @@ const minimumPlans: MinimumPlans = {
   clickhouse: 'scale-up',
   databricks: 'enterprise',
   flagsmith: null,
+  postgres: 'scale-up',
   snowflake: 'scale-up',
 }
 const flagValue = JSON.stringify({
@@ -25,8 +26,8 @@ const flagValue = JSON.stringify({
 
 describe('getConfigurableWarehouseTypes', () => {
   it.each([
-    [false, ['flagsmith_database', 'clickhouse', 'databricks']],
-    [true, ['flagsmith', 'clickhouse', 'databricks']],
+    [false, ['flagsmith_database', 'clickhouse', 'databricks', 'postgres']],
+    [true, ['flagsmith', 'clickhouse', 'databricks', 'postgres']],
   ])('isSaas=%s => %j', (isSaas, expected) => {
     expect(getConfigurableWarehouseTypes(isSaas)).toEqual(expected)
   })
@@ -69,6 +70,7 @@ describe('getWarehouseTypeStatus', () => {
     ['clickhouse', 'enterprise', true, 'available'],
     ['databricks', 'scale-up', true, 'plan-gated'],
     ['databricks', 'enterprise', true, 'available'],
+    ['postgres', 'startup', true, 'plan-gated'],
     ['snowflake', 'enterprise', true, 'coming-soon'],
     ['bigquery', 'enterprise', true, 'coming-soon'],
     ['clickhouse', 'free', false, 'available'],

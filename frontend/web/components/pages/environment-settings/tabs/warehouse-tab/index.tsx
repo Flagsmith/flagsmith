@@ -9,6 +9,7 @@ import {
 import {
   ClickHouseConfig,
   DatabricksConfig,
+  PostgresConfig,
   SnowflakeConfig,
 } from 'common/types/responses'
 import { experimentErrorMessage } from 'components/experiments/errors'
@@ -21,6 +22,8 @@ import ClickHouseConfigForm from './ClickHouseConfigForm'
 import { ClickHouseFormData } from './clickhouseConfig'
 import DatabricksConfigForm from './DatabricksConfigForm'
 import { DatabricksFormData } from './databricksConfig'
+import PostgresConfigForm from './PostgresConfigForm'
+import { PostgresFormData } from './postgresConfig'
 import sendWarehouseTestEvent from './sendWarehouseTestEvent'
 import { getApiEventsUrl } from './warehouseEventSnippets'
 import { getWarehousePollingInterval } from './warehousePolling'
@@ -181,7 +184,9 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
       .unwrap()
       .then(() => toast('Warehouse connection created'))
 
-  const handleUpdate = (data: ClickHouseFormData | DatabricksFormData) => {
+  const handleUpdate = (
+    data: ClickHouseFormData | DatabricksFormData | PostgresFormData,
+  ) => {
     if (!connection) return Promise.reject()
     return updateConnection({
       environmentId,
@@ -199,6 +204,15 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
     createConnection({
       environmentId,
       warehouse_type: 'databricks',
+      ...data,
+    })
+      .unwrap()
+      .then(() => toast('Warehouse connection created'))
+
+  const handleCreatePostgres = (data: PostgresFormData) =>
+    createConnection({
+      environmentId,
+      warehouse_type: 'postgres',
       ...data,
     })
       .unwrap()
@@ -278,6 +292,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
           onCreateSnowflake={handleCreateSnowflake}
           onCreateClickHouse={handleCreateClickHouse}
           onCreateDatabricks={handleCreateDatabricks}
+          onCreatePostgres={handleCreatePostgres}
           isCreating={isCreating || isEnabling}
         />
       </div>
@@ -320,6 +335,25 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
           isEdit
           environmentId={environmentId}
           initialConfig={connection.config as DatabricksConfig}
+          initialName={connection.name}
+          onSave={handleUpdate}
+          onCancel={() => setEditing(false)}
+        />
+      </div>
+    )
+  }
+
+  if (
+    editing &&
+    connection.warehouse_type === 'postgres' &&
+    !isFlagsmithDatabaseConnection(connection)
+  ) {
+    return (
+      <div className='mt-4 col-md-12'>
+        <PostgresConfigForm
+          isEdit
+          environmentId={environmentId}
+          initialConfig={connection.config as PostgresConfig}
           initialName={connection.name}
           onSave={handleUpdate}
           onCancel={() => setEditing(false)}
