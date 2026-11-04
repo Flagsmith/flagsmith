@@ -1789,6 +1789,21 @@ def test_get_flags__environment_never_evaluated__records_first_evaluation(
         {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15"
         },
+        {"User-Agent": "flagsmith-cli/2.0.0 (linux/amd64)"},
+        {"User-Agent": "flagsmith-edge-proxy/unknown"},
+        {"User-Agent": "flagsmith-edge-proxy-python/unknown"},
+        {
+            "Flagsmith-SDK-User-Agent": "flagsmith-cli/2.0.0",
+            "User-Agent": "flagsmith-python-sdk/6.0.0",
+        },
+    ],
+    ids=[
+        "no-headers",
+        "browser",
+        "cli",
+        "edge-proxy",
+        "edge-proxy-python",
+        "cli-sdk-header-takes-precedence",
     ],
 )
 def test_get_flags__sdk_not_identified__does_not_record_first_evaluation(

@@ -21,6 +21,16 @@ KnownSDK = Literal[
     "flagsmith-swift-ios-sdk",
 ]
 
+# Flagsmith clients that call SDK endpoints, but are not SDKs
+# integrated into customer code.
+KnownNonSDKClient = Literal[
+    "flagsmith-cli",
+    "flagsmith-edge-proxy",
+    "flagsmith-edge-proxy-python",
+]
+
+KnownClient = Literal[KnownSDK, KnownNonSDKClient]
+
 PeriodType = Literal[
     "current_billing_period",
     "previous_billing_period",
