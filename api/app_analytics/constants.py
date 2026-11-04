@@ -38,6 +38,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownClient, list[str]] = {
     ],
     "flagsmith-edge-proxy-python": [
         "unknown",
+        "2.24.0",
     ],
     "flagsmith-elixir-sdk": [
         "unknown",
