@@ -1478,11 +1478,16 @@ export type PostgresConfig = {
   sslmode: PostgresSslMode
 }
 
+export type FlagsmithDatabaseConfig = {
+  source: 'flagsmith_database'
+}
+
 export type WarehouseConfigResponse =
   | SnowflakeConfig
   | ClickHouseConfig
   | DatabricksConfig
   | PostgresConfig
+  | FlagsmithDatabaseConfig
   | Record<string, never>
 
 export type WarehouseConnectionTestResult = {

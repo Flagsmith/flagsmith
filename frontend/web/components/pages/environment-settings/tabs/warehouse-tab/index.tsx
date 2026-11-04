@@ -12,6 +12,8 @@ import {
   PostgresConfig,
   SnowflakeConfig,
 } from 'common/types/responses'
+import { experimentErrorMessage } from 'components/experiments/errors'
+import Project from 'common/project'
 import WarehouseConnectionCard from './WarehouseConnectionCard'
 import WarehouseSetup from './WarehouseSetup'
 import WarehouseSetupSkeleton from './WarehouseSetupSkeleton'
@@ -23,7 +25,12 @@ import { DatabricksFormData } from './databricksConfig'
 import PostgresConfigForm from './PostgresConfigForm'
 import { PostgresFormData } from './postgresConfig'
 import sendWarehouseTestEvent from './sendWarehouseTestEvent'
+import { getApiEventsUrl } from './warehouseEventSnippets'
 import { getWarehousePollingInterval } from './warehousePolling'
+import {
+  FLAGSMITH_DATABASE_CONFIG,
+  isFlagsmithDatabaseConnection,
+} from './warehouseTypes'
 
 type WarehouseTabProps = {
   environmentId: string
@@ -107,6 +114,33 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
           })
       },
       title: 'Connect Flagsmith Warehouse',
+    })
+  }
+
+  const handleEnableFlagsmithDatabase = () => {
+    openConfirm({
+      body: "This will store this environment's events in Flagsmith's own PostgreSQL database. Are you sure you want to proceed?",
+      onYes: () => {
+        setIsEnabling(true)
+        createConnection({
+          config: FLAGSMITH_DATABASE_CONFIG,
+          environmentId,
+          warehouse_type: 'postgres',
+        })
+          .unwrap()
+          .then(() => toast('Warehouse connection created'))
+          .catch((error) => {
+            setIsEnabling(false)
+            toast(
+              experimentErrorMessage(
+                error,
+                'Failed to create warehouse connection',
+              ),
+              'danger',
+            )
+          })
+      },
+      title: 'Connect Flagsmith Database',
     })
   }
 
@@ -215,7 +249,12 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
 
   const handleSendTestEvent = () => {
     if (!connection) return
-    sendWarehouseTestEvent(environmentId)
+    sendWarehouseTestEvent(
+      environmentId,
+      isFlagsmithDatabaseConnection(connection)
+        ? getApiEventsUrl(Project.api)
+        : undefined,
+    )
       .then(() => testConnection({ environmentId, id: connection.id }).unwrap())
       .then(() => toast('Test event sent'))
       .catch((error) => {
@@ -249,6 +288,7 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
         <WarehouseSetup
           environmentId={environmentId}
           onEnableFlagsmith={handleEnableFlagsmith}
+          onEnableFlagsmithDatabase={handleEnableFlagsmithDatabase}
           onCreateSnowflake={handleCreateSnowflake}
           onCreateClickHouse={handleCreateClickHouse}
           onCreateDatabricks={handleCreateDatabricks}
@@ -324,7 +364,8 @@ const WarehouseTab: FC<WarehouseTabProps> = ({ environmentId }) => {
         connection={connection}
         onDelete={handleDelete}
         onEdit={
-          connection.warehouse_type !== 'flagsmith'
+          connection.warehouse_type !== 'flagsmith' &&
+          !isFlagsmithDatabaseConnection(connection)
             ? () => setEditing(true)
             : undefined
         }
