@@ -1,33 +1,33 @@
 import { FC } from 'react'
-import classNames from 'classnames'
 import Icon from './icons/Icon'
-import Button, { ButtonType } from './base/forms/Button'
+import IconButton, { IconButtonProps } from './base/IconButton'
 
 type ActionButtonType = {
   onClick: () => void
-  'data-test'?: string
-  size?: ButtonType['size']
+  isOpen: boolean
+  label: string
+  size?: IconButtonProps['size']
 }
 
 const ActionButton: FC<ActionButtonType> = ({
+  isOpen,
+  label,
   onClick,
-  size = 'xSmall',
-  ...rest
+  size = 'medium',
 }) => {
   return (
-    <Button
+    <IconButton
+      variant='secondary'
       size={size}
-      className={classNames('btn btn-with-icon')}
-      data-test={rest['data-test']}
+      aria-label={`More actions for ${label}`}
+      aria-expanded={isOpen}
       onClick={(e) => {
         e.stopPropagation()
         onClick()
       }}
     >
-      <div className='pe-none'>
-        <Icon name='more-vertical' width={16} fill='#656D7B' />
-      </div>
-    </Button>
+      <Icon name='more-vertical' width={16} />
+    </IconButton>
   )
 }
 

@@ -35,6 +35,7 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.services import apply_experiment_rollout
+from experimentation.warehouses.constants import FLAGSMITH_DATABASE_SOURCE
 from features.future.types import Variant
 from features.models import Feature
 from features.multivariate.models import MultivariateFeatureOption
@@ -244,6 +245,19 @@ def postgres_connection(
         name="Production PostgreSQL",
         config=postgres_warehouse_schema.config,
         credentials={"password": postgres_warehouse_schema.password},
+    )
+    return connection
+
+
+@pytest.fixture()
+def flagsmith_database_connection(
+    environment: Environment,
+) -> WarehouseConnection:
+    connection: WarehouseConnection = WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.POSTGRES,
+        name="Flagsmith database",
+        config={"source": FLAGSMITH_DATABASE_SOURCE},
     )
     return connection
 

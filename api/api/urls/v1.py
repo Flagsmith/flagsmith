@@ -11,6 +11,7 @@ from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from environments.identities.traits.views import SDKTraits
 from environments.identities.views import SDKIdentities
 from environments.sdk.views import SDKEnvironmentAPIView
+from experimentation.views import SDKExperimentationEventsView
 from features.feature_health.views import feature_health_webhook
 from features.views import SDKFeatureStates, get_multivariate_options
 from integrations.github.views import github_webhook
@@ -72,6 +73,12 @@ urlpatterns = [
     re_path(r"^traits/", include(traits_router.urls), name="traits"),
     re_path(r"^analytics/flags/$", SDKAnalyticsFlags.as_view(), name="analytics-flags"),
     re_path(r"^analytics/telemetry/$", SelfHostedTelemetryAPIView.as_view()),
+    # Same path as the ingestion server's, so SDKs need only a different base URL.
+    re_path(
+        r"^events/?$",
+        SDKExperimentationEventsView.as_view(),
+        name="experimentation-events",
+    ),
     re_path(
         r"^environment-document/$",
         SDKEnvironmentAPIView.as_view(),

@@ -6,9 +6,11 @@ from typing import Any
 
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Prefetch, Q, QuerySet
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter,
     extend_schema,
@@ -16,18 +18,24 @@ from drf_spectacular.utils import (
 )
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import Throttled, ValidationError
+from rest_framework.exceptions import NotFound, Throttled, ValidationError
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 from rest_framework.throttling import BaseThrottle, ScopedRateThrottle
+from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
 from app.pagination import CustomPagination
 from core.dataclasses import AuthorData
+from environments.authentication import EnvironmentKeyAuthentication
+from environments.permissions.permissions import EnvironmentKeyPermissions
 from environments.views import NestedEnvironmentViewSet
 from experimentation.constants import (
+    BODY_LIMIT_ERROR,
+    EMPTY_BATCH_ERROR,
     EXPOSURES_REFRESH_MIN_INTERVAL,
     RESULTS_REFRESH_MIN_INTERVAL,
 )
@@ -44,6 +52,10 @@ from experimentation.models import (
     WarehouseType,
 )
 from experimentation.permissions import ExperimentationPermission
+from experimentation.sdk_events import (
+    SDKExperimentationEventBatchSerializer,
+    is_over_body_limit,
+)
 from experimentation.serializers import (
     ExperimentDetailSerializer,
     ExperimentExposuresSerializer,
@@ -67,6 +79,7 @@ from experimentation.services import (
     get_warehouse_event_names,
     mark_warehouse_pending_connection,
     refresh_warehouse_connection_status,
+    store_sdk_experimentation_events,
     transition_experiment_status,
     verify_warehouse_connection,
 )
@@ -74,7 +87,9 @@ from experimentation.tasks import (
     compute_experiment_exposures,
     compute_experiment_results,
 )
+from experimentation.types import SDKEventBatchResult
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
+from experimentation.warehouses.postgres import is_flagsmith_database_config
 from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
@@ -803,3 +818,50 @@ class MetricViewSet(
     @staticmethod
     def _get_user(request: Request) -> FFAdminUser:
         return request.user  # type: ignore[return-value]
+
+
+class SDKExperimentationEventsView(APIView):
+    authentication_classes = (EnvironmentKeyAuthentication,)
+    permission_classes = (EnvironmentKeyPermissions,)
+    parser_classes = (JSONParser,)
+    throttle_classes = []
+
+    @extend_schema(
+        request=SDKExperimentationEventBatchSerializer,
+        responses={
+            202: SDKEventBatchResult,
+            400: SDKEventBatchResult,
+            404: OpenApiTypes.OBJECT,
+            (413, "text/plain"): OpenApiTypes.STR,
+        },
+    )
+    def post(self, request: Request) -> HttpResponse:
+        if is_over_body_limit(request.META.get("CONTENT_LENGTH")):
+            return HttpResponse(
+                BODY_LIMIT_ERROR,
+                status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                content_type="text/plain; charset=utf-8",
+            )
+        environment = request.environment
+        config = environment.warehouse_connections.values_list(
+            "config", flat=True
+        ).first()
+        if not (config and is_flagsmith_database_config(config)):
+            raise NotFound("This environment does not store events in Flagsmith.")
+        batch = SDKExperimentationEventBatchSerializer(data=request.data)
+        if not batch.is_valid():
+            return Response(
+                {"accepted": 0, "rejected": [], "error": EMPTY_BATCH_ERROR},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        result = store_sdk_experimentation_events(
+            environment,
+            batch.validated_data["events"],
+            sdk_user_agent=request.headers.get("Flagsmith-SDK-User-Agent"),
+        )
+        return Response(
+            result,
+            status=status.HTTP_202_ACCEPTED
+            if result["accepted"]
+            else status.HTTP_400_BAD_REQUEST,
+        )
