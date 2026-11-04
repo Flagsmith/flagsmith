@@ -3,11 +3,17 @@ import { useTestWarehouseConnectionConfigMutation } from 'common/services/useWar
 import { Req } from 'common/types/requests'
 import { WarehouseType } from 'common/types/responses'
 import {
+  getApiErrorDetail,
   isMissingEventsTableDetail,
   isWarehouseStartingDetail,
 } from './warehouseFormUtils'
 
-export type WarehouseTestState = 'idle' | 'connected' | 'errored' | 'starting'
+export type WarehouseTestState =
+  | 'idle'
+  | 'connected'
+  | 'errored'
+  | 'rejected'
+  | 'starting'
 
 type TestPayload = Pick<
   Req['testWarehouseConnectionConfig'],
@@ -61,15 +67,17 @@ const useWarehouseConnectionTest = (
         setTestDetail(result.status_detail)
         setShowSetupSql(isMissingEventsTableDetail(result.status_detail))
       }
-    } catch {
+    } catch (error) {
       if (revision !== testRevision.current) return
-      setTestState('errored')
-      setTestDetail(null)
+      const detail = getApiErrorDetail(error)
+      // The API rejected the details, so there's nothing to save anyway.
+      setTestState(detail ? 'rejected' : 'errored')
+      setTestDetail(detail)
     }
   }
 
   return {
-    hasTestResult: testState !== 'idle',
+    hasTestResult: testState !== 'idle' && testState !== 'rejected',
     isTesting,
     runTest,
     showSetupSql,

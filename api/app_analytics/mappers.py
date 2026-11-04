@@ -6,6 +6,7 @@ from influxdb_client.client.flux_table import FluxTable
 from pydantic import BeforeValidator, Field, create_model
 
 from app_analytics.constants import (
+    KNOWN_SDKS,
     LABELS,
     SDK_INFLUX_IDS_BY_USER_AGENT,
     SDK_USER_AGENT_HEADERS,
@@ -21,6 +22,7 @@ from app_analytics.types import (
     DailyUsageData,
     FeatureEvaluationCacheKey,
     InputLabels,
+    KnownClient,
     KnownSDK,
     Labels,
     TrackFeatureEvaluationsByEnvironmentData,
@@ -30,12 +32,22 @@ from integrations.flagsmith.client import get_openfeature_client
 
 
 def map_user_agent_to_sdk_user_agent(value: str) -> str | None:
-    sdk_name, _, sdk_version = value.partition("/")
+    # Only consider the first product token, discarding any comments,
+    # e.g. `flagsmith-cli/2.0.0 (linux/amd64)` -> `flagsmith-cli/2.0.0`.
+    product = value.strip().partition(" ")[0]
+    sdk_name, _, sdk_version = product.partition("/")
     if sdk_name in SDK_USER_AGENT_KNOWN_VERSIONS:
-        if sdk_version in SDK_USER_AGENT_KNOWN_VERSIONS[cast(KnownSDK, sdk_name)]:
-            return value
+        if sdk_version in SDK_USER_AGENT_KNOWN_VERSIONS[cast(KnownClient, sdk_name)]:
+            return product
         return f"{sdk_name}/unknown"
     return None
+
+
+def map_user_agent_to_sdk_language_and_version(value: str | None) -> tuple[str, str]:
+    sdk_name, _, sdk_version = (
+        map_user_agent_to_sdk_user_agent(value or "") or "unknown/unknown"
+    ).partition("/")
+    return sdk_name.removeprefix("flagsmith-").removesuffix("-sdk"), sdk_version
 
 
 def map_request_to_sdk_label(request: HttpRequest) -> KnownSDK | None:
@@ -43,7 +55,12 @@ def map_request_to_sdk_label(request: HttpRequest) -> KnownSDK | None:
         if (value := request.headers.get(header)) and (
             sdk_user_agent := map_user_agent_to_sdk_user_agent(value)
         ):
-            return cast(KnownSDK, sdk_user_agent.partition("/")[0])
+            client_name = sdk_user_agent.partition("/")[0]
+            # Non-SDK clients, such as Edge Proxy or the CLI,
+            # do not indicate a code integration.
+            if client_name in KNOWN_SDKS:
+                return cast(KnownSDK, client_name)
+            return None
     return None
 
 

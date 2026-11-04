@@ -1,5 +1,5 @@
 import React, { FC, useId } from 'react'
-import Button from './base/forms/Button'
+import IconButton from './base/IconButton'
 import Flex from './base/grid/Flex'
 import FieldLabel from './base/forms/FieldLabel'
 import Icon from './icons/Icon'
@@ -42,14 +42,14 @@ const CopyField: FC<CopyFieldProps> = ({
           data-test={dataTest}
         />
       </Flex>
-      <Button
-        theme='secondary'
-        className='btn-with-icon'
+      <IconButton
+        variant='secondary'
+        size='large'
         onClick={onCopy}
         aria-label='Copy to clipboard'
       >
-        <Icon name='copy' width={20} />
-      </Button>
+        <Icon width={20} name='copy' />
+      </IconButton>
     </Row>
   )
 

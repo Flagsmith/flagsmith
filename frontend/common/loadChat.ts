@@ -2,7 +2,11 @@ declare global {
   interface Window {
     Pylon?: ((...args: unknown[]) => void) & { q?: unknown[][] }
     pylon?: { chat_settings: Record<string, string | undefined> }
-    hsConversationsSettings?: { loadImmediately?: boolean }
+    hsConversationsSettings?: {
+      loadImmediately?: boolean
+      identificationEmail?: string
+      identificationToken?: string
+    }
     hsConversationsOnReady?: (() => void)[]
     HubSpotConversations?: {
       widget: {
@@ -16,9 +20,11 @@ declare global {
 }
 
 import AccountStore from './stores/account-store'
+import { getStore } from './store'
+import { getHubspotChatToken } from './services/useHubspotChatToken'
 import getUserDisplayName from './utils/getUserDisplayName'
 import Utils from './utils/utils'
-import { AccountModel } from './types/responses'
+import { AccountModel, HubspotChatToken } from './types/responses'
 import Project from './project'
 
 const defaultPylonID = '028babb7-d93f-4e32-be6a-59db190a084f'
@@ -93,29 +99,106 @@ function hidePylon() {
   }
 }
 
-// The HubSpot script is added in libs.js with loadImmediately: false, so the
-// widget only appears once we call load(). Module-level so that repeated calls
-// before the API is ready queue it only once.
-const loadHubSpotWidget = () => {
+let isLoadingHubSpot = false
+let openHubSpotOnLoad = false
+// load() was called. status().loaded stays false until HubSpot's iframe is
+// ready, so it can't tell us on its own.
+let hasRequestedHubSpotLoad = false
+// Bumped when the widget is removed (e.g. logout), so a token fetched for
+// the previous user is never used.
+let hubSpotGeneration = 0
+
+function canLoadHubSpot() {
   const widget = window.HubSpotConversations?.widget
-  // Re-checked: the org may have changed before the API became ready.
-  if (widget && getChatProvider() === 'hubspot' && !widget.status().loaded) {
-    widget.load()
+  return (
+    !!widget &&
+    getChatProvider() === 'hubspot' &&
+    !hasRequestedHubSpotLoad &&
+    !widget.status().loaded
+  )
+}
+
+// HubSpot reads the identity when load() is called, so tickets get a contact
+// instead of "Unknown Visitor".
+function setHubSpotIdentity(identity?: HubspotChatToken) {
+  const settings = { ...window.hsConversationsSettings }
+  delete settings.identificationEmail
+  delete settings.identificationToken
+  window.hsConversationsSettings = identity
+    ? {
+        ...settings,
+        identificationEmail: identity.email,
+        identificationToken: identity.token,
+      }
+    : settings
+}
+
+// Without a token the widget still loads, just anonymously. A 404 means the
+// API has no HubSpot token configured (e.g. self-hosted), so it isn't logged.
+async function fetchHubSpotIdentity(): Promise<HubspotChatToken | undefined> {
+  const user = AccountStore.getUser() as AccountModel | undefined
+  if (!user?.id) return
+  try {
+    const { data, error } = await getHubspotChatToken(
+      getStore(),
+      { userId: user.id },
+      { subscribe: false },
+    )
+    if (error && error.status !== 404) {
+      console.error('Failed to identify the HubSpot chat user:', error)
+    }
+    return data
+  } catch (error) {
+    console.error('Failed to identify the HubSpot chat user:', error)
   }
+}
+
+// The HubSpot script is added in libs.js with loadImmediately: false, so the
+// widget only appears once we call load(). Calls made while the token is being
+// fetched share that fetch and a single load().
+function loadHubSpotWidget(widgetOpen = false) {
+  if (!canLoadHubSpot()) return
+  openHubSpotOnLoad = openHubSpotOnLoad || widgetOpen
+  if (isLoadingHubSpot) return
+  isLoadingHubSpot = true
+  const generation = hubSpotGeneration
+  fetchHubSpotIdentity().then((identity) => {
+    // Removed during the fetch: any newer call has started its own.
+    if (generation !== hubSpotGeneration) return
+    isLoadingHubSpot = false
+    const widgetOpenOnLoad = openHubSpotOnLoad
+    openHubSpotOnLoad = false
+    // Re-checked: the org may have changed while the token was fetched.
+    if (!canLoadHubSpot()) return
+    setHubSpotIdentity(identity)
+    hasRequestedHubSpotLoad = true
+    window.HubSpotConversations?.widget.load({ widgetOpen: widgetOpenOnLoad })
+  })
+}
+
+// Module-level so that repeated calls before the API is ready queue it only
+// once.
+const onHubSpotReady = () => {
+  loadHubSpotWidget()
 }
 
 function showHubSpot() {
   if (window.HubSpotConversations) {
     loadHubSpotWidget()
-  } else if (!window.hsConversationsOnReady?.includes(loadHubSpotWidget)) {
+  } else if (!window.hsConversationsOnReady?.includes(onHubSpotReady)) {
     window.hsConversationsOnReady = [
       ...(window.hsConversationsOnReady || []),
-      loadHubSpotWidget,
+      onHubSpotReady,
     ]
   }
 }
 
 function removeHubSpot() {
+  hubSpotGeneration += 1
+  isLoadingHubSpot = false
+  openHubSpotOnLoad = false
+  hasRequestedHubSpotLoad = false
+  setHubSpotIdentity()
   window.HubSpotConversations?.widget.remove()
 }
 
@@ -144,10 +227,11 @@ export function openChat() {
   const provider = getChatProvider()
   if (provider === 'hubspot' && window.HubSpotConversations) {
     const { widget } = window.HubSpotConversations
-    if (widget.status().loaded) {
+    // Once load() was called, open() is all that's left to do.
+    if (widget.status().loaded || hasRequestedHubSpotLoad) {
       widget.open()
     } else {
-      widget.load({ widgetOpen: true })
+      loadHubSpotWidget(true)
     }
     return
   }

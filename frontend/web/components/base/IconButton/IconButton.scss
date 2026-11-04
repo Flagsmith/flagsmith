@@ -13,6 +13,8 @@
   // need it passed as a prop.
   &__icon {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   // BareButton gives the outline; the frame's ring is 3px.
@@ -62,10 +64,10 @@
 
   &--secondary {
     background: var(--color-surface-muted);
-    color: var(--color-icon-default);
+    color: var(--color-icon-secondary);
 
-    &:hover,
-    &:active { background: var(--color-surface-emphasis); }
+    &:hover { background: var(--color-surface-emphasis); color: var(--color-icon-default); }
+    &:active { background: var(--color-surface-active); color: var(--color-icon-default); }
     &:disabled { color: var(--color-icon-disabled); }
   }
 

@@ -10,6 +10,8 @@ from app_analytics.mappers import (
     map_flux_tables_to_usage_data,
     map_influx_record_values_to_labels,
     map_usage_data_to_daily_totals,
+    map_user_agent_to_sdk_language_and_version,
+    map_user_agent_to_sdk_user_agent,
 )
 from app_analytics.models import Resource
 from app_analytics.types import AnnotatedAPIUsageBucket
@@ -194,6 +196,12 @@ def test_map_annotated_api_usage_buckets_to_usage_data__two_environments_same_pr
         ({"user_agent": "50001"}, {"user_agent": "flagsmith-js-sdk/9.3.1"}),
         ({"user_agent": "0"}, {"user_agent": "flagsmith-dotnet-sdk/unknown"}),
         ({"user_agent": "90000"}, {"user_agent": "flagsmith-python-sdk/unknown"}),
+        ({"user_agent": "130001"}, {"user_agent": "flagsmith-cli/2.0.0"}),
+        ({"user_agent": "140000"}, {"user_agent": "flagsmith-edge-proxy/unknown"}),
+        (
+            {"user_agent": "150000"},
+            {"user_agent": "flagsmith-edge-proxy-python/unknown"},
+        ),
         ({}, {}),
         ({"user_agent": "99999"}, {}),
         ({"user_agent": "not-a-number"}, {}),
@@ -205,6 +213,67 @@ def test_map_influx_record_values_to_labels__various_user_agents__returns_expect
 ) -> None:
     # Given / When
     result = map_influx_record_values_to_labels(values)
+
+    # Then
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "user_agent, expected",
+    [
+        ("flagsmith-python-sdk/6.2.3", ("python", "6.2.3")),
+        ("flagsmith-swift-ios-sdk/99.0.0", ("swift-ios", "unknown")),
+        ("curl/8.0", ("unknown", "unknown")),
+        (None, ("unknown", "unknown")),
+        ("flagsmith-cli/2.0.0 (linux/amd64)", ("cli", "2.0.0")),
+    ],
+    ids=["known-version", "untracked-version", "not-an-sdk", "missing", "cli"],
+)
+def test_map_user_agent_to_sdk_language_and_version__user_agent__returns_language_and_version(
+    user_agent: str | None,
+    expected: tuple[str, str],
+) -> None:
+    # Given / When
+    result = map_user_agent_to_sdk_language_and_version(user_agent)
+
+    # Then
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "user_agent, expected",
+    [
+        ("flagsmith-python-sdk/6.2.3", "flagsmith-python-sdk/6.2.3"),
+        ("flagsmith-python-sdk/99.0.0", "flagsmith-python-sdk/unknown"),
+        ("flagsmith-cli/2.0.0 (linux/amd64)", "flagsmith-cli/2.0.0"),
+        ("flagsmith-cli/99.0.0 (darwin/arm64)", "flagsmith-cli/unknown"),
+        ("flagsmith-edge-proxy/99.0.0", "flagsmith-edge-proxy/unknown"),
+        (
+            "flagsmith-edge-proxy-python/99.0.0",
+            "flagsmith-edge-proxy-python/unknown",
+        ),
+        ("python-httpx/0.28.1", None),
+        ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", None),
+        ("", None),
+    ],
+    ids=[
+        "known-sdk-version",
+        "untracked-sdk-version",
+        "known-version-with-comment",
+        "untracked-version-with-comment",
+        "edge-proxy",
+        "edge-proxy-python",
+        "unknown-client",
+        "browser",
+        "empty",
+    ],
+)
+def test_map_user_agent_to_sdk_user_agent__user_agent__returns_expected(
+    user_agent: str,
+    expected: str | None,
+) -> None:
+    # Given / When
+    result = map_user_agent_to_sdk_user_agent(user_agent)
 
     # Then
     assert result == expected

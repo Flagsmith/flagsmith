@@ -1,4 +1,5 @@
 import React, { FC } from 'react'
+import IconButton from 'components/base/IconButton'
 import moment from 'moment'
 import Button from 'components/base/forms/Button'
 import EmptyState from 'components/EmptyState'
@@ -194,16 +195,17 @@ const TrustRelationships: FC<TrustRelationshipsProps> = ({
                 <Switch checked={trustRelationship.is_admin} disabled />
               </div>
               <div className={COLUMN.narrow}>
-                <Button
-                  className='btn btn-with-icon'
+                <IconButton
+                  variant='secondary'
+                  size='large'
                   onClick={(e) => {
                     e.stopPropagation()
                     remove(trustRelationship)
                   }}
                   aria-label={`Delete ${trustRelationship.name}`}
                 >
-                  <Icon name='trash-2' width={20} />
-                </Button>
+                  <Icon width={20} name='trash-2' />
+                </IconButton>
               </div>
             </Row>
           )}

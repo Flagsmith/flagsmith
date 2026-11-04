@@ -1,4 +1,5 @@
 import React, { FC, ReactNode, useState } from 'react'
+import IconButton from './base/IconButton'
 import CreateGroup from './modals/CreateGroup'
 import Button from './base/forms/Button'
 import AccountStore from 'common/stores/account-store'
@@ -104,17 +105,18 @@ const UserGroupsRow: FC<UserGroupsRowType> = ({
       {showRemove ? (
         <div style={{ width: '80px' }} className='table-column text-center'>
           {isAdmin && (
-            <Button
+            <IconButton
+              variant='secondary'
+              size='large'
+              aria-label={`Delete group ${name}`}
               id='remove-group'
-              type='button'
               onClick={(e) => {
                 e.stopPropagation()
                 removeGroup(id, name)
               }}
-              className='btn btn-with-icon'
             >
-              <Icon name='trash-2' width={20} fill='#656D7B' />
-            </Button>
+              <Icon width={20} name='trash-2' />
+            </IconButton>
           )}
         </div>
       ) : (

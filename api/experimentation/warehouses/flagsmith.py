@@ -15,6 +15,7 @@ from experimentation.dataclasses import (
     WarehouseEventNames,
     WarehouseEventStats,
 )
+from experimentation.warehouses.cache import cache_warehouse_read_unless_empty
 from experimentation.warehouses.constants import EVENT_NAMES_CACHE_SECONDS
 from experimentation.warehouses.dialect import CLICKHOUSE_DIALECT
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
@@ -187,7 +188,9 @@ class FlagsmithWarehouse:
         finally:
             client.disconnect()
         event_names = build_event_names(rows)
-        cache.set(cache_key, event_names, EVENT_NAMES_CACHE_SECONDS)
+        cache_warehouse_read_unless_empty(
+            cache_key, event_names, EVENT_NAMES_CACHE_SECONDS
+        )
         return event_names
 
     def get_event_stats(

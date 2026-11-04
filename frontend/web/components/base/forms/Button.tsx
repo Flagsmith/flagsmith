@@ -5,7 +5,6 @@ import Loader from 'components/Loader'
 
 export const themeClassNames = {
   danger: 'btn-danger',
-  icon: 'btn-icon',
   outline: 'btn--outline',
   primary: 'btn-primary',
   project: 'btn-project',

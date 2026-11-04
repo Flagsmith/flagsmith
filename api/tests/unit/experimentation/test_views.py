@@ -1,10 +1,13 @@
 import socket
+from datetime import datetime, timezone
 
 import pytest
 from clickhouse_connect.driver.exceptions import OperationalError
+from common.test_tools import AssertMetricFixture
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
 from requests_mock import Mocker as RequestsMockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -13,18 +16,27 @@ from rest_framework.throttling import ScopedRateThrottle
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
+from experimentation.constants import BODY_LIMIT_ERROR, MAX_BODY_BYTES
 from experimentation.dataclasses import (
     WarehouseEventNames,
     WarehouseEventStats,
 )
 from experimentation.models import (
+    SDKExperimentationEvent,
     WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseDeliveryStatus,
     WarehouseType,
 )
 from experimentation.views import WarehouseConnectionViewSet
-from tests.unit.experimentation.conftest import SetWarehousesFlagFixture
+from experimentation.warehouses.constants import (
+    FLAGSMITH_DATABASE_SOURCE,
+    FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL,
+)
+from tests.unit.experimentation.conftest import (
+    PostgresWarehouseSchema,
+    SetWarehousesFlagFixture,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -2013,3 +2025,403 @@ def test_patch__existing_databricks_below_minimum_plan_on_saas__saves(
     assert response.status_code == status.HTTP_200_OK
     databricks_connection.refresh_from_db()
     assert databricks_connection.name == "Renamed"
+
+
+def test_post__postgres__returns_201_connected_with_generated_name(
+    admin_client: APIClient,
+    environment: Environment,
+    postgres_warehouse_schema: PostgresWarehouseSchema,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    payload = {
+        "warehouse_type": "postgres",
+        "config": postgres_warehouse_schema.config,
+        "credentials": {"password": postgres_warehouse_schema.password},
+    }
+
+    # When
+    response = admin_client.post(warehouse_connection_url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == WarehouseConnectionStatus.CONNECTED
+    assert response.json()["name"] == f"PostgreSQL Warehouse - {environment.name}"
+    assert response.json()["config"] == postgres_warehouse_schema.config
+    assert "credentials" not in response.json()
+
+
+@pytest.mark.usefixtures("saas_mode")
+def test_post__postgres_below_minimum_plan_on_saas__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    set_warehouses_flag: SetWarehousesFlagFixture,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    set_warehouses_flag({"minimum_plans": {"postgres": "scale-up"}})
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "postgres",
+            "config": {"host": "pg.example.com", "database": "a", "username": "b"},
+            "credentials": {"password": "hunter2"},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "warehouse_type": ["PostgreSQL connections are not available on your plan."]
+    }
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+def test_post__flagsmith_database_config__returns_201_connected_without_credentials(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+) -> None:
+    # Given
+    payload = {
+        "warehouse_type": "postgres",
+        "config": {"source": FLAGSMITH_DATABASE_SOURCE},
+    }
+
+    # When
+    response = admin_client.post(warehouse_connection_url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["status"] == WarehouseConnectionStatus.CONNECTED
+    assert response.json()["config"] == {"source": FLAGSMITH_DATABASE_SOURCE}
+    assert response.json()["name"] == f"Flagsmith database - {environment.name}"
+    connection = WarehouseConnection.objects.get(environment=environment)
+    assert connection.credentials is None
+
+
+@pytest.mark.parametrize(
+    "is_saas, is_default_database_postgresql",
+    [(True, True), (False, False)],
+    ids=["saas", "non-postgres-database"],
+)
+def test_post__flagsmith_database_on_saas_or_non_postgres__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    mocker: MockerFixture,
+    warehouse_connection_url: str,
+    is_saas: bool,
+    is_default_database_postgresql: bool,
+) -> None:
+    # Given
+    mocker.patch("experimentation.warehouses.postgres.is_saas", return_value=is_saas)
+    mocker.patch(
+        "experimentation.warehouses.postgres.is_default_database_postgresql",
+        return_value=is_default_database_postgresql,
+    )
+
+    # When
+    response = admin_client.post(
+        warehouse_connection_url,
+        data={
+            "warehouse_type": "postgres",
+            "config": {"source": FLAGSMITH_DATABASE_SOURCE},
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"config": [FLAGSMITH_DATABASE_UNAVAILABLE_DETAIL]}
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+@pytest.mark.parametrize(
+    "payload, expected_error",
+    [
+        (
+            {
+                "config": {"source": FLAGSMITH_DATABASE_SOURCE},
+                "credentials": {"password": "hunter2"},
+            },
+            {"credentials": ["The Flagsmith database takes no credentials."]},
+        ),
+        (
+            {"config": {"source": FLAGSMITH_DATABASE_SOURCE, "host": "db.example"}},
+            {
+                "config": {
+                    "source": 'Must be "flagsmith_database", with no other fields.'
+                }
+            },
+        ),
+    ],
+    ids=["with-credentials", "extra-config-keys"],
+)
+def test_post__invalid_flagsmith_database_payload__returns_400(
+    admin_client: APIClient,
+    environment: Environment,
+    warehouse_connection_url: str,
+    payload: dict[str, object],
+    expected_error: dict[str, object],
+) -> None:
+    # Given
+    payload = {"warehouse_type": "postgres", **payload}
+
+    # When
+    response = admin_client.post(warehouse_connection_url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == expected_error
+    assert not WarehouseConnection.objects.filter(environment=environment).exists()
+
+
+@pytest.mark.parametrize(
+    "has_credentials, expected_status_code",
+    [(True, status.HTTP_200_OK), (False, status.HTTP_400_BAD_REQUEST)],
+    ids=["with-credentials", "without-credentials"],
+)
+def test_patch__flagsmith_database_to_customer_postgres__requires_credentials(
+    admin_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+    postgres_warehouse_schema: PostgresWarehouseSchema,
+    has_credentials: bool,
+    expected_status_code: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, flagsmith_database_connection.id],
+    )
+    payload: dict[str, object] = {"config": postgres_warehouse_schema.config}
+    if has_credentials:
+        payload["credentials"] = {"password": postgres_warehouse_schema.password}
+
+    # When
+    response = admin_client.patch(url, data=payload, format="json")
+
+    # Then
+    assert response.status_code == expected_status_code
+    flagsmith_database_connection.refresh_from_db()
+    assert flagsmith_database_connection.config == (
+        postgres_warehouse_schema.config
+        if has_credentials
+        else {"source": FLAGSMITH_DATABASE_SOURCE}
+    )
+
+
+def test_patch__flagsmith_database_connection_name_only__saves_without_credentials(
+    admin_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, flagsmith_database_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(url, data={"name": "Renamed"}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    flagsmith_database_connection.refresh_from_db()
+    assert flagsmith_database_connection.name == "Renamed"
+
+
+def test_patch__postgres_to_flagsmith_database_config__clears_credentials(
+    admin_client: APIClient,
+    environment: Environment,
+    postgres_connection: WarehouseConnection,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:experimentation:warehouse-connections-detail",
+        args=[environment.api_key, postgres_connection.id],
+    )
+
+    # When
+    response = admin_client.patch(
+        url, data={"config": {"source": FLAGSMITH_DATABASE_SOURCE}}, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    postgres_connection.refresh_from_db()
+    assert postgres_connection.config == {"source": FLAGSMITH_DATABASE_SOURCE}
+    assert postgres_connection.credentials is None
+    assert postgres_connection.status == WarehouseConnectionStatus.CONNECTED
+
+
+def test_post_sdk_events__mixed_batch__stores_valid_events_and_returns_202(
+    api_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+    log: StructuredLogCapture,
+    assert_metric: AssertMetricFixture,
+) -> None:
+    # Given
+    timestamp = datetime.now(timezone.utc).replace(microsecond=0)
+    timestamp_ms = int(timestamp.timestamp() * 1000)
+    api_client.credentials(
+        HTTP_X_ENVIRONMENT_KEY=environment.api_key,
+        HTTP_FLAGSMITH_SDK_USER_AGENT="flagsmith-python-sdk/6.2.3",
+    )
+    payload = {
+        "events": [
+            {
+                "event": "$flag_exposure",
+                "feature_name": "checkout",
+                "identifier": "user-1",
+                "value": "variant_a",
+                "timestamp": timestamp_ms,
+            },
+            {"event": "purchase", "timestamp": 1},
+            "purchase",
+        ]
+    }
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:experimentation-events"), data=payload, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_202_ACCEPTED
+    assert response.json() == {
+        "accepted": 1,
+        "rejected": [
+            {
+                "index": 1,
+                "error": "timestamp: Timestamp must be after 2020-01-01.",
+            },
+            {
+                "index": 2,
+                "error": "Invalid data. Expected a dictionary, but got str.",
+            },
+        ],
+    }
+    assert list(
+        SDKExperimentationEvent.objects.values_list(
+            "environment_key", "event", "timestamp", "sdk_language"
+        )
+    ) == [(environment.api_key, "$flag_exposure", timestamp, "python")]
+    assert log.events == [
+        {
+            "level": "warning",
+            "event": "sdk_events.rejected",
+            "environment__id": environment.id,
+            "submitted_events__count": 3,
+            "rejected_events__count": 2,
+            "rejected_events__fields": ["non_field_errors", "timestamp"],
+        }
+    ]
+    assert_metric(
+        name="flagsmith_experimentation_sdk_events_total",
+        labels={"result": "accepted"},
+        value=1,
+    )
+    assert_metric(
+        name="flagsmith_experimentation_sdk_events_total",
+        labels={"result": "rejected"},
+        value=2,
+    )
+
+
+@pytest.mark.parametrize(
+    "payload, expected_body",
+    [
+        (
+            {"events": []},
+            {"accepted": 0, "rejected": [], "error": "events must be non-empty"},
+        ),
+        (
+            [{"event": "purchase"}],
+            {"accepted": 0, "rejected": [], "error": "events must be non-empty"},
+        ),
+        (
+            {"events": [{"event": "$made_up", "timestamp": 1}]},
+            {
+                "accepted": 0,
+                "rejected": [
+                    {"index": 0, "error": "event: The `$` prefix is reserved."}
+                ],
+            },
+        ),
+    ],
+    ids=["empty-batch", "not-a-batch", "no-valid-events"],
+)
+def test_post_sdk_events__nothing_to_store__returns_400(
+    api_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+    payload: object,
+    expected_body: dict[str, object],
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:experimentation-events"), data=payload, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == expected_body
+    assert not SDKExperimentationEvent.objects.exists()
+
+
+@pytest.mark.parametrize(
+    "config",
+    [None, {"host": "pg.example.com"}],
+    ids=["no-config", "customer-postgres"],
+)
+def test_post_sdk_events__environment_without_flagsmith_database__returns_404(
+    api_client: APIClient,
+    environment: Environment,
+    config: dict[str, str] | None,
+) -> None:
+    # Given
+    WarehouseConnection.objects.create(
+        environment=environment,
+        warehouse_type=WarehouseType.POSTGRES,
+        name="Production PostgreSQL",
+        config=config,
+    )
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:experimentation-events"),
+        data={"events": [{"event": "purchase", "timestamp": 1}]},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_post_sdk_events__body_over_limit__returns_413(
+    api_client: APIClient,
+    environment: Environment,
+    flagsmith_database_connection: WarehouseConnection,
+) -> None:
+    # Given
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    payload = {"events": [{"event": "purchase", "value": "x" * MAX_BODY_BYTES}]}
+
+    # When
+    response = api_client.post(
+        reverse("api-v1:experimentation-events"), data=payload, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    assert response.content == BODY_LIMIT_ERROR.encode()
+    assert not SDKExperimentationEvent.objects.exists()
