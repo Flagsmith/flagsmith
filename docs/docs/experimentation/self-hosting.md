@@ -13,18 +13,41 @@ Experimentation is in beta.
 
 Experimentation works in both the Open Source version and the
 [Enterprise Edition](/deployment-self-hosting/enterprise-edition), with no edition restriction. Self-hosted Flagsmith
-can store experiment events in two ways.
+can store experiment events in two ways: in the [Flagsmith database](#flagsmith-database) or in
+[your own warehouse](#your-own-warehouse).
+
+## Turning it on
+
+Set `EXPERIMENTATION_ENABLED=true` on the Flagsmith API. The **Warehouse** tab doesn't appear without it. See
+[environment variables](/deployment-self-hosting/core-configuration/environment-variables).
 
 ## Flagsmith database
 
-Events are stored in the PostgreSQL database Flagsmith already runs on, and the SDKs send them to your Flagsmith API.
+:::warning
 
-- Needs only the Flagsmith API; there is nothing extra to run.
-- Only works when your Flagsmith database is PostgreSQL.
-- Events share your application database, so they add to its size, backups and load.
+For evaluating experimentation only. Events share the database that serves your flags, so they can slow Flagsmith down.
+For production, [connect your own warehouse](#your-own-warehouse).
 
-To set it up, see
-[Self-hosted: use the Flagsmith database](/experimentation/connect-a-warehouse#self-hosted-use-the-flagsmith-database).
+:::
+
+Events are stored in the database Flagsmith already runs on, and the SDKs send them to your Flagsmith API. There is
+nothing extra to run. This only works when that database is PostgreSQL; enabling it fails on MySQL or Oracle.
+
+1. Go to **Environment Settings › Warehouse**.
+2. Select **Flagsmith database** and click **Enable**, then confirm.
+
+![The Warehouse tab with the Flagsmith database card selected and the Enable button](/img/experimentation/warehouse-flagsmith-database.png)
+
+The connection shows **Connected** straight away. If Flagsmith can't read the events table, it shows **Errored** with
+the reason; fix it and click **Test connection** on the card.
+
+Set each SDK's events URL to the URL shown on the card; see [SDK events URL](#sdk-events-url). To verify events arrive,
+click **Send your first event**.
+
+![A connected Flagsmith database card showing the events URL, an SDK snippet and the Send your first event button](/img/experimentation/warehouse-flagsmith-database-connected.png)
+
+The connection has no settings to edit. To stop storing events, delete the connection; events already stored stay in the
+table.
 
 ## Your own warehouse
 
@@ -34,11 +57,6 @@ Events are delivered to your own [ClickHouse](/experimentation/connect-clickhous
 - Also run the event ingestion service, Kafka and warehouse delivery. See [Deploying](#deploying).
 - Suits higher event volumes. See
   [Sizing experimentation](/deployment-self-hosting/scaling-and-performance/sizing-and-scaling#sizing-experimentation).
-
-## Turning it on
-
-Set `EXPERIMENTATION_ENABLED=true` on the Flagsmith API. The **Warehouse** tab doesn't appear without it. See
-[environment variables](/deployment-self-hosting/core-configuration/environment-variables).
 
 ## SDK events URL
 
