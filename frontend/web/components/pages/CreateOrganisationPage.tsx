@@ -123,12 +123,6 @@ const CreateOrganisationPage: React.FC = () => {
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          if (Project.capterraKey) {
-            const parts = Project.capterraKey.split(',')
-            Utils.appendImage(
-              `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
-            )
-          }
           AppActions.createOrganisation(
             name,
             getStoredOnboardingTargetingKey() ?? undefined,
