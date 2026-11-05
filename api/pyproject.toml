@@ -236,7 +236,7 @@ strict = true
 show_absolute_path = true
 
 [[tool.mypy.overrides]]
-module = ["admin_sso.models"]
+module = ["admin_sso.default_settings", "admin_sso.models"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
