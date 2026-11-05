@@ -11,7 +11,7 @@ type SystemSegmentOverrideLinkProps = {
 }
 
 // Links a system segment override to what manages it, where there's a page
-// for it.
+// for it. Styled as the action buttons of other segment overrides.
 const SystemSegmentOverrideLink: FC<SystemSegmentOverrideLinkProps> = ({
   environmentId,
   managedBy,
@@ -20,7 +20,12 @@ const SystemSegmentOverrideLink: FC<SystemSegmentOverrideLinkProps> = ({
 }) => {
   if (managedBy === 'dependency' && onViewDependencies) {
     return (
-      <Button theme='text' size='xSmall' onClick={onViewDependencies}>
+      <Button
+        theme='text'
+        size='xSmall'
+        className='btn-with-icon'
+        onClick={onViewDependencies}
+      >
         View dependencies
       </Button>
     )
@@ -30,6 +35,7 @@ const SystemSegmentOverrideLink: FC<SystemSegmentOverrideLinkProps> = ({
       <Button
         theme='text'
         size='xSmall'
+        className='btn-with-icon'
         href={`/project/${projectId}/environment/${environmentId}/experiments`}
       >
         View experiments

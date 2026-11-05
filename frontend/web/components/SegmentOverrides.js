@@ -273,6 +273,15 @@ const SegmentOverrideInner = class Override extends React.Component {
             </Row>
           </div>
         </Row>
+        {v.segment_managed_by === 'dependency' && (
+          <div
+            data-test={`segment-override-scope-${index}`}
+            className='px-3 mt-2 fs-small text-muted'
+          >
+            Applies to the whole environment while the flag's prerequisite is
+            off.
+          </div>
+        )}
         <div className='d-flex px-3 mt-2'>
           <div>
             <div className='me-4'>

@@ -91,6 +91,9 @@ test.describe('Flag Dependencies', () => {
     await expect(
       page.locator(byId('system-segment-override-label')),
     ).toHaveText('Managed by a flag dependency')
+    await expect(page.locator(byId('segment-override-scope-0'))).toContainText(
+      'Applies to the whole environment',
+    )
     await expect(page.locator(byId('segment-override-toggle-0'))).toBeDisabled()
     await visualSnapshot(page, 'dependencies-segment-override', testInfo)
     await page
