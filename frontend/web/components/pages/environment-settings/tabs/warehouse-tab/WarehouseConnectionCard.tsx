@@ -10,6 +10,7 @@ import ColorSwatch from 'components/ColorSwatch'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
+import Utils from 'common/utils/utils'
 import WarehouseEventCodeHelp from './WarehouseEventCodeHelp'
 import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
 import { CLICKHOUSE_DEFAULTS } from './clickhouseConfig'
@@ -26,7 +27,10 @@ import {
   POSTGRES_SETUP_SQL_LABEL,
 } from './postgresSetupSql'
 import WarehouseStats from './WarehouseStats'
-import { isFlagsmithDatabaseConnection } from './warehouseTypes'
+import {
+  isFlagsmithDatabaseConnection,
+  shouldShowSendFirstEvent,
+} from './warehouseTypes'
 
 type WarehouseConnectionCardProps = {
   connection: WarehouseConnection
@@ -78,19 +82,11 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
 }) => {
   const typeLabel = getTypeLabel(connection)
 
-  const isFlagsmith = connection.warehouse_type === 'flagsmith'
-  const isPending = connection.status === 'pending_connection'
   const isConnected = connection.status === 'connected'
-  const isCustomerWarehouse =
-    connection.warehouse_type === 'clickhouse' ||
-    connection.warehouse_type === 'databricks' ||
-    connection.warehouse_type === 'postgres'
-  // ClickHouse, Databricks and PostgreSQL connections are born connected, so
-  // the first-event nudge stays until events actually arrive in the customer's
-  // warehouse.
-  const showSendFirstEvent = isFlagsmith
-    ? !isPending && !isConnected
-    : isCustomerWarehouse && !connection.total_events_received
+  const showSendFirstEvent = shouldShowSendFirstEvent(
+    connection,
+    !!Utils.isSaas(),
+  )
 
   const handleDelete = () => {
     openConfirm({
