@@ -205,14 +205,6 @@ const SegmentOverrideInner = class Override extends React.Component {
           </div>
           <div>
             <Row className='gap-3'>
-              {isSystemSegment && (
-                <SystemSegmentOverrideLink
-                  managedBy={v.segment_managed_by}
-                  projectId={this.props.projectId}
-                  environmentId={environmentId}
-                  onViewDependencies={onViewDependencies}
-                />
-              )}
               {/* Input to adjust order without drag for E2E */}
               {E2E && (
                 <input
@@ -229,6 +221,14 @@ const SegmentOverrideInner = class Override extends React.Component {
                 />
               )}
               <Row className='gap-2'>
+                {isSystemSegment && (
+                  <SystemSegmentOverrideLink
+                    managedBy={v.segment_managed_by}
+                    projectId={this.props.projectId}
+                    environmentId={environmentId}
+                    onViewDependencies={onViewDependencies}
+                  />
+                )}
                 {/* Compare is read-only, so the actions render outside the
                     MANAGE_SEGMENT_OVERRIDES gate; edit and remove remain gated
                     by canEdit / canRemove below. */}
