@@ -44,6 +44,18 @@ Our Docker images are built against the following CPU architectures:
 - `linux/arm64`
 - `linux/arm/v7`
 
+## Image Format
+
+From version `v2.288.0`, we publish our images with [OCI](https://opencontainers.org/) media types instead of Docker v2 media types. Earlier tags do not change.
+
+Current versions of Docker, containerd and Kubernetes pull OCI images. Some older tools do not. This includes old Docker Engine versions, and private registries or pull-through mirrors that only accept Docker v2 manifests. If you pull or mirror our images through one of these, upgrade it before you upgrade Flagsmith.
+
+To see the media type of a tag, run:
+
+```bash
+docker buildx imagetools inspect flagsmith/flagsmith:<tag>
+```
+
 ## Architecture
 
 The docker-compose file runs the following containers:
