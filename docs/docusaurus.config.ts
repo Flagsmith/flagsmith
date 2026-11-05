@@ -285,6 +285,13 @@ const config: Config = {
 
     plugins: [
         './plugins/flagsmith-versions',
+        // Lets pages import a file's contents as text, e.g. `import sql from '../file.sql?raw'`.
+        () => ({
+            name: 'raw-source',
+            configureWebpack: () => ({
+                module: { rules: [{ resourceQuery: /raw/, type: 'asset/source' }] },
+            }),
+        }),
         [
             'docusaurus-plugin-openapi-docs',
             {

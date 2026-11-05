@@ -4,7 +4,7 @@ import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
 import { PricingFeaturesList } from './PricingFeaturesList'
 import { PaymentButton } from './PaymentButton'
-import { openChat } from 'common/loadChat'
+import ContactSalesForm from './ContactSalesForm'
 import { PricingFeature } from './types'
 
 export type PricingPanelProps = {
@@ -110,7 +110,13 @@ export const PricingPanel = ({
 
               {isEnterprise && (
                 <Button
-                  onClick={() => openChat()}
+                  onClick={() =>
+                    openModal(
+                      'Contact Sales',
+                      <ContactSalesForm />,
+                      'side-modal',
+                    )
+                  }
                   className='full-width btn-lg btn-tertiary mt-3'
                 >
                   Contact Sales

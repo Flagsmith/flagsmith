@@ -15,6 +15,9 @@ import { ClickHouseFormData } from './clickhouseConfig'
 import DatabricksConfigForm from './DatabricksConfigForm'
 import { getDatabricksSetupSql } from './databricksSetupSql'
 import { DatabricksFormData } from './databricksConfig'
+import PostgresConfigForm from './PostgresConfigForm'
+import { getPostgresOnboardingSql } from './postgresSetupSql'
+import { PostgresFormData } from './postgresConfig'
 import {
   getMinimumPlans,
   getPlanAvailabilityMessage,
@@ -29,9 +32,11 @@ import './WarehouseSetup.scss'
 type WarehouseSetupProps = {
   environmentId: string
   onEnableFlagsmith: () => void
+  onEnableFlagsmithDatabase: () => void
   onCreateSnowflake: (data: ConfigFormData) => Promise<unknown>
   onCreateClickHouse: (data: ClickHouseFormData) => Promise<unknown>
   onCreateDatabricks: (data: DatabricksFormData) => Promise<unknown>
+  onCreatePostgres: (data: PostgresFormData) => Promise<unknown>
   isCreating: boolean
 }
 
@@ -42,19 +47,27 @@ type WarehouseTypeCard = {
   type: WarehouseTypeOption
 }
 
+const FLAGSMITH_ICON = (
+  <img
+    src='/static/images/nav-logo.png'
+    alt='Flagsmith'
+    width={20}
+    height={20}
+  />
+)
+
 const WAREHOUSE_TYPE_CARDS: WarehouseTypeCard[] = [
   {
     description: 'Managed warehouse',
-    icon: (
-      <img
-        src='/static/images/nav-logo.png'
-        alt='Flagsmith'
-        width={20}
-        height={20}
-      />
-    ),
+    icon: FLAGSMITH_ICON,
     title: 'Flagsmith',
     type: 'flagsmith',
+  },
+  {
+    description: "Your installation's PostgreSQL",
+    icon: FLAGSMITH_ICON,
+    title: 'Flagsmith database',
+    type: 'flagsmith_database',
   },
   {
     description: 'Open-source OLAP database',
@@ -80,6 +93,12 @@ const WAREHOUSE_TYPE_CARDS: WarehouseTypeCard[] = [
     title: 'Databricks',
     type: 'databricks',
   },
+  {
+    description: 'Open-source relational database',
+    icon: <Icon name='layers' width={20} />,
+    title: 'PostgreSQL',
+    type: 'postgres',
+  },
 ]
 
 const STATUS_ORDER: Record<WarehouseTypeStatus, number> = {
@@ -93,8 +112,10 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
   isCreating,
   onCreateClickHouse,
   onCreateDatabricks,
+  onCreatePostgres,
   onCreateSnowflake,
   onEnableFlagsmith,
+  onEnableFlagsmithDatabase,
 }) => {
   const isSaas = !!Utils.isSaas()
   const minimumPlans = getMinimumPlans({
@@ -109,7 +130,7 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
   const statusOf = (type: WarehouseTypeOption) =>
     getWarehouseTypeStatus(type, gate)
   const typeCards = WAREHOUSE_TYPE_CARDS.filter(
-    ({ type }) => type !== 'flagsmith' || isSaas,
+    ({ type }) => type !== (isSaas ? 'flagsmith_database' : 'flagsmith'),
   ).sort(
     (a, b) => STATUS_ORDER[statusOf(a.type)] - STATUS_ORDER[statusOf(b.type)],
   )
@@ -174,6 +195,36 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
               size='small'
               disabled={isCreating}
               onClick={onEnableFlagsmith}
+            >
+              {isCreating ? 'Enabling...' : 'Enable'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {activeType === 'flagsmith_database' && (
+        <div className='warehouse-setup__flagsmith-card'>
+          <div>
+            <p className='warehouse-setup__flagsmith-description mb-2'>
+              Flagsmith stores events in its own PostgreSQL database, no
+              configuration required.
+            </p>
+            <p className='text-muted mb-1'>
+              Events are stored in the database this Flagsmith installation
+              already runs on, so there is nothing extra to host or secure.
+            </p>
+            <p className='text-muted mb-0'>
+              This suits most installations. For very high event volumes,
+              connect a dedicated warehouse such as ClickHouse or Databricks.
+            </p>
+          </div>
+          <div>
+            <Button
+              id='warehouse-enable-flagsmith-database'
+              theme='primary'
+              size='small'
+              disabled={isCreating}
+              onClick={onEnableFlagsmithDatabase}
             >
               {isCreating ? 'Enabling...' : 'Enable'}
             </Button>
@@ -252,6 +303,28 @@ const WarehouseSetup: FC<WarehouseSetupProps> = ({
           <DatabricksConfigForm
             environmentId={environmentId}
             onSave={onCreateDatabricks}
+          />
+        </WarehouseSetupSteps>
+      )}
+
+      {activeType === 'postgres' && (
+        <WarehouseSetupSteps
+          configure={
+            <>
+              <p className='text-muted mb-3'>
+                Run this once as a superuser or a role with CREATEROLE. Replace{' '}
+                {'<USER>'} and {'<CHANGE_ME_PASSWORD>'} with your own values.
+                This also works with PostgreSQL-compatible services such as
+                Supabase, Neon, Amazon RDS and Aurora, AlloyDB and Cloud SQL.
+              </p>
+              <WarehouseSqlSnippet sql={getPostgresOnboardingSql()} />
+            </>
+          }
+          connectDescription='Enter the connection details for the user you created in step 1.'
+        >
+          <PostgresConfigForm
+            environmentId={environmentId}
+            onSave={onCreatePostgres}
           />
         </WarehouseSetupSteps>
       )}

@@ -185,6 +185,13 @@ export type DependencyEdge = {
   segment: DependencyEdgeSegment
 }
 
+export type StagedAction = 'add' | 'remove'
+
+export type StagedDependencyChange = {
+  action: StagedAction
+  prerequisite: DependencyFeature
+}
+
 export type DependencyConflictCode =
   | 'circular_dependency'
   | 'dependency_exists'
@@ -239,7 +246,10 @@ export type Segment = {
   metadata: Metadata[] | []
   membership_counts?: SegmentMembership[]
   cohort?: SegmentCohort | null
+  managed_by?: SegmentManagedBy
 }
+// What creates and edits the segment, empty where users do.
+export type SegmentManagedBy = '' | 'cohort' | 'dependency' | 'experiment'
 export type ProjectChangeRequest = Omit<
   ChangeRequest,
   | 'environment_feature_versions'
@@ -1307,6 +1317,11 @@ export type Webhook = {
   updated_at: string
 }
 
+export type HubspotChatToken = {
+  email: string
+  token: string
+}
+
 export type AccountModel = Account & {
   organisations: Organisation[]
 }
@@ -1444,6 +1459,7 @@ export type WarehouseType =
   | 'snowflake'
   | 'clickhouse'
   | 'databricks'
+  | 'postgres'
 
 export type SnowflakeConfig = {
   account_identifier: string
@@ -1471,10 +1487,27 @@ export type DatabricksConfig = {
   schema: string
 }
 
+export type PostgresSslMode = 'require' | 'disable'
+
+export type PostgresConfig = {
+  host: string
+  port: number
+  database: string
+  schema: string
+  username: string
+  sslmode: PostgresSslMode
+}
+
+export type FlagsmithDatabaseConfig = {
+  source: 'flagsmith_database'
+}
+
 export type WarehouseConfigResponse =
   | SnowflakeConfig
   | ClickHouseConfig
   | DatabricksConfig
+  | PostgresConfig
+  | FlagsmithDatabaseConfig
   | Record<string, never>
 
 export type WarehouseConnectionTestResult = {
@@ -1626,6 +1659,7 @@ export type Res = {
   groupWithRole: PagedResponse<Role>
   changeRequests: PagedResponse<ChangeRequestSummary>
   updateChangeRequest: ChangeRequest
+  createEnvironmentChangeRequest: ChangeRequest
   groupSummaries: UserGroupSummary[]
   supportedContentType: ContentType[]
   externalResource: PagedResponse<ExternalResource>
@@ -1671,6 +1705,7 @@ export type Res = {
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>
   onboardingSupportOptIn: { id: string }
+  hubspotChatToken: HubspotChatToken
   environmentMetrics: {
     metrics: {
       value: number

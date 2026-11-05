@@ -1,0 +1,98 @@
+---
+title: Run Flagsmith Locally with a Coding Agent
+sidebar_label: Run Locally with an Agent
+sidebar_position: 2.5
+description:
+    A copy-paste prompt that has a coding agent run Flagsmith with experimentation on your machine using Docker.
+---
+
+# Run Flagsmith Locally with a Coding Agent
+
+Paste the prompt below into [Claude Code](https://claude.com/claude-code), or any coding agent that can run shell
+commands, and it will bring up a complete Flagsmith instance on your machine with Docker:
+
+1. Checks that Docker is installed and running, and that the ports Flagsmith needs are free.
+2. Downloads the Flagsmith [Docker Compose file](/deployment-self-hosting/hosting-guides/docker), starts it and waits
+   for it to become healthy.
+3. Creates your admin account, an organisation, a project, and Development and Production environments.
+4. Connects the bundled ClickHouse warehouse to both environments, so you can run [experiments](/experimentation)
+   straight away.
+5. Installs the [Flagsmith CLI](/integrating-with-flagsmith/CLI) and authenticates it against your instance.
+6. Prints a summary with your login, environment keys and URLs.
+
+## Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) with Docker Compose v2, and at least 4 GB of memory allocated to Docker.
+- Ports 8000, 8001 and 8080 free on your machine.
+- Claude Code or another coding agent.
+
+## The prompt
+
+```text title="Prompt: run Flagsmith locally"
+Set up a local Flagsmith instance with experimentation for me, using Docker. Work step by step. After each step,
+verify that it worked. If something fails, stop and show me the exact error; don't guess or work around it.
+
+1. Prerequisites. Check that Docker is running (`docker info`) and Docker Compose v2 is available
+   (`docker compose version`), and that ports 8000, 8001 and 8080 are free. If anything is missing or a port is
+   taken, tell me how to fix it and stop. Never stop or kill anything that is already running.
+
+2. Start Flagsmith. In a new `flagsmith` directory, download
+   https://raw.githubusercontent.com/Flagsmith/flagsmith/main/docker-compose.yml and run `docker compose up -d`.
+   The first run pulls several images and can take a few minutes. Wait until
+   http://localhost:8000/health/liveness/ and http://localhost:8080/health return 200, and `docker compose ps -a`
+   shows the one-off services (`migrate-db`, `kafka-init`, `clickhouse-init`) exited with code 0. If a service
+   fails, show me its last log lines.
+
+3. Create the admin account. Ask me for my name and email address (or use Admin User / admin@example.com if I
+   don't mind) and generate a strong password. There is no CLI bootstrap: the dashboard's onboarding screen does
+   this while `GET http://localhost:8000/version/` reports `self_hosted_data.has_users: false`, and you do the same
+   through the API:
+   - `POST /api/v1/auth/users/` with `{"email", "password", "re_password", "first_name", "last_name",
+     "superuser": true}`. `superuser` is only accepted while no users exist. The response's `key` authenticates
+     the next calls as `Authorization: Token <key>`. If `has_users` is already true, ask me for the existing
+     credentials and get a key from `POST /api/v1/auth/login/` with `{"email", "password"}` instead.
+   - Create an organisation (`POST /api/v1/organisations/` with `{"name"}`), a project (`POST /api/v1/projects/`
+     with `{"name", "organisation"}`) and two environments, Development and Production
+     (`POST /api/v1/environments/` with `{"name", "project"}`). Reuse any that already exist.
+
+4. Connect the bundled ClickHouse warehouse to each environment with
+   `POST /api/v1/environments/<environment key>/warehouse-connections/` and this body:
+   {"warehouse_type": "clickhouse", "config": {"host": "clickhouse", "port": 8123, "database": "flagsmith_exp",
+   "username": "flagsmith", "secure": false}, "credentials": {"password": "password"}}
+   Each should come back with `"status": "connected"`. To check settings without saving, POST the same body to
+   `/api/v1/environments/<environment key>/warehouse-connections/test-warehouse-connection/`. If `/version/` reports
+   `experimentation_enabled: false`, skip this step and tell me.
+
+5. Set up the Flagsmith CLI. If `flagsmith --version` doesn't report v2 or later, install it with
+   `curl -fsSL https://get.flagsmith.com | sh`, which puts it in `$HOME/.local/bin`, or with
+   `brew install Flagsmith/tap/flagsmith`; use `npm install -g @flagsmith/cli` only as a fallback. Check the version
+   again. Authenticate the CLI with an organisation API key, not `flagsmith login`: create one with
+   `POST /api/v1/organisations/<id>/master-api-keys/` and `{"name": "Flagsmith CLI", "is_admin": true}`; its `key`
+   is only returned once. Against a self-hosted instance the CLI only reads host-scoped keys, so write these two
+   lines to `flagsmith/flagsmith.env`, with file permissions 600:
+   export FLAGSMITH_API_URL=http://localhost:8000
+   export FLAGSMITH_API_KEY_localhost_8000=<key>
+   Then load the file and check that `flagsmith auth status` and `flagsmith project list` work.
+
+6. Finish with a summary: the dashboard URL (http://localhost:8000) with my email and password; the organisation,
+   project and environment names with each environment's key; the event ingestion service URL for SDKs
+   (http://localhost:8080); how to load the CLI credentials (`source flagsmith/flagsmith.env`); and how to stop
+   Flagsmith (`docker compose down`) or delete everything (`docker compose down -v`).
+```
+
+## What you get
+
+| Service                 | URL                     |
+| ----------------------- | ----------------------- |
+| Dashboard and API       | `http://localhost:8000` |
+| Task processor          | `http://localhost:8001` |
+| Event ingestion service | `http://localhost:8080` |
+
+The instance stores its data in Docker volumes, so it survives restarts until you run `docker compose down -v`. Treat it
+as a local playground: the Compose file uses default secrets that you should change before exposing it anywhere. For
+production deployments, see [Deployment and Self-hosting](/deployment-self-hosting).
+
+## Next steps
+
+To run your first A/B test against this instance, open your application's repository and use the
+[experiment set-up prompt](/experimentation/set-up-with-a-coding-agent).

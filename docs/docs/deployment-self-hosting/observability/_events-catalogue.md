@@ -240,7 +240,7 @@ Attributes:
 ### `experimentation.rollout.applied`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1018`
+ - `api/experimentation/services.py:1081`
 
 Attributes:
  - `audience.match`
@@ -256,13 +256,24 @@ Attributes:
 ### `experimentation.rollout.superseded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:609`
+ - `api/experimentation/services.py:672`
 
 Attributes:
  - `environment.id`
  - `experiment.id`
  - `feature.id`
  - `superseded_experiment.id`
+
+### `experimentation.sdk_events.rejected`
+
+Logged at `warning` from:
+ - `api/experimentation/services.py:222`
+
+Attributes:
+ - `environment.id`
+ - `rejected_events.count`
+ - `rejected_events.fields`
+ - `submitted_events.count`
 
 ### `feature_health.feature_health_event_dismissal_not_supported`
 
@@ -305,11 +316,12 @@ Attributes:
 ### `features.dependencies.create_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:171`
- - `api/features/dependencies/services.py:371`
- - `api/features/dependencies/services.py:387`
- - `api/features/dependencies/services.py:392`
- - `api/features/dependencies/services.py:402`
+ - `api/features/dependencies/services.py:212`
+ - `api/features/dependencies/services.py:498`
+ - `api/features/dependencies/services.py:503`
+ - `api/features/dependencies/services.py:513`
+ - `api/features/dependencies/services.py:570`
+ - `api/features/dependencies/services.py:573`
 
 Attributes:
  - `environment.key`
@@ -321,7 +333,7 @@ Attributes:
 ### `features.dependencies.created`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:134`
+ - `api/features/dependencies/services.py:138`
 
 Attributes:
  - `environment.key`
@@ -333,7 +345,8 @@ Attributes:
 ### `features.dependencies.delete_failed`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:482`
+ - `api/features/dependencies/services.py:645`
+ - `api/features/dependencies/services.py:659`
 
 Attributes:
  - `environment.key`
@@ -345,8 +358,8 @@ Attributes:
 ### `features.dependencies.deleted`
 
 Logged at `info` from:
- - `api/features/dependencies/services.py:106`
- - `api/features/dependencies/services.py:132`
+ - `api/features/dependencies/services.py:110`
+ - `api/features/dependencies/services.py:136`
 
 Attributes:
  - `environment.key`
@@ -354,6 +367,20 @@ Attributes:
  - `organisation.id`
  - `prerequisite_feature.name`
  - `project.id`
+
+### `features.flag.staged`
+
+Logged at `info` from:
+ - `api/features/future/services.py:463`
+
+Attributes:
+ - `change_request.id`
+ - `environment.id`
+ - `feature.id`
+ - `organisation.id`
+ - `project.id`
+ - `segment_overrides.created.segment.ids`
+ - `segment_overrides.deleted.segment.ids`
 
 ### `features.flag.update_rejected`
 
@@ -370,8 +397,8 @@ Attributes:
 ### `features.flag.updated`
 
 Logged at `info` from:
- - `api/features/future/services.py:486`
- - `api/features/future/services.py:546`
+ - `api/features/future/services.py:559`
+ - `api/features/future/services.py:628`
 
 Attributes:
  - `environment.id`
@@ -906,7 +933,7 @@ Attributes:
 ### `warehouse.connection.connected`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1194`
+ - `api/experimentation/services.py:1257`
 
 Attributes:
  - `environment.id`
@@ -915,8 +942,9 @@ Attributes:
 ### `warehouse.connection.event_names_failed`
 
 Logged at `warning` from:
- - `api/experimentation/warehouses/clickhouse.py:297`
- - `api/experimentation/warehouses/flagsmith.py:181`
+ - `api/experimentation/warehouses/clickhouse.py:298`
+ - `api/experimentation/warehouses/flagsmith.py:182`
+ - `api/experimentation/warehouses/postgres.py:444`
 
 Attributes:
  - `environment.id`
@@ -926,7 +954,8 @@ Attributes:
 ### `warehouse.connection.event_stats_failed`
 
 Logged at `warning` from:
- - `api/experimentation/warehouses/clickhouse.py:334`
+ - `api/experimentation/warehouses/clickhouse.py:337`
+ - `api/experimentation/warehouses/postgres.py:483`
 
 Attributes:
  - `environment.id`
@@ -935,7 +964,7 @@ Attributes:
 ### `warehouse.connection.test_event_sent`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1137`
+ - `api/experimentation/services.py:1200`
 
 Attributes:
  - `environment.id`
@@ -944,7 +973,7 @@ Attributes:
 ### `warehouse.connection.verification_failed`
 
 Logged at `warning` from:
- - `api/experimentation/services.py:1169`
+ - `api/experimentation/services.py:1232`
 
 Attributes:
  - `environment.id`
@@ -954,7 +983,7 @@ Attributes:
 ### `warehouse.connection.verification_succeeded`
 
 Logged at `info` from:
- - `api/experimentation/services.py:1179`
+ - `api/experimentation/services.py:1242`
 
 Attributes:
  - `environment.id`
@@ -963,7 +992,7 @@ Attributes:
 ### `warehouse.srm.overallocated`
 
 Logged at `error` from:
- - `api/experimentation/services.py:398`
+ - `api/experimentation/services.py:461`
 
 Attributes:
  - `environment.id`
@@ -973,7 +1002,7 @@ Attributes:
 ### `warehouse.srm.unkeyed_variant`
 
 Logged at `error` from:
- - `api/experimentation/services.py:384`
+ - `api/experimentation/services.py:447`
 
 Attributes:
  - `environment.id`
@@ -983,7 +1012,7 @@ Attributes:
 ### `workflows.change_request.committed`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:45`
+ - `api/core/workflows_services.py:49`
 
 Attributes:
  - `environment.id`
@@ -993,7 +1022,7 @@ Attributes:
 ### `workflows.missing_live_segment`
 
 Logged at `warning` from:
- - `api/core/workflows_services.py:130`
+ - `api/core/workflows_services.py:133`
 
 Attributes:
  - `draft_segment`
@@ -1001,7 +1030,7 @@ Attributes:
 ### `workflows.segment_revision_created`
 
 Logged at `info` from:
- - `api/core/workflows_services.py:135`
+ - `api/core/workflows_services.py:138`
 
 Attributes:
  - `revision_id`

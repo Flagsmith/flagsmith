@@ -4,6 +4,7 @@ from django.db import models
 from django.utils import timezone
 from flag_engine.engine import get_evaluation_result
 
+from environments.identities.constants import IDENTITY_IDENTIFIER_MAX_LENGTH
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -14,7 +15,7 @@ from segments.models import Segment
 
 
 class Identity(models.Model):
-    identifier = models.CharField(max_length=2000)
+    identifier = models.CharField(max_length=IDENTITY_IDENTIFIER_MAX_LENGTH)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     environment = models.ForeignKey(
         Environment, related_name="identities", on_delete=models.CASCADE

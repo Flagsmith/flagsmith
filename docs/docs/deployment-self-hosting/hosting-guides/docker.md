@@ -14,7 +14,16 @@ curl -o docker-compose.yml https://raw.githubusercontent.com/Flagsmith/flagsmith
 docker-compose -f docker-compose.yml up
 ```
 
-Wait for the images to download and run, then visit `http://localhost:8000/`. As a first step, you will need to create a new account at [http://localhost:8000/signup](http://localhost:8000/signup)
+Wait for the images to download and run, then visit [http://localhost:8000](http://localhost:8000). On a fresh install, the dashboard shows a **Welcome to Flagsmith** screen: select **Get Started** to create your admin account and your first organisation. Nothing is printed to the Compose logs for this step.
+
+This first account is a superuser. Once it exists, the dashboard shows the usual login and sign-up pages.
+
+To run Flagsmith without [experimentation](#experimentation), use the flags-only file instead:
+
+```bash
+curl -o docker-compose.yml https://raw.githubusercontent.com/Flagsmith/flagsmith/main/docker-compose.flags-only.yml
+docker-compose -f docker-compose.yml up
+```
 
 ## Environment Variables
 
@@ -47,11 +56,10 @@ The web user interface communicates via REST to the API that powers the applicat
 
 Once you have created an account and some flags, you can then start using the API with one of the [Flagsmith Client SDKs](https://github.com/Flagsmith?q=client&type=&language=). You will need to override the API endpoint for each SDK to point to [http://localhost:8000/api/v1/](http://localhost:8000/api/v1/).
 
-You can access the Django Admin console to get CRUD access to some of the core tables within the API. You will need to create a superuser account first with the following command:
+You can access the Django Admin console to get CRUD access to some of the core tables within the API. The admin account you created on first run is a superuser. To log in with its email and password, set `ENABLE_ADMIN_ACCESS_USER_PASS: 'true'` in the API's environment and restart; see [Using the Django Admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin#authentication). To create another superuser, run:
 
 ```bash
-# Make sure you are in the root directory of this repository
-docker-compose run --rm --entrypoint "python manage.py createsuperuser" api
+docker compose exec flagsmith flagsmith createsuperuser
 ```
 
 You can then access the admin dashboard at [http://localhost:8000/admin/](http://localhost:8000/admin/)
@@ -59,6 +67,16 @@ You can then access the admin dashboard at [http://localhost:8000/admin/](http:/
 ### PostgreSQL Database
 
 The REST API stores all its data within a PostgreSQL database. Schema changes will be carried out automatically when upgrading using Django Migrations.
+
+### Experimentation
+
+These containers run [experimentation](/experimentation/connect-a-warehouse):
+
+- **Ingestion server (port 8080)**: receives exposure and conversion events from the SDKs.
+- **Kafka**: queues events between the ingestion server and warehouse delivery.
+- **Warehouse delivery**: writes events to each environment's connected warehouse.
+- **ClickHouse**: a warehouse you can connect from **Environment Settings > Warehouse**, using host `clickhouse`, port
+  `8123`, TLS off, database `flagsmith_exp`, username `flagsmith` and password `password`.
 
 ## Access Flagsmith Remotely
 

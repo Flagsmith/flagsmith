@@ -10,6 +10,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveIndex(
+            model_name="warehousedeliverylog",
+            name="experimenta_connect_11e6cf_idx",
+        ),
         migrations.RemoveField(
             model_name="warehousedeliverylog",
             name="connection",

@@ -1,5 +1,84 @@
 # Changelog
 
+## [2.288.2](https://github.com/Flagsmith/flagsmith/compare/v2.288.1...v2.288.2) (2026-10-29)
+
+
+### Bug Fixes
+
+* **Audit:** Require at least 3 characters for audit log search ([#8851](https://github.com/Flagsmith/flagsmith/issues/8851)) ([4a4af55](https://github.com/Flagsmith/flagsmith/commit/4a4af55dd7a21df99994778727e6ddce3672afe2))
+
+
+### Performance Improvements
+
+* **Audit:** Index audit log text for search ([#8850](https://github.com/Flagsmith/flagsmith/issues/8850)) ([dcb1754](https://github.com/Flagsmith/flagsmith/commit/dcb1754ac5012b4880774d79bd0d041de22e3902))
+
+## [2.288.1](https://github.com/Flagsmith/flagsmith/compare/v2.288.0...v2.288.1) (2026-10-29)
+
+
+### Performance Improvements
+
+* **Audit:** Index audit logs by project and created date ([#8848](https://github.com/Flagsmith/flagsmith/issues/8848)) ([660f4dc](https://github.com/Flagsmith/flagsmith/commit/660f4dc9da4edaf162a4b311fc34ab87dd3d100d))
+
+## [2.288.0](https://github.com/Flagsmith/flagsmith/compare/v2.287.0...v2.288.0) (2026-10-28)
+
+
+### Features
+
+* **Dependencies:** Add the API calls for staging changes in a change request ([#8718](https://github.com/Flagsmith/flagsmith/issues/8718)) ([965c27d](https://github.com/Flagsmith/flagsmith/commit/965c27d124dd3bfa977cc436ee6b7812e5293319))
+* **Dependencies:** Keep the staged changes footer in view ([#8717](https://github.com/Flagsmith/flagsmith/issues/8717)) ([e5bbe9f](https://github.com/Flagsmith/flagsmith/commit/e5bbe9fefedbfbf7c88513f84e29002b06760b0b))
+* **Dependencies:** Show a change request's dependency changes ([#8716](https://github.com/Flagsmith/flagsmith/issues/8716)) ([7578fbf](https://github.com/Flagsmith/flagsmith/commit/7578fbf1f73d8e8b3168360b8023210421e564c3))
+* **Dependencies:** Show dependency changes pending in change requests ([#8783](https://github.com/Flagsmith/flagsmith/issues/8783)) ([d031dbe](https://github.com/Flagsmith/flagsmith/commit/d031dbe740f99e723ecbd7d97b219cc72111606c))
+* **Dependencies:** Stage dependency changes in a change request ([#8715](https://github.com/Flagsmith/flagsmith/issues/8715)) ([910ff3f](https://github.com/Flagsmith/flagsmith/commit/910ff3f5f0b770b7c7d972c2d4958b577d5b2447))
+* **experimentation:** add a PostgreSQL warehouse dialect ([#8841](https://github.com/Flagsmith/flagsmith/issues/8841)) ([1c5983e](https://github.com/Flagsmith/flagsmith/commit/1c5983e42681d79decb19d7f199e98c5673d3d03))
+* **Support:** Add an endpoint that issues HubSpot chat visitor tokens ([#8813](https://github.com/Flagsmith/flagsmith/issues/8813)) ([f4735b6](https://github.com/Flagsmith/flagsmith/commit/f4735b64807f742f81ece1f18e715d3044e2e222))
+* **Support:** Identify logged-in users in HubSpot chat ([#8814](https://github.com/Flagsmith/flagsmith/issues/8814)) ([3de69a9](https://github.com/Flagsmith/flagsmith/commit/3de69a9bfc10243ca3fb612825c5487a0d509094))
+* **Support:** Move in-app chat to HubSpot behind a feature flag ([#8710](https://github.com/Flagsmith/flagsmith/issues/8710)) ([b593df0](https://github.com/Flagsmith/flagsmith/commit/b593df0288b55bc4934e238233d51d0a2213d1fe))
+
+
+### Bug Fixes
+
+* **Billing:** Contact Sales opens the sales form instead of support chat ([#8711](https://github.com/Flagsmith/flagsmith/issues/8711)) ([eea9b7f](https://github.com/Flagsmith/flagsmith/commit/eea9b7f27b9d2f7d67a80b1b79001c593b2c8cd6))
+* land on experiments list when switching environment from an experiment ([#8790](https://github.com/Flagsmith/flagsmith/issues/8790)) ([6c4ef63](https://github.com/Flagsmith/flagsmith/commit/6c4ef63d629a435ead046a3bacf68d292f144a40))
+
+## [2.287.0](https://github.com/Flagsmith/flagsmith/compare/v2.286.0...v2.287.0) (2026-10-16)
+
+
+### Features
+
+* **API:** Remove the experimental flag update endpoints ([#8736](https://github.com/Flagsmith/flagsmith/issues/8736)) ([20cd1c2](https://github.com/Flagsmith/flagsmith/commit/20cd1c2daf3b3c34f0a69c37c49b4ed9b4857201))
+* **docker:** run experimentation infra in docker compose ([#8752](https://github.com/Flagsmith/flagsmith/issues/8752)) ([a815a96](https://github.com/Flagsmith/flagsmith/commit/a815a96083f0cf2cedcc48f7c1153cb8d987c342))
+* **Flag Dependency:** API support for change requests ([#8720](https://github.com/Flagsmith/flagsmith/issues/8720)) ([9d7907c](https://github.com/Flagsmith/flagsmith/commit/9d7907caf229c6431ce199a20acc2578268753cf))
+
+
+### Bug Fixes
+
+* **experimentation:** make migration 0014 reversible ([#8750](https://github.com/Flagsmith/flagsmith/issues/8750)) ([e40b88b](https://github.com/Flagsmith/flagsmith/commit/e40b88bed0c95d1c0338aead3e3c44c59f01cab2))
+* **Experiments:** fix result bars tokens ([#8789](https://github.com/Flagsmith/flagsmith/issues/8789)) ([b6824ac](https://github.com/Flagsmith/flagsmith/commit/b6824aca5fcff7f4448cac909390f875e52e790f))
+* **Local:** API workers crash on macOS when connecting to Postgres ([#8794](https://github.com/Flagsmith/flagsmith/issues/8794)) ([abb07d8](https://github.com/Flagsmith/flagsmith/commit/abb07d8ff232583b474aeeefa21bcd53e79a238f))
+
+
+### Dependency Updates
+
+* **api:** update dependency flagsmith-private to &gt;=0.14.2,&lt;1 ([#8791](https://github.com/Flagsmith/flagsmith/issues/8791)) ([a297876](https://github.com/Flagsmith/flagsmith/commit/a297876b3d7de4ba312674355aeea3e64f3ec194))
+
+
+### Docs
+
+* add ready-to-use coding agent prompts for local setup and experiments ([#8802](https://github.com/Flagsmith/flagsmith/issues/8802)) ([da6850b](https://github.com/Flagsmith/flagsmith/commit/da6850b5012780b39762ccec5be1135bba0c32c9))
+* document the dashboard's first-run admin setup for self-hosted ([#8799](https://github.com/Flagsmith/flagsmith/issues/8799)) ([defeac7](https://github.com/Flagsmith/flagsmith/commit/defeac735f2b6178edda05ef84ea22bd73d45148))
+* **experimentation:** add experimentation architecture to platform architecture page ([#8763](https://github.com/Flagsmith/flagsmith/issues/8763)) ([8bed28a](https://github.com/Flagsmith/flagsmith/commit/8bed28a1e7dbe614f47d74786b988e2c0faece7e))
+* **experimentation:** document SDK setup for events, including self-hosted ([#8797](https://github.com/Flagsmith/flagsmith/issues/8797)) ([ae30257](https://github.com/Flagsmith/flagsmith/commit/ae30257c6f26868b5816bea958144d99dd2dc9a4))
+* **experimentation:** Document WAREHOUSE_CREDENTIALS_SECRET and its chart secret ([#8796](https://github.com/Flagsmith/flagsmith/issues/8796)) ([b6d6988](https://github.com/Flagsmith/flagsmith/commit/b6d69889652df199a21dfa9f64a2c8a7550936f0))
+* **experimentation:** List the experimentation values in the Helm chart values table ([#8800](https://github.com/Flagsmith/flagsmith/issues/8800)) ([1b1adff](https://github.com/Flagsmith/flagsmith/commit/1b1adff03d9d6fde5789bec96f6c10b3e3ea26b8))
+* **experimentation:** Make the self-hosted experimentation guide easier to follow ([#8801](https://github.com/Flagsmith/flagsmith/issues/8801)) ([8f84966](https://github.com/Flagsmith/flagsmith/commit/8f849662e63f3646ffea5083f44664ea2c9d41fa))
+
+
+### Refactoring
+
+* **Dependencies:** Split the tab ahead of change request support ([#8768](https://github.com/Flagsmith/flagsmith/issues/8768)) ([1dc9b86](https://github.com/Flagsmith/flagsmith/commit/1dc9b86960d64a7aaea2de752ccc4e9f64b374ed))
+* **Flags:** Write live overrides of the legacy feature segment API through the flag API ([#8734](https://github.com/Flagsmith/flagsmith/issues/8734)) ([80fc3a6](https://github.com/Flagsmith/flagsmith/commit/80fc3a6ce26e3722fbfc4b4844ff484eae21fa70))
+* **Flags:** Write live overrides of the legacy feature state APIs through the flag API ([#8732](https://github.com/Flagsmith/flagsmith/issues/8732)) ([189d7df](https://github.com/Flagsmith/flagsmith/commit/189d7df6b51650bdb4dd78999ed7c4a2cffce793))
+
 ## [2.286.0](https://github.com/Flagsmith/flagsmith/compare/v2.285.0...v2.286.0) (2026-10-15)
 
 

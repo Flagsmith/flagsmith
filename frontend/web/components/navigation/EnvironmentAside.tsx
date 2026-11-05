@@ -221,8 +221,13 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                                       projectId: projectId,
                                     }),
                                   ).finally(() => {
+                                    const pathname =
+                                      document.location.pathname.replace(
+                                        /\/experiments\/[^/]+\/?$/,
+                                        '/experiments',
+                                      )
                                     history.push(
-                                      `${document.location.pathname}${
+                                      `${pathname}${
                                         document.location.search || ''
                                       }`.replace(
                                         environmentId,

@@ -12,6 +12,7 @@ from task_processor.decorators import (
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.dataclasses import AuthorData
 from features.models import FeatureState
 from features.versioning.exceptions import FeatureVersioningError
 from features.versioning.models import (
@@ -304,6 +305,7 @@ def publish_version_change_set(
     # djoser user serializer (which imports settings), we have to use
     # a local import, since the tasks module gets loaded on app start,
     # to avoid AppRegistryNotReady error.
+    from features.dependencies.services import report_flag_dependency_changes
     from features.versioning.serializers import (
         EnvironmentFeatureVersionCreateSerializer,
     )
@@ -346,6 +348,13 @@ def publish_version_change_set(
     # in the past since the task processor won't have picked it up and handled
     # it immediately, but we always care about the _actual_ time it's published.
     version.publish(published_by=user, live_from=now)
+    report_flag_dependency_changes(
+        environment=version_change_set.environment,
+        feature=version_change_set.feature,
+        created_segment_ids=serializer.segment_ids_to_create_overrides,
+        deleted_segment_ids=version_change_set.get_parsed_segment_ids_to_delete_overrides(),
+        author=AuthorData(user=user),
+    )
 
     # if live_from was set on the version_change set, then leave it alone for
     # auditing purposes.

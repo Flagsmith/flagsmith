@@ -28,8 +28,16 @@ export const usePrerequisites = ({
   const [addingName, setAddingName] = useState<string | undefined>()
   const { flash, flashedId } = useRowFlash()
 
-  const { add, dependentEdges, isCreating, isError, isLoading, remove, rows } =
-    useDependencies({ environmentId, featureId: projectFlag.id, projectId })
+  const {
+    add,
+    dependentEdges,
+    isCreating,
+    isEnabled,
+    isError,
+    isLoading,
+    remove,
+    rows,
+  } = useDependencies({ environmentId, featureId: projectFlag.id, projectId })
 
   // A refusal belongs to the add it came from, so it ends with it.
   const onAddingChange = useCallback((adding: boolean) => {
@@ -84,6 +92,7 @@ export const usePrerequisites = ({
     dependentEdges,
     flashedId,
     isCreating,
+    isEnabled,
     isError,
     isLoading,
     // A flag that gains a dependent cannot take prerequisites, so the picker

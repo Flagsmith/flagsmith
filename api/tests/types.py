@@ -1,8 +1,11 @@
+from contextlib import AbstractContextManager
 from datetime import datetime
 from typing import Callable, Literal, Optional, Protocol
 
+from django.db.models import QuerySet
 from django_test_migrations.migrator import Migrator
 
+from audit.models import AuditLog
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
@@ -86,3 +89,7 @@ class CreateChangeRequestSegmentOverrideFixture(Protocol):
         committed: bool = False,
         live_from: datetime | None = None,
     ) -> None: ...
+
+
+class CaptureAuditLogsFixture(Protocol):
+    def __call__(self) -> AbstractContextManager[QuerySet[AuditLog]]: ...

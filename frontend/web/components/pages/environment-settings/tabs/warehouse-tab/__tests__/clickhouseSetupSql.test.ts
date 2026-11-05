@@ -1,5 +1,3 @@
-import fs from 'fs'
-import path from 'path'
 import { CLICKHOUSE_DEFAULTS } from 'components/pages/environment-settings/tabs/warehouse-tab/clickhouseConfig'
 import {
   getClickHouseOnboardingSql,
@@ -45,23 +43,5 @@ describe('getClickHouseOnboardingSql', () => {
 
     expect(createTable).toBeLessThan(sql.indexOf('CREATE USER'))
     expect(createTable).toBeLessThan(sql.indexOf('GRANT'))
-  })
-
-  it('matches the copy of the script in the documentation', () => {
-    const doc = fs.readFileSync(
-      path.join(
-        __dirname,
-        '../../../../../../../../docs/docs/experimentation/connect-a-warehouse.md',
-      ),
-      'utf8',
-    )
-    const fencedSql = doc.match(/```sql\n([\s\S]*?)```/)?.[1] ?? ''
-    const dedented = fencedSql
-      .split('\n')
-      .map((line) => line.replace(/^ {3}/, ''))
-      .join('\n')
-      .trim()
-
-    expect(dedented).toEqual(getClickHouseOnboardingSql())
   })
 })

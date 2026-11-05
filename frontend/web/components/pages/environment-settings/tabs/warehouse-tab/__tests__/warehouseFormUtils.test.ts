@@ -1,4 +1,5 @@
 import {
+  getApiErrorDetail,
   getTestFailureWarning,
   isMissingEventsTableDetail,
   isWarehouseStartingDetail,
@@ -65,5 +66,19 @@ describe('getTestFailureWarning', () => {
     expect(getTestFailureWarning('Events table not found')).toContain(
       'Events table not found.\nYou can save anyway',
     )
+  })
+})
+
+describe('getApiErrorDetail', () => {
+  it.each([
+    [
+      {
+        data: { config: { host: ['Enter a single hostname or IP address.'] } },
+      },
+      'Enter a single hostname or IP address.',
+    ],
+    [{ data: '<html>502</html>' }, null],
+  ])('returns the API message from %j, or null', (error, expected) => {
+    expect(getApiErrorDetail(error)).toBe(expected)
   })
 })

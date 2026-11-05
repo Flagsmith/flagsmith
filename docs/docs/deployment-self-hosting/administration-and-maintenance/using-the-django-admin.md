@@ -24,8 +24,8 @@ A user with [`is_superuser`](https://docs.djangoproject.com/en/4.2/ref/contrib/a
 
 You can obtain a user with these permissions using any of these methods:
 
-* Use the [`createsuperuser` management command](/deployment-self-hosting/core-configuration/initial-setup#local-installation) from a Flagsmith API shell.
-* If no users exist yet, [visit the Initialise Config page](/deployment-self-hosting/core-configuration/initial-setup#cloud-environments-eg-heroku-ecs).
+* Use the [`createsuperuser` management command](/deployment-self-hosting/core-configuration/initial-setup#from-the-command-line) from a Flagsmith API shell.
+* If no users exist yet, [create the first account from the dashboard](/deployment-self-hosting/core-configuration/initial-setup#from-the-dashboard-recommended).
 * Manually set the `is_staff` and `is_superuser` database fields for your user in the `users_ffadminuser` table.
 
 ## Authentication

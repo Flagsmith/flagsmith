@@ -10,9 +10,12 @@ import Project from 'common/project'
 // empty `defaultFlags` skips fetching the customer's flag configuration
 // entirely (so we never pull their config into the dashboard), while
 // `enableEvents` still starts the event pipeline. `api` targets the backend
-// this environment lives on, and `eventsApiUrl` (when configured) points the
-// event pipeline at the matching ingestor; otherwise the SDK default is used.
-const sendWarehouseTestEvent = async (environmentId: string): Promise<void> => {
+// this environment lives on, and `eventsApiUrl` (when set) points the event
+// pipeline at the connection's events URL; otherwise the SDK default is used.
+const sendWarehouseTestEvent = async (
+  environmentId: string,
+  eventsApiUrl = Project.flagsmithClientEventsAPI,
+): Promise<void> => {
   const instance = createFlagsmithInstance()
   await instance.init({
     api: Project.api,
@@ -22,11 +25,7 @@ const sendWarehouseTestEvent = async (environmentId: string): Promise<void> => {
     fetch: globalThis.fetch.bind(globalThis),
     identity: 'test_warehouse_user',
     preventFetch: true,
-    ...(Project.flagsmithClientEventsAPI && {
-      eventProcessorConfig: {
-        eventsApiUrl: Project.flagsmithClientEventsAPI,
-      },
-    }),
+    ...(eventsApiUrl && { eventProcessorConfig: { eventsApiUrl } }),
   })
   instance.trackEvent('test_custom_event')
   await instance.flushEvents()
