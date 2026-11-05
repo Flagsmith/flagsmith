@@ -60,6 +60,7 @@ The current status is shown on the warehouse card in **Environment Settings › 
 - **Pending Connection**: waiting for the first event to arrive.
 - **Connected**: events have been received; you are ready to run experiments.
 - **Errored**: the card shows the reason. See Troubleshooting for
+  [ClickHouse](/experimentation/connect-clickhouse#troubleshooting),
   [Databricks](/experimentation/connect-databricks#troubleshooting) or
   [PostgreSQL](/experimentation/connect-postgresql#troubleshooting); otherwise [contact support](/support/).
 
