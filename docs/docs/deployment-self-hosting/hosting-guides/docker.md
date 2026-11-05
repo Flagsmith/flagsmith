@@ -18,13 +18,6 @@ Wait for the images to download and run, then visit [http://localhost:8000](http
 
 This first account is a superuser. Once it exists, the dashboard shows the usual login and sign-up pages.
 
-To run Flagsmith without [experimentation](#experimentation), use the flags-only file instead:
-
-```bash
-curl -o docker-compose.yml https://raw.githubusercontent.com/Flagsmith/flagsmith/main/docker-compose.flags-only.yml
-docker-compose -f docker-compose.yml up
-```
-
 ## Environment Variables
 
 As well as the Environment Variables specified in the [API](/deployment-self-hosting/core-configuration/environment-variables#api-environment-variables) and [Frontend](/deployment-self-hosting/core-configuration/environment-variables#frontend-environment-variables), you can also specify the following:
@@ -82,13 +75,9 @@ The REST API stores all its data within a PostgreSQL database. Schema changes wi
 
 ### Experimentation
 
-These containers run [experimentation](/experimentation/connect-a-warehouse):
-
-- **Ingestion server (port 8080)**: receives exposure and conversion events from the SDKs.
-- **Kafka**: queues events between the ingestion server and warehouse delivery.
-- **Warehouse delivery**: writes events to each environment's connected warehouse.
-- **ClickHouse**: a warehouse you can connect from **Environment Settings > Warehouse**, using host `clickhouse`, port
-  `8123`, TLS off, database `flagsmith_exp`, username `flagsmith` and password `password`.
+[Experimentation](/experimentation/connect-a-warehouse) is enabled and needs no extra containers. The API receives
+SDK events at `http://localhost:8000/api/v1/events/` and stores them in the PostgreSQL database. To use it, choose
+**Flagsmith database** in **Environment Settings > Warehouse**.
 
 ## Access Flagsmith Remotely
 
