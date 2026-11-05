@@ -75,9 +75,12 @@ The REST API stores all its data within a PostgreSQL database. Schema changes wi
 
 ### Experimentation
 
-[Experimentation](/experimentation/connect-a-warehouse) is enabled and needs no extra containers. The API receives
-SDK events at `http://localhost:8000/api/v1/events/` and stores them in the PostgreSQL database. To use it, choose
-**Flagsmith database** in **Environment Settings > Warehouse**.
+To try out [experimentation](/experimentation/connect-a-warehouse), choose **Flagsmith database** in **Environment
+Settings > Warehouse**. The API then receives SDK events at `http://localhost:8000/api/v1/events/` and stores them in
+its PostgreSQL database.
+
+The Flagsmith database is only meant for trying out experimentation. For production, connect a dedicated warehouse
+such as ClickHouse or Databricks.
 
 ## Access Flagsmith Remotely
 

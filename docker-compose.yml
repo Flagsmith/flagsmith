@@ -34,7 +34,8 @@ x-flagsmith-env: &flagsmith-env
   # EMAIL_PORT: 587 # optional
   # EMAIL_USE_TLS: 'true' # optional
 
-  # Experimentation stores SDK events in the Postgres database above.
+  # Lets you try out experimentation by storing SDK events in the Postgres database above.
+  # For production, connect a dedicated warehouse.
   EXPERIMENTATION_ENABLED: 'true'
 
 volumes:
