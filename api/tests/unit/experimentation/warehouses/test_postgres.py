@@ -441,7 +441,11 @@ def test_describe_error__other_failures__returns_detail(
         ),
         (
             "get_event_stats",
-            WarehouseEventStats(total_events_received=3, unique_events_count=2),
+            WarehouseEventStats(
+                total_events_received=3,
+                unique_events_count=2,
+                last_event_at=_at(1, 12),
+            ),
         ),
     ],
 )

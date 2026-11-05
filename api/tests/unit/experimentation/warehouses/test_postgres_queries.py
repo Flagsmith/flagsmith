@@ -158,10 +158,11 @@ def test_event_stats_query__postgres__counts_environment_events(
     rows, columns = _run_query(event_stats_query(POSTGRES_DIALECT), params)
 
     # Then
-    assert columns == ["total", "unique"]
+    assert columns == ["total", "unique", "last_event_at"]
     assert build_event_stats(rows) == WarehouseEventStats(
         total_events_received=33,
         unique_events_count=5,
+        last_event_at=_at(8, 0),
     )
 
 

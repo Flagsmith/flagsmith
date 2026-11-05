@@ -29,6 +29,7 @@ class RolloutSpec:
 class WarehouseEventStats:
     total_events_received: int
     unique_events_count: int
+    last_event_at: datetime | None = None
 
 
 @dataclass(frozen=True)
