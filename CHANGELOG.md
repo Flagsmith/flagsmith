@@ -2828,7 +2828,7 @@
 * collect and track utms at signup ([#5630](https://github.com/Flagsmith/flagsmith/issues/5630)) ([e433c2f](https://github.com/Flagsmith/flagsmith/commit/e433c2f76cfe9c04fed58a415120bda2c4015e2f))
 * enable feature versioning for new environments ([#5108](https://github.com/Flagsmith/flagsmith/issues/5108)) ([e9c16e1](https://github.com/Flagsmith/flagsmith/commit/e9c16e194a682b8897a4b95cbd344eb331b62935))
 * Expose "Enable real-time flags" option when self-hosting, add docs ([#4836](https://github.com/Flagsmith/flagsmith/issues/4836)) ([0e4c136](https://github.com/Flagsmith/flagsmith/commit/0e4c1366f8a34eaae3536a554af6b7d977bc6499))
-* generate-a-auth-cookie-on-oauth-succesful-logins ([#5670](https://github.com/Flagsmith/flagsmith/issues/5670)) ([4528877](https://github.com/Flagsmith/flagsmith/commit/4528877e77d74f8b5027a66000a027ca9d4cf0c6))
+* generate-a-auth-cookie-on-oauth-successful-logins ([#5670](https://github.com/Flagsmith/flagsmith/issues/5670)) ([4528877](https://github.com/Flagsmith/flagsmith/commit/4528877e77d74f8b5027a66000a027ca9d4cf0c6))
 * integrations onboarding ([#5497](https://github.com/Flagsmith/flagsmith/issues/5497)) ([fc216c8](https://github.com/Flagsmith/flagsmith/commit/fc216c84d23d3e671bbb6d8cb33134c7c6586845))
 * removes feature from release pipeline ([#5688](https://github.com/Flagsmith/flagsmith/issues/5688)) ([4981172](https://github.com/Flagsmith/flagsmith/commit/49811729b54fb087faf3c42d1118c8e47965b6a6))
 
