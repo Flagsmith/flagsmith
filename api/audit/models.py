@@ -2,8 +2,10 @@ import typing
 from functools import cached_property
 from importlib import import_module
 
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
 from django.db.models import Model, Q
+from django.db.models.functions import Upper
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
@@ -70,6 +72,16 @@ class AuditLog(LifecycleModel):  # type: ignore[misc]
     class Meta:
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
+        indexes = [
+            models.Index(
+                fields=["project", "-created_date"],
+                name="audit_project_created_idx",
+            ),
+            GinIndex(
+                OpClass(Upper("log"), name="gin_trgm_ops"),
+                name="audit_log_upper_trgm_idx",
+            ),
+        ]
 
     @property
     def organisation(self) -> "Organisation | None":

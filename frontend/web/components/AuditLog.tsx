@@ -29,7 +29,9 @@ type AuditLogType = {
 const widths = [210, 310, 150]
 const AuditLog: FC<AuditLogType> = (props) => {
   const [page, setPage] = useState(Utils.fromParam().page ?? 1)
-  const { search, searchInput, setSearchInput } = useDebouncedSearch()
+  const { search, searchInput, setSearchInput } = useDebouncedSearch(
+    Utils.fromParam().search ?? '',
+  )
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
     id: AccountStore.getOrganisation()?.id,
   })
@@ -65,7 +67,8 @@ const AuditLog: FC<AuditLogType> = (props) => {
       page,
       page_size: props.pageSize,
       project: props.projectId,
-      search,
+      // The API rejects searches shorter than 3 characters.
+      search: search?.trim().length >= 3 ? search.trim() : undefined,
     },
     {
       refetchOnMountOrArgChange: true,

@@ -1297,6 +1297,11 @@ export type Webhook = {
   updated_at: string
 }
 
+export type HubspotChatToken = {
+  email: string
+  token: string
+}
+
 export type AccountModel = Account & {
   organisations: Organisation[]
 }
@@ -1434,6 +1439,7 @@ export type WarehouseType =
   | 'snowflake'
   | 'clickhouse'
   | 'databricks'
+  | 'postgres'
 
 export type SnowflakeConfig = {
   account_identifier: string
@@ -1461,10 +1467,27 @@ export type DatabricksConfig = {
   schema: string
 }
 
+export type PostgresSslMode = 'require' | 'disable'
+
+export type PostgresConfig = {
+  host: string
+  port: number
+  database: string
+  schema: string
+  username: string
+  sslmode: PostgresSslMode
+}
+
+export type FlagsmithDatabaseConfig = {
+  source: 'flagsmith_database'
+}
+
 export type WarehouseConfigResponse =
   | SnowflakeConfig
   | ClickHouseConfig
   | DatabricksConfig
+  | PostgresConfig
+  | FlagsmithDatabaseConfig
   | Record<string, never>
 
 export type WarehouseConnectionTestResult = {
@@ -1487,6 +1510,7 @@ export type WarehouseConnection = {
   created_at: string
   total_events_received: number | null
   unique_events_count: number | null
+  last_event_received_at: string | null
 }
 
 export type TrustRelationshipClaimRule = {
@@ -1662,6 +1686,7 @@ export type Res = {
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>
   onboardingSupportOptIn: { id: string }
+  hubspotChatToken: HubspotChatToken
   environmentMetrics: {
     metrics: {
       value: number

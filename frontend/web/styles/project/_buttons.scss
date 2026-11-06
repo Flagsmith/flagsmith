@@ -141,60 +141,6 @@ button.btn {
     }
   }
 
-  &.btn-icon {
-    padding:0;
-    height: 32px;
-    width: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: $body-color;
-    svg {
-      width: 18px;
-      height: 18px;
-    }
-    path {
-      fill: var(--color-icon-secondary);
-    }
-    &:hover,&:focus {
-      background-color: $bg-light300;
-      path {
-        fill: var(--color-icon-default);
-      }
-    }
-  }
-  &-with-icon {
-    padding: 0 14px;
-    background-color: $basic-alpha-8;
-    border-radius: $border-radius;
-    svg path {
-      fill: var(--color-icon-secondary);
-    }
-    &:hover,
-    &:active,
-    &:disabled {
-      background-color: $basic-alpha-8 !important;
-      svg {
-        path {
-          fill: $primary;
-        }
-      }
-    }
-    &:focus {
-      background-color: $basic-alpha-8 !important;
-      svg {
-        path {
-          fill: $body-color;
-        }
-      }
-    }
-    &.btn-sm {
-      padding: 0 10px;
-    }
-    &.btn-lg {
-      line-height: $btn-line-height-lg;
-    }
-  }
   &-project {
     display: inline-block;
     background-color: $bg-light200;
@@ -306,12 +252,6 @@ button.btn-link {
   &:active {
     background: transparent;
   }
-  &.btn-with-icon {
-    padding: 0 14px;
-    background-color: $basic-alpha-8;
-    border-radius: $border-radius;
-    line-height: $btn-line-height;
-  }
 }
 
 $remove-btn-size: 24px;
@@ -350,12 +290,6 @@ $add-btn-size: 34px;
 
 .dark {
   .btn {
-    &.btn-icon {
-      color: $body-color-dark;
-      &:hover,&:focus {
-        background-color: $bg-dark300;
-      }
-    }
     &.btn-secondary {
       color: white;
       background-color: $btn-secondary-bg-dark !important;
@@ -443,12 +377,6 @@ $add-btn-size: 34px;
         & .btn-project-letter {
           background-color: $primary;
         }
-      }
-    }
-    &.btn-with-icon {
-      background-color: $basic-alpha-8;
-      &.btn-remove {
-        background-color: $danger-alfa-8;
       }
     }
   }

@@ -12,7 +12,9 @@ from django.db.models import Q
 from django.utils import timezone
 from flag_engine.segments.constants import ALL_RULE, ANY_RULE, PERCENTAGE_SPLIT
 from rest_framework.exceptions import ValidationError
+from rest_framework.settings import api_settings
 
+from app_analytics.mappers import map_user_agent_to_sdk_language_and_version
 from audit.constants import EXPERIMENT_ROLLOUT_APPLIED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -44,7 +46,9 @@ from experimentation.dataclasses import (
     WarehouseEventNames,
     WarehouseEventStats,
 )
+from experimentation.mappers import map_sdk_event_to_sdk_experimentation_event
 from experimentation.metrics import (
+    flagsmith_experimentation_sdk_events_total,
     flagsmith_experimentation_warehouse_connection_verifications_total,
 )
 from experimentation.models import (
@@ -54,11 +58,13 @@ from experimentation.models import (
     ExperimentStatus,
     MetricAggregation,
     MetricDirection,
+    SDKExperimentationEvent,
     WarehouseConnection,
     WarehouseConnectionStatus,
     WarehouseDeliveryStatus,
     WarehouseType,
 )
+from experimentation.sdk_events import SDKExperimentationEventSerializer
 from experimentation.stats import (
     Inference,
     VariantStats,
@@ -67,6 +73,7 @@ from experimentation.stats import (
 )
 from experimentation.warehouses import flagsmith
 from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
+from experimentation.warehouses.postgres import is_flagsmith_database_config
 from experimentation.warehouses.registry import get_warehouse
 from features.feature_segments.services import get_next_segment_override_priority
 from features.feature_states.models import API_VALUE_TYPES
@@ -91,7 +98,11 @@ if typing.TYPE_CHECKING:
 
     from environments.models import Environment
     from experimentation.models import Metric
-    from experimentation.types import ExposureGranularity
+    from experimentation.types import (
+        ExposureGranularity,
+        RejectedSDKEvent,
+        SDKEventBatchResult,
+    )
     from features.feature_states.models import FeatureValueType
     from features.models import FeatureStateValue
     from organisations.models import Organisation
@@ -164,6 +175,58 @@ def ensure_flagsmith_warehouse_connection(
         return connection
     except IntegrityError:
         return None
+
+
+def store_sdk_experimentation_events(
+    environment: Environment,
+    submitted_events: list[object],
+    *,
+    sdk_user_agent: str | None,
+) -> SDKEventBatchResult:
+    collected_at = timezone.now()
+    sdk_language, sdk_version = map_user_agent_to_sdk_language_and_version(
+        sdk_user_agent
+    )
+    valid_events: list[SDKExperimentationEvent] = []
+    rejected_events: list[RejectedSDKEvent] = []
+    rejected_fields: set[str] = set()
+    for index, event in enumerate(submitted_events):
+        serializer = SDKExperimentationEventSerializer(data=event)
+        if serializer.is_valid():
+            valid_events.append(
+                map_sdk_event_to_sdk_experimentation_event(
+                    serializer.validated_data,
+                    environment_key=environment.api_key,
+                    collected_at=collected_at,
+                    sdk_language=sdk_language,
+                    sdk_version=sdk_version,
+                )
+            )
+            continue
+        field, (message, *_) = next(iter(serializer.errors.items()))
+        rejected_fields.add(field)
+        error = (
+            message
+            if field == api_settings.NON_FIELD_ERRORS_KEY
+            else f"{field}: {message}"
+        )
+        rejected_events.append({"index": index, "error": error})
+    SDKExperimentationEvent.objects.bulk_create(valid_events)
+    flagsmith_experimentation_sdk_events_total.labels(result="accepted").inc(
+        len(valid_events)
+    )
+    flagsmith_experimentation_sdk_events_total.labels(result="rejected").inc(
+        len(rejected_events)
+    )
+    if rejected_events:
+        experimentation_logger.warning(
+            "sdk_events.rejected",
+            environment__id=environment.id,
+            submitted_events__count=len(submitted_events),
+            rejected_events__count=len(rejected_events),
+            rejected_events__fields=sorted(rejected_fields),
+        )
+    return {"accepted": len(valid_events), "rejected": rejected_events}
 
 
 def get_warehouse_event_names(
@@ -1207,6 +1270,8 @@ def annotate_warehouse_delivery_statuses(
     for connection in connections:
         if (
             connection.warehouse_type == WarehouseType.FLAGSMITH
+            # Django stores these events, so a delivery status means a misdirected SDK.
+            or is_flagsmith_database_config(connection.config)
             or connection.status != WarehouseConnectionStatus.CONNECTED
         ):
             continue

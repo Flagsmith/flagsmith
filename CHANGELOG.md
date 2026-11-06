@@ -1,5 +1,106 @@
 # Changelog
 
+## [2.290.0](https://github.com/Flagsmith/flagsmith/compare/v2.289.0...v2.290.0) (2026-11-05)
+
+
+### Features
+
+* **experimentation:** show when a warehouse last received an event ([#8742](https://github.com/Flagsmith/flagsmith/issues/8742)) ([5924f6f](https://github.com/Flagsmith/flagsmith/commit/5924f6fe494f9c47b5cc633799f533aa84930bcc))
+
+
+### Bug Fixes
+
+* **experimentation:** hide the first-event button for customer warehouses on self-hosted ([#8874](https://github.com/Flagsmith/flagsmith/issues/8874)) ([e755012](https://github.com/Flagsmith/flagsmith/commit/e755012a7447a2fe0db8ce2119edac7c3db8ccda))
+
+
+### Dependency Updates
+
+* lock file maintenance ([#8722](https://github.com/Flagsmith/flagsmith/issues/8722)) ([8bb5f38](https://github.com/Flagsmith/flagsmith/commit/8bb5f3893b45864342ef2102753e22959500d1ef))
+* **mcp:** update dependency flagsmith-common to v3.16.1 ([#8886](https://github.com/Flagsmith/flagsmith/issues/8886)) ([cdf25ca](https://github.com/Flagsmith/flagsmith/commit/cdf25ca6d1462205f4955b047b81a69b84986b29))
+
+## [2.289.0](https://github.com/Flagsmith/flagsmith/compare/v2.288.2...v2.289.0) (2026-11-05)
+
+
+### Features
+
+* **experimentation:** add bring-your-own PostgreSQL warehouses ([#8843](https://github.com/Flagsmith/flagsmith/issues/8843)) ([fdbe6fa](https://github.com/Flagsmith/flagsmith/commit/fdbe6fa34ec672007d9f9f287d106c6cb4d27fe7))
+* **experimentation:** add flagsmith database warehouse mode for self-hosted postgres ([#8857](https://github.com/Flagsmith/flagsmith/issues/8857)) ([600800f](https://github.com/Flagsmith/flagsmith/commit/600800f1b31dc52e3d71d7bb0429e5c261f60703))
+* **experimentation:** add the bring-your-own PostgreSQL warehouse form ([#8872](https://github.com/Flagsmith/flagsmith/issues/8872)) ([af5c88f](https://github.com/Flagsmith/flagsmith/commit/af5c88f39397cab20c96ad668e65c2e655c9fce4))
+* **experimentation:** add the one-click Flagsmith database warehouse for self-hosted ([#8863](https://github.com/Flagsmith/flagsmith/issues/8863)) ([51bcfc2](https://github.com/Flagsmith/flagsmith/commit/51bcfc235dcf7aa5470af1058f14f8b22e070515))
+* **experimentation:** receive SDK events in Django for the Flagsmith database warehouse ([#8864](https://github.com/Flagsmith/flagsmith/issues/8864)) ([31b9d56](https://github.com/Flagsmith/flagsmith/commit/31b9d564f6aeb17cb87da5357879f7bea9a6d535))
+* Track flagsmith-cli and Edge Proxy user agents ([#8876](https://github.com/Flagsmith/flagsmith/issues/8876)) ([4e87e6a](https://github.com/Flagsmith/flagsmith/commit/4e87e6a4b65d5bc26203c56ed0ace6226d1bda94))
+* **Users:** Allow `createinitialadminuser` to create many users ([#8842](https://github.com/Flagsmith/flagsmith/issues/8842)) ([9d7b774](https://github.com/Flagsmith/flagsmith/commit/9d7b774e3c3ea6fb5c7e0a54436194f234f8532e))
+
+
+### Bug Fixes
+
+* **Audit:** Read audit log search from the URL ([#8854](https://github.com/Flagsmith/flagsmith/issues/8854)) ([fbc77dc](https://github.com/Flagsmith/flagsmith/commit/fbc77dc5319d1ee71db2251606d4904a53e3df8d))
+* **experimentation:** don't cache empty warehouse event names and stats ([#8859](https://github.com/Flagsmith/flagsmith/issues/8859)) ([c964f50](https://github.com/Flagsmith/flagsmith/commit/c964f5014addf9058e1a03931666e283fdd5417f))
+* **IconButton:** Make icon buttons readable in dark mode ([#8805](https://github.com/Flagsmith/flagsmith/issues/8805)) ([aae9788](https://github.com/Flagsmith/flagsmith/commit/aae97886b61a12b14b6857d2f0f95adbf0ce7038))
+
+
+### Dependency Updates
+
+* **api:** update dependency djangorestframework to &gt;=3.18.2,&lt;3.19.0 [security] ([#8835](https://github.com/Flagsmith/flagsmith/issues/8835)) ([5974e2f](https://github.com/Flagsmith/flagsmith/commit/5974e2f06a8a3fbc01183d08bd8b4db5a11d0f79))
+* **api:** update dependency pylint to v4 [security] ([#8845](https://github.com/Flagsmith/flagsmith/issues/8845)) ([454cd42](https://github.com/Flagsmith/flagsmith/commit/454cd422c0821ce24a9a4109a022a315d8564aad))
+* **frontend:** update dependency body-parser to v2.4.0 [security] ([#8861](https://github.com/Flagsmith/flagsmith/issues/8861)) ([45cfd10](https://github.com/Flagsmith/flagsmith/commit/45cfd1026a35deeab3454de56aeb2c88877451c7))
+* **frontend:** update dependency dompurify to v3.4.17 [security] ([#8834](https://github.com/Flagsmith/flagsmith/issues/8834)) ([431f450](https://github.com/Flagsmith/flagsmith/commit/431f45090d680729c4d0bde40adb9c516085380a))
+* **frontend:** update dependency moment to v2.31.0 [security] ([#8619](https://github.com/Flagsmith/flagsmith/issues/8619)) ([5b30fa2](https://github.com/Flagsmith/flagsmith/commit/5b30fa21d9f1ae8bb814527c69c8be22b22eec94))
+* **frontend:** update dependency storybook to v10.6.2 [security] ([#8833](https://github.com/Flagsmith/flagsmith/issues/8833)) ([d1efefe](https://github.com/Flagsmith/flagsmith/commit/d1efefe47502ab8f06db0e9668f4b6588b74ef7b))
+* **frontend:** update dependency toml to v5 [security] ([#8836](https://github.com/Flagsmith/flagsmith/issues/8836)) ([1bfee03](https://github.com/Flagsmith/flagsmith/commit/1bfee03c9290c3cb550ffdd19ccd53fbe2f62843))
+* **mcp:** update dependency fastmcp to v3.4.10 [security] ([#8839](https://github.com/Flagsmith/flagsmith/issues/8839)) ([362733f](https://github.com/Flagsmith/flagsmith/commit/362733fe967a1b5d899ab95ffdbf645e1c62de85))
+
+
+### CI
+
+* Publish images with OCI media types ([#8815](https://github.com/Flagsmith/flagsmith/issues/8815)) ([1a0e591](https://github.com/Flagsmith/flagsmith/commit/1a0e59130e2ef7ca19a5dde9e65b0e216cd76d76))
+
+
+### Docs
+
+* **Flag Dependency:** Add documentation around feature prerequisites ([#8795](https://github.com/Flagsmith/flagsmith/issues/8795)) ([b0c3d24](https://github.com/Flagsmith/flagsmith/commit/b0c3d24526447d253debda232365c5efd7c3b74d))
+* **segments:** document the Matches regex operator ([#8812](https://github.com/Flagsmith/flagsmith/issues/8812)) ([519f891](https://github.com/Flagsmith/flagsmith/commit/519f89170dad9b3ddef430c804a135f2081b6bec))
+
+## [2.288.2](https://github.com/Flagsmith/flagsmith/compare/v2.288.1...v2.288.2) (2026-10-29)
+
+
+### Bug Fixes
+
+* **Audit:** Require at least 3 characters for audit log search ([#8851](https://github.com/Flagsmith/flagsmith/issues/8851)) ([4a4af55](https://github.com/Flagsmith/flagsmith/commit/4a4af55dd7a21df99994778727e6ddce3672afe2))
+
+
+### Performance Improvements
+
+* **Audit:** Index audit log text for search ([#8850](https://github.com/Flagsmith/flagsmith/issues/8850)) ([dcb1754](https://github.com/Flagsmith/flagsmith/commit/dcb1754ac5012b4880774d79bd0d041de22e3902))
+
+## [2.288.1](https://github.com/Flagsmith/flagsmith/compare/v2.288.0...v2.288.1) (2026-10-29)
+
+
+### Performance Improvements
+
+* **Audit:** Index audit logs by project and created date ([#8848](https://github.com/Flagsmith/flagsmith/issues/8848)) ([660f4dc](https://github.com/Flagsmith/flagsmith/commit/660f4dc9da4edaf162a4b311fc34ab87dd3d100d))
+
+## [2.288.0](https://github.com/Flagsmith/flagsmith/compare/v2.287.0...v2.288.0) (2026-10-28)
+
+
+### Features
+
+* **Dependencies:** Add the API calls for staging changes in a change request ([#8718](https://github.com/Flagsmith/flagsmith/issues/8718)) ([965c27d](https://github.com/Flagsmith/flagsmith/commit/965c27d124dd3bfa977cc436ee6b7812e5293319))
+* **Dependencies:** Keep the staged changes footer in view ([#8717](https://github.com/Flagsmith/flagsmith/issues/8717)) ([e5bbe9f](https://github.com/Flagsmith/flagsmith/commit/e5bbe9fefedbfbf7c88513f84e29002b06760b0b))
+* **Dependencies:** Show a change request's dependency changes ([#8716](https://github.com/Flagsmith/flagsmith/issues/8716)) ([7578fbf](https://github.com/Flagsmith/flagsmith/commit/7578fbf1f73d8e8b3168360b8023210421e564c3))
+* **Dependencies:** Show dependency changes pending in change requests ([#8783](https://github.com/Flagsmith/flagsmith/issues/8783)) ([d031dbe](https://github.com/Flagsmith/flagsmith/commit/d031dbe740f99e723ecbd7d97b219cc72111606c))
+* **Dependencies:** Stage dependency changes in a change request ([#8715](https://github.com/Flagsmith/flagsmith/issues/8715)) ([910ff3f](https://github.com/Flagsmith/flagsmith/commit/910ff3f5f0b770b7c7d972c2d4958b577d5b2447))
+* **experimentation:** add a PostgreSQL warehouse dialect ([#8841](https://github.com/Flagsmith/flagsmith/issues/8841)) ([1c5983e](https://github.com/Flagsmith/flagsmith/commit/1c5983e42681d79decb19d7f199e98c5673d3d03))
+* **Support:** Add an endpoint that issues HubSpot chat visitor tokens ([#8813](https://github.com/Flagsmith/flagsmith/issues/8813)) ([f4735b6](https://github.com/Flagsmith/flagsmith/commit/f4735b64807f742f81ece1f18e715d3044e2e222))
+* **Support:** Identify logged-in users in HubSpot chat ([#8814](https://github.com/Flagsmith/flagsmith/issues/8814)) ([3de69a9](https://github.com/Flagsmith/flagsmith/commit/3de69a9bfc10243ca3fb612825c5487a0d509094))
+* **Support:** Move in-app chat to HubSpot behind a feature flag ([#8710](https://github.com/Flagsmith/flagsmith/issues/8710)) ([b593df0](https://github.com/Flagsmith/flagsmith/commit/b593df0288b55bc4934e238233d51d0a2213d1fe))
+
+
+### Bug Fixes
+
+* **Billing:** Contact Sales opens the sales form instead of support chat ([#8711](https://github.com/Flagsmith/flagsmith/issues/8711)) ([eea9b7f](https://github.com/Flagsmith/flagsmith/commit/eea9b7f27b9d2f7d67a80b1b79001c593b2c8cd6))
+* land on experiments list when switching environment from an experiment ([#8790](https://github.com/Flagsmith/flagsmith/issues/8790)) ([6c4ef63](https://github.com/Flagsmith/flagsmith/commit/6c4ef63d629a435ead046a3bacf68d292f144a40))
+
 ## [2.287.0](https://github.com/Flagsmith/flagsmith/compare/v2.286.0...v2.287.0) (2026-10-16)
 
 

@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import pytest
 
 from environments.models import Environment
@@ -58,10 +60,21 @@ def test_create__soft_deleted_exists__creates_new_record(
     assert connection.name == f"Flagsmith Warehouse - {environment.name}"
 
 
-def test_create__valid_data__name_uses_warehouse_type_label(
+@pytest.mark.parametrize(
+    "environment_name, expected_name",
+    [
+        ("Production", "Flagsmith Warehouse - Production"),
+        ("e" * 300, f"Flagsmith Warehouse - {'e' * 233}"),
+    ],
+    ids=["short", "truncated-to-max-length"],
+)
+def test_create__environment_name__name_uses_warehouse_type_label(
     environment: Environment,
+    environment_name: str,
+    expected_name: str,
 ) -> None:
     # Given
+    environment.name = environment_name
     serializer = WarehouseConnectionSerializer(
         data={"warehouse_type": "flagsmith"},
     )
@@ -71,8 +84,7 @@ def test_create__valid_data__name_uses_warehouse_type_label(
     connection = serializer.save(environment=environment)
 
     # Then
-    assert connection.name.startswith("Flagsmith Warehouse")
-    assert environment.name in connection.name
+    assert connection.name == expected_name
 
 
 def test_create__snowflake_minimal_config__applies_defaults(
@@ -143,6 +155,7 @@ def test_warehouse_serializer__event_stats_attached__serializes_counts() -> None
     connection.event_stats = WarehouseEventStats(
         total_events_received=7,
         unique_events_count=2,
+        last_event_at=datetime(2026, 10, 12, 13, 23, 52, tzinfo=timezone.utc),
     )
 
     # When
@@ -151,6 +164,9 @@ def test_warehouse_serializer__event_stats_attached__serializes_counts() -> None
     # Then
     assert data["total_events_received"] == 7
     assert data["unique_events_count"] == 2
+    assert data["last_event_received_at"] == datetime(
+        2026, 10, 12, 13, 23, 52, tzinfo=timezone.utc
+    )
 
 
 def test_create__flagsmith_with_credentials__raises_type_neutral_error() -> None:

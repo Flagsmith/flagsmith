@@ -287,7 +287,7 @@ paths:
           schema:
             type: string
             maxLength: 256
-            minLength: 1
+            minLength: 3
       responses:
         '200':
           description: ''
@@ -1244,6 +1244,26 @@ paths:
       operationId: api_v1_auth_users_me_destroy
       responses:
         '204':
+          description: No response body
+      security:
+        - tokenAuth: []
+        - Master API Key: []
+      tags:
+        - Authentication
+  /api/v1/auth/users/me/hubspot-chat-token/:
+    get:
+      operationId: api_v1_auth_users_me_hubspot_chat_token_retrieve
+      description: Return a token that identifies the user to the HubSpot chat widget.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HubspotChatTokenResponse'
+        '404':
+          description: No response body
+        '502':
           description: No response body
       security:
         - tokenAuth: []
@@ -8443,6 +8463,45 @@ paths:
         - Master API Key: []
       tags:
         - Environments
+  /api/v1/events/:
+    post:
+      operationId: api_v1_events_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SDKExperimentationEventBatch'
+      responses:
+        '202':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SDKEventBatchResult'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SDKEventBatchResult'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+        '413':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+      security:
+        - Environment API Key: []
+      tags:
+        - Other
   '/api/v1/feature-health/{path}':
     post:
       operationId: api_v1_feature_health_create
@@ -9734,7 +9793,7 @@ paths:
           schema:
             type: string
             maxLength: 256
-            minLength: 1
+            minLength: 3
       responses:
         '200':
           description: ''
@@ -14887,7 +14946,7 @@ paths:
           schema:
             type: string
             maxLength: 256
-            minLength: 1
+            minLength: 3
       responses:
         '200':
           description: ''
@@ -22983,6 +23042,17 @@ components:
           maxLength: 200
       required:
         - api_key
+    HubspotChatTokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        email:
+          type: string
+          format: email
+      required:
+        - email
+        - token
     IdentifierOnlyIdentity:
       type: object
       properties:
@@ -27062,6 +27132,12 @@ components:
             - integer
             - 'null'
           readOnly: true
+        last_event_received_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          readOnly: true
     PatchedWebhook:
       type: object
       properties:
@@ -28142,6 +28218,77 @@ components:
         - identity
         - trait_key
         - trait_value
+    SDKEventBatchResult:
+      type: object
+      properties:
+        accepted:
+          type: integer
+          title: Accepted
+        rejected:
+          type: array
+          items:
+            $ref: '#/components/schemas/SDKEventBatchResultRejectedSDKEvent'
+          title: Rejected
+      required:
+        - accepted
+        - rejected
+      title: SDKEventBatchResult
+    SDKEventBatchResultRejectedSDKEvent:
+      type: object
+      properties:
+        index:
+          type: integer
+          title: Index
+        error:
+          type: string
+          title: Error
+      required:
+        - index
+        - error
+      title: RejectedSDKEvent
+    SDKExperimentationEvent:
+      type: object
+      properties:
+        event:
+          type: string
+          maxLength: 256
+        feature_name:
+          type:
+            - string
+            - 'null'
+          maxLength: 2000
+        identifier:
+          type:
+            - string
+            - 'null'
+          maxLength: 2000
+        timestamp:
+          type: integer
+        value:
+          oneOf:
+            - {}
+            - type: 'null'
+        traits:
+          type:
+            - object
+            - 'null'
+          additionalProperties: {}
+        metadata:
+          oneOf:
+            - {}
+            - type: 'null'
+      required:
+        - event
+        - timestamp
+    SDKExperimentationEventBatch:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/SDKExperimentationEvent'
+      required:
+        - events
     SamlAttributeMapping:
       type: object
       properties:
@@ -30333,6 +30480,12 @@ components:
             - integer
             - 'null'
           readOnly: true
+        last_event_received_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          readOnly: true
       required:
         - warehouse_type
     WarehouseConnectionStatusEnum:
@@ -30391,12 +30544,14 @@ components:
         * `snowflake` - Snowflake
         * `clickhouse` - ClickHouse
         * `databricks` - Databricks
+        * `postgres` - PostgreSQL
       type: string
       enum:
         - flagsmith
         - snowflake
         - clickhouse
         - databricks
+        - postgres
     Webhook:
       type: object
       properties:

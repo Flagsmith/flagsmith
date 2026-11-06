@@ -23,7 +23,8 @@ EVENT_NAMES_SQL = (
     "GROUP BY event ORDER BY max(timestamp) DESC LIMIT %(limit)s"
 )
 EVENT_STATS_SQL = (
-    "SELECT count() AS total, uniqExact(event) AS unique "
+    "SELECT count() AS total, uniqExact(event) AS unique, "
+    "toTimeZone(max(timestamp), 'UTC') AS last_event_at "
     "FROM events WHERE environment_key = %(environment_key)s"
 )
 
@@ -31,8 +32,8 @@ EXPOSURES_CTE_SQL = """
 WITH exposures AS (
     SELECT
         identifier,
-        if(uniqExact(value) > 1, '', any(value)) AS variant,
-        uniqExact(value) > 1 AS quarantined,
+        CASE WHEN uniqExact(coalesce(value, '')) > 1 THEN '' ELSE any(coalesce(value, '')) END AS variant,
+        uniqExact(coalesce(value, '')) > 1 AS quarantined,
         min(timestamp) AS first_exposure
     FROM events
     WHERE environment_key = %(environment_key)s

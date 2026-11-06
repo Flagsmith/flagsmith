@@ -478,13 +478,7 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
     controlValue < 0
   const isVersionedChangeRequest = existingChangeRequest && isVersioned
   const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
-  // Where change requests are enforced, the tab also needs its own flag, so the
-  // change request flow can roll out separately.
-  const isDependenciesTabEnabled =
-    Utils.getFlagsmithHasFeature('flag_dependencies') &&
-    !existingChangeRequest &&
-    (!is4Eyes ||
-      Utils.getFlagsmithHasFeature('flag_dependencies_change_requests'))
+  const isDependenciesTabEnabled = !existingChangeRequest
 
   let regexValid = true
   try {

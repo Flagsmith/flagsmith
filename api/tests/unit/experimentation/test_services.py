@@ -195,15 +195,6 @@ def test_get_warehouse_event_names__flagsmith_connection__returns_capped_names(
     assert result == expected
     mock_client.disconnect.assert_called_once_with()
 
-    # When — the result is cached, so a second request doesn't hit the warehouse
-    second_result = services.get_warehouse_event_names(
-        warehouse_connection, "env-key-123"
-    )
-
-    # Then
-    mock_client.execute.assert_called_once()
-    assert second_result == expected
-
 
 @pytest.mark.parametrize(
     "clickhouse_url, execute_side_effect",
@@ -618,18 +609,25 @@ def test_build_exposures_summary__no_buckets__empty_summary() -> None:
 
 
 @pytest.mark.parametrize(
-    "rows, expected_total, expected_unique",
+    "rows, expected_total, expected_unique, expected_last_event_at",
     [
-        ([(42, 3)], 42, 3),
-        ([], 0, 0),
+        (
+            [(42, 3, datetime(2026, 10, 12, 13, 0))],
+            42,
+            3,
+            datetime(2026, 10, 12, 13, 0, tzinfo=timezone.utc),
+        ),
+        ([(0, 0, datetime(1970, 1, 1))], 0, 0, None),
+        ([], 0, 0, None),
     ],
-    ids=["events_present", "empty_result_set"],
+    ids=["events_present", "no_events", "empty_result_set"],
 )
 def test_get_warehouse_event_stats__rows__returns_counts(
     mocker: MockerFixture,
-    rows: list[tuple[int, int]],
+    rows: list[tuple[int, int, datetime]],
     expected_total: int,
     expected_unique: int,
+    expected_last_event_at: datetime | None,
 ) -> None:
     # Given
     mock_client = mocker.Mock()
@@ -645,6 +643,7 @@ def test_get_warehouse_event_stats__rows__returns_counts(
     # Then
     assert result.total_events_received == expected_total
     assert result.unique_events_count == expected_unique
+    assert result.last_event_at == expected_last_event_at
     mock_client.disconnect.assert_called_once_with()
 
 
@@ -2750,8 +2749,12 @@ def test_verify_warehouse_connection__internal_host_on_saas__sets_errored_withou
     "query_result, expected_stats",
     [
         (
-            [(42, 7)],
-            WarehouseEventStats(total_events_received=42, unique_events_count=7),
+            [(42, 7, datetime(2026, 10, 12, 13, 0, tzinfo=timezone.utc))],
+            WarehouseEventStats(
+                total_events_received=42,
+                unique_events_count=7,
+                last_event_at=datetime(2026, 10, 12, 13, 0, tzinfo=timezone.utc),
+            ),
         ),
         (Exception("connection refused"), None),
     ],
@@ -2760,7 +2763,7 @@ def test_verify_warehouse_connection__internal_host_on_saas__sets_errored_withou
 def test_annotate_warehouse_event_stats__clickhouse_connection__queries_customer_instance(
     clickhouse_connection: WarehouseConnection,
     reset_cache: None,
-    query_result: Exception | list[tuple[int, int]],
+    query_result: Exception | list[tuple[int, int, datetime]],
     expected_stats: WarehouseEventStats | None,
     log: StructuredLogCapture,
     mocker: MockerFixture,
@@ -4021,10 +4024,19 @@ def test_annotate_warehouse_delivery_statuses__unverified_external_connection__k
     assert clickhouse_connection.status_detail == "Could not connect to the host."
 
 
-def test_annotate_warehouse_delivery_statuses__flagsmith_warehouse__stays_connected(
-    warehouse_connection: WarehouseConnection,
+@pytest.mark.parametrize(
+    "connection_fixture",
+    ["warehouse_connection", "flagsmith_database_connection"],
+    ids=["flagsmith-warehouse", "flagsmith-database"],
+)
+def test_annotate_warehouse_delivery_statuses__connection_not_delivered_by_service__stays_connected(
+    request: pytest.FixtureRequest,
+    connection_fixture: str,
 ) -> None:
-    # Given a Flagsmith connection, which the delivery service never handles
+    # Given
+    warehouse_connection: WarehouseConnection = request.getfixturevalue(
+        connection_fixture
+    )
     warehouse_connection.status = WarehouseConnectionStatus.CONNECTED
     WarehouseDeliveryStatus.objects.create(
         connection=warehouse_connection,

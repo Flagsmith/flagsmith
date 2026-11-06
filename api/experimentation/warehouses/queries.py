@@ -1,5 +1,6 @@
 import typing
 from collections.abc import Callable
+from datetime import timezone
 from typing import Any, NamedTuple
 
 from experimentation.dataclasses import (
@@ -35,7 +36,7 @@ QueryRunner = Callable[[str, dict[str, object]], QueryResult]
 
 def event_names_query(dialect: "Dialect") -> str:
     return (
-        "SELECT event FROM events "
+        f"SELECT event FROM {dialect.events_table_name} "
         f"WHERE environment_key = {dialect.param('environment_key')} "
         f"GROUP BY event ORDER BY max(timestamp) DESC LIMIT {dialect.param('limit')}"
     )
@@ -44,8 +45,9 @@ def event_names_query(dialect: "Dialect") -> str:
 def event_stats_query(dialect: "Dialect") -> str:
     return (
         f"SELECT {dialect.count_all()} AS total, "
-        f"{dialect.count_distinct('event')} AS unique "
-        f"FROM events WHERE environment_key = {dialect.param('environment_key')}"
+        f"{dialect.count_distinct('event')} AS unique, "
+        f"{dialect.max_utc('timestamp')} AS last_event_at "
+        f"FROM {dialect.events_table_name} WHERE environment_key = {dialect.param('environment_key')}"
     )
 
 
@@ -66,10 +68,14 @@ def build_event_names(rows: "Sequence[Sequence[Any]]") -> WarehouseEventNames:
 
 
 def build_event_stats(rows: "Sequence[Sequence[Any]]") -> WarehouseEventStats:
-    total, unique = rows[0] if rows else (0, 0)
+    total, unique, last_event_at = rows[0] if rows else (0, 0, None)
+    if last_event_at is not None and last_event_at.tzinfo is None:
+        last_event_at = last_event_at.replace(tzinfo=timezone.utc)
     return WarehouseEventStats(
         total_events_received=int(total),
         unique_events_count=int(unique),
+        # ClickHouse answers max() over no rows with the epoch, not NULL.
+        last_event_at=last_event_at if total else None,
     )
 
 

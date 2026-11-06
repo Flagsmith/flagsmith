@@ -1,5 +1,7 @@
 import { FC } from 'react'
+import IconButton from 'components/base/IconButton'
 import {
+  PostgresConfig,
   WarehouseConnection,
   WarehouseConnectionStatus,
   WarehouseType,
@@ -8,6 +10,7 @@ import ColorSwatch from 'components/ColorSwatch'
 import Tooltip from 'components/Tooltip'
 import Icon from 'components/icons/Icon'
 import Button from 'components/base/forms/Button'
+import Utils from 'common/utils/utils'
 import WarehouseEventCodeHelp from './WarehouseEventCodeHelp'
 import WarehouseSetupSqlHelp from './WarehouseSetupSqlHelp'
 import { CLICKHOUSE_DEFAULTS } from './clickhouseConfig'
@@ -19,7 +22,15 @@ import {
   DATABRICKS_SETUP_SQL_LABEL,
   getDatabricksSetupSql,
 } from './databricksSetupSql'
+import {
+  getPostgresSetupSql,
+  POSTGRES_SETUP_SQL_LABEL,
+} from './postgresSetupSql'
 import WarehouseStats from './WarehouseStats'
+import {
+  isFlagsmithDatabaseConnection,
+  shouldShowSendFirstEvent,
+} from './warehouseTypes'
 
 type WarehouseConnectionCardProps = {
   connection: WarehouseConnection
@@ -48,7 +59,16 @@ const STATUS_LABEL: Record<WarehouseConnectionStatus, string> = {
 const TYPE_LABEL: Partial<Record<WarehouseType, string>> = {
   clickhouse: 'ClickHouse',
   databricks: 'Databricks',
+  postgres: 'PostgreSQL',
   snowflake: 'Snowflake',
+}
+
+const getTypeLabel = (connection: WarehouseConnection): string | null => {
+  if (isFlagsmithDatabaseConnection(connection)) {
+    return 'Flagsmith database (PostgreSQL)'
+  }
+  if (connection.warehouse_type === 'flagsmith') return null
+  return TYPE_LABEL[connection.warehouse_type] ?? connection.warehouse_type
 }
 
 const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
@@ -60,23 +80,13 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
   onSendTestEvent,
   onTestConnection,
 }) => {
-  const typeLabel =
-    connection.warehouse_type !== 'flagsmith'
-      ? TYPE_LABEL[connection.warehouse_type] ?? connection.warehouse_type
-      : null
+  const typeLabel = getTypeLabel(connection)
 
-  const isFlagsmith = connection.warehouse_type === 'flagsmith'
-  const isPending = connection.status === 'pending_connection'
   const isConnected = connection.status === 'connected'
-  const isCustomerWarehouse =
-    connection.warehouse_type === 'clickhouse' ||
-    connection.warehouse_type === 'databricks'
-  // ClickHouse and Databricks connections are born connected, so the
-  // first-event nudge stays until events actually arrive in the customer's
-  // warehouse.
-  const showSendFirstEvent = isFlagsmith
-    ? !isPending && !isConnected
-    : isCustomerWarehouse && !connection.total_events_received
+  const showSendFirstEvent = shouldShowSendFirstEvent(
+    connection,
+    !!Utils.isSaas(),
+  )
 
   const handleDelete = () => {
     openConfirm({
@@ -125,29 +135,31 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
         </div>
         <div className='d-flex flex-row align-items-center gap-2'>
           {onEdit && (
-            <Button
+            <IconButton
+              variant='secondary'
+              size='small'
+              aria-label='Edit connection'
               id='warehouse-connection-edit'
-              size='xSmall'
-              className='btn btn-with-icon'
               onClick={onEdit}
             >
-              <Icon name='edit' width={16} fill='#656D7B' />
-            </Button>
+              <Icon width={16} name='edit' />
+            </IconButton>
           )}
-          <Button
+          <IconButton
+            variant='secondary'
+            size='small'
+            aria-label='Delete connection'
             id='warehouse-connection-delete'
-            size='xSmall'
-            className='btn btn-with-icon'
             onClick={handleDelete}
           >
-            <Icon name='trash-2' width={16} fill='#656D7B' />
-          </Button>
+            <Icon width={16} name='trash-2' />
+          </IconButton>
         </div>
       </div>
       <hr className='my-4' />
       <WarehouseStats
         errored={connection.status === 'errored'}
-        lastEventReceived='-'
+        lastEventReceivedAt={connection.last_event_received_at}
         loading={isLoadingStats}
         totalEventsReceived={connection.total_events_received}
         uniqueEventsCount={connection.unique_events_count}
@@ -162,7 +174,9 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
           </span>
         </div>
       )}
-      <WarehouseEventCodeHelp />
+      <WarehouseEventCodeHelp
+        isFlagsmithDatabase={isFlagsmithDatabaseConnection(connection)}
+      />
       {connection.warehouse_type === 'clickhouse' && (
         <div className='mt-3'>
           <WarehouseSetupSqlHelp
@@ -185,6 +199,17 @@ const WarehouseConnectionCard: FC<WarehouseConnectionCardProps> = ({
                 catalog: connection.config.catalog,
                 schema: connection.config.schema,
               })}
+            />
+          </div>
+        )}
+      {connection.warehouse_type === 'postgres' &&
+        !isFlagsmithDatabaseConnection(connection) && (
+          <div className='mt-3'>
+            <WarehouseSetupSqlHelp
+              label={POSTGRES_SETUP_SQL_LABEL}
+              sql={getPostgresSetupSql(
+                (connection.config as PostgresConfig).schema,
+              )}
             />
           </div>
         )}

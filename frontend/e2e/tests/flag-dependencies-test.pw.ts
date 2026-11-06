@@ -1,7 +1,6 @@
 import { test, expect } from '../test-setup'
 import {
   createHelpers,
-  getFlagsmith,
   log,
   LONG_TIMEOUT,
   visualSnapshot,
@@ -26,12 +25,6 @@ test.describe('Flag Dependencies', () => {
       toggleFeature,
       waitForModalToClose,
     } = createHelpers(page)
-
-    const flagsmith = await getFlagsmith()
-    test.skip(
-      !flagsmith.hasFeature('flag_dependencies'),
-      'flag_dependencies is off, so the Dependencies tab is unreachable',
-    )
 
     await page.goto('/login', { waitUntil: 'domcontentloaded' })
     await page.waitForSelector('[name="email"]', { state: 'visible' })

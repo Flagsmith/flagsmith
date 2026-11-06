@@ -28,17 +28,20 @@ from experimentation.warehouses.dialect import Dialect
 
 def exposures_cte(dialect: Dialect) -> str:
     """Events are delivered at-least-once, so dedup keeps duplicates from
-    inflating counts. Shared by the exposures, results and conversions queries."""
+    inflating counts. Shared by the exposures, results and conversions queries.
+
+    A NULL value counts as '', so it quarantines like any other distinct value."""
     p = dialect.param
-    distinct_values = dialect.count_distinct("value")
+    value = "coalesce(value, '')"
+    distinct_values = dialect.count_distinct(value)
     return f"""
 WITH exposures AS (
     SELECT
         identifier,
-        if({distinct_values} > 1, '', {dialect.any_value("value")}) AS variant,
+        CASE WHEN {distinct_values} > 1 THEN '' ELSE {dialect.any_value(value)} END AS variant,
         {dialect.bool_to_number(f"{distinct_values} > 1")} AS quarantined,
         min(timestamp) AS first_exposure
-    FROM events
+    FROM {dialect.events_table_name}
     WHERE environment_key = {p("environment_key")}
         AND event = {p("exposure_event")}
         AND feature_name = {p("feature_name")}
@@ -71,7 +74,7 @@ def _metric_join(dialect: Dialect, events_param: str, events: Sequence[str]) -> 
     the bound list of event names, so a query can join only the events it
     aggregates."""
     p = dialect.param
-    return f"""    LEFT JOIN events AS m
+    return f"""    LEFT JOIN {dialect.events_table_name} AS m
         ON m.identifier = e.identifier
         AND m.environment_key = {p("environment_key")}
         AND {dialect.in_list("m.event", events_param, len(events))}
