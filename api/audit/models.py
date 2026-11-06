@@ -17,6 +17,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 
 from api_keys.models import MasterAPIKey
 from audit.related_object_type import RelatedObjectType
+from organisations.models import Organisation
 from projects.models import Project
 
 if typing.TYPE_CHECKING:
@@ -28,6 +29,9 @@ RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 class AuditLog(LifecycleModel):  # type: ignore[misc]
     created_date = models.DateTimeField("DateCreated")  # type: ignore[var-annotated]
 
+    organisation_id = models.IntegerField[int | None, int | None](
+        null=True, db_index=True
+    )
     project = models.ForeignKey(  # type: ignore[var-annotated]
         Project, related_name="audit_logs", null=True, on_delete=models.DO_NOTHING
     )
@@ -85,8 +89,9 @@ class AuditLog(LifecycleModel):  # type: ignore[misc]
 
     @property
     def organisation(self) -> "Organisation | None":
-        # TODO properly implement organisation relation
-        # maybe the relation list should not be _that_ exhaustive...
+        if self.organisation_id is not None:
+            return Organisation.objects.get(id=self.organisation_id)  # type: ignore[no-any-return]
+
         for relation in (
             "project",
             "environment",
