@@ -2,6 +2,7 @@ import pytest
 from flag_engine.segments.constants import EQUAL
 from pytest_django import DjangoAssertNumQueries
 from pytest_lazy_fixtures import lf as lazy_fixture
+from pytest_mock import MockerFixture
 
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
@@ -16,6 +17,7 @@ from evaluation.mappers import (
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from features.versioning import versioning_service
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from util.engine_models.features.models import (
@@ -321,6 +323,32 @@ def test_map_environment_to_evaluation_context__no_identity__returns_environment
         },
         "features": {},
     }
+
+
+def test_map_environment_to_evaluation_context__segment_not_given__skips_reading_its_overrides(
+    environment: Environment,
+    feature_state: FeatureState,
+    segment_featurestate: FeatureState,
+    another_segment: Segment,
+    another_segment_featurestate: FeatureState,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    get_environment_flags_list_spy = mocker.spy(
+        versioning_service, "get_environment_flags_list"
+    )
+
+    # When
+    context = map_environment_to_evaluation_context(
+        environment=environment,
+        segments=[another_segment],
+    )
+
+    # Then
+    assert {
+        feature_state.pk for feature_state in get_environment_flags_list_spy.spy_return
+    } == {feature_state.pk, another_segment_featurestate.pk}
+    assert list(context.get("segments", {})) == [str(another_segment.pk)]
 
 
 @pytest.fixture()
