@@ -14,8 +14,7 @@ Experimentation is in beta.
 Flagsmith writes experiment events to a table in your PostgreSQL database and computes experiment results by querying it
 there. Each environment has one [warehouse connection](/experimentation/connect-a-warehouse).
 
-PostgreSQL suits low to moderate event volumes. See [Performance and table growth](#performance-and-table-growth) before
-choosing it for a high-traffic environment.
+Results queries slow down as the events table grows. See [Performance and table growth](#performance-and-table-growth).
 
 ## Before you start
 
@@ -93,8 +92,8 @@ Flagsmith doesn't create or alter the table, so keep exactly these columns and t
 
 ### Change the password
 
-Edit the connection, enter the new password, click **Test connection**, then click **Save changes**. Leaving the
-password blank keeps the current one.
+Change the user's password on your server first. Then edit the connection, enter the new password, click **Test
+connection**, then click **Save changes**. Leaving the password blank keeps the current one.
 
 ### Change server
 
@@ -102,7 +101,7 @@ The host can't be changed. To use a different PostgreSQL database, disconnect an
 
 ## Performance and table growth
 
-Results queries scan the events table, so they slow down as it grows. For high event volumes, use
+Results queries scan the events table, so they slow down as it grows. If results become too slow, use
 [ClickHouse](/experimentation/connect-a-warehouse#bring-your-own-clickhouse) or
 [Databricks](/experimentation/connect-databricks), which are built for this kind of query.
 
@@ -113,18 +112,18 @@ Flagsmith doesn't delete old events or partition the table. Monitor its size and
 Errors show under a form field, below **Test connection**, or on the connection card with status **Errored** when event
 delivery fails.
 
-| Message                                                                            | Where      | What to do                                                                                                                                      |
-| ---------------------------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Enter a hostname or IP address, without a scheme or port.                          | Form       | Remove any scheme (`postgresql://`), path, user or port from **Host**.                                                                          |
-| Port must be a number between 1 and 65535.                                         | Form       | Fix **Port**.                                                                                                                                   |
-| Use lowercase letters, numbers and underscores, not starting with a number.        | Form       | Fix **Schema**, and use the same name in the setup SQL.                                                                                         |
-| Host must not target internal or private network addresses.                        | Test, card | On Flagsmith Cloud, use a host with a public address.                                                                                           |
-| Authentication failed.                                                             | Test, card | Check **Username** and **Password**, and that your server's `pg_hba.conf` or firewall rules allow the connection.                               |
-| Database does not exist.                                                           | Test, card | Check **Database**.                                                                                                                             |
-| Events table not found in the configured database. Run the setup SQL to create it. | Test, card | Run the script in [step 1](#1-create-the-events-table-and-user) with the same schema as the connection.                                         |
-| Permission denied on the events table. The user needs SELECT and INSERT on it.     | Test, card | Run the `GRANT` statements in step 1 again for the connection's user.                                                                           |
-| The events table's columns don't match the setup SQL.                              | Test, card | Make the table's columns and types match step 1 exactly.                                                                                        |
-| The query timed out.                                                               | Test, card | Check the server's load. If the events table is large, see [Performance and table growth](#performance-and-table-growth).                       |
-| Could not connect to the host.                                                     | Test, card | Check **Host** and **Port**, that the server accepts connections from Flagsmith and, with **Secure connection (TLS)** on, that it supports SSL. |
-| The PostgreSQL server rejected the request.                                        | Test, card | Check the server's logs for the rejected connection or query.                                                                                   |
-| Connection failed.                                                                 | Test, card | [Contact support](/support/).                                                                                                                   |
+| Message                                                                            | Where      | What to do                                                                                                                                                                                   |
+| ---------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Enter a hostname or IP address, without a scheme or port.                          | Form       | Remove any scheme (`postgresql://`), path, user or port from **Host**.                                                                                                                       |
+| Port must be a number between 1 and 65535.                                         | Form       | Fix **Port**.                                                                                                                                                                                |
+| Use lowercase letters, numbers and underscores, not starting with a number.        | Form       | Fix **Schema**, and use the same name in the setup SQL.                                                                                                                                      |
+| Host must not target internal or private network addresses.                        | Test, card | On Flagsmith Cloud, use a host with a public address.                                                                                                                                        |
+| Authentication failed.                                                             | Test, card | Check **Username** and **Password**, and that your server's `pg_hba.conf` or firewall rules allow the connection.                                                                            |
+| Database does not exist.                                                           | Test, card | Check **Database**.                                                                                                                                                                          |
+| Events table not found in the configured database. Run the setup SQL to create it. | Test, card | Run the script in [step 1](#1-create-the-events-table-and-user) with the same schema as the connection.                                                                                      |
+| Permission denied on the events table. The user needs SELECT and INSERT on it.     | Test, card | Run the `GRANT` statements in step 1 again for the connection's user.                                                                                                                        |
+| The events table's columns don't match the setup SQL.                              | Test, card | Make the table's columns and types match step 1 exactly.                                                                                                                                     |
+| The query timed out.                                                               | Test, card | Check the server's load. If the events table is large, see [Performance and table growth](#performance-and-table-growth).                                                                    |
+| Could not connect to the host.                                                     | Test, card | Check **Host** and **Port**, that the server accepts connections from Flagsmith, that the user has `CONNECT` on the database and, with **Secure connection (TLS)** on, that it supports SSL. |
+| The PostgreSQL server rejected the request.                                        | Test, card | Check the server's logs for the rejected connection or query.                                                                                                                                |
+| Connection failed.                                                                 | Test, card | [Contact support](/support/).                                                                                                                                                                |

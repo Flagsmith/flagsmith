@@ -108,8 +108,7 @@ You can also store experiment events in your own **Databricks** workspace, and F
 ## Bring your own PostgreSQL
 
 You can store experiment events in your own **PostgreSQL** database, or a PostgreSQL-compatible service, and Flagsmith
-computes results there. It suits low to moderate event volumes. See
-[Connect PostgreSQL](/experimentation/connect-postgresql) for setup and troubleshooting.
+computes results there. See [Connect PostgreSQL](/experimentation/connect-postgresql) for setup and troubleshooting.
 
 ## Coming soon
 
