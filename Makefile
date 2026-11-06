@@ -18,13 +18,10 @@ lint:
 	$(MAKE) -C docs lint
 	$(MAKE) -C frontend lint
 
-# Run `make docker-up flags-only=1` to run Flagsmith without experimentation.
-compose-file = $(if $(flags-only),docker-compose.flags-only.yml,docker-compose.yml)
-
 .PHONY: docker-up
 docker-up:
-	docker compose -f $(compose-file) up -d
+	docker compose up -d
 
 .PHONY: docker-down
 docker-down:
-	docker compose -f $(compose-file) down
+	docker compose down
