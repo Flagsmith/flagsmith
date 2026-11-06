@@ -21,6 +21,15 @@ can store experiment events in two ways: in the [Flagsmith database](#flagsmith-
 Set `EXPERIMENTATION_ENABLED=true` on the Flagsmith API. The **Warehouse** tab doesn't appear without it. See
 [environment variables](/deployment-self-hosting/core-configuration/environment-variables).
 
+With the [Helm chart](/deployment-self-hosting/hosting-guides/kubernetes-openshift), and only the Flagsmith database,
+set it on the API without enabling the chart's experimentation services:
+
+```yaml
+api:
+ extraEnv:
+  EXPERIMENTATION_ENABLED: 'true'
+```
+
 ## Flagsmith database
 
 :::warning
