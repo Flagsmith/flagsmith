@@ -26,7 +26,7 @@ export const getPostgresOnboardingSql = (): string => {
 ${getPostgresSetupSql(schema)}
 
 -- Create a dedicated user for Flagsmith
-CREATE USER <USER> PASSWORD '<CHANGE_ME_PASSWORD>';
+CREATE USER <USER> PASSWORD '<YOUR_PASSWORD>';
 
 -- Allow it to read and write experiment events
 GRANT USAGE ON SCHEMA ${schema} TO <USER>;

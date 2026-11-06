@@ -2,8 +2,7 @@
 title: Connect a Warehouse
 sidebar_label: Connect a Warehouse
 sidebar_position: 2
-description:
- Choose where experiment events are stored, the managed Flagsmith warehouse or your own ClickHouse or Databricks.
+description: Choose where experiment events are stored, from the managed Flagsmith warehouse to your own database.
 ---
 
 import CodeBlock from '@theme/CodeBlock'; import eventsSql from '../../../experimentation/clickhouse/events.sql?raw';
@@ -19,15 +18,14 @@ warehouse connection, and it must be in place before you can create experiments.
 
 :::note Self-hosted
 
-The managed Flagsmith warehouse is only available on Flagsmith Cloud. When self-hosting, connect your own warehouse as
-described below, and deploy event ingestion and warehouse delivery, for example with the
-[Helm chart](/deployment-self-hosting/hosting-guides/kubernetes-openshift#experimentation).
+The managed Flagsmith warehouse is only available on Flagsmith Cloud. When self-hosting, see
+[Self-Hosting and Open Source](/experimentation/self-hosting).
 
 :::
 
 :::note Plans
 
-On Flagsmith Cloud, connecting your own ClickHouse or Databricks requires a
+On Flagsmith Cloud, connecting your own ClickHouse, Databricks or PostgreSQL requires a
 [Scale-Up or Enterprise subscription](https://www.flagsmith.com/pricing). Self-hosted Flagsmith has no plan restriction.
 
 :::
@@ -36,7 +34,7 @@ On Flagsmith Cloud, connecting your own ClickHouse or Databricks requires a
 
 The **Flagsmith** warehouse is managed and hosted by Flagsmith. There is nothing to provision or configure.
 
-1. Go to **Environment Settings > Warehouse**.
+1. Go to **Environment Settings › Warehouse**.
 2. Select **Flagsmith** and click **Enable**, then confirm.
 
 ![The Warehouse tab with the Flagsmith managed warehouse selected](/img/experimentation/warehouse-tab.png)
@@ -56,17 +54,16 @@ Warehouse tab open.
 Once connected, the warehouse card shows the total number of events received and the number of unique event names, which
 is useful to verify that instrumentation data is arriving.
 
-<!-- Screenshot: connected warehouse card with event stats -->
-
 ### Connection statuses
 
-The current status is shown on the warehouse card in **Environment Settings > Warehouse**.
+The current status is shown on the warehouse card in **Environment Settings › Warehouse**.
 
 - **Created**: the connection exists but no events have been received yet.
 - **Pending Connection**: waiting for the first event to arrive.
 - **Connected**: events have been received; you are ready to run experiments.
-- **Errored**: the card shows the reason. For Databricks, see
-  [Troubleshooting](/experimentation/connect-databricks#troubleshooting); otherwise [contact support](/support/).
+- **Errored**: the card shows the reason. See Troubleshooting for
+  [Databricks](/experimentation/connect-databricks#troubleshooting) or
+  [PostgreSQL](/experimentation/connect-postgresql#troubleshooting); otherwise [contact support](/support/).
 
 ## Bring your own ClickHouse
 
@@ -75,15 +72,15 @@ be reachable from Flagsmith: on Flagsmith Cloud, over the internet; when self-ho
 warehouse delivery.
 
 1. Configure your instance by running the following against it, using an administrative user (the statements require
-   `CREATE USER`, `GRANT`, `CREATE DATABASE` and `CREATE TABLE` privileges). Replace `<USER>` and `<CHANGE_ME_PASSWORD>`
-   with your own values. This is a one-off setup step; the same SQL is available to copy from the Flagsmith dashboard.
+   `CREATE USER`, `GRANT`, `CREATE DATABASE` and `CREATE TABLE` privileges). Replace `<USER>` and `<YOUR_PASSWORD>` with
+   your own values. This is a one-off setup step; the same SQL is available to copy from the Flagsmith dashboard.
 
    <CodeBlock language="sql">{eventsSql}</CodeBlock>
 
    ```sql
    -- Create a dedicated user for Flagsmith
    CREATE USER IF NOT EXISTS <USER>
-       IDENTIFIED WITH sha256_password BY '<CHANGE_ME_PASSWORD>';
+       IDENTIFIED WITH sha256_password BY '<YOUR_PASSWORD>';
 
    -- Allow it to write and read experiment events
    GRANT SELECT, INSERT ON flagsmith_exp.events TO <USER>;
@@ -92,12 +89,12 @@ warehouse delivery.
    GRANT SHOW TABLES, SHOW COLUMNS ON flagsmith_exp.* TO <USER>;
    ```
 
-2. Go to **Environment Settings > Warehouse**, select **ClickHouse** and enter your connection details: host, HTTPS port
+2. Go to **Environment Settings › Warehouse**, select **ClickHouse** and enter your connection details: host, HTTPS port
    (8443 by default), database (`flagsmith_exp` by default), and the username and password of the user you created in
    step 1.
 3. Click **Test connection**. Once the test succeeds, save the connection.
-4. Click **Send your first event** on the connection card to verify events are arriving in your warehouse; the button
-   disappears once the first event is received.
+4. On Flagsmith Cloud, click **Send your first event** on the connection card to verify events are arriving in your
+   warehouse; the button disappears once the first event is received.
 
 Connections use the ClickHouse HTTP(S) interface, with TLS enabled by default.
 
@@ -107,6 +104,11 @@ Experiment results and exposures are computed from your ClickHouse instance.
 
 You can also store experiment events in your own **Databricks** workspace, and Flagsmith computes results there. See
 [Connect Databricks](/experimentation/connect-databricks) for setup and troubleshooting.
+
+## Bring your own PostgreSQL
+
+You can store experiment events in your own **PostgreSQL** database, or a PostgreSQL-compatible service, and Flagsmith
+computes results there. See [Connect PostgreSQL](/experimentation/connect-postgresql) for setup and troubleshooting.
 
 ## Coming soon
 
