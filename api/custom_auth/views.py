@@ -4,7 +4,6 @@ from typing import Any
 
 from django.conf import settings
 from django.contrib.auth import user_logged_out
-from django.db import transaction
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from djoser.views import TokenCreateView, UserViewSet  # type: ignore[import-untyped]
@@ -18,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.throttling import ScopedRateThrottle
 
-from custom_auth.jwt_cookie.services import authorise_response
+from custom_auth.jwt_cookie.services import authorise_response, blacklist_user_tokens
 from custom_auth.mfa.backends.application import CustomApplicationBackend
 from custom_auth.mfa.trench.command.authenticate_second_factor import (
     authenticate_second_step_command,
@@ -112,8 +111,6 @@ def delete_token(request):  # type: ignore[no-untyped-def]
     name="destroy",
     decorator=extend_schema(parameters=[CustomUserDelete]),
 )
-@method_decorator(name="set_password", decorator=transaction.atomic)
-@method_decorator(name="reset_password_confirm", decorator=transaction.atomic)
 class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
     throttle_scope = "signup"
 
@@ -196,3 +193,23 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
             UserPasswordResetRequest.objects.create(user=user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(["post"], detail=False)
+    def set_password(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user = request.user
+        assert isinstance(user, FFAdminUser)
+        response: Response = super().set_password(request, *args, **kwargs)
+        blacklist_user_tokens(user)
+        return response
+
+    @action(["post"], detail=False)
+    def reset_password_confirm(
+        self, request: Request, *args: Any, **kwargs: Any
+    ) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.user
+        response: Response = super().reset_password_confirm(request, *args, **kwargs)
+        Token.objects.filter(user=user).delete()
+        blacklist_user_tokens(user)
+        return response

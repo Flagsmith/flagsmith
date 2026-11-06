@@ -3,7 +3,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import PBKDF2PasswordHasher, make_password
 from django.contrib.auth.tokens import default_token_generator
 from django.db import DatabaseError
 from django.urls import reverse
@@ -13,7 +13,9 @@ from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import SlidingToken
 
+from custom_auth.jwt_cookie.constants import JWT_SLIDING_COOKIE_KEY
 from users.models import FFAdminUser, HubspotTracker
 
 
@@ -333,6 +335,69 @@ def test_reset_password_confirm__token_auth__revokes_token(
     assert authenticated_client.get(me_url).status_code == status.HTTP_401_UNAUTHORIZED
 
 
+def test_set_password__jwt_cookie_auth__revokes_all_sessions(
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    staff_user.password = make_password("old-password")
+    staff_user.save()
+    current_client = APIClient()
+    current_client.cookies[JWT_SLIDING_COOKIE_KEY] = str(
+        SlidingToken.for_user(staff_user)
+    )
+    other_client = APIClient()
+    other_client.cookies[JWT_SLIDING_COOKIE_KEY] = str(
+        SlidingToken.for_user(staff_user)
+    )
+    url = reverse("api-v1:custom_auth:ffadminuser-set-password")
+
+    # When
+    response = current_client.post(
+        url,
+        data={
+            "current_password": "old-password",
+            "new_password": "new-password-123!",
+            "re_new_password": "new-password-123!",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    projects_url = reverse("api-v1:projects:project-list")
+    assert current_client.get(projects_url).status_code == status.HTTP_401_UNAUTHORIZED
+    assert other_client.get(projects_url).status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_reset_password_confirm__jwt_cookie_auth__revokes_all_sessions(
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    authenticated_client = APIClient()
+    authenticated_client.cookies[JWT_SLIDING_COOKIE_KEY] = str(
+        SlidingToken.for_user(staff_user)
+    )
+    url = reverse("api-v1:custom_auth:ffadminuser-reset-password-confirm")
+
+    # When
+    response = APIClient().post(
+        url,
+        data={
+            "uid": utils.encode_uid(staff_user.pk),
+            "token": default_token_generator.make_token(staff_user),
+            "new_password": "new-password-123!",
+            "re_new_password": "new-password-123!",
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    projects_url = reverse("api-v1:projects:project-list")
+    assert (
+        authenticated_client.get(projects_url).status_code
+        == status.HTTP_401_UNAUTHORIZED
+    )
+
+
 def test_set_password__save_fails__keeps_token(
     staff_user: FFAdminUser,
     mocker: MagicMock,
@@ -383,6 +448,33 @@ def test_reset_password_confirm__save_fails__keeps_token(
         )
 
     # Then
+    assert Token.objects.filter(key=token.key).exists()
+
+
+def test_login__outdated_password_hash__keeps_token(
+    staff_user: FFAdminUser,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.MD5PasswordHasher",
+        "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    ]
+    hasher = PBKDF2PasswordHasher()
+    staff_user.password = hasher.encode("password", hasher.salt(), iterations=1)
+    staff_user.save()
+    token = Token.objects.create(user=staff_user)
+    url = reverse("api-v1:custom_auth:custom-mfa-authtoken-login")
+
+    # When
+    response = APIClient().post(
+        url, data={"email": staff_user.email, "password": "password"}
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    staff_user.refresh_from_db()
+    assert staff_user.password.startswith("md5$")
     assert Token.objects.filter(key=token.key).exists()
 
 
