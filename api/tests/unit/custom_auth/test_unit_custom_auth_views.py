@@ -14,8 +14,8 @@ from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
-from rest_framework_simplejwt.tokens import SlidingToken
 from rest_framework.throttling import ScopedRateThrottle
+from rest_framework_simplejwt.tokens import SlidingToken
 
 from custom_auth.jwt_cookie.constants import JWT_SLIDING_COOKIE_KEY
 from users.models import FFAdminUser, HubspotTracker
