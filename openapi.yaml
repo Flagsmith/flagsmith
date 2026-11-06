@@ -9628,34 +9628,6 @@ paths:
         - Master API Key: []
       tags:
         - Other
-  /api/v1/onboarding/request/send/:
-    post:
-      operationId: api_v1_onboarding_request_send_create
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SelfHostedOnboardingSupportSendRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/SelfHostedOnboardingSupportSendRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/SelfHostedOnboardingSupportSendRequest'
-      responses:
-        '204':
-          description: No response body
-        '400':
-          description: ''
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      security:
-        - tokenAuth: []
-        - Master API Key: []
-      tags:
-        - Onboarding
   /api/v1/organisations/:
     get:
       operationId: list_organizations
@@ -28624,11 +28596,6 @@ components:
         - ALL
         - ANY
         - NONE
-    SelfHostedOnboardingSupportSendRequest:
-      type: object
-      properties:
-        hubspotutk:
-          type: string
     SendEmailReset:
       type: object
       properties:
