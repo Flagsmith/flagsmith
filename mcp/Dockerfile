@@ -7,7 +7,7 @@ ARG CI_COMMIT_SHA=dev
 
 # Pin runtimes versions
 ARG PYTHON_VERSION=3.13
-ARG UV_VERSION=0.11.18
+ARG UV_VERSION=0.13.7
 
 FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
 FROM cgr.dev/chainguard/wolfi-base:latest AS wolfi-base
