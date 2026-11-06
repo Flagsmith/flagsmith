@@ -3,23 +3,15 @@ import Diff, { DiffMethod } from 'react-diff-viewer-continued'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-json'
 import { FlagsmithValue } from 'common/types/responses'
+import { stringifyDiffValue } from 'common/utils/diffValue'
 import DiffRow from './DiffRow'
 
 type DiffType = {
-  oldValue: FlagsmithValue
-  newValue: FlagsmithValue
+  oldValue: FlagsmithValue | object
+  newValue: FlagsmithValue | object
   compareMethod?: DiffMethod
 }
 
-const sanitiseDiffString = (value: FlagsmithValue) => {
-  if (value === undefined || value === null) {
-    return ''
-  }
-  if (value === '') {
-    return '""'
-  }
-  return `${value}`
-}
 const DiffString: FC<DiffType> = ({
   compareMethod = DiffMethod.WORDS_WITH_SPACE,
   newValue,
@@ -34,7 +26,7 @@ const DiffString: FC<DiffType> = ({
     )
   }
 
-  if (oldValue === newValue) {
+  if (stringifyDiffValue(oldValue) === stringifyDiffValue(newValue)) {
     if (oldValue === null || oldValue === '') {
       return <div className='text-muted'>No Value.</div>
     }
@@ -44,7 +36,7 @@ const DiffString: FC<DiffType> = ({
           className='d-inline mb-0'
           dangerouslySetInnerHTML={{
             __html: Prism.highlight(
-              sanitiseDiffString(newValue),
+              stringifyDiffValue(newValue),
               Prism.languages.json,
               'json',
             ),
@@ -55,11 +47,14 @@ const DiffString: FC<DiffType> = ({
   }
   return (
     <Diff
-      oldValue={sanitiseDiffString(oldValue)}
-      newValue={sanitiseDiffString(newValue)}
+      oldValue={stringifyDiffValue(oldValue)}
+      newValue={stringifyDiffValue(newValue)}
       compareMethod={compareMethod}
       hideLineNumbers={
-        !(`${oldValue}`.includes?.('\n') || `${newValue}`.includes?.('\n'))
+        !(
+          stringifyDiffValue(oldValue).includes('\n') ||
+          stringifyDiffValue(newValue).includes('\n')
+        )
       }
       renderContent={(str) => (
         <pre
