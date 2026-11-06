@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.291.0](https://github.com/Flagsmith/flagsmith/compare/v2.290.0...v2.291.0) (2026-11-06)
+
+
+### Features
+
+* **docker:** Run experimentation on the Flagsmith Postgres database in docker compose ([#8884](https://github.com/Flagsmith/flagsmith/issues/8884)) ([1ec1049](https://github.com/Flagsmith/flagsmith/commit/1ec1049e6e40ab539242417c645b0ed5e2181f48))
+
+
+### Bug Fixes
+
+* Revoke DRF token after password change ([#8698](https://github.com/Flagsmith/flagsmith/issues/8698)) ([773f1c0](https://github.com/Flagsmith/flagsmith/commit/773f1c06ca20768351dac722724bf87fcbc8453e))
+
+
+### Dependency Updates
+
+* bump Node and uv to distrust compromised eMudhra CAs ([#8898](https://github.com/Flagsmith/flagsmith/issues/8898)) ([4449ad4](https://github.com/Flagsmith/flagsmith/commit/4449ad4231392545807649e3b52a595999e0512d))
+
+
+### Docs
+
+* **experimentation:** document PostgreSQL warehouses ([#8873](https://github.com/Flagsmith/flagsmith/issues/8873)) ([a130da6](https://github.com/Flagsmith/flagsmith/commit/a130da6f417d657d784c36e03cbc245db9d2e187))
+* **experimentation:** group warehouse pages under Connect a Warehouse ([#8883](https://github.com/Flagsmith/flagsmith/issues/8883)) ([6102623](https://github.com/Flagsmith/flagsmith/commit/610262351b43323bb90f6562565a2656459c1779))
+* **experimentation:** Point the coding agent prompts at the Flagsmith database ([#8892](https://github.com/Flagsmith/flagsmith/issues/8892)) ([eeac04b](https://github.com/Flagsmith/flagsmith/commit/eeac04bd70b936314b6384cc91da442ce450140c))
+
 ## [2.290.0](https://github.com/Flagsmith/flagsmith/compare/v2.289.0...v2.290.0) (2026-11-05)
 
 
