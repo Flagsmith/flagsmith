@@ -10,6 +10,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from features.feature_types import MULTIVARIATE
+from features.future.types import UpdateFlagRequest
 from tests.integration.helpers import (
     create_feature_with_api,
     create_mv_option_with_api,
@@ -732,3 +733,58 @@ def test_identify_user__prerequisite__serves_dependent_accordingly(
     assert {
         flag["feature"]["name"]: flag["enabled"] for flag in response.json()["flags"]
     } == {"payments": payments_enabled, "checkout": payments_enabled}
+
+
+def test_identify_user__dependent_default_value_changed__serves_current_value(
+    admin_client: APIClient,
+    sdk_client: APIClient,
+    project: int,
+    environment: int,
+    environment_api_key: str,
+    identity_identifier: str,
+) -> None:
+    # Given
+    chicken_id = create_feature_with_api(
+        client=admin_client,
+        project_id=project,
+        feature_name="chicken",
+        initial_value="",
+    )
+    chicken_response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{chicken_id}/",
+        data=UpdateFlagRequest({"environment_default": {"enabled": False}}),
+        format="json",
+    )
+    assert chicken_response.status_code == status.HTTP_200_OK
+    egg_id = create_feature_with_api(
+        client=admin_client,
+        project_id=project,
+        feature_name="egg",
+        initial_value="wild egg",
+    )
+    dependency_response = admin_client.post(
+        f"/api/v1/environments/{environment_api_key}/features/{egg_id}/dependencies/{chicken_id}/",
+    )
+    assert dependency_response.status_code == status.HTTP_201_CREATED
+    egg_response = admin_client.patch(
+        f"/api/__future__/environments/{environment_api_key}/features/{egg_id}/",
+        data=UpdateFlagRequest(
+            {"environment_default": {"value": {"type": "string", "value": "farm egg"}}}
+        ),
+        format="json",
+    )
+    assert egg_response.status_code == status.HTTP_200_OK
+
+    # When
+    response = sdk_client.post(
+        "/api/v1/identities/",
+        data={"identifier": identity_identifier, "traits": []},
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert {
+        flag["feature"]["name"]: (flag["enabled"], flag["feature_state_value"])
+        for flag in response.json()["flags"]
+    } == {"chicken": (False, ""), "egg": (False, "farm egg")}
