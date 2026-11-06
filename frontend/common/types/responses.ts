@@ -565,8 +565,8 @@ export type AuditLogItem = {
 export type AuditLogDetail = AuditLogItem & {
   change_details: {
     field: string
-    old: FlagsmithValue
-    new: FlagsmithValue
+    old: FlagsmithValue | object
+    new: FlagsmithValue | object
   }[]
 }
 export type PaymentMethod = 'CHARGEBEE' | 'XERO' | 'AWS_MARKETPLACE'
