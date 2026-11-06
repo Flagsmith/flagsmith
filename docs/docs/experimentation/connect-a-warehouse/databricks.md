@@ -1,7 +1,8 @@
 ---
 title: Connect Databricks
-sidebar_label: Connect Databricks
-sidebar_position: 2.5
+sidebar_label: Databricks
+sidebar_position: 2
+slug: /experimentation/connect-databricks
 description: Store and query experiment events in your own Databricks workspace.
 ---
 

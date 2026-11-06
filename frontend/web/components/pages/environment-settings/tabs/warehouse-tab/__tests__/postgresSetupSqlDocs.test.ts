@@ -9,7 +9,7 @@ describe('getPostgresOnboardingSql', () => {
     const doc = fs.readFileSync(
       path.join(
         __dirname,
-        '../../../../../../../../docs/docs/experimentation/connect-postgresql.md',
+        '../../../../../../../../docs/docs/experimentation/connect-a-warehouse/postgresql.md',
       ),
       'utf8',
     )
