@@ -72,8 +72,8 @@ Flagsmith doesn't create or alter the table, so keep exactly these columns and t
 
 ### Change the password
 
-Edit the connection, enter the new password, click **Test connection**, then click **Save changes**. Leaving the
-password blank keeps the current one.
+Change the user's password on your server first. Then edit the connection, enter the new password, click **Test
+connection**, then click **Save changes**. Leaving the password blank keeps the current one.
 
 ### Change server
 

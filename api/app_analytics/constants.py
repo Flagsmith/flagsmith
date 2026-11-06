@@ -1,6 +1,12 @@
 from typing import get_args
 
-from app_analytics.types import InputLabel, KnownSDK, Label, PeriodType
+from app_analytics.types import (
+    InputLabel,
+    KnownClient,
+    KnownSDK,
+    Label,
+    PeriodType,
+)
 
 ANALYTICS_READ_BUCKET_SIZE = 15
 
@@ -15,24 +21,38 @@ NINETY_DAY_PERIOD: PeriodType
 ) = get_args(PeriodType)
 
 
-# We make sure to only track known SDK versions
+# We make sure to only track known SDK and client versions
 # because, when we prepare the data for Influx, we need to map to numeric IDs.
 # This allows us to efficiently store usage and evaluation data.
-SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
+SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownClient, list[str]] = {
+    "flagsmith-cli": [
+        "unknown",
+        "2.0.0",
+    ],
     "flagsmith-dotnet-sdk": [
         "unknown",
         "9.0.0",
+        "9.1.0",
+    ],
+    "flagsmith-edge-proxy": [
+        "unknown",
+    ],
+    "flagsmith-edge-proxy-python": [
+        "unknown",
+        "2.24.0",
     ],
     "flagsmith-elixir-sdk": [
         "unknown",
         "2.3.0",
         "2.3.1",
+        "2.4.0",
     ],
     "flagsmith-flutter-sdk": [
         "unknown",
         "6.1.0",
         "6.1.1",
         "6.2.0",
+        "6.2.1",
     ],
     "flagsmith-go-sdk": [
         "unknown",
@@ -40,6 +60,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "5.1.0",
         "5.2.0",
         "5.3.0",
+        "5.4.0",
     ],
     "flagsmith-java-sdk": [
         "unknown",
@@ -50,6 +71,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "8.1.1",
         "8.1.2",
         "8.2.0",
+        "8.3.0",
     ],
     "flagsmith-js-sdk": [
         "unknown",
@@ -91,6 +113,7 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "5.1.0",
         "5.1.1",
         "5.1.2",
+        "5.2.0",
     ],
     "flagsmith-python-sdk": [
         "unknown",
@@ -113,10 +136,12 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
         "6.2.3",
         "6.3.0",
         "6.4.0",
+        "6.5.0",
     ],
     "flagsmith-ruby-sdk": [
         "unknown",
         "5.0.0",
+        "5.0.1",
         "5.1.0",
     ],
     "flagsmith-rust-sdk": [
@@ -132,10 +157,12 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownSDK, list[str]] = {
     "flagsmith-swift-ios-sdk": [
         "unknown",
         "3.10.0",
+        "3.10.1",
     ],
 }
 
-SDK_USER_AGENT_INFLUX_IDS: list[tuple[KnownSDK, int]] = [
+# Append new clients to the end so existing IDs stay stable.
+SDK_USER_AGENT_INFLUX_IDS: list[tuple[KnownClient, int]] = [
     ("flagsmith-dotnet-sdk", 0),
     ("flagsmith-elixir-sdk", 10000),
     ("flagsmith-flutter-sdk", 20000),
@@ -149,7 +176,12 @@ SDK_USER_AGENT_INFLUX_IDS: list[tuple[KnownSDK, int]] = [
     ("flagsmith-ruby-sdk", 100000),
     ("flagsmith-rust-sdk", 110000),
     ("flagsmith-swift-ios-sdk", 120000),
+    ("flagsmith-cli", 130000),
+    ("flagsmith-edge-proxy", 140000),
+    ("flagsmith-edge-proxy-python", 150000),
 ]
+
+KNOWN_SDKS: frozenset[str] = frozenset(get_args(KnownSDK))
 
 
 SDK_USER_AGENTS_BY_INFLUX_ID: dict[int, str] = {}

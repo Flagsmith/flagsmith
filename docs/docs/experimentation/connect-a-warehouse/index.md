@@ -70,8 +70,7 @@ To store experiment events in your own warehouse, and have Flagsmith compute res
 
 - [ClickHouse](/experimentation/connect-clickhouse)
 - [Databricks](/experimentation/connect-databricks)
-- [PostgreSQL](/experimentation/connect-postgresql), or a PostgreSQL-compatible service. It suits low to moderate event
-  volumes.
+- [PostgreSQL](/experimentation/connect-postgresql), or a PostgreSQL-compatible service
 
 ## Coming soon
 

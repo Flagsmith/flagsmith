@@ -40,6 +40,33 @@ export const isFlagsmithDatabaseConnection = (
   'source' in connection.config &&
   connection.config.source === FLAGSMITH_DATABASE_CONFIG.source
 
+const CUSTOMER_WAREHOUSE_TYPES: WarehouseType[] = [
+  'clickhouse',
+  'databricks',
+  'postgres',
+]
+
+// Customer warehouses are born connected, so the nudge stays until events
+// arrive. Off SaaS, the test event only reaches the installation's own API,
+// so it's offered for the Flagsmith database alone.
+export const shouldShowSendFirstEvent = (
+  connection: Pick<
+    WarehouseConnection,
+    'config' | 'status' | 'total_events_received' | 'warehouse_type'
+  >,
+  isSaas: boolean,
+): boolean => {
+  if (connection.warehouse_type === 'flagsmith') {
+    return (
+      connection.status !== 'pending_connection' &&
+      connection.status !== 'connected'
+    )
+  }
+  if (connection.total_events_received) return false
+  if (isFlagsmithDatabaseConnection(connection)) return true
+  return isSaas && CUSTOMER_WAREHOUSE_TYPES.includes(connection.warehouse_type)
+}
+
 export type MinimumPlans = Record<string, unknown>
 
 const asObject = (value: unknown): Record<string, unknown> | undefined =>

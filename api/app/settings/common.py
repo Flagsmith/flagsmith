@@ -370,6 +370,10 @@ REST_FRAMEWORK = {
     ),
     "PAGE_SIZE": 10,
     "UNICODE_JSON": False,
+    # DRF 3.18 returns `many=True` serializer errors as index-keyed dicts.
+    # Keep the pre-3.18 list format to avoid breaking API clients.
+    # TODO: Migrate to the dict format before DRF 3.20 removes this setting.
+    "LIST_SERIALIZER_ERRORS_AS_DICT": False,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_THROTTLE_CLASSES": DEFAULT_THROTTLE_CLASSES,
     "DEFAULT_THROTTLE_RATES": {

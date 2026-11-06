@@ -54,9 +54,7 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
     // The API rejects these.
     changeRequest.is_committed ||
     !isVersioned ||
-    !canCreateChangeRequest ||
-    !Utils.getFlagsmithHasFeature('flag_dependencies') ||
-    !Utils.getFlagsmithHasFeature('flag_dependencies_change_requests')
+    !canCreateChangeRequest
   const dependencies = useDependencyChanges({
     changeRequestId: changeRequest?.id ?? 0,
     environmentId,

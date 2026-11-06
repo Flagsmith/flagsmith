@@ -31,7 +31,7 @@ For production, [connect your own warehouse](#your-own-warehouse).
 :::
 
 Events are stored in the database Flagsmith already runs on, and the SDKs send them to your Flagsmith API. There is
-nothing extra to run. This only works when that database is PostgreSQL; enabling it fails on MySQL or Oracle.
+nothing extra to run. This only works when that database is PostgreSQL.
 
 1. Go to **Environment Settings › Warehouse**.
 2. Select **Flagsmith database** and click **Enable**, then confirm.
