@@ -150,7 +150,7 @@ def test_api_usage_middleware__request_not_tracked__not_calls_expected(
         (False, False, False),
     ],
 )
-def test_api_usage_middleware__edge_proxy_check__wired_only_where_expected(
+def test_api_usage_middleware__deployment_type__edge_proxy_request_verified_only_on_self_hosted_with_control_plane(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     edge_control_plane_installed: bool,
@@ -182,7 +182,7 @@ def test_api_usage_middleware__edge_proxy_check__wired_only_where_expected(
 
 
 @pytest.mark.parametrize("is_verified_proxy_request", [True, False])
-def test_api_usage_middleware__edge_proxy_check_wired__tracks_unverified_only(
+def test_api_usage_middleware__edge_control_plane_installed__only_unverified_edge_proxy_request_tracked(
     rf: RequestFactory,
     mocker: MockerFixture,
     settings: SettingsWrapper,
@@ -210,7 +210,7 @@ def test_api_usage_middleware__edge_proxy_check_wired__tracks_unverified_only(
     assert mocked_track_usage.called is not is_verified_proxy_request
 
 
-def test_api_usage_middleware__edge_proxy_check_not_wired__proxy_header_still_tracked(
+def test_api_usage_middleware__edge_control_plane_not_installed__edge_proxy_request_tracked(
     rf: RequestFactory,
     mocker: MockerFixture,
     settings: SettingsWrapper,
