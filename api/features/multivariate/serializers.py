@@ -124,7 +124,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
         """Partial updates omit unchanged fields, so fall back to the instance."""
         if field_name in attrs:
             return attrs[field_name]
-        return getattr(self.instance, field_name)
+        return getattr(self.instance, field_name, None)
 
     def _validate_environment_allocations(
         self, feature: Feature, default_percentage_allocation: float
@@ -148,7 +148,7 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
     def _validate_key_is_unique(
         self, attrs: dict[str, typing.Any], feature: Feature
     ) -> None:
-        key = attrs.get("key")
+        key = self._get_validated_or_instance_value(attrs, "key")
         if key is None:
             return
         if self._get_siblings(feature).filter(key=key).exists():

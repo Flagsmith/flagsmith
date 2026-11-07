@@ -743,6 +743,65 @@ def test_partial_update_mv_option__duplicate_sibling_key__returns_bad_request(
     assert MultivariateFeatureOption.objects.get(id=mv_option_50_percent).key is None
 
 
+def test_partial_update_mv_option__move_to_feature_with_same_key__returns_bad_request(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given - the option has a key, and another feature already uses that key
+    option_url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+    assert (
+        admin_client.patch(
+            option_url,
+            data=json.dumps({"key": "variant-a"}),
+            content_type="application/json",
+        ).status_code
+        == status.HTTP_200_OK
+    )
+    other_feature = admin_client.post(
+        reverse("api-v1:projects:project-features-list", args=[project]),
+        data={"name": "other_feature", "project": project},
+    ).json()["id"]
+    other_option_data = {
+        "type": "unicode",
+        "feature": other_feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 30,
+        "key": "variant-a",
+    }
+    assert (
+        admin_client.post(
+            reverse(
+                "api-v1:projects:feature-mv-options-list", args=[project, other_feature]
+            ),
+            data=json.dumps(other_option_data),
+            content_type="application/json",
+        ).status_code
+        == status.HTTP_201_CREATED
+    )
+
+    # When - the option is moved to the other feature without resending its key
+    response = admin_client.patch(
+        option_url,
+        data=json.dumps({"feature": other_feature}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["key"] == [
+        "Multivariate option with this key already exists for the feature."
+    ]
+    assert (
+        MultivariateFeatureOption.objects.get(id=mv_option_50_percent).feature_id
+        == feature
+    )
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
