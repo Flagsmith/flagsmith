@@ -1,4 +1,4 @@
-import React, { FC, useRef } from 'react'
+import React, { FC } from 'react'
 import Utils from 'common/utils/utils'
 import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
@@ -20,8 +20,6 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
   mobile,
   projectId,
 }) => {
-  const date = useRef(moment().toISOString())
-
   const { data: environments } = useGetEnvironmentsQuery(
     {
       projectId: `${projectId}`,
@@ -32,7 +30,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
   const { data: scheduledData } = useGetChangeRequestsQuery({
     committed: true,
     environmentId,
-    live_from_after: date.current,
+    live_from_after: true,
     page_size: 1,
   })
 

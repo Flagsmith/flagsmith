@@ -697,7 +697,7 @@ export type Req = {
     search?: string
     environmentId: string
     feature_id?: number
-    live_from_after?: string
+    live_from_after?: string | boolean
     committed?: boolean
   }>
   updateChangeRequest: ChangeRequest
