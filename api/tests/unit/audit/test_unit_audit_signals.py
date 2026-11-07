@@ -311,7 +311,7 @@ def test_send_audit_log_event_to_dynatrace__environment_feature_version__sends_e
 
     responses.add(
         method=responses.POST,
-        url=f"{base_url}{EVENTS_API_URI}?api-token={api_key}",
+        url=f"{base_url}/{EVENTS_API_URI}?api-token={api_key}",
         status=201,
         json={
             "reportCount": 1,
