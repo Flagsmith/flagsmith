@@ -32,11 +32,9 @@ class APIUsageMiddleware:
         get_response: Callable[[HttpRequest], HttpResponse],
     ) -> None:
         self.get_response = get_response
-        # An Edge Proxy reports the requests it serves itself, so its own
-        # requests to core must not also be counted here. The private
-        # edge_control_plane app decides what counts as the proxy's own: a
-        # verified X-Proxy-Key whose grants cover the presented environment —
-        # bare header presence is never trusted.
+        # The Edge Proxy reports its own usage. Only skip requests the
+        # edge_control_plane app verifies by their X-Proxy-Key; otherwise any
+        # client could add the header to avoid being counted.
         self.is_valid_edge_proxy_request: Callable[[HttpRequest], bool] | None = None
         if settings.EDGE_CONTROL_PLANE_INSTALLED and not is_saas():
             from edge_control_plane.authentication import (
