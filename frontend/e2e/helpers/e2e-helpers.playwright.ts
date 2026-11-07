@@ -635,6 +635,21 @@ export class E2EHelpers {
     }
   }
 
+  // Add a remote config override for a segment picked by name, so other
+  // segments in a shared project can't shift the selection
+  async addSegmentOverrideConfigForSegment(segmentName: string, value: string) {
+    await this.click(byId('segment_overrides'));
+    // E2E builds render the select's options as plain links
+    await this.page
+      .locator('[data-test^="select-segment-option-"]')
+      .filter({ hasText: segmentName })
+      .first()
+      .click();
+    await this.waitForElementVisible(this.segmentOverrideValueField(0));
+    await this.setText(this.segmentOverrideValueField(0), value);
+    await this.click(byId('segment-override-toggle-0'));
+  }
+
   // Add segment override for remote configs
   async addSegmentOverrideConfig(index: number, value: string | number | boolean, selectionIndex: number = 0) {
     await this.openSegmentOverride(index, selectionIndex);
@@ -1126,12 +1141,24 @@ export class E2EHelpers {
   }
 
   // Create a change request from feature modal
-  async createChangeRequest(title: string, description: string) {
+  async createChangeRequest(
+    title: string,
+    description: string,
+    {
+      openWith = '#update-feature-btn',
+      scheduleFor,
+    }: {
+      // The tab's save button, e.g. '#update-feature-segments-btn'
+      openWith?: string;
+      // A date in the picker's format, e.g. 'January 1, 2099 12:00 PM'
+      scheduleFor?: string;
+    } = {},
+  ) {
     log(`Create change request: ${title}`);
 
     // Click the update/create change request button
     // When four-eyes is enabled, this button says "Create Change Request"
-    await this.click('#update-feature-btn');
+    await this.click(openWith);
     await this.page.waitForTimeout(1000);
 
     // Fill in title using placeholder
@@ -1143,17 +1170,26 @@ export class E2EHelpers {
     const descField = this.page.locator('textarea[placeholder="Add an optional description..."]');
     await descField.fill(description);
 
-    // The date picker needs to be set - click on it to trigger current date/time
-    // Find the date input and click it
-    const dateInput = this.page.locator('.react-datepicker__input-container input').first();
-    await dateInput.click();
-    await this.page.waitForTimeout(300);
+    if (scheduleFor) {
+      const scheduleField = this.page.getByLabel('Schedule Change');
+      await scheduleField.fill(scheduleFor);
+      await scheduleField.press('Enter');
+      await this.page
+        .getByText('This change will be scheduled to go live at')
+        .waitFor({ state: 'visible' });
+    } else {
+      // The date picker needs to be set - click on it to trigger current date/time
+      // Find the date input and click it
+      const dateInput = this.page.locator('.react-datepicker__input-container input').first();
+      await dateInput.click();
+      await this.page.waitForTimeout(300);
 
-    // Click "Now" or today's date to set it
-    // The datepicker should appear - click on today
-    const todayButton = this.page.locator('.react-datepicker__today-button, .react-datepicker__day--today').first();
-    await todayButton.click();
-    await this.page.waitForTimeout(500);
+      // Click "Now" or today's date to set it
+      // The datepicker should appear - click on today
+      const todayButton = this.page.locator('.react-datepicker__today-button, .react-datepicker__day--today').first();
+      await todayButton.click();
+      await this.page.waitForTimeout(500);
+    }
 
     // Click create/save button - look for enabled button
     const saveButton = this.page.locator('button').filter({ hasText: /Save|Create/ }).filter({ hasNotText: 'Cancel' }).last();
@@ -1165,6 +1201,40 @@ export class E2EHelpers {
     await saveButton.click();
 
     await this.waitForToast();
+  }
+
+  // Save an open change request's edits from its feature modal
+  async updateChangeRequest() {
+    log('Update change request');
+    await this.click('#update-feature-btn');
+    const updateButton = this.page.getByRole('button', { name: 'Update', exact: true });
+    await updateButton.waitFor({ state: 'visible' });
+    await this.waitForToastsToClear();
+    await updateButton.click();
+    // Checked before it clears, as waitForToast waits for it to go
+    await expect(
+      this.page.locator('.toast-message').filter({ hasText: /Updated Change Request #\d+/ }),
+    ).toBeVisible({ timeout: LONG_TIMEOUT });
+    await this.waitForToastsToClear();
+  }
+
+  // Open the feature modal for an unapproved change request, from its page
+  async editChangeRequest() {
+    log('Edit change request');
+    await this.page.getByRole('button', { name: 'Edit', exact: true }).click();
+    await this.waitForElementVisible('#create-feature-modal');
+  }
+
+  // Enable feature versioning for the current environment
+  async enableFeatureVersioning() {
+    log('Enable feature versioning');
+    await this.click('#env-settings-link');
+    await this.click(byId('enable-versioning'));
+    await this.click('#confirm-btn-yes');
+    // Feature versioning takes up to a minute to enable on the backend
+    await this.waitForElementVisible(byId('feature-versioning-enabled'));
+    await this.waitForElementVisible('.toast-message');
+    await this.waitForToastsToClear();
   }
 
   // Open a change request from the list
