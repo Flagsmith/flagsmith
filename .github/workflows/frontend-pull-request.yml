@@ -38,6 +38,10 @@ jobs:
   lint:
     name: Lint changed files
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # reviewdog reports Stylelint results as a check run.
+      checks: write
 
     defaults:
       run:
@@ -64,3 +68,15 @@ jobs:
         env:
           ESLINT_PLUGIN_DIFF_COMMIT: ${{ github.event.pull_request.base.sha }}
         run: npm run lint
+
+      # Fails only on problems in lines this PR added, so existing styles
+      # don't fail it.
+      - name: Lint changed SCSS lines
+        uses: reviewdog/action-stylelint@v1.33.0
+        with:
+          workdir: frontend
+          # Quoted so Stylelint expands the glob, not the action's shell.
+          stylelint_input: "'**/*.scss'"
+          reporter: github-pr-check
+          filter_mode: added
+          fail_level: error
