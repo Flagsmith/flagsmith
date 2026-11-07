@@ -1,4 +1,3 @@
-import importlib
 from typing import Callable
 
 from common.core.utils import is_saas
@@ -35,19 +34,16 @@ class APIUsageMiddleware:
         self.get_response = get_response
         # An Edge Proxy reports the requests it serves itself, so its own
         # requests to core must not also be counted here. The private
-        # edge_proxy app decides what counts as the proxy's own: a verified
-        # X-Proxy-Key whose grants cover the presented environment — bare
-        # header presence is never trusted.
+        # edge_control_plane app decides what counts as the proxy's own: a
+        # verified X-Proxy-Key whose grants cover the presented environment —
+        # bare header presence is never trusted.
         self.is_valid_edge_proxy_request: Callable[[HttpRequest], bool] | None = None
-        if settings.EDGE_PROXY_INSTALLED and not is_saas():
-            # getattr, not a hard import: the installed edge_proxy app may
-            # predate the helper — the proxy's fetches are then counted as
-            # before.
-            self.is_valid_edge_proxy_request = getattr(
-                importlib.import_module("edge_proxy.authentication"),
-                "is_valid_edge_proxy_request",
-                None,
+        if settings.EDGE_CONTROL_PLANE_INSTALLED and not is_saas():
+            from edge_control_plane.authentication import (
+                is_valid_edge_proxy_request,
             )
+
+            self.is_valid_edge_proxy_request = is_valid_edge_proxy_request
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
         if (environment_key := request.headers.get("X-Environment-Key")) and not (
