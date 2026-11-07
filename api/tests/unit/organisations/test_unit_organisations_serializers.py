@@ -2,7 +2,11 @@ import pytest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
-from organisations.models import Organisation, OrganisationBreachedGracePeriod
+from organisations.models import (
+    APILimitAccessBlock,
+    Organisation,
+    OrganisationBreachedGracePeriod,
+)
 from organisations.serializers import (
     OrganisationSerializerFull,
     UpdateSubscriptionSerializer,
@@ -78,6 +82,23 @@ def test_organisation_serializer_full__api_limit_state__returns_expected(
     assert data["overage_billing_eligible"] is False
 
 
+@pytest.mark.parametrize("has_api_limit_access_block", [True, False])
+def test_organisation_serializer_full__api_limit_access_blocked__returns_expected(
+    organisation: Organisation,
+    has_api_limit_access_block: bool,
+) -> None:
+    # Given
+    if has_api_limit_access_block:
+        APILimitAccessBlock.objects.create(organisation=organisation)
+    organisation.refresh_from_db()
+
+    # When
+    data = OrganisationSerializerFull(instance=organisation).data
+
+    # Then
+    assert data["api_limit_access_blocked"] is has_api_limit_access_block
+
+
 def test_organisation_serializer_full__update_api_limit_state__ignored(
     organisation: Organisation,
 ) -> None:
@@ -89,6 +110,7 @@ def test_organisation_serializer_full__update_api_limit_state__ignored(
             "stop_serving_flags": True,
             "api_limit_restriction_enabled": True,
             "api_limit_grace_period_used": True,
+            "api_limit_access_blocked": True,
             "overage_billing_eligible": True,
         },
     )

@@ -62,6 +62,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
     role = serializers.SerializerMethodField()
     api_limit_restriction_enabled = serializers.SerializerMethodField()
     api_limit_grace_period_used = serializers.SerializerMethodField()
+    api_limit_access_blocked = serializers.SerializerMethodField()
     overage_billing_eligible = serializers.SerializerMethodField()
 
     class Meta:
@@ -80,6 +81,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "stop_serving_flags",
             "api_limit_restriction_enabled",
             "api_limit_grace_period_used",
+            "api_limit_access_blocked",
             "overage_billing_eligible",
             "restrict_project_create_to_admin",
             "force_2fa",
@@ -95,6 +97,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
             "stop_serving_flags",
             "api_limit_restriction_enabled",
             "api_limit_grace_period_used",
+            "api_limit_access_blocked",
             "overage_billing_eligible",
         )
         extra_kwargs = {
@@ -126,6 +129,10 @@ class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[t
         if not settings.ENABLE_API_USAGE_ALERTING:
             return False
         return hasattr(instance, "breached_grace_period")
+
+    @extend_schema_field({"type": "boolean"})
+    def get_api_limit_access_blocked(self, instance: Organisation) -> bool:
+        return hasattr(instance, "api_limit_access_block")
 
     @extend_schema_field({"type": "boolean"})
     def get_overage_billing_eligible(self, instance: Organisation) -> bool:

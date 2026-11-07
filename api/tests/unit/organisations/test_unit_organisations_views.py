@@ -32,6 +32,7 @@ from integrations.lead_tracking.hubspot.constants import HUBSPOT_COOKIE_NAME
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.invites.models import Invite
 from organisations.models import (
+    APILimitAccessBlock,
     Organisation,
     OrganisationAPIUsageNotification,
     OrganisationRole,
@@ -244,6 +245,25 @@ def test_update_organisation__valid_data__returns_200(
     assert response.status_code == status.HTTP_200_OK
     assert organisation.name == new_organisation_name
     assert organisation.restrict_project_create_to_admin is True
+
+
+@pytest.mark.parametrize("has_api_limit_access_block", [True, False])
+def test_get_organisation__api_limit_access_block__returns_expected_state(
+    admin_client: APIClient,
+    organisation: Organisation,
+    has_api_limit_access_block: bool,
+) -> None:
+    # Given
+    if has_api_limit_access_block:
+        APILimitAccessBlock.objects.create(organisation=organisation)
+    url = reverse("api-v1:organisations:organisation-detail", args=[organisation.pk])
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["api_limit_access_blocked"] is has_api_limit_access_block
 
 
 @pytest.mark.parametrize(
