@@ -592,6 +592,161 @@ def test_update_mv_option__total_allocation_exceeds_100__returns_bad_request(  #
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
+def test_partial_update_mv_option__key_only__returns_updated_option(
+    client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+
+    # When
+    response = client.patch(
+        url,
+        data=json.dumps({"key": "variant-a"}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["key"] == "variant-a"
+    assert response.json()["default_percentage_allocation"] == 50
+    assert response.json()["feature"] == feature
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_partial_update_mv_option__valid_allocation__returns_updated_option(
+    client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+
+    # When
+    response = client.patch(
+        url,
+        data=json.dumps({"default_percentage_allocation": 70}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["default_percentage_allocation"] == 70
+    assert response.json()["feature"] == feature
+
+
+def test_partial_update_mv_option__total_allocation_exceeds_100__returns_bad_request(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given - a sibling option already takes 30%
+    create_url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    sibling_data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 30,
+    }
+    assert (
+        admin_client.post(
+            create_url,
+            data=json.dumps(sibling_data),
+            content_type="application/json",
+        ).status_code
+        == status.HTTP_201_CREATED
+    )
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data=json.dumps({"default_percentage_allocation": 71}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["default_percentage_allocation"] == [
+        "Invalid percentage allocation"
+    ]
+    assert (
+        MultivariateFeatureOption.objects.get(
+            id=mv_option_50_percent
+        ).default_percentage_allocation
+        == 50
+    )
+
+
+def test_partial_update_mv_option__duplicate_sibling_key__returns_bad_request(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given - a sibling option already uses the key
+    create_url = reverse(
+        "api-v1:projects:feature-mv-options-list",
+        args=[project, feature],
+    )
+    sibling_data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 30,
+        "key": "variant-a",
+    }
+    assert (
+        admin_client.post(
+            create_url,
+            data=json.dumps(sibling_data),
+            content_type="application/json",
+        ).status_code
+        == status.HTTP_201_CREATED
+    )
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+
+    # When
+    response = admin_client.patch(
+        url,
+        data=json.dumps({"key": "variant-a"}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["key"] == [
+        "Multivariate option with this key already exists for the feature."
+    ]
+    assert MultivariateFeatureOption.objects.get(id=mv_option_50_percent).key is None
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_delete_mv_option__option_exists__returns_no_content(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
 ):
