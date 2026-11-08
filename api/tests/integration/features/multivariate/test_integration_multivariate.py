@@ -743,58 +743,72 @@ def test_partial_update_mv_option__duplicate_sibling_key__returns_bad_request(
     assert MultivariateFeatureOption.objects.get(id=mv_option_50_percent).key is None
 
 
-def test_partial_update_mv_option__move_to_feature_with_same_key__returns_bad_request(
+def test_partial_update_mv_option__different_feature__returns_bad_request(
     admin_client: APIClient,
     project: int,
     feature: int,
     mv_option_50_percent: int,
 ) -> None:
-    # Given - the option has a key, and another feature already uses that key
-    option_url = reverse(
-        "api-v1:projects:feature-mv-options-detail",
-        args=[project, feature, mv_option_50_percent],
-    )
-    assert (
-        admin_client.patch(
-            option_url,
-            data=json.dumps({"key": "variant-a"}),
-            content_type="application/json",
-        ).status_code
-        == status.HTTP_200_OK
-    )
+    # Given
     other_feature = admin_client.post(
         reverse("api-v1:projects:project-features-list", args=[project]),
         data={"name": "other_feature", "project": project},
     ).json()["id"]
-    other_option_data = {
-        "type": "unicode",
-        "feature": other_feature,
-        "string_value": "bigger",
-        "default_percentage_allocation": 30,
-        "key": "variant-a",
-    }
-    assert (
-        admin_client.post(
-            reverse(
-                "api-v1:projects:feature-mv-options-list", args=[project, other_feature]
-            ),
-            data=json.dumps(other_option_data),
-            content_type="application/json",
-        ).status_code
-        == status.HTTP_201_CREATED
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
     )
 
-    # When - the option is moved to the other feature without resending its key
+    # When
     response = admin_client.patch(
-        option_url,
+        url,
         data=json.dumps({"feature": other_feature}),
         content_type="application/json",
     )
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["key"] == [
-        "Multivariate option with this key already exists for the feature."
+    assert response.json()["feature"] == [
+        "Multivariate options cannot be moved to another feature."
+    ]
+    assert (
+        MultivariateFeatureOption.objects.get(id=mv_option_50_percent).feature_id
+        == feature
+    )
+
+
+def test_update_mv_option__different_feature__returns_bad_request(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given
+    other_feature = admin_client.post(
+        reverse("api-v1:projects:project-features-list", args=[project]),
+        data={"name": "other_feature", "project": project},
+    ).json()["id"]
+    url = reverse(
+        "api-v1:projects:feature-mv-options-detail",
+        args=[project, feature, mv_option_50_percent],
+    )
+    data = {
+        "id": mv_option_50_percent,
+        "type": "unicode",
+        "feature": other_feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 50,
+    }
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["feature"] == [
+        "Multivariate options cannot be moved to another feature."
     ]
     assert (
         MultivariateFeatureOption.objects.get(id=mv_option_50_percent).feature_id
@@ -834,6 +848,68 @@ def test_create_mv_option__without_allocation_and_sibling_allocated__returns_bad
     # When
     response = admin_client.post(
         url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["default_percentage_allocation"] == [
+        "Invalid percentage allocation"
+    ]
+    assert MultivariateFeatureOption.objects.filter(feature=feature).count() == 1
+
+
+def test_create_mv_option__without_allocation_and_environment_allocation_drifted__returns_bad_request(  # noqa: E501
+    admin_client: APIClient,
+    project: int,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+) -> None:
+    # Given - a sibling with a 0% default whose allocation was raised to 1% in
+    # this environment only, so the option-level total (0%) hides the overflow
+    create_url = reverse(
+        "api-v1:projects:feature-mv-options-list", args=[project, feature]
+    )
+    sibling_data = {
+        "type": "unicode",
+        "feature": feature,
+        "string_value": "bigger",
+        "default_percentage_allocation": 0,
+    }
+    sibling_id = admin_client.post(
+        create_url, data=json.dumps(sibling_data), content_type="application/json"
+    ).json()["id"]
+    feature_states_url = reverse(
+        "api-v1:environments:environment-featurestates-list", args=[environment_api_key]
+    )
+    feature_state = next(
+        fs
+        for fs in admin_client.get(feature_states_url).json()["results"]
+        if fs["feature"] == feature
+    )
+    mv_fsv = feature_state["multivariate_feature_state_values"][0]
+    assert mv_fsv["multivariate_feature_option"] == sibling_id
+    update_response = admin_client.put(
+        reverse(
+            "api-v1:environments:environment-featurestates-detail",
+            args=[environment_api_key, feature_state["id"]],
+        ),
+        data=json.dumps(
+            {
+                **feature_state,
+                "multivariate_feature_state_values": [
+                    {**mv_fsv, "percentage_allocation": 1}
+                ],
+            }
+        ),
+        content_type="application/json",
+    )
+    assert update_response.status_code == status.HTTP_200_OK
+    data = {"type": "unicode", "feature": feature, "string_value": "biggest"}
+
+    # When - the model default of 100% is applied to the omitted allocation
+    response = admin_client.post(
+        create_url, data=json.dumps(data), content_type="application/json"
     )
 
     # Then

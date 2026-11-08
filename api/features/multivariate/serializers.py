@@ -80,6 +80,16 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
             raise serializers.ValidationError(RESERVED_VARIANT_KEY_MESSAGE)
         return value
 
+    def validate_feature(self, value: Feature) -> Feature:
+        if (
+            isinstance(self.instance, MultivariateFeatureOption)
+            and value.id != self.instance.feature_id
+        ):
+            raise serializers.ValidationError(
+                "Multivariate options cannot be moved to another feature."
+            )
+        return value
+
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
         feature = self._get_validated_or_instance_value(attrs, "feature")
