@@ -802,6 +802,48 @@ def test_partial_update_mv_option__move_to_feature_with_same_key__returns_bad_re
     )
 
 
+def test_create_mv_option__without_allocation__uses_model_default(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:feature-mv-options-list", args=[project, feature])
+    data = {"type": "unicode", "feature": feature, "string_value": "bigger"}
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["default_percentage_allocation"] == 100
+
+
+def test_create_mv_option__without_allocation_and_sibling_allocated__returns_bad_request(
+    admin_client: APIClient,
+    project: int,
+    feature: int,
+    mv_option_50_percent: int,
+) -> None:
+    # Given - the model default of 100% cannot fit next to a 50% sibling
+    url = reverse("api-v1:projects:feature-mv-options-list", args=[project, feature])
+    data = {"type": "unicode", "feature": feature, "string_value": "bigger"}
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["default_percentage_allocation"] == [
+        "Invalid percentage allocation"
+    ]
+    assert MultivariateFeatureOption.objects.filter(feature=feature).count() == 1
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],

@@ -121,10 +121,12 @@ class MultivariateFeatureOptionSerializer(NestedMultivariateFeatureOptionSeriali
     def _get_validated_or_instance_value(
         self, attrs: dict[str, typing.Any], field_name: str
     ) -> typing.Any:
-        """Partial updates omit unchanged fields, so fall back to the instance."""
+        """Fall back to the stored option on partial updates, or to the model
+        defaults when creating, for fields the request omits."""
         if field_name in attrs:
             return attrs[field_name]
-        return getattr(self.instance, field_name, None)
+        instance = self.instance if self.instance is not None else self.Meta.model()
+        return getattr(instance, field_name)
 
     def _validate_environment_allocations(
         self, feature: Feature, default_percentage_allocation: float
