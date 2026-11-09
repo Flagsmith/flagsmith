@@ -180,8 +180,6 @@ class Segment(
         cloned_segment.pk = None
         cloned_segment.uuid = uuid.uuid4()
         if is_revision:
-            # Set before saving so that the revision is recognised as one,
-            # and doesn't get its own "created" audit log.
             cloned_segment.version_of = self
             cloned_segment.version = self.version
         else:
