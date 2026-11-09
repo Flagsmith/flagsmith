@@ -35,7 +35,7 @@ ${getClickHouseSetupSql('flagsmith_exp')}
 
 -- Create a dedicated user for Flagsmith
 CREATE USER IF NOT EXISTS <USER>
-    IDENTIFIED WITH sha256_password BY '<CHANGE_ME_PASSWORD>';
+    IDENTIFIED WITH sha256_password BY '<YOUR_PASSWORD>';
 
 -- Allow it to write and read experiment events
 GRANT SELECT, INSERT ON flagsmith_exp.events TO <USER>;

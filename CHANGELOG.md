@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.290.0](https://github.com/Flagsmith/flagsmith/compare/v2.289.0...v2.290.0) (2026-11-05)
+
+
+### Features
+
+* **experimentation:** show when a warehouse last received an event ([#8742](https://github.com/Flagsmith/flagsmith/issues/8742)) ([5924f6f](https://github.com/Flagsmith/flagsmith/commit/5924f6fe494f9c47b5cc633799f533aa84930bcc))
+
+
+### Bug Fixes
+
+* **experimentation:** hide the first-event button for customer warehouses on self-hosted ([#8874](https://github.com/Flagsmith/flagsmith/issues/8874)) ([e755012](https://github.com/Flagsmith/flagsmith/commit/e755012a7447a2fe0db8ce2119edac7c3db8ccda))
+
+
+### Dependency Updates
+
+* lock file maintenance ([#8722](https://github.com/Flagsmith/flagsmith/issues/8722)) ([8bb5f38](https://github.com/Flagsmith/flagsmith/commit/8bb5f3893b45864342ef2102753e22959500d1ef))
+* **mcp:** update dependency flagsmith-common to v3.16.1 ([#8886](https://github.com/Flagsmith/flagsmith/issues/8886)) ([cdf25ca](https://github.com/Flagsmith/flagsmith/commit/cdf25ca6d1462205f4955b047b81a69b84986b29))
+
 ## [2.289.0](https://github.com/Flagsmith/flagsmith/compare/v2.288.2...v2.289.0) (2026-11-05)
 
 

@@ -1,7 +1,8 @@
 ---
 title: Connect Databricks
-sidebar_label: Connect Databricks
-sidebar_position: 2.5
+sidebar_label: Databricks
+sidebar_position: 2
+slug: /experimentation/connect-databricks
 description: Store and query experiment events in your own Databricks workspace.
 ---
 
@@ -107,8 +108,8 @@ storage works; you don't need an external location.
 
 If the test fails, you can save anyway and test again later, but events won't be delivered until it succeeds.
 
-5. The connection shows **Connected** once the test succeeds. To verify events reach your table, click **Send your first
-   event** on the connection card; the button disappears once the first event arrives.
+5. The connection shows **Connected** once the test succeeds. On Flagsmith Cloud, to verify events reach your table,
+   click **Send your first event** on the connection card; the button disappears once the first event arrives.
 
 ![A connected Databricks warehouse card showing the last event received, total events and unique event names](/img/experimentation/warehouse-databricks-connected.png)
 

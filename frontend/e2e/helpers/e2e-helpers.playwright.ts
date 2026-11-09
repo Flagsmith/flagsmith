@@ -817,15 +817,43 @@ export class E2EHelpers {
     // Use .first() to handle cases where multiple comparison modals might exist in DOM
     await expect(this.page.locator(byId('old-enabled')).first()).toHaveText(`${oldEnabled}`);
     await expect(this.page.locator(byId('new-enabled')).first()).toHaveText(`${newEnabled}`);
-    if (oldValue !== undefined) {
-      const expectedOldValue = oldValue === null ? '' : `${oldValue}`;
-      await expect(this.page.locator(byId('old-value')).first()).toHaveText(expectedOldValue);
-    }
-    if (newValue !== undefined) {
-      const expectedNewValue = newValue === null ? '' : `${newValue}`;
-      await expect(this.page.locator(byId('new-value')).first()).toHaveText(expectedNewValue);
+    if (oldValue !== undefined && newValue !== undefined) {
+      await this.assertDiffString(
+        // The value diff can sit in an inactive tab, e.g. when only variations changed.
+        this.page
+          .getByRole('group', { includeHidden: true, name: 'Value diff' })
+          .first(),
+        oldValue,
+        newValue,
+      );
     }
     await this.closeModal();
+  }
+
+  // Assert what a DiffString renders. Changed values are shown by
+  // react-diff-viewer as a removed (`-`) line and an added (`+`) line.
+  async assertDiffString(diff: Locator, oldValue: any, newValue: any) {
+    const toText = (value: any) => (value === null ? '' : `${value}`);
+    const oldText = toText(oldValue);
+    const newText = toText(newValue);
+
+    if (oldText === newText) {
+      await expect(diff).toHaveText(oldText === '' ? 'No Value.' : oldText);
+      return;
+    }
+
+    const removedLines = diff.locator('tr:has(td pre:text-is("-")) td:last-child');
+    const addedLines = diff.locator('tr:has(td pre:text-is("+")) td:last-child');
+    if (oldText === '') {
+      await expect(removedLines).toHaveCount(0);
+    } else {
+      await expect(removedLines).toHaveText([oldText]);
+    }
+    if (newText === '') {
+      await expect(addedLines).toHaveCount(0);
+    } else {
+      await expect(addedLines).toHaveText([newText]);
+    }
   }
 
   // Assert number of versions

@@ -20,6 +20,10 @@ export interface GitHubPagedResponse<T> extends PagedResponse<T> {
 }
 export type FlagsmithValue = string | number | boolean | null
 
+// A value shown in a diff. JSON fields, e.g. segment `rules_data`, arrive as
+// arrays or objects.
+export type DiffValue = FlagsmithValue | unknown[] | Record<string, unknown>
+
 export type EnvironmentMetrics = {
   id: number
   name: string
@@ -565,8 +569,8 @@ export type AuditLogItem = {
 export type AuditLogDetail = AuditLogItem & {
   change_details: {
     field: string
-    old: FlagsmithValue
-    new: FlagsmithValue
+    old: DiffValue
+    new: DiffValue
   }[]
 }
 export type PaymentMethod = 'CHARGEBEE' | 'XERO' | 'AWS_MARKETPLACE'
