@@ -1,5 +1,3 @@
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
-import type { SerializedError } from '@reduxjs/toolkit'
 import {
   ChangeRequest,
   FeatureState,
@@ -11,6 +9,7 @@ import {
   useGetChangeRequestQuery,
   useUpdateChangeRequestAssigneesMutation,
 } from 'common/services/useChangeRequest'
+import { isNotFoundError, toErrorMessage } from 'common/utils/requestError'
 
 export type ChangeRequestAssignees = Pick<
   ChangeRequest,
@@ -36,22 +35,6 @@ export type ChangeRequestDetail = {
   updateAssignees: (assignees: ChangeRequestAssignees) => void
 }
 
-type RequestError = FetchBaseQueryError | SerializedError | undefined
-
-const hasDetail = (data: unknown): data is { detail: string } =>
-  typeof data === 'object' &&
-  data !== null &&
-  'detail' in data &&
-  typeof data.detail === 'string'
-
-// Match the Flux store, which shows the API's detail message on its own
-const toErrorMessage = (error: RequestError) => {
-  if (error && 'data' in error && hasDetail(error.data)) {
-    return error.data.detail
-  }
-  return error
-}
-
 export const useChangeRequestDetail = ({
   environmentId,
   id,
@@ -63,7 +46,7 @@ export const useChangeRequestDetail = ({
     isFetching,
   } = useGetChangeRequestQuery(
     { environmentId, id, projectId },
-    // Like the Flux store, refetch after an action, not on window focus
+    // Refetch after an action, not on window focus
     { refetchOnFocus: false },
   )
   const [action, actionState] = useActionChangeRequestMutation()
@@ -78,28 +61,37 @@ export const useChangeRequestDetail = ({
     deleteState.isLoading
   const error =
     actionState.error || updateState.error || deleteState.error || loadError
+  // Each mutation keeps its last error, so clear them when a new action starts
+  const clearErrors = () => {
+    actionState.reset()
+    updateState.reset()
+    deleteState.reset()
+  }
 
   return {
     approve: () => {
+      clearErrors()
       action({ actionType: 'approve', id })
     },
     changeRequest: data?.changeRequest,
     commit: async (onDone) => {
+      clearErrors()
       const res = await action({ actionType: 'commit', id })
       if (!('error' in res)) onDone()
     },
     environmentFlag: data?.environmentFlag,
     error: toErrorMessage(error),
     isUpdating,
-    notFound:
-      !data && !!loadError && 'status' in loadError && loadError.status === 404,
+    notFound: !data && isNotFoundError(loadError),
     projectFlag: data?.projectFlag,
     remove: async (onDone) => {
+      clearErrors()
       const res = await deleteChangeRequest({ id: Number(id) })
       if (!('error' in res)) onDone()
     },
     updateAssignees: (assignees) => {
       if (isUpdating || !data) return
+      clearErrors()
       updateAssignees({ ...assignees, id })
     },
   }

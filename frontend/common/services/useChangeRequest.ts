@@ -13,6 +13,7 @@ import sortBy from 'lodash/sortBy'
 import moment from 'moment'
 import transformCorePaging from 'common/transformCorePaging'
 import { sortMultivariateOptions } from 'common/utils/multivariate'
+import { isNotFoundError } from 'common/utils/requestError'
 import {
   addFeatureSegmentsToFeatureStates,
   featureStateService,
@@ -121,7 +122,7 @@ export const changeRequestService = service
             baseQuery({ url: `projects/${projectId}/features/${feature}/` }),
           ])
           // A 404 means the feature was deleted since, which the page explains
-          if (projectFlagRes.error?.status === 404) {
+          if (isNotFoundError(projectFlagRes.error)) {
             return { data: { changeRequest } }
           }
           if (projectFlagRes.error) return { error: projectFlagRes.error }
