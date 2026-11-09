@@ -1404,6 +1404,11 @@ def test_list_environments__returns_paginated_response(
     # Given
     env_1 = Environment.objects.create(name="Env One", project=project)
     env_2 = Environment.objects.create(name="Env Two", project=project)
+    env_3 = Environment.objects.create(name="Env Three", project=project)
+    another_project = Project.objects.create(
+        name="Other", organisation=project.organisation
+    )
+    Environment.objects.create(name="Other Project Env", project=another_project)
     url = reverse("api-v1:environments:environment-list")
 
     # When
@@ -1414,10 +1419,12 @@ def test_list_environments__returns_paginated_response(
     # Then
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["count"] == 2
+    assert data["count"] == 3
+    assert len(data["results"]) == 3
     assert {environment["id"] for environment in data["results"]} == {
         env_1.id,
         env_2.id,
+        env_3.id,
     }
 
 
@@ -1426,8 +1433,13 @@ def test_list_environments__page_size_param_is_respected(
     project: Project,
 ) -> None:
     # Given
-    for i in range(5):
-        Environment.objects.create(name=f"Env {i}", project=project)
+    environments = [
+        Environment.objects.create(name=f"Env {i}", project=project) for i in range(5)
+    ]
+    another_project = Project.objects.create(
+        name="Other", organisation=project.organisation
+    )
+    Environment.objects.create(name="Other Project Env", project=another_project)
     url = reverse("api-v1:environments:environment-list")
 
     # When
@@ -1441,15 +1453,43 @@ def test_list_environments__page_size_param_is_respected(
         data={"project": project.id, "page_size": 2, "page": 2},
         content_type="application/json",
     )
+    page_3_response = admin_client_new.get(
+        url,
+        data={"project": project.id, "page_size": 2, "page": 3},
+        content_type="application/json",
+    )
+    page_size_3_response = admin_client_new.get(
+        url,
+        data={"project": project.id, "page_size": 3},
+        content_type="application/json",
+    )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert page_2_response.status_code == status.HTTP_200_OK
+    assert page_3_response.status_code == status.HTTP_200_OK
+    assert page_size_3_response.status_code == status.HTTP_200_OK
     data = response.json()
     page_2_data = page_2_response.json()
+    page_3_data = page_3_response.json()
+    page_size_3_data = page_size_3_response.json()
     assert len(data["results"]) == 2
     assert data["count"] == 5
+    assert data["next"] is not None
     page_1_ids = {environment["id"] for environment in data["results"]}
     page_2_ids = {environment["id"] for environment in page_2_data["results"]}
+    page_3_ids = {environment["id"] for environment in page_3_data["results"]}
     assert len(page_2_data["results"]) == 2
+    assert len(page_3_data["results"]) == 1
+    assert page_3_data["next"] is None
+    assert len(page_size_3_data["results"]) == 3
     assert page_1_ids.isdisjoint(page_2_ids)
+    assert page_1_ids.isdisjoint(page_3_ids)
+    assert page_2_ids.isdisjoint(page_3_ids)
+    assert page_1_ids | page_2_ids | page_3_ids == {
+        environment.id for environment in environments
+    }
+    assert page_size_3_data["count"] == 5
+    assert {environment["id"] for environment in page_size_3_data["results"]}.issubset(
+        {environment.id for environment in environments}
+    )
