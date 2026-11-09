@@ -20,20 +20,11 @@ const sanitiseDiffString = (value: FlagsmithValue) => {
   }
   return `${value}`
 }
-const DiffString: FC<DiffType> = ({
-  compareMethod = DiffMethod.WORDS_WITH_SPACE,
-  newValue,
-  oldValue,
-}) => {
-  if (E2E) {
-    return (
-      <>
-        <div data-test={'old-value'}>{oldValue}</div>
-        <div data-test={'new-value'}>{newValue}</div>
-      </>
-    )
-  }
-
+const renderDiff = (
+  oldValue: FlagsmithValue,
+  newValue: FlagsmithValue,
+  compareMethod: DiffMethod,
+) => {
   if (oldValue === newValue) {
     if (oldValue === null || oldValue === '') {
       return <div className='text-muted'>No Value.</div>
@@ -73,5 +64,15 @@ const DiffString: FC<DiffType> = ({
     />
   )
 }
+
+const DiffString: FC<DiffType> = ({
+  compareMethod = DiffMethod.WORDS_WITH_SPACE,
+  newValue,
+  oldValue,
+}) => (
+  <div data-test='diff-string'>
+    {renderDiff(oldValue, newValue, compareMethod)}
+  </div>
+)
 
 export default DiffString
