@@ -17,3 +17,8 @@ export const isAllowedWhileBlocked = (pathname: string): boolean =>
 
 export const isOrganisationUsage = (pathname: string): boolean =>
   matches(pathname, ORGANISATION_USAGE)
+
+export const shouldShowOrganisationLimit = (
+  isAdmin: boolean,
+  hasOwnQuotaBanner: boolean,
+): boolean => isAdmin && !hasOwnQuotaBanner

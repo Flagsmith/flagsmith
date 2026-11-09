@@ -1,4 +1,8 @@
-import { isAllowedWhileBlocked, isOrganisationUsage } from 'web/routePaths'
+import {
+  isAllowedWhileBlocked,
+  isOrganisationUsage,
+  shouldShowOrganisationLimit,
+} from 'web/routePaths'
 
 // App renders <Blocked /> wherever this is false, so a wrong answer either
 // locks a blocked organisation out, or lets it back in.
@@ -25,6 +29,23 @@ describe('isAllowedWhileBlocked', () => {
       false,
     )
   })
+})
+
+describe('shouldShowOrganisationLimit', () => {
+  it.each`
+    isAdmin  | hasOwnQuotaBanner | shouldShow
+    ${true}  | ${false}          | ${true}
+    ${true}  | ${true}           | ${false}
+    ${false} | ${false}          | ${false}
+    ${false} | ${true}           | ${false}
+  `(
+    'admin=$isAdmin, own quota banner=$hasOwnQuotaBanner: $shouldShow',
+    ({ hasOwnQuotaBanner, isAdmin, shouldShow }) => {
+      expect(shouldShowOrganisationLimit(isAdmin, hasOwnQuotaBanner)).toBe(
+        shouldShow,
+      )
+    },
+  )
 })
 
 // App hides its app-wide quota banner here, where the page has its own.

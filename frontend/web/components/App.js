@@ -30,7 +30,11 @@ import Announcement from './Announcement'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 import AccountProvider from 'common/providers/AccountProvider'
 import Nav from './navigation/Nav'
-import { isAllowedWhileBlocked, isOrganisationUsage } from 'web/routePaths'
+import {
+  isAllowedWhileBlocked,
+  isOrganisationUsage,
+  shouldShowOrganisationLimit,
+} from 'web/routePaths'
 import 'project/darkMode'
 
 const App = class extends Component {
@@ -366,7 +370,10 @@ const App = class extends Component {
                     />
                     {user && (
                       <>
-                        {!hasOwnQuotaBanner && (
+                        {shouldShowOrganisationLimit(
+                          AccountStore.isAdmin(),
+                          hasOwnQuotaBanner,
+                        ) && (
                           <OrganisationLimit
                             id={AccountStore.getOrganisation()?.id}
                             organisationPlan={
