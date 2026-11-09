@@ -403,7 +403,7 @@ def test_create_segment__old_segment_versions_exist__ignores_old_versions_in_lim
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_update_segment__rules_changed__creates_only_update_audit_log(
+def test_update_segment__rules_changed__creates_single_update_audit_log(
     client: APIClient,
     project: Project,
     segment: Segment,
