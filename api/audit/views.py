@@ -42,6 +42,8 @@ class _BaseAuditLogViewSet(
         serializer = AuditLogsQueryParamSerializer(data=self.request.GET)
         serializer.is_valid(raise_exception=True)
 
+        if (is_org_level := serializer.data.get("is_organisation_level")) is not None:
+            q = q & Q(organisation__isnull=not is_org_level)
         if project_id := serializer.data.get("project"):
             q = q & Q(project__id=project_id)
         if environment_ids := serializer.data.get("environments"):
@@ -54,7 +56,7 @@ class _BaseAuditLogViewSet(
             q = q & Q(log__icontains=search)
 
         queryset = AuditLog.objects.filter(q).select_related(
-            "project", "environment", "author"
+            "organisation", "project", "environment", "author"
         )
 
         return self._apply_visibility_limits(queryset)
@@ -120,7 +122,10 @@ class OrganisationAuditLogViewSet(_BaseAuditLogViewSet):
     permission_classes = [IsAuthenticated, OrganisationAuditLogPermissions]
 
     def _get_base_filters(self) -> Q:
-        return Q(project__organisation__id=self.kwargs["organisation_pk"])
+        organisation_id = self.kwargs["organisation_pk"]
+        directly_related = Q(organisation__id=organisation_id)
+        indirectly_related = Q(project__organisation__id=organisation_id)
+        return directly_related | indirectly_related
 
     def _get_organisation(self) -> Organisation | None:
         return (  # type: ignore[no-any-return]

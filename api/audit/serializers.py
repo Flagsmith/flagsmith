@@ -2,14 +2,16 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from audit.models import AuditLog
-from audit.types import AuditLogChangeDetail, ChangeType
+from audit.types import AuditLogChangeDetail, AuditLogsQueryParams, ChangeType
 from environments.serializers import EnvironmentSerializerLight
+from organisations.serializers import OrganisationSerializerBasic
 from projects.serializers import ProjectListSerializer
 from users.serializers import UserListSerializer
 
 
 class AuditLogListSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     author = UserListSerializer()
+    organisation = OrganisationSerializerBasic()
     environment = EnvironmentSerializerLight()
     project = ProjectListSerializer()
 
@@ -20,6 +22,7 @@ class AuditLogListSerializer(serializers.ModelSerializer):  # type: ignore[type-
             "created_date",
             "log",
             "author",
+            "organisation",
             "environment",
             "project",
             "related_object_id",
@@ -37,6 +40,7 @@ class AuditLogChangeDetailsSerializer(serializers.Serializer[AuditLogChangeDetai
 
 class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     author = UserListSerializer()
+    organisation = OrganisationSerializerBasic()
     environment = EnvironmentSerializerLight()
     project = ProjectListSerializer()
     change_details = serializers.SerializerMethodField()
@@ -49,6 +53,7 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[t
             "created_date",
             "log",
             "author",
+            "organisation",
             "environment",
             "project",
             "related_object_id",
@@ -102,4 +107,16 @@ class AuditLogsQueryParamSerializer(serializers.Serializer):  # type: ignore[typ
     is_system_event = serializers.BooleanField(
         required=False, allow_null=True, default=None
     )
+    is_organisation_level = serializers.BooleanField(
+        required=False, allow_null=True, default=None
+    )
     search = serializers.CharField(min_length=3, max_length=256, required=False)
+
+    def validate(self, attrs: AuditLogsQueryParams) -> AuditLogsQueryParams:
+        if attrs.get("is_organisation_level") and (
+            attrs.get("project") or attrs.get("environments")
+        ):
+            raise serializers.ValidationError(
+                "Organisation-level logs cannot be filtered by project or environment."
+            )
+        return attrs

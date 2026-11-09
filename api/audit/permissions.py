@@ -1,5 +1,7 @@
 from common.projects.permissions import VIEW_AUDIT_LOG
+from django.contrib.auth.models import AnonymousUser
 from django.views import View
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 
@@ -15,7 +17,13 @@ class OrganisationAuditLogPermissions(BasePermission):
         except (Organisation.DoesNotExist, KeyError):
             return False
 
-        return request.user.is_organisation_admin(organisation)  # type: ignore[union-attr]
+        user = request.user
+        assert not isinstance(user, AnonymousUser)
+        if user.is_organisation_admin(organisation):
+            return True
+        if not user.belongs_to(organisation.id):
+            raise NotFound()
+        return False
 
 
 class ProjectAuditLogPermissions(BasePermission):

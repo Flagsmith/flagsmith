@@ -56,11 +56,12 @@ def _get_integration_config(
     instance: AuditLog,
     integration_name: AuditLogIntegrationAttrName,
 ) -> IntegrationsModel | None:
-    for relation_name in ("project", "environment", "organisation"):
-        if hasattr(
-            related_object := getattr(instance, relation_name),
-            integration_name,
-        ):
+    for related_object in (
+        instance.project,
+        instance.environment,
+        instance.organisation or getattr(instance.project, "organisation", None),
+    ):
+        if hasattr(related_object, integration_name):
             integration_config: IntegrationsModel = getattr(
                 related_object,
                 integration_name,
@@ -75,15 +76,15 @@ def call_webhooks(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
     if settings.DISABLE_WEBHOOKS:
         return
 
-    if not (instance.project_id or instance.environment_id):
-        logger.warning("Audit log without project or environment. Not sending webhook.")
+    if instance.organisation_id:
+        organisation_id = instance.organisation_id
+    elif instance.project:
+        organisation_id = instance.project.organisation_id
+    elif instance.environment:
+        organisation_id = instance.environment.project.organisation_id
+    else:
+        logger.warning("Audit log without organisation. Not sending webhook.")
         return
-
-    organisation_id = (
-        instance.project.organisation_id
-        if instance.project
-        else instance.environment.project.organisation_id
-    )
 
     if OrganisationWebhook.objects.filter(
         organisation_id=organisation_id, enabled=True

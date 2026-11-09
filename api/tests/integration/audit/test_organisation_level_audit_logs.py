@@ -70,7 +70,7 @@ def test_get_logs__logs_directly_associated_with_organisation__responds_200_with
                 "created_date": mock.ANY,
                 "log": "User `alice@example.com` joined the organisation",
                 "author": None,
-                "organisation": organisation,
+                "organisation": {"id": organisation, "name": "Test org"},
                 "environment": None,
                 "project": None,
                 "related_object_id": None,
@@ -217,6 +217,43 @@ def test_get_logs__mixed_logs_filtered_by_is_organisation_level__responds_200_wi
     assert [result["log"] for result in response.json()["results"]] == expected
 
 
+@pytest.mark.parametrize(
+    "filter_args",
+    [
+        {"project": "project"},
+        {"environments": "environment"},
+        {"project": "project", "environments": "environment"},
+    ],
+)
+def test_get_logs__filters_by_both_is_organisation_level_and_project_or_environment__responds_400(
+    admin_client: APIClient,
+    environment: int,
+    filter_args: dict[str, str],
+    organisation: int,
+    project: int,
+    request: pytest.FixtureRequest,
+) -> None:
+    # Given / When
+    response = admin_client.get(
+        f"/api/v1/organisations/{organisation}/audit/",
+        {
+            "is_organisation_level": True,
+            **{
+                name: request.getfixturevalue(value)
+                for name, value in filter_args.items()
+            },
+        },
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "non_field_errors": [
+            "Organisation-level logs cannot be filtered by project or environment."
+        ]
+    }
+
+
 def test_get_logs__mixed_logs__makes_expected_queries(
     admin_client: APIClient,
     admin_user: FFAdminUser,
@@ -319,7 +356,7 @@ def test_webhook_dispatch__organisation_log__sends_webhook(
             "created_date": mock.ANY,
             "log": "User `alice@example.com` joined the organisation",
             "author": None,
-            "organisation": organisation,
+            "organisation": {"id": organisation, "name": "Test org"},
             "environment": None,
             "project": None,
             "related_object_id": None,
