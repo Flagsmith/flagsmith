@@ -409,10 +409,7 @@ def test_update_segment__rules_changed__creates_single_update_audit_log(
     segment: Segment,
 ) -> None:
     # Given
-    url = reverse(
-        "api-v1:projects:project-segments-detail",
-        args=[project.id, segment.id],
-    )
+    url = f"/api/v1/projects/{project.id}/segments/{segment.id}/"
     data = {
         "name": segment.name,
         "project": project.id,
