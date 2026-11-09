@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 import requests
+from django.core.cache import cache
 from freezegun.api import FrozenDateTimeFactory
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
@@ -211,6 +212,11 @@ def sleep(freezer: FrozenDateTimeFactory, mocker: MockerFixture) -> MagicMock:
         "experimentation.warehouses.databricks.time.sleep", side_effect=freezer.tick
     )
     return mock
+
+
+@pytest.fixture(autouse=True)
+def token_cache() -> None:
+    cache.clear()
 
 
 @pytest.fixture(autouse=True)
@@ -838,6 +844,44 @@ def test_databricks_session__token_rejected__raises(
             pass  # pragma: no cover
 
 
+@pytest.mark.parametrize(
+    "elapsed_seconds, client_secret, expected_token_calls",
+    [(599, "sp-secret", 1), (601, "sp-secret", 2), (0, "rotated-secret", 2)],
+    ids=["within-ttl", "expired", "rotated-secret"],
+)
+def test_databricks_session__second_session__reuses_cached_token(
+    databricks_connection: WarehouseConnection,
+    freezer: FrozenDateTimeFactory,
+    token: Any,
+    statements: Any,
+    elapsed_seconds: int,
+    client_secret: str,
+    expected_token_calls: int,
+) -> None:
+    # Given
+    with databricks.databricks_session(
+        databricks_connection, budget_seconds=5
+    ) as session:
+        session.run("SELECT 1", {})
+    freezer.tick(timedelta(seconds=elapsed_seconds))
+    databricks_connection.credentials = {
+        "client_id": "sp-id",
+        "client_secret": client_secret,
+    }
+
+    # When
+    with databricks.databricks_session(
+        databricks_connection, budget_seconds=5
+    ) as session:
+        session.run("SELECT 1", {})
+
+    # Then
+    assert token.call_count == expected_token_calls
+    assert [
+        request.headers["Authorization"] for request in statements.request_history
+    ] == ["Bearer t0k3n", "Bearer t0k3n"]
+
+
 def test_run__typed_columns__converts_values(
     databricks_connection: WarehouseConnection,
     requests_mock: RequestsMockerFixture,
@@ -1062,7 +1106,7 @@ def test_describe_databricks_error__error__returns_user_facing_detail(
             _body(
                 EVENT_STATS_SQL,
                 [{"name": "environment_key", "value": "env-key", "type": "STRING"}],
-                "5s",
+                "15s",
             ),
             WarehouseEventStats(
                 total_events_received=10,
@@ -1122,6 +1166,28 @@ def test_event_lookup__unreachable__caches_unavailable_and_logs(
     assert token.call_count == 1
     assert [event["event"] for event in log.events] == [f"connection.{kind}_failed"]
     assert log.events[0]["environment__id"] == databricks_connection.environment_id
+
+
+@pytest.mark.parametrize("method", ["get_event_names", "get_event_stats"])
+def test_event_lookup__warehouse_starting__retries_on_next_lookup(
+    databricks_connection: WarehouseConnection,
+    requests_mock: RequestsMockerFixture,
+    token: Any,
+    method: str,
+) -> None:
+    # Given
+    submit = requests_mock.post(STATEMENTS_URL, json=_state("PENDING"))
+    requests_mock.get(f"{STATEMENTS_URL}/st-1", json=_state("PENDING"))
+    requests_mock.post(f"{STATEMENTS_URL}/st-1/cancel", json={})
+    lookup = getattr(DatabricksWarehouse(), method)
+
+    # When
+    first = lookup(databricks_connection, "env-key")
+    second = lookup(databricks_connection, "env-key")
+
+    # Then
+    assert first is second is None
+    assert submit.call_count == 2
 
 
 @pytest.mark.parametrize(
