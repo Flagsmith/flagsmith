@@ -56,11 +56,6 @@
       "rangeStrategy": "bump"
     },
     {
-      "description": "Keep Renovate itself up to date, so we get new features such as transitive security updates",
-      "matchPackageNames": ["renovatebot/github-action"],
-      "enabled": true
-    },
-    {
       "description": "Re-enable lock file maintenance for npm, which security:only-security-updates disables. Keep last with an empty scope to ensure commit scope is applied correctly.",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["lockFileMaintenance"],
