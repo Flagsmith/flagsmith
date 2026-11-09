@@ -291,7 +291,7 @@ def test_list_audit_log_for_organisation__non_enterprise__limits_logs_returned(
     assert response_json["results"][0]["log"] == "Something that happened today"
 
 
-def test_list_audit_log_for_organisation__projects_predating_edge__fetches_migration_status_once_per_project(
+def test_list_audit_log_for_organisation__multiple_projects__fetches_migration_status_once_per_project(
     admin_client: APIClient,
     organisation: Organisation,
     project: Project,
