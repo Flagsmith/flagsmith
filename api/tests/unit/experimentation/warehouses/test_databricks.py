@@ -893,7 +893,7 @@ def test_databricks_session__workspace_id_changed__rechecks_token_workspace(
     ) as session:
         session.run("SELECT 1", {})
     databricks_connection.config = {
-        **databricks_connection.config,
+        **(databricks_connection.config or {}),
         "workspace_id": "999",
     }
 
