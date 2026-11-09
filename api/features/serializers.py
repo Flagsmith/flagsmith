@@ -1,6 +1,6 @@
 from datetime import datetime
 from functools import cached_property
-from typing import Any, Callable
+from typing import Any, Callable, cast
 from uuid import UUID
 
 import django.core.exceptions
@@ -309,6 +309,17 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
                 }
             )
 
+    def update(self, instance: Feature, validated_data: dict[str, Any]) -> Feature:
+        if (
+            "multivariate_options" in validated_data
+            and has_live_experiment(instance.id)
+            and not self._changes_multivariate_options(
+                validated_data["multivariate_options"], instance
+            )
+        ):
+            validated_data.pop("multivariate_options")
+        return super().update(instance, validated_data)  # type: ignore[no-any-return]
+
     def validate_multivariate_options(self, multivariate_options):  # type: ignore[no-untyped-def]
         if multivariate_options:
             user = self.context["request"].user
@@ -326,19 +337,26 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             )
             if total_percentage_allocation > 100:
                 raise serializers.ValidationError("Invalid percentage allocation")
+        instance = cast(Feature | None, self.instance)
         if (
-            self.instance
-            and self._changes_multivariate_options(multivariate_options)
-            and has_live_experiment(self.instance.id)
+            instance
+            and self._changes_multivariate_options(multivariate_options, instance)
+            and has_live_experiment(instance.id)
         ):
             raise serializers.ValidationError(LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE)
         return multivariate_options
 
-    def _changes_multivariate_options(self, multivariate_options) -> bool:  # type: ignore[no-untyped-def]
+    def _changes_multivariate_options(
+        self,
+        multivariate_options: list[dict[str, Any]] | None,
+        instance: Feature | None = None,
+    ) -> bool:
+        instance = instance or cast(Feature | None, self.instance)
+        if instance is None:
+            return False
         # The frontend resubmits the whole feature, so only a real change to
-        # the options counts. Compare on content, not ids.
+        # writable option fields counts. Compare on content, not ids.
         fields = (
-            "key",
             "type",
             "integer_value",
             "string_value",
@@ -346,7 +364,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             "default_percentage_allocation",
         )
         current = NestedMultivariateFeatureOptionSerializer(
-            self.instance.multivariate_options.all(), many=True
+            instance.multivariate_options.all(), many=True
         ).data
 
         def signature(options) -> list[tuple[Any, ...]]:  # type: ignore[no-untyped-def]

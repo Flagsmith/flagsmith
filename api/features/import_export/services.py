@@ -1,6 +1,9 @@
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 
 from environments.models import Environment
+from experimentation.feature_state_metadata import has_live_experiment
+from features.constants import LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE
 from features.import_export.types import FeatureExportData
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -15,6 +18,17 @@ def overwrite_feature_for_environment(
     Apply a destructive feature import to a single environment without
     affecting other environments' feature states or the Feature definition.
     """
+    imported_option_values = {
+        (mv_data["type"], mv_data["value"]) for mv_data in feature_data["multivariate"]
+    }
+    existing_option_values = {
+        (option.type, option.value)
+        for option in existing_feature.multivariate_options.all()
+    }
+    creates_option = not imported_option_values.issubset(existing_option_values)
+    if creates_option and has_live_experiment(existing_feature.id):
+        raise ValidationError(LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE)
+
     FeatureSegment.objects.filter(
         feature=existing_feature, environment=environment
     ).delete()

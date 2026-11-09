@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 
 import pytest
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils import timezone
 from freezegun.api import FrozenDateTimeFactory
@@ -9,6 +10,7 @@ from pytest_django.fixtures import SettingsWrapper
 
 from environments.identities.models import Identity
 from environments.models import Environment
+from experimentation.models import Experiment, ExperimentStatus
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.import_export.constants import (
     FAILED,
@@ -22,6 +24,7 @@ from features.import_export.models import (
     FeatureImport,
     FlagsmithOnFlagsmithFeatureExport,
 )
+from features.import_export.services import overwrite_feature_for_environment
 from features.import_export.tasks import (
     _create_flagsmith_on_flagsmith_feature_export,
     clear_stale_feature_imports_and_exports,
@@ -29,6 +32,7 @@ from features.import_export.tasks import (
     import_features_for_environment,
     retire_stalled_feature_imports_and_exports,
 )
+from features.import_export.types import FeatureExportData
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.value_types import STRING
@@ -37,6 +41,55 @@ from organisations.models import Organisation
 from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import Segment
+
+
+def test_overwrite_feature_for_environment__live_experiment_requires_new_option__raises_validation_error(
+    db: None,
+    environment: Environment,
+    feature: Feature,
+) -> None:
+    # Given
+    MultivariateFeatureOption.objects.create(
+        feature=feature,
+        type=STRING,
+        string_value="existing",
+        default_percentage_allocation=100,
+    )
+    Experiment.objects.create(
+        environment=environment,
+        feature=feature,
+        name="live experiment",
+        hypothesis="new option wins",
+        status=ExperimentStatus.RUNNING,
+    )
+    feature_state = feature.feature_states.get(environment=environment)
+    imported_feature: FeatureExportData = {
+        "name": feature.name,
+        "default_enabled": feature.default_enabled,
+        "is_server_key_only": feature.is_server_key_only,
+        "initial_value": feature.initial_value,
+        "value": feature.initial_value,
+        "type": STRING,
+        "enabled": feature_state.enabled,
+        "multivariate": [
+            {
+                "percentage_allocation": 100,
+                "default_percentage_allocation": 100,
+                "value": "new",
+                "type": STRING,
+            }
+        ],
+    }
+
+    # When / Then
+    with pytest.raises(ValidationError):
+        overwrite_feature_for_environment(imported_feature, feature, environment)
+
+    assert feature.multivariate_options.count() == 1
+    assert (
+        feature.feature_states.get(environment=environment).feature_state_value.value
+        == feature.initial_value
+    )
 
 
 def test_clear_stale_feature_imports_and_exports__stale_records__deletes_old_keeps_new(  # type: ignore[no-untyped-def]
