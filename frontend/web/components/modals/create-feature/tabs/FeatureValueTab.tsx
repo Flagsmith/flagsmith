@@ -380,10 +380,23 @@ const FeatureValueTab: FC<FeatureValueTabProps> = ({
         />
       )}
       {!!isBlockedByDependencies && (
-        <Banner type='warning' className='mb-4' title='Served off by dependencies'>
+        <Banner
+          type='warning'
+          className='mb-4'
+          title='Served off by dependencies'
+        >
           This flag is currently forced off because one or more of its
-          prerequisites are not met. See the{' '}
-          <strong>Dependencies</strong> tab for details.
+          prerequisites are not met.{' '}
+          {existingChangeRequest ? (
+            <>
+              Open the feature's <strong>Dependencies</strong> tab outside this
+              change request for details.
+            </>
+          ) : (
+            <>
+              See the <strong>Dependencies</strong> tab for details.
+            </>
+          )}
         </Banner>
       )}
       <FormGroup className='mb-4'>

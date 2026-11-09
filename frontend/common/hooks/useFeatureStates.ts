@@ -1,10 +1,9 @@
-import { useGetFeatureListQuery } from 'common/services/useProjectFlag'
-import { useProjectEnvironments } from './useProjectEnvironments'
+import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import { ProjectFlag } from 'common/types/responses'
+import { useProjectEnvironments } from './useProjectEnvironments'
 
-// Stable, so a memo over the list doesn't rerun while it loads.
+// Stable, so consumers do not see a new empty list while loading.
 const NO_FEATURES: ProjectFlag[] = []
-
 type UseFeatureStatesArgs = {
   // The api key, as everywhere else in the UI.
   environmentId: string
@@ -12,8 +11,8 @@ type UseFeatureStatesArgs = {
   skip?: boolean
 }
 
-// Whether each of a project's features is on in one environment, from the
-// feature list. getFeatureList takes the numeric environment id, not the key.
+// Whether each feature is on in one environment, from all project flags.
+// The recursive project-flags query follows every page.
 export const useFeatureStates = ({
   environmentId,
   projectId,
@@ -26,16 +25,13 @@ export const useFeatureStates = ({
   } = useProjectEnvironments(projectId)
   const numericEnvId = getEnvironmentIdFromKey(environmentId)
   const {
-    data,
+    currentData: data,
     isError: isFeatureListError,
-    isLoading: isLoadingFeatureList,
-  } = useGetFeatureListQuery(
+    isFetching: isLoadingFeatureList,
+  } = useGetProjectFlagsQuery(
     {
-      environmentId: String(numericEnvId ?? ''),
-      page: 1,
-      // One page has to cover every feature, or one outside it reads as off.
-      page_size: 999,
-      projectId,
+      environment: numericEnvId,
+      project: String(projectId),
     },
     { skip: skip || !numericEnvId },
   )

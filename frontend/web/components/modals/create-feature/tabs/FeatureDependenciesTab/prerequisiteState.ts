@@ -28,6 +28,14 @@ export const toPrerequisiteRow = (
 })
 
 // Each prerequisite gets its own segment, so segment id is the order added.
+export const hasPrerequisiteStates = (
+  edges: DependencyEdge[],
+  features: ProjectFlag[],
+): boolean => {
+  const featureIds = new Set(features.map((feature) => feature.id))
+  return edges.every((edge) => featureIds.has(edge.prerequisite.id))
+}
+
 export const toPrerequisiteRows = (
   edges: DependencyEdge[],
   features: ProjectFlag[],

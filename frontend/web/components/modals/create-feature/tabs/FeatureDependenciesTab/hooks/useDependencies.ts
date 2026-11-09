@@ -7,7 +7,10 @@ import {
   useGetFeatureDependentsQuery,
 } from 'common/services/useFeatureDependency'
 import { useFeatureStates } from 'common/hooks/useFeatureStates'
-import { toPrerequisiteRows } from 'components/modals/create-feature/tabs/FeatureDependenciesTab/prerequisiteState'
+import {
+  hasPrerequisiteStates,
+  toPrerequisiteRows,
+} from 'components/modals/create-feature/tabs/FeatureDependenciesTab/prerequisiteState'
 
 type UseDependenciesArgs = {
   environmentId: string
@@ -28,11 +31,7 @@ export const useDependencies = ({
     isError: isDependenciesError,
     isLoading: isLoadingDependencies,
   } = useGetFeatureDependenciesQuery(query, { skip })
-  const {
-    data: dependents,
-    isError: isDependentsError,
-    isLoading: isLoadingDependents,
-  } = useGetFeatureDependentsQuery(query, { skip })
+  const { data: dependents } = useGetFeatureDependentsQuery(query, { skip })
 
   const [createDependency, { isLoading: isCreating }] =
     useCreateFeatureDependencyMutation()
@@ -41,13 +40,19 @@ export const useDependencies = ({
   // The edges carry only the prerequisite's name and id, so its current state
   // in this environment comes from the feature list.
   const featureStates = useFeatureStates({ environmentId, projectId, skip })
+  const prerequisites = dependencies?.results ?? []
+  const hasAllPrerequisiteStates = hasPrerequisiteStates(
+    prerequisites,
+    featureStates.features,
+  )
   const isReady =
     !skip &&
     !isDependenciesError &&
     !isLoadingDependencies &&
     !featureStates.isLoading &&
     !featureStates.isError &&
-    featureStates.hasLoadedFeatures
+    featureStates.hasLoadedFeatures &&
+    hasAllPrerequisiteStates
 
   const rows = useMemo(
     () =>
@@ -63,9 +68,11 @@ export const useDependencies = ({
   const isLoading =
     !skip &&
     (isLoadingDependencies ||
-      isLoadingDependents ||
       featureStates.isLoading ||
-      (!featureStates.isError && !featureStates.hasLoadedFeatures))
+      (!featureStates.isError && !featureStates.hasLoadedFeatures) ||
+      (!isDependenciesError &&
+        !isLoadingDependencies &&
+        !hasAllPrerequisiteStates))
 
   return {
     add: (prerequisite: ProjectFlag) =>
@@ -77,10 +84,8 @@ export const useDependencies = ({
     dependentEdges: dependents?.results ?? [],
     isCreating,
     isEnabled: featureStates.isEnabled,
-    // The feature list counts too. Without it every prerequisite reads as off,
-    // so the tab would claim the flag is serving off while the list is still
-    // in flight, or for good if the request fails.
-    isError: isDependenciesError || isDependentsError || featureStates.isError,
+    // Prerequisite status does not rely on dependents loading successfully.
+    isError: isDependenciesError || featureStates.isError,
     isLoading,
     isReady,
     remove: (prerequisiteFeatureId: number) =>
