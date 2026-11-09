@@ -58,7 +58,7 @@ const DiffString: FC<DiffType> = ({
   newValue,
   oldValue,
 }) => (
-  <div data-test='diff-string'>
+  <div role='group' aria-label='Value diff'>
     {renderDiff(oldValue, newValue, compareMethod)}
   </div>
 )

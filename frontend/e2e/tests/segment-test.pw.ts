@@ -509,7 +509,7 @@ test('Segment test 5 - Audit log shows segment rule changes @enterprise', async 
   await click(`text="Segment updated: ${segmentName}"`)
   const rulesDataDiff = page
     .locator('.list-item', { hasText: 'Rules data' })
-    .locator(byId('diff-string'))
+    .getByRole('group', { name: 'Value diff' })
   await expect(rulesDataDiff).toContainText('19')
   await expect(rulesDataDiff).not.toContainText('[object Object]')
 

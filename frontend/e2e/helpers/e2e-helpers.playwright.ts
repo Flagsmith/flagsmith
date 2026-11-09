@@ -819,7 +819,10 @@ export class E2EHelpers {
     await expect(this.page.locator(byId('new-enabled')).first()).toHaveText(`${newEnabled}`);
     if (oldValue !== undefined && newValue !== undefined) {
       await this.assertDiffString(
-        this.page.locator(byId('diff-string')).first(),
+        // The value diff can sit in an inactive tab, e.g. when only variations changed.
+        this.page
+          .getByRole('group', { includeHidden: true, name: 'Value diff' })
+          .first(),
         oldValue,
         newValue,
       );
