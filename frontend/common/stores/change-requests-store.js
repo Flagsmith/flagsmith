@@ -25,18 +25,19 @@ const controller = {
         {},
       )
       .then(() => {
-        data
+        // The action has landed, so refresh even if re-reading the change request fails
+        getStore().dispatch(
+          changeRequestService.util.invalidateTags(['ChangeRequest']),
+        )
+        getStore().dispatch(
+          featureStateService.util.invalidateTags(['FeatureState']),
+        )
+        cb && cb()
+        return data
           .get(`${Project.api}features/workflows/change-requests/${id}/`)
           .then(async (res) => {
             store.model[id] = await transformChangeRequest(res)
-            cb && cb()
             store.loaded()
-            getStore().dispatch(
-              changeRequestService.util.invalidateTags(['ChangeRequest']),
-            )
-            getStore().dispatch(
-              featureStateService.util.invalidateTags(['FeatureState']),
-            )
           })
       })
       .catch((e) => API.ajaxHandler(store, e))
