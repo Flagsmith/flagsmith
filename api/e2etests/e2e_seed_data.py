@@ -15,7 +15,12 @@ from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
-from organisations.models import Organisation, OrganisationRole, Subscription
+from organisations.models import (
+    Organisation,
+    OrganisationRole,
+    OrganisationSubscriptionInformationCache,
+    Subscription,
+)
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import (
     CREATE_PROJECT,
@@ -143,6 +148,17 @@ def seed_data() -> None:
     Subscription.objects.filter(organisation__in=org_admin.organisations.all()).update(
         max_seats=8, plan=ENTERPRISE, subscription_id="test_subscription_id"
     )
+    # On SaaS, plan limits such as audit log visibility come from the
+    # subscription information cache, which starts with free plan limits.
+    for subscription_cache in OrganisationSubscriptionInformationCache.objects.filter(
+        organisation__in=org_admin.organisations.all()
+    ).select_related("organisation__subscription"):
+        subscription = subscription_cache.organisation.subscription
+        subscription_cache.upgrade_to_enterprise(
+            seats=subscription.max_seats,
+            api_calls=subscription.max_api_calls,
+        )
+        subscription_cache.save()
 
     # Create projects and environments
     projects = []
