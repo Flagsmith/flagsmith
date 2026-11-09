@@ -1395,3 +1395,46 @@ def test_create_environment__required_metadata_on_other_project__returns_201(
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_list_environments__returns_paginated_response(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    Environment.objects.create(name="Env One", project=project)
+    Environment.objects.create(name="Env Two", project=project)
+    url = reverse("api-v1:environments:environment-list")
+
+    # When
+    response = admin_client_new.get(
+        url, data={"project": project.id}, content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert "results" in response.json()
+    assert "count" in response.json()
+
+
+def test_list_environments__page_size_param_is_respected(
+    admin_client_new: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    for i in range(5):
+        Environment.objects.create(name=f"Env {i}", project=project)
+    url = reverse("api-v1:environments:environment-list")
+
+    # When
+    response = admin_client_new.get(
+        url,
+        data={"project": project.id, "page_size": 2},
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    data = response.json()
+    assert len(data["results"]) == 2
+    assert data["count"] >= 5
