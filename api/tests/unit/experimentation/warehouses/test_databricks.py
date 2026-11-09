@@ -882,6 +882,28 @@ def test_databricks_session__second_session__reuses_cached_token(
     ] == ["Bearer t0k3n", "Bearer t0k3n"]
 
 
+def test_databricks_session__workspace_id_changed__rechecks_token_workspace(
+    databricks_connection: WarehouseConnection,
+    token: Any,
+    statements: Any,
+) -> None:
+    # Given
+    with databricks.databricks_session(
+        databricks_connection, budget_seconds=5
+    ) as session:
+        session.run("SELECT 1", {})
+    databricks_connection.config = {
+        **databricks_connection.config,
+        "workspace_id": "999",
+    }
+
+    # When / Then
+    with pytest.raises(DatabricksWorkspaceMismatch):
+        with databricks.databricks_session(databricks_connection, budget_seconds=5):
+            pass  # pragma: no cover
+    assert token.call_count == 2
+
+
 def test_run__typed_columns__converts_values(
     databricks_connection: WarehouseConnection,
     requests_mock: RequestsMockerFixture,

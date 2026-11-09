@@ -201,7 +201,12 @@ def _token_cache_key(
     config: DatabricksConfig, credentials: DatabricksCredentials
 ) -> str:
     details = json.dumps(
-        [config["host"], credentials["client_id"], credentials["client_secret"]]
+        [
+            config["host"],
+            config["workspace_id"],
+            credentials["client_id"],
+            credentials["client_secret"],
+        ]
     )
     digest = hashlib.sha256(details.encode()).hexdigest()
     return f"experimentation:databricks_token:{digest}"
