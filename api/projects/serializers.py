@@ -57,8 +57,6 @@ class ProjectListSerializer(serializers.ModelSerializer):  # type: ignore[type-a
         elif obj.is_edge_project_by_default:
             migration_status = ProjectIdentityMigrationStatus.MIGRATION_COMPLETED.value
         else:
-            # Memoise per project for this response: list endpoints nesting this
-            # serializer (e.g. audit logs) would otherwise hit DynamoDB per row.
             cache = self.context.setdefault("migration_status_by_project_id", {})
             if obj.id not in cache:
                 cache[obj.id] = IdentityMigrator(obj.id).migration_status.value  # type: ignore[no-untyped-call]
