@@ -39,6 +39,8 @@ import {
 } from './responses'
 import { UtmsType } from './utms'
 
+export type ChangeRequestAction = 'approve' | 'commit'
+
 export type UpdateProjectBody = {
   name: string
   hide_disabled_flags?: boolean
@@ -704,6 +706,13 @@ export type Req = {
     environmentId: string
   }>
   updateChangeRequest: ChangeRequest
+  getChangeRequest: { id: string; environmentId: string; projectId: string }
+  actionChangeRequest: { id: string; actionType: ChangeRequestAction }
+  updateChangeRequestAssignees: {
+    id: number
+    approvals: ChangeRequest['approvals']
+    group_assignments: ChangeRequest['group_assignments']
+  }
   getGroupSummaries: {
     orgId: number
   }

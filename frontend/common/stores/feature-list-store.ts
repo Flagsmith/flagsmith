@@ -37,6 +37,7 @@ import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
 import {
+  actionChangeRequest,
   changeRequestService,
   updateChangeRequest,
 } from 'common/services/useChangeRequest'
@@ -535,6 +536,9 @@ const controller = {
     commit: boolean,
   ) => {
     store.saving()
+    const changeRequestsRtk = Utils.getFlagsmithHasFeature(
+      'change_requests_rtk',
+    )
     try {
       API.trackEvent(Constants.events.EDIT_FEATURE)
       const env: Environment = ProjectStore.getEnvironment(environmentId) as any
@@ -705,8 +709,18 @@ const controller = {
                         : updatedChangeRequest,
                     )
                   : Promise.resolve()
-              ).then(() => {
+              ).then(async () => {
                 if (commit) {
+                  if (changeRequestsRtk) {
+                    const res = await actionChangeRequest(getStore(), {
+                      actionType: 'commit',
+                      id: `${updatedChangeRequest.id}`,
+                    })
+                    if (!('error' in res)) {
+                      AppActions.refreshFeatures(projectId, environmentId)
+                    }
+                    return
+                  }
                   AppActions.actionChangeRequest(
                     updatedChangeRequest.id,
                     'commit',
@@ -718,15 +732,17 @@ const controller = {
                   getStore().dispatch(
                     changeRequestService.util.invalidateTags(['ChangeRequest']),
                   )
-                  AppActions.getChangeRequest(
-                    updatedChangeRequest.id,
-                    projectId,
-                    environmentId,
-                  )
+                  if (!changeRequestsRtk) {
+                    AppActions.getChangeRequest(
+                      updatedChangeRequest.id,
+                      projectId,
+                      environmentId,
+                    )
+                  }
                 }
               })
               prom.then(() => {
-                if (featureStateId) {
+                if (featureStateId && !changeRequestsRtk) {
                   AppActions.getChangeRequest(
                     changeRequestData.id,
                     projectId,

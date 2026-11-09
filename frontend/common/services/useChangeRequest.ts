@@ -2,6 +2,8 @@ import {
   ChangeRequest,
   ChangeSet,
   FeatureState,
+  PagedResponse,
+  ProjectFlag,
   Res,
 } from 'common/types/responses'
 import { Req } from 'common/types/requests'
@@ -10,11 +12,41 @@ import Utils from 'common/utils/utils'
 import sortBy from 'lodash/sortBy'
 import moment from 'moment'
 import transformCorePaging from 'common/transformCorePaging'
+import { sortMultivariateOptions } from 'common/utils/multivariate'
+import {
+  addFeatureSegmentsToFeatureStates,
+  featureStateService,
+} from './useFeatureState'
 
 export const changeRequestService = service
   .enhanceEndpoints({ addTagTypes: ['ChangeRequest'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      actionChangeRequest: builder.mutation<
+        Res['actionChangeRequest'],
+        Req['actionChangeRequest']
+      >({
+        invalidatesTags: (_, error, { id }) =>
+          error
+            ? []
+            : [
+                { id, type: 'ChangeRequest' },
+                { id: 'LIST', type: 'ChangeRequest' },
+              ],
+        onQueryStarted: async (_, { dispatch, queryFulfilled }) => {
+          try {
+            await queryFulfilled
+            dispatch(featureStateService.util.invalidateTags(['FeatureState']))
+          } catch {
+            // The mutation's own error state reports the failure
+          }
+        },
+        query: ({ actionType, id }) => ({
+          body: {},
+          method: 'POST',
+          url: `features/workflows/change-requests/${id}/${actionType}/`,
+        }),
+      }),
       createEnvironmentChangeRequest: builder.mutation<
         Res['createEnvironmentChangeRequest'],
         Req['createEnvironmentChangeRequest']
@@ -57,6 +89,58 @@ export const changeRequestService = service
           url: `features/workflows/change-requests/${id}/`,
         }),
       }),
+      getChangeRequest: builder.query<
+        Res['changeRequestDetail'],
+        Req['getChangeRequest']
+      >({
+        providesTags: (_, _2, { id }) => [{ id, type: 'ChangeRequest' }],
+        queryFn: async (
+          { environmentId, id, projectId },
+          _api,
+          _extraOptions,
+          baseQuery,
+        ) => {
+          const res = await baseQuery({
+            url: `features/workflows/change-requests/${id}/`,
+          })
+          if (res.error) return { error: res.error }
+          const raw = res.data as ChangeRequest
+          const changeRequest: ChangeRequest = {
+            ...raw,
+            feature_states: await Promise.all(
+              raw.feature_states.map(addFeatureSegmentsToFeatureStates),
+            ),
+          }
+          const feature =
+            changeRequest.feature_states[0]?.feature ||
+            changeRequest.change_sets?.[0]?.feature
+          const [environmentFlags, projectFlagRes] = await Promise.all([
+            baseQuery({
+              url: `environments/${environmentId}/featurestates/?feature=${feature}`,
+            }),
+            baseQuery({ url: `projects/${projectId}/features/${feature}/` }),
+          ])
+          // The feature may have been deleted since, which the page explains
+          if (environmentFlags.error || projectFlagRes.error) {
+            return { data: { changeRequest } }
+          }
+          const projectFlag = projectFlagRes.data as ProjectFlag
+          return {
+            data: {
+              changeRequest,
+              environmentFlag: (
+                environmentFlags.data as PagedResponse<FeatureState>
+              ).results[0],
+              projectFlag: {
+                ...projectFlag,
+                multivariate_options: sortMultivariateOptions(
+                  projectFlag.multivariate_options,
+                ),
+              },
+            },
+          }
+        },
+      }),
       getChangeRequests: builder.query<
         Res['changeRequests'],
         Req['getChangeRequests']
@@ -97,6 +181,43 @@ export const changeRequestService = service
           url: `features/workflows/change-requests/${changeRequest.id}/`,
         }),
       }),
+      updateChangeRequestAssignees: builder.mutation<
+        Res['updateChangeRequest'],
+        Req['updateChangeRequestAssignees']
+      >({
+        invalidatesTags: (_, error, { id }) =>
+          error
+            ? []
+            : [
+                { id: `${id}`, type: 'ChangeRequest' },
+                { id: 'LIST', type: 'ChangeRequest' },
+              ],
+        // Re-read first so the PUT carries the stored change, not the page's copy
+        queryFn: async (
+          { approvals, group_assignments, id },
+          _api,
+          _extraOptions,
+          baseQuery,
+        ) => {
+          const url = `features/workflows/change-requests/${id}/`
+          const res = await baseQuery({ url })
+          if (res.error) return { error: res.error }
+          const current = res.data as ChangeRequest
+          const put = await baseQuery({
+            body: {
+              ...current,
+              approvals,
+              environment_feature_versions:
+                current.environment_feature_versions?.map((v) => v.uuid),
+              group_assignments,
+            },
+            method: 'PUT',
+            url,
+          })
+          if (put.error) return { error: put.error }
+          return { data: put.data as Res['updateChangeRequest'] }
+        },
+      }),
       // END OF ENDPOINTS
     }),
   })
@@ -123,13 +244,27 @@ export async function updateChangeRequest(
     changeRequestService.endpoints.updateChangeRequest.initiate(data, options),
   )
 }
+export async function actionChangeRequest(
+  store: any,
+  data: Req['actionChangeRequest'],
+  options?: Parameters<
+    typeof changeRequestService.endpoints.actionChangeRequest.initiate
+  >[1],
+) {
+  return store.dispatch(
+    changeRequestService.endpoints.actionChangeRequest.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useActionChangeRequestMutation,
   useCreateEnvironmentChangeRequestMutation,
   useDeleteChangeRequestMutation,
+  useGetChangeRequestQuery,
   useGetChangeRequestsQuery,
   useGetScheduledChangeRequestsQuery,
+  useUpdateChangeRequestAssigneesMutation,
   useUpdateChangeRequestMutation,
   // END OF EXPORTS
 } = changeRequestService

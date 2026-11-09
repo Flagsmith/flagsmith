@@ -1,7 +1,6 @@
 import { FC, ReactNode, useEffect, useMemo, useState } from 'react'
 import Icon from 'components/icons/Icon'
 import OrganisationStore from 'common/stores/organisation-store'
-import ChangeRequestStore from 'common/stores/change-requests-store'
 import FeatureListStore from 'common/stores/feature-list-store'
 import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import CreateFeatureModal from 'components/modals/create-feature'
@@ -44,6 +43,7 @@ import { useHistory } from 'react-router-dom'
 import { openPublishChangeRequestConfirm } from 'components/PublishChangeRequestModal'
 import { getChangeRequestLiveDate } from 'common/utils/getChangeRequestLiveDate'
 import { EnvironmentPermission } from 'common/types/permissions.types'
+import { useChangeRequestDetail } from 'common/hooks/useChangeRequestDetail'
 
 type ChangeRequestPageType = {
   match: {
@@ -60,21 +60,8 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   const { environmentId, id, projectId } = match.params
   const [_, setUpdate] = useState(Date.now())
   const [updateChangeRequest] = useUpdateChangeRequestMutation()
-  const error = ChangeRequestStore.error
-  const changeRequest = (
-    ChangeRequestStore.model as Record<string, ChangeRequest> | undefined
-  )?.[id]
-  const flags = (
-    ChangeRequestStore.flags as Record<
-      string,
-      {
-        environmentFlag: FeatureState
-        projectFlag: ProjectFlag
-      }
-    >
-  )[id]
-  const environmentFlag = flags?.environmentFlag
-  const projectFlag = flags && flags.projectFlag
+  const detail = useChangeRequestDetail({ environmentId, id, projectId })
+  const { changeRequest, environmentFlag, error, projectFlag } = detail
   const approvePermission = useHasPermission({
     id: environmentId,
     level: 'environment',
@@ -94,53 +81,39 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   })
 
   useEffect(() => {
-    AppActions.getChangeRequest(id, projectId, environmentId)
-  }, [id, projectId, environmentId])
-
-  useEffect(() => {
     const forceUpdate = () => {
       setUpdate(Date.now())
     }
-    ChangeRequestStore.on('change', forceUpdate)
     FeatureListStore.on('change', forceUpdate)
     OrganisationStore.on('change', forceUpdate)
 
     return () => {
-      ChangeRequestStore.off('change', forceUpdate)
       FeatureListStore.off('change', forceUpdate)
       OrganisationStore.off('change', forceUpdate)
     }
   }, [])
 
   const addOwner = (id: number, isUser = true) => {
-    if (ChangeRequestStore.isLoading || !changeRequest) return
-    AppActions.updateChangeRequest({
+    if (!changeRequest) return
+    detail.updateAssignees({
       approvals: isUser
         ? changeRequest.approvals.concat([{ user: id }])
         : changeRequest.approvals,
-      description: changeRequest.description,
-      feature_states: changeRequest.feature_states,
       group_assignments: isUser
         ? changeRequest.group_assignments
         : changeRequest.group_assignments.concat([{ group: id }]),
-      id: changeRequest.id,
-      title: changeRequest.title,
     })
   }
 
   const removeOwner = (id: number, isUser = true) => {
-    if (ChangeRequestStore.isLoading || !changeRequest) return
-    AppActions.updateChangeRequest({
+    if (!changeRequest) return
+    detail.updateAssignees({
       approvals: isUser
         ? changeRequest.approvals.filter((v) => v.user !== id)
         : changeRequest.approvals,
-      description: changeRequest.description,
-      feature_states: changeRequest.feature_states,
       group_assignments: isUser
         ? changeRequest.group_assignments
         : changeRequest.group_assignments.filter((v) => v.group !== id),
-      id: changeRequest.id,
-      title: changeRequest.title,
     })
   }
 
@@ -154,7 +127,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       ),
       destructive: true,
       onYes: () => {
-        AppActions.deleteChangeRequest(id, () => {
+        detail.remove(() => {
           history.replace(
             `/project/${projectId}/environment/${environmentId}/change-requests`,
           )
@@ -232,7 +205,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   }
 
   const approveChangeRequest = () => {
-    AppActions.actionChangeRequest(id, 'approve')
+    detail.approve()
   }
 
   const publishChangeRequest = () => {
@@ -258,7 +231,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       isScheduled,
       onYes: (ignore_conflicts) => {
         const commitChangeRequest = () => {
-          AppActions.actionChangeRequest(id, 'commit', () => {
+          detail.commit(() => {
             AppActions.refreshFeatures(projectId, environmentId)
           })
         }
@@ -281,7 +254,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     })
   }
 
-  if (error && !changeRequest) {
+  if (detail.notFound) {
     return (
       <div
         data-test='change-requests-page'
@@ -323,7 +296,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
 
   return (
     <div
-      style={{ opacity: ChangeRequestStore.isLoading ? 0.25 : 1 }}
+      style={{ opacity: detail.isUpdating ? 0.25 : 1 }}
       data-test='change-requests-page'
       id='change-requests-page'
       className='app-container container-fluid mt-1'
@@ -357,7 +330,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         scheduledDate={getChangeRequestLiveDate(changeRequest)}
         deleteChangeRequest={deleteChangeRequest}
         editChangeRequest={
-          !changeRequest?.committed_at
+          !changeRequest?.committed_at && projectFlag && environmentFlag
             ? () => editChangeRequest(projectFlag, environmentFlag)
             : undefined
         }
