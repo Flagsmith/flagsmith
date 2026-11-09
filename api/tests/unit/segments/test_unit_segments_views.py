@@ -25,7 +25,10 @@ from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from audit.constants import SEGMENT_DELETED_MESSAGE
+from audit.constants import (
+    SEGMENT_DELETED_MESSAGE,
+    SEGMENT_UPDATED_MESSAGE,
+)
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from cohorts.models import Cohort
@@ -394,6 +397,46 @@ def test_create_segment__old_segment_versions_exist__ignores_old_versions_in_lim
 
     # Then
     assert res.status_code == status.HTTP_201_CREATED
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_update_segment__rules_changed__creates_only_update_audit_log(
+    client: APIClient,
+    project: Project,
+    segment: Segment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail",
+        args=[project.id, segment.id],
+    )
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "type": "ALL",
+                "rules": [],
+                "conditions": [
+                    {"property": "foo", "operator": EQUAL, "value": "bar"},
+                ],
+            }
+        ],
+    }
+
+    # When
+    response = client.put(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert list(
+        AuditLog.objects.filter(
+            related_object_type=RelatedObjectType.SEGMENT.name,
+        ).values_list("related_object_id", "log")
+    ) == [(segment.id, SEGMENT_UPDATED_MESSAGE % segment.name)]
 
 
 @pytest.mark.parametrize(

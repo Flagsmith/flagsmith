@@ -175,6 +175,20 @@ def test_Segment_delete__multiple_rules_conditions__schedules_audit_log_task_onc
     assert task.delay.call_count == 1
 
 
+def test_Segment_clone__is_revision__does_not_schedule_audit_log_task(
+    mocker: MockerFixture,
+    segment: Segment,
+) -> None:
+    # Given
+    task = mocker.patch("core.signals.tasks.create_audit_log_from_historical_record")
+
+    # When
+    segment.clone(is_revision=True)
+
+    # Then
+    task.delay.assert_not_called()
+
+
 def test_Segment_clone__not_revision__creates_standalone_segment(
     segment: Segment,
 ) -> None:
