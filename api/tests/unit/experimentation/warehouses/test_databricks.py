@@ -1191,11 +1191,19 @@ def test_event_lookup__unreachable__caches_unavailable_and_logs(
 
 
 @pytest.mark.parametrize("method", ["get_event_names", "get_event_stats"])
-def test_event_lookup__warehouse_starting__retries_on_next_lookup(
+@pytest.mark.parametrize(
+    "elapsed_seconds, expected_submits",
+    [(9, 1), (11, 2)],
+    ids=["within-window", "after-window"],
+)
+def test_event_lookup__warehouse_starting__retries_after_short_window(
     databricks_connection: WarehouseConnection,
+    freezer: FrozenDateTimeFactory,
     requests_mock: RequestsMockerFixture,
     token: Any,
     method: str,
+    elapsed_seconds: int,
+    expected_submits: int,
 ) -> None:
     # Given
     submit = requests_mock.post(STATEMENTS_URL, json=_state("PENDING"))
@@ -1205,11 +1213,12 @@ def test_event_lookup__warehouse_starting__retries_on_next_lookup(
 
     # When
     first = lookup(databricks_connection, "env-key")
+    freezer.tick(timedelta(seconds=elapsed_seconds))
     second = lookup(databricks_connection, "env-key")
 
     # Then
     assert first is second is None
-    assert submit.call_count == 2
+    assert submit.call_count == expected_submits
 
 
 @pytest.mark.parametrize(

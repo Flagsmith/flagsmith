@@ -80,6 +80,7 @@ POLL_INTERVAL_SECONDS = 1
 MAX_WAIT_TIMEOUT_SECONDS = 30
 MIN_WAIT_TIMEOUT_SECONDS = 5
 TOKEN_CACHE_SECONDS = 600
+WAREHOUSE_STARTING_CACHE_SECONDS = 10
 EVENT_STATS_TIMEOUT_SECONDS = 15
 _TERMINAL_STATES = {"SUCCEEDED", "FAILED", "CANCELED", "CLOSED"}
 
@@ -524,8 +525,13 @@ class DatabricksWarehouse:
             ) as session:
                 result = read(session)
         except Exception as exc:
-            if not isinstance(exc, DatabricksWarehouseStarting):
-                cache.set(cache_key, CUSTOMER_EVENT_UNAVAILABLE, failure_seconds)
+            cache.set(
+                cache_key,
+                CUSTOMER_EVENT_UNAVAILABLE,
+                WAREHOUSE_STARTING_CACHE_SECONDS
+                if isinstance(exc, DatabricksWarehouseStarting)
+                else failure_seconds,
+            )
             logger.warning(
                 f"connection.{kind}_failed",
                 environment__id=connection.environment_id,
