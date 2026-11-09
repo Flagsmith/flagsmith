@@ -43,6 +43,8 @@ const ScheduledChangesPage: FC<ScheduledChangesPageType> = ({ match }) => {
       page,
       page_size: 50,
     },
+    // Same args on every visit, so refetch to drop changes that went live meanwhile
+    { refetchOnMountOrArgChange: true },
   )
   useEffect(() => {
     AppActions.getOrganisation(organisationId)
