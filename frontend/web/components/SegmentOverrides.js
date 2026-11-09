@@ -278,6 +278,7 @@ const SegmentOverrideInner = class Override extends React.Component {
               <div className='flex-fill overflow-hidden'>
                 <ValueEditor
                   label='Value'
+                  validateLength
                   disabled={readOnly}
                   value={v.value}
                   onChange={
@@ -295,6 +296,7 @@ const SegmentOverrideInner = class Override extends React.Component {
             <div className='flex-1 flex-column'>
               <ValueEditor
                 label='Segment Control Value'
+                validateLength
                 labelAfter={<ControlWeightChip percentage={controlPercent} />}
                 value={v.value}
                 disabled={readOnly}
