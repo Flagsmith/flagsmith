@@ -1163,93 +1163,93 @@ export const AllTokens: StoryObj = {
         <tbody>
           <tr>
             <td>
-              <code>--font-size-h1</code>
+              <code>--font-size-display-lg</code>
             </td>
             <td>
               <code>42px</code>
             </td>
-            <td>Headline 1.</td>
+            <td>Display large (Figma H1). Hero text, key figures.</td>
           </tr>
           <tr>
             <td>
-              <code>--font-size-h2</code>
+              <code>--font-size-display-md</code>
             </td>
             <td>
               <code>34px</code>
             </td>
-            <td>Headline 2.</td>
+            <td>Display medium (Figma H2).</td>
           </tr>
           <tr>
             <td>
-              <code>--font-size-h3</code>
+              <code>--font-size-display-sm</code>
             </td>
             <td>
               <code>30px</code>
             </td>
-            <td>Headline 3.</td>
+            <td>Display small (Figma H3).</td>
           </tr>
           <tr>
             <td>
-              <code>--font-size-h4</code>
+              <code>--font-size-heading-lg</code>
             </td>
             <td>
               <code>24px</code>
             </td>
-            <td>Headline 4.</td>
+            <td>Heading large (Figma H4). Page titles.</td>
           </tr>
           <tr>
             <td>
-              <code>--font-size-h5</code>
+              <code>--font-size-heading-md</code>
             </td>
             <td>
               <code>18px</code>
             </td>
-            <td>Headline 5.</td>
+            <td>Heading medium (Figma H5). Sections.</td>
           </tr>
           <tr>
             <td>
-              <code>--font-size-h6</code>
+              <code>--font-size-heading-sm</code>
             </td>
             <td>
               <code>16px</code>
             </td>
-            <td>Headline 6.</td>
+            <td>Heading small (Figma H6). Cards, subsections.</td>
           </tr>
           <tr>
             <td>
-              <code>--font-size-body-1</code>
+              <code>--font-size-body-lg</code>
             </td>
             <td>
               <code>14px</code>
             </td>
-            <td>Body 1. Default text.</td>
+            <td>Body large (Figma B1). Default text.</td>
           </tr>
           <tr>
             <td>
-              <code>--font-size-body-2</code>
+              <code>--font-size-body-md</code>
             </td>
             <td>
               <code>13px</code>
             </td>
-            <td>Body 2. Secondary text.</td>
+            <td>Body medium (Figma B2). Secondary text.</td>
           </tr>
           <tr>
             <td>
-              <code>--font-size-body-3</code>
+              <code>--font-size-body-sm</code>
             </td>
             <td>
               <code>12px</code>
             </td>
-            <td>Body 3. Captions, labels.</td>
+            <td>Body small (Figma B3). Captions, labels.</td>
           </tr>
           <tr>
             <td>
-              <code>--font-size-body-4</code>
+              <code>--font-size-body-xs</code>
             </td>
             <td>
               <code>11px</code>
             </td>
-            <td>Body 4. Fine print.</td>
+            <td>Body extra small (Figma B4). Fine print.</td>
           </tr>
         </tbody>
       </table>
@@ -1270,7 +1270,7 @@ export const AllTokens: StoryObj = {
             <td>
               <code>1.3</code>
             </td>
-            <td>Headlines H1 to H6.</td>
+            <td>Display and heading styles.</td>
           </tr>
           <tr>
             <td>
