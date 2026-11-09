@@ -3,6 +3,7 @@ from datetime import timedelta
 from typing import Optional
 
 from django.conf import settings
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from task_processor.decorators import (
@@ -143,27 +144,32 @@ def import_features_for_environment(feature_import_id: int) -> None:
 
 
 def _import_features_for_environment(feature_import: FeatureImport) -> None:
-    environment = feature_import.environment
-    input_data: list[FeatureExportData] = json.loads(feature_import.data)
-    project = environment.project
+    with transaction.atomic():
+        environment = feature_import.environment
+        input_data: list[FeatureExportData] = json.loads(feature_import.data)
+        project = environment.project
 
-    for feature_data in input_data:
-        existing_feature = Feature.objects.filter(
-            name=feature_data["name"],
-            project=project,
-        ).first()
+        for feature_data in input_data:
+            existing_feature = Feature.objects.filter(
+                name=feature_data["name"],
+                project=project,
+            ).first()
 
-        if existing_feature and feature_import.strategy == SKIP:
-            continue
+            if existing_feature and feature_import.strategy == SKIP:
+                continue
 
-        if existing_feature is None:
-            existing_feature = map_feature_export_data_to_feature(feature_data, project)
-            existing_feature.save()
+            if existing_feature is None:
+                existing_feature = map_feature_export_data_to_feature(
+                    feature_data, project
+                )
+                existing_feature.save()
 
-        overwrite_feature_for_environment(feature_data, existing_feature, environment)
+            overwrite_feature_for_environment(
+                feature_data, existing_feature, environment
+            )
 
-    feature_import.status = SUCCESS
-    feature_import.save()
+        feature_import.status = SUCCESS
+        feature_import.save()
 
 
 # Should only run on official flagsmith instance.

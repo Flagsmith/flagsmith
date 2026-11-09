@@ -2,6 +2,7 @@ from common.projects.permissions import (
     CREATE_FEATURE,
     VIEW_PROJECT,
 )
+from django.db import transaction
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
@@ -72,7 +73,13 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[t
     def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         feature_pk = self.kwargs.get("feature_pk")
         project_pk = self.kwargs.get("project_pk")
-        get_object_or_404(Feature.objects.filter(project__id=project_pk), pk=feature_pk)
+        url_feature = get_object_or_404(
+            Feature.objects.filter(project__id=project_pk), pk=feature_pk
+        )
+        if "feature" in request.data and str(request.data.get("feature")) != str(
+            url_feature.id
+        ):
+            raise ValidationError({"feature": "Feature must match the URL."})
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):  # type: ignore[no-untyped-def]
@@ -82,18 +89,32 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[t
         )
         if serializer.validated_data["feature"] != url_feature:
             raise ValidationError({"feature": "Feature must match the URL."})
-        self._check_no_live_experiment(url_feature)
-        super().perform_create(serializer)
+        with transaction.atomic():
+            Feature.objects.select_for_update().filter(pk=url_feature.pk).exists()
+            self._check_no_live_experiment(url_feature)
+            super().perform_create(serializer)
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
-        self._check_no_live_experiment(serializer.instance.feature)
+        features = [serializer.instance.feature]
         if "feature" in serializer.validated_data:
-            self._check_no_live_experiment(serializer.validated_data["feature"])
-        super().perform_update(serializer)
+            features.append(serializer.validated_data["feature"])
+        feature_ids = sorted({feature.id for feature in features})
+        with transaction.atomic():
+            list(
+                Feature.objects.select_for_update()
+                .filter(pk__in=feature_ids)
+                .order_by("pk")
+                .values_list("pk", flat=True)
+            )
+            for feature in features:
+                self._check_no_live_experiment(feature)
+            super().perform_update(serializer)
 
     def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
-        self._check_no_live_experiment(instance.feature)
-        super().perform_destroy(instance)
+        with transaction.atomic():
+            Feature.objects.select_for_update().filter(pk=instance.feature_id).exists()
+            self._check_no_live_experiment(instance.feature)
+            super().perform_destroy(instance)
 
     def _check_no_live_experiment(self, feature: Feature) -> None:
         if has_live_experiment(feature.id):
