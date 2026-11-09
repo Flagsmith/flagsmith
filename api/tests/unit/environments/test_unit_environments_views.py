@@ -1402,8 +1402,8 @@ def test_list_environments__returns_paginated_response(
     project: Project,
 ) -> None:
     # Given
-    Environment.objects.create(name="Env One", project=project)
-    Environment.objects.create(name="Env Two", project=project)
+    env_1 = Environment.objects.create(name="Env One", project=project)
+    env_2 = Environment.objects.create(name="Env Two", project=project)
     url = reverse("api-v1:environments:environment-list")
 
     # When
@@ -1413,8 +1413,12 @@ def test_list_environments__returns_paginated_response(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert "results" in response.json()
-    assert "count" in response.json()
+    data = response.json()
+    assert data["count"] == 2
+    assert {environment["id"] for environment in data["results"]} == {
+        env_1.id,
+        env_2.id,
+    }
 
 
 def test_list_environments__page_size_param_is_respected(
@@ -1429,12 +1433,23 @@ def test_list_environments__page_size_param_is_respected(
     # When
     response = admin_client_new.get(
         url,
-        data={"project": project.id, "page_size": 2},
+        data={"project": project.id, "page_size": 2, "page": 1},
+        content_type="application/json",
+    )
+    page_2_response = admin_client_new.get(
+        url,
+        data={"project": project.id, "page_size": 2, "page": 2},
         content_type="application/json",
     )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+    assert page_2_response.status_code == status.HTTP_200_OK
     data = response.json()
+    page_2_data = page_2_response.json()
     assert len(data["results"]) == 2
-    assert data["count"] >= 5
+    assert data["count"] == 5
+    page_1_ids = {environment["id"] for environment in data["results"]}
+    page_2_ids = {environment["id"] for environment in page_2_data["results"]}
+    assert len(page_2_data["results"]) == 2
+    assert page_1_ids.isdisjoint(page_2_ids)
