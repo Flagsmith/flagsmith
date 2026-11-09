@@ -37,9 +37,7 @@ const TabButton = React.forwardRef<HTMLButtonElement | null, TabButtonProps>(
             </span>
           )}
           {child.props.tabBadge !== undefined && (
-            <span className='btn-tab__badge' aria-label='Prerequisite status'>
-              {child.props.tabBadge}
-            </span>
+            <span className='btn-tab__badge'>{child.props.tabBadge}</span>
           )}
         </span>
       </Button>

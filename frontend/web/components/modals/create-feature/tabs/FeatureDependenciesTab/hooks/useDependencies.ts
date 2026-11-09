@@ -40,13 +40,32 @@ export const useDependencies = ({
 
   // The edges carry only the prerequisite's name and id, so its current state
   // in this environment comes from the feature list.
-  const featureStates = useFeatureStates({ environmentId, projectId })
+  const featureStates = useFeatureStates({ environmentId, projectId, skip })
+  const isReady =
+    !skip &&
+    !isDependenciesError &&
+    !isLoadingDependencies &&
+    !featureStates.isLoading &&
+    !featureStates.isError &&
+    featureStates.hasLoadedFeatures
 
   const rows = useMemo(
     () =>
-      toPrerequisiteRows(dependencies?.results ?? [], featureStates.features),
-    [dependencies, featureStates.features],
+      isReady
+        ? toPrerequisiteRows(
+            dependencies?.results ?? [],
+            featureStates.features,
+          )
+        : [],
+    [dependencies, featureStates.features, isReady],
   )
+
+  const isLoading =
+    !skip &&
+    (isLoadingDependencies ||
+      isLoadingDependents ||
+      featureStates.isLoading ||
+      (!featureStates.isError && !featureStates.hasLoadedFeatures))
 
   return {
     add: (prerequisite: ProjectFlag) =>
@@ -62,8 +81,8 @@ export const useDependencies = ({
     // so the tab would claim the flag is serving off while the list is still
     // in flight, or for good if the request fails.
     isError: isDependenciesError || isDependentsError || featureStates.isError,
-    isLoading:
-      isLoadingDependencies || isLoadingDependents || featureStates.isLoading,
+    isLoading,
+    isReady,
     remove: (prerequisiteFeatureId: number) =>
       deleteDependency({
         environmentId,

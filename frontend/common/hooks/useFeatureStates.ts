@@ -43,6 +43,7 @@ export const useFeatureStates = ({
   const features = data?.results ?? NO_FEATURES
   return {
     features,
+    hasLoadedFeatures: data !== undefined,
     isEnabled: (featureId: number) =>
       !!features.find((feature) => feature.id === featureId)
         ?.environment_feature_state?.enabled,

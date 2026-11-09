@@ -171,14 +171,18 @@ const CreateFeatureModal: FC<CreateFeatureModalProps> = (props) => {
   // Share the same RTK Query cache as FeatureDependenciesTab (no extra fetch).
   // Used to show the blocked-by-dependencies notice in the Value tab and the
   // met/total badge on the Dependencies tab.
-  const { rows: prerequisiteRows } = useDependencies({
-    environmentId,
-    featureId: projectFlag.id,
-    projectId,
-    skip: !projectFlag.id,
-  })
-  const prerequisitesMet = countMetPrerequisites(prerequisiteRows)
-  const isBlockedByDependencies = isBlocked(prerequisiteRows)
+  const { isReady: areDependenciesReady, rows: prerequisiteRows } =
+    useDependencies({
+      environmentId,
+      featureId: projectFlag.id,
+      projectId,
+      skip: !projectFlag.id || Boolean(identity),
+    })
+  const prerequisitesMet = areDependenciesReady
+    ? countMetPrerequisites(prerequisiteRows)
+    : undefined
+  const isBlockedByDependencies =
+    areDependenciesReady && isBlocked(prerequisiteRows)
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const close = useCallback(() => {
