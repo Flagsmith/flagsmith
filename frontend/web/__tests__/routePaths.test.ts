@@ -1,8 +1,20 @@
+import AccountStore from 'common/stores/account-store'
 import {
   isAllowedWhileBlocked,
   isOrganisationUsage,
   shouldShowOrganisationLimit,
 } from 'web/routePaths'
+
+jest.mock('common/stores/account-store', () => ({
+  __esModule: true,
+  default: { isAdmin: jest.fn() },
+}))
+
+const mockIsAdmin = AccountStore.isAdmin as jest.Mock
+
+beforeEach(() => {
+  mockIsAdmin.mockReset()
+})
 
 // App renders <Blocked /> wherever this is false, so a wrong answer either
 // locks a blocked organisation out, or lets it back in.
@@ -33,15 +45,17 @@ describe('isAllowedWhileBlocked', () => {
 
 describe('shouldShowOrganisationLimit', () => {
   it.each`
-    isAdmin  | hasOwnQuotaBanner | shouldShow
-    ${true}  | ${false}          | ${true}
-    ${true}  | ${true}           | ${false}
-    ${false} | ${false}          | ${false}
-    ${false} | ${true}           | ${false}
+    isAdmin  | pathname                         | usageDashboardEnabled | shouldShow
+    ${true}  | ${'/organisation/7528/usage'}    | ${false}              | ${true}
+    ${true}  | ${'/organisation/7528/usage'}    | ${true}               | ${false}
+    ${true}  | ${'/organisation/7528/projects'} | ${true}               | ${true}
+    ${false} | ${'/organisation/7528/usage'}    | ${false}              | ${false}
+    ${false} | ${'/organisation/7528/projects'} | ${true}               | ${false}
   `(
-    'admin=$isAdmin, own quota banner=$hasOwnQuotaBanner: $shouldShow',
-    ({ hasOwnQuotaBanner, isAdmin, shouldShow }) => {
-      expect(shouldShowOrganisationLimit(isAdmin, hasOwnQuotaBanner)).toBe(
+    'admin=$isAdmin, pathname=$pathname, usage dashboard=$usageDashboardEnabled: $shouldShow',
+    ({ isAdmin, pathname, shouldShow, usageDashboardEnabled }) => {
+      mockIsAdmin.mockReturnValue(isAdmin)
+      expect(shouldShowOrganisationLimit(pathname, usageDashboardEnabled)).toBe(
         shouldShow,
       )
     },
