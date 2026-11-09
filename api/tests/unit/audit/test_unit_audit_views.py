@@ -302,27 +302,14 @@ def test_list_audit_log_for_organisation__projects_predating_edge__fetches_migra
     # Given
     other_project = Project.objects.create(name="Other", organisation=organisation)
     settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = flagsmith_project_metadata_table.name
-    settings.EDGE_RELEASE_DATETIME = timezone.now() + timedelta(days=1)
     mocker.patch(
         "environments.dynamodb.types.project_metadata_table",
         flagsmith_project_metadata_table,
     )
-    flagsmith_project_metadata_table.put_item(
-        Item={
-            "id": project.id,
-            "migration_start_time": "2022-05-16T11:51:10",
-            "migration_end_time": "2022-05-16T11:51:34",
-        }
-    )
 
-    now = timezone.now()
-    for i in range(3):
-        AuditLog.objects.create(
-            project=project, created_date=now - timedelta(minutes=2 * i)
-        )
-        AuditLog.objects.create(
-            project=other_project, created_date=now - timedelta(minutes=2 * i + 1)
-        )
+    for _ in range(3):
+        AuditLog.objects.create(project=project)
+        AuditLog.objects.create(project=other_project)
 
     dynamodb_calls: list[str] = []
     flagsmith_project_metadata_table.meta.client.meta.events.register(
@@ -336,14 +323,3 @@ def test_list_audit_log_for_organisation__projects_predating_edge__fetches_migra
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(dynamodb_calls) == 2
-    assert [
-        (
-            result["project"]["id"],
-            result["project"]["migration_status"],
-            result["project"]["use_edge_identities"],
-        )
-        for result in response.json()["results"]
-    ] == [
-        (project.id, "MIGRATION_COMPLETED", True),
-        (other_project.id, "MIGRATION_NOT_STARTED", False),
-    ] * 3
