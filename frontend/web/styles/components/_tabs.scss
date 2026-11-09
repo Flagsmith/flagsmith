@@ -149,6 +149,21 @@
     gap: 4px;
   }
 
+  .btn-tab__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $tab-btn-counter-value-font-size;
+    background-color: $tab-btn-counter-value-bg;
+    line-height: $line-height-xxsm;
+    border-radius: 10px;
+    padding: 0 5px;
+    min-width: $tab-btn-counter-value-width;
+    height: $tab-btn-counter-value-width;
+    color: $text-icon-light;
+    font-weight: $tab-btn-font-weight;
+  }
+
   &.btn-no-focus {
     &:focus {
       box-shadow: none !important;

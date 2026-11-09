@@ -13,24 +13,26 @@ type UseDependenciesArgs = {
   environmentId: string
   featureId: number
   projectId: number
+  skip?: boolean
 }
 
 export const useDependencies = ({
   environmentId,
   featureId,
   projectId,
+  skip = false,
 }: UseDependenciesArgs) => {
   const query = { environmentId, featureId }
   const {
     data: dependencies,
     isError: isDependenciesError,
     isLoading: isLoadingDependencies,
-  } = useGetFeatureDependenciesQuery(query)
+  } = useGetFeatureDependenciesQuery(query, { skip })
   const {
     data: dependents,
     isError: isDependentsError,
     isLoading: isLoadingDependents,
-  } = useGetFeatureDependentsQuery(query)
+  } = useGetFeatureDependentsQuery(query, { skip })
 
   const [createDependency, { isLoading: isCreating }] =
     useCreateFeatureDependencyMutation()
