@@ -536,9 +536,6 @@ const controller = {
     commit: boolean,
   ) => {
     store.saving()
-    const changeRequestsRtk = Utils.getFlagsmithHasFeature(
-      'change_requests_rtk',
-    )
     try {
       API.trackEvent(Constants.events.EDIT_FEATURE)
       const env: Environment = ProjectStore.getEnvironment(environmentId) as any
@@ -670,7 +667,6 @@ const controller = {
             : `${Project.api}environments/${environmentId}/create-change-request/`
           return data[reqType](url, req).then(
             (updatedChangeRequest: ChangeRequest) => {
-              let prom = Promise.resolve()
               const shouldUpdateMv =
                 multivariate_options && updatedChangeRequest.feature_states?.[0]
               if (shouldUpdateMv) {
@@ -697,7 +693,7 @@ const controller = {
                   )
               }
 
-              prom = (
+              void (
                 shouldUpdateMv || (commit && ignore_conflicts)
                   ? updateChangeRequest(
                       getStore(),
@@ -711,42 +707,16 @@ const controller = {
                   : Promise.resolve()
               ).then(async () => {
                 if (commit) {
-                  if (changeRequestsRtk) {
-                    const res = await actionChangeRequest(getStore(), {
-                      actionType: 'commit',
-                      id: `${updatedChangeRequest.id}`,
-                    })
-                    if (!('error' in res)) {
-                      AppActions.refreshFeatures(projectId, environmentId)
-                    }
-                    return
+                  const res = await actionChangeRequest(getStore(), {
+                    actionType: 'commit',
+                    id: `${updatedChangeRequest.id}`,
+                  })
+                  if (!('error' in res)) {
+                    AppActions.refreshFeatures(projectId, environmentId)
                   }
-                  AppActions.actionChangeRequest(
-                    updatedChangeRequest.id,
-                    'commit',
-                    () => {
-                      AppActions.refreshFeatures(projectId, environmentId)
-                    },
-                  )
                 } else {
                   getStore().dispatch(
                     changeRequestService.util.invalidateTags(['ChangeRequest']),
-                  )
-                  if (!changeRequestsRtk) {
-                    AppActions.getChangeRequest(
-                      updatedChangeRequest.id,
-                      projectId,
-                      environmentId,
-                    )
-                  }
-                }
-              })
-              prom.then(() => {
-                if (featureStateId && !changeRequestsRtk) {
-                  AppActions.getChangeRequest(
-                    changeRequestData.id,
-                    projectId,
-                    environmentId,
                   )
                 }
               })

@@ -1,12 +1,40 @@
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import type { SerializedError } from '@reduxjs/toolkit'
 import {
+  ChangeRequest,
+  FeatureState,
+  ProjectFlag,
+} from 'common/types/responses'
+import {
   useActionChangeRequestMutation,
   useDeleteChangeRequestMutation,
   useGetChangeRequestQuery,
   useUpdateChangeRequestAssigneesMutation,
 } from 'common/services/useChangeRequest'
-import type { ChangeRequestDetail, ChangeRequestDetailParams } from './types'
+
+export type ChangeRequestAssignees = Pick<
+  ChangeRequest,
+  'approvals' | 'group_assignments'
+>
+
+type ChangeRequestDetailParams = {
+  environmentId: string
+  id: string
+  projectId: string
+}
+
+export type ChangeRequestDetail = {
+  changeRequest?: ChangeRequest
+  environmentFlag?: FeatureState
+  projectFlag?: ProjectFlag
+  error?: unknown
+  isUpdating: boolean
+  notFound: boolean
+  approve: () => void
+  commit: (onDone: () => void) => void
+  remove: (onDone: () => void) => void
+  updateAssignees: (assignees: ChangeRequestAssignees) => void
+}
 
 type RequestError = FetchBaseQueryError | SerializedError | undefined
 
@@ -24,8 +52,7 @@ const toErrorMessage = (error: RequestError) => {
   return error
 }
 
-export const useRtkChangeRequestDetail = ({
-  enabled,
+export const useChangeRequestDetail = ({
   environmentId,
   id,
   projectId,
@@ -37,7 +64,7 @@ export const useRtkChangeRequestDetail = ({
   } = useGetChangeRequestQuery(
     { environmentId, id, projectId },
     // Like the Flux store, refetch after an action, not on window focus
-    { refetchOnFocus: false, skip: !enabled },
+    { refetchOnFocus: false },
   )
   const [action, actionState] = useActionChangeRequestMutation()
   const [updateAssignees, updateState] =
