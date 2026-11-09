@@ -36,7 +36,8 @@ export const useRtkChangeRequestDetail = ({
     isFetching,
   } = useGetChangeRequestQuery(
     { environmentId, id, projectId },
-    { skip: !enabled },
+    // Like the Flux store, refetch after an action, not on window focus
+    { refetchOnFocus: false, skip: !enabled },
   )
   const [action, actionState] = useActionChangeRequestMutation()
   const [updateAssignees, updateState] =
@@ -63,7 +64,8 @@ export const useRtkChangeRequestDetail = ({
     environmentFlag: data?.environmentFlag,
     error: toErrorMessage(error),
     isUpdating,
-    notFound: !!loadError && !data,
+    notFound:
+      !data && !!loadError && 'status' in loadError && loadError.status === 404,
     projectFlag: data?.projectFlag,
     remove: async (onDone) => {
       const res = await deleteChangeRequest({ id: Number(id) })
@@ -71,7 +73,7 @@ export const useRtkChangeRequestDetail = ({
     },
     updateAssignees: (assignees) => {
       if (isUpdating || !data) return
-      updateAssignees({ ...assignees, id: data.changeRequest.id })
+      updateAssignees({ ...assignees, id })
     },
   }
 }

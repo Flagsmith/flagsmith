@@ -266,6 +266,17 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       </div>
     )
   }
+  if (!changeRequest && error) {
+    return (
+      <div
+        data-test='change-requests-page'
+        id='change-requests-page'
+        className='app-container container'
+      >
+        <ErrorMessage error={error} />
+      </div>
+    )
+  }
   if (!changeRequest || OrganisationStore.isLoading) {
     return (
       <div

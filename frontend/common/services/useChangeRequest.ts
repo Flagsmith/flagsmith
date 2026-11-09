@@ -120,10 +120,12 @@ export const changeRequestService = service
             }),
             baseQuery({ url: `projects/${projectId}/features/${feature}/` }),
           ])
-          // The feature may have been deleted since, which the page explains
-          if (environmentFlags.error || projectFlagRes.error) {
+          // A 404 means the feature was deleted since, which the page explains
+          if (projectFlagRes.error?.status === 404) {
             return { data: { changeRequest } }
           }
+          if (projectFlagRes.error) return { error: projectFlagRes.error }
+          if (environmentFlags.error) return { error: environmentFlags.error }
           const projectFlag = projectFlagRes.data as ProjectFlag
           return {
             data: {

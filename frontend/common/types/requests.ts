@@ -709,7 +709,7 @@ export type Req = {
   getChangeRequest: { id: string; environmentId: string; projectId: string }
   actionChangeRequest: { id: string; actionType: ChangeRequestAction }
   updateChangeRequestAssignees: {
-    id: number
+    id: string
     approvals: ChangeRequest['approvals']
     group_assignments: ChangeRequest['group_assignments']
   }
