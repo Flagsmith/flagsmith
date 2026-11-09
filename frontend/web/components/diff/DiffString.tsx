@@ -2,39 +2,24 @@ import React, { FC } from 'react'
 import Diff, { DiffMethod } from 'react-diff-viewer-continued'
 import Prism from 'prismjs'
 import 'prismjs/components/prism-json'
-import { FlagsmithValue } from 'common/types/responses'
+import { DiffValue } from 'common/types/responses'
+import Utils from 'common/utils/utils'
 import DiffRow from './DiffRow'
 
 type DiffType = {
-  oldValue: FlagsmithValue
-  newValue: FlagsmithValue
+  oldValue: DiffValue
+  newValue: DiffValue
   compareMethod?: DiffMethod
 }
 
-const sanitiseDiffString = (value: FlagsmithValue) => {
-  if (value === undefined || value === null) {
-    return ''
-  }
-  if (value === '') {
-    return '""'
-  }
-  return `${value}`
-}
-const DiffString: FC<DiffType> = ({
-  compareMethod = DiffMethod.WORDS_WITH_SPACE,
-  newValue,
-  oldValue,
-}) => {
-  if (E2E) {
-    return (
-      <>
-        <div data-test={'old-value'}>{oldValue}</div>
-        <div data-test={'new-value'}>{newValue}</div>
-      </>
-    )
-  }
-
-  if (oldValue === newValue) {
+const renderDiff = (
+  oldValue: DiffValue,
+  newValue: DiffValue,
+  compareMethod: DiffMethod,
+) => {
+  const oldText = Utils.sanitiseDiffString(oldValue)
+  const newText = Utils.sanitiseDiffString(newValue)
+  if (oldText === newText) {
     if (oldValue === null || oldValue === '') {
       return <div className='text-muted'>No Value.</div>
     }
@@ -43,11 +28,7 @@ const DiffString: FC<DiffType> = ({
         <pre
           className='d-inline mb-0'
           dangerouslySetInnerHTML={{
-            __html: Prism.highlight(
-              sanitiseDiffString(newValue),
-              Prism.languages.json,
-              'json',
-            ),
+            __html: Prism.highlight(newText, Prism.languages.json, 'json'),
           }}
         />
       </DiffRow>
@@ -55,12 +36,10 @@ const DiffString: FC<DiffType> = ({
   }
   return (
     <Diff
-      oldValue={sanitiseDiffString(oldValue)}
-      newValue={sanitiseDiffString(newValue)}
+      oldValue={oldText}
+      newValue={newText}
       compareMethod={compareMethod}
-      hideLineNumbers={
-        !(`${oldValue}`.includes?.('\n') || `${newValue}`.includes?.('\n'))
-      }
+      hideLineNumbers={!(oldText.includes('\n') || newText.includes('\n'))}
       renderContent={(str) => (
         <pre
           className='d-inline'
@@ -73,5 +52,15 @@ const DiffString: FC<DiffType> = ({
     />
   )
 }
+
+const DiffString: FC<DiffType> = ({
+  compareMethod = DiffMethod.WORDS_WITH_SPACE,
+  newValue,
+  oldValue,
+}) => (
+  <div role='group' aria-label='Value diff'>
+    {renderDiff(oldValue, newValue, compareMethod)}
+  </div>
+)
 
 export default DiffString

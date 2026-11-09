@@ -120,3 +120,34 @@ describe('getPlanPermission', () => {
     },
   )
 })
+
+describe('sanitiseDiffString', () => {
+  it.each([
+    [null, ''],
+    [undefined, ''],
+    ['', '""'],
+    ['small', 'small'],
+    [0, '0'],
+    [false, 'false'],
+  ])('formats %p as %p', (value, expected) => {
+    expect(Utils.sanitiseDiffString(value)).toBe(expected)
+  })
+
+  it('formats an array of objects as indented JSON', () => {
+    const rulesData = [
+      {
+        conditions: [{ operator: 'EQUAL', property: 'age', value: '19' }],
+        rules: [],
+        type: 'ALL',
+      },
+    ]
+
+    expect(Utils.sanitiseDiffString(rulesData)).toBe(
+      JSON.stringify(rulesData, null, 2),
+    )
+  })
+
+  it('formats an object as indented JSON', () => {
+    expect(Utils.sanitiseDiffString({ a: 1 })).toBe('{\n  "a": 1\n}')
+  })
+})

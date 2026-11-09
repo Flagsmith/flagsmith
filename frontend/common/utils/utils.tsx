@@ -3,6 +3,7 @@ import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
   ContentType,
+  DiffValue,
   FeatureState,
   FlagsmithValue,
   MultivariateFeatureStateValue,
@@ -721,9 +722,15 @@ const Utils = Object.assign({}, BaseUtils, {
     )
   },
 
-  sanitiseDiffString: (value: FlagsmithValue) => {
+  sanitiseDiffString: (value: DiffValue | undefined): string => {
     if (value === undefined || value === null) {
       return ''
+    }
+    if (value === '') {
+      return '""'
+    }
+    if (typeof value === 'object') {
+      return JSON.stringify(value, null, 2)
     }
     return `${value}`
   },
