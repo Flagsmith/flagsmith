@@ -12,6 +12,12 @@
     "enabled": true,
     "schedule": ["before 9am on monday"]
   },
+  "pep621": {
+    "lockFileMaintenance": {
+      "description": "Not needed for uv, as Renovate remediates vulnerable transitive uv.lock dependencies directly",
+      "enabled": false
+    }
+  },
   "packageRules": [
     {
       "matchManagers": ["pep621"],
@@ -50,7 +56,8 @@
       "rangeStrategy": "bump"
     },
     {
-      "description": "Re-enable lock file maintenance, which security:only-security-updates disables. Keep last with an empty scope to ensure commit scope is applied correctly.",
+      "description": "Re-enable lock file maintenance for npm, which security:only-security-updates disables. Keep last with an empty scope to ensure commit scope is applied correctly.",
+      "matchManagers": ["npm"],
       "matchUpdateTypes": ["lockFileMaintenance"],
       "enabled": true,
       "semanticCommitScope": ""
