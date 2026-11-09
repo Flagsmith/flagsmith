@@ -94,11 +94,17 @@ class _BaseAuditLogViewSet(
 
 class AllAuditLogViewSet(_BaseAuditLogViewSet):
     def _get_base_filters(self) -> Q:
-        return Q(
+        directly_related = Q(
+            organisation__userorganisation__user=self.request.user,
+            organisation__userorganisation__role=OrganisationRole.ADMIN,
+            organisation__userorganisation__is_active=True,
+        )
+        indirectly_related = Q(
             project__organisation__userorganisation__user=self.request.user,
             project__organisation__userorganisation__role=OrganisationRole.ADMIN,
             project__organisation__userorganisation__is_active=True,
         )
+        return directly_related | indirectly_related
 
     def _get_organisation(self) -> Organisation | None:
         """

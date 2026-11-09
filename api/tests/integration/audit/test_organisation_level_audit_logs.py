@@ -4,24 +4,13 @@ from unittest import mock
 import pytest
 import responses
 from pytest_django import DjangoAssertNumQueries
-from pytest_mock import MockerFixture
 from rest_framework.test import APIClient
 
 from audit.models import AuditLog
 from environments.models import Environment
 from organisations.models import Organisation
-from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from projects.models import Project
 from users.models import FFAdminUser
-
-
-@pytest.fixture(autouse=True)
-def _subscription_metadata(mocker: MockerFixture) -> None:
-    """Lift the free plan's audit log visibility limit, which hides all past logs."""
-    mocker.patch(
-        "organisations.models.Subscription.get_subscription_metadata",
-        return_value=BaseSubscriptionMetadata(audit_log_visibility_days=None),
-    )
 
 
 @pytest.fixture
