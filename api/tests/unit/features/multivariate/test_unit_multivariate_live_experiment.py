@@ -123,13 +123,7 @@ def test_create_mv_option__body_feature_mismatches_url__returns_400(  # type: ig
     # When
     response = admin_client.post(
         _options_url(project, multivariate_feature),
-        data={
-            "feature": other_feature.id,
-            "type": "unicode",
-            "string_value": "new option",
-            "default_percentage_allocation": 0,
-            "key": "new",
-        },
+        data={"feature": other_feature.id},
         format="json",
     )
 

@@ -12,7 +12,7 @@ from common.features.serializers import (
     FeatureStateValueSerializer,
 )
 from common.projects.permissions import VIEW_PROJECT
-from django.db import models
+from django.db import models, transaction
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from drf_writable_nested import (  # type: ignore[attr-defined]
@@ -310,15 +310,20 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             )
 
     def update(self, instance: Feature, validated_data: dict[str, Any]) -> Feature:
-        if (
-            "multivariate_options" in validated_data
-            and has_live_experiment(instance.id)
-            and not self._changes_multivariate_options(
-                validated_data["multivariate_options"], instance
-            )
-        ):
-            validated_data.pop("multivariate_options")
-        return super().update(instance, validated_data)  # type: ignore[no-any-return]
+        with transaction.atomic():
+            Feature.objects.select_for_update().filter(pk=instance.pk).exists()
+            if (
+                has_live_experiment(instance.id)
+                and "multivariate_options" in validated_data
+            ):
+                if self._changes_multivariate_options(
+                    validated_data["multivariate_options"], instance
+                ):
+                    raise serializers.ValidationError(
+                        {"multivariate_options": LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE}
+                    )
+                validated_data.pop("multivariate_options")
+            return super().update(instance, validated_data)  # type: ignore[no-any-return]
 
     def validate_multivariate_options(self, multivariate_options):  # type: ignore[no-untyped-def]
         if multivariate_options:

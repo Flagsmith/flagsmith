@@ -43,10 +43,11 @@ from projects.tags.models import Tag
 from segments.models import Segment
 
 
-def test_overwrite_feature_for_environment__live_experiment_requires_new_option__raises_validation_error(
+def test_overwrite_feature_for_environment__live_experiment__raises_validation_error(
     db: None,
     environment: Environment,
     feature: Feature,
+    feature_segment: FeatureSegment,
 ) -> None:
     # Given
     MultivariateFeatureOption.objects.create(
@@ -75,7 +76,7 @@ def test_overwrite_feature_for_environment__live_experiment_requires_new_option_
             {
                 "percentage_allocation": 100,
                 "default_percentage_allocation": 100,
-                "value": "new",
+                "value": "existing",
                 "type": STRING,
             }
         ],
@@ -85,11 +86,69 @@ def test_overwrite_feature_for_environment__live_experiment_requires_new_option_
     with pytest.raises(ValidationError):
         overwrite_feature_for_environment(imported_feature, feature, environment)
 
+    assert FeatureSegment.objects.filter(pk=feature_segment.pk).exists()
     assert feature.multivariate_options.count() == 1
     assert (
         feature.feature_states.get(environment=environment).feature_state_value.value
         == feature.initial_value
     )
+
+
+def test_import_features__live_experiment_on_later_feature__rolls_back_batch(
+    db: None,
+    environment: Environment,
+    project: Project,
+    feature: Feature,
+    feature_segment: FeatureSegment,
+) -> None:
+    # Given
+    Experiment.objects.create(
+        environment=environment,
+        feature=feature,
+        name="live experiment",
+        hypothesis="new option wins",
+        status=ExperimentStatus.RUNNING,
+    )
+    feature_import = FeatureImport.objects.create(
+        environment=environment,
+        strategy=OVERWRITE_DESTRUCTIVE,
+        data=json.dumps(
+            [
+                {
+                    "name": "created before failure",
+                    "default_enabled": False,
+                    "is_server_key_only": False,
+                    "initial_value": "initial",
+                    "value": "imported",
+                    "type": STRING,
+                    "enabled": True,
+                    "multivariate": [],
+                },
+                {
+                    "name": feature.name,
+                    "default_enabled": feature.default_enabled,
+                    "is_server_key_only": feature.is_server_key_only,
+                    "initial_value": feature.initial_value,
+                    "value": feature.initial_value,
+                    "type": STRING,
+                    "enabled": False,
+                    "multivariate": [],
+                },
+            ]
+        ),
+    )
+
+    # When / Then
+    with pytest.raises(ValidationError):
+        import_features_for_environment(feature_import.id)
+
+    feature_import.refresh_from_db()
+    assert feature_import.status == FAILED
+    assert not Feature.objects.filter(
+        project=project, name="created before failure"
+    ).exists()
+    assert FeatureSegment.objects.filter(pk=feature_segment.pk).exists()
+    assert feature.feature_states.get(environment=environment).enabled is False
 
 
 def test_clear_stale_feature_imports_and_exports__stale_records__deletes_old_keeps_new(  # type: ignore[no-untyped-def]
