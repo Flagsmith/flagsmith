@@ -700,6 +700,9 @@ export type Req = {
     live_from_after?: string
     committed?: boolean
   }>
+  getScheduledChangeRequests: PagedRequest<{
+    environmentId: string
+  }>
   updateChangeRequest: ChangeRequest
   getGroupSummaries: {
     orgId: number
