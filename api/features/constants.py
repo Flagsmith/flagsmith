@@ -10,6 +10,9 @@ DRAFT = "DRAFT"
 # Multivariate variant reported when an identity falls through to the control value
 CONTROL_VARIANT_KEY = "control"
 RESERVED_VARIANT_KEY_MESSAGE = f'"{CONTROL_VARIANT_KEY}" is a reserved variant key.'
+LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE = (
+    "Multivariate options cannot be changed while the feature is in a live experiment."
+)
 
 # Tag filtering strategy
 UNION = "UNION"
