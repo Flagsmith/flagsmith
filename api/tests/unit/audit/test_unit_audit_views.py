@@ -5,6 +5,8 @@ import pytest
 from django.db.models import Model
 from django.urls import reverse
 from django.utils import timezone
+from mypy_boto3_dynamodb.service_resource import Table
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -287,3 +289,61 @@ def test_list_audit_log_for_organisation__non_enterprise__limits_logs_returned(
     response_json = response.json()
     assert response_json["count"] == 1
     assert response_json["results"][0]["log"] == "Something that happened today"
+
+
+def test_list_audit_log_for_organisation__projects_predating_edge__fetches_migration_status_once_per_project(
+    admin_client: APIClient,
+    organisation: Organisation,
+    project: Project,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+    flagsmith_project_metadata_table: Table,
+) -> None:
+    # Given
+    other_project = Project.objects.create(name="Other", organisation=organisation)
+    settings.PROJECT_METADATA_TABLE_NAME_DYNAMO = flagsmith_project_metadata_table.name
+    settings.EDGE_RELEASE_DATETIME = timezone.now() + timedelta(days=1)
+    mocker.patch(
+        "environments.dynamodb.types.project_metadata_table",
+        flagsmith_project_metadata_table,
+    )
+    flagsmith_project_metadata_table.put_item(
+        Item={
+            "id": project.id,
+            "migration_start_time": "2022-05-16T11:51:10",
+            "migration_end_time": "2022-05-16T11:51:34",
+        }
+    )
+
+    now = timezone.now()
+    for i in range(3):
+        AuditLog.objects.create(
+            project=project, created_date=now - timedelta(minutes=2 * i)
+        )
+        AuditLog.objects.create(
+            project=other_project, created_date=now - timedelta(minutes=2 * i + 1)
+        )
+
+    dynamodb_calls: list[str] = []
+    flagsmith_project_metadata_table.meta.client.meta.events.register(
+        "before-call.dynamodb",
+        lambda model, **kwargs: dynamodb_calls.append(model.name),
+    )
+
+    # When
+    response = admin_client.get(f"/api/v1/organisations/{organisation.id}/audit/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert len(dynamodb_calls) == 2
+    assert [
+        (
+            result["project"]["id"],
+            result["project"]["migration_status"],
+            result["project"]["use_edge_identities"],
+        )
+        for result in response.json()["results"]
+    ] == [
+        (project.id, "MIGRATION_COMPLETED", True),
+        (other_project.id, "MIGRATION_NOT_STARTED", False),
+    ] * 3
