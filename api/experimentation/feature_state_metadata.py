@@ -12,10 +12,12 @@ if TYPE_CHECKING:  # pragma: no cover
 def has_live_experiment(feature_id: int) -> bool:
     # Multivariate options belong to the feature, not an environment, so an
     # experiment running in any environment locks them.
-    return Experiment.objects.filter(
-        feature_id=feature_id,
-        status=ExperimentStatus.RUNNING,
-    ).exists()
+    return bool(
+        Experiment.objects.filter(
+            feature_id=feature_id,
+            status=ExperimentStatus.RUNNING,
+        ).exists()
+    )
 
 
 def get_feature_state_metadata_builder(

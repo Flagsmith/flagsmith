@@ -76,11 +76,19 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[t
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):  # type: ignore[no-untyped-def]
-        self._check_no_live_experiment(serializer.validated_data["feature"])
+        url_feature = get_object_or_404(
+            Feature.objects.filter(project__id=self.kwargs["project_pk"]),
+            pk=self.kwargs["feature_pk"],
+        )
+        if serializer.validated_data["feature"] != url_feature:
+            raise ValidationError({"feature": "Feature must match the URL."})
+        self._check_no_live_experiment(url_feature)
         super().perform_create(serializer)
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         self._check_no_live_experiment(serializer.instance.feature)
+        if "feature" in serializer.validated_data:
+            self._check_no_live_experiment(serializer.validated_data["feature"])
         super().perform_update(serializer)
 
     def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
