@@ -20,17 +20,18 @@ from audit.related_object_type import RelatedObjectType
 from organisations.models import Organisation
 from projects.models import Project
 
-if typing.TYPE_CHECKING:
-    from organisations.models import Organisation
-
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
 
 class AuditLog(LifecycleModel):  # type: ignore[misc]
     created_date = models.DateTimeField("DateCreated")  # type: ignore[var-annotated]
 
-    organisation_id = models.IntegerField[int | None, int | None](
-        null=True, db_index=True
+    organisation = models.ForeignKey[Organisation | None, Organisation | None](
+        Organisation,
+        related_name="audit_logs",
+        null=True,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,  # Logs survive on deletion
     )
     project = models.ForeignKey(  # type: ignore[var-annotated]
         Project, related_name="audit_logs", null=True, on_delete=models.DO_NOTHING
@@ -86,22 +87,6 @@ class AuditLog(LifecycleModel):  # type: ignore[misc]
                 name="audit_log_upper_trgm_idx",
             ),
         ]
-
-    @property
-    def organisation(self) -> "Organisation | None":
-        if self.organisation_id is not None:
-            return Organisation.objects.get(id=self.organisation_id)  # type: ignore[no-any-return]
-
-        for relation in (
-            "project",
-            "environment",
-            "author",
-            "master_api_key",
-            "history_record",
-        ):
-            if hasattr(related_instance := getattr(self, relation), "organisation"):
-                return related_instance.organisation  # type: ignore[no-any-return]
-        return None
 
     @property
     def environment_document_updated(self) -> bool:
