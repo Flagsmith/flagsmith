@@ -6,9 +6,12 @@ from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
+from experimentation.feature_state_metadata import has_live_experiment
+from features.constants import LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE
 from features.models import Feature
 from projects.permissions import NestedProjectPermissions
 
@@ -71,6 +74,22 @@ class MultivariateFeatureOptionViewSet(viewsets.ModelViewSet):  # type: ignore[t
         project_pk = self.kwargs.get("project_pk")
         get_object_or_404(Feature.objects.filter(project__id=project_pk), pk=feature_pk)
         return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
+        self._check_no_live_experiment(serializer.validated_data["feature"])
+        super().perform_create(serializer)
+
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
+        self._check_no_live_experiment(serializer.instance.feature)
+        super().perform_update(serializer)
+
+    def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
+        self._check_no_live_experiment(instance.feature)
+        super().perform_destroy(instance)
+
+    def _check_no_live_experiment(self, feature: Feature) -> None:
+        if has_live_experiment(feature.id):
+            raise ValidationError(LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE)
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):

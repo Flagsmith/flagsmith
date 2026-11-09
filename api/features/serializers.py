@@ -31,7 +31,9 @@ from evaluation.results import get_split_weight
 from evaluation.types import EvaluatedFeatureState
 from experimentation.feature_state_metadata import (
     get_feature_state_metadata_builder,
+    has_live_experiment,
 )
+from features.constants import LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE
 from integrations.vcs.services import dispatch_vcs_on_feature_state_changed
 from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.code_references.serializers import (
@@ -324,7 +326,36 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             )
             if total_percentage_allocation > 100:
                 raise serializers.ValidationError("Invalid percentage allocation")
+        if (
+            self.instance
+            and self._changes_multivariate_options(multivariate_options)
+            and has_live_experiment(self.instance.id)
+        ):
+            raise serializers.ValidationError(LIVE_EXPERIMENT_MV_OPTIONS_MESSAGE)
         return multivariate_options
+
+    def _changes_multivariate_options(self, multivariate_options) -> bool:  # type: ignore[no-untyped-def]
+        # The frontend resubmits the whole feature, so only a real change to
+        # the options counts. Compare on content, not ids.
+        fields = (
+            "key",
+            "type",
+            "integer_value",
+            "string_value",
+            "boolean_value",
+            "default_percentage_allocation",
+        )
+        current = NestedMultivariateFeatureOptionSerializer(
+            self.instance.multivariate_options.all(), many=True
+        ).data
+
+        def signature(options) -> list[tuple[Any, ...]]:  # type: ignore[no-untyped-def]
+            return sorted(
+                (tuple(option.get(field) for field in fields) for option in options),
+                key=repr,
+            )
+
+        return signature(current) != signature(multivariate_options or [])
 
     def validate_owners(self, owners: list[FFAdminUser]) -> list[FFAdminUser]:
         project: Project = self.context["project"]
