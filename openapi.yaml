@@ -9791,9 +9791,7 @@ paths:
           in: path
           required: true
           schema:
-            type:
-              - integer
-              - 'null'
+            type: integer
         - name: page
           in: query
           description: A page number within the paginated result set.
@@ -9842,9 +9840,7 @@ paths:
           in: path
           required: true
           schema:
-            type:
-              - integer
-              - 'null'
+            type: integer
       responses:
         '200':
           description: ''
@@ -19250,11 +19246,17 @@ components:
         author:
           $ref: '#/components/schemas/UserList'
         organisation:
-          $ref: '#/components/schemas/OrganisationSerializerBasic'
+          oneOf:
+            - $ref: '#/components/schemas/OrganisationSerializerBasic'
+            - type: 'null'
         environment:
-          $ref: '#/components/schemas/EnvironmentSerializerLight'
+          oneOf:
+            - $ref: '#/components/schemas/EnvironmentSerializerLight'
+            - type: 'null'
         project:
-          $ref: '#/components/schemas/ProjectList'
+          oneOf:
+            - $ref: '#/components/schemas/ProjectList'
+            - type: 'null'
         related_object_id:
           type:
             - integer
@@ -19295,11 +19297,17 @@ components:
         author:
           $ref: '#/components/schemas/UserList'
         organisation:
-          $ref: '#/components/schemas/OrganisationSerializerBasic'
+          oneOf:
+            - $ref: '#/components/schemas/OrganisationSerializerBasic'
+            - type: 'null'
         environment:
-          $ref: '#/components/schemas/EnvironmentSerializerLight'
+          oneOf:
+            - $ref: '#/components/schemas/EnvironmentSerializerLight'
+            - type: 'null'
         project:
-          $ref: '#/components/schemas/ProjectList'
+          oneOf:
+            - $ref: '#/components/schemas/ProjectList'
+            - type: 'null'
         related_object_id:
           type:
             - integer
