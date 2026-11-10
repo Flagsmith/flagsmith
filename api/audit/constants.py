@@ -90,3 +90,5 @@ FEATURE_DEPENDENCY_CREATED_MESSAGE = (
 FEATURE_DEPENDENCY_DELETED_MESSAGE = (
     "Feature '%s' removed as a dependency for feature '%s'."
 )
+
+USER_LOGGED_OUT_MESSAGE = "User `%s` logged out."

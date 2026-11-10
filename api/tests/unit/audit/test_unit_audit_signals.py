@@ -11,6 +11,7 @@ from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from audit.signals import (
     call_webhooks,
+    create_user_logged_out_audit_logs,
     send_audit_log_event_to_dynatrace,
     send_audit_log_event_to_grafana,
     send_feature_flag_went_live_signal,
@@ -575,6 +576,16 @@ def test_send_feature_flag_went_live_signal__scheduled_feature_state__skips_sign
 
     # Then
     mock_signal_send.assert_not_called()
+
+
+def test_create_user_logged_out_audit_logs__anonymous_user__creates_no_audit_log(
+    organisation: Organisation,
+) -> None:
+    # Given / When
+    create_user_logged_out_audit_logs(sender=FFAdminUser, user=None)
+
+    # Then
+    assert not AuditLog.objects.exists()
 
 
 def test_send_feature_flag_went_live_signal__non_feature_state_instance__skips_signal(

@@ -2,9 +2,11 @@ import logging
 from typing import TYPE_CHECKING, Any, Callable, Literal, Protocol, Type
 
 from django.conf import settings
+from django.contrib.auth.signals import user_logged_out
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from audit.constants import USER_LOGGED_OUT_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from audit.serializers import AuditLogListSerializer
@@ -21,6 +23,7 @@ from integrations.sentry.change_tracking import SentryChangeTracking
 from integrations.sentry.models import SentryChangeTrackingConfiguration
 from integrations.slack.slack import SlackWrapper
 from organisations.models import OrganisationWebhook
+from users.models import FFAdminUser
 from webhooks.tasks import call_organisation_webhooks
 from webhooks.webhooks import WebhookEventType
 
@@ -229,6 +232,22 @@ def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ign
         return  # This is handled by audit.tasks.create_feature_state_went_live_audit_log
 
     feature_state_change_went_live.send(feature_state)
+
+
+@receiver(user_logged_out)
+def create_user_logged_out_audit_logs(
+    sender: type[FFAdminUser],
+    user: FFAdminUser | None,
+    **kwargs: Any,
+) -> None:
+    if user is None:
+        return
+    for organisation in user.organisations.all():
+        AuditLog.objects.create(
+            organisation=organisation,
+            author=user,
+            log=USER_LOGGED_OUT_MESSAGE % user.email,
+        )
 
 
 @receiver(feature_state_change_went_live)
