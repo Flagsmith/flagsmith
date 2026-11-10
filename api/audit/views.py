@@ -4,7 +4,8 @@ from datetime import timedelta
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
 
@@ -128,6 +129,11 @@ class AllAuditLogViewSet(_BaseAuditLogViewSet):
         )
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter("organisation_pk", OpenApiTypes.INT, OpenApiParameter.PATH),
+    ],
+)
 class OrganisationAuditLogViewSet(_BaseAuditLogViewSet):
     permission_classes = [IsAuthenticated, OrganisationAuditLogPermissions]
 

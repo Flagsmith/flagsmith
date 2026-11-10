@@ -11,9 +11,9 @@ from users.serializers import UserListSerializer
 
 class AuditLogListSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     author = UserListSerializer()
-    organisation = OrganisationSerializerBasic()
-    environment = EnvironmentSerializerLight()
-    project = ProjectListSerializer()
+    organisation = OrganisationSerializerBasic(allow_null=True)
+    environment = EnvironmentSerializerLight(allow_null=True)
+    project = ProjectListSerializer(allow_null=True)
 
     class Meta:
         model = AuditLog
@@ -40,9 +40,9 @@ class AuditLogChangeDetailsSerializer(serializers.Serializer[AuditLogChangeDetai
 
 class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     author = UserListSerializer()
-    organisation = OrganisationSerializerBasic()
-    environment = EnvironmentSerializerLight()
-    project = ProjectListSerializer()
+    organisation = OrganisationSerializerBasic(allow_null=True)
+    environment = EnvironmentSerializerLight(allow_null=True)
+    project = ProjectListSerializer(allow_null=True)
     change_details = serializers.SerializerMethodField()
     change_type = serializers.SerializerMethodField()
 
