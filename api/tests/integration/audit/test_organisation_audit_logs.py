@@ -317,6 +317,20 @@ def test_get_logs__non_member__responds_404(
     assert response.json() == {"detail": "Not found."}
 
 
+def test_get_logs__organisation_not_found__responds_404(
+    admin_client: APIClient,
+) -> None:
+    # Given
+    Organisation.objects.filter(id=999999).delete()  # 🤷
+
+    # When
+    response = admin_client.get("/api/v1/organisations/999999/audit/")
+
+    # Then
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found."}
+
+
 @responses.activate
 def test_webhook_dispatch__organisation_log__sends_webhook(
     admin_client: APIClient,
