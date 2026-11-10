@@ -10,6 +10,7 @@ class AuditLogChangeDetail(TypedDict):
 
 
 class AuditLogsQueryParams(TypedDict, total=False):
+    organisation: int
     project: int
     environments: list[int]
     is_system_event: bool | None

@@ -44,6 +44,10 @@ class _BaseAuditLogViewSet(
 
         if (is_org_level := serializer.data.get("is_organisation_level")) is not None:
             q = q & Q(organisation__isnull=not is_org_level)
+        if organisation_id := serializer.data.get("organisation"):
+            directly_related = Q(organisation__id=organisation_id)
+            indirectly_related = Q(project__organisation__id=organisation_id)
+            q = q & (directly_related | indirectly_related)
         if project_id := serializer.data.get("project"):
             q = q & Q(project__id=project_id)
         if environment_ids := serializer.data.get("environments"):

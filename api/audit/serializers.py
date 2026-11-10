@@ -100,6 +100,7 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[t
 
 
 class AuditLogsQueryParamSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    organisation = serializers.IntegerField(required=False)
     project = serializers.IntegerField(required=False)
     environments = serializers.ListField(
         child=serializers.IntegerField(min_value=0), required=False
