@@ -260,12 +260,22 @@ paths:
             items:
               type: integer
               minimum: 0
+        - name: is_organisation_level
+          in: query
+          schema:
+            type:
+              - boolean
+              - 'null'
         - name: is_system_event
           in: query
           schema:
             type:
               - boolean
               - 'null'
+        - name: organisation
+          in: query
+          schema:
+            type: integer
         - name: page
           in: query
           description: A page number within the paginated result set.
@@ -9761,17 +9771,29 @@ paths:
             items:
               type: integer
               minimum: 0
+        - name: is_organisation_level
+          in: query
+          schema:
+            type:
+              - boolean
+              - 'null'
         - name: is_system_event
           in: query
           schema:
             type:
               - boolean
               - 'null'
+        - name: organisation
+          in: query
+          schema:
+            type: integer
         - name: organisation_pk
           in: path
           required: true
           schema:
-            type: string
+            type:
+              - integer
+              - 'null'
         - name: page
           in: query
           description: A page number within the paginated result set.
@@ -9820,7 +9842,9 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type:
+              - integer
+              - 'null'
       responses:
         '200':
           description: ''
@@ -14912,12 +14936,22 @@ paths:
             items:
               type: integer
               minimum: 0
+        - name: is_organisation_level
+          in: query
+          schema:
+            type:
+              - boolean
+              - 'null'
         - name: is_system_event
           in: query
           schema:
             type:
               - boolean
               - 'null'
+        - name: organisation
+          in: query
+          schema:
+            type: integer
         - name: page
           in: query
           description: A page number within the paginated result set.
@@ -19215,6 +19249,8 @@ components:
           type: string
         author:
           $ref: '#/components/schemas/UserList'
+        organisation:
+          $ref: '#/components/schemas/OrganisationSerializerBasic'
         environment:
           $ref: '#/components/schemas/EnvironmentSerializerLight'
         project:
@@ -19242,6 +19278,7 @@ components:
         - created_date
         - environment
         - log
+        - organisation
         - project
     AuditLogRetrieve:
       type: object
@@ -19257,6 +19294,8 @@ components:
           type: string
         author:
           $ref: '#/components/schemas/UserList'
+        organisation:
+          $ref: '#/components/schemas/OrganisationSerializerBasic'
         environment:
           $ref: '#/components/schemas/EnvironmentSerializerLight'
         project:
@@ -19308,6 +19347,7 @@ components:
         - created_date
         - environment
         - log
+        - organisation
         - project
     BaseEdgeIdentityFeatureState:
       type: object
