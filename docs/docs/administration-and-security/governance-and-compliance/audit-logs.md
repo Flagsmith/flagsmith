@@ -109,3 +109,14 @@ The following sections describe the types of events that are recorded in the Aud
 ### Identities
 
 - Identity feature state overridden
+
+### Authentication
+
+These events are recorded in every organisation the user belongs to.
+
+- User logged in, with or without 2FA
+- User entered their password, pending 2FA
+- User failed to log in due to an incorrect password or 2FA code
+- User logged out
+- User changed their password
+- User enabled or disabled 2FA
