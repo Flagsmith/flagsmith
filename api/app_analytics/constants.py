@@ -34,7 +34,6 @@ SDK_USER_AGENT_KNOWN_VERSIONS: dict[KnownClient, list[str]] = {
         "9.0.0",
         "9.1.0",
         "10.0.0",
-    
     ],
     "flagsmith-edge-proxy": [
         "unknown",
