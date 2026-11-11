@@ -109,7 +109,10 @@ class AuditLogsQueryParamSerializer(serializers.Serializer):  # type: ignore[typ
         required=False, allow_null=True, default=None
     )
     is_organisation_level = serializers.BooleanField(
-        required=False, allow_null=True, default=None
+        required=False,
+        allow_null=True,
+        default=None,
+        help_text="Filter on events unrelated to projects or environments.",
     )
     search = serializers.CharField(min_length=3, max_length=256, required=False)
 
