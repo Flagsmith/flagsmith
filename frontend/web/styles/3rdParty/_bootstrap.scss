@@ -74,6 +74,8 @@ $utilities: map-merge($utilities, ("shadow": $_shadow-util));
 @import "~bootstrap/scss/type";
 // Provides .text-truncate, which the type import does not.
 @import "~bootstrap/scss/helpers/text-truncation";
+// Provides .visually-hidden, for inputs drawn by their label (Chip toggles).
+@import "~bootstrap/scss/helpers/visually-hidden";
 @import "~bootstrap/scss/containers";
 @import "~bootstrap/scss/grid";
 @import "~bootstrap/scss/tables";
