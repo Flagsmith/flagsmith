@@ -48,6 +48,8 @@ To run unit tests, run `npm run test:unit`.
 
 To run a specific test file: `npm run test:unit -- --testPathPatterns={filename}`
 
+**Component tests** use React Testing Library in jsdom, opted into per file. See `.claude/context/component-tests.md` for the setup and the rules they follow.
+
 **E2E tests** use TestCafe and are located in the `e2e/` directory.
 
 To run E2E tests (requires the API running on localhost:8000), run `npm run test`.

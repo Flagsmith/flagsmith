@@ -33,6 +33,7 @@ For detailed guidance on specific topics:
 - **Quick Start**: `.claude/context/quick-reference.md` - Common tasks, commands, patterns
 - **API Integration**: `.claude/context/api-integration.md` - Adding endpoints, RTK Query (required reading for API work)
 - **Backend**: `.claude/context/backend-integration.md` - Finding endpoints, backend structure
+- **Component tests**: `.claude/context/component-tests.md` - React Testing Library setup and the rules every test follows
 - **UI Patterns**: `.claude/context/ui-patterns.md` - Tables, tabs, modals, confirmations (required reading for UI work)
 - **Feature Flags**: `.claude/context/feature-flags/` - Using Flagsmith flags (optional, only when requested)
 - **Code Patterns**: `.claude/context/patterns/` - Complete examples, best practices
