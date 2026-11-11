@@ -30,8 +30,9 @@ export type ChangeRequestDetail = {
   isUpdating: boolean
   notFound: boolean
   approve: () => void
-  commit: (onDone: () => void) => void
-  remove: (onDone: () => void) => void
+  // Resolve to whether the request succeeded
+  commit: () => Promise<boolean>
+  remove: () => Promise<boolean>
   updateAssignees: (assignees: ChangeRequestAssignees) => void
 }
 
@@ -74,20 +75,20 @@ export const useChangeRequestDetail = ({
       action({ actionType: 'approve', id })
     },
     changeRequest: data?.changeRequest,
-    commit: async (onDone) => {
+    commit: async () => {
       clearErrors()
       const res = await action({ actionType: 'commit', id })
-      if (!('error' in res)) onDone()
+      return !('error' in res)
     },
     environmentFlag: data?.environmentFlag,
     error: toErrorMessage(error),
     isUpdating,
     notFound: !data && isNotFoundError(loadError),
     projectFlag: data?.projectFlag,
-    remove: async (onDone) => {
+    remove: async () => {
       clearErrors()
       const res = await deleteChangeRequest({ id: Number(id) })
-      if (!('error' in res)) onDone()
+      return !('error' in res)
     },
     updateAssignees: (assignees) => {
       if (isUpdating || !data) return

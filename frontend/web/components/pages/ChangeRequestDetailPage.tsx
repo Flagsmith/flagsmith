@@ -60,8 +60,18 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   const { environmentId, id, projectId } = match.params
   const [_, setUpdate] = useState(Date.now())
   const [updateChangeRequest] = useUpdateChangeRequestMutation()
-  const detail = useChangeRequestDetail({ environmentId, id, projectId })
-  const { changeRequest, environmentFlag, error, projectFlag } = detail
+  const {
+    approve,
+    changeRequest,
+    commit,
+    environmentFlag,
+    error,
+    isUpdating,
+    notFound,
+    projectFlag,
+    remove,
+    updateAssignees,
+  } = useChangeRequestDetail({ environmentId, id, projectId })
   const approvePermission = useHasPermission({
     id: environmentId,
     level: 'environment',
@@ -93,29 +103,28 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     }
   }, [])
 
-  const addOwner = (id: number, isUser = true) => {
+  const updateOwner = (id: number, isUser: boolean, add: boolean) => {
     if (!changeRequest) return
-    detail.updateAssignees({
-      approvals: isUser
-        ? changeRequest.approvals.concat([{ user: id }])
-        : changeRequest.approvals,
-      group_assignments: isUser
-        ? changeRequest.group_assignments
-        : changeRequest.group_assignments.concat([{ group: id }]),
-    })
+    const { approvals, group_assignments } = changeRequest
+    updateAssignees(
+      isUser
+        ? {
+            approvals: add
+              ? [...approvals, { user: id }]
+              : approvals.filter((v) => v.user !== id),
+            group_assignments,
+          }
+        : {
+            approvals,
+            group_assignments: add
+              ? [...group_assignments, { group: id }]
+              : group_assignments.filter((v) => v.group !== id),
+          },
+    )
   }
-
-  const removeOwner = (id: number, isUser = true) => {
-    if (!changeRequest) return
-    detail.updateAssignees({
-      approvals: isUser
-        ? changeRequest.approvals.filter((v) => v.user !== id)
-        : changeRequest.approvals,
-      group_assignments: isUser
-        ? changeRequest.group_assignments
-        : changeRequest.group_assignments.filter((v) => v.group !== id),
-    })
-  }
+  const addOwner = (id: number, isUser = true) => updateOwner(id, isUser, true)
+  const removeOwner = (id: number, isUser = true) =>
+    updateOwner(id, isUser, false)
 
   const deleteChangeRequest = () => {
     openConfirm({
@@ -126,12 +135,12 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         </div>
       ),
       destructive: true,
-      onYes: () => {
-        detail.remove(() => {
+      onYes: async () => {
+        if (await remove()) {
           history.replace(
             `/project/${projectId}/environment/${environmentId}/change-requests`,
           )
-        })
+        }
       },
       title: 'Delete Change Request',
       yesText: 'Confirm',
@@ -204,10 +213,6 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     )
   }
 
-  const approveChangeRequest = () => {
-    detail.approve()
-  }
-
   const publishChangeRequest = () => {
     if (!changeRequest) return
 
@@ -230,10 +235,10 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
       environmentId: environment.id,
       isScheduled,
       onYes: (ignore_conflicts) => {
-        const commitChangeRequest = () => {
-          detail.commit(() => {
+        const commitChangeRequest = async () => {
+          if (await commit()) {
             AppActions.refreshFeatures(projectId, environmentId)
-          })
+          }
         }
 
         if (ignore_conflicts) {
@@ -254,7 +259,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
     })
   }
 
-  if (detail.notFound) {
+  if (notFound) {
     return (
       <div
         data-test='change-requests-page'
@@ -307,7 +312,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
 
   return (
     <div
-      style={{ opacity: detail.isUpdating ? 0.25 : 1 }}
+      style={{ opacity: isUpdating ? 0.25 : 1 }}
       data-test='change-requests-page'
       id='change-requests-page'
       className='app-container container-fluid mt-1'
@@ -328,7 +333,7 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
         canManageChangeRequests={isEnvironmentAdmin?.permission}
         publishChangeRequest={publishChangeRequest}
         approvePermission={approvePermission?.permission}
-        approveChangeRequest={approveChangeRequest}
+        approveChangeRequest={approve}
         publishPermission={publishPermission?.permission}
         isScheduled={isScheduled}
         changeRequest={changeRequest}

@@ -192,7 +192,7 @@ export const changeRequestService = service
           error
             ? []
             : [
-                { id: `${id}`, type: 'ChangeRequest' },
+                { id, type: 'ChangeRequest' },
                 { id: 'LIST', type: 'ChangeRequest' },
               ],
         // Re-read first so the PUT carries the stored change, not the page's copy
