@@ -711,7 +711,12 @@ const controller = {
                     actionType: 'commit',
                     id: `${updatedChangeRequest.id}`,
                   })
-                  if (!('error' in res)) {
+                  if ('error' in res) {
+                    toast(
+                      'The change request was saved but could not be published',
+                      'danger',
+                    )
+                  } else {
                     AppActions.refreshFeatures(projectId, environmentId)
                   }
                 } else {

@@ -20,7 +20,7 @@ export const useChangeRequestDetail = ({
   projectId,
 }: ChangeRequestDetailParams) => {
   const changeRequest = useGetChangeRequestQuery({ id }, options)
-  const feature = getChangeRequestFeature(changeRequest.data)
+  const feature = getChangeRequestFeature(changeRequest.currentData)
   const projectFlag = useGetProjectFlagQuery(
     feature ? { id: feature, project: Number(projectId) } : skipToken,
     options,
@@ -33,23 +33,26 @@ export const useChangeRequestDetail = ({
   // A 404 means the feature was deleted since, which the page explains
   const featureDeleted = !feature || isNotFoundError(projectFlag.error)
   const flagsLoaded =
-    featureDeleted || (!!projectFlag.data && featureState.data !== undefined)
+    featureDeleted ||
+    (!!projectFlag.currentData && featureState.currentData !== undefined)
   const lookupError = featureDeleted
     ? undefined
     : projectFlag.error || featureState.error
 
   return {
+    // currentData, so a new route id never shows the previous request.
     // Held back until the flags arrive, so the page renders once
-    changeRequest: flagsLoaded ? changeRequest.data : undefined,
+    changeRequest: flagsLoaded ? changeRequest.currentData : undefined,
     environmentFlag: featureDeleted
       ? undefined
-      : featureState.data ?? undefined,
+      : featureState.currentData ?? undefined,
     isFetching:
       changeRequest.isFetching ||
       projectFlag.isFetching ||
       featureState.isFetching,
     loadError: toErrorMessage(changeRequest.error || lookupError),
-    notFound: !changeRequest.data && isNotFoundError(changeRequest.error),
-    projectFlag: featureDeleted ? undefined : projectFlag.data,
+    notFound:
+      !changeRequest.currentData && isNotFoundError(changeRequest.error),
+    projectFlag: featureDeleted ? undefined : projectFlag.currentData,
   }
 }
