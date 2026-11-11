@@ -400,8 +400,11 @@ def _restrict_use_for_organisation(
         subscription_cache.allowed_30d_api_calls or MAX_API_CALLS_IN_FREE_PLAN
     )
     if api_usage / allowed_30d_api_calls < 1.0:
-        logger.info(
-            f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
+        api_usage_logger.info(
+            "restriction.skipped",
+            organisation__id=organisation.id,
+            api_usage=api_usage,
+            allowed_30d_api_calls=allowed_30d_api_calls,
         )
         return
 

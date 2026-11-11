@@ -1958,7 +1958,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__doe
     organisation: Organisation,
     freezer: FrozenDateTimeFactory,
     mailoutbox: list[EmailMultiAlternatives],
-    caplog: pytest.LogCaptureFixture,
+    log: StructuredLogCapture,
     enable_features: EnableFeaturesFixture,
     settings: SettingsWrapper,
 ) -> None:
@@ -2009,9 +2009,13 @@ def test_restrict_use_due_to_api_limit_grace_period_over__reduced_api_usage__doe
     assert organisation.block_access_to_admin is False
     assert not hasattr(organisation, "api_limit_access_block")
     assert len(mailoutbox) == 0
-    assert caplog.messages == [
-        f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
-    ]
+    assert log.has(
+        "restriction.skipped",
+        organisation__id=organisation.id,
+        api_usage=8000,
+        allowed_30d_api_calls=10_000,
+        level="info",
+    )
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
