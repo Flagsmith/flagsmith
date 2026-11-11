@@ -1230,6 +1230,115 @@ def test_charge_for_api_call_count_overages__usage_under_api_limit__does_not_cha
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages__zero_allowed_api_calls__does_not_charge(
+    organisation: Organisation,
+    mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
+    log: StructuredLogCapture,
+) -> None:
+    """
+    A zero allowance used to raise a ZeroDivisionError, failing the whole run.
+    """
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=0,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    enable_features("api_usage_overage_charges")
+
+    mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.retrieve",
+        autospec=True,
+    )
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
+    )
+    mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+        return_value=2_000_000,
+    )
+
+    # When
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
+
+    # Then
+    mock_chargebee_update.assert_not_called()
+    assert OrganisationAPIBilling.objects.count() == 0
+    assert log.has(
+        "overage.missing_allowance",
+        organisation__id=organisation.id,
+        level="error",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages__no_subscription_id__does_not_charge(
+    organisation: Organisation,
+    mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=10_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = None
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    enable_features("api_usage_overage_charges")
+
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee_client.Subscription.update",
+        autospec=True,
+    )
+    mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+        return_value=2_000_000,
+    )
+
+    # When
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
+
+    # Then
+    mock_chargebee_update.assert_not_called()
+    assert OrganisationAPIBilling.objects.count() == 0
+    assert log.has(
+        "overage.missing_subscription_id",
+        organisation__id=organisation.id,
+        level="error",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_charge_for_api_call_count_overages__startup_plan__charges_correct_addon_quantity(
     organisation: Organisation,
     mocker: MockerFixture,

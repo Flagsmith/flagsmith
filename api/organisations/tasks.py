@@ -223,6 +223,15 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             continue
 
         subscription_cache = organisation.subscription_information_cache
+
+        # A zero allowance means a broken cache, not a limit to bill against.
+        if not subscription_cache.allowed_30d_api_calls:
+            api_usage_logger.error(
+                "overage.missing_allowance",
+                organisation__id=organisation.id,
+            )
+            continue
+
         # TODO: Default to get_total_events_count — https://github.com/Flagsmith/flagsmith/issues/6985
         if openfeature_client.get_boolean_value(
             "get_current_api_usage_deprecated",
@@ -265,29 +274,7 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             logger.info("API Usage below current API limit.")
             continue
 
-        try:
-            match organisation.subscription.subscription_plan_family:
-                case SubscriptionPlanFamily.START_UP:
-                    add_100k_api_calls_start_up(
-                        organisation.subscription.subscription_id,
-                        math.ceil(api_overage / 100_000),
-                    )
-                case SubscriptionPlanFamily.SCALE_UP:
-                    add_100k_api_calls_scale_up(
-                        organisation.subscription.subscription_id,
-                        math.ceil(api_overage / 100_000),
-                    )
-                case _:
-                    logger.error(
-                        "Unknown subscription plan when trying to bill for overages"
-                        f" {organisation.id=} {organisation.subscription.plan=}"
-                    )
-                    continue
-        except Exception:
-            logger.error(
-                f"Unable to charge organisation {organisation.id} due to billing error",
-                exc_info=True,
-            )
+        if not _add_api_call_addons(organisation, api_overage):
             continue
 
         # Save a copy of what was just billed in order to avoid
@@ -298,6 +285,43 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             immediate_invoice=False,
             billed_at=now,
         )
+
+
+def _add_api_call_addons(organisation: Organisation, api_overage: int) -> bool:
+    """
+    Charge the 100k API call addons covering `api_overage`, returning whether
+    anything was billed.
+    """
+    subscription_id = organisation.subscription.subscription_id
+    if not subscription_id:
+        # Nothing to add the addon to, e.g. a subscription billed outside Chargebee.
+        api_usage_logger.error(
+            "overage.missing_subscription_id",
+            organisation__id=organisation.id,
+        )
+        return False
+
+    quantity = math.ceil(api_overage / 100_000)
+    try:
+        match organisation.subscription.subscription_plan_family:
+            case SubscriptionPlanFamily.START_UP:
+                add_100k_api_calls_start_up(subscription_id, quantity)
+            case SubscriptionPlanFamily.SCALE_UP:
+                add_100k_api_calls_scale_up(subscription_id, quantity)
+            case _:
+                logger.error(
+                    "Unknown subscription plan when trying to bill for overages"
+                    f" {organisation.id=} {organisation.subscription.plan=}"
+                )
+                return False
+    except Exception:
+        logger.error(
+            f"Unable to charge organisation {organisation.id} due to billing error",
+            exc_info=True,
+        )
+        return False
+
+    return True
 
 
 # Task enqueued in register_recurring_tasks below.

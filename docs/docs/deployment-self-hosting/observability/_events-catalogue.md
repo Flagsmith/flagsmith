@@ -39,10 +39,26 @@ Attributes:
  - `matched_threshold`
  - `organisation.id`
 
+### `api_usage.overage.missing_allowance`
+
+Logged at `error` from:
+ - `api/organisations/tasks.py:229`
+
+Attributes:
+ - `organisation.id`
+
+### `api_usage.overage.missing_subscription_id`
+
+Logged at `error` from:
+ - `api/organisations/tasks.py:298`
+
+Attributes:
+ - `organisation.id`
+
 ### `api_usage.restriction.applied`
 
 Logged at `info` from:
- - `api/organisations/tasks.py:422`
+ - `api/organisations/tasks.py:446`
 
 Attributes:
  - `allowed_30d_api_calls`
@@ -54,7 +70,7 @@ Attributes:
 ### `api_usage.restriction.failed`
 
 Logged at `exception` from:
- - `api/organisations/tasks.py:356`
+ - `api/organisations/tasks.py:380`
 
 Attributes:
  - `organisation.id`
@@ -62,7 +78,7 @@ Attributes:
 ### `api_usage.restriction.skipped`
 
 Logged at `info` from:
- - `api/organisations/tasks.py:403`
+ - `api/organisations/tasks.py:427`
 
 Attributes:
  - `allowed_30d_api_calls`
