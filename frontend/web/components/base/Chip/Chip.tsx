@@ -91,7 +91,7 @@ const Chip = ({
         {checked && (
           <Icon
             name='checkmark'
-            width={12}
+            width={16}
             fill={colorIconAction}
             aria-hidden
           />
