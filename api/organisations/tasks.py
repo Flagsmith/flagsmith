@@ -253,7 +253,13 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             not hasattr(organisation, "breached_grace_period")
             and api_usage / subscription_cache.allowed_30d_api_calls < 2.0
         ):
-            logger.info("API Usage below normal usage or grace period.")
+            api_usage_logger.info(
+                "overage.skipped",
+                organisation__id=organisation.id,
+                reason="within_grace_period",
+                api_usage=api_usage,
+                allowed_30d_api_calls=subscription_cache.allowed_30d_api_calls,
+            )
 
             # Set organisation grace period breach for following months.
             if api_usage / subscription_cache.allowed_30d_api_calls > 1.0:
@@ -271,7 +277,13 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
         api_limit = subscription_cache.allowed_30d_api_calls + previous_api_overage
         api_overage = api_usage - api_limit
         if api_overage <= 0:
-            logger.info("API Usage below current API limit.")
+            api_usage_logger.info(
+                "overage.skipped",
+                organisation__id=organisation.id,
+                reason="under_api_limit",
+                api_usage=api_usage,
+                api_limit=api_limit,
+            )
             continue
 
         if not _add_api_call_addons(organisation, api_overage):
@@ -309,18 +321,26 @@ def _add_api_call_addons(organisation: Organisation, api_overage: int) -> bool:
             case SubscriptionPlanFamily.SCALE_UP:
                 add_100k_api_calls_scale_up(subscription_id, quantity)
             case _:
-                logger.error(
-                    "Unknown subscription plan when trying to bill for overages"
-                    f" {organisation.id=} {organisation.subscription.plan=}"
+                api_usage_logger.error(
+                    "overage.unknown_plan",
+                    organisation__id=organisation.id,
+                    subscription__plan=organisation.subscription.plan,
                 )
                 return False
     except Exception:
-        logger.error(
-            f"Unable to charge organisation {organisation.id} due to billing error",
-            exc_info=True,
+        api_usage_logger.exception(
+            "overage.charge_failed",
+            organisation__id=organisation.id,
+            api_overage=api_overage,
         )
         return False
 
+    api_usage_logger.info(
+        "overage.charged",
+        organisation__id=organisation.id,
+        api_overage=api_overage,
+        quantity=quantity,
+    )
     return True
 
 

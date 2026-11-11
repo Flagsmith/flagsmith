@@ -1431,7 +1431,7 @@ def test_charge_for_api_call_count_overages__startup_plan__charges_correct_addon
 def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_plan_warning(
     organisation: Organisation,
     mocker: MockerFixture,
-    caplog: pytest.LogCaptureFixture,
+    log: StructuredLogCapture,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
@@ -1475,11 +1475,12 @@ def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_pla
 
     # Then
     mock_chargebee_update.assert_not_called()
-    assert caplog.messages == [
-        "Unknown subscription plan when trying to bill for overages "
-        f"organisation.id={organisation.id} "
-        "organisation.subscription.plan='nonstandard-v2'"
-    ]
+    assert log.has(
+        "overage.unknown_plan",
+        organisation__id=organisation.id,
+        subscription__plan="nonstandard-v2",
+        level="error",
+    )
 
     assert OrganisationAPIBilling.objects.count() == 0
 
@@ -1488,7 +1489,7 @@ def test_charge_for_api_call_count_overages__non_standard_plan__logs_unknown_pla
 def test_charge_for_api_call_count_overages__billing_exception__logs_error_and_does_not_charge(
     organisation: Organisation,
     mocker: MockerFixture,
-    caplog: pytest.LogCaptureFixture,
+    log: StructuredLogCapture,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
@@ -1535,8 +1536,10 @@ def test_charge_for_api_call_count_overages__billing_exception__logs_error_and_d
     charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
-    assert caplog.messages[0].startswith(
-        f"Unable to charge organisation {organisation.id} due to billing error"
+    assert log.has(
+        "overage.charge_failed",
+        organisation__id=organisation.id,
+        level="error",
     )
     mock_chargebee_update.assert_not_called()
     assert OrganisationAPIBilling.objects.count() == 0
