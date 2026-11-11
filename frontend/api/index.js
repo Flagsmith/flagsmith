@@ -7,6 +7,12 @@ const spm = require('./middleware/single-page-middleware')
 const path = require('path')
 const app = express()
 
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'DENY')
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'none'")
+  next()
+})
+
 const SLACK_TOKEN = process.env.SLACK_TOKEN
 const slackClient = SLACK_TOKEN && require('./slack-client')
 
