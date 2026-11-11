@@ -283,22 +283,22 @@ def test_change_password__completed__creates_audit_log(
         {
             "organisation_id": organisation.id,
             "author_id": user.id,
-            "log": "User `alice@example.com` changed their password.",
+            "log": "User `alice@example.com` logged out.",
         },
         {
             "organisation_id": organisation.id,
             "author_id": user.id,
-            "log": "User `alice@example.com` logged out.",
-        },
-        {
-            "organisation_id": other_organisation.id,
-            "author_id": user.id,
             "log": "User `alice@example.com` changed their password.",
         },
         {
             "organisation_id": other_organisation.id,
             "author_id": user.id,
             "log": "User `alice@example.com` logged out.",
+        },
+        {
+            "organisation_id": other_organisation.id,
+            "author_id": user.id,
+            "log": "User `alice@example.com` changed their password.",
         },
     ]
 

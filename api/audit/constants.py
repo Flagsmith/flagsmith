@@ -92,3 +92,4 @@ FEATURE_DEPENDENCY_DELETED_MESSAGE = (
 )
 
 USER_LOGGED_OUT_MESSAGE = "User `%s` logged out."
+USER_PASSWORD_CHANGED_MESSAGE = "User `%s` changed their password."

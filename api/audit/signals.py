@@ -6,11 +6,15 @@ from django.contrib.auth.signals import user_logged_out
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from audit.constants import USER_LOGGED_OUT_MESSAGE
+from audit.constants import (
+    USER_LOGGED_OUT_MESSAGE,
+    USER_PASSWORD_CHANGED_MESSAGE,
+)
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from audit.serializers import AuditLogListSerializer
 from audit.services import get_audited_instance_from_audit_log_record
+from custom_auth.signals import user_password_changed
 from features.models import FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.signals import feature_state_change_went_live
@@ -247,6 +251,20 @@ def create_user_logged_out_audit_logs(
             organisation=organisation,
             author=user,
             log=USER_LOGGED_OUT_MESSAGE % user.email,
+        )
+
+
+@receiver(user_password_changed)
+def create_user_password_changed_audit_logs(
+    sender: type[FFAdminUser],
+    user: FFAdminUser,
+    **kwargs: Any,
+) -> None:
+    for organisation in user.organisations.all():
+        AuditLog.objects.create(
+            organisation=organisation,
+            author=user,
+            log=USER_PASSWORD_CHANGED_MESSAGE % user.email,
         )
 
 

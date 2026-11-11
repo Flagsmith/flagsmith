@@ -2,7 +2,7 @@ import json
 from typing import Any
 
 from django.conf import settings
-from django.dispatch import receiver
+from django.dispatch import Signal, receiver
 from djoser.signals import user_activated  # type: ignore[import-untyped]
 from openfeature.evaluation_context import EvaluationContext
 
@@ -11,6 +11,8 @@ from integrations.lead_tracking.hubspot.tasks import (
     create_hubspot_contact_for_user,
 )
 from users.models import FFAdminUser
+
+user_password_changed = Signal()
 
 
 @receiver(user_activated)

@@ -31,6 +31,7 @@ from custom_auth.mfa.trench.responses import ErrorResponse
 from custom_auth.mfa.trench.serializers import CodeLoginSerializer
 from custom_auth.mfa.trench.utils import user_token_generator
 from custom_auth.serializers import CustomUserDelete
+from custom_auth.signals import user_password_changed
 from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.services import (
     register_hubspot_tracker_and_track_user,
@@ -238,6 +239,7 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         assert isinstance(user, FFAdminUser)
         response: Response = super().set_password(request, *args, **kwargs)
         blacklist_user_tokens(user)
+        user_password_changed.send(sender=user.__class__, request=request, user=user)
         return response
 
     @action(["post"], detail=False)
