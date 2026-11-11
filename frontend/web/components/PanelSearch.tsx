@@ -10,6 +10,7 @@ import React, {
 } from 'react'
 import { AutoSizer, List } from 'react-virtualized'
 import Popover from './base/Popover'
+import BareButton from './base/forms/BareButton'
 import Input from './base/forms/Input'
 import Icon from './icons/Icon'
 import { IonIcon } from '@ionic/react'
@@ -271,9 +272,11 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
             {sorting && (
               <Row className='mr-3 position-relative'>
                 <Popover
-                  renderTitle={(toggle: () => void, isActive: boolean) => (
-                    <a
-                      onClick={toggle}
+                  aria-label='Sort'
+                  className='inline-modal--sm'
+                  renderTrigger={(triggerProps, isActive) => (
+                    <BareButton
+                      {...triggerProps}
                       className='flex-row'
                       style={{ color: isActive ? '#6837FC' : '#656d7b' }}
                     >
@@ -284,10 +287,10 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                         />
                       </span>
                       {currentSort ? currentSort.label : 'Unsorted'}
-                    </a>
+                    </BareButton>
                   )}
                 >
-                  {(toggle: () => void) => (
+                  {(close) => (
                     <div>
                       {sorting.map((sortOption, i) => (
                         <a
@@ -296,7 +299,7 @@ const PanelSearch = <T,>(props: PanelSearchProps<T>): ReactElement => {
                           href='#'
                           onClick={(e) => {
                             handleSort(e, sortOption)
-                            toggle()
+                            close()
                           }}
                         >
                           <Row space className='px-3 align-items-center py-2'>
