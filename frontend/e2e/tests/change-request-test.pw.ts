@@ -121,6 +121,11 @@ test.describe('Change Request Tests', () => {
     log('Close modal')
     await closeModal()
 
+    log('Verify the Scheduling link has no badge')
+    await expect(page.getByRole('link', { name: 'Scheduling' })).toHaveText(
+      'Scheduling',
+    )
+
     log('Verify value has NOW changed (change request published)')
     await gotoFeatures()
     await page.reload({ waitUntil: 'domcontentloaded' })

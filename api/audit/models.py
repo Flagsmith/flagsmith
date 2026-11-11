@@ -32,6 +32,7 @@ class AuditLog(LifecycleModel):  # type: ignore[misc]
         null=True,
         on_delete=models.DO_NOTHING,
         db_constraint=False,  # Logs survive on deletion
+        db_index=False,  # Indexed in `Meta.indexes`
     )
     project = models.ForeignKey(  # type: ignore[var-annotated]
         Project, related_name="audit_logs", null=True, on_delete=models.DO_NOTHING
@@ -78,6 +79,7 @@ class AuditLog(LifecycleModel):  # type: ignore[misc]
         verbose_name_plural = "Audit Logs"
         ordering = ("-created_date",)
         indexes = [
+            models.Index(fields=["organisation"], name="audit_organisation_idx"),
             models.Index(
                 fields=["project", "-created_date"],
                 name="audit_project_created_idx",

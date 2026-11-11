@@ -1,6 +1,6 @@
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useEffect, useState } from 'react'
 import moment from 'moment/moment'
-import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
+import { useGetScheduledChangeRequestsQuery } from 'common/services/useChangeRequest'
 import { RouterChildContext } from 'react-router'
 import AccountStore from 'common/stores/account-store'
 import { ChangeRequestSummary, User } from 'common/types/responses'
@@ -37,16 +37,15 @@ const ScheduledChangesPage: FC<ScheduledChangesPageType> = ({ match }) => {
   const organisation = OrganisationStore.model as any
   const users = organisation?.users as User[]
 
-  const live_from_after = useMemo(() => {
-    return new Date().toISOString()
-  }, [])
-  const { data: dataScheduled, isLoading } = useGetChangeRequestsQuery({
-    committed: true,
-    environmentId,
-    live_from_after,
-    page,
-    page_size: 50,
-  })
+  const { data: dataScheduled, isLoading } = useGetScheduledChangeRequestsQuery(
+    {
+      environmentId,
+      page,
+      page_size: 50,
+    },
+    // Same args on every visit, so refetch to drop changes that went live meanwhile
+    { refetchOnMountOrArgChange: true },
+  )
   useEffect(() => {
     AppActions.getOrganisation(organisationId)
   }, [organisationId])
