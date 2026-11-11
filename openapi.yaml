@@ -262,6 +262,7 @@ paths:
               minimum: 0
         - name: is_organisation_level
           in: query
+          description: Filter on events unrelated to projects or environments.
           schema:
             type:
               - boolean
@@ -9773,6 +9774,7 @@ paths:
               minimum: 0
         - name: is_organisation_level
           in: query
+          description: Filter on events unrelated to projects or environments.
           schema:
             type:
               - boolean
@@ -14934,6 +14936,7 @@ paths:
               minimum: 0
         - name: is_organisation_level
           in: query
+          description: Filter on events unrelated to projects or environments.
           schema:
             type:
               - boolean
