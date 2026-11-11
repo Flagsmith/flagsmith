@@ -105,8 +105,8 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   }, [])
 
   const updateOwner = (id: number, isUser: boolean, add: boolean) => {
-    // Wait for the latest assignees before changing them
-    if (!changeRequest || isUpdating) return
+    // The PUT sends the full lists, so only build them from a fresh load
+    if (!changeRequest || isUpdating || loadError) return
     const { approvals, group_assignments } = changeRequest
     updateAssignees(
       isUser
