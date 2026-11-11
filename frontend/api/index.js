@@ -4,14 +4,11 @@ const exphbs = require('express-handlebars')
 const express = require('express')
 const bodyParser = require('body-parser')
 const spm = require('./middleware/single-page-middleware')
+const frameProtection = require('./middleware/frame-protection-middleware')
 const path = require('path')
 const app = express()
 
-app.use((req, res, next) => {
-  res.setHeader('X-Frame-Options', 'DENY')
-  res.setHeader('Content-Security-Policy', "frame-ancestors 'none'")
-  next()
-})
+app.use(frameProtection)
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN
 const slackClient = SLACK_TOKEN && require('./slack-client')
