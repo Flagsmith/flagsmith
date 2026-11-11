@@ -69,6 +69,23 @@ export const changeRequestService = service
         }),
         transformResponse: (res, _, req) => transformCorePaging(req, res),
       }),
+      getScheduledChangeRequests: builder.query<
+        Res['changeRequests'],
+        Req['getScheduledChangeRequests']
+      >({
+        providesTags: [{ id: 'LIST', type: 'ChangeRequest' }],
+        // Read the time per request, so a refetch after a commit uses the current time
+        query: ({ environmentId, ...rest }) => ({
+          url: `environments/${environmentId}/list-change-requests/?${Utils.toParam(
+            {
+              ...rest,
+              committed: true,
+              live_from_after: new Date().toISOString(),
+            },
+          )}`,
+        }),
+        transformResponse: (res, _, req) => transformCorePaging(req, res),
+      }),
       updateChangeRequest: builder.mutation<
         Res['updateChangeRequest'],
         Req['updateChangeRequest']
@@ -112,6 +129,7 @@ export const {
   useCreateEnvironmentChangeRequestMutation,
   useDeleteChangeRequestMutation,
   useGetChangeRequestsQuery,
+  useGetScheduledChangeRequestsQuery,
   useUpdateChangeRequestMutation,
   // END OF EXPORTS
 } = changeRequestService
