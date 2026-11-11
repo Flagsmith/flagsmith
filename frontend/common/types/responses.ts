@@ -1686,12 +1686,9 @@ export type Res = {
   projectChangeRequests: PagedResponse<ChangeRequestSummary>
   projectChangeRequest: ProjectChangeRequest
   actionChangeRequest: {}
-  changeRequestDetail: {
-    changeRequest: ChangeRequest
-    // Missing when the feature has since been deleted
-    environmentFlag?: FeatureState
-    projectFlag?: ProjectFlag
-  }
+  changeRequest: ChangeRequest
+  // null when the environment has no state for the feature
+  environmentFeatureState: FeatureState | null
   identityTrait: { id: string }
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>

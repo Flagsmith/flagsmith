@@ -1,20 +1,9 @@
-import {
-  ChangeRequest,
-  FeatureState,
-  ProjectFlag,
-} from 'common/types/responses'
-import {
-  useActionChangeRequestMutation,
-  useDeleteChangeRequestMutation,
-  useGetChangeRequestQuery,
-  useUpdateChangeRequestAssigneesMutation,
-} from 'common/services/useChangeRequest'
+import { skipToken } from '@reduxjs/toolkit/query'
+import { useGetChangeRequestQuery } from 'common/services/useChangeRequest'
+import { useGetEnvironmentFeatureStateQuery } from 'common/services/useFeatureState'
+import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
+import { getChangeRequestFeature } from 'common/utils/getChangeRequestFeature'
 import { isNotFoundError, toErrorMessage } from 'common/utils/requestError'
-
-export type ChangeRequestAssignees = Pick<
-  ChangeRequest,
-  'approvals' | 'group_assignments'
->
 
 type ChangeRequestDetailParams = {
   environmentId: string
@@ -22,78 +11,45 @@ type ChangeRequestDetailParams = {
   projectId: string
 }
 
-export type ChangeRequestDetail = {
-  changeRequest?: ChangeRequest
-  environmentFlag?: FeatureState
-  projectFlag?: ProjectFlag
-  error?: unknown
-  isUpdating: boolean
-  notFound: boolean
-  approve: () => void
-  // Resolve to whether the request succeeded
-  commit: () => Promise<boolean>
-  remove: () => Promise<boolean>
-  updateAssignees: (assignees: ChangeRequestAssignees) => void
-}
+// Refetch after an action, not on window focus
+const options = { refetchOnFocus: false }
 
 export const useChangeRequestDetail = ({
   environmentId,
   id,
   projectId,
-}: ChangeRequestDetailParams): ChangeRequestDetail => {
-  const {
-    data,
-    error: loadError,
-    isFetching,
-  } = useGetChangeRequestQuery(
-    { environmentId, id, projectId },
-    // Refetch after an action, not on window focus
-    { refetchOnFocus: false },
+}: ChangeRequestDetailParams) => {
+  const changeRequest = useGetChangeRequestQuery({ id }, options)
+  const feature = getChangeRequestFeature(changeRequest.data)
+  const projectFlag = useGetProjectFlagQuery(
+    feature ? { id: feature, project: Number(projectId) } : skipToken,
+    options,
   )
-  const [action, actionState] = useActionChangeRequestMutation()
-  const [updateAssignees, updateState] =
-    useUpdateChangeRequestAssigneesMutation()
-  const [deleteChangeRequest, deleteState] = useDeleteChangeRequestMutation()
+  const featureState = useGetEnvironmentFeatureStateQuery(
+    feature ? { environmentId, feature } : skipToken,
+    options,
+  )
 
-  const isUpdating =
-    isFetching ||
-    actionState.isLoading ||
-    updateState.isLoading ||
-    deleteState.isLoading
-  const error =
-    actionState.error || updateState.error || deleteState.error || loadError
-  // Each mutation keeps its last error, so clear them when a new action starts
-  const clearErrors = () => {
-    actionState.reset()
-    updateState.reset()
-    deleteState.reset()
-  }
+  // A 404 means the feature was deleted since, which the page explains
+  const featureDeleted = !feature || isNotFoundError(projectFlag.error)
+  const flagsLoaded =
+    featureDeleted || (!!projectFlag.data && featureState.data !== undefined)
+  const lookupError = featureDeleted
+    ? undefined
+    : projectFlag.error || featureState.error
 
   return {
-    approve: () => {
-      clearErrors()
-      action({ actionType: 'approve', id })
-    },
-    changeRequest: data?.changeRequest,
-    commit: async () => {
-      clearErrors()
-      const res = await action({ actionType: 'commit', id })
-      return !('error' in res)
-    },
-    environmentFlag: data?.environmentFlag,
-    error: toErrorMessage(error),
-    isUpdating,
-    notFound: !data && isNotFoundError(loadError),
-    projectFlag: data?.projectFlag,
-    remove: async () => {
-      clearErrors()
-      const res = await deleteChangeRequest({ id: Number(id) })
-      return !('error' in res)
-    },
-    updateAssignees: (assignees) => {
-      if (isUpdating || !data) return
-      clearErrors()
-      updateAssignees({ ...assignees, id })
-    },
+    // Held back until the flags arrive, so the page renders once
+    changeRequest: flagsLoaded ? changeRequest.data : undefined,
+    environmentFlag: featureDeleted
+      ? undefined
+      : featureState.data ?? undefined,
+    isFetching:
+      changeRequest.isFetching ||
+      projectFlag.isFetching ||
+      featureState.isFetching,
+    loadError: toErrorMessage(changeRequest.error || lookupError),
+    notFound: !changeRequest.data && isNotFoundError(changeRequest.error),
+    projectFlag: featureDeleted ? undefined : projectFlag.data,
   }
 }

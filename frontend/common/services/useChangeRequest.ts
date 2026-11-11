@@ -2,8 +2,6 @@ import {
   ChangeRequest,
   ChangeSet,
   FeatureState,
-  PagedResponse,
-  ProjectFlag,
   Res,
 } from 'common/types/responses'
 import { Req } from 'common/types/requests'
@@ -12,8 +10,6 @@ import Utils from 'common/utils/utils'
 import sortBy from 'lodash/sortBy'
 import moment from 'moment'
 import transformCorePaging from 'common/transformCorePaging'
-import { sortMultivariateOptions } from 'common/utils/multivariate'
-import { isNotFoundError } from 'common/utils/requestError'
 import {
   addFeatureSegmentsToFeatureStates,
   featureStateService,
@@ -91,55 +87,24 @@ export const changeRequestService = service
         }),
       }),
       getChangeRequest: builder.query<
-        Res['changeRequestDetail'],
+        Res['changeRequest'],
         Req['getChangeRequest']
       >({
         providesTags: (_, _2, { id }) => [{ id, type: 'ChangeRequest' }],
-        queryFn: async (
-          { environmentId, id, projectId },
-          _api,
-          _extraOptions,
-          baseQuery,
-        ) => {
+        queryFn: async ({ id }, _api, _extraOptions, baseQuery) => {
           const res = await baseQuery({
             url: `features/workflows/change-requests/${id}/`,
           })
           if (res.error) return { error: res.error }
-          const raw = res.data as ChangeRequest
-          const changeRequest: ChangeRequest = {
-            ...raw,
-            feature_states: await Promise.all(
-              raw.feature_states.map(addFeatureSegmentsToFeatureStates),
-            ),
-          }
-          const feature =
-            changeRequest.feature_states[0]?.feature ||
-            changeRequest.change_sets?.[0]?.feature
-          const [environmentFlags, projectFlagRes] = await Promise.all([
-            baseQuery({
-              url: `environments/${environmentId}/featurestates/?feature=${feature}`,
-            }),
-            baseQuery({ url: `projects/${projectId}/features/${feature}/` }),
-          ])
-          // A 404 means the feature was deleted since, which the page explains
-          if (isNotFoundError(projectFlagRes.error)) {
-            return { data: { changeRequest } }
-          }
-          if (projectFlagRes.error) return { error: projectFlagRes.error }
-          if (environmentFlags.error) return { error: environmentFlags.error }
-          const projectFlag = projectFlagRes.data as ProjectFlag
+          const changeRequest = res.data as ChangeRequest
           return {
             data: {
-              changeRequest,
-              environmentFlag: (
-                environmentFlags.data as PagedResponse<FeatureState>
-              ).results[0],
-              projectFlag: {
-                ...projectFlag,
-                multivariate_options: sortMultivariateOptions(
-                  projectFlag.multivariate_options,
+              ...changeRequest,
+              feature_states: await Promise.all(
+                changeRequest.feature_states.map(
+                  addFeatureSegmentsToFeatureStates,
                 ),
-              },
+              ),
             },
           }
         },

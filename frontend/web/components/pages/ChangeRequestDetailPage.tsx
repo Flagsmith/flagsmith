@@ -44,6 +44,7 @@ import { openPublishChangeRequestConfirm } from 'components/PublishChangeRequest
 import { getChangeRequestLiveDate } from 'common/utils/getChangeRequestLiveDate'
 import { EnvironmentPermission } from 'common/types/permissions.types'
 import { useChangeRequestDetail } from 'common/hooks/useChangeRequestDetail'
+import { useChangeRequestActions } from 'common/hooks/useChangeRequestActions'
 
 type ChangeRequestPageType = {
   match: {
@@ -61,17 +62,17 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   const [_, setUpdate] = useState(Date.now())
   const [updateChangeRequest] = useUpdateChangeRequestMutation()
   const {
-    approve,
     changeRequest,
-    commit,
     environmentFlag,
-    error,
-    isUpdating,
+    isFetching,
+    loadError,
     notFound,
     projectFlag,
-    remove,
-    updateAssignees,
   } = useChangeRequestDetail({ environmentId, id, projectId })
+  const { actionError, approve, commit, isActing, remove, updateAssignees } =
+    useChangeRequestActions(id)
+  const isUpdating = isFetching || isActing
+  const error = actionError || loadError
   const approvePermission = useHasPermission({
     id: environmentId,
     level: 'environment',
@@ -104,7 +105,8 @@ const ChangeRequestDetailPage: FC<ChangeRequestPageType> = ({ match }) => {
   }, [])
 
   const updateOwner = (id: number, isUser: boolean, add: boolean) => {
-    if (!changeRequest) return
+    // Wait for the latest assignees before changing them
+    if (!changeRequest || isUpdating) return
     const { approvals, group_assignments } = changeRequest
     updateAssignees(
       isUser
