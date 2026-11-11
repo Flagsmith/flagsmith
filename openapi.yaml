@@ -260,12 +260,23 @@ paths:
             items:
               type: integer
               minimum: 0
+        - name: is_organisation_level
+          in: query
+          description: Filter on events unrelated to projects or environments.
+          schema:
+            type:
+              - boolean
+              - 'null'
         - name: is_system_event
           in: query
           schema:
             type:
               - boolean
               - 'null'
+        - name: organisation
+          in: query
+          schema:
+            type: integer
         - name: page
           in: query
           description: A page number within the paginated result set.
@@ -9761,17 +9772,28 @@ paths:
             items:
               type: integer
               minimum: 0
+        - name: is_organisation_level
+          in: query
+          description: Filter on events unrelated to projects or environments.
+          schema:
+            type:
+              - boolean
+              - 'null'
         - name: is_system_event
           in: query
           schema:
             type:
               - boolean
               - 'null'
+        - name: organisation
+          in: query
+          schema:
+            type: integer
         - name: organisation_pk
           in: path
           required: true
           schema:
-            type: string
+            type: integer
         - name: page
           in: query
           description: A page number within the paginated result set.
@@ -9820,7 +9842,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            type: integer
       responses:
         '200':
           description: ''
@@ -14912,12 +14934,23 @@ paths:
             items:
               type: integer
               minimum: 0
+        - name: is_organisation_level
+          in: query
+          description: Filter on events unrelated to projects or environments.
+          schema:
+            type:
+              - boolean
+              - 'null'
         - name: is_system_event
           in: query
           schema:
             type:
               - boolean
               - 'null'
+        - name: organisation
+          in: query
+          schema:
+            type: integer
         - name: page
           in: query
           description: A page number within the paginated result set.
@@ -19215,10 +19248,18 @@ components:
           type: string
         author:
           $ref: '#/components/schemas/UserList'
+        organisation:
+          oneOf:
+            - $ref: '#/components/schemas/OrganisationSerializerBasic'
+            - type: 'null'
         environment:
-          $ref: '#/components/schemas/EnvironmentSerializerLight'
+          oneOf:
+            - $ref: '#/components/schemas/EnvironmentSerializerLight'
+            - type: 'null'
         project:
-          $ref: '#/components/schemas/ProjectList'
+          oneOf:
+            - $ref: '#/components/schemas/ProjectList'
+            - type: 'null'
         related_object_id:
           type:
             - integer
@@ -19242,6 +19283,7 @@ components:
         - created_date
         - environment
         - log
+        - organisation
         - project
     AuditLogRetrieve:
       type: object
@@ -19257,10 +19299,18 @@ components:
           type: string
         author:
           $ref: '#/components/schemas/UserList'
+        organisation:
+          oneOf:
+            - $ref: '#/components/schemas/OrganisationSerializerBasic'
+            - type: 'null'
         environment:
-          $ref: '#/components/schemas/EnvironmentSerializerLight'
+          oneOf:
+            - $ref: '#/components/schemas/EnvironmentSerializerLight'
+            - type: 'null'
         project:
-          $ref: '#/components/schemas/ProjectList'
+          oneOf:
+            - $ref: '#/components/schemas/ProjectList'
+            - type: 'null'
         related_object_id:
           type:
             - integer
@@ -19308,6 +19358,7 @@ components:
         - created_date
         - environment
         - log
+        - organisation
         - project
     BaseEdgeIdentityFeatureState:
       type: object

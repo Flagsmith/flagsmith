@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta
 
+import pytest
 import responses
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
@@ -76,14 +77,16 @@ def test_call_webhooks__organisation_has_no_webhooks__does_not_create_task(
     mocked_call_organisation_webhooks.delay.assert_not_called()
 
 
+@pytest.mark.parametrize("related_object", ["project", "environment"])
 def test_call_webhooks__organisation_has_webhooks__creates_task(
     organisation: Organisation,
-    project: Project,
+    related_object: str,
+    request: pytest.FixtureRequest,
     settings: SettingsWrapper,
     mocker: MockerFixture,
 ) -> None:
     # Given
-    audit_log = AuditLog.objects.create(project=project)
+    audit_log = AuditLog(**{related_object: request.getfixturevalue(related_object)})
     OrganisationWebhook.objects.create(
         organisation=organisation,
         name="Example webhook",

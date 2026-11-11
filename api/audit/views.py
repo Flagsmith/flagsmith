@@ -4,7 +4,8 @@ from datetime import timedelta
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
 
@@ -42,11 +43,17 @@ class _BaseAuditLogViewSet(
         serializer = AuditLogsQueryParamSerializer(data=self.request.GET)
         serializer.is_valid(raise_exception=True)
 
+        if (is_org_level := serializer.data.get("is_organisation_level")) is not None:
+            q = q & Q(organisation__isnull=not is_org_level)
+        if organisation_id := serializer.data.get("organisation"):
+            directly_related = Q(organisation__id=organisation_id)
+            indirectly_related = Q(project__organisation__id=organisation_id)
+            q = q & (directly_related | indirectly_related)
         if project_id := serializer.data.get("project"):
             q = q & Q(project__id=project_id)
         if environment_ids := serializer.data.get("environments"):
             q = q & Q(environment__id__in=environment_ids)
-        if is_system_event := serializer.data.get("is_system_event") is not None:
+        if (is_system_event := serializer.data.get("is_system_event")) is not None:
             q = q & Q(is_system_event=is_system_event)
 
         search = serializer.data.get("search")
@@ -54,7 +61,7 @@ class _BaseAuditLogViewSet(
             q = q & Q(log__icontains=search)
 
         queryset = AuditLog.objects.filter(q).select_related(
-            "project", "environment", "author"
+            "organisation", "project", "environment", "author"
         )
 
         return self._apply_visibility_limits(queryset)
@@ -92,11 +99,17 @@ class _BaseAuditLogViewSet(
 
 class AllAuditLogViewSet(_BaseAuditLogViewSet):
     def _get_base_filters(self) -> Q:
-        return Q(
+        directly_related = Q(
+            organisation__userorganisation__user=self.request.user,
+            organisation__userorganisation__role=OrganisationRole.ADMIN,
+            organisation__userorganisation__is_active=True,
+        )
+        indirectly_related = Q(
             project__organisation__userorganisation__user=self.request.user,
             project__organisation__userorganisation__role=OrganisationRole.ADMIN,
             project__organisation__userorganisation__is_active=True,
         )
+        return directly_related | indirectly_related
 
     def _get_organisation(self) -> Organisation | None:
         """
@@ -116,11 +129,19 @@ class AllAuditLogViewSet(_BaseAuditLogViewSet):
         )
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter("organisation_pk", OpenApiTypes.INT, OpenApiParameter.PATH),
+    ],
+)
 class OrganisationAuditLogViewSet(_BaseAuditLogViewSet):
     permission_classes = [IsAuthenticated, OrganisationAuditLogPermissions]
 
     def _get_base_filters(self) -> Q:
-        return Q(project__organisation__id=self.kwargs["organisation_pk"])
+        organisation_id = self.kwargs["organisation_pk"]
+        directly_related = Q(organisation__id=organisation_id)
+        indirectly_related = Q(project__organisation__id=organisation_id)
+        return directly_related | indirectly_related
 
     def _get_organisation(self) -> Organisation | None:
         return (  # type: ignore[no-any-return]
