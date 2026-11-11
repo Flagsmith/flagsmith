@@ -4,6 +4,8 @@
   // Bootstrap's popover layer, so it also sits above modals.
   z-index: 1070;
   max-width: calc(100vw - 16px);
+  max-height: var(--ds-popover-max-height, none);
+  overflow-y: auto;
   background: var(--color-surface-default);
   border: 1px solid var(--color-border-default);
   border-radius: var(--radius-lg);

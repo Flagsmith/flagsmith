@@ -8,6 +8,7 @@ import {
   offset,
   Placement,
   shift,
+  size,
   useClick,
   useDismiss,
   useFloating,
@@ -39,7 +40,21 @@ const Popover: FC<PopoverProps> = ({
   const close = () => setIsOpen(false)
 
   const { context, floatingStyles, refs } = useFloating({
-    middleware: [offset(6), flip(), shift({ padding: 8 })],
+    middleware: [
+      offset(6),
+      flip(),
+      shift({ padding: 8 }),
+      // Caps the panel at the space left in the window; it scrolls past that.
+      size({
+        apply({ availableHeight, elements }) {
+          elements.floating.style.setProperty(
+            '--ds-popover-max-height',
+            `${Math.max(availableHeight, 120)}px`,
+          )
+        },
+        padding: 8,
+      }),
+    ],
     onOpenChange: setIsOpen,
     open: isOpen,
     placement,
