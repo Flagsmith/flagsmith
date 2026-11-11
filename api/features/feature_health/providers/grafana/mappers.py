@@ -1,3 +1,5 @@
+import json
+
 from features.feature_health.models import (
     FeatureHealthEventType,
     FeatureHealthProviderName,
@@ -81,3 +83,22 @@ def map_alert_instance_to_feature_health_event_data(
             provider_name=FeatureHealthProviderName.GRAFANA.value,
         )
     return None
+
+
+def map_payload_to_environment_names(payload: str) -> list[str]:
+    """Best-effort extraction of environment names from a possibly invalid payload."""
+    try:
+        data = json.loads(payload)
+    except ValueError:
+        return []
+    if not isinstance(data, dict) or not isinstance(alerts := data.get("alerts"), list):
+        return []
+    return [
+        environment_name
+        for alert in alerts
+        if isinstance(alert, dict)
+        and isinstance(labels := alert.get("labels"), dict)
+        and isinstance(
+            environment_name := labels.get(GRAFANA_ENVIRONMENT_LABEL_NAME), str
+        )
+    ]

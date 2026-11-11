@@ -150,6 +150,6 @@ def feature_health_webhook(request: Request, /, **kwargs: typing.Any) -> Respons
     if not (provider := get_provider_from_webhook_path(path)):
         return Response(status=status.HTTP_404_NOT_FOUND)
     payload = request.body.decode("utf-8")
-    if create_feature_health_events_from_provider(provider=provider, payload=payload):
-        return Response(status=status.HTTP_200_OK)
-    return Response(status=status.HTTP_400_BAD_REQUEST)
+    # Raises a 400 `APIException` with error details if no events are created.
+    create_feature_health_events_from_provider(provider=provider, payload=payload)
+    return Response(status=status.HTTP_200_OK)

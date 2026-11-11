@@ -328,12 +328,52 @@ def test_webhook__unhealthy_feature_healthy_post__creates_event_and_removes_tag(
 
 
 @pytest.mark.parametrize(
-    "body", ["invalid", json.dumps({"status": "unhealthy", "feature": "non_existent"})]
+    "body, expected_errors",
+    [
+        (
+            "invalid",
+            [
+                {
+                    "loc": "",
+                    "msg": "Invalid JSON: expected value at line 1 column 1",
+                    "type": "json_invalid",
+                },
+            ],
+        ),
+        (
+            json.dumps({"status": "unknown"}),
+            [
+                {
+                    "loc": "feature",
+                    "msg": "Field required",
+                    "type": "missing",
+                },
+                {
+                    "loc": "status",
+                    "msg": "Input should be 'healthy' or 'unhealthy'",
+                    "type": "literal_error",
+                },
+            ],
+        ),
+        (
+            json.dumps(
+                {"feature": "feature_1", "status": "unhealthy", "reason": "Broken"}
+            ),
+            [
+                {
+                    "loc": "reason",
+                    "msg": "Input should be an object",
+                    "type": "dict_type",
+                },
+            ],
+        ),
+    ],
 )
-def test_webhook__webhook_provider_invalid_payload__returns_400(
+def test_webhook__webhook_provider_invalid_payload__returns_400_with_errors(
     webhook_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     body: str,
+    expected_errors: list[dict[str, str]],
 ) -> None:
     # Given / When
     response = api_client.post(
@@ -344,6 +384,56 @@ def test_webhook__webhook_provider_invalid_payload__returns_400(
 
     # Then
     assert response.status_code == 400
+    assert response.json() == {
+        "detail": "Invalid feature health webhook payload.",
+        "code": "invalid_payload",
+        "errors": expected_errors,
+    }
+
+
+def test_webhook__webhook_provider_feature_not_found__returns_400_with_detail(
+    webhook_feature_health_provider_webhook_url: str,
+    api_client: APIClient,
+) -> None:
+    # Given / When
+    response = api_client.post(
+        webhook_feature_health_provider_webhook_url,
+        data=json.dumps({"status": "unhealthy", "feature": "non_existent"}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": (
+            "No feature health events were created: "
+            "feature(s) 'non_existent' not found in the project."
+        ),
+        "code": "no_events_created",
+    }
+
+
+def test_webhook__grafana_provider_invalid_payload__returns_400_with_errors(
+    grafana_feature_health_provider_webhook_url: str,
+    api_client: APIClient,
+) -> None:
+    # Given / When
+    response = api_client.post(
+        grafana_feature_health_provider_webhook_url,
+        data=json.dumps({"alerts": [{"status": "firing"}]}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == 400
+    response_json = response.json()
+    assert response_json["detail"] == "Invalid feature health webhook payload."
+    assert response_json["code"] == "invalid_payload"
+    assert {
+        "loc": "alerts.0.fingerprint",
+        "msg": "Field required",
+        "type": "missing",
+    } in response_json["errors"]
 
 
 def test_webhook__grafana_provider_firing_alert__creates_unhealthy_event(
@@ -580,6 +670,13 @@ def test_webhook__grafana_provider_multiple_alerts__creates_expected_events(
     # Then
     # unrelated alert was not accepted by webhook
     assert response.status_code == 400
+    assert response.json() == {
+        "detail": (
+            "No feature health events were created: "
+            "the payload does not reference any feature."
+        ),
+        "code": "no_events_created",
+    }
     response = admin_client_new.get(feature_health_events_url)
     assert response.json() == [
         # second firing alert has not been resolved

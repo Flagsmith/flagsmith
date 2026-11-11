@@ -75,7 +75,8 @@ You can use the webhook in your custom integration. Refer to the payload schema 
             "$ref": "#/definitions/FeatureHealthEventReasonUrlBlock"
           }
         }
-      }
+      },
+      "required": ["text_blocks", "url_blocks"]
     },
     "FeatureHealthEventReasonTextBlock": {
       "type": "object",
@@ -102,6 +103,19 @@ You can use the webhook in your custom integration. Refer to the payload schema 
       "required": ["url"]
     }
   }
+}
+```
+
+The webhook responds with `200 OK` once the event is recorded. Otherwise, it responds with `400 Bad Request` and a JSON body describing the problem:
+
+- If the payload does not match the schema, `code` is `invalid_payload` and `errors` lists each validation error, with its location in the payload (`loc`), a message (`msg`) and an error type (`type`).
+- If the payload is valid but no event could be recorded, e.g. because the feature does not exist in the project, `code` is `no_events_created` and `detail` explains why.
+
+```json
+{
+  "detail": "Invalid feature health webhook payload.",
+  "code": "invalid_payload",
+  "errors": [{ "loc": "reason", "msg": "Input should be an object", "type": "dict_type" }]
 }
 ```
 
