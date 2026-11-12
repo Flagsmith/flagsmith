@@ -23,7 +23,7 @@ const meta: Meta<typeof SegmentedControl<string>> = {
     docs: {
       description: {
         component:
-          'One choice from two to five, all visible. A radio group: Tab reaches the checked option and arrow keys move the selection. The indicator slides between options and stays still under reduced motion.',
+          'One choice from a few, all visible. A radio group: Tab reaches the checked option and arrow keys move the selection. Each option is at least as wide as its label.',
       },
     },
     layout: 'centered',
