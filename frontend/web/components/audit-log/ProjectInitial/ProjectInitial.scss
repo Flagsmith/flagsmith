@@ -1,0 +1,9 @@
+.project-initial {
+  line-height: 1;
+  color: var(--always-white);
+
+  // Light palette colours need dark text in either theme.
+  &--on-light {
+    color: var(--always-black);
+  }
+}
