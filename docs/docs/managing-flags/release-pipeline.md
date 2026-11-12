@@ -161,7 +161,7 @@ To turn a flag off automatically if it becomes unhealthy during a stage:
 3. Tick **Abort if unhealthy in this environment**.
 
 If the flag is unhealthy in the stage's environment when it enters the stage, or becomes unhealthy during the wait, the
-flag is disabled for everyone in that environment, including segment overrides, and removed from the pipeline.
+flag is disabled in that environment, including for segments enabled by earlier stages, and removed from the pipeline.
 
 :::note
 
