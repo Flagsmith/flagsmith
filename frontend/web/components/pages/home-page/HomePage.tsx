@@ -484,6 +484,7 @@ const HomePage: React.FC = () => {
                             )}
                             {!preventEmailPassword && (
                               <form
+                                key='login'
                                 id='form'
                                 name='form'
                                 onSubmit={(e) => {
@@ -650,6 +651,7 @@ const HomePage: React.FC = () => {
                           )}
                           {!preventEmailPassword && (
                             <form
+                              key='signup'
                               id='form'
                               name='form'
                               onSubmit={(e) => {

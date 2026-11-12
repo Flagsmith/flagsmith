@@ -72,7 +72,8 @@ const Input: React.FC<InputProps> = ({
   const [shouldValidate, setShouldValidate] = useState(
     !!value || !!autoValidate,
   )
-  const [type, setType] = useState(typeProp)
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
+  const type = typeProp === 'password' && isPasswordVisible ? 'text' : typeProp
 
   // No-op under E2E to avoid programmatic focus stealing during tests; native
   // autoFocus is unaffected. Matches the original Input.focus() behaviour.
@@ -148,7 +149,7 @@ const Input: React.FC<InputProps> = ({
             'border-0 bg-transparent p-0',
             sizeClassName,
           )}
-          onClick={() => setType(type === 'password' ? 'text' : 'password')}
+          onClick={() => setIsPasswordVisible(!isPasswordVisible)}
         >
           <Icon
             name={type === 'password' ? 'eye' : 'eye-off'}

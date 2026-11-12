@@ -83,4 +83,19 @@ test.describe('Invite Tests', () => {
     await expect(page.getByText('You already have an account')).toBeVisible()
     await expect(page.locator(byId('email'))).toHaveValue(E2E_USER)
   });
+
+  test('Switching from login to signup shows the name fields as text inputs @oss', async ({ page }) => {
+    const { click, waitForElementVisible } = createHelpers(page);
+
+    log('Open login')
+    await page.goto('/login')
+    await waitForElementVisible(byId('password'))
+
+    log('Switch to signup')
+    await click(byId('jsSignup'))
+    await waitForElementVisible(byId('firstName'))
+    await expect(page.locator(byId('firstName'))).toHaveAttribute('type', 'text')
+    await expect(page.locator(byId('lastName'))).toHaveAttribute('type', 'text')
+    await expect(page.locator(byId('password'))).toHaveAttribute('type', 'password')
+  });
 });
