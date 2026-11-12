@@ -57,7 +57,7 @@ def map_project_usage_data_to_project_usage(
 
 def map_organisation_to_usage_snapshot(organisation: Organisation) -> UsageSnapshot:
     hour_end = timezone.now().replace(minute=0, second=0, microsecond=0)
-    hour_start = hour_end - timedelta(hours=1)
+    hour_start = hour_end - timedelta(hours=24)
     seat_count = organisation.num_seats
     instance_version = get_version()
     usage_data = get_usage_data_for_window(organisation, hour_start, hour_end)
