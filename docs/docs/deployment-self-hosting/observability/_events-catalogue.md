@@ -910,7 +910,7 @@ Attributes:
 ### `usage_reporting.snapshot.errored`
 
 Logged at `exception` from:
- - `api/organisations/usage_reporting/services.py:109`
+ - `api/organisations/usage_reporting/services.py:112`
 
 Attributes:
  - `reason`
