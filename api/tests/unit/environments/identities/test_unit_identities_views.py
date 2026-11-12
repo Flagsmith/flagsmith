@@ -29,7 +29,9 @@ from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from experimentation.models import Experiment, ExperimentStatus
+from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
+from features.multivariate.models import MultivariateFeatureOption
 from integrations.amplitude.models import AmplitudeConfiguration
 from organisations.models import Organisation
 from permissions.models import PermissionModel
@@ -1572,3 +1574,70 @@ def test_sdk_identities_get__many_experimented_flags__single_experiment_query(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["flags"]) == 6
+
+
+def test_sdk_identities_get__segment_override_not_matched__reason_is_default(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    segment_featurestate: FeatureState,
+) -> None:
+    # Given - a segment override whose rules the identity does not match
+
+    # When
+    flags = _get_identity_flags(api_client, environment, identity)
+
+    # Then
+    assert flags[feature.name]["reason"] == "DEFAULT"
+
+
+def test_sdk_identities_get__segment_override_matched__reason_names_segment(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    identity_matching_segment: Segment,
+) -> None:
+    # Given
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=identity_matching_segment,
+            environment=environment,
+        ),
+    )
+
+    # When
+    flags = _get_identity_flags(api_client, environment, identity)
+
+    # Then
+    assert flags[feature.name]["reason"] == "TARGETING_MATCH; segment=Matching segment"
+
+
+def test_sdk_identities_get__multivariate_split__reason_is_split_with_weight(
+    api_client: APIClient,
+    environment: Environment,
+    identity: Identity,
+) -> None:
+    # Given - a single variant served to everyone, so bucketing is deterministic
+    mv_feature = Feature.objects.create(
+        name="mv_feature",
+        project=environment.project,
+        type=MULTIVARIATE,
+        initial_value="control",
+    )
+    MultivariateFeatureOption.objects.create(
+        feature=mv_feature,
+        default_percentage_allocation=100,
+        type=STRING,
+        string_value="variant",
+    )
+
+    # When
+    flags = _get_identity_flags(api_client, environment, identity)
+
+    # Then
+    assert flags[mv_feature.name]["reason"] == "SPLIT; weight=100.0"
