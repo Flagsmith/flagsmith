@@ -13,7 +13,7 @@ const meta: Meta<typeof ColorSwatch> = {
   argTypes: {
     color: { control: 'color' },
     shape: { control: 'inline-radio', options: ['square', 'circle'] },
-    size: { control: 'select', options: ['sm', 'md', 'lg'] },
+    size: { control: 'select', options: ['sm', 'md', 'lg', 'xl'] },
   },
   args: {
     color: colorChart1,
@@ -43,7 +43,7 @@ export const Sizes: Story = {
     docs: {
       description: {
         story:
-          '`sm` (8px) suits dense rows, `md` (12px) is the default for inline labels, `lg` (16px) is for headers or emphasised labels.',
+          '`sm` (8px) suits dense rows, `md` (12px) is the default for inline labels, `lg` (16px) is for headers or emphasised labels, `xl` (24px) is for a swatch with content inside.',
       },
     },
   },
@@ -52,6 +52,28 @@ export const Sizes: Story = {
       <ColorSwatch color={colorChart1} size='sm' />
       <ColorSwatch color={colorChart1} size='md' />
       <ColorSwatch color={colorChart1} size='lg' />
+      <ColorSwatch color={colorChart1} size='xl' />
+    </div>
+  ),
+}
+
+export const WithContent: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Children are centred inside, such as a project initial. The text colour is up to the caller.',
+      },
+    },
+  },
+  render: () => (
+    <div className='d-flex align-items-center gap-3 fw-semibold'>
+      <ColorSwatch color={colorChart1} size='lg'>
+        A
+      </ColorSwatch>
+      <ColorSwatch color={colorChart1} size='xl'>
+        A
+      </ColorSwatch>
     </div>
   ),
 }
