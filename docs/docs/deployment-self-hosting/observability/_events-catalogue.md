@@ -997,8 +997,8 @@ Attributes:
 ### `usage_reporting.run.skipped`
 
 Logged at `debug` from:
- - `api/organisations/usage_reporting/services.py:60`
- - `api/organisations/usage_reporting/services.py:63`
+ - `api/organisations/usage_reporting/services.py:80`
+ - `api/organisations/usage_reporting/services.py:83`
 
 Attributes:
  - `reason`
@@ -1006,25 +1006,26 @@ Attributes:
 ### `usage_reporting.snapshot.errored`
 
 Logged at `exception` from:
- - `api/organisations/usage_reporting/services.py:75`
+ - `api/organisations/usage_reporting/services.py:112`
 
 Attributes:
-
-### `usage_reporting.snapshot.push_failed`
-
-Logged at `warning` from:
- - `api/organisations/usage_reporting/services.py:55`
-
-Attributes:
- - `status_code`
+ - `reason`
 
 ### `usage_reporting.snapshot.pushed`
 
 Logged at `info` from:
- - `api/organisations/usage_reporting/services.py:53`
+ - `api/organisations/usage_reporting/services.py:75`
 
 Attributes:
  - `status_code`
+
+### `usage_reporting.snapshot.skipped`
+
+Logged at `debug` from:
+ - `api/organisations/usage_reporting/services.py:95`
+
+Attributes:
+ - `reason`
 
 ### `warehouse.connection.connected`
 
