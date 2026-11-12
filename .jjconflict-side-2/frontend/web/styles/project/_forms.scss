@@ -1,0 +1,206 @@
+.or-divider {
+    color: $text-muted;
+    font-weight: 400;
+    font-size: $font-caption;
+    line-height: $line-height-xsm;
+    &__line {
+        margin-left: calc($spacer / 4);
+        height: 2px;
+        border-bottom: 1px dashed $hr-border-color;
+    }
+}
+.and-divider {
+    color: $text-muted;
+    font-weight: 400;
+    font-size: $font-caption;
+    line-height: $line-height-xsm;
+    &__line {
+        margin-right: calc($spacer / 4);
+        &:last-child {
+            margin-right: 0;
+            margin-left: calc($spacer / 4);
+        }
+        height: 2px;
+        border-bottom: 1px solid $hr-border-color;
+    }
+}
+.dark {
+    .input-container {
+        input.input {
+            border: 1px solid var(--color-border-default);
+            background-color: var(--color-surface-default);
+            color: var(--color-text-default);
+
+            // Dark hover/focus stay action-coloured (was $primary) — the light
+            // rule uses --color-border-strong on hover, so this override keeps
+            // the existing dark behaviour rather than inheriting it.
+            &:hover {
+                border: 1px solid var(--color-border-action);
+            }
+            &:focus {
+                border: 1px solid var(--color-border-action);
+            }
+            &::placeholder {
+                color: var(--color-text-tertiary);
+            }
+            &:disabled {
+                border: 1px solid var(--color-border-disabled);
+                color: var(--color-text-disabled);
+                & + .input-icon-right {
+                    path {
+                        fill: var(--color-text-disabled);
+                        opacity: $btn-disabled-opacity;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.input-container,
+.react-datepicker-wrapper .react-datepicker__input-container {
+    &.invalid {
+        input.input {
+            border-color: var(--color-border-danger) !important;
+        }
+    }
+    &.success {
+        input.input {
+            border-color: var(--color-border-success) !important;
+        }
+    }
+
+    input.input {
+        border: 1px solid var(--color-border-default);
+        background-color: var(--color-surface-default);
+        @include transition(all 200ms);
+        &:hover {
+            border: 1px solid var(--color-border-strong);
+        }
+        &:focus {
+            border: 1px solid var(--color-border-action);
+        }
+
+        border-radius: $border-radius;
+        color: var(--color-text-default);
+        height: $input-height;
+        line-height: $line-height-lg;
+        padding: 12px 12px 12px 16px;
+        &--wide {
+            min-width: 300px;
+        }
+
+        &::placeholder {
+            color: var(--color-text-tertiary);
+            font-weight: normal;
+        }
+
+        &-sm {
+            padding: $input-padding-sm;
+            line-height: $line-height-sm;
+            height: $input-height-sm;
+        }
+        &-xsm {
+            padding: $input-padding-xsm;
+            line-height: $line-height-sm;
+            height: $input-height-xsm;
+            font-size: $font-sm;
+        }
+        &-lg {
+            padding: $input-padding-lg;
+            height: $input-height-lg;
+        }
+    }
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.label-switch {
+    color: var(--color-text-default);
+    font-weight: 500;
+}
+
+.rule-value-icon {
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        transform: scale(1.05);
+    }
+
+    &:active {
+        transform: scale(0.95);
+        transition: all 0.1s ease-in-out;
+    }
+}
+
+.setting {
+    label {
+        font-size: $font-size-base;
+        line-height: $line-height-base;
+    }
+}
+
+label {
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
+    margin-bottom: 6px;
+}
+label {
+    color: var(--color-text-default);
+    font-weight: 500;
+}
+
+.hljs,
+.hljs-header,
+.value-editor pre {
+    border-radius: $border-radius;
+}
+
+.control-label {
+    display: block;
+    svg {
+        vertical-align: bottom;
+    }
+}
+
+.notification {
+    text-align: center;
+    justify-content: center;
+    align-self: center;
+    &__icon {
+        color: $success;
+    }
+    &__text {
+        color: $success;
+        font-weight: bold;
+    }
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25em 0.4em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: $border-radius-sm;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
+}
+
+.badge-info {
+    background-color: $primary;
+    color: white;
+}
+
+.transform-none {
+    text-transform: none !important;
+}
+
+span[contenteditable]:focus-visible {
+    outline: none !important;
+}

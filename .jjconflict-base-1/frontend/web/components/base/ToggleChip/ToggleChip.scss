@@ -1,0 +1,25 @@
+.ds-toggle-chip {
+  // The global input[type='checkbox'] rule sets display: none, which would
+  // take the checkbox out of the tab order. The class makes this outrank it.
+  & input[type='checkbox'] {
+    display: block;
+  }
+
+  // The checkbox is visually hidden, so the chip shows its focus.
+  &:has(input:focus-visible) .ds-chip {
+    outline: 2px solid var(--color-border-action);
+    outline-offset: 2px;
+  }
+
+  &--disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  // A checked tinted chip: stronger tint, border in the text colour. The tint
+  // is part of Chip.scss's contrast check.
+  & input:checked ~ .ds-chip--tinted {
+    --chip-tint: 22%;
+    border-color: currentColor;
+  }
+}

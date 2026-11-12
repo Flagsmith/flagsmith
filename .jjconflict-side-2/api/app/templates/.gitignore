@@ -1,0 +1,3 @@
+# Front-end production template builds are copied here by webpack. HTML files in this folder should not be committed to git.
+
+webpack/**.html

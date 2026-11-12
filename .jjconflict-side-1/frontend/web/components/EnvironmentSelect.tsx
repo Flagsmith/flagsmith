@@ -1,0 +1,92 @@
+import React, { FC, useMemo } from 'react'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
+import { Props } from 'react-select'
+import { Environment } from 'common/types/responses'
+
+export type EnvironmentSelectOption = {
+  value: string
+  label: string
+  environment: Environment | null
+}
+
+type EnvironmentSelectType = Partial<Omit<Props, 'value'>> & {
+  projectId: number
+  value?: string
+  label?: string
+  onChange: (value: string, environment: Environment | null) => void
+  showAll?: boolean
+  readOnly?: boolean
+  idField?: 'id' | 'api_key'
+  ignore?: string[]
+  size?: 'default' | 'select-sm' | 'select-xsm'
+  dataTest?: (value: { label: string }) => string
+}
+
+const EnvironmentSelect: FC<EnvironmentSelectType> = ({
+  'data-test': dataTestProp,
+  idField = 'api_key',
+  ignore,
+  label,
+  onChange,
+  projectId,
+  readOnly,
+  showAll,
+  size = 'select-xsm',
+  value,
+  ...rest
+}) => {
+  const { data } = useGetEnvironmentsQuery({ projectId: `${projectId}` })
+
+  const environments = useMemo(() => {
+    return (data?.results || [])
+      ?.map((v) => ({
+        environment: v,
+        label: v.name,
+        value: `${v[idField]}`,
+      }))
+      .filter((v) => {
+        if (ignore) {
+          return !ignore.includes(v.value)
+        }
+        return true
+      })
+      .sort((a, b) => a.label.localeCompare(b.label))
+  }, [data?.results, ignore, idField])
+
+  const foundValue = useMemo(
+    () =>
+      environments.find((environment) => `${environment.value}` === `${value}`),
+    [value, environments],
+  )
+
+  if (readOnly) {
+    return <div className='mb-2'>{foundValue?.label}</div>
+  }
+  return (
+    <div data-test={dataTestProp}>
+      <Select
+        {...rest}
+        size={size === 'default' ? undefined : size}
+        value={
+          foundValue
+            ? foundValue
+            : {
+                label:
+                  label ||
+                  (showAll ? 'All Environments' : 'Select an Environment'),
+                value: '',
+              }
+        }
+        options={(showAll
+          ? [{ environment: null, label: 'All Environments', value: '' }]
+          : []
+        ).concat(environments)}
+        onChange={(value: EnvironmentSelectOption) =>
+          onChange(value?.value || '', value?.environment)
+        }
+      />
+    </div>
+  )
+}
+
+export default EnvironmentSelect

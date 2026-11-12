@@ -1,0 +1,237 @@
+{% extends "sales_dashboard/base.html" %}
+{% load humanize %}
+
+{% block title %}
+{{organisation.name}} -
+{% endblock title %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include "sales_dashboard/nav.html" %}
+
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+            <div
+                class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2 float-left">
+                    Organisation: <strong>{{organisation.name}}</strong>
+                    - Plan: <strong>{{ organisation.subscription.plan|default:"Free"}}</strong>
+                    {% if organisation.deleted_at %}<span class="badge badge-danger">Deleted</span>{% endif %}
+                    {% if organisation.has_paid_subscription and not organisation.is_paid %}<span class="badge badge-danger">Subscription Cancelled</span>{% endif %}
+                </h1>
+                <div class="float-right"><a href="/admin/organisations/organisation/{{organisation.id}}/change">Django Admin</a></div>
+                <div class="float-right">
+                    <form method="POST" action="{% url 'sales_dashboard:download-org-data' organisation.id %}">
+                        {% csrf_token %}
+                        <input type="submit" value="Download Org Data">
+                    </form>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+
+            <h2>API Calls</h2>
+            <table class="table table-striped table-sm">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>24h</th>
+                        <th>7d</th>
+                        <th>30d</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{api_calls.24h|intcomma}}</td>
+                        <td>{{api_calls.7d|intcomma}}</td>
+                        <td>{{api_calls.30d|intcomma}}</td>
+                        </tr>
+                </tbody>
+            </table>
+
+            <h2>
+                Subscription
+                {%if chargebee_email%} - <a href="mailto:{{ chargebee_email }}">{{ chargebee_email }}</a>{% endif %}
+            </h2>
+            <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>CB Customer ID</th>
+                            <th>CB Subscription Id</th>
+                            <th>Plan</th>
+                            <th>Max Seats</th>
+                            <th>Max API calls</th>
+                            <th>Max Projects</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ organisation.subscription.subscription_date|date:"M d, Y" }}</td>
+                            <td>{{ organisation.subscription.cancellation_date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if organisation.subscription.payment_method == "CHARGEBEE" %}
+                                    <a target="_blank" href="https://flagsmith.chargebee.com/customers?view_code=all&Customers.search={{ organisation.subscription.customer_id }}">{{ organisation.subscription.customer_id }}</a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if organisation.subscription.payment_method == "CHARGEBEE" %}
+                                    <a target="_blank" href="https://flagsmith.chargebee.com/subscriptions?view_code=all&Subscriptions.search={{ organisation.subscription.subscription_id }}">{{ organisation.subscription.subscription_id }}</a>
+                                {% endif %}
+                            </td>
+                            <td>{{ organisation.subscription.plan }}</td>
+                            <td>{{ max_seats }}</td>
+                            <td>{{ max_api_calls|intcomma }}</td>
+                            <td>{{ max_projects|default_if_none:"No limit configured" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                {%if organisation.subscription.is_in_trial %}
+                    <form action="{% url 'sales_dashboard:organisation_end_trial' organisation.id %}" method="post" class="form-inline float-right">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary mb-2">End Trial</button>
+                    </form>
+                {% else %}
+                    <form action="{% url 'sales_dashboard:organisation_start_trial' organisation.id %}" method="post" class="form-inline float-right">
+                        {% csrf_token %}
+                        <label class="sr-only" for="trialSeats">Seats</label>
+                        <input type="text" class="form-control mb-2 mr-sm-2" id="max_seats" name="max_seats" placeholder="Seats">
+                        <label class="sr-only" for="trialApiCalls">API Calls</label>
+                        <input type="text" class="form-control mb-2 mr-sm-2" id="max_api_calls" name="max_api_calls" placeholder="API Calls">
+                        <button type="submit" class="btn btn-primary mb-2">Start Trial</button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <h2>Projects</h2>
+            <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Created</th>
+                            <th>Name</th>
+                            <th>Environments</th>
+                            <th>Features</th>
+                            <th>Segments</th>
+                            <th>Dynamo DB Enabled</th>
+                            <th>Identity Count</th>
+                            <th>Identity Migration Status</th>
+                            <th>Migrate Identity</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in organisation.projects.all %}
+
+                        <tr>
+                            <td>{{project.id}}</td>
+                            <td>{{project.created_date|date:"M d, Y"}}</td>
+                            <td>{{project.name}}</td>
+                            <td>{{project.environments.all.count}}</td>
+                            <td>{{project.features.all.count}}</td>
+                            <td>{{project.live_segment_count}}</td>
+                            <td>{{project.enable_dynamo_db}}</td>
+                            <td>{{identity_count_dict|get_item:project.id|intcomma}}</td>
+                            <td>{{identity_migration_status_dict|get_item:project.id}}</td>
+                            <td>
+                            <form method="POST" class="form-inline" action="{% url 'sales_dashboard:migrate_identities' project.id %}">
+                                {% csrf_token %}
+                                <input value="migrate identities" {% if identity_migration_status_dict|get_item:project.id != "MIGRATION_NOT_STARTED" %} {{'disabled'}} {% endif %} type="submit"/>
+                            </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>Seats in Use: <strong>{{ organisation.users.count }}</strong></h2>
+            <h3><a href="mailto:{% for user in organisation.users.all %}{{user.email}},{% endfor %}">Mail All Users</a></h3>
+            <div class="table-responsive">
+                <table class="table table-striped table-sm">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email Address</th>
+                            <th>Date Registered</th>
+                            <th>Last Logged In</th>
+                            <th>User UUID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in organisation.users.all %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.first_name}}</td>
+                            <td><a href="mailto:{{user.email}}">{{user.email}}</a></td>
+                            <td>{{ user.date_joined }}</td>
+                            <td>{{ user.last_login }}</td>
+                            <td><span id="user-uuid">{{ user.uuid }}</span> <button onclick='navigator.clipboard.writeText(document.getElementById("user-uuid").innerText)'>copy</button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.js"></script>
+                <div class="container">
+                    <form action="{% url 'sales_dashboard:organisation_info' organisation.id %}" method="get" class="form-inline float-right">
+                        <label for="date-range">Days History: </label>
+                          <select name="date_range" id="date-range" class="custom-select m-1">
+                            <option value="30d" {% if date_range == "30d" %}selected{% endif %}>30d</option>
+                            <option value="90d" {% if date_range == "90d" %}selected{% endif %}>90d</option>
+                            <option value="180d" {% if date_range == "180d" %}selected{% endif %}>180d</option>
+                            <option value="365d" {% if date_range == "365d" %}selected{% endif %}>365d</option>
+                          </select>
+                          <button type="submit" class="btn btn-primary m-1">Apply</button>
+                        </form>
+                    <canvas id="examChart"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+var ctx = document.getElementById("examChart").getContext("2d");
+var myChart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: {{labels}},
+    datasets: [
+      {
+        label: 'Flags',
+        data: {{flags}},
+        backgroundColor: '#D6E9C6',
+      },
+      {
+        label: 'Identities',
+        data: {{identities}},
+        backgroundColor: '#FAEBCC',
+      },
+      {
+        label: 'Traits',
+        data: {{traits}},
+        backgroundColor: '#EBCCD1',
+      },
+      {
+        label: 'Environment Documents',
+        data: {{environment_documents}},
+        backgroundColor: '#368BD1',
+      }
+    ]
+  },
+  options: {
+    scales: {
+      xAxes: [{ stacked: true }],
+      yAxes: [{ stacked: true }]
+    }
+  }
+});
+</script>
+{% endblock %}

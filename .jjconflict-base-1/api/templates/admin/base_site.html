@@ -1,0 +1,9 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('NEW TITLE') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}" style="color: greenyellow;">Unless instructed by Flagsmith, modifying data here is not supported and may cause issues in your installation.</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

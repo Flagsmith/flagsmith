@@ -1,0 +1,80 @@
+---
+id: sdk-v-1-flags
+title: "sdk_v1_flags"
+description: "Retrieve the feature flags for an environment."
+sidebar_label: "sdk_v1_flags"
+hide_title: true
+hide_table_of_contents: true
+api: eJztVm1vGzcM/iuE9iFtcbabrZ+8NpubpEPQlxVNOgyIg4Q50T41Oukq8dx4xv33gbpzbMfuy9Bhn+YPsSNRJB/y0SMulK8oIBvvTrQaqqhvLmf7lxOL06gypSnmwVSyrYbqHXEwNCPggmBCyHUgSKYw8QHQAbmZCd6V5Lg/dmPX6/XG7tEbz/RoCJ8KclAFPzPauGlyctV5uYKPNYU5YJjWcjgDLkwEcrryxjF8MtaOXSCugwMyXFAAhGjc1BL46w+UM0gG8OTxE3hgJhsZak8RnGegWxP5IQSU82PHBTpAsCbuSLaObY6bWXAhKI0mx2ZiKICJoKkKlCOT7o/dW0sYCepIcDXAygxm+4PWnA3FwS+ro8+ern4fXIFxkQl1X2WqwoAlMYWohucL5bAkNVQdGpUpI71I9drq0BssCfwmfPYwJU5LkZFlX2Uq5gWVqIYLxfNK/EcOxk1VpkrjXpGbcqGG+01zkalAsfIuUhTrHx8/lq/NsCpTuXdMjmUPq8qaPHFq8CGKwWI7HIaAkr9hKuPaetvMHdSrAkVyHFd9F+bBgyXMhO0htBwhDdfzBPmF0LOUxp0evUzVDcJ46YZEXVZ1C9JGwJWTzj4DTRMjYZCF0omAlmZkJcR9KJshjV6DaxzTlIJqsq7P9/vRLN1tN4pcXarhuTo9G705Gr07Upl6/f7V2ckfo3cno7NjddE00ryPtQmkxdBo1YXpnF404gWvLa3ndO29JXQSuoN7mYp7OUNbp0xcba2cUkMONWXKO/p9ksi6BWuH1y2IksYMg8GWP/dxbkZLmLCj1VdM7+FfQs3WLtMuhBdN+mQqUl4Hw/ME7XilbTB6ewIvSdYv5IawqOXwXNRTXWSqJC68qOmUUvtR7pJaykESzIFcQQqz5SWvg1VDVTBXcTgYkJ5SHyvTnyyJ1899uXUpVrQ81lOSpJRks8z6VO5cy7lDX/jAcDp3eZv3Xekk5FIOUpsIA4XtUD5A3jqJ4mSpiRFytLa9bqL/t0zBob2z9XXIKYNY5wVghFFZWcO1pr6w615W8OA5RpM//FJ2YvDvJgdcIEOODryzc4jkNKQ8IA+UFBptXCF4bW4rdGT7cFYQ3NBcngARmgpj/OSD/jn9V0cJVZLsmqnzgXSCvJNEK1GsjCx0El8Q6tSK7gX4s7d2utcabhfi9OjlqgB9eIpQBJo821tyS/s8bvJqkFsjQjcIFPmHqr62Ju9hZXp3bvYOXhinwdcMpQ/0dIAHCc1rjEzhHwMZ1Vz4YP5KT8ROECNdGpf8fheUYGbI9G1YErUks6/STyTZ35C7Z/w9mM/EX+8ao7woNRdCu/YFbYeOpYpBFWhibmHcnhgrJTJl3MSnRAyL9K3pgkhCpkRl2jiz/c+LyF6EQx8I0OlEotHbk9iHw4Lym1Stbyj/3sEqtPZ5GuUSirbK7ZSAeVJ5KtGI5sW6qnzgXzelrsmUNTm52L43bQ2fnx7Bq241U6vxqd3q/dQ7tFhHSjWpfOQS3drpqG9gtg87R9vFan75f8r9b6bc7tYw3fKgsmjSvJGewUX3Yp7LlRL6CmmXbZP3tfCRZXuxkBvzPtimkeV2JJbXVJvYDTUTtJG+0OxvH5h35nsjqrc2TXQTkkrvcBpp0jByLhNOpwiSX3tslOdU8dqprcG5WR8mfjs+U5nCLdG5SaLT/VibwdDN13zvejzaNOTv2lC2eWyxaGWtae7s263PnrgTvtZa6iTz1N+o7fvn
+sidebar_class_name: "get api-method"
+info_path: sdk-api/flagsmith-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"sdk_v1_flags"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/api/v1/flags/"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Retrieve the feature flags for an environment.
+
+---
+*Note*: when providing the `feature` query argument, this endpoint will
+return either a single object or a 404 (if the feature does not exist) rather
+than a list.
+
+---
+*Note*: using this endpoint with an identifier is deprecated.
+Please use `/api/v1/identities/?identifier=<identifier>` instead.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"feature","in":"query","description":"Name of the feature to get the state of","schema":{"type":"string","minLength":1}}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"","content":{"application/json":{"schema":{"type":"array","items":{"type":"object","description":"Represents a single flag (feature state) returned by the Flagsmith SDK.","properties":{"feature":{"description":"Represents a Flagsmith feature, defined at project level.","type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"},"type":{"type":"string","enum":["STANDARD","MULTIVARIATE"]}},"required":["id","name","type"]},"enabled":{"type":"boolean"},"feature_state_value":{"nullable":true,"oneOf":[{"type":"integer"},{"type":"boolean"},{"type":"string"}]},"variant":{"type":"string","nullable":true},"reason":{"type":"string","nullable":true}},"required":["enabled","feature","feature_state_value"]}}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

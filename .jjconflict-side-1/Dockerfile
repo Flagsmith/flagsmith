@@ -1,0 +1,268 @@
+# Your usual Flagsmith release produces of a number of shippable Docker images:
+
+# - Private cloud: API, Unified
+# - SaaS: API
+# - Open Source: API, Frontend, Unified
+
+# This Dockerfile is meant to build all of the above via composable, interdependent stages.
+# The goal is to have as DRY as possible build for all the targets.
+
+# Usage Examples
+
+# Build an Open Source API image:
+# $ docker build -t flagsmith-api:dev --target oss-api .
+
+# Build an Open Source Unified image:
+# (`oss-unified` stage is the default one, so there's no need to specify a target stage)
+# $ docker build -t flagsmith:dev .
+
+# Build a SaaS API image:
+# $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-saas-api:dev --target saas-api \
+#     --secret="id=sse_pgp_pkey,src=./sse_pgp_pkey.key"\
+#     --secret="id=github_private_cloud_token,env=GH_TOKEN" .
+
+# Build a Private Cloud Unified image:
+# $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-private-cloud:dev --target private-cloud-unified \
+#     --secret="id=github_private_cloud_token,env=GH_TOKEN" .
+
+# Table of Contents
+# Stages are described as stage-name [dependencies]
+
+# - Intermediary stages
+# * build-node [node]
+# * build-node-django [build-node]
+# * build-node-selfhosted [build-node]
+# * build-python [wolfi-base]
+# * build-python-private [build-python]
+# * api-runtime [wolfi-base]
+# * api-runtime-private [api-runtime]
+
+# - Internal stages
+# * api-test [build-python]
+# * api-private-test [build-python-private]
+
+# - Target (shippable) stages
+# * private-cloud-api [api-runtime-private, build-python-private]
+# * private-cloud-unified [api-runtime-private, build-python-private, build-node-django]
+# * saas-api [api-runtime-private, build-python-private]
+# * oss-api [api-runtime, build-python]
+# * oss-frontend [node:slim, build-node-selfhosted]
+# * oss-unified [api-runtime, build-python, build-node-django]
+
+ARG CI_COMMIT_SHA=dev
+
+# Pin runtimes versions
+ARG NODE_VERSION=24
+ARG PYTHON_VERSION=3.13
+
+FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm AS node
+FROM cgr.dev/chainguard/wolfi-base:latest AS wolfi-base
+
+# - Intermediary stages
+# * build-node
+FROM node AS build-node
+
+# Copy the files required to install npm packages
+WORKDIR /build
+COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./frontend/.nvmrc ./frontend/
+COPY frontend/bin/ ./frontend/bin/
+COPY frontend/env/ ./frontend/env/
+
+ARG ENV=selfhosted
+RUN cd frontend && ENV=${ENV} npm ci --quiet --production
+
+COPY frontend /build/frontend
+
+# * build-node-django [build-node]
+FROM build-node AS build-node-django
+
+RUN mkdir /build/api && cd frontend && npm run bundledjango
+
+# * build-node-selfhosted [build-node]
+FROM build-node AS build-node-selfhosted
+
+RUN cd frontend && npm run bundle
+
+# * build-python
+FROM wolfi-base AS build-python
+COPY --from=ghcr.io/astral-sh/uv /uv /uvx /bin/
+WORKDIR /build
+
+ARG PYTHON_VERSION
+RUN apk add build-base linux-headers curl git \
+  python-${PYTHON_VERSION} \
+  python-${PYTHON_VERSION}-dev \
+  py${PYTHON_VERSION}-pip
+
+COPY api/pyproject.toml api/uv.lock api/Makefile ./
+ENV UV_PROJECT_ENVIRONMENT=/build/.venv \
+  UV_PYTHON_PREFERENCE=only-system \
+  UV_PYTHON=python${PYTHON_VERSION} \
+  UV_LINK_MODE=copy \
+  UV_NO_SYNC=1 \
+  UV_CACHE_DIR=/root/.cache/uv
+RUN --mount=type=cache,target=/root/.cache/uv \
+  make install opts='--no-install-project'
+
+# * build-python-private [build-python]
+FROM build-python AS build-python-private
+
+# Authenticate git with token and install private Python dependencies
+ARG EXTRAS="--extra private"
+RUN --mount=type=secret,id=github_private_cloud_token \
+  --mount=type=secret,id=codeartifact_token \
+  --mount=type=cache,target=/root/.cache/uv \
+  echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
+  git config --global credential.helper store && \
+  UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
+  UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
+  make install-packages opts="--no-install-project ${EXTRAS}"
+
+# * api-runtime
+FROM wolfi-base AS api-runtime
+
+# Install Python and make it available to venv entrypoints
+ARG PYTHON_VERSION
+RUN apk add python-${PYTHON_VERSION} && \
+  mkdir /build/ && ln -s /usr/local/ /build/.venv
+
+WORKDIR /app
+
+COPY api /app/
+COPY .release-please-manifest.json /app/.versions.json
+
+ARG PROMETHEUS_MULTIPROC_DIR="/tmp/prometheus"
+ARG ACCESS_LOG_LOCATION="/dev/null"
+ENV ACCESS_LOG_LOCATION=${ACCESS_LOG_LOCATION} \
+  PROMETHEUS_MULTIPROC_DIR=${PROMETHEUS_MULTIPROC_DIR} \
+  DJANGO_SETTINGS_MODULE=app.settings.production \
+  GUNICORN_WORKERS=3 \
+  GUNICORN_THREADS=2 \
+  APPLICATION_LOGGERS="api_usage,app_analytics,audit,code_references,common,core,dynamodb,edge_api,environments,features,import_export,integrations,mcp,oauth2_metadata,organisations,projects,segment_membership,segments,task_processor,trust_relationships,users,webhooks,workflows"
+
+ARG CI_COMMIT_SHA
+RUN echo ${CI_COMMIT_SHA} > /app/CI_COMMIT_SHA && \
+  mkdir -p ${PROMETHEUS_MULTIPROC_DIR} && \
+  chmod 01777 ${PROMETHEUS_MULTIPROC_DIR}
+
+EXPOSE 8000
+
+ENTRYPOINT ["flagsmith"]
+
+CMD ["migrate-and-serve"]
+
+HEALTHCHECK --interval=2s --timeout=2s --retries=3 --start-period=20s \
+  CMD flagsmith healthcheck tcp
+
+# * api-runtime-private [api-runtime]
+FROM api-runtime AS api-runtime-private
+
+# Install SAML binary dependency
+RUN apk add xmlsec
+
+# - Internal stages
+# * api-test [build-python]
+FROM build-python AS api-test
+
+COPY api /build/
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+  make install-packages opts='--extra dev'
+
+CMD ["make", "test"]
+
+# * api-private-test [build-python-private]
+FROM build-python-private AS api-private-test
+
+COPY api /build/
+
+RUN --mount=type=secret,id=codeartifact_token \
+  --mount=type=cache,target=/root/.cache/uv \
+  UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_USERNAME=aws \
+  UV_INDEX_FLAGSMITH_PYPI_PRODUCTION_PASSWORD="$(cat /run/secrets/codeartifact_token)" \
+  make install-packages opts='--extra dev --extra private' && \
+  make integrate-private-tests && \
+  git config --global --unset credential.helper && \
+  rm -f ${HOME}/.git-credentials
+
+CMD ["make", "test"]
+
+# - Target (shippable) stages
+# * private-cloud-api [api-runtime-private, build-python-private]
+FROM api-runtime-private AS private-cloud-api
+
+COPY --from=build-python-private /build/.venv/ /usr/local/
+
+RUN python manage.py collectstatic --no-input
+RUN touch ./ENTERPRISE_VERSION
+
+USER nobody
+
+# * private-cloud-unified [api-runtime-private, build-python-private, build-node-django]
+FROM api-runtime-private AS private-cloud-unified
+
+COPY --from=build-python-private /build/.venv/ /usr/local/
+COPY --from=build-node-django /build/api/ /app/
+
+RUN python manage.py collectstatic --no-input
+RUN touch ./ENTERPRISE_VERSION
+
+USER nobody
+
+# * saas-api [api-runtime-private, build-python-private]
+FROM api-runtime-private AS saas-api
+
+# Install GnuPG and import private key
+RUN --mount=type=secret,id=sse_pgp_pkey \
+  apk add gpg gpg-agent && \
+  gpg --import /run/secrets/sse_pgp_pkey && \
+  mv /root/.gnupg/ /app/ && \
+  chown -R nobody /app/.gnupg/
+
+COPY --from=build-python-private /build/.venv/ /usr/local/
+
+RUN python manage.py collectstatic --no-input
+RUN touch ./SAAS_DEPLOYMENT
+
+USER nobody
+
+# * oss-api [api-runtime, build-python]
+FROM api-runtime AS oss-api
+
+COPY --from=build-python /build/.venv/ /usr/local/
+
+RUN python manage.py collectstatic --no-input
+
+USER nobody
+
+# * oss-frontend [build-node-selfhosted]
+FROM wolfi-base AS oss-frontend
+
+ARG NODE_VERSION
+RUN apk add nodejs-${NODE_VERSION}
+
+WORKDIR /srv/bt
+
+COPY --from=build-node-selfhosted /build/frontend/ /srv/bt/
+
+ENV NODE_ENV=production
+
+ARG CI_COMMIT_SHA
+RUN echo ${CI_COMMIT_SHA} > /srv/bt/CI_COMMIT_SHA
+COPY .release-please-manifest.json /srv/bt/.versions.json
+
+EXPOSE 8080
+
+CMD ["node",  "./api/index.js"]
+
+USER nobody
+
+# * oss-unified [api-runtime, build-python, build-node-django]
+FROM api-runtime AS oss-unified
+
+COPY --from=build-python /build/.venv/ /usr/local/
+COPY --from=build-node-django /build/api/ /app/
+
+RUN python manage.py collectstatic --no-input
+
+USER nobody

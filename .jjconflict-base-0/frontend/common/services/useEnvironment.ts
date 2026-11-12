@@ -1,0 +1,126 @@
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { Environment, Res } from 'common/types/responses'
+import { Req } from 'common/types/requests'
+import { service } from 'common/service'
+import { fetchAllPages } from 'common/utils/fetchAllPages'
+
+export const environmentService = service
+  .enhanceEndpoints({ addTagTypes: ['Environment'] })
+  .injectEndpoints({
+    endpoints: (builder) => ({
+      createEnvironment: builder.mutation<
+        Res['environment'],
+        Req['createEnvironment']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'Environment' }],
+        query: (body: Req['createEnvironment']) => ({
+          body,
+          method: 'POST',
+          url: `environments/`,
+        }),
+      }),
+      getAllEnvironments: builder.query<
+        Res['allEnvironments'],
+        Req['getAllEnvironments']
+      >({
+        providesTags: [{ id: 'LIST', type: 'Environment' }],
+        queryFn: ({ projectId }, _, _2, baseQuery) =>
+          fetchAllPages<Environment, FetchBaseQueryError>(async (page) => {
+            const { data, error } = await baseQuery({
+              url: `environments/?project=${projectId}&page=${page}`,
+            })
+            return { data: data as Res['environments'] | undefined, error }
+          }),
+      }),
+      getEnvironment: builder.query<Res['environment'], Req['getEnvironment']>({
+        providesTags: (res) => [{ id: res?.id, type: 'Environment' }],
+        query: (query: Req['getEnvironment']) => ({
+          url: `environments/${query.id}/`,
+        }),
+      }),
+      getEnvironmentMetrics: builder.query<
+        Res['environmentMetrics'],
+        Req['getEnvironmentMetrics']
+      >({
+        providesTags: () => [{ id: 'METRICS', type: 'Environment' }],
+        query: (query: Req['getEnvironmentMetrics']) => ({
+          url: `environments/${query.id}/metrics/`,
+        }),
+      }),
+      getEnvironments: builder.query<
+        Res['environments'],
+        Req['getEnvironments']
+      >({
+        providesTags: [{ id: 'LIST', type: 'Environment' }],
+        query: (data) => ({
+          url: `environments/?project=${data.projectId}`,
+        }),
+      }),
+      updateEnvironment: builder.mutation<
+        Res['environment'],
+        Req['updateEnvironment']
+      >({
+        invalidatesTags: (res) => [
+          { id: 'LIST', type: 'Environment' },
+          { id: res?.id, type: 'Environment' },
+        ],
+        query: (query: Req['updateEnvironment']) => ({
+          body: query.body,
+          method: 'PUT',
+          url: `environments/${query.id}/`,
+        }),
+      }),
+      // END OF ENDPOINTS
+    }),
+  })
+
+export async function getEnvironments(
+  store: any,
+  data: Req['getEnvironments'],
+  options?: Parameters<
+    typeof environmentService.endpoints.getEnvironments.initiate
+  >[1],
+) {
+  return store.dispatch(
+    environmentService.endpoints.getEnvironments.initiate(data, options),
+  )
+}
+export async function getEnvironment(
+  store: any,
+  data: Req['getEnvironment'],
+  options?: Parameters<
+    typeof environmentService.endpoints.getEnvironment.initiate
+  >[1],
+) {
+  return store.dispatch(
+    environmentService.endpoints.getEnvironment.initiate(data, options),
+  )
+}
+export async function updateEnvironment(
+  store: any,
+  data: Req['updateEnvironment'],
+  options?: Parameters<
+    typeof environmentService.endpoints.updateEnvironment.initiate
+  >[1],
+) {
+  return store.dispatch(
+    environmentService.endpoints.updateEnvironment.initiate(data, options),
+  )
+}
+// END OF FUNCTION_EXPORTS
+
+export const {
+  useCreateEnvironmentMutation,
+  useGetAllEnvironmentsQuery,
+  useGetEnvironmentMetricsQuery,
+  useGetEnvironmentQuery,
+  useGetEnvironmentsQuery,
+  useUpdateEnvironmentMutation,
+  // END OF EXPORTS
+} = environmentService
+
+/* Usage examples:
+const { data, isLoading } = useGetEnvironmentsQuery({ id: 2 }, {}) //get hook
+const [createEnvironments, { isLoading, data, isSuccess }] = useCreateEnvironmentsMutation() //create hook
+environmentService.endpoints.getEnvironments.select({id: 2})(store.getState()) //access data from any function
+*/

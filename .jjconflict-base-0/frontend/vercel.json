@@ -1,0 +1,14 @@
+{
+    "version": 2,
+    "functions": {
+        "api/index.js": {
+            "includeFiles": "{CI_COMMIT_SHA,public/static/index.handlebars}"
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/api"
+        }
+    ]
+}

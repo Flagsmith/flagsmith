@@ -1,0 +1,30 @@
+{% load i18n %}
+
+{% block subject %}
+{% blocktrans %}Flagsmith Account Activation{% endblocktrans %}
+{% endblock subject %}
+
+{% block text_body %}
+{% blocktrans %}Hi,
+
+You're receiving this email because you need to confirm your email address with Flagsmith.{% endblocktrans %}
+
+{% trans "Please click on the link below to activate your account:" %}
+{{ protocol }}://{{ domain }}/{{ url|safe }}
+
+{% trans "Thanks for using Flagsmith!" %}
+
+{% blocktrans %}The Flagsmith Team{% endblocktrans %}
+{% endblock text_body %}
+
+{% block html_body %}
+<p>{% blocktrans %}Hi</p><p>You're receiving this email because you need to confirm your email address with Flagsmith.{% endblocktrans %}</p>
+
+<p>{% trans "Please click on the link below to activate your account:" %}</p>
+<p><a href="{{ protocol }}://{{ domain }}/{{ url|safe }}">Activate Flagsmith Account</a></p>
+
+<p>{% trans "Thanks for using Flagsmith!" %}</p>
+
+<p>{% blocktrans %}The Flagsmith Team{% endblocktrans %}</p>
+
+{% endblock html_body %}

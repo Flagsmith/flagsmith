@@ -1,0 +1,407 @@
+from typing import TYPE_CHECKING, Set, Union
+
+from django.conf import settings
+from django.db.models import Q, QuerySet
+
+from environments.models import Environment
+from organisations.models import Organisation, OrganisationRole
+from projects.models import Project
+from telemetry.spans import set_span_attribute
+
+from .rbac_wrapper import (  # type: ignore[attr-defined]
+    get_permitted_environments_for_master_api_key_using_roles,
+    get_permitted_projects_for_master_api_key_using_roles,
+    get_role_permission_filter,
+    is_master_api_key_object_admin,
+    master_api_key_has_organisation_permission_using_roles,
+)
+
+if TYPE_CHECKING:
+    from api_keys.models import MasterAPIKey
+    from users.models import FFAdminUser
+
+
+def get_active_membership_filter(user: "FFAdminUser", prefix: str = "") -> Q:
+    """
+    Build a filter matching objects related to an organisation that `user` is an
+    active member of.
+
+    Deactivated memberships (`UserOrganisation.is_active=False`) are excluded, so
+    this must be used in place of traversing the `Organisation.users` M2M.
+
+    `prefix` is the query path to the organisation, e.g. `"project__organisation__"`.
+    """
+    return Q(
+        **{
+            f"{prefix}userorganisation__user": user,
+            f"{prefix}userorganisation__is_active": True,
+        }
+    )
+
+
+def is_user_organisation_admin(
+    user: "FFAdminUser", organisation: Union[Organisation, int]
+) -> bool:
+    user_organisation = user.get_user_organisation(organisation)
+    if user_organisation is not None and user_organisation.is_active:
+        set_span_attribute("organisation.id", user_organisation.organisation_id)
+        return user_organisation.role == OrganisationRole.ADMIN.name
+    return False
+
+
+def is_user_project_admin(user: "FFAdminUser", project: Project) -> bool:
+    return is_user_organisation_admin(
+        user, project.organisation
+    ) or _is_user_object_admin(user, project)
+
+
+def is_user_environment_admin(user: "FFAdminUser", environment: Environment) -> bool:
+    return is_user_project_admin(user, environment.project) or _is_user_object_admin(
+        user, environment
+    )
+
+
+def is_master_api_key_project_admin(
+    master_api_key: "MasterAPIKey", project: Project
+) -> bool:
+    if master_api_key.is_admin:
+        return master_api_key.organisation_id == project.organisation_id
+    return is_master_api_key_object_admin(master_api_key, project)
+
+
+def is_master_api_key_environment_admin(
+    master_api_key: "MasterAPIKey", environment: Environment
+) -> bool:
+    if master_api_key.is_admin:
+        return master_api_key.organisation_id == environment.project.organisation_id  # type: ignore[no-any-return]
+    return is_master_api_key_project_admin(
+        master_api_key, environment.project
+    ) or is_master_api_key_object_admin(master_api_key, environment)
+
+
+def get_permitted_projects_for_user(
+    user: "FFAdminUser",
+    permission_key: str,
+    tag_ids: list[int] | None = None,
+) -> QuerySet[Project]:
+    """
+    Get all projects that the user has the given permissions for.
+
+    Rules:
+        - User has the required permissions directly (UserProjectPermission)
+        - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupProjectPermissions)
+        - User is an admin for the organisation the project belongs to
+        - User has a role attached with the required permissions(if rbac is enabled)
+        - User is in a UserPermissionGroup that has a role attached with the required permissions
+    NOTE:
+        - If `tag_ids` is None, tags filter will not be applied
+        - If `tag_ids` is an empty list, only project with no tags will be returned
+        - If `tag_ids` is a list of tag IDs, only project with one of those tags will
+        be returned
+    """
+    project_ids_from_base_filter = get_object_id_from_base_permission_filter(
+        user,
+        Project,  # type: ignore[arg-type]
+        permission_key,
+        tag_ids=tag_ids,
+    )
+
+    # The user has access to any projects belonging to organisations
+    # they are an admin of
+    admin_organisations_filter = Q(
+        organisation__userorganisation__user=user,
+        organisation__userorganisation__role=OrganisationRole.ADMIN.name,
+        organisation__userorganisation__is_active=True,
+    )
+    project_ids_from_admin_organisations = Project.objects.filter(
+        admin_organisations_filter
+    ).values_list("id", flat=True)
+
+    project_ids = project_ids_from_base_filter | set(
+        project_ids_from_admin_organisations
+    )
+    queryset = Project.objects.filter(id__in=project_ids)
+
+    # Final check to ensure that the user is a member of the organisation
+    queryset = queryset.filter(get_active_membership_filter(user, "organisation__"))
+
+    return queryset
+
+
+def get_permitted_projects_for_master_api_key(
+    master_api_key: "MasterAPIKey",
+    permission_key: str,
+    tag_ids: list[int] | None = None,
+) -> QuerySet[Project]:
+    if master_api_key.is_admin:
+        return Project.objects.filter(organisation_id=master_api_key.organisation_id)
+
+    return get_permitted_projects_for_master_api_key_using_roles(
+        master_api_key, permission_key, tag_ids
+    )
+
+
+def get_permitted_environments_for_user(
+    user: "FFAdminUser",
+    project: Project,
+    permission_key: str,
+    tag_ids: list[int] | None = None,
+    prefetch_metadata: bool = False,
+) -> QuerySet[Environment]:
+    """
+    Get all environments that the user has the given permissions for.
+
+    Rules:
+        - User has the required permissions directly (UserEnvironmentPermission)
+        - User is in a UserPermissionGroup that has required permissions (UserPermissionGroupEnvironmentPermissions)
+        - User is an admin for the project the environment belongs to
+        - User is an admin for the organisation the environment belongs to
+        - User has a role attached with the required permissions(if rbac is enabled)
+        - User is in a UserPermissionGroup that has a role attached with the required permissions(if rbac is enabled)
+    NOTE:
+        - If `tag_ids` is None, tags filter will not be applied
+        - If `tag_ids` is an empty list, only environments with no tags will be returned
+        - If `tag_ids` is a list of tag IDs, only environments with one of those tags will
+        be returned
+    """
+
+    if is_user_project_admin(user, project):
+        queryset = project.environments.all()
+        if prefetch_metadata:
+            return queryset.prefetch_related("metadata")
+        return queryset
+
+    environment_ids_from_base_filter = get_object_id_from_base_permission_filter(
+        user,
+        Environment,  # type: ignore[arg-type]
+        permission_key,
+        tag_ids=tag_ids,
+    )
+    queryset = Environment.objects.filter(
+        id__in=environment_ids_from_base_filter, project=project
+    )
+
+    if prefetch_metadata:
+        queryset = queryset.prefetch_related("metadata")
+
+    # Final check to ensure the user is a member of the organisation
+    queryset = queryset.filter(
+        get_active_membership_filter(user, "project__organisation__")
+    )
+
+    # Description is defered due to Oracle support where a
+    # query can't have a where clause if description is in
+    # the select parameters. This leads to an N+1 query for
+    # lists of environments when description is included, as
+    # each environment object re-queries the DB seperately.
+    return queryset.defer("description")
+
+
+def get_permitted_environments_for_master_api_key(
+    master_api_key: "MasterAPIKey",
+    project: Project,
+    permission_key: str,
+    tag_ids: list[int] | None = None,
+    prefetch_metadata: bool = False,
+) -> QuerySet[Environment]:
+    if is_master_api_key_project_admin(master_api_key, project):
+        queryset = project.environments.all()
+    else:
+        queryset = get_permitted_environments_for_master_api_key_using_roles(
+            master_api_key, project, permission_key, tag_ids
+        )
+
+    if prefetch_metadata:
+        queryset = queryset.prefetch_related("metadata")
+
+    return queryset
+
+
+def user_has_organisation_permission(
+    user: "FFAdminUser", organisation: Organisation, permission_key: str
+) -> bool:
+    """
+    Check if user has the given permission on an organisation.
+
+    Runs separate queries with early returns:
+    1. Organisation admin - admins hold every organisation permission.
+    2. Organisation membership - check to prevent orphaned permission
+       records from granting access.
+    3. Direct user permission - checks UserOrganisationPermission.
+    4. Group permission - checks via user's group memberships.
+    5. Role permission - RBAC check, only if enabled.
+    """
+    if is_user_organisation_admin(user, organisation):
+        return True
+
+    # Check: verify user belongs to the organisation
+    if not Organisation.objects.filter(
+        get_active_membership_filter(user) & Q(id=organisation.id)
+    ).exists():
+        return False
+
+    # NOTE: since we store organisation admin slightly differently
+    # compared to project and environment, allow_admin=True will not
+    # work for organisation
+
+    # Check direct permission
+    user_filter = get_user_permission_filter(user, permission_key, allow_admin=False)
+    if Organisation.objects.filter(user_filter & Q(id=organisation.id)).exists():
+        return True
+
+    # Check group permission
+    group_filter = get_group_permission_filter(user, permission_key, allow_admin=False)
+    if Organisation.objects.filter(group_filter & Q(id=organisation.id)).exists():
+        return True
+
+    # Check role permission (only if RBAC installed)
+    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
+        role_filter = get_role_permission_filter(
+            user, Organisation, permission_key, allow_admin=False
+        )
+        if Organisation.objects.filter(role_filter & Q(id=organisation.id)).exists():
+            return True
+
+    return False
+
+
+def master_api_key_has_organisation_permission(
+    master_api_key: "MasterAPIKey", organisation: Organisation, permission_key: str
+) -> bool:
+    if master_api_key.is_admin:
+        return master_api_key.organisation == organisation
+
+    return master_api_key_has_organisation_permission_using_roles(
+        master_api_key, organisation, permission_key
+    )
+
+
+def _is_user_object_admin(
+    user: "FFAdminUser", object_: Union[Project, Environment]
+) -> bool:
+    """
+    Check if user has admin permission on a project or environment.
+
+    Runs separate queries with early returns:
+    1. Organisation membership - check to prevent orphaned permission
+       records from granting access.
+    2. Direct user permission - checks UserProjectPermission/UserEnvironmentPermission.
+    3. Group permission - checks via user's group memberships.
+    4. Role permission - RBAC check, only if enabled.
+
+    Returns as soon as permission is found, avoiding unnecessary subsequent queries.
+
+    """
+    model_class = type(object_)
+    object_id = object_.id
+
+    # Check: verify user belongs to the organisation that owns this object
+    if model_class is Project:
+        if not Project.objects.filter(
+            get_active_membership_filter(user, "organisation__") & Q(id=object_id)
+        ).exists():
+            return False
+    elif model_class is Environment:
+        if not Environment.objects.filter(
+            get_active_membership_filter(user, "project__organisation__")
+            & Q(id=object_id)
+        ).exists():
+            return False
+    else:  # pragma: no cover
+        raise ValueError(f"Unexpected object type {model_class}")
+
+    # Check direct permission
+    user_filter = get_user_permission_filter(user, allow_admin=True)
+    if model_class.objects.filter(user_filter & Q(id=object_id)).exists():
+        return True
+
+    # Check group permission
+    group_filter = get_group_permission_filter(user, allow_admin=True)
+    if model_class.objects.filter(group_filter & Q(id=object_id)).exists():
+        return True
+
+    # Check role permission (only if RBAC installed)
+    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
+        role_filter = get_role_permission_filter(
+            user, model_class, permission_key=None, allow_admin=True, tag_ids=None
+        )
+        if model_class.objects.filter(role_filter & Q(id=object_id)).exists():
+            return True
+
+    return False
+
+
+def get_base_permission_filter(  # type: ignore[no-untyped-def]
+    user: "FFAdminUser",
+    for_model: Union[Organisation, Project, Environment] = None,  # type: ignore[assignment]
+    permission_key: str = None,  # type: ignore[assignment]
+    allow_admin: bool = True,
+    tag_ids=None,
+) -> Q:
+    user_filter = get_user_permission_filter(user, permission_key, allow_admin)
+    group_filter = get_group_permission_filter(user, permission_key, allow_admin)
+
+    role_filter = get_role_permission_filter(
+        user, for_model, permission_key, allow_admin, tag_ids
+    )
+
+    return user_filter | group_filter | role_filter  # type: ignore[no-any-return]
+
+
+def get_object_id_from_base_permission_filter(  # type: ignore[no-untyped-def]
+    user: "FFAdminUser",
+    for_model: Union[Organisation, Project, Environment] = None,  # type: ignore[assignment]
+    permission_key: str = None,  # type: ignore[assignment]
+    allow_admin: bool = True,
+    tag_ids=None,
+) -> Set[int]:
+    object_ids = set()
+    user_filter = get_user_permission_filter(user, permission_key, allow_admin)
+    object_ids.update(
+        list(for_model.objects.filter(user_filter).values_list("id", flat=True))
+    )
+
+    group_filter = get_group_permission_filter(user, permission_key, allow_admin)
+
+    object_ids.update(
+        list(for_model.objects.filter(group_filter).values_list("id", flat=True))
+    )
+    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
+        role_filter = get_role_permission_filter(
+            user, for_model, permission_key, allow_admin, tag_ids
+        )
+        object_ids.update(
+            list(for_model.objects.filter(role_filter).values_list("id", flat=True))
+        )
+    return object_ids
+
+
+def get_user_permission_filter(
+    user: "FFAdminUser",
+    permission_key: str = None,  # type: ignore[assignment]
+    allow_admin: bool = True,
+) -> Q:
+    base_filter = Q(userpermission__user=user)
+    permission_filter = Q(userpermission__admin=True) if allow_admin else Q()
+
+    if permission_key:
+        permission_filter = permission_filter | Q(
+            userpermission__permissions__key=permission_key
+        )
+
+    return base_filter & permission_filter
+
+
+def get_group_permission_filter(
+    user: "FFAdminUser",
+    permission_key: str = None,  # type: ignore[assignment]
+    allow_admin: bool = True,
+) -> Q:
+    base_filter = Q(grouppermission__group__users=user)
+    permission_filter = Q(grouppermission__admin=True) if allow_admin else Q()
+
+    if permission_key:
+        permission_filter = permission_filter | Q(
+            grouppermission__permissions__key=permission_key
+        )
+    return base_filter & permission_filter

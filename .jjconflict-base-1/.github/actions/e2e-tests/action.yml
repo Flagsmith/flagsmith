@@ -1,0 +1,80 @@
+name: Run E2E tests
+description: Run the E2E tests against an environment
+
+inputs:
+  e2e_test_token:
+    description: The authentication token used for E2E test endpoints.
+    required: true
+  slack_token:
+    description: The slack authentication token.
+    required: true
+  environment:
+    description: The value of the ENV environment variable to use for npm run env.
+    required: true
+  tests:
+    description: The space separated list of E2E tests to be executed.
+    required: false
+
+runs:
+  using: composite
+
+  steps:
+    - uses: actions/checkout@v5
+    - uses: actions/setup-node@v4
+      with:
+        cache: npm
+        node-version-file: frontend/.nvmrc
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Cache Playwright browsers
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('frontend/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-
+
+    - name: NPM Install
+      working-directory: frontend
+      run: |
+        npm ci
+      shell: bash
+
+    - name: Install Playwright browsers
+      working-directory: frontend
+      run: npm run test:install
+      shell: bash
+
+    - name: Run E2E tests
+      uses: nick-fields/retry@v3
+      with:
+        shell: bash
+        command: |
+          cd frontend
+          node -v
+          npm run env
+          npm run test -- ${{ inputs.tests }}
+        max_attempts: 2
+        retry_on: error
+        timeout_minutes: 20
+        on_retry_command: |
+          lsof -ti:3000 | xargs kill -9 || true
+      env:
+        E2E_TEST_TOKEN: ${{ inputs.e2e_test_token }}
+        SLACK_TOKEN: ${{ inputs.slack_token }}
+        ENV: ${{ inputs.environment == 'production' && 'prod' || inputs.environment }}
+        GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+    # Short retention because traces capture network payloads, including the
+    # (throwaway, reseeded-per-run) e2e users' auth tokens.
+    - name: Upload Playwright test results
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        # run_attempt avoids the v4 immutable-name collision when a failed job is re-run
+        name: e2e-test-results-${{ inputs.environment }}-attempt-${{ github.run_attempt }}
+        path: |
+          frontend/e2e/test-results
+          frontend/e2e/playwright-report
+        retention-days: 7
+        if-no-files-found: ignore

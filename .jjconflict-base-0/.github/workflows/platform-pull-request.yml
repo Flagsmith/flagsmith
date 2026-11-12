@@ -1,0 +1,182 @@
+name: Platform Pull Requests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - docs/**
+      - infrastructure/**
+
+jobs:
+  permissions-check:
+    name: Check actor permissions
+    runs-on: depot-ubuntu-latest
+    outputs:
+      can-write: ${{ steps.check.outputs.require-result }}
+    steps:
+      - uses: actions-cool/check-user-permission@main
+        id: check
+        with:
+          require: write
+
+  conventional-commit-label:
+    if: needs.permissions-check.outputs.can-write == 'true'
+    name: Add Conventional Commit labels
+    needs: permissions-check
+    runs-on: depot-ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Auto-label PR with Conventional Commit title
+        uses: kramen22/conventional-release-labels@v1
+        with:
+          type_labels: |
+            {
+              "feat": "feature",
+              "fix": "fix",
+              "infra": "infrastructure",
+              "ci": "ci-cd",
+              "docs": "docs",
+              "deps": "dependencies",
+              "perf": "performance",
+              "refactor": "refactor",
+              "test": "testing",
+              "chore": "chore"
+            }
+          ignored_types: "[]"
+
+  docker-prepare-report-comment:
+    if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
+    name: Prepare Docker report comment
+    needs: permissions-check
+    runs-on: depot-ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/
+          sparse-checkout-cone-mode: false
+      - uses: ./.github/actions/docker-build-report-to-pr
+
+  docker-build-unified:
+    if: github.event.pull_request.draft == false && !cancelled()
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build Unified Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: oss-unified
+      image-name: flagsmith
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
+
+  docker-build-api:
+    if: github.event.pull_request.draft == false && !cancelled()
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build API Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: oss-api
+      image-name: flagsmith-api
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
+
+  docker-build-frontend:
+    if: github.event.pull_request.draft == false && !cancelled()
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build Frontend Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: oss-frontend
+      image-name: flagsmith-frontend
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
+
+  docker-build-api-test:
+    if: github.event.pull_request.draft == false && !cancelled()
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build API Test Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: api-test
+      image-name: flagsmith-api-test
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
+      scan: false
+
+  docker-build-api-private-test:
+    if: needs.permissions-check.outputs.can-write == 'true'
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build API Enterprise Test Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: api-private-test
+      image-name: flagsmith-api-private-test
+      scan: false
+      codeartifact-login: true
+    secrets:
+      secrets: |
+        github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+
+  docker-build-e2e:
+    if: github.event.pull_request.draft == false && !cancelled()
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build E2E Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      file: frontend/Dockerfile.e2e
+      image-name: flagsmith-e2e
+      ephemeral: ${{ needs.permissions-check.outputs.can-write == 'false' }}
+      comment: ${{ needs.docker-prepare-report-comment.result == 'success' }}
+      scan: false
+
+  docker-build-private-cloud:
+    if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build Private Cloud Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: private-cloud-unified
+      image-name: flagsmith-private-cloud
+      comment: true
+      codeartifact-login: true
+    secrets:
+      secrets: |
+        github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+
+  run-e2e-tests:
+    if: github.event.pull_request.draft == false && !cancelled()
+    needs: [permissions-check, docker-build-api, docker-build-e2e]
+    uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
+    with:
+      runs-on: ${{ matrix.runs-on }}
+      e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
+      api-image: ${{ needs.docker-build-api.outputs.image }}
+      args: --grep @oss
+    secrets:
+      GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
+      SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
+
+    strategy:
+      matrix:
+        runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
+
+  run-e2e-tests-private-cloud:
+    if: github.event.pull_request.draft == false && !cancelled() && needs.permissions-check.outputs.can-write == 'true'
+    needs: [permissions-check, docker-build-private-cloud, docker-build-e2e]
+    uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
+    with:
+      runs-on: ${{ matrix.runs-on }}
+      e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
+      api-image: ${{ needs.docker-build-private-cloud.outputs.image }}
+      args: --grep "@oss|@enterprise"
+      visual-regression: ${{ matrix.runs-on == 'depot-ubuntu-latest-16' }}
+      # TODO: identify whether the E2E leaks connections, leading to the connection bloat
+      pg-max-connections: 200
+    secrets:
+      GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
+      SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
+
+    strategy:
+      matrix:
+        runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]

@@ -1,0 +1,62 @@
+name: MCP Deploy to ECS
+description: >
+  Roll the MCP ECS service onto a specific image tag. The task definition is
+  owned by Pulumi (registered with track_latest), so this fetches the live
+  definition, swaps in the published image, and registers a new revision.
+
+inputs:
+  role-to-assume:
+    description: The AWS IAM role ARN to assume via OIDC.
+    required: true
+  aws-region:
+    description: The AWS region of the ECS cluster.
+    required: false
+    default: eu-west-2
+  cluster:
+    description: The name of the ECS cluster to deploy to.
+    required: true
+  service:
+    description: The name of the ECS service to deploy to.
+    required: true
+  container-name:
+    description: The container in the task definition to update.
+    required: false
+    default: mcp-server
+  image:
+    description: The fully-qualified image reference to deploy.
+    required: true
+
+runs:
+  using: composite
+
+  steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+      with:
+        role-to-assume: ${{ inputs.role-to-assume }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Fetch current task definition
+      shell: bash
+      run: |
+        ARN=$(aws ecs describe-services \
+          --cluster "${{ inputs.cluster }}" --services "${{ inputs.service }}" \
+          --query 'services[0].taskDefinition' --output text)
+        aws ecs describe-task-definition --task-definition "$ARN" \
+          --query 'taskDefinition' --output json > task-def.json
+
+    - name: Render new image into task definition
+      id: render
+      uses: aws-actions/amazon-ecs-render-task-definition@138c24f321fdbdf7edee4a685519d253cae2cdea # v1.9.0
+      with:
+        task-definition: task-def.json
+        container-name: ${{ inputs.container-name }}
+        image: ${{ inputs.image }}
+
+    - name: Deploy
+      uses: aws-actions/amazon-ecs-deploy-task-definition@c465972ecbd160473f22e683363b422a5412a3de # v2.6.3
+      with:
+        task-definition: ${{ steps.render.outputs.task-definition }}
+        service: ${{ inputs.service }}
+        cluster: ${{ inputs.cluster }}
+        wait-for-service-stability: true

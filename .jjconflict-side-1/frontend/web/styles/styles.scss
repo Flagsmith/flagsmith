@@ -1,0 +1,149 @@
+@import "variables";
+@import "tokens";
+@import "token-utilities";
+@import "3rdParty/index";
+@import "components/index";
+@import "flexbox/index";
+@import "project/index";
+@import "project/segments";
+
+.butter-bar {
+  margin-top: 8px;
+  margin-bottom: 4px;
+  background-color: $butter-bar-bg;
+  text-align: center;
+  line-height: 44px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  >* { // since the markdown can be <p we need to reset any styling
+    display: inline-block;
+    margin: 0;
+  }
+}
+.dark .butter-bar {
+  background-color: $butter-bar-bg-dark;
+  color: $header-color-dark;
+}
+
+
+bold, strong {
+  font-weight: bold;
+}
+
+.overflow-visible {
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+}
+
+.faint {
+  color: $text-muted;
+  font-size: 0.8em;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+.cursor-default {
+  cursor: default;
+}
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+
+.maintenance {
+  background: $bg-dark400;
+
+  h1 {
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 2em;
+    font-family: Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  a {
+    color: #6896ba;
+  }
+
+  color: white;
+  font-size: 1.25em;
+  line-height: 44px;
+
+  .small {
+    margin-top: 44px;
+    color: white;
+    font-size: 0.8em;
+  }
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+body, html {
+  height: 100%;
+}
+
+body.dark {
+  background-color: $bg-dark500;
+  a {
+    color: $anchor-color-dark;
+
+  }
+}
+
+a {
+  color: $anchor-color;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.no-pointer {
+  pointer-events: none !important;
+}
+
+input:disabled {
+  opacity: 0.4;
+}
+
+.full-width {
+  width: 100%;
+
+  > input {
+    width: 100%;
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.react-select__menu {
+  z-index: 3 !important;
+}
+
+// react-select portals the menu to the body with z-index 1, which puts it
+// behind every modal in _modals.scss. Only applies to selects that opt into
+// menuPortalTarget, which they do to escape a clipping container.
+.react-select__menu-portal {
+  z-index: 200000000001 !important;
+}
+
+
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.repo-code-references-section {
+  background-color: $code-btn-bg;
+}

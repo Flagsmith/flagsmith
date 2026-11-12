@@ -1,0 +1,244 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+:root {
+  --card-primary-text: #23232A;
+  --card-secondary-text: #71768B;
+  --border-color: #D7D7D7;
+  --link-color: #7B51FB;
+  --link-hover-color: #FFFFFF;
+  --icon-color: #22194D;
+  --icon-circle-color: #F6F3EE;
+}
+
+[data-theme="dark"] {
+  --card-primary-text: #FFFFFF;
+  --card-secondary-text: #FFFFFF;
+  --border-color: #464646;
+  --link-color: #A384FF;
+  --link-hover-color: #FFFFFF;
+  --icon-color: #22194D;
+  --icon-circle-color: #7B51FB;
+}
+
+.heroBanner {
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero {
+  background: #fdf9f6;
+  padding: 4rem 0;
+}
+
+[data-theme="dark"] .hero {
+  background: #222221;
+}
+
+.heroInner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  vertical-align: middle;
+  padding: 2rem 0;
+}
+
+.heroInner > div {
+  flex: 1;
+  max-width: 55%;
+}
+
+.logo {
+  max-width: 80%;
+  width: 35%;
+  height: auto;
+}
+
+.section {
+  margin-top: 4rem;
+}
+
+.cardGrid {
+  display: grid;
+  gap: 24px;
+  margin-top: 1rem;
+}
+
+[data-section="introduction"] .cardGrid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+[data-section="integration"] .cardGrid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+[data-section="configuration"] .cardGrid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+[data-section="configuration"] .cardGrid > *:last-child {
+  grid-column: 1 / 3;
+  margin: 0 auto;
+  width: 100%;
+}
+
+[data-section="ecosystem"] .cardGrid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.card {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme="dark"] .card {
+  background: #222221;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  background: #7B51FB;
+  box-shadow: 0 8px 16px rgba(35, 41, 54, 0.1);
+}
+
+.card:hover h3,
+.card:hover p,
+.card:hover span {
+  color: var(--link-hover-color) !important;
+}
+
+.card:focus {
+  outline: none;
+  border-color: #7B51FB;
+  box-shadow: 0 0 0 2px rgba(123, 81, 251, 0.2);
+}
+
+.card h3 {
+  margin: 0 0 0.1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--card-primary-text);
+}
+
+.card p {
+  color: var(--card-primary-text);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+  flex-grow: 1;
+}
+
+[data-theme="dark"] .card p {
+  color: #CCCCCC;
+}
+
+.card a {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+
+
+.card-icon {
+  font-size: 24px !important;
+  padding: 12px;
+  border-radius: 50%;
+  color: var(--icon-color);
+  background-color: var(--icon-circle-color);
+  transition: color 0.2s;
+}
+
+[data-theme='dark'] .card:hover .card-icon {
+  color: white;
+}
+
+.cardHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.iconContainer {
+  margin-bottom: 1rem;
+}
+
+.cardIcon {
+  font-size: 24px !important;
+  padding: 12px;
+  border-radius: 50%;
+  color: var(--icon-color);
+  background-color: var(--icon-circle-color);
+  transition: color 0.2s;
+}
+
+.cardLink {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+@media (max-width: 1200px) {
+  [data-section="integration"] .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  [data-section="ecosystem"] .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  [data-section="introduction"] .cardGrid,
+  [data-section="integration"] .cardGrid,
+  [data-section="configuration"] .cardGrid,
+  [data-section="ecosystem"] .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  [data-section="configuration"] .cardGrid > *:last-child {
+    grid-column: 1 / 3;
+  }
+
+  .hero {
+    padding: 2rem 0;
+  }
+
+  .section {
+    margin-top: 2rem;
+  }
+}
+
+@media (max-width: 996px) {
+  .heroInner {
+    flex-direction: column;
+    padding: 0 1rem;
+  }
+
+  .heroInner > div,
+  .logo {
+    max-width: 100%;
+    width: 100%;
+  }
+}

@@ -1,0 +1,62 @@
+# Copyright Broadcom, Inc. All Rights Reserved.
+# SPDX-License-Identifier: APACHE-2.0
+
+services:
+  pg-0:
+    image: docker.io/bitnami/postgresql-repmgr:15
+    ports:
+      - 5432
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=password
+      - POSTGRESQL_USERNAME=flagsmith
+      - POSTGRESQL_PASSWORD=password
+      - POSTGRESQL_DATABASE=flagsmith
+      - POSTGRESQL_NUM_SYNCHRONOUS_REPLICAS=1
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-1,pg-0
+      - REPMGR_NODE_NAME=pg-0
+      - REPMGR_NODE_NETWORK_NAME=pg-0
+      - REPMGR_USERNAME=repmgr
+      - REPMGR_PASSWORD=repmgrpassword
+
+  pg-1:
+    image: docker.io/bitnami/postgresql-repmgr:15
+    ports:
+      - 5432
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=password
+      - POSTGRESQL_USERNAME=flagsmith
+      - POSTGRESQL_PASSWORD=password
+      - POSTGRESQL_DATABASE=flagsmith
+      - POSTGRESQL_NUM_SYNCHRONOUS_REPLICAS=1
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1
+      - REPMGR_NODE_NAME=pg-1
+      - REPMGR_NODE_NETWORK_NAME=pg-1
+      - REPMGR_USERNAME=repmgr
+      - REPMGR_PASSWORD=repmgrpassword
+
+  pgpool:
+    image: docker.io/bitnami/pgpool:4
+    ports:
+      - 5432:5432
+    environment:
+      - PGPOOL_BACKEND_NODES=0:pg-0:5432,1:pg-1:5432
+      - PGPOOL_SR_CHECK_USER=repmgr
+      - PGPOOL_SR_CHECK_PASSWORD=repmgrpassword
+      - PGPOOL_ENABLE_LDAP=no
+      - PGPOOL_POSTGRES_USERNAME=postgres
+      - PGPOOL_POSTGRES_PASSWORD=password
+      - PGPOOL_ADMIN_USERNAME=admin
+      - PGPOOL_ADMIN_PASSWORD=adminpassword
+      - PGPOOL_ENABLE_LOAD_BALANCING=yes
+      - PGPOOL_POSTGRES_CUSTOM_USERS=flagsmith
+      - PGPOOL_POSTGRES_CUSTOM_PASSWORDS=password
+    healthcheck:
+      test: ['CMD', '/opt/bitnami/scripts/pgpool/healthcheck.sh']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - pg-0
+      - pg-1

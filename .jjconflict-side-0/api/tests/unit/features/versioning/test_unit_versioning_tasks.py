@@ -1,0 +1,841 @@
+import json
+from datetime import timedelta
+from unittest import mock
+
+import freezegun
+import pytest
+import responses
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.utils import timezone
+from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
+from rest_framework.exceptions import ValidationError
+
+from core.constants import STRING
+from environments.identities.models import Identity
+from environments.models import Environment, Webhook
+from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.exceptions import FeatureVersioningError
+from features.versioning.models import (
+    EnvironmentFeatureVersion,
+    VersionChangeSet,
+)
+from features.versioning.tasks import (
+    disable_v2_versioning,
+    enable_v2_versioning,
+    publish_version_change_set,
+    trigger_update_version_webhooks,
+)
+from features.versioning.versioning_service import (
+    get_environment_flags_dict,
+    get_environment_flags_queryset,
+)
+from features.workflows.core.models import ChangeRequest
+from organisations.models import Organisation
+from projects.models import Project
+from segments.models import Segment
+from users.models import FFAdminUser
+from webhooks.webhooks import WebhookEventType
+
+
+def test_enable_v2_versioning__environment_with_features__creates_versions_and_enables_flag(
+    environment: Environment, feature: Feature, multivariate_feature: Feature
+) -> None:
+    # Given / When
+    enable_v2_versioning(environment.id)
+
+    # Then
+    assert EnvironmentFeatureVersion.objects.filter(
+        environment=environment, feature=feature
+    ).exists()
+    assert EnvironmentFeatureVersion.objects.filter(
+        environment=environment, feature=multivariate_feature
+    ).exists()
+
+    environment.refresh_from_db()
+    assert environment.use_v2_feature_versioning is True
+
+
+def test_disable_v2_versioning__published_and_unpublished_versions__restores_latest_published_state(
+    environment_v2_versioning: Environment,
+    project: Project,
+    feature: Feature,
+    segment: Segment,
+    staff_user: FFAdminUser,
+    identity: Identity,
+) -> None:
+    # Given
+    # First, let's create a new version for the given feature which we'll also add a segment override to
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    v2_environment_flag = v2.feature_states.filter(feature=feature).first()
+    v2_environment_flag.enabled = True
+    v2_environment_flag.save()
+
+    FeatureState.objects.create(
+        feature_segment=FeatureSegment.objects.create(
+            environment=environment_v2_versioning,
+            feature=feature,
+            segment=segment,
+            environment_feature_version=v2,
+        ),
+        feature=feature,
+        environment=environment_v2_versioning,
+        enabled=True,
+        environment_feature_version=v2,
+    )
+
+    v2.publish(staff_user)
+
+    # Now, let's create a new version which we won't publish (and hence should be ignored after we disabled
+    # v2 versioning)
+    v3 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+
+    v3_environment_flag = v3.feature_states.filter(feature=feature).first()
+    v3_environment_flag.enabled = False
+    v3_environment_flag.save()
+
+    # Let's also create an identity override to confirm it is not affected.
+    FeatureState.objects.create(
+        identity=identity,
+        feature=feature,
+        enabled=True,
+        environment=environment_v2_versioning,
+    )
+
+    # Finally, let's create another environment and confirm its
+    # feature states are unaffected.
+    unaffected_environment = Environment.objects.create(
+        name="Unaffected environment", project=project
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=unaffected_environment,
+        feature_segment=FeatureSegment.objects.create(
+            segment=segment,
+            feature=feature,
+            environment=unaffected_environment,
+        ),
+    )
+
+    # When
+    disable_v2_versioning(environment_v2_versioning.id)
+    environment_v2_versioning.refresh_from_db()
+
+    # Then
+    latest_feature_states = get_environment_flags_queryset(
+        environment=environment_v2_versioning
+    )
+
+    assert latest_feature_states.count() == 3
+    assert (
+        latest_feature_states.filter(  # type: ignore[union-attr]
+            feature=feature, feature_segment__isnull=True, identity__isnull=True
+        )
+        .first()
+        .enabled
+        is True
+    )
+    assert (
+        latest_feature_states.filter(feature=feature, feature_segment__segment=segment)  # type: ignore[union-attr]
+        .first()
+        .enabled
+        is True
+    )
+    assert (
+        latest_feature_states.filter(feature=feature, identity=identity).first().enabled  # type: ignore[union-attr]
+        is True
+    )
+
+    assert unaffected_environment.feature_states.count() == 2
+    assert unaffected_environment.feature_segments.count() == 1
+
+
+@responses.activate
+def test_trigger_update_version_webhooks__version_with_changes__triggers_flag_updated_and_version_published_webhooks(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    v1 = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+    v1_fs = v1.feature_states.first()
+
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    v2_fs = v2.feature_states.first()
+    v2_fs.enabled = not v1_fs.enabled  # Make a change
+    v2_fs.save()
+    v2.publish(published_by=staff_user)
+
+    # Setup webhooks
+    from organisations.models import OrganisationWebhook
+
+    environment_webhook_url = "https://example.com/env-webhook/"
+    organisation_webhook_url = "https://example.com/org-webhook/"
+    Webhook.objects.create(
+        environment=environment_v2_versioning, url=environment_webhook_url, enabled=True
+    )
+    OrganisationWebhook.objects.create(
+        organisation=environment_v2_versioning.project.organisation,
+        name="Test Org Webhook",
+        url=organisation_webhook_url,
+        enabled=True,
+    )
+    responses.post(url=environment_webhook_url, status=200)
+    responses.post(url=organisation_webhook_url, status=200)
+
+    # When
+    trigger_update_version_webhooks(str(v2.uuid))
+
+    # Then
+    # Should trigger 3 webhook calls: 2 environment (FLAG_UPDATED + NEW_VERSION_PUBLISHED)
+    # and 1 organisation (FLAG_UPDATED only)
+    assert len(responses.calls) == 3
+
+    # Verify FLAG_UPDATED webhook to environment (first call)
+    flag_updated_env_body = json.loads(responses.calls[0].request.body)  # type: ignore[union-attr]
+    assert flag_updated_env_body["event_type"] == WebhookEventType.FLAG_UPDATED.name
+    assert flag_updated_env_body["data"]["new_state"]["enabled"] == v2_fs.enabled
+    assert flag_updated_env_body["data"]["new_state"]["feature"]["id"] == feature.id
+    assert flag_updated_env_body["data"]["new_state"]["feature"]["name"] == feature.name
+    assert (
+        flag_updated_env_body["data"]["new_state"]["feature_state_value"]
+        == v2_fs.get_feature_state_value()
+    )
+    assert flag_updated_env_body["data"]["previous_state"]["enabled"] == v1_fs.enabled
+    assert (
+        flag_updated_env_body["data"]["previous_state"]["feature_state_value"]
+        == v1_fs.get_feature_state_value()
+    )
+    assert (
+        flag_updated_env_body["data"]["new_state"]["multivariate_feature_state_values"]
+        == []
+    )
+    assert (
+        flag_updated_env_body["data"]["previous_state"][
+            "multivariate_feature_state_values"
+        ]
+        == []
+    )
+    assert flag_updated_env_body["data"]["changed_by"] == staff_user.email
+    assert "timestamp" in flag_updated_env_body["data"]
+
+    # Verify FLAG_UPDATED webhook to organisation (second call)
+    flag_updated_org_body = json.loads(responses.calls[1].request.body)  # type: ignore[union-attr]
+    assert flag_updated_org_body == flag_updated_env_body  # Should be identical
+
+    # Verify NEW_VERSION_PUBLISHED webhook to environment (third call)
+    new_version_body = json.loads(responses.calls[2].request.body)  # type: ignore[union-attr]
+    assert new_version_body == {
+        "event_type": WebhookEventType.NEW_VERSION_PUBLISHED.name,
+        "data": {
+            "uuid": str(v2.uuid),
+            "feature": {"id": feature.id, "name": feature.name},
+            "published_by": {"id": staff_user.id, "email": staff_user.email},
+            "feature_states": [
+                {
+                    "enabled": v2_fs.enabled,
+                    "value": v2_fs.get_feature_state_value(),
+                    "multivariate_feature_state_values": [],
+                }
+            ],
+        },
+    }
+
+
+@responses.activate
+def test_trigger_update_version_webhooks__version_without_changes__triggers_only_version_published_webhook(
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    v1 = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+    v1.publish(published_by=staff_user)
+
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    v2.publish(published_by=staff_user)
+
+    # Setup webhook
+    environment_webhook_url = "https://example.com/env-webhook/"
+    Webhook.objects.create(
+        environment=environment_v2_versioning, url=environment_webhook_url, enabled=True
+    )
+    responses.post(url=environment_webhook_url, status=200)
+
+    # When
+    trigger_update_version_webhooks(str(v2.uuid))
+
+    # Then
+    # Should trigger only 1 webhook call: NEW_VERSION_PUBLISHED (no FLAG_UPDATED since no changes)
+    assert len(responses.calls) == 1
+
+    # Verify NEW_VERSION_PUBLISHED webhook data
+    new_version_body = json.loads(responses.calls[0].request.body)  # type: ignore[union-attr]
+    assert new_version_body == {
+        "event_type": WebhookEventType.NEW_VERSION_PUBLISHED.name,
+        "data": {
+            "uuid": str(v2.uuid),
+            "feature": {"id": feature.id, "name": feature.name},
+            "published_by": {"id": staff_user.id, "email": staff_user.email},
+            "feature_states": [
+                {
+                    "enabled": v2.feature_states.first().enabled,
+                    "value": v2.feature_states.first().get_feature_state_value(),
+                    "multivariate_feature_state_values": [],
+                }
+            ],
+        },
+    }
+
+
+@responses.activate
+def test_trigger_update_version_webhooks__multivariate_feature__includes_mv_values_in_payloads(
+    multivariate_feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    v1 = EnvironmentFeatureVersion.objects.get(
+        feature=multivariate_feature, environment=environment_v2_versioning
+    )
+    v1_fs = v1.feature_states.first()
+
+    # Bump one option's allocation in v2 so we count as a change and so
+    # previous/new mv values differ.
+    v2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=multivariate_feature
+    )
+    v2_fs = v2.feature_states.first()
+    v2_mv_values = list(
+        v2_fs.multivariate_feature_state_values.select_related(
+            "multivariate_feature_option"
+        ).order_by("multivariate_feature_option_id")
+    )
+    bumped_mv_value = v2_mv_values[0]
+    original_allocation = bumped_mv_value.percentage_allocation
+    bumped_mv_value.percentage_allocation = original_allocation + 5
+    bumped_mv_value.save()
+    v2.publish(published_by=staff_user)
+
+    environment_webhook_url = "https://example.com/env-webhook/"
+    Webhook.objects.create(
+        environment=environment_v2_versioning,
+        url=environment_webhook_url,
+        enabled=True,
+    )
+    responses.post(url=environment_webhook_url, status=200)
+
+    # When
+    trigger_update_version_webhooks(str(v2.uuid))
+
+    # Then
+    flag_updated_body = json.loads(responses.calls[0].request.body)  # type: ignore[union-attr]
+    assert flag_updated_body["event_type"] == WebhookEventType.FLAG_UPDATED.name
+
+    expected_new_mv_payload = [
+        {
+            "id": mv.id,
+            "multivariate_feature_option": {
+                "id": mv.multivariate_feature_option_id,
+                "value": mv.multivariate_feature_option.value,
+            },
+            "percentage_allocation": mv.percentage_allocation,
+        }
+        for mv in v2_fs.multivariate_feature_state_values.select_related(
+            "multivariate_feature_option"
+        ).order_by("multivariate_feature_option_id")
+    ]
+    assert (
+        sorted(
+            flag_updated_body["data"]["new_state"]["multivariate_feature_state_values"],
+            key=lambda mv: mv["multivariate_feature_option"]["id"],
+        )
+        == expected_new_mv_payload
+    )
+
+    expected_previous_mv_payload = [
+        {
+            "id": mv.id,
+            "multivariate_feature_option": {
+                "id": mv.multivariate_feature_option_id,
+                "value": mv.multivariate_feature_option.value,
+            },
+            "percentage_allocation": mv.percentage_allocation,
+        }
+        for mv in v1_fs.multivariate_feature_state_values.select_related(
+            "multivariate_feature_option"
+        ).order_by("multivariate_feature_option_id")
+    ]
+    assert (
+        sorted(
+            flag_updated_body["data"]["previous_state"][
+                "multivariate_feature_state_values"
+            ],
+            key=lambda mv: mv["multivariate_feature_option"]["id"],
+        )
+        == expected_previous_mv_payload
+    )
+
+    # NEW_VERSION_PUBLISHED summary event should also carry mv values.
+    new_version_body = json.loads(responses.calls[1].request.body)  # type: ignore[union-attr]
+    assert new_version_body["event_type"] == WebhookEventType.NEW_VERSION_PUBLISHED.name
+    summary_mv_payload = new_version_body["data"]["feature_states"][0][
+        "multivariate_feature_state_values"
+    ]
+    assert (
+        sorted(
+            summary_mv_payload,
+            key=lambda mv: mv["multivariate_feature_option"]["id"],
+        )
+        == expected_new_mv_payload
+    )
+
+
+def test_enable_v2_versioning__scheduled_changes_exist__converts_published_scheduled_changes(
+    environment: Environment, staff_user: FFAdminUser, feature: Feature
+) -> None:
+    # Given
+    now = timezone.now()
+    one_from_from_now = now + timedelta(hours=1)
+    two_hours_from_now = now + timedelta(hours=2)
+
+    # The current environment feature state for the provided feature
+    current_environment_feature_state = FeatureState.objects.get(
+        environment=environment, feature=feature
+    )
+
+    # A feature state scheduled to go live in the future that is published
+    scheduled_change_request = ChangeRequest.objects.create(
+        environment=environment, title="Scheduled Change", user=staff_user
+    )
+    scheduled_feature_state = FeatureState.objects.create(
+        feature=feature,
+        enabled=True,
+        environment=environment,
+        live_from=one_from_from_now,
+        change_request=scheduled_change_request,
+        version=None,
+    )
+    scheduled_change_request.commit(staff_user)
+
+    # and a feature state scheduled to go live in the future that is not published (and hence
+    # shouldn't affect anything)
+    unpublished_scheduled_change_request = ChangeRequest.objects.create(
+        environment=environment, title="Unpublished Scheduled Change", user=staff_user
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        enabled=True,
+        environment=environment,
+        live_from=two_hours_from_now,
+        change_request=unpublished_scheduled_change_request,
+        version=None,
+    )
+
+    # and a published, scheduled feature state associated with a different project
+    # Note: this additional test clause is to verify an issue found in testing
+    # where enabling feature versioning 'stole' scheduled feature states from other
+    # projects.
+    another_organisation = Organisation.objects.create(name="another organisation")
+    staff_user.add_organisation(another_organisation)
+    another_project = Project.objects.create(
+        name="another project", organisation=another_organisation
+    )
+    another_environment = Environment.objects.create(
+        name="another environment", project=another_project
+    )
+    another_feature = Feature.objects.create(
+        name="another_feature", project=another_project
+    )
+    published_scheduled_cr_another_environment = ChangeRequest.objects.create(
+        environment=another_environment,
+        title="Published, scheduled change in another environment",
+        user=staff_user,
+    )
+    another_environment_fs = FeatureState.objects.create(
+        feature=another_feature,
+        enabled=True,
+        environment=another_environment,
+        live_from=two_hours_from_now,
+        change_request=published_scheduled_cr_another_environment,
+        version=None,
+    )
+    published_scheduled_cr_another_environment.commit(staff_user)
+
+    # When
+    enable_v2_versioning(environment.id)
+
+    # Then
+    environment_flags_queryset_now = get_environment_flags_queryset(environment)
+    assert environment_flags_queryset_now.count() == 1
+    assert environment_flags_queryset_now.first() == current_environment_feature_state
+
+    with freezegun.freeze_time(one_from_from_now):
+        environment_flags_queryset_one_hour_later = get_environment_flags_queryset(
+            environment
+        )
+        assert environment_flags_queryset_one_hour_later.count() == 1
+        assert (
+            environment_flags_queryset_one_hour_later.first() == scheduled_feature_state
+        )
+
+    with freezegun.freeze_time(two_hours_from_now):
+        environment_flags_queryset_two_hours_later = get_environment_flags_queryset(
+            environment
+        )
+        assert environment_flags_queryset_two_hours_later.count() == 1
+        assert (
+            environment_flags_queryset_two_hours_later.first()
+            == scheduled_feature_state
+        )
+
+    another_environment_fs.refresh_from_db()
+    assert another_environment_fs.environment_feature_version is None
+    assert (
+        another_environment_fs.change_request
+        == published_scheduled_cr_another_environment
+    )
+
+
+def test_enable_v2_versioning__multi_feature_scheduled_changes__each_efv_matches_feature(
+    environment: Environment,
+    project: Project,
+    feature: Feature,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    now = timezone.now()
+    one_hour_from_now = now + timedelta(hours=1)
+    two_hours_from_now = now + timedelta(hours=2)
+
+    feature_b = Feature.objects.create(name="feature_b", project=project)
+    feature_c = Feature.objects.create(name="feature_c", project=project)
+
+    cr_b = ChangeRequest.objects.create(
+        environment=environment,
+        title="Scheduled change for feature_b",
+        user=staff_user,
+    )
+    scheduled_fs_b = FeatureState.objects.create(
+        feature=feature_b,
+        enabled=True,
+        environment=environment,
+        live_from=one_hour_from_now,
+        change_request=cr_b,
+        version=None,
+    )
+    cr_b.commit(staff_user)
+
+    cr_c = ChangeRequest.objects.create(
+        environment=environment,
+        title="Scheduled change for feature_c",
+        user=staff_user,
+    )
+    scheduled_fs_c = FeatureState.objects.create(
+        feature=feature_c,
+        enabled=True,
+        environment=environment,
+        live_from=two_hours_from_now,
+        change_request=cr_c,
+        version=None,
+    )
+    cr_c.commit(staff_user)
+
+    # When
+    enable_v2_versioning(environment.id)
+
+    # Then
+    scheduled_fs_b.refresh_from_db()
+    scheduled_fs_c.refresh_from_db()
+
+    assert scheduled_fs_b.environment_feature_version is not None
+    assert scheduled_fs_b.environment_feature_version.feature_id == feature_b.id, (
+        f"scheduled FS for feature_b is bound to an EFV for "
+        f"feature_id={scheduled_fs_b.environment_feature_version.feature_id}; "
+        f"expected {feature_b.id}"
+    )
+
+    assert scheduled_fs_c.environment_feature_version is not None
+    assert scheduled_fs_c.environment_feature_version.feature_id == feature_c.id, (
+        f"scheduled FS for feature_c is bound to an EFV for "
+        f"feature_id={scheduled_fs_c.environment_feature_version.feature_id}; "
+        f"expected {feature_c.id}"
+    )
+
+
+def test_publish_version_change_set__conflict_with_scheduled_change__sends_conflict_email_to_owner(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+    mailoutbox: list[EmailMessage],
+) -> None:
+    # Given
+    live_from = timezone.now() + timedelta(hours=1)
+
+    # First, we need to create the change request, and change set
+    # that we want to publish in this test (but should fail because
+    # of a conflict with another change set that we will create
+    # afterwards and publish immediately).
+    change_request_1 = ChangeRequest.objects.create(
+        title="CR 1",
+        environment=environment_v2_versioning,
+        user=staff_user,
+    )
+    change_set_to_publish = VersionChangeSet.objects.create(
+        feature=feature,
+        change_request=change_request_1,
+        live_from=live_from,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature": feature.id,
+                    "enabled": True,
+                    "feature_segment": None,
+                    "feature_state_value": {"type": "unicode", "string_value": "foo"},
+                }
+            ]
+        ),
+    )
+    with mock.patch(
+        "features.versioning.tasks.publish_version_change_set"
+    ) as mock_publish:
+        change_request_1.commit(staff_user)
+        task_kwargs = {
+            "version_change_set_id": change_set_to_publish.id,
+            "user_id": staff_user.id,
+            "is_scheduled": True,
+        }
+        mock_publish.delay.assert_called_once_with(
+            kwargs=task_kwargs,
+            delay_until=live_from,
+        )
+
+    # Now, we'll create another change request and change set that will
+    # conflict with the first one and publish it immediately.
+    conflict_change_request = ChangeRequest.objects.create(
+        title="Conflict CR",
+        environment=environment_v2_versioning,
+        user=staff_user,
+    )
+    conflict_feature_value = "bar"
+    conflict_feature_enabled = False
+    VersionChangeSet.objects.create(
+        feature=feature,
+        change_request=conflict_change_request,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature": feature.id,
+                    "enabled": conflict_feature_enabled,
+                    "feature_segment": None,
+                    "feature_state_value": {
+                        "type": "unicode",
+                        "string_value": conflict_feature_value,
+                    },
+                }
+            ]
+        ),
+    )
+    conflict_change_request.commit(staff_user)
+
+    # When
+    # We simulate the task being called by the task processor at the correct time,
+    # as per the mock call that we asserted above.
+    with freezegun.freeze_time(live_from):
+        publish_version_change_set(**task_kwargs)
+
+    # Then
+    # an alert was sent to the change request owner
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].subject == change_request_1.email_subject
+    assert mailoutbox[0].to == [staff_user.email]
+    assert mailoutbox[0].body == render_to_string(
+        "versioning/scheduled_change_failed_conflict_email.txt",
+        context={
+            "change_request": change_request_1,
+            "user": staff_user,
+            "feature": feature,
+        },
+    )
+
+    # and the change is not reflected in the flags
+    latest_flags = get_environment_flags_dict(environment=environment_v2_versioning)
+    assert latest_flags[(feature.id, None, None)].enabled is conflict_feature_enabled
+    assert (
+        latest_flags[(feature.id, None, None)].get_feature_state_value()
+        == conflict_feature_value
+    )
+
+
+def test_publish_version_change_set__segment_override_does_not_exist__raises_validation_error(
+    change_request: ChangeRequest,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    # We create a change set that attempts to update a segment override that
+    # doesn't currently exist.
+    change_set = VersionChangeSet.objects.create(
+        change_request=change_request,
+        feature=feature,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature_segment": {"segment": segment.id},
+                    "enabled": True,
+                    "feature_state_value": {"type": STRING, "string_value": "override"},
+                }
+            ]
+        ),
+    )
+
+    # When
+    with pytest.raises(ValidationError) as e:
+        publish_version_change_set(
+            version_change_set_id=change_set.id, user_id=admin_user.id
+        )
+
+    # Then
+    assert e.value.detail["message"] == (  # type: ignore[call-overload]
+        f"An unresolvable conflict occurred: segment override does not exist for segment '{segment.name}'."
+    )
+
+    # and we should still only have a single version for the feature
+    assert (
+        EnvironmentFeatureVersion.objects.filter(
+            environment=environment_v2_versioning, feature=feature
+        ).count()
+        == 1
+    )
+
+
+def test_publish_version_change_set__invalid_serializer_data__raises_feature_versioning_error(
+    change_request: ChangeRequest,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    segment: Segment,
+    admin_user: FFAdminUser,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # Given
+    # We create a change set for which the JSON data is invalid.
+    # Note that this should never happen since the data is validated on create.
+    change_set = VersionChangeSet.objects.create(
+        change_request=change_request, feature=feature, feature_states_to_update="[{}]"
+    )
+
+    # When
+    with pytest.raises(FeatureVersioningError) as e:
+        publish_version_change_set(
+            version_change_set_id=change_set.id, user_id=admin_user.id
+        )
+
+    # Then
+    assert str(e.value) == "Unable to publish version change set"
+
+
+def test_publish_version_change_set__live_from_in_past__uses_current_time_for_version(
+    change_request: ChangeRequest,
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    now = timezone.now()
+    five_minutes_ago = now - timezone.timedelta(minutes=5)  # type: ignore[attr-defined]
+
+    # a version change_set that sets a live_from a short time in the past
+    VersionChangeSet.objects.create(
+        change_request=change_request,
+        feature=feature,
+        feature_states_to_update=json.dumps(
+            [
+                {
+                    "feature_segment": None,
+                    "enabled": True,
+                    "feature_state_value": {"type": STRING, "string_value": "foo"},
+                }
+            ]
+        ),
+        live_from=five_minutes_ago,
+    )
+
+    # When
+    with freeze_time(now):
+        change_request.commit(admin_user)
+
+    # Then
+    assert (
+        EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
+            environment_v2_versioning.id
+        )
+        .get(feature=feature)
+        .live_from
+        == now
+    )
+
+
+def test_publish_version_change_set__ignore_conflicts_with_invalid_data__sends_conflict_email(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    admin_user: FFAdminUser,
+    freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMessage],
+) -> None:
+    # Given
+    now = timezone.now()
+    five_minutes_from_now = now + timezone.timedelta(minutes=5)  # type: ignore[attr-defined]
+
+    change_request = ChangeRequest.objects.create(
+        title="Test CR",
+        environment=environment_v2_versioning,
+        user=admin_user,
+        ignore_conflicts=True,
+    )
+    change_set = VersionChangeSet.objects.create(
+        change_request=change_request,
+        feature=feature,
+        feature_states_to_update=json.dumps(
+            [{"foo": "bar"}]
+        ),  # bad data to force serializer validation failure
+        live_from=five_minutes_from_now,
+    )
+    change_request.commit(admin_user)
+
+    # When
+    freezer.move_to(five_minutes_from_now)
+    with pytest.raises(FeatureVersioningError):
+        publish_version_change_set(
+            version_change_set_id=change_set.id,
+            user_id=admin_user.id,
+            is_scheduled=True,
+        )
+
+    # Then
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].subject == change_request.email_subject
+    assert mailoutbox[0].to == [admin_user.email]
+    assert mailoutbox[0].body == render_to_string(
+        "versioning/scheduled_change_failed_conflict_email.txt",
+        context={
+            "user": admin_user,
+            "feature": feature,
+            "change_request": change_request,
+        },
+    )

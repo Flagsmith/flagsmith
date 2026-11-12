@@ -1,0 +1,80 @@
+import logging
+
+from django.conf import settings
+from drf_spectacular.utils import extend_schema
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
+
+from api.serializers import ErrorSerializer
+from custom_auth.jwt_cookie.services import authorise_response
+from custom_auth.oauth.exceptions import GithubError, GoogleError
+from custom_auth.oauth.serializers import (
+    GithubLoginSerializer,
+    GoogleLoginSerializer,
+    OAuthTokenSerializer,
+)
+
+logger = logging.getLogger(__name__)
+
+AUTH_ERROR_MESSAGE = "An error occurred authenticating with {}"
+GITHUB_AUTH_ERROR_MESSAGE = AUTH_ERROR_MESSAGE.format("GITHUB")
+GOOGLE_AUTH_ERROR_MESSAGE = AUTH_ERROR_MESSAGE.format("GOOGLE")
+
+
+@extend_schema(
+    request=GoogleLoginSerializer,
+    responses={200: OAuthTokenSerializer, 502: ErrorSerializer},
+)
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def login_with_google(request):  # type: ignore[no-untyped-def]
+    try:
+        serializer = GoogleLoginSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        token = serializer.save()
+        if settings.COOKIE_AUTH_ENABLED:
+            return authorise_response(token.user, Response(status=HTTP_204_NO_CONTENT))
+        return Response(
+            data=OAuthTokenSerializer(
+                {"key": token.key, "is_new_user": serializer.is_new_user}
+            ).data
+        )
+    except GoogleError as e:
+        logger.warning("%s: %s" % (GOOGLE_AUTH_ERROR_MESSAGE, str(e)))
+        return Response(
+            data={"message": GOOGLE_AUTH_ERROR_MESSAGE},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )
+
+
+@extend_schema(
+    request=GithubLoginSerializer,
+    responses={200: OAuthTokenSerializer, 502: ErrorSerializer},
+)
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def login_with_github(request):  # type: ignore[no-untyped-def]
+    try:
+        serializer = GithubLoginSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        token = serializer.save()
+        if settings.COOKIE_AUTH_ENABLED:
+            return authorise_response(token.user, Response(status=HTTP_204_NO_CONTENT))
+        return Response(
+            data=OAuthTokenSerializer(
+                {"key": token.key, "is_new_user": serializer.is_new_user}
+            ).data
+        )
+    except GithubError as e:
+        logger.warning("%s: %s" % (GITHUB_AUTH_ERROR_MESSAGE, str(e)))
+        return Response(
+            data={"message": GITHUB_AUTH_ERROR_MESSAGE},
+            status=status.HTTP_502_BAD_GATEWAY,
+        )

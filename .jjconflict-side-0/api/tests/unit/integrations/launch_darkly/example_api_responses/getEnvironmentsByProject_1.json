@@ -1,0 +1,73 @@
+{
+    "_links": {
+        "last": {
+            "href": "/api/v2/projects/test-project-key/environments?limit=1&offset=1",
+            "type": "application/json"
+        },
+        "next": {
+            "href": "/api/v2/projects/test-project-key/environments?limit=1&offset=1",
+            "type": "application/json"
+        },
+        "parent": {
+            "href": "/api/v2/projects/test-project-key",
+            "type": "application/json"
+        },
+        "self": {
+            "href": "/api/v2/projects/test-project-key/environments?limit=1",
+            "type": "application/json"
+        }
+    },
+    "totalCount": 2,
+    "items": [
+        {
+            "_links": {
+                "analytics": {
+                    "href": "https://app.launchdarkly.com/snippet/events/v1/64f6f21653c76f12626d142b.js",
+                    "type": "text/html"
+                },
+                "apiKey": {
+                    "href": "/api/v2/projects/test-project-key/environments/test/apiKey",
+                    "type": "application/json"
+                },
+                "mobileKey": {
+                    "href": "/api/v2/projects/test-project-key/environments/test/mobileKey",
+                    "type": "application/json"
+                },
+                "self": {
+                    "href": "/api/v2/projects/test-project-key/environments/test",
+                    "type": "application/json"
+                },
+                "snippet": {
+                    "href": "https://app.launchdarkly.com/snippet/features/64f6f21653c76f12626d142b.js",
+                    "type": "text/html"
+                }
+            },
+            "_id": "64f6f21653c76f12626d142b",
+            "_pubnub": {
+                "channel": "998de857419c22b4088e392f78e55ca0b37786e562c6b4d43d6d9efce50617c6",
+                "cipherKey": "ab186f79fe320f43a8381b868a88dda5b227c92afa2160eb52c48a09a491221d"
+            },
+            "key": "test",
+            "name": "Test",
+            "apiKey": "sdk-3d2a7b99-65bc-468d-8177-b60d3b2fba9d",
+            "mobileKey": "mob-1ccfdaf7-170a-40ae-bbf3-2a3a7f043693",
+            "color": "F5A623",
+            "defaultTtl": 0,
+            "secureMode": false,
+            "defaultTrackEvents": false,
+            "requireComments": false,
+            "confirmChanges": false,
+            "tags": [],
+            "approvalSettings": {
+                "required": false,
+                "bypassApprovalsForPendingChanges": false,
+                "minNumApprovals": 1,
+                "canReviewOwnRequest": false,
+                "canApplyDeclinedChanges": true,
+                "serviceKind": "launchdarkly",
+                "serviceConfig": {},
+                "requiredApprovalTags": []
+            }
+        }
+    ]
+}

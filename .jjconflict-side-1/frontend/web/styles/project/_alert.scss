@@ -1,0 +1,101 @@
+@import "../variables";
+
+.alert {
+  border-radius: $border-radius-lg;
+  line-height: $alert-line-height;
+  color: $alert-color;
+  font-size: $alert-font-size;
+  text-align: left;
+  .icon-alert {
+    margin-right: 0.75rem;
+  }
+  text-transform: none;
+}
+
+.alert-danger {
+  background-color: $alert-danger-bg;
+  border-color: $alert-danger-border-color;
+}
+
+.alert-warning {
+  background-color: $alert-warning-bg;
+  border-color: $alert-warning-border-color;
+}
+.alert {
+  padding: calc($spacer / 2);
+}
+.alert-info {
+  background-color: $alert-info-bg;
+  border-color: $alert-info-border-color;
+
+  .close-btn {
+    margin-top: -3px;
+    font-size: 20px;
+    color: $alert-announcement-close-btn;
+  }
+  .title {
+    font-weight: 500;
+    color: $body-color;
+  }
+  a {
+    color: $primary;
+    font-weight: normal;
+  }
+  strong {
+    font-weight: 500;
+    color: $body-color;
+  }
+}
+.alert-success {
+  background-color: $alert-success-bg;
+  border-color: $alert-success-border-color;
+  .title {
+    font-weight: 500;
+    margin-bottom: 2px;
+    color: $body-color;
+  }
+  a {
+    color: $primary;
+    font-weight: normal;
+  }
+  strong {
+    font-weight: 500;
+    color: $body-color;
+  }
+}
+
+.dark {
+  .alert {
+    color: $alert-color-dark;
+    background-color: $success-solid-dark-alert;
+  }
+  .alert-info {
+    background-color: $info-solid-dark-alert;
+    .title {
+      color: $text-icon-light;
+    }
+    a {
+      color: $primary;
+    }
+    strong {
+      color: $text-icon-light;
+    }
+  }
+  .alert-success {
+    .title {
+      color: $text-icon-light;
+    }
+    strong {
+      color: $text-icon-light;
+    }
+  }
+  .alert-warning {
+    background-color: $warning-solid-dark-alert;
+    strong {
+      color: $text-icon-light;
+    }
+  }
+  .alert-danger{
+    background-color: $danger-solid-dark-alert
+  }
+}

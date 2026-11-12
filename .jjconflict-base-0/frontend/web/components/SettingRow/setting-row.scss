@@ -1,0 +1,28 @@
+.setting-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.setting-row__header {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.setting-row__switch {
+  flex-shrink: 0;
+}
+
+.setting-row__title {
+  color: var(--color-text-default);
+  display: flex;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.setting-row__description {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.4;
+}

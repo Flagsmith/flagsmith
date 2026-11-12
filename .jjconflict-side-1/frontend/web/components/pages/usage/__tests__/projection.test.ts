@@ -1,0 +1,118 @@
+import { projectionNote, projectUsage } from 'components/pages/usage/projection'
+
+// A 30 day period, with now sitting 15 days in.
+const PERIOD = {
+  ends_at: '2026-07-31T00:00:00Z',
+  starts_at: '2026-07-01T00:00:00Z',
+}
+
+describe('projectUsage', () => {
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-07-16T00:00:00Z'))
+  })
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('doubles usage at the halfway point', () => {
+    const projection = projectUsage(600_000, 2_000_000, PERIOD)
+
+    expect(projection?.total).toBe(1_200_000)
+    expect(projection?.percentOfLimit).toBe(60)
+    expect(projection?.overLimit).toBe(false)
+  })
+
+  it('flags a projection that lands over the limit', () => {
+    const projection = projectUsage(600_000, 1_000_000, PERIOD)
+
+    expect(projection?.total).toBe(1_200_000)
+    expect(projection?.percentOfLimit).toBe(120)
+    expect(projection?.overLimit).toBe(true)
+  })
+
+  // Free plans have no period end to project to.
+  it('says nothing on a rolling window', () => {
+    expect(projectUsage(600_000, 50_000, null)).toBeUndefined()
+  })
+
+  it('says nothing before a fifth of the period has passed', () => {
+    // Day 5 of 30 is a sixth.
+    jest.setSystemTime(new Date('2026-07-06T00:00:00Z'))
+
+    expect(projectUsage(100_000, 2_000_000, PERIOD)).toBeUndefined()
+  })
+
+  it('starts once a fifth has passed', () => {
+    jest.setSystemTime(new Date('2026-07-07T00:00:00Z'))
+
+    expect(projectUsage(100_000, 2_000_000, PERIOD)).toBeDefined()
+  })
+
+  it('projects a total with no limit to compare against', () => {
+    const projection = projectUsage(600_000, null, PERIOD)
+
+    expect(projection?.total).toBe(1_200_000)
+    expect(projection?.percentOfLimit).toBeUndefined()
+    expect(projection?.overLimit).toBe(false)
+  })
+
+  // Nothing is being estimated any more, and the billing strip says ended.
+  it('says nothing once the period is over', () => {
+    jest.setSystemTime(new Date('2026-08-10T00:00:00Z'))
+
+    expect(projectUsage(900_000, 2_000_000, PERIOD)).toBeUndefined()
+  })
+
+  it('still projects on the final day of the period', () => {
+    jest.setSystemTime(new Date('2026-07-30T12:00:00Z'))
+
+    expect(projectUsage(900_000, 2_000_000, PERIOD)).toBeDefined()
+  })
+
+  // The response carries no row for a quiet day, so the last row is the last
+  // day with traffic. Elapsed has to come from the clock instead.
+  it('divides by time elapsed, not by days that had traffic', () => {
+    // Half the period gone, whenever the calls actually arrived.
+    expect(projectUsage(600_000, null, PERIOD)?.total).toBe(1_200_000)
+  })
+})
+
+describe('projectionNote', () => {
+  it('names the landing total, its share and the period end', () => {
+    expect(
+      projectionNote(
+        { overLimit: false, percentOfLimit: 94, total: 1900000 },
+        '2026-08-17T00:00:00Z',
+      ),
+      // The end is exclusive, so the sentence names 16 August.
+    ).toBe('Estimated to reach ~1.9M (94% of your limit) by 16 Aug.')
+  })
+
+  it('says so when the line lands over the limit', () => {
+    expect(
+      projectionNote(
+        { overLimit: true, percentOfLimit: 135, total: 2700000 },
+        '2026-10-08T00:00:00Z',
+      ),
+    ).toContain('That lands over your limit.')
+  })
+
+  // Rounding can put a real share at zero, which is not the same as no limit.
+  it('keeps a share of zero', () => {
+    expect(
+      projectionNote(
+        { overLimit: false, percentOfLimit: 0, total: 100 },
+        '2026-08-17T00:00:00Z',
+      ),
+    ).toBe('Estimated to reach ~100 (0% of your limit) by 16 Aug.')
+  })
+
+  it('omits the share when there is no limit', () => {
+    expect(
+      projectionNote(
+        { overLimit: false, percentOfLimit: undefined, total: 100 },
+        '2026-08-17T00:00:00Z',
+      ),
+    ).toBe('Estimated to reach ~100 by 16 Aug.')
+  })
+})

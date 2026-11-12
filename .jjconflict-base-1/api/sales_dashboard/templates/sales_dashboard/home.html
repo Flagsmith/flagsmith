@@ -1,0 +1,124 @@
+{% extends "sales_dashboard/base.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    {% include "sales_dashboard/nav.html" %}
+
+    <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4">
+      <div
+        class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center border-bottom">
+        <h1 class="h2">Organisations</h1>
+        <div class="float-right">
+          <div class='float-left'>
+            <form method="POST" action="{% url 'sales_dashboard:update-organisation-subscription-information-cache' %}">
+              {% csrf_token %}
+              <input type="submit" value="Update subscription data" class="btn btn-primary m-1">
+            </form>
+          </div>
+          <div class='float-left'>
+            <form method="POST" action="{% url 'sales_dashboard:update-organisation-subscription-information-influx-cache' %}">
+              {% csrf_token %}
+              <input type="submit" value="Update only influx data" class="btn btn-primary m-1">
+            </form>
+            <small class="p-1">Last Influx data updated at: {{ subscription_information_caches_influx_updated_at|default:"never" }}</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="sort-form">
+        <form action="{% url 'sales_dashboard:index' %}" method="get" class="form-inline float-right">
+        <label for="include-deleted" class="mr-1">Include deleted:</label>
+        <input type="checkbox" name="include_deleted" id="include-deleted" class="mr-1" {% if include_deleted %}checked{% endif %}>
+        <label for="filter-plan">Filter: </label>
+          <select name="filter_plan" id="filter-plan" class="custom-select m-1">
+            <option value="" {% if not filter_plan %}selected{% endif %}>Filter Plan</option>
+            <option value="free" {% if filter_plan == "free" %}selected{% endif %}>Free</option>
+            <option value="start" {% if filter_plan == "start" %}selected{% endif %}>Start Up</option>
+            <option value="scale" {% if filter_plan == "scale" %}selected{% endif %}>Scale Up</option>
+          </select>
+          <label for="sort-field">Sort: </label>
+          <select name="sort_field" id="sort-field" class="custom-select m-1" value="{{ sort_field }}">
+            <option value="num_users" {% if sort_field == "num_users" %}selected{% endif %}>Users</option>
+            <option value="subscription_information_cache__allowed_seats" {% if sort_field == "subscription_information_cache__allowed_seats" %}selected{% endif %}>Seats</option>
+            <option value="num_projects" {% if sort_field == "num_projects" %}selected{% endif %}>Projects</option>
+            <option value="num_features" {% if sort_field == "num_features" %}selected{% endif %}>Flags</option>
+            <option value="subscription_information_cache__api_calls_24h" {% if sort_field == "subscription_information_cache__api_calls_24h" %}selected{% endif %}>24h API calls</option>
+            <option value="subscription_information_cache__api_calls_7d" {% if sort_field == "subscription_information_cache__api_calls_7d" %}selected{% endif %}>7d API calls</option>
+            <option value="subscription_information_cache__api_calls_30d" {% if sort_field == "subscription_information_cache__api_calls_30d" or not sort_field %}selected{% endif %}>30d API calls</option>
+            <option value="overage" {% if sort_field == "overage"%}selected{% endif %}>Overage</option>
+          </select>
+          <select name="sort_direction" id="sort-direction" class="custom-select m-1">
+            <option value="DESC" {% if not sort_direction or sort_direction == "DESC" %}selected{% endif %}>Descending</option>
+            <option value="ASC" {% if sort_direction == "ASC" %}selected{% endif %}>Ascending</option>
+          </select>
+          <button type="submit" class="btn btn-primary m-1">Apply</button>
+        </form>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-striped table-sm" data-toggle="table">
+          <thead class="thead-dark">
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Plan</th>
+              <th>Users</th>
+              <th>Seats</th>
+              <th>Max API Calls</th>
+              <th>Projects</th>
+              <th>Flags</th>
+              <th>24h</th>
+              <th>7d</th>
+              <th>30d</th>
+              <th>Overage</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for org in object_list %}
+            <tr class="
+              {% if org.has_paid_subscription and not org.is_paid %}table-danger
+              {% elif org.num_users > org.subscription_information_cache.allowed_seats %}table-warning
+              {% elif org.subscription_information_cache.api_calls_30d > org.subscription_information_cache.allowed_30d_api_calls %}table-warning
+              {% endif %}"
+              >
+              <td>{{org.id}}</td>
+              <td><a href="/sales-dashboard/organisations/{{org.id}}">{{org.name}} {% if org.deleted_at %}<span class="badge badge-danger">Deleted</span>{% endif %}</a></td>
+              <td>{{ org.subscription.plan|default:"Free" }}{% if org.subscription.payment_method %} - {{ org.subscription.payment_method|capfirst }}{% endif %}</td>
+              <td><span class="{% if org.num_users > org.subscription_information_cache.allowed_seats %}badge badge-danger{% endif %}">{{org.num_users}}</span></td>
+              <td>{{org.subscription_information_cache.allowed_seats|default:1}}</td>
+              <td>{{org.subscription_information_cache.allowed_30d_api_calls|default:50000|intcomma}}</td>
+              <td>{{org.num_projects}}</td>
+              <td>{{org.num_features}}</td>
+              <td>{{org.subscription_information_cache.api_calls_24h|intcomma|default:0}}</td>
+              <td>{{org.subscription_information_cache.api_calls_7d|intcomma|default:0}}</td>
+              <td><span class="{% if org.subscription_information_cache.api_calls_30d > org.subscription_information_cache.allowed_30d_api_calls %}badge badge-danger{% endif %}">{{org.subscription_information_cache.api_calls_30d|intcomma|default:0}}</span></td>
+              <td><span class="{% if org.overage > 0 %}badge badge-danger{% endif %}">{{org.overage|intcomma}}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="pagination">
+          <span class="step-links">
+            {% if page_obj.has_previous %}
+            <a href="?{% query_transform request page=1 %}">&laquo; first</a>
+            <a href="?{% query_transform request page=page_obj.previous_page_number %}">previous</a>
+            {% endif %}
+
+            <span class="current">
+              Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+            <a href="?{% query_transform request page=page_obj.next_page_number %}">next</a>
+            <a href="?{% query_transform request page=page_obj.paginator.num_pages %}">last &raquo;</a>
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+</div>
+{% endblock %}

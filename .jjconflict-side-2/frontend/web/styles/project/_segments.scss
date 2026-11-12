@@ -1,0 +1,33 @@
+.panel-rule {
+  border-radius: $border-radius-lg;
+  background-color: $bg-light200;
+  .react-select {
+    font-weight: normal;
+    .react-select__input input {
+      font-weight: normal;
+    }
+    &__menu {
+      font-weight: normal;
+    }
+    &__option {
+      &:hover {
+        background: $primary-alfa-8 !important;
+        color: $body-color !important;
+      }
+    }
+  }
+}
+.dark {
+  .panel-rule {
+    background-color: $bg-dark200;
+  }
+}
+
+.create-segment-overrides:first-child {
+  margin: -0.5rem -1.5rem -1rem !important;
+}
+
+.drag-handle {
+  cursor: grab;
+  touch-action: none;
+}

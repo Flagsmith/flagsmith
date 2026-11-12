@@ -1,0 +1,118 @@
+name: Notify Slack of a deploy
+description: Post the outcome of a deploy to a Slack incoming webhook.
+
+inputs:
+  webhook_url:
+    description: The Slack incoming webhook to post the notification to.
+    required: true
+  service:
+    description: The name of the deployed service, e.g. Frontend.
+    required: true
+  app_url:
+    description: The URL of the deployed application, linked from the notification.
+    required: true
+  environment:
+    description: The environment that was deployed to.
+    required: false
+    default: production
+  state:
+    description: >
+      in_progress before the deploy runs, otherwise the production job's
+      result. Only in_progress, success and cancelled get their own copy;
+      anything else reads as a failure.
+    required: true
+  commit_sha:
+    description: The commit that was deployed.
+    required: true
+  actor:
+    description: The GitHub login that triggered the deploy.
+    required: true
+  run_url:
+    description: Link to the deploy run, not to the run posting this.
+    required: true
+  repo_url:
+    description: Repository URL, used to link the pull request. Omit to leave the title unlinked.
+    required: false
+  commit_message:
+    description: >
+      The deployed commit's message. Only its first line is used, which on a
+      squash merge is the pull request title. Omitted from the card if absent.
+    required: false
+  started_at:
+    description: When the deploy run started, ISO 8601. Omitted from the message if absent.
+    required: false
+  ended_at:
+    description: When the deploy run finished, ISO 8601. Paired with started_at for the duration.
+    required: false
+
+runs:
+  using: composite
+
+  steps:
+    - name: Post to Slack
+      shell: bash
+      env:
+        SLACK_WEBHOOK_URL: ${{ inputs.webhook_url }}
+        SERVICE: ${{ inputs.service }}
+        APP_URL: ${{ inputs.app_url }}
+        ENVIRONMENT: ${{ inputs.environment }}
+        STATE: ${{ inputs.state }}
+        COMMIT_SHA: ${{ inputs.commit_sha }}
+        ACTOR: ${{ inputs.actor }}
+        RUN_URL: ${{ inputs.run_url }}
+        REPO_URL: ${{ inputs.repo_url }}
+        COMMIT_MESSAGE: ${{ inputs.commit_message }}
+        STARTED_AT: ${{ inputs.started_at }}
+        ENDED_AT: ${{ inputs.ended_at }}
+      run: |
+        set -euo pipefail
+
+        # A squash merge puts the pull request title and number in the first
+        # line, as "title (#123)". A direct push or a merge commit will not
+        # match, so the number is optional and the title falls back to the
+        # whole line.
+        subject="$(printf '%s' "${COMMIT_MESSAGE:-}" | head -1)"
+        pr_number="$(printf '%s' "$subject" | sed -n 's/.*(#\([0-9]\{1,\}\))$/\1/p')"
+        title="$subject"
+        pr_url=''
+        if [ -n "$pr_number" ]; then
+          title="$(printf '%s' "$subject" | sed 's/ *(#[0-9]\{1,\})$//')"
+          [ -n "${REPO_URL:-}" ] && pr_url="$REPO_URL/pull/$pr_number"
+        fi
+
+        # Best effort: a timestamp that will not parse costs the message two
+        # fields rather than failing the run.
+        epoch() { date -u -d "$1" +%s 2>/dev/null || true; }
+
+        started_epoch="$([ -n "$STARTED_AT" ] && epoch "$STARTED_AT" || true)"
+        ended_epoch="$([ -n "$ENDED_AT" ] && epoch "$ENDED_AT" || true)"
+        started_label=''
+        duration=''
+
+        if [ -n "$started_epoch" ]; then
+          started_label="$(date -u -d "@$started_epoch" '+%H:%M UTC' 2>/dev/null || true)"
+          if [ -n "$ended_epoch" ] && [ "$ended_epoch" -ge "$started_epoch" ]; then
+            elapsed=$(( ended_epoch - started_epoch ))
+            duration="$(( elapsed / 60 ))m $(( elapsed % 60 ))s"
+          fi
+        fi
+
+        # jq escapes every value for us, unlike a JSON heredoc.
+        jq -n \
+          --arg service "$SERVICE" \
+          --arg environment "$ENVIRONMENT" \
+          --arg state "$STATE" \
+          --arg short_sha "${COMMIT_SHA:0:7}" \
+          --arg actor "$ACTOR" \
+          --arg app_url "$APP_URL" \
+          --arg run_url "$RUN_URL" \
+          --arg title "$title" \
+          --arg pr_url "$pr_url" \
+          --arg started_epoch "$started_epoch" \
+          --arg started_label "$started_label" \
+          --arg duration "$duration" \
+          -f "$GITHUB_ACTION_PATH/payload.jq" \
+        | curl --fail-with-body --connect-timeout 10 --max-time 30 -X POST \
+            -H 'Content-Type: application/json' \
+            --data @- \
+            "$SLACK_WEBHOOK_URL"

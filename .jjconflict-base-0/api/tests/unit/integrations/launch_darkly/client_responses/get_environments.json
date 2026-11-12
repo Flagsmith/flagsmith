@@ -1,0 +1,102 @@
+[
+  {
+    "_links": {
+      "analytics": {
+        "href": "https://app.launchdarkly.com/snippet/events/v1/64c102aeca98f813c9eb1b65.js",
+        "type": "text/html"
+      },
+      "apiKey": {
+        "href": "/api/v2/projects/another-project/environments/test/apiKey",
+        "type": "application/json"
+      },
+      "mobileKey": {
+        "href": "/api/v2/projects/another-project/environments/test/mobileKey",
+        "type": "application/json"
+      },
+      "self": {
+        "href": "/api/v2/projects/another-project/environments/test",
+        "type": "application/json"
+      },
+      "snippet": {
+        "href": "https://app.launchdarkly.com/snippet/features/64c102aeca98f813c9eb1b65.js",
+        "type": "text/html"
+      }
+    },
+    "_id": "64c102aeca98f813c9eb1b65",
+    "_pubnub": {
+      "channel": "bce8df91f7bc13f3a0e623fb18523d82f94a93e64ad768b48a19d0cdc1c9acee",
+      "cipherKey": "83aa965574be6d7d55854d89efa499d815981b650a08578b61c8cbaeca626ce1"
+    },
+    "key": "test",
+    "name": "Test",
+    "apiKey": "sdk-eec99e0d-300a-4b72-9a2e-1f2a325f39d9",
+    "mobileKey": "mob-9e1b7c64-da86-417a-8272-e42ad0b44500",
+    "color": "EBFF38",
+    "defaultTtl": 0,
+    "secureMode": false,
+    "defaultTrackEvents": false,
+    "requireComments": false,
+    "confirmChanges": false,
+    "tags": [],
+    "approvalSettings": {
+      "required": false,
+      "bypassApprovalsForPendingChanges": false,
+      "minNumApprovals": 1,
+      "canReviewOwnRequest": false,
+      "canApplyDeclinedChanges": true,
+      "serviceKind": "launchdarkly",
+      "serviceConfig": {},
+      "requiredApprovalTags": []
+    }
+  },
+  {
+    "_links": {
+      "analytics": {
+        "href": "https://app.launchdarkly.com/snippet/events/v1/64c102aeca98f813c9eb1b66.js",
+        "type": "text/html"
+      },
+      "apiKey": {
+        "href": "/api/v2/projects/another-project/environments/production/apiKey",
+        "type": "application/json"
+      },
+      "mobileKey": {
+        "href": "/api/v2/projects/another-project/environments/production/mobileKey",
+        "type": "application/json"
+      },
+      "self": {
+        "href": "/api/v2/projects/another-project/environments/production",
+        "type": "application/json"
+      },
+      "snippet": {
+        "href": "https://app.launchdarkly.com/snippet/features/64c102aeca98f813c9eb1b66.js",
+        "type": "text/html"
+      }
+    },
+    "_id": "64c102aeca98f813c9eb1b66",
+    "_pubnub": {
+      "channel": "11facfd22d3ef9cd3206b46732b99e048f303455d4ca17930dba41efcb6d9c53",
+      "cipherKey": "55d970a9033916f1bc9bea1daf40f08ae526351c526719042c4460045a530cfa"
+    },
+    "key": "production",
+    "name": "Production",
+    "apiKey": "sdk-691532b0-3700-41a0-9a15-9b83514d45ee",
+    "mobileKey": "mob-060f691c-8d59-4b14-ac57-94623b5e492c",
+    "color": "00DA7B",
+    "defaultTtl": 0,
+    "secureMode": false,
+    "defaultTrackEvents": false,
+    "requireComments": true,
+    "confirmChanges": true,
+    "tags": [],
+    "approvalSettings": {
+      "required": false,
+      "bypassApprovalsForPendingChanges": false,
+      "minNumApprovals": 1,
+      "canReviewOwnRequest": false,
+      "canApplyDeclinedChanges": true,
+      "serviceKind": "launchdarkly",
+      "serviceConfig": {},
+      "requiredApprovalTags": []
+    }
+  }
+]

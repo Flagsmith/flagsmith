@@ -1,0 +1,60 @@
+name: Renovate
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: "Comma-separated packages to force-update out of band (leave empty for a normal run)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write # For CodeArtifact OIDC
+
+jobs:
+  renovate:
+    runs-on: depot-ubuntu-latest-16
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Authenticate with CodeArtifact
+        id: codeartifact
+        uses: ./.github/actions/codeartifact-login
+
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLAGSMITH_ENGINEERING_GH_APP_ID }}
+          private-key: ${{ secrets.FLAGSMITH_ENGINEERING_GH_APP_PRIVATE_KEY }}
+
+      - name: Compute Renovate force override
+        id: force
+        shell: python
+        env:
+          PACKAGES: ${{ inputs.packages }}
+        run: |
+          import json, os
+          names = [n for part in os.environ["PACKAGES"].split(",") if (n := part.strip())]
+          if names:
+              value = {"packageRules": [{"matchPackageNames": names, "enabled": True, "rangeStrategy": "bump"}]}
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write(f"value={json.dumps(value)}\n")
+
+      - name: Run Renovate
+        uses: renovatebot/github-action@266fef21329c44765ad42f9dea1f01f5d2d91084 # v46.3.13
+        env:
+          RENOVATE_TOKEN: ${{ steps.app-token.outputs.token }}
+          RENOVATE_FORCE: ${{ steps.force.outputs.value }}
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_GIT_AUTHOR: ${{ vars.RENOVATE_GIT_AUTHOR }}
+          # Recomputes SRI hashes in docs jsDelivr snippets after Renovate bumps their version (see renovate.json).
+          # TODO: drop once Renovate's html manager supports jsDelivr and updates SRI hashes itself:
+          # https://github.com/renovatebot/renovate/pull/45015, https://github.com/renovatebot/renovate/issues/26937
+          RENOVATE_ALLOWED_COMMANDS: '["^node docs/plugins/js-cdn-sri/update\\.mjs$"]'
+          RENOVATE_HOST_RULES: >-
+            [{"matchHost":"flagsmith-production-084060095745.d.codeartifact.eu-west-2.amazonaws.com","username":"aws","password":"${{ steps.codeartifact.outputs.token }}"}]

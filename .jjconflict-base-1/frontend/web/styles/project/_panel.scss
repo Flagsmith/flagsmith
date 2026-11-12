@@ -1,0 +1,113 @@
+.dark {
+  .panel {
+    input {
+      background-color: $input-bg-dark;
+      color: $input-color-dark;
+    }
+    &--grey {
+      background: $panel-grey-background-dark;
+      .panel {
+        background-color: $primary900;
+        .panel-content {
+          background-color: $primary900;
+        }
+      }
+    }
+  }
+}
+.dark .panel--flat {
+  border: 1px solid #252836;
+}
+.panel {
+  &--flat {
+    box-shadow: none !important;
+  }
+  &--draggable {
+    cursor: move;
+    @include transition(background 200ms ease-in-out);
+
+    .panel-content {
+      @include transition(background 200ms ease-in-out);
+    }
+  }
+
+  input[type='text'] {
+    opacity: 1;
+    border-radius: $border-radius;
+  }
+
+  &--grey {
+    background: $panel-grey-background;
+    border-radius: $border-radius-lg;
+
+    padding: 20px;
+  }
+  &--transparent {
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+    .panel-heading {
+      background-color: transparent;
+    }
+  }
+  &--nested {
+    box-shadow: none !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+  }
+
+}
+.dark {
+  .panel {
+    &--transparent {
+      input[type='text'] {
+        background: $input-bg-dark;
+      }
+    }
+  }
+}
+
+.plan {
+  border-radius: $border-radius;
+  border: 1px solid $basic-alpha-16;
+  &-icon {
+    padding: 12px;
+    background-color: $primary-alfa-8;
+    border-radius: $border-radius-lg;
+    margin-right: 12px;
+  }
+}
+
+.visibility-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  color: white;
+}
+
+/*Change text in autofill textbox*/
+.dark {
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    -webkit-text-fill-color: $body-color-dark;
+    -webkit-box-shadow: 0 0 0px 1000px $input-bg-dark inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+  .plan {
+    background-color: $bg-dark300;
+    path {
+      fill: $text-icon-light;
+    }
+  }
+}

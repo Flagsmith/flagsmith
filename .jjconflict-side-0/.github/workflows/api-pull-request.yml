@@ -1,0 +1,82 @@
+name: API Pull Request
+
+permissions:
+  contents: read # For actions/checkout
+  id-token: write # For Codecov OIDC
+
+on:
+  pull_request:
+    paths:
+      - api/**
+      - docker/api/**
+      - .github/**
+      - .release-please-manifest.json
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    paths:
+      - api/**
+      - docker/api/**
+      - .github/**
+      - .release-please-manifest.json
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: api
+
+env:
+  DOTENV_OVERRIDE_FILE: .env-ci
+
+jobs:
+  test:
+    runs-on: depot-ubuntu-latest-16
+    name: API Unit Tests
+
+    strategy:
+      max-parallel: 3
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/install-uv
+        with:
+          working-directory: api
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Dependencies
+        run: make install-packages opts='--extra dev'
+
+      - name: Check for missing migrations
+        env:
+          opts: --no-input --dry-run --check
+        run: make django-make-migrations
+
+      - uses: liskin/gh-problem-matcher-wrap@v2
+        with:
+          action: add
+          linters: mypy
+
+      - name: Check for new typing errors
+        run: make typecheck
+
+      - uses: liskin/gh-problem-matcher-wrap@v2
+        with:
+          action: remove
+          linters: mypy
+
+      - name: Run Tests
+        env:
+          format: xml
+        run: make test-coverage
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v5
+        env:
+          PYTHON: ${{ matrix.python-version }}
+        with:
+          env_vars: PYTHON
+          use_oidc: true

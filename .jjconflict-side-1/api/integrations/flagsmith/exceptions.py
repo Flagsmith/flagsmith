@@ -1,0 +1,2 @@
+class FlagsmithIntegrationError(Exception):
+    pass

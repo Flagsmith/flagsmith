@@ -1,0 +1,510 @@
+from dataclasses import asdict
+from datetime import datetime
+from datetime import timezone as dt_timezone
+from typing import Any
+
+import pytest
+from django.utils import timezone
+from freezegun import freeze_time
+from pytest_mock import MockerFixture
+from pytest_structlog import StructuredLogCapture
+from task_processor.exceptions import TaskBackoffError
+
+from experimentation.dataclasses import (
+    ExposuresSummary,
+    ExposuresTimeseries,
+    ExposuresTimeseriesPoint,
+    MetricResult,
+    ResultsSummary,
+)
+from experimentation.models import (
+    Experiment,
+    ExperimentExposures,
+    ExperimentResults,
+    ExperimentStatus,
+    WarehouseConnection,
+)
+from experimentation.stats import VariantStats
+from experimentation.tasks import (
+    compute_experiment_exposures,
+    compute_experiment_results,
+)
+from experimentation.warehouses.exceptions import UnsupportedWarehouseOperation
+from experimentation.warehouses.flagsmith import (
+    CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS,
+)
+
+
+def _summary() -> ExposuresSummary:
+    return ExposuresSummary(
+        excluded_identities=1,
+        timeseries=ExposuresTimeseries(
+            granularity="hour",
+            points=[
+                ExposuresTimeseriesPoint(
+                    bucket="2026-06-01T00:00:00+00:00",
+                    new_identities={"control": 6, "variant_a": 4},
+                )
+            ],
+        ),
+    )
+
+
+@freeze_time("2026-06-11T12:00:00Z")
+def test_compute_experiment_exposures__running_experiment__stores_summary(
+    experiment: Experiment,
+    mocker: MockerFixture,
+) -> None:
+    # Given a running experiment and a warehouse responding with a summary
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mock_compute = mocker.patch(
+        "experimentation.tasks.compute_exposures_summary",
+        return_value=_summary(),
+    )
+
+    # When
+    compute_experiment_exposures(experiment_id=experiment.id)
+
+    # Then the full window up to now is computed and stored on the row
+    mock_compute.assert_called_once_with(
+        experiment,
+        window_start=experiment.started_at,
+        window_end=timezone.now(),
+    )
+    exposures = ExperimentExposures.objects.get(experiment=experiment)
+    assert exposures.payload == asdict(_summary())
+    assert exposures.as_of == timezone.now()
+    assert exposures.last_error_at is None
+
+
+def test_compute_experiment_exposures__completed_experiment__window_ends_at_ended_at(
+    experiment: Experiment,
+    mocker: MockerFixture,
+) -> None:
+    # Given a completed experiment
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
+    experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mock_compute = mocker.patch(
+        "experimentation.tasks.compute_exposures_summary",
+        return_value=_summary(),
+    )
+
+    # When
+    compute_experiment_exposures(experiment_id=experiment.id)
+
+    # Then the window is frozen at the experiment's end
+    mock_compute.assert_called_once_with(
+        experiment,
+        window_start=experiment.started_at,
+        window_end=experiment.ended_at,
+    )
+    exposures = ExperimentExposures.objects.get(experiment=experiment)
+    assert exposures.as_of == experiment.ended_at
+
+
+def test_compute_experiment_exposures__warehouse_error__records_failure(
+    experiment: Experiment,
+    mocker: MockerFixture,
+    log: StructuredLogCapture,
+) -> None:
+    # Given a running experiment whose row holds a previously computed payload
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    as_of = timezone.now()
+    ExperimentExposures.objects.create(
+        experiment=experiment,
+        as_of=as_of,
+        payload=asdict(_summary()),
+    )
+    mocker.patch(
+        "experimentation.tasks.compute_exposures_summary",
+        side_effect=Exception("warehouse unreachable"),
+    )
+
+    # When
+    compute_experiment_exposures(experiment_id=experiment.id)
+
+    # Then the failure is recorded and the last good payload survives
+    exposures = ExperimentExposures.objects.get(experiment=experiment)
+    assert exposures.last_error_at is not None
+    assert exposures.payload == asdict(_summary())
+    assert exposures.as_of == as_of
+    # And the failure is logged for operators
+    assert log.has(
+        "exposures.compute_failed",
+        level="error",
+        experiment__id=experiment.id,
+        environment__id=experiment.environment_id,
+        organisation__id=experiment.environment.project.organisation_id,
+    )
+
+
+def test_compute_experiment_exposures__transient_warehouse_error__records_failure_and_backs_off(
+    experiment: Experiment,
+    mocker: MockerFixture,
+    log: StructuredLogCapture,
+) -> None:
+    # Given
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mocker.patch(
+        "experimentation.tasks.compute_exposures_summary",
+        side_effect=TimeoutError("The read operation timed out"),
+    )
+
+    # When
+    with pytest.raises(TaskBackoffError):
+        compute_experiment_exposures(experiment_id=experiment.id)
+
+    # Then
+    exposures = ExperimentExposures.objects.get(experiment=experiment)
+    assert exposures.last_error_at is not None
+    assert log.has("exposures.compute_failed", level="error")
+
+
+def test_compute_experiment_exposures__not_started_experiment__skips(
+    experiment: Experiment,
+    mocker: MockerFixture,
+) -> None:
+    # Given a created experiment that has never started
+    mock_compute = mocker.patch(
+        "experimentation.tasks.compute_exposures_summary",
+    )
+
+    # When
+    compute_experiment_exposures(experiment_id=experiment.id)
+
+    # Then nothing is queried or stored
+    mock_compute.assert_not_called()
+    assert not ExperimentExposures.objects.filter(experiment=experiment).exists()
+
+
+def test_compute_experiment_exposures__final_row__skips_without_recompute(
+    experiment: Experiment,
+    mocker: MockerFixture,
+) -> None:
+    # Given a completed experiment whose row already covers the full window
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
+    experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentExposures.objects.create(
+        experiment=experiment,
+        as_of=experiment.ended_at,
+        payload=asdict(_summary()),
+    )
+    mock_compute = mocker.patch(
+        "experimentation.tasks.compute_exposures_summary",
+    )
+
+    # When
+    compute_experiment_exposures(experiment_id=experiment.id)
+
+    # Then the final payload is left untouched regardless of the caller
+    mock_compute.assert_not_called()
+    exposures = ExperimentExposures.objects.get(experiment=experiment)
+    assert exposures.payload == asdict(_summary())
+
+
+def test_compute_experiment_exposures__experiment_deleted_after_enqueue__skips(
+    experiment: Experiment,
+    mocker: MockerFixture,
+) -> None:
+    # Given the experiment is deleted between enqueue and execution
+    experiment_id = experiment.id
+    experiment.delete()
+    mock_compute = mocker.patch(
+        "experimentation.tasks.compute_exposures_summary",
+    )
+
+    # When
+    compute_experiment_exposures(experiment_id=experiment_id)
+
+    # Then the task exits without raising into the task processor
+    mock_compute.assert_not_called()
+
+
+def _results_summary() -> ResultsSummary:
+    return ResultsSummary(
+        srm_p_value=0.42,
+        metrics=[
+            MetricResult(
+                metric_id=7,
+                variants={
+                    "control": VariantStats(n=1000, sum=100.0, sum_squares=100.0)
+                },
+                inference={},
+                conversions_timeseries=None,
+            )
+        ],
+        exposures_timeseries=ExposuresTimeseries(granularity="day", points=[]),
+    )
+
+
+@freeze_time("2026-06-11T12:00:00Z")
+def test_compute_experiment_results__running_experiment__stores_summary(
+    experiment: Experiment,
+    mocker: MockerFixture,
+) -> None:
+    # Given a running experiment and a warehouse responding with a summary
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mock_compute = mocker.patch(
+        "experimentation.tasks.compute_results_summary",
+        return_value=_results_summary(),
+    )
+
+    # When
+    compute_experiment_results(experiment_id=experiment.id)
+
+    # Then the full window up to now is computed and stored on the row
+    mock_compute.assert_called_once_with(
+        experiment,
+        window_start=experiment.started_at,
+        window_end=timezone.now(),
+    )
+    results = ExperimentResults.objects.get(experiment=experiment)
+    assert results.payload == asdict(_results_summary())
+    assert results.as_of == timezone.now()
+    assert results.last_error_at is None
+
+
+def test_compute_experiment_results__completed_experiment__window_ends_at_ended_at(
+    experiment: Experiment,
+    mocker: MockerFixture,
+) -> None:
+    # Given a completed experiment
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
+    experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mock_compute = mocker.patch(
+        "experimentation.tasks.compute_results_summary",
+        return_value=_results_summary(),
+    )
+
+    # When
+    compute_experiment_results(experiment_id=experiment.id)
+
+    # Then the window is frozen at the experiment's end
+    mock_compute.assert_called_once_with(
+        experiment,
+        window_start=experiment.started_at,
+        window_end=experiment.ended_at,
+    )
+    results = ExperimentResults.objects.get(experiment=experiment)
+    assert results.as_of == experiment.ended_at
+
+
+def test_compute_experiment_results__warehouse_error__records_failure(
+    experiment: Experiment,
+    mocker: MockerFixture,
+    log: StructuredLogCapture,
+) -> None:
+    # Given a running experiment whose row holds a previously computed payload
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    as_of = timezone.now()
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        as_of=as_of,
+        payload=asdict(_results_summary()),
+    )
+    exc = Exception("warehouse unreachable")
+    mocker.patch(
+        "experimentation.tasks.compute_results_summary",
+        side_effect=exc,
+    )
+
+    # When
+    compute_experiment_results(experiment_id=experiment.id)
+
+    # Then the failure is recorded and the last good payload survives
+    results = ExperimentResults.objects.get(experiment=experiment)
+    assert results.last_error_at is not None
+    assert results.payload == asdict(_results_summary())
+    assert results.as_of == as_of
+    # And exactly one failure event is logged for operators, carrying the
+    # exception so the traceback reaches the logs
+    assert log.events == [
+        {
+            "event": "results.compute_failed",
+            "level": "error",
+            "exc_info": exc,
+            "experiment__id": experiment.id,
+            "environment__id": experiment.environment_id,
+            "organisation__id": experiment.environment.project.organisation_id,
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    "exc",
+    [
+        TimeoutError("The read operation timed out"),
+        ConnectionResetError("Connection reset by peer"),
+    ],
+    ids=["timeout", "reset"],
+)
+def test_compute_experiment_results__transient_warehouse_error__records_failure_and_backs_off(
+    experiment: Experiment,
+    mocker: MockerFixture,
+    log: StructuredLogCapture,
+    exc: Exception,
+) -> None:
+    # Given
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mocker.patch(
+        "experimentation.tasks.compute_results_summary",
+        side_effect=exc,
+    )
+
+    # When
+    with pytest.raises(TaskBackoffError):
+        compute_experiment_results(experiment_id=experiment.id)
+
+    # Then
+    results = ExperimentResults.objects.get(experiment=experiment)
+    assert results.last_error_at is not None
+    assert log.has("results.compute_failed", level="error")
+
+
+@pytest.mark.parametrize(
+    "task_handler, compute_path, computation_model, event",
+    [
+        (
+            compute_experiment_exposures,
+            "experimentation.tasks.compute_exposures_summary",
+            ExperimentExposures,
+            "exposures.compute_unsupported",
+        ),
+        (
+            compute_experiment_results,
+            "experimentation.tasks.compute_results_summary",
+            ExperimentResults,
+            "results.compute_unsupported",
+        ),
+    ],
+    ids=["exposures", "results"],
+)
+def test_compute_experiment_task_handlers__unsupported_warehouse__records_failure_without_backoff(
+    experiment: Experiment,
+    clickhouse_connection: WarehouseConnection,
+    mocker: MockerFixture,
+    log: StructuredLogCapture,
+    task_handler: Any,
+    compute_path: str,
+    computation_model: type[ExperimentExposures] | type[ExperimentResults],
+    event: str,
+) -> None:
+    # Given a running experiment whose warehouse cannot compute the panel
+    experiment.status = ExperimentStatus.RUNNING
+    experiment.started_at = datetime(2026, 6, 10, tzinfo=dt_timezone.utc)
+    experiment.save()
+    mocker.patch(compute_path, side_effect=UnsupportedWarehouseOperation())
+
+    # When
+    task_handler(experiment_id=experiment.id)
+
+    # Then the failure is recorded without a retry
+    computation = computation_model.objects.get(experiment=experiment)
+    assert computation.last_error_at is not None
+    # And a warning names the warehouse type rather than an error traceback
+    assert log.events == [
+        {
+            "event": event,
+            "level": "warning",
+            "experiment__id": experiment.id,
+            "environment__id": experiment.environment_id,
+            "organisation__id": experiment.environment.project.organisation_id,
+            "warehouse__type": "clickhouse",
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    "task_handler",
+    [compute_experiment_exposures, compute_experiment_results],
+    ids=["exposures", "results"],
+)
+def test_compute_experiment_task_handlers__task_timeout__exceeds_background_query_timeout(
+    task_handler: Any,
+) -> None:
+    # Given
+    task_timeout = task_handler.timeout
+
+    # When / Then
+    assert task_timeout is not None
+    assert task_timeout.total_seconds() > CLICKHOUSE_BACKGROUND_QUERY_TIMEOUT_SECONDS
+
+
+def test_compute_experiment_results__not_started_experiment__skips(
+    experiment: Experiment,
+    mocker: MockerFixture,
+) -> None:
+    # Given a created experiment that has never started
+    mock_compute = mocker.patch(
+        "experimentation.tasks.compute_results_summary",
+    )
+
+    # When
+    compute_experiment_results(experiment_id=experiment.id)
+
+    # Then nothing is queried or stored
+    mock_compute.assert_not_called()
+    assert not ExperimentResults.objects.filter(experiment=experiment).exists()
+
+
+def test_compute_experiment_results__final_row__skips_without_recompute(
+    experiment: Experiment,
+    mocker: MockerFixture,
+) -> None:
+    # Given a completed experiment whose row already covers the full window
+    experiment.status = ExperimentStatus.COMPLETED
+    experiment.started_at = datetime(2026, 6, 1, tzinfo=dt_timezone.utc)
+    experiment.ended_at = datetime(2026, 6, 8, tzinfo=dt_timezone.utc)
+    experiment.save()
+    ExperimentResults.objects.create(
+        experiment=experiment,
+        as_of=experiment.ended_at,
+        payload=asdict(_results_summary()),
+    )
+    mock_compute = mocker.patch(
+        "experimentation.tasks.compute_results_summary",
+    )
+
+    # When
+    compute_experiment_results(experiment_id=experiment.id)
+
+    # Then the final payload is left untouched regardless of the caller
+    mock_compute.assert_not_called()
+    results = ExperimentResults.objects.get(experiment=experiment)
+    assert results.payload == asdict(_results_summary())
+
+
+def test_compute_experiment_results__experiment_deleted_after_enqueue__skips(
+    experiment: Experiment,
+    mocker: MockerFixture,
+) -> None:
+    # Given the experiment is deleted between enqueue and execution
+    experiment_id = experiment.id
+    experiment.delete()
+    mock_compute = mocker.patch(
+        "experimentation.tasks.compute_results_summary",
+    )
+
+    # When
+    compute_experiment_results(experiment_id=experiment_id)
+
+    # Then the task exits without raising into the task processor
+    mock_compute.assert_not_called()

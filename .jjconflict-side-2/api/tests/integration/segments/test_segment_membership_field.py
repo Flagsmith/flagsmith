@@ -1,0 +1,49 @@
+from typing import Any
+
+from rest_framework import status
+from rest_framework.test import APIClient
+
+from segment_membership.models import SegmentMembershipCount
+
+
+def test_get_segment__no_memberships__returns_empty_list(
+    admin_client: APIClient,
+    project: int,
+    segment: int,
+) -> None:
+    # Given / When
+    response = admin_client.get(f"/api/v1/projects/{project}/segments/{segment}/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    body: dict[str, Any] = response.json()
+    assert body["membership_counts"] == []
+
+
+def test_get_segment__one_membership_per_environment__returns_per_env_counts(
+    admin_client: APIClient,
+    project: int,
+    segment: int,
+    environment: int,
+) -> None:
+    # Given
+    SegmentMembershipCount.objects.create(
+        segment_id=segment,
+        environment_id=environment,
+        count=42,
+        last_synced_at="2026-05-01T00:00:00Z",
+    )
+
+    # When
+    response = admin_client.get(f"/api/v1/projects/{project}/segments/{segment}/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    body: dict[str, Any] = response.json()
+    assert body["membership_counts"] == [
+        {
+            "environment": environment,
+            "count": 42,
+            "last_synced_at": "2026-05-01T00:00:00Z",
+        }
+    ]

@@ -1,0 +1,164 @@
+.hover-color-primary {
+    &:hover {
+        color: $primary;
+        >*{
+          color: $primary;
+        }
+        path {
+            fill: $primary;
+        }
+    }
+}
+.bg-required {
+    background-color: $danger;
+    color: $bg-light300;
+    border-color: $danger;
+}
+.standard-case {
+    text-transform: none !important;
+}
+.form-cta {
+    text-align: right;
+}
+
+.max-w-auto {
+  max-width: none !important;
+}
+.top-form-item {
+    top: 30px;
+}
+.border-left-1 {
+    border-left: 1px solid $hr-border-color !important;
+}
+.border-bottom-1 {
+    border-bottom: 1px solid $hr-border-color !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+.margin-top{
+    margin-top:20px;
+}
+
+
+.disable-transitions {
+    .modal-dialog {
+        transition: none;
+        transform: none !important;
+    }
+    .fade {
+        transition: none!important;
+        opacity: 1;
+    }
+    .toast-message {
+        animation: none !important;
+    }
+}
+
+.show {
+    display: block!important;
+}
+
+.signup-icon {
+    width: 64px;
+    path {
+        fill: $primary;
+    }
+}
+
+.unread {
+    display: inline-block;
+    border-radius: 7px;
+    background: #7b51fb;
+    font-weight: bold;
+    padding-left: 3px;
+    padding-right: 3px;
+    height: 14px;
+    min-width: 14px;
+    color: #fff;
+    text-align: center;
+    line-height: 14px;
+    font-size: 10px;
+    cursor: pointer;
+    position: relative;
+    bottom: -1px;
+}
+
+.bg-primary {
+    background: $primary !important;
+    &.bg-opacity-10 {
+        background: rgba($primary,0.1) !important;
+    }
+}
+.dark {
+    .text-body {
+        color: white !important;
+        >path{
+            fill: white !important;
+        }
+    }
+    .bg-primary {
+        background: $primary900 !important;
+    }
+}
+
+.link-unstyled {
+    text-decoration: none;
+    &:hover {
+        text-decoration: none;
+        color: $primary900
+    }
+}
+
+.mh-auto {
+    min-height: auto !important;
+}
+
+.text-overflow {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.overflow-ellipsis {
+    width: 100%;
+    text-overflow: ellipsis;
+    >* {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+    }
+}
+
+.overflow-y-auto{ overflow-y: auto}
+
+.bg-primary-opacity-5 {
+    background-color: transparentize($primary, 0.95);
+}
+
+.bg-card {
+    background-color: white;
+}
+.dark {
+    .bg-card {
+        background-color: $bg-dark200;
+    }
+}
+
+.full-screen {
+  .announcement-container {
+    display: none;
+  }
+  background-color: $bg-light200;
+}
+
+@include media-breakpoint-up(md) {
+    .left-md-0 {
+        left:0;
+    }
+}
+
+.overflow-x-hidden{
+  overflow-x: hidden !important;
+}

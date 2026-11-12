@@ -1,0 +1,39 @@
+.trust-relationships {
+  // 12px matches the side padding and gives the two stacked lines room.
+  // Double class so it beats `.table-column`'s padding shorthand whichever
+  // order the stylesheets land in.
+  &__name-column.table-column,
+  &__config-column.table-column {
+    padding-block: 0.75rem;
+  }
+
+  &__name-column {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  &__config-column {
+    flex: 2 1 0;
+    min-width: 0;
+  }
+
+  &__narrow-column {
+    flex: 0 0 80px;
+  }
+
+  // Lets a long name shrink rather than widen the column and break the ratio.
+  &__name-body {
+    min-width: 0;
+  }
+
+  // A grid rather than two rows, so both values start at the same edge however
+  // wide the labels render.
+  &__config {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 1rem;
+    row-gap: 0.25rem;
+    // Keeps the label on the first line of a value that wraps.
+    align-items: baseline;
+  }
+}

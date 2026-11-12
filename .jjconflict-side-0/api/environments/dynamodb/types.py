@@ -1,0 +1,105 @@
+import enum
+import typing
+from dataclasses import asdict, dataclass
+from datetime import datetime
+
+import boto3
+from django.conf import settings
+from django.utils import timezone
+from pydantic import BaseModel, Field
+
+from util.engine_models.features.models import FeatureStateModel
+
+if typing.TYPE_CHECKING:
+    from projects.models import EdgeV2MigrationStatus
+
+project_metadata_table = None
+
+if settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
+    project_metadata_table = boto3.resource("dynamodb").Table(
+        settings.PROJECT_METADATA_TABLE_NAME_DYNAMO
+    )
+
+
+class ProjectIdentityMigrationStatus(enum.Enum):
+    MIGRATION_SCHEDULED = "MIGRATION_SCHEDULED"
+    MIGRATION_COMPLETED = "MIGRATION_COMPLETED"
+    MIGRATION_IN_PROGRESS = "MIGRATION_IN_PROGRESS"
+    MIGRATION_NOT_STARTED = "MIGRATION_NOT_STARTED"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+
+
+@dataclass
+class DynamoProjectMetadata:
+    """Internal class used by `IdentityMigrator` to store identity migration state"""
+
+    id: int
+    migration_start_time: str = None  # type: ignore[assignment]
+    migration_end_time: str = None  # type: ignore[assignment]
+    triggered_at: str = None  # type: ignore[assignment]
+
+    @classmethod
+    def get_or_new(cls, project_id: int) -> "DynamoProjectMetadata":
+        document = project_metadata_table.get_item(Key={"id": project_id}).get("Item")  # type: ignore[union-attr]
+        if document:
+            return cls(**document)
+        return cls(id=project_id)
+
+    @property
+    def identity_migration_status(self) -> ProjectIdentityMigrationStatus:
+        if not self.migration_start_time:
+            return (
+                ProjectIdentityMigrationStatus.MIGRATION_SCHEDULED
+                if self.triggered_at
+                else ProjectIdentityMigrationStatus.MIGRATION_NOT_STARTED
+            )
+        elif self.migration_start_time and not self.migration_end_time:
+            return ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS
+        return ProjectIdentityMigrationStatus.MIGRATION_COMPLETED
+
+    def trigger_identity_migration(self):  # type: ignore[no-untyped-def]
+        if self.triggered_at:
+            raise AttributeError("Migration has already been triggered.")
+        self.triggered_at = datetime.now().isoformat()
+        self._save()  # type: ignore[no-untyped-call]
+
+    def start_identity_migration(self):  # type: ignore[no-untyped-def]
+        if self.migration_start_time:
+            raise AttributeError("Migration has already been started.")
+        self.migration_start_time = datetime.now().isoformat()
+        self._save()  # type: ignore[no-untyped-call]
+
+    def finish_identity_migration(self):  # type: ignore[no-untyped-def]
+        if self.migration_end_time:
+            raise AttributeError("Migration has already been finished.")
+        self.migration_end_time = datetime.now().isoformat()
+        self._save()  # type: ignore[no-untyped-call]
+
+    def _save(self):  # type: ignore[no-untyped-def]
+        return project_metadata_table.put_item(Item=asdict(self))  # type: ignore[union-attr]
+
+    def delete(self):  # type: ignore[no-untyped-def]
+        if project_metadata_table:
+            project_metadata_table.delete_item(Key={"id": self.id})
+
+
+class IdentityOverrideV2(BaseModel):
+    environment_id: str
+    document_key: str
+    environment_api_key: str
+    identifier: str
+    identity_uuid: str
+    feature_state: FeatureStateModel
+    created_date: datetime = Field(default_factory=timezone.now)
+
+
+@dataclass
+class IdentityOverridesV2Changeset:
+    to_delete: list[IdentityOverrideV2]
+    to_put: list[IdentityOverrideV2]
+
+
+@dataclass
+class EdgeV2MigrationResult:
+    identity_overrides_changeset: IdentityOverridesV2Changeset
+    status: "EdgeV2MigrationStatus"

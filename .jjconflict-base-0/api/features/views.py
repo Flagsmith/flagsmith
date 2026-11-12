@@ -1,0 +1,1342 @@
+import logging
+import typing
+from datetime import timedelta
+from functools import reduce
+
+from common.core.utils import is_database_replica_setup, using_database_replica
+from common.projects.permissions import VIEW_PROJECT
+from django.conf import settings
+from django.core.cache import caches
+from django.db.models import (
+    BooleanField,
+    Case,
+    Exists,
+    OuterRef,
+    Q,
+    QuerySet,
+    Subquery,
+    Value,
+    When,
+)
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    PolymorphicProxySerializer,
+    extend_schema,
+    extend_schema_view,
+)
+from flagsmith_schemas import api as api_schemas
+from rest_framework import mixins, serializers, status, viewsets
+from rest_framework.decorators import (
+    action,
+    api_view,
+    authentication_classes,
+    permission_classes,
+    throttle_classes,
+)
+from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.generics import GenericAPIView, get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
+from rest_framework.request import Request
+from rest_framework.response import Response
+
+from app.pagination import CustomPagination
+from app_analytics.analytics_db_service import get_feature_evaluation_data
+from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from app_analytics.mappers import map_request_to_sdk_label
+from app_analytics.throttles import InfluxQueryThrottle
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
+from core.dataclasses import AuthorData
+from core.request_origin import RequestOrigin
+from edge_api.identities.edge_identity_service import (
+    get_overridden_feature_ids_for_edge_identity,
+)
+from environments.authentication import EnvironmentKeyAuthentication
+from environments.identities.models import Identity
+from environments.identities.serializers import (
+    IdentityAllFeatureStatesSerializer,
+    IdentitySourceIdentityRequestSerializer,
+)
+from environments.identities.services import replace_identity_environment
+from environments.models import Environment
+from environments.onboarding.services import record_environment_first_evaluation
+from environments.permissions.permissions import (
+    EnvironmentKeyPermissions,
+    NestedEnvironmentPermissions,
+)
+from evaluation.services import (
+    get_environment_feature_states,
+    get_identity_feature_states,
+)
+from features.dependencies.exceptions import (
+    DependencyConflictDetail,
+    FeatureIsReferencedDetail,
+)
+from features.feature_lifecycle.services import (
+    annotate_feature_queryset_with_lifecycle_stage,
+)
+from features.feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+    exceeds_segment_override_limit,
+)
+from features.feature_segments.services import (
+    get_next_segment_override_priority,
+    get_segment_override,
+    is_segment_override_unchanged,
+    write_segment_override,
+    writes_live_segment_override,
+)
+from features.services import delete_feature
+from features.types import LegacyFeatureStateData
+from features.value_types import BOOLEAN, INTEGER, STRING
+from projects.code_references.services import (
+    annotate_feature_queryset_with_code_references_summary,
+)
+from projects.models import Project
+from segments.services import check_segment_is_not_system
+from users.models import FFAdminUser, UserPermissionGroup
+
+from .constants import INTERSECTION, UNION
+from .features_service import get_overrides_data
+from .models import Feature, FeatureSegment, FeatureState
+from .multivariate.serializers import (
+    FeatureMVOptionsValuesResponseSerializer,
+)
+from .permissions import (
+    CreateSegmentOverridePermissions,
+    EnvironmentFeatureStatePermissions,
+    FeaturePermissions,
+    FeatureStatePermissions,
+    IdentityFeatureStatePermissions,
+)
+from .serializers import (  # type: ignore[attr-defined]
+    CreateFeatureSerializer,
+    CustomCreateSegmentOverrideFeatureStateSerializer,
+    FeatureEvaluationDataSerializer,
+    FeatureGroupOwnerInputSerializer,
+    FeatureInfluxDataSerializer,
+    FeatureOwnerInputSerializer,
+    FeatureQuerySerializer,
+    FeatureStateSerializerBasic,
+    FeatureStateSerializerCreate,
+    FeatureStateSerializerWithIdentity,
+    FeatureStateValueSerializer,
+    GetInfluxDataQuerySerializer,
+    GetUsageDataQuerySerializer,
+    ListFeatureSerializer,
+    ProjectFeatureSerializer,
+    SDKFeatureStateSerializer,
+    SDKFeatureStatesQuerySerializer,
+    UpdateFeatureSerializer,
+    WritableNestedFeatureStateSerializer,
+)
+from .versioning.models import EnvironmentFeatureVersion
+from .versioning.versioning_service import (
+    get_environment_flags_list,
+    get_environment_flags_queryset,
+    require_direct_state_write,
+    require_direct_state_write_for_state,
+)
+
+logger = logging.getLogger(__name__)
+
+flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
+
+
+def _feature_name_matches(name: str, requested_name: str) -> bool:
+    # Feature names are unique per project regardless of case, and SDKs
+    # have historically relied on case-insensitive lookups.
+    return name.casefold() == requested_name.casefold()
+
+
+@extend_schema(responses={200: CreateFeatureSerializer()})
+@api_view(["GET"])
+def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
+    accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
+    qs = Feature.objects.filter(project__in=accessible_projects).prefetch_related(
+        "multivariate_options", "owners", "tags"
+    )
+    feature = get_object_or_404(qs, uuid=uuid)
+    serializer = CreateFeatureSerializer(instance=feature)
+    return Response(serializer.data)
+
+
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        tags=["mcp"],
+        parameters=[FeatureQuerySerializer],
+        operation_id="list_project_features",
+        description="Lists a project's feature flags (paginated). Pass `environment=<id>` to also get each feature's live state for that environment in `environment_feature_state`, along with override counts. Works for both v1 and v2 versioned environments.",
+    ),
+)
+@method_decorator(
+    name="create",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="create_feature",
+        description="Creates a new feature flag in the specified project with default settings.",
+    ),
+)
+@method_decorator(
+    name="retrieve",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="get_feature_flag",
+        description="Retrieves detailed information about a specific feature flag.",
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="update_feature",
+        description="Updates feature flag properties such as name and description.",
+    ),
+)
+@extend_schema_view(
+    destroy=extend_schema(
+        responses={
+            204: None,
+            400: PolymorphicProxySerializer(
+                component_name="FeatureDeletionRefusedDetail",
+                serializers=[DependencyConflictDetail, FeatureIsReferencedDetail],  # type: ignore[list-item]
+                resource_type_field_name=None,
+            ),
+        },
+    )
+)
+class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
+    permission_classes = [FeaturePermissions]
+    pagination_class = CustomPagination
+
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
+        return {
+            "list": ListFeatureSerializer,
+            "retrieve": ListFeatureSerializer,
+            "create": ListFeatureSerializer,
+            "update": UpdateFeatureSerializer,
+            "partial_update": UpdateFeatureSerializer,
+        }.get(self.action, ProjectFeatureSerializer)
+
+    def get_queryset(self):  # type: ignore[no-untyped-def]  # noqa: C901
+        if getattr(self, "swagger_fake_view", False):
+            return Feature.objects.none()
+
+        accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)  # type: ignore[union-attr]
+
+        project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
+
+        queryset = (
+            project.features.all()
+            .annotate(
+                last_modified_in_any_environment=Subquery(
+                    EnvironmentFeatureVersion.objects.filter(
+                        feature=OuterRef("pk"),
+                        published_at__isnull=False,
+                    )
+                    .order_by("-created_at")
+                    .values("created_at")[:1]
+                ),
+            )
+            .prefetch_related(
+                "multivariate_options", "owners", "tags", "group_owners", "metadata"
+            )
+        )
+
+        query_serializer = FeatureQuerySerializer(
+            data=self.request.query_params,
+            context={"project": project},
+        )
+        query_serializer.is_valid(raise_exception=True)
+        query_data = query_serializer.validated_data
+
+        queryset = annotate_feature_queryset_with_code_references_summary(queryset)
+
+        queryset = self._filter_queryset(queryset, query_serializer)
+
+        if environment_id := query_data.get("environment"):
+            queryset = queryset.annotate(
+                last_modified_in_current_environment=Subquery(
+                    EnvironmentFeatureVersion.objects.filter(
+                        feature=OuterRef("pk"),
+                        environment=environment_id,
+                        published_at__isnull=False,
+                    )
+                    .order_by("-created_at")
+                    .values("created_at")[:1]
+                )
+            )
+
+        if query_data["value_search"] or query_data["is_enabled"] is not None:
+            queryset = self.apply_state_to_queryset(query_data, queryset)
+        sort = "%s%s" % (
+            "-" if query_data["sort_direction"] == "DESC" else "",
+            query_data["sort_field"],
+        )
+        override_ordering: list[str] = []
+        if environment_id and (segment_id := query_data.get("segment")):
+            queryset = queryset.annotate(
+                has_segment_override=Exists(
+                    FeatureSegment.objects.filter(
+                        feature=OuterRef("pk"),
+                        segment_id=segment_id,
+                        environment_id=environment_id,
+                    )
+                ),
+            )
+            override_ordering.append("-has_segment_override")
+        if identity := query_data.get("identity"):
+            if project.enable_dynamo_db:
+                # Bounded by Project.max_features_allowed
+                override_feature_ids = get_overridden_feature_ids_for_edge_identity(
+                    identity
+                )
+                queryset = queryset.annotate(
+                    has_identity_override=Case(
+                        When(pk__in=override_feature_ids, then=Value(True)),
+                        default=Value(False),
+                        output_field=BooleanField(),
+                    ),
+                )
+            else:
+                queryset = queryset.annotate(
+                    has_identity_override=Exists(
+                        FeatureState.objects.filter(
+                            feature=OuterRef("pk"),
+                            identity_id=identity,
+                        )
+                    ),
+                )
+            override_ordering.append("-has_identity_override")
+        queryset = queryset.order_by(*override_ordering, sort)
+
+        if environment_id:
+            self.environment = Environment.objects.get(id=environment_id)
+            queryset = annotate_feature_queryset_with_lifecycle_stage(
+                queryset, self.environment
+            )
+            if lifecycle_stage := query_data.get("lifecycle_stage"):
+                queryset = queryset.filter(lifecycle_stage=lifecycle_stage)
+            page = self.paginate_queryset(queryset)
+            self.feature_ids = [feature.id for feature in page]
+            feature_states_query = Q(
+                feature_id__in=self.feature_ids,
+                identity__isnull=True,
+                feature_segment__isnull=True,
+            )
+            feature_states = get_environment_flags_list(
+                environment=self.environment,
+                additional_filters=feature_states_query,
+                additional_select_related_args=["feature_state_value", "feature"],
+            )
+            self._feature_states = {fs.feature_id: fs for fs in feature_states}
+
+            if segment_id := query_data.get("segment"):
+                segment_query = Q(
+                    feature_id__in=self.feature_ids,
+                    identity__isnull=True,
+                    feature_segment__segment_id=segment_id,
+                )
+                segment_feature_states = get_environment_flags_list(
+                    environment=self.environment,
+                    additional_filters=segment_query,
+                    additional_select_related_args=["feature_state_value", "feature"],
+                )
+                self._segment_feature_states = {
+                    fs.feature_id: fs for fs in segment_feature_states
+                }
+
+        return queryset
+
+    def paginate_queryset(self, queryset: QuerySet[Feature]) -> list[Feature]:  # type: ignore[override]
+        if getattr(self, "_page", None):
+            return self._page  # type: ignore[no-any-return,has-type]
+
+        self._page = super().paginate_queryset(queryset)
+        return self._page  # type: ignore[return-value]
+
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
+        serializer.save(
+            project_id=int(self.kwargs.get("project_pk")),  # type: ignore[arg-type]
+            user=self.request.user,
+        )
+
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
+        serializer.save(project_id=self.kwargs.get("project_pk"))
+
+    def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
+        delete_feature(instance)
+
+    def get_serializer_context(self):  # type: ignore[no-untyped-def]
+        context = super().get_serializer_context()
+        feature_states = getattr(self, "_feature_states", {})
+        segment_feature_states = getattr(self, "_segment_feature_states", {})
+        project = get_object_or_404(Project.objects.all(), pk=self.kwargs["project_pk"])
+        context.update(
+            project=project,
+            user=self.request.user,
+            feature_states=feature_states,
+            segment_feature_states=segment_feature_states,
+        )
+
+        if (
+            self.action == "list"
+            and (environment := getattr(self, "environment", None))
+            and (feature_ids := getattr(self, "feature_ids", None)) is not None
+        ):
+            # `environment` and `feature_ids` are set by `get_queryset` when an
+            # environment is passed in the query parameters. Limiting overrides
+            # data to the current page keeps the query cost bound to page size.
+            context["overrides_data"] = get_overrides_data(
+                environment,
+                feature_ids=feature_ids,
+            )
+
+        return context
+
+    def apply_state_to_queryset(
+        self, query_data: dict[str, typing.Any], queryset: QuerySet[Feature]
+    ) -> QuerySet[Feature]:
+        if not query_data.get("environment"):
+            raise serializers.ValidationError(
+                "Environment is required in order to filter by state search or by state enabled"
+            )
+        is_enabled = query_data["is_enabled"]
+        value_search = query_data["value_search"]
+        environment_id = query_data["environment"]
+
+        filter_search_q = Q()
+        if value_search is not None:
+            filter_search_q = filter_search_q | Q(
+                feature_state_value__string_value__icontains=value_search,
+                feature_state_value__type=STRING,
+            )
+
+            if value_search.lower() in {"true", "false"}:
+                boolean_search = value_search.lower() == "true"
+                filter_search_q = filter_search_q | Q(
+                    feature_state_value__boolean_value=boolean_search,
+                    feature_state_value__type=BOOLEAN,
+                )
+
+            if value_search.isdigit():
+                integer_search = int(value_search)
+                filter_search_q = filter_search_q | Q(
+                    feature_state_value__integer_value=integer_search,
+                    feature_state_value__type=INTEGER,
+                )
+        filter_enabled_q = Q()
+        if is_enabled is not None:
+            filter_enabled_q = filter_enabled_q | Q(enabled=is_enabled)
+
+        base_q = Q(
+            identity__isnull=True,
+            feature_segment__isnull=True,
+        )
+        if not getattr(self, "environment", None):
+            self.environment = Environment.objects.get(id=environment_id)
+
+        feature_states = get_environment_flags_list(
+            environment=self.environment,
+            additional_filters=base_q,
+        )
+
+        feature_ids = FeatureState.objects.filter(
+            filter_search_q & filter_enabled_q,
+            id__in=[fs.id for fs in feature_states],
+        ).values_list("feature_id", flat=True)
+
+        return queryset.filter(id__in=feature_ids)
+
+    @extend_schema(
+        request=FeatureGroupOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="add-group-owners")
+    def add_group_owners(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        feature = self.get_object()
+        data = request.data
+
+        serializer = FeatureGroupOwnerInputSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        if not UserPermissionGroup.objects.filter(
+            id__in=serializer.validated_data["group_ids"],
+            organisation_id=feature.project.organisation_id,
+        ).count() == len(serializer.validated_data["group_ids"]):
+            raise serializers.ValidationError("Some groups not found")
+
+        serializer.add_group_owners(feature)
+        response = Response(self.get_serializer(instance=feature).data)
+        return response
+
+    @extend_schema(
+        request=FeatureGroupOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="remove-group-owners")
+    def remove_group_owners(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        feature = self.get_object()
+        serializer = FeatureGroupOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self._validate_owner_removal(
+            feature,
+            group_ids_to_remove=serializer.validated_data["group_ids"],
+        )
+        serializer.remove_group_owners(feature)
+        response = Response(self.get_serializer(instance=feature).data)
+        return response
+
+    @extend_schema(
+        request=FeatureOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="add-owners")
+    def add_owners(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        serializer = FeatureOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        feature = self.get_object()
+
+        for user in FFAdminUser.objects.filter(
+            id__in=serializer.validated_data["user_ids"]
+        ):
+            if not user.has_project_permission(VIEW_PROJECT, feature.project):
+                raise serializers.ValidationError("Some users not found")
+
+        serializer.add_owners(feature)
+        return Response(self.get_serializer(instance=feature).data)
+
+    @extend_schema(
+        request=FeatureOwnerInputSerializer,
+        responses={200: ProjectFeatureSerializer},
+    )
+    @action(detail=True, methods=["POST"], url_path="remove-owners")
+    def remove_owners(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        serializer = FeatureOwnerInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        feature = self.get_object()
+        self._validate_owner_removal(
+            feature,
+            user_ids_to_remove=serializer.validated_data["user_ids"],
+        )
+        serializer.remove_users(feature)
+
+        return Response(self.get_serializer(instance=feature).data)
+
+    def _validate_owner_removal(
+        self,
+        feature: Feature,
+        user_ids_to_remove: typing.Iterable[int] = (),
+        group_ids_to_remove: typing.Iterable[int] = (),
+    ) -> None:
+        if not feature.project.enforce_feature_owners:
+            return
+        owners_to_remove = feature.owners.filter(id__in=user_ids_to_remove).count()
+        group_owners_to_remove = feature.group_owners.filter(
+            id__in=group_ids_to_remove
+        ).count()
+        remaining = (
+            feature.owners.count()
+            - owners_to_remove
+            + feature.group_owners.count()
+            - group_owners_to_remove
+        )
+        if remaining < 1:
+            raise serializers.ValidationError(
+                "This project requires at least one owner or group owner per feature."
+            )
+
+    @extend_schema(
+        parameters=[GetInfluxDataQuerySerializer],
+        responses={200: FeatureInfluxDataSerializer()},
+        deprecated=True,
+        description="Please use ​/api​/v1​/projects​/{project_pk}​/features​/{id}​/evaluation-data/",
+    )
+    @action(detail=True, methods=["GET"], url_path="influx-data")
+    def get_influx_data(self, request, pk, project_pk):  # type: ignore[no-untyped-def]
+        feature = get_object_or_404(Feature, pk=pk)
+
+        query_serializer = GetInfluxDataQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+        period = query_serializer.data["period"]
+        now = timezone.now()
+        if period.endswith("h"):
+            date_start = now - timedelta(hours=int(period[:-1]))
+        elif period.endswith("d"):
+            date_start = now - timedelta(days=int(period[:-1]))
+        else:
+            raise ValidationError("Malformed period supplied")
+
+        events_list = get_multiple_event_list_for_feature(
+            feature_name=feature.name,
+            date_start=date_start,
+            environment_id=query_serializer.data["environment_id"],
+            aggregate_every=query_serializer.data["aggregate_every"],
+        )
+        serializer = FeatureInfluxDataSerializer(instance={"events_list": events_list})
+        return Response(serializer.data)
+
+    @extend_schema(
+        tags=["mcp"],
+        parameters=[GetUsageDataQuerySerializer],
+        responses={200: FeatureEvaluationDataSerializer()},
+        operation_id="get_feature_evaluation_data",
+        description="Retrieves evaluation data and analytics for a specific feature flag.",
+    )
+    @action(detail=True, methods=["GET"], url_path="evaluation-data")
+    @throttle_classes([InfluxQueryThrottle])
+    def get_evaluation_data(self, request, pk, project_pk):  # type: ignore[no-untyped-def]
+        feature = get_object_or_404(Feature, pk=pk)
+
+        filters = GetUsageDataQuerySerializer(data=request.query_params)
+        filters.is_valid(raise_exception=True)
+
+        usage_data = get_feature_evaluation_data(
+            feature=feature, **filters.validated_data
+        )
+        serializer = FeatureEvaluationDataSerializer(usage_data, many=True)
+
+        return Response(serializer.data)
+
+    def filter_owners_and_group_owners(
+        self,
+        queryset: QuerySet[Feature],
+        query_data: dict[str, typing.Any],
+    ) -> QuerySet[Feature]:
+        owners_q = Q()
+        if query_data.get("owners"):
+            owners_q = owners_q | Q(
+                Exists(
+                    Feature.owners.through.objects.filter(
+                        feature_id=OuterRef("pk"),
+                        ffadminuser_id__in=query_data["owners"],
+                    )
+                )
+            )
+
+        group_owners_q = Q()
+        if query_data.get("group_owners"):
+            group_owners_q = group_owners_q | Q(
+                Exists(
+                    Feature.group_owners.through.objects.filter(
+                        feature_id=OuterRef("pk"),
+                        userpermissiongroup_id__in=query_data["group_owners"],
+                    )
+                )
+            )
+
+        return queryset.filter(owners_q | group_owners_q)
+
+    def _filter_queryset(
+        self,
+        queryset: QuerySet[Feature],
+        query_serializer: FeatureQuerySerializer,
+    ) -> QuerySet[Feature]:
+        query_data = query_serializer.validated_data
+
+        if query_data.get("search"):
+            queryset = queryset.filter(name__icontains=query_data["search"])
+
+        if "tags" in query_serializer.initial_data:
+            feature_tags = Feature.tags.through.objects.filter(
+                feature_id=OuterRef("pk")
+            )
+            if query_data.get("tags", "") == "":
+                queryset = queryset.filter(~Exists(feature_tags))
+            elif query_data["tag_strategy"] == UNION:
+                queryset = queryset.filter(
+                    Exists(feature_tags.filter(tag_id__in=query_data["tags"]))
+                )
+            else:
+                assert query_data["tag_strategy"] == INTERSECTION
+                queryset = reduce(
+                    lambda qs, tag_id: qs.filter(tags=tag_id),
+                    query_data["tags"],
+                    queryset,
+                )
+
+        if "is_archived" in query_serializer.initial_data:
+            queryset = queryset.filter(is_archived=query_data["is_archived"])
+
+        if query_data.get("type"):
+            queryset = queryset.filter(type=query_data["type"])
+
+        queryset = self.filter_owners_and_group_owners(queryset, query_data)
+
+        return queryset
+
+
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="feature",
+                location=OpenApiParameter.QUERY,
+                description="ID of the feature to filter by.",
+                required=False,
+                type=int,
+            ),
+            OpenApiParameter(
+                name="feature_name",
+                location=OpenApiParameter.QUERY,
+                description="Name of the feature to filter by.",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="anyIdentity",
+                location=OpenApiParameter.QUERY,
+                description="Pass any value to get results that have an identity override. "
+                "Do not pass for default behaviour.",
+                required=False,
+                type=str,
+            ),
+        ]
+    ),
+)
+class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
+    """
+    View set to manage feature states. Nested beneath environments and environments + identities
+    to allow for filtering on both.
+    """
+
+    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
+
+    # Override serializer class to show correct information in docs
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
+        if self.action == "list":
+            return FeatureStateSerializerWithIdentity
+        elif self.action in ["retrieve", "update", "create"]:
+            return FeatureStateSerializerBasic
+        else:
+            return FeatureStateSerializerCreate
+
+    def get_serializer_context(self):  # type: ignore[no-untyped-def]
+        context = super().get_serializer_context()
+        if self.action in ["update", "create"]:
+            context["environment"] = self.get_environment_from_request()  # type: ignore[no-untyped-call]
+        return context
+
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        """
+        Override queryset to filter based on provided URL parameters.
+        """
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
+
+        environment_api_key = self.kwargs["environment_api_key"]
+
+        try:
+            environment = Environment.objects.get(api_key=environment_api_key)
+            queryset = get_environment_flags_queryset(
+                environment=environment,
+                feature_name=self.request.query_params.get("feature_name"),  # type: ignore[arg-type]
+            )
+            queryset = self._apply_query_param_filters(queryset)
+
+            if self.action == "list":
+                queryset = queryset.prefetch_related(
+                    "multivariate_feature_state_values"
+                )
+
+            return queryset.select_related("feature_state_value", "identity", "feature")
+        except Environment.DoesNotExist:
+            raise NotFound("Environment not found.")
+
+    def _apply_query_param_filters(self, queryset: QuerySet) -> QuerySet:  # type: ignore[type-arg]
+        if self.request.query_params.get("feature"):
+            queryset = queryset.filter(
+                feature__id=int(self.request.query_params["feature"])
+            )
+        return queryset
+
+    def get_environment_from_request(self):  # type: ignore[no-untyped-def]
+        """
+        Get environment object from URL parameters in request.
+        """
+        environment = Environment.objects.get(
+            api_key=self.kwargs["environment_api_key"]
+        )
+        return environment
+
+    def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        """
+        DEPRECATED: please use `/features/featurestates/` instead.
+        Override create method to add environment and identity (if present) from URL parameters.
+        """
+        data = request.data
+        if "feature" not in data:
+            error = {"detail": "Feature not provided"}
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+
+        environment = self.get_environment_from_request()  # type: ignore[no-untyped-call]
+        data["environment"] = environment.id
+
+        identity_pk = self.kwargs.get("identity_pk")
+        if identity_pk:
+            data["identity"] = identity_pk
+
+        require_direct_state_write(
+            environment=environment,
+            is_identity_override=bool(identity_pk),
+        )
+
+        serializer = self.get_serializer(data=data)
+
+        if serializer.is_valid(raise_exception=True):
+            if feature_segment := serializer.validated_data.get("feature_segment"):
+                check_segment_is_not_system(feature_segment.segment)
+            feature_state = serializer.save()
+            headers = self.get_success_headers(serializer.data)
+
+            if "feature_state_value" in data:
+                self.update_feature_state_value(  # type: ignore[no-untyped-call]
+                    data["feature_state_value"], feature_state
+                )
+
+            return Response(
+                FeatureStateSerializerBasic(feature_state).data,
+                status=status.HTTP_201_CREATED,
+                headers=headers,
+            )
+
+    def update(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        """
+        Override update method to always assume update request is partial and create / update
+        feature state value.
+        """
+        feature_state_to_update = self.get_object()
+        require_direct_state_write_for_state(feature_state_to_update)
+        feature_state_data = request.data
+
+        # Check if feature state value was provided with request data. If so, create / update
+        # feature state value object and associate with feature state.
+        if "feature_state_value" in feature_state_data:
+            feature_state_value = self.update_feature_state_value(  # type: ignore[no-untyped-call]
+                feature_state_data["feature_state_value"], feature_state_to_update
+            )
+
+            if isinstance(feature_state_value, Response):
+                return feature_state_value
+
+            feature_state_data["feature_state_value"] = feature_state_value.id
+
+        serializer = self.get_serializer(
+            feature_state_to_update, data=feature_state_data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        if getattr(feature_state_to_update, "_prefetched_objects_cache", None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            feature_state_to_update = self.get_object()
+            serializer = self.get_serializer(feature_state_to_update)
+
+        return Response(serializer.data)
+
+    def partial_update(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        """
+        Override partial_update as overridden update method assumes partial True for all requests.
+        """
+        return self.update(request, *args, **kwargs)  # type: ignore[no-untyped-call]
+
+    def destroy(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        require_direct_state_write_for_state(self.get_object())
+        return super().destroy(request, *args, **kwargs)
+
+    def update_feature_state_value(self, value, feature_state):  # type: ignore[no-untyped-def]
+        feature_state_value_dict = feature_state.generate_feature_state_value_data(
+            value
+        )
+
+        if hasattr(feature_state, "feature_state_value"):
+            feature_state_value_serializer = FeatureStateValueSerializer(
+                instance=feature_state.feature_state_value,
+                data=feature_state_value_dict,
+            )
+        else:
+            data = {**feature_state_value_dict, "feature_state": feature_state.id}
+            feature_state_value_serializer = FeatureStateValueSerializer(data=data)
+
+        if feature_state_value_serializer.is_valid():
+            feature_state_value = feature_state_value_serializer.save()
+        else:
+            return Response(
+                feature_state_value_serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return feature_state_value
+
+
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="update_environment_feature_state",
+        description="Updates a feature state in an environment, including enabled status and value. Applies to environments without v2 feature versioning (use_v2_feature_versioning: false).",
+    ),
+)
+class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
+    permission_classes = [EnvironmentFeatureStatePermissions]
+
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        queryset = super().get_queryset().filter(feature_segment=None)  # type: ignore[no-untyped-call]
+
+        if "anyIdentity" in self.request.query_params:
+            # TODO: deprecate anyIdentity query parameter
+            return queryset.exclude(identity=None)
+        return queryset.filter(identity=None)
+
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
+        if self.action == "create_new_version":
+            return FeatureStateSerializerBasic
+        return super().get_serializer_class()  # type: ignore[no-untyped-call]
+
+
+class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
+    permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
+
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
+
+        return super().get_queryset().filter(identity__pk=self.kwargs["identity_pk"])  # type: ignore[no-untyped-call]
+
+    @action(methods=["GET"], detail=False)
+    def all(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        identity = get_object_or_404(Identity, pk=self.kwargs["identity_pk"])
+
+        serializer = IdentityAllFeatureStatesSerializer(
+            instance=get_identity_feature_states(identity),
+            many=True,
+            context={"request": request},
+        )
+
+        return Response(serializer.data)
+
+    @extend_schema(
+        request=IdentitySourceIdentityRequestSerializer(),
+        responses={200: IdentityAllFeatureStatesSerializer(many=True)},
+    )
+    @action(methods=["POST"], detail=False, url_path="clone-from-given-identity")
+    def clone_from_given_identity(self, request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
+        """
+        Clone feature states from a given source identity.
+        """
+        serializer = IdentitySourceIdentityRequestSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        # Get and validate source and target identities
+        target_identity = get_object_or_404(
+            queryset=Identity, pk=self.kwargs["identity_pk"]
+        )
+        source_identity = get_object_or_404(
+            queryset=Identity, pk=request.data.get("source_identity_id")
+        )
+
+        # Clone feature states
+        FeatureState.copy_identity_feature_states(
+            target_identity=target_identity, source_identity=source_identity
+        )
+
+        return self.all(request, *args, **kwargs)  # type: ignore[no-any-return]
+
+
+# TODO: Remove after https://github.com/Flagsmith/flagsmith/issues/1667
+@method_decorator(
+    name="list",
+    decorator=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="environment",
+                location=OpenApiParameter.QUERY,
+                description="ID of the environment.",
+                required=True,
+                type=int,
+            ),
+        ]
+    ),
+)
+@method_decorator(
+    name="update",
+    decorator=extend_schema(
+        tags=["mcp"],
+        operation_id="update_feature_state",
+        description="Updates a feature state, including its enabled status and value. Also updates a segment override's value for environments without v2 feature versioning (use_v2_feature_versioning: false).",
+    ),
+)
+class SimpleFeatureStateViewSet(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet[FeatureState],
+):
+    serializer_class = WritableNestedFeatureStateSerializer
+    permission_classes = [FeatureStatePermissions]
+    filterset_fields = ["environment", "feature", "feature_segment"]
+
+    def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        environment_id = request.data.get("environment")
+        targets_version = bool(request.data.get("environment_feature_version"))
+        if environment_id and not targets_version:
+            environment = get_object_or_404(Environment, id=environment_id)
+            require_direct_state_write(
+                environment=environment,
+                is_identity_override=bool(request.data.get("identity")),
+            )
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if feature_segment := serializer.validated_data.get("feature_segment"):
+            check_segment_is_not_system(feature_segment.segment)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        feature_state = self.get_object()
+        require_direct_state_write_for_state(feature_state)
+        if feature_segment := feature_state.feature_segment:
+            serializer = self.get_serializer(
+                feature_state,
+                data=request.data,
+                partial=kwargs.get("partial", False),
+            )
+            serializer.is_valid(raise_exception=True)
+            feature_state_data = typing.cast(
+                LegacyFeatureStateData, serializer.validated_data
+            )
+            if (
+                writes_live_segment_override(feature_state_data)
+                and get_segment_override(
+                    environment=feature_segment.environment,
+                    feature=feature_segment.feature,
+                    segment_id=feature_segment.segment_id,
+                )
+                == feature_state
+            ):
+                # The dashboard writes every override of the flags it saves.
+                if feature_segment.segment.is_system_segment and (
+                    is_segment_override_unchanged(
+                        feature_segment, feature_state, feature_state_data
+                    )
+                ):
+                    return Response(self.get_serializer(feature_state).data)
+                feature_state = write_segment_override(
+                    environment=feature_segment.environment,
+                    feature=feature_segment.feature,
+                    segment_id=feature_segment.segment_id,
+                    feature_state_data=feature_state_data,
+                    author=AuthorData.from_request(request),
+                )
+                return Response(self.get_serializer(feature_state).data)
+            check_segment_is_not_system(feature_segment.segment)
+        return super().update(request, *args, **kwargs)
+
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
+
+        if not self.action == "list":
+            return FeatureState.objects.all()
+
+        try:
+            if not (environment_id := self.request.query_params.get("environment")):
+                raise ValidationError("'environment' GET parameter is required.")
+
+            environment = get_object_or_404(Environment, id=environment_id)
+            queryset = get_environment_flags_queryset(environment=environment)
+            return queryset.select_related("feature_state_value").prefetch_related(
+                "multivariate_feature_state_values"
+            )
+        except Environment.DoesNotExist:
+            raise NotFound("Environment not found.")
+
+
+@extend_schema(responses={200: WritableNestedFeatureStateSerializer()})
+@api_view(["GET"])
+def get_feature_state_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
+    accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
+    qs = FeatureState.objects.filter(
+        feature__project__in=accessible_projects
+    ).select_related("feature_state_value")
+    feature_state = get_object_or_404(qs, uuid=uuid)
+    serializer = WritableNestedFeatureStateSerializer(instance=feature_state)
+    return Response(serializer.data)
+
+
+@extend_schema(tags=["sdk"])
+class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
+    serializer_class = SDKFeatureStateSerializer
+    permission_classes = (EnvironmentKeyPermissions,)
+    authentication_classes = (EnvironmentKeyAuthentication,)
+    renderer_classes = [JSONRenderer]
+    pagination_class = None
+    throttle_classes = []
+    queryset = FeatureState.objects.none()
+
+    @extend_schema(
+        parameters=[SDKFeatureStatesQuerySerializer],
+        responses={200: api_schemas.V1FlagsResponse},
+        operation_id="sdk_v1_flags",
+    )
+    @method_decorator(vary_on_headers(SDK_ENVIRONMENT_KEY_HEADER))
+    @method_decorator(
+        cache_page(
+            timeout=settings.GET_FLAGS_ENDPOINT_CACHE_SECONDS,
+            cache=settings.GET_FLAGS_ENDPOINT_CACHE_NAME,
+        )
+    )
+    def get(self, request, identifier=None, *args, **kwargs):  # type: ignore[no-untyped-def]
+        """
+        Retrieve the feature flags for an environment.
+
+        ---
+        *Note*: when providing the `feature` query argument, this endpoint will
+        return either a single object or a 404 (if the feature does not exist) rather
+        than a list.
+
+        ---
+        *Note*: using this endpoint with an identifier is deprecated.
+        Please use `/api/v1/identities/?identifier=<identifier>` instead.
+        """
+        if request.environment.first_evaluated_at is None and (
+            sdk_label := map_request_to_sdk_label(request)
+        ):
+            record_environment_first_evaluation(request.environment, sdk_label)
+
+        if identifier:
+            return self._get_flags_response_with_identifier(request, identifier)
+
+        if feature_name := request.GET.get("feature"):
+            # Filtered after evaluating, not before, because of dependent flags
+            evaluated_feature_state = next(
+                (
+                    evaluated_feature_state
+                    for evaluated_feature_state in get_environment_feature_states(
+                        request.environment,
+                        hide_server_key_only=self._hide_server_key_only,
+                        from_replica=True,
+                    )
+                    if _feature_name_matches(
+                        evaluated_feature_state.evaluation_result["name"],
+                        feature_name,
+                    )
+                ),
+                None,
+            )
+            if evaluated_feature_state is None:
+                return Response(
+                    {"detail": "Given feature not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            return Response(self.get_serializer(evaluated_feature_state).data)
+
+        if settings.CACHE_FLAGS_SECONDS > 0:
+            data = self._get_flags_from_cache(request.environment)
+        else:
+            data = self.get_serializer(
+                get_environment_feature_states(
+                    request.environment,
+                    hide_server_key_only=self._hide_server_key_only,
+                    from_replica=True,
+                ),
+                many=True,
+            ).data
+
+        updated_at = self.request.environment.updated_at
+        return Response(
+            data,
+            headers={FLAGSMITH_UPDATED_AT_HEADER: updated_at.timestamp()},
+        )
+
+    @property
+    def _hide_server_key_only(self) -> bool:
+        return self.request.originated_from is RequestOrigin.CLIENT
+
+    def _get_flags_from_cache(
+        self,
+        environment: Environment,
+    ) -> list[typing.Any]:
+        data: list[typing.Any]
+        # Include request origin in cache key to isolate client vs server requests
+        cache_key = f"{environment.api_key}:{self.request.originated_from.value}"
+        data = flags_cache.get(cache_key)
+        if not data:
+            data = self.get_serializer(
+                get_environment_feature_states(
+                    environment,
+                    hide_server_key_only=self._hide_server_key_only,
+                    from_replica=True,
+                ),
+                many=True,
+            ).data
+            flags_cache.set(cache_key, data, settings.CACHE_FLAGS_SECONDS)
+
+        return data
+
+    def _get_flags_response_with_identifier(
+        self, request: Request, identifier: str
+    ) -> Response:
+        identity, is_new_identity = Identity.objects.get_or_create(
+            identifier=identifier, environment=request.environment
+        )
+
+        # New identities may take a while to replicate — otherwise use a replica
+        if not is_new_identity and is_database_replica_setup():
+            identity = (
+                using_database_replica(Identity.objects)
+                .with_traits()
+                .get(id=identity.id)
+            )
+        replace_identity_environment(identity, request.environment)
+
+        evaluated_feature_states = get_identity_feature_states(identity)
+
+        if feature_name := request.GET.get("feature"):
+            # Filtered after evaluation rather than before: a segment may
+            # depend on a flag other than the one asked for.
+            evaluated_feature_state = next(
+                (
+                    evaluated_feature_state
+                    for evaluated_feature_state in evaluated_feature_states
+                    if _feature_name_matches(
+                        evaluated_feature_state.evaluation_result["name"],
+                        feature_name,
+                    )
+                ),
+                None,
+            )
+            if evaluated_feature_state is None:
+                return Response(
+                    {"detail": "Given feature not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            return Response(
+                self.get_serializer(evaluated_feature_state).data,
+                status=status.HTTP_200_OK,
+            )
+
+        flags = self.get_serializer(evaluated_feature_states, many=True)
+        return Response(flags.data, status=status.HTTP_200_OK)
+
+
+@extend_schema(
+    responses={200: FeatureMVOptionsValuesResponseSerializer(many=True)},
+)
+@api_view(["GET"])
+@authentication_classes(
+    [
+        EnvironmentKeyAuthentication,
+    ]
+)
+@permission_classes([EnvironmentKeyPermissions])
+def get_multivariate_options(request: Request, feature_id: int) -> Response:
+    environment = request.environment
+    feature = get_object_or_404(Feature, id=feature_id, project=environment.project)
+    fs = (
+        FeatureState.objects.get_live_feature_states(
+            environment=environment,
+            additional_filters=Q(
+                identity__isnull=True,
+                feature_segment__isnull=True,
+                feature_id=feature.id,
+            ),
+        )
+        .filter(feature__is_archived=False)
+        .select_related("feature_state_value")
+        .first()
+    )
+
+    payload = {
+        "feature_state": fs,
+        "options": feature.multivariate_options.all(),
+    }
+    data = FeatureMVOptionsValuesResponseSerializer(payload).data
+    return Response(data)
+
+
+def organisation_has_got_feature(request, organisation):  # type: ignore[no-untyped-def]
+    """
+    Helper method to set flag against organisation to confirm that they've requested their
+    feature states for analytics purposes
+
+    :param request: HTTP request
+    :return: True if value set. None otherwise.
+    """
+    if organisation.has_requested_features:
+        return None
+
+    referer = request.META.get("HTTP_REFERER")
+    if not referer or "bullet-train.io" in referer:
+        return None
+    else:
+        organisation.has_requested_features = True
+        organisation.save()
+        return True
+
+
+@extend_schema(
+    tags=["mcp"],
+    request=CustomCreateSegmentOverrideFeatureStateSerializer(),
+    responses={201: CustomCreateSegmentOverrideFeatureStateSerializer()},
+    operation_id="create_segment_override",
+    description="Creates a segment override for a feature in an environment in a single call, setting both the segment binding and its value. Applies to environments without v2 feature versioning (use_v2_feature_versioning: false).",
+)
+@api_view(["POST"])
+@permission_classes([CreateSegmentOverridePermissions])
+def create_segment_override(  # type: ignore[no-untyped-def]
+    request: Request, environment_api_key: str, feature_pk: int
+):
+    environment = get_object_or_404(Environment, api_key=environment_api_key)
+    feature = get_object_or_404(Feature, project=environment.project, pk=feature_pk)
+
+    require_direct_state_write(environment=environment, is_identity_override=False)
+
+    serializer = CustomCreateSegmentOverrideFeatureStateSerializer(
+        data=request.data, context={"environment": environment, "feature": feature}
+    )
+    serializer.is_valid(raise_exception=True)
+
+    if not (feature_segment_data := serializer.validated_data.get("feature_segment")):
+        raise ValidationError({"feature_segment": ["This field is required."]})
+
+    segment = feature_segment_data["segment"]
+    priority = feature_segment_data.get("priority")
+    feature_state_data = typing.cast(
+        LegacyFeatureStateData, dict(serializer.validated_data)
+    )
+    check_segment_is_not_system(segment)
+    if get_segment_override(
+        environment=environment, feature=feature, segment_id=segment.id
+    ):
+        raise ValidationError("The flag is already overridden for this segment.")
+    feature_state_data.setdefault("enabled", False)
+    if exceeds_segment_override_limit(environment):
+        raise ValidationError({"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE})
+    if priority is None:
+        priority = get_next_segment_override_priority(
+            environment=environment, feature=feature
+        )
+
+    feature_state = write_segment_override(
+        environment=environment,
+        feature=feature,
+        segment_id=segment.id,
+        feature_state_data=feature_state_data,
+        author=AuthorData.from_request(request),
+        priority=priority,
+    )
+    return Response(
+        CustomCreateSegmentOverrideFeatureStateSerializer(feature_state).data,
+        status=201,
+    )

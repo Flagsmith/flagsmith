@@ -1,0 +1,914 @@
+from datetime import datetime
+from functools import cached_property
+from typing import Any, Callable
+from uuid import UUID
+
+import django.core.exceptions
+from common.features.multivariate.serializers import (
+    MultivariateFeatureStateValueSerializer,
+)
+from common.features.serializers import (
+    CreateSegmentOverrideFeatureSegmentSerializer,
+    FeatureStateValueSerializer,
+)
+from common.projects.permissions import VIEW_PROJECT
+from django.db import models
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
+from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
+
+from app_analytics.serializers import LabelsQuerySerializerMixin, LabelsSerializer
+from edge_api.utils import is_edge_enabled
+from environments.identities.models import Identity
+from environments.sdk.serializers_mixins import (
+    HideSensitiveFieldsSerializerMixin,
+)
+from evaluation.results import get_split_weight
+from evaluation.types import EvaluatedFeatureState
+from experimentation.feature_state_metadata import (
+    get_feature_state_metadata_builder,
+)
+from integrations.vcs.services import dispatch_vcs_on_feature_state_changed
+from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
+from projects.code_references.serializers import (
+    FeatureFlagCodeReferencesRepositoryCountSerializer,
+)
+from projects.models import Project
+from users.models import FFAdminUser, UserPermissionGroup
+from users.serializers import (
+    UserIdsSerializer,
+    UserListSerializer,
+    UserPermissionGroupSummarySerializer,
+)
+from util.drf_writable_nested.serializers import (
+    DeleteBeforeUpdateWritableNestedModelSerializer,
+    WritableNestedModelSerializer,
+)
+
+from .constants import CONTROL_VARIANT_KEY, INTERSECTION, UNION
+from .feature_lifecycle.types import LifecycleStage
+from .feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+    exceeds_segment_override_limit,
+)
+from .feature_segments.serializers import (
+    CustomCreateSegmentOverrideFeatureSegmentSerializer,
+)
+from .feature_types import FEATURE_TYPE_CHOICES, MULTIVARIATE
+from .models import Feature, FeatureSegment, FeatureState
+from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
+
+
+class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[type-arg]
+    feature_state_value = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FeatureState
+        fields = (
+            "id",
+            "feature_state_value",
+            "environment",
+            "identity",
+            "feature_segment",
+            "enabled",
+        )
+
+    @extend_schema_field({"type": ["string", "integer", "boolean"], "nullable": True})
+    def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
+        return obj.get_feature_state_value()
+
+
+class FeatureQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+    search = serializers.CharField(required=False)
+    sort_field = serializers.ChoiceField(
+        choices=("created_date", "name"), default="created_date"
+    )
+    sort_direction = serializers.ChoiceField(choices=("ASC", "DESC"), default="ASC")
+
+    tags = serializers.CharField(
+        required=False,
+        help_text=(
+            "Comma separated list of tag ids to filter on (AND with "
+            "INTERSECTION, and OR with UNION via tag_strategy)"
+        ),
+    )
+    tag_strategy = serializers.ChoiceField(
+        choices=(UNION, INTERSECTION), default=INTERSECTION
+    )
+
+    is_archived = serializers.BooleanField(required=False)
+    type = serializers.ChoiceField(
+        choices=FEATURE_TYPE_CHOICES,
+        required=False,
+        help_text="Feature type to filter on (STANDARD or MULTIVARIATE).",
+    )
+    environment = serializers.IntegerField(
+        required=False,
+        help_text="Integer ID of the environment to view features in the context of.",
+    )
+    segment = serializers.IntegerField(
+        required=False,
+        help_text="Integer ID of the segment to retrieve segment overrides for.",
+    )
+    identity = serializers.CharField(
+        required=False,
+        help_text="ID of the identity to sort features with identity overrides first.",
+    )
+
+    lifecycle_stage = serializers.ChoiceField(
+        choices=list(LifecycleStage),
+        required=False,
+        help_text="Lifecycle stage to filter on. Requires `environment`.",
+    )
+
+    is_enabled = serializers.BooleanField(
+        allow_null=True,
+        required=False,
+        default=None,
+        help_text="Boolean value to filter features as enabled or disabled.",
+    )
+    value_search = serializers.CharField(
+        required=False,
+        default=None,
+        help_text="Value of type int, string, or boolean to filter features based on their values",
+    )
+
+    owners = serializers.CharField(
+        required=False,
+        help_text="Comma separated list of owner ids to filter on",
+    )
+    group_owners = serializers.CharField(
+        required=False,
+        help_text="Comma separated list of group owner ids to filter on",
+    )
+
+    @property
+    def project(self) -> Project:
+        if isinstance(project := self.context.get("project"), Project):
+            return project
+        else:  # pragma: no cover
+            raise RuntimeError(f"{type(self)} requires 'project' in context.")
+
+    def validate_identity(self, value: str) -> str:
+        if self.project.enable_dynamo_db:
+            try:
+                UUID(value)
+            except ValueError:
+                raise serializers.ValidationError("Must be a valid UUID.")
+        elif not value.isdigit():
+            raise serializers.ValidationError("Must be a valid integer.")
+        return value
+
+    def validate_owners(self, owners: str) -> list[int]:
+        try:
+            return [int(owner_id.strip()) for owner_id in owners.split(",")]
+        except ValueError:
+            raise serializers.ValidationError("Owner IDs must be integers.")
+
+    def validate_group_owners(self, group_owners: str) -> list[int]:
+        try:
+            return [
+                int(group_owner_id.strip())
+                for group_owner_id in group_owners.split(",")
+            ]
+        except ValueError:
+            raise serializers.ValidationError("Group owner IDs must be integers.")
+
+    def validate_tags(self, tags: str) -> list[int]:
+        try:
+            return [int(tag_id.strip()) for tag_id in tags.split(",")]
+        except ValueError:
+            raise serializers.ValidationError("Tag IDs must be integers.")
+
+
+class _FeatureOwnersField(serializers.PrimaryKeyRelatedField[FFAdminUser]):
+    def get_queryset(self) -> models.QuerySet[FFAdminUser]:
+        return FFAdminUser.objects.all()
+
+    def to_representation(self, value: FFAdminUser) -> dict[str, Any]:
+        return UserListSerializer(value).data
+
+
+class _FeatureGroupOwnersField(serializers.PrimaryKeyRelatedField[UserPermissionGroup]):
+    def get_queryset(self) -> models.QuerySet[UserPermissionGroup]:
+        return UserPermissionGroup.objects.all()
+
+    def to_representation(self, value: UserPermissionGroup) -> dict[str, Any]:
+        return UserPermissionGroupSummarySerializer(value).data
+
+
+class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
+    multivariate_options = NestedMultivariateFeatureOptionSerializer(
+        many=True, required=False
+    )
+    owners = _FeatureOwnersField(many=True, required=False)
+    group_owners = _FeatureGroupOwnersField(many=True, required=False)
+
+    environment_feature_state = serializers.SerializerMethodField()
+    segment_feature_state = serializers.SerializerMethodField()
+
+    num_segment_overrides = serializers.SerializerMethodField(
+        help_text="Number of segment overrides that exist for the given feature "
+        "in the environment provided by the `environment` query parameter."
+    )
+    num_identity_overrides = serializers.SerializerMethodField(
+        help_text="Number of identity overrides that exist for the given feature "
+        "in the environment provided by the `environment` query parameter. "
+        "Note: will return null for Edge enabled projects."
+    )
+
+    # This is kept for backwards compatibility, but is always true
+    is_num_identity_overrides_complete = serializers.BooleanField(
+        read_only=True, default=True
+    )
+
+    last_modified_in_any_environment = serializers.SerializerMethodField(
+        help_text="Datetime representing the last time that the feature was modified "
+        "in any environment in the given project. Note: requires feature "
+        "versioning v2 enabled on the environment."
+    )
+    last_modified_in_current_environment = serializers.SerializerMethodField(
+        help_text="Datetime representing the last time that the feature was modified "
+        "in any environment in the current environment. Note: requires that "
+        "the environment query parameter is passed and feature versioning v2 "
+        "enabled on the environment."
+    )
+
+    class Meta:
+        model = Feature
+        fields = (
+            "id",
+            "name",
+            "type",
+            "default_enabled",
+            "initial_value",
+            "created_date",
+            "description",
+            "tags",
+            "multivariate_options",
+            "is_archived",
+            "owners",
+            "group_owners",
+            "uuid",
+            "project",
+            "environment_feature_state",
+            "segment_feature_state",
+            "num_segment_overrides",
+            "num_identity_overrides",
+            "is_num_identity_overrides_complete",
+            "is_server_key_only",
+            "last_modified_in_any_environment",
+            "last_modified_in_current_environment",
+        )
+        read_only_fields = (
+            "feature_segments",
+            "created_date",
+            "uuid",
+            "project",
+        )
+
+    def to_internal_value(self, data):  # type: ignore[no-untyped-def]
+        if data.get("initial_value") and not isinstance(data["initial_value"], str):
+            data["initial_value"] = str(data["initial_value"])
+        return super(CreateFeatureSerializer, self).to_internal_value(data)
+
+    def create(self, validated_data: dict) -> Feature:  # type: ignore[type-arg]
+        project = self.context["project"]
+        self.validate_project_features_limit(project)
+
+        # Pop M2M fields before creating the instance (can't pass to Model.objects.create)
+        owners: list[FFAdminUser] = validated_data.pop("owners", [])
+        group_owners: list[UserPermissionGroup] = validated_data.pop("group_owners", [])
+
+        user = validated_data.pop("user", None)
+        instance = super(CreateFeatureSerializer, self).create(validated_data)  # type: ignore[no-untyped-call]
+
+        if owners:
+            instance.owners.add(*owners)
+        elif user and getattr(user, "is_master_api_key_user", False) is False:
+            # Auto-add the creating user as owner only when no explicit owners provided
+            instance.owners.add(user)
+
+        if group_owners:
+            instance.group_owners.add(*group_owners)
+
+        return instance  # type: ignore[no-any-return]
+
+    def validate_project_features_limit(self, project: Project) -> None:
+        if not is_edge_enabled():
+            return
+        if project.features.count() >= project.max_features_allowed:
+            raise serializers.ValidationError(
+                {
+                    "project": "The Project has reached the maximum allowed features limit."
+                }
+            )
+
+    def validate_multivariate_options(self, multivariate_options):  # type: ignore[no-untyped-def]
+        if multivariate_options:
+            user = self.context["request"].user
+            project = self.context.get("project")
+
+            if user.is_authenticated and not (
+                project and user.is_project_admin(project)
+            ):
+                raise PermissionDenied(
+                    "User must be project admin to modify / create MV options."
+                )
+            total_percentage_allocation = sum(
+                mv_option.get("default_percentage_allocation", 100)
+                for mv_option in multivariate_options
+            )
+            if total_percentage_allocation > 100:
+                raise serializers.ValidationError("Invalid percentage allocation")
+        return multivariate_options
+
+    def validate_owners(self, owners: list[FFAdminUser]) -> list[FFAdminUser]:
+        project: Project = self.context["project"]
+        invalid_users = [
+            user
+            for user in owners
+            if not user.has_project_permission(VIEW_PROJECT, project)
+        ]
+        if invalid_users:
+            invalid_user_ids = [user.id for user in invalid_users]
+            raise serializers.ValidationError(
+                f"Users with ids {invalid_user_ids} do not have access to this project."
+            )
+        return owners
+
+    def validate_group_owners(
+        self, group_owners: list[UserPermissionGroup]
+    ) -> list[UserPermissionGroup]:
+        project: Project = self.context["project"]
+        invalid_groups = [
+            group
+            for group in group_owners
+            if group.organisation_id != project.organisation_id
+        ]
+        if invalid_groups:
+            invalid_group_ids = [group.id for group in invalid_groups]
+            raise serializers.ValidationError(
+                f"Groups with ids {invalid_group_ids} do not belong to this project's organisation."
+            )
+        return group_owners
+
+    def validate_name(self, name: str):  # type: ignore[no-untyped-def]
+        view = self.context["view"]
+
+        project = self.context["project"]
+        feature_name_regex = project.feature_name_regex
+
+        if not project.is_feature_name_valid(name):
+            raise serializers.ValidationError(
+                f"Feature name must match regex: {feature_name_regex}"
+            )
+
+        unique_filters = {
+            "project__id": view.kwargs.get("project_pk"),
+            "name__iexact": name,
+        }
+        existing_feature_queryset = Feature.objects.filter(**unique_filters)
+        if self.instance:
+            existing_feature_queryset = existing_feature_queryset.exclude(
+                id=self.instance.id  # type: ignore[union-attr]
+            )
+
+        if existing_feature_queryset.exists():
+            raise serializers.ValidationError(
+                "Feature with that name already exists for this "
+                "project. Note that feature names are case "
+                "insensitive."
+            )
+
+        return name
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        view = self.context["view"]
+        project_id = str(view.kwargs.get("project_pk"))
+        if not project_id.isdigit():
+            raise serializers.ValidationError("Invalid project ID.")
+
+        # If tags selected check they from the same Project as Feature Project
+        if any(tag.project_id != int(project_id) for tag in attrs.get("tags", [])):
+            raise serializers.ValidationError(
+                "Selected Tags must be from the same Project as current Feature"
+            )
+
+        self._validate_enforce_feature_owners(attrs)
+
+        return attrs
+
+    def _validate_enforce_feature_owners(self, attrs: dict[str, Any]) -> None:
+        project: Project = self.context["project"]
+        if (
+            not self.instance
+            and project.enforce_feature_owners
+            and not attrs.get("owners")
+            and not attrs.get("group_owners")
+        ):
+            raise serializers.ValidationError(
+                "This project requires at least one owner or group owner "
+                "when creating a feature."
+            )
+
+    @extend_schema_field(FeatureStateSerializerSmall(allow_null=True))
+    def get_environment_feature_state(  # type: ignore[return]
+        self, instance: Feature
+    ) -> dict[str, Any] | None:
+        if (feature_states := self.context.get("feature_states")) and (
+            feature_state := feature_states.get(instance.id)
+        ):
+            return FeatureStateSerializerSmall(instance=feature_state).data
+
+    @extend_schema_field(FeatureStateSerializerSmall(allow_null=True))
+    def get_segment_feature_state(  # type: ignore[return]
+        self, instance: Feature
+    ) -> dict[str, Any] | None:
+        if (segment_feature_states := self.context.get("segment_feature_states")) and (
+            segment_feature_state := segment_feature_states.get(instance.id)
+        ):
+            return FeatureStateSerializerSmall(instance=segment_feature_state).data
+
+    def get_num_segment_overrides(self, instance: Feature) -> int:
+        try:
+            return self.context["overrides_data"][instance.id].num_segment_overrides  # type: ignore[no-any-return]
+        except (KeyError, AttributeError):
+            return 0
+
+    def get_num_identity_overrides(self, instance: Feature) -> int | None:
+        try:
+            return self.context["overrides_data"][instance.id].num_identity_overrides  # type: ignore[no-any-return]
+        except (KeyError, AttributeError):
+            return None
+
+    def get_last_modified_in_any_environment(
+        self, instance: Feature
+    ) -> datetime | None:
+        return getattr(instance, "last_modified_in_any_environment", None)
+
+    def get_last_modified_in_current_environment(
+        self, instance: Feature
+    ) -> datetime | None:
+        return getattr(instance, "last_modified_in_current_environment", None)
+
+
+class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerializer):
+    metadata = MetadataSerializer(required=False, many=True)
+
+    # NOTE: This field is populated by `projects.code_references.services.annotate_feature_queryset_with_code_references_summary`.
+    code_references_counts = FeatureFlagCodeReferencesRepositoryCountSerializer(
+        many=True,
+        read_only=True,
+    )
+
+    # NOTE: This field is populated by `features.feature_lifecycle.services.annotate_feature_queryset_with_lifecycle_stage`.
+    lifecycle_stage = serializers.ChoiceField(
+        choices=list(LifecycleStage),
+        read_only=True,
+    )
+
+    class Meta(CreateFeatureSerializer.Meta):
+        fields = CreateFeatureSerializer.Meta.fields + (  # type: ignore[assignment]
+            "metadata",
+            "code_references_counts",
+            "lifecycle_stage",
+        )
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        attrs = super().validate(attrs)
+        project = self.instance.project if self.instance else self.context["project"]  # type: ignore[union-attr]
+        organisation = project.organisation
+        self._validate_required_metadata(
+            organisation, attrs.get("metadata", []), project=project
+        )
+        return attrs
+
+    def create(self, validated_data: dict[str, Any]) -> Feature:
+        metadata_data = validated_data.pop("metadata", [])
+        feature = super().create(validated_data)
+        self._update_metadata(feature, metadata_data)
+        return feature
+
+    def update(self, feature: Feature, validated_data: dict[str, Any]) -> Feature:
+        metadata = validated_data.pop("metadata", [])
+        feature = super().update(feature, validated_data)
+        self._update_metadata(feature, metadata)
+        return feature
+
+
+class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
+    """prevent users from changing certain values after creation"""
+
+    owners = _FeatureOwnersField(many=True, read_only=True)
+    group_owners = _FeatureGroupOwnersField(many=True, read_only=True)
+
+    class Meta(FeatureSerializerWithMetadata.Meta):
+        read_only_fields = FeatureSerializerWithMetadata.Meta.read_only_fields + (  # type: ignore[assignment]
+            "default_enabled",
+            "initial_value",
+            "name",
+        )
+
+
+class ListFeatureSerializer(FeatureSerializerWithMetadata):
+    # This exists purely to reduce the conflicts for the EE repository
+    # which has some extra behaviour here to support Oracle DB.
+    pass
+
+
+class UpdateFeatureSerializer(ListFeatureSerializer):
+    """prevent users from changing certain values after creation"""
+
+    owners = _FeatureOwnersField(many=True, read_only=True)
+    group_owners = _FeatureGroupOwnersField(many=True, read_only=True)
+
+    class Meta(ListFeatureSerializer.Meta):
+        read_only_fields = ListFeatureSerializer.Meta.read_only_fields + (  # type: ignore[assignment]
+            "default_enabled",
+            "initial_value",
+            "name",
+        )
+
+
+class FeatureSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    class Meta:
+        model = Feature
+        fields = (
+            "id",
+            "name",
+            "created_date",
+            "description",
+            "initial_value",
+            "default_enabled",
+            "type",
+        )
+        writeonly_fields = ("initial_value", "default_enabled")
+
+
+class SDKFeatureSerializer(HideSensitiveFieldsSerializerMixin, FeatureSerializer):
+    sensitive_fields = (
+        "created_date",
+        "description",
+        "initial_value",
+        "default_enabled",
+    )
+
+
+class FeatureStateSerializerFull(serializers.Serializer):  # type: ignore[type-arg]
+    id = serializers.IntegerField(source="feature_state.id")
+    feature = FeatureSerializer(source="feature_state.feature")
+    feature_state_value = serializers.SerializerMethodField()
+    environment = serializers.IntegerField(
+        source="feature_state.environment_id", allow_null=True
+    )
+    identity = serializers.IntegerField(
+        source="feature_state.identity_id", allow_null=True
+    )
+    feature_segment = serializers.IntegerField(
+        source="feature_state.feature_segment_id", allow_null=True
+    )
+    enabled = serializers.BooleanField(source="evaluation_result.enabled")
+
+    @extend_schema_field(
+        {
+            "type": [
+                "string",
+                "integer",
+                "number",
+                "boolean",
+            ],
+            "nullable": True,
+        }
+    )
+    def get_feature_state_value(self, obj: EvaluatedFeatureState) -> Any:
+        return obj.evaluation_result["value"]
+
+
+class FeatureOwnerInputSerializer(UserIdsSerializer):
+    def add_owners(self, feature: Feature):  # type: ignore[no-untyped-def]
+        user_ids = self.validated_data["user_ids"]
+        feature.owners.add(*user_ids)
+
+    def remove_users(self, feature: Feature):  # type: ignore[no-untyped-def]
+        user_ids = self.validated_data["user_ids"]
+        feature.owners.remove(*user_ids)
+
+
+class FeatureGroupOwnerInputSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    group_ids = serializers.ListField(child=serializers.IntegerField())
+
+    def add_group_owners(self, feature: Feature):  # type: ignore[no-untyped-def]
+        group_ids = self.validated_data["group_ids"]
+        feature.group_owners.add(*group_ids)
+
+    def remove_group_owners(self, feature: Feature):  # type: ignore[no-untyped-def]
+        group_ids = self.validated_data["group_ids"]
+        feature.group_owners.remove(*group_ids)
+
+
+class ProjectFeatureSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    owners = UserListSerializer(many=True, read_only=True)
+    group_owners = UserPermissionGroupSummarySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Feature
+        fields = (
+            "id",
+            "name",
+            "created_date",
+            "description",
+            "initial_value",
+            "default_enabled",
+            "type",
+            "owners",
+            "group_owners",
+            "is_server_key_only",
+        )
+        writeonly_fields = ("initial_value", "default_enabled")
+
+
+class SDKFeatureStateSerializer(
+    HideSensitiveFieldsSerializerMixin, FeatureStateSerializerFull
+):
+    feature = SDKFeatureSerializer(source="feature_state.feature")
+    sensitive_fields = (
+        "id",
+        "environment",
+        "identity",
+        "feature_segment",
+    )
+
+
+class SDKIdentityFeatureStateSerializer(SDKFeatureStateSerializer):
+    variant = serializers.SerializerMethodField()
+    metadata = serializers.SerializerMethodField()
+
+    @extend_schema_field({"type": "string", "nullable": True})
+    def get_variant(self, obj: EvaluatedFeatureState) -> str | None:
+        if obj.feature_state.feature.type != MULTIVARIATE:
+            return None
+        variant = obj.evaluation_result["variant"]
+        if variant is None and get_split_weight(obj.evaluation_result) is None:
+            return CONTROL_VARIANT_KEY
+        return variant
+
+    @cached_property
+    def _build_metadata(self) -> Callable[[FeatureState], dict[str, Any] | None]:
+        return get_feature_state_metadata_builder(self.context["environment"])
+
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_metadata(self, obj: EvaluatedFeatureState) -> dict[str, Any] | None:
+        return self._build_metadata(obj.feature_state)
+
+    def to_representation(self, instance: EvaluatedFeatureState) -> dict[str, Any]:
+        representation: dict[str, Any] = super().to_representation(instance)  # type: ignore[no-untyped-call]
+        if not representation.get("metadata"):
+            representation.pop("metadata", None)
+        return representation
+
+
+class FeatureStateSerializerBasic(WritableNestedModelSerializer):
+    feature_state_value = serializers.SerializerMethodField()
+    multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
+        many=True, required=False
+    )
+    identifier = serializers.CharField(
+        required=False,
+        help_text="Can be passed as an alternative to `identity`",
+    )
+
+    class Meta:
+        model = FeatureState
+        exclude = ("mv_hashing_salt",)
+        read_only_fields = ("version", "created_at", "updated_at", "status")
+
+    @extend_schema_field(
+        {
+            "type": [
+                "string",
+                "integer",
+                "number",
+                "boolean",
+                "null",
+            ],
+        }
+    )
+    def get_feature_state_value(self, obj):  # type: ignore[no-untyped-def]
+        return obj.get_feature_state_value()
+
+    def save(self, **kwargs):  # type: ignore[no-untyped-def]
+        try:
+            response = super().save(**kwargs)  # type: ignore[no-untyped-call]
+            if isinstance(feature_state := self.instance, FeatureState):
+                dispatch_vcs_on_feature_state_changed(feature_state)
+            return response
+
+        except django.core.exceptions.ValidationError as e:
+            raise serializers.ValidationError(str(e))
+
+    def validate_feature(self, feature):  # type: ignore[no-untyped-def]
+        if self.instance and self.instance.feature_id != feature.id:  # type: ignore[union-attr]
+            raise serializers.ValidationError(
+                "Cannot change the feature of a feature state"
+            )
+        return feature
+
+    def validate_environment(self, environment):  # type: ignore[no-untyped-def]
+        if environment is None:
+            raise serializers.ValidationError("Environment may not be null.")
+        if self.instance and self.instance.environment_id != environment.id:  # type: ignore[union-attr]
+            raise serializers.ValidationError(
+                "Cannot change the environment of a feature state"
+            )
+        return environment
+
+    def validate_feature_segment(
+        self, feature_segment: FeatureSegment | None
+    ) -> FeatureSegment | None:
+        feature_segment_id = feature_segment.id if feature_segment else None
+        if (
+            isinstance(self.instance, FeatureState)
+            and self.instance.feature_segment_id != feature_segment_id
+        ):
+            raise serializers.ValidationError(
+                "Cannot change the feature segment of a feature state"
+            )
+        return feature_segment
+
+    def validate(self, attrs):  # type: ignore[no-untyped-def]
+        environment = attrs.get("environment") or self.context["environment"]
+        identity = attrs.get("identity")
+        feature_segment = attrs.get("feature_segment")
+        identifier = attrs.pop("identifier", None)
+        feature = attrs.get("feature")
+        if feature and feature.project_id != environment.project_id:
+            error = {"feature": "Feature does not exist in project"}
+            raise serializers.ValidationError(error)
+
+        if identifier:
+            try:
+                identity = Identity.objects.get(
+                    identifier=identifier, environment=environment
+                )
+                attrs["identity"] = identity
+            except Identity.DoesNotExist:
+                raise serializers.ValidationError("Invalid identifier")
+
+        if identity and not identity.environment == environment:
+            raise serializers.ValidationError("Identity does not exist in environment.")
+
+        if feature_segment and not feature_segment.environment == environment:
+            raise serializers.ValidationError(
+                "Feature Segment does not belong to environment."
+            )
+
+        mv_values = attrs.get("multivariate_feature_state_values", [])
+        if sum([v.get("percentage_allocation", 0) for v in mv_values]) > 100:
+            raise serializers.ValidationError(
+                "Multivariate percentage values exceed 100%."
+            )
+
+        return attrs
+
+
+class FeatureStateSerializerWithIdentity(FeatureStateSerializerBasic):
+    class _IdentitySerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+        class Meta:
+            model = Identity
+            fields = ("id", "identifier")
+
+    identity = _IdentitySerializer()
+
+
+class FeatureStateSerializerCreate(serializers.ModelSerializer):  # type: ignore[type-arg]
+    class Meta:
+        model = FeatureState
+        fields = ("feature", "enabled")
+
+
+class FeatureInfluxDataSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    events_list = serializers.ListSerializer(child=serializers.DictField())  # type: ignore[var-annotated]
+
+
+class FeatureEvaluationDataSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    day = serializers.CharField()
+    count = serializers.IntegerField()
+    labels = LabelsSerializer(allow_null=True)
+
+
+class GetInfluxDataQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+    period = serializers.CharField(required=False, default="24h")
+    environment_id = serializers.CharField(required=True)
+    aggregate_every = serializers.CharField(required=False, default="24h")
+
+
+class GetUsageDataQuerySerializer(LabelsQuerySerializerMixin, serializers.Serializer):  # type: ignore[type-arg]
+    period = serializers.IntegerField(
+        required=False,
+        default=30,
+        help_text="number of days",
+        source="period_days",
+    )
+    environment_id = serializers.IntegerField(required=True)
+
+
+class WritableNestedFeatureStateSerializer(FeatureStateSerializerBasic):
+    feature_state_value = FeatureStateValueSerializer(required=False)  # type: ignore[assignment]
+
+    class Meta(FeatureStateSerializerBasic.Meta):
+        extra_kwargs = {"environment": {"required": True}}
+
+
+class SegmentAssociatedFeatureStateSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    class Meta:
+        model = FeatureState
+        fields = ("id", "feature", "environment")
+
+
+class AssociatedFeaturesQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+    environment = serializers.IntegerField(required=False)
+
+
+class SDKFeatureStatesQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+    feature = serializers.CharField(
+        required=False, help_text="Name of the feature to get the state of"
+    )
+
+
+class EnvironmentFeatureStatesQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+    segment = serializers.IntegerField(
+        required=False,
+        help_text="ID of the segment to filter segment overrides by.",
+    )
+
+
+class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer):
+    feature_state_value = FeatureStateValueSerializer()
+    feature_segment = CreateSegmentOverrideFeatureSegmentSerializer(
+        required=False, allow_null=True
+    )
+    multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
+        many=True, required=False
+    )
+
+    class Meta:
+        model = FeatureState
+        fields = (
+            "id",
+            "feature",
+            "enabled",
+            "feature_state_value",
+            "feature_segment",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
+            "multivariate_feature_state_values",
+        )
+
+        read_only_fields = (
+            "id",
+            "deleted_at",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "live_from",
+            "environment",
+            "identity",
+            "change_request",
+            "feature",
+        )
+
+
+class CustomCreateSegmentOverrideFeatureStateSerializer(
+    CreateSegmentOverrideFeatureStateSerializer
+):
+    validate_override_limit = True
+
+    feature_segment = CustomCreateSegmentOverrideFeatureSegmentSerializer(
+        required=False, allow_null=True
+    )
+
+    def _get_save_kwargs(self, field_name):  # type: ignore[no-untyped-def]
+        kwargs = super()._get_save_kwargs(field_name)  # type: ignore[no-untyped-call]
+        if field_name == "feature_segment":
+            kwargs["feature"] = self.context.get("feature")
+            kwargs["environment"] = self.context.get("environment")
+            kwargs["environment_feature_version"] = self.context.get(
+                "environment_feature_version"
+            )
+        return kwargs
+
+    def create(self, validated_data: dict) -> FeatureState:  # type: ignore[type-arg]
+        environment = validated_data["environment"]
+        if self.validate_override_limit and exceeds_segment_override_limit(environment):
+            raise serializers.ValidationError(
+                {"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE}
+            )
+        return super().create(validated_data)  # type: ignore[no-any-return,no-untyped-call]

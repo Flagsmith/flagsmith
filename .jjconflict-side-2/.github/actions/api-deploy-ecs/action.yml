@@ -1,0 +1,190 @@
+name: API Deploy to ECS
+description: Deploy the Flagsmith API to ECS
+
+inputs:
+  aws_access_key_id:
+    description: The AWS access key ID to use for deploying to ECS.
+    required: true
+  aws_secret_access_key:
+    description: The AWS secret access key to use for deploying to ECS.
+    required: true
+  # TODO: do we need cluster name and ARN
+  aws_ecs_cluster_name:
+    description: The name of the ECS cluster to deploy to.
+    required: true
+  aws_ecs_cluster_arn:
+    description: The ARN of the AWS ECS cluster to deploy to.
+    required: true
+  aws_ecs_service_name:
+    description: The name of the ECS service to deploy to.
+    required: true
+  aws_ecs_sdk_service_name:
+    description: The name of the SDK ECS service to deploy to.
+    required: true
+  aws_vpc_subnet_id:
+    description: The id of the AWS VPC subnet to use for running migration tasks.
+    required: true
+  aws_ecs_security_group_id:
+    description: The id of the AWS security group to use for running migration tasks.
+    required: true
+  aws_identity_migration_event_bus_name:
+    description: The name of the AWS event bus used by the identity migration task.
+    required: true
+  aws_identity_migration_event_bus_rule_id:
+    description: The id of the aws event bus rule used by the identity migration task.
+    required: true
+  aws_identity_migration_task_role_arn:
+    description: The ARN of the role to run the identity migration task.
+    required: true
+  aws_task_definitions_directory_path:
+    description: The local path in the repository to the json file containing the task definition template
+    required: true
+  api_ecr_image_url:
+    description: The ECR URL of the latest API image.
+    required: true
+
+outputs:
+  api_ecr_image_url:
+    description: The image URL from ECR
+    value: ${{ steps.build-image.outputs.image }}
+
+runs:
+  using: composite
+
+  steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ inputs.aws_access_key_id }}
+        aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
+        aws-region: eu-west-2
+
+    - name: Render SDK API task definition
+      id: task-def-sdk-api
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-sdk-api.json
+        container-name: flagsmith-api
+        image: ${{ inputs.api_ecr_image_url }}
+
+    - name: Render Admin API task definition
+      id: task-def-admin-api
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-admin-api.json
+        container-name: flagsmith-api
+        image: ${{ inputs.api_ecr_image_url }}
+
+    # This is used in both the SQL migrations and the Dynamo Identity Migrations
+    - name: Fill in the new image ID in the Amazon ECS migration task definition
+      id: task-def-migration
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ${{ inputs.aws_task_definitions_directory_path }}/ecs-task-definition-migration.json
+        container-name: flagsmith-api-migration
+        image: ${{ inputs.api_ecr_image_url }}
+
+    - name: Register and perform SQL schema migration
+      id: register-migrate-task
+      env:
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
+        AWS_DEFAULT_REGION: eu-west-2
+        TASK_DEFINITION: ${{ steps.task-def-migration.outputs.task-definition }}
+      run: |
+        echo "task_definition_arn=$(aws ecs register-task-definition --cli-input-json file://$TASK_DEFINITION | jq '.taskDefinition.taskDefinitionArn')" >> $GITHUB_OUTPUT
+        aws ecs run-task --cluster ${{ inputs.aws_ecs_cluster_name }} --count 1 --launch-type FARGATE --task-definition flagsmith-api-migration  --network-configuration '{
+          "awsvpcConfiguration": {
+            "subnets": ["${{ inputs.aws_vpc_subnet_id }}"],
+            "securityGroups": ["${{ inputs.aws_ecs_security_group_id }}"],
+            "assignPublicIp": "ENABLED"
+          }}'
+      shell: bash
+
+    - name: Deploy new Task Definition to ECS Admin API service
+      id: deploy-admin-api-task-definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      with:
+        cluster: ${{ inputs.aws_ecs_cluster_name }}
+        service: ${{ inputs.aws_ecs_service_name }}
+        task-definition: ${{ steps.task-def-admin-api.outputs.task-definition }}
+
+    - name: Deploy new Task Definition to ECS SDK API service
+      id: deploy-sdk-api-task-definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      with:
+        cluster: ${{ inputs.aws_ecs_cluster_name }}
+        service: ${{ inputs.aws_ecs_sdk_service_name }}
+        task-definition: ${{ steps.task-def-sdk-api.outputs.task-definition }}
+
+    # The DynamoDB Identity Migrator uses the same task definition as the SQL schema migrator but overrides the container definition
+    # with the new django execute target
+    - name: Update Identity migrate rule with target
+      run: |
+        aws events put-targets --event-bus-name ${{ inputs.aws_identity_migration_event_bus_name }} --rule ${{ inputs.aws_identity_migration_event_bus_rule_id }} --targets '[{
+        "Id": "identity_migrate_rule_target",
+        "Arn": "${{ inputs.aws_ecs_cluster_arn }}",
+        "RoleArn": "${{ inputs.aws_identity_migration_task_role_arn }}",
+        "EcsParameters": {
+          "TaskDefinitionArn": ${{ steps.register-migrate-task.outputs.task_definition_arn }},
+          "TaskCount": 1,
+          "LaunchType": "FARGATE",
+          "NetworkConfiguration": {
+            "awsvpcConfiguration": {
+              "Subnets": ["${{ inputs.aws_vpc_subnet_id }}"],
+              "SecurityGroups": ["${{ inputs.aws_ecs_security_group_id }}"],
+            "AssignPublicIp": "ENABLED"
+            }
+            },
+            "PlatformVersion": "1.4.0",
+            "CapacityProviderStrategy": [],
+            "EnableECSManagedTags": true,
+            "EnableExecuteCommand": true,
+            "PlacementConstraints": [],
+            "PlacementStrategy": [],
+            "Tags": []
+            },
+            "RetryPolicy": {
+              "MaximumRetryAttempts": 1,
+              "MaximumEventAgeInSeconds": 3600
+              },
+              "InputTransformer": {
+                "InputPathsMap":{"project_id":"$.detail.project_id"},
+                "InputTemplate": "{ \"containerOverrides\": [ { \"name\": \"flagsmith-api-migration\", \"command\": [\"migrate_to_edge\", <project_id>], \" environment \":[{\"PROJECT_METADATA_TABLE_NAME_DYNAMO\":\"flagsmith_project_metadata\"}]}]}"
+                }
+                }
+                ]'
+      shell: bash
+
+    - name: Wait for services to be stable
+      run: |
+        aws ecs wait services-stable --cluster ${{ inputs.aws_ecs_cluster_name }} --services ${{ inputs.aws_ecs_service_name }}
+        aws ecs wait services-stable --cluster ${{ inputs.aws_ecs_cluster_name }} --services ${{ inputs.aws_ecs_sdk_service_name }}
+      shell: bash
+
+    - name: Verify correct version is running
+      shell: bash
+      run: |
+        EXPECTED_ADMIN_API_TASK_DEF=${{ steps.deploy-admin-api-task-definition.outputs.task-definition-arn }}
+        EXPECTED_SDK_API_TASK_DEF=${{ steps.deploy-sdk-api-task-definition.outputs.task-definition-arn }}
+        RUNNING_ADMIN_API_TASK_DEF=$(aws ecs describe-services \
+          --cluster ${{ inputs.aws_ecs_cluster_name }} \
+          --services ${{ inputs.aws_ecs_service_name }} \
+          --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition' \
+          --output text)
+        RUNNING_SDK_API_TASK_DEF=$(aws ecs describe-services \
+          --cluster ${{ inputs.aws_ecs_cluster_name }} \
+          --services ${{ inputs.aws_ecs_sdk_service_name }} \
+          --query 'services[0].deployments[?status==`PRIMARY`].taskDefinition' \
+          --output text)
+        if [[ "$RUNNING_ADMIN_API_TASK_DEF" == "$EXPECTED_ADMIN_API_TASK_DEF" && \
+              "$RUNNING_SDK_API_TASK_DEF" == "$EXPECTED_SDK_API_TASK_DEF" ]]; then
+          exit 0
+        else
+          echo "Task definition mismatch detected"
+          echo "Expected Admin API: $EXPECTED_ADMIN_API_TASK_DEF"
+          echo "Admin API running: $RUNNING_ADMIN_API_TASK_DEF"
+          echo "Expected SDK API: $EXPECTED_SDK_API_TASK_DEF"
+          echo "SDK API running: $RUNNING_SDK_API_TASK_DEF"
+          exit 1
+        fi

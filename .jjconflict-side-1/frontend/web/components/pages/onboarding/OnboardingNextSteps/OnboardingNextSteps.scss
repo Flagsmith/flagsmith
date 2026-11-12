@@ -1,0 +1,90 @@
+// "Choose your next quest" section. Layout comes from utilities in the markup;
+// this file holds the type sizes, secondary text colour, the dimmed locked
+// state, and the small per-card preview shapes (rollout track, A/B segmented,
+// value pill). Secondary text isn't a utility: Bootstrap's .text-secondary
+// (gold, !important) would win over our token utility, so it's set here.
+.onboarding-next-steps {
+  &__title {
+    font-size: 16px;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+  }
+
+  // Locked affordance: intentionally faint (disabled look). The lock icon
+  // inherits this via currentColor.
+  &__lock {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+  }
+
+  &__caption {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  // Dimmed until the app connects (the design's 0.4 locked state). The `inert`
+  // attribute on the same element blocks pointer + keyboard interaction.
+  &__body--locked {
+    opacity: 0.4;
+  }
+
+  // Equal-width cards regardless of their copy length.
+  &__row > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  // Illustrative preview sits a little below the card's description.
+  &__preview {
+    margin-top: 6px;
+  }
+
+  // Rollout: a part-filled pill track.
+  &__track {
+    display: block;
+    width: 100%;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--color-border-default);
+  }
+
+  &__track-fill {
+    display: block;
+    width: 25%;
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-action);
+  }
+
+  // Experiment: an A/B segmented control.
+  &__segmented {
+    align-self: flex-start;
+    overflow: hidden;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-lg);
+  }
+
+  &__segment {
+    padding: 5px 16px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    background: var(--color-surface-default);
+
+    &--active {
+      color: var(--color-text-action);
+      background: var(--color-surface-action-subtle);
+    }
+  }
+
+  // Remote config: a value chip.
+  &__value-pill {
+    align-self: flex-start;
+    padding: 5px 10px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+  }
+}

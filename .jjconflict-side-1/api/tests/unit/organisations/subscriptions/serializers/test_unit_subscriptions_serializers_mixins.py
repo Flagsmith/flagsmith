@@ -1,0 +1,98 @@
+from unittest.mock import MagicMock
+
+import pytest
+from rest_framework import serializers
+
+from organisations.models import Subscription
+from organisations.subscriptions.serializers.mixins import (
+    ReadOnlyIfNotValidPlanMixin,
+)
+
+
+@pytest.mark.parametrize(
+    "plan_id, invalid_plans_, invalid_plans_regex_",
+    (
+        ("invalid-plan-id", ("invalid-plan-id",), ""),
+        ("invalid-plan-id", tuple(), "invalid-.*"),
+        ("Scale-Up-v4-USD-Yearly", tuple(), r"^(free|startup.*|scale-up.*)$"),
+    ),
+)
+def test_read_only_if_not_valid_plan_mixin__invalid_plan__sets_fields_read_only(
+    plan_id: str, invalid_plans_: list[str], invalid_plans_regex_: str
+) -> None:
+    # Given
+    mock_view = MagicMock()
+
+    class MySerializer(ReadOnlyIfNotValidPlanMixin, serializers.Serializer):  # type: ignore[type-arg]
+        field_names = ("foo",)
+
+        invalid_plans = invalid_plans_
+        invalid_plans_regex = invalid_plans_regex_
+
+        foo = serializers.CharField()
+
+        def get_subscription(self) -> Subscription:
+            return MagicMock(plan=plan_id)
+
+    serializer = MySerializer(data={"foo": "bar"}, context={"view": mock_view})  # type: ignore[no-untyped-call]
+
+    # When
+    serializer.is_valid()
+
+    # Then
+    assert "foo" not in serializer.validated_data
+    assert serializer.fields["foo"].read_only is True
+
+
+def test_read_only_if_not_valid_plan_mixin__valid_plan__keeps_fields_writable():  # type: ignore[no-untyped-def]
+    # Given
+    valid_plan_id = "plan-id"
+    invalid_plan_id = "invalid-plan-id"
+    invalid_plans_regex_ = r"^another-invalid-plan-id-.*$"
+
+    mock_view = MagicMock()
+
+    class MySerializer(ReadOnlyIfNotValidPlanMixin, serializers.Serializer):  # type: ignore[type-arg]
+        invalid_plans = (invalid_plan_id,)
+        field_names = ("foo",)
+        invalid_plans_regex = invalid_plans_regex_
+
+        foo = serializers.CharField()
+
+        def get_subscription(self) -> Subscription:
+            return MagicMock(plan=valid_plan_id)
+
+    serializer = MySerializer(data={"foo": "bar"}, context={"view": mock_view})  # type: ignore[no-untyped-call]
+
+    # When
+    serializer.is_valid()
+
+    # Then
+    assert "foo" in serializer.validated_data
+    assert serializer.fields["foo"].read_only is False
+
+
+def test_read_only_if_not_valid_plan_mixin__no_view_context__returns_fields_unchanged() -> (
+    None
+):
+    # This tests the schema generation scenario where drf-spectacular
+    # doesn't provide a view in the context.
+
+    # Given
+
+    class MySerializer(ReadOnlyIfNotValidPlanMixin, serializers.Serializer[object]):
+        invalid_plans = ("invalid-plan-id",)
+        field_names = ("foo",)
+
+        foo = serializers.CharField()
+
+        def get_subscription(self) -> Subscription:  # pragma: no cover
+            return MagicMock(plan="invalid-plan-id")
+
+    # When
+    # no context provided (simulates schema generation)
+    serializer = MySerializer()  # type: ignore[no-untyped-call]
+
+    # Then
+    # field should NOT be read-only since we're in schema generation mode
+    assert serializer.fields["foo"].read_only is False

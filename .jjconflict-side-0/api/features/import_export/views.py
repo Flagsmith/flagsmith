@@ -1,0 +1,165 @@
+import json
+
+from django.conf import settings
+from django.db.models import QuerySet
+from django.http import Http404
+from drf_spectacular.utils import extend_schema
+from rest_framework import permissions, serializers
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.generics import ListAPIView, get_object_or_404
+from rest_framework.request import Request
+from rest_framework.response import Response
+
+from environments.models import Environment
+
+from .constants import SUCCESS
+from .models import (
+    FeatureExport,
+    FeatureImport,
+    FlagsmithOnFlagsmithFeatureExport,
+)
+from .permissions import (
+    CreateFeatureExportPermissions,
+    DownloadFeatureExportPermissions,
+    FeatureExportListPermissions,
+    FeatureImportListPermissions,
+    FeatureImportPermissions,
+)
+from .serializers import (
+    CreateFeatureExportSerializer,
+    FeatureExportSerializer,
+    FeatureImportSerializer,
+    FeatureImportUploadSerializer,
+)
+
+
+@extend_schema(
+    request=CreateFeatureExportSerializer(),
+    responses={201: FeatureExportSerializer()},
+)
+@api_view(["POST"])
+@permission_classes([CreateFeatureExportPermissions])
+def create_feature_export(request: Request) -> Response:
+    serializer = CreateFeatureExportSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    feature_export = serializer.save()
+    response_serializer = FeatureExportSerializer(feature_export)
+
+    return Response(response_serializer.data, status=201)
+
+
+@extend_schema(
+    request=FeatureImportUploadSerializer(),
+    responses={201: FeatureImportSerializer()},
+)
+@api_view(["POST"])
+@permission_classes([FeatureImportPermissions])
+def feature_import(request: Request, environment_id: int) -> Response:
+    upload_serializer = FeatureImportUploadSerializer(data=request.data)
+    upload_serializer.is_valid(raise_exception=True)
+    _feature_import = upload_serializer.save(environment_id=environment_id)
+    serializer = FeatureImportSerializer(instance=_feature_import)
+    return Response(serializer.data, status=201)
+
+
+@extend_schema(
+    responses={200: {"type": "object", "additionalProperties": True}},
+    description="This endpoint is to download a feature export file from a specific environment",
+)
+@api_view(["GET"])
+@permission_classes([DownloadFeatureExportPermissions])
+def download_feature_export(request: Request, feature_export_id: int) -> Response:
+    feature_export = get_object_or_404(FeatureExport, id=feature_export_id)
+
+    if feature_export.status != SUCCESS:
+        raise serializers.ValidationError(
+            {
+                "detail": f"Unable to download export with status '{feature_export.status}'."
+            }
+        )
+
+    response = Response(
+        json.loads(feature_export.data),  # type: ignore[arg-type]
+        content_type="application/json",
+    )
+    response.headers["Content-Disposition"] = (
+        f"attachment; filename=feature_export.{feature_export_id}.json"
+    )
+    return response
+
+
+@extend_schema(
+    responses={200: {"type": "object", "additionalProperties": True}},
+    description="This endpoint is to download a feature export to enable Flagsmith on Flagsmith",
+)
+@api_view(["GET"])
+@permission_classes([permissions.AllowAny])
+def download_flagsmith_on_flagsmith(request: Request) -> Response:
+    if (
+        not settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID
+        or not settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID
+    ):
+        # No explicit settings on both feature settings, so 404.
+        raise Http404("This system is not configured for this download.")
+
+    fof = FlagsmithOnFlagsmithFeatureExport.objects.order_by("-created_at").first()
+
+    if fof is None:
+        raise Http404("There is no present downloadable export.")
+
+    response = Response(
+        json.loads(fof.feature_export.data),  # type: ignore[arg-type]
+        content_type="application/json",
+    )
+    response.headers["Content-Disposition"] = (
+        f"attachment; filename=flagsmith_on_flagsmith.{fof.id}.json"
+    )
+    return response
+
+
+class FeatureExportListView(ListAPIView):  # type: ignore[type-arg]
+    serializer_class = FeatureExportSerializer
+    permission_classes = [FeatureExportListPermissions]
+
+    def get_queryset(self) -> QuerySet[FeatureExport]:
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureExport.objects.none()
+
+        environment_ids = []
+        user = self.request.user
+
+        for environment in Environment.objects.filter(
+            project_id=self.kwargs["project_pk"],
+        ):
+            if user.is_environment_admin(environment):  # type: ignore[union-attr]
+                environment_ids.append(environment.id)
+
+        return (
+            FeatureExport.objects.filter(environment__in=environment_ids)
+            .defer("data")
+            .order_by("-created_at")
+        )
+
+
+class FeatureImportListView(ListAPIView):  # type: ignore[type-arg]
+    serializer_class = FeatureImportSerializer
+    permission_classes = [FeatureImportListPermissions]
+
+    def get_queryset(self) -> QuerySet[FeatureImport]:
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureImport.objects.none()
+
+        environment_ids = []
+        user = self.request.user
+
+        for environment in Environment.objects.filter(
+            project_id=self.kwargs["project_pk"],
+        ):
+            if user.is_environment_admin(environment):  # type: ignore[union-attr]
+                environment_ids.append(environment.id)
+
+        return (
+            FeatureImport.objects.filter(environment__in=environment_ids)
+            .defer("data")
+            .order_by("-created_at")
+        )

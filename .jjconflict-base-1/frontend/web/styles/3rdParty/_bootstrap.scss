@@ -1,0 +1,125 @@
+// Custom.scss
+// Option B: Include parts of Bootstrap
+@import "~bootstrap/scss/maps";
+// 1. Include functions first (so you can manipulate colors, SVGs, calc, etc)
+@import "~bootstrap/scss/mixins"; // Required
+@import "~bootstrap/scss/functions";
+
+// 2. Include any default variable overrides in styles/_variables.scss
+
+// 3. Include remainder of required Bootstrap stylesheets
+@import "~bootstrap/scss/variables"; // Required
+@import "~bootstrap/scss/root"; // Required
+@import "~bootstrap/scss/reboot"; // Required
+@import "~bootstrap/scss/utilities"; // Required
+
+// 4. Optionally include utilities API last to generate classes based on the Sass map in `_utilities.scss`
+
+@import "../project/spacing-utils";
+
+// Colour is owned by the design-system token utilities (_token-utilities.scss).
+// Drop the overlapping keys from Bootstrap's text-colour utility so `.text-*`
+// resolve to the tokens, not Bootstrap's `$theme-colors`. Otherwise Bootstrap's
+// `!important` copy wins the cascade and the token utility is dead.
+// - secondary/success/danger/warning/info: token utilities take over. Values are
+//   identical to Bootstrap (secondary excepted, that is the intended yellow->grey
+//   fix), so this is a no-op for the others.
+// - light/black/white-50/black-50: unused, no token equivalent, dropped.
+// Not removed: primary, dark, body, muted, white, reset. Bootstrap still
+// generates these; muted resolves to the token via $text-muted (_variables.scss).
+$_color-util: map-get($utilities, "color");
+$_color-util: map-merge(
+  $_color-util,
+  (
+    values:
+      map-remove(
+        map-get($_color-util, "values"),
+        "secondary",
+        "success",
+        "danger",
+        "warning",
+        "info",
+        "light",
+        "black",
+        "white-50",
+        "black-50"
+      )
+  )
+);
+$utilities: map-merge($utilities, ("color": $_color-util));
+
+// Border colour: Bootstrap generates `.border-*` with the token colours, after
+// `.border`, so `border border-warning` draws the warning colour.
+$_border-util: map-get($utilities, "border-color");
+$_border-util: map-merge(
+  $_border-util,
+  (
+    values: map-merge(
+      map-get($_border-util, "values"),
+      (
+        "action": var(--color-border-action),
+        "danger": var(--color-border-danger),
+        "default": var(--color-border-default),
+        "disabled": var(--color-border-disabled),
+        "info": var(--color-border-info),
+        "strong": var(--color-border-strong),
+        "success": var(--color-border-success),
+        "warning": var(--color-border-warning),
+      )
+    ),
+  )
+);
+$utilities: map-merge($utilities, ("border-color": $_border-util));
+
+// Shadow scale is owned by the token utilities (--shadow-*). Drop sm/lg/none so
+// `.shadow-sm` / `.shadow-lg` / `.shadow-none` use the DS tokens, consistent with
+// the token-only `.shadow-md` / `.shadow-xl`. Bootstrap's suffixless `.shadow`
+// (the `null` key) is left in place.
+$_shadow-util: map-get($utilities, "shadow");
+$_shadow-util: map-merge(
+  $_shadow-util,
+  (values: map-remove(map-get($_shadow-util, "values"), "sm", "lg", "none"))
+);
+$utilities: map-merge($utilities, ("shadow": $_shadow-util));
+
+@import "~bootstrap/scss/utilities/api";
+
+// 5. Include any optional Bootstrap CSS as needed
+@import "~bootstrap/scss/type";
+// Provides .text-truncate, which the type import does not.
+@import "~bootstrap/scss/helpers/text-truncation";
+// Provides .visually-hidden, for inputs that stay focusable but unseen.
+@import "~bootstrap/scss/helpers/visually-hidden";
+@import "~bootstrap/scss/containers";
+@import "~bootstrap/scss/grid";
+@import "~bootstrap/scss/tables";
+@import "~bootstrap/scss/forms";
+@import "~bootstrap/scss/buttons";
+@import "~bootstrap/scss/transitions";
+
+//@import "~bootstrap/scss/card";
+//@import "~bootstrap/scss/accordion";
+//@import "~bootstrap/scss/pagination";
+@import "~bootstrap/scss/badge";
+@import "~bootstrap/scss/alert";
+@import "~bootstrap/scss/progress";
+//@import "~bootstrap/scss/list-group";
+//@import "~bootstrap/scss/toasts";
+@import "~bootstrap/scss/modal"; // Requires transitions
+//@import "~bootstrap/scss/tooltip";
+//@import "~bootstrap/scss/popover";
+//@import "~bootstrap/scss/carousel";
+//@import "~bootstrap/scss/offcanvas";
+//@import "~bootstrap/scss/placeholders";
+
+// 6. Add additional custom code here
+
+.modal-footer {
+  padding: 0;
+}
+
+// The colour of a plain `.border`. On body, not :root, so the token resolves
+// under .dark too.
+body {
+  --bs-border-color: var(--color-border-default);
+}

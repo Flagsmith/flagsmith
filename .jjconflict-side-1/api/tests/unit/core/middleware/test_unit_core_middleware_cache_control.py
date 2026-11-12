@@ -1,0 +1,22 @@
+from django.http import HttpResponse
+
+from core.middleware.cache_control import NeverCacheMiddleware
+
+
+def test_never_cache_middleware__any_request__adds_cache_control_headers(mocker):  # type: ignore[no-untyped-def]
+    # Given
+    a_response = HttpResponse()
+    mocked_get_response = mocker.MagicMock(return_value=a_response)
+    mock_request = mocker.MagicMock()
+
+    middleware = NeverCacheMiddleware(mocked_get_response)  # type: ignore[no-untyped-call]
+
+    # When
+    response = middleware(mock_request)
+
+    # Then
+    assert (
+        response.headers["Cache-Control"]
+        == "max-age=0, no-cache, no-store, must-revalidate, private"
+    )
+    assert response.headers["Pragma"] == "no-cache"

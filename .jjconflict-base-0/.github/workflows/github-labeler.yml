@@ -1,0 +1,15 @@
+name: Github Labeler
+
+on:
+  - pull_request_target
+
+jobs:
+  apply-labels:
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: depot-ubuntu-latest
+
+    steps:
+      - name: Run labeler
+        uses: actions/labeler@v5

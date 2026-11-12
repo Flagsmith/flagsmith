@@ -1,0 +1,204 @@
+@import '../variables';
+@import '../flexbox/mixins';
+
+.flat-panel {
+  .panel {
+    box-shadow: none;
+    border: none;
+    .panel-heading {
+      background-color: transparent;
+    }
+  }
+}
+
+.panel {
+  &.no-pad {
+    padding: 0 !important;
+    .panel-content {
+      padding: 0 !important;
+    }
+  }
+  .panel-heading {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      color: $body-color;
+      margin: 0;
+    }
+
+    font-weight: 500;
+    font-size: $font-size-base;
+    flex: 1 1 0%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-transform: capitalize;
+    padding-top: 2px;
+    padding-bottom: 2px;
+
+    .title {
+      color: $body-color;
+      font-family: $font-family-header;
+      .subtitle {
+        color: $body-color;
+        font-weight: normal;
+        text-transform: none;
+      }
+    }
+  }
+
+  .panel-content {
+    background-color: $panel-bg;
+    padding: $input-padding-y $input-padding-x;
+  }
+
+  &.segment-overrides {
+    border: 1px solid $basic-alpha-16;
+    border-radius: $border-radius-lg;
+    background-color: $text-icon-light;
+  }
+
+  &.no-pad {
+    .panel-content {
+      padding: 0;
+    }
+  }
+}
+.overflow-visible>.panel-content {
+  overflow: visible;
+}
+.dark {
+  .panel {
+    .panel-content {
+      background-color: transparent;
+      .search-list {
+        background-color: $bg-dark400;
+        border: 1px solid $white-alpha-8;
+        .list-item {
+          border-top: 1px solid $white-alpha-8;
+          &:first-child {
+            border-top: none;
+          }
+        }
+        &.change-request-list{
+          background-color: $bg-dark500;
+        }
+      }
+
+      .chip {
+        background-color: $primary900;
+      }
+    }
+    .panel-heading {
+      h1,
+      h2,
+      h3,
+      h4,
+      h5 {
+        color: $panel-heading-color-dark;
+        margin: 0;
+      }
+      .title {
+        color: $text-icon-light;
+        .subtitle {
+          color: $text-icon-light;
+        }
+      }
+      color: $text-icon-light;
+    }
+    a {
+      color: $dark-highlight-color;
+      &:hover {
+        color: $dark-highlight-color !important;
+        &.text-white {
+          color: white !important;
+        }
+      }
+    }
+
+    // :hover is spelled out because `a:hover` above is also !important and
+    // more specific, so a hovered link would otherwise still go near-white.
+    .list-item:hover a,
+    .btn-link,
+    .btn-link:hover {
+      color: var(--color-text-action) !important;
+    }
+
+    &.panel-integrations {
+      border: 1px solid $basic-alpha-16;
+      background-color: $bg-dark300;
+      .list-integrations {
+        background-color: $bg-dark200;
+      }
+    }
+    &.segment-overrides {
+      background-color: $bg-dark400;
+      border: 1px solid $white-alpha-8;
+    }
+    .panel-content {
+      .search-list {
+        border: 1px solid $panel-border-color-dark;
+        background-color: $bg-dark400;
+        .list-item {
+          border-top: 1px solid $panel-border-color-dark;
+          background-color: $bg-dark400;
+        }
+      }
+    }
+  }
+}
+
+a.text-white {
+  &:hover {
+    color: white !important;
+  }
+}
+
+.panel {
+  &.panel-integrations {
+    border-radius: $panel-border-radius;
+    border: 1px solid $panel-border-color;
+
+    img {
+      height: 50px;
+      object-fit: contain;
+    }
+    .list-integrations {
+      border-radius: $border-radius-xlg;
+      background-color: $bg-light200;
+      font-size: $font-sm;
+      line-height: $line-height-sm;
+    }
+  }
+  .panel-content {
+    .search-list {
+      border: 1px solid $panel-border-color;
+      border-radius: $panel-border-radius;
+      .list-item {
+        border-top: 1px solid $panel-border-color;
+        &:first-child {
+          border-top: none;
+        }
+        &:last-of-type {
+          border-bottom-left-radius: $border-radius;
+          border-bottom-right-radius: $border-radius;
+        }
+        &:first-of-type {
+          border-bottom-left-radius: 0;
+          border-bottom-right-radius: 0;
+        }
+      }
+    }
+  }
+  &.panel-projects {
+    .panel-content {
+      .search-list {
+        border: none;
+        background-color: transparent;
+      }
+    }
+  }
+}

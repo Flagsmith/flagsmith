@@ -1,0 +1,96 @@
+from contextlib import suppress
+
+from rest_framework.permissions import IsAuthenticated
+
+from metadata.models import MetadataField
+from organisations.models import Organisation
+from projects.models import Project
+
+
+class MetadataFieldPermissions(IsAuthenticated):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
+        if not super().has_permission(request, view):
+            return False
+
+        # list is handled by the view
+        if view.action == "list" or view.detail:
+            return True
+
+        if view.action == "create":
+            with suppress(Organisation.DoesNotExist):
+                organisation_id = request.data.get("organisation")
+                organisation = Organisation.objects.get(id=organisation_id)
+
+                if request.user.is_organisation_admin(organisation):
+                    return True
+
+                project_id = request.data.get("project")
+                if project_id is not None:
+                    with suppress(Project.DoesNotExist):
+                        project = Project.objects.get(id=project_id)
+                        if project.organisation_id == organisation.id:
+                            return request.user.is_project_admin(project)
+
+        return False
+
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
+        if view.action in ("retrieve"):
+            return request.user.belongs_to(obj.organisation.id)
+
+        if view.action in (
+            "update",
+            "destroy",
+            "partial_update",
+        ):
+            if request.user.is_organisation_admin(obj.organisation):
+                return True
+
+            if obj.project is not None:
+                return request.user.is_project_admin(obj.project)
+
+        return False
+
+
+class MetadataModelFieldPermissions(IsAuthenticated):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
+        if not super().has_permission(request, view):
+            return False
+
+        with suppress(MetadataField.DoesNotExist, ValueError):
+            organisation_pk = int(view.kwargs.get("organisation_pk"))
+
+            if request.user.belongs_to(organisation_pk):
+                if (
+                    view.action
+                    in [
+                        "list",
+                        "supported_content_types",
+                        "supported_required_for_models",
+                    ]
+                    or view.detail
+                ):
+                    return True
+
+                if view.action == "create":
+                    field = MetadataField.objects.get(id=request.data.get("field"))
+
+                    return (organisation_pk == field.organisation.id) and (
+                        request.user.is_organisation_admin(organisation_pk)
+                        or (project := field.project)
+                        and request.user.is_project_admin(project)
+                    )
+
+        return False
+
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
+        if view.action in ("retrieve"):
+            return request.user.belongs_to(obj.field.organisation.id)
+
+        if view.action in ("update", "destroy", "partial_update"):
+            return (
+                request.user.is_organisation_admin(obj.field.organisation)
+                or (project := obj.field.project)
+                and request.user.is_project_admin(project)
+            )
+
+        return False

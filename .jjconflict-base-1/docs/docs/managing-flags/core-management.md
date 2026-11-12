@@ -1,0 +1,119 @@
+---
+title: Basic Flag Management
+sidebar_label: Basic Flag Management
+sidebar_position: 1
+---
+
+Feature flags in Flagsmith are used to categorise and monitor user actions or events, such as detecting spam or abuse. This guide covers how to create, edit, clone, and delete flags in your project.
+
+---
+
+## Creating a Feature Flag
+
+To create a new feature flag:
+
+1. Go to the **Features** section in your dashboard.
+2. Click **Create Feature**.
+3. Enter a descriptive name for your flag (e.g., `new_ui_enabled`).
+4. Fill in the available fields according to the specifications of your feature. Note that these values are applied to all your [environments]. You can edit each environment individually later.
+    - **Enabled by default**: determines the initial state of the flag for all environments. This can be edited for each environment later.
+    - **Value** (optional): additionally to their boolean value, you can choose a format and a value for your flag.
+    - **Tags** (optional): organise your flags by tags or add `protected` to prevent them from accidentally being deleted.
+    - **Description** (optional): add a feature flag description.
+    - **Server-side only**: enabling this prevents your flag from being accessed by client-side SDKs.
+5. Click **Create Feature**.
+
+:::tip
+
+By clicking the **Create A/B/n Test** button, you can define values for A/B testing. To learn more about this operation, refer to the [A/B Testing guide](/experimentation-ab-testing).
+
+:::
+
+### Multivariate flags (A/B/n)
+
+Multivariate flags let you define multiple variants with percentage weightings (A/B/n). Key points:
+
+- Require identified users: multivariate bucketing is calculated per identity, so you must identify users (or generate a unique anonymous identifier like a GUID/UUID) to serve a consistent variant.
+- Deterministic per environment: the same identity gets the same variant within an environment unless you change weights.
+- Stable weights matter: changing weightings during a live test can re-bucket users; avoid mid-test weight changes unless you intentionally want to reshuffle.
+- Per-environment: identity bucketing is independent per environment; the same identity can land in different buckets across environments.
+- Percentages must sum to 100% and you need at least two variants.
+- The SDK returns both the boolean `enabled` state and the multivariate `value`; use the value to drive your experiment behaviour.
+
+If you need to test unauthenticated traffic, generate a unique identifier (like a GUID/UUID) for each anonymous user and store it persistently (e.g., in a cookie or localStorage) so the same user gets the same variant across sessions.
+
+Quick A/B/n setup checklist:
+1. Define variants and weights (total 100%)
+2. Enable the flag
+3. Identify the user (or anonymous GUID) before fetching
+4. Use the `value` of the feature when defining the branching logic in your code
+5. Enable required [integrations](/third-party-integrations/) for analytics purposes
+
+---
+
+## Editing a Feature Flag
+
+You create feature flags once per project, but you edit them within each environment. To edit an existing feature flag:
+
+1. While on the **Environments** tab on the dashboard, use the dropdown to select the environment where you want to apply the changes.
+2. Locate the feature flag you want to edit and click on it. You can use the search bar to find the feature flag by its name.
+
+:::tip
+
+If you just want to toggle the feature flag *on* or *off*, use the switch under the **View** column in the list view.
+
+:::
+
+3. On the **Value** tab, you can set the feature flag to be on or off, as well as edit a value for it. Click **Update Feature Value** to save your changes.
+4. Optionally, create segment-specific feature flags and define **segment overrides**. Refer to the documentation to learn more about [segments](/flagsmith-concepts/segments). Save any changes by clicking the **Update Segment Overrides** button.
+5. On the **Settings** tab, you can:
+    - Add tags to your feature flag.
+    - Assign it to specific *users* and *groups*.
+    - Update the feature flag's description.
+    - Mark the feature flag as **Server-side only** to prevent it from being accessed by client-side SDKs.
+    - Set the **Archived** status to filter the feature flag as no longer relevant. Note that the feature flag will still be returned by the endpoint as before.
+  Click **Update Settings** to save your changes.
+
+:::tip
+
+Changes made in the **Settings** tab affect all environments. Changes made in other tabs while editing a feature flag are valid only for the selected environment.
+
+:::
+
+---
+
+## Deleting a Feature Flag
+
+To delete a feature flag:
+
+1. In the **Features** section, locate the feature flag you want to remove and click the **three dots** icon on the right.
+2. Select the **Remove feature** option.
+3. Type in the name of the feature flag to confirm the deletion.
+
+:::caution
+
+Deleting a feature flag is permanent and cannot be undone. Make sure your applications do not contain any reference to this feature flag before confirming deleting it.
+
+:::
+
+---
+
+## Troubleshooting
+
+### Feature Flags Not Updating
+
+- Make sure you have saved your changes in each tab of the edit feature flag panel.
+- Check that you are in the correct project and environment.
+
+### Multivariate Flags Giving Inconsistent Results
+
+- Ensure you identify users before fetching flags. For anonymous users, generate a unique identifier and store it persistently (e.g., cookie or localStorage) so the same user gets the same variant across sessions.
+- Avoid changing weightings during a live experiment, as this can re-bucket users and invalidate results.
+
+### Permission Issues
+
+- You may need additional permissions to create, edit, clone, or delete feature flags. If you see permission errors or options are disabled, contact your Flagsmith administrator to review your access rights. For more information, see the [Permissions and Roles](/administration-and-security/access-control/rbac) page.
+
+## Remote Config {#remote-config}
+
+Remote Config lets you return a typed value (string, number, boolean or JSON) alongside the on/off state of a feature. You configure Remote Config on the same feature definition, and SDKs read these values when evaluating flags, using the same targeting and rollout rules. This is useful for tweaking behaviour, thresholds, copy or layout without changing code, rather than only enabling or disabling features.

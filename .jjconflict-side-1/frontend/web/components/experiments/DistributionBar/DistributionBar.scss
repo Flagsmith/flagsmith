@@ -1,0 +1,23 @@
+.distribution-bar {
+  display: flex;
+  height: 10px;
+  width: 100%;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: var(--color-surface-emphasis);
+
+  &__segment {
+    height: 100%;
+    transition: width var(--duration-fast) var(--easing-standard);
+  }
+
+  &__segment--hatched {
+    background: repeating-linear-gradient(
+      45deg,
+      var(--color-surface-emphasis),
+      var(--color-surface-emphasis) 5px,
+      var(--color-surface-default) 5px,
+      var(--color-surface-default) 10px
+    );
+  }
+}

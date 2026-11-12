@@ -1,0 +1,151 @@
+import {
+  getConfigurableWarehouseTypes,
+  getMinimumPlans,
+  getPlanAvailabilityMessage,
+  getWarehouseMinimumPlan,
+  getWarehouseTypeStatus,
+  isFlagsmithDatabaseConnection,
+  MinimumPlans,
+  shouldShowSendFirstEvent,
+  WarehouseTypeOption,
+  WarehouseTypeStatus,
+} from 'components/pages/environment-settings/tabs/warehouse-tab/warehouseTypes'
+import { PlanFamily } from 'common/utils/plans'
+import { WarehouseConnection } from 'common/types/responses'
+
+const minimumPlans: MinimumPlans = {
+  clickhouse: 'scale-up',
+  databricks: 'enterprise',
+  flagsmith: null,
+  postgres: 'scale-up',
+  snowflake: 'scale-up',
+}
+const flagValue = JSON.stringify({
+  auto_connect_flagsmith: true,
+  minimum_plans: minimumPlans,
+})
+
+describe('getConfigurableWarehouseTypes', () => {
+  it.each([
+    [false, ['flagsmith_database', 'clickhouse', 'databricks', 'postgres']],
+    [true, ['flagsmith', 'clickhouse', 'databricks', 'postgres']],
+  ])('isSaas=%s => %j', (isSaas, expected) => {
+    expect(getConfigurableWarehouseTypes(isSaas)).toEqual(expected)
+  })
+})
+
+describe('getMinimumPlans', () => {
+  it.each<[boolean, unknown, MinimumPlans]>([
+    [true, flagValue, minimumPlans],
+    [false, flagValue, {}],
+    [true, JSON.stringify({ minimum_plans: ['scale-up'] }), {}],
+    [true, JSON.stringify(['scale-up']), {}],
+    [true, 'not json', {}],
+    [true, null, {}],
+  ])('enabled=%s value=%s => %j', (enabled, value, expected) => {
+    expect(getMinimumPlans({ enabled, value })).toEqual(expected)
+  })
+})
+
+describe('getWarehouseMinimumPlan', () => {
+  it.each<[WarehouseTypeOption, MinimumPlans, PlanFamily]>([
+    ['clickhouse', minimumPlans, 'scale-up'],
+    ['databricks', minimumPlans, 'enterprise'],
+    ['flagsmith', minimumPlans, 'free'],
+    ['bigquery', minimumPlans, 'free'],
+    ['clickhouse', { clickhouse: 'free' }, 'free'],
+    ['clickhouse', { clickhouse: 'gold' }, 'free'],
+    ['clickhouse', { clickhouse: ['scale-up'] }, 'free'],
+    ['clickhouse', {}, 'free'],
+  ])('%s with %j => %s', (type, plans, expected) => {
+    expect(getWarehouseMinimumPlan(type, plans)).toBe(expected)
+  })
+})
+
+describe('getWarehouseTypeStatus', () => {
+  it.each<[WarehouseTypeOption, string | null, boolean, WarehouseTypeStatus]>([
+    ['flagsmith', 'free', true, 'available'],
+    ['clickhouse', 'free', true, 'plan-gated'],
+    ['clickhouse', 'startup', true, 'plan-gated'],
+    ['clickhouse', 'scale-up', true, 'available'],
+    ['clickhouse', 'enterprise', true, 'available'],
+    ['databricks', 'scale-up', true, 'plan-gated'],
+    ['databricks', 'enterprise', true, 'available'],
+    ['postgres', 'startup', true, 'plan-gated'],
+    ['snowflake', 'enterprise', true, 'coming-soon'],
+    ['bigquery', 'enterprise', true, 'coming-soon'],
+    ['clickhouse', 'free', false, 'available'],
+    ['databricks', null, false, 'available'],
+    ['flagsmith', 'enterprise', false, 'coming-soon'],
+    ['flagsmith_database', null, false, 'available'],
+  ])('%s on %s (isSaas=%s) => %s', (type, planId, isSaas, expected) => {
+    expect(getWarehouseTypeStatus(type, { isSaas, minimumPlans, planId })).toBe(
+      expected,
+    )
+  })
+})
+
+describe('isFlagsmithDatabaseConnection', () => {
+  it.each<[Pick<WarehouseConnection, 'config' | 'warehouse_type'>, boolean]>([
+    [
+      { config: { source: 'flagsmith_database' }, warehouse_type: 'postgres' },
+      true,
+    ],
+    [{ config: {}, warehouse_type: 'postgres' }, false],
+    [{ config: {}, warehouse_type: 'flagsmith' }, false],
+  ])('%j => %s', (connection, expected) => {
+    expect(isFlagsmithDatabaseConnection(connection)).toBe(expected)
+  })
+})
+
+describe('shouldShowSendFirstEvent', () => {
+  const byo = { config: {}, warehouse_type: 'clickhouse' } as const
+  const flagsmithDatabase = {
+    config: { source: 'flagsmith_database' },
+    warehouse_type: 'postgres',
+  } as const
+  it.each<
+    [
+      Pick<WarehouseConnection, 'config' | 'warehouse_type'>,
+      Pick<WarehouseConnection, 'status' | 'total_events_received'>,
+      boolean,
+      boolean,
+    ]
+  >([
+    [byo, { status: 'connected', total_events_received: 0 }, true, true],
+    [byo, { status: 'connected', total_events_received: 0 }, false, false],
+    [byo, { status: 'connected', total_events_received: 3 }, true, false],
+    [
+      flagsmithDatabase,
+      { status: 'connected', total_events_received: 0 },
+      false,
+      true,
+    ],
+    [
+      { config: {}, warehouse_type: 'flagsmith' },
+      { status: 'created', total_events_received: null },
+      true,
+      true,
+    ],
+    [
+      { config: {}, warehouse_type: 'flagsmith' },
+      { status: 'pending_connection', total_events_received: null },
+      true,
+      false,
+    ],
+  ])('%j %j isSaas=%s => %s', (type, state, isSaas, expected) => {
+    expect(shouldShowSendFirstEvent({ ...type, ...state }, isSaas)).toBe(
+      expected,
+    )
+  })
+})
+
+describe('getPlanAvailabilityMessage', () => {
+  it.each<[PlanFamily, string]>([
+    ['start-up', 'Available on Startup, Scale-Up and Enterprise plans'],
+    ['scale-up', 'Available on Scale-Up and Enterprise plans'],
+    ['enterprise', 'Available on the Enterprise plan'],
+  ])('%s => %s', (minimum, expected) => {
+    expect(getPlanAvailabilityMessage(minimum)).toBe(expected)
+  })
+})
