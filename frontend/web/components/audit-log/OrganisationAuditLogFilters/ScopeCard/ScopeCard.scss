@@ -1,0 +1,41 @@
+.scope-card {
+  // As wide as the scope switch; the steps below wrap to it.
+  width: max-content;
+  max-width: 100%;
+
+  // Steps open by height, and the gap opens with them.
+  &__section {
+    contain: inline-size;
+    display: grid;
+    grid-template-rows: 0fr;
+    transition:
+      grid-template-rows var(--duration-slow) var(--easing-standard),
+      margin-top var(--duration-slow) var(--easing-standard);
+
+    &.open {
+      grid-template-rows: 1fr;
+      margin-top: 8px;
+    }
+  }
+
+  &__section-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  &__projects {
+    max-height: 280px;
+    overflow-y: auto;
+  }
+
+  &__project:not(:has(input:checked)):hover {
+    background: var(--color-surface-hover);
+  }
+
+
+  @media (prefers-reduced-motion: reduce) {
+    &__section {
+      transition: none;
+    }
+  }
+}

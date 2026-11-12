@@ -1,0 +1,27 @@
+@import '../../../../styles/variables';
+
+.scope-filter {
+  &__control {
+    // As tall as the xSmall search input, also when it wraps onto its own line.
+    min-height: $input-height-xsm;
+    min-width: 0;
+    border: 1px solid var(--color-border-default);
+
+    &--active {
+      border-color: var(--color-border-action);
+    }
+  }
+
+  &__trigger,
+  &__clear {
+    color: inherit;
+  }
+
+  &__trigger {
+    min-width: 0;
+  }
+
+  &__clear {
+    border-left: 1px solid var(--color-border-action);
+  }
+}

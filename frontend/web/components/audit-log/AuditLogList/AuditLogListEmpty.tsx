@@ -15,7 +15,7 @@ const AuditLogListEmpty: FC<AuditLogListEmptyProps> = ({
     <EmptyState
       icon='search'
       title='No changes match these filters'
-      description='Try a shorter search.'
+      description='Try a shorter search or a wider scope.'
       action={
         <Button theme='outline' size='small' onClick={onClearFilters}>
           Clear filters

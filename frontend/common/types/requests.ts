@@ -64,6 +64,18 @@ export type UpdateFeatureStateBody = {
   multivariate_feature_state_values?: MultivariateOption[] | null
 }
 
+// The API refuses organisation level together with a project or environments.
+export type OrganisationAuditLogScopeQuery =
+  | { is_organisation_level: true; project?: never; environments?: never }
+  | {
+      is_organisation_level?: false
+      project?: number
+      environments?: number[]
+    }
+export type OrganisationAuditLogQuery = {
+  search?: string
+} & OrganisationAuditLogScopeQuery
+
 export type PagedRequest<T> = T & {
   page?: number
   page_size?: number
@@ -256,10 +268,9 @@ export type Req = {
     project: number
     environments?: number
   }>
-  getOrganisationAuditLogs: PagedRequest<{
-    organisationId: number
-    search?: string
-  }>
+  getOrganisationAuditLogs: PagedRequest<
+    { organisationId: number } & OrganisationAuditLogQuery
+  >
   getOrganisationAuditLogItem: { organisationId: number; id: number }
   getOrganisations: {}
   getOrganisation: { id: number }
