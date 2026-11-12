@@ -388,6 +388,28 @@ def test_push_usage_snapshots__already_reported_this_hour__skips_push(
 
 
 @pytest.mark.freeze_time("2026-06-18T09:30:00+00:00")
+def test_push_usage_snapshots__never_reported_push_fails__keeps_initial_boundary(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    mocked_map_for_licensed_organisation: MagicMock,
+) -> None:
+    # Given - no UsageReportingState for the organisation
+    mocker.patch(
+        "organisations.usage_reporting.services.push_snapshot",
+        side_effect=requests.HTTPError("503 Server Error"),
+    )
+
+    # When
+    push_usage_snapshots()
+
+    # Then - the next run retries the window starting 24 hours ago
+    organisation.refresh_from_db()
+    assert organisation.usage_reporting_state.reported_until == datetime(
+        2026, 6, 17, 9, 0, 0, tzinfo=timezone.utc
+    )
+
+
+@pytest.mark.freeze_time("2026-06-18T09:30:00+00:00")
 def test_push_usage_snapshots__push_fails__keeps_reported_until(
     mocker: MockerFixture,
     log: StructuredLogCapture,

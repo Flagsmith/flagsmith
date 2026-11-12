@@ -44,7 +44,10 @@ def get_window_start(organisation: Organisation, window_end: datetime) -> dateti
     try:
         return organisation.usage_reporting_state.reported_until
     except UsageReportingState.DoesNotExist:
-        return window_end - timedelta(hours=24)
+        return UsageReportingState.objects.create(
+            organisation=organisation,
+            reported_until=window_end - timedelta(hours=24),
+        ).reported_until
 
 
 def push_snapshot(
@@ -102,9 +105,6 @@ def push_usage_snapshots() -> None:
                     signature_b64=organisation.licence.signature,
                 )
 
-                UsageReportingState.objects.get_or_create(
-                    organisation=organisation, defaults={"reported_until": window_end}
-                )
                 UsageReportingState.objects.filter(
                     organisation=organisation, reported_until__lt=window_end
                 ).update(reported_until=window_end)
