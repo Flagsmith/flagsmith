@@ -84,12 +84,14 @@ test.describe('Invite Tests', () => {
     await expect(page.locator(byId('email'))).toHaveValue(E2E_USER)
   });
 
-  test('Switching from login to signup shows the name fields as text inputs @oss', async ({ page }) => {
-    const { click, waitForElementVisible } = createHelpers(page);
+  test('Switching from login to signup keeps credentials and shows name fields as text @oss', async ({ page }) => {
+    const { click, setText, waitForElementVisible } = createHelpers(page);
 
-    log('Open login')
+    log('Open login and enter credentials')
     await page.goto('/login')
     await waitForElementVisible(byId('password'))
+    await setText(byId('email'), E2E_USER)
+    await setText(byId('password'), PASSWORD)
 
     log('Switch to signup')
     await click(byId('jsSignup'))
@@ -97,5 +99,7 @@ test.describe('Invite Tests', () => {
     await expect(page.locator(byId('firstName'))).toHaveAttribute('type', 'text')
     await expect(page.locator(byId('lastName'))).toHaveAttribute('type', 'text')
     await expect(page.locator(byId('password'))).toHaveAttribute('type', 'password')
+    await expect(page.locator(byId('email'))).toHaveValue(E2E_USER)
+    await expect(page.locator(byId('password'))).toHaveValue(PASSWORD)
   });
 });
