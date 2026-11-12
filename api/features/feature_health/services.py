@@ -66,12 +66,14 @@ def create_feature_health_events_from_provider(
     response = get_provider_response(provider, payload)
     project = provider.project
     events_to_create = []
-    environment_ids_by_feature_id: dict[int, set[int | None]] = {}
+    feature_ids_to_update = set()
+    updated_feature_environments: set[tuple[Feature, Environment | None]] = set()
     if response:
         for event_data in response.events:
             if feature := Feature.objects.filter(
                 project=provider.project, name=event_data.feature_name
             ).first():
+                feature_ids_to_update.add(feature.id)
                 if environment_name := event_data.environment_name:
                     environment = Environment.objects.filter(
                         project=project,
@@ -79,9 +81,7 @@ def create_feature_health_events_from_provider(
                     ).first()
                 else:
                     environment = None
-                environment_ids_by_feature_id.setdefault(feature.id, set()).add(
-                    environment.id if environment else None
-                )
+                updated_feature_environments.add((feature, environment))
                 events_to_create.append(
                     map_feature_health_event_data_to_feature_health_event(
                         feature_health_event_data=event_data,
@@ -90,10 +90,13 @@ def create_feature_health_events_from_provider(
                     )
                 )
     FeatureHealthEvent.objects.bulk_create(events_to_create)
-    for feature_id, environment_ids in environment_ids_by_feature_id.items():
-        tasks.update_feature_unhealthy_tag.delay(
-            args=(feature_id,),
-            kwargs={"environment_ids": list(environment_ids)},
+    for feature_id in feature_ids_to_update:
+        tasks.update_feature_unhealthy_tag.delay(args=(feature_id,))
+    for feature, environment in updated_feature_environments:
+        feature_health_updated.send(
+            sender=Feature,
+            feature=feature,
+            environment=environment,
         )
     return events_to_create
 
@@ -118,26 +121,6 @@ def update_feature_unhealthy_tag(feature: "Feature") -> None:
         else:
             feature.tags.remove(unhealthy_tag)
         feature.save()
-
-
-def send_feature_health_updated(
-    feature: "Feature",
-    environment_ids: typing.Collection[int | None],
-) -> None:
-    environments_by_id = Environment.objects.in_bulk(
-        [environment_id for environment_id in environment_ids if environment_id]
-    )
-    for environment_id in environment_ids:
-        if environment_id is None:
-            environment = None
-        elif not (environment := environments_by_id.get(environment_id)):
-            # The environment was deleted after the event was received.
-            continue
-        feature_health_updated.send(
-            sender=Feature,
-            feature=feature,
-            environment=environment,
-        )
 
 
 def dismiss_feature_health_event(
@@ -179,5 +162,9 @@ def dismiss_feature_health_event(
 
     tasks.update_feature_unhealthy_tag.delay(
         args=(feature_health_event.feature.id,),
-        kwargs={"environment_ids": [feature_health_event.environment_id]},
+    )
+    feature_health_updated.send(
+        sender=Feature,
+        feature=feature_health_event.feature,
+        environment=feature_health_event.environment,
     )

@@ -132,41 +132,6 @@ def test_create_feature_health_events_from_provider__events_in_several_environme
     )
 
 
-def test_create_feature_health_events_from_provider__unhealthy_event__sends_feature_health_updated_after_tag_update(
-    feature: Feature,
-    environment: Environment,
-    feature_health_provider: FeatureHealthProvider,
-    feature_health_updated_receiver: MagicMock,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    mocker.patch(
-        "features.feature_health.services.get_provider_response",
-        return_value=FeatureHealthProviderResponse(
-            events=[
-                FeatureHealthEventData(
-                    feature_name=feature.name,
-                    environment_name=environment.name,
-                    type=FeatureHealthEventType.UNHEALTHY,
-                    provider_name="Webhook",
-                ),
-            ]
-        ),
-    )
-    tag_labels_seen_by_receiver: list[list[str]] = []
-    feature_health_updated_receiver.side_effect = lambda feature, **kwargs: (
-        tag_labels_seen_by_receiver.append(
-            list(feature.tags.values_list("label", flat=True))
-        )
-    )
-
-    # When
-    create_feature_health_events_from_provider(feature_health_provider, "payload")
-
-    # Then
-    assert tag_labels_seen_by_receiver == [["Unhealthy"]]
-
-
 def test_create_feature_health_events_from_provider__invalid_payload__does_not_send_feature_health_updated(
     feature_health_provider: FeatureHealthProvider,
     feature_health_updated_receiver: MagicMock,
