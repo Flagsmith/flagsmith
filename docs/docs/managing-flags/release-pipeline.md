@@ -74,8 +74,8 @@ Each stage in your pipeline consists of:
 - Triggers after waiting for a specified amount of time.
 - Configure the wait time in minutes, hours, or days.
 - Use this for gradual rollouts or testing periods.
-- Optionally, add an [abort condition](#aborting-a-pipeline-when-a-flag-becomes-unhealthy) to stop the release if the
-  flag becomes unhealthy during the wait.
+- Optionally, add an [abort condition](#aborting-a-pipeline) to stop the release if the flag becomes unhealthy during
+  the wait.
 
 ### Stage Actions
 
@@ -118,8 +118,8 @@ Once published, a release pipeline cannot be modified. Ensure your configuration
 
 :::warning
 
-In alpha phase there are no automatic rollbacks, you'd need to revert changes manually. To stop a release automatically,
-use an [abort condition](#aborting-a-pipeline-when-a-flag-becomes-unhealthy).
+Release Pipelines don't revert changes that earlier stages have made. An [abort condition](#aborting-a-pipeline) can
+turn a flag off if it becomes unhealthy, but any other changes have to be reverted manually.
 
 :::
 
@@ -152,12 +152,11 @@ Once a flag is added to a pipeline:
 - **Active Pipelines**: View all published pipelines and their current status.
 - **Flag Progress**: Track which flags are currently in each stage.
 
-### Aborting a Pipeline When a Flag Becomes Unhealthy
+### Aborting a Pipeline
 
 A **Wait For** stage can act as a kill switch. Tick **Abort if unhealthy in this environment**. If
 [Feature Health](/managing-flags/feature-health-metrics) reports the flag as unhealthy in the stage's environment while
-it waits, the pipeline stops and the flag is turned off in that environment. If the wait runs out and the flag is
-healthy, the stage runs its actions and the flag moves to the next stage as usual.
+it waits, the pipeline stops and the flag is turned off in that environment.
 
 **Example: release to everyone unless an alert fires**
 
