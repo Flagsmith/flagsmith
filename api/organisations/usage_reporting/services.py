@@ -102,8 +102,11 @@ def push_usage_snapshots() -> None:
                     signature_b64=organisation.licence.signature,
                 )
 
-                UsageReportingState.objects.update_or_create(
+                UsageReportingState.objects.get_or_create(
                     organisation=organisation, defaults={"reported_until": window_end}
                 )
+                UsageReportingState.objects.filter(
+                    organisation=organisation, reported_until__lt=window_end
+                ).update(reported_until=window_end)
             except Exception as e:
                 logger.exception("snapshot.errored", reason=e)
