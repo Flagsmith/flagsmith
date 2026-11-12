@@ -1,6 +1,8 @@
 import json
 import typing
 
+import pydantic
+
 from features.feature_health.models import FeatureHealthEvent
 from features.feature_health.types import FeatureHealthEventData
 
@@ -30,3 +32,21 @@ def map_feature_health_event_data_to_feature_health_event(
     if feature_health_event_data.created_at:
         instance.created_at = feature_health_event_data.created_at
     return instance
+
+
+def map_validation_error_to_payload_error_details(
+    exc: pydantic.ValidationError,
+) -> list[dict[str, str]]:
+    # Inputs are deliberately omitted so as not to echo large payloads back.
+    return [
+        {
+            "loc": ".".join(str(part) for part in error["loc"]),
+            "msg": error["msg"],
+            "type": error["type"],
+        }
+        for error in exc.errors(
+            include_url=False,
+            include_context=False,
+            include_input=False,
+        )
+    ]

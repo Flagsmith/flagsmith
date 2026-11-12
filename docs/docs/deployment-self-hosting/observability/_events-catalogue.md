@@ -278,7 +278,7 @@ Attributes:
 ### `feature_health.feature_health_event_dismissal_not_supported`
 
 Logged at `warning` from:
- - `api/features/feature_health/services.py:127`
+ - `api/features/feature_health/services.py:221`
 
 Attributes:
  - `feature_health_event_external_id`
@@ -289,7 +289,7 @@ Attributes:
 ### `feature_health.feature_health_provider_error`
 
 Logged at `error` from:
- - `api/features/feature_health/services.py:50`
+ - `api/features/feature_health/services.py:83`
 
 Attributes:
  - `exc_info`
@@ -303,6 +303,32 @@ Logged at `warning` from:
 
 Attributes:
  - `path`
+
+### `feature_health.webhook_payload.invalid`
+
+Logged at `warning` from:
+ - `api/features/feature_health/services.py:77`
+
+Attributes:
+ - `environment.id`
+ - `errors`
+ - `organisation.id`
+ - `project.id`
+ - `provider.id`
+ - `provider.name`
+
+### `feature_health.webhook_payload.no_events_created`
+
+Logged at `info` from:
+ - `api/features/feature_health/services.py:153`
+
+Attributes:
+ - `environment.id`
+ - `feature_names`
+ - `organisation.id`
+ - `project.id`
+ - `provider.id`
+ - `provider.name`
 
 ### `feature_lifecycle.summarised`
 

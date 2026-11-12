@@ -1,6 +1,7 @@
 import json
 import typing
 
+import pydantic
 import structlog
 
 from api_keys.user import APIKeyUser
@@ -10,8 +11,13 @@ from features.feature_health.constants import (
     UNHEALTHY_TAG_COLOUR,
     UNHEALTHY_TAG_LABEL,
 )
+from features.feature_health.exceptions import (
+    FeatureHealthEventsNotCreatedError,
+    FeatureHealthWebhookPayloadInvalidError,
+)
 from features.feature_health.mappers import (
     map_feature_health_event_data_to_feature_health_event,
+    map_validation_error_to_payload_error_details,
 )
 from features.feature_health.models import (
     FeatureHealthEvent,
@@ -27,6 +33,7 @@ from users.models import FFAdminUser
 
 if typing.TYPE_CHECKING:
     from features.feature_health.types import FeatureHealthProviderResponse
+    from projects.models import Project
 
 logger = structlog.get_logger("feature_health")
 
@@ -39,6 +46,14 @@ PROVIDER_RESPONSE_GETTERS: dict[
     FeatureHealthProviderName.WEBHOOK.value: webhook.get_provider_response,
 }
 
+PROVIDER_ENVIRONMENT_NAMES_GETTERS: dict[
+    str,
+    typing.Callable[[str], list[str]],
+] = {
+    FeatureHealthProviderName.GRAFANA.value: grafana.map_payload_to_environment_names,
+    FeatureHealthProviderName.WEBHOOK.value: webhook.map_payload_to_environment_names,
+}
+
 
 def get_provider_response(
     provider: FeatureHealthProvider, payload: str
@@ -46,6 +61,24 @@ def get_provider_response(
     response = None
     try:
         response = PROVIDER_RESPONSE_GETTERS[provider.name](payload)
+    except pydantic.ValidationError as exc:
+        errors = map_validation_error_to_payload_error_details(exc)
+        log = logger.bind(
+            organisation__id=provider.project.organisation_id,
+            project__id=provider.project_id,
+            provider__id=provider.uuid,
+            provider__name=provider.name,
+        )
+        if environment_id := _get_environment_id(
+            provider.project,
+            PROVIDER_ENVIRONMENT_NAMES_GETTERS[provider.name](payload),
+        ):
+            log = log.bind(environment__id=environment_id)
+        log.warning(
+            "webhook_payload.invalid",
+            errors=_summarise_payload_error_details(errors),
+        )
+        raise FeatureHealthWebhookPayloadInvalidError(errors) from exc
     except (KeyError, ValueError) as exc:
         logger.error(
             "feature-health-provider-error",
@@ -60,36 +93,97 @@ def create_feature_health_events_from_provider(
     provider: FeatureHealthProvider,
     payload: str,
 ) -> list[FeatureHealthEvent]:
+    """
+    Create feature health events from a provider's webhook payload.
+
+    Raise `FeatureHealthWebhookPayloadInvalidError` if the payload is invalid,
+    and `FeatureHealthEventsNotCreatedError` if it yields no events.
+    """
     from features.feature_health import tasks
 
-    response = get_provider_response(provider, payload)
+    if not (response := get_provider_response(provider, payload)):
+        raise FeatureHealthEventsNotCreatedError()
+
     project = provider.project
     events_to_create = []
     feature_ids_to_update = set()
-    if response:
-        for event_data in response.events:
-            if feature := Feature.objects.filter(
-                project=provider.project, name=event_data.feature_name
-            ).first():
-                feature_ids_to_update.add(feature.id)
-                if environment_name := event_data.environment_name:
-                    environment = Environment.objects.filter(
-                        project=project,
-                        name=environment_name,
-                    ).first()
-                else:
-                    environment = None
-                events_to_create.append(
-                    map_feature_health_event_data_to_feature_health_event(
-                        feature_health_event_data=event_data,
-                        feature=feature,
-                        environment=environment,
-                    )
+    for event_data in response.events:
+        if feature := Feature.objects.filter(
+            project=provider.project, name=event_data.feature_name
+        ).first():
+            feature_ids_to_update.add(feature.id)
+            if environment_name := event_data.environment_name:
+                environment = Environment.objects.filter(
+                    project=project,
+                    name=environment_name,
+                ).first()
+            else:
+                environment = None
+            events_to_create.append(
+                map_feature_health_event_data_to_feature_health_event(
+                    feature_health_event_data=event_data,
+                    feature=feature,
+                    environment=environment,
                 )
+            )
+
+    if not events_to_create:
+        feature_names = sorted({event.feature_name for event in response.events})
+        if feature_names:
+            detail = (
+                "No feature health events were created: feature(s) "
+                f"{', '.join(map(repr, feature_names))} not found in the project."
+            )
+        else:
+            detail = (
+                "No feature health events were created: "
+                "the payload does not reference any feature."
+            )
+        log = logger.bind(
+            organisation__id=project.organisation_id,
+            project__id=project.id,
+            provider__id=provider.uuid,
+            provider__name=provider.name,
+        )
+        if environment_id := _get_environment_id(
+            project,
+            [event.environment_name for event in response.events],
+        ):
+            log = log.bind(environment__id=environment_id)
+        log.info(
+            "webhook_payload.no_events_created",
+            feature_names=feature_names,
+        )
+        raise FeatureHealthEventsNotCreatedError(detail)
+
     FeatureHealthEvent.objects.bulk_create(events_to_create)
     for feature_id in feature_ids_to_update:
         tasks.update_feature_unhealthy_tag.delay(args=(feature_id,))
     return events_to_create
+
+
+def _summarise_payload_error_details(
+    errors: list[dict[str, str]],
+) -> str:
+    return "; ".join(
+        f"{error['loc']}: {error['msg']}" if error["loc"] else error["msg"]
+        for error in errors
+    )
+
+
+def _get_environment_id(
+    project: "Project",
+    environment_names: typing.Iterable[str | None],
+) -> int | None:
+    # Only attribute an event to an environment when it's unambiguous.
+    if len(unique_names := {name for name in environment_names if name}) != 1:
+        return None
+    environment_id: int | None = (
+        Environment.objects.filter(project=project, name=unique_names.pop())
+        .values_list("id", flat=True)
+        .first()
+    )
+    return environment_id
 
 
 def update_feature_unhealthy_tag(feature: "Feature") -> None:

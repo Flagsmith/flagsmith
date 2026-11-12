@@ -1,3 +1,5 @@
+import json
+
 from pydantic.type_adapter import TypeAdapter
 
 from features.feature_health.models import (
@@ -44,3 +46,16 @@ def map_payload_to_provider_response(
             ),
         ],
     )
+
+
+def map_payload_to_environment_names(payload: str) -> list[str]:
+    """Best-effort extraction of environment names from a possibly invalid payload."""
+    try:
+        data = json.loads(payload)
+    except ValueError:
+        return []
+    if isinstance(data, dict) and isinstance(
+        environment_name := data.get("environment"), str
+    ):
+        return [environment_name]
+    return []
