@@ -67,7 +67,8 @@ def create_feature_health_events_from_provider(
     project = provider.project
     events_to_create = []
     feature_ids_to_update = set()
-    updated_feature_environments: set[tuple[Feature, Environment | None]] = set()
+    # Keyed for de-duplication; dicts keep the order events were received in.
+    updated_feature_environments: dict[tuple[Feature, Environment | None], None] = {}
     if response:
         for event_data in response.events:
             if feature := Feature.objects.filter(
@@ -81,7 +82,7 @@ def create_feature_health_events_from_provider(
                     ).first()
                 else:
                     environment = None
-                updated_feature_environments.add((feature, environment))
+                updated_feature_environments[(feature, environment)] = None
                 events_to_create.append(
                     map_feature_health_event_data_to_feature_health_event(
                         feature_health_event_data=event_data,

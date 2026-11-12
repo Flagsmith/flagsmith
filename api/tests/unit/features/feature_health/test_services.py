@@ -82,7 +82,7 @@ def test_dismiss_feature_health_event__healthy_event__log_expected(
     ]
 
 
-def test_create_feature_health_events_from_provider__events_in_several_environments__sends_feature_health_updated_per_environment(
+def test_create_feature_health_events_from_provider__events_in_several_environments__sends_feature_health_updated_per_environment_in_order(
     feature: Feature,
     environment: Environment,
     feature_health_provider: FeatureHealthProvider,
@@ -94,6 +94,11 @@ def test_create_feature_health_events_from_provider__events_in_several_environme
         "features.feature_health.services.get_provider_response",
         return_value=FeatureHealthProviderResponse(
             events=[
+                FeatureHealthEventData(
+                    feature_name=feature.name,
+                    type=FeatureHealthEventType.UNHEALTHY,
+                    provider_name="Webhook",
+                ),
                 FeatureHealthEventData(
                     feature_name=feature.name,
                     environment_name=environment.name,
@@ -108,11 +113,6 @@ def test_create_feature_health_events_from_provider__events_in_several_environme
                     provider_name="Webhook",
                     external_id="alert-2",
                 ),
-                FeatureHealthEventData(
-                    feature_name=feature.name,
-                    type=FeatureHealthEventType.UNHEALTHY,
-                    provider_name="Webhook",
-                ),
             ]
         ),
     )
@@ -121,15 +121,20 @@ def test_create_feature_health_events_from_provider__events_in_several_environme
     create_feature_health_events_from_provider(feature_health_provider, "payload")
 
     # Then
-    assert feature_health_updated_receiver.call_count == 2
-    assert {
-        call.kwargs["environment"]
-        for call in feature_health_updated_receiver.call_args_list
-    } == {environment, None}
-    assert all(
-        call.kwargs["feature"] == feature
-        for call in feature_health_updated_receiver.call_args_list
-    )
+    assert feature_health_updated_receiver.call_args_list == [
+        mocker.call(
+            signal=mocker.ANY,
+            sender=Feature,
+            feature=feature,
+            environment=None,
+        ),
+        mocker.call(
+            signal=mocker.ANY,
+            sender=Feature,
+            feature=feature,
+            environment=environment,
+        ),
+    ]
 
 
 def test_create_feature_health_events_from_provider__invalid_payload__does_not_send_feature_health_updated(
