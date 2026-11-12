@@ -27,8 +27,6 @@ def feature_health_updated_receiver(
     mocker: MockerFixture,
 ) -> typing.Generator[MagicMock, None, None]:
     receiver = mocker.MagicMock(return_value=None)
-    # `Signal.send_robust` logs receiver errors by qualified name.
-    receiver.__qualname__ = "feature_health_updated_receiver"
     feature_health_updated.connect(receiver, weak=False)
     yield receiver
     feature_health_updated.disconnect(receiver)
