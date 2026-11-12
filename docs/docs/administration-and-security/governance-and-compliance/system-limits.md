@@ -34,20 +34,9 @@ Please contact us if you need higher limits for a project. We can change:
 
 ### Self Hosted
 
-You can change these limits per project in
-[Django admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin), under **Projects**:
-
-- Features per project (**Max features allowed**)
-- Segments per project (**Max segments allowed**)
-- Segment overrides per environment (**Max segment overrides allowed**)
-
-You can change these limits for the whole installation with environment variables on the Flagsmith API:
-
-- Segment rules conditions (`SEGMENT_RULES_CONDITIONS_LIMIT`)
-- Flag string value size (`FEATURE_VALUE_LIMIT`)
-- Segment rule value size (`SEGMENT_CONDITION_VALUE_LIMIT`)
-
-The maximum size of an identity trait value cannot be changed.
+You can modify the system limits on a per-Project basis. These limits are defined in the database against the Project.
+The easiest way to modify them is with the
+[Django admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin) interface.
 
 ## Traffic Limits
 
