@@ -391,10 +391,11 @@ def test_push_usage_snapshots__already_reported_this_hour__skips_push(
 def test_push_usage_snapshots__never_reported_push_fails__keeps_initial_boundary(
     mocker: MockerFixture,
     organisation: Organisation,
+    snapshot: UsageSnapshot,
     mocked_map_for_licensed_organisation: MagicMock,
 ) -> None:
     # Given - no UsageReportingState for the organisation
-    mocker.patch(
+    mocked_push = mocker.patch(
         "organisations.usage_reporting.services.push_snapshot",
         side_effect=requests.HTTPError("503 Server Error"),
     )
@@ -402,7 +403,11 @@ def test_push_usage_snapshots__never_reported_push_fails__keeps_initial_boundary
     # When
     push_usage_snapshots()
 
-    # Then - the next run retries the window starting 24 hours ago
+    # Then - the push was attempted and failed
+    mocked_push.assert_called_once_with(
+        base_url="https://cp.example.com", snapshot=snapshot, signature_b64="sig-1"
+    )
+    # The next run retries the window starting 24 hours ago
     organisation.refresh_from_db()
     assert organisation.usage_reporting_state.reported_until == datetime(
         2026, 6, 17, 9, 0, 0, tzinfo=timezone.utc
