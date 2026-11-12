@@ -1,8 +1,7 @@
 import base64
-from datetime import timedelta
+from datetime import datetime
 
 from common.core.utils import get_version
-from django.utils import timezone
 
 from app_analytics.analytics_db_service import get_usage_data_for_window
 from app_analytics.dataclasses import UsageData
@@ -55,15 +54,15 @@ def map_project_usage_data_to_project_usage(
     return rows[:MAX_PROJECT_USAGE_ROWS]
 
 
-def map_organisation_to_usage_snapshot(organisation: Organisation) -> UsageSnapshot:
-    hour_end = timezone.now().replace(minute=0, second=0, microsecond=0)
-    hour_start = hour_end - timedelta(hours=24)
+def map_organisation_to_usage_snapshot(
+    organisation: Organisation, window_start: datetime, window_end: datetime
+) -> UsageSnapshot:
     seat_count = organisation.num_seats
     instance_version = get_version()
-    usage_data = get_usage_data_for_window(organisation, hour_start, hour_end)
+    usage_data = get_usage_data_for_window(organisation, window_start, window_end)
     usage_data_by_project_id = {
         project.id: get_usage_data_for_window(
-            organisation, hour_start, hour_end, project_id=project.id
+            organisation, window_start, window_end, project_id=project.id
         )
         for project in organisation.projects.all()
     }
@@ -71,7 +70,7 @@ def map_organisation_to_usage_snapshot(organisation: Organisation) -> UsageSnaps
     # No data access past this point!
 
     return UsageSnapshot(
-        timestamp=hour_start,
+        timestamp=window_start,
         seat_count=seat_count,
         api_call_total=map_usage_data_to_total_api_calls(usage_data),
         api_call_breakdown=map_usage_data_to_api_call_breakdown(usage_data),

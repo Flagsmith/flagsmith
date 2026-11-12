@@ -1,14 +1,16 @@
 import dataclasses
 import json
+from datetime import datetime, timedelta
 
 import requests
 import structlog
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
+from django.utils import timezone
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
-from organisations.models import Organisation
+from organisations.models import Organisation, UsageReportingState
 from organisations.usage_reporting.dataclasses import UsageSnapshot
 from organisations.usage_reporting.mappers import (
     map_organisation_to_usage_snapshot,
@@ -32,8 +34,17 @@ def get_licensed_organisations() -> list[Organisation]:
     if not settings.LICENSING_INSTALLED:
         return []
     return list(
-        Organisation.objects.filter(licence__isnull=False).select_related("licence")
+        Organisation.objects.filter(licence__isnull=False).select_related(
+            "licence", "usage_reporting_state"
+        )
     )
+
+
+def get_window_start(organisation: Organisation, window_end: datetime) -> datetime:
+    try:
+        return organisation.usage_reporting_state.reported_until
+    except UsageReportingState.DoesNotExist:
+        return window_end - timedelta(hours=24)
 
 
 def push_snapshot(
@@ -57,10 +68,8 @@ def push_snapshot(
             url=url, data=body, headers=headers, timeout=REQUEST_TIMEOUT_SECONDS
         )
 
-        if response.ok:
-            logger.info("snapshot.pushed", status_code=response.status_code)
-        else:
-            logger.warning("snapshot.push_failed", status_code=response.status_code)
+        response.raise_for_status()
+        logger.info("snapshot.pushed", status_code=response.status_code)
 
 
 def push_usage_snapshots() -> None:
@@ -71,13 +80,25 @@ def push_usage_snapshots() -> None:
         logger.debug("run.skipped", reason="no_licensed_organisations")
         return
 
+    window_end = timezone.now().replace(minute=0, second=0, microsecond=0)
+
     for organisation in organisations:
         with structlog.contextvars.bound_contextvars(organisation__id=organisation.id):
             try:
+                window_start = get_window_start(organisation, window_end)
+
                 push_snapshot(
                     base_url=base_url,
-                    snapshot=map_organisation_to_usage_snapshot(organisation),
+                    snapshot=map_organisation_to_usage_snapshot(
+                        organisation=organisation,
+                        window_start=window_start,
+                        window_end=window_end,
+                    ),
                     signature_b64=organisation.licence.signature,
                 )
-            except Exception:
-                logger.exception("snapshot.errored")
+
+                UsageReportingState.objects.update_or_create(
+                    organisation=organisation, defaults={"reported_until": window_end}
+                )
+            except Exception as e:
+                logger.exception("snapshot.errored", reason=e)

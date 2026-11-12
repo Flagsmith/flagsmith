@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 
-import pytest
 from pytest_mock import MockerFixture
 
 from app_analytics.dataclasses import UsageData
@@ -16,8 +15,10 @@ from organisations.usage_reporting.mappers import (
 )
 from projects.models import Project
 
+WINDOW_START = datetime(2026, 6, 17, 9, 0, 0, tzinfo=timezone.utc)
+WINDOW_END = datetime(2026, 6, 18, 9, 0, 0, tzinfo=timezone.utc)
 
-@pytest.mark.freeze_time("2026-06-18T09:30:00+00:00")
+
 def test_map_organisation_to_usage_snapshot__with_usage__returns_populated_snapshot(
     organisation: Organisation,
     project: Project,
@@ -25,7 +26,7 @@ def test_map_organisation_to_usage_snapshot__with_usage__returns_populated_snaps
 ) -> None:
     # Given
     mocker.patch.object(mappers, "get_version", return_value="2.142.3")
-    mocker.patch.object(
+    mocked_get_usage_data = mocker.patch.object(
         mappers,
         "get_usage_data_for_window",
         return_value=[
@@ -40,11 +41,13 @@ def test_map_organisation_to_usage_snapshot__with_usage__returns_populated_snaps
     )
 
     # When
-    snapshot = map_organisation_to_usage_snapshot(organisation)
+    snapshot = map_organisation_to_usage_snapshot(
+        organisation, window_start=WINDOW_START, window_end=WINDOW_END
+    )
 
     # Then
     assert snapshot == UsageSnapshot(
-        timestamp=datetime(2026, 6, 17, 9, 0, 0, tzinfo=timezone.utc),
+        timestamp=WINDOW_START,
         seat_count=organisation.num_seats,
         api_call_total=10,
         api_call_breakdown=ApiCallBreakdown(
@@ -54,9 +57,12 @@ def test_map_organisation_to_usage_snapshot__with_usage__returns_populated_snaps
         instance_version="2.142.3",
         project_usage=[ProjectUsage(project_id=project.id, api_call_count=10)],
     )
+    mocked_get_usage_data.assert_any_call(organisation, WINDOW_START, WINDOW_END)
+    mocked_get_usage_data.assert_any_call(
+        organisation, WINDOW_START, WINDOW_END, project_id=project.id
+    )
 
 
-@pytest.mark.freeze_time("2026-06-18T09:30:00+00:00")
 def test_map_organisation_to_usage_snapshot__no_analytics__returns_zeroed_snapshot(
     organisation: Organisation,
     project: Project,
@@ -67,11 +73,13 @@ def test_map_organisation_to_usage_snapshot__no_analytics__returns_zeroed_snapsh
     mocker.patch.object(mappers, "get_usage_data_for_window", return_value=[])
 
     # When
-    snapshot = map_organisation_to_usage_snapshot(organisation)
+    snapshot = map_organisation_to_usage_snapshot(
+        organisation, window_start=WINDOW_START, window_end=WINDOW_END
+    )
 
     # Then
     assert snapshot == UsageSnapshot(
-        timestamp=datetime(2026, 6, 17, 9, 0, 0, tzinfo=timezone.utc),
+        timestamp=WINDOW_START,
         seat_count=organisation.num_seats,
         api_call_total=0,
         api_call_breakdown=ApiCallBreakdown(
@@ -105,7 +113,9 @@ def test_map_organisation_to_usage_snapshot__excess_projects__keeps_highest_usag
     mocker.patch.object(mappers, "MAX_PROJECT_USAGE_ROWS", 1)
 
     # When
-    snapshot = map_organisation_to_usage_snapshot(organisation)
+    snapshot = map_organisation_to_usage_snapshot(
+        organisation, window_start=WINDOW_START, window_end=WINDOW_END
+    )
 
     # Then - only the highest-usage project survives the cap
     assert snapshot.project_usage == [

@@ -3,12 +3,13 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
 import pytest
+import requests
 from django.conf import settings as django_settings
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
-from organisations.models import Organisation
+from organisations.models import Organisation, UsageReportingState
 from organisations.usage_reporting.dataclasses import (
     ApiCallBreakdown,
     ProjectUsage,
@@ -71,31 +72,21 @@ def test_get_licensed_organisations__organisation_without_licence__excluded(
     assert get_licensed_organisations() == []
 
 
-@pytest.mark.parametrize(
-    "status_code, event, level",
-    [
-        (201, "snapshot.pushed", "info"),
-        (200, "snapshot.pushed", "info"),
-        (400, "snapshot.push_failed", "warning"),
-        (401, "snapshot.push_failed", "warning"),
-        (403, "snapshot.push_failed", "warning"),
-        (429, "snapshot.push_failed", "warning"),
-        (500, "snapshot.push_failed", "warning"),
-        (503, "snapshot.push_failed", "warning"),
-        (418, "snapshot.push_failed", "warning"),
-    ],
-)
-def test_push_snapshot__status_code__logs_expected_event(
+def build_response(status_code: int) -> requests.Response:
+    response = requests.Response()
+    response.status_code = status_code
+    return response
+
+
+@pytest.mark.parametrize("status_code", [200, 201])
+def test_push_snapshot__success_status_code__logs_pushed(
     mocked_post: MagicMock,
     log: StructuredLogCapture,
     snapshot: UsageSnapshot,
     status_code: int,
-    event: str,
-    level: str,
 ) -> None:
     # Given
-    mocked_post.return_value.status_code = status_code
-    mocked_post.return_value.ok = status_code < 400
+    mocked_post.return_value = build_response(status_code)
 
     # When
     push_snapshot(
@@ -105,7 +96,30 @@ def test_push_snapshot__status_code__logs_expected_event(
     )
 
     # Then
-    assert log.has(event, level=level, status_code=status_code)
+    assert log.has("snapshot.pushed", level="info", status_code=status_code)
+
+
+@pytest.mark.parametrize("status_code", [400, 401, 403, 418, 429, 500, 503])
+def test_push_snapshot__error_status_code__raises_http_error(
+    mocked_post: MagicMock,
+    log: StructuredLogCapture,
+    snapshot: UsageSnapshot,
+    status_code: int,
+) -> None:
+    # Given
+    mocked_post.return_value = build_response(status_code)
+
+    # When
+    with pytest.raises(requests.HTTPError) as exc_info:
+        push_snapshot(
+            base_url="https://cp.example.com/",
+            snapshot=snapshot,
+            signature_b64="c2ln",
+        )
+
+    # Then
+    assert exc_info.value.response.status_code == status_code
+    assert not log.has("snapshot.pushed")
 
 
 def test_push_snapshot__valid_snapshot__mounts_retry_policy(
@@ -239,6 +253,132 @@ def test_push_usage_snapshots__licensed_organisations__pushes_each(
     mocked_push.assert_any_call(
         base_url="https://cp.example.com", snapshot=snapshot, signature_b64="sig-2"
     )
+
+
+@pytest.fixture
+def mocked_map_for_licensed_organisation(
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+    organisation: Organisation,
+    snapshot: UsageSnapshot,
+) -> MagicMock:
+    settings.CONTROL_PLANE_URL = "https://cp.example.com"
+    mocker.patch(
+        "organisations.usage_reporting.services.get_licensed_organisations",
+        return_value=[organisation],
+    )
+    # The licence relation only exists with the optional licensing package.
+    mocker.patch.object(
+        Organisation, "licence", create=True, new=mocker.Mock(signature="sig-1")
+    )
+    mocker.patch("organisations.usage_reporting.services.push_snapshot")
+    mocked_map: MagicMock = mocker.patch(
+        "organisations.usage_reporting.services.map_organisation_to_usage_snapshot",
+        return_value=snapshot,
+    )
+    return mocked_map
+
+
+@pytest.mark.freeze_time("2026-06-18T09:30:00+00:00")
+def test_push_usage_snapshots__never_reported__maps_previous_24_hours(
+    organisation: Organisation,
+    mocked_map_for_licensed_organisation: MagicMock,
+) -> None:
+    # Given - no UsageReportingState for the organisation
+
+    # When
+    push_usage_snapshots()
+
+    # Then - the window ends at the start of the current hour
+    mocked_map_for_licensed_organisation.assert_called_once_with(
+        organisation=organisation,
+        window_start=datetime(2026, 6, 17, 9, 0, 0, tzinfo=timezone.utc),
+        window_end=datetime(2026, 6, 18, 9, 0, 0, tzinfo=timezone.utc),
+    )
+
+
+@pytest.mark.freeze_time("2026-06-18T09:30:00+00:00")
+def test_push_usage_snapshots__previously_reported__maps_from_reported_until(
+    organisation: Organisation,
+    mocked_map_for_licensed_organisation: MagicMock,
+) -> None:
+    # Given - the last successful push ended three days ago
+    reported_until = datetime(2026, 6, 15, 9, 0, 0, tzinfo=timezone.utc)
+    UsageReportingState.objects.create(
+        organisation=organisation, reported_until=reported_until
+    )
+
+    # When
+    push_usage_snapshots()
+
+    # Then - the unreported period is included in the window
+    mocked_map_for_licensed_organisation.assert_called_once_with(
+        organisation=organisation,
+        window_start=reported_until,
+        window_end=datetime(2026, 6, 18, 9, 0, 0, tzinfo=timezone.utc),
+    )
+
+
+@pytest.mark.freeze_time("2026-06-18T09:30:00+00:00")
+def test_push_usage_snapshots__never_reported_push_succeeds__saves_reported_until(
+    organisation: Organisation,
+    mocked_map_for_licensed_organisation: MagicMock,
+) -> None:
+    # Given - no UsageReportingState for the organisation
+
+    # When
+    push_usage_snapshots()
+
+    # Then
+    organisation.refresh_from_db()
+    assert organisation.usage_reporting_state.reported_until == datetime(
+        2026, 6, 18, 9, 0, 0, tzinfo=timezone.utc
+    )
+
+
+@pytest.mark.freeze_time("2026-06-18T09:30:00+00:00")
+def test_push_usage_snapshots__previously_reported_push_succeeds__moves_reported_until(
+    organisation: Organisation,
+    mocked_map_for_licensed_organisation: MagicMock,
+) -> None:
+    # Given
+    state = UsageReportingState.objects.create(
+        organisation=organisation,
+        reported_until=datetime(2026, 6, 15, 9, 0, 0, tzinfo=timezone.utc),
+    )
+
+    # When
+    push_usage_snapshots()
+
+    # Then
+    state.refresh_from_db()
+    assert state.reported_until == datetime(2026, 6, 18, 9, 0, 0, tzinfo=timezone.utc)
+
+
+@pytest.mark.freeze_time("2026-06-18T09:30:00+00:00")
+def test_push_usage_snapshots__push_fails__keeps_reported_until(
+    mocker: MockerFixture,
+    log: StructuredLogCapture,
+    organisation: Organisation,
+    mocked_map_for_licensed_organisation: MagicMock,
+) -> None:
+    # Given
+    reported_until = datetime(2026, 6, 15, 9, 0, 0, tzinfo=timezone.utc)
+    state = UsageReportingState.objects.create(
+        organisation=organisation, reported_until=reported_until
+    )
+    mocker.patch(
+        "organisations.usage_reporting.services.push_snapshot",
+        side_effect=requests.HTTPError("503 Server Error"),
+    )
+
+    # When
+    push_usage_snapshots()
+
+    # Then - the next run retries the same window
+    state.refresh_from_db()
+    assert state.reported_until == reported_until
+    assert log.has("snapshot.errored", level="error")
 
 
 def test_push_usage_snapshots__one_organisation_raises__continues(
