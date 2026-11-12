@@ -641,6 +641,7 @@ class SDKFeatureStateSerializer(
         "environment",
         "identity",
         "feature_segment",
+        "reason",
     )
 
 

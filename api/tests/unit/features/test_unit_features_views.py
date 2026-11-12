@@ -1312,7 +1312,7 @@ def test_get_flags__hide_sensitive_data_enabled__returns_nulled_fields(
         "initial_value",
         "default_enabled",
     ]
-    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment"]
+    fs_sensitive_fields = ["id", "environment", "identity", "feature_segment", "reason"]
 
     # Then
     assert response.status_code == status.HTTP_200_OK
